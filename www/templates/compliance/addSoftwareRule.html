@@ -1,0 +1,53 @@
+<div id="nscompliance-addsoftwareruleform" title="Add software rule">
+
+	<div class="nsdialog-logo">
+		<img alt="Software rule" src="img/add_32px.png" />
+	</div>
+	
+	<form>
+		<fieldset>
+			<label for="group">Group: </label>
+			<select name="group" id="group"
+				class="text ui-widget-content ui-corner-all"></select>
+		</fieldset>
+		<fieldset>
+			<label for="devicetype">Device type: </label>
+			<select name="devicetype" id="devicetype"
+				class="text ui-widget-content ui-corner-all"></select>
+		</fieldset>
+		<fieldset>
+			<label for="family">Device family: </label>
+			<input type="text" name="family" id="family"
+				class="text ui-widget-content ui-corner-all" value="<%- family %>" />
+			<input type="checkbox" name="familyregexp" id="familyregexp"<% if (typeof(familyRegExp) != "undefined" && familyRegExp) { %> checked="checked"<% } %> />
+			<label for="familyregexp">RegExp</label>
+		</fieldset>
+		<fieldset>
+			<label for="version">Version: </label>
+			<input type="text" name="version" id="version"
+				class="text ui-widget-content ui-corner-all" value="<%- version %>" />
+			<input type="checkbox" name="versionregexp" id="versionregexp"<% if (typeof(versionRegExp) != "undefined" && versionRegExp) { %> checked="checked"<% } %> />
+			<label for="versionregexp">RegExp</label>
+		</fieldset>
+		<fieldset>
+			<div>Compliance level:</div>
+			<div class="gold">
+				<input type="radio" id="gold" name="level" checked="checked" />
+				<label for="gold">Gold</label>
+			</div>
+			<div class="silver">
+				<input type="radio" id="silver" name="level" />
+				<label for="silver">Silver</label>
+			</div>
+			<div class="bronze">
+				<input type="radio" id="bronze" name="level" />
+				<label for="bronze">Bronze</label>
+			</div>
+		</fieldset>
+
+		<div class="nserror" id="error">
+			<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+			<span id="errormsg"></span>
+		</div>
+	</form>
+</div>

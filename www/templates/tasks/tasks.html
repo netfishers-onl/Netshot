@@ -1,0 +1,54 @@
+
+<div class="nsfullpage">
+
+	<h1>Tasks</h1>
+		
+	<div id="nstasks-taskstabs">
+
+		<div id="taskstoolbar">
+		<button id="refresh">Refresh this page</button>
+		<span id="tabs">
+			<input type="radio" id="running" name="tabs" checked="checked" />
+			<label for="running">Running</label>
+			<input type="radio" id="scheduled" name="tabs" />
+			<label for="scheduled">Scheduled</label>
+			<input type="radio" id="success" name="tabs" />
+			<label for="success">Succeeded</label>
+			<input type="radio" id="failure" name="tabs" />
+			<label for="failure">Failed</label>
+			<input type="radio" id="cancelled" name="tabs" />
+			<label for="cancelled">Cancelled</label>
+			<input type="radio" id="all" name="tabs" />
+			<label for="all">All</label>
+		</span>
+		
+		<input type="text" name="day" id="day" style="display: none;"
+				class="nsdatepicker text ui-widget-content ui-corner-all" readonly="readonly" />
+				
+		</div>
+	</div>
+			
+		
+	<div id="nstasks-tasks">
+	
+		<table class="nstable">
+		<thead>
+			<tr>
+			<th>Type</th>
+			<th>Target</th>
+			<th>Status</th>
+			<th>Execution time</th>
+			<th>Comments</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr><td>
+				<span class="nsloader">
+				<img src="img/ajax-loader.gif" alt="Loading"></span>
+			</td></tr>
+		</tbody>
+		</table>
+	
+	</div>
+
+</div>

@@ -1,0 +1,48 @@
+
+<h1>Changes over the last days</h1>
+<canvas id="chart-lastdaychanges" width="500" height="200"></canvas>
+
+<h1>Configuration changes</h1>
+	
+<div id="nsreport-tabs">
+
+	<div id="reportstoolbar">
+	<span id="tabs">
+		<input type="radio" id="last1hour" name="tabs" checked="checked" />
+		<label for="last1hour">Last hour</label>
+		<input type="radio" id="last4hours" name="tabs" />
+		<label for="last4hours">Last 4 hours</label>
+		<input type="radio" id="last12hours" name="tabs" />
+		<label for="last12hours">Last 12 hours</label>
+		<input type="radio" id="last24hours" name="tabs" />
+		<label for="last24hours">Last day</label>
+		<input type="radio" id="period" name="tabs" />
+		<label for="period">Specific day...</label>
+	</span>
+	
+	<input type="text" name="day" id="day" style="display: none;"
+			class="nsdatepicker text ui-widget-content ui-corner-all" readonly="readonly" />
+			
+	</div>
+</div>
+		
+	
+<div id="nsreports-changes">
+
+	<table class="nstable">
+	<thead>
+		<tr>
+		<th>Date/time</th>
+		<th>Device</th>
+		<th>Author</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr><td>
+			<span class="nsloader">
+			<img src="img/ajax-loader.gif" alt="Loading"></span>
+		</td></tr>
+	</tbody>
+	</table>
+
+</div>

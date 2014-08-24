@@ -1,0 +1,5 @@
+<tr>
+<td><% if (typeof(eoxDate) == "number") { %><%- $.formatDateTime('dd/mm/y', new Date(eoxDate)) %><% } else { %>Never<% } %></td>
+<td><% if (type.match(/EoS/)) { %><a href="#" class="eoxdevices" data-type="eos" data-date="<%- eoxDate %>">+<%- deviceCount %> devices</a><% } %></td>
+<td><% if (type.match(/EoL/)) { %><a href="#" class="eoxdevices" data-type="eol" data-date="<%- eoxDate %>">+<%- deviceCount %> devices</a><% } %></td>
+</tr>

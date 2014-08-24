@@ -1,0 +1,364 @@
+<tr class="configline" data-config-id="<%- id %>">
+	<th><span class="expandicon ui-icon ui-icon-triangle-1-e"></span>
+	<a href="#" class="configlink" data-config-id="<%- id %>"><%- $.formatDateTime('dd/mm/y hh:ii', new Date(changeDate)) %></a></th>
+	<td></td>
+	<td>
+		<button class="configpreviousdiff">Compare to previous</button>
+	</td>
+</tr>
+
+<% if (type == ".vendors.CiscoIosDevice$CiscoIosConfig") { %>
+
+<tr class="configdetails">
+	<td class="maincolumn">Running Config</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="running-config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="running-config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Startup Config</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="startup-config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="startup-config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Image File</td>
+	<td><%- iosImageFile %></td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">IOS Version</td>
+	<td><%- iosVersion %></td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Login (possible)</td>
+	<td><%- author %></td>
+</tr>
+
+<% } %>
+
+<% if (type == ".vendors.JunOsDevice$JunOsConfig") { %>
+
+<tr class="configdetails">
+	<td class="maincolumn">Configuration</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">JunOS Version</td>
+	<td><%- junOsVersion %></td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Login (possible)</td>
+	<td><%- author %></td>
+</tr>
+
+<% } %>
+
+<% if (type == ".vendors.AlcatelLucentSrDevice$AlcatelLucentSrConfig") { %>
+
+<tr class="configdetails">
+	<td class="maincolumn">Configuration</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="configuration" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="configuration" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">BOF</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="bof" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="bof" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Configuration saved</td>
+	<td><% if (adminSaved) { %>Yes<% } else { %>No<% } %></td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">TiMOS Version</td>
+	<td><%- timosVersion %></td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Login (possible)</td>
+	<td><%- author %></td>
+</tr>
+
+<% } %>
+
+<% if (type == ".vendors.BrocadeFastIronDevice$BrocadeFastIronConfig") { %>
+
+<tr class="configdetails">
+	<td class="maincolumn">Running Config</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="running-config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="running-config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Startup Config</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="startup-config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="startup-config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">OS Version</td>
+	<td><%- osVersion %></td>
+</tr>
+
+<% } %>
+
+<% if (type == ".vendors.CiscoNxOsDevice$CiscoNxOsConfig") { %>
+
+<tr class="configdetails">
+	<td class="maincolumn">Running Config</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="running-config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="running-config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Startup Config</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="startup-config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="startup-config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">NX-OS Version</td>
+	<td><%- nxosVersion %></td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">System Image</td>
+	<td><%- systemImage %></td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Kickstart Image</td>
+	<td><%- kickstartImage %></td>
+</tr>
+
+<% } %>
+
+<% if (type == ".vendors.CiscoIosXrDevice$CiscoIosXrConfig") { %>
+
+<tr class="configdetails">
+	<td class="maincolumn">Configuration</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Admin Configuration</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="admin config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="admin config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Install Summary</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="ios-xr install summary" data-config-action="view">View</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">IOS-XR Version</td>
+	<td><%- iosXrVersion %></td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Login (possible)</td>
+	<td><%- author %></td>
+</tr>
+
+<% } %>
+
+<% if (type == ".vendors.HuaweiVrpDevice$HuaweiVrpConfig") { %>
+
+<tr class="configdetails">
+	<td class="maincolumn">Current Config</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="current-config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="current-config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Startup Config</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="startup-config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="startup-config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">VRP Version</td>
+	<td><%- vrpVersion %></td>
+</tr>
+
+<% } %>
+
+<% if (type == ".vendors.CiscoAceDevice$CiscoAceConfig") { %>
+
+<tr class="configdetails">
+	<td class="maincolumn">Running Config</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="running-config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="running-config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">Image File</td>
+	<td><%- systemImage %></td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">ACE Version</td>
+	<td><%- aceVersion %></td>
+</tr>
+
+<% } %>
+
+<% if (type == ".vendors.StarOsDevice$StarOsConfig") { %>
+
+<tr class="configdetails">
+	<td class="maincolumn">Configuration</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="config" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="config" data-config-action="download">Download</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">License Information</td>
+	<td>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="license information" data-config-action="view">View</a>
+	</td>
+</tr>
+
+<tr class="configdetails">
+	<td class="maincolumn">StarOS Version</td>
+	<td><%- starOsVersion %></td>
+</tr>
+
+<% } %>

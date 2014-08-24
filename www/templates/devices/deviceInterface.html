@@ -1,0 +1,39 @@
+<tr>
+	<td><%- virtualDevice %></td>
+	<td class="maincolumn">
+		<% if (enabled) { %>
+		<span class="ui-corner-all" title="Enabled">
+			<span class="ui-icon ui-icon-bullet"></span>
+		</span>
+		<% } else { %>
+		<span class="ui-corner-all" title="Disabled">
+			<span class="ui-icon ui-icon-radio-off"></span>
+		</span>
+		<% } %>
+	</td>
+	<td class="maincolumn"><%- interfaceName %></td>
+	<td><%- description %></td>
+	<td>
+		<% if (macAddress == "0000.0000.0000") { %>
+		-
+		<% } else { %>
+		<%- macAddress %>
+		<% } %>
+	</td>
+	<td>
+		<% if (level3) { %>
+		<span class="ui-corner-all" title="Level 3">
+			<span class="ui-icon ui-icon-star"></span>
+		</span>
+		<% } %>
+	</td>
+	<td><%- vrfInstance %></td>
+	<td>
+		<% _.each(ip4Addresses, function(ip) { %>
+		<%- ip.ip %>/<%- ip.prefixLength %><br/>
+		<% }); %>
+		<% _.each(ip6Addresses, function(ip) { %>
+		<%- ip.ip %>/<%- ip.prefixLength %><br/>
+		<% }); %>
+	</td>
+</tr>

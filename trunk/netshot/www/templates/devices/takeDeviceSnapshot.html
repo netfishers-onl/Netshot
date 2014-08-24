@@ -1,0 +1,23 @@
+<div id="nsdevices-snapshotform" title="Take Device Snapshot">
+
+	<div class="nsdialog-logo">
+		<img alt="Task" src="img/refresh_32px.png" />
+	</div>
+
+	<form>	
+		<table>
+			<thead></thead>
+			<tbody>
+				<tr><td>Device:</td><td><strong><%- name %></strong></td></tr>
+				<tr><td>IP Address:</td><td><%- mgmtAddress.ip %></td></tr>
+			</tbody>
+		</table>
+		
+		<div id="nstasks-schedulertoolbox"></div>
+
+		<div class="nserror" id="error">
+			<span class="ui-icon ui-icon-alert"></span>
+			<span id="errormsg"></span>
+		</div>
+	</form>
+</div>

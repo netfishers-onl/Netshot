@@ -1,0 +1,53 @@
+<tr data-task-id="<%- id %>">
+	<td><strong><%- taskDescription %></strong></td>
+	<td><%- target %></td>
+	<td>
+		<span class="ui-corner-all nsicon" title="Status">
+		<%
+			if (status == "RUNNING") {
+		%>
+			<span class="ui-icon ui-icon-play"></span>
+		<%
+			}
+			else if (status == "SCHEDULED") {
+		%>
+			<span class="ui-icon ui-icon-clock"></span>
+		<%
+			}
+			else if (status == "SUCCESS") {
+		%>
+			<span class="ui-icon ui-icon-flag"></span>
+		<%
+			}
+			else if (status == "FAILURE") {
+		%>
+			<span class="ui-icon ui-icon-alert"></span>
+		<%
+			}
+			else if (status == "CANCELLED") {
+		%>
+			<span class="ui-icon ui-icon-cancel"></span>
+		<%
+			}
+		%>
+		</span>
+		<%- status.toLowerCase().replace(/^(.)/, function(a, l) { return l.toUpperCase(); }) %>
+	</td>
+	<td>
+	<% if (significantDate != 0) { %>
+	<%- (typeof(significantDate) == "string" ? significantDate : $.formatDateTime('dd/mm/y hh:ii', new Date(significantDate))) %>
+	<% if (repeating) { %>
+	<span class="ui-corner-all nsicon" title="Repeating">
+		<span class="ui-icon ui-icon-arrowrefresh-1-e"></span>
+	</span>
+	<% } %>
+	<% } %>
+	</td>
+	<td><%- comments %></td>
+	<td>
+		<% if (status == "SCHEDULED") { %>
+		<button class="cancel">Cancel</button>
+		<% } %>
+		<button class="monitor">Monitor</button>
+	</td>
+</tr>

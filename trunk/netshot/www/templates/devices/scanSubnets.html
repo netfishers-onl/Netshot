@@ -1,0 +1,23 @@
+<div id="nsdevices-addlistform" title="Add Devices">
+
+	<div class="nsdialog-logo">
+		<img alt="Device" src="img/add_32px.png" />
+	</div>
+	
+	<form>
+		<fieldset>
+			<label for="devicedomain">Domain: </label> <select
+				name="devicedomain" id="devicedomain"
+				class="text ui-widget-content ui-corner-all"></select>
+		</fieldset>
+		<fieldset>
+			<label for="subnets">Subnet(s) or IP addresses (one per line): </label><br />
+			<textarea id="subnets" rows="10" cols="20" autofocus="autofocus"
+				class="text ui-widget-content ui-corner-all"></textarea>
+		</fieldset>
+		<div class="nserror" id="error">
+			<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+			<span id="errormsg"></span>
+		</div>
+	</form>
+</div>

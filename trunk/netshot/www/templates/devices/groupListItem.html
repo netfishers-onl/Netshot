@@ -1,0 +1,13 @@
+<li class="nsdevices-list-group" data-group-id="<%- id %>">
+  <span class="name"><%- name %></span>
+  <div class="details">
+
+<% if (type.match(/\.StaticDeviceGroup$/)) { %>Static group<% } %>
+<% if (type.match(/\.DynamicDeviceGroup$/)) { %>Dynamic group<% } %>
+  
+  <div class="actions">
+  <button class="edit">Edit</button>
+  <button class="delete">Delete</button>
+  </div>
+  </div>
+</li>

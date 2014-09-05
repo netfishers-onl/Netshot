@@ -765,7 +765,7 @@ public class CiscoIosXrDevice extends Device implements
 		}
 		
 		try {
-			String showInventory = this.cliExecCommand("show inventory");
+			String showInventory = this.cliExecCommand("admin show inventory");
 			Pattern pattern = Pattern
 			    .compile("NAME: \"(?<name>.*)\", +DESCR: \"(?<descr>.*)\"[\r\n]+PID: (?<pid>.*), +VID: (?<vid>.*), +SN: (?<sn>.*)");
 			Matcher matcher = pattern.matcher(showInventory);

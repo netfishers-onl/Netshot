@@ -23,3 +23,7 @@ Go to http://www.netfishers.onl/netshot and download the binary package if you a
 Installation instructions are included, but you can also consult the blog: http://www.netfishers.onl/blog
 
 If you want to contribute to the code, pull it from GitHub and contact us to publish updates.
+
+## Contact
+
+contact@netfishers.onl

@@ -1,0 +1,7 @@
+<tr class="<% if (typeof(result) != "undefined") { %><%- result.toLowerCase() %><% } %>">
+	<td><%- policyName %></td>
+	<td class="maincolumn"><%- ruleName %></td>
+	<td class="result"><% if (typeof(result) != "undefined") { %><%- result %><% if (result == "EXEMPTED" && typeof(expirationDate) != "undefined") { %> (until <%- $.formatDateTime('dd/mm/y', new Date(expirationDate)) %>)<% } %><% } else { %>NOT TESTED<% } %></td>
+	<td><% if (typeof(comment) != "undefined") { %><%- comment %><% } %></td>
+	<td><% if (typeof(result) != "undefined") { %><%- $.formatDateTime('dd/mm/y hh:ii:ss', new Date(checkDate)) %><% } %></td>
+</tr>

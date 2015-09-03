@@ -1,0 +1,56 @@
+<div id="nscompliance-runscriptform" class="editscriptform" title="Run script">
+
+	<div class="nsdialog-logo">
+		<img alt="Run" src="img/script_32px.png" />
+	</div>
+
+	<form>
+		<fieldset>
+			<p>Device: <strong><%- name %></strong> (<%- realDeviceType %>)</p>
+		</fieldset>
+		<fieldset id="editorfield">
+			<div id="script">function run(cli, device) {
+	cli.macro("configure");
+	cli.command("no ip domain-lookup");
+	cli.macro("end");
+	cli.macro("save");
+}</div>
+		</fieldset>
+		<div id="savetools" class="loadsavetools">
+			<input type="checkbox" id="scriptsaving"/><label for="scriptsaving">Export script</label>
+			<input type="text" class="text ui-widget-content ui-corner-all" id="scriptname" placeholder="Enter name" />
+			<button id="scriptsave">Save</button>
+		</div>
+		<div id="loadtools" class="loadsavetools">
+			<input type="checkbox" id="scriptloading"/><label for="scriptloading">Import script</label>
+			<select class="text ui-widget-content ui-corner-all"></select>
+			<table>
+			<tbody>
+			<tr>
+				<th>Name</th>
+				<td id="name"></td>
+			</tr>
+			<tr>
+				<th>Author</th>
+				<td id="author"></td>
+			</tr>
+			</tbody>
+			</table>
+			
+			<button id="scriptload">Load</button>
+			<button id="scriptdelete">Delete</button>
+		</div>
+		<fieldset id="scripttools">
+			<div id="nstasks-schedulertoolbox"></div>
+		</fieldset>
+
+		<div class="nserror" id="error">
+			<span class="ui-icon ui-icon-alert"></span>
+			<span id="errormsg"></span>
+		</div>
+		<div class="nsinfo" id="info">
+			<span class="ui-icon ui-icon-info"></span>
+			<span id="infomsg">Info</span>
+		</div>
+	</form>
+</div>

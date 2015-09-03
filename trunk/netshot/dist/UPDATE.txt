@@ -1,0 +1,27 @@
+HOW TO UPDATE A WORKING INSTALLATION
+
+### 1. You should always backup your data:
+  * Your installation folder, e.g. /usr/local/netshot
+  * Your drivers (if your have customized any), e.g. /usr/local/netshot/drivers
+  * Your database
+  * Your configuration file, e.g. /etc/netshot.conf
+
+### 2. Stop Netshot
+
+$ sudo service netshot stop
+
+### 3. Copy the updated package
+
+$ sudo cp netshot.jar /usr/local/netshot/netshot.jar
+
+Overwrite the old version.
+
+### 4. If you have made local changes to your drivers, or have written your
+own drivers, you should ensure that they are compatible with the new version,
+and you might want to adapt them.
+
+### 5. Start Netshot
+
+$ sudo service netshot start
+
+ 

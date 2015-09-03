@@ -1,0 +1,32 @@
+<div id="nsdevices-addform" title="Add Device">
+
+	<div class="nsdialog-logo">
+		<img alt="Device" src="img/add_32px.png" />
+	</div>
+	
+	<form>
+		<fieldset>
+			<label for="devicedomain">Domain: </label> <select
+				name="devicedomain" id="devicedomain"
+				class="text ui-widget-content ui-corner-all"></select>
+		</fieldset>
+		<fieldset>
+			<label for="deviceip">IP Address: </label> <input type="text"
+				name="deviceip" id="deviceip" autofocus="autofocus"
+				class="text ui-widget-content ui-corner-all" />
+		</fieldset>
+		<fieldset>
+			<input type="checkbox" name="autodiscover" id="autodiscover" /> <label
+				for="autodiscover">Autodiscover Device Type</label>
+		</fieldset>
+		<fieldset>
+			<label for="devicetype">Type: </label> <select
+				name="devicetype" id="devicetype"
+				class="text ui-widget-content ui-corner-all"></select>
+		</fieldset>
+		<div class="nserror" id="error">
+			<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+			<span id="errormsg"></span>
+		</div>
+	</form>
+</div>

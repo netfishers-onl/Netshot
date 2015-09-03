@@ -1,0 +1,33 @@
+<h1>Device access failures</h1>
+
+<p>List of (enabled) devices which haven't had a successful snapshot for the last 
+<input type="text" name="olderthandays" id="olderthandays" class="text spinner" value="7" /> days...
+</p>
+<p>
+<button id="update">Update</button>
+</p>
+
+
+
+
+<div id="nsreports-accessfailures">
+
+	<table class="nstable">
+	<thead>
+		<tr>
+		<th>Device</th>
+		<th>Management IP</th>
+		<th>Family</th>
+		<th>Last successful snapshot</th>
+		<th>Last failed snapshot</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr><td>
+			<span class="nsloader">
+			<img src="img/ajax-loader.gif" alt="Loading"></span>
+		</td></tr>
+	</tbody>
+	</table>
+
+</div>

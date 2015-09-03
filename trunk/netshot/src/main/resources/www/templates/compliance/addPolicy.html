@@ -1,0 +1,29 @@
+<div id="nscompliance-addpolicyform" title="Add policy">
+
+	<div class="nsdialog-logo">
+		<img alt="Policy" src="img/add_32px.png" />
+	</div>
+	
+	<form>
+		<fieldset>
+			<label for="policyname">Name: </label>
+			<input type="text" name="policyname" id="policyname" autofocus="autofocus"
+				class="text ui-widget-content ui-corner-all" />
+		</fieldset>
+		<fieldset>
+			<label for="group">Group: </label>
+			<select name="group" id="group"
+				class="text ui-widget-content ui-corner-all"></select>
+		</fieldset>
+		<fieldset>
+			<div>
+				This will create an empty policy. Once created, you will have to add rules.
+			</div>
+		</fieldset>
+
+		<div class="nserror" id="error">
+			<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+			<span id="errormsg"></span>
+		</div>
+	</form>
+</div>

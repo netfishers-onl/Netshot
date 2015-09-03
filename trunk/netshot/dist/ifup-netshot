@@ -1,0 +1,6 @@
+#!/bin/bash
+
+iptables -t nat -D PREROUTING -p udp --dport 162 -j REDIRECT --to-port 1162
+iptables -t nat -D PREROUTING -p udp --dport 514 -j REDIRECT --to-port 1514
+iptables -t nat -A PREROUTING -p udp --dport 162 -j REDIRECT --to-port 1162
+iptables -t nat -A PREROUTING -p udp --dport 514 -j REDIRECT --to-port 1514

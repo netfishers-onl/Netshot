@@ -1,0 +1,22 @@
+<div id="nsdevices-snapshotsform" title="Take Snapshots">
+
+	<div class="nsdialog-logo">
+		<img alt="Task" src="img/refresh_32px.png" />
+	</div>
+	
+	<form>
+		<div>
+			<p>You are about to start snapshot tasks for <%- number %> devices.</p>
+		</div>
+		<div id="status" class="nsdialog-progress" style="display: none;">
+		Please wait... Creating tasks...
+		<div id="progress" data-progress="0">
+			<div id="bar"></div>
+		</div>
+		</div>
+		<div class="nserror" id="error">
+			<span class="ui-icon ui-icon-alert"></span>
+			<span id="errormsg"></span>
+		</div>
+	</form>
+</div>

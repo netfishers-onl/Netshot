@@ -1,0 +1,7 @@
+<tr data-device-id="<%- id %>">
+	<td><a href="#/devices/<%- id %>" class="gotodevice"><%- name %></a></td>
+	<td><%- mgmtAddress.ip %></td>
+	<td><%- family %></td>
+	<td><% if (typeof(lastSuccess) == "number") { %><%- $.formatDateTime('dd/mm/y hh:ii', new Date(lastSuccess)) %><% } else { %>Never<% } %></td>
+	<td><% if (typeof(lastFailure) == "number") { %><%- $.formatDateTime('dd/mm/y hh:ii', new Date(lastFailure)) %><% } else { %>Never<% } %></td>
+</tr>

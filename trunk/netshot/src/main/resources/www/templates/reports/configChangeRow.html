@@ -1,0 +1,8 @@
+<tr data-device-id="<%- deviceId %>" data-change-id="<%- cid %>">
+	<td><%- $.formatDateTime('dd/mm/y hh:ii', new Date(newChangeDate)) %></td>
+	<td><a href="#/devices/<%- deviceId %>" class="gotodevice"><%- deviceName %></a></td>
+	<td><%- author %></td>
+	<td>
+		<button class="show">Show difference</button>
+	</td>
+</tr>

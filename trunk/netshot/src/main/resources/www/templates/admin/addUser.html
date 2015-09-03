@@ -1,0 +1,50 @@
+<div id="nsadmin-usereditform" title="Add/Edit User">
+
+	<div class="nsdialog-logo">
+		<img alt="Add" src="img/add_32px.png" />
+	</div>
+	
+	<form>
+		<fieldset>
+			<label for="username">Username: </label>
+			<input type="text" name="username" id="username" autofocus="autofocus" value="<%- username %>" class="text ui-widget-content ui-corner-all" />
+		</fieldset>
+		<fieldset>
+			<div>
+				<input type="radio" id="roleuser" name="role" value="user" <% if (level < 100) { %>checked="checked"<% } %> data-level="10" />
+				<label for="roleuser">Visitor</label>
+			</div>
+			<div>
+				<input type="radio" id="rolereadwrite" name="role" value="readwrite" <% if (level >= 100 && level < 1000) { %>checked="checked"<% } %> data-level="100" />
+				<label for="rolereadwrite">Read-write</label>
+			</div>
+			<div>
+				<input type="radio" id="roleadmin" name="role" value="admin" <% if (level >= 1000) { %>checked="checked"<% } %> data-level="1000" />
+				<label for="roleadmin">Admin</label>
+			</div>
+		</fieldset>
+		<fieldset>
+			<div>
+				<input type="checkbox" id="remoteuser" name="remoteuser" <% if (!local) { %>checked="checked"<% } %> />
+				<label for="remoteuser">Remote user</label>
+			</div>
+		</fieldset>
+		<fieldset id="password"<% if (!local) { %> style="display: none;"<% } %>>
+			<table>
+			<tbody>
+				<td><label for="password1">Password: </label></td>
+				<td><input type="password" name="password1" id="password1" class="text ui-widget-content ui-corner-all" <% if (local) { %>value="<%- password %>" <% } %>/></td>
+				</tr>
+				<tr>
+				<td><label for="password2">Repeat password: </label></td>
+				<td><input type="password" name="password2" id="password2" class="text ui-widget-content ui-corner-all" <% if (local) { %>value="<%- password %>" <% } %>/></td>
+				</tr>
+			</tbody>
+			</table>
+		</fieldset>
+		<div class="nserror" id="error">
+			<span class="ui-icon ui-icon-alert"></span>
+			<span id="errormsg"></span>
+		</div>
+	</form>
+</div>

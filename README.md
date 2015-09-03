@@ -7,6 +7,13 @@ http://www.netfishers.onl/netshot
 
 * Configuration backup and history
 * Many devices supported
+  * Cisco IOS, NX-OS, IOS-XR, ACE, ASA, StarOS
+  * Juniper JUNOS
+  * Huawei NE
+  * Brocade FastIron
+  * Fortinet FortiOS
+  * Alcatel-Lucent TiMOS
+  * ...
 * Network inventory
 * Software compliance
 * Hardware compliance

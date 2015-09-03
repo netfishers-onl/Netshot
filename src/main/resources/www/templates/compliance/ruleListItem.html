@@ -1,0 +1,15 @@
+<li class="nscompliance-list-rule<% if (!enabled) { %> disabled<% } %>" data-rule-id="<%- id %>">
+  <span class="name"><%- name %></span>
+  <div class="details">
+	<% if (type == ".rules.JavaScriptRule") { %>
+	Script rule
+	<% } %>
+	<% if (type == ".rules.TextRule") { %>
+	Text rule
+	<% } %>
+  <div class="actions">
+  <button class="edit">Edit</button>
+  <button class="delete">Delete</button>
+  </div>
+  </div>
+</li>

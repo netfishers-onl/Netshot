@@ -1,0 +1,23 @@
+<div id="nscompliance-editrulescriptform" class="editscriptform" title="Edit script">
+
+	<form>
+		<fieldset id="nscompliance-editrule-editorfield">
+			<div id="nscompliance-editrule-script"></div>		
+		</fieldset>
+		<fieldset id="nscompliance-editrule-testerfield">
+			<input type="text" id="ruledevice" placeholder="Select a device..." data-device-id=""
+				class="nsdatepicker text ui-widget-content ui-corner-all" readonly="readonly" />
+			<button id="ruletest">Test...</button>
+		</fieldset>
+
+		<div class="nserror" id="error">
+			<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+			<span id="errormsg"></span>
+		</div>
+		<div class="nsinfo" id="info">
+			<span class="ui-icon ui-icon-infot" style="float: left; margin-right: .3em;"></span>
+			<span id="infomsg">Info</span>
+		</div>
+	</form>
+</div>
+<div id="nsdialog-child"></div>

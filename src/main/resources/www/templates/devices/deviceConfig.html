@@ -1,0 +1,38 @@
+<tr class="configline" data-config-id="<%- id %>">
+	<th><span class="expandicon ui-icon ui-icon-triangle-1-e"></span>
+	<a href="#" class="configlink" data-config-id="<%- id %>"><%- $.formatDateTime('dd/mm/y hh:ii', new Date(changeDate)) %></a></th>
+	<td></td>
+	<td>
+		<button class="configpreviousdiff">Compare to previous</button>
+	</td>
+</tr>
+
+<% for (var a in attributes) { %>
+
+<% var attribute = attributes[a]; %>
+
+<tr class="configdetails">
+	<td class="maincolumn"><%- attribute.title %></td>
+	<td>
+	<% if (attribute.type == "INTEGER") { %><%- attribute.number %><% } %>
+	<% if (attribute.type == "TEXT") { %><%- attribute.text %><% } %>
+	<% if (attribute.type == "BINARY") { if (attribute.assumption === true) { %>Yes<% } else { %>No<% } } %>
+	<% if (attribute.type == "LONGTEXT") { %>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="<%- attribute.name %>" data-config-title="<%- attribute.title %>" data-config-action="view">View</a>
+		<div style="display: inline-block;">
+		<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		</div>
+		<a href="#" data-config-item="<%- attribute.name %>" data-config-action="download">Download</a>
+	<% } %>
+	</td>
+</tr>
+
+<% } %>
+
+<tr class="configdetails">
+	<td class="maincolumn">Probable author</td>
+	<td><%- author %></td>
+</tr>

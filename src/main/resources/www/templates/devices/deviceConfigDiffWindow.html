@@ -1,0 +1,118 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+	<title>Netshot</title>
+	<link rel="stylesheet" href="css/normalize.css" />
+	<link rel="stylesheet" href="css/common.css" />
+	<link rel="stylesheet" href="css/smoothness/jquery-ui.css" />
+	<link rel="stylesheet" href="css/app.css" />
+
+</head>
+<body class="nsconfig">
+
+<table>
+<tbody>
+
+<tr>
+	<th colspan="2">
+		<button id="previous">Previous</button>
+		<% if (typeof(originalDate) == "undefined") { %>
+		No capture
+		<% } else { %>
+		Captured <%- $.formatDateTime('dd/mm/y hh:ii', new Date(originalDate)) %>
+		<% } %>
+	</th>
+	<th colspan="2">
+		Captured <%- $.formatDateTime('dd/mm/y hh:ii', new Date(revisedDate)) %>
+		<button id="next">Next</button>
+	</th>
+</tr>
+
+<% _.each(deltas, function(deltaSet, item) { %>
+
+<tr><th colspan="4">Differences on <%- item %></th></tr>
+
+<% var currentLine = 0; %>
+<% var maxLine = 0; %>
+
+<% _.each(deltaSet, function(delta) { %>
+
+<%
+	var oLine = delta.originalPosition - delta.preContext.length + 1;
+	var rLine = delta.revisedPosition - delta.preContext.length + 1;
+%>
+
+<% if (oLine > maxLine + 1) { %>
+<tr<% if (currentLine++ % 2 == 0) { %> class="even"<% } %>>
+	<td class="linenum"></td><td>...</td>
+	<td class="linenum"></td><td>...</td>
+</tr>
+<% } %>
+
+<% _.each(delta.preContext, function(line) {
+	if (oLine < maxLine) { oLine++; rLine++; return; }
+%>
+<tr<% if (currentLine++ % 2 == 0) { %> class="even"<% } %>>
+	<td class="linenum"><%- oLine++ %></td><td><%- line.replace(/ /g, '\u00a0') %></td>
+	<td class="linenum"><%- rLine++ %></td><td><%- line.replace(/ /g, '\u00a0') %></td>
+</tr>
+<% }); %>
+
+
+<% if (delta.diffType == "CHANGE") { %>
+<% for (var i = 0; i < Math.max(delta.originalLines.length, delta.revisedLines.length); i++) { %>
+<tr class="changed">
+	<% if (i < delta.originalLines.length) { %>
+	<td class="linenum"><%- oLine++ %></td><td><%- delta.originalLines[i].replace(/ /g, '\u00a0') %></td>
+	<% } else { %>
+	<td class="linenum"></td><td></td>
+	<% } %>
+	<% if (i < delta.revisedLines.length) { %>
+	<td class="linenum"><%- rLine++ %></td><td><%- delta.revisedLines[i].replace(/ /g, '\u00a0') %></td>
+	<% } else { %>
+	<td class="linenum"></td><td></td>
+	<% } %>
+</tr>
+<% } %>
+<% } %>
+
+<% if (delta.diffType == "INSERT") { %>
+<% _.each(delta.revisedLines, function(line) { %>
+<tr class="inserted">
+	<td class="linenum"></td><td></td>
+	<td class="linenum"><%- rLine++ %></td><td><%- line.replace(/ /g, '\u00a0') %></td>
+</tr>
+<% }); %>
+<% } %>
+
+<% if (delta.diffType == "DELETE") { %>
+<% _.each(delta.originalLines, function(line) { %>
+<tr class="deleted">
+	<td class="linenum"><%- oLine++ %></td><td><%- line.replace(/ /g, '\u00a0') %></td>
+	<td class="linenum"></td><td></td>
+</tr>
+<% }); %>
+<% } %>
+
+<% _.each(delta.postContext, function(line) { %>
+<tr<% if (currentLine++ % 2 == 0) { %> class="even"<% } %>>
+	<td class="linenum"><%- oLine++ %></td><td><%- line.replace(/ /g, '\u00a0') %></td>
+	<td class="linenum"><%- rLine++ %></td><td><%- line.replace(/ /g, '\u00a0') %></td>
+</tr>
+<% }); %>
+
+<% maxLine = oLine; %>
+
+<% }); %>
+
+
+<% }); %>
+
+</tbody>
+</table>
+
+</body>
+</html>

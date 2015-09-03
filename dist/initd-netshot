@@ -1,0 +1,324 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          netshot
+# Required-Start:    $remote_fs $syslog mysql
+# Required-Stop:     $remote_fs $syslog mysql
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Netshot - Network Configuration System
+# Description:       Backups and checks compliance of network equipments.
+### END INIT INFO
+
+# Author: NetFishers <netshot@netfishers.onl>
+
+# Do NOT "set -e"
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="Netshot"
+NAME=netshot
+USER=netshot
+DAEMON=/usr/bin/java
+APP=/usr/local/netshot/$NAME.jar
+DAEMON_ARGS="-jar $APP"
+PIDFILE=/var/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+
+# Exit if the package is not installed
+[ -x "$DAEMON" ] || exit 0
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+[ -r /etc/sysconfig/$NAME ] && . /etc/sysconfig/$NAME
+
+# Load the VERBOSE setting and other rcS variables
+[ -r /lib/init/vars.sh ] && . /lib/init/vars.sh
+
+
+log_daemon_msg () {
+	if [ -z "${1:-}" ]; then
+		return 1
+	fi
+	if [ -z "${2:-}" ]; then
+		echo -n "$1:" || true
+		return
+	fi
+	echo -n "$1: $2" || true
+}
+
+log_end_msg () {
+	if [ -z "${1:-}" ]; then
+		return 1
+	fi
+
+	local retval
+	retval=$1
+
+	if [ $1 -eq 0 ]; then
+		echo "." || true
+	elif [ $1 -eq 255 ]; then
+		/bin/echo -e " (warning)" || true
+	else
+		/bin/echo -e " failed!" || true
+	fi
+	return $retval
+}
+
+log_begin_msg () {
+	if [ -z "${1:-}" ]; then
+		return 1
+	fi
+	echo -n "$@" || true
+}
+
+
+status_of_proc () {
+	local daemon process
+	daemon=$1
+	name=$2
+	if [ -r "$PIDFILE" ]; then
+		pid=`cat $PIDFILE`
+		kill -0 $pid > /dev/null 2>&1
+		if [ $? -eq 0 ]; then
+			log_begin_msg "$name is running"
+			log_end_msg 0
+			return 0
+		fi
+	fi
+	log_begin_msg "$name is not running"
+	log_end_msg 1
+	return 1
+}
+
+
+daemonize() {
+	start-stop-daemon $*
+	return $?
+}
+
+command -v "start-stop-daemon" >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+	daemonize() {
+		local action pidfile="/dev/null" daemon test=0 retry oknodo=0 params=""
+		while [ "$1" != "${1##[-+]}" ]; do
+			case $1 in
+			  --start|-S)
+				action="start"
+				shift
+				;;
+			  --stop|-K)
+				action="stop"
+				shift
+				;;
+			  --background)
+				shift
+				;;
+			  --quiet)
+				shift
+				;;
+			  --pidfile)
+				pidfile=$2
+				shift 2
+				;;
+			  --exec)
+				daemon=$2
+				shift 2
+				;;
+			  --test)
+				test=1
+				shift
+				;;
+			  --retry=*)
+				retry=${1#--retry=}
+				shift 1
+				;;
+			  --oknodo)
+				oknodo=1
+				shift
+				;;
+			  --name)
+				name=$2
+				shift 2
+				;;
+			  -c)
+				user=$2
+				shift 2
+				;;
+			  --)
+				shift
+				break
+				;;
+			  *)
+				shift
+				;;
+			esac
+		done
+		case "$action" in
+		  start)
+			params=$*
+			if [ -r "$PIDFILE" ]; then
+				pid=`cat $PIDFILE`
+				kill -0 $pid > /dev/null 2>&1
+				if [ $? -eq 0 ]; then
+					# The process is running
+					[ $oknodo -eq 1 ] && return 0
+					return 1
+				fi
+			fi
+			[ $test -eq 1 -a $oknodo -eq 1 ] && return 1
+			[ $test -eq 1 ] &&  return 0
+			[ -f $PIDFILE ] && rm -f $PIDFILE
+			pid=`runuser $user -s /bin/bash -c "nohup $daemon $params > /dev/null 2>&1& "'echo $!'`
+			kill -0 $pid > /dev/null 2>&1
+			if [ $? -eq 0 ]; then
+				echo "$pid" > $PIDFILE
+			fi
+			return $?
+			;;
+		  stop)
+			if [ -r "$PIDFILE" ]; then
+				pid=`cat $PIDFILE`
+				kill -0 $pid > /dev/null 2>&1
+				if [ $? -eq 0 ]; then
+					s=""
+					for t in `echo $retry | tr "/" " "`; do
+						if [ -n "$s" ]; then
+							kill -s $s $pid
+							sleep $t
+							kill -0 $pid > /dev/null 2>&1
+							[ $? -ne 0 ] && return 0
+							s=""
+						else
+							s="$t"
+						fi
+					done	
+				fi
+				kill -0 $pid > /dev/null 2>&1
+				return 1
+			fi
+			[ $oknodo -eq 1 ] && return 0
+			return 1
+			;;
+		esac
+	}
+fi
+
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.2-14) to ensure that this file is present
+# and status_of_proc is working.
+[ -r /lib/lsb/init-functions ] && . /lib/lsb/init-functions
+
+#
+# Function that starts the daemon/service
+#
+do_start() {
+	# Return
+	#   0 if daemon has been started
+	#   1 if daemon was already running
+	#   2 if daemon could not be started
+	daemonize --start --background --quiet --pidfile $PIDFILE --exec $DAEMON --test -c $USER > /dev/null \
+		|| return 1
+	daemonize --start --background --quiet --pidfile $PIDFILE --exec $DAEMON -c $USER -- \
+		$DAEMON_ARGS \
+		|| return 2
+	# Add code here, if necessary, that waits for the process to be ready
+	# to handle requests from services started subsequently which depend
+	# on this one.  As a last resort, sleep for some time.
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop() {
+	# Return
+	#   0 if daemon has been stopped
+	#   1 if daemon was already stopped
+	#   2 if daemon could not be stopped
+	#   other if a failure occurred
+	daemonize --stop --quiet --retry=TERM/10/KILL/5 --pidfile $PIDFILE --name $NAME
+	RETVAL="$?"
+	[ "$RETVAL" = 2 ] && return 2
+	# Wait for children to finish too if this is a daemon that forks
+	# and if the daemon is only ever run from this initscript.
+	# If the above conditions are not satisfied then add some other code
+	# that waits for the process to drop all resources that could be
+	# needed by services started subsequently.  A last resort is to
+	# sleep for some time.
+	daemonize --stop --quiet --oknodo --retry=TERM/10/KILL/5 --exec $DAEMON
+	[ "$?" = 2 ] && return 2
+	# Many daemons don't delete their pidfiles when they exit.
+	rm -f $PIDFILE
+	return "$RETVAL"
+}
+
+#
+# Function that sends a SIGHUP to the daemon/service
+#
+do_reload() {
+	#
+	# If the daemon can reload its configuration without
+	# restarting (for example, when it is sent a SIGHUP),
+	# then implement that here.
+	#
+	daemonize --stop --signal 1 --quiet --pidfile $PIDFILE --name $NAME
+	return 0
+}
+
+case "$1" in
+  start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  stop)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  status)
+       status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+       ;;
+  #reload|force-reload)
+	#
+	# If do_reload() is not implemented then leave this commented out
+	# and leave 'force-reload' as an alias for 'restart'.
+	#
+	#log_daemon_msg "Reloading $DESC" "$NAME"
+	#do_reload
+	#log_end_msg $?
+	#;;
+  restart|force-reload)
+	#
+	# If the "reload" option is implemented then remove the
+	# 'force-reload' alias
+	#
+	log_daemon_msg "Restarting $DESC" "$NAME"
+	do_stop
+	case "$?" in
+	  0|1)
+		do_start
+		case "$?" in
+			0) log_end_msg 0 ;;
+			1) log_end_msg 1 ;; # Old process is still running
+			*) log_end_msg 1 ;; # Failed to start
+		esac
+		;;
+	  *)
+	  	# Failed to stop
+		log_end_msg 1
+		;;
+	esac
+	;;
+  *)
+	#echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
+	echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
+	exit 3
+	;;
+esac

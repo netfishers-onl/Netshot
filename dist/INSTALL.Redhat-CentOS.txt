@@ -1,0 +1,94 @@
+
+Below are some instructions to install Netshot on Redhat-based system.
+You can also consult our Blog at: http://www.netfishers.onl/blog
+
+
+HOW TO INSTALL ON A REDHAT-BASED MACHINE
+Example with CentOS Version 6
+
+
+### 0. Unzip the Netshot package
+You must have downloaded it from the NetFishers web site.
+Unzip the file.
+$ unzip netshot_x.y.z.zip
+
+
+### 1. Install a database server, e.g. MySQL
+$ sudo yum install mysql-server
+$ sudo service mysqld start
+
+
+### 2. Install Java 8
+Go to http://www.oracle.com/technetwork/java/javase/downloads/index.html
+Select JRE Download then download JRE 8 last update for your linux architecture
+(32 or 64-bit), in RPM format, e.g. jre-8u25-linux-x64.rpm
+Install it:
+$ sudo rpm -Uvh jre-8u25-linux-x64.rpm
+
+Check the running Java version:
+$ java -version 2>&1 | grep version
+This should give 1.8.x
+
+
+### 3. Add a dedicated system user
+
+$ sudo useradd --system -k /dev/null --create-home --home /usr/local/netshot -s /bin/false netshot
+
+
+### 4. Create the SSL certificate
+
+$ /usr/java/default/bin/keytool -genkey -keyalg RSA -alias selfsigned -keystore netshot.jks -storepass password -validity 3600 -keysize 2048
+Press Enter when asked for a password.
+
+$ sudo mv netshot.jks /usr/local/netshot
+
+
+### 5. Prepare files
+
+$ sudo cp netshot.jar /usr/local/netshot
+$ sudo mkdir /usr/local/netshot/drivers
+$ sudo chown -R netshot /usr/local/netshot
+$ sudo cp initd-netshot /etc/rc.d/init.d/netshot
+$ sudo chown root:root /etc/init.d/netshot
+$ sudo chmod +x /etc/init.d/netshot
+$ sudo mkdir /var/log/netshot
+$ sudo chown -R netshot /var/log/netshot
+$ sudo cp netshot.conf /etc/netshot.conf
+$ sudo chown root:root /etc/netshot.conf
+
+
+### 6. Create database and user
+
+$ mysql -u root
+> CREATE DATABASE netshot01 CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+> GRANT ALL PRIVILEGES ON netshot01.* TO 'netshot'@'localhost' IDENTIFIED BY 'netshot';
+> quit
+
+### 7. Start Netshot service
+
+$ sudo service netshot start
+
+### 8. Manually create the initial user
+
+$ mysql -u root
+> USE netshot01;
+> INSERT INTO user (level, local, username, hashed_password) VALUES (1000, 1, 'netshot', '7htrot2BNjUV/g57h/HJ/C1N0Fqrj+QQ');
+
+Now you should be able to access Netshot with a browser, on
+https://localhost:8443/ on the machine itself.
+Use the account netshot (password netshot) for the initial login (then you can
+create the real users in the Admin section).
+
+
+### 9. Optional - UDP port translation
+If you want Netshot to detect changes from Syslog and/or SNMP messages sent by
+the devices, you can translate the UDP ports using the firewall:
+
+$ sudo iptables -t nat -A PREROUTING -p udp --dport 162 -j REDIRECT --to-port 1162
+$ sudo iptables -t nat -A PREROUTING -p udp --dport 514 -j REDIRECT --to-port 1514
+$ sudo service iptables save
+
+
+### 10. Optional - Start Netshot at bootup
+
+$ sudo chkconfig --add netshot

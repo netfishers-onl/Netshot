@@ -1,0 +1,16 @@
+<fieldset>
+<strong>Purge the old entries from the database</strong>
+</fieldset>
+<fieldset>
+	<span>Purge tasks finished more than 
+	<input type="text" id="tasksolderthandays" class="text spinner" value="90" /> 
+	days ago</span>
+</fieldset>
+<fieldset>
+	<div><div><input type="checkbox" id="configsdelete" /> <label for="configsdelete">Delete configurations older than 
+	<input type="text" id="configsolderthandays" class="text spinner" value="200" /> days</label></div>
+	<div>&nbsp;&nbsp;<input type="checkbox" id="configsfiltersize" /> <label for="configsfiltersize">Only configurations bigger than 
+	<input type="text" id="configsbiggerthan" class="text spinner" value="500" />KB</label></div>
+	<div>&nbsp;&nbsp;<input type="checkbox" id="configskeep" /> <label for="configskeep">Keep for each device one config every 
+	<input type="text" id="configskeepeverydays" class="text spinner" value="7" /> days</label></div></div>
+</fieldset>

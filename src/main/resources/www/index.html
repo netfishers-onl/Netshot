@@ -1,0 +1,66 @@
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+	<title>Netshot</title>
+	<meta name="description" content="Netshot Network Management" />
+	<meta name="author" content="Netshot Team" />
+
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+
+	<link rel="stylesheet" href="css/normalize.css" />
+	<link rel="stylesheet" href="css/common.css" />
+	<link rel="stylesheet" href="css/smoothness/jquery-ui.css" />
+	<link rel="stylesheet" href="css/app.css" />
+
+	<script data-main="js/loader-app" src="js/libs/require/require.js"></script>
+</head>
+<body>
+
+<div id="splash" class="nsdialog">
+	<div class="title">Netshot</div>
+	<div id="progress" data-progress="0">
+		<div id="bar"></div>
+	</div>
+	<div class="nserror" id="connection-error">
+		<span class="ui-icon ui-icon-alert"></span>
+		<span id="errormsg">Unable to connect to the Netshot REST server.</span>
+	</div>
+	<div class="nserror" id="versionmismatch-error">
+		<span class="ui-icon ui-icon-alert"></span>
+		<span id="errormsg">Netshot version mismatch (frontend vs backend).</span>
+	</div>
+	<form id="authentication-box">
+		<table>
+		<tbody>
+		<tr>
+		<td><label for="username">Username </label></td>
+		<td><input type="text" id="username" class="text ui-widget-content ui-corner-all" autofocus="autofocus" /></td>
+		</tr>
+		<tr>
+		<td><label for="password">Password </label></td>
+		<td><input type="password" id="password" class="text ui-widget-content ui-corner-all" /></td>
+		</tr>
+		<tr>
+		<td></td>
+		<td><button id="authenticate">Connect</button></td>
+		</tr>
+		</tbody>
+		</table>
+	</form>
+</div>
+
+<div id="container">
+  <div id="header"></div>
+
+  <div id="page">
+  </div>
+</div> 
+
+</body>
+</html>

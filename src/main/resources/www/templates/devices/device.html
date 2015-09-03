@@ -1,0 +1,43 @@
+<h1><%- name %></h1>
+
+<% if (!compliant) { %>
+<div id="nsdevices-device-noncompliant">
+	<span class="ui-icon ui-icon-alert icon"></span>
+	<a href="#" class="message">Non compliant device</a>
+</div>
+<% } %>
+
+<div id="nsdevices-devicetabs">
+
+	<div id="devicetoolbar">
+	<button id="refresh">Refresh the page</button>
+	<span id="tabs">
+		<input type="radio" id="general" name="tabs" checked="checked" />
+		<label for="general">General</label>
+		<input type="radio" id="configs" name="tabs" />
+		<label for="configs">Configuration</label>
+		<input type="radio" id="interfaces" name="tabs" />
+		<label for="interfaces">Interfaces</label>
+		<input type="radio" id="modules" name="tabs" />
+		<label for="modules">Modules</label>
+		<input type="radio" id="compliance" name="tabs" />
+		<label for="compliance">Compliance</label>
+		<input type="radio" id="tasks" name="tabs" />
+		<label for="tasks">Tasks</label>
+	</span>
+	
+	<button id="edit">Edit</button>
+	<button id="delete">Delete</button>
+	
+	<input type="checkbox" id="enable" name="enable" />
+	<label for="enable">Enable/Disable</label>
+	
+	<button id="runscript">Run script</button>
+	
+	<button id="snapshot">Snapshot</button>
+	
+	</div>
+</div>
+	
+<div id="nsdevices-devicedetails" class="panel">
+</div>

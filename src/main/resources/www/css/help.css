@@ -1,0 +1,91 @@
+
+#page {
+	position: absolute;
+	top: 80px;
+	left: 10px;
+	bottom: 10px;
+	right: 10px;
+	border: 1px solid #DDD;
+	padding: 10px;
+	overflow: auto;
+}
+
+#viewer {
+	height: 20px;
+	width: 20px;
+	overflow: hidden;
+	position: absolute;
+	padding: 10px;
+	z-index: 100;
+	background-color: #000;
+	display: none;
+}
+
+#viewer .title {
+	font-size: small;
+	padding: 2px;
+	color: white;
+}
+
+#viewer .title .legend {
+	font-weight: bold;
+}
+
+div.figure span {
+	cursor: zoom-in;
+	padding: 10px;
+	display: inline-block;
+}
+
+div.figure span.hover {
+	background-color: #EEE;
+}
+
+img.figure {
+	height: 80px;
+	max-height: 500px;
+}
+
+.code {
+	font-family: monospace;
+	background-color: #EEE;
+	padding: 5px;
+	white-space: pre;
+}
+
+p.code {
+	border-left: 2px solid #BBB;
+}
+
+p.note {
+	padding: 5px;
+	border: 1px dotted #BBB;
+	background-color: #FEFFE5;
+}
+
+td {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+h1 {
+	border-bottom: 2px solid red;
+	margin: 20px 10px 0px 10px;
+	padding-left: 50px;
+	background: url("../img/netshot-small.png") no-repeat left;
+}
+
+.ui-button {
+	font-size: 11px;
+}
+
+#menu {
+	position: absolute;
+	top: 30px;
+	right: 20px;
+}
+
+#menu select {
+}
+
+

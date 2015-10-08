@@ -3,8 +3,8 @@
 echo "@@@ Switch to main directory"
 cd "$(dirname "$0")"
 cd ..
-echo "@@@ Update using SVN" 
-svn up
+echo "@@@ Update using GIT" 
+git pull --rebase
 
 VERSION_CODE=`sed -nr 's/.* String VERSION *= *"(.*?)".*/\1/p' src/main/java/onl/netfishers/netshot/Netshot.java`
 VERSION_POM=`cat pom.xml | tr -d '\r\n' | sed -r 's/.*<artifactId>netshot<\/artifactId>[ \t]*<version>([^<]+)<\/version>.*/\1/'`

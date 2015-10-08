@@ -818,13 +818,25 @@ on devices.</p>
 <p>You can choose to make Netshot listen for SNMP traps on port 1162 (non root user)
 and use iptables to rewrite the destination port. See the installation guide.</p>
 
-<h4>User authentication</h4>
+<h4 id="aaaconf">User authentication</h4>
 
 <ul>
 	<li><span class="code">netshot.aaa.radius1.ip = 1.2.3.4</span>,
 	<span class="code">netshot.aaa.radius1.authport = 1812</span>,
 	<span class="code">netshot.aaa.radius1.secret = MyKey#1</span>: defines
 	the first RADIUS server to be used for user authentication.</li>
+	<li>You can define up to 3 RADIUS servers.</li>
+	<li><span class="code">netshot.aaa.radius1.timeout = 10</span>: defines the timeout
+	value (in seconds) for the first RADIUS server. The default is 5 seconds.</li>
+	<li><span class="code">netshot.aaa.radius.method = mschapv2</span>: sets the RADIUS method
+	to MSCHAPv2 (this is the default). The other options are:
+	<ul>
+		<li><span class="code">netshot.aaa.radius.method = pap</span>: PAP.</li>
+		<li><span class="code">netshot.aaa.radius.method = chap</span>: CHAP.</li>
+		<li><span class="code">netshot.aaa.radius.method = eap-md5</span>: EAP-MD5.</li>
+		<li><span class="code">netshot.aaa.radius.method = eap-mschapv2</span>: EAP-MSCHAPv2.</li>
+	</ul>
+	</li>
 	<li><span class="code">netshot.aaa.maxidletime = 1200</span>: sets the maximum
 	idle time for a logged in user, after which he/she will be disconnected. In
 	seconds. The default is 1800.</li>
@@ -888,6 +900,7 @@ You can have up to 3 servers. They will be tried one by one until one responds. 
  netshot.aaa.radius2.authport = 1812
  netshot.aaa.radius2.secret = MyKey#1</p>
 
+<p>See the <a href="#aaaconf">configuration section</a> for more details.</p>
 
 <h3 id="devicedomain">Device domains</h3>
 
@@ -962,8 +975,8 @@ in the <a href="#netshotconf">Netshot configuration file</a> by
 from the .jar file, and copy it to the driver directory. The driver loaded from
 the file system has priority over the built-in driver.</p>
 
-<p>The drivers can by dynamically reloaded while Netshot runs from the
-<a href="#admin">page</a>.</p>
+<p>The drivers can be dynamically reloaded while Netshot runs from the
+<a href="#admin">Admin page</a>.</p>
 
 <h3>Driver structure</h3>
 

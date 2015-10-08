@@ -16,7 +16,13 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
 
 import net.jradius.client.RadiusClient;
+import net.jradius.client.auth.CHAPAuthenticator;
+import net.jradius.client.auth.EAPAuthenticator;
+import net.jradius.client.auth.EAPMD5Authenticator;
+import net.jradius.client.auth.EAPMSCHAPv2Authenticator;
 import net.jradius.client.auth.MSCHAPv2Authenticator;
+import net.jradius.client.auth.PAPAuthenticator;
+import net.jradius.client.auth.RadiusAuthenticator;
 import net.jradius.dictionary.Attr_NASPort;
 import net.jradius.dictionary.Attr_NASPortType;
 import net.jradius.dictionary.Attr_ServiceType;
@@ -31,6 +37,7 @@ import net.jradius.packet.attribute.AttributeList;
 /**
  * The Radius class authenticates the users against a RADIUS server.
  */
+@SuppressWarnings("unused")
 public class Radius {
 
 	/** The logger. */
@@ -39,6 +46,9 @@ public class Radius {
 
 	/** The clients. */
 	private static List<RadiusClient> clients = new ArrayList<RadiusClient>();
+	
+	/** The authentication method. */
+	private static Class<? extends RadiusAuthenticator> authMethod = MSCHAPv2Authenticator.class;
 
 	/**
 	 * Load server config.
@@ -87,8 +97,27 @@ public class Radius {
 			client = new RadiusClient(address, key, authPort, acctPort, timeout);
 		}
 		catch (IOException e) {
-			logger.error("Unable to create the RADIUS client for server {}", id, e);
+			logger.error("Unable to create the RADIUS client for server {}.", id, e);
 			return;
+		}
+		String method = Netshot.getConfig("netshot.aaa.radius.method");
+		if ("pap".equals(method)) {
+			authMethod = PAPAuthenticator.class;
+		}
+		else if ("chap".equals(method)) {
+			authMethod = CHAPAuthenticator.class;
+		}
+		else if ("eap-md5".equals(method)) {
+			authMethod = EAPMD5Authenticator.class;
+		}
+		else if ("eap-mschapv2".equals(method)) {
+			authMethod = EAPMSCHAPv2Authenticator.class;
+		}
+		else if (method == null) {
+			// Default
+		}
+		else {
+			logger.error("Invalid configured RADIUS method '{}'. Defaulting to MSCHAPv2.", method);
 		}
 		clients.add(client);
 	}
@@ -125,7 +154,7 @@ public class Radius {
 			request.addAttribute(new Attr_UserPassword(password));
 			RadiusResponse reply;
 			try {
-				reply = radiusClient.authenticate(request, new MSCHAPv2Authenticator(), 3);
+				reply = radiusClient.authenticate(request, authMethod.newInstance(), 3);
 				if (reply == null) {
 					logger.error("Request to RADIUS server {} timed out.", radiusClient.getRemoteInetAddress().toString());
 					aaaLogger.error(MarkerFactory.getMarker("AAA"), "Request to RADIUS server {} timed out.",

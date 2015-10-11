@@ -8,6 +8,29 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.5.1 - 2015-10-01
+
+* Ability to select the protocol used over RADIUS to authenticate
+  a remote user, using the netshot.aaa.radius.method config line
+
+
+0.5.0 - 2015-07-14
+
+* Key-based SSH authentication to access devices
+* MySQL 5.6 compatibility
+* Automatic purge of old configurations using the Purge Database task
+* Source IP of improper SNMP traps now displayed in the logs
+* 'comment' field in the result of JavaScript rules now properly truncated to 255 characters
+* Search toolbox bug fix ([IP address] vs [IP])
+
+
+0.4.5 - 2015-03-23
+
+This release includes bug fixes only:
+* Huawei NE, Fortinet, ASA drivers
+* Rule exemptions
+* Saving text rules
+* Displaying XML configurations
 
 0.4.4 - 2014-12-07
 

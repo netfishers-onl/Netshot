@@ -10,14 +10,16 @@ define([
 	'text!templates/reports/hardwareSupportStatusReport.html',
 	'text!templates/reports/hardwareSupportMilestoneRow.html',
 	'text!templates/reports/hardwareSupportMilestoneRestRow.html',
-	'text!templates/reports/hardwareSupportDeviceRow.html'
+	'text!templates/reports/hardwareSupportDeviceRow.html',
+	'text!templates/reports/hardwareSupportStatusTitle.html'
 ], function($, _, Backbone, Chart, ReportView,
 		HardwareSupportStatCollection,
 		HardwareSupportDevicesCollection,
 		hardwareSupportStatusReportTemplate,
 		hardwareSupportMilestoneRowTemplate,
 		hardwareSupportMilestoneRestRowTemplate,
-		hardwareSupportDeviceRowTemplate) {
+		hardwareSupportDeviceRowTemplate,
+		hardwareSupportStatusTitleTemplate) {
 
 	return ReportView.extend({
 
@@ -25,6 +27,7 @@ define([
 		milestoneRowTemplate: _.template(hardwareSupportMilestoneRowTemplate),
 		milestoneRestRowTemplate: _.template(hardwareSupportMilestoneRestRowTemplate),
 		deviceRowTemplate: _.template(hardwareSupportDeviceRowTemplate),
+		statusTitleTemplate: _.template(hardwareSupportStatusTitleTemplate),
 
 		render: function() {
 			var that = this;
@@ -159,6 +162,10 @@ define([
 			var that = this;
 			this.htmlBuffer = "";
 			this.eoxDevices.each(that.renderEoxDevice, this);
+			this.$("#devices h1").html(this.statusTitleTemplate({
+				type: this.eoxDevices.type,
+				eoxDate: this.eoxDevices.eoxDate
+			}));
 			this.$("#devices table>tbody").html(this.htmlBuffer);
 			this.$("#devices").show();
 		},

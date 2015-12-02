@@ -5806,12 +5806,14 @@ public class RestService extends Thread {
 		try {
 			@SuppressWarnings("unchecked")
 			List<RsHardwareSupportStat> eosStats = session
-			.createQuery("select count(d) as deviceCount, d.eosDate AS eoxDate from Device d group by d.eosDate")
+			.createQuery("select count(d) as deviceCount, d.eosDate AS eoxDate from Device d where d.status = :enabled group by d.eosDate")
+			.setParameter("enabled", Device.Status.INPRODUCTION)
 			.setResultTransformer(Transformers.aliasToBean(RsHardwareSupportEoSStat.class))
 			.list();
 			@SuppressWarnings("unchecked")
 			List<RsHardwareSupportStat> eolStats = session
-			.createQuery("select count(d) as deviceCount, d.eolDate AS eoxDate from Device d group by d.eolDate")
+			.createQuery("select count(d) as deviceCount, d.eolDate AS eoxDate from Device d where d.status = :enabled group by d.eolDate")
+			.setParameter("enabled", Device.Status.INPRODUCTION)
 			.setResultTransformer(Transformers.aliasToBean(RsHardwareSupportEoLStat.class))
 			.list();
 			List<RsHardwareSupportStat> stats = new ArrayList<RsHardwareSupportStat>();
@@ -6120,11 +6122,12 @@ public class RestService extends Thread {
 		try {
 			@SuppressWarnings("unchecked")
 			List<RsLightPolicyRuleDevice> devices = session
-			.createQuery(DEVICELIST_BASEQUERY + ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p where g.id = :id and ccr.result = :nonConforming")
-			.setLong("id", id)
-			.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
-			.setResultTransformer(Transformers.aliasToBean(RsLightPolicyRuleDevice.class))
-			.list();
+				.createQuery(DEVICELIST_BASEQUERY + ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p where g.id = :id and ccr.result = :nonConforming and d.status = :enabled")
+				.setLong("id", id)
+				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
+				.setParameter("enabled", Device.Status.INPRODUCTION)
+				.setResultTransformer(Transformers.aliasToBean(RsLightPolicyRuleDevice.class))
+				.list();
 			return devices;
 		}
 		catch (HibernateException e) {
@@ -6154,7 +6157,8 @@ public class RestService extends Thread {
 			if (date == 0) {
 				@SuppressWarnings("unchecked")
 				List<RsLightDevice> devices = session
-				.createQuery(DEVICELIST_BASEQUERY + "from Device d where d." + type + "Date is null")
+				.createQuery(DEVICELIST_BASEQUERY + "from Device d where d." + type + "Date is null and d.status = :enabled")
+				.setParameter("enabled", Device.Status.INPRODUCTION)
 				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
 				.list();
 				return devices;
@@ -6162,8 +6166,9 @@ public class RestService extends Thread {
 			else {
 				@SuppressWarnings("unchecked")
 				List<RsLightDevice> devices = session
-				.createQuery(DEVICELIST_BASEQUERY + "from Device d where d." + type + "Date = :eoxDate")
+				.createQuery(DEVICELIST_BASEQUERY + "from Device d where d." + type + "Date = :eoxDate and d.status = :enabled")
 				.setDate("eoxDate", eoxDate)
+				.setParameter("enabled", Device.Status.INPRODUCTION)
 				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
 				.list();
 				return devices;
@@ -6914,9 +6919,10 @@ public class RestService extends Thread {
 		try {
 			@SuppressWarnings("unchecked")
 			List<RsLightSoftwareLevelDevice> devices = session
-			.createQuery(DEVICELIST_BASEQUERY + ", d.softwareLevel as softwareLevel from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level")
+			.createQuery(DEVICELIST_BASEQUERY + ", d.softwareLevel as softwareLevel from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled")
 			.setLong("id", id)
 			.setParameter("level", filterLevel)
+			.setParameter("enabled", Device.Status.INPRODUCTION)
 			.setResultTransformer(Transformers.aliasToBean(RsLightSoftwareLevelDevice.class))
 			.list();
 			return devices;

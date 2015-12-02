@@ -12,7 +12,7 @@ define([
 		},
 
 		url: function() {
-			return "api/reports/hardwaresupportdevices/" + this.type + "/" + this.eoxDate;
+			return "api/reports/hardwaresupportdevices/" + this.type.toLowerCase() + "/" + this.eoxDate;
 		}
 
 	});

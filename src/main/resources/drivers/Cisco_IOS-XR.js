@@ -54,7 +54,7 @@ var Device = {
 
 var CLI = {
 	telnet: {
-		macros: {
+		macros: {l2
 			exec: {
 				options: [ "username", "password", "exec" ],
 				target: "exec"
@@ -267,7 +267,7 @@ function snapshot(cli, device, config) {
 		}
 	} 
 	
-	var interfaces = cli.findSections(runningConfig, /^interface (preconfigure )?([^ ]+)( l2transport)?/m);
+	var interfaces = cli.findSections(runningConfig, /^interface (preconfigure )?([^ ]+)/m);
 	for (var i in interfaces) {
 		var networkInterface = {
 			name: interfaces[i].match[2],

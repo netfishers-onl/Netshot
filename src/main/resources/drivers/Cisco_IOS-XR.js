@@ -54,7 +54,7 @@ var Device = {
 
 var CLI = {
 	telnet: {
-		macros: {l2
+		macros: {
 			exec: {
 				options: [ "username", "password", "exec" ],
 				target: "exec"

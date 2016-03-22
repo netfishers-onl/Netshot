@@ -267,7 +267,7 @@ function snapshot(cli, device, config) {
 		}
 	} 
 	
-	var interfaces = cli.findSections(runningConfig, /^interface (preconfigure )?(.+)/m);
+	var interfaces = cli.findSections(runningConfig, /^interface (preconfigure )?([^ ]+)/m);
 	for (var i in interfaces) {
 		var networkInterface = {
 			name: interfaces[i].match[2],

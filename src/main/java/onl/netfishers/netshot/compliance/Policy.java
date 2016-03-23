@@ -75,6 +75,9 @@ public class Policy {
 	 * @param session the session
 	 */
 	public void check(Session session) {
+		if (targetGroup == null) {
+			return;
+		}
 		for (Device device : targetGroup.getCachedDevices()) {
 			this.check(device, session);
 		}

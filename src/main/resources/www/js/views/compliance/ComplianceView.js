@@ -94,7 +94,7 @@ define([
 
 		refreshPolicies: function() {
 			var that = this;
-			$.when(this.policies.fetch(), this.deviceTypes.fetch()).done(function() {
+			$.when(this.policies.fetch({ reset: true }), this.deviceTypes.fetch()).done(function() {
 				that.renderPolicyList();
 			});
 		},

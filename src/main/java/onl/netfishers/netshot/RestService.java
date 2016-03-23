@@ -2938,8 +2938,11 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			DeviceGroup deviceGroup = (DeviceGroup) session.load(DeviceGroup.class,
-					id);
+			DeviceGroup deviceGroup = (DeviceGroup) session.load(DeviceGroup.class, id);
+			for (Policy policy : deviceGroup.getAppliedPolicies()) {
+				policy.setTargetGroup(null);
+				session.save(policy);
+			}
 			session.delete(deviceGroup);
 			session.getTransaction().commit();
 		}
@@ -4374,7 +4377,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			@SuppressWarnings("unchecked")
-			List<Policy> policies = session.createQuery("from Policy p join fetch p.targetGroup")
+			List<Policy> policies = session.createQuery("from Policy p left join fetch p.targetGroup")
 			.list();
 			return policies;
 		}
@@ -4531,7 +4534,10 @@ public class RestService extends Thread {
 		try {
 			session.beginTransaction();
 
-			DeviceGroup group = (DeviceGroup) session.load(DeviceGroup.class, rsPolicy.getGroup());
+			DeviceGroup group = null;
+			if (rsPolicy.getGroup() != -1) {
+				group = (DeviceGroup) session.load(DeviceGroup.class, rsPolicy.getGroup());
+			}
 
 			policy = new Policy(name, group);
 
@@ -4636,14 +4642,17 @@ public class RestService extends Thread {
 						NetshotBadRequestException.NETSHOT_INVALID_POLICY_NAME);
 			}
 			policy.setName(name);
-
-			if (policy.getTargetGroup().getId() != rsPolicy.getGroup()) {
-				DeviceGroup group = (DeviceGroup) session.load(DeviceGroup.class, rsPolicy.getGroup());
-				policy.setTargetGroup(group);
+			
+			if (policy.getTargetGroup() != null && policy.getTargetGroup().getId() != rsPolicy.getGroup()) {
 				session.createQuery("delete CheckResult cr where cr.key.rule in (select r from Rule r where r.policy = :id)")
-				.setLong("id", policy.getId())
-				.executeUpdate();
+					.setLong("id", policy.getId())
+					.executeUpdate();
 			}
+			DeviceGroup group = null;
+			if (rsPolicy.getGroup() != -1) {
+				group = (DeviceGroup) session.load(DeviceGroup.class, rsPolicy.getGroup());
+			}
+			policy.setTargetGroup(group);
 
 			session.update(policy);
 			session.getTransaction().commit();

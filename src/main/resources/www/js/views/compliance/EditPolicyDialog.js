@@ -60,7 +60,7 @@ define([
 				$('<option />').attr('value', group.get('id')).text(group.get('name'))
 						.appendTo(that.$('#group'));
 			});
-			this.$('#group').val(this.model.get('targetGroup').id);
+			this.$('#group').val(this.model.get('targetGroup') ? this.model.get('targetGroup').id : -1);
 		},
 
 	});

@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import onl.netfishers.netshot.compliance.HardwareRule;
 import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.SoftwareRule;
 import onl.netfishers.netshot.work.tasks.CheckGroupComplianceTask;
@@ -59,6 +60,9 @@ abstract public class DeviceGroup {
 	
 	/** The applied software rules. */
 	protected Set<SoftwareRule> appliedSoftwareRules = new HashSet<SoftwareRule>();
+	
+	/** The applied hardware rules. */
+	protected Set<HardwareRule> appliedHardwareRules = new HashSet<HardwareRule>();
 	
 	/** The cached devices. */
 	protected Set<Device> cachedDevices = new HashSet<Device>();
@@ -121,7 +125,7 @@ abstract public class DeviceGroup {
 	 *
 	 * @return the applied policies
 	 */
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "targetGroup")
+	@OneToMany(mappedBy = "targetGroup")
 	public Set<Policy> getAppliedPolicies() {
 		return appliedPolicies;
 	}
@@ -134,6 +138,16 @@ abstract public class DeviceGroup {
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "targetGroup")
 	public Set<SoftwareRule> getAppliedSoftwareRules() {
 		return appliedSoftwareRules;
+	}
+	
+	/**
+	 * Gets the applied hardware rules.
+	 *
+	 * @return the applied hardware rules
+	 */
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "targetGroup")
+	public Set<HardwareRule> getAppliedHardwareRules() {
+		return appliedHardwareRules;
 	}
 	
 	/**
@@ -254,6 +268,15 @@ abstract public class DeviceGroup {
 	 */
 	public void setAppliedSoftwareRules(Set<SoftwareRule> appliedSoftwareRules) {
 		this.appliedSoftwareRules = appliedSoftwareRules;
+	}
+	
+	/**
+	 * Sets the applied hardware rules.
+	 *
+	 * @param appliedHardwareRules the new applied hardware rules
+	 */
+	public void setAppliedHardwareRules(Set<HardwareRule> appliedHardwareRules) {
+		this.appliedHardwareRules = appliedHardwareRules;
 	}
 	
 	/**

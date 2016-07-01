@@ -3,6 +3,10 @@
  */
 package onl.netfishers.netshot.compliance.rules;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.script.Bindings;
@@ -17,10 +21,12 @@ import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.Rule;
 import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
 import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.device.DeviceDriver;
 
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MarkerFactory;
 
 /**
  * A JavaScriptRule is a Javascript-coded script that will check the device
@@ -41,7 +47,33 @@ public class JavaScriptRule extends Rule {
 			+ "    //return NONCONFORMING;\n" + "    //return NOTAPPLICABLE;\n"
 			+ "}\n";
 	
-	private static final String JSLOADER = "var NONCONFORMING = \"NONCONFORMING\";\r\nvar NOTAPPLICABLE = \"NOTAPPLICABLE\";\r\nvar CONFORMING = \"CONFORMING\";\r\n\r\nfunction _check(provider) {\r\n\r\n\tvar debug = function(message) {\r\n\t\tif (typeof(message) == \"string\") {\r\n\t\t\tmessage = String(message);\r\n\t\t\tprovider.debug(message);\r\n\t\t}\r\n\t};\r\n\r\n\tvar _toNative = function(o) {\r\n\t\tif (o == null || typeof(o) == \"undefined\") {\r\n\t\t\treturn null;\r\n\t\t}\r\n\t\tif (typeof(o) == \"object\" && (o instanceof Array || o.class.toString().match(/^class \\[/))) {\r\n\t\t\tvar l = [];\r\n\t\t\tfor (var i in o) {\r\n\t\t\t\tl.push(_toNative(o[i]));\r\n\t\t\t}\r\n\t\t\treturn l;\r\n\t\t}\r\n\t\tif (typeof(o) == \"object\") {\r\n\t\t\tvar m = {};\r\n\t\t\tfor (var i in o) {\r\n\t\t\t\tm[i] = _toNative(o[i]);\r\n\t\t\t}\r\n\t\t\treturn m;\r\n\t\t}\r\n\t\treturn o;\r\n\t};\r\n\r\n\tvar device = {\r\n\t\r\n\t\tget: function(key, id) {\r\n\t\t\tif (typeof(key) == \"string\") {\r\n\t\t\t\tkey = String(key);\r\n\t\t\t\tif (typeof(id) == \"undefined\") {\r\n\t\t\t\t\treturn _toNative(provider.get(key));\r\n\t\t\t\t}\r\n\t\t\t\telse if (typeof(id) == \"number\" && !isNaN(id)) {\r\n\t\t\t\t\treturn _toNative(provider.get(key, id));\r\n\t\t\t\t}\r\n\t\t\t\telse if (typeof(id) == \"string\") {\r\n\t\t\t\t\tvar name = String(id);\r\n\t\t\t\t\treturn _toNative(provider.get(key, name));\r\n\t\t\t\t}\r\n\t\t\t\telse {\r\n\t\t\t\t\tthrow \"Invalid device id to retrieve data from.\";\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t\tthrow \"Invalid key to retrieve.\";\r\n\t\t},\r\n\r\n\t\tnslookup: function(host) {\r\n\t\t\tif (typeof(host) == \"string\") {\r\n\t\t\t\treturn _toNative(provider.nslookup(String(host)));\r\n\t\t\t}\r\n\t\t\tthrow \"Invalid host to resolve.\";\r\n\t\t},\r\n\t\t\r\n\t\tfindSections: function(text, regex) {\r\n\t\t\tvar lines = text.split(/[\\r\\n]+/g);\r\n\t\t\tif (typeof(text) != \"string\") {\r\n\t\t\t\tthrow \"Invalid text string in findSections.\";\r\n\t\t\t}\r\n\t\t\tif (typeof(regex) != \"object\" || !(regex instanceof RegExp)) {\r\n\t\t\t\tthrow \"Invalid regex parameter in findSections.\";\r\n\t\t\t}\r\n\t\t\tvar sections = [];\r\n\t\t\tvar section;\r\n\t\t\tvar indent = -1;\r\n\t\t\tfor (var l in lines) {\r\n\t\t\t\tvar line = lines[l];\r\n\t\t\t\tvar i = line.search(/[^\\t\\s]/);\r\n\t\t\t\tif (i > indent) {\r\n\t\t\t\t\tif (indent > -1) {\r\n\t\t\t\t\t\tsection.lines.push(line);\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t\telse {\r\n\t\t\t\t\tindent = -1;\r\n\t\t\t\t}\r\n\t\t\t\tif (indent == -1) {\r\n\t\t\t\t\tvar match = regex.exec(line);\r\n\t\t\t\t\tif (match) {\r\n\t\t\t\t\t\tindent = i;\r\n\t\t\t\t\t\tsection = {\r\n\t\t\t\t\t\t\tmatch: match,\r\n\t\t\t\t\t\t\tlines: []\r\n\t\t\t\t\t\t};\r\n\t\t\t\t\t\tsections.push(section);\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t\tfor (var s in sections) {\r\n\t\t\t\tsections[s].config = sections[s].lines.join(\"\\n\");\r\n\t\t\t}\r\n\t\t\treturn sections;\r\n\t\t}\r\n\r\n\t};\r\n\r\n\r\n\tvar r = check(device, debug);\r\n\r\n\tif (typeof(r) == \"string\") {\r\n\t\tr = String(r);\r\n\t\treturn {\r\n\t\t\tresult: r,\r\n\t\t\tcomment: \"\"\r\n\t\t};\r\n\t}\r\n\treturn r;\r\n\r\n}";
+	private static String JSLOADER;
+	
+	static {
+		try {
+			logger.info("Reading the JavaScript rule loader code from the resource JS file.");
+			// Read the JavaScript loader code from the resource file.
+			String path = "interfaces/rule-loader.js";
+			InputStream in = DeviceDriver.class.getResourceAsStream("/" + path);
+			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+			StringBuffer buffer = new StringBuffer();
+			String line = null;
+			while ((line = reader.readLine()) != null) {
+				buffer.append(line + "\n");
+			}
+			JSLOADER = buffer.toString();
+			reader.close();
+			in.close();
+			logger.debug("The JavaScript rule loader code has been read from the resource JS file.");
+		}
+		catch (Exception e) {
+			logger.error(MarkerFactory.getMarker("FATAL"),
+					"Unable to read the Javascript rule loader.", e);
+			System.err.println("NETSHOT FATAL ERROR");
+			e.printStackTrace();
+			System.exit(1);
+		}
+	}
 	
 	private ScriptEngine engine;
 

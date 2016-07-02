@@ -776,6 +776,13 @@ public class DeviceDriver {
 			return errored;
 		}
 		
+		public void sleep(long millis) {
+			try {
+				Thread.sleep(millis);
+			} catch (InterruptedException e) {
+			}
+		}
+		
 		public void log() {
 			
 		}

@@ -82,12 +82,18 @@ function _connect(_cli, _protocol, _function, _device, _config) {
 			else if (nextOne.noCr !== true) {
 				cmd += this.CR;
 			}
+			if (typeof(nextOne.waitBefore) == "number") {
+				this.sleep(nextOne.waitBefore);
+			}
 			var output;
 			if (typeof(nextOne.timeout) == "number") {
 				output = _cli.send(cmd, prompts, nextOne.timeout);
 			}
 			else {
 				output = _cli.send(cmd, prompts);
+			}
+			if (typeof(nextOne.waitAfter) == "number") {
+				this.sleep(nextOne.waitAfter);
 			}
 			if (_cli.isErrored()) {
 				throw "Error while running CLI macro '" + macro + "'";
@@ -211,7 +217,6 @@ function _connect(_cli, _protocol, _function, _device, _config) {
 		},
 		
 		findSections: function(text, regex) {
-			var lines = text.split(/[\r\n]+/g);
 			if (typeof(text) != "string") {
 				throw "Invalid text string in findSections.";
 			}
@@ -221,6 +226,7 @@ function _connect(_cli, _protocol, _function, _device, _config) {
 			var sections = [];
 			var section;
 			var indent = -1;
+			var lines = text.split(/[\r\n]+/g);
 			for (var l in lines) {
 				var line = lines[l];
 				var i = line.search(/[^\t\s]/);
@@ -248,6 +254,19 @@ function _connect(_cli, _protocol, _function, _device, _config) {
 				sections[s].config = sections[s].lines.join("\n");
 			}
 			return sections;
+		},
+		
+		sleep: function(millis) {
+			if (typeof(millis) != "number") {
+				throw "Invalid number of milliseconds in sleep.";
+			}
+			if (millis < 0) {
+				throw "The number of milliseconds to wait can't be negative in sleep.";
+			}
+			if (millis % 1 !== 0) {
+				throw "The number of milliseconds to wait must be integer in sleep.";
+			}
+			_cli.sleep(millis);
 		}
 		
 	};

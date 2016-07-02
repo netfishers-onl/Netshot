@@ -8,6 +8,13 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.5.4 - 2016-07-02
+
+* A 'sleep' function is now available for the drivers which need it.
+* The 'noCr' option prevents the automatic sending of Carriage Return to
+  the device after a command.
+
+
 0.5.1 - 2015-10-01
 
 * Ability to select the protocol used over RADIUS to authenticate

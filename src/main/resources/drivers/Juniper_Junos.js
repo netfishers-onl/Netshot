@@ -149,7 +149,7 @@ function snapshot(cli, device, config, debug) {
 		device.set("name", hostname[1]);
 	}
 	
-	var version = showVersion.match(/^JUNOS Base OS Software Suite \[(.*)\]/m);
+	var version = showVersion.match(/^JUNOS .* \[(.*)\]/m);
 	if (version != null) {
 		device.set("softwareVersion", version[1]);
 		config.set("junosVersion", version[1]);

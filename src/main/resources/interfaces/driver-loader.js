@@ -186,7 +186,7 @@ function _connect(_cli, _protocol, _function, _device, _config) {
 				}
 			}
 			while (true) {
-				var cleanResult = result.replace(/[^[\b]][\b]/, "");
+				var cleanResult = result.replace(/[^\b][\b]/, "");
 				cleanResult = cleanResult.replace(/.*\r(.+)/, "$1");
 				if (cleanResult == result) {
 					break;

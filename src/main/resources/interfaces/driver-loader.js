@@ -154,27 +154,17 @@ function _connect(_cli, _protocol, _function, _device, _config) {
 			if (mode.clearPrompt === true) clearPrompt = true;
 			if (typeof(options) == "object" && options.clearPrompt === true) clearPrompt = true;
 			if (typeof options == "object" && options.noCr === true) noCr = true;
-			if (clearPrompt) {
-				this._strictPrompt = null;
-			}
-			if (typeof(this._strictPrompt) == "string") {
-				var prompt = this._strictPrompt.replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
-				prompt = "(" + prompt + ")";
-				prompts.push(prompt);
-			}
-			else {
-				prompts.push(mode.prompt.source);
-			}
-			
+			if (clearPrompt) this._strictPrompt = null;
+			var prompt = mode.prompt.source;
+			prompt = stripPreviousMatch(prompt, this._strictPrompt);
+			prompts.push(prompt);
 			if (typeof(this.pagerMatch) != "undefined") {
 				prompts.push(this.pagerMatch.source);
 			}
 			
 			var result = "";
 			var toSend = command;
-			if (!noCr) {
-			 toSend += this.CR;
-		 	}
+			if (!noCr) toSend += this.CR;
 			while (true) {
 				var buffer;
 				if (typeof(options) == "object" && typeof(options.timeout) == "number") {
@@ -271,14 +261,40 @@ function _connect(_cli, _protocol, _function, _device, _config) {
 		
 	};
 	
-
+	var stripPreviousMatch = function(prompt, strictPrompt) {
+		if (typeof(strictPrompt) == "string") {
+			var groups = [];
+			for (var p = 0; p < prompt.length; p++) {
+				if (prompt[p] === '(') {
+					groups.push({ start: p });
+				}
+				else if (prompt[p] === ')') {
+					for (var g = groups.length; g > 0; g--) {
+						if (typeof groups[g - 1].end == "undefined") {
+							groups[g - 1].end = p;
+							break;
+						}
+					}
+				}
+			}
+			for (var i = 0; i < groups.length; i++) {
+				var s = groups[i].start;
+				var e = groups[i].end;
+				if (prompt.substr(s, 3) === '(?:') continue;
+				prompt = prompt.substr(0, s + 1) + strictPrompt.replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1")
+				  + prompt.substr(e);
+				break;
+			}
+		}
+		return prompt;
+	};
 	
 	var debug = function(message) {
 		if (typeof(message) == "string") {
 			message = String(message);
 			_device.debug(message);
 		}
-	}
+	};
 	
 	if (_function == "snapshot") {
 		

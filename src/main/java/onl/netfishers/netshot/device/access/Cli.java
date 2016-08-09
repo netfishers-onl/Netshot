@@ -194,10 +194,10 @@ public abstract class Cli {
 	public abstract void disconnect();
 
 	/**
-	 * Read until.
+	 * Read until a string is matched
 	 *
-	 * @param expects the expects
-	 * @return the string
+	 * @param expects the list of patterns to expect
+	 * @return the collected output
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	protected String readUntil(String[] expects) throws IOException {

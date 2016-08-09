@@ -3,7 +3,7 @@ var Info = {
 	name: "JuniperJunos",
 	description: "Juniper Junos",
 	author: "NetFishers",
-	version: "1.3"
+	version: "1.4"
 };
 
 var Config = {

@@ -3,7 +3,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.3"
+	version: "1.4"
 };
 
 var Config = {
@@ -104,7 +104,7 @@ var CLI = {
 		fail: "Authentication failed - Telnet authentication failure."
 	},
 	disable: {
-		prompt: /^([A-Za-z\-_0-9\.]+\>)$/,
+		prompt: /^([A-Za-z\-_0-9\.\/]+\>)$/,
 		pager: {
 			avoid: "terminal length 0",
 			match: /^--More--$/,
@@ -138,7 +138,7 @@ var CLI = {
 	},
 
 	enable: {
-		prompt: /^([A-Za-z\-_0-9\.]+#)$/,
+		prompt: /^([A-Za-z\-_0-9\.\/]+#)$/,
 		error: /^% (.*)/m,
 		pager: {
 			avoid: "terminal length 0",
@@ -178,7 +178,7 @@ var CLI = {
 	},
 	
 	configure: {
-		prompt: /^([A-Za-z\-_0-9\.]+\(conf[0-9\-a-zA-Z]+\)#)$/,
+		prompt: /^([A-Za-z\-_0-9\.\/]+\(conf[0-9\-a-zA-Z]+\)#)$/,
 		error: /^% (.*)/m,
 		clearPrompt: true,
 		macros: {
@@ -223,8 +223,11 @@ function snapshot(cli, device, config, debug) {
 		device.set("name", hostname[1]);
 	}
 	
-	var version = showVersion.match(/(?:Cisco )?IOS.*Software.*Version ([0-9\.A-Za-z\(\):]+)/m);
-	if (version != null) {
+	var version = showVersion.match(/(?:Cisco )?IOS.*Software.*Version ([0-9\.A-Za-z\(\):]+),/m);
+	if (!version) {
+		version = showVersion.match(/(?:Cisco )?IOS.*Software.*Version ([0-9\.A-Za-z\(\):]+)/m);
+	}
+	if (version) {
 		device.set("softwareVersion", version[1]);
 		config.set("iosVersion", version[1]);
 	}
@@ -232,7 +235,7 @@ function snapshot(cli, device, config, debug) {
 	if (image != null) {
 		config.set("iosImageFile", image[1]);
 	}
-	var versionDetails = showVersion.match(/^(.*) with (\d+)K(\/(\d+)K)? bytes of memory/m);
+	var versionDetails = showVersion.match(/^(.*) with (\d+)K(\/(\d+)K)? bytes of /m);
 	device.set("networkClass", "ROUTER");
 	device.set("family", "Unknown IOS device");
 	if (versionDetails != null) {
@@ -255,6 +258,9 @@ function snapshot(cli, device, config, debug) {
 		}
 		else if (system.match(/.*26[12][01].*/)) {
 			device.set("family", "Cisco 2600");
+		}
+		else if (system.match(/.*Cisco 18\d\d .*/)) {
+			device.set("family", "Cisco ISR 1800");
 		}
 		else if (system.match(/.*Cisco 28\d\d .*/)) {
 			device.set("family", "Cisco ISR 2800");
@@ -280,8 +286,19 @@ function snapshot(cli, device, config, debug) {
 		else if (system.match(/^([Cc]isco )?37.*/)) {
 			device.set("family", "Cisco 3700");
 		}
+		else if (system.match(/^([Cc]isco )?17[0-9][0-9]/)) {
+			device.set("family", "Cisco 1700");
+		}
+		else if (system.match(/.*WS-C3650.*/)) {
+			device.set("family", "Cisco Catalyst 3650");
+			device.set("networkClass", "SWITCH");
+		}
 		else if (system.match(/.*WS-C3750.*/)) {
 			device.set("family", "Cisco Catalyst 3750");
+			device.set("networkClass", "SWITCH");
+		}
+		else if (system.match(/.*WS-C3850.*/)) {
+			device.set("family", "Cisco Catalyst 3850");
 			device.set("networkClass", "SWITCH");
 		}
 		else if (system.match(/^(Cisco )?38\d\d.*/)) {
@@ -304,6 +321,9 @@ function snapshot(cli, device, config, debug) {
 		}
 		else if (system.match(/.*720[246].*/)) {
 			device.set("family", "Cisco 7200");
+		}
+		else if (system.match(/[Cc]isco 7300/)) {
+			device.set("family", "Cisco 7300");
 		}
 		else if (system.match(/.*(OSR-|CISCO)76.*/)) {
 			device.set("family", "Cisco 7600");

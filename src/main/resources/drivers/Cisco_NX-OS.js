@@ -3,7 +3,7 @@ var Info = {
 	name: "CiscoNXOS",
 	description: "Cisco NX-OS 5.x/6.x",
 	author: "NetFishers",
-	version: "1.1"
+	version: "1.4"
 };
 
 var Config = {
@@ -180,7 +180,9 @@ function snapshot(cli, device, config) {
 	device.set("family", "Unknown NX-OS device");
 	var chassis = showVersion.match(/cisco (.*?)( \(.*\))? Chassis/m);
 	if (chassis) {
-		device.set("family", chassis[1]);
+		var chassis = chassis[1];
+		chassis = chassis.replace(/(Nexus)([0-9].*)/, "$1 $2");
+		device.set("family", chassis);
 	}
 	
 	var version = showVersion.match(/system: *version (.*)/m);
@@ -230,8 +232,18 @@ function snapshot(cli, device, config) {
 		var vdcName = vdcConfig.match(/^switchto vdc (.*)$/m);
 		if (vdcName) {
 			vdcName = vdcName[1];
-			cli.command("switchto vdc " + vdcName, { clearPrompt: true });
-			device.add("virtualDevice", vdcName);
+			try {
+				cli.command("switchto vdc " + vdcName, { clearPrompt: true });
+				device.add("virtualDevice", vdcName);
+			}
+			catch (error) {
+				if (typeof error == "string" && error.match(/switchto vdc/)) {
+					continue;
+				}
+				else {
+					throw error;
+				}
+			}
 		}
 		else {
 			vdcName = "";
@@ -258,7 +270,7 @@ function snapshot(cli, device, config) {
 		
 		var interfaces = cli.findSections(vdcConfig, /^interface ([^ ]+)/m);
 		for (var i in interfaces) {
-			if (interfaces[i].match[1].match(/cmp-mgmt/)) {
+			if (interfaces[i].match[1].match(/cmp-mgmt|breakout/)) {
 				continue;
 			}
 			var networkInterface = {

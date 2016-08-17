@@ -3,7 +3,7 @@ var Info = {
 	name: "CiscoACE",
 	description: "Cisco ACE",
 	author: "NetFishers",
-	version: "1.2"
+	version: "1.4"
 };
 
 var Config = {
@@ -123,7 +123,7 @@ var CLI = {
 	}
 };
 
-function snapshot(cli, device, config) {
+function snapshot(cli, device, config, debug) {
 	
 	cli.macro("exec");
 
@@ -133,7 +133,7 @@ function snapshot(cli, device, config) {
 	if (hostname) {
 		device.set("name", hostname[1]);
 	}
-	var version = showVersion.match(/^ *system: *Version ([A-Z0-9\(\)\.]+)/m);
+	var version = showVersion.match(/^ *system: *Version ([A-Za-z0-9\(\)\.]+)/m);
 	version = (version ? version[1] : "Unknown");
 	device.set("softwareVersion", version);
 	config.set("aceVersion", version);
@@ -225,15 +225,20 @@ function snapshot(cli, device, config) {
 				};
 				networkInterface.ip.push(ip);
 			}
-			cli.command("changeto " + context, { clearPrompt: true });
-			var showInterface = cli.command("show interface " + networkInterface.name + " | inc is");
-			cli.command("changeto Admin", { clearPrompt: true });
-			var macAddress = showInterface.match(/MAC address is ([0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2})/);
-			if (macAddress) {
-				networkInterface.mac = macAddress[1];
+			try {
+				cli.command("changeto " + context, { clearPrompt: true });
+				var showInterface = cli.command("show interface " + networkInterface.name + " | inc is");
+				cli.command("changeto Admin", { clearPrompt: true });
+				var macAddress = showInterface.match(/MAC address is ([0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2}:[0-9a-fA-F]{2})/);
+				if (macAddress) {
+					networkInterface.mac = macAddress[1];
+				}
+				if (!showInterface.match(/administratively up/)) {
+					networkInterface.enabled = false;
+				}
 			}
-			if (!showInterface.match(/administratively up/)) {
-				networkInterface.enabled = false;
+			catch (e) {
+				debug("Unable to get interface details for " + networkInterface.name);
 			}
 			device.add("networkInterface", networkInterface);
 		}
@@ -253,7 +258,7 @@ function analyzeSyslog(message) {
 
 function snmpAutoDiscover(sysObjectID, sysDesc) {
 	if (sysObjectID.substring(0, 16) == "1.3.6.1.4.1.9.1."
-		&& sysDesc.match(/Application Control Engine Service Module/)) {
+		&& sysDesc.match(/Application Control Engine/)) {
 		return true;
 	}
 	return false;

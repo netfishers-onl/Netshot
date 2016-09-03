@@ -1,6 +1,6 @@
 <tr data-rule-id="<%- id %>" class="rulerow">
 	<td><% if (typeof targetGroup === "object" && targetGroup) { %><%- targetGroup.name %><% } else { %>[Any]<% } %></td>
-	<td><% if (driver == "") { %>[Any]<% } else { %><%- deviceType %><% } %></td>
+	<td><% if (driver) { %><%- deviceType %><% } else { %>[Any]<% } %></td>
 	<td><%- family %></td>
 	<td><%- partNumber %></td>
 	<td><% if (typeof endOfSale === "number") { %>

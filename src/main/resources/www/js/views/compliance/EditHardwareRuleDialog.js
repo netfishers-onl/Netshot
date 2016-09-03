@@ -87,7 +87,8 @@ define([
 			if (typeof targetGroup === "object" && targetGroup) {
 				this.$('#group').val(targetGroup.id);
 			}
-			this.$('#devicetype').val(this.model.get('driver'));
+			this.$('#devicetype').val(this.model.get('driver') ? this.model.get('driver') :
+				"onl.netfishers.netshot.device.Device");
 			var families = [];
 			this.deviceFamilies.each(function(family) {
 				families.push(family.get('deviceFamily'));

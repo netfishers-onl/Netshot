@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.4"
+	version: "1.4.1"
 };
 
 var Config = {
@@ -256,7 +256,7 @@ function snapshot(cli, device, config, debug) {
 	var versionDetails = showVersion.match(/^(.*) with (\d+)K(\/(\d+)K)? bytes of /m);
 	device.set("networkClass", "ROUTER");
 	device.set("family", "Unknown IOS device");
-	if (versionDetails != null) {
+	if (versionDetails) {
 		var memory = parseInt(versionDetails[2]);
 		if (typeof(versionDetails[4]) != "undefined") {
 			memory += parseInt(versionDetails[4]);
@@ -351,6 +351,12 @@ function snapshot(cli, device, config, debug) {
 		}
 		else if (system.match(/cisco OS-CIGESM.*/)) {
 			device.set("family", "Cisco CIGESM Blade");
+		}
+		else if (system.match(/Cisco IOSv/)) {
+			device.set("family", "Cisco IOSv");
+		}
+		else if (system.match(/[Cc]isco CSR1000V/)) {
+			device.set("family", "Cisco CSR1000V")
 		}
 	}
 	var configRegister = showVersion.match(/^Configuration register is (.*)/m);

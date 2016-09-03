@@ -19,6 +19,9 @@ RELEASE HISTORY:
   regex).
 * Most of the underlying libraries have been updated to the last
   available version (in the same train).
+* A few UI fixes.
+* There was a bug on Excel export function: interfaces without IP
+  address were not exported.
 
 
 0.5.4 - 2016-07-02

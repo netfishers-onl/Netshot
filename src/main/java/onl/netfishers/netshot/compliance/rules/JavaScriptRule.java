@@ -57,7 +57,7 @@ public class JavaScriptRule extends Rule {
 	/** The script. */
 	private String script = "/*\n" + " * Script template - to be customized.\n"
 			+ " */\n" + "function check(device) {\n"
-			+ "    //var config = device.get('running-config');\n"
+			+ "    //var config = device.get('runningConfig');\n"
 			+ "    //var name = device.get('name');\n" + "    return CONFORMING;\n"
 			+ "    //return NONCONFORMING;\n" + "    //return NOTAPPLICABLE;\n"
 			+ "}\n";

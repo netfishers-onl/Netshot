@@ -8,6 +8,19 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.5.5 - 2016-09-02
+
+* Various updates on drivers. This includes the addition of Citrix
+  NetScaler and Avaya ERS basic drivers (to be improved).
+* A bug on the removal of backspaces (when using paging) has been fixed.
+* The code is now released under GPLv3.
+* The strict prompt check feature has been improved (i.e. when Netshot
+  tries to find the saved prompt rather than simply using the prompt
+  regex).
+* Most of the underlying libraries have been updated to the last
+  available version (in the same train).
+
+
 0.5.4 - 2016-07-02
 
 * A 'sleep' function is now available for the drivers which need it.

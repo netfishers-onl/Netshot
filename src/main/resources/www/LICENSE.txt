@@ -1,11 +1,14 @@
+Netshot, Copyright 2013-2016 Sylvain Cadilhac (NetFishers)
 
-Netshot License Terms:
+Netshot is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-- Netshot is made available by NetFishers (http://www.netfishers.onl/netshot).
-- Netshot shouldn't be distributed without formal agreement from NetFishers
-  team (contact@netfishers.onl).
-- Netshot is free of charge.
-- Netshot is distributed "as is", without warranty. NetFishers people can't be
-  held responsible for any damage caused to your devices or you network by the
-  usage of Netshot.
-- Netshot and NetFishers have no relationship with the network device vendors.
+Netshot is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Netshot.  If not, see <http://www.gnu.org/licenses/>.

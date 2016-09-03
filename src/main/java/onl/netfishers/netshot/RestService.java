@@ -7694,6 +7694,20 @@ public class RestService extends Thread {
 					int yInterface = 1;
 					for (Device device : devices) {
 						for (NetworkInterface networkInterface : device.getNetworkInterfaces()) {
+							if (networkInterface.getIpAddresses().size() == 0) {
+								row = interfaceSheet.createRow(yInterface++);
+								row.createCell(0).setCellValue(device.getId());
+								row.createCell(1).setCellValue(networkInterface.getVirtualDevice());
+								row.createCell(2).setCellValue(networkInterface.getInterfaceName());
+								row.createCell(3).setCellValue(networkInterface.getDescription());
+								row.createCell(4).setCellValue(networkInterface.getVrfInstance());
+								row.createCell(5).setCellValue(networkInterface.getMacAddress());
+								row.createCell(6).setCellValue(networkInterface.isEnabled());
+								row.createCell(7).setCellValue(networkInterface.isLevel3());
+								row.createCell(8).setCellValue("");
+								row.createCell(9).setCellValue("");
+								row.createCell(10).setCellValue("");
+							}
 							for (NetworkAddress address : networkInterface.getIpAddresses()) {
 								row = interfaceSheet.createRow(yInterface++);
 								row.createCell(0).setCellValue(device.getId());

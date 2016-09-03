@@ -130,7 +130,7 @@ define([
 			var eosRest = 0;
 			var eolRest = 0;
 			this.hardwareSupportStats.each(function(stat) {
-				if (typeof(stat.get('eoxDate')) == "number") {
+				if (typeof stat.get('eoxDate') === "number") {
 					var row = that.milestoneRowTemplate(stat.toJSON());
 					that.$("#milestones>tbody").append($(row));
 				}

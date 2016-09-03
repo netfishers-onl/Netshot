@@ -17,7 +17,7 @@ define([
 		},
 
 		templateData: function() {
-			if (typeof (this.model) == "object") {
+			if (typeof this.model === "object" && this.model) {
 				return this.model.toJSON();
 			}
 			return {};

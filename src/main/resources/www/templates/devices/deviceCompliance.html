@@ -65,7 +65,7 @@
 <div id="hardwarecompliancestatus" class="compliancestatus hardware compliant">
 	<span class="ui-icon ui-icon-check icon"></span>
 	<span class="message"><b>Hardware:</b>
-	Not end of sale yet<% if (typeof(eosDate) == "number") { %>, planned on <%- $.formatDateTime('dd/mm/y', new Date(eosDate)) %>
+	Not end of sale yet<% if (typeof eosDate === "number") { %>, planned on <%- $.formatDateTime('dd/mm/y', new Date(eosDate)) %>
 	(module <%- eosModule.partNumber %>)<% } %>
 	</span>
 </div>
@@ -82,7 +82,7 @@
 <div id="hardwarecompliancestatus" class="compliancestatus hardware compliant">
 	<span class="ui-icon ui-icon-check icon"></span>
 	<span class="message"><b>Hardware:</b>
-	Not end of life yet<% if (typeof(eolDate) == "number") { %>, planned on <%- $.formatDateTime('dd/mm/y', new Date(eolDate)) %>
+	Not end of life yet<% if (typeof eolDate === "number") { %>, planned on <%- $.formatDateTime('dd/mm/y', new Date(eolDate)) %>
 	(module <%- eolModule.partNumber %>)<% } %>
 	</span>
 </div>

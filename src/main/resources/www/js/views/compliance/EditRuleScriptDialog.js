@@ -65,7 +65,7 @@ define([
 		},
 		
 		setTestDevice: function(device) {
-			if (typeof(device) == "undefined") return;
+			if (typeof device == "undefined") return;
 			this.$("#ruledevice").val(device.get('name')).data('device-id', device.get('id'));
 			this.$("#ruletest").button('enable');
 			this.device = device;

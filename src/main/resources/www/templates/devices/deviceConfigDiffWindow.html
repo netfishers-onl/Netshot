@@ -19,7 +19,7 @@
 <tr>
 	<th colspan="2">
 		<button id="previous">Previous</button>
-		<% if (typeof(originalDate) == "undefined") { %>
+		<% if (typeof originalDate === "undefined") { %>
 		No capture
 		<% } else { %>
 		Captured <%- $.formatDateTime('dd/mm/y hh:ii', new Date(originalDate)) %>

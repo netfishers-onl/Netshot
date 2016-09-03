@@ -23,7 +23,7 @@ define([
 					that.render();
 				});
 			};
-			if (typeof (this.options.delay) == "number") {
+			if (typeof this.options.delay === "number") {
 				setTimeout(fetchAndRender, this.options.delay);
 			}
 			else {

@@ -27,7 +27,7 @@
 
 <tr><th>Creation Date</th><td>
 	<%- $.formatDateTime('dd/mm/y hh:ii', new Date(createdDate)) %>
-	<% if (typeof(creator) == "string" && creator.length > 0) { %> (added by <%- creator %>)<% } %>
+	<% if (typeof creator === "string" && creator.length > 0) { %> (added by <%- creator %>)<% } %>
 </td></tr>
 <tr><th>Last Change</th><td><%- $.formatDateTime('dd/mm/y hh:ii', new Date(changeDate)) %></td></tr>
 
@@ -38,8 +38,8 @@
 <% _.each(attributes, function(attribute) { %>
 <tr><th><%- attribute.title %></th>
 <td>
-<% if (attribute.type == "INTEGER" && typeof(attribute.number) != "undefined") { %><%- attribute.number %><% } %>
-<% if (attribute.type == "TEXT" && typeof(attribute.text) != "undefined") { %><%- attribute.text %><% } %>
+<% if (attribute.type == "INTEGER" && typeof attribute.number != "undefined") { %><%- attribute.number %><% } %>
+<% if (attribute.type == "TEXT" && typeof attribute.text != "undefined") { %><%- attribute.text %><% } %>
 <% if (attribute.type == "BINARY") { if (attribute.assumption === true) { %>Yes<% } else { %>No<% } } %>
 </td>
 <% }); %>

@@ -165,7 +165,7 @@ define([
 				that.$('#fieldbuttons button').button('destroy');
 				that.$('#fieldbuttons').empty();
 				var attributes = that.defaultAttributes;
-				if (typeof(that.driver) == "object") {
+				if (typeof that.driver === "object" && that.driver) {
 					attributes = _.union(attributes, that.driver.get("attributes"));
 				}
 				var attribute = _.findWhere(attributes, { name: $(this).val() });
@@ -221,7 +221,7 @@ define([
 				};
 
 				var buttons;
-				if (typeof(actions[type]) == "object") {
+				if (typeof actions[type] === "object" && actions[type]) {
 					buttons = actions[type];
 				}
 				else {
@@ -238,7 +238,7 @@ define([
 				that.$('#fieldname').empty();
 				var attributes = that.defaultAttributes;
 				that.driver = that.deviceTypes.findWhere({ name: $(this).val() });
-				if (typeof(that.driver) == "object") {
+				if (typeof that.driver === "object" && that.driver) {
 					attributes = _.union(attributes, that.driver.get("attributes"));
 				}
 				attributes = _.sortBy(attributes, "title");
@@ -252,7 +252,7 @@ define([
 			}).change();
 			this.$('button').button().addClass('ui-button');
 
-			if (typeof(this.options.onRendered) === "function") {
+			if (typeof this.options.onRendered === "function") {
 				this.options.onRendered();
 			}
 

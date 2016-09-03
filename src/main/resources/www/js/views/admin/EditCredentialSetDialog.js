@@ -100,7 +100,7 @@ define([
 						.text(domain.get('name')).appendTo(that.$('#credentialsdomain'));
 			});
 			var domain = that.model.get('mgmtDomain');
-			if (typeof (domain) == "object") {
+			if (typeof domain === "object" && domain) {
 				that.$('#credentialsdomain').val(domain.id);
 			}
 			this.$("#credentialsname").select();

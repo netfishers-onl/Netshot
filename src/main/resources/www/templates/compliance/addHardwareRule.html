@@ -19,14 +19,14 @@
 			<label for="family">Device family: </label>
 			<input type="text" name="family" id="family"
 				class="text ui-widget-content ui-corner-all" value="<%- family %>" />
-			<input type="checkbox" name="familyregexp" id="familyregexp"<% if (typeof(familyRegExp) != "undefined" && familyRegExp) { %> checked="checked"<% } %> />
+			<input type="checkbox" name="familyregexp" id="familyregexp"<% if (typeof familyRegExp !== "undefined" && familyRegExp) { %> checked="checked"<% } %> />
 			<label for="familyregexp">RegExp</label>
 		</fieldset>
 		<fieldset>
 			<label for="version">Part number: </label>
 			<input type="text" name="partnumber" id="partnumber"
 				class="text ui-widget-content ui-corner-all" value="<%- partNumber %>" />
-			<input type="checkbox" name="partnumberregexp" id="partnumberregexp"<% if (typeof(partNumberRegExp) != "undefined" && partNumberRegExp) { %> checked="checked"<% } %> />
+			<input type="checkbox" name="partnumberregexp" id="partnumberregexp"<% if (typeof partNumberRegExp !== "undefined" && partNumberRegExp) { %> checked="checked"<% } %> />
 			<label for="partnumberregexp">RegExp</label>
 		</fieldset>
 		<fieldset>

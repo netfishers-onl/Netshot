@@ -1,7 +1,7 @@
 <tr data-task-id="<%- id %>">
 	<td><strong><%- taskDescription %></strong></td>
 	<td><%- target %></td>
-	<td><% if (typeof(author) == "string") { %><%- author %><% } %></td>
+	<td><% if (typeof author === "string") { %><%- author %><% } %></td>
 	<td>
 		<span class="ui-corner-all nsicon" title="Status">
 		<%
@@ -36,7 +36,7 @@
 	</td>
 	<td>
 	<% if (significantDate != 0) { %>
-	<%- (typeof(significantDate) == "string" ? significantDate : $.formatDateTime('dd/mm/y hh:ii', new Date(significantDate))) %>
+	<%- (typeof significantDate === "string" ? significantDate : $.formatDateTime('dd/mm/y hh:ii', new Date(significantDate))) %>
 	<% if (repeating) { %>
 	<span class="ui-corner-all nsicon" title="Repeating">
 		<span class="ui-icon ui-icon-arrowrefresh-1-e"></span>

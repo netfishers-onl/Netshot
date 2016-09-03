@@ -248,7 +248,7 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 				this.$("#nsdevices-searchfield").val("");
 				this.$("#nsdevices-clearsearch").hide();
 			}
-			else if (typeof(this.devices.filter.text) == "string") {
+			else if (typeof this.devices.filter.text === "string") {
 				this.$("#nsdevices-searchfield").val(this.devices.filter.text);
 				if (this.devices.filter.text != "") {
 					this.$("#nsdevices-clearsearch").show().button("enable");
@@ -280,7 +280,7 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 			if (this.device != null) {
 				this.highlightDevice(this.device.get('id'));
 			}
-			else if (typeof(this.initialDevice) == "number") {
+			else if (typeof this.initialDevice === "number") {
 				this.selectDevice(this.initialDevice);
 				this.initialDevice = null;
 			}
@@ -297,7 +297,7 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 		},
 		
 		getDeviceListItem: function(id) {
-			if (typeof(id) == "undefined") {
+			if (typeof id === "undefined") {
 				id = this.device.get('id');
 			}
 			return this.$('#nsdevices-listbox>ul li[data-device-id="' + id + '"]');

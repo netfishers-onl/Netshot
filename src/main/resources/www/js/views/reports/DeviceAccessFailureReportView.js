@@ -38,7 +38,7 @@ define([
 				value: this.$('#olderthandays').prop('value'),
 				change: function() {
 					var value = $(this).spinner('value');
-					if (typeof(value) != "number") {
+					if (typeof value !== "number") {
 						$(this).spinner('value', 3);
 					}
 				}

@@ -160,7 +160,7 @@ define([
 				var changeCountDay = this.lastDayChanges.findWhere({
 					changeDay: day.getTime()
 				});
-				var changeCount = (typeof (changeCountDay) == "object"
+				var changeCount = (typeof changeCountDay === "object" && changeCountDay
 						? changeCountDay.get('changeCount') : 0);
 				if (changeCount > changeMax) {
 					changeMax = changeCount;

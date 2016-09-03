@@ -1,12 +1,12 @@
 <tr data-rule-id="<%- id %>" class="rulerow">
-	<td><% if (typeof(targetGroup) == "object") { %><%- targetGroup.name %><% } else { %>[Any]<% } %></td>
+	<td><% if (typeof targetGroup === "object" && targetGroup) { %><%- targetGroup.name %><% } else { %>[Any]<% } %></td>
 	<td><% if (driver == "") { %>[Any]<% } else { %><%- deviceType %><% } %></td>
 	<td><%- family %></td>
 	<td><%- partNumber %></td>
-	<td><% if (typeof(endOfSale) == "number") { %>
+	<td><% if (typeof endOfSale === "number") { %>
 		<%- $.formatDateTime('dd/mm/y', new Date(endOfSale)) %>
 	<% } else { %>None<% } %></td>
-	<td><% if (typeof(endOfLife) == "number") { %>
+	<td><% if (typeof endOfLife === "number") { %>
 		<%- $.formatDateTime('dd/mm/y', new Date(endOfLife)) %>
 	<% } else { %>None<% } %></td>
 	<td>

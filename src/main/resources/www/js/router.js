@@ -23,7 +23,7 @@ define([
 				new ReAuthDialog();
 			}
 			else {
-				if (typeof(window.reauth) != "undefined") {
+				if (typeof window.reauth !== "undefined") {
 					clearTimeout(window.reauth);
 				}
 				window.reauth = setTimeout(function() {
@@ -56,7 +56,7 @@ define([
 			var id = parseInt(id);
 
 			if (this.currentView != null
-					&& typeof (this.currentView.selectDevice) == "function") {
+					&& typeof this.currentView.selectDevice === "function") {
 				if (!isNaN(id)) {
 					this.currentView.selectDevice(id);
 				}

@@ -89,7 +89,7 @@ define([
 				that.$('.schedule-options').hide();
 				that.$('#schedulerepeat-options').show();
 			});
-			if (typeof (this.options.onRendered) === "function") {
+			if (typeof this.options.onRendered === "function") {
 				this.options.onRendered();
 			}
 

@@ -24,8 +24,8 @@ define([
 				var saveModel = that.model.clone();
 				saveModel.set({
 					priority: this.options.priority,
-					group: (typeof (saveModel.get('targetGroup')) == "object" ? saveModel
-							.get('targetGroup').id : -1)
+					group: (typeof (saveModel.get('targetGroup')) == "object" && saveModel.get('targetGroup') ?
+							saveModel.get('targetGroup').id : -1)
 				});
 				saveModel.save().done(function(data) {
 					that.close();

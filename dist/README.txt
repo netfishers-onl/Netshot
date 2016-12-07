@@ -8,6 +8,14 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.5.6 - 2016-12-07
+
+* Update the charts (now using Chart.js version 2) in reports. This fixes
+  the size of the charts for the high resolution screens.
+* Update the Junos driver (now storing the configuration in "set" version
+  as well).
+
+
 0.5.5 - 2016-09-02
 
 * Various updates on drivers. This includes the addition of Citrix

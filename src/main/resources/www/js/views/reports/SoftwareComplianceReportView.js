@@ -52,18 +52,21 @@ define([
 			var that = this;
 			var html = this.groupChartTemplate(group.toJSON());
 			var $group = this.$("#nsreport-softwarecompliance-groups")
-			.append(html).find('.group-chart').last();
+				.append(html).find('.group-chart').last();
 
-			var ctx = $group.find('.chart').get(0).getContext("2d");
-			var chart = new Chart(ctx);
 			var htmlLegend = "";
-			var data = [];
+			var data = {
+				labels: [],
+				datasets: [{
+					data: [],
+					backgroundColor: []
+				}],
+			};
 
 			var color = '#FFD700';
-			data.push({
-				value: group.get('goldDeviceCount'),
-				color: color
-			});
+			data.labels.push("Gold");
+			data.datasets[0].data.push(group.get('goldDeviceCount'));
+			data.datasets[0].backgroundColor.push(color);
 			htmlLegend += that.chartLegendTemplate({
 				id: group.get('groupId'),
 				color: color,
@@ -72,10 +75,9 @@ define([
 			});
 
 			color = '#C0C0C0';
-			data.push({
-				value: group.get('silverDeviceCount'),
-				color: color
-			});
+			data.labels.push("Silver");
+			data.datasets[0].data.push(group.get('silverDeviceCount'));
+			data.datasets[0].backgroundColor.push(color);
 			htmlLegend += that.chartLegendTemplate({
 				id: group.get('groupId'),
 				color: color,
@@ -84,10 +86,9 @@ define([
 			});
 
 			color = '#CD7F32';
-			data.push({
-				value: group.get('bronzeDeviceCount'),
-				color: color
-			});
+			data.labels.push("Bronze");
+			data.datasets[0].data.push(group.get('bronzeDeviceCount'));
+			data.datasets[0].backgroundColor.push(color);
 			htmlLegend += that.chartLegendTemplate({
 				id: group.get('groupId'),
 				color: color,
@@ -96,12 +97,11 @@ define([
 			});
 
 			var rest = group.get('deviceCount') - group.get('goldDeviceCount')
-			- group.get('silverDeviceCount') - group.get('bronzeDeviceCount');
+				- group.get('silverDeviceCount') - group.get('bronzeDeviceCount');
 			color = '#000000';
-			data.push({
-				value: rest,
-				color: color
-			});
+			data.labels.push("Non compliant");
+			data.datasets[0].data.push(rest);
+			data.datasets[0].backgroundColor.push(color);
 			htmlLegend += that.chartLegendTemplate({
 				id: group.get('groupId'),
 				color: color,
@@ -110,7 +110,16 @@ define([
 			});
 
 			var options = {};
-			new Chart(ctx).Pie(data, options);
+			new Chart($group.find('.chart'), {
+				data: data,
+				type: "pie",
+				options: {
+					responsive: false,
+					legend: {
+						display: false,
+					}
+				}
+			});
 			$group.find('.legend tbody').html(htmlLegend);
 		},
 

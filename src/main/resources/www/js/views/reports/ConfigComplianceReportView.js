@@ -41,19 +41,23 @@ define([
 
 		renderGroupConfigComplianceStats: function() {
 			var that = this;
-			var ctx = $("#chart-configcompliance").get(0).getContext("2d");
-			var chart = new Chart(ctx);
-			var data = [];
+			var data = {
+				datasets: [{
+					data: [],
+					backgroundColor: [],
+					label: "Configuration compliance"
+				}],
+				labels: [],
+			};
 			var htmlLegend = "";
 			this.groupConfigComplianceStats.each(function(stat, i) {
 				var compliant = stat.get('compliantDeviceCount');
 				var total = stat.get('deviceCount');
 				var value = Math.round(total == 0 ? 100 : 100 * compliant / total);
 				var color = that.legendColors[i % that.legendColors.length];
-				data.push({
-					value: value,
-					color: color
-				});
+				data.datasets[0].data.push(value);
+				data.datasets[0].backgroundColor.push(color);
+				data.labels.push(stat.get('groupName'));
 				var legend = {
 					id: stat.get('groupId'),
 					color: color,
@@ -68,12 +72,21 @@ define([
 				scaleStepWidth: 20,
 				scaleLabel: "<%=value%>%"
 			};
-			new Chart(ctx).PolarArea(data, options);
+			var chart = new Chart($("#chart-configcompliance"), {
+				data: data,
+				type: "polarArea",
+				options: {
+					responsive: false,
+					scale: {
+						ticks: {
+							maxTicksLimit: 5
+						}
+					}
+				}
+			});
 			this.$('#legend-configcompliance tbody').html(htmlLegend);
-			this.$('#legend-configcompliance .nsreport-legend-text a')
-			.click(function() {
-				var group = $(this).closest('.nsreport-legend-item')
-				.data('group-id');
+			this.$('#legend-configcompliance .nsreport-legend-text a').click(function() {
+				var group = $(this).closest('.nsreport-legend-item').data('group-id');
 				that.refreshGroupNonCompliantDevices(group);
 				return false;
 			});

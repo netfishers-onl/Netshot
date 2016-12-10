@@ -6191,7 +6191,7 @@ public class RestService extends Thread {
 			else {
 				@SuppressWarnings("unchecked")
 				List<RsLightDevice> devices = session
-				.createQuery(DEVICELIST_BASEQUERY + "from Device d where d." + type + "Date = :eoxDate and d.status = :enabled")
+				.createQuery(DEVICELIST_BASEQUERY + "from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled")
 				.setDate("eoxDate", eoxDate)
 				.setParameter("enabled", Device.Status.INPRODUCTION)
 				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))

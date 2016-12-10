@@ -149,6 +149,8 @@ define([
 		renderLastDayChangesChart: function() {
 			var days = [];
 			var changeCounts = [];
+			var colors = [];
+			var borderColors = [];
 			var today = new Date();
 			today.setHours(0);
 			today.setMinutes(0);
@@ -172,9 +174,10 @@ define([
 				labels: days,
 				datasets: [{
 					label: "Changes per day",
-					fillColor: "rgba(220,220,220,0.5)",
-					strokeColor: "rgba(220,220,220,1)",
-					data: changeCounts
+					backgroundColor: "rgba(220, 220,220, 0.5)",
+					borderColor: "rgba(220, 220, 220, 1)",
+					data: changeCounts,
+					borderWidth: 2
 				}]
 			};
 			new Chart($("#chart-lastdaychanges"), {
@@ -184,9 +187,11 @@ define([
 					responsive: false,
 					scales: {
 						yAxes: [{
-							min: 0,
-							maxTicksLimit: 5,
-							suggestedMax: changeMax * 1.2
+							ticks: {
+								min: 0,
+								maxTicksLimit: 5,
+								suggestedMax: changeMax * 1.2
+							}
 						}]
 					}
 				}

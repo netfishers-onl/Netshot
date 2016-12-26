@@ -41,6 +41,7 @@ $ sudo keytool -genkey -keyalg RSA -alias selfsigned -keystore netshot.jks -stor
 Press Enter when asked for a password.
 
 $ sudo mv netshot.jks /usr/local/netshot
+$ sudo chmod o-r /usr/local/netshot
 
 
 ### 5. Prepare files
@@ -48,13 +49,22 @@ $ sudo mv netshot.jks /usr/local/netshot
 $ sudo cp netshot.jar /usr/local/netshot
 $ sudo mkdir /usr/local/netshot/drivers
 $ sudo chown -R netshot /usr/local/netshot
-$ sudo cp initd-netshot /etc/init.d/netshot
-$ sudo chown root:root /etc/init.d/netshot
-$ sudo chmod +x /etc/init.d/netshot
 $ sudo mkdir /var/log/netshot
 $ sudo chown -R netshot /var/log/netshot
 $ sudo cp netshot.conf /etc/netshot.conf
-$ sudo chown root:root /etc/netshot.conf
+$ sudo chown netshot /etc/netshot.conf
+$ sudo chmod 400 /etc/netshot.conf
+
+In case of SysV system:
+
+$ sudo cp initd-netshot /etc/init.d/netshot
+$ sudo chown root:root /etc/init.d/netshot
+$ sudo chmod +x /etc/init.d/netshot
+
+In case of systemd system:
+
+$ sudo cp systemd-netshot /etc/systemd/system/netshot.service
+$ sudo systemctl enable netshot.service
 
 
 ### 6. Create database and user

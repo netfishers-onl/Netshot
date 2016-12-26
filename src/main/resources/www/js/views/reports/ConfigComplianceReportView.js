@@ -79,7 +79,9 @@ define([
 					responsive: false,
 					scale: {
 						ticks: {
-							maxTicksLimit: 5
+							maxTicksLimit: 5,
+							min: 0,
+							max: 100
 						}
 					}
 				}

@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "NetFishers",
-	version: "1.2"
+	version: "1.3"
 };
 
 var Config = {
@@ -273,11 +273,11 @@ function snapshot(cli, device, config) {
 			var ipv6Match;
 			while (ipv6Match = ipv6Pattern.exec(fhrpIntConfig[i].config)) {
 				var ip = {
-					ipv6: ipMatch[2],
+					ipv6: ipv6Match[2],
 					mask: 128,
 					usage: usage
 				};
-				if (ipMatch[2] == " secondary") {
+				if (ipv6Match[2] == " secondary") {
 					ip.usage = "SECONDARY" + ip.usage;
 				}
 				fhrpAddresses[intName].push(ip);

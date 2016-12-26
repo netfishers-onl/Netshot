@@ -8,6 +8,11 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.5.7 - 2016-12-26
+
+* Fixes for a couple of bugs on the charts
+
+
 0.5.6 - 2016-12-07
 
 * Update the charts (now using Chart.js version 2) in reports. This fixes

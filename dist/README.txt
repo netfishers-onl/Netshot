@@ -8,6 +8,15 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.5.8 - 2016-01-12
+
+* Fix for HSRPv6 in XR driver
+* Improve the config compliance chart
+* Improve the Junos driver
+* Add a systemd unit file
+* Fix a bug on the device compliance page
+
+
 0.5.7 - 2016-12-26
 
 * Fixes for a couple of bugs on the charts

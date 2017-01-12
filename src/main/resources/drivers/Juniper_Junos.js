@@ -21,7 +21,7 @@ var Info = {
 	name: "JuniperJunos",
 	description: "Juniper Junos",
 	author: "NetFishers",
-	version: "2.0"
+	version: "2.1"
 };
 
 var Config = {
@@ -191,7 +191,8 @@ function snapshot(cli, device, config, debug) {
 	var family = showVersion.match(/^Model: (.*)/m);
 	if (family) {
 		var family = family[1];
-		family = family.replace(/^[a-z]/, function(m) { return m.toUpperCase(); });
+		family = family.toUpperCase();
+		family = family.replace(/(^[A-Z0-9]+)-.*/, "$1");
 		device.set("family", "Juniper " + family);
 		if (family.match(/EX/)) {
 			device.set("networkClass", "ROUTERSWITCH");
@@ -208,11 +209,11 @@ function snapshot(cli, device, config, debug) {
 	device.set("contact", "");
 	var snmpConfig = cli.findSections(configuration, /^snmp /m);
 	if (snmpConfig.length > 0) {
-		var location = snmpConfig[0].config.match(/^ *location ("(.*)"|(.*));/m);
+		var location = snmpConfig[0].config.match(/^ *location ("(.+)"|(.+));/m);
 		if (location) {
 			device.set("location", location[2] || location[3]);
 		}
-		var contact = snmpConfig[0].config.match(/^ *contact ("(.*)"|(.*));/m);
+		var contact = snmpConfig[0].config.match(/^ *contact ("(.+)"|(.+));/m);
 		if (contact) {
 			device.set("contact", contact[2] || contact[3]);
 		}

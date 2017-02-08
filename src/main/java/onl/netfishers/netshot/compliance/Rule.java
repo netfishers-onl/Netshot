@@ -186,6 +186,8 @@ public abstract class Rule {
 					networkInterface.put("mac", ni.getMacAddress());
 					networkInterface.put("virtualDevice", ni.getVirtualDevice());
 					networkInterface.put("vrf", ni.getVrfInstance());
+					networkInterface.put("enabled", ni.isEnabled());
+					networkInterface.put("level3", ni.isLevel3());
 					List<Map<String, String>> ips = new ArrayList<Map<String, String>>();
 					for (Network4Address address : ni.getIp4Addresses()) {
 						Map<String, String> ip = new HashMap<String, String>();

@@ -36,6 +36,8 @@ import org.slf4j.LoggerFactory;
 public abstract class Cli {
 	
 	private static Logger logger = LoggerFactory.getLogger(Cli.class);
+	
+	private static Pattern ansiEscapePattern = Pattern.compile("\u001B\\[[;\\d]*m");
 
 	/** The connection timeout. */
 	protected int connectionTimeout = 5000;
@@ -233,11 +235,14 @@ public abstract class Cli {
 				buffer.append(s);
 			}
 			for (int i = 0; i < patterns.length; i++) {
-				Matcher matcher = patterns[i].matcher(buffer);
+				String received = buffer.toString();
+				// Remove ANSI escape sequences
+				received = Cli.ansiEscapePattern.matcher(received).replaceAll("");
+				Matcher matcher = patterns[i].matcher(received);
 				if (matcher.find()) {
 					this.lastExpectMatch = matcher;
 					this.lastExpectMatchIndex = i;
-					this.lastFullOutput = buffer.toString();
+					this.lastFullOutput = received;
 					this.lastExpectMatchPattern = expects[i];
 					return matcher.replaceFirst("");
 				}

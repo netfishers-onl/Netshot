@@ -10,6 +10,7 @@ target/*
 .settings/*
 *.iml
 *.jks
+src/main/resources/configs/
 
 # CMake
 cmake-build-debug/

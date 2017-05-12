@@ -210,7 +210,7 @@ function snapshot(cli, device, config, debug) {
 
 function analyzeTrap(trap, debug) {
     //TODO : Set the trap Riverbed
-    return true;
+    return false;
 }
 
 function snmpAutoDiscover(sysObjectID, sysDesc) {

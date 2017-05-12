@@ -41,21 +41,6 @@ var Device = {
         title: "Managed by CMC",
         searchable: true
     }
-    // "usedMemory": {
-    //     type: "Text",
-    //     title: "Used memory size (MB)",
-    //     searchable: true
-    // },
-    // "freeMemory": {
-    //     type: "Text",
-    //     title: "Free memory size (MB)",
-    //     searchable: true
-    // },
-    // "totalMemory": {
-    //     type: "Text",
-    //     title: "Total memory size (MB)",
-    //     searchable: true
-    // }
 };
 
 var CLI = {
@@ -135,33 +120,6 @@ var CLI = {
 
 function snapshot(cli, device, config, debug) {
 
-    var arraySubnet = {
-        '255.255.255.254': "31",
-        '255.255.255.252': "30",
-        '255.255.255.248': "29",
-        '255.255.255.240': "28",
-        '255.255.255.224': "27",
-        '255.255.255.192': "26",
-        '255.255.255.128': "25",
-        '255.255.255.0': "24",
-        '255.255.254.0': "23",
-        '255.255.252.0': "22",
-        '255.255.248.0': "21",
-        '255.255.240.0': "20",
-        '255.255.224.0': "19",
-        '255.255.192.0': "18",
-        '255.255.128.0': "17",
-        '255.255.0.0': "16",
-        '255.254.0.0': "15",
-        '255.252.0.0': "14",
-        '255.248.0.0': "13",
-        '255.240.0.0': "12",
-        '255.224.0.0': "11",
-        '255.192.0.0': "10",
-        '255.128.0.0': "9",
-        '255.0.0.0': "8"
-    };
-
     cli.macro("enable");
     cli.command("enable");
 
@@ -214,22 +172,6 @@ function snapshot(cli, device, config, debug) {
         device.set("serialNumber", "");
     }
 
-
-    // var data = status.match(/System memory: (.*)/);
-    // if (data) {
-    //     var dataTmp = data[1];
-    //     var arrayData = dataTmp.split('/');
-    //     for (var i = 0; i < arrayData.length; i++) {
-    //         arrayData[i] = arrayData[i].replace(/\s\s/g, " ")
-    //     }
-    //     var used = arrayData[0].match(/[0-9]+/);
-    //     var free = arrayData[1].match(/[0-9]+/);
-    //     var total = arrayData[2].match(/[0-9]+/);
-    //     device.set("usedMemory", used[0]);
-    //     device.set("freeMemory", free[0]);
-    //     device.set("totalMemory", total[0]);
-    // }
-
     var infoStatus = cli.command("show interfaces brief");
     var tmpListInterfaces = cli.findSections(infoStatus, /Interface (.*) state/);
     var listInterface = [];
@@ -254,7 +196,7 @@ function snapshot(cli, device, config, debug) {
             var sp = ip[1].replace(/[\s]*/, "").split(' ');
             var tmpIP = {
                 ip: sp[0],
-                mask: parseInt(arraySubnet[netmask[1].replace(/[\s]*/, "")]),
+                mask: netmask[1].replace(/[\s]*/, ""),
                 usage: "PRIMARY"
             };
             networkInterface.ip.push(tmpIP);
@@ -265,14 +207,13 @@ function snapshot(cli, device, config, debug) {
 
 }
 
-// No known log message upon configuration change
 
 function analyzeTrap(trap, debug) {
-    return trap["1.3.6.1.6.3.1.1.4.1.0"] == "1.3.6.1.4.1.12356.101.6.0.1003" ||
-        trap["1.3.6.1.6.3.1.1.4.1.0"] == "1.3.6.1.2.1.47.2.0.1";
+    //TODO : Set the trap Riverbed
+    return true;
 }
 
 function snmpAutoDiscover(sysObjectID, sysDesc) {
-    return (sysObjectID.substring(0, 22) == "1.3.6.1.4.1.25461.2.3.") &&
-        sysDesc.match(/^Palo Alto Networks PA-([0-9]+|VM) series firewall$/);
+    return (sysObjectID.substring(0, 22) == "1.3.6.1.4.1.17163.1.1") &&
+        sysDesc.match(/^Linux (.*)$/);
 }

@@ -200,7 +200,7 @@ public class Radius {
 			}
 			catch (Exception e) {
 				logger.error("Error while authenticating against RADIUS server {}.",
-						radiusClient.getRemoteInetAddress().toString());
+						radiusClient.getRemoteInetAddress().toString(), e);
 			}
 		}
 		return null;

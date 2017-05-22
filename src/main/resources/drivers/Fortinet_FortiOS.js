@@ -98,7 +98,7 @@ var CLI = {
 		fail: "Authentication failed - Telnet authentication failure."
 	},
 	basic: {
-		prompt: /^([A-Za-z0-9_\-]+? (\([A-Za-z0-9_\-]+?\) )?# )$/,
+		prompt: /^([A-Za-z0-9_\-]+? (\([A-Za-z0-9_\-]+?\) )?[#$] )$/,
 		pager: {
 			match: /^--More-- /,
 			response: " "

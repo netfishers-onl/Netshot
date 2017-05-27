@@ -63,7 +63,7 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.39</version>
+			<version>5.1.42</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-net</groupId>
@@ -189,6 +189,11 @@
 			<artifactId>postgresql</artifactId>
 			<version>9.4.1209</version>
 		</dependency>
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk15on</artifactId>
+			<version>1.57</version>
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>
@@ -218,11 +223,6 @@
 				<enabled>false</enabled>
 				<updatePolicy>never</updatePolicy>
 			</snapshots>
-		</repository>
-		<repository>
-			<id>opennms-coova</id>
-			<name>Coova Repository by OpenNMS</name>
-			<url>http://maven.opennms.org/content/repositories/coova/</url>
 		</repository>
 	</repositories>
 	<url>http://www.netfishers.onl/netshot</url>

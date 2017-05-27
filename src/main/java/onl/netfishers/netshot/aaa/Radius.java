@@ -20,11 +20,13 @@ package onl.netfishers.netshot.aaa;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.List;
 
 import onl.netfishers.netshot.Netshot;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -127,12 +129,14 @@ public class Radius {
 		else if ("eap-mschapv2".equals(method)) {
 			authMethod = EAPMSCHAPv2Authenticator.class;
 		}
-		else if (method == null) {
+		else if (method == null || "mschapv2".equals(method)) {
 			// Default
 		}
 		else {
 			logger.error("Invalid configured RADIUS method '{}'. Defaulting to MSCHAPv2.", method);
 		}
+		logger.info("Loading Bouncy Castle Security Provider");
+		Security.addProvider(new BouncyCastleProvider());
 		clients.add(client);
 	}
 

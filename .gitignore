@@ -123,3 +123,4 @@ $RECYCLE.BIN/
 .metadata/.plugins/org.eclipse.core.resources/.history/52/f0b35dc8634a00151f22ad7d25da3f55
 *.sw[a-p]
 
+/target/

@@ -11,6 +11,7 @@ target/*
 *.iml
 *.jks
 src/main/resources/configs/
+netshot.conf
 
 # CMake
 cmake-build-debug/
@@ -121,3 +122,4 @@ $RECYCLE.BIN/
 .metadata/.plugins/org.eclipse.core.resources/.history/33/40808329934a00151f22ad7d25da3f55
 .metadata/.plugins/org.eclipse.core.resources/.history/52/f0b35dc8634a00151f22ad7d25da3f55
 *.sw[a-p]
+

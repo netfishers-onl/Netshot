@@ -7585,6 +7585,7 @@ public class RestService extends Thread {
 			@DefaultValue("-1") @QueryParam("group") long group,
 			@DefaultValue("false") @QueryParam("interfaces") boolean exportInterfaces,
 			@DefaultValue("false") @QueryParam("inventory") boolean exportInventory,
+			@DefaultValue("false") @QueryParam("locations") boolean exportLocations,
 			@DefaultValue("xlsx") @QueryParam("format") String fileFormat) throws WebApplicationException {
 		logger.debug("REST request, export data.");
 		User user = (User) request.getSession().getAttribute("user");
@@ -7644,6 +7645,10 @@ public class RestService extends Thread {
 				row.createCell(8).setCellValue("Software");
 				row.createCell(9).setCellValue("End of Sale Date");
 				row.createCell(10).setCellValue("End Of Life Date");
+				if (exportLocations) {
+					row.createCell(11).setCellValue("Location");
+					row.createCell(12).setCellValue("Contact");
+				}
 
 				int yDevice = 1;
 
@@ -7673,6 +7678,10 @@ public class RestService extends Thread {
 						cell = row.createCell(10);
 						cell.setCellValue(device.getEolDate());
 						cell.setCellStyle(dateCellStyle);
+					}
+					if (exportLocations) {
+						row.createCell(11).setCellValue(device.getLocation());
+						row.createCell(12).setCellValue(device.getContact());
 					}
 				}
 

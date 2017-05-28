@@ -41,7 +41,8 @@ define([
 					group: (that.$('#filtergroup').prop('checked') ? that.$('#group')
 							.val() : -1),
 					interfaces: that.$('#filterinterfaces').prop('checked'),
-					inventory: that.$('#filterinventory').prop('checked')
+					inventory: that.$('#filterinventory').prop('checked'),
+					locations: that.$('#filterlocations').prop('checked'),
 				});
 				window.location = exportParams.getDownloadUrl();
 				return false;

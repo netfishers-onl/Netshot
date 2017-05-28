@@ -84,6 +84,8 @@ import org.hibernate.cfg.ImprovedNamingStrategy;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
+import org.jasypt.hibernate4.encryptor.HibernatePBEEncryptorRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -232,6 +234,11 @@ public class Database {
 				.setProperty("hibernate.c3p0.unreturnedConnectionTimeout", "1800")
 				.setProperty("hibernate.c3p0.debugUnreturnedConnectionStackTraces", "true");
 
+			
+			StandardPBEStringEncryptor credentialEncryptor = new StandardPBEStringEncryptor();
+			credentialEncryptor.setPassword(Netshot.getConfig("netshot.db.encryptionPassword", "NETSHOT"));
+			HibernatePBEEncryptorRegistry encryptorRegistry = HibernatePBEEncryptorRegistry.getInstance();
+			encryptorRegistry.registerPBEStringEncryptor("credentialEncryptor", credentialEncryptor);
 
 			configuration
 				.setProperty("factory_class",

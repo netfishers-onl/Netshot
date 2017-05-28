@@ -21,6 +21,8 @@ package onl.netfishers.netshot.device.credentials;
 import javax.persistence.Entity;
 import javax.xml.bind.annotation.XmlElement;
 
+import org.hibernate.annotations.Type;
+
 
 /**
  * A SNMP community to poll a device.
@@ -55,6 +57,7 @@ public abstract class DeviceSnmpCommunity extends DeviceCredentialSet {
 	 * @return the community
 	 */
 	@XmlElement
+	@Type(type = "credentialString")
 	public String getCommunity() {
 		return community;
 	}

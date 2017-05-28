@@ -36,6 +36,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import onl.netfishers.netshot.device.Domain;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
+import org.jasypt.hibernate4.type.EncryptedStringType;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -54,6 +58,15 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 	@Type(value = DeviceSshAccount.class, name = "SSH"),
 	@Type(value = DeviceSshKeyAccount.class, name = "SSH Key"),
 	@Type(value = DeviceTelnetAccount.class, name = "Telnet")
+})
+@TypeDefs({
+	@TypeDef(
+		name = "credentialString",
+		typeClass = EncryptedStringType.class,
+		parameters = {
+			@Parameter(name = "encryptorRegisteredName", value = "credentialEncryptor")
+		}
+	)
 })
 public class DeviceCredentialSet {
 

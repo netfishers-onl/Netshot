@@ -67,7 +67,7 @@ var CLI = {
         fail: "Authentication failed - Telnet authentication failure."
     },
     operational: {
-        prompt: /^([A-Za-z\-_0-9.]+@[a-zA-Z0-9._-]+> )$/,
+        prompt: /^([A-Za-z\-_0-9.]+@[a-zA-Z0-9._-]+(\((.*)*\))*> )$/,
         error: /^(Unknown command: .*|Invalid syntax.)/m,
         pager: {
             avoid: "set cli pager off",

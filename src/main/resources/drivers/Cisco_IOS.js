@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.4.1"
+	version: "1.4.2"
 };
 
 var Config = {
@@ -356,7 +356,10 @@ function snapshot(cli, device, config, debug) {
 			device.set("family", "Cisco IOSv");
 		}
 		else if (system.match(/[Cc]isco CSR1000V/)) {
-			device.set("family", "Cisco CSR1000V")
+			device.set("family", "Cisco CSR1000V");
+		}
+		else if (showVersion.match(/IOS .* RSP Software/) && system.match(/cisco RSP/)) {
+			device.set("family", "Cisco 7500");
 		}
 	}
 	var configRegister = showVersion.match(/^Configuration register is (.*)/m);

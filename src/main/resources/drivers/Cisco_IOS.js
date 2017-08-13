@@ -358,6 +358,9 @@ function snapshot(cli, device, config, debug) {
 		else if (system.match(/[Cc]isco CSR1000V/)) {
 			device.set("family", "Cisco CSR1000V");
 		}
+		else if (system.match(/WS-CBS3/)) {
+			device.set("family", "Cisco CBS");
+		}
 		else if (showVersion.match(/IOS .* RSP Software/) && system.match(/cisco RSP/)) {
 			device.set("family", "Cisco 7500");
 		}

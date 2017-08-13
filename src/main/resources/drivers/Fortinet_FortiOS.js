@@ -17,15 +17,21 @@
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * 'Info' object = Meta data of the driver.
+ */
 var Info = {
-	name: "FortinetFortiOS",
-	description: "Fortinet FortiOS",
+	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
+	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "1.4"
+	version: "1.4" /* Version will appear in the Admin tab. */
 };
 
+/**
+ * 'Config' object = Data fields to be included in each configuration revision.
+ */
 var Config = {
-	"osVersion": {
+	"osVersion": { /* This stores the detected FortiOS version on each snapshot. */
 		type: "Text",
 		title: "FortiOS version",
 		comparable: true,
@@ -36,7 +42,7 @@ var Config = {
 			preLine: "##  "
 		}
 	},
-	"configuration": {
+	"configuration": { /* This stores the full textual configuration of the device on each snapshot. */
 		type: "LongText",
 		title: "Configuration",
 		comparable: true,
@@ -49,8 +55,11 @@ var Config = {
 	}
 };
 
+/**
+ * 'Device' object = Data fields to add to devices of this type. 
+ */
 var Device = {
-	"haPeer": {
+	"haPeer": { /* This stores the name of an optional HA peer. */
 		type: "Text",
 		title: "HA peer name",
 		searchable: true,
@@ -58,16 +67,19 @@ var Device = {
 	}
 };
 
+/**
+ * 'CLI' object = Definition of the finite state machine to recognize and handle the CLI prompt changes. 
+ */
 var CLI = {
-	telnet: {
-		macros: {
-			basic: {
-				options: [ "login", "password", "basic" ],
-				target: "basic"
+	telnet: { /* Entry point for Telnet access. */
+		macros: { /* List of available macros in the CLI mode. */
+			basic: { /* 'basic' macro (will be called in the snapshot procedure. */
+				options: [ "login", "password", "basic" ], /* Possible next modes, Netshot will test the associated prompt regexp's. */
+				target: "basic" /* Netshot will target this mode. */
 			}
 		}
 	},
-	ssh: {
+	ssh: { /* Entry point for SSH access. */
 		macros: {
 			basic: {
 				options: [ "basic" ],
@@ -75,7 +87,7 @@ var CLI = {
 			}
 		}
 	},
-	login: {
+	login: { /* 'login' prompt: send the username and expect the password prompt. */
 		prompt: / login: $/,
 		macros: {
 			auto: {
@@ -84,7 +96,7 @@ var CLI = {
 			}
 		}
 	},
-	password: {
+	password: { /* 'password' prompt: send the password, and expect the basic prompt. */
 		prompt: /^Password: $/,
 		macros: {
 			auto: {
@@ -93,13 +105,13 @@ var CLI = {
 			}
 		}
 	},
-	loginAgain: {
+	loginAgain: { /* 'login' prompt again: this means that authentication failed. */
 		prompt: / login: $/,
 		fail: "Authentication failed - Telnet authentication failure."
 	},
-	basic: {
+	basic: { /* The basic FortiOS prompt. */
 		prompt: /^([A-Za-z0-9_\-]+? (\([A-Za-z0-9_\-]+?\) )?[#$] )$/,
-		pager: {
+		pager: { /* 'pager': define how to handle the pager for long outputs. */
 			match: /^--More-- /,
 			response: " "
 		},
@@ -109,20 +121,30 @@ var CLI = {
 	}
 };
 
-function snapshot(cli, device, config, debug) {
-	
+/**
+ * The 'snapshot' function entry point = Will be called by Netshot when initiating a snapshot of this type of device.
+ * @param cli = object used to interact with the current device via CLI.
+ * @param device = used to store data at the device level.
+ * @param config = used to store data at the configuration revision level.
+ */
+function snapshot(cli, device, config) {
+	// Targets the 'basic' CLI mode.
 	cli.macro("basic");
 
+	// 'status' will be used to read the version, hostname, etc.
 	var status = cli.command("get system status");
+	// The configuration is retrived by a simple 'show' at the root level.
 	var configuration = cli.command("show");
 	config.set("configuration", configuration);
 	
+	// Read the device hostname from the 'status' output.
 	var hostname = status.match(/Hostname: (.*)$/m);
 	if (hostname) {
 		hostname = hostname[1];
 		device.set("name", hostname);
 	} 
 
+	// Read version and family from the 'status' output.
 	var version = status.match(/Version: (.*) v([0-9]+.*)/);
 	var family = (version ? version[1] : "FortiOS device");
 	device.set("family", family);
@@ -132,7 +154,7 @@ function snapshot(cli, device, config, debug) {
 
 	device.set("networkClass", "FIREWALL");
 
-
+	// Read the serial number from the 'status' output.
 	var serial = status.match(/Serial-Number: (.*)/);
 	if (serial) {
 		var module = {
@@ -147,6 +169,7 @@ function snapshot(cli, device, config, debug) {
 		device.set("serialNumber", "");
 	}
 
+	// Read the contact and location fields from the configuration directly.
 	device.set("contact", "");
 	device.set("location", "");
 	var sysInfos = cli.findSections(configuration, /config system snmp sysinfo/);
@@ -161,6 +184,7 @@ function snapshot(cli, device, config, debug) {
 		}
 	}
 
+	// Read the HA peer hostname from a 'get system ha status' in global mode.
 	cli.command("config global", { clearPrompt: true });
 	var getHa = cli.command("get system ha status");
 	cli.command("end", { clearPrompt: true });
@@ -173,7 +197,7 @@ function snapshot(cli, device, config, debug) {
 		}
 	}
 
-
+	// Read the list of interfaces from the configuration itself.
 	var systemInterfaceConfig = cli.findSections(configuration, /^config system interface/m);
 	var vdomArp = {};
 	for (var c in systemInterfaceConfig) {
@@ -226,11 +250,23 @@ function snapshot(cli, device, config, debug) {
 
 // No known log message upon configuration change
 
-function analyzeTrap(trap, debug) {
+/**
+ * The 'analyzeTrap' function entry point = Will be called when receiving a trap for a device of this type.
+ * @param trap = the SNMP data embedded in the trap.
+ * @returns true if the trap indicates a configuration changes (this means to initiate a new snapshot).
+ */
+function analyzeTrap(trap) {
 	return trap["1.3.6.1.6.3.1.1.4.1.0"] == "1.3.6.1.4.1.12356.101.6.0.1003" ||
 		trap["1.3.6.1.6.3.1.1.4.1.0"] == "1.3.6.1.2.1.47.2.0.1";
 }
 
+/**
+ * The 'snmpAutoDiscover' function entry point = Will be called with the sysObjectID and sysDesc
+ * of a device when auto discovering the type of a device.
+ * @param sysObjectID = The SNMP sysObjectID of a device being discovered.
+ * @param sysDesc = The SNMP sysDesc of a device being discovered.
+ * @returns true if the scanned device is supported by this driver.
+ */
 function snmpAutoDiscover(sysObjectID, sysDesc) {
 	return (sysObjectID.substring(0, 22) == "1.3.6.1.4.1.12356.101.");
 }

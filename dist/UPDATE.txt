@@ -24,4 +24,23 @@ and you might want to adapt them.
 
 $ sudo service netshot start
 
- 
+
+
+### Special update steps
+
+### Any version to 0.6.0
+Starting with 0.6.0 credentials are encrypted in the database. When updating an
+existing deployment to 0.6.0 or later, the credentials need to be manually reentered so
+they are properly encrypted.
+
+1. Access the database
+
+mysql -u netshot -p netshot01
+
+In case you need a cleartext read of the credential sets, run:
+> SELECT * FROM device_credential_set;
+Erase the secrets:
+> UPDATE device_credential_set SET community = NULL, password = NULL, super_password = NULL;
+
+2. Log into the Netshot UI, go to the Admin tab, and edit each account to enter the secret.
+

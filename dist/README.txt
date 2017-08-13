@@ -8,6 +8,17 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.6.0 - 2017-08-13
+
+* BREAKING CHANGE: Encrypt the secrets (communities, passwords) in the database
+  (=> see the update notes)
+* Add Palo Alto PanOS driver (from agm)
+* Add Riverbed RiOS driver (from agm)
+* Fix - Remove ANSI escape characters from CLI outputs
+* Several minor fixes in drivers
+* Fix MSCHAPv2 for RADIUS authentication
+
+
 0.5.8 - 2016-01-12
 
 * Fix for HSRPv6 in XR driver

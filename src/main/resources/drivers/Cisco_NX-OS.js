@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoNXOS",
 	description: "Cisco NX-OS 5+",
 	author: "NetFishers",
-	version: "1.5"
+	version: "1.6"
 };
 
 var Config = {
@@ -196,7 +196,7 @@ function snapshot(cli, device, config) {
 	}
 	device.set("networkClass", "SWITCH");
 	device.set("family", "Unknown NX-OS device");
-	var chassis = showVersion.match(/cisco (.*?)( \(.*\))? Chassis/m);
+	var chassis = showVersion.match(/cisco (.*?)( \(.*\))? [cC]hassis/m);
 	if (chassis) {
 		var chassis = chassis[1];
 		chassis = chassis.replace(/(Nexus)([0-9].*)/, "$1 $2");

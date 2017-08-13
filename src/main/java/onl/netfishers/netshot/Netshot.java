@@ -96,7 +96,7 @@ public class Netshot extends Thread {
 	 *
 	 * @return true, if successful
 	 */
-	private static boolean initConfig() {
+	protected static boolean initConfig() {
 		config = new Properties();
 		for (String fileName : CONFIG_FILENAMES) {
 			try {
@@ -122,7 +122,7 @@ public class Netshot extends Thread {
 	 *
 	 * @return true, if successful
 	 */
-	private static boolean initLogging() {
+	protected static boolean initLogging() {
 		// Redirect JUL to SLF4J
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();

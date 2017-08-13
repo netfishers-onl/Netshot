@@ -19,9 +19,9 @@
 
 var Info = {
 	name: "CiscoNXOS",
-	description: "Cisco NX-OS 5.x/6.x",
+	description: "Cisco NX-OS 5+",
 	author: "NetFishers",
-	version: "1.4"
+	version: "1.5"
 };
 
 var Config = {
@@ -234,12 +234,23 @@ function snapshot(cli, device, config) {
 	};
 	
 	
-	var runningConfig = cli.command("show running-config vdc-all");
-
+	var runningConfig;
+	try {
+		runningConfig = cli.command("show running-config vdc-all");
+	}
+	catch (error) {
+		runningConfig = cli.command("show running-config");
+	}
 	runningConfig = configCleanup(runningConfig);
 	config.set("runningConfig", runningConfig);
 	
-	var startupConfig = cli.command("show startup-config vdc-all");
+	var startupConfig;
+	try {
+		startupConfig = cli.command("show startup-config vdc-all");
+	}
+	catch (error) {
+		startupConfig = cli.command("show startup-config");
+	}
 	startupConfig = configCleanup(startupConfig);
 	device.set("configurationSaved", startupConfig == runningConfig);
 	

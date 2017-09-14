@@ -195,7 +195,8 @@ function snapshot(cli, device, config, debug) {
 	
 	var license = "";
 	try {
-		var license = cli.command("show license")
+		license += cli.command("show license usage");
+		license += cli.command("show license");
 	}
 	catch (error) {
 	}

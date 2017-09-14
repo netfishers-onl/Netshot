@@ -56,6 +56,17 @@ var Config = {
 			pre: "!! Running configuration (taken on %when%):",
 			post: "!! End of running configuration"
 		}
+	},
+	"nxosLicense": {
+		type: "LongText",
+		title: "License",
+		comparable: true,
+		searchable: false,
+		checkable: true,
+		dump: {
+			pre: "!! NX-OS license(s):",
+			preLine: "!! "
+		}
 	}
 };
 
@@ -223,6 +234,15 @@ function snapshot(cli, device, config) {
 			device.set("serialNumber", module.serialNumber);
 		}
 	}
+	
+	var license = "";
+	try {
+		license += cli.command("show license usage");
+		license += cli.command("show license");
+	}
+	catch (error) {
+	}
+	config.set("nxosLicense", license);
 	
 	var configCleanup = function(config) {
 		var p = config.search(/^[a-z]/m);

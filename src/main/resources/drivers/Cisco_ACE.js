@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoACE",
 	description: "Cisco ACE",
 	author: "NetFishers",
-	version: "1.5"
+	version: "1.5.1"
 };
 
 var Config = {

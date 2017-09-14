@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoNXOS",
 	description: "Cisco NX-OS 5+",
 	author: "NetFishers",
-	version: "1.7"
+	version: "1.8"
 };
 
 var Config = {

@@ -54,7 +54,7 @@ var Config = {
 			post: "!! End of running configuration"
 		}
 	},
-	"license": {
+	"aceLicense": {
 		type: "LongText",
 		title: "Software Licenses",
 		comparable: true,
@@ -199,7 +199,7 @@ function snapshot(cli, device, config, debug) {
 	}
 	catch (error) {
 	}
-	config.set("license", license);
+	config.set("aceLicense", license);
 
 
 	var configCleanup = function(config) {

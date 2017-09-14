@@ -83,7 +83,8 @@ public class DeviceListExtractor extends Netshot {
 			Session session = Database.getSession();
 			@SuppressWarnings("unchecked")
 			List<Device> devices = session
-				.createQuery("select d from Device d")
+				.createQuery("select d from Device d where d.status = :enabled")
+				.setParameter("enabled", Device.Status.INPRODUCTION)
 				.list();
 			for (Device device : devices) {
 				DeviceCliAccount cliAccount = null;

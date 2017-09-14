@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoNXOS",
 	description: "Cisco NX-OS 5+",
 	author: "NetFishers",
-	version: "1.6"
+	version: "1.7"
 };
 
 var Config = {
@@ -178,9 +178,9 @@ function snapshot(cli, device, config) {
 	if (image) {
 		config.set("kickstartImageFile", image[1]);
 	}
-	var image = showVersion.match(/system image file is: *(.*)/m);
+	var image = showVersion.match(/(NXOS|system) image file is: *(.*)/m);
 	if (image) {
-		config.set("systemImageFile", image[1]);
+		config.set("systemImageFile", image[2]);
 	}
 	var memory = showVersion.match(/with (\d+) kB of memory/m);
 	if (memory) {
@@ -203,10 +203,10 @@ function snapshot(cli, device, config) {
 		device.set("family", chassis);
 	}
 	
-	var version = showVersion.match(/system: *version (.*)/m);
+	var version = showVersion.match(/(system|NXOS): *version (.*)/m);
 	if (version) {
-		device.set("softwareVersion", version[1]);
-		config.set("nxosVersion", version[1]);
+		device.set("softwareVersion", version[2]);
+		config.set("nxosVersion", version[2]);
 	}
 	
 	var showInventory = cli.command("show inventory");
@@ -237,6 +237,9 @@ function snapshot(cli, device, config) {
 	var runningConfig;
 	try {
 		runningConfig = cli.command("show running-config vdc-all");
+		if (runningConfig.match(/vdc_is_active failed/)) {
+			throw "Nexus 4000 error";
+		}
 	}
 	catch (error) {
 		runningConfig = cli.command("show running-config");

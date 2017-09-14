@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>onl.netfishers.netshot</groupId>
 	<artifactId>netshot</artifactId>
-	<version>0.6.0</version>
+	<version>0.6.1</version>
 	<name>Netshot</name>
 	<build>
 		<finalName>netshot</finalName>

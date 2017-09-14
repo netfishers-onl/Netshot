@@ -8,6 +8,11 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.6.1 - 2017-09-14
+
+* Add ScreenOS driver
+* Various improvements on drivers
+
 0.6.0 - 2017-08-13
 
 * BREAKING CHANGE: Encrypt the secrets (communities, passwords) in the database

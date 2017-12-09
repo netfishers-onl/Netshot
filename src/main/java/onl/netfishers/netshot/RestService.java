@@ -432,6 +432,9 @@ public class RestService extends Thread {
 
 		/** The Constant NETSHOT_MALFORMED_IP_ADDRESS. */
 		public static final int NETSHOT_MALFORMED_IP_ADDRESS = 101;
+		
+		/** The Constant NETSHOT_INVALID_PORT. */
+		public static final int NETSHOT_INVALID_PORT = 102;
 
 		/** The Constant NETSHOT_INVALID_DOMAIN. */
 		public static final int NETSHOT_INVALID_DOMAIN = 110;
@@ -2168,6 +2171,15 @@ public class RestService extends Thread {
 		/** The ip address. */
 		private String ipAddress = null;
 
+		/** The connection IP address (optional). */
+		private String connectIpAddress = null;
+		
+		/** The SSH port. */
+		private String sshPort;
+
+		/** The Telnet port. */
+		private String telnetPort;
+
 		/** The auto try credentials. */
 		private Boolean autoTryCredentials = null;
 
@@ -2316,6 +2328,33 @@ public class RestService extends Thread {
 		public void setClearCredentialSetIds(List<Long> clearCredentialSetIds) {
 			this.clearCredentialSetIds = clearCredentialSetIds;
 		}
+
+		@XmlElement
+		public String getConnectIpAddress() {
+			return connectIpAddress;
+		}
+
+		public void setConnectIpAddress(String connectIpAddress) {
+			this.connectIpAddress = connectIpAddress;
+		}
+
+		@XmlElement
+		public String getSshPort() {
+			return sshPort;
+		}
+
+		public void setSshPort(String sshPort) {
+			this.sshPort = sshPort;
+		}
+
+		@XmlElement
+		public String getTelnetPort() {
+			return telnetPort;
+		}
+
+		public void setTelnetPort(String telnetPort) {
+			this.telnetPort = telnetPort;
+		}
 	}
 
 	/**
@@ -2356,6 +2395,58 @@ public class RestService extends Thread {
 							NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
 				}
 				device.setMgmtAddress(v4Address);
+			}
+			if (rsDevice.getConnectIpAddress() != null) {
+				if ("".equals(rsDevice.getConnectIpAddress())) {
+					device.setConnectAddress(null);
+				}
+				else {
+					Network4Address v4ConnectAddress = new Network4Address(rsDevice.getConnectIpAddress());
+					if (!v4ConnectAddress.isNormalUnicast()) {
+						session.getTransaction().rollback();
+						throw new NetshotBadRequestException("Invalid Connect IP address",
+								NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
+					}
+					device.setConnectAddress(v4ConnectAddress);
+				}
+			}
+			if (rsDevice.getSshPort() != null) {
+				if ("".equals(rsDevice.getSshPort())) {
+					device.setSshPort(0);
+				}
+				else {
+					try {
+						int port = Integer.parseInt(rsDevice.getSshPort());
+						if (port < 1 || port > 65535) {
+							throw new Exception();
+						}
+						device.setSshPort(port);
+					}
+					catch (Exception e) {
+						session.getTransaction().rollback();
+						throw new NetshotBadRequestException("Invalid SSH port",
+								NetshotBadRequestException.NETSHOT_INVALID_PORT);
+					}
+				}
+			}
+			if (rsDevice.getTelnetPort() != null) {
+				if ("".equals(rsDevice.getTelnetPort())) {
+					device.setTelnetPort(0);
+				}
+				else {
+					try {
+						int port = Integer.parseInt(rsDevice.getTelnetPort());
+						if (port < 1 || port > 65535) {
+							throw new Exception();
+						}
+						device.setTelnetPort(port);
+					}
+					catch (Exception e) {
+						session.getTransaction().rollback();
+						throw new NetshotBadRequestException("Invalid Telnet port",
+								NetshotBadRequestException.NETSHOT_INVALID_PORT);
+					}
+				}
 			}
 			if (rsDevice.getComments() != null) {
 				device.setComments(rsDevice.getComments());

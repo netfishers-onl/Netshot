@@ -44,6 +44,16 @@ define([
 					'credentialSetIds': [],
 					'mgmtDomain': that.$('#devicedomain').val()
 				};
+				var fields = ["connectIpAddress", "sshPort", "telnetPort"];
+				for (var f in fields) {
+					var value = that.$('#device' + fields[f].toLowerCase()).val();
+					if (value && that.$('#overrideconnectsettings').is(":checked")) {
+						device[fields[f]] = value; 
+					}
+					else {
+						device[fields[f]] = "";
+					}
+				}
 				that.$('#devicecredentials input:checked').each(function() {
 					device.credentialSetIds.push($(this).prop('name')
 							.replace("credentialset", ""));
@@ -66,6 +76,15 @@ define([
 
 		onCreate: function() {
 			var that = this;
+			var overrideConnectSettings = !!(this.model.get('connectAddress') || this.model.get('sshPort') || this.model.get('telnetPort'));
+			that.$('#overrideconnectsettings').change(function() {
+				if (that.$('#overrideconnectsettings').is(":checked")) {
+					that.$('#deviceconnectionsettings').show();
+				}
+				else {
+					that.$('#deviceconnectionsettings').hide();
+				}
+			}).prop('checked', overrideConnectSettings).trigger('change');
 			this.credentialSets.each(function(credentialSet) {
 				var model = credentialSet.toJSON();
 				model['inUse'] = $.inArray(credentialSet.get("id"), that.model

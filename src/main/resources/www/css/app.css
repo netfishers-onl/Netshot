@@ -732,6 +732,11 @@ h1 {
 	width: 30px;
 }
 
+.nsportpicker {
+	text-align: center;
+	width: 60px;
+}
+
 .nstask-schedule {
 	display: none;
 }
@@ -1012,7 +1017,17 @@ input.spinner {
 	width: 500px;
 }
 
+#nsdevice-deviceeditform #devicecredentials {
+	padding-left: 10px;
+}
 
+#nsdevice-deviceeditform #deviceconnectionsettings {
+	padding-left: 10px;
+}
+
+#nsdevice-deviceeditform #deviceconnectionsettings>div {
+	margin-top: 5px;
+}
 
 #nsdevices-selectdeviceform #devicesearch {
 	margin-top: 5px;

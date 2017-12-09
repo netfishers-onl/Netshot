@@ -8,6 +8,11 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.7.0 - 2017-12-09
+
+* Device-specific credentials
+* Ability to set alternate IP address and TCP port to connect to the device (allow for connection through TCP proxy)
+
 0.6.1 - 2017-09-14
 
 * Add ScreenOS driver

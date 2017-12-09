@@ -24,6 +24,37 @@
 				name="devicetype" id="devicetype"
 				class="text ui-widget-content ui-corner-all"></select>
 		</fieldset>
+		<fieldset>
+			<input type="checkbox" name="overrideconnectsettings" id="overrideconnectsettings" />
+			<label for="overrideconnectsettings">Override connection settings</label><br />
+			<div id="deviceconnectionsettings">
+				<div>
+					<label for="deviceconnectipaddress">Connect to this IP: </label>
+					<input
+						type="text"
+						name="deviceconnectipaddress"
+						id="deviceconnectipaddress"
+						class="text ui-widget-content ui-corner-all"
+					/>
+				</div>
+				<div>
+					<label for="devicesshport">SSH port: </label>
+					<input
+						type="text"
+						name="devicesshport"
+						id="devicesshport"
+						class="text ui-widget-content ui-corner-all nsportpicker"
+					/>
+					<label for="devicetelnetport">Telnet port: </label>
+					<input
+						type="text"
+						name="devicetelnetport"
+						id="devicetelnetport"
+						class="text ui-widget-content ui-corner-all nsportpicker"
+					/>
+				</div>
+			</div>
+		</fieldset>
 		<div class="nserror" id="error">
 			<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
 			<span id="errormsg"></span>

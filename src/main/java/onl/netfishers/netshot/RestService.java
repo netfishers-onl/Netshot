@@ -1852,6 +1852,15 @@ public class RestService extends Thread {
 		/** The device type. */
 		private String deviceType = "";
 
+		/** The connection IP address (optional). */
+		private String connectIpAddress = null;
+		
+		/** The SSH port. */
+		private String sshPort;
+
+		/** The Telnet port. */
+		private String telnetPort;
+		
 		/**
 		 * Checks if is auto discover.
 		 *
@@ -1965,6 +1974,58 @@ public class RestService extends Thread {
 		public void setDeviceType(String deviceType) {
 			this.deviceType = deviceType;
 		}
+
+
+		/**
+		 * Gets the connect IP address.
+		 * @return the connect IP address
+		 */
+		@XmlElement
+		public String getConnectIpAddress() {
+			return connectIpAddress;
+		}
+
+		/**
+		 * Sets the connection IP address.
+		 * @param connectIpAddress the new connection IP address. "" to clear it.
+		 */
+		public void setConnectIpAddress(String connectIpAddress) {
+			this.connectIpAddress = connectIpAddress;
+		}
+
+		/**
+		 * Gets the SSH port.
+		 * @return the SSH port
+		 */
+		@XmlElement
+		public String getSshPort() {
+			return sshPort;
+		}
+
+		/**
+		 * Sets the SSH port.
+		 * @param sshPort the new SSH port; "" to clear it
+		 */
+		public void setSshPort(String sshPort) {
+			this.sshPort = sshPort;
+		}
+
+		/**
+		 * Gets the Telnet port.
+		 * @return the Telnet port
+		 */
+		@XmlElement
+		public String getTelnetPort() {
+			return telnetPort;
+		}
+
+		/**
+		 * Sets the Telnet port.
+		 * @param telnetPort the new Telnet port; "" to clear it
+		 */
+		public void setTelnetPort(String telnetPort) {
+			this.telnetPort = telnetPort;
+		}
 	}
 
 	/**
@@ -1996,6 +2057,48 @@ public class RestService extends Thread {
 			logger.warn("User posted an invalid IP address.");
 			throw new NetshotBadRequestException("Malformed IP address",
 					NetshotBadRequestException.NETSHOT_MALFORMED_IP_ADDRESS);
+		}
+		Network4Address connectAddress;
+		try {
+			connectAddress = new Network4Address(device.getConnectIpAddress());
+			if (!deviceAddress.isNormalUnicast()) {
+				logger.warn("User posted an invalid connect IP address (not normal unicast).");
+				throw new NetshotBadRequestException("Invalid connect IP address",
+						NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
+			}
+		}
+		catch (UnknownHostException e) {
+			logger.warn("User posted an invalid IP address.");
+			throw new NetshotBadRequestException("Malformed connect IP address",
+					NetshotBadRequestException.NETSHOT_MALFORMED_IP_ADDRESS);
+		}
+		Integer sshPort = null;
+		if (device.getSshPort() != null && !"".equals(device.getSshPort())) {
+			try {
+				int port = Integer.parseInt(device.getSshPort());
+				if (port < 1 || port > 65535) {
+					throw new Exception();
+				}
+				sshPort = port;
+			}
+			catch (Exception e) {
+				throw new NetshotBadRequestException("Invalid SSH port",
+						NetshotBadRequestException.NETSHOT_INVALID_PORT);
+			}
+		}
+		Integer telnetPort = null;
+		if (device.getTelnetPort() != null && !"".equals(device.getTelnetPort())) {
+			try {
+				int port = Integer.parseInt(device.getTelnetPort());
+				if (port < 1 || port > 65535) {
+					throw new Exception();
+				}
+				telnetPort = port;
+			}
+			catch (Exception e) {
+				throw new NetshotBadRequestException("Invalid Telnet port",
+						NetshotBadRequestException.NETSHOT_INVALID_PORT);
+			}
 		}
 		Domain domain;
 		List<DeviceCredentialSet> knownCommunities;
@@ -2075,6 +2178,15 @@ public class RestService extends Thread {
 			try {
 				session.beginTransaction();
 				newDevice = new Device(driver.getName(), deviceAddress, domain, user.getUsername());
+				if (connectAddress != null) {
+					newDevice.setConnectAddress(connectAddress);
+				}
+				if (sshPort != null) {
+					newDevice.setSshPort(sshPort);
+				}
+				if (telnetPort != null) {
+					newDevice.setTelnetPort(telnetPort);
+				}
 				session.save(newDevice);
 				task = new TakeSnapshotTask(newDevice, "Initial snapshot after device creation", user.getUsername());
 				session.save(task);
@@ -2303,7 +2415,7 @@ public class RestService extends Thread {
 		}
 
 		/**
-		 * Sets the enable.
+		 * Sets the device as enabled.
 		 *
 		 * @param enable the new enable
 		 */
@@ -2311,47 +2423,87 @@ public class RestService extends Thread {
 			this.enabled = enabled;
 		}
 
+		/**
+		 * Gets the management domain.
+		 * @return the management domain
+		 */
 		@XmlElement
 		public Long getMgmtDomain() {
 			return mgmtDomain;
 		}
 
+		/**
+		 * Sets the management domain.
+		 * @param mgmtDomain the new management domain
+		 */
 		public void setMgmtDomain(Long mgmtDomain) {
 			this.mgmtDomain = mgmtDomain;
 		}
 
+		/**
+		 * Gets the list of credential set IDs.
+		 * @return the list of credential sets
+		 */
 		@XmlElement
 		public List<Long> getClearCredentialSetIds() {
 			return clearCredentialSetIds;
 		}
 
+		/**
+		 * Sets the list of credential set IDs to use with this device.
+		 * @param clearCredentialSetIds the new list of credential sets
+		 */
 		public void setClearCredentialSetIds(List<Long> clearCredentialSetIds) {
 			this.clearCredentialSetIds = clearCredentialSetIds;
 		}
 
+		/**
+		 * Gets the connect IP address.
+		 * @return the connect IP address
+		 */
 		@XmlElement
 		public String getConnectIpAddress() {
 			return connectIpAddress;
 		}
 
+		/**
+		 * Sets the connection IP address.
+		 * @param connectIpAddress the new connection IP address. "" to clear it.
+		 */
 		public void setConnectIpAddress(String connectIpAddress) {
 			this.connectIpAddress = connectIpAddress;
 		}
 
+		/**
+		 * Gets the SSH port.
+		 * @return the SSH port
+		 */
 		@XmlElement
 		public String getSshPort() {
 			return sshPort;
 		}
 
+		/**
+		 * Sets the SSH port.
+		 * @param sshPort the new SSH port; "" to clear it
+		 */
 		public void setSshPort(String sshPort) {
 			this.sshPort = sshPort;
 		}
 
+		/**
+		 * Gets the Telnet port.
+		 * @return the Telnet port
+		 */
 		@XmlElement
 		public String getTelnetPort() {
 			return telnetPort;
 		}
 
+		/**
+		 * Sets the Telnet port.
+		 * @param telnetPort the new Telnet port; "" to clear it
+		 */
 		public void setTelnetPort(String telnetPort) {
 			this.telnetPort = telnetPort;
 		}

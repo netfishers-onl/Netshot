@@ -41,12 +41,22 @@ define([
 				var that = this;
 				var $button = $(event.target).closest("button");
 				$button.button('disable');
-				that.model.save({
+				var device = {
 					autoDiscover: that.$('#autodiscover').is(":checked"),
 					ipAddress: that.$('#deviceip').val(),
 					deviceType: that.$('#devicetype').val(),
 					domainId: (that.$('#devicedomain').val() ? that.$('#devicedomain').val() : -1)
-				}).done(function(data) {
+				};
+				if (that.$('#overrideconnectsettings').is(":checked")) {
+					var fields = ["connectIpAddress", "sshPort", "telnetPort"];
+					for (var f in fields) {
+						var value = that.$('#device' + fields[f].toLowerCase()).val();
+						if (value) {
+							device[fields[f]] = value; 
+						}
+					}
+				}
+				that.model.save(device).done(function(data) {
 					that.close();
 					var monitorTaskDialog = new MonitorTaskDialog({
 						taskId: data.id,
@@ -68,12 +78,23 @@ define([
 			var that = this;
 			that.$('#autodiscover').change(function() {
 				if (that.$('#autodiscover').is(":checked")) {
-					that.$('#devicetype').prev().addBack().hide();
+					that.$('#overrideconnectsettings').prop('checked', false).trigger('change');
+					that.$('#devicetype').parent().hide();
+					that.$('#deviceconnectionsettings').parent().hide();
 				}
 				else {
-					that.$('#devicetype').prev().addBack().show();
+					that.$('#devicetype').parent().show();
+					that.$('#deviceconnectionsettings').parent().show();
 				}
 			}).prop('checked', true).trigger('change');
+			that.$('#overrideconnectsettings').change(function() {
+				if (that.$('#overrideconnectsettings').is(":checked")) {
+					that.$('#deviceconnectionsettings').show();
+				}
+				else {
+					that.$('#deviceconnectionsettings').hide();
+				}
+			}).prop('checked', false).trigger('change');
 			_.each(this.deviceTypes.models, function(deviceType) {
 				$('<option />').attr('value', deviceType.get('name')).text(deviceType
 						.get('description')).appendTo(that.$('#devicetype'));

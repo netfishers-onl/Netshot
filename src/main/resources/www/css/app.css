@@ -1021,14 +1021,6 @@ input.spinner {
 	padding-left: 10px;
 }
 
-#nsdevice-deviceeditform #deviceconnectionsettings {
-	padding-left: 10px;
-}
-
-#nsdevice-deviceeditform #deviceconnectionsettings>div {
-	margin-top: 5px;
-}
-
 #nsdevices-selectdeviceform #devicesearch {
 	margin-top: 5px;
 	width: 230px;
@@ -1348,3 +1340,12 @@ input.spinner {
 	position: absolute;
 	bottom: 30px;
 }
+
+#deviceconnectionsettings {
+	padding-left: 10px;
+}
+
+#deviceconnectionsettings>div {
+	margin-top: 5px;
+}
+

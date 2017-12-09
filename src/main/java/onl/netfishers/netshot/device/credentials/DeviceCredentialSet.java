@@ -19,6 +19,7 @@
 package onl.netfishers.netshot.device.credentials;
 
 import java.util.Date;
+import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -83,6 +84,9 @@ public class DeviceCredentialSet {
 	
 	/** The mgmtDomain. */
 	protected Domain mgmtDomain;
+	
+	/** Device-specific credential set */
+	protected boolean deviceSpecific = false;
 
 	/**
 	 * Instantiates a new device credential set.
@@ -224,4 +228,26 @@ public class DeviceCredentialSet {
 	public void setMgmtDomain(Domain domain) {
 		this.mgmtDomain = domain;
 	}
+
+	/**
+	 * Is the credential set specific to a device?
+	 * @return true if the credential set is specific;
+	 */
+	@XmlElement
+	public boolean isDeviceSpecific() {
+		return deviceSpecific;
+	}
+
+	/**
+	 * Sets whether the credential set is specific to a device.
+	 * @param specific true if the credential set is specific.
+	 */
+	public void setDeviceSpecific(boolean specific) {
+		this.deviceSpecific = specific;
+	}
+	
+	static public String generateSpecificName() {
+		return String.format("DEVICESPECIFIC-%s", UUID.randomUUID());
+	}
+	
 }

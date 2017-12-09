@@ -24,7 +24,7 @@
 				name="devicetype" id="devicetype"
 				class="text ui-widget-content ui-corner-all"></select>
 		</fieldset>
-		<fieldset>
+		<fieldset class="nsdevices-autodiscoverimcompatible">
 			<input type="checkbox" name="overrideconnectsettings" id="overrideconnectsettings" />
 			<label for="overrideconnectsettings">Override connection settings</label><br />
 			<div id="deviceconnectionsettings">
@@ -55,6 +55,68 @@
 				</div>
 			</div>
 		</fieldset>
+		<fieldset class="nsdevices-autodiscoverimcompatible">
+			<div>
+				<input type="radio" id="credentialstypecommon" name="credentialstype" value="Global" />
+				<label for="credentialstypecommon">Use global credential sets for authentication</label>
+			</div>
+			<div>
+				<input type="radio" id="credentialstypessh" name="credentialstype" value="SSH" />
+				<label for="credentialstypessh">Specific SSH account</label>
+			</div>
+			<div>
+				<input type="radio" id="credentialstypesshkey" name="credentialstype" value="SSH Key" />
+				<label for="credentialstypesshkey">Specific SSH key</label>
+			</div>
+			<div>
+				<input type="radio" id="credentialstypetelnet" name="credentialstype" value="Telnet" />
+				<label for="credentialstypetelnet">Specific Telnet account</label>
+			</div>
+		</fieldset>
+		<div class="nsdevices-autodiscoverimcompatible">
+			<table>
+				<tbody>
+					<tr class="nsadmin-credentialscommunity">
+						<td><label for="credentialscommunity">Community:</label></td>
+						<td><input type="text" name="credentialscommunity"
+							id="credentialscommunity"
+							class="text ui-widget-content ui-corner-all" /></td>
+					</tr>
+					<tr class="nsadmin-credentialscli">
+						<td><label for="credentialsusername">Username:</label></td>
+						<td><input type="text" name="credentialsusername"
+							id="credentialsusername"
+							class="text ui-widget-content ui-corner-all" /></td>
+					</tr>
+					<tr class="nsadmin-credentialsclikey">
+						<td colspan="2"><label for="credentialspublickey">RSA Public Key:</label></td>
+					</tr>
+					<tr class="nsadmin-credentialsclikey">
+						<td colspan="2"><textarea rows="3" cols="64" name="credentialspublickey"
+							id="credentialspublickey" class="text ui-widget-content ui-corner-all"></textarea></td>
+					</tr>
+					<tr class="nsadmin-credentialsclikey">
+						<td colspan="2"><label for="credentialsprivatekey">RSA Private Key:</label></td>
+					</tr>
+					<tr class="nsadmin-credentialsclikey">
+						<td colspan="2"><textarea rows="3" cols="64" name="credentialsprivatekey"
+							id="credentialsprivatekey" class="text ui-widget-content ui-corner-all"></textarea></td>
+					</tr>
+					<tr class="nsadmin-credentialscli">
+						<td class="nsadmin-credentialsclikey"><label for="credentialspassword">Passphrase:</label></td>
+						<td class="nsadmin-credentialsclinokey"><label for="credentialspassword">Password:</label></td>
+						<td><input type="password" name="credentialspassword"
+							id="credentialspassword"
+							class="text ui-widget-content ui-corner-all" /></td>
+					</tr>
+					<tr class="nsadmin-credentialscli">
+						<td><label for="credentialssuper">Enable/Super password:</label></td>
+						<td><input type="password" name="credentialssuper" id="credentialssuper"
+							class="text ui-widget-content ui-corner-all" /></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
 		<div class="nserror" id="error">
 			<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
 			<span id="errormsg"></span>

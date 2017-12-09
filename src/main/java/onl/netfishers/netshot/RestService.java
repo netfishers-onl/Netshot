@@ -468,6 +468,9 @@ public class RestService extends Thread {
 
 		/** The Constant NETSHOT_CREDENTIALS_NOTFOUND. */
 		public static final int NETSHOT_CREDENTIALS_NOTFOUND = 133;
+		
+		/** The Constant NETSHOT_INVALID_CREDENTIALS_NAME. */
+		public static final int NETSHOT_INVALID_CREDENTIALS_NAME = 134;
 
 		/** The Constant NETSHOT_SCHEDULE_ERROR. */
 		public static final int NETSHOT_SCHEDULE_ERROR = 30;
@@ -1510,6 +1513,14 @@ public class RestService extends Thread {
 			device.setMgmtDomain(Database.unproxy(device.getMgmtDomain()));
 			device.setEolModule(Database.unproxy(device.getEolModule()));
 			device.setEosModule(Database.unproxy(device.getEosModule()));
+			if (device.getSpecificCredentialSet() != null) {
+				DeviceCredentialSet credentialSet = Database.unproxy(device.getSpecificCredentialSet());
+				if (DeviceCliAccount.class.isInstance(credentialSet)) {
+					((DeviceCliAccount) credentialSet).setPassword("=");
+					((DeviceCliAccount) credentialSet).setSuperPassword("=");
+				}
+				device.setSpecificCredentialSet(credentialSet);
+			}
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the device", e);
@@ -1861,6 +1872,9 @@ public class RestService extends Thread {
 		/** The Telnet port. */
 		private String telnetPort;
 		
+		/** A device-specific credential set. */
+		private DeviceCredentialSet specificCredentialSet;
+		
 		/**
 		 * Checks if is auto discover.
 		 *
@@ -2026,6 +2040,23 @@ public class RestService extends Thread {
 		public void setTelnetPort(String telnetPort) {
 			this.telnetPort = telnetPort;
 		}
+
+		/**
+		 * Gets the device-specific credential set.
+		 * @return the specific credential set
+		 */
+		@XmlElement
+		public DeviceCredentialSet getSpecificCredentialSet() {
+			return specificCredentialSet;
+		}
+
+		/**
+		 * Sets a device-specific credential set.
+		 * @param specificCredentialSet the new specific credential set
+		 */
+		public void setSpecificCredentialSet(DeviceCredentialSet specificCredentialSet) {
+			this.specificCredentialSet = specificCredentialSet;
+		}
 	}
 
 	/**
@@ -2058,19 +2089,21 @@ public class RestService extends Thread {
 			throw new NetshotBadRequestException("Malformed IP address",
 					NetshotBadRequestException.NETSHOT_MALFORMED_IP_ADDRESS);
 		}
-		Network4Address connectAddress;
-		try {
-			connectAddress = new Network4Address(device.getConnectIpAddress());
-			if (!deviceAddress.isNormalUnicast()) {
-				logger.warn("User posted an invalid connect IP address (not normal unicast).");
-				throw new NetshotBadRequestException("Invalid connect IP address",
-						NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
+		Network4Address connectAddress = null;
+		if (device.getConnectIpAddress() != null && !device.getConnectIpAddress().equals("")) {
+			try {
+				connectAddress = new Network4Address(device.getConnectIpAddress());
+				if (!deviceAddress.isNormalUnicast()) {
+					logger.warn("User posted an invalid connect IP address (not normal unicast).");
+					throw new NetshotBadRequestException("Invalid connect IP address",
+							NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
+				}
 			}
-		}
-		catch (UnknownHostException e) {
-			logger.warn("User posted an invalid IP address.");
-			throw new NetshotBadRequestException("Malformed connect IP address",
-					NetshotBadRequestException.NETSHOT_MALFORMED_IP_ADDRESS);
+			catch (UnknownHostException e) {
+				logger.warn("User posted an invalid IP address.");
+				throw new NetshotBadRequestException("Malformed connect IP address",
+						NetshotBadRequestException.NETSHOT_MALFORMED_IP_ADDRESS);
+			}
 		}
 		Integer sshPort = null;
 		if (device.getSshPort() != null && !"".equals(device.getSshPort())) {
@@ -2187,6 +2220,13 @@ public class RestService extends Thread {
 				if (telnetPort != null) {
 					newDevice.setTelnetPort(telnetPort);
 				}
+				if (device.getSpecificCredentialSet() != null && device.getSpecificCredentialSet() instanceof DeviceCliAccount) {
+					device.getSpecificCredentialSet().setName(DeviceCredentialSet.generateSpecificName());
+					device.getSpecificCredentialSet().setDeviceSpecific(true);
+					session.save(device.getSpecificCredentialSet());
+					newDevice.setSpecificCredentialSet(device.getSpecificCredentialSet());
+					newDevice.setAutoTryCredentials(false);
+				}
 				session.save(newDevice);
 				task = new TakeSnapshotTask(newDevice, "Initial snapshot after device creation", user.getUsername());
 				session.save(task);
@@ -2301,6 +2341,9 @@ public class RestService extends Thread {
 		private List<Long> clearCredentialSetIds = null;
 
 		private Long mgmtDomain = null;
+		
+		/** A device-specific credential set. */
+		private DeviceCredentialSet specificCredentialSet = null;
 
 		/**
 		 * Gets the id.
@@ -2507,6 +2550,24 @@ public class RestService extends Thread {
 		public void setTelnetPort(String telnetPort) {
 			this.telnetPort = telnetPort;
 		}
+		
+
+		/**
+		 * Gets the device-specific credential set.
+		 * @return the specific credential set
+		 */
+		@XmlElement
+		public DeviceCredentialSet getSpecificCredentialSet() {
+			return specificCredentialSet;
+		}
+
+		/**
+		 * Sets a device-specific credential set.
+		 * @param specificCredentialSet the new specific credential set
+		 */
+		public void setSpecificCredentialSet(DeviceCredentialSet specificCredentialSet) {
+			this.specificCredentialSet = specificCredentialSet;
+		}
 	}
 
 	/**
@@ -2554,7 +2615,7 @@ public class RestService extends Thread {
 				}
 				else {
 					Network4Address v4ConnectAddress = new Network4Address(rsDevice.getConnectIpAddress());
-					if (!v4ConnectAddress.isNormalUnicast()) {
+					if (!v4ConnectAddress.isNormalUnicast() && !v4ConnectAddress.isLoopback()) {
 						session.getTransaction().rollback();
 						throw new NetshotBadRequestException("Invalid Connect IP address",
 								NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
@@ -2628,6 +2689,43 @@ public class RestService extends Thread {
 			}
 			if (rsDevice.isAutoTryCredentials() != null) {
 				device.setAutoTryCredentials(rsDevice.isAutoTryCredentials());
+			}
+			DeviceCredentialSet rsCredentialSet = rsDevice.getSpecificCredentialSet();
+			DeviceCredentialSet credentialSet = device.getSpecificCredentialSet();
+			
+			if (rsCredentialSet == null) {
+				if (credentialSet != null) {
+					session.delete(credentialSet);
+					device.setSpecificCredentialSet(null);
+				}
+			}
+			else if (DeviceCliAccount.class.isInstance(rsCredentialSet)) {
+				if (credentialSet != null && !credentialSet.getClass().equals(rsCredentialSet.getClass())) {
+					session.delete(credentialSet);
+					credentialSet = null;
+				}
+				if (credentialSet == null) {
+					credentialSet = rsCredentialSet;
+					credentialSet.setDeviceSpecific(true);
+					credentialSet.setName(DeviceCredentialSet.generateSpecificName());
+					session.save(credentialSet);
+					device.setSpecificCredentialSet(credentialSet);
+				}
+				else {
+					DeviceCliAccount cliAccount = (DeviceCliAccount) credentialSet;
+					DeviceCliAccount rsCliAccount = (DeviceCliAccount) rsCredentialSet;
+					cliAccount.setUsername(rsCliAccount.getUsername());
+					if (!rsCliAccount.getPassword().equals("=")) {
+						cliAccount.setPassword(rsCliAccount.getPassword());
+					}
+					if (!rsCliAccount.getSuperPassword().equals("=")) {
+						cliAccount.setSuperPassword(rsCliAccount.getSuperPassword());
+					}
+					if (DeviceSshKeyAccount.class.isInstance(credentialSet)) {
+						((DeviceSshKeyAccount) cliAccount).setPublicKey(((DeviceSshKeyAccount) rsCliAccount).getPublicKey());
+						((DeviceSshKeyAccount) cliAccount).setPrivateKey(((DeviceSshKeyAccount) rsCliAccount).getPrivateKey());
+					}
+				}
 			}
 			if (rsDevice.getMgmtDomain() != null) {
 				Domain domain = (Domain) session.load(Domain.class, rsDevice.getMgmtDomain());
@@ -2752,7 +2850,10 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		List<DeviceCredentialSet> credentialSets;
 		try {
-			credentialSets = session.createCriteria(DeviceCredentialSet.class).list();
+			credentialSets = session
+					.createQuery("select cs from DeviceCredentialSet cs where not (cs.deviceSpecific = :true)")
+					.setBoolean("true", true)
+					.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the credentials.", e);
@@ -2790,13 +2891,21 @@ public class RestService extends Thread {
 			session.beginTransaction();
 			DeviceCredentialSet credentialSet = (DeviceCredentialSet) session.load(
 					DeviceCredentialSet.class, id);
+			if (credentialSet.isDeviceSpecific()) {
+				throw new NetshotBadRequestException(
+						"Can't delete a device-specific credential set.",
+						NetshotBadRequestException.NETSHOT_USED_CREDENTIALS);
+			}
 			session.delete(credentialSet);
 			session.getTransaction().commit();
 		}
-		catch (HibernateException e) {
+		catch (Exception e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to delete the credentials {}", id, e);
 			Throwable t = e.getCause();
+			if (e instanceof NetshotBadRequestException) {
+				throw e;
+			}
 			if (t != null && t.getMessage().contains("foreign key constraint fails")) {
 				throw new NetshotBadRequestException(
 						"Unable to delete the credential set, there must be devices or tasks using it.",
@@ -2827,12 +2936,18 @@ public class RestService extends Thread {
 	public void addCredentialSet(DeviceCredentialSet credentialSet)
 			throws WebApplicationException {
 		logger.debug("REST request, add credentials.");
+		if (credentialSet.getName() == null || credentialSet.getName().trim().equals("")) {
+			logger.error("Invalid credential set name.");
+			throw new NetshotBadRequestException("Invalid name for the credential set",
+					NetshotBadRequestException.NETSHOT_INVALID_CREDENTIALS_NAME);
+		}
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
 			if (credentialSet.getMgmtDomain() != null) {
 				credentialSet.setMgmtDomain((Domain) session.load(Domain.class, credentialSet.getMgmtDomain().getId()));
 			}
+			credentialSet.setDeviceSpecific(false);
 			session.save(credentialSet);
 			session.getTransaction().commit();
 		}

@@ -189,6 +189,9 @@ public class Device {
 	/** The credential sets. */
 	protected Set<DeviceCredentialSet> credentialSets = new HashSet<DeviceCredentialSet>();
 
+	/** Device-specific credential set/ */
+	protected DeviceCredentialSet specificCredentialSet;
+
 	/** The device driver name. */
 	protected String driver;
 
@@ -1199,6 +1202,16 @@ public class Device {
 		this.telnetPort = telnetPort;
 	}
 
+	@XmlElement
+	@OneToOne(cascade = CascadeType.ALL)
+	public DeviceCredentialSet getSpecificCredentialSet() {
+		return specificCredentialSet;
+	}
+
+	public void setSpecificCredentialSet(DeviceCredentialSet specificCredentialSet) {
+		this.specificCredentialSet = specificCredentialSet;
+	}
+
 	@Embedded
 	@AttributeOverrides({
 		@AttributeOverride(name = "address", column = @Column(name = "connect_ipv4_address", unique = true)),
@@ -1233,7 +1246,12 @@ public class Device {
 		if (connectAddress != null) {
 			address = connectAddress;
 		}
+		Set<DeviceCredentialSet> credentialSets = this.credentialSets;
 		
+		if (specificCredentialSet != null) {
+			credentialSets = new HashSet<DeviceCredentialSet>();
+			credentialSets.add(specificCredentialSet);
+		}
 		if (deviceDriver.getProtocols().contains(DriverProtocol.SSH)) {
 			for (DeviceCredentialSet credentialSet : credentialSets) {
 				if (credentialSet instanceof DeviceSshAccount) {

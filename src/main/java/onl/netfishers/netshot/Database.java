@@ -236,7 +236,11 @@ public class Database {
 
 			
 			StandardPBEStringEncryptor credentialEncryptor = new StandardPBEStringEncryptor();
-			credentialEncryptor.setPassword(Netshot.getConfig("netshot.db.encryptionPassword", "NETSHOT"));
+			String cryptPassword = Netshot.getConfig("netshot.db.encryptionpassword", null);
+			if (cryptPassword == null) {
+				cryptPassword = Netshot.getConfig("netshot.db.encryptionPassword", "NETSHOT"); // Historical reasons
+			}
+			credentialEncryptor.setPassword(cryptPassword);
 			HibernatePBEEncryptorRegistry encryptorRegistry = HibernatePBEEncryptorRegistry.getInstance();
 			encryptorRegistry.registerPBEStringEncryptor("credentialEncryptor", credentialEncryptor);
 

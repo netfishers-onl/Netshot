@@ -2151,8 +2151,9 @@ public class RestService extends Thread {
 			}
 			domain = (Domain) session.load(Domain.class, device.getDomainId());
 			knownCommunities = session
-					.createQuery("from DeviceSnmpCommunity c where c.mgmtDomain is null or c.mgmtDomain = :domain")
+					.createQuery("from DeviceSnmpCommunity c where (mgmtDomain = :domain or mgmtDomain is null) and (not (c.deviceSpecific = :true))")
 					.setEntity("domain", domain)
+					.setBoolean("true", true)
 					.list();
 			if (knownCommunities.size() == 0) {
 				logger.error("No available SNMP community");

@@ -390,8 +390,9 @@ public class Device {
 	@Transient
 	protected List<DeviceCredentialSet> getAutoCredentialSetList(Session session) throws HibernateException {
 		return session
-				.createQuery("from DeviceCredentialSet where mgmtDomain = :domain or mgmtDomain is null")
+				.createQuery("from DeviceCredentialSet cs where (cs.mgmtDomain = :domain or cs.mgmtDomain is null) and (not (cs.deviceSpecific = :true))")
 				.setEntity("domain", this.getMgmtDomain())
+				.setBoolean("true", true)
 				.list();
 	}
 

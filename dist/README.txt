@@ -8,6 +8,11 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.7.1 - 2016-12-21
+
+* Device-specific credentials -- fix a bug where they could be used by another device.
+* Rename netshot.db.encryptionPassword to netshot.db.encryptionpassword for consistency. With backward compatibility.
+
 0.7.0 - 2017-12-09
 
 * Device-specific credentials

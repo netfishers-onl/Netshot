@@ -49,7 +49,7 @@ import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 public class Netshot extends Thread {
 
 	/** Netshot version. */
-	public static final String VERSION = "0.7.0";
+	public static final String VERSION = "0.7.1";
 
 	/** The list of configuration files to look at, in sequence. */
 	private static final String[] CONFIG_FILENAMES = new String[] {

@@ -1215,7 +1215,7 @@ public class Device {
 
 	@Embedded
 	@AttributeOverrides({
-		@AttributeOverride(name = "address", column = @Column(name = "connect_ipv4_address", unique = true)),
+		@AttributeOverride(name = "address", column = @Column(name = "connect_ipv4_address")),
 		@AttributeOverride(name = "prefixLength", column = @Column(name = "connect_ipv4_pfxlen")),
 		@AttributeOverride(name = "addressUsage", column = @Column(name = "connect_ipv4_usage")),
 	})

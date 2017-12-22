@@ -28,6 +28,15 @@ $ sudo service netshot start
 
 ### Special update steps
 
+### 0.7.0 or 0.7.1 to 0.7.2 onl
+Remove the unique index from the device table on column connect_ipv4_address.
+
+mysql -u netshot -p netshot01
+> SHOW INDEX FROM device;
+Note the Key name for Column_name connect_ipv4_address, then remove the index:
+> ALTER TABLE device DROP INDEX `key name noted above`;
+
+
 ### Any version to 0.6.0
 Starting with 0.6.0 credentials are encrypted in the database. When updating an
 existing deployment to 0.6.0 or later, the credentials need to be manually reentered so

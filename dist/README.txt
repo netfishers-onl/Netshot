@@ -8,7 +8,11 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
-0.7.1 - 2016-12-21
+0.7.2 - 2017-12-22
+
+* Allow the same connect IP address for different devices (probably using different ports)
+
+0.7.1 - 2017-12-21
 
 * Device-specific credentials -- fix a bug where they could be used by another device.
 * Rename netshot.db.encryptionPassword to netshot.db.encryptionpassword for consistency. With backward compatibility.

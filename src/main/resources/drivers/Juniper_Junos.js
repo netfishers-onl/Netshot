@@ -21,7 +21,7 @@ var Info = {
 	name: "JuniperJunos",
 	description: "Juniper Junos",
 	author: "NetFishers",
-	version: "2.1"
+	version: "2.11"
 };
 
 var Config = {
@@ -195,7 +195,7 @@ function snapshot(cli, device, config, debug) {
 		family = family.replace(/(^[A-Z0-9]+)-.*/, "$1");
 		device.set("family", "Juniper " + family);
 		if (family.match(/EX/)) {
-			device.set("networkClass", "ROUTERSWITCH");
+			device.set("networkClass", "SWITCHROUTER");
 		}
 		else if (family.match(/SRX/)) {
 			device.set("networkClass", "FIREWALL");

@@ -54,7 +54,7 @@ define([
 			name: "networkClass",
 			title: "Network class",
 			type: "ENUM",
-			values: [ "FIREWALL", "ROUTER", "SWITCH", "ROUTERSWITCH", "FIREWALL", "UNKNOWN", "LOADBALANCER" ],
+			values: [ "FIREWALL", "ROUTER", "SWITCH", "SWITCHROUTER", "FIREWALL", "UNKNOWN", "LOADBALANCER" ],
 			searchable: true
 		}, {
 			level: "DEVICE",

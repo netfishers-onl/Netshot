@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoNXOS",
 	description: "Cisco NX-OS 5+",
 	author: "NetFishers",
-	version: "1.8"
+	version: "1.8.1"
 };
 
 var Config = {
@@ -181,10 +181,6 @@ function snapshot(cli, device, config) {
 	cli.macro("exec");
 	var showVersion = cli.command("show version");
 	
-	var hostname = showVersion.match(/Device name: *(.*)/m);
-	if (hostname) {
-		device.set("name", hostname[1]);
-	}
 	var image = showVersion.match(/kickstart image file is: *(.*)/m);
 	if (image) {
 		config.set("kickstartImageFile", image[1]);
@@ -276,6 +272,12 @@ function snapshot(cli, device, config) {
 	}
 	startupConfig = configCleanup(startupConfig);
 	device.set("configurationSaved", startupConfig == runningConfig);
+	
+	
+	var hostname = runningConfig.match(/^hostname (.+)$/m);
+	if (hostname) {
+		device.set("name", hostname[1]);
+	}
 	
 	var vdcConfigs = runningConfig.split(/[\r\n]+\!Running config for vdc: .*[\r\n]+/);
 	for (var v in vdcConfigs) {

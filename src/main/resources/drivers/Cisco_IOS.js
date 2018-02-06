@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.4.2"
+	version: "1.5"
 };
 
 var Config = {
@@ -277,6 +277,9 @@ function snapshot(cli, device, config, debug) {
 		else if (system.match(/.*26[12][01].*/)) {
 			device.set("family", "Cisco 2600");
 		}
+		else if (system.match(/.*Cisco 8\d\d[^\d]/)) {
+			device.set("family", "Cisco ISR 800");
+		}
 		else if (system.match(/.*Cisco 18\d\d .*/)) {
 			device.set("family", "Cisco ISR 1800");
 		}
@@ -315,6 +318,10 @@ function snapshot(cli, device, config, debug) {
 			device.set("family", "Cisco Catalyst 3750");
 			device.set("networkClass", "SWITCH");
 		}
+		else if (system.match(/cisco ME-3400.*/)) {
+			device.set("family", "Cisco ME3400");
+			device.set("networkClass", "SWITCH");
+		}
 		else if (system.match(/.*WS-C3850.*/)) {
 			device.set("family", "Cisco Catalyst 3850");
 			device.set("networkClass", "SWITCH");
@@ -348,6 +355,9 @@ function snapshot(cli, device, config, debug) {
 		}
 		else if (system.match(/.* ASR100[0-9].*/)) {
 			device.set("family", "Cisco ASR 1000");
+		}
+		else if (system.match(/cisco ASR-920-.*/)) {
+			device.set("family", "Cisco ASR 920");
 		}
 		else if (system.match(/cisco OS-CIGESM.*/)) {
 			device.set("family", "Cisco CIGESM Blade");

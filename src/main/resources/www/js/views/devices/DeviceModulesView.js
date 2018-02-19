@@ -3,10 +3,11 @@ define([
 	'jquery',
 	'underscore',
 	'backbone',
+	'tablesort',
 	'models/device/DeviceModuleCollection',
 	'text!templates/devices/deviceModules.html',
 	'text!templates/devices/deviceModule.html'
-], function($, _, Backbone, DeviceModuleCollection, deviceModulesTemplate,
+], function($, _, Backbone, TableSort, DeviceModuleCollection, deviceModulesTemplate,
 		deviceModuleTemplate) {
 
 	return Backbone.View.extend({
@@ -35,6 +36,7 @@ define([
 			this.deviceModules.each(function(deviceModule) {
 				$(that.moduleTemplate(deviceModule.toJSON())).appendTo($table);
 			});
+			new TableSort(this.$("#modules").get(0));
 
 			return this;
 		},

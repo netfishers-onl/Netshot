@@ -3,6 +3,7 @@ define([
 	'jquery',
 	'underscore',
 	'backbone',
+	'tablesort',
 	'models/domain/DomainCollection',
 	'views/admin/AddDomainDialog',
 	'views/admin/EditDomainDialog',
@@ -23,7 +24,7 @@ define([
 	'text!templates/admin/credentials.html',
 	'text!templates/admin/user.html',
 	'text!templates/admin/driver.html'
-], function($, _, Backbone, DomainCollection, AddDomainDialog,
+], function($, _, Backbone, TableSort, DomainCollection, AddDomainDialog,
 		EditDomainDialog, DeleteDomainDialog, CredentialSetCollection,
 		AddCredentialSetDialog, EditCredentialSetDialog, DeleteCredentialSetDialog,
 		UserCollection, AddUserDialog, EditUserDialog, DeleteUserDialog,
@@ -158,6 +159,7 @@ define([
 						});
 					});
 				});
+				new TableSort($table.parent().get(0));
 			});
 		},
 
@@ -201,6 +203,7 @@ define([
 						});
 					});
 				});
+				new TableSort($table.parent().get(0));
 			});
 		},
 
@@ -247,6 +250,7 @@ define([
 						});
 					});
 				});
+				new TableSort($table.parent().get(0));
 			});
 		},
 		
@@ -260,6 +264,7 @@ define([
 				});
 				$('#nsadmin-refreshdrivers').button("enable");
 			});
+			new TableSort($table.parent().get(0));
 		},
 
 	});

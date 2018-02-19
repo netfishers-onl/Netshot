@@ -3,11 +3,12 @@ define([
 	'jquery',
 	'underscore',
 	'backbone',
+	'tablesort',
 	'views/reports/ReportView',
 	'models/reports/AccessFailureDeviceCollection',
 	'text!templates/reports/deviceAccessFailureReport.html',
 	'text!templates/reports/deviceAccessFailureRow.html'
-], function($, _, Backbone, ReportView, AccessFailureDeviceCollection,
+], function($, _, Backbone, TableSort, ReportView, AccessFailureDeviceCollection,
 		deviceAccessFailureReportTemplate,
 		deviceAccessFailureRowTemplate) {
 
@@ -70,6 +71,7 @@ define([
 				that.htmlBuffer += that.rowTemplate(device.toJSON());
 			});
 			this.$("#nsreports-accessfailures table tbody").html(this.htmlBuffer);
+			new TableSort(this.$("#nsreports-accessfailures table").get(0));
 		}
 
 	});

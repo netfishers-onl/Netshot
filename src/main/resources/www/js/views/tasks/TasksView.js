@@ -3,6 +3,7 @@ define([
 	'jquery',
 	'underscore',
 	'backbone',
+	'tablesort',
 	'models/task/TaskCollection',
 	'views/tasks/MonitorTaskDialog',
 	'views/tasks/CancelTaskDialog',
@@ -10,7 +11,7 @@ define([
 	'text!templates/tasks/tasks.html',
 	'text!templates/tasks/tasksToolBar.html',
 	'text!templates/tasks/taskRow.html'
-], function($, _, Backbone, TaskCollection, MonitorTaskDialog,
+], function($, _, Backbone, TableSort, TaskCollection, MonitorTaskDialog,
 		CancelTaskDialog, CreateTaskDialog, tasksTemplate, tasksToolBarTemplate,
 		taskRowTemplate) {
 
@@ -176,6 +177,7 @@ define([
 			this.htmlBuffer = "";
 			this.tasks.each(this.renderTaskRow, this);
 			this.$("#nstasks-tasks table>tbody").html(this.htmlBuffer);
+			new TableSort(this.$("#nstasks-tasks table").get(0));
 		},
 
 		renderTaskRow: function(task) {

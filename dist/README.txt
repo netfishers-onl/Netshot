@@ -8,6 +8,12 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.7.3 - 2018-02-19
+
+* It is now possible to match on the part number (from hardware inventory) within the software compliance rules.
+* Most of the tables within the Web interface are now sortable (by clicking on the headers).
+* A few driver updates.
+
 0.7.2 - 2017-12-22
 
 * Allow the same connect IP address for different devices (probably using different ports)

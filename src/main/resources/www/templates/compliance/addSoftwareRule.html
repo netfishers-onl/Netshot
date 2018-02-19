@@ -23,6 +23,13 @@
 			<label for="familyregexp">RegExp</label>
 		</fieldset>
 		<fieldset>
+			<label for="partnumber">Part number: </label>
+			<input type="text" name="partnumber" id="partnumber"
+				class="text ui-widget-content ui-corner-all" value="<%- partNumber %>" />
+			<input type="checkbox" name="partnumberregexp" id="partnumberregexp"<% if (typeof partNumberRegExp !== "undefined" && partNumberRegExp) { %> checked="checked"<% } %> />
+			<label for="partnumberregexp">RegExp</label>
+		</fieldset>
+		<fieldset>
 			<label for="version">Version: </label>
 			<input type="text" name="version" id="version"
 				class="text ui-widget-content ui-corner-all" value="<%- version %>" />

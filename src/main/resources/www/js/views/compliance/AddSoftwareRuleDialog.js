@@ -7,11 +7,12 @@ define([
 	'models/device/DeviceTypeCollection',
 	'models/device/DeviceGroupCollection',
 	'models/device/DeviceFamilyCollection',
+	'models/device/PartNumberCollection',
 	'models/compliance/SoftwareRuleModel',
 	'text!templates/compliance/addSoftwareRule.html'
 ], function($, _, Backbone, Dialog, DeviceTypeCollection,
-		DeviceGroupCollection, DeviceFamilyCollection, SoftwareRuleModel,
-		addSoftwareRuleTemplate) {
+		DeviceGroupCollection, DeviceFamilyCollection, PartNumberCollection,
+		SoftwareRuleModel, addSoftwareRuleTemplate) {
 
 	return Dialog.extend({
 
@@ -23,8 +24,9 @@ define([
 			this.groups = new DeviceGroupCollection([]);
 			this.deviceTypes = new DeviceTypeCollection([]);
 			this.deviceFamilies = new DeviceFamilyCollection([]);
+			this.partNumbers = new PartNumberCollection([]);
 			$.when(this.groups.fetch(), this.deviceTypes.fetch(), this.deviceFamilies
-					.fetch()).done(function() {
+					.fetch(), this.partNumbers.fetch()).done(function() {
 				that.render();
 			});
 		},
@@ -47,6 +49,8 @@ define([
 					'versionRegExp': that.$('#versionregexp').prop('checked'),
 					'family': that.$('#family').val(),
 					'familyRegExp': that.$('#familyregexp').prop('checked'),
+					'partNumber': that.$('#partnumber').val(),
+					'partNumberRegExp': that.$('#partnumberregexp').prop('checked'),
 					'level': that.$('input[name="level"]:checked').attr('id')
 							.toUpperCase()
 				}).done(function(data) {
@@ -86,6 +90,13 @@ define([
 			});
 			this.$('#family').autocomplete({
 				source: families
+			});
+			var partNumbers = [];
+			this.partNumbers.each(function(partNumber) {
+				partNumbers.push(partNumber.get('partNumber'));
+			});
+			this.$('#partnumber').autocomplete({
+				source: partNumbers
 			});
 		}
 

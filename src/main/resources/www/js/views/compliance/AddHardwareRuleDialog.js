@@ -94,7 +94,7 @@ define([
 			});
 			this.$('#partnumber').autocomplete({
 				source: partNumbers
-			})
+			});
 			this.$('.nsdatepicker').datepicker({
 				dateFormat: "dd/mm/y",
 				changeMonth: true,

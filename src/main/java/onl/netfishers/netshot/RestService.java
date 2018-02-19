@@ -6930,6 +6930,11 @@ public class RestService extends Thread {
 
 		private boolean familyRegExp = false;
 
+		/** The part number. */
+		private String partNumber = "";
+
+		private boolean partNumberRegExp = false;
+
 		/** The level. */
 		private SoftwareRule.ConformanceLevel level = ConformanceLevel.GOLD;
 
@@ -7081,6 +7086,24 @@ public class RestService extends Thread {
 		public void setFamilyRegExp(boolean familyRegExp) {
 			this.familyRegExp = familyRegExp;
 		}
+
+		@XmlElement
+		public String getPartNumber() {
+			return partNumber;
+		}
+
+		public void setPartNumber(String partNumber) {
+			this.partNumber = partNumber;
+		}
+
+		@XmlElement
+		public boolean isPartNumberRegExp() {
+			return partNumberRegExp;
+		}
+
+		public void setPartNumberRegExp(boolean partNumberRegExp) {
+			this.partNumberRegExp = partNumberRegExp;
+		}
 	}
 
 	/**
@@ -7116,7 +7139,8 @@ public class RestService extends Thread {
 
 			rule = new SoftwareRule(rsRule.getPriority(), group, driver,
 					rsRule.getFamily(), rsRule.isFamilyRegExp(), rsRule.getVersion(),
-					rsRule.isVersionRegExp(), rsRule.getLevel());
+					rsRule.isVersionRegExp(), rsRule.getPartNumber(), rsRule.isPartNumberRegExp(),
+					rsRule.getLevel());
 
 			session.save(rule);
 			session.getTransaction().commit();
@@ -7223,6 +7247,8 @@ public class RestService extends Thread {
 			rule.setFamilyRegExp(rsRule.isFamilyRegExp());
 			rule.setVersion(rsRule.getVersion());
 			rule.setVersionRegExp(rsRule.isVersionRegExp());
+			rule.setPartNumber(rsRule.getPartNumber());
+			rule.setPartNumberRegExp(rsRule.isPartNumberRegExp());
 			rule.setPriority(rsRule.getPriority());
 			rule.setLevel(rsRule.getLevel());
 

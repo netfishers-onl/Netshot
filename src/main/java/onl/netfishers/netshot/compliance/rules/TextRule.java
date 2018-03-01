@@ -32,6 +32,7 @@ import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.Rule;
 import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
 import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.device.DeviceDataProvider;
 import onl.netfishers.netshot.device.DeviceDriver;
 
 import org.hibernate.Session;
@@ -256,7 +257,7 @@ public class TextRule extends Rule {
 			this.setCheckResult(device, ResultOption.EXEMPTED, "", session);
 			return;
 		}
-		RuleDataProvider provider = this.new RuleDataProvider(session, device);
+		DeviceDataProvider provider = new DeviceDataProvider(session, device);
 		try {
 			String content = provider.get(field).toString();
 			content = content.replace("\r", "");
@@ -292,6 +293,9 @@ public class TextRule extends Rule {
 		catch (Exception e) {
 			this.setCheckResult(device, ResultOption.NOTAPPLICABLE, "No such field.", session);
 			return;
+		}
+		finally {
+			this.logIt(provider.getLog());
 		}
 	}
 

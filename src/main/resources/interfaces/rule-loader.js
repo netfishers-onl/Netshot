@@ -21,12 +21,12 @@ var NONCONFORMING = "NONCONFORMING";
 var NOTAPPLICABLE = "NOTAPPLICABLE";
 var CONFORMING = "CONFORMING";
 
-function _check(provider) {
+function _check(_provider) {
 
 	var debug = function(message) {
 		if (typeof(message) == "string") {
 			message = String(message);
-			provider.debug(message);
+			_provider.debug(message);
 		}
 	};
 
@@ -57,14 +57,14 @@ function _check(provider) {
 			if (typeof(key) == "string") {
 				key = String(key);
 				if (typeof(id) == "undefined") {
-					return _toNative(provider.get(key));
+					return _toNative(_provider.get(key));
 				}
 				else if (typeof(id) == "number" && !isNaN(id)) {
-					return _toNative(provider.get(key, id));
+					return _toNative(_provider.get(key, id));
 				}
 				else if (typeof(id) == "string") {
 					var name = String(id);
-					return _toNative(provider.get(key, name));
+					return _toNative(_provider.get(key, name));
 				}
 				else {
 					throw "Invalid device id to retrieve data from.";
@@ -75,7 +75,7 @@ function _check(provider) {
 
 		nslookup: function(host) {
 			if (typeof(host) == "string") {
-				return _toNative(provider.nslookup(String(host)));
+				return _toNative(_provider.nslookup(String(host)));
 			}
 			throw "Invalid host to resolve.";
 		},

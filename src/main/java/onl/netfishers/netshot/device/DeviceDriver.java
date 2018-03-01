@@ -73,6 +73,7 @@ import onl.netfishers.netshot.device.attribute.DeviceTextAttribute;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
 import onl.netfishers.netshot.work.Task;
 
+import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -1106,10 +1107,12 @@ public class DeviceDriver {
 	private void cliRunFunction(Device device, Config config, Cli cli, DriverProtocol protocol,
 			String function, DeviceCliAccount account)
 					throws InvalidCredentialsException, IOException, ScriptException {
+		Session session = Database.getSession();
+		DeviceDataProvider dataProvider = new DeviceDataProvider(session, device);
 		try {
 			JsCli jsCli = new JsCli(cli, account);
 			((Invocable) engine).invokeFunction("_connect", jsCli, protocol.value(), function,
-					new JsDevice(device), new JsConfig(config));
+					new JsDevice(device), new JsConfig(config), dataProvider);
 		}
 		catch (ScriptException e) {
 			logger.error("Error while running function {} using driver {}.", function, name, e);
@@ -1127,6 +1130,9 @@ public class DeviceDriver {
 			device.logIt(String.format("No such method %s while using driver %s to take snapshot: '%s'.",
 					function, name, e.getMessage()), 1);
 			throw new ScriptException(e);
+		}
+		finally {
+			session.close();
 		}
 	}
 

@@ -17,7 +17,28 @@
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-function _connect(_cli, _protocol, _function, _device, _config) {
+function _connect(_cli, _protocol, _function, _device, _config, _provider) {
+	
+	var _toNative = function(o) {
+		if (o == null || typeof(o) == "undefined") {
+			return null;
+		}
+		if (typeof(o) == "object" && (o instanceof Array || o.class.toString().match(/^class \[/))) {
+			var l = [];
+			for (var i in o) {
+				l.push(_toNative(o[i]));
+			}
+			return l;
+		}
+		if (typeof(o) == "object") {
+			var m = {};
+			for (var i in o) {
+				m[i] = _toNative(o[i]);
+			}
+			return m;
+		}
+		return o;
+	};
 	
 	var cli = {
 		
@@ -315,85 +336,87 @@ function _connect(_cli, _protocol, _function, _device, _config) {
 		}
 	};
 	
+	var device = {
+		set: function(key, value) {
+			if (typeof(key) == "string") {
+				key = String(key);
+			}
+			else {
+				throw "The key should be a string in device.set.";
+			}
+			if (typeof(value) == "undefined") {
+				throw "Undefined value used in device.set, for key " + key + ".";
+			}
+			else if (typeof(value) == "string") {
+				value = String(value);
+			}
+			_device.set(key, value);
+		},
+		add: function(collection, value) {
+			if (typeof(collection) == "string") {
+				collection = String(collection);
+			}
+			else {
+				throw "The collection should be a string in device.add.";
+			}
+			if (typeof(value) == "undefined") {
+				throw "Undefined value used in device.add, for collection " + collection + ".";
+			}
+			else if (typeof(value) == "object") {
+				value["__"] = {};
+			}
+			else if (typeof(value) == "string") {
+				value = String(value);
+			}
+			_device.add(collection, value);
+		},
+		get: function(key, id) {
+			if (typeof(key) == "string") {
+				key = String(key);
+				if (typeof(id) == "undefined") {
+					return _toNative(_provider.get(key));
+				}
+				else if (typeof(id) == "number" && !isNaN(id)) {
+					return _toNative(_provider.get(key, id));
+				}
+				else if (typeof(id) == "string") {
+					var name = String(id);
+					return _toNative(_provider.get(key, name));
+				}
+				else {
+					throw "Invalid device id to retrieve data from.";
+				}
+			}
+			throw "Invalid key to retrieve.";
+		},
+	};
+	
+
+	var config = {
+		set: function(key, value) {
+			if (typeof(key) == "string") {
+				key = String(key);
+			}
+			else {
+				throw "The key should be a string in config.set.";
+			}
+			if (typeof(value) == "undefined") {
+				throw "Undefined value used in config.set, for key " + key + ".";
+			}
+			else if (typeof(value) == "string") {
+				value = String(value);
+			}
+			_config.set(key, value);
+		}
+	};
+	
 	if (_function == "snapshot") {
-		
-		var config = {
-			set: function(key, value) {
-				if (typeof(key) == "string") {
-					key = String(key);
-				}
-				else {
-					throw "The key should be a string in config.set.";
-				}
-				if (typeof(value) == "undefined") {
-					throw "Undefined value used in config.set, for key " + key + ".";
-				}
-				else if (typeof(value) == "string") {
-					value = String(value);
-				}
-				_config.set(key, value);
-			}
-		};
-		
-		var device = {
-			set: function(key, value) {
-				if (typeof(key) == "string") {
-					key = String(key);
-				}
-				else {
-					throw "The key should be a string in device.set.";
-				}
-				if (typeof(value) == "undefined") {
-					throw "Undefined value used in device.set, for key " + key + ".";
-				}
-				else if (typeof(value) == "string") {
-					value = String(value);
-				}
-				_device.set(key, value);
-			},
-			add: function(collection, value) {
-				if (typeof(collection) == "string") {
-					collection = String(collection);
-				}
-				else {
-					throw "The collection should be a string in device.add.";
-				}
-				if (typeof(value) == "undefined") {
-					throw "Undefined value used in device.add, for collection " + collection + ".";
-				}
-				else if (typeof(value) == "object") {
-					value["__"] = {};
-				}
-				else if (typeof(value) == "string") {
-					value = String(value);
-				}
-				_device.add(collection, value);
-			}
-		};
 		
 		_device.reset();
 		snapshot(cli, device, config, debug);
 	}
 	else if (_function == "run") {
-
-		var device = {
-			set: function(key, value) {
-				if (typeof(key) == "string") {
-					key = String(key);
-				}
-				else {
-					throw "The key should be a string in device.set.";
-				}
-				if (typeof(value) == "undefined") {
-					throw "Undefined value used in device.set, for key " + key + ".";
-				}
-				else if (typeof(value) == "string") {
-					value = String(value);
-				}
-				_device.set(key, value);
-			}
-		};
-
+		
 		if (typeof(run) != "function") {
 			throw "No 'run' function";
 		}

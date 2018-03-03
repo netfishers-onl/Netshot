@@ -24,7 +24,7 @@ var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "1.4" /* Version will appear in the Admin tab. */
+	version: "2.0" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -133,9 +133,28 @@ function snapshot(cli, device, config) {
 
 	// 'status' will be used to read the version, hostname, etc.
 	var status = cli.command("get system status");
-	// The configuration is retrived by a simple 'show' at the root level.
+	// The configuration is retrieved by a simple 'show' at the root level.
 	var configuration = cli.command("show");
-	config.set("configuration", configuration);
+	
+	
+	var removeChangingParts = function(text) {
+		var cleaned = text;
+		cleaned = cleaned.replace(/^ *set (passphrase|password|passwd) ENC .*$/mg, "");
+		cleaned = cleaned.replace(/^ *set private-key "[.\r\n]*?".*$/mg, "");
+		return cleaned;
+	}
+	
+	// If only the passwords are changing (they are hashed with a new salt at each 'show') then
+	// just keep the previous configuration.
+	// That means we could miss a password change in the history of configurations, but no choice...
+	var previousConfiguration = device.get("configuration");
+	if (typeof previousConfiguration === "string" &&
+			removeChangingParts(previousConfiguration) === removeChangingParts(configuration)) {
+		config.set("configuration", previousConfiguration);
+	}
+	else {
+		config.set("configuration", configuration);
+	}
 	
 	// Read the device hostname from the 'status' output.
 	var hostname = status.match(/Hostname: (.*)$/m);

@@ -24,7 +24,7 @@ var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "2.0" /* Version will appear in the Admin tab. */
+	version: "3.0" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -111,6 +111,7 @@ var CLI = {
 	},
 	basic: { /* The basic FortiOS prompt. */
 		prompt: /^([A-Za-z0-9_\-]+? (\([A-Za-z0-9_\-]+?\) )?[#$] )$/,
+		error: /^(Unknown action|Command fail)/m,
 		pager: { /* 'pager': define how to handle the pager for long outputs. */
 			match: /^--More-- /,
 			response: " "
@@ -133,14 +134,14 @@ function snapshot(cli, device, config) {
 
 	// 'status' will be used to read the version, hostname, etc.
 	var status = cli.command("get system status");
-	// The configuration is retrieved by a simple 'show' at the root level.
-	var configuration = cli.command("show");
+	// The configuration is retrieved by a simple 'show' at the root level. Add grep to avoid paging.
+	var configuration = cli.command("show | grep .");
 	
 	
 	var removeChangingParts = function(text) {
 		var cleaned = text;
 		cleaned = cleaned.replace(/^ *set (passphrase|password|passwd) ENC .*$/mg, "");
-		cleaned = cleaned.replace(/^ *set private-key "[.\r\n]*?".*$/mg, "");
+		cleaned = cleaned.replace(/^ *set private-key "(.|[\r\n])*?"$/mg, "");
 		return cleaned;
 	}
 	
@@ -204,12 +205,28 @@ function snapshot(cli, device, config) {
 	}
 
 	// Read the HA peer hostname from a 'get system ha status' in global mode.
-	cli.command("config global", { clearPrompt: true });
+	var vdomMode = true;
+	try {
+		cli.command("config global", { clearPrompt: true });
+	}
+	catch (e) {
+		vdomMode = false;
+	}
 	var getHa = cli.command("get system ha status");
-	cli.command("end", { clearPrompt: true });
-	var peerPattern = /^(Master|Slave) *:[0-9]+ *(.+?) *([A-Z0-9]+) [0-9]/gm;
+	if (vdomMode) {
+		cli.command("end", { clearPrompt: true });
+	}
+	var peerPattern1 = /^(Master|Slave) *: *[0-9]+ (.+?) +([A-Z0-9]+) [0-9]$/gm;
 	var match;
-	while (match = peerPattern.exec(getHa)) {
+	while (match = peerPattern1.exec(getHa)) {
+		if (match[2] != hostname) {
+			device.set("haPeer", match[2]);
+			break;
+		}
+	}
+	// Newer form
+	var peerPattern2 = /^(Master|Slave) *: (.+?) *, +([A-Z0-9]+)$/gm;
+	while (match = peerPattern2.exec(getHa)) {
 		if (match[2] != hostname) {
 			device.set("haPeer", match[2]);
 			break;
@@ -240,10 +257,14 @@ function snapshot(cli, device, config) {
 				vdom = vdom[1];
 				networkInterface.virtualDevice = vdom;
 				if (typeof(vdomArp[vdom]) != "object") {
-					cli.command("config vdom", { clearPrompt: true });
-					cli.command("edit " + vdom, { clearPrompt: true });
+					if (vdomMode) {
+						cli.command("config vdom", { clearPrompt: true });
+						cli.command("edit " + vdom, { clearPrompt: true });
+					}
 					var arp = cli.command("get system arp");
-					cli.command("end", { clearPrompt: true });
+					if (vdomMode) {
+						cli.command("end", { clearPrompt: true });
+					}
 					vdomArp[vdom] = {};
 					var arpPattern = /^(\d+\.\d+\.\d+\.\d+) +[0-9]+ +([0-9a-f:]+) (.*)/gm;
 					var match;

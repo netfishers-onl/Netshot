@@ -221,6 +221,9 @@ public class Device {
 
 	/** The log. */
 	protected transient List<String> log  = new ArrayList<String>();
+	
+	/** Session debug log. */
+	protected transient List<String> sessionDebugLog;
 
 	/** The mgmt address. */
 	protected Network4Address mgmtAddress;
@@ -616,6 +619,16 @@ public class Device {
 	public List<String> getLog() {
 		return log;
 	}
+	
+	/**
+	 * Gets the debug logs of the session.
+	 * 
+	 * @return the logs
+	 */
+	@Transient
+	public List<String> getSessionDebugLog() {
+		return sessionDebugLog;
+	}
 
 
 	/**
@@ -710,6 +723,23 @@ public class Device {
 	public String getPlainLog() {
 		StringBuffer buffer = new StringBuffer();
 		for (String log : this.log) {
+			buffer.append(log);
+			buffer.append("\n");
+		}
+		return buffer.toString();
+	}
+	
+	/**
+	 * Gets the session debug logs as plain string.
+	 * @return the logs
+	 */
+	@Transient
+	public String getPlainSessionDebugLog() {
+		if (this.sessionDebugLog == null) {
+			return null;
+		}
+		StringBuffer buffer = new StringBuffer();
+		for (String log : this.sessionDebugLog) {
 			buffer.append(log);
 			buffer.append("\n");
 		}
@@ -1230,15 +1260,15 @@ public class Device {
 
 
 
-	public void takeSnapshot() throws IOException, MissingDeviceDriverException, InvalidCredentialsException, ScriptException {
-		this.execute(null);
+	public void takeSnapshot(boolean debugSession) throws IOException, MissingDeviceDriverException, InvalidCredentialsException, ScriptException {
+		this.execute(null, debugSession);
 	}
 	
-	public void runScript(String script) throws IOException, MissingDeviceDriverException, InvalidCredentialsException, ScriptException {
-		this.execute(script);
+	public void runScript(String script, boolean debugSession) throws IOException, MissingDeviceDriverException, InvalidCredentialsException, ScriptException {
+		this.execute(script, debugSession);
 	}
 	
-	private void execute(String script) throws IOException, MissingDeviceDriverException, InvalidCredentialsException, ScriptException {
+	private void execute(String script, boolean debugSession) throws IOException, MissingDeviceDriverException, InvalidCredentialsException, ScriptException {
 		DeviceDriver deviceDriver = getDeviceDriver();
 		
 		boolean sshOpened = true;
@@ -1269,7 +1299,7 @@ public class Device {
 					}
 					try {
 						cli.connect();
-						deviceDriver.runScript(this, cli, DriverProtocol.SSH, (DeviceCliAccount) credentialSet, script);
+						deviceDriver.runScript(this, cli, DriverProtocol.SSH, (DeviceCliAccount) credentialSet, script, debugSession);
 						return;
 					}
 					catch (InvalidCredentialsException e) {
@@ -1301,7 +1331,7 @@ public class Device {
 					Cli cli = new Telnet(address, telnetPort);
 					try {
 						cli.connect();
-						deviceDriver.runScript(this, cli, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet, script);
+						deviceDriver.runScript(this, cli, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet, script, debugSession);
 						return;
 					}
 					catch (InvalidCredentialsException e) {
@@ -1344,7 +1374,7 @@ public class Device {
 							}
 							try {
 								cli.connect();
-								deviceDriver.runScript(this, cli, DriverProtocol.SSH, (DeviceCliAccount) credentialSet, script);
+								deviceDriver.runScript(this, cli, DriverProtocol.SSH, (DeviceCliAccount) credentialSet, script, debugSession);
 								Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
 								while (ci.hasNext()) {
 									DeviceCredentialSet c = ci.next();
@@ -1384,7 +1414,7 @@ public class Device {
 							Cli cli = new Telnet(address, telnetPort);
 							try {
 								cli.connect();
-								deviceDriver.runScript(this, cli, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet, script);
+								deviceDriver.runScript(this, cli, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet, script, debugSession);
 								Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
 								while (ci.hasNext()) {
 									DeviceCredentialSet c = ci.next();

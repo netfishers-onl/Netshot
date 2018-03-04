@@ -90,6 +90,14 @@ define([
 						return true;
 					});
 				}
+				if (this.model.get('status') != "CANCELLED" && this.model.get('debugEnabled')) {
+					this.$("#nstask-showdebuglog").show();
+					var url = that.model.getDebugLogUrl();
+					this.$("#nstask-showdebuglog a").click(function() {
+						window.location = url;
+						return false;
+					}).prop("href", url);
+				}
 			}
 		},
 

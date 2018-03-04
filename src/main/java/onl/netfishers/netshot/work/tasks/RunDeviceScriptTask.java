@@ -100,7 +100,7 @@ public class RunDeviceScriptTask extends Task {
 				return;
 			}
 			
-			device.runScript(script);
+			device.runScript(script, false);
 			
 			this.logIt(String.format("Device logs (%d next lines):", device.getLog().size()), 3);
 			this.log.append(device.getPlainLog());

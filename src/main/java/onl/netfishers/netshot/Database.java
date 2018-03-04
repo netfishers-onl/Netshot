@@ -69,6 +69,7 @@ import onl.netfishers.netshot.device.credentials.DeviceSnmpv2cCommunity;
 import onl.netfishers.netshot.device.credentials.DeviceSshAccount;
 import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
 import onl.netfishers.netshot.device.credentials.DeviceTelnetAccount;
+import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.tasks.DeviceJsScript;
 
@@ -277,7 +278,7 @@ public class Database {
 				.addAnnotatedClass(DeviceSshKeyAccount.class)
 				.addAnnotatedClass(DeviceTelnetAccount.class)
 				.addAnnotatedClass(Policy.class).addAnnotatedClass(Rule.class)
-				.addAnnotatedClass(Task.class)
+				.addAnnotatedClass(Task.class).addAnnotatedClass(DebugLog.class)
 				.addAnnotatedClass(Exemption.class)
 				.addAnnotatedClass(Exemption.Key.class)
 				.addAnnotatedClass(CheckResult.class)

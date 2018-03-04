@@ -23,12 +23,15 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
@@ -86,6 +89,9 @@ public abstract class Task implements Cloneable {
 	 */
 	public static enum Status {
 
+		/** The cancelled. */
+		CANCELLED,
+
 		/** The failure. */
 		FAILURE,
 
@@ -102,17 +108,14 @@ public abstract class Task implements Cloneable {
 		SUCCESS,
 
 		/** The waiting. */
-		WAITING,
-
-		/** The cancelled. */
-		CANCELLED
+		WAITING
 	}
-
-	/** The Constant TASK_CLASSES. */
-	private static final Set<Class<? extends Task>> TASK_CLASSES;
 
 	/** The logger. */
 	private static Logger logger = LoggerFactory.getLogger(Task.class);
+
+	/** The Constant TASK_CLASSES. */
+	private static final Set<Class<? extends Task>> TASK_CLASSES;
 
 	static {
 		TASK_CLASSES = new HashSet<Class<? extends Task>>();
@@ -139,14 +142,23 @@ public abstract class Task implements Cloneable {
 		return TASK_CLASSES;
 	}
 
+	protected String author = "";
+	
 	/** The change date. */
 	protected Date changeDate;
-	
-	private int version;
+
+	/** The comments. */
+	protected String comments = "";
 
 	/** The creation date. */
 	protected Date creationDate = new Date();
 
+	/** Debug enabled. */
+	protected boolean debugEnabled = false;
+
+	/** The debug log. */
+	protected DebugLog debugLog;
+	
 	/** The execution date. */
 	protected Date executionDate;
 
@@ -156,22 +168,20 @@ public abstract class Task implements Cloneable {
 	/** The log. */
 	protected StringBuffer log = new StringBuffer();
 
-	/** The comments. */
-	protected String comments = "";
-
 	/** The schedule reference. */
 	protected Date scheduleReference = new Date();
 
 	/** The schedule type. */
 	protected ScheduleType scheduleType = ScheduleType.ASAP;
-
+	
 	/** The status. */
 	protected Status status = Status.NEW;
 
 	/** The target. */
 	protected String target = "None";
 
-	protected String author = "";
+	/** DB version field. */
+	private int version;
 
 	/**
 	 * Instantiates a new task.
@@ -185,12 +195,37 @@ public abstract class Task implements Cloneable {
 	 * @param comments the comments
 	 * @param target the target
 	 */
+	public Task(String comments, String target, String author, boolean debugEnabled) {
+		this.comments = comments;
+		this.target = target;
+		this.author = author;
+		this.debugEnabled = debugEnabled;
+	}
+	
+	/**
+	 * Instantiates a new task.
+	 *
+	 * @param comments the comments
+	 * @param target the target
+	 */
 	public Task(String comments, String target, String author) {
 		this.comments = comments;
 		this.target = target;
 		this.author = author;
 	}
 
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#clone()
+	 */
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		Task task = (Task) super.clone();
+		task.setScheduleReference(this.scheduleReference);
+		task.setScheduleType(this.scheduleType);
+		task.setId(0);
+		return task;
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
@@ -208,7 +243,12 @@ public abstract class Task implements Cloneable {
 			return false;
 		return true;
 	}
-
+	
+	@XmlElement
+	public String getAuthor() {
+		return author;
+	}
+	
 	/**
 	 * Gets the change date.
 	 *
@@ -218,14 +258,15 @@ public abstract class Task implements Cloneable {
 	public Date getChangeDate() {
 		return changeDate;
 	}
-	
-	@Version
-	public int getVersion() {
-		return version;
-	}
-	
-	public void setVersion(int version) {
-		this.version = version;
+
+	/**
+	 * Gets the comments.
+	 *
+	 * @return the comments
+	 */
+	@XmlElement
+	public String getComments() {
+		return comments;
 	}
 
 	/**
@@ -236,6 +277,25 @@ public abstract class Task implements Cloneable {
 	@XmlElement
 	public Date getCreationDate() {
 		return creationDate;
+	}
+
+	/**
+	 * Gets the debug log.
+	 * @return the debug log
+	 */
+	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	public DebugLog getDebugLog() {
+		return debugLog;
+	}
+
+	/**
+	 * Gets the execution date.
+	 *
+	 * @return the execution date
+	 */
+	@XmlElement
+	public Date getExecutionDate() {
+		return executionDate;
 	}
 
 	/**
@@ -260,45 +320,6 @@ public abstract class Task implements Cloneable {
 	public String getLog() {
 		return log.toString();
 	}
-
-	/**
-	 * Gets the schedule reference.
-	 *
-	 * @return the schedule reference
-	 */
-	@XmlElement
-	public Date getScheduleReference() {
-		return scheduleReference;
-	}
-
-	/**
-	 * Gets the schedule type.
-	 *
-	 * @return the schedule type
-	 */
-	@XmlElement
-	public ScheduleType getScheduleType() {
-		return scheduleType;
-	}
-
-	/**
-	 * Gets the status.
-	 *
-	 * @return the status
-	 */
-	@XmlElement
-	public Status getStatus() {
-		return status;
-	}
-
-	/**
-	 * Gets the task description.
-	 *
-	 * @return the task description
-	 */
-	@XmlElement
-	@Transient
-	abstract public String getTaskDescription();
 
 	/**
 	 * Gets the next execution date.
@@ -353,6 +374,81 @@ public abstract class Task implements Cloneable {
 	}
 
 	/**
+	 * Gets the schedule reference.
+	 *
+	 * @return the schedule reference
+	 */
+	@XmlElement
+	public Date getScheduleReference() {
+		return scheduleReference;
+	}
+
+	/**
+	 * Gets the schedule type.
+	 *
+	 * @return the schedule type
+	 */
+	@XmlElement
+	public ScheduleType getScheduleType() {
+		return scheduleType;
+	}
+
+	/**
+	 * Gets the status.
+	 *
+	 * @return the status
+	 */
+	@XmlElement
+	public Status getStatus() {
+		return status;
+	}
+
+	/**
+	 * Gets the target.
+	 *
+	 * @return the target
+	 */
+	@XmlElement
+	@Column(length = 10000)
+	public String getTarget() {
+		return target;
+	}
+
+	/**
+	 * Gets the task description.
+	 *
+	 * @return the task description
+	 */
+	@XmlElement
+	@Transient
+	abstract public String getTaskDescription();
+
+	@Version
+	public int getVersion() {
+		return version;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (id ^ (id >>> 32));
+		return result;
+	}
+
+	/**
+	 * Is debug enabled on this task?
+	 * @return true if debug is enabled
+	 */
+	@XmlElement
+	public boolean isDebugEnabled() {
+		return debugEnabled;
+	}
+
+	/**
 	 * Checks if is repeating.
 	 *
 	 * @return true, if is repeating
@@ -372,17 +468,6 @@ public abstract class Task implements Cloneable {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (id ^ (id >>> 32));
-		return result;
-	}
-
 	/**
 	 * Log it.
 	 *
@@ -394,15 +479,62 @@ public abstract class Task implements Cloneable {
 	}
 
 	/**
-	 * Run.
+	 * On cancel.
 	 */
-	public abstract void run();
+	public void onCancel() {
+	}
+
+	/**
+	 * On schedule.
+	 */
+	public void onSchedule() {
+
+	}
 
 	/**
 	 * Prepare.
 	 */
 	public void prepare() {
 
+	}
+
+	/**
+	 * Run.
+	 */
+	public abstract void run();
+
+	/**
+	 * Schedule.
+	 *
+	 * @param reference the reference
+	 * @param type the type
+	 */
+	public void schedule(Date reference, ScheduleType type) {
+		this.scheduleType = type;
+		this.scheduleReference = reference;
+	}
+
+	/**
+	 * Schedule.
+	 *
+	 * @param minutes the minutes
+	 */
+	public void schedule(int minutes) {
+		this.scheduleType = ScheduleType.AT;
+		Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.MINUTE, minutes);
+		this.scheduleReference = calendar.getTime();
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
+	}
+
+	/**
+	 * Sets the cancelled.
+	 */
+	public void setCancelled() {
+		this.status = Status.CANCELLED;
 	}
 
 	/**
@@ -415,12 +547,45 @@ public abstract class Task implements Cloneable {
 	}
 
 	/**
+	 * Sets the comments.
+	 *
+	 * @param comments the new comments
+	 */
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+
+	/**
 	 * Sets the creation date.
 	 *
 	 * @param creationDate the new creation date
 	 */
 	public void setCreationDate(Date creationDate) {
 		this.creationDate = creationDate;
+	}
+
+	/**
+	 * Enable debugging on this task.
+	 * @param debugEnabled true to enable debugging
+	 */
+	public void setDebugEnabled(boolean debugEnabled) {
+		this.debugEnabled = debugEnabled;
+	}
+
+	/**
+	 * Sets the execution date.
+	 *
+	 * @param executionDate the new execution date
+	 */
+	public void setExecutionDate(Date executionDate) {
+		this.executionDate = executionDate;
+	}
+
+	/**
+	 * Sets the failed.
+	 */
+	public void setFailed() {
+		this.status = Status.FAILURE;
 	}
 
 	/**
@@ -451,6 +616,14 @@ public abstract class Task implements Cloneable {
 	}
 
 	/**
+	 * Sets the debug log.
+	 * @param debugLog the new debug log
+	 */
+	public void setDebugLog(DebugLog debugLog) {
+		this.debugLog = debugLog;
+	}
+
+	/**
 	 * Sets the running.
 	 */
 	public void setRunning() {
@@ -467,20 +640,6 @@ public abstract class Task implements Cloneable {
 	}
 
 	/**
-	 * Sets the cancelled.
-	 */
-	public void setCancelled() {
-		this.status = Status.CANCELLED;
-	}
-
-	/**
-	 * Sets the failed.
-	 */
-	public void setFailed() {
-		this.status = Status.FAILURE;
-	}
-
-	/**
 	 * Sets the schedule reference.
 	 *
 	 * @param scheduleReference the new schedule reference
@@ -488,7 +647,7 @@ public abstract class Task implements Cloneable {
 	public void setScheduleReference(Date scheduleReference) {
 		this.scheduleReference = scheduleReference;
 	}
-
+	
 	/**
 	 * Sets the schedule type.
 	 *
@@ -499,96 +658,12 @@ public abstract class Task implements Cloneable {
 	}
 
 	/**
-	 * Schedule.
-	 *
-	 * @param reference the reference
-	 * @param type the type
-	 */
-	public void schedule(Date reference, ScheduleType type) {
-		this.scheduleType = type;
-		this.scheduleReference = reference;
-	}
-
-	/**
-	 * Schedule.
-	 *
-	 * @param minutes the minutes
-	 */
-	public void schedule(int minutes) {
-		this.scheduleType = ScheduleType.AT;
-		Calendar calendar = Calendar.getInstance();
-		calendar.add(Calendar.MINUTE, minutes);
-		this.scheduleReference = calendar.getTime();
-	}
-
-	/**
 	 * Sets the status.
 	 *
 	 * @param status the new status
 	 */
 	public void setStatus(Status status) {
 		this.status = status;
-	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#clone()
-	 */
-	@Override
-	public Object clone() throws CloneNotSupportedException {
-		Task task = (Task) super.clone();
-		task.setScheduleReference(this.scheduleReference);
-		task.setScheduleType(this.scheduleType);
-		task.setId(0);
-		return task;
-	}
-
-	/**
-	 * Gets the execution date.
-	 *
-	 * @return the execution date
-	 */
-	@XmlElement
-	public Date getExecutionDate() {
-		return executionDate;
-	}
-
-	/**
-	 * Sets the execution date.
-	 *
-	 * @param executionDate the new execution date
-	 */
-	public void setExecutionDate(Date executionDate) {
-		this.executionDate = executionDate;
-	}
-
-	/**
-	 * Gets the comments.
-	 *
-	 * @return the comments
-	 */
-	@XmlElement
-	public String getComments() {
-		return comments;
-	}
-
-	/**
-	 * Sets the comments.
-	 *
-	 * @param comments the new comments
-	 */
-	public void setComments(String comments) {
-		this.comments = comments;
-	}
-
-	/**
-	 * Gets the target.
-	 *
-	 * @return the target
-	 */
-	@XmlElement
-	@Column(length = 10000)
-	public String getTarget() {
-		return target;
 	}
 
 	/**
@@ -601,25 +676,11 @@ public abstract class Task implements Cloneable {
 	}
 
 	/**
-	 * On schedule.
+	 * Sets the version
+	 * @param version the new version
 	 */
-	public void onSchedule() {
-
-	}
-
-	/**
-	 * On cancel.
-	 */
-	public void onCancel() {
-	}
-
-	@XmlElement
-	public String getAuthor() {
-		return author;
-	}
-
-	public void setAuthor(String author) {
-		this.author = author;
+	public void setVersion(int version) {
+		this.version = version;
 	}
 
 }

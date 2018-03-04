@@ -32,6 +32,10 @@ define([
 			}
 		},
 
+		getDebugLogUrl: function() {
+			return this.urlRoot + "/" + this.get('id') + "/debuglog";
+		},
+
 		toJSON: function() {
 			var j = _(this.attributes).clone();
 			j.significantDate = this.getSignificantDate();
@@ -58,7 +62,8 @@ define([
 				'configSizeToPurge',
 				'configKeepDays',
 				'driver',
-				'script'
+				'script',
+				'debugEnabled'
 			]);
 			options.attrs = attrs;
 			return Backbone.Model.prototype.save.call(this, attrs, options);

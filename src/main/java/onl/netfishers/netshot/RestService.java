@@ -110,6 +110,7 @@ import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
 import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
+import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.Task.ScheduleType;
 import onl.netfishers.netshot.work.tasks.CheckComplianceTask;
@@ -1129,7 +1130,7 @@ public class RestService extends Thread {
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
 	public Response getDeviceConfigPlain(@PathParam("id") Long id,
 			@PathParam("item") String item) throws WebApplicationException {
-		logger.debug("REST request, get device {id} config {}.", id, item);
+		logger.debug("REST request, get device {} config {}.", id, item);
 		Session session = Database.getSession();
 		try {
 			Config config = (Config) session.get(Config.class, id);
@@ -2803,6 +2804,48 @@ public class RestService extends Thread {
 			session.close();
 		}
 	}
+	
+	/**
+	 * Gets the debug log of a task
+	 *
+	 * @param request the request
+	 * @param id the id
+	 * @param item the item
+	 * @return the device config plain
+	 * @throws WebApplicationException the web application exception
+	 */
+	@GET
+	@Path("tasks/{id}/debuglog")
+	@RolesAllowed("readonly")
+	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
+	public Response getTaskDebugLog(@PathParam("id") Long id) throws WebApplicationException {
+		logger.debug("REST request, get task {} debug log.", id);
+		Session session = Database.getSession();
+		Task task;
+		try {
+			task = (Task) session.get(Task.class, id);
+			DebugLog log = task.getDebugLog();
+			String text = log == null ? "" : log.getText();
+			String fileName = String.format("debug_%d.log", id);
+			return Response.ok(text)
+					.header("Content-Disposition", "attachment; filename=" + fileName)
+					.build();
+		}
+		catch (ObjectNotFoundException e) {
+			logger.error("Unable to find the task {}.", id, e);
+			throw new WebApplicationException(
+					"Task not found",
+					javax.ws.rs.core.Response.Status.NOT_FOUND);
+		}
+		catch (HibernateException e) {
+			logger.error("Unable to fetch the task {}.", id, e);
+			throw new WebApplicationException("Unable to get the task",
+					javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
 
 	/**
 	 * Gets the tasks.
@@ -2819,8 +2862,9 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			@SuppressWarnings("unchecked")
-			List<Task> tasks = session.createQuery("from Task t order by t.id desc")
-			.list();
+			List<Task> tasks = session
+				.createQuery("from Task t order by t.id desc")
+				.list();
 			return tasks;
 		}
 		catch (HibernateException e) {
@@ -3660,6 +3704,8 @@ public class RestService extends Thread {
 		private String script = "";
 		
 		private String driver;
+		
+		private boolean debugEnabled = false;
 
 		/**
 		 * Gets the id.
@@ -3935,6 +3981,15 @@ public class RestService extends Thread {
 
 		public void setConfigKeepDays(int configKeepDays) {
 			this.configKeepDays = configKeepDays;
+		}
+		
+		@XmlElement
+		public boolean isDebugEnabled() {
+			return debugEnabled;
+		}
+		
+		public void setDebugEnabled(boolean debugEnabled) {
+			this.debugEnabled = debugEnabled;
 		}
 		
 	}
@@ -4442,6 +4497,7 @@ public class RestService extends Thread {
 					NetshotBadRequestException.NETSHOT_INVALID_TASK);
 		}
 		if (rsTask.getScheduleReference() != null) {
+			task.setDebugEnabled(rsTask.isDebugEnabled());
 			task.setScheduleReference(rsTask.getScheduleReference());
 			task.setScheduleType(rsTask.getScheduleType());
 			if (task.getScheduleType() == ScheduleType.AT) {

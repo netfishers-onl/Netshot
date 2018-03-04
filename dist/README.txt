@@ -8,6 +8,13 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.8.0 - 2018-03-04
+
+* Debug mode for snapshot tasks (hidden by default). This makes easy to debug drivers.
+* Snapshot and run scripts have now access to the current device data, so they can compute some differences before
+pushing a new config to the history (for example).
+* Updates on FortiOS and Avaya drivers.
+
 0.7.3 - 2018-02-19
 
 * It is now possible to match on the part number (from hardware inventory) within the software compliance rules.

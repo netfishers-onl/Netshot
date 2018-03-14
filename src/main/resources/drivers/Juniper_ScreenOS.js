@@ -24,7 +24,7 @@ var Info = {
 	name: "JuniperScreenOS", /* Unique identifier of the driver within Netshot. */
 	description: "Juniper ScreenOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "1.0" /* Version will appear in the Admin tab. */
+	version: "1.1" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -151,7 +151,7 @@ function snapshot(cli, device, config, debug) {
 	
 	cli.macro("operate");
 	var getSystem = cli.command("get system");
-	var getConfig = cli.command("get config");
+	var getConfig = cli.command("get config", { timeout: 120000 });
 	var configuration = configCleanup(getConfig);
 	
 	config.set("configuration", configuration);

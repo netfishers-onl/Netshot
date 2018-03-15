@@ -207,8 +207,9 @@ function _connect(_cli, _protocol, _function, _device, _config, _provider) {
 			if (!noCr) toSend += this.CR;
 			while (true) {
 				var buffer;
+				
 				if (typeof(options) == "object" && typeof(options.timeout) == "number") {
-					buffer = _cli.send(toSend, prompts, timeout);
+					buffer = _cli.send(toSend, prompts, options.timeout);
 				}
 				else {
 					buffer = _cli.send(toSend, prompts);

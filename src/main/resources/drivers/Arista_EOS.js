@@ -21,7 +21,7 @@ var Info = {
 	name: "AristaEOS",
 	description: "Arista EOS",
 	author: "NetFishers",
-	version: "1.0"
+	version: "1.0.1"
 };
 
 var Config = {
@@ -280,7 +280,7 @@ function snapshot(cli, device, config, debug) {
 					var slot = slots[slotId];
 					if (typeof slot === "object") {
 						var partNumber = slot.name || slot.modelName || "";
-						var serialNumer = slot.serialNum;
+						var serialNumber = slot.serialNum;
 						if (serialNumber) {
 							var module = {
 								slot: slotId,
@@ -305,8 +305,7 @@ function snapshot(cli, device, config, debug) {
 		
 	}
 	catch (e) {
-		debug("Can't extract the inventory as JSON.");
-		debug(e.toString());
+		debug("Error while reading the inventory. Does the device support 'json' pipe modifier?");
 	}
 	
 	var vrfPattern = /^(?:ip vrf|vrf definition) (.+)/mg;

@@ -290,6 +290,9 @@ function snapshot(cli, device, config, debug) {
 			device.set("family", "Cisco Catalyst 2900");
 			device.set("networkClass", "SWITCH");
 		}
+		else if (system.match(/.*CISCO19\d\d.*/)) {
+			device.set("family", "Cisco ISR-G2 1900");
+		}
 		else if (system.match(/.*CISCO29\d\d.*/)) {
 			device.set("family", "Cisco ISR-G2 2900");
 		}
@@ -332,7 +335,10 @@ function snapshot(cli, device, config, debug) {
 		else if (system.match(/.*CISCO39\d\d.*/)) {
 			device.set("family", "Cisco ISR-G2 3900");
 		}
-		else if (system.match(/.*WS-C45.*/)) {
+		else if (system.match(/cisco ISR44\d\d/)) {
+			device.set("family", "Cisco ISR 4400");
+		}
+		else if (system.match(/.*WS-C4[59].*/)) {
 			device.set("family", "Cisco Catalyst 4500");
 			device.set("networkClass", "SWITCH");
 		}
@@ -342,6 +348,14 @@ function snapshot(cli, device, config, debug) {
 		}
 		else if (system.match(/.*WS-C65.*/)) {
 			device.set("family", "Cisco Catalyst 6500");
+			device.set("networkClass", "SWITCHROUTER");
+		}
+		else if (system.match(/cisco ME-C65\d\d/)) {
+			device.set("family", "Cisco ME6500");
+			device.set("networkClass", "SWITCH");
+		}
+		else if (system.match(/Cisco C68\d\d-/)) {
+			device.set("family", "Cisco Catalyst 6800");
 			device.set("networkClass", "SWITCHROUTER");
 		}
 		else if (system.match(/.*720[246].*/)) {
@@ -373,6 +387,10 @@ function snapshot(cli, device, config, debug) {
 		}
 		else if (showVersion.match(/IOS .* RSP Software/) && system.match(/cisco RSP/)) {
 			device.set("family", "Cisco 7500");
+		}
+		else if (system.match(/Cisco VG2\d\d/)) {
+			device.set("family", "Cisco VG200");
+			device.set("networkClass", "UNKNOWN");
 		}
 	}
 	var configRegister = showVersion.match(/^Configuration register is (.*)/m);

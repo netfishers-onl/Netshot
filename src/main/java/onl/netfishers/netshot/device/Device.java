@@ -1393,7 +1393,7 @@ public class Device {
 							}
 							catch (IOException e) {
 								logger.warn("Unable to open an SSH connection to {}:{}.", address.getIp(), sshPort, e);
-								if (e.getMessage().contains("Auth fail")) {
+								if (e.getMessage().contains("Auth fail") || e.getMessage().contains("authentication failure")) {
 									logIt(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()), 1);
 								}
 								else {

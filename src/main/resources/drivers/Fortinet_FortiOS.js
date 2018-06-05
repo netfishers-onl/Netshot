@@ -24,7 +24,7 @@ var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "3.0" /* Version will appear in the Admin tab. */
+	version: "3.1" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -135,7 +135,7 @@ function snapshot(cli, device, config) {
 	// 'status' will be used to read the version, hostname, etc.
 	var status = cli.command("get system status");
 	// The configuration is retrieved by a simple 'show' at the root level. Add grep to avoid paging.
-	var configuration = cli.command("show | grep .");
+	var configuration = cli.command("show | grep .", { timeout: 120000 });
 	
 	
 	var removeChangingParts = function(text) {

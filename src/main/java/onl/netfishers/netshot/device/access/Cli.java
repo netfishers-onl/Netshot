@@ -38,6 +38,27 @@ public abstract class Cli {
 	private static Logger logger = LoggerFactory.getLogger(Cli.class);
 	
 	private static Pattern ansiEscapePattern = Pattern.compile("\u001B\\[[;\\d]*m");
+	
+	/**
+	 * An IOException, with an attached buffer.
+	 * @author sylvain.cadilhac
+	 *
+	 */
+	public class WithBufferIOException extends IOException {
+		private static final long serialVersionUID = -1759143581862318498L;
+
+		public WithBufferIOException(String message, StringBuffer receivedBuffer) {
+			super(message);
+			this.receivedBuffer = receivedBuffer;
+		}
+		
+		private StringBuffer receivedBuffer;
+		
+		public StringBuffer getReceivedBuffer() {
+			return receivedBuffer;
+		}
+		
+	}
 
 	/** The connection timeout. */
 	protected int connectionTimeout = 5000;
@@ -248,7 +269,7 @@ public abstract class Cli {
 				}
 			}
 			if (System.currentTimeMillis() > maxTime) {
-				throw new IOException("Timeout waiting for the command output.");
+				throw new WithBufferIOException("Timeout waiting for the command output.", buffer);
 			}
 		}
 	}

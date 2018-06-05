@@ -64,6 +64,7 @@ import onl.netfishers.netshot.device.Device.InvalidCredentialsException;
 import onl.netfishers.netshot.device.Device.NetworkClass;
 import onl.netfishers.netshot.device.NetworkAddress.AddressUsage;
 import onl.netfishers.netshot.device.access.Cli;
+import onl.netfishers.netshot.device.access.Cli.WithBufferIOException;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigBinaryAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigLongTextAttribute;
@@ -714,7 +715,10 @@ public class DeviceDriver {
 		private static String toHexAscii(String text) {
 			StringBuffer hex = new StringBuffer();
 			for (int i = 0; i < text.length(); i++) {
-				hex.append(" ").append(Integer.toHexString(text.charAt(i)));
+				if (i % 16 == 0 && i > 0) {
+					hex.append("\n");
+				}
+				hex.append(" ").append(String.format("%02x", (int) text.charAt(i)));
 			}
 			return hex.toString();
 		}
@@ -776,6 +780,11 @@ public class DeviceDriver {
 			catch (IOException e) {
 				logger.error("CLI I/O error.", e);
 				this.logIt("I/O error: " + e.getMessage());
+				if (this.debugSession && e instanceof WithBufferIOException) {
+					String buffer = ((WithBufferIOException) e).getReceivedBuffer().toString();
+					this.logIt("Received buffer: '" + buffer + "'");
+					this.logIt("In hex: " + toHexAscii(buffer));
+				}
 				this.errored = true;
 			}
 			finally {

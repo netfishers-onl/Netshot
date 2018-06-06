@@ -154,7 +154,7 @@ var CLI = {
 };
 
 
-function snapshot(cli, device, config) {
+function snapshot(cli, device, config, debug) {
 	
 	var configCleanup = function(config) {
 		var p = config.search(/^[a-z]/m);
@@ -180,7 +180,8 @@ function snapshot(cli, device, config) {
 	
 	var showVersion = cli.command("show version");
 	var showInventory = cli.command("admin show inventory");
-	var showInstall = cli.command("admin show install summary");
+	showInventory += cli.command("show inventory");
+	var showInstall = cli.command("admin show install active");
 	
 	var hostname = runningConfig.match(/^hostname (.+)/m);
 	if (!hostname) {
@@ -242,12 +243,25 @@ function snapshot(cli, device, config) {
 	};
 	var inventoryPattern = /NAME: (.*), +DESCR: (.*)[\r\n]+PID: (.*?) *, +VID: (.*), +SN: (.*)/g;
 	var match;
+	var knownModules = [];
 	while (match = inventoryPattern.exec(showInventory)) {
 		var module = {
 			slot: removeQuotes(match[1]),
-			partNumber: emoveQuotes(match[3]),
-			serialNumber: emoveQuotes(match[5])
+			partNumber: removeQuotes(match[3]),
+			serialNumber: removeQuotes(match[5])
 		};
+		var existing = false;
+		for (var m in knownModules) {
+			if (module.slot === knownModules[m].slot &&
+			    module.partNumber === knownModules[m].partNumber &&
+			    module.serialNumber === knownModules[m].serialNumber) {
+				existing = true;
+				break;
+			}
+		}
+		if (existing) {
+			continue;
+		}
 		device.add("module", module);
 		if (module.slot.match(/Chassis/)) {
 			device.set("serialNumber", module.serialNumber);

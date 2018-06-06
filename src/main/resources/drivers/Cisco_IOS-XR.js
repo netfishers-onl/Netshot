@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "NetFishers",
-	version: "1.3"
+	version: "1.4"
 };
 
 var Config = {
@@ -182,8 +182,11 @@ function snapshot(cli, device, config) {
 	var showInventory = cli.command("admin show inventory");
 	var showInstall = cli.command("admin show install summary");
 	
-	var hostname = showVersion.match(/^ *(.*) uptime is/m);
-	if (hostname != null) {
+	var hostname = runningConfig.match(/^hostname (.+)/m);
+	if (!hostname) {
+		hostname = showVersion.match(/^ *(.*) uptime is/m);
+	}
+	if (hostname) {
 		device.set("name", hostname[1]);
 	}
 	device.set("networkClass", "ROUTER");
@@ -194,9 +197,9 @@ function snapshot(cli, device, config) {
 		config.set("xrVersion", version[2]);
 	}
 	
-	var versionDetails = showVersion.match(/^(.*) with (\d+)K(\/(\d+)K)? bytes of memory/m);
 	device.set("family", "IOS-XR device");
-	if (versionDetails != null) {
+	var versionDetails = showVersion.match(/^(.*) with (\d+)K(\/(\d+)K)? bytes of memory/m);
+	if (versionDetails) {
 		var system = versionDetails[1];
 		if (system.match(/cisco 12\d\d\d.*/)) {
 			device.set("family", "Cisco 12000 Series");
@@ -229,17 +232,34 @@ function snapshot(cli, device, config) {
 		device.set("contact", "");
 	}
 	
-	var inventoryPattern = /NAME: \"(.*)\", +DESCR: \"(.*)\"[\r\n]+PID: (.*?) *, +VID: (.*), +SN: (.*)/g;
+	var removeQuotes = function(info) {
+		var match = info.match(/^\"(.*)\"$/);
+		if (match) {
+			info = match[1];
+		}
+		info = info.trim();
+		return info;
+	};
+	var inventoryPattern = /NAME: (.*), +DESCR: (.*)[\r\n]+PID: (.*?) *, +VID: (.*), +SN: (.*)/g;
 	var match;
 	while (match = inventoryPattern.exec(showInventory)) {
 		var module = {
-			slot: match[1],
-			partNumber: match[3],
-			serialNumber: match[5]
+			slot: removeQuotes(match[1]),
+			partNumber: emoveQuotes(match[3]),
+			serialNumber: emoveQuotes(match[5])
 		};
 		device.add("module", module);
 		if (module.slot.match(/Chassis/)) {
 			device.set("serialNumber", module.serialNumber);
+			if (module.slot.match(/NCS55[0-9A-Z][0-9A-Z]/)) {
+				device.set("family", "Cisco NCS5500");
+			}
+			else if (module.slot.match(/NCS5[0-9A-Z][0-9A-Z][0-9A-Z]/)) {
+				device.set("family", "Cisco NCS5000");
+			}
+			else if (module.slot.match(/NCS6[0-9A-Z][0-9A-Z][0-9A-Z]/)) {
+				device.set("family", "Cisco NCS6000");
+			}
 		}
 	}
 	

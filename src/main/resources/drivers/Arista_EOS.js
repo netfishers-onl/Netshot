@@ -279,7 +279,7 @@ function snapshot(cli, device, config, debug) {
 				for (var slotId in slots) {
 					var slot = slots[slotId];
 					if (typeof slot === "object") {
-						var partNumber = slot.name || slot.modelName || "";
+						var partNumber = slot.name || slot.modelName || "";
 						var serialNumber = slot.serialNum;
 						if (serialNumber) {
 							var module = {

@@ -6,9 +6,11 @@ define([
 	'tablesort',
 	'views/reports/ReportView',
 	'models/reports/AccessFailureDeviceCollection',
+	'models/domain/DomainCollection',
 	'text!templates/reports/deviceAccessFailureReport.html',
 	'text!templates/reports/deviceAccessFailureRow.html'
 ], function($, _, Backbone, TableSort, ReportView, AccessFailureDeviceCollection,
+		DomainCollection,
 		deviceAccessFailureReportTemplate,
 		deviceAccessFailureRowTemplate) {
 
@@ -21,6 +23,15 @@ define([
 			var that = this;
 
 			this.$el.html(this.template());
+			
+			this.domains = new DomainCollection([]);
+			this.domains.fetch().done(function() {
+				that.renderDomainList();
+			});
+
+			this.$('#filterdomain').click(function() {
+				that.$('#domain').prop('disabled', !$(this).prop('checked'));
+			});
 
 			this.$('#update').button({
 				icons: {
@@ -57,10 +68,19 @@ define([
 		refreshDevices: function() {
 			var that = this;
 			this.devices = new AccessFailureDeviceCollection([], {
-				days: this.$('#olderthandays').spinner('value')
+				days: this.$('#olderthandays').spinner('value'),
+				domains: this.$('#filterdomain').prop('checked') ? [this.$('#domain').val()] : undefined,
 			});
 			this.devices.fetch().done(function() {
 				that.renderDevices();
+			});
+		},
+		
+		renderDomainList: function() {
+			var that = this;
+			this.domains.each(function(domain) {
+				$('<option />').attr('value', domain.get('id')).text(domain.get('name'))
+						.appendTo(that.$('#domain'));
 			});
 		},
 		

@@ -7433,10 +7433,10 @@ public class RestService extends Thread {
 	}
 	
 	@GET
-	@Path("reports/accessfailuredevices/{days}")
+	@Path("reports/accessfailuredevices")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsLightAccessFailureDevice> getAccessFailureDevices(@PathParam("days") Integer days) throws WebApplicationException {
+	public List<RsLightAccessFailureDevice> getAccessFailureDevices(@QueryParam("days") Integer days, @QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, devices without successful snapshot over the last {} days.", days);
 		
 		if (days == null || days < 1) {
@@ -7450,12 +7450,23 @@ public class RestService extends Thread {
 			Calendar when = Calendar.getInstance();
 			when.add(Calendar.DATE, -days);
 			
-			@SuppressWarnings("unchecked")
-			List<RsLightAccessFailureDevice> devices = session
-				.createQuery(DEVICELIST_BASEQUERY + ", (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure from Device d where d.status = :enabled")
+			String domainFilter = "";
+			if (domains.size() > 0) {
+				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
+			}
+			
+			Query query = session
+				.createQuery(DEVICELIST_BASEQUERY + ", (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, "
+						+ "(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure from Device d where d.status = :enabled"
+						+ domainFilter)
 				.setParameter("success", Task.Status.SUCCESS)
 				.setParameter("failure", Task.Status.FAILURE)
-				.setParameter("enabled", Device.Status.INPRODUCTION)
+				.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domainFilter.length() > 0) {
+				query.setParameterList("domainIds", domains);
+			}
+			@SuppressWarnings("unchecked")
+			List<RsLightAccessFailureDevice> devices = query
 				.setResultTransformer(Transformers.aliasToBean(RsLightAccessFailureDevice.class))
 				.list();
 			Iterator<RsLightAccessFailureDevice> d = devices.iterator();

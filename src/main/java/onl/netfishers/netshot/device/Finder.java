@@ -113,43 +113,40 @@ public class Finder {
 
 		/** The device. */
 		DEVICE("(?i)^\\s*(\\[device\\])", "DEVICE"),
+		
+		/** The domain token/ */
+		DOMAIN("(?i)^\\s*(\\[domain\\])", "DOMAIN"),
 
 		/** The SUBNET v4. */
-		SUBNETV4(
-				"^\\s*(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/(1[0-9]|2[0-9]|3[0-2]|[0-9]))",
+		SUBNETV4("^\\s*(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/(1[0-9]|2[0-9]|3[0-2]|[0-9]))", ""),
+
+		/** The IP v4. */
+		IPV4("^\\s*(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))", ""),
+
+		/** The SUBNET v6. */
+		SUBNETV6(
+				"^\\s*(((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))/(1[01][0-9]|12[0-8]|[0-9][0-9]|[0-9]))",
 				""),
 
-				/** The IP v4. */
-				IPV4(
-						"^\\s*(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))",
-						""),
+		/** The IP v6. */
+		IPV6(
+				"^\\s*((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))",
+				""),
 
-						/** The SUBNET v6. */
-						SUBNETV6(
-								"^\\s*(((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))/(1[01][0-9]|12[0-8]|[0-9][0-9]|[0-9]))",
-								""),
+		/** The macsubnet. */
+		MACSUBNET("^\\s*([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}/(4[0-8]|[1-3][0-9]|[0-9]))", ""),
 
-								/** The IP v6. */
-								IPV6(
-										"^\\s*((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))",
-										""),
+		/** The macaddress. */
+		MACADDRESS("^\\s*([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4})", ""),
 
-										/** The macsubnet. */
-										MACSUBNET(
-												"^\\s*([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}/(4[0-8]|[1-3][0-9]|[0-9]))",
-												""),
+		/** The quote. */
+		QUOTE("^\\s*\"(.*?)(?<!\\\\)\"", ""),
 
-												/** The macaddress. */
-												MACADDRESS("^\\s*([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4})", ""),
+		/** The numeric. */
+		NUMERIC("^\\s*([0-9\\.]+)\\b", ""),
 
-												/** The quote. */
-												QUOTE("^\\s*\"(.*?)(?<!\\\\)\"", ""),
-
-												/** The numeric. */
-												NUMERIC("^\\s*([0-9\\.]+)\\b", ""),
-
-												/** The item. */
-												ITEM("^\\s*\\[([A-Za-z\\-0-9 \\(\\)]+)\\]", "");
+		/** The item. */
+		ITEM("^\\s*\\[([A-Za-z\\-0-9 \\(\\)]+)\\]", "");
 
 		/** The pattern. */
 		private Pattern pattern;
@@ -393,6 +390,11 @@ public class Finder {
 			}
 
 			expr = DeviceExpression.parse(tokens, driver);
+			if (expr != null) {
+				return expr;
+			}
+
+			expr = DomainExpression.parse(tokens, driver);
 			if (expr != null) {
 				return expr;
 			}
@@ -1012,6 +1014,80 @@ public class Finder {
 		@Override
 		public String toString() {
 			return String.format("[%s] %s %d", TokenType.DEVICE, TokenType.IS, this.value);
+		}
+
+	}
+
+	/**
+	 * The Class DomainExpress. Matches a device domain.
+	 */
+	public static class DomainExpression extends Expression {
+
+		/**
+		 * Instantiates a new domain expression.
+		 *
+		 * @param driver the device class
+		 */
+		public DomainExpression(DeviceDriver driver) {
+			super(driver);
+		}
+
+		/** The value. */
+		private Long value;
+
+		/**
+		 * Parses the expression.
+		 *
+		 * @param tokens the tokens
+		 * @param driver the device class
+		 * @return the expression
+		 * @throws FinderParseException the finder parse exception
+		 */
+		public static Expression parse(List<Token> tokens,
+				DeviceDriver driver) throws FinderParseException {
+			if (tokens.size() == 3 && tokens.get(0).type == TokenType.DOMAIN) {
+				Token comparator = tokens.get(1);
+				Token value = tokens.get(2);
+				if (comparator.type != TokenType.IS) {
+					throw new FinderParseException(String.format(
+							"Invalid operator after DOMAIN at character %d.",
+							comparator.position));
+				}
+				if (value.type != TokenType.NUMERIC) {
+					throw new FinderParseException(String.format(
+							"Expecting a numeric value for DOMAIN at character %d.",
+							value.position));
+				}
+				DomainExpression domExpr = new DomainExpression(driver);
+				domExpr.value = Long.parseLong(value.text);
+				return domExpr;
+			}
+			return null;
+		}
+
+		/* (non-Javadoc)
+		 * @see onl.netfishers.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
+		 */
+		public FinderCriteria buildHqlString(String itemPrefix) {
+			FinderCriteria criteria = super.buildHqlString(itemPrefix);
+			criteria.where = String.format("d.mgmtDomain.id = :%s", itemPrefix);
+			return criteria;
+		}
+
+		/* (non-Javadoc)
+		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
+		 */
+		public void setVariables(Query query, String itemPrefix) {
+			super.setVariables(query, itemPrefix);
+			query.setLong(itemPrefix, value);
+		}
+
+		/* (non-Javadoc)
+		 * @see onl.netfishers.netshot.device.Finder.Expression#toString()
+		 */
+		@Override
+		public String toString() {
+			return String.format("[%s] %s %d", TokenType.DOMAIN, TokenType.IS, this.value);
 		}
 
 	}

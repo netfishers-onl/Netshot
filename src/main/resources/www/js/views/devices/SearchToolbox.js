@@ -4,9 +4,10 @@ define([
 	'underscore',
 	'backbone',
 	'models/device/DeviceTypeCollection',
+	'models/domain/DomainCollection',
 	'text!templates/devices/searchToolbox.html',
 	'rangyinput'
-], function($, _, Backbone, DeviceTypeCollection,
+], function($, _, Backbone, DeviceTypeCollection, DomainCollection,
 		searchToolboxTemplate) {
 
 	return Backbone.View.extend({
@@ -118,15 +119,29 @@ define([
 			title: "Device",
 			type: "ID",
 			searchable: true
+		}, {
+			level: "DEVICE",
+			name: "domain",
+			title: "Domain",
+			type: "ENUM",
+			values: function() {
+				return this.domains.map(function(domain) {
+					return {
+						caption: domain.get('id') + " (" + domain.get('name') + ")",
+						id: domain.get('id'),
+					};
+				});
+			},
+			searchable: true
 		} ],
 
 		template: _.template(searchToolboxTemplate),
 
-		deviceTypes: new DeviceTypeCollection([]),
-
 		initialize: function(options) {
 			var that = this;
-			this.deviceTypes.fetch().done(function() {
+			this.deviceTypes = new DeviceTypeCollection([]);
+			this.domains = new DomainCollection([]);
+			$.when(this.deviceTypes.fetch(), this.domains.fetch()).done(function() {
 				that.render();
 			});
 		},
@@ -212,9 +227,18 @@ define([
 					},
 					'ENUM': function() {
 						var buttons = {};
-						for (a in this.values) {
-							var value = this.values[a];
-							buttons[value] = '[' + this.title + '] IS "' + value + '"';
+						var values = this.values;
+						if (typeof values === "function") {
+							values = values.call(that);
+						}
+						for (a in values) {
+							var value = values[a];
+							if (typeof value === "string") {
+								buttons[value] = '[' + this.title + '] IS "' + value + '"';
+							}
+							else {
+								buttons[value.caption] = '[' + this.title + '] IS ' + value.id;
+							}
 						}
 						return buttons;
 					}

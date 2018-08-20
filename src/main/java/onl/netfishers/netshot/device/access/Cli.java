@@ -115,7 +115,7 @@ public abstract class Cli {
 	}
 
 	/**
-	 * Sets the command timeout.
+	 * Sets the command idle timeout, i.e. max time without receiving data.
 	 *
 	 * @param commandTimeout the new command timeout
 	 */
@@ -245,8 +245,8 @@ public abstract class Cli {
 		for (int i = 0; i < expects.length; i++) {
 			patterns[i] = Pattern.compile(expects[i], Pattern.MULTILINE);
 		}
-	
-		long maxTime = System.currentTimeMillis() + this.commandTimeout;
+		
+		long lastActivityTime = System.currentTimeMillis();
 		
 		while (true) {			
 			while (this.inStream != null && this.inStream.available() > 0) {
@@ -254,6 +254,7 @@ public abstract class Cli {
 				String s = new String(miniBuffer, 0, length);
 				logger.debug("Received data '{}'.", s);
 				buffer.append(s);
+				lastActivityTime = System.currentTimeMillis();
 			}
 			for (int i = 0; i < patterns.length; i++) {
 				String received = buffer.toString();
@@ -268,7 +269,7 @@ public abstract class Cli {
 					return matcher.replaceFirst("");
 				}
 			}
-			if (System.currentTimeMillis() > maxTime) {
+			if (System.currentTimeMillis() > lastActivityTime + this.commandTimeout) {
 				throw new WithBufferIOException("Timeout waiting for the command output.", buffer);
 			}
 		}

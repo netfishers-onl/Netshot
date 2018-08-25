@@ -25,9 +25,6 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import onl.netfishers.netshot.collector.SnmpTrapReceiver;
-import onl.netfishers.netshot.collector.SyslogServer;
-import onl.netfishers.netshot.device.DeviceDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -36,12 +33,16 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.net.SyslogAppender;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.OutputStreamAppender;
 import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
+import onl.netfishers.netshot.collector.SnmpTrapReceiver;
+import onl.netfishers.netshot.collector.SyslogServer;
+import onl.netfishers.netshot.device.DeviceDriver;
 
 /**
  * The Class Netshot. Starting point of Netshot
@@ -60,6 +61,7 @@ public class Netshot extends Thread {
 
 	/** The logger. */
 	private static Logger logger = LoggerFactory.getLogger(Netshot.class);
+	final static public Logger aaaLogger = LoggerFactory.getLogger("AAA");
 
 	/**
 	 * Gets the config.
@@ -122,7 +124,7 @@ public class Netshot extends Thread {
 	 *
 	 * @return true, if successful
 	 */
-	protected static boolean initLogging() {
+	protected static boolean initMainLogging() {
 		// Redirect JUL to SLF4J
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
@@ -132,10 +134,8 @@ public class Netshot extends Thread {
 		LoggerContext loggerContext = rootLogger.getLoggerContext();
 		
 		System.setProperty("org.jboss.logging.provider", "slf4j");
-		
 
 		String logFile = Netshot.getConfig("netshot.log.file", "netshot.log");
-		String aaaLogFile = Netshot.getConfig("netshot.log.auditfile");
 		String logLevelCfg = Netshot.getConfig("netshot.log.level");
 		String logCountCfg = Netshot.getConfig("netshot.log.count", "5");
 		String logMaxSizeCfg = Netshot.getConfig("netshot.log.maxsize", "2");
@@ -161,7 +161,7 @@ public class Netshot extends Thread {
 
 		Level logLevel = Level.toLevel(logLevelCfg, Level.WARN);
 		if (logLevelCfg != null && !logLevel.toString().equals(logLevelCfg)) {
-			logger.error("Invalid log level '{}'. Using {}.", logLevelCfg, logLevel);
+			logger.error("Invalid log level (netshot.log.level) '{}'. Using {}.", logLevelCfg, logLevel);
 		}
 		
 		OutputStreamAppender<ILoggingEvent> appender;
@@ -204,8 +204,6 @@ public class Netshot extends Thread {
 				return false;
 			}
 		}
-		
-
 
 		rootLogger.setLevel(logLevel);
 		PatternLayoutEncoder encoder = new PatternLayoutEncoder();
@@ -238,47 +236,81 @@ public class Netshot extends Thread {
 			}
 		}
 		
+		return true;
+	}
 
-
-		if (aaaLogFile != null) {
+	/**
+	 * Initialize the audit logging.
+	 * @return true if everything went well
+	 */
+	protected static boolean initAuditLogging() {
+		String auditFile = Netshot.getConfig("netshot.log.audit.file");
+		String auditLevelCfg = Netshot.getConfig("netshot.log.audit.level");
+		String auditCountCfg = Netshot.getConfig("netshot.log.audit.count", "5");
+		String auditMaxSizeCfg = Netshot.getConfig("netshot.log.audit.maxsize", "2");
+		int auditCount = 5;
+		try {
+			auditCount = Integer.parseInt(auditCountCfg);
+		}
+		catch (NumberFormatException e) {
+			logger.error("Invalid number of log files (netshot.log.audit.count config line). Using {}.", auditCount);
+		}
+		
+		int auditMaxSize = 5;
+		try {
+			auditMaxSize = Integer.parseInt(auditMaxSizeCfg);
+			if (auditMaxSize < 1) {
+				throw new NumberFormatException();
+			}
+		}
+		catch (NumberFormatException e1) {
+			logger.error("Invalid max size of log files (netshot.log.audit.maxsize config line). Using {}.", auditMaxSize);
+		}
+		((ch.qos.logback.classic.Logger) aaaLogger).setAdditive(false);
+		Level logLevel = Level.toLevel(auditLevelCfg, Level.OFF);
+		if (auditLevelCfg != null && !logLevel.toString().equals(auditLevelCfg)) {
+			logger.error("Invalid log level (netshot.log.audit.level) '{}'. Using {}.", auditLevelCfg, logLevel);
+		}
+		((ch.qos.logback.classic.Logger) aaaLogger).setLevel(logLevel);
+		
+		if (auditFile != null) {
 			try {
-				ch.qos.logback.classic.Logger aaaLogger = (ch.qos.logback.classic.Logger)
-						LoggerFactory.getLogger("AAA");
-				LoggerContext aaaLoggerContext = aaaLogger.getLoggerContext();
-				aaaLogger.setLevel(Level.ALL);
-				RollingFileAppender<ILoggingEvent> aaaRfAppender = new RollingFileAppender<ILoggingEvent>();
-				aaaRfAppender.setContext(aaaLoggerContext);
-				aaaRfAppender.setFile(aaaLogFile);
+				LoggerContext loggerContext = ((ch.qos.logback.classic.Logger) aaaLogger).getLoggerContext();
+				RollingFileAppender<ILoggingEvent> appender = new RollingFileAppender<ILoggingEvent>();
+				appender.setContext(loggerContext);
+				appender.setFile(auditFile);
 
 				FixedWindowRollingPolicy fwRollingPolicy = new FixedWindowRollingPolicy();
-				fwRollingPolicy.setContext(aaaLoggerContext);
-				fwRollingPolicy.setFileNamePattern(aaaLogFile + ".%i.gz");
+				fwRollingPolicy.setContext(loggerContext);
+				fwRollingPolicy.setFileNamePattern(auditFile + ".%i.gz");
 				fwRollingPolicy.setMinIndex(1);
-				fwRollingPolicy.setMaxIndex(logCount);
-				fwRollingPolicy.setParent(aaaRfAppender);
+				fwRollingPolicy.setMaxIndex(auditCount);
+				fwRollingPolicy.setParent(appender);
 				fwRollingPolicy.start();
 
 				SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new 
 						SizeBasedTriggeringPolicy<ILoggingEvent>();
-				triggeringPolicy.setMaxFileSize(String.format("%dMB", logMaxSize));
+				triggeringPolicy.setMaxFileSize(String.format("%dMB", auditMaxSize));
 				triggeringPolicy.start();
 
-				aaaRfAppender.setRollingPolicy(fwRollingPolicy);
-				aaaRfAppender.setTriggeringPolicy(triggeringPolicy);
-
-				PatternLayoutEncoder aaaEncoder = new PatternLayoutEncoder();
-				aaaEncoder.setContext(loggerContext);
-				aaaEncoder.setPattern("%d %-5level [%thread] %logger{0}: %msg%n");
-				aaaEncoder.start();
-				aaaRfAppender.setEncoder(aaaEncoder);
-				aaaRfAppender.start();
-				aaaLogger.addAppender(aaaRfAppender);
+				appender.setRollingPolicy(fwRollingPolicy);
+				appender.setTriggeringPolicy(triggeringPolicy);
+				PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+				encoder.setContext(loggerContext);
+				encoder.setPattern("%d %logger{0}: %msg%n");
+				encoder.start();
+				appender.setEncoder(encoder);
+				appender.setContext(loggerContext);
+				
+				appender.start();
+				((ch.qos.logback.classic.Logger) aaaLogger).addAppender(appender);
+				logger.warn("Audit information will be logged to {}.", auditFile);
+				aaaLogger.error("Audit starting.");
 			}
 			catch (Exception e) {
-				logger.error("Unable to log AAA data into file {}. Exiting.", aaaLogFile, e);
+				logger.error("Unable to log AAA data into file {}. Exiting.", auditFile, e);
 			}
 		}
-
 		return true;
 	}
 	
@@ -290,6 +322,56 @@ public class Netshot extends Thread {
 			System.exit(1);
 		}
 	};
+	
+	/**
+	 * Initialize remote Syslog logging.
+	 * @return true if everything went fine.
+	 */
+	protected static boolean initSyslogLogging() {
+
+		ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger)
+				LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+		LoggerContext loggerContext = rootLogger.getLoggerContext();
+		
+		int syslogIndex = 1;
+		while (true) {
+			String host = Netshot.getConfig(String.format("netshot.log.syslog%d.host", syslogIndex));
+			if (host == null) {
+				break;
+			}
+			host = host.trim();
+			if (host.equals("")) {
+				break;
+			}
+			SyslogAppender appender = new SyslogAppender();
+			appender.setSyslogHost(host);
+			appender.setContext(loggerContext);
+			appender.setSuffixPattern("[Netshot] %logger{0}: %msg");
+			String port = Netshot.getConfig(String.format("netshot.log.syslog%d.port", syslogIndex));
+			if (port != null) {
+				try {
+					appender.setPort(Integer.parseInt(port));
+				}
+				catch (NumberFormatException e) {
+					logger.error("Invalid syslog port number ({}).", String.format("netshot.log.syslog%d.port", syslogIndex));
+				}
+			}
+			String facility = Netshot.getConfig(String.format("netshot.log.syslog%d.facility", syslogIndex));
+			appender.setFacility(facility == null ? "LOCAL7" : facility);
+			rootLogger.addAppender(appender);
+			((ch.qos.logback.classic.Logger) aaaLogger).addAppender(appender);
+			try {
+				appender.start();
+			}
+			catch (Exception e) {
+				logger.error("Unable to start syslog instance {}: {}.", syslogIndex, e.getMessage());
+			}
+			logger.warn("Logging to syslog {}:{} has started", appender.getSyslogHost(), appender.getPort());
+			syslogIndex++;
+		}
+		
+		return true;
+	}
 
 	/**
 	 * The main method.
@@ -304,7 +386,7 @@ public class Netshot extends Thread {
 		if (!Netshot.initConfig()) {
 			System.exit(1);
 		}
-		if (!Netshot.initLogging()) {
+		if (!Netshot.initMainLogging() || !Netshot.initAuditLogging() || !Netshot.initSyslogLogging()) {
 			System.exit(1);
 		}
 

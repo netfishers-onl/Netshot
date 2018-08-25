@@ -179,8 +179,7 @@ public class RestService extends Thread {
 	private static final String DEVICELIST_BASEQUERY = "select d.id as id, d.name as name, d.family as family, d.mgmtAddress as mgmtAddress, d.status as status ";
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory
-			.getLogger(RestService.class);
+	private static Logger logger = LoggerFactory.getLogger(RestService.class);
 
 	/** The static instance service. */
 	private static RestService nsRestService;
@@ -207,6 +206,7 @@ public class RestService extends Thread {
 		@Override
 		public void filter(ContainerRequestContext requestContext) throws IOException {
 			User user = (User) httpRequest.getSession().getAttribute("user");
+			Netshot.aaaLogger.info("HTTP Request {} by user {}.", requestContext.getUriInfo().getRequestUri(), user == null ? "<null>" : user.getUsername());
 			requestContext.setSecurityContext(new Authorizer(user));
 		}
 
@@ -220,10 +220,12 @@ public class RestService extends Thread {
 
 			@Override
 			public boolean isUserInRole(String role) {
-				return (user != null &&
+				boolean result = (user != null &&
 						(("admin".equals(role) && user.getLevel() >= User.LEVEL_ADMIN) ||
 								("readwrite".equals(role) && user.getLevel() >= User.LEVEL_READWRITE) ||
 								("readonly".equals(role) && user.getLevel() >= User.LEVEL_READONLY)));
+				Netshot.aaaLogger.debug("Role {} requested for user {}: result {}.", role, user == null ? "<null>" : user.getUsername(), result);
+				return result;
 			}
 
 			@Override
@@ -248,7 +250,12 @@ public class RestService extends Thread {
 
 		public Response toResponse(Throwable t) {
 			if (!(t instanceof ForbiddenException)) {
-				logger.error("Uncaught exception thrown by REST service", t);
+				if (t instanceof NetshotAuthenticationRequiredException) {
+					logger.info("Authentication required.", t);
+				}
+				else {
+					logger.error("Uncaught exception thrown by REST service", t);
+				}
 			}
 			if (t instanceof WebApplicationException) {
 				return ((WebApplicationException) t).getResponse();
@@ -416,6 +423,21 @@ public class RestService extends Thread {
 		 */
 		public void setErrorCode(int errorCode) {
 			this.errorCode = errorCode;
+		}
+	}
+	
+	/**
+	 * The NetshotAuthenticationRequiredException class, which indicates that user authentication is required (401 error).
+	 */
+	static public class NetshotAuthenticationRequiredException extends WebApplicationException {
+		/** The Constant serialVersionUID. */
+		private static final long serialVersionUID = -2463854660543944995L;
+		
+		/**
+		 * Default constructor.
+		 */
+		public NetshotAuthenticationRequiredException() {
+			super(Response.status(Response.Status.UNAUTHORIZED).build());
 		}
 	}
 
@@ -7574,8 +7596,10 @@ public class RestService extends Thread {
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public void logout(@Context HttpServletRequest request) throws WebApplicationException {
 		logger.debug("REST logout request.");
+		User sessionUser = (User) request.getSession().getAttribute("user");
 		HttpSession httpSession = request.getSession();
 		httpSession.invalidate();
+		Netshot.aaaLogger.warn("User {} has logged out.", sessionUser.getUsername());
 	}
 
 	/**
@@ -7594,6 +7618,7 @@ public class RestService extends Thread {
 	public User setPassword(@Context HttpServletRequest request, RsLogin rsLogin) throws WebApplicationException {
 		logger.debug("REST password change request, username {}.", rsLogin.getUsername());
 		User sessionUser = (User) request.getSession().getAttribute("user");
+		Netshot.aaaLogger.warn("Password change request via REST by user {} for user {}.", sessionUser.getUsername(), rsLogin.getUsername());
 
 		User user;
 		Session session = Database.getSession();
@@ -7619,6 +7644,7 @@ public class RestService extends Thread {
 			user.setPassword(newPassword);
 			session.save(user);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.warn("Password successfully changed by user {} for user {}.",sessionUser.getUsername(), rsLogin.getUsername());
 			return sessionUser;
 		}
 		catch (HibernateException e) {
@@ -7647,6 +7673,7 @@ public class RestService extends Thread {
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public User login(@Context HttpServletRequest request, RsLogin rsLogin) throws WebApplicationException {
 		logger.debug("REST authentication request, username {}.", rsLogin.getUsername());
+		Netshot.aaaLogger.info("REST authentication request, username {}.", rsLogin.getUsername());
 
 		User user = null;
 
@@ -7664,7 +7691,11 @@ public class RestService extends Thread {
 		}
 
 		if (user != null && user.isLocal()) {
-			if (!user.checkPassword(rsLogin.getPassword())) {
+			if (user.checkPassword(rsLogin.getPassword())) {
+				Netshot.aaaLogger.info("Local authentication success for user {}.", rsLogin.getUsername());
+			}
+			else {
+				Netshot.aaaLogger.warn("Local authentication failure for user {}.", rsLogin.getUsername());
 				user = null;
 			}
 		}
@@ -7672,6 +7703,10 @@ public class RestService extends Thread {
 			User remoteUser = Radius.authenticate(rsLogin.getUsername(), rsLogin.getPassword());
 			if (remoteUser != null && user != null) {
 				remoteUser.setLevel(user.getLevel());
+				Netshot.aaaLogger.info("Remote authentication success for user {}.", rsLogin.getUsername());
+			}
+			else {
+				Netshot.aaaLogger.warn("Remote authentication failure for user {}.", rsLogin.getUsername());
 			}
 			user = remoteUser;
 		}
@@ -7685,7 +7720,7 @@ public class RestService extends Thread {
 			httpSession.setMaxInactiveInterval(User.MAX_IDLE_TIME);
 			return user;
 		}
-		throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+		throw new NetshotAuthenticationRequiredException();
 	}
 
 	/**

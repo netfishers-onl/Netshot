@@ -105,7 +105,7 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>log4j-over-slf4j</artifactId>
-			<version>1.7.21</version>
+			<version>1.7.25</version>
 		</dependency>
 
 		<dependency>
@@ -177,7 +177,7 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jul-to-slf4j</artifactId>
-			<version>1.7.21</version>
+			<version>1.7.25</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.jtds</groupId>

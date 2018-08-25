@@ -771,6 +771,16 @@ the new parameters are taken into account.</p>
 	<li><span class="code">netshot.log.class.<i>ClassName</i> = DEBUG</span>:
 	sets the log level of a specific class ClassName to a custom level. This
 	obviously requires some knowledge of the Netshot internal code.</li>
+	<li><span class="code">netshot.log.audit.file = /var/log/netshot/audit.log</span>:
+	enables logging of audit-related messages (authentication, authorization) to the given
+	file. Setting the audit level to something like INFO is also required.</li>
+	<li><span class="code">netshot.log.audit.level = INFO</span>:
+	sets the logging level of audit-related messages.</li>
+	<li><span class="code">netshot.log.syslog1.host = 10.0.16.16</span>:
+	enables remote logging (syslog) to the specified host. Increment the number,
+	e.g. syslog2, syslog3, etc. to configure several syslog destinations.</li>
+	<li><span class="code">netshot.log.syslog1.facility = LOCAL7</span>:
+	sets the Syslog facility to use for the syslog server.</li>
 </ul>
 
 <h4>Database configuration</h4>

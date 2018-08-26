@@ -8,6 +8,26 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.9.0 - 2018-08-28
+
+* The command timeout value is now an idle timeout while waiting for data from the device.
+* Add first version of F5 TM-OS (BIG-IP) driver.
+* Add more logging options.
+* Add the ability to search based on device domains, and to build dynamic groups based on device domains.
+* Add the ability to filter reports based on device domains.
+* Cisco IOS-XR: more device families (NCS).
+* More details in SNMP trap received error message.
+
+0.8.1 - 2018-06-05
+
+* Improved debug mode for snapshot tasks (now log the buffer in case of timeout).
+* FortiOS: increase the timeout delay on the main 'show' command.
+* ScreenOS: increase the timeout delay on the main 'get config' command.
+* Cisco IOS: more families.
+* Add Arista EOS driver.
+* Fix a bug when the 'timeout' option is used in the drivers.
+* Fix a bug where Netshot wasn't properly trying the next available SSH credentials after an authentication failure.
+
 0.8.0 - 2018-03-04
 
 * Debug mode for snapshot tasks (hidden by default). This makes easy to debug drivers.

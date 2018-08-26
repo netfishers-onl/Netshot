@@ -3,6 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>onl.netfishers.netshot</groupId>
 	<artifactId>netshot</artifactId>
+	<version>0.9.0</version>
 	<name>Netshot</name>
 	<build>
 		<finalName>netshot</finalName>
@@ -238,5 +239,4 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-	<version>0.9.0</version>
 </project>

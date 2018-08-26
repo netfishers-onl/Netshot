@@ -9,11 +9,22 @@ define([
 		initialize: function(models, options) {
 			this.group = options.group;
 			this.level = options.level;
+			this.domains = options.domains;
 		},
 
 		url: function() {
-			return "api/reports/groupdevicesbysoftwarelevel/" + this.group + "/"
-					+ this.level;
+			var url = "api/reports/groupdevicesbysoftwarelevel/"
+				+ this.group + "/" + this.level;
+			var params = [];
+			if (this.domains) {
+				_.forEach(this.domains, function(domain) {
+					params.push("domain=" + domain);
+				});
+			}
+			if (params.length) {
+				url += "?" + params.join("&");
+			}
+			return url;
 		},
 
 	});

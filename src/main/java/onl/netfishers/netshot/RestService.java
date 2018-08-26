@@ -318,10 +318,8 @@ public class RestService extends Thread {
 			sslContext.setKeyStoreFile(httpSslKeystoreFile);
 			sslContext.setKeyStorePass(httpSslKeystorePass);
 
-			if (!sslContext.validateConfiguration(true)) {
-				throw new RuntimeException(
-						"Invalid SSL settings for the embedded HTTPS server.");
-			}
+			// Create the context and raise any error if anything is wrong with the SSL configuration.
+			sslContext.createSSLContext(true);
 			SSLEngineConfigurator sslConfig = new SSLEngineConfigurator(sslContext)
 			.setClientMode(false).setNeedClientAuth(false).setWantClientAuth(false);
 			URI url = UriBuilder.fromUri(httpBaseUrl).port(httpBasePort).build();
@@ -6201,17 +6199,29 @@ public class RestService extends Thread {
 	@Path("reports/groupconfigcompliancestats")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsGroupConfigComplianceStat> getGroupConfigComplianceStats() throws WebApplicationException {
+	public List<RsGroupConfigComplianceStat> getGroupConfigComplianceStats(@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, group config compliance stats.");
 		Session session = Database.getSession();
 		try {
+			String domainFilter = "";
+			if (domains.size() > 0) {
+				domainFilter = " d.mgmtDomain.id in (:domainIds) and";
+			}
+			
+			Query query = session
+				.createQuery("select g.id as groupId, g.name as groupName, "
+						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled and (select count(ccr.result) from d.complianceCheckResults ccr where ccr.result = :nonConforming) = 0) as compliantDeviceCount, "
+						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled) as deviceCount "
+						+ "from DeviceGroup g where g.hiddenFromReports <> true")
+				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
+				.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domains.size() > 0) {
+				query.setParameterList("domainIds", domains);
+			}
 			@SuppressWarnings("unchecked")
-			List<RsGroupConfigComplianceStat> stats = session
-			.createQuery("select g.id as groupId, g.name as groupName, (select count(d) from g.cachedDevices d where d.status = :enabled and (select count(ccr.result) from d.complianceCheckResults ccr where ccr.result = :nonConforming) = 0) as compliantDeviceCount, (select count(d) from g.cachedDevices d where d.status = :enabled) as deviceCount from DeviceGroup g where g.hiddenFromReports <> true")
-			.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
-			.setParameter("enabled", Device.Status.INPRODUCTION)
-			.setResultTransformer(Transformers.aliasToBean(RsGroupConfigComplianceStat.class))
-			.list();
+			List<RsGroupConfigComplianceStat> stats = query
+				.setResultTransformer(Transformers.aliasToBean(RsGroupConfigComplianceStat.class))
+				.list();
 			return stats;
 		}
 		catch (HibernateException e) {
@@ -6446,19 +6456,32 @@ public class RestService extends Thread {
 	@Path("reports/groupsoftwarecompliancestats")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsGroupSoftwareComplianceStat> getGroupSoftwareComplianceStats() throws WebApplicationException {
+	public List<RsGroupSoftwareComplianceStat> getGroupSoftwareComplianceStats(@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, group software compliance stats.");
 		Session session = Database.getSession();
 		try {
+			String domainFilter = "";
+			if (domains.size() > 0) {
+				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
+			}
+			Query query = session
+				.createQuery("select g.id as groupId, g.name as groupName, "
+						+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :gold" + domainFilter + ") as goldDeviceCount, "
+						+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :silver" + domainFilter + ") as silverDeviceCount, "
+						+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :bronze"  + domainFilter + ") as bronzeDeviceCount, "
+						+ "(select count(d) from g.cachedDevices d where d.status = :enabled"  + domainFilter + ") as deviceCount "
+						+ "from DeviceGroup g where g.hiddenFromReports <> true")
+				.setParameter("gold", ConformanceLevel.GOLD)
+				.setParameter("silver", ConformanceLevel.SILVER)
+				.setParameter("bronze", ConformanceLevel.BRONZE)
+				.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domains.size() > 0) {
+				query.setParameterList("domainIds", domains);
+			}
 			@SuppressWarnings("unchecked")
-			List<RsGroupSoftwareComplianceStat> stats = session
-			.createQuery("select g.id as groupId, g.name as groupName, (select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :gold) as goldDeviceCount, (select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :silver) as silverDeviceCount, (select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :bronze) as bronzeDeviceCount, (select count(d) from g.cachedDevices d where d.status = :enabled) as deviceCount from DeviceGroup g where g.hiddenFromReports <> true")
-			.setParameter("gold", ConformanceLevel.GOLD)
-			.setParameter("silver", ConformanceLevel.SILVER)
-			.setParameter("bronze", ConformanceLevel.BRONZE)
-			.setParameter("enabled", Device.Status.INPRODUCTION)
-			.setResultTransformer(Transformers.aliasToBean(RsGroupSoftwareComplianceStat.class))
-			.list();
+			List<RsGroupSoftwareComplianceStat> stats = query
+				.setResultTransformer(Transformers.aliasToBean(RsGroupSoftwareComplianceStat.class))
+				.list();
 			return stats;
 		}
 		catch (HibernateException e) {
@@ -6578,16 +6601,26 @@ public class RestService extends Thread {
 	@Path("reports/groupconfignoncompliantdevices/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsLightPolicyRuleDevice> getGroupConfigNonCompliantDevices(@PathParam("id") Long id) throws WebApplicationException {
+	public List<RsLightPolicyRuleDevice> getGroupConfigNonCompliantDevices(@PathParam("id") Long id, @QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, group config non compliant devices.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
-			List<RsLightPolicyRuleDevice> devices = session
-				.createQuery(DEVICELIST_BASEQUERY + ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p where g.id = :id and ccr.result = :nonConforming and d.status = :enabled")
+			String domainFilter = "";
+			if (domains.size() > 0) {
+				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
+			}
+			Query query = session
+				.createQuery(DEVICELIST_BASEQUERY + ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d "
+						+ "join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p "
+						+ "where g.id = :id and ccr.result = :nonConforming and d.status = :enabled" + domainFilter)
 				.setLong("id", id)
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
-				.setParameter("enabled", Device.Status.INPRODUCTION)
+				.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domains.size() > 0) {
+				query.setParameterList("domainIds", domains);
+			}
+			@SuppressWarnings("unchecked")
+			List<RsLightPolicyRuleDevice> devices = query
 				.setResultTransformer(Transformers.aliasToBean(RsLightPolicyRuleDevice.class))
 				.list();
 			return devices;
@@ -7392,7 +7425,8 @@ public class RestService extends Thread {
 	@Path("reports/groupdevicesbysoftwarelevel/{id}/{level}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsLightSoftwareLevelDevice> getGroupDevicesBySoftwareLevel(@PathParam("id") Long id, @PathParam("level") String level) throws WebApplicationException {
+	public List<RsLightSoftwareLevelDevice> getGroupDevicesBySoftwareLevel(@PathParam("id") Long id, @PathParam("level") String level,
+			@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, group {} devices by software level {}.", id, level);
 		Session session = Database.getSession();
 
@@ -7405,14 +7439,23 @@ public class RestService extends Thread {
 		}
 
 		try {
+			String domainFilter = "";
+			if (domains.size() > 0) {
+				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
+			}
+			Query query =  session
+				.createQuery(DEVICELIST_BASEQUERY + ", d.softwareLevel as softwareLevel "
+						+ "from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled" + domainFilter)
+				.setLong("id", id)
+				.setParameter("level", filterLevel)
+				.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domains.size() > 0) {
+				query.setParameterList("domainIds", domains);
+			}
 			@SuppressWarnings("unchecked")
-			List<RsLightSoftwareLevelDevice> devices = session
-			.createQuery(DEVICELIST_BASEQUERY + ", d.softwareLevel as softwareLevel from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled")
-			.setLong("id", id)
-			.setParameter("level", filterLevel)
-			.setParameter("enabled", Device.Status.INPRODUCTION)
-			.setResultTransformer(Transformers.aliasToBean(RsLightSoftwareLevelDevice.class))
-			.list();
+			List<RsLightSoftwareLevelDevice> devices = query
+				.setResultTransformer(Transformers.aliasToBean(RsLightSoftwareLevelDevice.class))
+				.list();
 			return devices;
 		}
 		catch (HibernateException e) {
@@ -8070,6 +8113,7 @@ public class RestService extends Thread {
 	@Produces({ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
 	public Response getDataXLSX(@Context HttpServletRequest request,
 			@DefaultValue("-1") @QueryParam("group") long group,
+			@QueryParam("domain") Set<Long> domains,
 			@DefaultValue("false") @QueryParam("interfaces") boolean exportInterfaces,
 			@DefaultValue("false") @QueryParam("inventory") boolean exportInventory,
 			@DefaultValue("false") @QueryParam("locations") boolean exportLocations,
@@ -8104,20 +8148,42 @@ public class RestService extends Thread {
 				cell = row.createCell(1);
 				cell.setCellValue(new Date());
 				cell.setCellStyle(datetimeCellStyle);
+				
+
+				Criteria criteria = session.createCriteria(Device.class);
+				
 				row = summarySheet.createRow(4);
-				row.createCell(0).setCellValue("Selected Group");
-				Query query;
-				if (group == -1) {
-					query = session.createQuery("select d from Device d");
-					row.createCell(1).setCellValue("None");
+				row.createCell(0).setCellValue("Selected Domain");
+				if (domains.size() == 0) {
+					row.createCell(1).setCellValue("Any");
 				}
 				else {
-					query = session
-							.createQuery("select d from Device d join d.ownerGroups g where g.id = :id")
-							.setLong("id", group);
+					@SuppressWarnings("unchecked")
+					List<Domain> deviceDomains = session
+							.createQuery("select d from Domain d where d.id in (:domainIds)")
+							.setParameterList("domainIds", domains)
+							.list();
+					List<String> domainNames = new ArrayList<String>();
+					for (Domain deviceDomain : deviceDomains) {
+						domainNames.add(String.format("%s (%d)", deviceDomain.getName(), deviceDomain.getId()));
+					}
+					row.createCell(1).setCellValue(String.join(", ", domainNames));
+					criteria.createCriteria("mgmtDomain", "md");
+					criteria.add(Restrictions.in("md.id", domains));
+				}
+				row = summarySheet.createRow(5);
+				row.createCell(0).setCellValue("Selected Group");
+				if (group == -1) {
+					row.createCell(1).setCellValue("Any");
+				}
+				else {
 					DeviceGroup deviceGroup = (DeviceGroup) session.get(DeviceGroup.class, group);
 					row.createCell(1).setCellValue(deviceGroup.getName());
+					criteria.createCriteria("ownerGroups", "g");
+					criteria.add(Restrictions.eq("g.id", group));
 				}
+				
+				
 
 				Sheet deviceSheet = workBook.createSheet("Devices");
 				row = deviceSheet.createRow(0);
@@ -8140,7 +8206,7 @@ public class RestService extends Thread {
 				int yDevice = 1;
 
 				@SuppressWarnings("unchecked")
-				List<Device> devices = query.list();
+				List<Device> devices = criteria.list();
 				for (Device device : devices) {
 					row = deviceSheet.createRow(yDevice++);
 					row.createCell(0).setCellValue(device.getId());

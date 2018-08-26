@@ -7,6 +7,11 @@
 <td class="nsreport-legend-text">
 <a href="#"><%- text %></a>
 </td>
+<% if (typeof comment === "string") { %>
+<td class="nsreport-legend-comment">
+<%- comment %>
+</td>
+<% } %>
 <td class="nsreport-legend-value">
 <%- value %>
 </td>

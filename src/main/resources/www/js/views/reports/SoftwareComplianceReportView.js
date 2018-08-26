@@ -7,13 +7,15 @@ define([
 	'views/reports/ReportView',
 	'models/reports/GroupSoftwareComplianceStatCollection',
 	'models/reports/GroupDevicesBySoftwareLevelCollection',
+	'models/domain/DomainCollection',
 	'text!templates/reports/softwareComplianceReport.html',
 	'text!templates/reports/chartLegend.html',
 	'text!templates/reports/softwareGroupComplianceChart.html',
 	'text!templates/reports/softwareComplianceDeviceRow.html'
 	], function($, _, Backbone, Chart, ReportView,
 			GroupSoftwareComplianceStatCollection,
-			GroupDevicesBySoftwareLevelCollection, softwareComplianceReportTemplate,
+			GroupDevicesBySoftwareLevelCollection, DomainCollection,
+			softwareComplianceReportTemplate,
 			chartLegendTemplate, softwareGroupComplianceChartTemplate,
 			softwareComplianceDeviceRow) {
 
@@ -28,17 +30,52 @@ define([
 			var that = this;
 
 			this.$el.html(this.template());
+			
+			this.$('#filterdomain').click(function() {
+				that.$('#domain').prop('disabled', !$(this).prop('checked'));
+			});
 
-			this.groupSoftwareComplianceStats = new GroupSoftwareComplianceStatCollection([]);
-			this.refreshGroupSoftwareComplianceStats();
+			this.$('#update').button({
+				icons: {
+					primary: "ui-icon-refresh"
+				}
+			}).click(function() {
+				ReportView.defaultOptions.domain = that.$('#filterdomain').prop('checked') ? that.$('#domain').val() : undefined;
+				that.refreshGroupSoftwareComplianceStats();
+				return false;
+			});
+
+			this.domains = new DomainCollection([]);
+			this.domains.fetch().done(function() {
+				that.renderDomainList();
+				that.refreshGroupSoftwareComplianceStats();
+			});
+
 			return this;
+		},
+
+		renderDomainList: function() {
+			var that = this;
+			this.domains.each(function(domain) {
+				$('<option />').attr('value', domain.get('id')).text(domain.get('name'))
+						.appendTo(that.$('#domain'));
+			});
+			if (ReportView.defaultOptions.domain) {
+				this.$('#domain').val(ReportView.defaultOptions.domain).prop('disabled', false);
+				this.$('#filterdomain').prop('checked', true);
+			}
 		},
 
 		refreshGroupSoftwareComplianceStats: function() {
 			var that = this;
+			this.$('#devices').hide();
+			this.groupSoftwareComplianceStats = new GroupSoftwareComplianceStatCollection([], {
+				domains: this.$('#filterdomain').prop('checked') ? [this.$('#domain').val()] : undefined,
+			});
 			this.groupSoftwareComplianceStats.fetch().done(function() {
+				that.$("#nsreport-softwarecompliance-groups").empty();
 				that.groupSoftwareComplianceStats
-				.each(that.renderGroupSoftwareComplianceStats, that);
+					.each(that.renderGroupSoftwareComplianceStats, that);
 				that.$(".nsreport-legend-item a").click(function() {
 					var group = $(this).closest("[data-group-id]").data("group-id");
 					var level = $(this).text().toLowerCase();
@@ -50,6 +87,9 @@ define([
 
 		renderGroupSoftwareComplianceStats: function(group) {
 			var that = this;
+			if (group.get('deviceCount') === 0) {
+				return;
+			}
 			var html = this.groupChartTemplate(group.toJSON());
 			var $group = this.$("#nsreport-softwarecompliance-groups")
 				.append(html).find('.group-chart').last();
@@ -127,7 +167,8 @@ define([
 			var that = this;
 			this.groupDevices = new GroupDevicesBySoftwareLevelCollection([], {
 				group: group,
-				level: level
+				level: level,
+				domains: this.groupSoftwareComplianceStats.domains
 			});
 			this.groupDevices.fetch().done(function() {
 				that.renderGroupDevices();

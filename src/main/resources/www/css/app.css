@@ -1187,6 +1187,7 @@ input.spinner {
 	display: inline-block;
 	border: 1px solid #BBB;
 	padding: 10px;
+	margin-top: 10px;
 }
 
 .nsreport-legend-item {
@@ -1208,6 +1209,13 @@ input.spinner {
 .nsreport-legend-value {
 	text-align: right;
 	padding-left: 10px;
+}
+
+.nsreport-legend-comment {
+	text-align: left;
+	padding-left: 10px;
+	font-size: .9em;
+	color: #BBB;
 }
 
 #nscompliance-addsoftwareruleform .nsdialog-logo {

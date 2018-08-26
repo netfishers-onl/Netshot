@@ -6,9 +6,10 @@ define([
 	'views/reports/ReportView',
 	'models/device/DeviceGroupCollection',
 	'models/reports/DataExportReportParamsModel',
+	'models/domain/DomainCollection',
 	'text!templates/reports/dataExportReport.html',
 ], function($, _, Backbone, ReportView, DeviceGroupCollection,
-		DataExportReportParamsModel, dataExportReportTemplate) {
+		DataExportReportParamsModel, DomainCollection, dataExportReportTemplate) {
 
 	return ReportView.extend({
 
@@ -23,13 +24,12 @@ define([
 				that.renderGroupList();
 			});
 
+			this.$('#filterdomain').click(function() {
+				that.$('#domain').prop('disabled', !$(this).prop('checked'));
+			});
+
 			this.$('#filtergroup').click(function() {
-				if ($(this).prop('checked')) {
-					that.$('#group').prop('disabled', false);
-				}
-				else {
-					that.$('#group').prop('disabled', true);
-				}
+				that.$('#group').prop('disabled', !$(this).prop('checked'));
 			});
 
 			this.$('#export').button({
@@ -37,15 +37,21 @@ define([
 					primary: "ui-icon-arrowstop-1-s"
 				}
 			}).click(function() {
+				ReportView.defaultOptions.domain = that.$('#filterdomain').prop('checked') ? that.$('#domain').val() : undefined;
 				var exportParams = new DataExportReportParamsModel({
-					group: (that.$('#filtergroup').prop('checked') ? that.$('#group')
-							.val() : -1),
+					group: (that.$('#filtergroup').prop('checked') ? that.$('#group').val() : -1),
+					domains: (that.$('#filterdomain').prop('checked') ? that.$('#domain').val() : -1),
 					interfaces: that.$('#filterinterfaces').prop('checked'),
 					inventory: that.$('#filterinventory').prop('checked'),
 					locations: that.$('#filterlocations').prop('checked'),
 				});
 				window.location = exportParams.getDownloadUrl();
 				return false;
+			});
+			
+			this.domains = new DomainCollection([]);
+			this.domains.fetch().done(function() {
+				that.renderDomainList();
 			});
 
 			return this;
@@ -57,6 +63,18 @@ define([
 				$('<option />').attr('value', group.get('id')).text(group.get('name'))
 						.appendTo(that.$('#group'));
 			});
+		},
+
+		renderDomainList: function() {
+			var that = this;
+			this.domains.each(function(domain) {
+				$('<option />').attr('value', domain.get('id')).text(domain.get('name'))
+						.appendTo(that.$('#domain'));
+			});
+			if (ReportView.defaultOptions.domain) {
+				this.$('#domain').val(ReportView.defaultOptions.domain).prop('disabled', false);
+				this.$('#filterdomain').prop('checked', true);
+			}
 		},
 
 		destroy: function() {

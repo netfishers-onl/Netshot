@@ -1,6 +1,16 @@
 
-<div id="nsreport-softwarecompliance-groups">
-</div>
+<form id="nsreport-softwarecompliance-options">
+	<fieldset>
+		<input type="checkbox" name="filterdomain" id="filterdomain" />
+		<label for="filterdomain">Restrict to the following device domain:</label>
+		<select name="domain" id="domain" disabled="disabled" class="text ui-widget-content ui-corner-all"></select>
+	</fieldset>
+	<p>
+		<button id="update">Update</button>
+	</p>
+</form>
+
+<div id="nsreport-softwarecompliance-groups" />
 
 <div id="devices" style="display: none;">
 

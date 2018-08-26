@@ -4,6 +4,12 @@
 <form id="nsreports-export">
 
 	<fieldset>
+		<input type="checkbox" name="filterdomain" id="filterdomain" />
+		<label for="filterdomain">Restrict export to the following domain:</label>
+		<select name="domain" id="domain" disabled="disabled" class="text ui-widget-content ui-corner-all"></select>
+	</fieldset>
+	
+	<fieldset>
 		<input type="checkbox" name="filtergroup" id="filtergroup" />
 		<label for="filtergroup">Restrict export to the following group:</label>
 		<select name="group" id="group" disabled="disabled" class="text ui-widget-content ui-corner-all"></select>

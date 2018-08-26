@@ -23,11 +23,6 @@ define([
 			var that = this;
 
 			this.$el.html(this.template());
-			
-			this.domains = new DomainCollection([]);
-			this.domains.fetch().done(function() {
-				that.renderDomainList();
-			});
 
 			this.$('#filterdomain').click(function() {
 				that.$('#domain').prop('disabled', !$(this).prop('checked'));
@@ -38,6 +33,7 @@ define([
 					primary: "ui-icon-refresh"
 				}
 			}).click(function() {
+				ReportView.defaultOptions.domain = that.$('#filterdomain').prop('checked') ? that.$('#domain').val() : undefined;
 				that.refreshDevices();
 				return false;
 			});
@@ -56,7 +52,12 @@ define([
 				}
 			});
 			
-			this.refreshDevices();
+
+			this.domains = new DomainCollection([]);
+			this.domains.fetch().done(function() {
+				that.renderDomainList();
+				that.refreshDevices();
+			});
 
 			return this;
 		},
@@ -82,6 +83,10 @@ define([
 				$('<option />').attr('value', domain.get('id')).text(domain.get('name'))
 						.appendTo(that.$('#domain'));
 			});
+			if (ReportView.defaultOptions.domain) {
+				this.$('#domain').val(ReportView.defaultOptions.domain).prop('disabled', false);
+				this.$('#filterdomain').prop('checked', true);
+			}
 		},
 		
 		renderDevices: function() {

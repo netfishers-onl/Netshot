@@ -8,10 +8,21 @@ define([
 
 		initialize: function(models, options) {
 			this.group = options.group;
+			this.domains = options.domains;
 		},
 
 		url: function() {
-			return "api/reports/groupconfignoncompliantdevices/" + this.group;
+			var url = "api/reports/groupconfignoncompliantdevices/" + this.group;
+			var params = [];
+			if (this.domains) {
+				_.forEach(this.domains, function(domain) {
+					params.push("domain=" + domain);
+				});
+			}
+			if (params.length) {
+				url += "?" + params.join("&");
+			}
+			return url;
 		},
 
 		comparator: function(config) {

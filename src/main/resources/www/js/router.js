@@ -114,7 +114,8 @@ define([
 					icons: {
 						primary: "ui-icon-circle-triangle-e"
 					}
-				}).click(function() {
+				});
+				$("#splash #authentication-box").submit(function() {
 					$("#splash #authentication-box #authenticate").button('disable');
 					$("#splash #connection-error").hide();
 					window.user = new CurrentUserModel();
@@ -130,13 +131,6 @@ define([
 						$("#splash #authentication-box #password").val("");
 					});
 					return false;
-				});
-				$("#splash #authentication-box").keydown(function(e) {
-					if (e.which == 13) {
-						e.preventDefault();
-						$("#splash #authentication-box #authenticate").click();
-						return false;
-					}
 				}).show();
 				$("#splash #authentication-box #authenticate").button('enable');
 			}

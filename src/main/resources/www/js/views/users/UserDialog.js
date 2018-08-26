@@ -21,7 +21,7 @@ define([
 					location.reload();
 				});
 			},
-			"Change password": function() {
+			"Change password": function(event) {
 				var that = this;
 				var $button = $(event.target).closest("button");
 				$button.button('disable');

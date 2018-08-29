@@ -148,6 +148,7 @@ import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.glassfish.jersey.servlet.ServletProperties;
 import org.hibernate.Criteria;
+import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Query;
@@ -8151,6 +8152,8 @@ public class RestService extends Thread {
 				
 
 				Criteria criteria = session.createCriteria(Device.class);
+				criteria.setFetchMode("mgmtDomain", FetchMode.SELECT);
+				criteria.setFetchMode("specificCredentialSet", FetchMode.SELECT);
 				
 				row = summarySheet.createRow(4);
 				row.createCell(0).setCellValue("Selected Domain");

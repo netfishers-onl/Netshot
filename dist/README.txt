@@ -8,7 +8,11 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
-0.9.0 - 2018-08-28
+0.9.0a - 2018-08-29
+
+* Fix a bug (regression of 0.9.0) which affects the performance of data export (visible with huge lists of devices).
+
+0.9.0 - 2018-08-26
 
 * The command timeout value is now an idle timeout while waiting for data from the device.
 * Add first version of F5 TM-OS (BIG-IP) driver.

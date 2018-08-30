@@ -131,7 +131,8 @@ import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -8127,7 +8128,7 @@ public class RestService extends Thread {
 
 			Session session = Database.getSession();
 			try {
-				Workbook workBook = new XSSFWorkbook();
+				Workbook workBook = new SXSSFWorkbook(100);
 				Row row;
 				Cell cell;
 
@@ -8189,6 +8190,7 @@ public class RestService extends Thread {
 				
 
 				Sheet deviceSheet = workBook.createSheet("Devices");
+				((SXSSFSheet) deviceSheet).setRandomAccessWindowSize(100);
 				row = deviceSheet.createRow(0);
 				row.createCell(0).setCellValue("ID");
 				row.createCell(1).setCellValue("Name");
@@ -8243,6 +8245,7 @@ public class RestService extends Thread {
 
 				if (exportInterfaces) {
 					Sheet interfaceSheet = workBook.createSheet("Interfaces");
+					((SXSSFSheet) interfaceSheet).setRandomAccessWindowSize(100);
 					row = interfaceSheet.createRow(0);
 					row.createCell(0).setCellValue("Device ID");
 					row.createCell(1).setCellValue("Virtual Device");
@@ -8293,6 +8296,7 @@ public class RestService extends Thread {
 
 				if (exportInventory) {
 					Sheet inventorySheet = workBook.createSheet("Inventory");
+					((SXSSFSheet) inventorySheet).setRandomAccessWindowSize(100);
 					row = inventorySheet.createRow(0);
 					row.createCell(0).setCellValue("Device ID");
 					row.createCell(1).setCellValue("Slot");

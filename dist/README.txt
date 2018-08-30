@@ -8,6 +8,11 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+
+0.9.0b - 2018-08-30
+
+* Reduce the memory footprint of data export.
+
 0.9.0a - 2018-08-29
 
 * Fix a bug (regression of 0.9.0) which affects the performance of data export (visible with huge lists of devices).

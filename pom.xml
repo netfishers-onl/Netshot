@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>onl.netfishers.netshot</groupId>
 	<artifactId>netshot</artifactId>
-	<version>0.9.0a</version>
+	<version>0.9.0b</version>
 	<name>Netshot</name>
 	<build>
 		<finalName>netshot</finalName>
@@ -132,7 +132,7 @@
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
-			<version>3.14</version>
+			<version>3.17</version>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish.grizzly</groupId>

@@ -116,7 +116,7 @@ public class JavaScriptRule extends Rule {
 	 * @return the script
 	 */
 	@XmlElement
-	@Column(length = 100000000)
+	@Column(length = 10000000)
 	public String getScript() {
 		return script;
 	}

@@ -316,7 +316,7 @@ public abstract class Task implements Cloneable {
 	 * @return the log
 	 */
 	@XmlElement
-	@Column(name = "log", length = 100000000)
+	@Column(name = "log", length = 10000000)
 	public String getLog() {
 		return log.toString();
 	}

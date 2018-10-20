@@ -93,7 +93,7 @@ public class TextRule extends Rule {
 	}
 
 	@XmlElement
-	@Column(length = 100000000)
+	@Column(length = 10000000)
 	public String getText() {
 		return text;
 	}

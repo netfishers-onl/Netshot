@@ -10,8 +10,12 @@ You must have downloaded it from the NetFishers web site.
 Unzip the file.
 $ unzip netshot_x.y.z.zip
 
-### 1. Install a database server, e.g. MySQL
+### 1. Install a database server
+First choice is MySQL:
 $ sudo apt-get install mysql-server
+
+If you prefer to go for PostgreSQL:
+$ sudo apt-get install postgresql
 
 
 ### 2. Install Java 8
@@ -69,10 +73,20 @@ $ sudo systemctl enable netshot.service
 
 ### 6. Create database and user
 
+If you've chosen MySQL:
 $ mysql -u root
 > CREATE DATABASE netshot01 CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 > GRANT ALL PRIVILEGES ON netshot01.* TO 'netshot'@'localhost' IDENTIFIED BY 'netshot';
 > quit
+
+If you've chosen PostgreSQL:
+$ sudo -u postgres psql
+# CREATE USER netshot WITH ENCRYPTED PASSWORD 'netshot';
+# CREATE DATABASE netshot01 WITH OWNER 'netshot' ENCODING 'UTF8' TEMPLATE template0;
+# \q
+And update /etc/netshot.conf to use the PostgreSQL driver rather than MySQL:
+netshot.db.driver_class = org.postgresql.Driver
+netshot.db.url = jdbc:postgresql://localhost/netshot01
 
 
 ### 7. Start Netshot service
@@ -82,9 +96,15 @@ $ sudo service netshot start
 
 ### 8. Manually create the initial user
 
+If you've chosen MySQL:
 $ mysql -u root
 > USE netshot01;
 > INSERT INTO user (level, local, username, hashed_password) VALUES (1000, 1, 'netshot', '7htrot2BNjUV/g57h/HJ/C1N0Fqrj+QQ');
+
+If you've chosen PostgreSQL:
+$ sudo -u postgres psql
+# \c netshot01;
+# INSERT INTO "user" (id, level, local, username, hashed_password) VALUES (0, 1000, TRUE, 'netshot', '7htrot2BNjUV/g57h/HJ/C1N0Fqrj+QQ');
 
 Now you should be able to access Netshot with a browser, on
 https://localhost:8443/ on the machine itself.

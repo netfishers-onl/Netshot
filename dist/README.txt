@@ -8,6 +8,9 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.10.0 - 2018-10-20
+
+* Add support for PostgreSQL as underlying database (thanks to @eczema) -- experimental for now though.
 
 0.9.0b - 2018-08-30
 

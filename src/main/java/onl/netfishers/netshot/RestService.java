@@ -6078,7 +6078,7 @@ public class RestService extends Thread {
 		try {
 			@SuppressWarnings("unchecked")
 			List<RsConfigChangeNumberByDateStat> stats = session
-			.createQuery("select count(c) as changeCount, cast(cast(c.changeDate as date) as timestamp) as changeDay from Config c group by cast(c.changeDate as date) order by changeDate desc")
+			.createQuery("select count(c) as changeCount, cast(cast(c.changeDate as date) as timestamp) as changeDay from Config c group by cast(c.changeDate as date) order by changeDay desc")
 			.setMaxResults(7)
 			.setResultTransformer(Transformers.aliasToBean(RsConfigChangeNumberByDateStat.class))
 			.list();

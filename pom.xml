@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>onl.netfishers.netshot</groupId>
 	<artifactId>netshot</artifactId>
-	<version>0.9.0b</version>
+	<version>0.10.0</version>
 	<name>Netshot</name>
 	<build>
 		<finalName>netshot</finalName>
@@ -187,7 +187,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>9.4.1209</version>
+			<version>42.2.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>

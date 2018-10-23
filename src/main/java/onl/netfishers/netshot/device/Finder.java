@@ -2299,7 +2299,7 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
-			criteria.where = this.buildWhere("assumption", "=", "1");
+			criteria.where = this.buildWhere("assumption", "is", "true");
 			return criteria;
 		}
 

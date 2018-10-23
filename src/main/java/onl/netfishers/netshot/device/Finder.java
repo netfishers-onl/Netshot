@@ -479,8 +479,12 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = this.child.buildHqlString(itemPrefix + "_0");
-			criteria.where = "not (" + criteria.where + ")";
-			return criteria;
+			if (  criteria.where.indexOf("is true") > 0 ) {
+                                criteria.where = criteria.where.replaceAll("is true", "is false");
+                        } else {
+                                criteria.where = "not (" + criteria.where + ")";
+                        }
+                        return criteria;
 		}
 
 		/* (non-Javadoc)

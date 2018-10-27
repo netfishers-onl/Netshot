@@ -40,6 +40,7 @@ import ch.qos.logback.core.OutputStreamAppender;
 import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
+import ch.qos.logback.core.util.FileSize;
 import onl.netfishers.netshot.collector.SnmpTrapReceiver;
 import onl.netfishers.netshot.collector.SyslogServer;
 import onl.netfishers.netshot.device.DeviceDriver;
@@ -191,7 +192,7 @@ public class Netshot extends Thread {
 
 				SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new 
 						SizeBasedTriggeringPolicy<ILoggingEvent>();
-				triggeringPolicy.setMaxFileSize(String.format("%dMB", logMaxSize));
+				triggeringPolicy.setMaxFileSize(FileSize.valueOf(String.format("%d MB", logMaxSize)));
 				triggeringPolicy.start();
 
 				rfAppender.setRollingPolicy(fwRollingPolicy);
@@ -290,7 +291,7 @@ public class Netshot extends Thread {
 
 				SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new 
 						SizeBasedTriggeringPolicy<ILoggingEvent>();
-				triggeringPolicy.setMaxFileSize(String.format("%dMB", auditMaxSize));
+				triggeringPolicy.setMaxFileSize(FileSize.valueOf(String.format("%dMB", auditMaxSize)));
 				triggeringPolicy.start();
 
 				appender.setRollingPolicy(fwRollingPolicy);

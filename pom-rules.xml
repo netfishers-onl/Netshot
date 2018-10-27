@@ -1,0 +1,24 @@
+<ruleset comparisonMethod="maven"
+         xmlns="http://mojo.codehaus.org/versions-maven-plugin/rule/2.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://mojo.codehaus.org/versions-maven-plugin/rule/2.0.0 http://mojo.codehaus.org/versions-maven-plugin/xsd/rule-2.0.0.xsd">
+  <ignoreVersions>
+    <ignoreVersion type="regex">.*[-_\.](alpha|Alpha|ALPHA|b|beta|Beta|BETA|rc|RC|M|EA)[-_\.]?[0-9]*</ignoreVersion>
+  </ignoreVersions>
+  <rules>
+	<rule groupId="org.hibernate.common"  artifactId="hibernate-commons-annotations"  comparisonMethod="maven">
+	<ignoreVersions>
+	<ignoreVersion type="regex">5.*</ignoreVersion>
+	</ignoreVersions>
+	</rule>
+        <rule groupId="org.hibernate"  artifactId="hibernate-core"  comparisonMethod="maven">
+        <ignoreVersions>
+	<ignoreVersion type="regex">5.*</ignoreVersion>
+	</ignoreVersions>
+        </rule>
+        <rule groupId="org.hibernate"  artifactId="hibernate-c3p0"  comparisonMethod="maven">
+        <ignoreVersions>
+	<ignoreVersion type="regex">5.*</ignoreVersion>
+	</ignoreVersions>
+        </rule>
+  </rules>
+</ruleset>

@@ -73,7 +73,7 @@ import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.tasks.DeviceJsScript;
 
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;

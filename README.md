@@ -14,6 +14,7 @@ http://www.netfishers.onl/netshot
   * Fortinet FortiOS
   * Alcatel-Lucent TiMOS
   * ...
+  * Check https://github.com/netfishers-onl/Netshot/tree/master/src/main/resources/drivers for the complete list of current "official" drivers
 * Network inventory
 * Software compliance
 * Hardware compliance

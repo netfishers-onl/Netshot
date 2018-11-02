@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The User class represents a Netshot user.
  */
-@Entity(name = "\"user\"" )
+@Entity(name="\"user\"")
 @XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
 public class User implements Principal {
 

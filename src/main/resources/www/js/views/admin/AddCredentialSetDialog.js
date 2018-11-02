@@ -21,8 +21,6 @@ define([
 			this.domains.fetch().done(function() {
 				that.render();
 			});
-			this.authtypes = [ 'MD5','SHA' ];
-			this.privtypes = [ 'DES', 'AES128' , 'AES192', 'AES256' ];
 		},
 
 		dialogOptions: {
@@ -41,11 +39,6 @@ define([
 					password: that.$('#credentialspassword').val(),
 					superPassword: that.$('#credentialssuper').val(),
 					community: that.$('#credentialscommunity').val(),
-					snmpv3username: that.$('#credentialssnmpv3username').val(),
-					snmpv3authtype: that.$('#credentialssnmpv3authtype').val(),
-					snmpv3authkey: that.$('#credentialssnmpv3authkey').val(),
-					snmpv3privtype: that.$('#credentialssnmpv3privtype').val(),
-					snmpv3privkey: that.$('#credentialssnmpv3privkey').val(),
 					publicKey: that.$('#credentialspublickey').val(),
 					privateKey: that.$('#credentialsprivatekey').val()
 				};
@@ -74,21 +67,13 @@ define([
 		onCreate: function() {
 			var that = this;
 			this.$("input[name='credentialstype']").change(function() {
-				if ($(this).val().match(/SNMP v(1|2)/)) {
+				if ($(this).val().match(/SNMP/)) {
 					that.$('.nsadmin-credentialscommunity').show();
-					that.$('.nsadmin-credentialscli').hide();
-					that.$('.nsadmin-credentialsclikey').hide();
-					that.$('.nsadmin-credentialssnmpv3').hide();
-				}
-				else if ($(this).val().match(/SNMP v3/)) {
-					that.$('.nsadmin-credentialssnmpv3').show();
-					that.$('.nsadmin-credentialscommunity').hide();
 					that.$('.nsadmin-credentialscli').hide();
 					that.$('.nsadmin-credentialsclikey').hide();
 				}
 				else if ($(this).val().match(/(SSH|Telnet)/)) {
 					that.$('.nsadmin-credentialscommunity').hide();
-					that.$('.nsadmin-credentialssnmpv3').hide();
 					that.$('.nsadmin-credentialscli').show();
 					if ($(this).val().match(/Key/)) {
 						that.$('.nsadmin-credentialsclikey').show();
@@ -106,12 +91,6 @@ define([
 				$('<option />').attr('value', domain.get('id'))
 						.text(domain.get('name')).appendTo(that.$('#credentialsdomain'));
 			});
-			$.each(this.authtypes,function(index,authtype) {
-				$('<option />').attr('value', authtype ).text(authtype).appendTo(that.$('#credentialssnmpv3authtype'));
-			});
-                        $.each(this.privtypes,function(index,privtype) {
-                                $('<option />').attr('value', privtype ).text(privtype).appendTo(that.$('#credentialssnmpv3privtype'));
-                        });
 			this.$("#credentialsname").select();
 		}
 

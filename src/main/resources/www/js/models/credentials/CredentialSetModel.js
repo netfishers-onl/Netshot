@@ -16,12 +16,7 @@ define([
 			'password': "=",
 			'superPassword': "=",
 			'publicKey': "",
-			'privateKey': "",
-			'snmpv3username' : "",
-			'snmpv3authtype' : "SHA",
-			'snmpv3authkey' : "",
-			'snmpv3privtype' : "DES",
-			'snmpv3privkey' : ""
+			'privateKey': ""
 		},
 
 		cleanUp: function(attrs) {
@@ -32,11 +27,10 @@ define([
 				'name',
 				'mgmtDomain'
 			];
-			if (type.match(/SNMP v(1|2)/i)) {
+			if (type.match(/SNMP/i)) {
 				selAttrs.push('community');
-			} else if ( type.match(/SNMP v3/i)) {  
-				selAttrs.push('snmpv3username', 'snmpv3authtype', 'snmpv3authkey' , 'snmpv3privtype', 'snmpv3privkey' );
-			} else if (type.match(/(Telnet|SSH)/i)) {
+			}
+			else if (type.match(/(Telnet|SSH)/i)) {
 				selAttrs.push('username', 'password', 'superPassword');
 				if (type.match(/Key/)) {
 					selAttrs.push('publicKey', 'privateKey');

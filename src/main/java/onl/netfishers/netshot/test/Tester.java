@@ -51,7 +51,6 @@ public class Tester {
 			Domain domain = new Domain("Fake", "Fake domain", new Network4Address("10.0.16.1"), null);
 			session.save(domain);
 			DeviceCredentialSet snmp = new DeviceSnmpv2cCommunity("test", "Fake SNMP");
-			DeviceCredentialSet snmp = new DeviceSnmpv3Community("test", "Fake SNMP","fakeuser","MD5","authkey-test","DES","privkey-test");
 			DeviceCredentialSet ssh = new DeviceSshAccount("test", "test", "test", "Fake SSH");
 			session.save(snmp);
 			session.save(ssh);

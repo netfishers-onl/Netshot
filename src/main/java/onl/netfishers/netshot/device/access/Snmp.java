@@ -23,6 +23,20 @@ import java.io.IOException;
 import onl.netfishers.netshot.device.NetworkAddress;
 
 import org.snmp4j.CommunityTarget;
+import org.snmp4j.UserTarget;
+import org.snmp4j.security.SecurityLevel;
+import org.snmp4j.security.AuthMD5;
+import org.snmp4j.security.AuthSHA;
+import org.snmp4j.security.Priv3DES;
+import org.snmp4j.security.PrivAES128;
+import org.snmp4j.security.PrivAES192;
+import org.snmp4j.security.PrivAES256;
+import org.snmp4j.security.USM;
+import org.snmp4j.ScopedPDU;
+import org.snmp4j.mp.MPv3;
+import org.snmp4j.security.UsmUser;
+import org.snmp4j.security.SecurityProtocols;
+import org.snmp4j.security.SecurityModels;
 import org.snmp4j.PDU;
 import org.snmp4j.Target;
 import org.snmp4j.event.ResponseEvent;
@@ -33,6 +47,10 @@ import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.TransportMapping;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * A SNMP poller class, to poll data from a device via SNMP.
@@ -47,6 +65,14 @@ public class Snmp extends Poller {
 
 	/** The port. */
 	private static int PORT = 161;
+
+	/** SNMPv3 auth protocol */
+	private OID authProtocol; 
+
+	/** SNMPv3 priv protocol */
+	private OID privProtocol; 	
+	
+	private static Logger logger = LoggerFactory.getLogger(Snmp.class);
 
 	/**
 	 * Instantiates a new snmp.
@@ -63,7 +89,7 @@ public class Snmp extends Poller {
 	}
 
 	/**
-	 * Instantiates a new snmp.
+	 * Instantiates a new SNMPv1/2 access.
 	 *
 	 * @param address the address
 	 * @param community the community
@@ -73,15 +99,62 @@ public class Snmp extends Poller {
 		this(address, community, false);
 	}
 
-	/**
-	 * Instantiates a new snmp.
-	 *
-	 * @param address the address
-	 * @param username the username
-	 * @param password the password
-	 */
-	public Snmp(NetworkAddress address, String username, String password) {
-		//TODO
+
+	public Snmp(NetworkAddress address, String username, String authType, String authKey, String privType, String privKey)
+			throws IOException {
+		// TODO
+		// AuthSHA.ID AuthMD5.ID
+		// AuthHMAC128SHA224.ID AuthHMAC192SHA256.ID AuthHMAC256SHA384.ID
+		// AuthHMAC384SHA512.ID
+		// Priv3DES.ID PrivAES128.ID PrivAES192.ID PrivAES256.ID
+		// AUTH_NOPRIV AUTH_PRIV NOAUTH_NOPRIV
+
+		// Prepare target
+		logger.debug("Prepare SNMPv3 context");
+		this.target = new UserTarget();
+		this.target.setTimeout(5000);
+		this.target.setVersion(SnmpConstants.version3);
+		this.target.setAddress(new UdpAddress(address.getInetAddress(), PORT));
+		if (authKey == null) {
+			this.target.setSecurityLevel(SecurityLevel.NOAUTH_NOPRIV);
+		}
+		else if (privKey == null) {
+			this.target.setSecurityLevel(SecurityLevel.AUTH_NOPRIV);
+		}
+		else {
+			this.target.setSecurityLevel(SecurityLevel.AUTH_PRIV);
+		}
+		this.target.setSecurityName(new OctetString(username));
+
+		// Prepare transport
+		logger.debug("Auth Protocol called: {}", authType);
+		if (authType.equals("SHA")) {
+			this.authProtocol = AuthSHA.ID;
+			logger.debug("Using SHA Auth");
+		}
+		else {
+			this.authProtocol = AuthMD5.ID;
+		}
+
+		if (privType.equals("AES128")) {
+			this.privProtocol = PrivAES128.ID;
+		}
+		else if (privType.equals("AES192")) {
+			this.privProtocol = PrivAES192.ID;
+		}
+		else if (privType.equals("AES256")) {
+			this.privProtocol = PrivAES256.ID;
+		}
+		else {
+			this.privProtocol = Priv3DES.ID;
+		}
+
+		USM usm = new USM(SecurityProtocols.getInstance(), new OctetString(MPv3.createLocalEngineID()), 0);
+		usm.addUser(new OctetString(username), new UsmUser(new OctetString(username), this.authProtocol,
+				new OctetString(authKey), this.privProtocol, new OctetString(privKey)));
+		SecurityModels.getInstance().addSecurityModel(usm);
+
+		start();
 	}
 
 	/**
@@ -143,24 +216,45 @@ public class Snmp extends Poller {
 		for (OID oid : oids) {
 			pdu.add(new VariableBinding(oid));
 		}
-
 		pdu.setType(PDU.GET);
 		return pdu;
 	}
 
 	/**
-	 * Gets the.
+	 * Gets the scoped pdu.
+	 * 
+	 * @param oids the oids
+	 * @return the scoped pdu
+	 */
+
+	private ScopedPDU getScopedPDU(OID oids[]) {
+		ScopedPDU scopedPdu = new ScopedPDU();
+		for (OID oid : oids) {
+			scopedPdu.add(new VariableBinding(oid));
+		}
+		scopedPdu.setType(PDU.GET);
+		return scopedPdu;
+	}
+
+	/**
+	 * Gets the a response.
 	 *
 	 * @param oids the oids
 	 * @return the response event
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public ResponseEvent get(OID oids[]) throws IOException {
-		ResponseEvent event = snmp.send(getPDU(oids), target, null);
+		ResponseEvent event;
+		if (this.target.getVersion() == SnmpConstants.version3) {
+			event = snmp.send(getScopedPDU(oids), target, null);
+		}
+		else {
+			event = snmp.send(getPDU(oids), target, null);
+		}
 		if (event != null) {
 			return event;
 		}
-		throw new RuntimeException("SNMP Get timed out");	  
+		throw new RuntimeException("SNMP Get timed out");
 	}
 
 

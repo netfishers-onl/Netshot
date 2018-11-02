@@ -45,9 +45,15 @@ define([
 						credentialSet.privateKey = that.$('#credentialsprivatekey').val();
 					}
 				}
-				else if (credentialSet.type.match(/SNMP/)) {
+				else if (credentialSet.type.match(/SNMP v(1|2)/)) {
 					credentialSet.community = that.$('#credentialscommunity').val();
-					
+				}
+				else if (credentialSet.type.match(/SNMP v3/)) {
+					credentialSet.username = that.$('#credentialssnmpv3username').val();
+					credentialSet.authType = that.$('#credentialssnmpv3authtype').val();
+					credentialSet.authKey = that.$('#credentialssnmpv3authkey').val();
+					credentialSet.privType = that.$('#credentialssnmpv3privtype').val();
+					credentialSet.privKey = that.$('#credentialssnmpv3privkey').val();
 				}
 				var domain = that.$('#credentialsdomain').val();
 				if (domain != 0) {
@@ -76,13 +82,21 @@ define([
 			that.$('input[value="' + that.model.get('type') + '"]')
 					.prop('checked', true);
 			that.$('input[type="radio"]').prop('disabled', true);
-			if (that.model.get('type').match(/SNMP/)) {
+			if (that.model.get('type').match(/SNMP v(1|2)/)) {
 				that.$('.nsadmin-credentialscommunity').show();
+				that.$('.nsadmin-credentialscli').hide();
+				that.$('.nsadmin-credentialsclikey').hide();
+				that.$('.nsadmin-credentialssnmpv3').hide();
+			}
+			else if (that.model.get('type').match(/SNMP v3/)) {
+				that.$('.nsadmin-credentialssnmpv3').show();
+				that.$('.nsadmin-credentialscommunity').hide();
 				that.$('.nsadmin-credentialscli').hide();
 				that.$('.nsadmin-credentialsclikey').hide();
 			}
 			else if (that.model.get('type').match(/(SSH|Telnet)/)) {
 				that.$('.nsadmin-credentialscommunity').hide();
+				that.$('.nsadmin-credentialssnmpv3').hide();
 				that.$('.nsadmin-credentialscli').show();
 				if (that.model.get('type').match(/Key/)) {
 					that.$('.nsadmin-credentialsclikey').show();
@@ -103,6 +117,17 @@ define([
 			if (typeof domain === "object" && domain) {
 				that.$('#credentialsdomain').val(domain.id);
 			}
+			$.each(CredentialSetModel.authTypes, function(index, authType) {
+				$('<option />').attr('value', authType).text(authType).appendTo(that.$('#credentialssnmpv3authtype'));
+			});
+			$.each(CredentialSetModel.privTypes, function(index, privType) {
+				$('<option />').attr('value', privType).text(privType).appendTo(that.$('#credentialssnmpv3privtype'));
+			});
+			if (that.model.get('type').match(/SNMP v3/)) {
+				that.$('#credentialssnmpv3authtype').val(that.model.get('snmpv3authtype'));
+				that.$('#credentialssnmpv3privtype').val(that.model.get('snmpv3privtype'));
+			}
+
 			this.$("#credentialsname").select();
 		},
 

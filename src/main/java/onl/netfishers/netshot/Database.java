@@ -66,6 +66,7 @@ import onl.netfishers.netshot.device.attribute.DeviceTextAttribute;
 import onl.netfishers.netshot.device.attribute.LongTextConfiguration;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpv1Community;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpv2cCommunity;
+import onl.netfishers.netshot.device.credentials.DeviceSnmpv3Community;
 import onl.netfishers.netshot.device.credentials.DeviceSshAccount;
 import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
 import onl.netfishers.netshot.device.credentials.DeviceTelnetAccount;
@@ -274,6 +275,7 @@ public class Database {
 				.addAnnotatedClass(NetworkInterface.class)
 				.addAnnotatedClass(DeviceSnmpv1Community.class)
 				.addAnnotatedClass(DeviceSnmpv2cCommunity.class)
+				.addAnnotatedClass(DeviceSnmpv3Community.class)
 				.addAnnotatedClass(DeviceSshAccount.class)
 				.addAnnotatedClass(DeviceSshKeyAccount.class)
 				.addAnnotatedClass(DeviceTelnetAccount.class)

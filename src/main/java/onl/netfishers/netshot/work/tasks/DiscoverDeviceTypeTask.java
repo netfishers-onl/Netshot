@@ -46,6 +46,7 @@ import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpv1Community;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpv2cCommunity;
+import onl.netfishers.netshot.device.credentials.DeviceSnmpv3Community;
 import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
@@ -227,6 +228,22 @@ public class DiscoverDeviceTypeTask extends Task {
 		return false;
 	}
 
+	private boolean snmpv3Discover(DeviceSnmpv3Community cred) {
+		this.logIt("Trying SNMPv3 discovery.", 5);
+		try {
+			Snmp poller = new Snmp(deviceAddress, cred.getUsername(), cred.getAuthType(), cred.getAuthKey(),
+					cred.getPrivType(), cred.getPrivKey());
+			return snmpDiscover(poller);
+		} catch (UnknownHostException e) {
+			logger.warn("SNMPv3 unknown host error.", e);
+			this.logIt("SNMPv3 unknown host error: " + e.getMessage(), 3);
+		} catch (Exception e) {
+			logger.error("SNMPv3 error while polling the device.", e);
+			this.logIt("Error while SNMPv3 polling the device: " + e.getMessage(), 3);
+		}
+		return false;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -270,6 +287,17 @@ public class DiscoverDeviceTypeTask extends Task {
 					break;
 				}
 			}
+			else if (credentialSet instanceof DeviceSnmpv3Community) {
+                                logger.trace("SNMPv3 credential set.");
+                                didTrySnmp = true;
+                                DeviceSnmpv3Community DeviceSnmpcred = (DeviceSnmpv3Community) credentialSet;
+                                if (snmpv3Discover(DeviceSnmpcred)) {
+                                        this.status = Status.SUCCESS;
+                                        this.successCredentialSet = credentialSet;
+                                        break;
+                                }
+                        }
+  
 		}
 		if (this.status == Status.SUCCESS) {
 			Task snapshotTask = null;

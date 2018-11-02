@@ -49,7 +49,7 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 		this.privateKey = privateKey;
 	}
 
-	@Column(length = 10000)
+	@Column(length = 5000)
 	@XmlElement
 	@Type(type = "credentialString")
 	public String getPrivateKey() {
@@ -60,7 +60,7 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 		this.privateKey = privateKey;
 	}
 	
-	@Column(length = 10000)
+	@Column(length = 5000)
 	@XmlElement
 	public String getPublicKey() {
 		return publicKey;

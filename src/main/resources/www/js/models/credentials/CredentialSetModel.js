@@ -4,7 +4,7 @@ define([
 	'backbone',
 ], function(_, Backbone) {
 
-	return Backbone.Model.extend({
+	var CredentialSetModel = Backbone.Model.extend({
 
 		urlRoot: "api/credentialsets",
 
@@ -16,8 +16,16 @@ define([
 			'password': "=",
 			'superPassword': "=",
 			'publicKey': "",
-			'privateKey': ""
+			'privateKey': "",
+			'username': "",
+			'authType': "SHA",
+			'authKey': "",
+			'privType': "DES",
+			'privKey': ""
 		},
+		
+		authTypes: ["MD5", "SHA"],
+		privTypes: ["DES", "AES128", "AES192", "AES256"],
 
 		cleanUp: function(attrs) {
 			var type = (typeof attrs['type'] == 'undefined' ? this.get('type') : attrs['type']);
@@ -27,8 +35,11 @@ define([
 				'name',
 				'mgmtDomain'
 			];
-			if (type.match(/SNMP/i)) {
+			if (type.match(/SNMP v(1|2)/i)) {
 				selAttrs.push('community');
+			}
+			else if ( type.match(/SNMP v3/i)) {  
+				selAttrs.push('username', 'authType', 'authKey' , 'privType', 'privKey');
 			}
 			else if (type.match(/(Telnet|SSH)/i)) {
 				selAttrs.push('username', 'password', 'superPassword');
@@ -47,5 +58,7 @@ define([
 		}
 
 	});
+
+	return CredentialSetModel;
 
 });

@@ -39,6 +39,11 @@ define([
 					password: that.$('#credentialspassword').val(),
 					superPassword: that.$('#credentialssuper').val(),
 					community: that.$('#credentialscommunity').val(),
+					username: that.$('#credentialssnmpv3username').val(),
+					authType: that.$('#credentialssnmpv3authtype').val(),
+					authKey: that.$('#credentialssnmpv3authkey').val(),
+					privType: that.$('#credentialssnmpv3privtype').val(),
+					privKey: that.$('#credentialssnmpv3privkey').val(),
 					publicKey: that.$('#credentialspublickey').val(),
 					privateKey: that.$('#credentialsprivatekey').val()
 				};
@@ -67,13 +72,21 @@ define([
 		onCreate: function() {
 			var that = this;
 			this.$("input[name='credentialstype']").change(function() {
-				if ($(this).val().match(/SNMP/)) {
+				if ($(this).val().match(/SNMP v(1|2)/)) {
 					that.$('.nsadmin-credentialscommunity').show();
+					that.$('.nsadmin-credentialscli').hide();
+					that.$('.nsadmin-credentialsclikey').hide();
+					that.$('.nsadmin-credentialssnmpv3').hide();
+				}
+				else if ($(this).val().match(/SNMP v3/)) {
+					that.$('.nsadmin-credentialssnmpv3').show();
+					that.$('.nsadmin-credentialscommunity').hide();
 					that.$('.nsadmin-credentialscli').hide();
 					that.$('.nsadmin-credentialsclikey').hide();
 				}
 				else if ($(this).val().match(/(SSH|Telnet)/)) {
 					that.$('.nsadmin-credentialscommunity').hide();
+					that.$('.nsadmin-credentialssnmpv3').hide();
 					that.$('.nsadmin-credentialscli').show();
 					if ($(this).val().match(/Key/)) {
 						that.$('.nsadmin-credentialsclikey').show();
@@ -90,6 +103,12 @@ define([
 			this.domains.each(function(domain) {
 				$('<option />').attr('value', domain.get('id'))
 						.text(domain.get('name')).appendTo(that.$('#credentialsdomain'));
+			});
+			$.each(CredentialSetModel.authTypes, function(index, authType) {
+				$('<option />').attr('value', authType).text(authType).appendTo(that.$('#credentialssnmpv3authtype'));
+			});
+			$.each(CredentialSetModel.privTypes, function(index, privType) {
+				$('<option />').attr('value', privType).text(privType).appendTo(that.$('#credentialssnmpv3privtype'));
 			});
 			this.$("#credentialsname").select();
 		}

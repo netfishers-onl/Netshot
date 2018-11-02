@@ -109,6 +109,7 @@ import onl.netfishers.netshot.device.attribute.ConfigLongTextAttribute;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
+import onl.netfishers.netshot.device.credentials.DeviceSnmpv3Community;
 import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
@@ -3096,6 +3097,14 @@ public class RestService extends Thread {
 					((DeviceSshKeyAccount) cliAccount).setPublicKey(((DeviceSshKeyAccount) rsCliAccount).getPublicKey());
 					((DeviceSshKeyAccount) cliAccount).setPrivateKey(((DeviceSshKeyAccount) rsCliAccount).getPrivateKey());
 				}
+			}
+			else if (DeviceSnmpv3Community.class.isInstance(credentialSet)) {
+				((DeviceSnmpv3Community) credentialSet).setUsername( ((DeviceSnmpv3Community) rsCredentialSet).getUsername() ); 
+				((DeviceSnmpv3Community) credentialSet).setAuthType( ((DeviceSnmpv3Community) rsCredentialSet).getAuthType() ); 
+				((DeviceSnmpv3Community) credentialSet).setAuthKey( ((DeviceSnmpv3Community) rsCredentialSet).getAuthKey() ); 
+				((DeviceSnmpv3Community) credentialSet).setPrivType( ((DeviceSnmpv3Community) rsCredentialSet).getPrivType() ); 
+				((DeviceSnmpv3Community) credentialSet).setPrivKey( ((DeviceSnmpv3Community) rsCredentialSet).getPrivKey() ); 
+				
 			}
 			else if (DeviceSnmpCommunity.class.isInstance(credentialSet)) {
 				((DeviceSnmpCommunity) credentialSet)

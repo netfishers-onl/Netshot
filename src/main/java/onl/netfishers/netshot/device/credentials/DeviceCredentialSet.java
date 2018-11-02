@@ -56,6 +56,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
 	@Type(value = DeviceSnmpv1Community.class, name = "SNMP v1"),
 	@Type(value = DeviceSnmpv2cCommunity.class, name = "SNMP v2"),
+	@Type(value = DeviceSnmpv3Community.class, name = "SNMP v3"),
 	@Type(value = DeviceSshAccount.class, name = "SSH"),
 	@Type(value = DeviceSshKeyAccount.class, name = "SSH Key"),
 	@Type(value = DeviceTelnetAccount.class, name = "Telnet")

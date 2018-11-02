@@ -21,7 +21,7 @@ var Info = {
 	name: "BrocadeFastIron",
 	description: "Brocade FastIron",
 	author: "NetFishers",
-	version: "1.3"
+	version: "1.2"
 };
 
 var Config = {
@@ -117,7 +117,7 @@ var CLI = {
 		fail: "Authentication failed - Telnet authentication failure."
 	},
 	disable: {
-		prompt: /^((telnet|ssh|SSH)@[A-Za-z\-_0-9\. ]+\>)$/,
+		prompt: /^((telnet|ssh)@[A-Za-z\-_0-9\.]+\>)$/,
 		pager: {
 			match: /^--More--$/,
 			response: " "
@@ -150,7 +150,7 @@ var CLI = {
 	},
 
 	enable: {
-		prompt: /^((telnet|ssh|SSH)@[A-Za-z\-_0-9\. ]+#)$/,
+		prompt: /^((telnet|ssh)@[A-Za-z\-_0-9\.]+#)$/,
 		error: /^Invalid input/m,
 		pager: {
 			avoid: "skip-page-display",
@@ -182,7 +182,7 @@ var CLI = {
 	},
 	
 	configure: {
-		prompt: /^((telnet|ssh|SSH)@[A-Za-z\-_0-9\. ]+\(conf[0-9\-a-zA-Z]+\)#)$/,
+		prompt: /^((telnet|ssh)@[A-Za-z\-_0-9\.]+\(conf[0-9\-a-zA-Z]+\)#)$/,
 		error: /^Invalid input/m,
 		clearPrompt: true,
 		macros: {
@@ -222,7 +222,7 @@ function snapshot(cli, device, config) {
 		device.set("name", hostname[1]);
 	}
 	
-	var version = showVersion.match(/SW: Version (.*)( Copyright|)/m);
+	var version = showVersion.match(/SW: Version (.*) Copyright/m);
 	if (version) {
 		device.set("softwareVersion", version[1]);
 		config.set("iwVersion", version[1]);
@@ -232,9 +232,9 @@ function snapshot(cli, device, config) {
 		config.set("iwVersion", "Unknown");
 	}
 	
-	var bootVersion = showVersion.match(/(BootROM: Version |Boot-Monitor.*Version:)([0-9a-zA-Z\.]+)/);
+	var bootVersion = showVersion.match(/BootROM: Version (.*)/);
 	if (bootVersion) {
-		config.set("bootVersion", bootVersion[2]);
+		config.set("bootVersion", bootVersion[1]);
 	}
 	else {
 		config.set("bootVersion", "Unknown");

@@ -32,7 +32,7 @@ define([
 					var name = definitions[d].name;
 					var attribute = attributes[name];
 					if (typeof attribute !== "object" || !attribute) { attribute = {}; }
-					fullAttributes.push(_.extend(definitions[d], attribute));
+					fullAttributes.push(_.extend({}, definitions[d], attribute));
 				}
 			}
 			data.attributes = fullAttributes;

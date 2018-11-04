@@ -92,6 +92,12 @@ public class Finder {
 
 		/** The greaterthan. */
 		GREATERTHAN("(?i)^\\s*(greaterthan)\\b", "GREATERTHAN"),
+		
+		/** True. */
+		TRUE("(?i)^\\s*(true)\\b", "TRUE"),
+		
+		/** False. */
+		FALSE("(?i)^\\s*(false)\\b", "FALSE"),
 
 		/** The ip. */
 		IP("(?i)^\\s*(\\[ip\\])", "IP"),
@@ -573,6 +579,8 @@ public class Finder {
 				}
 				criteria.where += childCriteria.where;
 				criteria.joins.addAll(childCriteria.joins);
+				criteria.otherTables.addAll(childCriteria.otherTables);
+				criteria.whereJoins.addAll(childCriteria.whereJoins);
 				i++;
 			}
 			criteria.where += ")";
@@ -680,6 +688,8 @@ public class Finder {
 				}
 				criteria.where += childCriteria.where;
 				criteria.joins.addAll(childCriteria.joins);
+				criteria.otherTables.addAll(childCriteria.otherTables);
+				criteria.whereJoins.addAll(childCriteria.whereJoins);
 				i++;
 			}
 			criteria.where += ")";
@@ -1614,13 +1624,13 @@ public class Finder {
 		 *
 		 * @return the property name
 		 */
-		public String buildWhere(String valueName, String operator, String value) {
+		public String buildWhere(String valueName, String operator, String itemPrefix) {
 			if (propertyLevel.nativeProperty) {
-				return propertyLevel.prefix + property + " " + operator + " " + value;
+				return propertyLevel.prefix + property + " " + operator + " :" + itemPrefix;
 			}
 			else {
-				return propertyLevel.prefix + "name = '" + property + "' and " +
-						propertyLevel.prefix + valueName + " " + operator + " " + value;
+				return itemPrefix + "_" + propertyLevel.prefix + valueName + " " + operator
+						+ " :" + itemPrefix;
 			}
 		}
 
@@ -1727,13 +1737,16 @@ public class Finder {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			switch (this.propertyLevel) {
 			case CONFIGATTRIBUTE:
-				criteria.joins.add("c.attributes ca");
+				criteria.joins.add(String.format("c.attributes %s_ca with %s_ca.name = :%s_name",
+						itemPrefix, itemPrefix, itemPrefix));
 			case CONFIG:
 				criteria.whereJoins.add("d.lastConfig = c");
 				criteria.otherTables.add("Config c");
 				break;
 			case DEVICEATTRIBUTE:
-				criteria.joins.add("d.attributes da");
+				criteria.joins.add(String.format("d.attributes %s_da with %s_da.name = :%s_name",
+						itemPrefix, itemPrefix, itemPrefix));
+				
 			default:
 				break;
 			}
@@ -1742,6 +1755,9 @@ public class Finder {
 		
 		public void setVariables(Query query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
+			if (!propertyLevel.nativeProperty) {
+				query.setString(itemPrefix + "_name", property);
+			}
 		}
 	}
 
@@ -1780,13 +1796,13 @@ public class Finder {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			switch (sign) {
 			case GREATERTHAN:
-				criteria.where = this.buildWhere("number", ">", ":" + itemPrefix);
+				criteria.where = this.buildWhere("number", ">", itemPrefix);
 				break;
 			case LESSTHAN:
-				criteria.where = this.buildWhere("number", "<", ":" + itemPrefix);
+				criteria.where = this.buildWhere("number", "<", itemPrefix);
 				break;
 			default:
-				criteria.where = this.buildWhere("number", "=", ":" + itemPrefix);
+				criteria.where = this.buildWhere("number", "=", itemPrefix);
 				break;
 			}
 			return criteria;
@@ -1893,7 +1909,7 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
-			criteria.where = this.buildWhere("choice", "=", ":" + itemPrefix);
+			criteria.where = this.buildWhere("choice", "=", itemPrefix);
 			return criteria;
 		}
 
@@ -1996,7 +2012,7 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
-			criteria.where = this.buildWhere(longText ? "longText.text" : "text", "like", ":" + itemPrefix);
+			criteria.where = this.buildWhere(longText ? "longText.text" : "text", "like", itemPrefix);
 			return criteria;
 		}
 
@@ -2146,14 +2162,14 @@ public class Finder {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			switch (sign) {
 			case AFTER:
-				criteria.where = this.buildWhere("when", ">=", ":" + itemPrefix);
+				criteria.where = this.buildWhere("when", ">=", itemPrefix);
 				break;
 			case BEFORE:
-				criteria.where = this.buildWhere("when", "<=", ":" + itemPrefix);
+				criteria.where = this.buildWhere("when", "<=", itemPrefix);
 				break;
 			default:
-				criteria.where = "(" + this.buildWhere("when", ">=", ":" + itemPrefix + "_1") + " and "
-						+ this.buildWhere("when", "<=", ":" + itemPrefix + "_2") + ")";
+				criteria.where = "(" + this.buildWhere("when", ">=", itemPrefix + "_1") + " and "
+						+ this.buildWhere("when", "<=", itemPrefix + "_2") + ")";
 			}
 			return criteria;
 		}
@@ -2266,6 +2282,8 @@ public class Finder {
 	 * The Class BinaryAttributeExpression.
 	 */
 	public static class BinaryAttributeExpression extends AttributeExpression {
+		
+		private boolean value;
 
 		/**
 		 * Instantiates a new binary config item expression.
@@ -2278,20 +2296,14 @@ public class Finder {
 		public BinaryAttributeExpression(DeviceDriver driver,
 				String item, String property, PropertyLevel propertyLevel) {
 			super(driver, item, property, propertyLevel);
+			this.sign = TokenType.IS;
 		}
 
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.AttributeExpression#getTextValue()
 		 */
 		protected String getTextValue() {
-			return null;
-		}
-
-		/* (non-Javadoc)
-		 * @see onl.netfishers.netshot.device.Finder.AttributeExpression#toString()
-		 */
-		public String toString() {
-			return String.format("[%s]", item);
+			return value ? "TRUE" : "FALSE";
 		}
 
 		/* (non-Javadoc)
@@ -2299,7 +2311,7 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
-			criteria.where = this.buildWhere("assumption", "=", "1");
+			criteria.where = this.buildWhere("assumption", "is", itemPrefix);
 			return criteria;
 		}
 
@@ -2308,6 +2320,7 @@ public class Finder {
 		 */
 		public void setVariables(Query query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
+			query.setBoolean(itemPrefix, this.value);
 		}
 
 		public static Expression parse(List<Token> tokens,
@@ -2334,13 +2347,31 @@ public class Finder {
 			if (item == null) {
 				return null;
 			}
-			if (tokens.size() > 1) {
+			if (tokens.size() != 3) {
 				throw new FinderParseException(String.format(
-						"Invalid token following binary item at character %d.",
-						tokens.get(1).position));
+						"Incomplete or incorrect expression after enum item at character %d.",
+						tokens.get(0).position));
+			}
+			Token sign = tokens.get(1);
+			Token value = tokens.get(2);
+			if (sign.type != TokenType.IS) {
+				throw new FinderParseException(String.format(
+						"Parsing error, invalid operator at position %d, should be 'IS'.",
+						sign.position));
 			}
 			BinaryAttributeExpression binExpr =
 					new BinaryAttributeExpression(driver, item, property, level);
+			if (value.type == TokenType.TRUE) {
+				binExpr.value = true;
+			}
+			else if (value.type == TokenType.FALSE) {
+				binExpr.value = false;
+			}
+			else {
+				throw new FinderParseException(String.format(
+						"Parsing error, invalid operator at position %d, should be 'TRUE' or 'FALSE'.",
+						value.position));
+			}
 			return binExpr;
 		}
 	}

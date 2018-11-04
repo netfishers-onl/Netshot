@@ -222,8 +222,8 @@ define([
 						'IN': '[' + name + '] IN 1616.1616.1616/32'
 					},
 					'BINARY': {
-						'YES': '[' + name + ']',
-						'NO': 'NOT([' + name + '])'
+						'TRUE': '[' + name + '] IS TRUE',
+						'FALSE': '[' + name + '] IS FALSE'
 					},
 					'ENUM': function() {
 						var buttons = {};

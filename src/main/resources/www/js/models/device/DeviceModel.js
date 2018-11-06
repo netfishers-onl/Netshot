@@ -30,7 +30,11 @@ define([
 				'credentialSetIds',
 				'clearCredentialSetIds',
 				'enabled',
-				'mgmtDomain'
+				'mgmtDomain',
+				'connectIpAddress',
+				'sshPort',
+				'telnetPort',
+				'specificCredentialSet'
 			]);
 			options.attrs = attrs;
 			return Backbone.Model.prototype.save.call(this, attrs, options);

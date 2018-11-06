@@ -1,7 +1,7 @@
 <li class="nscompliance-list-policy config-policy" data-policy-id="<%- id %>">
 	<span class="name"><%- name %></span>
 	<div class="details">
-		<% if (typeof targetGroup == "object") { %>
+		<% if (typeof targetGroup === "object" && targetGroup) { %>
 		Applies to <span class="group"><%- targetGroup.name %></span>
 		<% } else { %>
 		Not applied

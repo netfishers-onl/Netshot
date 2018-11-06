@@ -9,7 +9,7 @@
 			<p>Name: <strong><%- name %></strong></p>
 		</fieldset>
 		<fieldset>
-			<label for="deviceipaddress">IP Address: </label>
+			<label for="deviceipaddress">Main IP Address: </label>
 			<input type="text" name="deviceipaddress" id="deviceipaddress" autofocus="autofocus" value="<%- mgmtAddress.ip %>" class="text ui-widget-content ui-corner-all" />
 		</fieldset>
 		<fieldset>
@@ -18,11 +18,103 @@
 				class="text ui-widget-content ui-corner-all"></select>
 		</fieldset>
 		<fieldset>
-			Use the following credential sets:<br />
-			<span id="devicecredentials"></span>
-			<input type="checkbox" name="autotrycredentials" id="autotrycredentials" <% if (autoTryCredentials) { %>checked="checked" <% } %>/>
-			<label for="autotrycredentials">In case of failure, also try all known credentials</label><br />
+			<input type="checkbox" name="overrideconnectsettings" id="overrideconnectsettings" />
+			<label for="overrideconnectsettings">Override connection settings</label><br />
+			<div id="deviceconnectionsettings">
+				<div>
+					<label for="deviceconnectipaddress">Connect to this IP: </label>
+					<input
+						type="text"
+						name="deviceconnectipaddress"
+						id="deviceconnectipaddress"
+						value="<%- connectAddress && connectAddress.ip %>"
+						class="text ui-widget-content ui-corner-all"
+					/>
+				</div>
+				<div>
+					<label for="devicesshport">SSH port: </label>
+					<input
+						type="text"
+						name="devicesshport"
+						id="devicesshport"
+						value="<%- sshPort || '' %>"
+						class="text ui-widget-content ui-corner-all nsportpicker"
+					/>
+					<label for="devicetelnetport">Telnet port: </label>
+					<input
+						type="text"
+						name="devicetelnetport"
+						id="devicetelnetport"
+						value="<%- telnetPort || '' %>"
+						class="text ui-widget-content ui-corner-all nsportpicker"
+					/>
+				</div>
+			</div>
 		</fieldset>
+		<fieldset class="autodiscover-imcompatible">
+			<div>
+				<input type="radio" id="credentialstypecommon" name="credentialstype" value="Global" />
+				<label for="credentialstypecommon">Use global credential sets for authentication</label>
+			</div>
+			<div>
+				<input type="radio" id="credentialstypessh" name="credentialstype" value="SSH" />
+				<label for="credentialstypessh">Specific SSH account</label>
+			</div>
+			<div>
+				<input type="radio" id="credentialstypesshkey" name="credentialstype" value="SSH Key" />
+				<label for="credentialstypesshkey">Specific SSH key</label>
+			</div>
+			<div>
+				<input type="radio" id="credentialstypetelnet" name="credentialstype" value="Telnet" />
+				<label for="credentialstypetelnet">Specific Telnet account</label>
+			</div>
+		</fieldset>
+		<div>
+			<div id="globalcredentials">
+				<div id="devicecredentials"></div>
+				<input type="checkbox" name="autotrycredentials" id="autotrycredentials" <% if (autoTryCredentials) { %>checked="checked" <% } %>/>
+				<label for="autotrycredentials">In case of failure, also try all known credentials</label><br />
+			</div>
+			<table>
+				<tbody>
+					<tr class="nsadmin-credentialscli">
+						<td><label for="credentialsusername">Username:</label></td>
+						<td><input type="text" name="credentialsusername"
+							id="credentialsusername"
+							value="<%- (specificCredentialSet ? specificCredentialSet.username : '') %>"
+							class="text ui-widget-content ui-corner-all" /></td>
+					</tr>
+					<tr class="nsadmin-credentialsclikey">
+						<td colspan="2"><label for="credentialspublickey">RSA Public Key:</label></td>
+					</tr>
+					<tr class="nsadmin-credentialsclikey">
+						<td colspan="2"><textarea rows="3" cols="64" name="credentialspublickey" id="credentialspublickey"
+							class="text ui-widget-content ui-corner-all"><%- (specificCredentialSet ? specificCredentialSet.publicKey : "") %></textarea></td>
+					</tr>
+					<tr class="nsadmin-credentialsclikey">
+						<td colspan="2"><label for="credentialsprivatekey">RSA Private Key:</label></td>
+					</tr>
+					<tr class="nsadmin-credentialsclikey">
+						<td colspan="2"><textarea rows="3" cols="64" name="credentialsprivatekey" id="credentialsprivatekey"
+							class="text ui-widget-content ui-corner-all"><%- (specificCredentialSet ? specificCredentialSet.privateKey : "") %></textarea></td>
+					</tr>
+					<tr class="nsadmin-credentialscli">
+						<td class="nsadmin-credentialsclikey"><label for="credentialspassword">Passphrase:</label></td>
+						<td class="nsadmin-credentialsclinokey"><label for="credentialspassword">Password:</label></td>
+						<td><input type="password" name="credentialspassword"
+							id="credentialspassword"
+							value="<%- (specificCredentialSet ? specificCredentialSet.password : '') %>"
+							class="text ui-widget-content ui-corner-all" /></td>
+					</tr>
+					<tr class="nsadmin-credentialscli">
+						<td><label for="credentialssuper">Enable/Super password:</label></td>
+						<td><input type="password" name="credentialssuper" id="credentialssuper"
+							value="<%- (specificCredentialSet ? specificCredentialSet.superPassword : '') %>"
+							class="text ui-widget-content ui-corner-all" /></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
 		<fieldset>
 			<label for="devicecomments">Comments: </label>
 			<textarea rows="4" cols="40" id="devicecomments" class="text ui-widget-content ui-corner-all"><%- comments %></textarea>

@@ -6,6 +6,40 @@ html,button,input,select,textarea {
 	padding: 2px;
 }
 
+th[role=columnheader]:not(.no-sort) {
+	cursor: pointer;
+}
+
+th[role=columnheader]:not(.no-sort):after {
+	content: '';
+	float: right;
+	margin-top: 7px;
+	border-width: 0 4px 4px;
+	border-style: solid;
+	border-color: #404040 transparent;
+	visibility: hidden;
+	opacity: 0;
+	-ms-user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	user-select: none;
+}
+
+th[aria-sort=ascending]:not(.no-sort):after {
+	border-bottom: none;
+	border-width: 4px 4px 0;
+}
+
+th[aria-sort]:not(.no-sort):after {
+	visibility: visible;
+	opacity: 0.4;
+}
+
+th[role=columnheader]:not(.no-sort):hover:after {
+	visibility: visible;
+	opacity: 1;
+}
+
 #splash {
 	position: absolute;
 	top: 50%;
@@ -75,6 +109,10 @@ html,button,input,select,textarea {
 
 .ui-widget form .ui-widget {
 	font-size: 11px;
+}
+
+.ui-menu-item>a {
+	text-decoration: none;"
 }
 
 .nstoolbar {
@@ -728,6 +766,11 @@ h1 {
 	width: 30px;
 }
 
+.nsportpicker {
+	text-align: center;
+	width: 60px;
+}
+
 .nstask-schedule {
 	display: none;
 }
@@ -1008,7 +1051,9 @@ input.spinner {
 	width: 500px;
 }
 
-
+#nsdevice-deviceeditform #devicecredentials {
+	padding-left: 10px;
+}
 
 #nsdevices-selectdeviceform #devicesearch {
 	margin-top: 5px;
@@ -1142,6 +1187,7 @@ input.spinner {
 	display: inline-block;
 	border: 1px solid #BBB;
 	padding: 10px;
+	margin-top: 10px;
 }
 
 .nsreport-legend-item {
@@ -1163,6 +1209,13 @@ input.spinner {
 .nsreport-legend-value {
 	text-align: right;
 	padding-left: 10px;
+}
+
+.nsreport-legend-comment {
+	text-align: left;
+	padding-left: 10px;
+	font-size: .9em;
+	color: #BBB;
 }
 
 #nscompliance-addsoftwareruleform .nsdialog-logo {
@@ -1329,3 +1382,12 @@ input.spinner {
 	position: absolute;
 	bottom: 30px;
 }
+
+#deviceconnectionsettings {
+	padding-left: 10px;
+}
+
+#deviceconnectionsettings>div {
+	margin-top: 5px;
+}
+

@@ -36,6 +36,7 @@ import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.Rule;
 import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
 import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.device.DeviceDataProvider;
 import onl.netfishers.netshot.device.DeviceDriver;
 
 import org.hibernate.Session;
@@ -57,7 +58,7 @@ public class JavaScriptRule extends Rule {
 	/** The script. */
 	private String script = "/*\n" + " * Script template - to be customized.\n"
 			+ " */\n" + "function check(device) {\n"
-			+ "    //var config = device.get('running-config');\n"
+			+ "    //var config = device.get('runningConfig');\n"
 			+ "    //var name = device.get('name');\n" + "    return CONFORMING;\n"
 			+ "    //return NONCONFORMING;\n" + "    //return NOTAPPLICABLE;\n"
 			+ "}\n";
@@ -115,7 +116,7 @@ public class JavaScriptRule extends Rule {
 	 * @return the script
 	 */
 	@XmlElement
-	@Column(length = 100000000)
+	@Column(length = 10000000)
 	public String getScript() {
 		return script;
 	}
@@ -194,8 +195,8 @@ public class JavaScriptRule extends Rule {
 			return;
 		}
 
+		DeviceDataProvider dataProvider = new DeviceDataProvider(session, device);
 		try {
-			RuleDataProvider dataProvider = this.new RuleDataProvider(session, device);
 			Object result = ((Invocable) engine).invokeFunction("_check", dataProvider);
 			if (result != null && result instanceof Bindings) {
 				String comment = "";
@@ -218,6 +219,9 @@ public class JavaScriptRule extends Rule {
 		catch (Exception e) {
 			logIt("Error while running the script: " + e.getMessage(), 2);
 			logger.error("Error while running the script on device {}.", device.getId(), e);
+		}
+		finally {
+			logIt(dataProvider.getLog());
 		}
 		this.setCheckResult(device, ResultOption.INVALIDRULE, "", session);
 	}

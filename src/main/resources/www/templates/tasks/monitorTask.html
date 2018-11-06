@@ -10,7 +10,7 @@
 			<tr><td>Description:</td><td><%- taskDescription %></td></tr>
 			<tr><td>Comments:</td><td><%- comments %></td></tr>
 			<tr><td>Creation:</td><td><%- $.formatDateTime('dd/mm/y hh:ii:ss', new Date(creationDate)) %>
-			<% if (typeof(author) == "string" && author.length > 0) { %> (by <%- author %>)<% } %></td></tr>
+			<% if (typeof author === "string" && author.length > 0) { %> (by <%- author %>)<% } %></td></tr>
 			<tr><td>Execution:</td><td>
 			<% if (significantDate !== 0) { %><%- (isNaN((new Date(significantDate)).getDate()) ? significantDate : $.formatDateTime('dd/mm/y hh:ii:ss', new Date(significantDate))) %><% } %>
 			(<%
@@ -33,6 +33,7 @@
 	<div id="nstask-showlog" style="display: none;"><a href="#">Show logs</a></div>
 	<div class="nsdialog-log" style="display: none;">
 	</div>
+	<div id="nstask-showdebuglog" style="display: none;"><a href="#">Download debug logs</a></div>
 	</div>
 
 </div>

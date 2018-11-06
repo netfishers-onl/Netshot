@@ -1,13 +1,18 @@
 <h1>Device access failures</h1>
 
-<p>List of (enabled) devices which haven't had a successful snapshot for the last 
-<input type="text" name="olderthandays" id="olderthandays" class="text spinner" value="7" /> days...
-</p>
-<p>
-<button id="update">Update</button>
-</p>
-
-
+<form id="nsreports-accessfailures">
+	<p>List of (enabled) devices which haven't had a successful snapshot for the last 
+		<input type="text" name="olderthandays" id="olderthandays" class="text spinner" value="7" /> days...
+	</p>
+	<fieldset>
+		<input type="checkbox" name="filterdomain" id="filterdomain" />
+		<label for="filterdomain">Restrict to the following device domain:</label>
+		<select name="domain" id="domain" disabled="disabled" class="text ui-widget-content ui-corner-all"></select>
+	</fieldset>
+	<p>
+		<button id="update">Update</button>
+	</p>
+</form>
 
 
 <div id="nsreports-accessfailures">

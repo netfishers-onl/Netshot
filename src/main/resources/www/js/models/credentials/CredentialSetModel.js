@@ -19,11 +19,8 @@ define([
 			'privateKey': ""
 		},
 
-		save: function(attrs, options) {
-			attrs = attrs || this.toJSON();
-			options = options || {};
-			var type = (typeof attrs['type'] == 'undefined' ? this.get('type')
-					: attrs['type']);
+		cleanUp: function(attrs) {
+			var type = (typeof attrs['type'] == 'undefined' ? this.get('type') : attrs['type']);
 			var selAttrs = [
 				'id',
 				'type',
@@ -39,7 +36,13 @@ define([
 					selAttrs.push('publicKey', 'privateKey');
 				}
 			}
-			options.attrs = _.pick(attrs, selAttrs);
+			return _.pick(attrs, selAttrs);
+		},
+
+		save: function(attrs, options) {
+			attrs = attrs || this.toJSON();
+			options = options || {};
+			options.attrs = this.cleanUp(attrs);
 			return Backbone.Model.prototype.save.call(this, attrs, options);
 		}
 

@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.4"
+	version: "1.6.1"
 };
 
 var Config = {
@@ -256,7 +256,7 @@ function snapshot(cli, device, config, debug) {
 	var versionDetails = showVersion.match(/^(.*) with (\d+)K(\/(\d+)K)? bytes of /m);
 	device.set("networkClass", "ROUTER");
 	device.set("family", "Unknown IOS device");
-	if (versionDetails != null) {
+	if (versionDetails) {
 		var memory = parseInt(versionDetails[2]);
 		if (typeof(versionDetails[4]) != "undefined") {
 			memory += parseInt(versionDetails[4]);
@@ -277,6 +277,9 @@ function snapshot(cli, device, config, debug) {
 		else if (system.match(/.*26[12][01].*/)) {
 			device.set("family", "Cisco 2600");
 		}
+		else if (system.match(/.*Cisco 8\d\d[^\d]/)) {
+			device.set("family", "Cisco ISR 800");
+		}
 		else if (system.match(/.*Cisco 18\d\d .*/)) {
 			device.set("family", "Cisco ISR 1800");
 		}
@@ -286,6 +289,9 @@ function snapshot(cli, device, config, debug) {
 		else if (system.match(/.*WS-C29.*/)) {
 			device.set("family", "Cisco Catalyst 2900");
 			device.set("networkClass", "SWITCH");
+		}
+		else if (system.match(/.*CISCO19\d\d.*/)) {
+			device.set("family", "Cisco ISR-G2 1900");
 		}
 		else if (system.match(/.*CISCO29\d\d.*/)) {
 			device.set("family", "Cisco ISR-G2 2900");
@@ -307,12 +313,20 @@ function snapshot(cli, device, config, debug) {
 		else if (system.match(/^([Cc]isco )?17[0-9][0-9]/)) {
 			device.set("family", "Cisco 1700");
 		}
+		else if (system.match(/.*WS-C356.*/)) {
+			device.set("family", "Cisco Catalyst 3560");
+			device.set("networkClass", "SWITCH");
+		}
 		else if (system.match(/.*WS-C3650.*/)) {
 			device.set("family", "Cisco Catalyst 3650");
 			device.set("networkClass", "SWITCH");
 		}
 		else if (system.match(/.*WS-C3750.*/)) {
 			device.set("family", "Cisco Catalyst 3750");
+			device.set("networkClass", "SWITCH");
+		}
+		else if (system.match(/cisco ME-3400.*/)) {
+			device.set("family", "Cisco ME3400");
 			device.set("networkClass", "SWITCH");
 		}
 		else if (system.match(/.*WS-C3850.*/)) {
@@ -325,7 +339,10 @@ function snapshot(cli, device, config, debug) {
 		else if (system.match(/.*CISCO39\d\d.*/)) {
 			device.set("family", "Cisco ISR-G2 3900");
 		}
-		else if (system.match(/.*WS-C45.*/)) {
+		else if (system.match(/cisco ISR44\d\d/)) {
+			device.set("family", "Cisco ISR 4400");
+		}
+		else if (system.match(/.*WS-C4[59].*/)) {
 			device.set("family", "Cisco Catalyst 4500");
 			device.set("networkClass", "SWITCH");
 		}
@@ -335,6 +352,14 @@ function snapshot(cli, device, config, debug) {
 		}
 		else if (system.match(/.*WS-C65.*/)) {
 			device.set("family", "Cisco Catalyst 6500");
+			device.set("networkClass", "SWITCHROUTER");
+		}
+		else if (system.match(/cisco ME-C65\d\d/)) {
+			device.set("family", "Cisco ME6500");
+			device.set("networkClass", "SWITCH");
+		}
+		else if (system.match(/Cisco C68\d\d-/)) {
+			device.set("family", "Cisco Catalyst 6800");
 			device.set("networkClass", "SWITCHROUTER");
 		}
 		else if (system.match(/.*720[246].*/)) {
@@ -349,8 +374,27 @@ function snapshot(cli, device, config, debug) {
 		else if (system.match(/.* ASR100[0-9].*/)) {
 			device.set("family", "Cisco ASR 1000");
 		}
+		else if (system.match(/cisco ASR-920-.*/)) {
+			device.set("family", "Cisco ASR 920");
+		}
 		else if (system.match(/cisco OS-CIGESM.*/)) {
 			device.set("family", "Cisco CIGESM Blade");
+		}
+		else if (system.match(/Cisco IOSv/)) {
+			device.set("family", "Cisco IOSv");
+		}
+		else if (system.match(/[Cc]isco CSR1000V/)) {
+			device.set("family", "Cisco CSR1000V");
+		}
+		else if (system.match(/WS-CBS3/)) {
+			device.set("family", "Cisco CBS");
+		}
+		else if (showVersion.match(/IOS .* RSP Software/) && system.match(/cisco RSP/)) {
+			device.set("family", "Cisco 7500");
+		}
+		else if (system.match(/Cisco VG2\d\d/)) {
+			device.set("family", "Cisco VG200");
+			device.set("networkClass", "UNKNOWN");
 		}
 	}
 	var configRegister = showVersion.match(/^Configuration register is (.*)/m);

@@ -36,6 +36,29 @@ import org.slf4j.LoggerFactory;
 public abstract class Cli {
 	
 	private static Logger logger = LoggerFactory.getLogger(Cli.class);
+	
+	private static Pattern ansiEscapePattern = Pattern.compile("\u001B\\[[;\\d]*m");
+	
+	/**
+	 * An IOException, with an attached buffer.
+	 * @author sylvain.cadilhac
+	 *
+	 */
+	public class WithBufferIOException extends IOException {
+		private static final long serialVersionUID = -1759143581862318498L;
+
+		public WithBufferIOException(String message, StringBuffer receivedBuffer) {
+			super(message);
+			this.receivedBuffer = receivedBuffer;
+		}
+		
+		private StringBuffer receivedBuffer;
+		
+		public StringBuffer getReceivedBuffer() {
+			return receivedBuffer;
+		}
+		
+	}
 
 	/** The connection timeout. */
 	protected int connectionTimeout = 5000;
@@ -92,7 +115,7 @@ public abstract class Cli {
 	}
 
 	/**
-	 * Sets the command timeout.
+	 * Sets the command idle timeout, i.e. max time without receiving data.
 	 *
 	 * @param commandTimeout the new command timeout
 	 */
@@ -222,8 +245,8 @@ public abstract class Cli {
 		for (int i = 0; i < expects.length; i++) {
 			patterns[i] = Pattern.compile(expects[i], Pattern.MULTILINE);
 		}
-	
-		long maxTime = System.currentTimeMillis() + this.commandTimeout;
+		
+		long lastActivityTime = System.currentTimeMillis();
 		
 		while (true) {			
 			while (this.inStream != null && this.inStream.available() > 0) {
@@ -231,19 +254,23 @@ public abstract class Cli {
 				String s = new String(miniBuffer, 0, length);
 				logger.debug("Received data '{}'.", s);
 				buffer.append(s);
+				lastActivityTime = System.currentTimeMillis();
 			}
 			for (int i = 0; i < patterns.length; i++) {
-				Matcher matcher = patterns[i].matcher(buffer);
+				String received = buffer.toString();
+				// Remove ANSI escape sequences
+				received = Cli.ansiEscapePattern.matcher(received).replaceAll("");
+				Matcher matcher = patterns[i].matcher(received);
 				if (matcher.find()) {
 					this.lastExpectMatch = matcher;
 					this.lastExpectMatchIndex = i;
-					this.lastFullOutput = buffer.toString();
+					this.lastFullOutput = received;
 					this.lastExpectMatchPattern = expects[i];
 					return matcher.replaceFirst("");
 				}
 			}
-			if (System.currentTimeMillis() > maxTime) {
-				throw new IOException("Timeout waiting for the command output.");
+			if (System.currentTimeMillis() > lastActivityTime + this.commandTimeout) {
+				throw new WithBufferIOException("Timeout waiting for the command output.", buffer);
 			}
 		}
 	}

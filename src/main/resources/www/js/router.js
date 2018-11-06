@@ -23,7 +23,7 @@ define([
 				new ReAuthDialog();
 			}
 			else {
-				if (typeof(window.reauth) != "undefined") {
+				if (typeof window.reauth !== "undefined") {
 					clearTimeout(window.reauth);
 				}
 				window.reauth = setTimeout(function() {
@@ -56,7 +56,7 @@ define([
 			var id = parseInt(id);
 
 			if (this.currentView != null
-					&& typeof (this.currentView.selectDevice) == "function") {
+					&& typeof this.currentView.selectDevice === "function") {
 				if (!isNaN(id)) {
 					this.currentView.selectDevice(id);
 				}
@@ -114,7 +114,8 @@ define([
 					icons: {
 						primary: "ui-icon-circle-triangle-e"
 					}
-				}).click(function() {
+				});
+				$("#splash #authentication-box").submit(function() {
 					$("#splash #authentication-box #authenticate").button('disable');
 					$("#splash #connection-error").hide();
 					window.user = new CurrentUserModel();
@@ -130,13 +131,6 @@ define([
 						$("#splash #authentication-box #password").val("");
 					});
 					return false;
-				});
-				$("#splash #authentication-box").keydown(function(e) {
-					if (e.which == 13) {
-						e.preventDefault();
-						$("#splash #authentication-box #authenticate").click();
-						return false;
-					}
 				}).show();
 				$("#splash #authentication-box #authenticate").button('enable');
 			}

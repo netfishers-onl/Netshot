@@ -129,7 +129,7 @@ define([
 					disabled: true,
 					change: function() {
 						var value = $(this).spinner('value');
-						if (typeof(value) != "number") {
+						if (typeof value !== "number") {
 							$(this).spinner('value', 168);
 						}
 					}
@@ -203,7 +203,7 @@ define([
 				value: this.$('#tasksolderthandays').prop('value'),
 				change: function() {
 					var value = $(this).spinner('value');
-					if (typeof(value) != "number") {
+					if (typeof value !== "number") {
 						$(this).spinner('value', 90);
 					}
 				}
@@ -216,7 +216,7 @@ define([
 				value: this.$('#configsbiggerthan').prop('value'),
 				change: function() {
 					var value = $(this).spinner('value');
-					if (typeof(value) != "number") {
+					if (typeof value !== "number") {
 						$(this).spinner('value', 500);
 					}
 				}
@@ -229,7 +229,7 @@ define([
 				value: this.$('#configsolderthandays').prop('value'),
 				change: function() {
 					var value = $(this).spinner('value');
-					if (typeof(value) != "number") {
+					if (typeof value !== "number") {
 						$(this).spinner('value', 200);
 					}
 				}
@@ -242,7 +242,7 @@ define([
 				value: this.$('#configskeepeverydays').prop('value'),
 				change: function() {
 					var value = $(this).spinner('value');
-					if (typeof(value) != "number") {
+					if (typeof value !== "number") {
 						$(this).spinner('value', 7);
 					}
 				}

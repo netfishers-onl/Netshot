@@ -41,6 +41,7 @@ $ /usr/java/default/bin/keytool -genkey -keyalg RSA -alias selfsigned -keystore 
 Press Enter when asked for a password.
 
 $ sudo mv netshot.jks /usr/local/netshot
+$ sudo chmod o-r /usr/local/netshot
 
 
 ### 5. Prepare files
@@ -54,7 +55,8 @@ $ sudo chmod +x /etc/init.d/netshot
 $ sudo mkdir /var/log/netshot
 $ sudo chown -R netshot /var/log/netshot
 $ sudo cp netshot.conf /etc/netshot.conf
-$ sudo chown root:root /etc/netshot.conf
+$ sudo chown netshot /etc/netshot.conf
+$ sudo chmod 400 /etc/netshot.conf
 
 
 ### 6. Create database and user

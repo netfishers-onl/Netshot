@@ -18,7 +18,7 @@ define([
 
 		render: function() {
 			var that = this;
-			if (typeof(this.myWindow) == "undefined") {
+			if (typeof this.myWindow == "undefined") {
 				this.myWindow = window.open('', "config" + this.deviceConfig.get('id'),
 				'width=800, height=600, menubar=0, location=0, status=0, scrollbars=1, resizable=1');
 			}

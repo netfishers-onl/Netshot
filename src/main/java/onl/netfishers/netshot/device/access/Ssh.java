@@ -69,7 +69,7 @@ public class Ssh extends Cli {
 	 */
 	public Ssh(NetworkAddress host, int port, String username, String password) {
 		super(host);
-		this.port = port;
+		if (port != 0) this.port = port;
 		this.username = username;
 		this.password = password;
 		this.privateKey = null;
@@ -86,7 +86,7 @@ public class Ssh extends Cli {
 	 */
 	public Ssh(NetworkAddress host, int port, String username, String publicKey, String privateKey, String passphrase) {
 		super(host);
-		this.port = port;
+		if (port != 0) this.port = port;
 		this.username = username;
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
@@ -173,7 +173,7 @@ public class Ssh extends Cli {
 					}
 					@Override
 					public void clear() {
-					    kpair.dispose();
+						kpair.dispose();
 					}
 				}, password == null ? null : password.getBytes());
 			}
@@ -189,7 +189,8 @@ public class Ssh extends Cli {
 			this.inStream = channel.getInputStream();
 			this.outStream = new PrintStream(channel.getOutputStream());
 			channel.connect(this.connectionTimeout);
-		} catch (JSchException e) {
+		}
+		catch (JSchException e) {
 			throw new IOException(e.getMessage(), e);
 		}
 		

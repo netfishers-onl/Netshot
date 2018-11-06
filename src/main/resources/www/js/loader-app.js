@@ -3,12 +3,13 @@ require.config({
 	paths: {
 		jquery: 'libs/jquery/jquery-min',
 		'jquery-ui': 'libs/jquery-ui/jquery-ui',
-		'formatDateTime': 'libs/jquery/jquery.formatDateTime.min',
+		formatDateTime: 'libs/jquery/jquery.formatDateTime.min',
 		rangyinput: 'libs/jquery/rangyinputs-jquery',
 		underscore: 'libs/underscore/underscore-min',
 		backbone: 'libs/backbone/backbone-min',
 		ace: 'libs/ace',
 		Chart: 'libs/Chart.js/Chart.min',
+		tablesort: 'libs/tablesort/tablesort.min',
 		templates: '../templates'
 	},
 	shim: {
@@ -39,6 +40,9 @@ require.config({
 		},
 		Chart: {
 			exports: 'Chart'
+		},
+		tablesort: {
+			exports: 'Tablesort',
 		}
 	}
 });

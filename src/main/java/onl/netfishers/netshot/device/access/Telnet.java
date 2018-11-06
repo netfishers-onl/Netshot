@@ -53,7 +53,7 @@ public class Telnet extends Cli {
 	 */
 	public Telnet(NetworkAddress host, int port) {
 		this(host);
-		this.port = port;
+		if (port != 0) this.port = port;
 	}
 	
 	/* (non-Javadoc)

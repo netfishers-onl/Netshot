@@ -4,9 +4,10 @@ define([
 	'underscore',
 	'backbone',
 	'models/device/DeviceTypeCollection',
+	'models/domain/DomainCollection',
 	'text!templates/devices/searchToolbox.html',
 	'rangyinput'
-], function($, _, Backbone, DeviceTypeCollection,
+], function($, _, Backbone, DeviceTypeCollection, DomainCollection,
 		searchToolboxTemplate) {
 
 	return Backbone.View.extend({
@@ -54,7 +55,7 @@ define([
 			name: "networkClass",
 			title: "Network class",
 			type: "ENUM",
-			values: [ "FIREWALL", "ROUTER", "SWITCH", "ROUTERSWITCH", "FIREWALL", "UNKNOWN", "LOADBALANCER" ],
+			values: [ "FIREWALL", "ROUTER", "SWITCH", "SWITCHROUTER", "FIREWALL", "UNKNOWN", "LOADBALANCER" ],
 			searchable: true
 		}, {
 			level: "DEVICE",
@@ -118,15 +119,29 @@ define([
 			title: "Device",
 			type: "ID",
 			searchable: true
+		}, {
+			level: "DEVICE",
+			name: "domain",
+			title: "Domain",
+			type: "ENUM",
+			values: function() {
+				return this.domains.map(function(domain) {
+					return {
+						caption: domain.get('id') + " (" + domain.get('name') + ")",
+						id: domain.get('id'),
+					};
+				});
+			},
+			searchable: true
 		} ],
 
 		template: _.template(searchToolboxTemplate),
 
-		deviceTypes: new DeviceTypeCollection([]),
-
 		initialize: function(options) {
 			var that = this;
-			this.deviceTypes.fetch().done(function() {
+			this.deviceTypes = new DeviceTypeCollection([]);
+			this.domains = new DomainCollection([]);
+			$.when(this.deviceTypes.fetch(), this.domains.fetch()).done(function() {
 				that.render();
 			});
 		},
@@ -165,7 +180,7 @@ define([
 				that.$('#fieldbuttons button').button('destroy');
 				that.$('#fieldbuttons').empty();
 				var attributes = that.defaultAttributes;
-				if (typeof(that.driver) == "object") {
+				if (typeof that.driver === "object" && that.driver) {
 					attributes = _.union(attributes, that.driver.get("attributes"));
 				}
 				var attribute = _.findWhere(attributes, { name: $(this).val() });
@@ -207,21 +222,30 @@ define([
 						'IN': '[' + name + '] IN 1616.1616.1616/32'
 					},
 					'BINARY': {
-						'YES': '[' + name + ']',
-						'NO': 'NOT([' + name + '])'
+						'TRUE': '[' + name + '] IS TRUE',
+						'FALSE': '[' + name + '] IS FALSE'
 					},
 					'ENUM': function() {
 						var buttons = {};
-						for (a in this.values) {
-							var value = this.values[a];
-							buttons[value] = '[' + this.title + '] IS "' + value + '"';
+						var values = this.values;
+						if (typeof values === "function") {
+							values = values.call(that);
+						}
+						for (a in values) {
+							var value = values[a];
+							if (typeof value === "string") {
+								buttons[value] = '[' + this.title + '] IS "' + value + '"';
+							}
+							else {
+								buttons[value.caption] = '[' + this.title + '] IS ' + value.id;
+							}
 						}
 						return buttons;
 					}
 				};
 
 				var buttons;
-				if (typeof(actions[type]) == "object") {
+				if (typeof actions[type] === "object" && actions[type]) {
 					buttons = actions[type];
 				}
 				else {
@@ -238,7 +262,7 @@ define([
 				that.$('#fieldname').empty();
 				var attributes = that.defaultAttributes;
 				that.driver = that.deviceTypes.findWhere({ name: $(this).val() });
-				if (typeof(that.driver) == "object") {
+				if (typeof that.driver === "object" && that.driver) {
 					attributes = _.union(attributes, that.driver.get("attributes"));
 				}
 				attributes = _.sortBy(attributes, "title");
@@ -252,7 +276,7 @@ define([
 			}).change();
 			this.$('button').button().addClass('ui-button');
 
-			if (typeof(this.options.onRendered) === "function") {
+			if (typeof this.options.onRendered === "function") {
 				this.options.onRendered();
 			}
 

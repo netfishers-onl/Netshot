@@ -1,2 +1,2 @@
-<% if (typeof(eoxDate) == "number" && eoxDate > 0) { %>Devices becoming <%- type %> on <%- $.formatDateTime('dd/mm/y', new Date(eoxDate)) %>
+<% if (typeof eoxDate === "number" && eoxDate > 0) { %>Devices becoming <%- type %> on <%- $.formatDateTime('dd/mm/y', new Date(eoxDate)) %>
 <% } else { %>Devices without <%- type %> date<% } %>

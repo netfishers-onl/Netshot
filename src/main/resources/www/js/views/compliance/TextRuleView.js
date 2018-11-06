@@ -28,7 +28,7 @@ define([
 			
 			data.fieldDescription = "Unknown";
 			var attributes = EditTextRuleDialog.prototype.defaultAttributes;
-			if (typeof(this.deviceType) == "object") {
+			if (typeof this.deviceType === "object" && this.deviceType) {
 				attributes = _.union(attributes, this.deviceType.get("attributes"));
 			}
 			for (var a in attributes) {

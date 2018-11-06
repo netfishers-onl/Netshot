@@ -42,7 +42,7 @@ public class LongTextConfiguration {
 		return id;
 	}
 
-	@Column(length = 100000000)
+	@Column(length = 10000000)
 	public String getText() {
 		return text;
 	}

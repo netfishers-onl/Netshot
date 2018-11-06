@@ -3,11 +3,12 @@ define([
 	'jquery',
 	'underscore',
 	'backbone',
+	'tablesort',
 	'models/compliance/DeviceRuleCollection',
 	'views/devices/CheckDeviceComplianceDialog',
 	'text!templates/devices/deviceCompliance.html',
 	'text!templates/devices/deviceRule.html'
-], function($, _, Backbone, DeviceRuleCollection, CheckDeviceComplianceDialog,
+], function($, _, Backbone, TableSort, DeviceRuleCollection, CheckDeviceComplianceDialog,
 		deviceComplianceTemplate, deviceRuleTemplate) {
 
 	return Backbone.View.extend({
@@ -36,6 +37,7 @@ define([
 			_.each(this.deviceRules.models, function(deviceRule) {
 				$(that.ruleTemplate(deviceRule.toJSON())).appendTo($table);
 			});
+			new TableSort(this.$("#rules").get(0));
 			
 			if (!user.isReadWrite()) {
 				this.$("#checkcompliance").remove();

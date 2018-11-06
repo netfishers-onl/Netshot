@@ -3,13 +3,14 @@ define([
 	'jquery',
 	'underscore',
 	'backbone',
+	'tablesort',
 	'models/task/TaskCollection',
 	'views/tasks/MonitorTaskDialog',
 	'views/tasks/CancelTaskDialog',
 	'text!templates/devices/deviceTasks.html',
 	'text!templates/devices/deviceTask.html'
-], function($, _, Backbone, TaskCollection, MonitorTaskDialog, CancelTaskDialog,
-		deviceTasksTemplate, deviceTaskTemplate) {
+], function($, _, Backbone, TableSort, TaskCollection, MonitorTaskDialog,
+		CancelTaskDialog, deviceTasksTemplate, deviceTaskTemplate) {
 
 	return Backbone.View.extend({
 
@@ -75,6 +76,7 @@ define([
 					taskId: id
 				});
 			});
+			new TableSort($table.parent().get(0));
 
 			return this;
 		},

@@ -34,6 +34,7 @@ import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DynamicDeviceGroup;
 import onl.netfishers.netshot.device.Network4Address;
+import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
@@ -187,7 +188,7 @@ public class TakeSnapshotTask extends Task {
 				return;
 			}
 
-			device.takeSnapshot();
+			device.takeSnapshot(this.debugEnabled);
 			this.logIt(String.format("Device logs (%d next lines):", device.getLog().size()), 3);
 			this.log.append(device.getPlainLog());
 			session.update(device);
@@ -206,6 +207,14 @@ public class TakeSnapshotTask extends Task {
 			return;
 		}
 		finally {
+			try {
+				if (this.debugEnabled) {
+					this.debugLog = new DebugLog(device.getPlainSessionDebugLog());
+				}
+			}
+			catch (Exception e1) {
+				logger.error("Error while saving the debug logs.", e1);
+			}
 			TakeSnapshotTask.clearRunningSnapshot(device.getId());
 			if (automatic) {
 				TakeSnapshotTask.clearScheduledAutoSnapshot(this.device.getId());
@@ -246,14 +255,29 @@ public class TakeSnapshotTask extends Task {
 		return device;
 	}
 
+	/**
+	 * Is this an automatic snapshot?
+	 * 
+	 * @return true if this is an automatic snapshot
+	 */
 	protected boolean isAutomatic() {
 		return automatic;
 	}
 
+	/**
+	 * Set the snapshot as automatic
+	 * 
+	 * @param automatic true if automatic
+	 */
 	protected void setAutomatic(boolean automatic) {
 		this.automatic = automatic;
 	}
 
+	/**
+	 * Get the ID of the device
+	 * 
+	 * @return the ID of the device
+	 */
 	@XmlElement
 	@Transient
 	protected long getDeviceId() {

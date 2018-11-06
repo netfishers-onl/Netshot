@@ -27,7 +27,8 @@ define([
 				$button.button('disable');
 				var task = new TaskModel({
 					'type': "TakeSnapshotTask",
-					'device': that.model.get('id')
+					'device': that.model.get('id'),
+					'debugEnabled': that.$('#debugsession').is(":checked"),
 				});
 				task.set(that.taskSchedulerToolbox.getSchedule());
 				task.save().done(function(data) {
@@ -49,6 +50,11 @@ define([
 		},
 
 		onCreate: function() {
+			var that = this;
+			this.$("#hidden").hide();
+			this.$(".nsdialog-logo").dblclick(function() {
+				that.$("#hidden").show();
+			});
 			this.taskSchedulerToolbox = new TaskSchedulerToolbox();
 		}
 

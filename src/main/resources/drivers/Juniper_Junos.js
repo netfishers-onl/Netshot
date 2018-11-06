@@ -21,7 +21,7 @@ var Info = {
 	name: "JuniperJunos",
 	description: "Juniper Junos",
 	author: "NetFishers",
-	version: "1.4"
+	version: "2.11"
 };
 
 var Config = {
@@ -37,7 +37,14 @@ var Config = {
 	},
 	"configuration": {
 		type: "LongText",
-		title: "Configuration",
+		title: "Configuration (curly)",
+		comparable: true,
+		searchable: true,
+		checkable: true
+	},
+	"configurationAsSet": {
+		type: "LongText",
+		title: "Configuration (set)",
 		comparable: true,
 		searchable: true,
 		checkable: true,
@@ -152,6 +159,7 @@ function snapshot(cli, device, config, debug) {
 	
 	cli.macro("operate");
 	var configuration = cli.command("show configuration");
+	var configurationAsSet = cli.command("show configuration | display set");
 	
 	var author = configuration.match(/^## Last commit: .* by (.*)$/m);
 	if (author != null) {
@@ -159,6 +167,8 @@ function snapshot(cli, device, config, debug) {
 	}
 	configuration = configCleanup(configuration);
 	config.set("configuration", configuration);
+	configurationAsSet = configCleanup(configurationAsSet);
+	config.set("configurationAsSet", configurationAsSet);
 	
 	var showVersion = cli.command("show version");
 	
@@ -181,10 +191,11 @@ function snapshot(cli, device, config, debug) {
 	var family = showVersion.match(/^Model: (.*)/m);
 	if (family) {
 		var family = family[1];
-		family = family.replace(/^[a-z]/, function(m) { return m.toUpperCase(); });
+		family = family.toUpperCase();
+		family = family.replace(/(^[A-Z0-9]+)-.*/, "$1");
 		device.set("family", "Juniper " + family);
 		if (family.match(/EX/)) {
-			device.set("networkClass", "ROUTERSWITCH");
+			device.set("networkClass", "SWITCHROUTER");
 		}
 		else if (family.match(/SRX/)) {
 			device.set("networkClass", "FIREWALL");
@@ -198,13 +209,13 @@ function snapshot(cli, device, config, debug) {
 	device.set("contact", "");
 	var snmpConfig = cli.findSections(configuration, /^snmp /m);
 	if (snmpConfig.length > 0) {
-		var location = snmpConfig[0].config.match(/^ *location "(.*)";/m);
+		var location = snmpConfig[0].config.match(/^ *location ("(.+)"|(.+));/m);
 		if (location) {
-			device.set("location", location[1]);
+			device.set("location", location[2] || location[3]);
 		}
-		var contact = snmpConfig[0].config.match(/^ *contact "(.*)";/m);
+		var contact = snmpConfig[0].config.match(/^ *contact ("(.+)"|(.+));/m);
 		if (contact) {
-			device.set("contact", contact[1]);
+			device.set("contact", contact[2] || contact[3]);
 		}
 	}
 	

@@ -23,7 +23,7 @@ define([
 					that.render();
 				});
 			};
-			if (typeof (this.options.delay) == "number") {
+			if (typeof this.options.delay === "number") {
 				setTimeout(fetchAndRender, this.options.delay);
 			}
 			else {
@@ -89,6 +89,14 @@ define([
 						that.close();
 						return true;
 					});
+				}
+				if (this.model.get('status') != "CANCELLED" && this.model.get('debugEnabled')) {
+					this.$("#nstask-showdebuglog").show();
+					var url = that.model.getDebugLogUrl();
+					this.$("#nstask-showdebuglog a").click(function() {
+						window.location = url;
+						return false;
+					}).prop("href", url);
 				}
 			}
 		},

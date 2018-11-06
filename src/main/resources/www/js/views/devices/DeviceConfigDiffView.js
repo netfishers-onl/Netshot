@@ -31,7 +31,7 @@ define([
 			this.configDifferences.fetch().done(function() {
 				that.configDifferences.cleanContext();
 				d.writeln(that.template(that.configDifferences.toJSON()));
-				if (typeof(that.options.deviceConfigs) == "object") {
+				if (typeof that.options.deviceConfigs === "object" && that.options.deviceConfigs) {
 					var deviceConfigs = that.options.deviceConfigs;
 					var i1 = deviceConfigs.indexOf(deviceConfigs.get(that.options.configId1));
 					var i2 = deviceConfigs.indexOf(deviceConfigs.get(that.options.configId2));
@@ -40,7 +40,7 @@ define([
 					$(d).find("#previous").button({
 						icons: { primary: "ui-icon-seek-prev" }
 					});
-					if (typeof(previousConfig) == "object") {
+					if (typeof previousConfig === "object" && previousConfig) {
 						$(d).find("#previous").click(function() {
 							that.options.configId2 = that.options.configId1;
 							that.options.configId1 = previousConfig.get("id");
@@ -54,7 +54,7 @@ define([
 					$(d).find("#next").button({
 						icons: { secondary: "ui-icon-seek-next" }
 					});
-					if (typeof(nextConfig) == "object") {
+					if (typeof nextConfig === "object" && nextConfig) {
 						$(d).find("#next").click(function() {
 							that.options.configId1 = that.options.configId2;
 							that.options.configId2 = nextConfig.get("id");

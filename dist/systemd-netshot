@@ -1,0 +1,12 @@
+[Unit]
+Description=Netshot
+After=mysql.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/java -jar /usr/local/netshot/netshot.jar
+User=netshot
+
+[Install]
+Alias=netshot
+WantedBy=multi-user.target

@@ -23,6 +23,8 @@ import javax.persistence.Entity;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.hibernate.annotations.Type;
+
 /**
  * SSH credentials with a private key.
  * The inherited password is actually the passphrase for the key.
@@ -49,6 +51,7 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 
 	@Column(length = 10000)
 	@XmlElement
+	@Type(type = "credentialString")
 	public String getPrivateKey() {
 		return privateKey;
 	}

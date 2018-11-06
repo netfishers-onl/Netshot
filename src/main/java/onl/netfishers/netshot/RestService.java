@@ -61,6 +61,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -109,6 +110,7 @@ import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
 import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
+import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.Task.ScheduleType;
 import onl.netfishers.netshot.work.tasks.CheckComplianceTask;
@@ -129,7 +131,8 @@ import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
 import org.glassfish.grizzly.http.server.HttpServer;
@@ -146,6 +149,7 @@ import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.glassfish.jersey.servlet.ServletProperties;
 import org.hibernate.Criteria;
+import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Query;
@@ -177,8 +181,7 @@ public class RestService extends Thread {
 	private static final String DEVICELIST_BASEQUERY = "select d.id as id, d.name as name, d.family as family, d.mgmtAddress as mgmtAddress, d.status as status ";
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory
-			.getLogger(RestService.class);
+	private static Logger logger = LoggerFactory.getLogger(RestService.class);
 
 	/** The static instance service. */
 	private static RestService nsRestService;
@@ -193,6 +196,7 @@ public class RestService extends Thread {
 	}
 
 	@Priority(Priorities.AUTHORIZATION)
+	@PreMatching
 	private static class SecurityFilter implements ContainerRequestFilter {
 
 		@Context
@@ -204,6 +208,7 @@ public class RestService extends Thread {
 		@Override
 		public void filter(ContainerRequestContext requestContext) throws IOException {
 			User user = (User) httpRequest.getSession().getAttribute("user");
+			Netshot.aaaLogger.info("HTTP Request {} by user {}.", requestContext.getUriInfo().getRequestUri(), user == null ? "<null>" : user.getUsername());
 			requestContext.setSecurityContext(new Authorizer(user));
 		}
 
@@ -217,10 +222,12 @@ public class RestService extends Thread {
 
 			@Override
 			public boolean isUserInRole(String role) {
-				return (user != null &&
+				boolean result = (user != null &&
 						(("admin".equals(role) && user.getLevel() >= User.LEVEL_ADMIN) ||
 								("readwrite".equals(role) && user.getLevel() >= User.LEVEL_READWRITE) ||
 								("readonly".equals(role) && user.getLevel() >= User.LEVEL_READONLY)));
+				Netshot.aaaLogger.debug("Role {} requested for user {}: result {}.", role, user == null ? "<null>" : user.getUsername(), result);
+				return result;
 			}
 
 			@Override
@@ -245,7 +252,12 @@ public class RestService extends Thread {
 
 		public Response toResponse(Throwable t) {
 			if (!(t instanceof ForbiddenException)) {
-				logger.error("Uncaught exception thrown by REST service", t);
+				if (t instanceof NetshotAuthenticationRequiredException) {
+					logger.info("Authentication required.", t);
+				}
+				else {
+					logger.error("Uncaught exception thrown by REST service", t);
+				}
 			}
 			if (t instanceof WebApplicationException) {
 				return ((WebApplicationException) t).getResponse();
@@ -308,10 +320,8 @@ public class RestService extends Thread {
 			sslContext.setKeyStoreFile(httpSslKeystoreFile);
 			sslContext.setKeyStorePass(httpSslKeystorePass);
 
-			if (!sslContext.validateConfiguration(true)) {
-				throw new RuntimeException(
-						"Invalid SSL settings for the embedded HTTPS server.");
-			}
+			// Create the context and raise any error if anything is wrong with the SSL configuration.
+			sslContext.createSSLContext(true);
 			SSLEngineConfigurator sslConfig = new SSLEngineConfigurator(sslContext)
 			.setClientMode(false).setNeedClientAuth(false).setWantClientAuth(false);
 			URI url = UriBuilder.fromUri(httpBaseUrl).port(httpBasePort).build();
@@ -415,6 +425,21 @@ public class RestService extends Thread {
 			this.errorCode = errorCode;
 		}
 	}
+	
+	/**
+	 * The NetshotAuthenticationRequiredException class, which indicates that user authentication is required (401 error).
+	 */
+	static public class NetshotAuthenticationRequiredException extends WebApplicationException {
+		/** The Constant serialVersionUID. */
+		private static final long serialVersionUID = -2463854660543944995L;
+		
+		/**
+		 * Default constructor.
+		 */
+		public NetshotAuthenticationRequiredException() {
+			super(Response.status(Response.Status.UNAUTHORIZED).build());
+		}
+	}
 
 	/**
 	 * The NetshotBadRequestException class, a WebApplication exception
@@ -430,6 +455,9 @@ public class RestService extends Thread {
 
 		/** The Constant NETSHOT_MALFORMED_IP_ADDRESS. */
 		public static final int NETSHOT_MALFORMED_IP_ADDRESS = 101;
+		
+		/** The Constant NETSHOT_INVALID_PORT. */
+		public static final int NETSHOT_INVALID_PORT = 102;
 
 		/** The Constant NETSHOT_INVALID_DOMAIN. */
 		public static final int NETSHOT_INVALID_DOMAIN = 110;
@@ -463,6 +491,9 @@ public class RestService extends Thread {
 
 		/** The Constant NETSHOT_CREDENTIALS_NOTFOUND. */
 		public static final int NETSHOT_CREDENTIALS_NOTFOUND = 133;
+		
+		/** The Constant NETSHOT_INVALID_CREDENTIALS_NAME. */
+		public static final int NETSHOT_INVALID_CREDENTIALS_NAME = 134;
 
 		/** The Constant NETSHOT_SCHEDULE_ERROR. */
 		public static final int NETSHOT_SCHEDULE_ERROR = 30;
@@ -1121,7 +1152,7 @@ public class RestService extends Thread {
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
 	public Response getDeviceConfigPlain(@PathParam("id") Long id,
 			@PathParam("item") String item) throws WebApplicationException {
-		logger.debug("REST request, get device {id} config {}.", id, item);
+		logger.debug("REST request, get device {} config {}.", id, item);
 		Session session = Database.getSession();
 		try {
 			Config config = (Config) session.get(Config.class, id);
@@ -1505,6 +1536,14 @@ public class RestService extends Thread {
 			device.setMgmtDomain(Database.unproxy(device.getMgmtDomain()));
 			device.setEolModule(Database.unproxy(device.getEolModule()));
 			device.setEosModule(Database.unproxy(device.getEosModule()));
+			if (device.getSpecificCredentialSet() != null) {
+				DeviceCredentialSet credentialSet = Database.unproxy(device.getSpecificCredentialSet());
+				if (DeviceCliAccount.class.isInstance(credentialSet)) {
+					((DeviceCliAccount) credentialSet).setPassword("=");
+					((DeviceCliAccount) credentialSet).setSuperPassword("=");
+				}
+				device.setSpecificCredentialSet(credentialSet);
+			}
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the device", e);
@@ -1847,6 +1886,18 @@ public class RestService extends Thread {
 		/** The device type. */
 		private String deviceType = "";
 
+		/** The connection IP address (optional). */
+		private String connectIpAddress = null;
+		
+		/** The SSH port. */
+		private String sshPort;
+
+		/** The Telnet port. */
+		private String telnetPort;
+		
+		/** A device-specific credential set. */
+		private DeviceCredentialSet specificCredentialSet;
+		
 		/**
 		 * Checks if is auto discover.
 		 *
@@ -1960,6 +2011,75 @@ public class RestService extends Thread {
 		public void setDeviceType(String deviceType) {
 			this.deviceType = deviceType;
 		}
+
+
+		/**
+		 * Gets the connect IP address.
+		 * @return the connect IP address
+		 */
+		@XmlElement
+		public String getConnectIpAddress() {
+			return connectIpAddress;
+		}
+
+		/**
+		 * Sets the connection IP address.
+		 * @param connectIpAddress the new connection IP address. "" to clear it.
+		 */
+		public void setConnectIpAddress(String connectIpAddress) {
+			this.connectIpAddress = connectIpAddress;
+		}
+
+		/**
+		 * Gets the SSH port.
+		 * @return the SSH port
+		 */
+		@XmlElement
+		public String getSshPort() {
+			return sshPort;
+		}
+
+		/**
+		 * Sets the SSH port.
+		 * @param sshPort the new SSH port; "" to clear it
+		 */
+		public void setSshPort(String sshPort) {
+			this.sshPort = sshPort;
+		}
+
+		/**
+		 * Gets the Telnet port.
+		 * @return the Telnet port
+		 */
+		@XmlElement
+		public String getTelnetPort() {
+			return telnetPort;
+		}
+
+		/**
+		 * Sets the Telnet port.
+		 * @param telnetPort the new Telnet port; "" to clear it
+		 */
+		public void setTelnetPort(String telnetPort) {
+			this.telnetPort = telnetPort;
+		}
+
+		/**
+		 * Gets the device-specific credential set.
+		 * @return the specific credential set
+		 */
+		@XmlElement
+		public DeviceCredentialSet getSpecificCredentialSet() {
+			return specificCredentialSet;
+		}
+
+		/**
+		 * Sets a device-specific credential set.
+		 * @param specificCredentialSet the new specific credential set
+		 */
+		public void setSpecificCredentialSet(DeviceCredentialSet specificCredentialSet) {
+			this.specificCredentialSet = specificCredentialSet;
+		}
 	}
 
 	/**
@@ -1992,6 +2112,50 @@ public class RestService extends Thread {
 			throw new NetshotBadRequestException("Malformed IP address",
 					NetshotBadRequestException.NETSHOT_MALFORMED_IP_ADDRESS);
 		}
+		Network4Address connectAddress = null;
+		if (device.getConnectIpAddress() != null && !device.getConnectIpAddress().equals("")) {
+			try {
+				connectAddress = new Network4Address(device.getConnectIpAddress());
+				if (!deviceAddress.isNormalUnicast()) {
+					logger.warn("User posted an invalid connect IP address (not normal unicast).");
+					throw new NetshotBadRequestException("Invalid connect IP address",
+							NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
+				}
+			}
+			catch (UnknownHostException e) {
+				logger.warn("User posted an invalid IP address.");
+				throw new NetshotBadRequestException("Malformed connect IP address",
+						NetshotBadRequestException.NETSHOT_MALFORMED_IP_ADDRESS);
+			}
+		}
+		Integer sshPort = null;
+		if (device.getSshPort() != null && !"".equals(device.getSshPort())) {
+			try {
+				int port = Integer.parseInt(device.getSshPort());
+				if (port < 1 || port > 65535) {
+					throw new Exception();
+				}
+				sshPort = port;
+			}
+			catch (Exception e) {
+				throw new NetshotBadRequestException("Invalid SSH port",
+						NetshotBadRequestException.NETSHOT_INVALID_PORT);
+			}
+		}
+		Integer telnetPort = null;
+		if (device.getTelnetPort() != null && !"".equals(device.getTelnetPort())) {
+			try {
+				int port = Integer.parseInt(device.getTelnetPort());
+				if (port < 1 || port > 65535) {
+					throw new Exception();
+				}
+				telnetPort = port;
+			}
+			catch (Exception e) {
+				throw new NetshotBadRequestException("Invalid Telnet port",
+						NetshotBadRequestException.NETSHOT_INVALID_PORT);
+			}
+		}
 		Domain domain;
 		List<DeviceCredentialSet> knownCommunities;
 		Session session = Database.getSession();
@@ -2010,8 +2174,9 @@ public class RestService extends Thread {
 			}
 			domain = (Domain) session.load(Domain.class, device.getDomainId());
 			knownCommunities = session
-					.createQuery("from DeviceSnmpCommunity c where c.mgmtDomain is null or c.mgmtDomain = :domain")
+					.createQuery("from DeviceSnmpCommunity c where (mgmtDomain = :domain or mgmtDomain is null) and (not (c.deviceSpecific = :true))")
 					.setEntity("domain", domain)
+					.setBoolean("true", true)
 					.list();
 			if (knownCommunities.size() == 0) {
 				logger.error("No available SNMP community");
@@ -2070,6 +2235,22 @@ public class RestService extends Thread {
 			try {
 				session.beginTransaction();
 				newDevice = new Device(driver.getName(), deviceAddress, domain, user.getUsername());
+				if (connectAddress != null) {
+					newDevice.setConnectAddress(connectAddress);
+				}
+				if (sshPort != null) {
+					newDevice.setSshPort(sshPort);
+				}
+				if (telnetPort != null) {
+					newDevice.setTelnetPort(telnetPort);
+				}
+				if (device.getSpecificCredentialSet() != null && device.getSpecificCredentialSet() instanceof DeviceCliAccount) {
+					device.getSpecificCredentialSet().setName(DeviceCredentialSet.generateSpecificName());
+					device.getSpecificCredentialSet().setDeviceSpecific(true);
+					session.save(device.getSpecificCredentialSet());
+					newDevice.setSpecificCredentialSet(device.getSpecificCredentialSet());
+					newDevice.setAutoTryCredentials(false);
+				}
 				session.save(newDevice);
 				task = new TakeSnapshotTask(newDevice, "Initial snapshot after device creation", user.getUsername());
 				session.save(task);
@@ -2166,6 +2347,15 @@ public class RestService extends Thread {
 		/** The ip address. */
 		private String ipAddress = null;
 
+		/** The connection IP address (optional). */
+		private String connectIpAddress = null;
+		
+		/** The SSH port. */
+		private String sshPort;
+
+		/** The Telnet port. */
+		private String telnetPort;
+
 		/** The auto try credentials. */
 		private Boolean autoTryCredentials = null;
 
@@ -2175,6 +2365,9 @@ public class RestService extends Thread {
 		private List<Long> clearCredentialSetIds = null;
 
 		private Long mgmtDomain = null;
+		
+		/** A device-specific credential set. */
+		private DeviceCredentialSet specificCredentialSet = null;
 
 		/**
 		 * Gets the id.
@@ -2289,7 +2482,7 @@ public class RestService extends Thread {
 		}
 
 		/**
-		 * Sets the enable.
+		 * Sets the device as enabled.
 		 *
 		 * @param enable the new enable
 		 */
@@ -2297,22 +2490,107 @@ public class RestService extends Thread {
 			this.enabled = enabled;
 		}
 
+		/**
+		 * Gets the management domain.
+		 * @return the management domain
+		 */
 		@XmlElement
 		public Long getMgmtDomain() {
 			return mgmtDomain;
 		}
 
+		/**
+		 * Sets the management domain.
+		 * @param mgmtDomain the new management domain
+		 */
 		public void setMgmtDomain(Long mgmtDomain) {
 			this.mgmtDomain = mgmtDomain;
 		}
 
+		/**
+		 * Gets the list of credential set IDs.
+		 * @return the list of credential sets
+		 */
 		@XmlElement
 		public List<Long> getClearCredentialSetIds() {
 			return clearCredentialSetIds;
 		}
 
+		/**
+		 * Sets the list of credential set IDs to use with this device.
+		 * @param clearCredentialSetIds the new list of credential sets
+		 */
 		public void setClearCredentialSetIds(List<Long> clearCredentialSetIds) {
 			this.clearCredentialSetIds = clearCredentialSetIds;
+		}
+
+		/**
+		 * Gets the connect IP address.
+		 * @return the connect IP address
+		 */
+		@XmlElement
+		public String getConnectIpAddress() {
+			return connectIpAddress;
+		}
+
+		/**
+		 * Sets the connection IP address.
+		 * @param connectIpAddress the new connection IP address. "" to clear it.
+		 */
+		public void setConnectIpAddress(String connectIpAddress) {
+			this.connectIpAddress = connectIpAddress;
+		}
+
+		/**
+		 * Gets the SSH port.
+		 * @return the SSH port
+		 */
+		@XmlElement
+		public String getSshPort() {
+			return sshPort;
+		}
+
+		/**
+		 * Sets the SSH port.
+		 * @param sshPort the new SSH port; "" to clear it
+		 */
+		public void setSshPort(String sshPort) {
+			this.sshPort = sshPort;
+		}
+
+		/**
+		 * Gets the Telnet port.
+		 * @return the Telnet port
+		 */
+		@XmlElement
+		public String getTelnetPort() {
+			return telnetPort;
+		}
+
+		/**
+		 * Sets the Telnet port.
+		 * @param telnetPort the new Telnet port; "" to clear it
+		 */
+		public void setTelnetPort(String telnetPort) {
+			this.telnetPort = telnetPort;
+		}
+		
+
+		/**
+		 * Gets the device-specific credential set.
+		 * @return the specific credential set
+		 */
+		@XmlElement
+		public DeviceCredentialSet getSpecificCredentialSet() {
+			return specificCredentialSet;
+		}
+
+		/**
+		 * Sets a device-specific credential set.
+		 * @param specificCredentialSet the new specific credential set
+		 */
+		public void setSpecificCredentialSet(DeviceCredentialSet specificCredentialSet) {
+			this.specificCredentialSet = specificCredentialSet;
 		}
 	}
 
@@ -2355,6 +2633,58 @@ public class RestService extends Thread {
 				}
 				device.setMgmtAddress(v4Address);
 			}
+			if (rsDevice.getConnectIpAddress() != null) {
+				if ("".equals(rsDevice.getConnectIpAddress())) {
+					device.setConnectAddress(null);
+				}
+				else {
+					Network4Address v4ConnectAddress = new Network4Address(rsDevice.getConnectIpAddress());
+					if (!v4ConnectAddress.isNormalUnicast() && !v4ConnectAddress.isLoopback()) {
+						session.getTransaction().rollback();
+						throw new NetshotBadRequestException("Invalid Connect IP address",
+								NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
+					}
+					device.setConnectAddress(v4ConnectAddress);
+				}
+			}
+			if (rsDevice.getSshPort() != null) {
+				if ("".equals(rsDevice.getSshPort())) {
+					device.setSshPort(0);
+				}
+				else {
+					try {
+						int port = Integer.parseInt(rsDevice.getSshPort());
+						if (port < 1 || port > 65535) {
+							throw new Exception();
+						}
+						device.setSshPort(port);
+					}
+					catch (Exception e) {
+						session.getTransaction().rollback();
+						throw new NetshotBadRequestException("Invalid SSH port",
+								NetshotBadRequestException.NETSHOT_INVALID_PORT);
+					}
+				}
+			}
+			if (rsDevice.getTelnetPort() != null) {
+				if ("".equals(rsDevice.getTelnetPort())) {
+					device.setTelnetPort(0);
+				}
+				else {
+					try {
+						int port = Integer.parseInt(rsDevice.getTelnetPort());
+						if (port < 1 || port > 65535) {
+							throw new Exception();
+						}
+						device.setTelnetPort(port);
+					}
+					catch (Exception e) {
+						session.getTransaction().rollback();
+						throw new NetshotBadRequestException("Invalid Telnet port",
+								NetshotBadRequestException.NETSHOT_INVALID_PORT);
+					}
+				}
+			}
 			if (rsDevice.getComments() != null) {
 				device.setComments(rsDevice.getComments());
 			}
@@ -2383,6 +2713,43 @@ public class RestService extends Thread {
 			}
 			if (rsDevice.isAutoTryCredentials() != null) {
 				device.setAutoTryCredentials(rsDevice.isAutoTryCredentials());
+			}
+			DeviceCredentialSet rsCredentialSet = rsDevice.getSpecificCredentialSet();
+			DeviceCredentialSet credentialSet = device.getSpecificCredentialSet();
+			
+			if (rsCredentialSet == null) {
+				if (credentialSet != null) {
+					session.delete(credentialSet);
+					device.setSpecificCredentialSet(null);
+				}
+			}
+			else if (DeviceCliAccount.class.isInstance(rsCredentialSet)) {
+				if (credentialSet != null && !credentialSet.getClass().equals(rsCredentialSet.getClass())) {
+					session.delete(credentialSet);
+					credentialSet = null;
+				}
+				if (credentialSet == null) {
+					credentialSet = rsCredentialSet;
+					credentialSet.setDeviceSpecific(true);
+					credentialSet.setName(DeviceCredentialSet.generateSpecificName());
+					session.save(credentialSet);
+					device.setSpecificCredentialSet(credentialSet);
+				}
+				else {
+					DeviceCliAccount cliAccount = (DeviceCliAccount) credentialSet;
+					DeviceCliAccount rsCliAccount = (DeviceCliAccount) rsCredentialSet;
+					cliAccount.setUsername(rsCliAccount.getUsername());
+					if (!rsCliAccount.getPassword().equals("=")) {
+						cliAccount.setPassword(rsCliAccount.getPassword());
+					}
+					if (!rsCliAccount.getSuperPassword().equals("=")) {
+						cliAccount.setSuperPassword(rsCliAccount.getSuperPassword());
+					}
+					if (DeviceSshKeyAccount.class.isInstance(credentialSet)) {
+						((DeviceSshKeyAccount) cliAccount).setPublicKey(((DeviceSshKeyAccount) rsCliAccount).getPublicKey());
+						((DeviceSshKeyAccount) cliAccount).setPrivateKey(((DeviceSshKeyAccount) rsCliAccount).getPrivateKey());
+					}
+				}
 			}
 			if (rsDevice.getMgmtDomain() != null) {
 				Domain domain = (Domain) session.load(Domain.class, rsDevice.getMgmtDomain());
@@ -2459,6 +2826,48 @@ public class RestService extends Thread {
 			session.close();
 		}
 	}
+	
+	/**
+	 * Gets the debug log of a task
+	 *
+	 * @param request the request
+	 * @param id the id
+	 * @param item the item
+	 * @return the device config plain
+	 * @throws WebApplicationException the web application exception
+	 */
+	@GET
+	@Path("tasks/{id}/debuglog")
+	@RolesAllowed("readonly")
+	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
+	public Response getTaskDebugLog(@PathParam("id") Long id) throws WebApplicationException {
+		logger.debug("REST request, get task {} debug log.", id);
+		Session session = Database.getSession();
+		Task task;
+		try {
+			task = (Task) session.get(Task.class, id);
+			DebugLog log = task.getDebugLog();
+			String text = log == null ? "" : log.getText();
+			String fileName = String.format("debug_%d.log", id);
+			return Response.ok(text)
+					.header("Content-Disposition", "attachment; filename=" + fileName)
+					.build();
+		}
+		catch (ObjectNotFoundException e) {
+			logger.error("Unable to find the task {}.", id, e);
+			throw new WebApplicationException(
+					"Task not found",
+					javax.ws.rs.core.Response.Status.NOT_FOUND);
+		}
+		catch (HibernateException e) {
+			logger.error("Unable to fetch the task {}.", id, e);
+			throw new WebApplicationException("Unable to get the task",
+					javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
 
 	/**
 	 * Gets the tasks.
@@ -2475,8 +2884,9 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			@SuppressWarnings("unchecked")
-			List<Task> tasks = session.createQuery("from Task t order by t.id desc")
-			.list();
+			List<Task> tasks = session
+				.createQuery("from Task t order by t.id desc")
+				.list();
 			return tasks;
 		}
 		catch (HibernateException e) {
@@ -2507,7 +2917,10 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		List<DeviceCredentialSet> credentialSets;
 		try {
-			credentialSets = session.createCriteria(DeviceCredentialSet.class).list();
+			credentialSets = session
+					.createQuery("select cs from DeviceCredentialSet cs where not (cs.deviceSpecific = :true)")
+					.setBoolean("true", true)
+					.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the credentials.", e);
@@ -2545,13 +2958,21 @@ public class RestService extends Thread {
 			session.beginTransaction();
 			DeviceCredentialSet credentialSet = (DeviceCredentialSet) session.load(
 					DeviceCredentialSet.class, id);
+			if (credentialSet.isDeviceSpecific()) {
+				throw new NetshotBadRequestException(
+						"Can't delete a device-specific credential set.",
+						NetshotBadRequestException.NETSHOT_USED_CREDENTIALS);
+			}
 			session.delete(credentialSet);
 			session.getTransaction().commit();
 		}
-		catch (HibernateException e) {
+		catch (Exception e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to delete the credentials {}", id, e);
 			Throwable t = e.getCause();
+			if (e instanceof NetshotBadRequestException) {
+				throw e;
+			}
 			if (t != null && t.getMessage().contains("foreign key constraint fails")) {
 				throw new NetshotBadRequestException(
 						"Unable to delete the credential set, there must be devices or tasks using it.",
@@ -2582,12 +3003,18 @@ public class RestService extends Thread {
 	public void addCredentialSet(DeviceCredentialSet credentialSet)
 			throws WebApplicationException {
 		logger.debug("REST request, add credentials.");
+		if (credentialSet.getName() == null || credentialSet.getName().trim().equals("")) {
+			logger.error("Invalid credential set name.");
+			throw new NetshotBadRequestException("Invalid name for the credential set",
+					NetshotBadRequestException.NETSHOT_INVALID_CREDENTIALS_NAME);
+		}
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
 			if (credentialSet.getMgmtDomain() != null) {
 				credentialSet.setMgmtDomain((Domain) session.load(Domain.class, credentialSet.getMgmtDomain().getId()));
 			}
+			credentialSet.setDeviceSpecific(false);
 			session.save(credentialSet);
 			session.getTransaction().commit();
 		}
@@ -3299,6 +3726,8 @@ public class RestService extends Thread {
 		private String script = "";
 		
 		private String driver;
+		
+		private boolean debugEnabled = false;
 
 		/**
 		 * Gets the id.
@@ -3574,6 +4003,15 @@ public class RestService extends Thread {
 
 		public void setConfigKeepDays(int configKeepDays) {
 			this.configKeepDays = configKeepDays;
+		}
+		
+		@XmlElement
+		public boolean isDebugEnabled() {
+			return debugEnabled;
+		}
+		
+		public void setDebugEnabled(boolean debugEnabled) {
+			this.debugEnabled = debugEnabled;
 		}
 		
 	}
@@ -4081,6 +4519,7 @@ public class RestService extends Thread {
 					NetshotBadRequestException.NETSHOT_INVALID_TASK);
 		}
 		if (rsTask.getScheduleReference() != null) {
+			task.setDebugEnabled(rsTask.isDebugEnabled());
 			task.setScheduleReference(rsTask.getScheduleReference());
 			task.setScheduleType(rsTask.getScheduleType());
 			if (task.getScheduleType() == ScheduleType.AT) {
@@ -5639,7 +6078,7 @@ public class RestService extends Thread {
 		try {
 			@SuppressWarnings("unchecked")
 			List<RsConfigChangeNumberByDateStat> stats = session
-			.createQuery("select count(c) as changeCount, cast(cast(c.changeDate as date) as timestamp) as changeDay from Config c group by cast(c.changeDate as date) order by changeDate desc")
+			.createQuery("select count(c) as changeCount, cast(cast(c.changeDate as date) as timestamp) as changeDay from Config c group by cast(c.changeDate as date) order by changeDay desc")
 			.setMaxResults(7)
 			.setResultTransformer(Transformers.aliasToBean(RsConfigChangeNumberByDateStat.class))
 			.list();
@@ -5762,17 +6201,29 @@ public class RestService extends Thread {
 	@Path("reports/groupconfigcompliancestats")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsGroupConfigComplianceStat> getGroupConfigComplianceStats() throws WebApplicationException {
+	public List<RsGroupConfigComplianceStat> getGroupConfigComplianceStats(@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, group config compliance stats.");
 		Session session = Database.getSession();
 		try {
+			String domainFilter = "";
+			if (domains.size() > 0) {
+				domainFilter = " d.mgmtDomain.id in (:domainIds) and";
+			}
+			
+			Query query = session
+				.createQuery("select g.id as groupId, g.name as groupName, "
+						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled and (select count(ccr.result) from d.complianceCheckResults ccr where ccr.result = :nonConforming) = 0) as compliantDeviceCount, "
+						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled) as deviceCount "
+						+ "from DeviceGroup g where g.hiddenFromReports <> true")
+				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
+				.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domains.size() > 0) {
+				query.setParameterList("domainIds", domains);
+			}
 			@SuppressWarnings("unchecked")
-			List<RsGroupConfigComplianceStat> stats = session
-			.createQuery("select g.id as groupId, g.name as groupName, (select count(d) from g.cachedDevices d where d.status = :enabled and (select count(ccr.result) from d.complianceCheckResults ccr where ccr.result = :nonConforming) = 0) as compliantDeviceCount, (select count(d) from g.cachedDevices d where d.status = :enabled) as deviceCount from DeviceGroup g where g.hiddenFromReports <> true")
-			.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
-			.setParameter("enabled", Device.Status.INPRODUCTION)
-			.setResultTransformer(Transformers.aliasToBean(RsGroupConfigComplianceStat.class))
-			.list();
+			List<RsGroupConfigComplianceStat> stats = query
+				.setResultTransformer(Transformers.aliasToBean(RsGroupConfigComplianceStat.class))
+				.list();
 			return stats;
 		}
 		catch (HibernateException e) {
@@ -6007,19 +6458,32 @@ public class RestService extends Thread {
 	@Path("reports/groupsoftwarecompliancestats")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsGroupSoftwareComplianceStat> getGroupSoftwareComplianceStats() throws WebApplicationException {
+	public List<RsGroupSoftwareComplianceStat> getGroupSoftwareComplianceStats(@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, group software compliance stats.");
 		Session session = Database.getSession();
 		try {
+			String domainFilter = "";
+			if (domains.size() > 0) {
+				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
+			}
+			Query query = session
+				.createQuery("select g.id as groupId, g.name as groupName, "
+						+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :gold" + domainFilter + ") as goldDeviceCount, "
+						+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :silver" + domainFilter + ") as silverDeviceCount, "
+						+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :bronze"  + domainFilter + ") as bronzeDeviceCount, "
+						+ "(select count(d) from g.cachedDevices d where d.status = :enabled"  + domainFilter + ") as deviceCount "
+						+ "from DeviceGroup g where g.hiddenFromReports <> true")
+				.setParameter("gold", ConformanceLevel.GOLD)
+				.setParameter("silver", ConformanceLevel.SILVER)
+				.setParameter("bronze", ConformanceLevel.BRONZE)
+				.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domains.size() > 0) {
+				query.setParameterList("domainIds", domains);
+			}
 			@SuppressWarnings("unchecked")
-			List<RsGroupSoftwareComplianceStat> stats = session
-			.createQuery("select g.id as groupId, g.name as groupName, (select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :gold) as goldDeviceCount, (select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :silver) as silverDeviceCount, (select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :bronze) as bronzeDeviceCount, (select count(d) from g.cachedDevices d where d.status = :enabled) as deviceCount from DeviceGroup g where g.hiddenFromReports <> true")
-			.setParameter("gold", ConformanceLevel.GOLD)
-			.setParameter("silver", ConformanceLevel.SILVER)
-			.setParameter("bronze", ConformanceLevel.BRONZE)
-			.setParameter("enabled", Device.Status.INPRODUCTION)
-			.setResultTransformer(Transformers.aliasToBean(RsGroupSoftwareComplianceStat.class))
-			.list();
+			List<RsGroupSoftwareComplianceStat> stats = query
+				.setResultTransformer(Transformers.aliasToBean(RsGroupSoftwareComplianceStat.class))
+				.list();
 			return stats;
 		}
 		catch (HibernateException e) {
@@ -6139,16 +6603,26 @@ public class RestService extends Thread {
 	@Path("reports/groupconfignoncompliantdevices/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsLightPolicyRuleDevice> getGroupConfigNonCompliantDevices(@PathParam("id") Long id) throws WebApplicationException {
+	public List<RsLightPolicyRuleDevice> getGroupConfigNonCompliantDevices(@PathParam("id") Long id, @QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, group config non compliant devices.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
-			List<RsLightPolicyRuleDevice> devices = session
-				.createQuery(DEVICELIST_BASEQUERY + ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p where g.id = :id and ccr.result = :nonConforming and d.status = :enabled")
+			String domainFilter = "";
+			if (domains.size() > 0) {
+				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
+			}
+			Query query = session
+				.createQuery(DEVICELIST_BASEQUERY + ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d "
+						+ "join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p "
+						+ "where g.id = :id and ccr.result = :nonConforming and d.status = :enabled" + domainFilter)
 				.setLong("id", id)
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
-				.setParameter("enabled", Device.Status.INPRODUCTION)
+				.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domains.size() > 0) {
+				query.setParameterList("domainIds", domains);
+			}
+			@SuppressWarnings("unchecked")
+			List<RsLightPolicyRuleDevice> devices = query
 				.setResultTransformer(Transformers.aliasToBean(RsLightPolicyRuleDevice.class))
 				.list();
 			return devices;
@@ -6189,7 +6663,7 @@ public class RestService extends Thread {
 			else {
 				@SuppressWarnings("unchecked")
 				List<RsLightDevice> devices = session
-				.createQuery(DEVICELIST_BASEQUERY + "from Device d where d." + type + "Date = :eoxDate and d.status = :enabled")
+				.createQuery(DEVICELIST_BASEQUERY + "from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled")
 				.setDate("eoxDate", eoxDate)
 				.setParameter("enabled", Device.Status.INPRODUCTION)
 				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
@@ -6569,6 +7043,11 @@ public class RestService extends Thread {
 
 		private boolean familyRegExp = false;
 
+		/** The part number. */
+		private String partNumber = "";
+
+		private boolean partNumberRegExp = false;
+
 		/** The level. */
 		private SoftwareRule.ConformanceLevel level = ConformanceLevel.GOLD;
 
@@ -6720,6 +7199,24 @@ public class RestService extends Thread {
 		public void setFamilyRegExp(boolean familyRegExp) {
 			this.familyRegExp = familyRegExp;
 		}
+
+		@XmlElement
+		public String getPartNumber() {
+			return partNumber;
+		}
+
+		public void setPartNumber(String partNumber) {
+			this.partNumber = partNumber;
+		}
+
+		@XmlElement
+		public boolean isPartNumberRegExp() {
+			return partNumberRegExp;
+		}
+
+		public void setPartNumberRegExp(boolean partNumberRegExp) {
+			this.partNumberRegExp = partNumberRegExp;
+		}
 	}
 
 	/**
@@ -6755,7 +7252,8 @@ public class RestService extends Thread {
 
 			rule = new SoftwareRule(rsRule.getPriority(), group, driver,
 					rsRule.getFamily(), rsRule.isFamilyRegExp(), rsRule.getVersion(),
-					rsRule.isVersionRegExp(), rsRule.getLevel());
+					rsRule.isVersionRegExp(), rsRule.getPartNumber(), rsRule.isPartNumberRegExp(),
+					rsRule.getLevel());
 
 			session.save(rule);
 			session.getTransaction().commit();
@@ -6862,6 +7360,8 @@ public class RestService extends Thread {
 			rule.setFamilyRegExp(rsRule.isFamilyRegExp());
 			rule.setVersion(rsRule.getVersion());
 			rule.setVersionRegExp(rsRule.isVersionRegExp());
+			rule.setPartNumber(rsRule.getPartNumber());
+			rule.setPartNumberRegExp(rsRule.isPartNumberRegExp());
 			rule.setPriority(rsRule.getPriority());
 			rule.setLevel(rsRule.getLevel());
 
@@ -6927,7 +7427,8 @@ public class RestService extends Thread {
 	@Path("reports/groupdevicesbysoftwarelevel/{id}/{level}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsLightSoftwareLevelDevice> getGroupDevicesBySoftwareLevel(@PathParam("id") Long id, @PathParam("level") String level) throws WebApplicationException {
+	public List<RsLightSoftwareLevelDevice> getGroupDevicesBySoftwareLevel(@PathParam("id") Long id, @PathParam("level") String level,
+			@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, group {} devices by software level {}.", id, level);
 		Session session = Database.getSession();
 
@@ -6940,14 +7441,23 @@ public class RestService extends Thread {
 		}
 
 		try {
+			String domainFilter = "";
+			if (domains.size() > 0) {
+				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
+			}
+			Query query =  session
+				.createQuery(DEVICELIST_BASEQUERY + ", d.softwareLevel as softwareLevel "
+						+ "from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled" + domainFilter)
+				.setLong("id", id)
+				.setParameter("level", filterLevel)
+				.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domains.size() > 0) {
+				query.setParameterList("domainIds", domains);
+			}
 			@SuppressWarnings("unchecked")
-			List<RsLightSoftwareLevelDevice> devices = session
-			.createQuery(DEVICELIST_BASEQUERY + ", d.softwareLevel as softwareLevel from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled")
-			.setLong("id", id)
-			.setParameter("level", filterLevel)
-			.setParameter("enabled", Device.Status.INPRODUCTION)
-			.setResultTransformer(Transformers.aliasToBean(RsLightSoftwareLevelDevice.class))
-			.list();
+			List<RsLightSoftwareLevelDevice> devices = query
+				.setResultTransformer(Transformers.aliasToBean(RsLightSoftwareLevelDevice.class))
+				.list();
 			return devices;
 		}
 		catch (HibernateException e) {
@@ -6990,10 +7500,10 @@ public class RestService extends Thread {
 	}
 	
 	@GET
-	@Path("reports/accessfailuredevices/{days}")
+	@Path("reports/accessfailuredevices")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsLightAccessFailureDevice> getAccessFailureDevices(@PathParam("days") Integer days) throws WebApplicationException {
+	public List<RsLightAccessFailureDevice> getAccessFailureDevices(@QueryParam("days") Integer days, @QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, devices without successful snapshot over the last {} days.", days);
 		
 		if (days == null || days < 1) {
@@ -7007,12 +7517,23 @@ public class RestService extends Thread {
 			Calendar when = Calendar.getInstance();
 			when.add(Calendar.DATE, -days);
 			
-			@SuppressWarnings("unchecked")
-			List<RsLightAccessFailureDevice> devices = session
-				.createQuery(DEVICELIST_BASEQUERY + ", (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure from Device d where d.status = :enabled")
+			String domainFilter = "";
+			if (domains.size() > 0) {
+				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
+			}
+			
+			Query query = session
+				.createQuery(DEVICELIST_BASEQUERY + ", (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, "
+						+ "(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure from Device d where d.status = :enabled"
+						+ domainFilter)
 				.setParameter("success", Task.Status.SUCCESS)
 				.setParameter("failure", Task.Status.FAILURE)
-				.setParameter("enabled", Device.Status.INPRODUCTION)
+				.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domainFilter.length() > 0) {
+				query.setParameterList("domainIds", domains);
+			}
+			@SuppressWarnings("unchecked")
+			List<RsLightAccessFailureDevice> devices = query
 				.setResultTransformer(Transformers.aliasToBean(RsLightAccessFailureDevice.class))
 				.list();
 			Iterator<RsLightAccessFailureDevice> d = devices.iterator();
@@ -7120,8 +7641,10 @@ public class RestService extends Thread {
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public void logout(@Context HttpServletRequest request) throws WebApplicationException {
 		logger.debug("REST logout request.");
+		User sessionUser = (User) request.getSession().getAttribute("user");
 		HttpSession httpSession = request.getSession();
 		httpSession.invalidate();
+		Netshot.aaaLogger.warn("User {} has logged out.", sessionUser.getUsername());
 	}
 
 	/**
@@ -7140,6 +7663,7 @@ public class RestService extends Thread {
 	public User setPassword(@Context HttpServletRequest request, RsLogin rsLogin) throws WebApplicationException {
 		logger.debug("REST password change request, username {}.", rsLogin.getUsername());
 		User sessionUser = (User) request.getSession().getAttribute("user");
+		Netshot.aaaLogger.warn("Password change request via REST by user {} for user {}.", sessionUser.getUsername(), rsLogin.getUsername());
 
 		User user;
 		Session session = Database.getSession();
@@ -7165,6 +7689,7 @@ public class RestService extends Thread {
 			user.setPassword(newPassword);
 			session.save(user);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.warn("Password successfully changed by user {} for user {}.",sessionUser.getUsername(), rsLogin.getUsername());
 			return sessionUser;
 		}
 		catch (HibernateException e) {
@@ -7193,6 +7718,7 @@ public class RestService extends Thread {
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public User login(@Context HttpServletRequest request, RsLogin rsLogin) throws WebApplicationException {
 		logger.debug("REST authentication request, username {}.", rsLogin.getUsername());
+		Netshot.aaaLogger.info("REST authentication request, username {}.", rsLogin.getUsername());
 
 		User user = null;
 
@@ -7210,7 +7736,11 @@ public class RestService extends Thread {
 		}
 
 		if (user != null && user.isLocal()) {
-			if (!user.checkPassword(rsLogin.getPassword())) {
+			if (user.checkPassword(rsLogin.getPassword())) {
+				Netshot.aaaLogger.info("Local authentication success for user {}.", rsLogin.getUsername());
+			}
+			else {
+				Netshot.aaaLogger.warn("Local authentication failure for user {}.", rsLogin.getUsername());
 				user = null;
 			}
 		}
@@ -7218,6 +7748,10 @@ public class RestService extends Thread {
 			User remoteUser = Radius.authenticate(rsLogin.getUsername(), rsLogin.getPassword());
 			if (remoteUser != null && user != null) {
 				remoteUser.setLevel(user.getLevel());
+				Netshot.aaaLogger.info("Remote authentication success for user {}.", rsLogin.getUsername());
+			}
+			else {
+				Netshot.aaaLogger.warn("Remote authentication failure for user {}.", rsLogin.getUsername());
 			}
 			user = remoteUser;
 		}
@@ -7231,7 +7765,7 @@ public class RestService extends Thread {
 			httpSession.setMaxInactiveInterval(User.MAX_IDLE_TIME);
 			return user;
 		}
-		throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
+		throw new NetshotAuthenticationRequiredException();
 	}
 
 	/**
@@ -7581,8 +8115,10 @@ public class RestService extends Thread {
 	@Produces({ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
 	public Response getDataXLSX(@Context HttpServletRequest request,
 			@DefaultValue("-1") @QueryParam("group") long group,
+			@QueryParam("domain") Set<Long> domains,
 			@DefaultValue("false") @QueryParam("interfaces") boolean exportInterfaces,
 			@DefaultValue("false") @QueryParam("inventory") boolean exportInventory,
+			@DefaultValue("false") @QueryParam("locations") boolean exportLocations,
 			@DefaultValue("xlsx") @QueryParam("format") String fileFormat) throws WebApplicationException {
 		logger.debug("REST request, export data.");
 		User user = (User) request.getSession().getAttribute("user");
@@ -7592,7 +8128,7 @@ public class RestService extends Thread {
 
 			Session session = Database.getSession();
 			try {
-				Workbook workBook = new XSSFWorkbook();
+				Workbook workBook = new SXSSFWorkbook(100);
 				Row row;
 				Cell cell;
 
@@ -7614,22 +8150,47 @@ public class RestService extends Thread {
 				cell = row.createCell(1);
 				cell.setCellValue(new Date());
 				cell.setCellStyle(datetimeCellStyle);
+				
+
+				Criteria criteria = session.createCriteria(Device.class);
+				criteria.setFetchMode("mgmtDomain", FetchMode.SELECT);
+				criteria.setFetchMode("specificCredentialSet", FetchMode.SELECT);
+				
 				row = summarySheet.createRow(4);
-				row.createCell(0).setCellValue("Selected Group");
-				Query query;
-				if (group == -1) {
-					query = session.createQuery("select d from Device d");
-					row.createCell(1).setCellValue("None");
+				row.createCell(0).setCellValue("Selected Domain");
+				if (domains.size() == 0) {
+					row.createCell(1).setCellValue("Any");
 				}
 				else {
-					query = session
-							.createQuery("select d from Device d join d.ownerGroups g where g.id = :id")
-							.setLong("id", group);
+					@SuppressWarnings("unchecked")
+					List<Domain> deviceDomains = session
+							.createQuery("select d from Domain d where d.id in (:domainIds)")
+							.setParameterList("domainIds", domains)
+							.list();
+					List<String> domainNames = new ArrayList<String>();
+					for (Domain deviceDomain : deviceDomains) {
+						domainNames.add(String.format("%s (%d)", deviceDomain.getName(), deviceDomain.getId()));
+					}
+					row.createCell(1).setCellValue(String.join(", ", domainNames));
+					criteria.createCriteria("mgmtDomain", "md");
+					criteria.add(Restrictions.in("md.id", domains));
+				}
+				row = summarySheet.createRow(5);
+				row.createCell(0).setCellValue("Selected Group");
+				if (group == -1) {
+					row.createCell(1).setCellValue("Any");
+				}
+				else {
 					DeviceGroup deviceGroup = (DeviceGroup) session.get(DeviceGroup.class, group);
 					row.createCell(1).setCellValue(deviceGroup.getName());
+					criteria.createCriteria("ownerGroups", "g");
+					criteria.add(Restrictions.eq("g.id", group));
 				}
+				
+				
 
 				Sheet deviceSheet = workBook.createSheet("Devices");
+				((SXSSFSheet) deviceSheet).setRandomAccessWindowSize(100);
 				row = deviceSheet.createRow(0);
 				row.createCell(0).setCellValue("ID");
 				row.createCell(1).setCellValue("Name");
@@ -7642,11 +8203,15 @@ public class RestService extends Thread {
 				row.createCell(8).setCellValue("Software");
 				row.createCell(9).setCellValue("End of Sale Date");
 				row.createCell(10).setCellValue("End Of Life Date");
+				if (exportLocations) {
+					row.createCell(11).setCellValue("Location");
+					row.createCell(12).setCellValue("Contact");
+				}
 
 				int yDevice = 1;
 
 				@SuppressWarnings("unchecked")
-				List<Device> devices = query.list();
+				List<Device> devices = criteria.list();
 				for (Device device : devices) {
 					row = deviceSheet.createRow(yDevice++);
 					row.createCell(0).setCellValue(device.getId());
@@ -7672,10 +8237,15 @@ public class RestService extends Thread {
 						cell.setCellValue(device.getEolDate());
 						cell.setCellStyle(dateCellStyle);
 					}
+					if (exportLocations) {
+						row.createCell(11).setCellValue(device.getLocation());
+						row.createCell(12).setCellValue(device.getContact());
+					}
 				}
 
 				if (exportInterfaces) {
 					Sheet interfaceSheet = workBook.createSheet("Interfaces");
+					((SXSSFSheet) interfaceSheet).setRandomAccessWindowSize(100);
 					row = interfaceSheet.createRow(0);
 					row.createCell(0).setCellValue("Device ID");
 					row.createCell(1).setCellValue("Virtual Device");
@@ -7692,6 +8262,20 @@ public class RestService extends Thread {
 					int yInterface = 1;
 					for (Device device : devices) {
 						for (NetworkInterface networkInterface : device.getNetworkInterfaces()) {
+							if (networkInterface.getIpAddresses().size() == 0) {
+								row = interfaceSheet.createRow(yInterface++);
+								row.createCell(0).setCellValue(device.getId());
+								row.createCell(1).setCellValue(networkInterface.getVirtualDevice());
+								row.createCell(2).setCellValue(networkInterface.getInterfaceName());
+								row.createCell(3).setCellValue(networkInterface.getDescription());
+								row.createCell(4).setCellValue(networkInterface.getVrfInstance());
+								row.createCell(5).setCellValue(networkInterface.getMacAddress());
+								row.createCell(6).setCellValue(networkInterface.isEnabled());
+								row.createCell(7).setCellValue(networkInterface.isLevel3());
+								row.createCell(8).setCellValue("");
+								row.createCell(9).setCellValue("");
+								row.createCell(10).setCellValue("");
+							}
 							for (NetworkAddress address : networkInterface.getIpAddresses()) {
 								row = interfaceSheet.createRow(yInterface++);
 								row.createCell(0).setCellValue(device.getId());
@@ -7712,6 +8296,7 @@ public class RestService extends Thread {
 
 				if (exportInventory) {
 					Sheet inventorySheet = workBook.createSheet("Inventory");
+					((SXSSFSheet) inventorySheet).setRandomAccessWindowSize(100);
 					row = inventorySheet.createRow(0);
 					row.createCell(0).setCellValue("Device ID");
 					row.createCell(1).setCellValue("Slot");

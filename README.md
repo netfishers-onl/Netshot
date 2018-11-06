@@ -14,6 +14,7 @@ http://www.netfishers.onl/netshot
   * Fortinet FortiOS
   * Alcatel-Lucent TiMOS
   * ...
+  * Check https://github.com/netfishers-onl/Netshot/tree/master/src/main/resources/drivers for the complete list of current "official" drivers
 * Network inventory
 * Software compliance
 * Hardware compliance
@@ -25,11 +26,7 @@ http://www.netfishers.onl/netshot
 
 ## How to start
 
-Go to http://www.netfishers.onl/netshot and download the binary package if you are a simple user.
-
-Installation instructions are included, but you can also consult the blog: http://www.netfishers.onl/blog
-
-If you want to contribute to the code, pull it from GitHub and contact us to publish updates.
+Go to the Wiki page https://github.com/netfishers-onl/Netshot/wiki for installation and other instructions.
 
 ## Contact
 

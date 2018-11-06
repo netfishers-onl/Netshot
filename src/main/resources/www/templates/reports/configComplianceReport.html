@@ -1,6 +1,17 @@
 
 <h1>Configuration compliance per group</h1>
 
+<form id="nsreports-configcompliance-options">
+	<fieldset>
+		<input type="checkbox" name="filterdomain" id="filterdomain" />
+		<label for="filterdomain">Restrict to the following device domain:</label>
+		<select name="domain" id="domain" disabled="disabled" class="text ui-widget-content ui-corner-all"></select>
+	</fieldset>
+	<p>
+		<button id="update">Update</button>
+	</p>
+</form>
+
 <canvas id="chart-configcompliance" width="350" height="350"></canvas>
 
 <div id="legend-configcompliance" class="nsreport-legend">

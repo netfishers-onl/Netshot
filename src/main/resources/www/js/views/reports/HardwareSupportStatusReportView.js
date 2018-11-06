@@ -41,7 +41,6 @@ define([
 		
 		renderHardwareSupportStats: function() {
 			var that = this;
-			var ctx = $("#chart-overview").get(0).getContext("2d");
 			var eolData = [];
 			var eosData = [];
 			var maxData = [];
@@ -93,24 +92,48 @@ define([
 				labels: labels,
 				datasets: [
 					{
-						fillColor: "rgba(220,220,220,0.5)",
-						strokeColor: "rgba(220,220,220,1)",
-						pointColor: "rgba(220,220,220,1)",
-						pointStrokeColor: "#fff",
-						data: eosData,
-					},
-					{
-						fillColor: "rgba(151,187,205,0.5)",
-						strokeColor: "rgba(151,187,205,1)",
-						pointColor: "rgba(151,187,205,1)",
-						pointStrokeColor: "#fff",
+						label: "End-of-Life Devices",
+						backgroundColor: "rgba(151,187,205,0.5)",
+						borderColor: "rgba(151,187,205,1)",
+						borderDash: [],
+						borderDashOffset: 0.0,
+						borderJoinStyle: 'miter',
+						spanGaps: false,
+						pointBorderWidth: 1,
+						pointHoverBorderWidth: 2,
+						pointRadius: 1,
+						pointHitRadius: 10,
 						data: eolData
 					},
 					{
+						label: "End-of-Sale Devices",
+						backgroundColor: "rgba(220,220,220,0.5)",
+						borderColor: "rgba(220,220,220,1)",
+						borderDash: [],
+						borderDashOffset: 0.0,
+						borderJoinStyle: 'miter',
+						spanGaps: false,
+						pointBorderWidth: 1,
+						pointHoverBorderWidth: 2,
+						pointRadius: 1,
+						pointHitRadius: 10,
+						data: eosData
+					},
+					{
+						label: "Total Devices",
 						fillColor: "rgba(240,90,90,0.01)",
-						strokeColor: "rgba(240,90,90,0.5)",
-						pointColor: "rgba(240,90,90,0.5)",
-						pointStrokeColor: "#fff",
+						borderColor: "rgba(240,90,90,0.5)",
+			            backgroundColor: "rgba(255,255,255,0.8)",
+						borderCapStyle: 'butt',
+						borderDash: [],
+						borderDashOffset: 0.0,
+						borderJoinStyle: 'miter',
+						spanGaps: false,
+						pointBorderWidth: 1,
+						pointHoverBorderWidth: 2,
+						pointRadius: 1,
+						pointHitRadius: 10,
+						fill: false,
 						data: maxData
 					}
 				]
@@ -125,12 +148,25 @@ define([
 				scaleStepWidth: Math.ceil(eoxMax / 10),
 				scaleStartValue: 0
 			};
-			new Chart(ctx).Line(data, options);
+			new Chart($("#chart-overview"), {
+				data: data,
+				type: "line",
+				options: {
+					responsive: false,
+					scales: {
+						yAxes: [{
+							min: 0,
+							maxTicksLimit: 10,
+							suggestedMax: eoxMax * 1.2
+						}]
+					}
+				}
+			});
 			
 			var eosRest = 0;
 			var eolRest = 0;
 			this.hardwareSupportStats.each(function(stat) {
-				if (typeof(stat.get('eoxDate')) == "number") {
+				if (typeof stat.get('eoxDate') === "number") {
 					var row = that.milestoneRowTemplate(stat.toJSON());
 					that.$("#milestones>tbody").append($(row));
 				}

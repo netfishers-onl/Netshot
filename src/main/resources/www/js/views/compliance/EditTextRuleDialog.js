@@ -91,7 +91,7 @@ define([
 		},
 		
 		setTestDevice: function(device) {
-			if (typeof(device) == "undefined") return;
+			if (typeof device == "undefined") return;
 			this.$("#ruledevice").val(device.get('name')).data('device-id', device.get('id'));
 			this.$("#ruletest").button('enable');
 			this.device = device;
@@ -111,7 +111,7 @@ define([
 				that.$('#fieldname').empty();
 				var attributes = that.defaultAttributes;
 				that.driver = that.deviceTypes.findWhere({ name: $(this).val() });
-				if (typeof(that.driver) == "object") {
+				if (typeof that.driver == "object" && that.driver) {
 					attributes = _.union(attributes, that.driver.get("attributes"));
 				}
 				attributes = _.sortBy(attributes, "title");

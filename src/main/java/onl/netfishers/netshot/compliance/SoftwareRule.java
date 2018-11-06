@@ -33,6 +33,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.DeviceGroup;
+import onl.netfishers.netshot.device.Module;
 
 /**
  * A software rule defines constraints that apply to the software versions.
@@ -59,7 +60,8 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 
 	public SoftwareRule(double priority, DeviceGroup targetGroup,
 			String driver, String family, boolean familyRegExp,
-			String version, boolean versionRegExp, ConformanceLevel level) {
+			String version, boolean versionRegExp, String partNumber,
+			boolean partNumberRegExp, ConformanceLevel level) {
 		this.priority = priority;
 		this.targetGroup = targetGroup;
 		this.driver = driver;
@@ -67,6 +69,8 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 		this.familyRegExp = familyRegExp;
 		this.version = version;
 		this.versionRegExp = versionRegExp;
+		this.partNumber = partNumber;
+		this.partNumberRegExp = partNumberRegExp;
 		this.level = level;
 	}
 
@@ -104,6 +108,12 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 
 	/** The version is a regular expression. */
 	private boolean versionRegExp = false;
+
+	/** The part number. */
+	private String partNumber;
+
+	/** The part number reg exp. */
+	private boolean partNumberRegExp = false;
 
 	/** The level. */
 	protected ConformanceLevel level = ConformanceLevel.GOLD;
@@ -230,6 +240,44 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	}
 
 	/**
+	 * Gets the part number.
+	 *
+	 * @return the part number
+	 */
+	@XmlElement
+	public String getPartNumber() {
+		return partNumber;
+	}
+
+	/**
+	 * Sets the part number.
+	 *
+	 * @param partNumber the new part number
+	 */
+	public void setPartNumber(String partNumber) {
+		this.partNumber = partNumber;
+	}
+
+	/**
+	 * Checks if is part number reg exp.
+	 *
+	 * @return true, if is part number reg exp
+	 */
+	@XmlElement
+	public boolean isPartNumberRegExp() {
+		return partNumberRegExp;
+	}
+
+	/**
+	 * Sets the part number reg exp.
+	 *
+	 * @param partNumberRegExp the new part number reg exp
+	 */
+	public void setPartNumberRegExp(boolean partNumberRegExp) {
+		this.partNumberRegExp = partNumberRegExp;
+	}
+
+	/**
 	 * Gets the level.
 	 *
 	 * @return the level
@@ -331,6 +379,31 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 		}
 		else {
 			if (!version.equals("") && !device.getSoftwareVersion().equals(version)) {
+				return;
+			}
+		}
+		if (partNumber != null && partNumber != "") {
+			boolean moduleMatches = false;
+			for (Module module : device.getModules()) {
+				if (partNumberRegExp) {
+					try {
+						if (!module.getPartNumber().matches(partNumber)) {
+							continue;
+						}
+					}
+					catch (PatternSyntaxException e) {
+						return;
+					}
+				}
+				else {
+					if (!partNumber.equals("") && !module.getPartNumber().equals(partNumber)) {
+						continue;
+					}
+				}
+				moduleMatches = true;
+				break;
+			}
+			if (!moduleMatches) {
 				return;
 			}
 		}

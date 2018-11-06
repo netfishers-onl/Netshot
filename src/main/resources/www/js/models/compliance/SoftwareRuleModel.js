@@ -13,6 +13,7 @@ define([
 			version: "",
 			group: -1,
 			driver: "",
+			partNumber: "",
 			level: "GOLD"
 		},
 
@@ -26,6 +27,8 @@ define([
 				'group',
 				'version',
 				'versionRegExp',
+				'partNumber',
+				'partNumberRegExp',
 				'priority',
 				'driver',
 				'level'

@@ -5,7 +5,7 @@ define([
 	'backbone',
 ], function($, _, Backbone) {
 
-	return Backbone.View.extend({
+	var ReportView = Backbone.View.extend({
 
 		el: "#nsreports-report",
 
@@ -64,4 +64,7 @@ define([
 		]
 
 	});
+	
+	ReportView.defaultOptions = {};
+	return ReportView;
 });

@@ -8,9 +8,11 @@ define([
 	'models/device/DeviceGroupCollection',
 	'models/device/DeviceTypeCollection',
 	'models/device/DeviceFamilyCollection',
+	'models/device/PartNumberCollection',
 	'text!templates/compliance/addSoftwareRule.html',
 ], function($, _, Backbone, Dialog, SoftwareRuleModel, DeviceGroupCollection,
-		DeviceTypeCollection, DeviceFamilyCollection, addSoftwareRuleTemplate) {
+		DeviceTypeCollection, DeviceFamilyCollection, PartNumberCollection,
+		addSoftwareRuleTemplate) {
 
 	return Dialog.extend({
 
@@ -25,8 +27,9 @@ define([
 			this.groups = new DeviceGroupCollection([]);
 			this.deviceTypes = new DeviceTypeCollection([]);
 			this.deviceFamilies = new DeviceFamilyCollection([]);
+			this.partNumbers = new PartNumberCollection([]);
 			$.when(this.groups.fetch(), this.deviceTypes.fetch(), this.deviceFamilies
-					.fetch()).done(function() {
+					.fetch(), this.partNumbers.fetch()).done(function() {
 				that.render();
 			});
 		},
@@ -45,6 +48,8 @@ define([
 					'versionRegExp': that.$('#versionregexp').prop('checked'),
 					'family': that.$('#family').val(),
 					'familyRegExp': that.$('#familyregexp').prop('checked'),
+					'partNumber': that.$('#partnumber').val(),
+					'partNumberRegExp': that.$('#partnumberregexp').prop('checked'),
 					'level': that.$('input[name="level"]:checked').attr('id')
 							.toUpperCase()
 				});
@@ -80,10 +85,12 @@ define([
 				$('<option />').attr('value', deviceType.get('name')).text(deviceType
 						.get('description')).appendTo(that.$('#devicetype'));
 			});
-			if (typeof (this.model.get('targetGroup')) == "object") {
-				this.$('#group').val(this.model.get('targetGroup').id);
+			var targetGroup = this.model.get('targetGroup'); 
+			if (typeof targetGroup === "object" && targetGroup) {
+				this.$('#group').val(targetGroup.id);
 			}
-			this.$('#devicetype').val(this.model.get('driver'));
+			this.$('#devicetype').val(this.model.get('driver') ? this.model.get('driver') :
+				"onl.netfishers.netshot.device.Device");
 			this.$('input[name="level"]').filter('#'
 					+ this.model.get('level').toLowerCase()).click();
 			var families = [];
@@ -92,6 +99,13 @@ define([
 			});
 			this.$('#family').autocomplete({
 				source: families
+			});
+			var partNumbers = [];
+			this.partNumbers.each(function(partNumber) {
+				partNumbers.push(partNumber.get('partNumber'));
+			});
+			this.$('#partnumber').autocomplete({
+				source: partNumbers
 			});
 		},
 

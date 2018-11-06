@@ -13,23 +13,23 @@
 
 <tr>
 <th>Type of device</th>
-<td><% if (typeof(deviceDriver) == "undefined") { %>Any<% } else { %><%- deviceDriverDescription %><% } %></td>
+<td><% if (typeof deviceDriver === "undefined") { %>Any<% } else { %><%- deviceDriverDescription %><% } %></td>
 </tr>
 
 <tr>
 <th>Field to check</th>
-<td><% if (typeof(field) == "undefined") { %>Unset<% } else { %><%- fieldDescription %><% } %></td>
+<td><% if (typeof field === "undefined") { %>Unset<% } else { %><%- fieldDescription %><% } %></td>
 </tr>
 
 <tr>
 <th><% if (anyBlock) { %>At least one such block...<% } else { %>All such blocks...<% } %></th>
-<td><div class="ruleconfig"><% if (typeof(context) != "undefined") { %><%= $('<div></div>').text(context).html().replace(/ /g, "&nbsp;").replace(/\r?\n/g,"<br/>") %><% } %></div></td>
+<td><div class="ruleconfig"><% if (typeof context !== "undefined") { %><%= $('<div></div>').text(context).html().replace(/ /g, "&nbsp;").replace(/\r?\n/g,"<br/>") %><% } %></div></td>
 </tr>
 
 <tr>
 <th>...<% if (invert) { %>must not<% } else { %>must<% } %> <% if (regExp) { %><% if (matchAll) { %>fully <% } %>match<% } else { %><% if (matchAll) { %>be<% } else { %>contain<% } } %>
 </th>
-<td><div class="ruleconfig"><% if (typeof(text) != "undefined") { %><%= $('<div></div>').text(text).html().replace(/ /g, "&nbsp;").replace(/\r?\n/g,"<br/>") %><% } %></div></td>
+<td><div class="ruleconfig"><% if (typeof text !== "undefined") { %><%= $('<div></div>').text(text).html().replace(/ /g, "&nbsp;").replace(/\r?\n/g,"<br/>") %><% } %></div></td>
 </tr>
 
 </tbody>

@@ -8,7 +8,7 @@ define([
 	return Backbone.Collection.extend({
 
 		initialize: function(models, options) {
-			if (typeof(options) == "object" && typeof(options.device) == "object") {
+			if (typeof options === "object" && options && typeof options.device === "object" && options.device) {
 				this.device = options.device;
 			}
 		},

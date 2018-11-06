@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "NetFishers",
-	version: "1.2"
+	version: "1.4"
 };
 
 var Config = {
@@ -154,7 +154,7 @@ var CLI = {
 };
 
 
-function snapshot(cli, device, config) {
+function snapshot(cli, device, config, debug) {
 	
 	var configCleanup = function(config) {
 		var p = config.search(/^[a-z]/m);
@@ -180,10 +180,14 @@ function snapshot(cli, device, config) {
 	
 	var showVersion = cli.command("show version");
 	var showInventory = cli.command("admin show inventory");
-	var showInstall = cli.command("admin show install summary");
+	showInventory += cli.command("show inventory");
+	var showInstall = cli.command("admin show install active");
 	
-	var hostname = showVersion.match(/^ *(.*) uptime is/m);
-	if (hostname != null) {
+	var hostname = runningConfig.match(/^hostname (.+)/m);
+	if (!hostname) {
+		hostname = showVersion.match(/^ *(.*) uptime is/m);
+	}
+	if (hostname) {
 		device.set("name", hostname[1]);
 	}
 	device.set("networkClass", "ROUTER");
@@ -194,9 +198,9 @@ function snapshot(cli, device, config) {
 		config.set("xrVersion", version[2]);
 	}
 	
-	var versionDetails = showVersion.match(/^(.*) with (\d+)K(\/(\d+)K)? bytes of memory/m);
 	device.set("family", "IOS-XR device");
-	if (versionDetails != null) {
+	var versionDetails = showVersion.match(/^(.*) with (\d+)K(\/(\d+)K)? bytes of memory/m);
+	if (versionDetails) {
 		var system = versionDetails[1];
 		if (system.match(/cisco 12\d\d\d.*/)) {
 			device.set("family", "Cisco 12000 Series");
@@ -229,17 +233,47 @@ function snapshot(cli, device, config) {
 		device.set("contact", "");
 	}
 	
-	var inventoryPattern = /NAME: \"(.*)\", +DESCR: \"(.*)\"[\r\n]+PID: (.*?) *, +VID: (.*), +SN: (.*)/g;
+	var removeQuotes = function(info) {
+		var match = info.match(/^\"(.*)\"$/);
+		if (match) {
+			info = match[1];
+		}
+		info = info.trim();
+		return info;
+	};
+	var inventoryPattern = /NAME: (.*), +DESCR: (.*)[\r\n]+PID: (.*?) *, +VID: (.*), +SN: (.*)/g;
 	var match;
+	var knownModules = [];
 	while (match = inventoryPattern.exec(showInventory)) {
 		var module = {
-			slot: match[1],
-			partNumber: match[3],
-			serialNumber: match[5]
+			slot: removeQuotes(match[1]),
+			partNumber: removeQuotes(match[3]),
+			serialNumber: removeQuotes(match[5])
 		};
+		var existing = false;
+		for (var m in knownModules) {
+			if (module.slot === knownModules[m].slot &&
+			    module.partNumber === knownModules[m].partNumber &&
+			    module.serialNumber === knownModules[m].serialNumber) {
+				existing = true;
+				break;
+			}
+		}
+		if (existing) {
+			continue;
+		}
 		device.add("module", module);
 		if (module.slot.match(/Chassis/)) {
 			device.set("serialNumber", module.serialNumber);
+			if (module.slot.match(/NCS55[0-9A-Z][0-9A-Z]/)) {
+				device.set("family", "Cisco NCS5500");
+			}
+			else if (module.slot.match(/NCS5[0-9A-Z][0-9A-Z][0-9A-Z]/)) {
+				device.set("family", "Cisco NCS5000");
+			}
+			else if (module.slot.match(/NCS6[0-9A-Z][0-9A-Z][0-9A-Z]/)) {
+				device.set("family", "Cisco NCS6000");
+			}
 		}
 	}
 	
@@ -273,11 +307,11 @@ function snapshot(cli, device, config) {
 			var ipv6Match;
 			while (ipv6Match = ipv6Pattern.exec(fhrpIntConfig[i].config)) {
 				var ip = {
-					ipv6: ipMatch[2],
+					ipv6: ipv6Match[2],
 					mask: 128,
 					usage: usage
 				};
-				if (ipMatch[2] == " secondary") {
+				if (ipv6Match[2] == " secondary") {
 					ip.usage = "SECONDARY" + ip.usage;
 				}
 				fhrpAddresses[intName].push(ip);

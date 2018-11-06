@@ -69,10 +69,11 @@ import onl.netfishers.netshot.device.credentials.DeviceSnmpv2cCommunity;
 import onl.netfishers.netshot.device.credentials.DeviceSshAccount;
 import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
 import onl.netfishers.netshot.device.credentials.DeviceTelnetAccount;
+import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.tasks.DeviceJsScript;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -84,6 +85,8 @@ import org.hibernate.cfg.ImprovedNamingStrategy;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
+import org.jasypt.hibernate4.encryptor.HibernatePBEEncryptorRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -232,6 +235,15 @@ public class Database {
 				.setProperty("hibernate.c3p0.unreturnedConnectionTimeout", "1800")
 				.setProperty("hibernate.c3p0.debugUnreturnedConnectionStackTraces", "true");
 
+			
+			StandardPBEStringEncryptor credentialEncryptor = new StandardPBEStringEncryptor();
+			String cryptPassword = Netshot.getConfig("netshot.db.encryptionpassword", null);
+			if (cryptPassword == null) {
+				cryptPassword = Netshot.getConfig("netshot.db.encryptionPassword", "NETSHOT"); // Historical reasons
+			}
+			credentialEncryptor.setPassword(cryptPassword);
+			HibernatePBEEncryptorRegistry encryptorRegistry = HibernatePBEEncryptorRegistry.getInstance();
+			encryptorRegistry.registerPBEStringEncryptor("credentialEncryptor", credentialEncryptor);
 
 			configuration
 				.setProperty("factory_class",
@@ -266,7 +278,7 @@ public class Database {
 				.addAnnotatedClass(DeviceSshKeyAccount.class)
 				.addAnnotatedClass(DeviceTelnetAccount.class)
 				.addAnnotatedClass(Policy.class).addAnnotatedClass(Rule.class)
-				.addAnnotatedClass(Task.class)
+				.addAnnotatedClass(Task.class).addAnnotatedClass(DebugLog.class)
 				.addAnnotatedClass(Exemption.class)
 				.addAnnotatedClass(Exemption.Key.class)
 				.addAnnotatedClass(CheckResult.class)

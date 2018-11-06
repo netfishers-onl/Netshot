@@ -19,9 +19,9 @@
 
 var Info = {
 	name: "CiscoNXOS",
-	description: "Cisco NX-OS 5.x/6.x",
+	description: "Cisco NX-OS 5+",
 	author: "NetFishers",
-	version: "1.4"
+	version: "1.8.1"
 };
 
 var Config = {
@@ -55,6 +55,17 @@ var Config = {
 		dump: {
 			pre: "!! Running configuration (taken on %when%):",
 			post: "!! End of running configuration"
+		}
+	},
+	"nxosLicense": {
+		type: "LongText",
+		title: "License",
+		comparable: true,
+		searchable: false,
+		checkable: true,
+		dump: {
+			pre: "!! NX-OS license(s):",
+			preLine: "!! "
 		}
 	}
 };
@@ -170,17 +181,13 @@ function snapshot(cli, device, config) {
 	cli.macro("exec");
 	var showVersion = cli.command("show version");
 	
-	var hostname = showVersion.match(/Device name: *(.*)/m);
-	if (hostname) {
-		device.set("name", hostname[1]);
-	}
 	var image = showVersion.match(/kickstart image file is: *(.*)/m);
 	if (image) {
 		config.set("kickstartImageFile", image[1]);
 	}
-	var image = showVersion.match(/system image file is: *(.*)/m);
+	var image = showVersion.match(/(NXOS|system) image file is: *(.*)/m);
 	if (image) {
-		config.set("systemImageFile", image[1]);
+		config.set("systemImageFile", image[2]);
 	}
 	var memory = showVersion.match(/with (\d+) kB of memory/m);
 	if (memory) {
@@ -196,17 +203,17 @@ function snapshot(cli, device, config) {
 	}
 	device.set("networkClass", "SWITCH");
 	device.set("family", "Unknown NX-OS device");
-	var chassis = showVersion.match(/cisco (.*?)( \(.*\))? Chassis/m);
+	var chassis = showVersion.match(/cisco (.*?)( \(.*\))? [cC]hassis/m);
 	if (chassis) {
 		var chassis = chassis[1];
 		chassis = chassis.replace(/(Nexus)([0-9].*)/, "$1 $2");
 		device.set("family", chassis);
 	}
 	
-	var version = showVersion.match(/system: *version (.*)/m);
+	var version = showVersion.match(/(system|NXOS): *version (.*)/m);
 	if (version) {
-		device.set("softwareVersion", version[1]);
-		config.set("nxosVersion", version[1]);
+		device.set("softwareVersion", version[2]);
+		config.set("nxosVersion", version[2]);
 	}
 	
 	var showInventory = cli.command("show inventory");
@@ -224,6 +231,15 @@ function snapshot(cli, device, config) {
 		}
 	}
 	
+	var license = "";
+	try {
+		license += cli.command("show license usage");
+		license += cli.command("show license");
+	}
+	catch (error) {
+	}
+	config.set("nxosLicense", license);
+	
 	var configCleanup = function(config) {
 		var p = config.search(/^[a-z]/m);
 		if (p > 0) {
@@ -234,14 +250,34 @@ function snapshot(cli, device, config) {
 	};
 	
 	
-	var runningConfig = cli.command("show running-config vdc-all");
-
+	var runningConfig;
+	try {
+		runningConfig = cli.command("show running-config vdc-all");
+		if (runningConfig.match(/vdc_is_active failed/)) {
+			throw "Nexus 4000 error";
+		}
+	}
+	catch (error) {
+		runningConfig = cli.command("show running-config");
+	}
 	runningConfig = configCleanup(runningConfig);
 	config.set("runningConfig", runningConfig);
 	
-	var startupConfig = cli.command("show startup-config vdc-all");
+	var startupConfig;
+	try {
+		startupConfig = cli.command("show startup-config vdc-all");
+	}
+	catch (error) {
+		startupConfig = cli.command("show startup-config");
+	}
 	startupConfig = configCleanup(startupConfig);
 	device.set("configurationSaved", startupConfig == runningConfig);
+	
+	
+	var hostname = runningConfig.match(/^hostname (.+)$/m);
+	if (hostname) {
+		device.set("name", hostname[1]);
+	}
 	
 	var vdcConfigs = runningConfig.split(/[\r\n]+\!Running config for vdc: .*[\r\n]+/);
 	for (var v in vdcConfigs) {

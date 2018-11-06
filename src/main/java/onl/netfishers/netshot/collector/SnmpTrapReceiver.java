@@ -194,7 +194,8 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 				}
 			}
 			else {
-				logger.warn("Invalid community {} received from {}.", community, event.getPeerAddress());
+				logger.warn("Invalid community {} (vs {}) received from {}.", community,
+						this.community, event.getPeerAddress());
 			}
 
 		}

@@ -21,7 +21,7 @@ var Info = {
 	name: "AvayaERS",
 	description: "Avaya ERS",
 	author: "NetFishers",
-	version: "0.4.3"
+	version: "0.4.4"
 };
 
 var Config = {
@@ -98,6 +98,15 @@ var CLI = {
 			auto: {
 				cmd: String.fromCharCode(0x19),
 				noCr: true,
+				options: [ "username", "disable", "enable", "enter" ]
+			}
+		}
+	},
+	enter: {
+		prompt: /Press ENTER to continue/,
+		macros: {
+			auto: {
+				cmd: "",
 				options: [ "username", "disable", "enable" ]
 			}
 		}

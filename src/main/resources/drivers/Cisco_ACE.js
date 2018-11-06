@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoACE",
 	description: "Cisco ACE",
 	author: "NetFishers",
-	version: "1.4"
+	version: "1.5.1"
 };
 
 var Config = {
@@ -53,7 +53,18 @@ var Config = {
 			pre: "!! Running configuration (taken on %when%):",
 			post: "!! End of running configuration"
 		}
-	}
+	},
+	"aceLicense": {
+		type: "LongText",
+		title: "Software Licenses",
+		comparable: true,
+		searchable: false,
+		checkable: true,
+		dump: {
+			pre: "!! ACE Software Licenses:",
+			preLine: "!! "
+		}
+	},
 };
 
 var Device = {
@@ -181,6 +192,15 @@ function snapshot(cli, device, config, debug) {
 			device.set("serialNumber", module.serialNumber);
 		}
 	}
+	
+	var license = "";
+	try {
+		license += cli.command("show license usage");
+		license += cli.command("show license");
+	}
+	catch (error) {
+	}
+	config.set("aceLicense", license);
 
 
 	var configCleanup = function(config) {

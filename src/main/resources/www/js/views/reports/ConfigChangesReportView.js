@@ -149,6 +149,8 @@ define([
 		renderLastDayChangesChart: function() {
 			var days = [];
 			var changeCounts = [];
+			var colors = [];
+			var borderColors = [];
 			var today = new Date();
 			today.setHours(0);
 			today.setMinutes(0);
@@ -160,7 +162,7 @@ define([
 				var changeCountDay = this.lastDayChanges.findWhere({
 					changeDay: day.getTime()
 				});
-				var changeCount = (typeof (changeCountDay) == "object"
+				var changeCount = (typeof changeCountDay === "object" && changeCountDay
 						? changeCountDay.get('changeCount') : 0);
 				if (changeCount > changeMax) {
 					changeMax = changeCount;
@@ -168,24 +170,32 @@ define([
 				days.push($.formatDateTime('dd/mm', day));
 				changeCounts.push(changeCount);
 			}
-			var ctx = $("#chart-lastdaychanges").get(0).getContext("2d");
 			var data = {
 				labels: days,
-				datasets: [
-				           {
-				          	 fillColor: "rgba(220,220,220,0.5)",
-				          	 strokeColor: "rgba(220,220,220,1)",
-				          	 data: changeCounts
-				           }
-				           ]
+				datasets: [{
+					label: "Changes per day",
+					backgroundColor: "rgba(220, 220,220, 0.5)",
+					borderColor: "rgba(220, 220, 220, 1)",
+					data: changeCounts,
+					borderWidth: 2
+				}]
 			};
-			var options = {
-				scaleOverride: true,
-				scaleStepWidth: Math.round(1 + (changeMax + 1) / 5),
-				scaleSteps: 5,
-				scaleStartValue: 0
-			};
-			new Chart(ctx).Bar(data, options);
+			new Chart($("#chart-lastdaychanges"), {
+				data: data,
+				type: "bar",
+				options: {
+					responsive: false,
+					scales: {
+						yAxes: [{
+							ticks: {
+								min: 0,
+								maxTicksLimit: 5,
+								suggestedMax: changeMax * 1.2
+							}
+						}]
+					}
+				}
+			});
 		},
 
 		destroy: function() {

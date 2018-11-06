@@ -25,14 +25,14 @@ define([
 			var that = this;
 			var fullAttributes = [];
 			var data = this.device.toJSON();
-			if (typeof(this.deviceType) == "object" && data.attributes instanceof Array) {
+			if (typeof this.deviceType == "object" && this.deviceType && data.attributes instanceof Array) {
 				var definitions = _.where(this.deviceType.get("attributes"), { level: "DEVICE" });
 				var attributes = _.indexBy(data.attributes, "name");
 				for (var d in definitions) {
 					var name = definitions[d].name;
 					var attribute = attributes[name];
-					if (typeof(attribute) != "object") { attribute = {}; }
-					fullAttributes.push(_.extend(definitions[d], attribute));
+					if (typeof attribute !== "object" || !attribute) { attribute = {}; }
+					fullAttributes.push(_.extend({}, definitions[d], attribute));
 				}
 			}
 			data.attributes = fullAttributes;

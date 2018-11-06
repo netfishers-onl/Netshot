@@ -22,6 +22,8 @@ import javax.persistence.Entity;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.hibernate.annotations.Type;
+
 /**
  * A CLI account.
  */
@@ -86,6 +88,7 @@ public abstract class DeviceCliAccount extends DeviceCredentialSet {
 	 * @return the password
 	 */
 	@XmlElement
+	@Type(type = "credentialString")
 	public String getPassword() {
 		return password;
 	}
@@ -105,6 +108,7 @@ public abstract class DeviceCliAccount extends DeviceCredentialSet {
 	 * @return the super password
 	 */
 	@XmlElement
+	@Type(type = "credentialString")
 	public String getSuperPassword() {
 		return superPassword;
 	}

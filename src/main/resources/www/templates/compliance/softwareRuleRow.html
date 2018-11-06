@@ -1,8 +1,9 @@
 <tr data-rule-id="<%- id %>" class="rulerow">
 	<td><%- order + 1 %></td>
-	<td><% if (typeof(targetGroup) == "object") { %><%- targetGroup.name %><% } else { %>[Any]<% } %></td>
-	<td><% if (driver == "") { %>[Any]<% } else { %><%- deviceType %><% } %></td>
+	<td><% if (typeof targetGroup === "object" && targetGroup) { %><%- targetGroup.name %><% } else { %>[Any]<% } %></td>
+	<td><% if (driver) { %><%- deviceType %><% } else { %>[Any]<% } %></td>
 	<td><%- family %></td>
+	<td><%- partNumber %></td>
 	<td><%- version %></td>
 	<td class="<%- level.toLowerCase() %>"><%- level %></td>
 	<td>

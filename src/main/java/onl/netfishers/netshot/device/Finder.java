@@ -92,6 +92,12 @@ public class Finder {
 
 		/** The greaterthan. */
 		GREATERTHAN("(?i)^\\s*(greaterthan)\\b", "GREATERTHAN"),
+		
+		/** True. */
+		TRUE("(?i)^\\s*(true)\\b", "TRUE"),
+		
+		/** False. */
+		FALSE("(?i)^\\s*(false)\\b", "FALSE"),
 
 		/** The ip. */
 		IP("(?i)^\\s*(\\[ip\\])", "IP"),
@@ -113,43 +119,40 @@ public class Finder {
 
 		/** The device. */
 		DEVICE("(?i)^\\s*(\\[device\\])", "DEVICE"),
+		
+		/** The domain token/ */
+		DOMAIN("(?i)^\\s*(\\[domain\\])", "DOMAIN"),
 
 		/** The SUBNET v4. */
-		SUBNETV4(
-				"^\\s*(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/(1[0-9]|2[0-9]|3[0-2]|[0-9]))",
+		SUBNETV4("^\\s*(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)/(1[0-9]|2[0-9]|3[0-2]|[0-9]))", ""),
+
+		/** The IP v4. */
+		IPV4("^\\s*(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))", ""),
+
+		/** The SUBNET v6. */
+		SUBNETV6(
+				"^\\s*(((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))/(1[01][0-9]|12[0-8]|[0-9][0-9]|[0-9]))",
 				""),
 
-				/** The IP v4. */
-				IPV4(
-						"^\\s*(((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))",
-						""),
+		/** The IP v6. */
+		IPV6(
+				"^\\s*((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))",
+				""),
 
-						/** The SUBNET v6. */
-						SUBNETV6(
-								"^\\s*(((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))/(1[01][0-9]|12[0-8]|[0-9][0-9]|[0-9]))",
-								""),
+		/** The macsubnet. */
+		MACSUBNET("^\\s*([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}/(4[0-8]|[1-3][0-9]|[0-9]))", ""),
 
-								/** The IP v6. */
-								IPV6(
-										"^\\s*((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))",
-										""),
+		/** The macaddress. */
+		MACADDRESS("^\\s*([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4})", ""),
 
-										/** The macsubnet. */
-										MACSUBNET(
-												"^\\s*([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}/(4[0-8]|[1-3][0-9]|[0-9]))",
-												""),
+		/** The quote. */
+		QUOTE("^\\s*\"(.*?)(?<!\\\\)\"", ""),
 
-												/** The macaddress. */
-												MACADDRESS("^\\s*([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4})", ""),
+		/** The numeric. */
+		NUMERIC("^\\s*([0-9\\.]+)\\b", ""),
 
-												/** The quote. */
-												QUOTE("^\\s*\"(.*?)(?<!\\\\)\"", ""),
-
-												/** The numeric. */
-												NUMERIC("^\\s*([0-9\\.]+)\\b", ""),
-
-												/** The item. */
-												ITEM("^\\s*\\[([A-Za-z\\-0-9 \\(\\)]+)\\]", "");
+		/** The item. */
+		ITEM("^\\s*\\[([A-Za-z\\-0-9 \\(\\)]+)\\]", "");
 
 		/** The pattern. */
 		private Pattern pattern;
@@ -397,6 +400,11 @@ public class Finder {
 				return expr;
 			}
 
+			expr = DomainExpression.parse(tokens, driver);
+			if (expr != null) {
+				return expr;
+			}
+
 			expr = Ipv4Expression.parse(tokens, driver);
 			if (expr != null) {
 				return expr;
@@ -571,6 +579,8 @@ public class Finder {
 				}
 				criteria.where += childCriteria.where;
 				criteria.joins.addAll(childCriteria.joins);
+				criteria.otherTables.addAll(childCriteria.otherTables);
+				criteria.whereJoins.addAll(childCriteria.whereJoins);
 				i++;
 			}
 			criteria.where += ")";
@@ -678,6 +688,8 @@ public class Finder {
 				}
 				criteria.where += childCriteria.where;
 				criteria.joins.addAll(childCriteria.joins);
+				criteria.otherTables.addAll(childCriteria.otherTables);
+				criteria.whereJoins.addAll(childCriteria.whereJoins);
 				i++;
 			}
 			criteria.where += ")";
@@ -1012,6 +1024,80 @@ public class Finder {
 		@Override
 		public String toString() {
 			return String.format("[%s] %s %d", TokenType.DEVICE, TokenType.IS, this.value);
+		}
+
+	}
+
+	/**
+	 * The Class DomainExpress. Matches a device domain.
+	 */
+	public static class DomainExpression extends Expression {
+
+		/**
+		 * Instantiates a new domain expression.
+		 *
+		 * @param driver the device class
+		 */
+		public DomainExpression(DeviceDriver driver) {
+			super(driver);
+		}
+
+		/** The value. */
+		private Long value;
+
+		/**
+		 * Parses the expression.
+		 *
+		 * @param tokens the tokens
+		 * @param driver the device class
+		 * @return the expression
+		 * @throws FinderParseException the finder parse exception
+		 */
+		public static Expression parse(List<Token> tokens,
+				DeviceDriver driver) throws FinderParseException {
+			if (tokens.size() == 3 && tokens.get(0).type == TokenType.DOMAIN) {
+				Token comparator = tokens.get(1);
+				Token value = tokens.get(2);
+				if (comparator.type != TokenType.IS) {
+					throw new FinderParseException(String.format(
+							"Invalid operator after DOMAIN at character %d.",
+							comparator.position));
+				}
+				if (value.type != TokenType.NUMERIC) {
+					throw new FinderParseException(String.format(
+							"Expecting a numeric value for DOMAIN at character %d.",
+							value.position));
+				}
+				DomainExpression domExpr = new DomainExpression(driver);
+				domExpr.value = Long.parseLong(value.text);
+				return domExpr;
+			}
+			return null;
+		}
+
+		/* (non-Javadoc)
+		 * @see onl.netfishers.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
+		 */
+		public FinderCriteria buildHqlString(String itemPrefix) {
+			FinderCriteria criteria = super.buildHqlString(itemPrefix);
+			criteria.where = String.format("d.mgmtDomain.id = :%s", itemPrefix);
+			return criteria;
+		}
+
+		/* (non-Javadoc)
+		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
+		 */
+		public void setVariables(Query query, String itemPrefix) {
+			super.setVariables(query, itemPrefix);
+			query.setLong(itemPrefix, value);
+		}
+
+		/* (non-Javadoc)
+		 * @see onl.netfishers.netshot.device.Finder.Expression#toString()
+		 */
+		@Override
+		public String toString() {
+			return String.format("[%s] %s %d", TokenType.DOMAIN, TokenType.IS, this.value);
 		}
 
 	}
@@ -1538,13 +1624,13 @@ public class Finder {
 		 *
 		 * @return the property name
 		 */
-		public String buildWhere(String valueName, String operator, String value) {
+		public String buildWhere(String valueName, String operator, String itemPrefix) {
 			if (propertyLevel.nativeProperty) {
-				return propertyLevel.prefix + property + " " + operator + " " + value;
+				return propertyLevel.prefix + property + " " + operator + " :" + itemPrefix;
 			}
 			else {
-				return propertyLevel.prefix + "name = '" + property + "' and " +
-						propertyLevel.prefix + valueName + " " + operator + " " + value;
+				return itemPrefix + "_" + propertyLevel.prefix + valueName + " " + operator
+						+ " :" + itemPrefix;
 			}
 		}
 
@@ -1651,13 +1737,16 @@ public class Finder {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			switch (this.propertyLevel) {
 			case CONFIGATTRIBUTE:
-				criteria.joins.add("c.attributes ca");
+				criteria.joins.add(String.format("c.attributes %s_ca with %s_ca.name = :%s_name",
+						itemPrefix, itemPrefix, itemPrefix));
 			case CONFIG:
 				criteria.whereJoins.add("d.lastConfig = c");
 				criteria.otherTables.add("Config c");
 				break;
 			case DEVICEATTRIBUTE:
-				criteria.joins.add("d.attributes da");
+				criteria.joins.add(String.format("d.attributes %s_da with %s_da.name = :%s_name",
+						itemPrefix, itemPrefix, itemPrefix));
+				
 			default:
 				break;
 			}
@@ -1666,6 +1755,9 @@ public class Finder {
 		
 		public void setVariables(Query query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
+			if (!propertyLevel.nativeProperty) {
+				query.setString(itemPrefix + "_name", property);
+			}
 		}
 	}
 
@@ -1704,13 +1796,13 @@ public class Finder {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			switch (sign) {
 			case GREATERTHAN:
-				criteria.where = this.buildWhere("number", ">", ":" + itemPrefix);
+				criteria.where = this.buildWhere("number", ">", itemPrefix);
 				break;
 			case LESSTHAN:
-				criteria.where = this.buildWhere("number", "<", ":" + itemPrefix);
+				criteria.where = this.buildWhere("number", "<", itemPrefix);
 				break;
 			default:
-				criteria.where = this.buildWhere("number", "=", ":" + itemPrefix);
+				criteria.where = this.buildWhere("number", "=", itemPrefix);
 				break;
 			}
 			return criteria;
@@ -1817,7 +1909,7 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
-			criteria.where = this.buildWhere("choice", "=", ":" + itemPrefix);
+			criteria.where = this.buildWhere("choice", "=", itemPrefix);
 			return criteria;
 		}
 
@@ -1920,7 +2012,7 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
-			criteria.where = this.buildWhere(longText ? "longText.text" : "text", "like", ":" + itemPrefix);
+			criteria.where = this.buildWhere(longText ? "longText.text" : "text", "like", itemPrefix);
 			return criteria;
 		}
 
@@ -2070,14 +2162,14 @@ public class Finder {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			switch (sign) {
 			case AFTER:
-				criteria.where = this.buildWhere("when", ">=", ":" + itemPrefix);
+				criteria.where = this.buildWhere("when", ">=", itemPrefix);
 				break;
 			case BEFORE:
-				criteria.where = this.buildWhere("when", "<=", ":" + itemPrefix);
+				criteria.where = this.buildWhere("when", "<=", itemPrefix);
 				break;
 			default:
-				criteria.where = "(" + this.buildWhere("when", ">=", ":" + itemPrefix + "_1") + " and "
-						+ this.buildWhere("when", "<=", ":" + itemPrefix + "_2") + ")";
+				criteria.where = "(" + this.buildWhere("when", ">=", itemPrefix + "_1") + " and "
+						+ this.buildWhere("when", "<=", itemPrefix + "_2") + ")";
 			}
 			return criteria;
 		}
@@ -2190,6 +2282,8 @@ public class Finder {
 	 * The Class BinaryAttributeExpression.
 	 */
 	public static class BinaryAttributeExpression extends AttributeExpression {
+		
+		private boolean value;
 
 		/**
 		 * Instantiates a new binary config item expression.
@@ -2202,20 +2296,14 @@ public class Finder {
 		public BinaryAttributeExpression(DeviceDriver driver,
 				String item, String property, PropertyLevel propertyLevel) {
 			super(driver, item, property, propertyLevel);
+			this.sign = TokenType.IS;
 		}
 
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.AttributeExpression#getTextValue()
 		 */
 		protected String getTextValue() {
-			return null;
-		}
-
-		/* (non-Javadoc)
-		 * @see onl.netfishers.netshot.device.Finder.AttributeExpression#toString()
-		 */
-		public String toString() {
-			return String.format("[%s]", item);
+			return value ? "TRUE" : "FALSE";
 		}
 
 		/* (non-Javadoc)
@@ -2223,7 +2311,7 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
-			criteria.where = this.buildWhere("assumption", "=", "1");
+			criteria.where = this.buildWhere("assumption", "is", itemPrefix);
 			return criteria;
 		}
 
@@ -2232,6 +2320,7 @@ public class Finder {
 		 */
 		public void setVariables(Query query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
+			query.setBoolean(itemPrefix, this.value);
 		}
 
 		public static Expression parse(List<Token> tokens,
@@ -2258,13 +2347,31 @@ public class Finder {
 			if (item == null) {
 				return null;
 			}
-			if (tokens.size() > 1) {
+			if (tokens.size() != 3) {
 				throw new FinderParseException(String.format(
-						"Invalid token following binary item at character %d.",
-						tokens.get(1).position));
+						"Incomplete or incorrect expression after enum item at character %d.",
+						tokens.get(0).position));
+			}
+			Token sign = tokens.get(1);
+			Token value = tokens.get(2);
+			if (sign.type != TokenType.IS) {
+				throw new FinderParseException(String.format(
+						"Parsing error, invalid operator at position %d, should be 'IS'.",
+						sign.position));
 			}
 			BinaryAttributeExpression binExpr =
 					new BinaryAttributeExpression(driver, item, property, level);
+			if (value.type == TokenType.TRUE) {
+				binExpr.value = true;
+			}
+			else if (value.type == TokenType.FALSE) {
+				binExpr.value = false;
+			}
+			else {
+				throw new FinderParseException(String.format(
+						"Parsing error, invalid operator at position %d, should be 'TRUE' or 'FALSE'.",
+						value.position));
+			}
 			return binExpr;
 		}
 	}

@@ -149,7 +149,7 @@ public class RunDeviceGroupScriptTask extends Task {
 		return task;
 	}
 
-	@Column(length = 100000000)
+	@Column(length = 10000000)
 	public String getScript() {
 		return script;
 	}

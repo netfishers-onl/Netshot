@@ -89,6 +89,12 @@ to the device.</li>
 <li>Once the type of device is discovered (either manually or by SNMP polling), the proper driver is assigned,
 and Netshot will start a <em>Snapshot</em> task, to capture information about the device (including the current
 configuration).</li>
+<li>If you check the <em>Override connection settings</em> box and enter an IP address, an SSH or a Telnet TCP port,
+these settings will be used to connect to the device rather than the primary management address. This allows for 
+connection through a port redirection proxy for example.</li>
+<li>By default, Netshot will try and use the globally defined <a href="#credentials">credential sets</a>. Starting
+with Netshot 0.7.0, you can provide device-specific credentials by selecting <em>Specific SSH account</em>,
+<em>Specific SSH Key</em> or <em>Specific Telnet account</em>.</li>
 </ul>
 
 <p>To add a bunch of devices:</p>
@@ -221,10 +227,16 @@ snapshots.</li>
 <li><em>IP address</em>: the management IP address of the device, used by Netshot to access it.
 You can change it if for some reason Netshot should use another IP address to administrate the device.</li>
 <li><em>Domain</em>: the <a href="#devicedomain">management domain</a> the device belongs to.</li>
-<li>You can select which credential set(s) should be used to access the device. If the </li>
+<li>You can select which credential set(s) should be used to access the device. If several sets are
+selected, they will be tried in turn until one works.</li>
 <li><em>In case of failure, also try all known credentials</em>: if you check this box, and Netshot
 can't connect to the device using the selected credential set(s), other ones will automatically
 be tried in turn, if they are associated with the same management domain or with no domain at all.</li>
+<li><em>Override connection settings</em>: check this box and fill any of <em>IP</em>, <em>SSH port</em> or
+<em>Telnet port</em> to force Netshot to connect to the device via an alternate IP or port.</li>
+<li><em>Specific SSH account</em>, <em>Specific SSH key</em> and <em>Specific Telnet account</em>: select one of
+these options, and fill in the corresponding text boxes, to provide specific credentials for this device
+(instead of using the globally defined credential sets).</li>
 <li>You can store some free-form text in the <em>Comments</em> box.</li>
 </ul>
 
@@ -438,6 +450,10 @@ then click on the <em>+</em>.</p>
 <li>In <em>Device family</em>, enter a string to be found in the device family. If you check the
 <em>RegExp</em> box, the string will be interpreted as a regular expression, for more
 flexibility.</li>
+<li>If you want to define your software versions based on precise hardware part numbers, you
+can use the <em>Part number</em> field to restrict the match to devices containing this piece of
+hardware. If you check the <em>RegExp</em> box, the string will be interpreted as a regular
+expression.</li>
 <li>In <em>Version</em>, enter a string to be found in the software version field of the device.
 If you check the <em>RegExp</em> box, the string will be interpreted as a regular expression,
 for more flexibility.</li>
@@ -755,6 +771,16 @@ the new parameters are taken into account.</p>
 	<li><span class="code">netshot.log.class.<i>ClassName</i> = DEBUG</span>:
 	sets the log level of a specific class ClassName to a custom level. This
 	obviously requires some knowledge of the Netshot internal code.</li>
+	<li><span class="code">netshot.log.audit.file = /var/log/netshot/audit.log</span>:
+	enables logging of audit-related messages (authentication, authorization) to the given
+	file. Setting the audit level to something like INFO is also required.</li>
+	<li><span class="code">netshot.log.audit.level = INFO</span>:
+	sets the logging level of audit-related messages.</li>
+	<li><span class="code">netshot.log.syslog1.host = 10.0.16.16</span>:
+	enables remote logging (syslog) to the specified host. Increment the number,
+	e.g. syslog2, syslog3, etc. to configure several syslog destinations.</li>
+	<li><span class="code">netshot.log.syslog1.facility = LOCAL7</span>:
+	sets the Syslog facility to use for the syslog server.</li>
 </ul>
 
 <h4>Database configuration</h4>

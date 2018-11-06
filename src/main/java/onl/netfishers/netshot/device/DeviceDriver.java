@@ -30,11 +30,14 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
@@ -61,6 +64,7 @@ import onl.netfishers.netshot.device.Device.InvalidCredentialsException;
 import onl.netfishers.netshot.device.Device.NetworkClass;
 import onl.netfishers.netshot.device.NetworkAddress.AddressUsage;
 import onl.netfishers.netshot.device.access.Cli;
+import onl.netfishers.netshot.device.access.Cli.WithBufferIOException;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigBinaryAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigLongTextAttribute;
@@ -73,6 +77,7 @@ import onl.netfishers.netshot.device.attribute.DeviceTextAttribute;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
 import onl.netfishers.netshot.work.Task;
 
+import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -705,10 +710,30 @@ public class DeviceDriver {
 		private Cli cli;
 		private DeviceCliAccount account;
 		private boolean errored = false;
-
+		private boolean debugSession = false;
+		
+		private static String toHexAscii(String text) {
+			StringBuffer hex = new StringBuffer();
+			for (int i = 0; i < text.length(); i++) {
+				if (i % 16 == 0 && i > 0) {
+					hex.append("\n");
+				}
+				hex.append(" ").append(String.format("%02x", (int) text.charAt(i)));
+			}
+			return hex.toString();
+		}
+		
+		/** The log. */
+		protected transient List<String> log  = new ArrayList<String>();
+		
 		private JsCli(Cli cli, DeviceCliAccount account) {
 			this.cli = cli;
 			this.account = account;
+		}
+
+		private JsCli(Cli cli, DeviceCliAccount account, boolean debugSession) {
+			this(cli, account);
+			this.debugSession = debugSession;
 		}
 		
 		public String removeEcho(String text, String command) {
@@ -729,14 +754,16 @@ public class DeviceDriver {
 			if (command == null) {
 				command = "";
 			}
-			else {
-				command = command.replaceAll("\\$\\$NetshotUsername\\$\\$",
-						Matcher.quoteReplacement(account.getUsername()));
-				command = command.replaceAll("\\$\\$NetshotPassword\\$\\$",
-						Matcher.quoteReplacement(account.getPassword()));
-				command = command.replaceAll("\\$\\$NetshotSuperPassword\\$\\$",
-						Matcher.quoteReplacement(account.getSuperPassword()));
+			if (this.debugSession) {
+				this.logIt("About to send the following command: '" + command + "'");
+				this.logIt("In hex: " + toHexAscii(command));
 			}
+			command = command.replaceAll("\\$\\$NetshotUsername\\$\\$",
+					Matcher.quoteReplacement(account.getUsername()));
+			command = command.replaceAll("\\$\\$NetshotPassword\\$\\$",
+					Matcher.quoteReplacement(account.getPassword()));
+			command = command.replaceAll("\\$\\$NetshotSuperPassword\\$\\$",
+					Matcher.quoteReplacement(account.getSuperPassword()));
 			int oldTimeout = cli.getCommandTimeout();
 			if (timeout > 0) {
 				cli.setCommandTimeout(timeout);
@@ -744,10 +771,20 @@ public class DeviceDriver {
 			try {
 				logger.debug("Command to be sent: '{}'.", command);
 				String result = cli.send(command, expects);
+				if (this.debugSession) {
+					this.logIt("Received the following output: '" + result + "'");
+					this.logIt("In hex: " + toHexAscii(result));
+				}
 				return result;
 			}
 			catch (IOException e) {
 				logger.error("CLI I/O error.", e);
+				this.logIt("I/O error: " + e.getMessage());
+				if (this.debugSession && e instanceof WithBufferIOException) {
+					String buffer = ((WithBufferIOException) e).getReceivedBuffer().toString();
+					this.logIt("Received buffer: '" + buffer + "'");
+					this.logIt("In hex: " + toHexAscii(buffer));
+				}
 				this.errored = true;
 			}
 			finally {
@@ -800,6 +837,14 @@ public class DeviceDriver {
 		
 		public void log() {
 			
+		}
+		
+		protected void logIt(String log) {
+			this.log.add(Instant.now() + " [CLI] " + log);
+		}
+		
+		public List<String> getLog() {
+			return log;
 		}
 
 	}
@@ -1104,12 +1149,14 @@ public class DeviceDriver {
 	}
 
 	private void cliRunFunction(Device device, Config config, Cli cli, DriverProtocol protocol,
-			String function, DeviceCliAccount account)
+			String function, DeviceCliAccount account, boolean debugSession)
 					throws InvalidCredentialsException, IOException, ScriptException {
+		Session session = Database.getSession();
+		DeviceDataProvider dataProvider = new DeviceDataProvider(session, device);
+		JsCli jsCli = new JsCli(cli, account, debugSession);
 		try {
-			JsCli jsCli = new JsCli(cli, account);
 			((Invocable) engine).invokeFunction("_connect", jsCli, protocol.value(), function,
-					new JsDevice(device), new JsConfig(config));
+					new JsDevice(device), new JsConfig(config), dataProvider);
 		}
 		catch (ScriptException e) {
 			logger.error("Error while running function {} using driver {}.", function, name, e);
@@ -1128,6 +1175,10 @@ public class DeviceDriver {
 					function, name, e.getMessage()), 1);
 			throw new ScriptException(e);
 		}
+		finally {
+			device.sessionDebugLog = jsCli.log;
+			session.close();
+		}
 	}
 
 	@XmlElement
@@ -1136,17 +1187,17 @@ public class DeviceDriver {
 	}
 	
 	public void runScript(Device device, Cli cli, DriverProtocol protocol,
-			DeviceCliAccount account, String script) throws InvalidCredentialsException, IOException, ScriptException {
+			DeviceCliAccount account, String script, boolean debugSession) throws InvalidCredentialsException, IOException, ScriptException {
 		if (script == null) {
-			this.takeSnapshot(device, cli, protocol, account);
+			this.takeSnapshot(device, cli, protocol, account, debugSession);
 		}
 		else {
+			JsCli jsCli = new JsCli(cli, account, debugSession);
 			try {
 				ScriptContext scriptContext = new SimpleScriptContext();
 				scriptContext.setBindings(engine.getContext().getBindings(ScriptContext.ENGINE_SCOPE),
 						ScriptContext.ENGINE_SCOPE);
 				engine.eval(script, scriptContext);
-				JsCli jsCli = new JsCli(cli, account);
 				((Invocable) engine).invokeFunction("_connect", jsCli, protocol.value(), "run",
 						new JsDevice(device));
 			}
@@ -1167,13 +1218,16 @@ public class DeviceDriver {
 						name, e.getMessage()), 1);
 				throw new ScriptException(e);
 			}
+			finally {
+				device.sessionDebugLog = jsCli.log;
+			}
 		}
 	}
 
 	public void takeSnapshot(Device device, Cli cli, DriverProtocol protocol,
-			DeviceCliAccount account) throws InvalidCredentialsException, IOException, ScriptException {
+			DeviceCliAccount account, boolean debugSession) throws InvalidCredentialsException, IOException, ScriptException {
 		Config config = new Config(device);
-		this.cliRunFunction(device, config, cli, protocol, "snapshot", account);
+		this.cliRunFunction(device, config, cli, protocol, "snapshot", account, debugSession);
 		
 		boolean different = false;
 		try {

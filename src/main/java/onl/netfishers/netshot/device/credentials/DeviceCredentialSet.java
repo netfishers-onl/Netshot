@@ -19,6 +19,7 @@
 package onl.netfishers.netshot.device.credentials;
 
 import java.util.Date;
+import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -36,6 +37,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import onl.netfishers.netshot.device.Domain;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.TypeDefs;
+import org.jasypt.hibernate4.type.EncryptedStringType;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -55,6 +60,15 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 	@Type(value = DeviceSshKeyAccount.class, name = "SSH Key"),
 	@Type(value = DeviceTelnetAccount.class, name = "Telnet")
 })
+@TypeDefs({
+	@TypeDef(
+		name = "credentialString",
+		typeClass = EncryptedStringType.class,
+		parameters = {
+			@Parameter(name = "encryptorRegisteredName", value = "credentialEncryptor")
+		}
+	)
+})
 public class DeviceCredentialSet {
 
 	/** The change date. */
@@ -70,6 +84,9 @@ public class DeviceCredentialSet {
 	
 	/** The mgmtDomain. */
 	protected Domain mgmtDomain;
+	
+	/** Device-specific credential set */
+	protected boolean deviceSpecific = false;
 
 	/**
 	 * Instantiates a new device credential set.
@@ -211,4 +228,26 @@ public class DeviceCredentialSet {
 	public void setMgmtDomain(Domain domain) {
 		this.mgmtDomain = domain;
 	}
+
+	/**
+	 * Is the credential set specific to a device?
+	 * @return true if the credential set is specific;
+	 */
+	@XmlElement
+	public boolean isDeviceSpecific() {
+		return deviceSpecific;
+	}
+
+	/**
+	 * Sets whether the credential set is specific to a device.
+	 * @param specific true if the credential set is specific.
+	 */
+	public void setDeviceSpecific(boolean specific) {
+		this.deviceSpecific = specific;
+	}
+	
+	static public String generateSpecificName() {
+		return String.format("DEVICESPECIFIC-%s", UUID.randomUUID());
+	}
+	
 }

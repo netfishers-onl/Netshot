@@ -8,6 +8,103 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.10.0 - 2018-10-20
+
+* Add support for PostgreSQL as underlying database (thanks to @eczema) -- experimental for now though.
+
+0.9.0b - 2018-08-30
+
+* Reduce the memory footprint of data export.
+
+0.9.0a - 2018-08-29
+
+* Fix a bug (regression of 0.9.0) which affects the performance of data export (visible with huge lists of devices).
+
+0.9.0 - 2018-08-26
+
+* The command timeout value is now an idle timeout while waiting for data from the device.
+* Add first version of F5 TM-OS (BIG-IP) driver.
+* Add more logging options.
+* Add the ability to search based on device domains, and to build dynamic groups based on device domains.
+* Add the ability to filter reports based on device domains.
+* Cisco IOS-XR: more device families (NCS).
+* More details in SNMP trap received error message.
+
+0.8.1 - 2018-06-05
+
+* Improved debug mode for snapshot tasks (now log the buffer in case of timeout).
+* FortiOS: increase the timeout delay on the main 'show' command.
+* ScreenOS: increase the timeout delay on the main 'get config' command.
+* Cisco IOS: more families.
+* Add Arista EOS driver.
+* Fix a bug when the 'timeout' option is used in the drivers.
+* Fix a bug where Netshot wasn't properly trying the next available SSH credentials after an authentication failure.
+
+0.8.0 - 2018-03-04
+
+* Debug mode for snapshot tasks (hidden by default). This makes easy to debug drivers.
+* Snapshot and run scripts have now access to the current device data, so they can compute some differences before
+pushing a new config to the history (for example).
+* Updates on FortiOS and Avaya drivers.
+
+0.7.3 - 2018-02-19
+
+* It is now possible to match on the part number (from hardware inventory) within the software compliance rules.
+* Most of the tables within the Web interface are now sortable (by clicking on the headers).
+* A few driver updates.
+
+0.7.2 - 2017-12-22
+
+* Allow the same connect IP address for different devices (probably using different ports)
+
+0.7.1 - 2017-12-21
+
+* Device-specific credentials -- fix a bug where they could be used by another device.
+* Rename netshot.db.encryptionPassword to netshot.db.encryptionpassword for consistency. With backward compatibility.
+
+0.7.0 - 2017-12-09
+
+* Device-specific credentials
+* Ability to set alternate IP address and TCP port to connect to the device (allow for connection through TCP proxy)
+
+0.6.1 - 2017-09-14
+
+* Add ScreenOS driver
+* Various improvements on drivers
+
+0.6.0 - 2017-08-13
+
+* BREAKING CHANGE: Encrypt the secrets (communities, passwords) in the database
+  (=> see the update notes)
+* Add Palo Alto PanOS driver (from agm)
+* Add Riverbed RiOS driver (from agm)
+* Fix - Remove ANSI escape characters from CLI outputs
+* Several minor fixes in drivers
+* Fix MSCHAPv2 for RADIUS authentication
+
+
+0.5.8 - 2016-01-12
+
+* Fix for HSRPv6 in XR driver
+* Improve the config compliance chart
+* Improve the Junos driver
+* Add a systemd unit file
+* Fix a bug on the device compliance page
+
+
+0.5.7 - 2016-12-26
+
+* Fixes for a couple of bugs on the charts
+
+
+0.5.6 - 2016-12-07
+
+* Update the charts (now using Chart.js version 2) in reports. This fixes
+  the size of the charts for the high resolution screens.
+* Update the Junos driver (now storing the configuration in "set" version
+  as well).
+
+
 0.5.5 - 2016-09-02
 
 * Various updates on drivers. This includes the addition of Citrix
@@ -19,6 +116,9 @@ RELEASE HISTORY:
   regex).
 * Most of the underlying libraries have been updated to the last
   available version (in the same train).
+* A few UI fixes.
+* There was a bug on Excel export function: interfaces without IP
+  address were not exported.
 
 
 0.5.4 - 2016-07-02

@@ -8,10 +8,24 @@ define([
 
 		initialize: function(models, options) {
 			this.days = options.days;
+			this.domains = options.domains;
 		},
 
 		url: function() {
-			return "api/reports/accessfailuredevices/" + this.days;
+			var url = "api/reports/accessfailuredevices";
+			var params = [];
+			if (typeof this.days !== "undefined") {
+				params.push("days=" + this.days);
+			}
+			if (this.domains) {
+				_.forEach(this.domains, function(domain) {
+					params.push("domain=" + domain);
+				});
+			}
+			if (params.length) {
+				url += "?" + params.join("&");
+			}
+			return url;
 		},
 		
 		comparator: function(item) {

@@ -83,10 +83,12 @@ define([
 				$('<option />').attr('value', deviceType.get('name')).text(deviceType
 						.get('description')).appendTo(that.$('#devicetype'));
 			});
-			if (typeof (this.model.get('targetGroup')) == "object") {
-				this.$('#group').val(this.model.get('targetGroup').id);
+			var targetGroup = this.model.get('targetGroup'); 
+			if (typeof targetGroup === "object" && targetGroup) {
+				this.$('#group').val(targetGroup.id);
 			}
-			this.$('#devicetype').val(this.model.get('driver'));
+			this.$('#devicetype').val(this.model.get('driver') ? this.model.get('driver') :
+				"onl.netfishers.netshot.device.Device");
 			var families = [];
 			this.deviceFamilies.each(function(family) {
 				families.push(family.get('deviceFamily'));

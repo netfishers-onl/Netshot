@@ -66,7 +66,7 @@ define([
 
 		onCreate: function() {
 			var that = this;
-			this.$("input[type='radio']").change(function() {
+			this.$("input[name='credentialstype']").change(function() {
 				if ($(this).val().match(/SNMP/)) {
 					that.$('.nsadmin-credentialscommunity').show();
 					that.$('.nsadmin-credentialscli').hide();

@@ -21,7 +21,7 @@ var Info = {
 	name: "CitrixNetscaler",
 	description: "Citrix NetScaler",
 	author: "NetFishers",
-	version: "0.1"
+	version: "1.1"
 };
 
 var Config = {
@@ -84,7 +84,7 @@ var CLI = {
 		}
 	},
 	cli: {
-		prompt: /^([^\s\r\n]*> )$/,
+		prompt: /^([^\s\r\n]*( \((Primary|Secondary)\))?> )$/,
 		error: /^ERROR: /m,
 		pager: {
 			avoid: "set cli mode -page OFF",

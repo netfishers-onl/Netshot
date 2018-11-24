@@ -394,6 +394,8 @@ public class Netshot extends Thread {
 		try {
 			logger.info("Initializing the task manager.");
 			TaskManager.init();
+			logger.info("Updating the database schema, if necessary.");
+			Database.update();
 			logger.info("Initializing access to the database.");
 			Database.init();
 			logger.info("Loading the device drivers");
@@ -409,6 +411,7 @@ public class Netshot extends Thread {
 			RestService.init();
 			logger.info("Scheduling the existing tasks.");
 			TaskManager.rescheduleAll();
+			logger.warn("Netshot is started");
 
 		}
 		catch (Exception e) {

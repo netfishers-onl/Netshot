@@ -24,6 +24,9 @@ import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -91,6 +94,14 @@ import org.jasypt.hibernate4.encryptor.HibernatePBEEncryptorRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
+
+import liquibase.Contexts;
+import liquibase.LabelExpression;
+import liquibase.Liquibase;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.LiquibaseException;
+import liquibase.resource.ClassLoaderResourceAccessor;
 
 /**
  * The Database class, utilities to access the database.
@@ -211,7 +222,55 @@ public class Database {
 		}
 		return classes;
 	}
+	
+	/**
+	 * Retrieve the configured driver class.
+	 * @return the configured driver class
+	 */
+	private static String getDriverClass() {
+		return Netshot.getConfig("netshot.db.driver_class", "com.mysql.jdbc.Driver");
+	}
+	
+	/**
+	 * Retrieve the DB URL.
+	 * @return the configured DB URL.
+	 */
+	private static String getUrl() {
+		return Netshot.getConfig("netshot.db.url", "jdbc:mysql://localhost/netshot01");
+	}
+	
+	/**
+	 * Retrieve the DB username.
+	 * @return the configured DB username
+	 */
+	private static String getUsername() {
+		return Netshot.getConfig("netshot.db.username", "netshot");
+	}
+	
+	/**
+	 * Retrieve the DB password.
+	 * @return the configured DB password
+	 */
+	private static String getPassword() {
+		return Netshot.getConfig("netshot.db.password", "netshot");
+	}
 
+	/**
+	 * Update the database schema (to be run at startup).
+	 */
+	public static void update() {
+		try {
+			Connection connection = DriverManager.getConnection(getUrl(), getUsername(), getPassword());
+			liquibase.database.Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+			Liquibase liquibase = new Liquibase("migration/netshot0.xml", new ClassLoaderResourceAccessor(), database);
+			liquibase.update(new Contexts(), new LabelExpression());
+		}
+		catch (SQLException | LiquibaseException e) {
+			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to connect to the database (for the initial schema update)", e);
+			throw new RuntimeException("Unable to connect to the database, see logs for more details");
+		}
+	}
+	
 	/**
 	 * Initializes the database access, with Hibernate.
 	 */
@@ -221,14 +280,10 @@ public class Database {
 			configuration = new Configuration();
 
 			configuration
-				.setProperty("hibernate.connection.driver_class",
-					Netshot.getConfig("netshot.db.driver_class", "com.mysql.jdbc.Driver"))
-				.setProperty("hibernate.connection.url",
-					Netshot.getConfig("netshot.db.url", "jdbc:mysql://localhost/netshot01"))
-				.setProperty("hibernate.connection.username",
-					Netshot.getConfig("netshot.db.username", "netshot"))
-				.setProperty("hibernate.connection.password",
-					Netshot.getConfig("netshot.db.password", "netshot"))
+				.setProperty("hibernate.connection.driver_class", getDriverClass())
+				.setProperty("hibernate.connection.url", getUrl())
+				.setProperty("hibernate.connection.username", getUsername())
+				.setProperty("hibernate.connection.password", getPassword())
 				.setProperty("hibernate.c3p0.min_size", "5")
 				.setProperty("hibernate.c3p0.max_size", "30")
 				.setProperty("hibernate.c3p0.timeout", "1800")
@@ -247,10 +302,9 @@ public class Database {
 			encryptorRegistry.registerPBEStringEncryptor("credentialEncryptor", credentialEncryptor);
 
 			configuration
-				.setProperty("factory_class",
-					"org.hibernate.transaction.JDBCTransactionFactory")
+				.setProperty("factory_class", "org.hibernate.transaction.JDBCTransactionFactory")
 				.setProperty("current_session_context_class", "thread")
-				.setProperty("hibernate.hbm2ddl.auto", "update")
+				.setProperty("hibernate.hbm2ddl.auto", "")
 				//.setProperty("hibernate.show_sql", "true")
 				.addAnnotatedClass(Device.class).addAnnotatedClass(DeviceGroup.class)
 				.addAnnotatedClass(Config.class)

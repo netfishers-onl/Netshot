@@ -1,0 +1,774 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+<!-- netshot_0_5_2.xml -->
+	<changeSet author="netshot (generated)" id="0.5.2_1">
+		<preConditions onFail="MARK_RAN">
+			<not><tableExists tableName="device"/></not>
+		</preConditions>
+		<createTable tableName="check_compliance_task">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="device" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="check_group_compliance_task">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="device_group" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="check_group_software_task">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="device_group" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="check_result">
+			<column name="check_date" type="datetime"/>
+			<column name="comment" type="VARCHAR(255)"/>
+			<column name="result" type="INT"/>
+			<column name="device" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="rule" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createTable tableName="config">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="author" type="VARCHAR(255)"/>
+			<column name="change_date" type="datetime"/>
+			<column name="version" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="device" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="config_attribute">
+			<column name="type" type="CHAR(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="name" type="VARCHAR(255)"/>
+			<column name="number" type="DOUBLE"/>
+			<column name="text" type="VARCHAR(255)"/>
+			<column name="assumption" type="BIT(1)"/>
+			<column name="config" type="BIGINT"/>
+			<column name="long_text" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="device">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="auto_try_credentials" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="change_date" type="datetime"/>
+			<column name="comments" type="VARCHAR(255)"/>
+			<column name="contact" type="VARCHAR(255)"/>
+			<column name="created_date" type="datetime"/>
+			<column name="creator" type="VARCHAR(255)"/>
+			<column name="driver" type="VARCHAR(255)"/>
+			<column name="eol_date" type="datetime"/>
+			<column name="eos_date" type="datetime"/>
+			<column name="family" type="VARCHAR(255)"/>
+			<column name="location" type="VARCHAR(255)"/>
+			<column name="ipv4_address" type="INT">
+				<constraints unique="true"/>
+			</column>
+			<column name="ipv4_usage" type="INT"/>
+			<column name="ipv4_pfxlen" type="INT"/>
+			<column name="name" type="VARCHAR(255)"/>
+			<column name="network_class" type="INT"/>
+			<column name="serial_number" type="VARCHAR(255)"/>
+			<column name="software_level" type="INT"/>
+			<column name="software_version" type="VARCHAR(255)"/>
+			<column name="status" type="INT"/>
+			<column name="version" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="eol_module" type="BIGINT"/>
+			<column name="eos_module" type="BIGINT"/>
+			<column name="last_config" type="BIGINT"/>
+			<column name="mgmt_domain" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="device_attribute">
+			<column name="type" type="CHAR(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="name" type="VARCHAR(255)"/>
+			<column name="number" type="DOUBLE"/>
+			<column name="text" type="VARCHAR(255)"/>
+			<column name="assumption" type="BIT(1)"/>
+			<column name="device" type="BIGINT"/>
+			<column name="long_text" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="device_credential_set">
+			<column name="dtype" type="VARCHAR(31)">
+				<constraints nullable="false"/>
+			</column>
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="change_date" type="datetime"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints unique="true"/>
+			</column>
+			<column name="version" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="community" type="VARCHAR(255)"/>
+			<column name="password" type="VARCHAR(255)"/>
+			<column name="super_password" type="VARCHAR(255)"/>
+			<column name="username" type="VARCHAR(255)"/>
+			<column name="private_key" type="VARCHAR(10000)"/>
+			<column name="public_key" type="VARCHAR(10000)"/>
+			<column name="mgmt_domain" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="device_credential_sets">
+			<column name="device" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="credential_sets" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createTable tableName="device_group">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="change_date" type="datetime"/>
+			<column name="folder" type="VARCHAR(1000)"/>
+			<column name="hidden_from_reports" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="name" type="VARCHAR(255)">
+				<constraints unique="true"/>
+			</column>
+			<column name="version" type="INT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		<createTable tableName="device_group_cached_devices">
+			<column name="owner_groups" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="cached_devices" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createTable tableName="device_js_script">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="author" type="VARCHAR(255)"/>
+			<column name="device_driver" type="VARCHAR(255)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints unique="true"/>
+			</column>
+			<column name="script" type="LONGTEXT"/>
+		</createTable>
+		<createTable tableName="device_virtual_devices">
+			<column name="device" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="virtual_devices" type="VARCHAR(255)"/>
+		</createTable>
+		<createTable tableName="device_vrf_instances">
+			<column name="device" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="vrf_instances" type="VARCHAR(255)"/>
+		</createTable>
+		<createTable tableName="discover_device_type_task">
+			<column name="ipv4_address" type="INT"/>
+			<column name="ipv4_usage" type="INT"/>
+			<column name="ipv4_pfxlen" type="INT"/>
+			<column name="device_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="discovered_device_type" type="VARCHAR(255)"/>
+			<column name="snapshot_task_id" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="domain" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="discover_device_type_task_credential_sets">
+			<column name="discover_device_type_task" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="credential_sets" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createTable tableName="domain">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="change_date" type="datetime"/>
+			<column name="description" type="VARCHAR(255)"/>
+			<column name="name" type="VARCHAR(255)">
+				<constraints unique="true"/>
+			</column>
+			<column name="ipv4_address" type="INT"/>
+			<column name="ipv4_usage" type="INT"/>
+			<column name="ipv4_pfxlen" type="INT"/>
+			<column name="ipv6_address1" type="BIGINT"/>
+			<column name="ipv6_address2" type="BIGINT"/>
+			<column name="ipv6_usage" type="INT"/>
+			<column name="ipv6_pfxlen" type="INT"/>
+			<column name="version" type="INT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		<createTable tableName="dynamic_device_group">
+			<column name="driver" type="VARCHAR(255)"/>
+			<column name="query" type="VARCHAR(1000)"/>
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createTable tableName="exemption">
+			<column name="expiration_date" type="datetime"/>
+			<column name="device" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="rule" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createTable tableName="hardware_rule">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="driver" type="VARCHAR(255)"/>
+			<column name="end_of_life" type="datetime"/>
+			<column name="end_of_sale" type="datetime"/>
+			<column name="family" type="VARCHAR(255)"/>
+			<column name="family_reg_exp" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="part_number" type="VARCHAR(255)"/>
+			<column name="part_number_reg_exp" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="target_group" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="java_script_rule">
+			<column name="script" type="LONGTEXT"/>
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createTable tableName="long_text_configuration">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="text" type="LONGTEXT"/>
+		</createTable>
+		<createTable tableName="module">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="part_number" type="VARCHAR(255)"/>
+			<column name="serial_number" type="VARCHAR(255)"/>
+			<column name="slot" type="VARCHAR(255)"/>
+			<column name="device" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="network_interface">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="description" type="VARCHAR(255)"/>
+			<column name="enabled" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="interface_name" type="VARCHAR(255)"/>
+			<column name="level3" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="physical_address" type="BIGINT"/>
+			<column name="virtual_device" type="VARCHAR(255)"/>
+			<column name="vrf_instance" type="VARCHAR(255)"/>
+			<column name="device" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="network_interface_ip4addresses">
+			<column name="network_interface" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="address" type="INT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="address_usage" type="INT"/>
+			<column name="prefix_length" type="INT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createTable tableName="network_interface_ip6addresses">
+			<column name="network_interface" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="address1" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="address2" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="address_usage" type="INT"/>
+			<column name="prefix_length" type="INT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createTable tableName="policy">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="name" type="VARCHAR(255)">
+				<constraints unique="true"/>
+			</column>
+			<column name="target_group" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="purge_database_task">
+			<column name="config_days" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="config_keep_days" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="config_size" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="days" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createTable tableName="rule">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="enabled" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="name" type="VARCHAR(255)"/>
+			<column name="policy" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="run_device_group_script_task">
+			<column name="device_driver" type="VARCHAR(255)"/>
+			<column name="script" type="LONGTEXT"/>
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="device_group" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="run_device_script_task">
+			<column name="device_driver" type="VARCHAR(255)"/>
+			<column name="script" type="LONGTEXT"/>
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="device" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="scan_subnets_task">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="domain" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="scan_subnets_task_subnets">
+			<column name="scan_subnets_task" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="ipv4address" type="INT"/>
+			<column name="ipv4usage" type="INT"/>
+			<column name="ipv4mask" type="INT"/>
+		</createTable>
+		<createTable tableName="software_rule">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="driver" type="VARCHAR(255)"/>
+			<column name="family" type="VARCHAR(255)"/>
+			<column name="family_reg_exp" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="level" type="INT"/>
+			<column name="priority" type="DOUBLE">
+				<constraints nullable="false"/>
+			</column>
+			<column name="version" type="VARCHAR(255)"/>
+			<column name="version_reg_exp" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="target_group" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="static_device_group">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createTable tableName="take_group_snapshot_task">
+			<column name="limit_to_outofdate_device_hours" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="device_group" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="take_snapshot_task">
+			<column name="automatic" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="device" type="BIGINT"/>
+		</createTable>
+		<createTable tableName="task">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="author" type="VARCHAR(255)"/>
+			<column name="change_date" type="datetime"/>
+			<column name="comments" type="VARCHAR(255)"/>
+			<column name="creation_date" type="datetime"/>
+			<column name="execution_date" type="datetime"/>
+			<column name="log" type="LONGTEXT"/>
+			<column name="schedule_reference" type="datetime"/>
+			<column name="schedule_type" type="INT"/>
+			<column name="status" type="INT"/>
+			<column name="target" type="VARCHAR(10000)"/>
+			<column name="version" type="INT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		<createTable tableName="text_rule">
+			<column name="any_block" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="context" type="VARCHAR(10000)"/>
+			<column name="device_driver" type="VARCHAR(255)"/>
+			<column name="field" type="VARCHAR(255)"/>
+			<column name="invert" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="match_all" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="reg_exp" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="text" type="LONGTEXT"/>
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createTable tableName="user">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="hashed_password" type="VARCHAR(255)"/>
+			<column name="level" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="local" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="username" type="VARCHAR(255)">
+				<constraints unique="true"/>
+			</column>
+		</createTable>
+		<addUniqueConstraint columnNames="policy, name" constraintName="UK_4v8b8vxv2odk13plyumd9us34" tableName="rule"/>
+		<createIndex indexName="FK_1ritpkb4tkbgfj1ohxvnm72k4" tableName="check_group_compliance_task">
+			<column name="device_group"/>
+		</createIndex>
+		<createIndex indexName="FK_1x5sdn329t8d12efpn0sillef" tableName="device_vrf_instances">
+			<column name="device"/>
+		</createIndex>
+		<createIndex indexName="FK_2ri1o576na33d3xt3a83n6xx1" tableName="exemption">
+			<column name="rule"/>
+		</createIndex>
+		<createIndex indexName="FK_45d40f4630st7b6ecf698ap00" tableName="check_result">
+			<column name="rule"/>
+		</createIndex>
+		<createIndex indexName="FK_62er5lohw2iuq4q7omo344i8n" tableName="module">
+			<column name="device"/>
+		</createIndex>
+		<createIndex indexName="FK_6v7ehqqbb51g0fuf614s38t4g" tableName="scan_subnets_task_subnets">
+			<column name="scan_subnets_task"/>
+		</createIndex>
+		<createIndex indexName="FK_6w0sgusprwk0sum7kho1yl9n7" tableName="device">
+			<column name="mgmt_domain"/>
+		</createIndex>
+		<createIndex indexName="FK_8nwgcvkktkgb0ep9jngl0fhkw" tableName="take_snapshot_task">
+			<column name="device"/>
+		</createIndex>
+		<createIndex indexName="FK_9eujdpbu4mqg91nhxqcyvvy5i" tableName="device">
+			<column name="last_config"/>
+		</createIndex>
+		<createIndex indexName="FK_9onv1cbwo6a3eubb1mxldddaw" tableName="policy">
+			<column name="target_group"/>
+		</createIndex>
+		<createIndex indexName="FK_a9huwp5oxt701ovqo18qcfqu8" tableName="run_device_script_task">
+			<column name="device"/>
+		</createIndex>
+		<createIndex indexName="FK_abmy0oyjv94it7e1mxfyxjc7j" tableName="device_credential_set">
+			<column name="mgmt_domain"/>
+		</createIndex>
+		<createIndex indexName="FK_ad969re21gdfwgujgmp5wkdhd" tableName="device_attribute">
+			<column name="device"/>
+		</createIndex>
+		<createIndex indexName="FK_chqgqnpukbtthsxxs7l03c50a" tableName="take_group_snapshot_task">
+			<column name="device_group"/>
+		</createIndex>
+		<createIndex indexName="FK_djshbk3sfsartfxdfx8u9n4go" tableName="config_attribute">
+			<column name="config"/>
+		</createIndex>
+		<createIndex indexName="FK_e1p7bmak3fa8yhqns9y4ttofg" tableName="device_credential_sets">
+			<column name="credential_sets"/>
+		</createIndex>
+		<createIndex indexName="FK_gb5du9qiiq23ew5ymufci7cbn" tableName="software_rule">
+			<column name="target_group"/>
+		</createIndex>
+		<createIndex indexName="FK_gpsllhlyii8d5g54pyiw0gmm2" tableName="device">
+			<column name="eos_module"/>
+		</createIndex>
+		<createIndex indexName="FK_h4jb4a8i8qcu1l6xkqb3iycu6" tableName="config">
+			<column name="device"/>
+		</createIndex>
+		<createIndex indexName="FK_h8avh8p102nh9utmk7o9t1ob4" tableName="run_device_group_script_task">
+			<column name="device_group"/>
+		</createIndex>
+		<createIndex indexName="FK_ht328wnxn56rpf0em847y7dhe" tableName="device_group_cached_devices">
+			<column name="cached_devices"/>
+		</createIndex>
+		<createIndex indexName="FK_j0e7ywojnw9kpht8bgsnmyu8f" tableName="device">
+			<column name="eol_module"/>
+		</createIndex>
+		<createIndex indexName="FK_k22df6wt1rev0sewgyiv69wt1" tableName="config_attribute">
+			<column name="long_text"/>
+		</createIndex>
+		<createIndex indexName="FK_kgxdkl1nyj7t6v5xqc7ucd3t2" tableName="network_interface">
+			<column name="device"/>
+		</createIndex>
+		<createIndex indexName="FK_lal8j7qfsr8slibjna4ay0aj4" tableName="scan_subnets_task">
+			<column name="domain"/>
+		</createIndex>
+		<createIndex indexName="FK_m5vant7ddy2hlhqu414avmwyt" tableName="hardware_rule">
+			<column name="target_group"/>
+		</createIndex>
+		<createIndex indexName="FK_mmce331srfb7u1u997bs68d1r" tableName="check_compliance_task">
+			<column name="device"/>
+		</createIndex>
+		<createIndex indexName="FK_p811rnilum8v5kxqgt0r61ymk" tableName="discover_device_type_task">
+			<column name="domain"/>
+		</createIndex>
+		<createIndex indexName="FK_q35kbbuo3pt2ob0lee6lfaaml" tableName="discover_device_type_task_credential_sets">
+			<column name="credential_sets"/>
+		</createIndex>
+		<createIndex indexName="FK_qslc3h936kdd8tyrdtjvp11yu" tableName="check_group_software_task">
+			<column name="device_group"/>
+		</createIndex>
+		<createIndex indexName="FK_r07wpc4nloww05wbebu3w9eys" tableName="device_virtual_devices">
+			<column name="device"/>
+		</createIndex>
+		<createIndex indexName="FK_t74v5mfn55fq6kb9gb2ynftwx" tableName="device_attribute">
+			<column name="long_text"/>
+		</createIndex>
+		<createIndex indexName="changeDateIndex_config" tableName="config">
+			<!-- Would be simply called changeDateIndex on MySQL Hibernated-generated (pre-0.10.1) schema -->
+			<column name="change_date"/>
+		</createIndex>
+		<createIndex indexName="changeDateIndex_task" tableName="task">
+			<!-- Would be simply called changeDateIndex on MySQL Hibernated-generated (pre-0.10.1) schema -->
+			<column name="change_date"/>
+		</createIndex>
+		<createIndex indexName="creationDateIndex" tableName="task">
+			<column name="creation_date"/>
+		</createIndex>
+		<createIndex indexName="executionDateIndex" tableName="task">
+			<column name="execution_date"/>
+		</createIndex>
+		<createIndex indexName="statusIndex" tableName="task">
+			<column name="status"/>
+		</createIndex>
+		<addForeignKeyConstraint baseColumnNames="owner_groups" baseTableName="device_group_cached_devices" constraintName="FK_18wsap0oik79pkeeo5fovicqe" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="check_group_compliance_task" constraintName="FK_1ritpkb4tkbgfj1ohxvnm72k4" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="device_vrf_instances" constraintName="FK_1x5sdn329t8d12efpn0sillef" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="run_device_script_task" constraintName="FK_2cy8ij2so3qb8g86mj2muy1qf" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="rule" baseTableName="exemption" constraintName="FK_2ri1o576na33d3xt3a83n6xx1" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="rule" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="scan_subnets_task" constraintName="FK_39fi2vln5d01prp78pcrp42b2" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="rule" baseTableName="check_result" constraintName="FK_45d40f4630st7b6ecf698ap00" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="rule" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="exemption" constraintName="FK_46nq9o72v3f83yi6ix6f2mksk" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="check_group_software_task" constraintName="FK_4h86pvse37dbru1e5g1oyr0ku" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="module" constraintName="FK_62er5lohw2iuq4q7omo344i8n" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="scan_subnets_task" baseTableName="scan_subnets_task_subnets" constraintName="FK_6v7ehqqbb51g0fuf614s38t4g" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="scan_subnets_task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="mgmt_domain" baseTableName="device" constraintName="FK_6w0sgusprwk0sum7kho1yl9n7" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="domain" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="device_credential_sets" constraintName="FK_8ef54qntljb5yg34cyt3mt8n0" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="take_snapshot_task" constraintName="FK_8nwgcvkktkgb0ep9jngl0fhkw" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="policy" baseTableName="rule" constraintName="FK_96khaxcxa7rcxlsbv2iiqrdih" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="policy" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="last_config" baseTableName="device" constraintName="FK_9eujdpbu4mqg91nhxqcyvvy5i" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="config" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="target_group" baseTableName="policy" constraintName="FK_9onv1cbwo6a3eubb1mxldddaw" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="run_device_script_task" constraintName="FK_a9huwp5oxt701ovqo18qcfqu8" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="mgmt_domain" baseTableName="device_credential_set" constraintName="FK_abmy0oyjv94it7e1mxfyxjc7j" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="domain" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="device_attribute" constraintName="FK_ad969re21gdfwgujgmp5wkdhd" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="network_interface" baseTableName="network_interface_ip6addresses" constraintName="FK_afmunli6ag9lxgherj3e8jkrw" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="network_interface" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="take_group_snapshot_task" constraintName="FK_chqgqnpukbtthsxxs7l03c50a" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="check_group_compliance_task" constraintName="FK_d0q8cchd7q05kd5k57sk27v5e" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="config" baseTableName="config_attribute" constraintName="FK_djshbk3sfsartfxdfx8u9n4go" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="config" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="take_snapshot_task" constraintName="FK_dt375c74natqhpgfcnxddbt2v" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="credential_sets" baseTableName="device_credential_sets" constraintName="FK_e1p7bmak3fa8yhqns9y4ttofg" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_credential_set" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="text_rule" constraintName="FK_etb8vxi7yva4m8hn7wwxcjhxk" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="rule" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="target_group" baseTableName="software_rule" constraintName="FK_gb5du9qiiq23ew5ymufci7cbn" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="eos_module" baseTableName="device" constraintName="FK_gpsllhlyii8d5g54pyiw0gmm2" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="module" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="config" constraintName="FK_h4jb4a8i8qcu1l6xkqb3iycu6" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="run_device_group_script_task" constraintName="FK_h8avh8p102nh9utmk7o9t1ob4" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="static_device_group" constraintName="FK_he9hhtkye83t4i1py4nq5m5fj" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="cached_devices" baseTableName="device_group_cached_devices" constraintName="FK_ht328wnxn56rpf0em847y7dhe" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="network_interface" baseTableName="network_interface_ip4addresses" constraintName="FK_igqlkeru1uy3prmexodxj2d6l" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="network_interface" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="check_result" constraintName="FK_j0aws3rbmlvcd8td8re2f0g35" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="eol_module" baseTableName="device" constraintName="FK_j0e7ywojnw9kpht8bgsnmyu8f" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="module" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="dynamic_device_group" constraintName="FK_j788a6fp6l7sdr13brudq5ax9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="long_text" baseTableName="config_attribute" constraintName="FK_k22df6wt1rev0sewgyiv69wt1" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="long_text_configuration" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="network_interface" constraintName="FK_kgxdkl1nyj7t6v5xqc7ucd3t2" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="domain" baseTableName="scan_subnets_task" constraintName="FK_lal8j7qfsr8slibjna4ay0aj4" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="domain" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="target_group" baseTableName="hardware_rule" constraintName="FK_m5vant7ddy2hlhqu414avmwyt" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="take_group_snapshot_task" constraintName="FK_mjatmcp80bgfmi27u9w3iqfhw" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="check_compliance_task" constraintName="FK_mmce331srfb7u1u997bs68d1r" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="discover_device_type_task" constraintName="FK_nt7n1st5svy4p3aiu8mlyptwp" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="domain" baseTableName="discover_device_type_task" constraintName="FK_p811rnilum8v5kxqgt0r61ymk" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="domain" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="purge_database_task" constraintName="FK_pd1x44t9mx1ylixv3jlq79te3" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="discover_device_type_task" baseTableName="discover_device_type_task_credential_sets" constraintName="FK_pxcvrxuml1idn4v6tfuggcx26" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="discover_device_type_task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="credential_sets" baseTableName="discover_device_type_task_credential_sets" constraintName="FK_q35kbbuo3pt2ob0lee6lfaaml" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_credential_set" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="check_group_software_task" constraintName="FK_qslc3h936kdd8tyrdtjvp11yu" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="java_script_rule" constraintName="FK_qxf28k9n9g16igqsqb9v5o4s" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="rule" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="device_virtual_devices" constraintName="FK_r07wpc4nloww05wbebu3w9eys" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="run_device_group_script_task" constraintName="FK_s5jv4rui34kv94rgk7gcxqeco" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="check_compliance_task" constraintName="FK_sh1li78aw9uu0me0bcli9319h" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="long_text" baseTableName="device_attribute" constraintName="FK_t74v5mfn55fq6kb9gb2ynftwx" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="long_text_configuration" validate="true"/>
+	</changeSet>
+<!-- netshot_0_5_2_to_0_5_3.xml -->
+<!-- netshot_0_5_3_to_0_5_4.xml -->
+<!-- netshot_0_5_4_to_0_5_6.xml -->
+<!-- netshot_0_5_6_to_0_5_8.xml -->
+<!-- netshot_0_5_8_to_0_6_0.xml -->
+<!-- netshot_0_6_0_to_0_6_1.xml -->
+<!-- netshot_0_6_1_to_0_7_0.xml -->
+	<changeSet author="netshot (generated)" id="0.7.0_1">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="device_credential_set" columnName="device_specific"/></not>
+		</preConditions>
+		<addColumn tableName="device_credential_set">
+			<column name="device_specific" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+		<addColumn tableName="device">
+			<column name="connect_ipv4_address" type="INT(10)"/>
+		</addColumn>
+		<addColumn tableName="device">
+			<column name="connect_ipv4_usage" type="INT(10)"/>
+		</addColumn>
+		<addColumn tableName="device">
+			<column name="connect_ipv4_pfxlen" type="INT(10)"/>
+		</addColumn>
+		<addColumn tableName="device">
+			<column name="ssh_port" type="INT(10)">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+		<addColumn tableName="device">
+			<column name="telnet_port" type="INT(10)">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+		<addColumn tableName="device">
+			<column name="specific_credential_set" type="BIGINT"/>
+		</addColumn>
+		<addUniqueConstraint columnNames="connect_ipv4_address" constraintName="UK_49k44bri62v926c9f4uw4t68q" tableName="device"/>
+		<createIndex indexName="FK_puwqpsdbpiwy4tmptice8vwy1" tableName="device">
+			<column name="specific_credential_set"/>
+		</createIndex>
+		<addForeignKeyConstraint baseColumnNames="specific_credential_set" baseTableName="device" constraintName="FK_puwqpsdbpiwy4tmptice8vwy1" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_credential_set" validate="true"/>
+	</changeSet>
+<!-- netshot_0_7_0_to_0_7_1.xml -->
+<!-- netshot_0_7_1_to_0_7_2.xml -->
+	<changeSet author="netshot (generated)" id="0.7.2_1">
+		<preConditions onFail="MARK_RAN">
+			<not><foreignKeyConstraintExists foreignKeyName="UK_49k44bri62v926c9f4uw4t68q"/></not>
+		</preConditions>
+		<dropUniqueConstraint constraintName="UK_49k44bri62v926c9f4uw4t68q" tableName="device"/>
+	</changeSet>
+<!-- netshot_0_7_2_to_0_7_3.xml -->
+	<changeSet author="netshot (generated)" id="0.7.3_1">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="software_rule" columnName="part_number"/></not>
+		</preConditions>
+		<addColumn tableName="software_rule">
+			<column name="part_number" type="VARCHAR(255 BYTE)"/>
+		</addColumn>
+		<addColumn tableName="software_rule">
+			<column name="part_number_reg_exp" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
+<!-- netshot_0_7_3_to_0_8_0.xml -->
+	<changeSet author="netshot (generated)" id="0.8.0_1">
+		<preConditions onFail="MARK_RAN">
+			<not><tableExists tableName="debug_log"/></not>
+		</preConditions>
+		<createTable tableName="debug_log">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="text" type="LONGTEXT"/>
+		</createTable>
+		<addColumn tableName="task">
+			<column name="debug_enabled" type="BIT(1)">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+		<addColumn tableName="task">
+			<column name="debug_log" type="BIGINT"/>
+		</addColumn>
+		<createIndex indexName="FK_kbqvwwy2olpj1jbwxfqhvl97l" tableName="task">
+			<column name="debug_log"/>
+		</createIndex>
+		<addForeignKeyConstraint baseColumnNames="debug_log" baseTableName="task" constraintName="FK_kbqvwwy2olpj1jbwxfqhvl97l" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="debug_log" validate="true"/>
+	</changeSet>
+<!-- netshot_0_8_0_to_0_8_1.xml -->
+<!-- netshot_0_8_1_to_0_9_0.xml -->
+<!-- netshot_0_9_0_to_0_10_1.xml -->
+	<changeSet author="netshot (generated)" id="0.10.1_1">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="device_credential_set" columnName="auth_key"/></not>
+		</preConditions>
+		<modifyDataType columnName="private_key" newDataType="varchar(5000)" tableName="device_credential_set"/>
+		<modifyDataType columnName="public_key" newDataType="varchar(5000)" tableName="device_credential_set"/>
+		<addColumn tableName="device_credential_set">
+			<column name="auth_key" type="VARCHAR(255 BYTE)"/>
+		</addColumn>
+		<addColumn tableName="device_credential_set">
+			<column name="auth_type" type="VARCHAR(255 BYTE)"/>
+		</addColumn>
+		<addColumn tableName="device_credential_set">
+			<column name="priv_key" type="VARCHAR(255 BYTE)"/>
+		</addColumn>
+		<addColumn tableName="device_credential_set">
+			<column name="priv_type" type="VARCHAR(255 BYTE)"/>
+		</addColumn>
+	</changeSet>
+</databaseChangeLog>

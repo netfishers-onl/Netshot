@@ -324,7 +324,7 @@ public class RestService extends Thread {
 			// Create the context and raise any error if anything is wrong with the SSL configuration.
 			sslContext.createSSLContext(true);
 			SSLEngineConfigurator sslConfig = new SSLEngineConfigurator(sslContext)
-			.setClientMode(false).setNeedClientAuth(false).setWantClientAuth(false);
+					.setClientMode(false).setNeedClientAuth(false).setWantClientAuth(false);
 			URI url = UriBuilder.fromUri(httpBaseUrl).port(httpBasePort).build();
 			HttpServer server = GrizzlyHttpServerFactory.createHttpServer(
 					url, (GrizzlyHttpContainer) null, true, sslConfig, false);

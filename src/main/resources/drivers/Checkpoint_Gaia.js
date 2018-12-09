@@ -21,7 +21,7 @@ var Info = {
 	name: "CheckpointGaia",
 	description: "Checkpoint Gaia",
 	author: "NetFishers",
-	version: "1.0"
+	version: "1.1"
 };
 
 var Config = {
@@ -226,15 +226,15 @@ function snapshot(cli, device, config, debug) {
 	device.set("networkClass", "FIREWALL");
 	
 	var showInterfaces = cli.command("show interfaces all");
-	var interfaces = cli.findSections(showConfig, /^Interface (.+)/m);
+	var interfaces = cli.findSections(showInterfaces, /^Interface (.+)/m);
 	for (var i in interfaces) {
 		var networkInterface = {
 			name: interfaces[i].match[1],
 			ip: []
 		};
-		var description = interfaces[i].config.match(/^ *comments \{(.+)\}|(.+)$/m);
+		var description = interfaces[i].config.match(/^ *comments (\{(.+)\}|(.+))$/m);
 		if (description) {
-			networkInterface.description = description[1] || description[2];
+			networkInterface.description = description[2] || description[3];
 		}
 		var ipv4 = interfaces[i].config.match(/^ *ipv4-address (\d+\.\d+\.\d+\.\d+)\/(\d+)/m);
 		if (ipv4) {
@@ -262,7 +262,7 @@ function snapshot(cli, device, config, debug) {
 				usage: "PRIMARY"
 			});
 		}
-		var macAddress = interfaces[i].config.match(/^ *mac-addr ([0-9A-Za-z:]+)/m);
+		var macAddress = interfaces[i].config.match(/^ *mac-addr (([0-9A-fa-f][0-9A-fa-f]:){5}[0-9A-fa-f][0-9A-fa-f])/m);
 		if (macAddress) {
 			networkInterface.mac = macAddress[1];
 		}

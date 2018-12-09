@@ -88,10 +88,10 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	/**
 	 * Sets the username.
 	 *
-	 * @param snmpv3username the new username
+	 * @param snmpv3Username the new username
 	 */
-	public void setUsername(String snmpv3username) {
-		this.username = snmpv3username;
+	public void setUsername(String snmpv3Username) {
+		this.username = snmpv3Username;
 	}
 
 	/**
@@ -108,10 +108,10 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	/**
 	 * Sets the auth type.
 	 *
-	 * @param snmpv3authtype the new auth type
+	 * @param snmpv3AuthType the new auth type
 	 */
-	public void setAuthType(String snmpv3authtype) {
-		this.authType = snmpv3authtype;
+	public void setAuthType(String snmpv3AuthType) {
+		this.authType = snmpv3AuthType;
 	}
 
 
@@ -130,10 +130,10 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	/**
 	 * Sets the auth key.
 	 *
-	 * @param snmpv3authkey the new auth key
+	 * @param snmpv3AuthKey the new auth key
 	 */
-	public void setAuthKey(String snmpv3authkey) {
-		this.authKey = snmpv3authkey;
+	public void setAuthKey(String snmpv3AuthKey) {
+		this.authKey = snmpv3AuthKey;
 	}
 
 	/**
@@ -150,10 +150,10 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	/**
 	 * Sets the priv type.
 	 *
-	 * @param snmpv3privtype the new priv type
+	 * @param snmpv3PrivType the new priv type
 	 */
-	public void setPrivType(String snmpv3privtype) {
-		this.privType = snmpv3privtype;
+	public void setPrivType(String snmpv3PrivType) {
+		this.privType = snmpv3PrivType;
 	}
 
 	/**
@@ -171,10 +171,10 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	/**
 	 * Sets the priv key.
 	 *
-	 * @param snmpv3privkey the new priv key
+	 * @param snmpv3PrivKey the new priv key
 	 */
-	public void setPrivKey(String snmpv3privkey) {
-		this.privKey = snmpv3privkey;
+	public void setPrivKey(String snmpv3PrivKey) {
+		this.privKey = snmpv3PrivKey;
 	}
 
 	/*

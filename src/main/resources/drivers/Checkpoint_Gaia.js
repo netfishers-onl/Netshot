@@ -21,7 +21,7 @@ var Info = {
 	name: "CheckpointGaia",
 	description: "Checkpoint Gaia",
 	author: "NetFishers",
-	version: "1.1"
+	version: "1.2"
 };
 
 var Config = {
@@ -266,7 +266,7 @@ function snapshot(cli, device, config, debug) {
 		if (macAddress) {
 			networkInterface.mac = macAddress[1];
 		}
-		if (interfaces[i].config.match(/^ state off/m)) {
+		if (interfaces[i].config.match(/^ *state off/m)) {
 			networkInterface.enabled = false;
 		}
 		device.add("networkInterface", networkInterface);

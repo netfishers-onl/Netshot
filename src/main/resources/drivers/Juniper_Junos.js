@@ -21,7 +21,7 @@ var Info = {
 	name: "JuniperJunos",
 	description: "Juniper Junos",
 	author: "NetFishers",
-	version: "2.11"
+	version: "2.12"
 };
 
 var Config = {
@@ -106,7 +106,7 @@ var CLI = {
 		fail: "Authentication failed - Telnet authentication failure."
 	},
 	operate: {
-		prompt: /^([A-Za-z0-9\.\-]+@[A-Za-z\-_0-9\.]+>) $/,
+		prompt: /^([A-Za-z0-9\.\-_]+@[A-Za-z\-_0-9\.]+>) $/,
 		error: /^(unknown command|syntax error|error: Unrecognized command)/m,
 		pager: {
 			avoid: [ "set cli complete-on-space off", "set cli screen-length 0" ],
@@ -123,7 +123,7 @@ var CLI = {
 
 	},
 	configure: {
-		prompt: /^([A-Za-z0-9\.\-]+@[A-Za-z\-_0-9\.]+#) $/,
+		prompt: /^([A-Za-z0-9\.\-_]+@[A-Za-z\-_0-9\.]+#) $/,
 		error: /^(unknown command|syntax error|invalid )/m,
 		clearPrompt: true,
 		macros: {
@@ -194,7 +194,7 @@ function snapshot(cli, device, config, debug) {
 		family = family.toUpperCase();
 		family = family.replace(/(^[A-Z0-9]+)-.*/, "$1");
 		device.set("family", "Juniper " + family);
-		if (family.match(/EX/)) {
+		if (family.match(/(EX|QFX)/)) {
 			device.set("networkClass", "SWITCHROUTER");
 		}
 		else if (family.match(/SRX/)) {

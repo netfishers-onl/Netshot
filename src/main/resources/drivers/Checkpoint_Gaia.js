@@ -21,7 +21,7 @@ var Info = {
 	name: "CheckpointGaia",
 	description: "Checkpoint Gaia",
 	author: "NetFishers",
-	version: "1.2"
+	version: "1.3"
 };
 
 var Config = {
@@ -128,7 +128,7 @@ var CLI = {
 		fail: "Authentication failed - Telnet authentication failure."
 	},
 	clish: {
-		prompt: /^([A-Za-z\-_0-9\.]+> )$/,
+		prompt: /^([A-Za-z\-_0-9\.:]+> )$/,
 		error: /^(CLINFR0329|NMSHNM0679) .*nvalid/m,
 		pager: {
 			avoid: "set clienv rows 0",

@@ -707,7 +707,7 @@
 <!-- netshot_0_7_1_to_0_7_2.xml -->
 	<changeSet author="netshot (generated)" id="0.7.2_1">
 		<preConditions onFail="MARK_RAN">
-			<not><foreignKeyConstraintExists foreignKeyName="UK_49k44bri62v926c9f4uw4t68q"/></not>
+			<foreignKeyConstraintExists foreignKeyName="UK_49k44bri62v926c9f4uw4t68q"/>
 		</preConditions>
 		<dropUniqueConstraint constraintName="UK_49k44bri62v926c9f4uw4t68q" tableName="device"/>
 	</changeSet>

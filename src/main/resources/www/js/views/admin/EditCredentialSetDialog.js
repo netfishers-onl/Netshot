@@ -49,7 +49,7 @@ define([
 					credentialSet.community = that.$('#credentialscommunity').val();
 				}
 				else if (credentialSet.type.match(/SNMP v3/)) {
-					credentialSet.username = that.$('#credentialssnmpv3username').val();
+					credentialSet.username = that.$('#credentialsusername').val();
 					credentialSet.authType = that.$('#credentialssnmpv3authtype').val();
 					credentialSet.authKey = that.$('#credentialssnmpv3authkey').val();
 					credentialSet.privType = that.$('#credentialssnmpv3privtype').val();
@@ -117,15 +117,15 @@ define([
 			if (typeof domain === "object" && domain) {
 				that.$('#credentialsdomain').val(domain.id);
 			}
-			$.each(CredentialSetModel.authTypes, function(index, authType) {
+			$.each(CredentialSetModel.prototype.authTypes, function(index, authType) {
 				$('<option />').attr('value', authType).text(authType).appendTo(that.$('#credentialssnmpv3authtype'));
 			});
-			$.each(CredentialSetModel.privTypes, function(index, privType) {
+			$.each(CredentialSetModel.prototype.privTypes, function(index, privType) {
 				$('<option />').attr('value', privType).text(privType).appendTo(that.$('#credentialssnmpv3privtype'));
 			});
 			if (that.model.get('type').match(/SNMP v3/)) {
-				that.$('#credentialssnmpv3authtype').val(that.model.get('snmpv3authtype'));
-				that.$('#credentialssnmpv3privtype').val(that.model.get('snmpv3privtype'));
+				that.$('#credentialssnmpv3authtype').val(that.model.get('authType'));
+				that.$('#credentialssnmpv3privtype').val(that.model.get('privType'));
 			}
 
 			this.$("#credentialsname").select();

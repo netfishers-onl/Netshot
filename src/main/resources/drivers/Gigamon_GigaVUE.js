@@ -21,7 +21,7 @@ var Info = {
 	name: "GigamonGigaVUE",
 	description: "Gigamon GigaVUE",
 	author: "NetFishers",
-	version: "1.0"
+	version: "1.1"
 };
 
 var Config = {
@@ -196,8 +196,8 @@ function snapshot(cli, device, config, debug) {
 	if (productModel && productHw && hostId) {
 		device.add("module", {
 			slot: "Chassis",
-			partNumber: productModel + " (" + productHw + ")",
-			serialNumber: hostId,
+			partNumber: productModel[1] + " (" + productHw[1] + ")",
+			serialNumber: hostId[1],
 		});
 	}
 	
@@ -251,7 +251,7 @@ function snapshot(cli, device, config, debug) {
 		portConfigs[name] += match[2];
 		portConfigs[name] += "\n";
 	}
-	for (var p in ports) {
+	for (var p in portConfigs) {
 		var networkInterface = {
 			name: p,
 			ip: [],

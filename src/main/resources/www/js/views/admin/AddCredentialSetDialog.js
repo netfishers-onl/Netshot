@@ -39,7 +39,6 @@ define([
 					password: that.$('#credentialspassword').val(),
 					superPassword: that.$('#credentialssuper').val(),
 					community: that.$('#credentialscommunity').val(),
-					username: that.$('#credentialssnmpv3username').val(),
 					authType: that.$('#credentialssnmpv3authtype').val(),
 					authKey: that.$('#credentialssnmpv3authkey').val(),
 					privType: that.$('#credentialssnmpv3privtype').val(),
@@ -104,10 +103,10 @@ define([
 				$('<option />').attr('value', domain.get('id'))
 						.text(domain.get('name')).appendTo(that.$('#credentialsdomain'));
 			});
-			$.each(CredentialSetModel.authTypes, function(index, authType) {
+			$.each(CredentialSetModel.prototype.authTypes, function(index, authType) {
 				$('<option />').attr('value', authType).text(authType).appendTo(that.$('#credentialssnmpv3authtype'));
 			});
-			$.each(CredentialSetModel.privTypes, function(index, privType) {
+			$.each(CredentialSetModel.prototype.privTypes, function(index, privType) {
 				$('<option />').attr('value', privType).text(privType).appendTo(that.$('#credentialssnmpv3privtype'));
 			});
 			this.$("#credentialsname").select();

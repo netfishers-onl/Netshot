@@ -8,6 +8,14 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.11.O - 2019-01-27
+
+* Fix some bugs with PostgreSQL
+* Add SNMPv3 (formatted work from @eczema)
+* Netshot is now using Liquibase for the DB schema migrations
+* New drivers: Checkpoint Gaia, Gigamon GigaVUE
+* A few other bug fixes especially in drivers
+
 0.10.0 - 2018-10-20
 
 * Add support for PostgreSQL as underlying database (thanks to @eczema) -- experimental for now though.

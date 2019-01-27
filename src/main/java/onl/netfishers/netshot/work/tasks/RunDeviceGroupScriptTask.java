@@ -100,20 +100,20 @@ public class RunDeviceGroupScriptTask extends Task {
 		DeviceDriver driver = DeviceDriver.getDriverByName(this.deviceDriver);
 		if (driver == null) {
 			logger.error("No such device driver {}.", deviceDriver);
-			this.logIt("Unknown device driver.", 1);
+			this.error("Unknown device driver.");
 			this.status = Status.FAILURE;
 			return;
 		}
 
 		for (Device device : devices) {
-			this.logIt(String.format("Starting run script task for device %s.", device.getName()), 5);
+			this.info(String.format("Starting run script task for device %s.", device.getName()));
 			RunDeviceScriptTask task = new RunDeviceScriptTask(device, script, driver, comment, author);
 			try {
 				TaskManager.addTask(task);
 			}
 			catch (Exception e) {
 				logger.error("Error while scheduling the individual snapshot task.", e);
-				this.logIt("Error while scheduling the task.", 1);
+				this.error("Error while scheduling the task.");
 			}
 		}
 		logger.debug("Everything went fine.");

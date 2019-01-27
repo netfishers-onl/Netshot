@@ -111,8 +111,8 @@ public class ScanSubnetsTask extends Task {
 						max--;
 					}
 					logger.trace("Will scan from {} to {}.", min, max);
-					this.logIt(String.format("Will scan %s (from %d to %d)", subnet.getPrefix(),
-							min, max), 5);
+					this.info(String.format("Will scan %s (from %d to %d)", subnet.getPrefix(),
+							min, max));
 					List<Integer> existing = session
 							.createQuery("select d.mgmtAddress.address from Device d where d.mgmtAddress.address >= :min and d.mgmtAddress.address <= :max")
 							.setInteger("min", min)
@@ -127,7 +127,7 @@ public class ScanSubnetsTask extends Task {
 			}
 			catch (HibernateException e) {
 				logger.error("Error while retrieving the existing devices in the scope.", e);
-				this.logIt("Error while checking the existing devices.", 1);
+				this.error("Error while checking the existing devices.");
 				this.status = Status.FAILURE;
 				return;
 			}
@@ -140,7 +140,7 @@ public class ScanSubnetsTask extends Task {
 			}
 			catch (Exception e) {
 				logger.error("Error while retrieving the communities.", e);
-				this.logIt("Error while getting the communities.", 1);
+				this.error("Error while getting the communities.");
 				this.status = Status.FAILURE;
 				return;
 			}
@@ -150,7 +150,7 @@ public class ScanSubnetsTask extends Task {
 		}
 		if (knownCommunities.size() == 0) {
 			logger.error("No available SNMP community to scan devices.");
-			this.logIt("No available SNMP community to scan devices.", 1);
+			this.error("No available SNMP community to scan devices.");
 			this.status = Status.FAILURE;
 			return;
 		}
@@ -162,10 +162,10 @@ public class ScanSubnetsTask extends Task {
 				Network4Address address = new Network4Address(a, 32);
 				if (!address.isNormalUnicast()) {
 					logger.trace("Bad address {} skipped.", a);
-					this.logIt(String.format("Skipping %s.", address.getIp()), 4);
+					this.info(String.format("Skipping %s.", address.getIp()));
 					continue;
 				}
-				this.logIt("Adding a task to scan " + address.getIp(), 5);
+				this.info("Adding a task to scan " + address.getIp());
 				logger.trace("Will add a discovery task for device with IP {} ({}).", a, address.getIp());
 				DiscoverDeviceTypeTask discoverTask = new DiscoverDeviceTypeTask(address, this.getDomain(), comments, author);
 				for (DeviceCredentialSet credentialSet : knownCommunities) {
@@ -175,7 +175,7 @@ public class ScanSubnetsTask extends Task {
 			}
 			catch (Exception e) {
 				logger.error("Error while adding discovery task.", e);
-				this.logIt("Error while adding discover device type: " + e.getMessage(), 2);
+				this.error("Error while adding discover device type: " + e.getMessage());
 			}
 		}
 		

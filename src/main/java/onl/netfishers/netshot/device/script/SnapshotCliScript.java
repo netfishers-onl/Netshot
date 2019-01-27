@@ -1,0 +1,177 @@
+package onl.netfishers.netshot.device.script;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.Date;
+import java.util.Map;
+import java.util.regex.Matcher;
+
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
+
+import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import onl.netfishers.netshot.Database;
+import onl.netfishers.netshot.Netshot;
+import onl.netfishers.netshot.device.Config;
+import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.device.DeviceDataProvider;
+import onl.netfishers.netshot.device.Device.InvalidCredentialsException;
+import onl.netfishers.netshot.device.Device.MissingDeviceDriverException;
+import onl.netfishers.netshot.device.DeviceDriver;
+import onl.netfishers.netshot.device.DeviceDriver.DriverProtocol;
+import onl.netfishers.netshot.device.access.Cli;
+import onl.netfishers.netshot.device.attribute.AttributeDefinition;
+import onl.netfishers.netshot.device.attribute.ConfigAttribute;
+import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
+import onl.netfishers.netshot.device.script.helper.JsCliHelper;
+import onl.netfishers.netshot.device.script.helper.JsCliScriptOptions;
+import onl.netfishers.netshot.device.script.helper.JsConfigHelper;
+import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
+import onl.netfishers.netshot.work.TaskLogger;
+
+public class SnapshotCliScript extends CliScript {
+	/** The logger. */
+	private static Logger logger = LoggerFactory.getLogger(SnapshotCliScript.class);
+
+	public SnapshotCliScript(boolean cliLogging) {
+		super(cliLogging);
+	}
+
+	@Override
+	protected void run(Session session, Device device, Cli cli, DriverProtocol protocol, DeviceCliAccount cliAccount)
+			throws InvalidCredentialsException, IOException, ScriptException, MissingDeviceDriverException {
+
+		TaskLogger taskLogger = this.getJsLogger();
+		JsCliHelper jsCliHelper = new JsCliHelper(cli, cliAccount, taskLogger, this.getCliLogger());
+		DeviceDriver driver = device.getDeviceDriver();
+		ScriptEngine engine = driver.getEngine();
+		try {
+			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper);
+			options.setDevice(new JsDeviceHelper(device, taskLogger));
+			Config config = new Config(device);
+			options.setConfig(new JsConfigHelper(device, config, taskLogger));
+			options.setDataProvider(new DeviceDataProvider(session, device));
+			((Invocable) engine).invokeFunction("_connect", "snapshot", protocol.value(), options, taskLogger);
+			boolean different = false;
+			try {
+				Config lastConfig = Database.unproxy(device.getLastConfig());
+				if (lastConfig == null) {
+					different = true;
+				}
+				else {
+					Map<String, ConfigAttribute> oldAttributes = lastConfig.getAttributeMap();
+					Map<String, ConfigAttribute> newAttributes = config.getAttributeMap();
+					for (AttributeDefinition definition : driver.getAttributes()) {
+						if (definition.getLevel() != AttributeLevel.CONFIG) {
+							continue;
+						}
+						ConfigAttribute oldAttribute = oldAttributes.get(definition.getName());
+						ConfigAttribute newAttribute = newAttributes.get(definition.getName());
+						if (oldAttribute != null) {
+							if (!oldAttribute.equals(newAttribute)) {
+								different = true;
+								break;
+							}
+						}
+						else if (newAttribute != null) {
+							different = true;
+							break;
+						}
+					}
+				}
+			}
+			catch (Exception e) {
+				logger.error("Error while comparing old and new configuration. Will save the new configuration.", e);
+			}
+			if (different) {
+				device.setLastConfig(config);
+				device.getConfigs().add(config);
+			}
+			else {
+				taskLogger.info("The configuration hasn't changed. Not storing a new one in the DB.");
+			}
+			
+
+			String path = Netshot.getConfig("netshot.snapshots.dump");
+			if (path != null) {
+				try {
+					BufferedWriter output = new BufferedWriter(
+							new FileWriter(Paths.get(path, device.getName()).normalize().toFile()));
+					Map<String, ConfigAttribute> newAttributes = config.getAttributeMap();
+					for (AttributeDefinition definition : driver.getAttributes()) {
+						if (!definition.isDump()) {
+							continue;
+						}
+						String preText = definition.getPreDump();
+						if (preText != null) {
+							preText = preText.replaceAll("%when%",
+									Matcher.quoteReplacement(new Date().toString()));
+							output.write(preText);
+							output.write("\r\n");
+						}
+						ConfigAttribute newAttribute = newAttributes.get(definition.getName());
+						if (newAttribute != null) {
+							String text = newAttribute.getAsText();
+							if (text != null) {
+								if (definition.getPreLineDump() != null || definition.getPostLineDump() != null) {
+									String[] lines = text.split("\\r?\\n");
+									for (String line : lines) {
+										if (definition.getPreLineDump() != null) {
+											output.write(definition.getPreLineDump());
+										}
+										output.write(line);
+										if (definition.getPostLineDump() != null) {
+											output.write(definition.getPostLineDump());
+										}
+										output.write("\r\n");
+									}
+								}
+								else {
+									output.write(text);
+								}
+							}
+						}
+						String postText = definition.getPostDump();
+						if (postText != null) {
+							postText = postText.replaceAll("%when%",
+									Matcher.quoteReplacement(new Date().toString()));
+							output.write(postText);
+							output.write("\r\n");
+						}
+					}
+					output.close();
+					taskLogger.info("The configuration has been saved as a file in the dump folder.");
+				}
+				catch (Exception e) {
+					logger.warn("Couldn't write the configuration into file.", e);
+					taskLogger.warn("Unable to write the configuration as a file.");
+				}
+			}
+		}
+		catch (ScriptException e) {
+			logger.error("Error while running snapshot using driver {}.", driver.getName(), e);
+			taskLogger.error(String.format("Error while running snapshot using driver %s: '%s'.",
+					driver.getName(), e.getMessage()));
+			if (e.getMessage().contains("Authentication failed")) {
+				throw new InvalidCredentialsException("Authentication failed");
+			}
+			else {
+				throw e;
+			}
+		}
+		catch (NoSuchMethodException e) {
+			logger.error("No such method 'snapshot' while using driver {}.", driver.getName(), e);
+			taskLogger.error(String.format("No such method 'snapshot' while using driver %s to take snapshot: '%s'.",
+					driver.getName(), e.getMessage()));
+			throw new ScriptException(e);
+		}
+	}
+
+}

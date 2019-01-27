@@ -34,6 +34,8 @@ import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DynamicDeviceGroup;
 import onl.netfishers.netshot.device.Network4Address;
+import onl.netfishers.netshot.device.script.CliScript;
+import onl.netfishers.netshot.device.script.SnapshotCliScript;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 
@@ -168,29 +170,29 @@ public class TakeSnapshotTask extends Task {
 	@Override
 	public void run() {
 		logger.debug("Starting snapshot task for device {}.", device.getId());
-		this.logIt(String.format("Snapshot task for device %s (%s).",
-				device.getName(), device.getMgmtAddress().getIp()), 5);
+		this.info(String.format("Snapshot task for device %s (%s).",
+				device.getName(), device.getMgmtAddress().getIp()));
 
 		Session session = Database.getSession();
+		CliScript cliScript = new SnapshotCliScript(this.debugEnabled);
 		try {
 			session.beginTransaction();
 			session.refresh(device);
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				logger.trace("Device not INPRODUCTION, stopping the snapshot task.");
-				this.logIt("The device is not enabled (not in production).", 2);
+				this.warn("The device is not enabled (not in production).");
 				this.status = Status.FAILURE;
 				return;
 			}
 			if (!TakeSnapshotTask.checkRunningSnapshot(device.getId())) {
 				logger.trace("Snapshot task already ongoing for this device, cancelling.");
-				this.logIt("A snapshot task is already running for this device, cancelling this task.", 2);
+				this.warn("A snapshot task is already running for this device, cancelling this task.");
 				this.status = Status.CANCELLED;
 				return;
 			}
-
-			device.takeSnapshot(this.debugEnabled);
-			this.logIt(String.format("Device logs (%d next lines):", device.getLog().size()), 3);
-			this.log.append(device.getPlainLog());
+			
+			cliScript.connectRun(session, device);
+			this.log.append(cliScript.getPlainJsLog());
 			session.update(device);
 			session.getTransaction().commit();
 			this.status = Status.SUCCESS;
@@ -198,18 +200,15 @@ public class TakeSnapshotTask extends Task {
 		catch (Exception e) {
 			session.getTransaction().rollback();
 			logger.error("Error while taking the snapshot.", e);
-			this.logIt("Error while taking the snapshot: " + e.getMessage(), 3);
-			this.logIt(
-					String.format("Device logs (%d next lines):", device.getLog().size()),
-					3);
-			this.log.append(device.getPlainLog());
+			this.error("Error while taking the snapshot: " + e.getMessage());
+			this.log.append(cliScript.getPlainJsLog());
 			this.status = Status.FAILURE;
 			return;
 		}
 		finally {
 			try {
 				if (this.debugEnabled) {
-					this.debugLog = new DebugLog(device.getPlainSessionDebugLog());
+					this.debugLog = new DebugLog(cliScript.getPlainCliLog());
 				}
 			}
 			catch (Exception e1) {

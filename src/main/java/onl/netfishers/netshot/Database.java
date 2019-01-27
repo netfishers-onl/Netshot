@@ -73,6 +73,13 @@ import onl.netfishers.netshot.device.credentials.DeviceSnmpv3Community;
 import onl.netfishers.netshot.device.credentials.DeviceSshAccount;
 import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
 import onl.netfishers.netshot.device.credentials.DeviceTelnetAccount;
+import onl.netfishers.netshot.diagnostic.Diagnostic;
+import onl.netfishers.netshot.diagnostic.DiagnosticBinaryResult;
+import onl.netfishers.netshot.diagnostic.DiagnosticLongTextResult;
+import onl.netfishers.netshot.diagnostic.DiagnosticNumericResult;
+import onl.netfishers.netshot.diagnostic.DiagnosticResult;
+import onl.netfishers.netshot.diagnostic.DiagnosticTextResult;
+import onl.netfishers.netshot.diagnostic.SimpleDiagnostic;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.tasks.DeviceJsScript;
@@ -304,7 +311,7 @@ public class Database {
 			configuration
 				.setProperty("factory_class", "org.hibernate.transaction.JDBCTransactionFactory")
 				.setProperty("current_session_context_class", "thread")
-				.setProperty("hibernate.hbm2ddl.auto", "")
+				.setProperty("hibernate.hbm2ddl.auto", "update") // "update" or ""
 				//.setProperty("hibernate.show_sql", "true")
 				.addAnnotatedClass(Device.class).addAnnotatedClass(DeviceGroup.class)
 				.addAnnotatedClass(Config.class)
@@ -342,6 +349,13 @@ public class Database {
 				.addAnnotatedClass(SoftwareRule.class)
 				.addAnnotatedClass(HardwareRule.class)
 				.addAnnotatedClass(DeviceJsScript.class)
+				.addAnnotatedClass(Diagnostic.class)
+				.addAnnotatedClass(SimpleDiagnostic.class)
+				.addAnnotatedClass(DiagnosticResult.class)
+				.addAnnotatedClass(DiagnosticBinaryResult.class)
+				.addAnnotatedClass(DiagnosticNumericResult.class)
+				.addAnnotatedClass(DiagnosticLongTextResult.class)
+				.addAnnotatedClass(DiagnosticTextResult.class)
 				.addAnnotatedClass(User.class);
 
 			for (Class<?> clazz : Task.getTaskClasses()) {

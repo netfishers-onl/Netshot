@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlElement;
 import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
+import onl.netfishers.netshot.device.script.JsCliScript;
 import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
@@ -36,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This task takes a snapshot of a device.
+ * This task runs a JS script on a device.
  */
 @Entity
 public class RunDeviceScriptTask extends Task {
@@ -80,30 +81,32 @@ public class RunDeviceScriptTask extends Task {
 	@Override
 	public void run() {
 		logger.debug("Starting script task for device {}.", device.getId());
-		this.logIt(String.format("Run script task for device %s (%s).",
-				device.getName(), device.getMgmtAddress().getIp()), 5);
+		this.info(String.format("Run script task for device %s (%s).",
+				device.getName(), device.getMgmtAddress().getIp()));
 
+		JsCliScript cliScript = null;
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
 			session.refresh(device);
 			if (deviceDriver == null || !deviceDriver.equals(device.getDriver())) {
 				logger.trace("The script doesn't apply to the driver of the device.");
-				this.logIt("The script doesn't apply to the driver of the device.", 2);
+				this.error("The script doesn't apply to the driver of the device.");
 				this.status = Status.CANCELLED;
 				return;
 			}
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				logger.trace("Device not INPRODUCTION, stopping the run script task.");
-				this.logIt("The device is not enabled (not in production).", 2);
+				this.warn("The device is not enabled (not in production).");
 				this.status = Status.FAILURE;
 				return;
 			}
 			
-			device.runScript(script, false);
+			cliScript = new JsCliScript(script, false);
+			cliScript.connectRun(session, device);
 			
-			this.logIt(String.format("Device logs (%d next lines):", device.getLog().size()), 3);
-			this.log.append(device.getPlainLog());
+			this.info(String.format("Device logs (%d next lines):", cliScript.getJsLog().size()));
+			this.log.append(cliScript.getPlainJsLog());
 			session.update(device);
 			session.getTransaction().commit();
 			this.status = Status.SUCCESS;
@@ -111,11 +114,12 @@ public class RunDeviceScriptTask extends Task {
 		catch (Exception e) {
 			session.getTransaction().rollback();
 			logger.error("Error while running the script.", e);
-			this.logIt("Error while running the script: " + e.getMessage(), 3);
-			this.logIt(
-					String.format("Device logs (%d next lines):", device.getLog().size()),
-					3);
-			this.log.append(device.getPlainLog());
+			this.error("Error while running the script: " + e.getMessage());
+			if (cliScript != null) {
+				this.info(String.format("Device logs (%d next lines):", cliScript.getJsLog().size()));
+				this.log.append(cliScript.getPlainJsLog());
+			}
+			
 			this.status = Status.FAILURE;
 			return;
 		}

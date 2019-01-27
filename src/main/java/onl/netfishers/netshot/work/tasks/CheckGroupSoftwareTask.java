@@ -127,8 +127,8 @@ public class CheckGroupSoftwareTask extends Task {
 	@Override
 	public void run() {
 		logger.debug("Starting check software compliance and hardware support status task for group {}.", deviceGroup.getId());
-		this.logIt(String.format("Check software compliance task for group %s.",
-				deviceGroup.getName()), 5);
+		this.trace(String.format("Check software compliance task for group %s.",
+				deviceGroup.getName()));
 
 		Session session = Database.getSession();
 		try {
@@ -174,7 +174,7 @@ public class CheckGroupSoftwareTask extends Task {
 
 			}
 			logger.error("Error while checking compliance.", e);
-			this.logIt("Error while checking compliance: " + e.getMessage(), 2);
+			this.error("Error while checking compliance: " + e.getMessage());
 			this.status = Status.FAILURE;
 			return;
 		}

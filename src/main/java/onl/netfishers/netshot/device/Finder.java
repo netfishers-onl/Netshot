@@ -34,12 +34,13 @@ import java.util.regex.Pattern;
 
 import onl.netfishers.netshot.compliance.SoftwareRule;
 import onl.netfishers.netshot.device.Device.NetworkClass;
-import onl.netfishers.netshot.device.DeviceDriver.AttributeDefinition;
-import onl.netfishers.netshot.device.DeviceDriver.AttributeLevel;
-import onl.netfishers.netshot.device.DeviceDriver.AttributeType;
 import onl.netfishers.netshot.device.Finder.Expression.FinderParseException;
+import onl.netfishers.netshot.device.attribute.AttributeDefinition;
+import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
 
 import org.hibernate.Query;
+
 
 /**
  * A Finder finds devices based on a text expression.

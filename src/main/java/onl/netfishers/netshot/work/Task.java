@@ -467,15 +467,61 @@ public abstract class Task implements Cloneable {
 			return true;
 		}
 	}
+	
+	public void debug(String message) {
+		this.log.append(String.format("[DEBUG] %s\n", message));
+	}
+	
+	public void trace(String message) {
+		this.log.append(String.format("[TRACE] %s\n", message));
+	}
+	
+	public void info(String message) {
+		this.log.append(String.format("[INFO] %s\n", message));
+	}
+	
+	public void warn(String message) {
+		this.log.append(String.format("[WARN] %s\n", message));
+	}
+	
+	public void error(String message) {
+		this.log.append(String.format("[ERROR] %s\n", message));
+	}
+	
 
 	/**
-	 * Log it.
-	 *
-	 * @param log the log
-	 * @param level the level
+	 * Get the JS logger
+	 * @return the JS logger
 	 */
-	public void logIt(String log, int level) {
-		this.log.append(String.format("[%02d] %s\n", level, log));
+	@Transient
+	protected TaskLogger getJsLogger() {
+		return new TaskLogger() {
+			
+			@Override
+			public void warn(String message) {
+				warn(message);
+			}
+			
+			@Override
+			public void trace(String message) {
+				trace(message);
+			}
+			
+			@Override
+			public void info(String message) {
+				info(message);
+			}
+			
+			@Override
+			public void error(String message) {
+				error(message);
+			}
+			
+			@Override
+			public void debug(String message) {
+				debug(message);
+			}
+		};
 	}
 
 	/**

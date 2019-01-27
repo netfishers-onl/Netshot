@@ -85,8 +85,8 @@ public class CheckComplianceTask extends Task {
 	@Override
 	public void run() {
 		logger.debug("Starting check compliance task for device {}.", device.getId());
-		this.logIt(String.format("Check compliance task for device %s (%s).",
-				device.getName(), device.getMgmtAddress().getIp()), 5);
+		this.trace(String.format("Check compliance task for device %s (%s).",
+				device.getName(), device.getMgmtAddress().getIp()));
 
 		Session session = Database.getSession();
 		try {
@@ -136,7 +136,7 @@ public class CheckComplianceTask extends Task {
 		catch (Exception e) {
 			session.getTransaction().rollback();
 			logger.error("Error while checking compliance.", e);
-			this.logIt("Error while checking compliance: " + e.getMessage(), 2);
+			this.error("Error while checking compliance: " + e.getMessage());
 			this.status = Status.FAILURE;
 			return;
 		}

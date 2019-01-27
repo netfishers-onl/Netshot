@@ -93,7 +93,7 @@ public class TaskManager {
 			session.beginTransaction();
 			task.onCancel();
 			task.setCancelled();
-			task.logIt(reason, 2);
+			task.warn(reason);
 			session.saveOrUpdate(task);
 			session.getTransaction().commit();
 			logger.trace("Task successfully cancelled.");

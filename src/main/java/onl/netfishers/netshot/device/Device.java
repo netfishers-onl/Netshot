@@ -18,7 +18,6 @@
  */
 package onl.netfishers.netshot.device;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -44,39 +43,28 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 import javax.persistence.Version;
-import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import onl.netfishers.netshot.Database;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Exemption;
 import onl.netfishers.netshot.compliance.Rule;
 import onl.netfishers.netshot.compliance.SoftwareRule;
 import onl.netfishers.netshot.compliance.SoftwareRule.ConformanceLevel;
-import onl.netfishers.netshot.device.DeviceDriver.DriverProtocol;
-import onl.netfishers.netshot.device.access.Cli;
-import onl.netfishers.netshot.device.access.Ssh;
-import onl.netfishers.netshot.device.access.Telnet;
 import onl.netfishers.netshot.device.attribute.DeviceAttribute;
-import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
-import onl.netfishers.netshot.device.credentials.DeviceSshAccount;
-import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
-import onl.netfishers.netshot.device.credentials.DeviceTelnetAccount;
+import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.work.tasks.CheckComplianceTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceScriptTask;
 import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
-
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A device.
@@ -147,9 +135,6 @@ public class Device {
 	/** The Constant DEFAULTNAME. */
 	public static final String DEFAULTNAME = "[NONAME]";
 
-	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(Device.class);
-
 	/** The attributes. */
 	private Set<DeviceAttribute> attributes = new HashSet<DeviceAttribute>();
 
@@ -177,6 +162,9 @@ public class Device {
 
 	/** The configs. */
 	protected List<Config> configs = new ArrayList<Config>();
+	
+	/** The diagnostic results. */
+	protected Set<DiagnosticResult> diagnosticResults = new HashSet<DiagnosticResult>();
 
 	/** The contact. */
 	protected String contact = "";
@@ -218,12 +206,6 @@ public class Device {
 
 	/** The location. */
 	protected String location = "";
-
-	/** The log. */
-	protected transient List<String> log  = new ArrayList<String>();
-	
-	/** Session debug log. */
-	protected transient List<String> sessionDebugLog;
 
 	/** The mgmt address. */
 	protected Network4Address mgmtAddress;
@@ -391,7 +373,7 @@ public class Device {
 
 	@SuppressWarnings("unchecked")
 	@Transient
-	protected List<DeviceCredentialSet> getAutoCredentialSetList(Session session) throws HibernateException {
+	public List<DeviceCredentialSet> getAutoCredentialSetList(Session session) throws HibernateException {
 		return session
 				.createQuery("from DeviceCredentialSet cs where (cs.mgmtDomain = :domain or cs.mgmtDomain is null) and (not (cs.deviceSpecific = :true))")
 				.setEntity("domain", this.getMgmtDomain())
@@ -527,13 +509,11 @@ public class Device {
 	public DeviceDriver getDeviceDriver() throws MissingDeviceDriverException {
 		if (driver == null) {
 			String message = String.format("The device with ID %d has no associated driver.", id);
-			this.logIt(message, 1);
 			throw new MissingDeviceDriverException(message);
 		}
 		DeviceDriver deviceDriver = DeviceDriver.getDriverByName(driver);
 		if (deviceDriver == null) {
 			String message = String.format("Unable to locate the driver %s for device %d.", driver, id);
-			this.logIt(message, 1);
 			throw new MissingDeviceDriverException(message);
 		}
 		return deviceDriver;
@@ -608,28 +588,6 @@ public class Device {
 	public String getLocation() {
 		return location;
 	}
-
-
-	/**
-	 * Gets the log.
-	 *
-	 * @return the log
-	 */
-	@Transient
-	public List<String> getLog() {
-		return log;
-	}
-	
-	/**
-	 * Gets the debug logs of the session.
-	 * 
-	 * @return the logs
-	 */
-	@Transient
-	public List<String> getSessionDebugLog() {
-		return sessionDebugLog;
-	}
-
 
 	/**
 	 * Gets the mgmt address.
@@ -711,39 +669,6 @@ public class Device {
 	@ManyToMany(fetch = FetchType.LAZY, mappedBy = "cachedDevices")
 	public Set<DeviceGroup> getOwnerGroups() {
 		return ownerGroups;
-	}
-
-
-	/**
-	 * Gets the plain log.
-	 *
-	 * @return the plain log
-	 */
-	@Transient
-	public String getPlainLog() {
-		StringBuffer buffer = new StringBuffer();
-		for (String log : this.log) {
-			buffer.append(log);
-			buffer.append("\n");
-		}
-		return buffer.toString();
-	}
-	
-	/**
-	 * Gets the session debug logs as plain string.
-	 * @return the logs
-	 */
-	@Transient
-	public String getPlainSessionDebugLog() {
-		if (this.sessionDebugLog == null) {
-			return null;
-		}
-		StringBuffer buffer = new StringBuffer();
-		for (String log : this.sessionDebugLog) {
-			buffer.append(log);
-			buffer.append("\n");
-		}
-		return buffer.toString();
 	}
 
 
@@ -905,16 +830,6 @@ public class Device {
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * Log it.
-	 *
-	 * @param log the log
-	 * @param level the level
-	 */
-	protected void logIt(String log, int level) {
-		this.log.add("[" + level + "] " + log);
 	}
 
 	/**
@@ -1257,206 +1172,19 @@ public class Device {
 	public void setConnectAddress(Network4Address connectAddress) {
 		this.connectAddress = connectAddress;
 	}
-
-
-
-	public void takeSnapshot(boolean debugSession) throws IOException, MissingDeviceDriverException, InvalidCredentialsException, ScriptException {
-		this.execute(null, debugSession);
-	}
 	
-	public void runScript(String script, boolean debugSession) throws IOException, MissingDeviceDriverException, InvalidCredentialsException, ScriptException {
-		this.execute(script, debugSession);
-	}
-	
-	private void execute(String script, boolean debugSession) throws IOException, MissingDeviceDriverException, InvalidCredentialsException, ScriptException {
-		DeviceDriver deviceDriver = getDeviceDriver();
-		
-		boolean sshOpened = true;
-		boolean telnetOpened = true;
-		Network4Address address = mgmtAddress;
-		if (connectAddress != null) {
-			address = connectAddress;
+	public void addDiagnosticResult(DiagnosticResult result) {
+		if (result == null) {
+			return;
 		}
-		Set<DeviceCredentialSet> credentialSets = this.credentialSets;
-		
-		if (specificCredentialSet != null) {
-			credentialSets = new HashSet<DeviceCredentialSet>();
-			credentialSets.add(specificCredentialSet);
-		}
-		if (deviceDriver.getProtocols().contains(DriverProtocol.SSH)) {
-			for (DeviceCredentialSet credentialSet : credentialSets) {
-				if (credentialSet instanceof DeviceSshAccount) {
-					Cli cli;
-					if (credentialSet instanceof DeviceSshKeyAccount) {
-						cli = new Ssh(address, sshPort, ((DeviceSshKeyAccount) credentialSet).getUsername(),
-								((DeviceSshKeyAccount) credentialSet).getPublicKey(),
-								((DeviceSshKeyAccount) credentialSet).getPrivateKey(),
-								((DeviceSshKeyAccount) credentialSet).getPassword());
-					}
-					else {
-						cli = new Ssh(address, sshPort, ((DeviceSshAccount) credentialSet).getUsername(),
-								((DeviceSshAccount) credentialSet).getPassword());
-					}
-					try {
-						cli.connect();
-						deviceDriver.runScript(this, cli, DriverProtocol.SSH, (DeviceCliAccount) credentialSet, script, debugSession);
-						return;
-					}
-					catch (InvalidCredentialsException e) {
-						logIt(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()), 1);
-					}
-					catch (ScriptException e) {
-						throw e;
-					}
-					catch (Exception e) {
-						logger.warn("Unable to open an SSH connection to {}:{}.", address.getIp(), sshPort, e);
-						if (e.getMessage().contains("Auth fail")) {
-							logIt(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()), 1);
-						}
-						else {
-							logIt("Unable to open an SSH socket to the device.", 2);
-							sshOpened = false;
-							break;
-						}
-					}
-					finally {
-						cli.disconnect();
-					}
-				}
+		Iterator<DiagnosticResult> existingIterator = this.diagnosticResults.iterator();
+		while (existingIterator.hasNext()) {
+			DiagnosticResult existingResult = existingIterator.next();
+			if (existingResult.getDiagnostic().equals(result.getDiagnostic())) {
+				existingIterator.remove();
 			}
 		}
-		if (deviceDriver.getProtocols().contains(DriverProtocol.TELNET)) {
-			for (DeviceCredentialSet credentialSet : credentialSets) {
-				if (credentialSet instanceof DeviceTelnetAccount) {
-					Cli cli = new Telnet(address, telnetPort);
-					try {
-						cli.connect();
-						deviceDriver.runScript(this, cli, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet, script, debugSession);
-						return;
-					}
-					catch (InvalidCredentialsException e) {
-						logIt(String.format("Authentication failed using Telnet credential set %s.", credentialSet.getName()), 1);
-					}
-					catch (ScriptException e) {
-						throw e;
-					}
-					catch (IOException e) {
-						logger.warn("Unable to open a Telnet connection to {}:{}.", address.getIp(), telnetPort, e);
-						logIt("Unable to open a Telnet socket to the device.", 2);
-						telnetOpened = false;
-						break;
-					}
-					finally {
-						cli.disconnect();
-					}
-				}
-			}
-		}
-		if (this.autoTryCredentials && (sshOpened || telnetOpened)) {
-			Session session = Database.getSession();
-			try {
-				List<DeviceCredentialSet> globalCredentialSets = this
-						.getAutoCredentialSetList(session);
-				if (sshOpened) {
-					for (DeviceCredentialSet credentialSet : globalCredentialSets) {
-						if (credentialSet instanceof DeviceSshAccount) {
-							logIt(String.format("Will try SSH credentials %s.", credentialSet.getName()), 5);
-							Cli cli;
-							if (credentialSet instanceof DeviceSshKeyAccount) {
-								cli = new Ssh(address, sshPort, ((DeviceSshKeyAccount) credentialSet).getUsername(),
-										((DeviceSshKeyAccount) credentialSet).getPublicKey(),
-										((DeviceSshKeyAccount) credentialSet).getPrivateKey(),
-										((DeviceSshKeyAccount) credentialSet).getPassword());
-							}
-							else {
-								cli = new Ssh(address, sshPort, ((DeviceSshAccount) credentialSet).getUsername(),
-										((DeviceSshAccount) credentialSet).getPassword());
-							}
-							try {
-								cli.connect();
-								deviceDriver.runScript(this, cli, DriverProtocol.SSH, (DeviceCliAccount) credentialSet, script, debugSession);
-								Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
-								while (ci.hasNext()) {
-									DeviceCredentialSet c = ci.next();
-									if (c instanceof DeviceCliAccount) {
-										ci.remove();
-									}
-								}
-								credentialSets.add(credentialSet);
-								return;
-							}
-							catch (InvalidCredentialsException e) {
-								logIt(String.format("Authentication failed using Telnet credential set %s.", credentialSet.getName()), 1);
-							}
-							catch (ScriptException e) {
-								throw e;
-							}
-							catch (IOException e) {
-								logger.warn("Unable to open an SSH connection to {}:{}.", address.getIp(), sshPort, e);
-								if (e.getMessage().contains("Auth fail") || e.getMessage().contains("authentication failure")) {
-									logIt(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()), 1);
-								}
-								else {
-									logIt("Unable to open an SSH socket to the device.", 2);
-									break;
-								}
-							}
-							finally {
-								cli.disconnect();
-							}
-						}
-					}
-				}
-				if (telnetOpened) {
-					for (DeviceCredentialSet credentialSet : globalCredentialSets) {
-						if (credentialSet instanceof DeviceTelnetAccount) {
-							logIt(String.format("Will try Telnet credentials %s.", credentialSet.getName()), 5);
-							Cli cli = new Telnet(address, telnetPort);
-							try {
-								cli.connect();
-								deviceDriver.runScript(this, cli, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet, script, debugSession);
-								Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
-								while (ci.hasNext()) {
-									DeviceCredentialSet c = ci.next();
-									if (c instanceof DeviceCliAccount) {
-										ci.remove();
-									}
-								}
-								credentialSets.add(credentialSet);
-								return;
-							}
-							catch (InvalidCredentialsException e) {
-								logIt(String.format("Authentication failed using Telnet credential set %s.", credentialSet.getName()), 1);
-							}
-							catch (ScriptException e) {
-								throw e;
-							}
-							catch (IOException e) {
-								logger.warn("Unable to open a Telnet connection to {}:{}.", address.getIp(), telnetPort, e);
-								logIt("Unable to open a Telnet socket to the device.", 2);
-								telnetOpened = false;
-								break;
-							}
-							finally {
-								cli.disconnect();
-							}
-						}
-					}
-				}
-			}
-			catch (HibernateException e) {
-				session.getTransaction().rollback();
-				this.logIt("Error while retrieving the global credentials.", 2);
-				logger.error("Error while retrieving the global credentials.", e);
-			}
-			finally {
-				session.close();
-			}
-		}
-		if (!sshOpened && !telnetOpened) {
-			throw new IOException("Couldn't open either SSH or Telnet socket with the device.");
-		}
-		throw new InvalidCredentialsException("Couldn't find valid credentials.");
+		this.diagnosticResults.add(result);
 	}
 
 }

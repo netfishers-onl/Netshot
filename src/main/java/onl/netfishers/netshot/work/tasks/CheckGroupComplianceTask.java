@@ -123,8 +123,8 @@ public class CheckGroupComplianceTask extends Task {
 	@Override
 	public void run() {
 		logger.debug("Starting check compliance task for group {}.", deviceGroup.getId());
-		this.logIt(String.format("Check compliance task for group %s.",
-				deviceGroup.getName()), 5);
+		this.trace(String.format("Check compliance task for group %s.",
+				deviceGroup.getName()));
 
 		Session session = Database.getSession();
 		try {
@@ -161,7 +161,7 @@ public class CheckGroupComplianceTask extends Task {
 
 			}
 			logger.error("Error while checking compliance.", e);
-			this.logIt("Error while checking compliance: " + e.getMessage(), 2);
+			this.error("Error while checking compliance: " + e.getMessage());
 			this.status = Status.FAILURE;
 			return;
 		}

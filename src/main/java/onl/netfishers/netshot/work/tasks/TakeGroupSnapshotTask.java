@@ -106,18 +106,18 @@ public class TakeGroupSnapshotTask extends Task {
 		referenceDate.add(Calendar.HOUR, -this.getLimitToOutofdateDeviceHours());
 		for (Device device : devices) {
 			if (referenceDate.getTime().before(device.getChangeDate())) {
-				this.logIt(String.format("Ignoring device %s because it changed less than %d hours ago",
-						device.getName(), this.getLimitToOutofdateDeviceHours()), 5);
+				this.info(String.format("Ignoring device %s because it changed less than %d hours ago",
+						device.getName(), this.getLimitToOutofdateDeviceHours()));
 				continue;
 			}
-			this.logIt(String.format("Starting snapshot task for device %s.", device.getName()), 5);
+			this.info(String.format("Starting snapshot task for device %s.", device.getName()));
 			TakeSnapshotTask task = new TakeSnapshotTask(device, comment, author);
 			try {
 				TaskManager.addTask(task);
 			}
 			catch (Exception e) {
 				logger.error("Error while scheduling the individual snapshot task.", e);
-				this.logIt("Error while scheduling the task.", 1);
+				this.error("Error while scheduling the task.");
 			}
 		}
 		logger.debug("Everything went fine.");

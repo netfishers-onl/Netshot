@@ -16,8 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import onl.netfishers.netshot.device.Device.MissingDeviceDriverException;
-import onl.netfishers.netshot.device.DeviceDriver.AttributeDefinition;
-import onl.netfishers.netshot.device.DeviceDriver.AttributeLevel;
+import onl.netfishers.netshot.device.attribute.AttributeDefinition;
+import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
 import onl.netfishers.netshot.device.attribute.DeviceAttribute;
 

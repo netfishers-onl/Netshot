@@ -17,7 +17,7 @@
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-function _connect(_cli, _protocol, _function, _device, _config, _provider) {
+function _connect(_cli, _function, _protocol, _options, _logger) {
 	
 	var _toNative = function(o) {
 		if (o == null || typeof(o) == "undefined") {
@@ -333,11 +333,11 @@ function _connect(_cli, _protocol, _function, _device, _config, _provider) {
 	var debug = function(message) {
 		if (typeof(message) == "string") {
 			message = String(message);
-			_device.debug(message);
+			_logger.debug(message);
 		}
 	};
 	
-	var device = {
+	var deviceHelper = {
 		set: function(key, value) {
 			if (typeof(key) == "string") {
 				key = String(key);
@@ -351,7 +351,7 @@ function _connect(_cli, _protocol, _function, _device, _config, _provider) {
 			else if (typeof(value) == "string") {
 				value = String(value);
 			}
-			_device.set(key, value);
+			_options.device.set(key, value);
 		},
 		add: function(collection, value) {
 			if (typeof(collection) == "string") {
@@ -369,20 +369,20 @@ function _connect(_cli, _protocol, _function, _device, _config, _provider) {
 			else if (typeof(value) == "string") {
 				value = String(value);
 			}
-			_device.add(collection, value);
+			_options.device.add(collection, value);
 		},
 		get: function(key, id) {
 			if (typeof(key) == "string") {
 				key = String(key);
 				if (typeof(id) == "undefined") {
-					return _toNative(_provider.get(key));
+					return _toNative(_options.dataProvider.get(key));
 				}
 				else if (typeof(id) == "number" && !isNaN(id)) {
-					return _toNative(_provider.get(key, id));
+					return _toNative(_options.dataProvider.get(key, id));
 				}
 				else if (typeof(id) == "string") {
 					var name = String(id);
-					return _toNative(_provider.get(key, name));
+					return _toNative(_options.dataProvider.get(key, name));
 				}
 				else {
 					throw "Invalid device id to retrieve data from.";
@@ -392,8 +392,7 @@ function _connect(_cli, _protocol, _function, _device, _config, _provider) {
 		},
 	};
 	
-
-	var config = {
+	var configHelper = {
 		set: function(key, value) {
 			if (typeof(key) == "string") {
 				key = String(key);
@@ -407,22 +406,72 @@ function _connect(_cli, _protocol, _function, _device, _config, _provider) {
 			else if (typeof(value) == "string") {
 				value = String(value);
 			}
-			_config.set(key, value);
+			_options.config.set(key, value);
 		}
 	};
 	
-	if (_function == "snapshot") {
-		
-		_device.reset();
-		snapshot(cli, device, config, debug);
+	var diagnosticHelper = {
+		set: function(key, value) {
+			if (typeof(key) == "string") {
+				key = String(key);
+			}
+			else {
+				throw "The key should be a string in diagnostic.set.";
+			}
+			if (typeof(value) == "undefined") {
+				throw "Undefined value used in diagnostic.set, for key " + key + ".";
+			}
+			value = String(value);
+			_options.diagnosticResult.set(key, value);
+		}
+	};
+	
+	if (_function === "snapshot") {
+		_options.device.reset();
+		snapshot(cli, deviceHelper, configHelper, debug);
 	}
-	else if (_function == "run") {
-		
+	else if (_function === "run") {
 		if (typeof(run) != "function") {
 			throw "No 'run' function";
 		}
 		
-		run(cli, device, config, debug);
+		run(cli, deviceHelper, configHelper, debug);
+	}
+	else if (_function === "diagnostic") {
+		if (typeof(diagnose) != "function") {
+			throw "No 'diagnose' function";
+		}
+		
+		diagnose(cli, deviceHelper, diagnostic, debug);
+	}
+	else if (_function === "simpleDiagnostic") {
+		var diagnostics = _options.simpleDiagnostics;
+		if (typeof(diagnostics) === "object" && diagnostics instanceof Array) {
+			for (var k in diagnostics) {
+				var diagnostic = diagnostics[k];
+				cli.macro(diagnostic.cliMode);
+				var output = cli.command(diagnostic.command);
+				if (typeof output === "string") {
+					if (diagnostic.modifierPattern && diagnostic.modifierReplacement) {
+						try {
+							var pattern = new RegExp(diagnostic.modifierPattern);
+							output = output.replace(pattern, diagnostic.modifierPattern);
+						}
+						catch (setError) {
+							_options.error("Can't transform simple diagnostic output using the given regular expression. " + setError);
+							output = null;
+						}
+					}
+					output = String(output);
+				}
+				if (output !== null) {
+					diagnosticHelper.set(diagnostic.name, output);	
+				}
+			}
+		}
+		else {
+			throw "No 'simpleDiagnostic' array";
+		}
 	}
 }
 

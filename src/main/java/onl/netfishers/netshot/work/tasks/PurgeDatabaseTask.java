@@ -96,7 +96,7 @@ public class PurgeDatabaseTask extends Task {
 			try {
 				session.beginTransaction();
 				logger.trace("Cleaning up tasks finished more than {} days ago...", days);
-				this.logIt(String.format("Cleaning up tasks more than %d days ago...", days), 5);
+				this.info(String.format("Cleaning up tasks more than %d days ago...", days));
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * days);
 				ScrollableResults tasks = session.createQuery(
@@ -119,7 +119,7 @@ public class PurgeDatabaseTask extends Task {
 				}
 				session.getTransaction().commit();
 				logger.trace("Cleaning up done on tasks, {} entries affected.", count);
-				this.logIt(String.format("Cleaning up done on tasks, %d entries affected.", count), 5);
+				this.info(String.format("Cleaning up done on tasks, %d entries affected.", count));
 			}
 			catch (HibernateException e) {
 				try {
@@ -129,7 +129,7 @@ public class PurgeDatabaseTask extends Task {
 	
 				}
 				logger.error("Database error while purging the old tasks from the database.", e);
-				this.logIt("Database error during the task purge.", 1);
+				this.error("Database error during the task purge.");
 				this.status = Status.FAILURE;
 				return;
 			}
@@ -141,7 +141,7 @@ public class PurgeDatabaseTask extends Task {
 					
 				}
 				logger.error("Error while purging the old tasks from the database.", e);
-				this.logIt("Error during the task purge.", 1);
+				this.error("Error during the task purge.");
 				this.status = Status.FAILURE;
 				return;
 			}
@@ -155,7 +155,7 @@ public class PurgeDatabaseTask extends Task {
 			try {
 				session.beginTransaction();
 				logger.trace("Cleaning up configurations taken more than {} days ago...", configDays);
-				this.logIt(String.format("Cleaning up configurations older than %d days...", configDays), 5);
+				this.info(String.format("Cleaning up configurations older than %d days...", configDays));
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * configDays);
 				Query query;
@@ -202,7 +202,7 @@ public class PurgeDatabaseTask extends Task {
 				}
 				session.getTransaction().commit();
 				logger.trace("Cleaning up done on configurations, {} entries affected.", count);
-				this.logIt(String.format("Cleaning up done on configurations, %d entries affected.", count), 5);
+				this.info(String.format("Cleaning up done on configurations, %d entries affected.", count));
 			}
 			catch (HibernateException e) {
 				try {
@@ -212,7 +212,7 @@ public class PurgeDatabaseTask extends Task {
 	
 				}
 				logger.error("Database error while purging the old configurations from the database.", e);
-				this.logIt("Database error during the configuration purge.", 1);
+				this.error("Database error during the configuration purge.");
 				this.status = Status.FAILURE;
 				return;
 			}
@@ -224,7 +224,7 @@ public class PurgeDatabaseTask extends Task {
 					
 				}
 				logger.error("Error while purging the old configurations from the database.", e);
-				this.logIt("Error during the configuration purge.", 1);
+				this.error("Error during the configuration purge.");
 				this.status = Status.FAILURE;
 				return;
 			}

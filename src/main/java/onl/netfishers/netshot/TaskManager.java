@@ -30,7 +30,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
-import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
@@ -85,8 +84,7 @@ public class TaskManager {
 	static public void cancelTask(Task task, String reason) throws SchedulerException,
 	HibernateException {
 		logger.debug("Cancelling task.");
-		JobKey job = JobKey.jobKey(TaskManager.getTaskIdentity(task));
-		scheduler.deleteJob(job);
+		scheduler.deleteJob(task.getIdentity());
 		logger.trace("The task has been deleted from the scheduler.");
 		Session session = Database.getSession();
 		try {
@@ -109,25 +107,15 @@ public class TaskManager {
 	}
 
 	/**
-	 * Gets the task identity.
-	 *
-	 * @param task the task
-	 * @return the task identity
-	 */
-	static public String getTaskIdentity(Task task) {
-		return String.format("task_%d", task.getId());
-	}
-
-	/**
 	 * Adds a task to the scheduler.
 	 *
 	 * @param task the task
 	 * @throws SchedulerException the scheduler exception
-	 * @throws HibernateException the hibernate exception
+	 * @throws HibernateException the Hibernate exception
 	 */
 	static public void addTask(Task task)
 			throws SchedulerException, HibernateException {
-		logger.debug("Adding task.");
+		logger.debug("Adding a task to the scheduler.");
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
@@ -149,7 +137,7 @@ public class TaskManager {
 
 
 		JobDetail job = JobBuilder.newJob(TaskJob.class)
-				.withIdentity(TaskManager.getTaskIdentity(task)).build();
+				.withIdentity(task.getIdentity()).build();
 		job.getJobDataMap().put(TaskJob.NETSHOT_TASK, new Long(task.getId()));
 		Date when = task.getNextExecutionDate();
 		Trigger trigger;
@@ -170,8 +158,7 @@ public class TaskManager {
 	 * @throws SchedulerException the scheduler exception
 	 * @throws HibernateException the hibernate exception
 	 */
-	static public void repeatTask(Task task) throws SchedulerException,
-	HibernateException {
+	static public void repeatTask(Task task) throws SchedulerException, HibernateException {
 		logger.debug("Repeating task {} if necessary.", task.getId());
 		if (!task.isRepeating()) {
 			logger.trace("Not necessary.");

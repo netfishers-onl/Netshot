@@ -33,6 +33,7 @@ import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -184,4 +185,14 @@ public class RunDeviceScriptTask extends Task {
 		this.deviceDriver = deviceDriver;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see onl.netfishers.netshot.work.Task#getIdentity()
+	 */
+	@Override
+	@Transient
+	public JobKey getIdentity() {
+		return new JobKey(String.format("Task_%d", this.getId()), 
+				String.format("RunDevice_%d", this.getDevice().getId()));
+	}
 }

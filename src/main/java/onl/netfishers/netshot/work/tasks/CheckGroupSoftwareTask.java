@@ -40,6 +40,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.criterion.Property;
+import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -181,6 +182,17 @@ public class CheckGroupSoftwareTask extends Task {
 		finally {
 			session.close();
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see onl.netfishers.netshot.work.Task#getIdentity()
+	 */
+	@Override
+	@Transient
+	public JobKey getIdentity() {
+		return new JobKey(String.format("Task_%d", this.getId()),
+				String.format("CheckGroupSoftware_%d", this.getDeviceGroup().getId()));
 	}
 
 }

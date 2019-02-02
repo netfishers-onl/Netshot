@@ -18,6 +18,10 @@
  */
 package onl.netfishers.netshot.work.tasks;
 
+import javax.persistence.Transient;
+
+import org.quartz.JobKey;
+
 import onl.netfishers.netshot.work.Task;
 
 /**
@@ -80,4 +84,13 @@ public class Traceroute4Task extends Task {
 
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see onl.netfishers.netshot.work.Task#getIdentity()
+	 */
+	@Override
+	@Transient
+	public JobKey getIdentity() {
+		return new JobKey(String.format("Task_%d", this.getId()), "Traceroute");
+	}
 }

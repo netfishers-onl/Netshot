@@ -34,6 +34,7 @@ import onl.netfishers.netshot.device.DeviceGroup;
 import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
+import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,4 +167,14 @@ public class RunDeviceGroupScriptTask extends Task {
 		this.deviceDriver = deviceDriver;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see onl.netfishers.netshot.work.Task#getIdentity()
+	 */
+	@Override
+	@Transient
+	public JobKey getIdentity() {
+		return new JobKey(String.format("Task_%d", this.getId()), 
+				String.format("RunDeviceGroupScript_%d", this.getDeviceGroup().getId()));
+	}
 }

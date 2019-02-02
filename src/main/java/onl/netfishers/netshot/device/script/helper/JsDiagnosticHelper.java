@@ -1,6 +1,7 @@
 package onl.netfishers.netshot.device.script.helper;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -27,7 +28,7 @@ public class JsDiagnosticHelper {
 	/** The device the diagnostic is running on. */
 	private final Device device;
 	/** The list of diagnostics. */
-	private Set<Diagnostic> diagnostics;
+	private List<Diagnostic> diagnostics;
 	/** The JS Logger. */
 	private TaskLogger taskLogger;
 	
@@ -37,7 +38,7 @@ public class JsDiagnosticHelper {
 	 * @param diagnostics The set of diagnostics to run
 	 * @param taskLogger the JS logger
 	 */
-	public JsDiagnosticHelper(Device device, Set<Diagnostic> diagnostics, TaskLogger taskLogger) {
+	public JsDiagnosticHelper(Device device, List<Diagnostic> diagnostics, TaskLogger taskLogger) {
 		this.device = device;
 		this.diagnostics = diagnostics;
 		this.taskLogger = taskLogger;
@@ -140,7 +141,7 @@ public class JsDiagnosticHelper {
 	 * Get the diagnostics.
 	 * @return the diagnostics
 	 */
-	public Set<Diagnostic> getDiagnostics() {
+	public List<Diagnostic> getDiagnostics() {
 		return diagnostics;
 	}
 	

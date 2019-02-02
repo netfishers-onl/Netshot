@@ -17,7 +17,9 @@
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-function _connect(_cli, _function, _protocol, _options, _logger) {
+function _connect(_function, _protocol, _options, _logger) {
+	
+	var _cli = _options.cli;
 	
 	var _toNative = function(o) {
 		if (o == null || typeof(o) == "undefined") {

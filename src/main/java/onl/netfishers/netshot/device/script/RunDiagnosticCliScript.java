@@ -1,8 +1,7 @@
 package onl.netfishers.netshot.device.script;
 
 import java.io.IOException;
-import java.util.Set;
-
+import java.util.List;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -32,14 +31,14 @@ public class RunDiagnosticCliScript extends CliScript {
 	private static Logger logger = LoggerFactory.getLogger(RunDiagnosticCliScript.class);
 	
 	/** The diagnostics to execute. */
-	private Set<Diagnostic> diagnostics;
+	private List<Diagnostic> diagnostics;
 
 	
 	/**
 	 * Instantiates a JS-based script.
 	 * @param code The JS code
 	 */
-	public RunDiagnosticCliScript(Set<Diagnostic> diagnostics, boolean cliLogging) {
+	public RunDiagnosticCliScript(List<Diagnostic> diagnostics, boolean cliLogging) {
 		super(cliLogging);
 		this.diagnostics = diagnostics;
 	}

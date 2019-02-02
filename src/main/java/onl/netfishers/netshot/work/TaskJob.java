@@ -23,6 +23,7 @@ import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.work.Task.Status;
 
 import org.hibernate.Session;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A Quartz job which runs a Netshot task.
  */
+@DisallowConcurrentExecution
 public class TaskJob implements Job {
 
 	/** The Constant NETSHOT_TASK. */
@@ -123,8 +125,6 @@ public class TaskJob implements Job {
 		finally  {
 			session.close();
 		}
-
-
 
 		try {
 			TaskManager.repeatTask(task);

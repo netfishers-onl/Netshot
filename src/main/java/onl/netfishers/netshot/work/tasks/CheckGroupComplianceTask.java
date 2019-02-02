@@ -37,6 +37,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,9 +134,9 @@ public class CheckGroupComplianceTask extends Task {
 
 			session.beginTransaction();
 			session
-			.createQuery("delete from CheckResult c where c.key.device.id in (select d.id as id from DeviceGroup g1 join g1.cachedDevices d where g1.id = :id)")
-			.setLong("id", deviceGroup.getId())
-			.executeUpdate();
+				.createQuery("delete from CheckResult c where c.key.device.id in (select d.id as id from DeviceGroup g1 join g1.cachedDevices d where g1.id = :id)")
+				.setLong("id", deviceGroup.getId())
+				.executeUpdate();
 			for (Policy policy : policies) {
 				ScrollableResults devices = session
 						.createQuery("from Device d join fetch d.lastConfig where d.id in (select d.id as id from DeviceGroup g1 join g1.cachedDevices d join d.ownerGroups g2 join g2.appliedPolicies p where g1.id = :id and p.id = :pid)")
@@ -168,6 +169,17 @@ public class CheckGroupComplianceTask extends Task {
 		finally {
 			session.close();
 		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see onl.netfishers.netshot.work.Task#getIdentity()
+	 */
+	@Override
+	@Transient
+	public JobKey getIdentity() {
+		return new JobKey(String.format("Task_%d", this.getId()),
+				String.format("CheckGroupCompliance_%d", this.getDeviceGroup().getId()));
 	}
 
 }

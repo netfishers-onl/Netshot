@@ -45,6 +45,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import onl.netfishers.netshot.compliance.HardwareRule;
 import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.SoftwareRule;
+import onl.netfishers.netshot.diagnostic.Diagnostic;
 import onl.netfishers.netshot.work.tasks.CheckGroupComplianceTask;
 import onl.netfishers.netshot.work.tasks.CheckGroupSoftwareTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceGroupScriptTask;
@@ -93,7 +94,11 @@ abstract public class DeviceGroup {
 	/** The check software compliance tasks. */
 	protected List<CheckGroupSoftwareTask> checkSoftwareComplianceTasks = new ArrayList<CheckGroupSoftwareTask>();
 	
+	/** The script tasks. */
 	protected List<RunDeviceGroupScriptTask> runDeviceGroupScriptTasks = new ArrayList<RunDeviceGroupScriptTask>();
+	
+	/** The diagnostics. */
+	protected List<Diagnostic> diagnostics = new ArrayList<Diagnostic>();
 	
 	/** The id. */
 	protected long id;
@@ -224,7 +229,14 @@ abstract public class DeviceGroup {
 		this.runDeviceGroupScriptTasks = runDeviceGroupScriptTasks;
 	}
 	
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "targetGroup")
+	public List<Diagnostic> getDiagnostics() {
+		return diagnostics;
+	}
 	
+	public void setDiagnostics(List<Diagnostic> diagnostics) {
+		this.diagnostics = diagnostics;
+	}
 
 	/**
 	 * Gets the id.

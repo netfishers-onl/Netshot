@@ -18,9 +18,9 @@
  */
 package onl.netfishers.netshot.work.tasks;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -41,6 +41,7 @@ import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,15 +54,55 @@ public class TakeSnapshotTask extends Task {
 	/** The logger. */
 	private static Logger logger = LoggerFactory.getLogger(TakeSnapshotTask.class);
 
-	/** The scheduled auto snapshots. */
-	private static Set<Long> scheduledAutoSnapshots = new HashSet<Long>();
-
-	/** The running snapshots. */
-	private static Set<Long> runningSnapshots = new HashSet<Long>();
-
+	/** Allow trap from any IP of a device to trigger a automatic snapshot. */ 
 	private static boolean AUTOSNAPSHOT_ANYIP = false;
 
+	/** Minutes to wait before starting an automatic snapshot. */
 	public static int AUTOSNAPSHOT_INTERVAL = 10;
+	
+	/** The scheduled automatic snapshots. */
+	private static Set<Long> scheduledAutoSnapshots = ConcurrentHashMap.newKeySet();
+
+	/** Device IDs on which a snapshot is currently running. */
+	private static Set<Long> runningSnapshots = ConcurrentHashMap.newKeySet();
+	
+	/**
+	 * Clear scheduled auto snapshot.
+	 *
+	 * @param deviceId the device
+	 */
+	public static void clearScheduledAutoSnapshot(Long deviceId) {
+		scheduledAutoSnapshots.remove(deviceId);
+	}
+
+	/**
+	 * Clear running snapshot status.
+	 *
+	 * @param deviceId the device
+	 */
+	public static void clearRunningSnapshot(Long deviceId) {
+		runningSnapshots.remove(deviceId);
+	}
+	
+	/**
+	 * Check whether an automatic snapshot is queued for the given device.
+	 *
+	 * @param deviceId the device
+	 * @return true, if successful
+	 */
+	public static boolean checkAutoSnasphot(Long deviceId) {
+		return scheduledAutoSnapshots.add(deviceId);
+	}
+
+	/**
+	 * Check whether a snapshot is currently running for the given device.
+	 *
+	 * @param deviceId the device
+	 * @return true, if successful
+	 */
+	public static boolean checkRunningSnapshot(Long deviceId) {
+		return runningSnapshots.add(deviceId);
+	}
 
 	static {
 		if (Netshot.getConfig("netshot.snapshots.auto.anyip", "false").equals("true")) {
@@ -77,52 +118,6 @@ public class TakeSnapshotTask extends Task {
 		catch (Exception e) {
 			logger.error("Invalid value for netshot.snapshots.auto.interval in the configuration file. Using default of {} minutes.",
 					AUTOSNAPSHOT_INTERVAL);
-		}
-	}
-
-	/**
-	 * Check auto snapshot.
-	 *
-	 * @param device the device
-	 * @return true, if successful
-	 */
-	private static boolean checkAutoSnasphot(Long device) {
-		synchronized (TakeSnapshotTask.scheduledAutoSnapshots) {
-			return TakeSnapshotTask.scheduledAutoSnapshots.add(device);
-		}
-	}
-
-	/**
-	 * Check running snapshot.
-	 *
-	 * @param device the device
-	 * @return true, if successful
-	 */
-	private static boolean checkRunningSnapshot(Long device) {
-		synchronized (TakeSnapshotTask.runningSnapshots) {
-			return TakeSnapshotTask.runningSnapshots.add(device);
-		}
-	}
-
-	/**
-	 * Clear scheduled auto snapshot.
-	 *
-	 * @param device the device
-	 */
-	private static void clearScheduledAutoSnapshot(Long device) {
-		synchronized (TakeSnapshotTask.scheduledAutoSnapshots) {
-			TakeSnapshotTask.scheduledAutoSnapshots.remove(device);
-		}
-	}
-
-	/**
-	 * Clear running snapshot.
-	 *
-	 * @param device the device
-	 */
-	private static void clearRunningSnapshot(Long device) {
-		synchronized (TakeSnapshotTask.runningSnapshots) {
-			TakeSnapshotTask.runningSnapshots.remove(device);
 		}
 	}
 
@@ -143,6 +138,7 @@ public class TakeSnapshotTask extends Task {
 	 *
 	 * @param device the device
 	 * @param comments the comments
+	 * @param author who requested this task
 	 */
 	public TakeSnapshotTask(Device device, String comments, String author) {
 		super(comments, (device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName()),
@@ -172,6 +168,7 @@ public class TakeSnapshotTask extends Task {
 		logger.debug("Starting snapshot task for device {}.", device.getId());
 		this.info(String.format("Snapshot task for device %s (%s).",
 				device.getName(), device.getMgmtAddress().getIp()));
+		boolean locked = false;
 
 		Session session = Database.getSession();
 		CliScript cliScript = new SnapshotCliScript(this.debugEnabled);
@@ -184,7 +181,8 @@ public class TakeSnapshotTask extends Task {
 				this.status = Status.FAILURE;
 				return;
 			}
-			if (!TakeSnapshotTask.checkRunningSnapshot(device.getId())) {
+			locked = checkRunningSnapshot(device.getId());
+			if (!locked) {
 				logger.trace("Snapshot task already ongoing for this device, cancelling.");
 				this.warn("A snapshot task is already running for this device, cancelling this task.");
 				this.status = Status.CANCELLED;
@@ -214,19 +212,21 @@ public class TakeSnapshotTask extends Task {
 			catch (Exception e1) {
 				logger.error("Error while saving the debug logs.", e1);
 			}
-			TakeSnapshotTask.clearRunningSnapshot(device.getId());
-			if (automatic) {
-				TakeSnapshotTask.clearScheduledAutoSnapshot(this.device.getId());
-			}
 			session.close();
+			if (locked) {
+				clearRunningSnapshot(device.getId());
+			}
+			if (automatic) {
+				clearScheduledAutoSnapshot(this.device.getId());
+			}
 		}
 
 		logger.debug("Request to refresh all the groups for the device after the snapshot.");
 		DynamicDeviceGroup.refreshAllGroups(device);
 
 		try {
-			Task checkTask = new CheckComplianceTask(device, "Check compliance after snapshot.", "Auto");
-			TaskManager.addTask(checkTask);
+			Task diagTask = new RunDiagnosticsTask(device, "Run diagnostics after snapshot", "Auto");
+			TaskManager.addTask(diagTask);
 		}
 		catch (Exception e) {
 			logger.error("Error while registering the new task.", e);
@@ -327,11 +327,11 @@ public class TakeSnapshotTask extends Task {
 				return false;
 			}
 			if (!drivers.contains(device.getDriver())) {
-				logger.warn("The driver {} of the device {} in database isn't in the list of drivers asking for a snapshot (address {}).",
+				logger.warn("The driver {} of the device {} in database isn't in the list of drivers requesting a snapshot (address {}).",
 						device.getDriver(), device.getId(), device.getMgmtAddress());
 				return false;
 			}
-			if (!TakeSnapshotTask.checkAutoSnasphot(device.getId())) {
+			if (!checkAutoSnasphot(device.getId())) {
 				logger.debug("A snapshot task is already scheduled.");
 				return true;
 			}
@@ -360,7 +360,7 @@ public class TakeSnapshotTask extends Task {
 	@Override
 	public void onSchedule() {
 		if (automatic) {
-			TakeSnapshotTask.checkAutoSnasphot(device.getId());
+			checkAutoSnasphot(device.getId());
 		}
 	}
 
@@ -369,7 +369,18 @@ public class TakeSnapshotTask extends Task {
 	 */
 	@Override
 	public void onCancel() {
-		TakeSnapshotTask.clearScheduledAutoSnapshot(this.device.getId());
+		clearScheduledAutoSnapshot(this.device.getId());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see onl.netfishers.netshot.work.Task#getIdentity()
+	 */
+	@Override
+	@Transient
+	public JobKey getIdentity() {
+		return new JobKey(String.format("Task_%d", this.getId()), 
+				String.format("RunDevice_%d", this.getDevice().getId()));
 	}
 
 }

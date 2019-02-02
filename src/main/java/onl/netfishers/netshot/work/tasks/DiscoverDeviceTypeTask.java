@@ -52,6 +52,7 @@ import onl.netfishers.netshot.work.Task;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -289,16 +290,15 @@ public class DiscoverDeviceTypeTask extends Task {
 				}
 			}
 			else if (credentialSet instanceof DeviceSnmpv3Community) {
-                                logger.trace("SNMPv3 credential set.");
-                                didTrySnmp = true;
-                                DeviceSnmpv3Community DeviceSnmpcred = (DeviceSnmpv3Community) credentialSet;
-                                if (snmpv3Discover(DeviceSnmpcred)) {
-                                        this.status = Status.SUCCESS;
-                                        this.successCredentialSet = credentialSet;
-                                        break;
-                                }
-                        }
-  
+				logger.trace("SNMPv3 credential set.");
+				didTrySnmp = true;
+				DeviceSnmpv3Community DeviceSnmpcred = (DeviceSnmpv3Community) credentialSet;
+				if (snmpv3Discover(DeviceSnmpcred)) {
+					this.status = Status.SUCCESS;
+					this.successCredentialSet = credentialSet;
+					break;
+				}
+			}
 		}
 		if (this.status == Status.SUCCESS) {
 			Task snapshotTask = null;
@@ -532,6 +532,17 @@ public class DiscoverDeviceTypeTask extends Task {
 	 */
 	protected void setSnapshotTaskId(long snapshotTaskId) {
 		this.snapshotTaskId = snapshotTaskId;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see onl.netfishers.netshot.work.Task#getIdentity()
+	 */
+	@Override
+	@Transient
+	public JobKey getIdentity() {
+		return new JobKey(String.format("Task_%d", this.getId()),
+				String.format("DiscoverDeviceType_%s", this.getDeviceAddress().getIp()));
 	}
 
 }

@@ -63,6 +63,7 @@ import onl.netfishers.netshot.device.attribute.DeviceAttribute;
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
 import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.work.tasks.CheckComplianceTask;
+import onl.netfishers.netshot.work.tasks.RunDiagnosticsTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceScriptTask;
 import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
 
@@ -134,6 +135,7 @@ public class Device {
 	
 	/** The Constant DEFAULTNAME. */
 	public static final String DEFAULTNAME = "[NONAME]";
+	
 
 	/** The attributes. */
 	private Set<DeviceAttribute> attributes = new HashSet<DeviceAttribute>();
@@ -149,7 +151,11 @@ public class Device {
 	/** The check compliance tasks. */
 	protected List<CheckComplianceTask> checkComplianceTasks = new ArrayList<CheckComplianceTask>();
 	
+	/** The run device script tasks. */
 	protected List<RunDeviceScriptTask> runDeviceScriptTasks = new ArrayList<RunDeviceScriptTask>();
+	
+	/** The diagnostic tasks. */
+	protected List<RunDiagnosticsTask> runDiagnosticsTasks = new ArrayList<RunDiagnosticsTask>();
 
 	/** The comments. */
 	protected String comments = "";
@@ -409,10 +415,25 @@ public class Device {
 	public List<CheckComplianceTask> getCheckComplianceTasks() {
 		return checkComplianceTasks;
 	}
-	
+
+	/**
+	 * Gets the run device script tasks.
+	 *
+	 * @return the run device script tasks
+	 */
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "device")
 	public List<RunDeviceScriptTask> getRunDeviceScriptTasks() {
 		return runDeviceScriptTasks;
+	}
+
+	/**
+	 * Gets the run diagnostics tasks.
+	 *
+	 * @return the run diagnostics tasks
+	 */
+	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "device")
+	public List<RunDiagnosticsTask> getRunDiagnosticsTasks() {
+		return runDiagnosticsTasks;
 	}
 
 	/**
@@ -875,8 +896,20 @@ public class Device {
 		this.checkComplianceTasks = checkComplianceTasks;
 	}
 	
+	/**
+	 * Sets the run device script tasks.
+	 * @param tasks the new device script tasks
+	 */
 	public void setRunDeviceScriptTasks(List<RunDeviceScriptTask> tasks) {
 		this.runDeviceScriptTasks = tasks;
+	}
+	
+	/**
+	 * Sets the run diagnostics tasks.
+	 * @param tasks the new run diagnostics tasks
+	 */
+	public void setRunDiagnosticsTasks(List<RunDiagnosticsTask> tasks) {
+		this.runDiagnosticsTasks = tasks;
 	}
 
 	/**
@@ -1173,6 +1206,8 @@ public class Device {
 		this.connectAddress = connectAddress;
 	}
 	
+	
+	
 	public void addDiagnosticResult(DiagnosticResult result) {
 		if (result == null) {
 			return;
@@ -1185,6 +1220,22 @@ public class Device {
 			}
 		}
 		this.diagnosticResults.add(result);
+	}
+	
+
+
+	/**
+	 * Gets the diagnostic results.
+	 *
+	 * @return the diagnostic results
+	 */
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "device", cascade = CascadeType.ALL, orphanRemoval = true)
+	public Set<DiagnosticResult> getDiagnosticResults() {
+		return diagnosticResults;
+	}
+	
+	public void setDiagnosticResults(Set<DiagnosticResult> diagnosticResults) {
+		this.diagnosticResults = diagnosticResults;
 	}
 
 }

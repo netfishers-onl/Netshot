@@ -40,6 +40,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -220,4 +221,13 @@ public class ScanSubnetsTask extends Task {
 		this.subnets = subnets;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see onl.netfishers.netshot.work.Task#getIdentity()
+	 */
+	@Override
+	@Transient
+	public JobKey getIdentity() {
+		return new JobKey(String.format("Task_%d", this.getId()), "ScanSubnets");
+	}
 }

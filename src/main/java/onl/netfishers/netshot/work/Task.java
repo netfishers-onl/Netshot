@@ -43,6 +43,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import onl.netfishers.netshot.Database;
 
+import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,25 +90,25 @@ public abstract class Task implements Cloneable {
 	 */
 	public static enum Status {
 
-		/** The cancelled. */
+		/** The task was cancelled. */
 		CANCELLED,
 
-		/** The failure. */
+		/** The task failed. */
 		FAILURE,
 
-		/** The new. */
+		/** The task is new. */
 		NEW,
 
-		/** The running. */
+		/** The task is running. */
 		RUNNING,
 
-		/** The scheduled. */
+		/** The task is scheduled. */
 		SCHEDULED,
 
-		/** The success. */
+		/** The task is a success. */
 		SUCCESS,
 
-		/** The waiting. */
+		/** The task is waiting. */
 		WAITING
 	}
 
@@ -213,6 +214,14 @@ public abstract class Task implements Cloneable {
 		this.target = target;
 		this.author = author;
 	}
+	
+	/**
+	 * Generate the identity of the task. Used by Quartz.
+	 * Two tasks with the same identity won't be executed concurrently.
+	 * @return the identity of the task.
+	 */
+	@Transient
+	abstract public JobKey getIdentity();
 
 
 	/* (non-Javadoc)
@@ -550,10 +559,10 @@ public abstract class Task implements Cloneable {
 	public abstract void run();
 
 	/**
-	 * Schedule.
+	 * Schedule the task.
 	 *
-	 * @param reference the reference
-	 * @param type the type
+	 * @param reference the date reference
+	 * @param type the type of schedule
 	 */
 	public void schedule(Date reference, ScheduleType type) {
 		this.scheduleType = type;
@@ -561,9 +570,9 @@ public abstract class Task implements Cloneable {
 	}
 
 	/**
-	 * Schedule.
+	 * Schedule the task.
 	 *
-	 * @param minutes the minutes
+	 * @param minutes Minutes to wait before starting the task
 	 */
 	public void schedule(int minutes) {
 		this.scheduleType = ScheduleType.AT;
@@ -572,6 +581,11 @@ public abstract class Task implements Cloneable {
 		this.scheduleReference = calendar.getTime();
 	}
 
+	/**
+	 * Sets the author.
+	 * 
+	 * @param author Who requested the task
+	 */
 	public void setAuthor(String author) {
 		this.author = author;
 	}
@@ -628,7 +642,7 @@ public abstract class Task implements Cloneable {
 	}
 
 	/**
-	 * Sets the failed.
+	 * Sets the task as failed.
 	 */
 	public void setFailed() {
 		this.status = Status.FAILURE;

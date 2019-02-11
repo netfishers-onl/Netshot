@@ -15,8 +15,12 @@
 				<label for="roleuser">Visitor</label>
 			</div>
 			<div>
-				<input type="radio" id="rolereadwrite" name="role" value="readwrite" <% if (level >= 100 && level < 1000) { %>checked="checked"<% } %> data-level="100" />
+				<input type="radio" id="rolereadwrite" name="role" value="readwrite" <% if (level >= 100 && level < 500) { %>checked="checked"<% } %> data-level="100" />
 				<label for="rolereadwrite">Read-write</label>
+			</div>
+			<div>
+				<input type="radio" id="roleexecutereadwrite" name="role" value="executereadwrite" <% if (level >= 500 && level < 1000) { %>checked="checked"<% } %> data-level="500" />
+				<label for="roleexecutereadwrite">Read-write &amp; commands on devices</label>
 			</div>
 			<div>
 				<input type="radio" id="roleadmin" name="role" value="admin" <% if (level >= 1000) { %>checked="checked"<% } %> data-level="1000" />

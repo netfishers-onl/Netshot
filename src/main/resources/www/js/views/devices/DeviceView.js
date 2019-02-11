@@ -10,6 +10,7 @@ define([
 	'views/devices/DeviceConfigsView',
 	'views/devices/DeviceInterfacesView',
 	'views/devices/DeviceModulesView',
+	'views/devices/DeviceDiagnosticsView',
 	'views/devices/DeviceComplianceView',
 	'views/devices/DeviceTasksView',
 	'views/devices/DisableDeviceDialog',
@@ -18,9 +19,9 @@ define([
 	'views/devices/RunDeviceScriptDialog'
 ], function($, _, Backbone, deviceTemplate, DeleteDeviceDialog,
 		EditDeviceDialog, DeviceGeneralView, DeviceConfigsView,
-		DeviceInterfacesView, DeviceModulesView, DeviceComplianceView,
-		DeviceTasksView, DisableDeviceDialog, EnableDeviceDialog, TakeDeviceSnapshotDialog,
-		RunDeviceScriptDialog) {
+		DeviceInterfacesView, DeviceModulesView, DeviceDiagnosticsView,
+		DeviceComplianceView, DeviceTasksView, DisableDeviceDialog,
+		EnableDeviceDialog, TakeDeviceSnapshotDialog, RunDeviceScriptDialog) {
 
 	var DeviceView = Backbone.View.extend({
 
@@ -85,6 +86,11 @@ define([
 						device: that.model
 					});
 					break;
+				case "diagnostics":
+					this.currentView = new DeviceDiagnosticsView({
+						device: that.model
+					});
+					break;
 				case "compliance":
 					this.currentView = new DeviceComplianceView({
 						device: that.model
@@ -118,6 +124,11 @@ define([
 					primary: "ui-icon-link"
 				}
 			});
+			this.$('#diagnostics').button({
+				icons: {
+					primary: "ui-icon-clipboard"
+				}
+			});
 			this.$('#compliance').button({
 				icons: {
 					primary: "ui-icon-check"
@@ -128,7 +139,7 @@ define([
 					primary: "ui-icon-clock"
 				}
 			});
-			if (user.isAdmin()) {
+			if (user.isExecuteReadWrite()) {
 				this.$('#runscript').button({
 					icons: {
 						primary: "ui-icon ui-icon-play"

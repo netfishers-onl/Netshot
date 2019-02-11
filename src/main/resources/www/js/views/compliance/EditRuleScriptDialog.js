@@ -51,7 +51,7 @@ define([
 					that.model.set(data);
 					that.options.onEdited();
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$("#error").show();
 					$button.button('enable');
@@ -119,7 +119,7 @@ define([
 					that.$el.addClass("withinfo");
 				}).fail(function(data) {
 					that.$("#info").hide();
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$el.removeClass("withinfo").addClass("witherror");
 					$button.button('enable');
@@ -133,6 +133,9 @@ define([
 
 		onClose: function() {
 			this.$el.off('dialogresizestop');
+			if (this.scriptEditor) {
+				this.scriptEditor.destroy();
+			}
 		}
 
 	});

@@ -79,7 +79,6 @@ import onl.netfishers.netshot.diagnostic.DiagnosticLongTextResult;
 import onl.netfishers.netshot.diagnostic.DiagnosticNumericResult;
 import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.diagnostic.DiagnosticTextResult;
-import onl.netfishers.netshot.diagnostic.SimpleDiagnostic;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.tasks.DeviceJsScript;
@@ -350,7 +349,6 @@ public class Database {
 				.addAnnotatedClass(HardwareRule.class)
 				.addAnnotatedClass(DeviceJsScript.class)
 				.addAnnotatedClass(Diagnostic.class)
-				.addAnnotatedClass(SimpleDiagnostic.class)
 				.addAnnotatedClass(DiagnosticResult.class)
 				.addAnnotatedClass(DiagnosticBinaryResult.class)
 				.addAnnotatedClass(DiagnosticNumericResult.class)
@@ -369,6 +367,9 @@ public class Database {
 						configuration.addAnnotatedClass(subClass);
 					}
 				}
+			}
+			for (Class<?> clazz : Diagnostic.getDiagnosticClasses()) {
+				configuration.addAnnotatedClass(clazz);
 			}
 
 			configuration.setNamingStrategy(new ImprovedNamingStrategy());

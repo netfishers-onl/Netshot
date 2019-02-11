@@ -18,13 +18,59 @@
  */
 package onl.netfishers.netshot.diagnostic;
 
+import javax.persistence.Entity;
+import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import onl.netfishers.netshot.device.DeviceDriver;
+import onl.netfishers.netshot.device.DeviceGroup;
+import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
 
 /**
- * This is a simple diagnostic: runs a CLI command in a CLI mode, and
- * optionally transforms the result using a regular expression.
+ * This is a simple diagnostic: runs a CLI command in a CLI mode, and optionally
+ * transforms the result using a regular expression.
+ * 
  * @author sylvain.cadilhac
  */
+@Entity
+@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
 public class SimpleDiagnostic extends Diagnostic {
+
+	/**
+	 * Instantiates a new SimpleDiagnostic. For Hibernate.
+	 */
+	protected SimpleDiagnostic() {
+	}
+
+
+	/**
+	 * Instantiates a new diagnostic.
+	 * @param name The name
+	 * @param enabled True to enable the diagnostic
+	 * @param targetGroup The group of devices the diagnostic applies to
+	 * @param resultType The type of result expected by this diagnostic
+	 * @param cliMode The CLI mode
+	 * @param command The CLI command to issue
+	 * @param modifierPattern The pattern to match
+	 * @param modifierReplacement The replacement script if the pattern is matched
+	 */
+	public SimpleDiagnostic(String name, boolean enabled, DeviceGroup targetGroup, AttributeType resultType,
+			String deviceDriver, String cliMode, String command, String modifierPattern, String modifierReplacement) {
+		super(name, enabled, targetGroup, resultType);
+		this.deviceDriver = deviceDriver;
+		this.cliMode = cliMode;
+		this.command = command;
+		this.modifierPattern = modifierPattern;
+		this.modifierReplacement = modifierReplacement;
+	}
+	
+	/**
+	 * The type of device this diagnostic applies to.
+	 */
+	private String deviceDriver;
 	
 	/**
 	 * The CLI mode to run the command in.
@@ -47,11 +93,30 @@ public class SimpleDiagnostic extends Diagnostic {
 	 */
 	private String modifierReplacement;
 
+	
+	/**
+	 * Gets the device driver this diagnostic applies to.
+	 * @return the device driver.
+	 */
+	@XmlElement
+	public String getDeviceDriver() {
+		return deviceDriver;
+	}
+
+	/**
+	 * Sets the device driver
+	 * @param deviceDriver the new device driver
+	 */
+	public void setDeviceDriver(String deviceDriver) {
+		this.deviceDriver = deviceDriver;
+	}
+
 	/**
 	 * Gets the cli mode.
 	 *
 	 * @return the cli mode
 	 */
+	@XmlElement
 	public String getCliMode() {
 		return cliMode;
 	}
@@ -70,6 +135,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 *
 	 * @return the command
 	 */
+	@XmlElement
 	public String getCommand() {
 		return command;
 	}
@@ -88,6 +154,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 *
 	 * @return the modifier pattern
 	 */
+	@XmlElement
 	public String getModifierPattern() {
 		return modifierPattern;
 	}
@@ -106,6 +173,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 *
 	 * @return the modifier replacement
 	 */
+	@XmlElement
 	public String getModifierReplacement() {
 		return modifierReplacement;
 	}
@@ -117,6 +185,25 @@ public class SimpleDiagnostic extends Diagnostic {
 	 */
 	public void setModifierReplacement(String modifierReplacement) {
 		this.modifierReplacement = modifierReplacement;
+	}
+	
+	/**
+	 * Gets the description of the device driver. To be sent along with the diagnostic.
+	 * @return the description of the device driver
+	 */
+	@Transient
+	@XmlElement
+	public String getDeviceDriverDescription() {
+		if ("".equals(deviceDriver)) {
+			return "";
+		}
+		try {
+			DeviceDriver d = DeviceDriver.getDriverByName(deviceDriver);
+			return d.getDescription();
+		}
+		catch (Exception e) {
+			return "Unknown driver";
+		}
 	}
 	
 }

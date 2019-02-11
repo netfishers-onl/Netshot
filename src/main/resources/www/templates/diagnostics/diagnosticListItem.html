@@ -1,0 +1,13 @@
+<li class="nsdiagnostics-list-diagnostic<% if (!enabled) { %> disabled<% } %>" data-diagnostic-id="<%- id %>">
+	<span class="name"><%- name %></span>
+	<div class="details">
+		<% if (typeof targetGroup === "object" && targetGroup) { %>
+		Applies to <span class="group"><%- targetGroup.name %></span>
+		<% } else { %>
+		Not applied
+		<% } %>
+		<div class="actions">
+			<button class="delete">Delete</button>
+		</div>
+	</div>
+</li>

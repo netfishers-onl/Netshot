@@ -52,6 +52,9 @@ public class User implements Principal {
 	/** Read-write authorization level. */
 	public final static int LEVEL_READWRITE = 100;
 
+	/** Read-write and command executer (on devices) level. */
+	public final static int LEVEL_EXECUTEREADWRITE = 500;
+
 	/** Admin authorization level. */
 	public final static int LEVEL_ADMIN = 1000;
 

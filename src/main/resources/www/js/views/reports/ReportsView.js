@@ -15,7 +15,7 @@ define([
 		HardwareSupportStatusReportView,
 		DataExportReportView, DeviceAccessFailureReportView) {
 
-	makeLoadProgress(15);
+	makeLoadProgress(13);
 
 	return Backbone.View.extend({
 

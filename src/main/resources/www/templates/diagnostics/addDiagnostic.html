@@ -1,0 +1,75 @@
+<div id="nsdiagnostics-adddiagnosticform" title="Add diagnostic">
+
+	<div class="nsdialog-logo">
+		<img alt="Diagnostic" src="img/add_32px.png" />
+	</div>
+
+	<form class="editscriptform">
+		<table>
+		<tbody>
+			<tr>
+				<td><label for="diagnosticname">Name: </label></td>
+				<td><input type="text" name="diagnosticname" id="diagnosticname" autofocus="autofocus"
+					class="text ui-widget-content ui-corner-all" /></td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<input type="checkbox" name="diagnosticenabled" id="diagnosticenabled" checked="checked" />
+					<label for="diagnosticenabled">Enabled</label>
+				</td>
+			</tr>
+			<tr>
+				<td><label for="resulttype">Result type: </label></td>
+				<td><select name="resulttype" id="resulttype" class="text ui-widget-content ui-corner-all">
+					<option value="TEXT">Text</option>
+					<option value="NUMERIC">Numeric</option>
+					<option value="BINARY">Binary</option>
+					<option value="DATE">Date</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td><label for="group">Group: </label></td>
+				<td><select name="group" id="group" class="text ui-widget-content ui-corner-all">
+					<option value="-1">None (not applied)</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td colspan="2">
+						<input type="radio" id="nsdiagnostictype-simple" name="diagnostictype" checked="checked" data-type="SimpleDiagnostic" />
+						<label for="nsdiagnostictype-simple">Simple diagnostic</label>
+						<input type="radio" id="nsdiagnostictype-js" name="diagnostictype" data-type="JsDiagnostic" />
+						<label for="nsdiagnostictype-js">Javascript-based diagnostic</label>
+				</td>
+			</tr>
+			<tr class="nsdiagnostics-settings" data-for-type="SimpleDiagnostic">
+				<td><label for="devicetype">Device type: </label></td>
+				<td><select name="devicetype" id="devicetype" class="text ui-widget-content ui-corner-all"></select></td>
+			</tr>
+			<tr class="nsdiagnostics-settings" data-for-type="SimpleDiagnostic">
+				<td><label for="climode">CLI mode: </label></td>
+				<td><select name="climode" id="climode" class="text ui-widget-content ui-corner-all"></select></td>
+			</tr>
+			<tr class="nsdiagnostics-settings" data-for-type="SimpleDiagnostic">
+				<td><label for="command">CLI command: </label></td>
+				<td><input type="text" name="command" id="command" class="text ui-widget-content ui-corner-all" /></td>
+			</tr>
+			<tr class="nsdiagnostics-settings" data-for-type="SimpleDiagnostic">
+				<td><label for="modifierpattern">RegEx pattern: </label></td>
+				<td><input type="text" name="modifierpattern" id="modifierpattern" class="text ui-widget-content ui-corner-all" /></td>
+			</tr>
+			<tr class="nsdiagnostics-settings" data-for-type="SimpleDiagnostic">
+				<td><label for="modifierreplacement">Replace with: </label></td>
+				<td><input type="text" name="modifierreplacement" id="modifierreplacement" class="text ui-widget-content ui-corner-all" /></td>
+			</tr>
+		</tbody>
+		</table>
+
+		<fieldset id="nsdiagnostics-adddiagnostic-editorfield" class="nsdiagnostics-settings" data-for-type="JsDiagnostic">
+		</fieldset>
+	
+		<div class="nserror" id="error">
+			<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+			<span id="errormsg"></span>
+		</div>
+	</form>
+</div>

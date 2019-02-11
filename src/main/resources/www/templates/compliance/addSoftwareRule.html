@@ -5,52 +5,64 @@
 	</div>
 	
 	<form>
-		<fieldset>
-			<label for="group">Group: </label>
-			<select name="group" id="group"
-				class="text ui-widget-content ui-corner-all"></select>
-		</fieldset>
-		<fieldset>
-			<label for="devicetype">Device type: </label>
-			<select name="devicetype" id="devicetype"
-				class="text ui-widget-content ui-corner-all"></select>
-		</fieldset>
-		<fieldset>
-			<label for="family">Device family: </label>
-			<input type="text" name="family" id="family"
-				class="text ui-widget-content ui-corner-all" value="<%- family %>" />
-			<input type="checkbox" name="familyregexp" id="familyregexp"<% if (typeof familyRegExp !== "undefined" && familyRegExp) { %> checked="checked"<% } %> />
-			<label for="familyregexp">RegExp</label>
-		</fieldset>
-		<fieldset>
-			<label for="partnumber">Part number: </label>
-			<input type="text" name="partnumber" id="partnumber"
-				class="text ui-widget-content ui-corner-all" value="<%- partNumber %>" />
-			<input type="checkbox" name="partnumberregexp" id="partnumberregexp"<% if (typeof partNumberRegExp !== "undefined" && partNumberRegExp) { %> checked="checked"<% } %> />
-			<label for="partnumberregexp">RegExp</label>
-		</fieldset>
-		<fieldset>
-			<label for="version">Version: </label>
-			<input type="text" name="version" id="version"
-				class="text ui-widget-content ui-corner-all" value="<%- version %>" />
-			<input type="checkbox" name="versionregexp" id="versionregexp"<% if (typeof versionRegExp !== "undefined" && versionRegExp) { %> checked="checked"<% } %> />
-			<label for="versionregexp">RegExp</label>
-		</fieldset>
-		<fieldset>
-			<div>Compliance level:</div>
-			<div class="gold">
-				<input type="radio" id="gold" name="level" checked="checked" />
-				<label for="gold">Gold</label>
-			</div>
-			<div class="silver">
-				<input type="radio" id="silver" name="level" />
-				<label for="silver">Silver</label>
-			</div>
-			<div class="bronze">
-				<input type="radio" id="bronze" name="level" />
-				<label for="bronze">Bronze</label>
-			</div>
-		</fieldset>
+		<table>
+		<tbody>
+			<tr>
+				<td><label for="group">Group: </label></td>
+				<td><select name="group" id="group"
+					class="text ui-widget-content ui-corner-all"></select></td>
+			</tr>
+			<tr>
+				<td><label for="devicetype">Device type: </label></td>
+				<td><select name="devicetype" id="devicetype"
+					class="text ui-widget-content ui-corner-all"></select></td>
+			</tr>
+			<tr>
+				<td><label for="family">Device family: </label></td>
+				<td>
+					<input type="text" name="family" id="family"
+						class="text ui-widget-content ui-corner-all" value="<%- family %>" />
+					<input type="checkbox" name="familyregexp" id="familyregexp"<% if (typeof familyRegExp !== "undefined" && familyRegExp) { %> checked="checked"<% } %> />
+					<label for="familyregexp">RegExp</label>
+				</td>
+			</tr>
+			<tr>
+				<td><label for="partnumber">Part number: </label></td>
+				<td>
+					<input type="text" name="partnumber" id="partnumber"
+						class="text ui-widget-content ui-corner-all" value="<%- partNumber %>" />
+					<input type="checkbox" name="partnumberregexp" id="partnumberregexp"<% if (typeof partNumberRegExp !== "undefined" && partNumberRegExp) { %> checked="checked"<% } %> />
+					<label for="partnumberregexp">RegExp</label>
+				</td>
+			</tr>
+			<tr>
+				<td><label for="version">Version: </label></td>
+				<td>
+					<input type="text" name="version" id="version"
+						class="text ui-widget-content ui-corner-all" value="<%- version %>" />
+					<input type="checkbox" name="versionregexp" id="versionregexp"<% if (typeof versionRegExp !== "undefined" && versionRegExp) { %> checked="checked"<% } %> />
+					<label for="versionregexp">RegExp</label>
+				</td>
+			</tr>
+			<tr>
+				<td>Result:</td>
+				<td>
+					<div class="gold">
+						<input type="radio" id="gold" name="level" checked="checked" />
+						<label for="gold">Gold</label>
+					</div>
+					<div class="silver">
+						<input type="radio" id="silver" name="level" />
+						<label for="silver">Silver</label>
+					</div>
+					<div class="bronze">
+						<input type="radio" id="bronze" name="level" />
+						<label for="bronze">Bronze</label>
+					</div>
+				</td>
+			</tr>
+		</tbody>
+		</table>
 
 		<div class="nserror" id="error">
 			<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>

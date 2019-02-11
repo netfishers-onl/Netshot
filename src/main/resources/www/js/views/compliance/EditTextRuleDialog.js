@@ -23,7 +23,7 @@ define([
 		dialogOptions: {
 			title: "Edit text rule",
 			width: 600,
-			height: 520
+			height: 470
 		},
 		
 		deviceTypes: new DeviceTypeCollection([]),
@@ -77,7 +77,7 @@ define([
 					that.model.set(data);
 					that.options.onEdited();
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$("#error").show();
 					$button.button('enable');
@@ -100,7 +100,6 @@ define([
 
 		onCreate: function() {
 			var that = this;
-			
 
 			$('<option />').attr('value', "").text("[Any]").appendTo(this.$('#devicetype'));
 			this.deviceTypes.each(function(deviceType) {
@@ -176,7 +175,7 @@ define([
 					that.$el.addClass("withinfo");
 				}).fail(function(data) {
 					that.$("#info").hide();
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$el.removeClass("withinfo").addClass("witherror");
 					$button.button('enable');

@@ -1,5 +1,5 @@
 html,button,input,select,textarea {
-	font-family: sans-serif
+	font-family: sans-serif;
 }
 
 .text {
@@ -573,8 +573,23 @@ h1 {
 	margin-bottom: 10px;
 }
 
+.nsdialog table td {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+.nsdialog form table td {
+	padding-top: 3px;
+	padding-bottom: 3px;
+	padding-right: 0px;
+}
+
 .nsdialog form {
 	padding-left: 50px;
+}
+
+.nsdialog label {
+	margin-right: 5px;
 }
 
 .nsdialog .nserror {
@@ -607,13 +622,9 @@ h1 {
 	overflow-y: scroll;
 }
 
-.nsdialog table td {
-	padding-left: 10px;
-	padding-right: 10px;
-}
-
 .nsicon {
 	display: inline-block;
+	vertical-align: text-top;
 }
 
 .nstable {
@@ -1390,4 +1401,121 @@ input.spinner {
 #deviceconnectionsettings>div {
 	margin-top: 5px;
 }
+
+#nsdiagnostics-list {
+	position: absolute;
+	top: 5px;
+	left: 5px;
+	bottom: 5px;
+}
+
+#nsdiagnostics-listbox {
+	position: absolute;
+	height: auto;
+	top: 0px;
+	left: 0px;
+	bottom: 0px;
+	width: 250px;
+	outline: none;
+}
+
+#nsdiagnostics-listbox li {
+	display: block;
+}
+
+.nsdiagnostics-list-diagnostic {
+	background: url('../img/diagnostic_16px.png') no-repeat left 3px;
+	padding-left: 18px;
+}
+
+.nsdiagnostics-list-diagnostic.disabled {
+	background-image: url('../img/diagnostic_disabled_16px.png');
+	color: #AAAAAA;
+}
+
+.nsdiagnostics-list-diagnostic .actions {
+	float: right;
+	margin-top: -15px;
+}
+
+.nsdiagnostics-list-diagnostic .details {
+	display: none;
+	font-size: small;
+}
+
+.nsdiagnostics-list-diagnostic.active .details {
+	display: block;
+}
+
+.nsdiagnostics-list-diagnostic .name {
+	display: block;
+	font-weight: bold;
+}
+
+.nsdiagnostics-list-diagnostic .group {
+	font-style: italic;
+}
+
+select#climode {
+	font-family: monospace;
+}
+
+#nsdiagnostics-simplediagnostic-details {
+	font-size: 0.9em;
+	width: 100%;
+	margin-top: 30px;
+}
+
+#nsdiagnostics-simplediagnostic-details tr {
+	border-top: 1px solid #D3D3D3;
+	border-bottom: 1px solid #D3D3D3;
+}
+
+#nsdiagnostics-simplediagnostic-details th {
+	width: 160px;
+	padding-left: 20px;
+	padding-right: 20px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	text-align: left;
+}
+
+#nsdiagnostics-simplediagnostic-details td {
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+#nsdiagnostics-simplediagnostic-details .command {
+	font-family: monospace;
+}
+
+#nsdiagnostics-adddiagnostic-editorfield {
+	position: absolute;
+	top: 140px;
+	bottom: 15px;
+	left: 10px;
+	right: 10px;
+}
+
+#nsdiagnostic-adddiagnostic-script {
+	width: 100%;
+	height: 100%;
+}
+
+#nsdiagnostics-editdiagnostic-editorfield {
+	position: absolute;
+	top: 120px;
+	bottom: 15px;
+	left: 10px;
+	right: 10px;
+}
+
+#nsdiagnostics-diagnostic-script {
+	position: absolute;
+	top: 40px;
+	left: 5px;
+	bottom: 5px;
+	right: 5px;
+}
+
 

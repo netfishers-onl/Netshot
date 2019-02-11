@@ -5,26 +5,32 @@
 	</div>
 	
 	<form>
-		<fieldset>
-			<label for="rulename">Name: </label>
-			<input type="text" name="rulename" id="rulename" autofocus="autofocus"
-				class="text ui-widget-content ui-corner-all" />
-		</fieldset>
-		<fieldset>
-			<div>
-				<input type="radio" id="TextRule" name="ruletype" checked="checked" />
-				<label for="TextRule">Simple text (or regular expression) rule</label>
-			</div>
-			<div>
-				<input type="radio" id="JavaScriptRule" name="ruletype" />
-				<label for="JavaScriptRule">JavaScript rule</label>
-			</div>
-		</fieldset>
-		<fieldset>
-			<div>
-				The rule will be added to policy <strong><%- name %></strong>.
-			</div>
-		</fieldset>
+		<table>
+		<tbody>
+			<tr>
+				<td><label for="rulename">Name: </label></td>
+				<td><input type="text" name="rulename" id="rulename" autofocus="autofocus"
+					class="text ui-widget-content ui-corner-all" /></td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<div>
+						<input type="radio" id="TextRule" name="ruletype" checked="checked" />
+						<label for="TextRule">Simple text (or regular expression) rule</label>
+					</div>
+					<div>
+						<input type="radio" id="JavaScriptRule" name="ruletype" />
+						<label for="JavaScriptRule">JavaScript rule</label>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					The rule will be added to policy <strong><%- name %></strong>.
+				</td>
+			</tr>
+		</tbody>
+		</table>
 
 		<div class="nserror" id="error">
 			<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>

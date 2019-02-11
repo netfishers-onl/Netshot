@@ -11,7 +11,11 @@ define([
 		isAdmin: function() {
 			return this.get('level') >= 1000;
 		},
-		
+
+		isExecuteReadWrite: function() {
+			return this.get('level') >= 500;
+		},
+
 		isReadWrite: function() {
 			return this.get('level') >= 100;
 		},

@@ -4,11 +4,11 @@ define([
 	'underscore',
 	'backbone',
 	'tablesort',
-	'models/compliance/DeviceRuleCollection',
+	'models/device/DeviceComplianceResultCollection',
 	'views/devices/CheckDeviceComplianceDialog',
 	'text!templates/devices/deviceCompliance.html',
 	'text!templates/devices/deviceRule.html'
-], function($, _, Backbone, TableSort, DeviceRuleCollection, CheckDeviceComplianceDialog,
+], function($, _, Backbone, TableSort, DeviceComplianceResultCollection, CheckDeviceComplianceDialog,
 		deviceComplianceTemplate, deviceRuleTemplate) {
 
 	return Backbone.View.extend({
@@ -20,7 +20,7 @@ define([
 
 		initialize: function(options) {
 			this.device = options.device;
-			this.deviceRules = new DeviceRuleCollection([], {
+			this.deviceRules = new DeviceComplianceResultCollection([], {
 				'device': this.device
 			});
 			var that = this;

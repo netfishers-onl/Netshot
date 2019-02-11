@@ -27,6 +27,9 @@ define([
 			this.$('#nstoolbar-devices').click(function() {
 				window.location = "#/devices";
 			});
+			this.$('#nstoolbar-diagnostics').click(function() {
+				window.location = "#/diagnostics";
+			});
 			this.$('#nstoolbar-compliance').click(function() {
 				window.location = "#/compliance";
 			});

@@ -5,17 +5,23 @@
 	</div>
 	
 	<form>
-		<fieldset>
-			<label for="policyname">Name: </label>
-			<input type="text" name="policyname" id="policyname" autofocus="autofocus"
-				class="text ui-widget-content ui-corner-all" value="<%- name %>" />
-		</fieldset>
-		<fieldset>
-			<label for="group">Group: </label>
-			<select name="group" id="group" class="text ui-widget-content ui-corner-all">
-				<option value="-1">None (not applied)</option>
-			</select>
-		</fieldset>
+		<table>
+		<tbody>
+			<tr>
+				<td><label for="policyname">Name: </label></td>
+				<td><input type="text" name="policyname" id="policyname" autofocus="autofocus"
+					class="text ui-widget-content ui-corner-all" value="<%- name %>" /></td>
+			</tr>
+			<tr>
+				<td><label for="group">Group: </label></td>
+				<td>
+					<select name="group" id="group" class="text ui-widget-content ui-corner-all">
+						<option value="-1">None (not applied)</option>
+					</select>
+				</td>
+			</tr>
+		</tbody>
+		</table>
 
 		<div class="nserror" id="error">
 			<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>

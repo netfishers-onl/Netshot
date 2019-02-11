@@ -30,7 +30,7 @@ define([
 					that.close();
 					that.options.onEdited();
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$("#error").show();
 					$button.button('enable');

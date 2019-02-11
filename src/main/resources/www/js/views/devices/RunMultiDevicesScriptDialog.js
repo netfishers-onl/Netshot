@@ -121,7 +121,7 @@ define([
 					that.$("#scriptloading").prop("checked", false).button("refresh");
 					that.$("#loadtools").removeClass("expanded");
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$("#error").show();
 					$button.button('enable');
@@ -145,7 +145,7 @@ define([
 					that.$("#info").show();
 					that.refreshScripts();
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$("#error").show();
 					$button.button('enable');
@@ -174,7 +174,7 @@ define([
 					that.$("#scriptsaving").prop("checked", false).button("refresh");
 					that.$("#savetools").removeClass("expanded");
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$("#error").show();
 					$button.button('enable');
@@ -253,7 +253,7 @@ define([
 						that.$('#bar').css('width', (100 * (1 - devices.length / total)) + '%');
 						startNext();
 					}).fail(function(data) {
-						var error = $.parseJSON(data.responseText);
+						var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 						that.$("#errormsg").text("Error processing " + device.get('name') + ": " + error.errorMsg);
 						that.$("#error").show();
 						$buttons.button('enable');

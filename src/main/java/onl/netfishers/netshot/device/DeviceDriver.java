@@ -59,10 +59,16 @@ import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
 import onl.netfishers.netshot.work.TaskLogger;
 import onl.netfishers.netshot.work.Task;
 
+/**
+ * This is a device driver.
+ */
 @XmlRootElement()
 @XmlAccessorType(XmlAccessType.NONE)
 public class DeviceDriver {
 
+	/**
+	 * Possible protocols for a device driver.
+	 */
 	public static enum DriverProtocol {
 		TELNET("telnet"),
 		SSH("ssh");
@@ -130,6 +136,7 @@ public class DeviceDriver {
 		}
 	};
 
+	/** The Javascript loader code. */
 	private static String JSLOADER;
 
 	static {
@@ -158,12 +165,24 @@ public class DeviceDriver {
 		}
 	}
 
+	/**
+	 * The list of loaded drivers.
+	 */
 	private static Map<String, DeviceDriver> drivers = new HashMap<String, DeviceDriver>();
 
+	/**
+	 * Gets all loaded drivers.
+	 * @return the loaded drivers
+	 */
 	public static Collection<DeviceDriver> getAllDrivers() {
 		return drivers.values();
 	}
 
+	/**
+	 * Gets a driver from its name.
+	 * @param name the name of the device driver
+	 * @return the device driver from that name, or null if not found
+	 */
 	public static DeviceDriver getDriverByName(String name) {
 		if (name == null) {
 			return null;
@@ -171,10 +190,18 @@ public class DeviceDriver {
 		return drivers.get(name);
 	}
 
-
+	/**
+	 * Gets all loaded drivers as a hash.
+	 * @return the hash of loaded drivers
+	 */
 	public static Map<String, DeviceDriver> getDrivers() {
 		return drivers;
 	}
+
+	/**
+	 * Reloads all the drivers from disk.
+	 * @throws Exception something bad
+	 */
 	public static void refreshDrivers() throws Exception {
 		Map<String, DeviceDriver> drivers = new HashMap<String, DeviceDriver>();
 
@@ -277,25 +304,49 @@ public class DeviceDriver {
 		}
 		DeviceDriver.drivers = drivers;
 	}
+
+	/** The name of the driver */
 	private String name;
+
+	/** The author of the driver */
 	private String author;
+
+	/** The description of the driver */
 	private String description;
+
+	/** The version of the driver */
 	private String version;
 	
+	/** The device attributed provided by this driver */
 	Set<AttributeDefinition> attributes = new HashSet<AttributeDefinition>();
+
+	/** The protocols provided by this driver */
 	private Set<DriverProtocol> protocols = new HashSet<DriverProtocol>();
+
+	/** The main CLI modes supported by this driver (e.g. 'enable', 'configure', etc.) */
+	private Set<String> cliMainModes = new HashSet<String>();
+
+	/** Set to true if the driver can analyze SNMP traps */
 	private boolean canAnalyzeTraps = true;
 
+	/** Set to true if the driver can analyze syslog messages */
 	private boolean canAnalyzeSyslog = true;
 
+	/** Set to true if the driver can identify a relevant device based on SNMP sysObjectId and name */
 	private boolean canSnmpAutodiscover = true;
 
+	/** The JS engine */
 	private ScriptEngine engine;
 
+	/** Instantiates a new device driver (empty constructor) */
 	protected DeviceDriver() {
-
 	}
 
+	/**
+	 * Instantiates a new device driver.
+	 * @param in The stream to read the JavaScript driver code from
+	 * @throws Exception something went wrong
+	 */
 	protected DeviceDriver(InputStream in) throws Exception {
 		engine = new ScriptEngineManager().getEngineByName("nashorn");
 
@@ -358,9 +409,25 @@ public class DeviceDriver {
 			Bindings cli = JsDeviceHelper.toBindings(engine, "CLI");
 			if (cli.containsKey("ssh") && cli.get("ssh") instanceof Bindings) {
 				this.protocols.add(DriverProtocol.SSH);
+				Bindings ssh = (Bindings) cli.get("ssh");
+				try {
+					Bindings macros = (Bindings) ssh.get("macros");
+					this.cliMainModes.addAll(macros.keySet());
+				}
+				catch (Exception e) {
+					// Not a problem
+				}
 			}
 			if (cli.containsKey("telnet") && cli.get("telnet") instanceof Bindings) {
 				this.protocols.add(DriverProtocol.TELNET);
+				Bindings telnet = (Bindings) cli.get("telnet");
+				try {
+					Bindings macros = (Bindings) telnet.get("macros");
+					this.cliMainModes.addAll(macros.keySet());
+				}
+				catch (Exception e) {
+					// Not a problem
+				}
 			}
 
 		}
@@ -377,6 +444,12 @@ public class DeviceDriver {
 		logger.info("Loaded driver {}.", this);
 	}
 
+	/**
+	 * Asks the driver to analyze a syslog message.
+	 * @param message The syslog message
+	 * @param ip The IP address the message is coming from
+	 * @return true to trigger a snapshot of the device
+	 */
 	public boolean analyzeSyslog(String message, Network4Address ip) {
 		if (!canAnalyzeSyslog) {
 			return false;
@@ -422,24 +495,6 @@ public class DeviceDriver {
 		}
 		return false;
 	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (!(obj instanceof DeviceDriver))
-			return false;
-		DeviceDriver other = (DeviceDriver) obj;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		}
-		else if (!name.equals(other.name))
-			return false;
-		return true;
-	}
 	
 	@XmlElement
 	public Set<AttributeDefinition> getAttributes() {
@@ -467,6 +522,11 @@ public class DeviceDriver {
 	}
 
 	@XmlElement
+	public Set<String> getCliMainModes() {
+		return cliMainModes;
+	}
+
+	@XmlElement
 	public String getVersion() {
 		return version;
 	}
@@ -476,18 +536,18 @@ public class DeviceDriver {
 		return engine;
 	}
 	
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
-	}
-	
 	protected void setProtocols(Set<DriverProtocol> protocols) {
 		this.protocols = protocols;
 	}
 	
+	/**
+	 * Asks the driver to analyze SNMP information.
+	 * @param task The auto discovery task
+	 * @param sysObjectId The received sysObjectId
+	 * @param sysDesc The received sysDesc
+	 * @param taskLogger The logger from the task
+	 * @return true if the passed SNMP information matches a device of this driver
+	 */
 	public boolean snmpAutoDiscover(Task task, String sysObjectId, String sysDesc, TaskLogger taskLogger) {
 		if (!canSnmpAutodiscover) {
 			return false;
@@ -511,6 +571,11 @@ public class DeviceDriver {
 		return false;
 	}
 
+	/**
+	 * Test whether a function exists in the Javascript driver code.
+	 * @param function The name of the function to look for
+	 * @throws IllegalArgumentException if something went wrong
+	 */
 	protected void testFunction(String function) throws IllegalArgumentException {
 		try {
 			((Invocable) engine).invokeFunction(function);
@@ -546,6 +611,32 @@ public class DeviceDriver {
 		builder.append(version);
 		builder.append("]");
 		return builder.toString();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof DeviceDriver))
+			return false;
+		DeviceDriver other = (DeviceDriver) obj;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		}
+		else if (!name.equals(other.name))
+			return false;
+		return true;
+	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
 	}
 
 }

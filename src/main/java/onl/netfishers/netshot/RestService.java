@@ -106,11 +106,16 @@ import onl.netfishers.netshot.device.Finder.Expression.FinderParseException;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigLongTextAttribute;
+import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpv3Community;
 import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
+import onl.netfishers.netshot.diagnostic.Diagnostic;
+import onl.netfishers.netshot.diagnostic.DiagnosticResult;
+import onl.netfishers.netshot.diagnostic.JsDiagnostic;
+import onl.netfishers.netshot.diagnostic.SimpleDiagnostic;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.Task.ScheduleType;
@@ -122,6 +127,7 @@ import onl.netfishers.netshot.work.tasks.DiscoverDeviceTypeTask;
 import onl.netfishers.netshot.work.tasks.PurgeDatabaseTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceGroupScriptTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceScriptTask;
+import onl.netfishers.netshot.work.tasks.RunDiagnosticsTask;
 import onl.netfishers.netshot.work.tasks.ScanSubnetsTask;
 import onl.netfishers.netshot.work.tasks.TakeGroupSnapshotTask;
 import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
@@ -225,8 +231,9 @@ public class RestService extends Thread {
 			public boolean isUserInRole(String role) {
 				boolean result = (user != null &&
 						(("admin".equals(role) && user.getLevel() >= User.LEVEL_ADMIN) ||
-								("readwrite".equals(role) && user.getLevel() >= User.LEVEL_READWRITE) ||
-								("readonly".equals(role) && user.getLevel() >= User.LEVEL_READONLY)));
+						("executereadwrite".equals(role) && user.getLevel() >= User.LEVEL_EXECUTEREADWRITE) ||
+						("readwrite".equals(role) && user.getLevel() >= User.LEVEL_READWRITE) ||
+						("readonly".equals(role) && user.getLevel() >= User.LEVEL_READONLY)));
 				Netshot.aaaLogger.debug("Role {} requested for user {}: result {}.", role, user == null ? "<null>" : user.getUsername(), result);
 				return result;
 			}
@@ -574,11 +581,29 @@ public class RestService extends Thread {
 		/** The Constant NETSHOT_INVALID_PASSWORD. */
 		public static final int NETSHOT_INVALID_PASSWORD = 203;
 		
+		/** The Constant NETSHOT_INVALID_SCRIPT. */
 		public static final int NETSHOT_INVALID_SCRIPT = 220;
 		
+		/** The Constant NETSHOT_UNKNOWN_SCRIPT. */
 		public static final int NETSHOT_UNKNOWN_SCRIPT = 221;
 		
+		/** The Constant NETSHOT_DUPLICATE_SCRIPT. */
 		public static final int NETSHOT_DUPLICATE_SCRIPT = 222;
+
+		/** The Constant NETSHOT_INVALID_DIAGNOSTIC_NAME. */
+		public static final int NETSHOT_INVALID_DIAGNOSTIC_NAME = 230;
+
+		/** The Constant NETSHOT_DUPLICATE_DIAGNOSTIC. */
+		public static final int NETSHOT_DUPLICATE_DIAGNOSTIC = 231;
+
+		/** The Constant NETSHOT_INVALID_DIAGNOSTIC_TYPE. */
+		public static final int NETSHOT_INVALID_DIAGNOSTIC_TYPE = 232;
+
+		/** The Constant NETSHOT_INVALID_DIAGNOSTIC. */
+		public static final int NETSHOT_INVALID_DIAGNOSTIC = 233;
+
+		/** The Constant NETSHOT_INCOMPATIBLE_DIAGNOSTIC. */
+		public static final int NETSHOT_INCOMPATIBLE_DIAGNOSTIC = 234;
 
 		/** The Constant serialVersionUID. */
 		private static final long serialVersionUID = -4538169756895835186L;
@@ -4259,8 +4284,8 @@ public class RestService extends Thread {
 			task = new TakeSnapshotTask(device, rsTask.getComments(), userName);
 		}
 		else if (rsTask.getType().equals("RunDeviceScriptTask")) {
-			if (!securityContext.isUserInRole("admin")) {
-				throw new NetshotNotAuthorizedException("Must be admin to run scripts on devices.", 0);
+			if (!securityContext.isUserInRole("executereadwrite")) {
+				throw new NetshotNotAuthorizedException("Insufficient permissions to run scripts on devices.", 0);
 			}
 			logger.trace("Adding a RunDeviceScriptTask");
 			DeviceDriver driver = DeviceDriver.getDriverByName(rsTask.getDriver());
@@ -4521,6 +4546,28 @@ public class RestService extends Thread {
 			}
 			task = new PurgeDatabaseTask(rsTask.getComments(), userName, rsTask.getDaysToPurge(),
 					configDays, configSize, configKeepDays);
+		}
+		else if (rsTask.getType().equals("RunDiagnosticsTask")) {
+			logger.trace("Adding a RunDiagnosticsTask");
+			Device device;
+			Session session = Database.getSession();
+			try {
+				device = (Device) session.get(Device.class, rsTask.getDevice());
+				if (device == null) {
+					logger.error("Unable to find the device {}.", rsTask.getDevice());
+					throw new NetshotBadRequestException("Unable to find the device.",
+							NetshotBadRequestException.NETSHOT_INVALID_DEVICE);
+				}
+			}
+			catch (HibernateException e) {
+				logger.error("Error while retrieving the device.", e);
+				throw new NetshotBadRequestException("Database error.",
+						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+			}
+			finally {
+				session.close();
+			}
+			task = new RunDiagnosticsTask(device, rsTask.getComments(), userName);
 		}
 		else {
 			logger.error("User posted an invalid task type '{}'.", rsTask.getType());
@@ -5984,7 +6031,7 @@ public class RestService extends Thread {
 	}
 
 	/**
-	 * Gets the device compliance.
+	 * Gets the device compliance results.
 	 *
 	 * @param request the request
 	 * @param id the id
@@ -5992,11 +6039,11 @@ public class RestService extends Thread {
 	 * @throws WebApplicationException the web application exception
 	 */
 	@GET
-	@Path("rules/device/{id}")
+	@Path("devices/{id}/complianceresults")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsDeviceRule> getDeviceCompliance(@PathParam("id") Long id) throws WebApplicationException {
-		logger.debug("REST request, get exemptions for rules {}.", id);
+	public List<RsDeviceRule> getDeviceComplianceResults(@PathParam("id") Long id) throws WebApplicationException {
+		logger.debug("REST request, get compliance results for device {}.", id);
 		Session session = Database.getSession();
 		try {
 			@SuppressWarnings("unchecked")
@@ -8490,4 +8537,575 @@ public class RestService extends Thread {
 		}
 	}
 
+
+
+	/**
+	 * The Class RsDiagnostic.
+	 */
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.NONE)
+	public static class RsDiagnostic {
+
+		/** The id. */
+		private long id = 0;
+
+		/** The name. */
+		private String name = "";
+
+		/** The group. */
+		private long targetGroup = 0;
+
+		/** Whether the diagnostic is enabled or not. */
+		private boolean enabled = false;
+
+		/** The type of result (boolean, text, etc.). */
+		private String resultType;
+
+		/** The type of diagnostic. */
+		private String type;
+
+		/** The Javascript script (in case of JsDiagnostic). */
+		private String script;
+
+		/** The device driver name (in case of SimpleDiagnostic). */
+		private String deviceDriver;
+
+		/** The mode in which to run the command (in case of SimpleDiagnostic). */
+		private String cliMode;
+
+		/** The CLI command to execute (in case of SimpleDiagnostic). */
+		private String command;
+
+		/** The pattern to match (in case of SimpleDiagnostic). */
+		private String modifierPattern;
+
+		/** The replacement text (in case of SimpleDiagnostic). */
+		private String modifierReplacement;
+
+		/**
+		 * Instantiates a new rs policy.
+		 */
+		public RsDiagnostic() {
+
+		}
+
+		/**
+		 * @return the deviceDriver
+		 */
+		@XmlElement
+		public String getDeviceDriver() {
+			return deviceDriver;
+		}
+
+		/**
+		 * @param deviceDriver the deviceDriver to set
+		 */
+		public void setDeviceDriver(String deviceDriver) {
+			this.deviceDriver = deviceDriver;
+		}
+
+		/**
+		 * Gets the id.
+		 *
+		 * @return the id
+		 */
+		@XmlElement
+		public long getId() {
+			return id;
+		}
+
+		/**
+		 * Sets the id.
+		 *
+		 * @param id the new id
+		 */
+		public void setId(long id) {
+			this.id = id;
+		}
+
+		/**
+		 * Gets the name.
+		 *
+		 * @return the name
+		 */
+		@XmlElement
+		public String getName() {
+			return name;
+		}
+
+		/**
+		 * Sets the name.
+		 *
+		 * @param name the new name
+		 */
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		/**
+		 * Gets the group.
+		 *
+		 * @return the target group
+		 */
+		@XmlElement
+		public long getTargetGroup() {
+			return targetGroup;
+		}
+
+		/**
+		 * Sets the group.
+		 *
+		 * @param targetGroup the new group
+		 */
+		public void setTargetGroup(long targetGroup) {
+			this.targetGroup = targetGroup;
+		}
+
+		/**
+		 * Set to yes to enable to diagnostic.
+		 * @return the enabled True to enable, false to disable
+		 */
+		@XmlElement
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		/**
+		 * Returns whether the diagnostic should be enabled or disabled.
+		 * @param enabled set to true to enable the diagnostic
+		 */
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		/**
+		 * @return the script
+		 */
+		@XmlElement
+		public String getScript() {
+			return script;
+		}
+
+		/**
+		 * @param script
+		 *                   the script to set
+		 */
+		public void setScript(String script) {
+			this.script = script;
+		}
+
+		/**
+		 * @return the command
+		 */
+		@XmlElement
+		public String getCommand() {
+			return command;
+		}
+
+		/**
+		 * @param command
+		 *                    the command to set
+		 */
+		public void setCommand(String command) {
+			this.command = command;
+		}
+
+		/**
+		 * @return the modifierPattern
+		 */
+		@XmlElement
+		public String getModifierPattern() {
+			return modifierPattern;
+		}
+
+		/**
+		 * @param modifierPattern
+		 *                            the modifierPattern to set
+		 */
+		public void setModifierPattern(String modifierPattern) {
+			this.modifierPattern = modifierPattern;
+		}
+
+		/**
+		 * @return the modifierReplacement
+		 */
+		@XmlElement
+		public String getModifierReplacement() {
+			return modifierReplacement;
+		}
+
+		/**
+		 * @param modifierReplacement the modifierReplacement to set
+		 */
+		public void setModifierReplacement(String modifierReplacement) {
+			this.modifierReplacement = modifierReplacement;
+		}
+
+		/**
+		 * Gets the type of diagnostic.
+		 * @return the type
+		 */
+		@XmlElement
+		public String getType() {
+			return type;
+		}
+
+		/**
+		 * Sets the type of diagnostic.
+		 * @param type the type to set
+		 */
+		public void setType(String type) {
+			this.type = type;
+		}
+
+		/**
+		 * Gets the CLI mode.
+		 * @return the cliMode
+		 */
+		@XmlElement
+		public String getCliMode() {
+			return cliMode;
+		}
+
+		/**
+		 * Sets the CLI mode.
+		 * @param cliMode the cliMode to set
+		 */
+		public void setCliMode(String cliMode) {
+			this.cliMode = cliMode;
+		}
+
+		/**
+		 * Gets the type of result.
+		 * @return the resultType
+		 */
+		@XmlElement
+		public String getResultType() {
+			return resultType;
+		}
+
+		/**
+		 * Sets the type of result.
+		 * @param resultType the resultType to set
+		 */
+		public void setResultType(String resultType) {
+			this.resultType = resultType;
+		}
+	}
+
+
+
+	/**
+	 * Gets the diagnotics.
+	 *
+	 * @param request the request
+	 * @return the diagnotics
+	 * @throws WebApplicationException the web application exception
+	 */
+	@GET
+	@Path("diagnostics")
+	@RolesAllowed("readonly")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	public List<Diagnostic> getDiagnostics() throws WebApplicationException {
+		logger.debug("REST request, get diagnotics.");
+		Session session = Database.getSession();
+		try {
+			@SuppressWarnings("unchecked")
+			List<Diagnostic> diagnostics = session.createQuery("select d from Diagnostic d left join fetch d.targetGroup").list();
+			return diagnostics;
+		}
+		catch (HibernateException e) {
+			logger.error("Unable to fetch the diagnostics.", e);
+			throw new NetshotBadRequestException("Unable to fetch the diagnostics",
+					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	
+	@POST
+	@Path("diagnostics")
+	@RolesAllowed("executereadwrite")
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	public Diagnostic addDiagnostic(RsDiagnostic rsDiagnostic) throws WebApplicationException {
+		logger.debug("REST request, add diagnostic");
+		String name = rsDiagnostic.getName().trim();
+		if (name.isEmpty()) {
+			logger.warn("User posted an empty diagnostic name.");
+			throw new NetshotBadRequestException("Invalid diagnostic name.",
+					NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC_NAME);
+		}
+		AttributeType resultType;
+		try {
+			resultType = AttributeType.valueOf(rsDiagnostic.getResultType());
+		}
+		catch (Exception e) {
+			throw new NetshotBadRequestException("Invalid diagnostic result type.",
+				NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+		}
+
+		Diagnostic diagnostic;
+		Session session = Database.getSession();
+		try {
+			session.beginTransaction();
+			DeviceGroup group = null;
+			if (rsDiagnostic.getTargetGroup() != -1) {
+				group = (DeviceGroup) session.load(DeviceGroup.class, rsDiagnostic.getTargetGroup());
+			}
+
+			if (".JsDiagnostic".equals(rsDiagnostic.getType())) {
+				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim() == "") {
+					throw new NetshotBadRequestException(
+						"Invalid diagnostic script",
+						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+				}
+				diagnostic = new JsDiagnostic(name, rsDiagnostic.isEnabled(), group, 
+						resultType, rsDiagnostic.getScript());
+			}
+			else if (".SimpleDiagnostic".equals(rsDiagnostic.getType())) {
+				if (rsDiagnostic.getCliMode() == null || rsDiagnostic.getCliMode().trim() == "") {
+					throw new NetshotBadRequestException("The CLI mode must be provided.",
+							NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+				}
+				if (rsDiagnostic.getCommand() == null || rsDiagnostic.getCommand().trim() == "") {
+					throw new NetshotBadRequestException("The command cannot be empty.",
+							NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+				}
+				diagnostic = new SimpleDiagnostic(name, rsDiagnostic.isEnabled(), group, resultType, rsDiagnostic.getDeviceDriver(),
+						rsDiagnostic.getCliMode(), rsDiagnostic.getCommand(), rsDiagnostic.getModifierPattern(),
+						rsDiagnostic.getModifierReplacement());
+			}
+			else {
+				throw new NetshotBadRequestException(
+					"Invalid diagnostic type.",
+					NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC_TYPE);
+			}
+			
+			session.save(diagnostic);
+			session.getTransaction().commit();
+		}
+		catch (ObjectNotFoundException e) {
+			session.getTransaction().rollback();
+			logger.error("The posted group doesn't exist", e);
+			throw new NetshotBadRequestException(
+					"Invalid group",
+					NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+		}
+		catch (HibernateException e) {
+			session.getTransaction().rollback();
+			logger.error("Error while saving the new diagnostic.", e);
+			Throwable t = e.getCause();
+			if (t != null && t.getMessage().contains("Duplicate entry")) {
+				throw new NetshotBadRequestException(
+						"A diagnostic with this name already exists.",
+						NetshotBadRequestException.NETSHOT_DUPLICATE_DIAGNOSTIC);
+			}
+			throw new NetshotBadRequestException(
+					"Unable to add the policy to the database.",
+					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+		return diagnostic;
+	}
+
+
+	/**
+	 * Updates the diagnostic.
+	 * 
+	 * @param request the request
+	 * @param id the diagnostic ID
+	 * @param rsDiagnostic the passed diagnostic
+	 * @return the updated diagnostic
+	 * @throws WebApplicationException a web application exception
+	 */
+	@PUT
+	@Path("diagnostics/{id}")
+	@RolesAllowed("executereadwrite")
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	public Diagnostic setDiagnostic(@PathParam("id") Long id, RsDiagnostic rsDiagnostic)
+			throws WebApplicationException {
+		logger.debug("REST request, edit diagnostic {}.", id);
+		Session session = Database.getSession();
+		try {
+			session.beginTransaction();
+			Diagnostic diagnostic = (Diagnostic) session.get(Diagnostic.class, id);
+			if (diagnostic == null) {
+				logger.error("Unable to find the diagnostic {} to be edited.", id);
+				throw new NetshotBadRequestException("Unable to find this diagnostic.",
+						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+			}
+			
+			String name = rsDiagnostic.getName().trim();
+			if (name.isEmpty()) {
+				logger.warn("User posted an empty diagnostic name.");
+				throw new NetshotBadRequestException("Invalid diagnostic name.",
+						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC_NAME);
+			}
+			AttributeType resultType;
+			try {
+				resultType = AttributeType.valueOf(rsDiagnostic.getResultType());
+			}
+			catch (Exception e) {
+				throw new NetshotBadRequestException("Invalid diagnostic result type.",
+					NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+			}
+			diagnostic.setName(name);
+			if (diagnostic.getTargetGroup() != null && diagnostic.getTargetGroup().getId() != rsDiagnostic.getTargetGroup()) {
+				session.createQuery("delete DiagnosticResult dr where dr.diagnostic.id = :id")
+					.setLong("id", diagnostic.getId())
+					.executeUpdate();
+			}
+			DeviceGroup group = null;
+			if (rsDiagnostic.getTargetGroup() != -1) {
+				group = (DeviceGroup) session.load(DeviceGroup.class, rsDiagnostic.getTargetGroup());
+			}
+			diagnostic.setTargetGroup(group);
+
+			diagnostic.setEnabled(rsDiagnostic.isEnabled());
+			if (diagnostic instanceof JsDiagnostic) {
+				if (!".JsDiagnostic".equals(rsDiagnostic.getType())) {
+					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
+							NetshotBadRequestException.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
+				}
+				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim() == "") {
+					throw new NetshotBadRequestException(
+						"Invalid diagnostic script",
+						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+				}
+				((JsDiagnostic) diagnostic).setResultType(resultType);
+				((JsDiagnostic) diagnostic).setScript(rsDiagnostic.getScript());
+			}
+			else if (diagnostic instanceof SimpleDiagnostic) {
+				if (!".SimpleDiagnostic".equals(rsDiagnostic.getType())) {
+					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
+							NetshotBadRequestException.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
+				}
+				if (rsDiagnostic.getCliMode() == null || rsDiagnostic.getCliMode().trim() == "") {
+					throw new NetshotBadRequestException("The CLI mode must be provided.",
+							NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+				}
+				if (rsDiagnostic.getCommand() == null || rsDiagnostic.getCommand().trim() == "") {
+					throw new NetshotBadRequestException("The command cannot be empty.",
+							NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+				}
+				SimpleDiagnostic simpleDiagnostic = (SimpleDiagnostic) diagnostic;
+				simpleDiagnostic.setDeviceDriver(rsDiagnostic.getDeviceDriver());
+				simpleDiagnostic.setCliMode(rsDiagnostic.getCliMode());
+				simpleDiagnostic.setCommand(rsDiagnostic.getCommand());
+				simpleDiagnostic.setModifierPattern(rsDiagnostic.getModifierPattern());
+				simpleDiagnostic.setModifierReplacement(rsDiagnostic.getModifierReplacement());
+			}
+
+			session.update(diagnostic);
+			session.getTransaction().commit();
+			return diagnostic;
+		}
+		catch (ObjectNotFoundException e) {
+			session.getTransaction().rollback();
+			logger.error("Unable to find the group {} to be assigned to the diagnostic {}.",
+					rsDiagnostic.getTargetGroup(), id, e);
+			throw new NetshotBadRequestException(
+					"Unable to find the group.",
+					NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+		}
+		catch (HibernateException e) {
+			session.getTransaction().rollback();
+			logger.error("Unable to save the diagnostic {}.", id, e);
+			Throwable t = e.getCause();
+			if (t != null && t.getMessage().contains("Duplicate entry")) {
+				throw new NetshotBadRequestException("A diagnostic with this name already exists.",
+					NetshotBadRequestException.NETSHOT_DUPLICATE_DIAGNOSTIC);
+			}
+			throw new NetshotBadRequestException("Unable to save the policy.",
+					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		catch (WebApplicationException e) {
+			session.getTransaction().rollback();
+			throw e;
+		}
+		finally {
+			session.close();
+		}
+	}
+
+
+	/**
+	 * Delete diagnostic.
+	 *
+	 * @param request the request
+	 * @param id the id of the diagnostic to delete
+	 * @throws WebApplicationException the web application exception
+	 */
+	@DELETE
+	@Path("diagnostics/{id}")
+	@RolesAllowed("executereadwrite")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	public void deleteDiagnostic(@PathParam("id") Long id)
+			throws WebApplicationException {
+		logger.debug("REST request, delete diagnostic {}.", id);
+		Session session = Database.getSession();
+		try {
+			session.beginTransaction();
+			Diagnostic diagnostic = (Diagnostic) session.load(Diagnostic.class, id);
+			session.delete(diagnostic);
+			session.getTransaction().commit();
+		}
+		catch (ObjectNotFoundException e) {
+			session.getTransaction().rollback();
+			logger.error("The diagnostic {} to be deleted doesn't exist.", id, e);
+			throw new NetshotBadRequestException("The diagnostic doesn't exist.",
+					NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+		}
+		catch (HibernateException e) {
+			session.getTransaction().rollback();
+			logger.error("Unable to delete the diagnostic {}.", id, e);
+			throw new NetshotBadRequestException("Unable to delete the diagnostic",
+					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	/**
+	 * Gets the device diagnostic results
+	 *
+	 * @param request the request
+	 * @param id the id
+	 * @return the device compliance
+	 * @throws WebApplicationException the web application exception
+	 */
+	@GET
+	@Path("devices/{id}/diagnosticresults")
+	@RolesAllowed("readonly")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	public List<DiagnosticResult> getDeviceDiagnosticResults(@PathParam("id") Long id) throws WebApplicationException {
+		logger.debug("REST request, get diagnostic results for device {}.", id);
+		Session session = Database.getSession();
+		try {
+			@SuppressWarnings("unchecked")
+			List<DiagnosticResult> results = session
+				.createQuery("from DiagnosticResult dr where dr.device.id = :id")
+				.setLong("id", id)
+				.list();
+			return results;
+		}
+		catch (HibernateException e) {
+			logger.error("Unable to fetch the diagnostic results.", e);
+			throw new NetshotBadRequestException("Unable to fetch the diagnostic results",
+					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
 }
+
+

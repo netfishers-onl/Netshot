@@ -15,7 +15,7 @@ define([
 		CancelTaskDialog, CreateTaskDialog, tasksTemplate, tasksToolBarTemplate,
 		taskRowTemplate) {
 
-	makeLoadProgress(15);
+	makeLoadProgress(13);
 
 	return Backbone.View.extend({
 

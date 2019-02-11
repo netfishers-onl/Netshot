@@ -18,6 +18,7 @@
  */
 package onl.netfishers.netshot.diagnostic;
 
+import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Transient;
@@ -39,6 +40,7 @@ public class DiagnosticTextResult extends DiagnosticResult {
 	}
 
 	@XmlElement
+	@Column(length = 255)
 	public String getText() {
 		return text;
 	}

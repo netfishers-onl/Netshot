@@ -53,7 +53,7 @@ define([
 					that.model.set(data);
 					that.options.onEdited();
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$("#error").show();
 					$button.button('enable');
@@ -117,7 +117,7 @@ define([
 					that.searchedDevices.fetch().done(function() {
 						that.renderSearchedDevices();
 					}).fail(function(data) {
-						var error = $.parseJSON(data.responseText);
+						var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 						that.$("#errormsg").text("Error: " + error.errorMsg);
 						that.$("#error").show();
 					});

@@ -30,7 +30,7 @@ define([
 					that.model.set(data);
 					that.options.onDisabled();
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					this.$("#errormsg").text("Error: " + error.errorMsg);
 					this.$("#error").show();
 					$button.button('enable');

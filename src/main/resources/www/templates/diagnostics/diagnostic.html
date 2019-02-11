@@ -1,0 +1,40 @@
+<div id="nsdiagnostics-diagnosticheader">
+	<div id="diagnostictoolbar">
+		<button id="diagnosticedit">Edit...</button>
+	</div>
+</div>
+
+<% if (type === ".SimpleDiagnostic") { %>
+
+<table id="nsdiagnostics-simplediagnostic-details">
+<tbody>
+	<tr>
+		<th>For devices of type...</th>
+		<td><% if (typeof deviceDriver === "undefined") { %>Any<% } else { %><%- deviceDriverDescription %><% } %></td>
+	</tr>
+	<tr>
+		<th>In CLI mode</th>
+		<td class="command"><% if (typeof cliMode !== "undefined") { %><%- cliMode %><% } %></td>
+	</tr>
+	<tr>
+		<th>Execute the command</th>
+		<td class="command"><%if (typeof command !== "undefined") { %><%- command %><% } %></td>
+	</tr>
+	<% if (typeof modifierPattern !== "undefined" && modifierPattern && typeof modifierReplacement !== "undefined" && modifierReplacement) { %>
+	<tr>
+		<th>Replace anything matching...</th>
+		<td class="command"><%- modifierPattern %></td>
+	</tr>
+	<tr>
+		<th>...with</th>
+		<td class="command"><%- modifierReplacement %></td>
+	</tr>
+	<% } %>
+</tbody>
+</table>
+
+<% } else if (type === ".JsDiagnostic") { %>
+
+<div id="nsdiagnostics-diagnostic-script"></div>
+
+<% } %>

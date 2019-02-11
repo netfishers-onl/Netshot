@@ -6,10 +6,9 @@ define([
 	'views/Dialog',
 	'models/device/DeviceGroupCollection',
 	'models/compliance/PolicyModel',
-	'text!templates/compliance/addPolicy.html',
-	'models/compliance/PolicyModel'
+	'text!templates/compliance/addPolicy.html'
 ], function($, _, Backbone, Dialog, DeviceGroupCollection, PolicyModel,
-		addPolicyTemplate, PolicyModel) {
+		addPolicyTemplate) {
 
 	return Dialog.extend({
 
@@ -41,7 +40,7 @@ define([
 					var policy = new PolicyModel(data);
 					that.options.onAdded(policy);
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$("#error").show();
 					$button.button('enable');

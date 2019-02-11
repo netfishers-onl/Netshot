@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2016 Sylvain Cadilhac (NetFishers)
+ * Copyright 2013-2019 Sylvain Cadilhac (NetFishers)
  * 
  * This file is part of Netshot.
  * 
@@ -421,10 +421,13 @@ function _connect(_function, _protocol, _options, _logger) {
 				throw "The key should be a string in diagnostic.set.";
 			}
 			if (typeof(value) == "undefined") {
-				throw "Undefined value used in diagnostic.set, for key " + key + ".";
+				value = key;
+				_options.diagnosticResult.set(value);
 			}
-			value = String(value);
-			_options.diagnosticResult.set(key, value);
+			else {
+				value = String(value);
+				_options.diagnosticResult.set(key, value);
+			}
 		}
 	};
 	
@@ -444,7 +447,7 @@ function _connect(_function, _protocol, _options, _logger) {
 			throw "No 'diagnose' function";
 		}
 		
-		diagnose(cli, deviceHelper, diagnostic, debug);
+		diagnose(cli, deviceHelper, diagnosticHelper, debug);
 	}
 	else if (_function === "simpleDiagnostic") {
 		var diagnostics = _options.simpleDiagnostics;

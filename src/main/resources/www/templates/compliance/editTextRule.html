@@ -1,44 +1,56 @@
 <div id="nscompliance-editruletextform" class="editscriptform" title="Edit text rule">
 
 	<form>
-		<fieldset>
-			<label for="devicetype">Device type: </label>
-			<select name="devicetype" id="devicetype" class="text ui-widget-content ui-corner-all"></select>
-		</fieldset>
-		<fieldset>
-			<label for="fieldname">Field: </label>
-			<select name="fieldname" id="fieldname" class="text ui-widget-content ui-corner-all"></select>
-		</fieldset>
-		<fieldset>
-			<label for="context">Context: </label>
-			<textarea rows="3" cols="40" id="context"></textarea>
-		</fieldset>
-		<fieldset>
-			<input type="radio" id="allblocks" name="blocks" checked="checked" />
-			<label for="allblocks">All blocks</label>
-			<input type="radio" id="anyblock" name="blocks" />
-			<label for="anyblock">At least one block</label>
-		</fieldset>
-		<fieldset>
-			<div>
-			<label for="text">Text: </label>
-			(<input type="checkbox" name="regexp" id="regexp" /> <label for="regexp">Regular expression</label>
-			<input type="checkbox" name="matchall" id="matchall" /> <label for="matchall">Match whole section</label>)
-			</div><div>
-			<textarea rows="8" cols="80" id="text"></textarea>
-			</div>
-		</fieldset>
-		<fieldset>
-			<input type="radio" id="dontinvert" name="ruleinvert" checked="checked" />
-			<label for="dontinvert">The text must exist</label>
-			<input type="radio" id="invert" name="ruleinvert" />
-			<label for="invert">The text must not exist</label>
-		</fieldset>
-		<fieldset id="nscompliance-editrule-testerfield">
-			<input type="text" id="ruledevice" placeholder="Select a device..." data-device-id=""
-				class="nsdatepicker text ui-widget-content ui-corner-all" readonly="readonly" />
-			<button id="ruletest">Test...</button>
-		</fieldset>
+		<table>
+		<tbody>
+			<tr>
+				<td><label for="devicetype">Device type: </label></td>
+				<td><select name="devicetype" id="devicetype" class="text ui-widget-content ui-corner-all"></select></td>
+			</tr>
+			<tr>
+				<td><label for="fieldname">Field: </label></td>
+				<td><select name="fieldname" id="fieldname" class="text ui-widget-content ui-corner-all"></select></td>
+			</tr>
+			<tr>
+				<td><label for="context">Context: </label></td>
+				<td><textarea rows="3" cols="40" id="context" class="text ui-widget-content ui-corner-all"></textarea></td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<input type="radio" id="allblocks" name="blocks" checked="checked" />
+					<label for="allblocks">All blocks</label>
+					<input type="radio" id="anyblock" name="blocks" />
+					<label for="anyblock">At least one block</label>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<div>
+						<label for="text">Text: </label>
+							(<input type="checkbox" name="regexp" id="regexp" /> <label for="regexp">Regular expression</label>
+							<input type="checkbox" name="matchall" id="matchall" /> <label for="matchall">Match whole section</label>)
+						</div><div>
+						<textarea rows="8" cols="80" id="text" class="text ui-widget-content ui-corner-all"></textarea>
+						</div>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<input type="radio" id="dontinvert" name="ruleinvert" checked="checked" />
+					<label for="dontinvert">The text must exist</label>
+					<input type="radio" id="invert" name="ruleinvert" />
+					<label for="invert">The text must not exist</label>
+				</td>
+			</tr>
+			<tr id="nscompliance-editrule-testerfield">
+				<td colspan="2">
+					<input type="text" id="ruledevice" placeholder="Select a device..." data-device-id=""
+						class="nsdatepicker text ui-widget-content ui-corner-all" readonly="readonly" />
+					<button id="ruletest">Test...</button>
+				</td>
+			</tr>
+		</tbody>
+		</table>
 
 		<div class="nserror" id="error">
 			<span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>

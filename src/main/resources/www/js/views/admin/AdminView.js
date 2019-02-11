@@ -32,7 +32,7 @@ define([
 		adminTemplate, adminToolbarTemplate, domainRowTemplate,
 		credentialsRowTemplate, userRowTemplate, driverRowTemplate) {
 
-	makeLoadProgress(15);
+	makeLoadProgress(13);
 
 	return Backbone.View.extend({
 

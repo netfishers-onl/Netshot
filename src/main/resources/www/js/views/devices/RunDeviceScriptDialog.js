@@ -55,7 +55,7 @@ define([
 						delay: 1200
 					});
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$("#error").show();
 					$button.button('enable');
@@ -147,7 +147,7 @@ define([
 					that.$("#scriptloading").prop("checked", false).button("refresh");
 					that.$("#loadtools").removeClass("expanded");
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$("#error").show();
 					$button.button('enable');
@@ -171,7 +171,7 @@ define([
 					that.$("#info").show();
 					that.refreshScripts();
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$("#error").show();
 					$button.button('enable');
@@ -200,7 +200,7 @@ define([
 					that.$("#scriptsaving").prop("checked", false).button("refresh");
 					that.$("#savetools").removeClass("expanded");
 				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText);
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 					that.$("#errormsg").text("Error: " + error.errorMsg);
 					that.$("#error").show();
 					$button.button('enable');
@@ -239,6 +239,9 @@ define([
 
 		onClose: function() {
 			this.$el.off('dialogresizestop');
+			if (this.scriptEditor) {
+				this.scriptEditor.destroy();
+			}
 		}
 
 	});

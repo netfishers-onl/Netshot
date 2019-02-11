@@ -30,7 +30,7 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 		DeviceView, MultiDevicesView, AdvancedSearchDialog, EditGroupDialog,
 		DeviceTypeCollection, CreateTaskDialog) {
 
-	makeLoadProgress(15);
+	makeLoadProgress(13);
 
 	var DevicesView = Backbone.View.extend({
 
@@ -589,6 +589,12 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 			this.devices.filter.text = "Group: " + this.group.get('name');
 			this.devices.filter.group = id;
 			this.fetchDevices();
+		},
+
+		destroy: function() {
+			if (this.deviceView) {
+				this.deviceView.destroy();
+			}
 		}
 
 	});

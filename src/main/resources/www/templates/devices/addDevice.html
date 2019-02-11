@@ -5,74 +5,81 @@
 	</div>
 	
 	<form>
-		<fieldset>
-			<label for="devicedomain">Domain: </label> <select
-				name="devicedomain" id="devicedomain"
-				class="text ui-widget-content ui-corner-all"></select>
-		</fieldset>
-		<fieldset>
-			<label for="deviceip">IP Address: </label> <input type="text"
-				name="deviceip" id="deviceip" autofocus="autofocus"
-				class="text ui-widget-content ui-corner-all" />
-		</fieldset>
-		<fieldset>
-			<input type="checkbox" name="autodiscover" id="autodiscover" /> <label
-				for="autodiscover">Autodiscover Device Type</label>
-		</fieldset>
-		<fieldset>
-			<label for="devicetype">Type: </label> <select
-				name="devicetype" id="devicetype"
-				class="text ui-widget-content ui-corner-all"></select>
-		</fieldset>
-		<fieldset class="nsdevices-autodiscoverimcompatible">
-			<input type="checkbox" name="overrideconnectsettings" id="overrideconnectsettings" />
-			<label for="overrideconnectsettings">Override connection settings</label><br />
-			<div id="deviceconnectionsettings">
-				<div>
-					<label for="deviceconnectipaddress">Connect to this IP: </label>
-					<input
-						type="text"
-						name="deviceconnectipaddress"
-						id="deviceconnectipaddress"
-						class="text ui-widget-content ui-corner-all"
-					/>
-				</div>
-				<div>
-					<label for="devicesshport">SSH port: </label>
-					<input
-						type="text"
-						name="devicesshport"
-						id="devicesshport"
-						class="text ui-widget-content ui-corner-all nsportpicker"
-					/>
-					<label for="devicetelnetport">Telnet port: </label>
-					<input
-						type="text"
-						name="devicetelnetport"
-						id="devicetelnetport"
-						class="text ui-widget-content ui-corner-all nsportpicker"
-					/>
-				</div>
-			</div>
-		</fieldset>
-		<fieldset class="nsdevices-autodiscoverimcompatible">
-			<div>
-				<input type="radio" id="credentialstypecommon" name="credentialstype" value="Global" />
-				<label for="credentialstypecommon">Use global credential sets for authentication</label>
-			</div>
-			<div>
-				<input type="radio" id="credentialstypessh" name="credentialstype" value="SSH" />
-				<label for="credentialstypessh">Specific SSH account</label>
-			</div>
-			<div>
-				<input type="radio" id="credentialstypesshkey" name="credentialstype" value="SSH Key" />
-				<label for="credentialstypesshkey">Specific SSH key</label>
-			</div>
-			<div>
-				<input type="radio" id="credentialstypetelnet" name="credentialstype" value="Telnet" />
-				<label for="credentialstypetelnet">Specific Telnet account</label>
-			</div>
-		</fieldset>
+		<table>
+		<tbody>
+			<tr>
+				<td><label for="devicedomain">Domain: </label></td>
+				<td><select name="devicedomain" id="devicedomain" class="text ui-widget-content ui-corner-all"></select></td>
+			</tr>
+			<tr>
+				<td><label for="deviceip">IP Address: </label></td>
+				<td><input type="text" name="deviceip" id="deviceip" autofocus="autofocus"
+					class="text ui-widget-content ui-corner-all" /></td>
+			</tr>
+			<tr>
+				<td colspan="2"><input type="checkbox" name="autodiscover" id="autodiscover" /> <label
+					for="autodiscover">Autodiscover Device Type</label></td>
+			</tr>
+			<tr class="nsdevices-autodiscoverimcompatible">
+				<td><label for="devicetype">Type: </label></td>
+				<td><select name="devicetype" id="devicetype" class="text ui-widget-content ui-corner-all"></select></td>
+			</tr>
+			<tr class="nsdevices-autodiscoverimcompatible">
+				<td colspan="2">
+					<input type="checkbox" name="overrideconnectsettings" id="overrideconnectsettings" />
+					<label for="overrideconnectsettings">Override connection settings</label><br />
+					<div id="deviceconnectionsettings">
+						<div>
+							<label for="deviceconnectipaddress">Connect to this IP: </label>
+							<input
+								type="text"
+								name="deviceconnectipaddress"
+								id="deviceconnectipaddress"
+								class="text ui-widget-content ui-corner-all"
+							/>
+						</div>
+						<div>
+							<label for="devicesshport">SSH port: </label>
+							<input
+								type="text"
+								name="devicesshport"
+								id="devicesshport"
+								class="text ui-widget-content ui-corner-all nsportpicker"
+							/>
+							<label for="devicetelnetport">Telnet port: </label>
+							<input
+								type="text"
+								name="devicetelnetport"
+								id="devicetelnetport"
+								class="text ui-widget-content ui-corner-all nsportpicker"
+							/>
+						</div>
+					</div>
+				</td>
+			</tr>
+			<tr class="nsdevices-autodiscoverimcompatible">
+				<td colspan="2">
+					<div>
+						<input type="radio" id="credentialstypecommon" name="credentialstype" value="Global" />
+						<label for="credentialstypecommon">Use global credential sets for authentication</label>
+					</div>
+					<div>
+						<input type="radio" id="credentialstypessh" name="credentialstype" value="SSH" />
+						<label for="credentialstypessh">Specific SSH account</label>
+					</div>
+					<div>
+						<input type="radio" id="credentialstypesshkey" name="credentialstype" value="SSH Key" />
+						<label for="credentialstypesshkey">Specific SSH key</label>
+					</div>
+					<div>
+						<input type="radio" id="credentialstypetelnet" name="credentialstype" value="Telnet" />
+						<label for="credentialstypetelnet">Specific Telnet account</label>
+					</div>
+				</td>
+			</tr>
+		</tbody>
+		</table>
+
 		<div class="nsdevices-autodiscoverimcompatible">
 			<table>
 				<tbody>

@@ -56,6 +56,7 @@ public abstract class Diagnostic {
 	static {
 		DIAGNOSTIC_CLASSES = new HashSet<Class<? extends Diagnostic>>();
 		DIAGNOSTIC_CLASSES.add(SimpleDiagnostic.class);
+		DIAGNOSTIC_CLASSES.add(JsDiagnostic.class);
 	}
 
 	/**
@@ -63,7 +64,7 @@ public abstract class Diagnostic {
 	 *
 	 * @return the Diagnostic classes
 	 */
-	public static final Set<Class<? extends Diagnostic>> getRuleClasses() {
+	public static final Set<Class<? extends Diagnostic>> getDiagnosticClasses() {
 		return DIAGNOSTIC_CLASSES;
 	}
 
@@ -89,6 +90,20 @@ public abstract class Diagnostic {
 	}
 
 	/**
+	 * Instantiates a new diagnostic.
+	 * @param name The name
+	 * @param enabled True to enable the diagnostic
+	 * @param targetGroup The group of devices the diagnostic applies to
+	 * @param resultType The type of result expected by this diagnostic
+	 */
+	public Diagnostic(String name, boolean enabled, DeviceGroup targetGroup, AttributeType resultType) {
+		this.name = name;
+		this.enabled = enabled;
+		this.targetGroup = targetGroup;
+		this.resultType = resultType;
+	}
+
+	/**
 	 * Gets the id.
 	 *
 	 * @return the id
@@ -111,7 +126,7 @@ public abstract class Diagnostic {
 		return name;
 	}
 
-
+	@XmlElement
 	public AttributeType getResultType() {
 		return resultType;
 	}
@@ -131,6 +146,7 @@ public abstract class Diagnostic {
 	 * Is the diagnostic enabled?
 	 * @return true if it's enabled
 	 */
+	@XmlElement
 	public boolean isEnabled() {
 		return enabled;
 	}

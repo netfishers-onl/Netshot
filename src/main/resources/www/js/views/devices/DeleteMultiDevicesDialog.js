@@ -49,7 +49,7 @@ define([
 						that.$('#bar').css('width', (100 * (1 - devices.length / total)) + '%');
 						startNext();
 					}).fail(function(data) {
-						var error = $.parseJSON(data.responseText);
+						var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
 						that.$("#errormsg").text("Error processing " + device.get('name') + ": " + error.errorMsg);
 						that.$("#error").show();
 						$buttons.button('enable');

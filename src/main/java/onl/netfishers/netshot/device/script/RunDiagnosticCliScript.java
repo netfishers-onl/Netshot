@@ -1,6 +1,7 @@
 package onl.netfishers.netshot.device.script;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
@@ -24,6 +25,7 @@ import onl.netfishers.netshot.device.script.helper.JsCliScriptOptions;
 import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
 import onl.netfishers.netshot.device.script.helper.JsDiagnosticHelper;
 import onl.netfishers.netshot.diagnostic.Diagnostic;
+import onl.netfishers.netshot.diagnostic.JsDiagnostic;
 import onl.netfishers.netshot.work.TaskLogger;
 
 public class RunDiagnosticCliScript extends CliScript {
@@ -50,6 +52,8 @@ public class RunDiagnosticCliScript extends CliScript {
 		JsCliHelper jsCliHelper = new JsCliHelper(cli, cliAccount, this.getJsLogger(), this.getCliLogger());
 		TaskLogger taskLogger = this.getJsLogger();
 		DeviceDriver driver = device.getDeviceDriver();
+		List<Diagnostic> simpleDiagnostics = new ArrayList<Diagnostic>();
+		// Filter on the device driver
 		try {
 			ScriptEngine engine = driver.getEngine();
 			ScriptContext scriptContext = new SimpleScriptContext();
@@ -57,8 +61,21 @@ public class RunDiagnosticCliScript extends CliScript {
 					ScriptContext.ENGINE_SCOPE);
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper);
 			options.setDevice(new JsDeviceHelper(device, taskLogger));
+
+			for (Diagnostic diagnostic : this.diagnostics) {
+				if (diagnostic instanceof JsDiagnostic) {
+					try {
+						engine.eval(((JsDiagnostic) diagnostic).getScript(), scriptContext);
+						Object d = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).get("diagnose");
+					}
+					catch (Exception e1) {
+
+					}
+				}
+			}
+
 			options.setDiagnostic(new JsDiagnosticHelper(device, diagnostics, taskLogger));
-			((Invocable) engine).invokeFunction("_connect", "simpleDiagnostic", protocol.value(), options, taskLogger);
+			((Invocable) engine).invokeFunction("_connect", "diagnostics", protocol.value(), options, taskLogger);
 		}
 		catch (ScriptException e) {
 			logger.error("Error while running script using driver {}.", driver.getName(), e);

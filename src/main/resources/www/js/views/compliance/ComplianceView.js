@@ -41,7 +41,7 @@ define([
 		DeleteSoftwareRuleDialog, SortSoftwareRuleDialog, AddHardwareRuleDialog,
 		EditHardwareRuleDialog, DeleteHardwareRuleDialog) {
 
-	makeLoadProgress(15);
+	makeLoadProgress(13);
 
 	return Backbone.View.extend({
 
@@ -396,8 +396,6 @@ define([
 			});
 		},
 
-
-
 		renderHardwareRuleTable: function() {
 			var that = this;
 			this.hardwareRules.each(this.renderHardwareRuleRow, this);
@@ -549,6 +547,12 @@ define([
 						}
 					});
 				}
+			}
+		},
+
+		destroy: function() {
+			if (this.ruleView) {
+				this.ruleView.destroy();
 			}
 		}
 

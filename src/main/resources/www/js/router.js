@@ -5,14 +5,15 @@ define([
 	'backbone',
 	'views/header/HeaderView',
 	'views/devices/DevicesView',
+	'views/diagnostics/DiagnosticsView',
 	'views/admin/AdminView',
 	'views/tasks/TasksView',
 	'views/reports/ReportsView',
 	'views/compliance/ComplianceView',
 	'models/user/CurrentUserModel',
 	'views/users/ReAuthDialog'
-], function($, _, Backbone, HeaderView, DevicesView, AdminView, TasksView,
-		ReportsView, ComplianceView, CurrentUserModel, ReAuthDialog) {
+], function($, _, Backbone, HeaderView, DevicesView, DiagnosticsView, AdminView,
+		TasksView, ReportsView, ComplianceView, CurrentUserModel, ReAuthDialog) {
 
 	makeLoadProgress(100);
 
@@ -35,6 +36,7 @@ define([
 
 		var routes = {
 			'devices(/:id)': 'showDevices',
+			'diagnostics': 'showDiagnostics',
 			'admin': 'showAdmin',
 			'reports': 'showReports',
 			'tasks': 'showTasks',
@@ -50,9 +52,17 @@ define([
 			currentView: null,
 			routes: routes
 		});
-		var app_router = new AppRouter;
+		var appRouter = new AppRouter;
 
-		app_router.on('route:showDevices', function(id) {
+		var switchToView = function(SubView, options) {
+			if (appRouter.currentView && typeof appRouter.currentView.destroy === "function") {
+				appRouter.currentView.destroy();
+			}
+			appRouter.currentView = new SubView(options);
+			appRouter.currentView.render();
+		}
+
+		appRouter.on('route:showDevices', function(id) {
 			var id = parseInt(id);
 
 			if (this.currentView != null
@@ -66,29 +76,28 @@ define([
 				if (!isNaN(id)) {
 					options['id'] = id;
 				}
-				this.currentView = new DevicesView(options);
-				this.currentView.render();
+				switchToView(DevicesView, options);
 			}
 		});
 
-		app_router.on('route:showAdmin', function() {
-			this.currentView = new AdminView();
-			this.currentView.render();
+		appRouter.on('route:showAdmin', function() {
+			switchToView(AdminView,);
 		});
 
-		app_router.on('route:showReports', function() {
-			this.currentView = new ReportsView();
-			this.currentView.render();
+		appRouter.on('route:showReports', function() {
+			switchToView(ReportsView,);
 		});
 
-		app_router.on('route:showTasks', function() {
-			this.currentView = new TasksView();
-			this.currentView.render();
+		appRouter.on('route:showTasks', function() {
+			switchToView(TasksView,);
 		});
 
-		app_router.on('route:showCompliance', function() {
-			this.currentView = new ComplianceView();
-			this.currentView.render();
+		appRouter.on('route:showCompliance', function() {
+			switchToView(ComplianceView,);
+		});
+
+		appRouter.on('route:showDiagnostics', function() {
+			switchToView(DiagnosticsView);
 		});
 
 		var headerView = new HeaderView();

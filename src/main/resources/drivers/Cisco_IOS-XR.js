@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "NetFishers",
-	version: "1.4"
+	version: "1.5"
 };
 
 var Config = {
@@ -214,6 +214,9 @@ function snapshot(cli, device, config, debug) {
 		else if (system.match(/cisco IOS XRv Series.*/)) {
 			device.set("family", "Cisco XRv");
 		}
+	}
+	if (showVersion.match(/IOS-XRv 9000 /)) {
+		device.set("family", "Cisco XRv 9000");
 	}
 	
 	config.set("xrPackages", showInstall);

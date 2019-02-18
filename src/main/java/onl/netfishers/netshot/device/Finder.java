@@ -2057,6 +2057,10 @@ public class Finder {
 				property = "contact";
 				item = "Contact";
 			}
+			else if ("Family".equalsIgnoreCase(tokens.get(0).text)) {
+				property = "family";
+				item = "Family";
+			}
 			else if ("Location".equalsIgnoreCase(tokens.get(0).text)) {
 				property = "location";
 				item = "Location";

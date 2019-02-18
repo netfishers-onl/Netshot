@@ -109,6 +109,12 @@ define([
 			searchable: true
 		}, {
 			level: "DEVICE",
+			name: "family",
+			title: "Family",
+			type: "TEXT",
+			searchable: true
+		}, {
+			level: "DEVICE",
 			name: "changeDate",
 			title: "Last change date",
 			type: "DATE",

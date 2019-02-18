@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2016 Sylvain Cadilhac (NetFishers)
+ * Copyright 2013-2019 Sylvain Cadilhac (NetFishers)
  * 
  * This file is part of Netshot.
  * 
@@ -18,7 +18,6 @@
  */
 package onl.netfishers.netshot.work.tasks;
 
-import java.util.Calendar;
 import java.util.Set;
 
 import javax.persistence.Entity;
@@ -38,51 +37,38 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This task schedules new tasks to take a new snapshot of each device of the
+ * This task schedules new tasks to run diagnostics on each device of the
  * given group.
  */
 @Entity
-public class TakeGroupSnapshotTask extends Task {
+public class RunGroupDiagnosticsTask extends Task {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(TakeGroupSnapshotTask.class);
+	private static Logger logger = LoggerFactory.getLogger(RunGroupDiagnosticsTask.class);
 
 	/** The device group. */
 	private DeviceGroup deviceGroup;
-
-	/** Only capture devices updated more than X hours ago **/
-	private int limitToOutofdateDeviceHours = -1;
-
-	/** Do not automatically start a run diagnostics task */
-	private boolean dontRunDiagnostics = false;
 
 	/** Do not automatically start a check compliance task */
 	private boolean dontCheckCompliance = false;
 
 
-
 	/**
-	 * Instantiates a new take group snapshot task.
+	 * Instantiates a new run group diagnostic task.
 	 */
-	public TakeGroupSnapshotTask() {
+	public RunGroupDiagnosticsTask() {
 
 	}
 
 	/**
-	 * Instantiates a new take group snapshot task.
+	 * Instantiates a new run group diagnostic task.
 	 *
 	 * @param group the group
 	 * @param comments the comments
-	 * @param limitToOutofdateDeviceHours ignore devices that had a successful snapshot in the last given hours
-	 * @param dontRunDiagnostics Set to the true to disable running diagnostics
-	 * @param dontCheckCompliance Set to true to disable compliance checking
 	 */
-	public TakeGroupSnapshotTask(DeviceGroup group, String comments, String author,
-			int limitToOutofdateDeviceHours, boolean dontRunDiagnostics, boolean dontCheckCompliance) {
+	public RunGroupDiagnosticsTask(DeviceGroup group, String comments, String author, boolean dontCheckCompliance) {
 		super(comments, group.getName(), author);
 		this.deviceGroup = group;
-		this.limitToOutofdateDeviceHours = limitToOutofdateDeviceHours;
-		this.dontRunDiagnostics = dontRunDiagnostics;
 		this.dontCheckCompliance = dontCheckCompliance;
 	}
 
@@ -93,7 +79,7 @@ public class TakeGroupSnapshotTask extends Task {
 	@XmlElement
 	@Transient
 	public String getTaskDescription() {
-		return "Group snapshot";
+		return "Group diagnostics";
 	}
 
 	/* (non-Javadoc)
@@ -110,26 +96,18 @@ public class TakeGroupSnapshotTask extends Task {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Starting snapshot task for group {}.", this.getDeviceGroup().getId());
+		logger.debug("Starting diagnostics task for group {}.", this.getDeviceGroup().getId());
 		Set<Device> devices = this.getDeviceGroup().getCachedDevices();
 		logger.debug("{} devices in the group.", devices.size());
-		String comment = String.format("Started due to group %s snapshot", this.getDeviceGroup().getName());
-		Calendar referenceDate = Calendar.getInstance();
-		referenceDate.add(Calendar.HOUR, -this.getLimitToOutofdateDeviceHours());
+		String comment = String.format("Started due to group %s diagnotics", this.getDeviceGroup().getName());
 		for (Device device : devices) {
-			if (referenceDate.getTime().before(device.getChangeDate())) {
-				this.info(String.format("Ignoring device %s because it changed less than %d hours ago",
-						device.getName(), this.getLimitToOutofdateDeviceHours()));
-				continue;
-			}
-			this.info(String.format("Starting snapshot task for device %s.", device.getName()));
-			TakeSnapshotTask task = new TakeSnapshotTask(device, comment, author, false,
-					this.dontRunDiagnostics, this.dontCheckCompliance);
+			this.info(String.format("Scheduling diagnostics task for device %s.", device.getName()));
+			RunDiagnosticsTask task = new RunDiagnosticsTask(device, comment, author, this.dontCheckCompliance);
 			try {
 				TaskManager.addTask(task);
 			}
 			catch (Exception e) {
-				logger.error("Error while scheduling the individual snapshot task.", e);
+				logger.error("Error while scheduling the individual diagnostics task.", e);
 				this.error("Error while scheduling the task.");
 			}
 		}
@@ -156,30 +134,6 @@ public class TakeGroupSnapshotTask extends Task {
 		this.deviceGroup = deviceGroup;
 	}
 
-	public int getLimitToOutofdateDeviceHours() {
-		return limitToOutofdateDeviceHours;
-	}
-
-	public void setLimitToOutofdateDeviceHours(int limitToOutofdateDeviceHours) {
-		this.limitToOutofdateDeviceHours = limitToOutofdateDeviceHours;
-	}
-
-	/**
-	 * Do wee need to bypass the diagnostics execution?
-	 * @return true not to schedule the automatic diagnostics
-	 */
-	public boolean isDontRunDiagnostics() {
-		return dontRunDiagnostics;
-	}
-
-	/**
-	 * Enables or disables the automatic diagnostics after the snapshot.
-	 * @param dontRunDiagnostics true to bypass the diagnostics
-	 */
-	public void setDontRunDiagnostics(boolean dontRunDiagnostics) {
-		this.dontRunDiagnostics = dontRunDiagnostics;
-	}
-
 	/**
 	 * Do we need to bypass the compliance check?
 	 * 
@@ -202,7 +156,7 @@ public class TakeGroupSnapshotTask extends Task {
 	 */
 	@Override
 	public Object clone() throws CloneNotSupportedException {
-		TakeGroupSnapshotTask task = (TakeGroupSnapshotTask) super.clone();
+		RunGroupDiagnosticsTask task = (RunGroupDiagnosticsTask) super.clone();
 		task.setDeviceGroup(this.deviceGroup);
 		return task;
 	}
@@ -215,6 +169,6 @@ public class TakeGroupSnapshotTask extends Task {
 	@Transient
 	public JobKey getIdentity() {
 		return new JobKey(String.format("Task_%d", this.getId()), 
-				String.format("TakeGroupSnapshot_%d", this.getDeviceGroup().getId()));
+				String.format("RunGroupDiagnosticsTask_%d", this.getDeviceGroup().getId()));
 	}
 }

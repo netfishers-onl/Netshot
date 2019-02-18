@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2016 Sylvain Cadilhac (NetFishers)
+ * Copyright 2013-2019 Sylvain Cadilhac (NetFishers)
  * 
  * This file is part of Netshot.
  * 
@@ -100,6 +100,16 @@ public class Snmp extends Poller {
 	}
 
 
+	/**
+	 * Instantiates a new SNMPv3 access.
+	 * @param address the IP address
+	 * @param username the SNMP username
+	 * @param authType the SNMP authType
+	 * @param authKey the SNMP authKey
+	 * @param privType the SNMP privType
+	 * @param privKey The SNMP privKey
+	 * @throws IOException if something went wrong
+	 */
 	public Snmp(NetworkAddress address, String username, String authType, String authKey, String privType, String privKey)
 			throws IOException {
 		// TODO

@@ -13,6 +13,7 @@ define([
 	'text!templates/tasks/createTask.html',
 	'text!templates/tasks/createScanSubnetsTask.html',
 	'text!templates/tasks/createTakeGroupSnapshotTask.html',
+	'text!templates/tasks/createRunGroupDiagnosticsTask.html',
 	'text!templates/tasks/createCheckGroupComplianceTask.html',
 	'text!templates/tasks/createCheckGroupSoftwareTask.html',
 	'text!templates/tasks/createPurgeDatabaseTask.html'
@@ -20,6 +21,7 @@ define([
 		DeviceGroupCollection, DomainCollection, MonitorTaskDialog,
 		TaskSchedulerToolbox, createTaskTemplate, createScanSubnetsTaskTemplate,
 		createTakeGroupSnapshotTaskTemplate,
+		createRunGroupDiagnosticsTaskTemplate,
 		createCheckGroupComplianceTaskTemplate,
 		createCheckGroupSoftwareTaskTemplate,
 		createPurgeDatabaseTaskTemplate) {
@@ -140,12 +142,35 @@ define([
 
 				that.getTaskData = function() {
 					var data = {
-						group: that.$('#group').val()
+						group: that.$('#group').val(),
+						dontRunDiagnostics: !that.$('#rundiagnostics').is(':checked'),
+						dontCheckCompliance: !that.$('#checkcompliance').is(':checked')
 					};
 					if (that.$('#olderthan').is(':checked')) {
 						data.limitToOutofdateDeviceHours = that.$('#olderthanhours').spinner('value');
 					}
 					return data;
+				};
+			});
+			this.renderScheduler();
+		},
+
+		renderCreateRunGroupDiagnosticsTask: function() {
+			var that = this;
+			this.groups = new DeviceGroupCollection([]);
+			this.groups.fetch().done(function() {
+				var template = _.template(createRunGroupDiagnosticsTaskTemplate);
+				that.$('#nstasks-specifictask').html(template);
+				that.groups.each(function(group) {
+					$('<option />').attr('value', group.get('id'))
+							.text(group.get('name')).appendTo(that.$('#group'));
+				});
+
+				that.getTaskData = function() {
+					return {
+						group: that.$('#group').val(),
+						dontCheckCompliance: !that.$('#checkcompliance').is(':checked')
+					};
 				};
 			});
 			this.renderScheduler();

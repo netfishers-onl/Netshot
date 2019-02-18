@@ -114,10 +114,11 @@ import onl.netfishers.netshot.device.credentials.DeviceSnmpv3Community;
 import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
 import onl.netfishers.netshot.diagnostic.Diagnostic;
 import onl.netfishers.netshot.diagnostic.DiagnosticResult;
-import onl.netfishers.netshot.diagnostic.JsDiagnostic;
+import onl.netfishers.netshot.diagnostic.JavaScriptDiagnostic;
 import onl.netfishers.netshot.diagnostic.SimpleDiagnostic;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
+import onl.netfishers.netshot.work.TaskLogger;
 import onl.netfishers.netshot.work.Task.ScheduleType;
 import onl.netfishers.netshot.work.tasks.CheckComplianceTask;
 import onl.netfishers.netshot.work.tasks.CheckGroupComplianceTask;
@@ -128,6 +129,7 @@ import onl.netfishers.netshot.work.tasks.PurgeDatabaseTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceGroupScriptTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceScriptTask;
 import onl.netfishers.netshot.work.tasks.RunDiagnosticsTask;
+import onl.netfishers.netshot.work.tasks.RunGroupDiagnosticsTask;
 import onl.netfishers.netshot.work.tasks.ScanSubnetsTask;
 import onl.netfishers.netshot.work.tasks.TakeGroupSnapshotTask;
 import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
@@ -1054,11 +1056,13 @@ public class RestService extends Thread {
 					CheckComplianceTask.class,
 					DiscoverDeviceTypeTask.class,
 					TakeSnapshotTask.class,
-					RunDeviceScriptTask.class
+					RunDeviceScriptTask.class,
+					RunDiagnosticsTask.class,
 			};
 			final Criterion[] restrictions = new Criterion[] {
 					Restrictions.eq("t.device.id", id),
 					Restrictions.eq("t.deviceId", id),
+					Restrictions.eq("t.device.id", id),
 					Restrictions.eq("t.device.id", id),
 					Restrictions.eq("t.device.id", id)
 			};
@@ -2278,7 +2282,7 @@ public class RestService extends Thread {
 					newDevice.setAutoTryCredentials(false);
 				}
 				session.save(newDevice);
-				task = new TakeSnapshotTask(newDevice, "Initial snapshot after device creation", user.getUsername());
+				task = new TakeSnapshotTask(newDevice, "Initial snapshot after device creation", user.getUsername(), true, false, false);
 				session.save(task);
 				session.getTransaction().commit();
 			}
@@ -3763,6 +3767,12 @@ public class RestService extends Thread {
 		
 		private boolean debugEnabled = false;
 
+		/** Disable automatic diagnostic task (applies to snapshot tasks) */
+		private boolean dontRunDiagnostics = false;
+
+		/** Disable automatic check compliance task (applies to snapshot and diagnostic tasks)  */
+		private boolean dontCheckCompliance = false;
+
 		/**
 		 * Gets the id.
 		 *
@@ -3776,7 +3786,8 @@ public class RestService extends Thread {
 		/**
 		 * Sets the id.
 		 *
-		 * @param id the new id
+		 * @param id
+		 *             the new id
 		 */
 		public void setId(long id) {
 			this.id = id;
@@ -4047,6 +4058,24 @@ public class RestService extends Thread {
 		public void setDebugEnabled(boolean debugEnabled) {
 			this.debugEnabled = debugEnabled;
 		}
+
+		@XmlElement
+		public boolean isDontRunDiagnostics() {
+			return dontRunDiagnostics;
+		}
+
+		public void setDontRunDiagnostics(boolean dontRunDiagnostics) {
+			this.dontRunDiagnostics = dontRunDiagnostics;
+		}
+
+		@XmlElement
+		public boolean isDontCheckCompliance() {
+			return dontCheckCompliance;
+		}
+
+		public void setDontCheckCompliance(boolean dontCheckCompliance) {
+			this.dontCheckCompliance = dontCheckCompliance;
+		}
 		
 	}
 
@@ -4281,7 +4310,8 @@ public class RestService extends Thread {
 			finally {
 				session.close();
 			}
-			task = new TakeSnapshotTask(device, rsTask.getComments(), userName);
+			task = new TakeSnapshotTask(device, rsTask.getComments(), userName, false,
+					rsTask.isDontRunDiagnostics(), rsTask.isDontCheckCompliance());
 		}
 		else if (rsTask.getType().equals("RunDeviceScriptTask")) {
 			if (!securityContext.isUserInRole("executereadwrite")) {
@@ -4386,7 +4416,8 @@ public class RestService extends Thread {
 							NetshotBadRequestException.NETSHOT_INVALID_GROUP);
 				}
 				task = new TakeGroupSnapshotTask(group, rsTask.getComments(), userName,
-						rsTask.getLimitToOutofdateDeviceHours());
+						rsTask.getLimitToOutofdateDeviceHours(), rsTask.isDontRunDiagnostics(),
+						rsTask.isDontCheckCompliance());
 			}
 			catch (HibernateException e) {
 				logger.error("Error while retrieving the group.", e);
@@ -4431,6 +4462,29 @@ public class RestService extends Thread {
 							NetshotBadRequestException.NETSHOT_INVALID_GROUP);
 				}
 				task = new CheckGroupSoftwareTask(group, rsTask.getComments(), userName);
+			}
+			catch (HibernateException e) {
+				logger.error("Error while retrieving the group.", e);
+				throw new NetshotBadRequestException("Database error.",
+						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+			}
+			finally {
+				session.close();
+			}
+		}
+		else if (rsTask.getType().equals("RunGroupDiagnosticsTask")) {
+			logger.trace("Adding a RunGroupDiagnosticsTask");
+			DeviceGroup group;
+			Session session = Database.getSession();
+			try {
+				group = (DeviceGroup) session.get(DeviceGroup.class, rsTask.getGroup());
+				if (group == null) {
+					logger.error("Unable to find the group {}.", rsTask.getGroup());
+					throw new NetshotBadRequestException("Unable to find the group.",
+							NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+				}
+				task = new RunGroupDiagnosticsTask(group, rsTask.getComments(), userName,
+					rsTask.isDontCheckCompliance());
 			}
 			catch (HibernateException e) {
 				logger.error("Error while retrieving the group.", e);
@@ -4567,7 +4621,7 @@ public class RestService extends Thread {
 			finally {
 				session.close();
 			}
-			task = new RunDiagnosticsTask(device, rsTask.getComments(), userName);
+			task = new RunDiagnosticsTask(device, rsTask.getComments(), userName, rsTask.isDontCheckCompliance());
 		}
 		else {
 			logger.error("User posted an invalid task type '{}'.", rsTask.getType());
@@ -5785,10 +5839,39 @@ public class RestService extends Thread {
 
 			RsRuleTestResult result = new RsRuleTestResult();
 
+			StringBuffer log = new StringBuffer();
+			TaskLogger taskLogger = new TaskLogger(){
+			
+				@Override
+				public void warn(String message) {
+					log.append(String.format("[WARN] %s\n", message));
+				}
+			
+				@Override
+				public void trace(String message) {
+					log.append(String.format("[TRACE] %s\n", message));
+				}
+			
+				@Override
+				public void info(String message) {
+					log.append(String.format("[INFO] %s\n", message));
+				}
+			
+				@Override
+				public void error(String message) {
+					log.append(String.format("[ERROR] %s\n", message));
+				}
+			
+				@Override
+				public void debug(String message) {
+					log.append(String.format("[DEBUG] %s\n", message));
+				}
+			};
+
 			rule.setEnabled(true);
-			rule.check(device, session);
+			rule.check(device, session, taskLogger);
 			result.setResult(rule.getCheckResults().iterator().next().getResult());
-			result.setScriptError(rule.getPlainLog());
+			result.setScriptError(log.toString());
 
 			return result;
 		}
@@ -8564,7 +8647,7 @@ public class RestService extends Thread {
 		/** The type of diagnostic. */
 		private String type;
 
-		/** The Javascript script (in case of JsDiagnostic). */
+		/** The Javascript script (in case of JavaScriptDiagnostic). */
 		private String script;
 
 		/** The device driver name (in case of SimpleDiagnostic). */
@@ -8856,13 +8939,13 @@ public class RestService extends Thread {
 				group = (DeviceGroup) session.load(DeviceGroup.class, rsDiagnostic.getTargetGroup());
 			}
 
-			if (".JsDiagnostic".equals(rsDiagnostic.getType())) {
+			if (".JavaScriptDiagnostic".equals(rsDiagnostic.getType())) {
 				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim() == "") {
 					throw new NetshotBadRequestException(
 						"Invalid diagnostic script",
 						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
 				}
-				diagnostic = new JsDiagnostic(name, rsDiagnostic.isEnabled(), group, 
+				diagnostic = new JavaScriptDiagnostic(name, rsDiagnostic.isEnabled(), group, 
 						resultType, rsDiagnostic.getScript());
 			}
 			else if (".SimpleDiagnostic".equals(rsDiagnostic.getType())) {
@@ -8968,8 +9051,8 @@ public class RestService extends Thread {
 			diagnostic.setTargetGroup(group);
 
 			diagnostic.setEnabled(rsDiagnostic.isEnabled());
-			if (diagnostic instanceof JsDiagnostic) {
-				if (!".JsDiagnostic".equals(rsDiagnostic.getType())) {
+			if (diagnostic instanceof JavaScriptDiagnostic) {
+				if (!".JavaScriptDiagnostic".equals(rsDiagnostic.getType())) {
 					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
 							NetshotBadRequestException.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
 				}
@@ -8978,8 +9061,8 @@ public class RestService extends Thread {
 						"Invalid diagnostic script",
 						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
 				}
-				((JsDiagnostic) diagnostic).setResultType(resultType);
-				((JsDiagnostic) diagnostic).setScript(rsDiagnostic.getScript());
+				((JavaScriptDiagnostic) diagnostic).setResultType(resultType);
+				((JavaScriptDiagnostic) diagnostic).setScript(rsDiagnostic.getScript());
 			}
 			else if (diagnostic instanceof SimpleDiagnostic) {
 				if (!".SimpleDiagnostic".equals(rsDiagnostic.getType())) {

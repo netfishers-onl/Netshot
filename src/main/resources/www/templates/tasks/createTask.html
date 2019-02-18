@@ -5,40 +5,40 @@
 	</div>
 	
 	<form>
-		<div class="nsdialog-page1">
-		
-		<div>
-		<input type="radio" id="ScanSubnetsTask" name="tasktype" checked="checked" />
-		<label for="ScanSubnetsTask">Scan subnets to discover devices</label>
-		</div>
-		<div>
-		<input type="radio" id="TakeGroupSnapshotTask" name="tasktype" />
-		<label for="TakeGroupSnapshotTask">Take a snapshot of a group of devices</label>
-		</div>
-		<div>
-		<input type="radio" id="CheckGroupComplianceTask" name="tasktype" />
-		<label for="CheckGroupComplianceTask">Check the config compliance of a group of devices</label>
-		</div>
-		<div>
-		<input type="radio" id="CheckGroupSoftwareTask" name="tasktype" />
-		<label for="CheckGroupSoftwareTask">Check the software compliance and hardware support status of a group of devices</label>
-		</div>
-		<div>
-		<input type="radio" id="PurgeDatabaseTask" name="tasktype" data-level="admin" />
-		<label for="PurgeDatabaseTask">Purge old entries from the database</label>
-		</div>
-		
+		<div class="nsdialog-page1">	
+			<div>
+				<input type="radio" id="ScanSubnetsTask" name="tasktype" checked="checked" />
+				<label for="ScanSubnetsTask">Scan subnets to discover devices</label>
+			</div>
+			<div>
+				<input type="radio" id="TakeGroupSnapshotTask" name="tasktype" />
+				<label for="TakeGroupSnapshotTask">Take a snapshot of a group of devices</label>
+			</div>
+			<div>
+				<input type="radio" id="RunGroupDiagnosticsTask" name="tasktype" />
+				<label for="RunGroupDiagnosticsTask">Run diagnostics on a group of devices</label>
+			</div>
+			<div>
+				<input type="radio" id="CheckGroupComplianceTask" name="tasktype" />
+				<label for="CheckGroupComplianceTask">Check the config compliance of a group of devices</label>
+			</div>
+			<div>
+				<input type="radio" id="CheckGroupSoftwareTask" name="tasktype" />
+				<label for="CheckGroupSoftwareTask">Check the software compliance and hardware support status of a group of devices</label>
+			</div>
+			<div>
+				<input type="radio" id="PurgeDatabaseTask" name="tasktype" data-level="admin" />
+				<label for="PurgeDatabaseTask">Purge old entries from the database</label>
+			</div>
 		</div>
 		
 		<div class="nsdialog-page2" style="display: none">
-		<div id="nstasks-specifictask"></div>
-		
-		<div id="nstasks-schedulertoolbox"></div>
-
-		<div class="nserror" id="error">
-			<span class="ui-icon ui-icon-alert"></span>
-			<span id="errormsg"></span>
-		</div>
+			<div id="nstasks-specifictask"></div>
+			<div id="nstasks-schedulertoolbox"></div>
+			<div class="nserror" id="error">
+				<span class="ui-icon ui-icon-alert"></span>
+				<span id="errormsg"></span>
+			</div>
 		</div>
 	</form>
 </div>

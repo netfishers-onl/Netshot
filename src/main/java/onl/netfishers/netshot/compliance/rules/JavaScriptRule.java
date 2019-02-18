@@ -36,8 +36,9 @@ import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.Rule;
 import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
 import onl.netfishers.netshot.device.Device;
-import onl.netfishers.netshot.device.DeviceDataProvider;
 import onl.netfishers.netshot.device.DeviceDriver;
+import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
+import onl.netfishers.netshot.work.TaskLogger;
 
 import org.hibernate.Session;
 import org.slf4j.Logger;
@@ -145,7 +146,7 @@ public class JavaScriptRule extends Rule {
 	/**
 	 * Prepare.
 	 */
-	private void prepare() {
+	private void prepare(TaskLogger taskLogger) {
 		if (prepared) {
 			return;
 		}
@@ -163,14 +164,14 @@ public class JavaScriptRule extends Rule {
 			}
 			catch (NoSuchMethodException e) {
 				logger.warn("The check function wasn't found in the script");
-				logIt("The 'check' function couldn't be found in the script.", 2);
+				taskLogger.error("The 'check' function couldn't be found in the script.");
 			}
 			catch (Exception e) {
 				jsValid = true;
 			}
 		}
 		catch (ScriptException e) {
-			this.logIt("Error while evaluating the Javascript script.", 2);
+			taskLogger.error("Error while evaluating the Javascript script.");
 			logger.warn("Error while evaluating the Javascript script.", e);
 			jsValid = false;
 		}
@@ -180,12 +181,12 @@ public class JavaScriptRule extends Rule {
 	 * @see onl.netfishers.netshot.compliance.Rule#check(onl.netfishers.netshot.device.Device, org.hibernate.Session)
 	 */
 	@Override
-	public void check(Device device, Session session) {
+	public void check(Device device, Session session, TaskLogger taskLogger) {
 		if (!this.isEnabled()) {
 			this.setCheckResult(device, ResultOption.DISABLED, "", session);
 			return;
 		}
-		prepare();
+		prepare(taskLogger);
 		if (!this.jsValid) {
 			this.setCheckResult(device, ResultOption.INVALIDRULE, "", session);
 			return;
@@ -195,9 +196,9 @@ public class JavaScriptRule extends Rule {
 			return;
 		}
 
-		DeviceDataProvider dataProvider = new DeviceDataProvider(session, device);
 		try {
-			Object result = ((Invocable) engine).invokeFunction("_check", dataProvider);
+			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, session, taskLogger, true);
+			Object result = ((Invocable) engine).invokeFunction("_check", deviceHelper);
 			if (result != null && result instanceof Bindings) {
 				String comment = "";
 				Object jsComment = ((Bindings) result).get("comment");
@@ -207,8 +208,8 @@ public class JavaScriptRule extends Rule {
 				Object jsResult = ((Bindings) result).get("result");
 				for (CheckResult.ResultOption allowedResult : ALLOWED_RESULTS) {
 					if (allowedResult.toString().equals(jsResult)) {
-						logIt(String.format("The script returned %s (%d), comment '%s'.",
-								allowedResult.toString(), allowedResult.getValue(), comment), 2);
+						taskLogger.info(String.format("The script returned %s (%d), comment '%s'.",
+								allowedResult.toString(), allowedResult.getValue(), comment));
 						this.setCheckResult(device, allowedResult, comment, session);
 						return;
 					}
@@ -217,11 +218,11 @@ public class JavaScriptRule extends Rule {
 			}
 		}
 		catch (Exception e) {
-			logIt("Error while running the script: " + e.getMessage(), 2);
+			taskLogger.error("Error while running the script: " + e.getMessage());
 			logger.error("Error while running the script on device {}.", device.getId(), e);
 		}
 		finally {
-			logIt(dataProvider.getLog());
+			taskLogger.debug("End of check");
 		}
 		this.setCheckResult(device, ResultOption.INVALIDRULE, "", session);
 	}

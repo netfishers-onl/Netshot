@@ -1,3 +1,21 @@
+/**
+ * Copyright 2013-2019 Sylvain Cadilhac (NetFishers)
+ * 
+ * This file is part of Netshot.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package onl.netfishers.netshot.device.script;
 
 import java.io.BufferedWriter;
@@ -20,7 +38,6 @@ import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.device.Device;
-import onl.netfishers.netshot.device.DeviceDataProvider;
 import onl.netfishers.netshot.device.Device.InvalidCredentialsException;
 import onl.netfishers.netshot.device.Device.MissingDeviceDriverException;
 import onl.netfishers.netshot.device.DeviceDriver;
@@ -54,10 +71,9 @@ public class SnapshotCliScript extends CliScript {
 		ScriptEngine engine = driver.getEngine();
 		try {
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper);
-			options.setDevice(new JsDeviceHelper(device, taskLogger));
+			options.setDevice(new JsDeviceHelper(device, session, taskLogger, false));
 			Config config = new Config(device);
-			options.setConfig(new JsConfigHelper(device, config, taskLogger));
-			options.setDataProvider(new DeviceDataProvider(session, device));
+			options.setConfigHelper(new JsConfigHelper(device, config, taskLogger));
 			((Invocable) engine).invokeFunction("_connect", "snapshot", protocol.value(), options, taskLogger);
 			boolean different = false;
 			try {

@@ -1,6 +1,22 @@
+/**
+ * Copyright 2013-2019 Sylvain Cadilhac (NetFishers)
+ * 
+ * This file is part of Netshot.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package onl.netfishers.netshot.device.script.helper;
-
-import onl.netfishers.netshot.device.DeviceDataProvider;
 
 /**
  * The options object to pass data to JavaScript entry function in a generic way.
@@ -8,58 +24,45 @@ import onl.netfishers.netshot.device.DeviceDataProvider;
  *
  */
 public class JsCliScriptOptions {
-	private JsCliHelper cli;
-	private JsDeviceHelper device;
-	private JsConfigHelper config;
-	private DeviceDataProvider dataProvider;
-	private JsDiagnosticHelper diagnostic;
+	private JsCliHelper cliHelper;
+	private JsConfigHelper configHelper;
+	private JsDeviceHelper deviceHelper;
+	private JsDiagnosticHelper diagnosticHelper;
 
-	public JsDiagnosticHelper getDiagnostic() {
-		return diagnostic;
+	public JsCliScriptOptions(JsCliHelper cliHelper) {
+		this.cliHelper = cliHelper;
 	}
 
-	public void setDiagnostic(JsDiagnosticHelper diagnostic) {
-		this.diagnostic = diagnostic;
+	public JsDiagnosticHelper getDiagnosticHelper() {
+		return diagnosticHelper;
 	}
 
-	public JsCliScriptOptions(JsCliHelper cli) {
-		this.cli = cli;
+	public JsDeviceHelper getDeviceHelper() {
+		return deviceHelper;
 	}
 
-	public JsCliHelper getCli() {
-		return cli;
+	public void setDevice(JsDeviceHelper deviceHelper) {
+		this.deviceHelper = deviceHelper;
 	}
 
-	public void setCli(JsCliHelper cli) {
-		this.cli = cli;
+	public void setDiagnosticHelper(JsDiagnosticHelper diagnosticHelper) {
+		this.diagnosticHelper = diagnosticHelper;
 	}
 
-	public JsDeviceHelper getDevice() {
-		return device;
+	public JsCliHelper getCliHelper() {
+		return cliHelper;
 	}
 
-	public void setDevice(JsDeviceHelper device) {
-		this.device = device;
+	public void setCli(JsCliHelper cliHelper) {
+		this.cliHelper = cliHelper;
 	}
 
-	public JsConfigHelper getConfig() {
-		return config;
+	public JsConfigHelper getConfigHelper() {
+		return configHelper;
 	}
 
-	public void setConfig(JsConfigHelper config) {
-		this.config = config;
-	}
-
-	public DeviceDataProvider getDataProvider() {
-		return dataProvider;
-	}
-
-	public void setDataProvider(DeviceDataProvider dataProvider) {
-		this.dataProvider = dataProvider;
-	}
-	
-	public void logIt(String log, int level) {
-		
+	public void setConfigHelper(JsConfigHelper configHelper) {
+		this.configHelper = configHelper;
 	}
 
 }

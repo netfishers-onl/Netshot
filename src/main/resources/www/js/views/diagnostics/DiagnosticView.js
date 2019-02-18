@@ -41,7 +41,7 @@ define([
 				},
 			}).click(function() {
 				var EditDiagnosticDialog = EditSimpleDiagnosticDialog;
-				if (that.model.get('type') === ".JsDiagnostic") {
+				if (that.model.get('type') === ".JavaScriptDiagnostic") {
 					EditDiagnosticDialog = EditJsDiagnosticDialog;
 				}
 				var editDialog = new EditDiagnosticDialog({
@@ -52,7 +52,7 @@ define([
 				});
 			});
 
-			if (this.model.get('type') === ".JsDiagnostic") {
+			if (this.model.get('type') === ".JavaScriptDiagnostic") {
 				this.scriptEditor = ace.edit('nsdiagnostics-diagnostic-script');
 				this.scriptEditor.getSession().setMode("ace/mode/javascript");
 				this.scriptEditor.setReadOnly(true);

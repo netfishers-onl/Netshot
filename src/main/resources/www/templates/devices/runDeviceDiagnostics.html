@@ -1,7 +1,7 @@
-<div id="nsdevices-snapshotform" title="Take Device Snapshot">
+<div id="nsdevices-rundiagnosticsform" title="Check Device Compliance">
 
 	<div class="nsdialog-logo">
-		<img alt="Task" src="img/refresh_32px.png" />
+		<img alt="Task" src="img/diagnostic_32px.png" />
 	</div>
 
 	<form>	
@@ -14,17 +14,8 @@
 		</table>
 
 		<fieldset>
-			<input type="checkbox" id="rundiagnostics" checked="checked" />
-			<label for="rundiagnostics">Run the device diagnostics after the snapshot</label>
-		</fieldset>
-		<fieldset>
 			<input type="checkbox" id="checkcompliance" checked="checked" />
 			<label for="checkcompliance">Check device compliance after the snapshot</label>
-		</fieldset>
-		
-		<fieldset id="hidden">
-			<input type="checkbox" name="debugsession" id="debugsession" /> <label
-				for="debugsession">Enable full debug of the CLI session (only for troubleshooting)</label>
 		</fieldset>
 		
 		<div id="nstasks-schedulertoolbox"></div>

@@ -60,6 +60,9 @@ public class RunDiagnosticsTask extends Task {
 
 	/** The device. */
 	private Device device;
+
+	/** Do not automatically start a check compliance task */
+	private boolean dontCheckCompliance = false;
 	
 	/**
 	 * Instantiate a new RunDiagnosticTask (for Hibernate).
@@ -73,10 +76,11 @@ public class RunDiagnosticsTask extends Task {
 	 * @param comments Any commends about this task
 	 * @param author Who requested that task
 	 */
-	public RunDiagnosticsTask(Device device, String comments, String author) {
+	public RunDiagnosticsTask(Device device, String comments, String author, boolean dontCheckCompliance) {
 		super(comments, (device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName()),
 				author);
 		this.device = device;
+		this.dontCheckCompliance = dontCheckCompliance;
 	}
 
 	/* (non-Javadoc)
@@ -92,7 +96,7 @@ public class RunDiagnosticsTask extends Task {
 	@XmlElement
 	@Transient
 	public String getTaskDescription() {
-		return "Diagnostics on a device";
+		return "Device diagnostics";
 	}
 
 	/**
@@ -125,6 +129,23 @@ public class RunDiagnosticsTask extends Task {
 		this.device = device;
 	}
 
+	/**
+	 * Do we need to bypass the compliance check?
+	 * 
+	 * @return true not to schedule the automatic compliance check
+	 */
+	public boolean isDontCheckCompliance() {
+		return dontCheckCompliance;
+	}
+
+	/**
+	 * Enables or disables the automatic compliance check.
+	 * @param dontCheckCompliance true to bypass the compliance check
+	 */
+	public void setDontCheckCompliance(boolean dontCheckCompliance) {
+		this.dontCheckCompliance = dontCheckCompliance;
+	}
+
 	/* (non-Javadoc)
 	 * @see onl.netfishers.netshot.work.Task#clone()
 	 */
@@ -134,8 +155,6 @@ public class RunDiagnosticsTask extends Task {
 		task.setDevice(this.device);
 		return task;
 	}
-	
-	
 
 	@Override
 	public void run() {
@@ -210,12 +229,14 @@ public class RunDiagnosticsTask extends Task {
 		logger.debug("Request to refresh all the groups for the device after the diagnostics.");
 		DynamicDeviceGroup.refreshAllGroups(device);
 
-		try {
-			Task checkTask = new CheckComplianceTask(device, "Check compliance after device diagnostics.", "Auto");
-			TaskManager.addTask(checkTask);
-		}
-		catch (Exception e) {
-			logger.error("Error while registering the new task.", e);
+		if (!this.dontCheckCompliance) {
+			try {
+				Task checkTask = new CheckComplianceTask(device, "Check compliance after device diagnostics.", "Auto");
+				TaskManager.addTask(checkTask);
+			}
+			catch (Exception e) {
+				logger.error("Error while registering the new task.", e);
+			}
 		}
 		
 	}

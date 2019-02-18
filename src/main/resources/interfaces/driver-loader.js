@@ -19,7 +19,7 @@
 
 function _connect(_function, _protocol, _options, _logger) {
 	
-	var _cli = _options.cli;
+	var _cli = _options.cliHelper;
 	
 	var _toNative = function(o) {
 		if (o == null || typeof(o) == "undefined") {
@@ -353,7 +353,7 @@ function _connect(_function, _protocol, _options, _logger) {
 			else if (typeof(value) == "string") {
 				value = String(value);
 			}
-			_options.device.set(key, value);
+			_options.deviceHelper.set(key, value);
 		},
 		add: function(collection, value) {
 			if (typeof(collection) == "string") {
@@ -371,20 +371,20 @@ function _connect(_function, _protocol, _options, _logger) {
 			else if (typeof(value) == "string") {
 				value = String(value);
 			}
-			_options.device.add(collection, value);
+			_options.deviceHelper.add(collection, value);
 		},
 		get: function(key, id) {
 			if (typeof(key) == "string") {
 				key = String(key);
 				if (typeof(id) == "undefined") {
-					return _toNative(_options.dataProvider.get(key));
+					return _toNative(_options.deviceHelper.get(key));
 				}
 				else if (typeof(id) == "number" && !isNaN(id)) {
-					return _toNative(_options.dataProvider.get(key, id));
+					return _toNative(_options.deviceHelper.get(key, id));
 				}
 				else if (typeof(id) == "string") {
 					var name = String(id);
-					return _toNative(_options.dataProvider.get(key, name));
+					return _toNative(_options.deviceHelper.get(key, name));
 				}
 				else {
 					throw "Invalid device id to retrieve data from.";
@@ -408,11 +408,14 @@ function _connect(_function, _protocol, _options, _logger) {
 			else if (typeof(value) == "string") {
 				value = String(value);
 			}
-			_options.config.set(key, value);
+			_options.configHelper.set(key, value);
 		}
 	};
 	
 	var diagnosticHelper = {
+		setKey: function(key) {
+			this.currentKey = key;
+		},
 		set: function(key, value) {
 			if (typeof(key) == "string") {
 				key = String(key);
@@ -422,17 +425,17 @@ function _connect(_function, _protocol, _options, _logger) {
 			}
 			if (typeof(value) == "undefined") {
 				value = key;
-				_options.diagnosticResult.set(value);
+				_options.diagnosticHelper.set(this.currentKey, value);
 			}
 			else {
 				value = String(value);
-				_options.diagnosticResult.set(key, value);
+				_options.diagnosticHelper.set(key, value);
 			}
 		}
 	};
 	
 	if (_function === "snapshot") {
-		_options.device.reset();
+		_options.deviceHelper.reset();
 		snapshot(cli, deviceHelper, configHelper, debug);
 	}
 	else if (_function === "run") {
@@ -442,40 +445,20 @@ function _connect(_function, _protocol, _options, _logger) {
 		
 		run(cli, deviceHelper, configHelper, debug);
 	}
-	else if (_function === "diagnostic") {
-		if (typeof(diagnose) != "function") {
-			throw "No 'diagnose' function";
-		}
-		
-		diagnose(cli, deviceHelper, diagnosticHelper, debug);
-	}
-	else if (_function === "simpleDiagnostic") {
-		var diagnostics = _options.simpleDiagnostics;
-		if (typeof(diagnostics) === "object" && diagnostics instanceof Array) {
-			for (var k in diagnostics) {
-				var diagnostic = diagnostics[k];
-				cli.macro(diagnostic.cliMode);
-				var output = cli.command(diagnostic.command);
-				if (typeof output === "string") {
-					if (diagnostic.modifierPattern && diagnostic.modifierReplacement) {
-						try {
-							var pattern = new RegExp(diagnostic.modifierPattern);
-							output = output.replace(pattern, diagnostic.modifierPattern);
-						}
-						catch (setError) {
-							_options.error("Can't transform simple diagnostic output using the given regular expression. " + setError);
-							output = null;
-						}
-					}
-					output = String(output);
-				}
-				if (output !== null) {
-					diagnosticHelper.set(diagnostic.name, output);	
-				}
+	else if (_function === "diagnostics") {
+		var diagnostics = _options.diagnosticHelper.jsDiagnostics;
+		for (var name in diagnostics) {
+			var diagnostic = diagnostics[name];
+			diagnosticHelper.setKey(name);
+			if (typeof diagnostic === "function") {
+				var diagnose = diagnostic;
+				diagnose(cli, deviceHelper, diagnosticHelper, debug);
 			}
-		}
-		else {
-			throw "No 'simpleDiagnostic' array";
+			else {
+				cli.macro(diagnostic.mode);
+				var output = cli.command(diagnostic.command);
+				diagnosticHelper.set(output);
+			}
 		}
 	}
 }

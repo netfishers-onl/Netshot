@@ -61,7 +61,7 @@ define([
 						'modifierReplacement': that.$('#modifierreplacement').val(),
 					});
 				}
-				else if (data.type === ".JsDiagnostic") {
+				else if (data.type === ".JavaScriptDiagnostic") {
 					_.extend(data, {
 						'script': that.scriptEditor.getValue(),
 					});
@@ -117,7 +117,7 @@ define([
 			that.$('input[name="diagnostictype"]').change(function() {
 				var diagnosticType = $('input[name="diagnostictype"]:checked').data('type');
 				that.$('.nsdiagnostics-settings[data-for-type="' + diagnosticType + '"]').show();
-				if (diagnosticType === "JsDiagnostic") {
+				if (diagnosticType === "JavaScriptDiagnostic") {
 					$('<div id="nsdiagnostic-adddiagnostic-script" />')
 						.appendTo('#nsdiagnostics-adddiagnostic-editorfield');
 					that.scriptEditor = ace.edit('nsdiagnostic-adddiagnostic-script');

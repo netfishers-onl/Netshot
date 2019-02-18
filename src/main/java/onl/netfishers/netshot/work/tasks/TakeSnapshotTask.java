@@ -127,28 +127,36 @@ public class TakeSnapshotTask extends Task {
 	/** Automatic snapshot. */
 	private boolean automatic = false;
 
+	/** Do not automatically start a run diagnostics task */
+	private boolean dontRunDiagnostics = false;
+
+	/** Do not automatically start a check compliance task */
+	private boolean dontCheckCompliance = false;
+
 	/**
 	 * Instantiates a new take snapshot task.
 	 */
 	protected TakeSnapshotTask() {
 	}
+	
 
 	/**
 	 * Instantiates a new take snapshot task.
-	 *
-	 * @param device the device
-	 * @param comments the comments
-	 * @param author who requested this task
+	 * @param device The device to run the snapshot on
+	 * @param comments Any comment about the task
+	 * @param author The author of the task
+	 * @param automatic Is it an automatic snapshot?
+	 * @param dontRunDiagnostics Set to the true to disable running diagnostics
+	 * @param dontCheckCompliance Set to true to disable compliance checking
 	 */
-	public TakeSnapshotTask(Device device, String comments, String author) {
+	public TakeSnapshotTask(Device device, String comments, String author, boolean automatic,
+			boolean dontRunDiagnostics, boolean dontCheckCompliance) {
 		super(comments, (device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName()),
 				author);
 		this.device = device;
-	}
-
-	public TakeSnapshotTask(Device device, String comments, String author, boolean automatic) {
-		this(device, comments, author);
 		this.automatic = automatic;
+		this.dontRunDiagnostics = dontRunDiagnostics;
+		this.dontCheckCompliance = dontCheckCompliance;
 	}
 
 	/* (non-Javadoc)
@@ -224,14 +232,25 @@ public class TakeSnapshotTask extends Task {
 		logger.debug("Request to refresh all the groups for the device after the snapshot.");
 		DynamicDeviceGroup.refreshAllGroups(device);
 
-		try {
-			Task diagTask = new RunDiagnosticsTask(device, "Run diagnostics after snapshot", "Auto");
-			TaskManager.addTask(diagTask);
-		}
-		catch (Exception e) {
-			logger.error("Error while registering the new task.", e);
-		}
+		if (!this.dontRunDiagnostics) {
+			try {
+				Task diagTask = new RunDiagnosticsTask(device, "Run diagnostics after device snapshot", "Auto", this.dontCheckCompliance);
+				TaskManager.addTask(diagTask);
+			}
+			catch (Exception e) {
+				logger.error("Error while registering the new task.", e);
+			}
 
+		}
+		else if (!this.dontCheckCompliance) {
+			try {
+				Task checkTask = new CheckComplianceTask(device, "Check compliance after device snapshot.", "Auto");
+				TaskManager.addTask(checkTask);
+			}
+			catch (Exception e) {
+				logger.error("Error while registering the new task.", e);
+			}
+		}
 	}
 
 	/* (non-Javadoc)
@@ -270,6 +289,39 @@ public class TakeSnapshotTask extends Task {
 	 */
 	protected void setAutomatic(boolean automatic) {
 		this.automatic = automatic;
+	}
+
+	/**
+	 * Do wee need to bypass the diagnostics execution?
+	 * @return true not to schedule the automatic diagnostics
+	 */
+	public boolean isDontRunDiagnostics() {
+		return dontRunDiagnostics;
+	}
+
+	/**
+	 * Enables or disables the automatic diagnostics after the snapshot.
+	 * @param dontRunDiagnostics true to bypass the diagnostics
+	 */
+	public void setDontRunDiagnostics(boolean dontRunDiagnostics) {
+		this.dontRunDiagnostics = dontRunDiagnostics;
+	}
+
+	/**
+	 * Do we need to bypass the compliance check?
+	 * 
+	 * @return true not to schedule the automatic compliance check
+	 */
+	public boolean isDontCheckCompliance() {
+		return dontCheckCompliance;
+	}
+
+	/**
+	 * Enables or disables the automatic compliance check.
+	 * @param dontCheckCompliance true to bypass the compliance check
+	 */
+	public void setDontCheckCompliance(boolean dontCheckCompliance) {
+		this.dontCheckCompliance = dontCheckCompliance;
 	}
 
 	/**
@@ -343,8 +395,9 @@ public class TakeSnapshotTask extends Task {
 		finally {
 			session.close();
 		}
+
 		try {
-			Task snapshot = new TakeSnapshotTask(device, "Automatic snapshot after config change", "Auto", true);
+			Task snapshot = new TakeSnapshotTask(device, "Automatic snapshot after config change", "Auto", true, false, false);
 			snapshot.schedule(TakeSnapshotTask.AUTOSNAPSHOT_INTERVAL);
 			TaskManager.addTask(snapshot);
 		}

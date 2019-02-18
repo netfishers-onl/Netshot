@@ -31,6 +31,7 @@ import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
 import onl.netfishers.netshot.work.Task;
+import onl.netfishers.netshot.work.TaskLogger;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
@@ -132,6 +133,8 @@ public class CheckGroupComplianceTask extends Task {
 			@SuppressWarnings("unchecked")
 			List<Policy> policies = session.createCriteria(Policy.class).list();
 
+			TaskLogger taskLogger = this.getJsLogger();
+
 			session.beginTransaction();
 			session
 				.createQuery("delete from CheckResult c where c.key.device.id in (select d.id as id from DeviceGroup g1 join g1.cachedDevices d where g1.id = :id)")
@@ -146,7 +149,7 @@ public class CheckGroupComplianceTask extends Task {
 						.scroll(ScrollMode.FORWARD_ONLY);
 				while (devices.next()) {
 					Device device = (Device) devices.get(0);
-					policy.check(device, session);
+					policy.check(device, session, taskLogger);
 					session.flush();
 					session.evict(device);
 				}

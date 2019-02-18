@@ -24,7 +24,6 @@
 					<option value="TEXT">Text</option>
 					<option value="NUMERIC">Numeric</option>
 					<option value="BINARY">Binary</option>
-					<option value="DATE">Date</option>
 				</select></td>
 			</tr>
 			<tr>
@@ -37,7 +36,7 @@
 				<td colspan="2">
 						<input type="radio" id="nsdiagnostictype-simple" name="diagnostictype" checked="checked" data-type="SimpleDiagnostic" />
 						<label for="nsdiagnostictype-simple">Simple diagnostic</label>
-						<input type="radio" id="nsdiagnostictype-js" name="diagnostictype" data-type="JsDiagnostic" />
+						<input type="radio" id="nsdiagnostictype-js" name="diagnostictype" data-type="JavaScriptDiagnostic" />
 						<label for="nsdiagnostictype-js">Javascript-based diagnostic</label>
 				</td>
 			</tr>
@@ -47,24 +46,26 @@
 			</tr>
 			<tr class="nsdiagnostics-settings" data-for-type="SimpleDiagnostic">
 				<td><label for="climode">CLI mode: </label></td>
-				<td><select name="climode" id="climode" class="text ui-widget-content ui-corner-all"></select></td>
+				<td><select name="climode" id="climode" class="text ui-widget-content ui-corner-all cli-text"></select></td>
 			</tr>
 			<tr class="nsdiagnostics-settings" data-for-type="SimpleDiagnostic">
 				<td><label for="command">CLI command: </label></td>
-				<td><input type="text" name="command" id="command" class="text ui-widget-content ui-corner-all" /></td>
+				<td><input type="text" name="command" id="command" class="text ui-widget-content ui-corner-all cli-text" /></td>
 			</tr>
 			<tr class="nsdiagnostics-settings" data-for-type="SimpleDiagnostic">
 				<td><label for="modifierpattern">RegEx pattern: </label></td>
-				<td><input type="text" name="modifierpattern" id="modifierpattern" class="text ui-widget-content ui-corner-all" /></td>
+				<td><input type="text" name="modifierpattern" id="modifierpattern"
+					class="text ui-widget-content ui-corner-all cli-text" /></td>
 			</tr>
 			<tr class="nsdiagnostics-settings" data-for-type="SimpleDiagnostic">
 				<td><label for="modifierreplacement">Replace with: </label></td>
-				<td><input type="text" name="modifierreplacement" id="modifierreplacement" class="text ui-widget-content ui-corner-all" /></td>
+				<td><input type="text" name="modifierreplacement" id="modifierreplacement"
+					class="text ui-widget-content ui-corner-all cli-text" /></td>
 			</tr>
 		</tbody>
 		</table>
 
-		<fieldset id="nsdiagnostics-adddiagnostic-editorfield" class="nsdiagnostics-settings" data-for-type="JsDiagnostic">
+		<fieldset id="nsdiagnostics-adddiagnostic-editorfield" class="nsdiagnostics-settings" data-for-type="JavaScriptDiagnostic">
 		</fieldset>
 	
 		<div class="nserror" id="error">

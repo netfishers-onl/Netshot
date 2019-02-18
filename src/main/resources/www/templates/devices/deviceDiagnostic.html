@@ -1,5 +1,14 @@
 <tr>
 		<td class="maincolumn"><%- diagnosticName %></td>
-		<td><%- "a" %></td>
-		<td><%- "b" %></td>
+		<td>
+			<% if (typeof assumption !== "undefined") { %>
+				<%- (assumption ? "TRUE" : "FALSE") %>
+			<% } else if (typeof number !== "undefined") { %>
+				<%- number %>
+			<% } else if (typeof text !== "undefined") { %>
+				<%- text %>
+			<% } %>
+		</td>
+		<td><%- $.formatDateTime('dd/mm/y hh:ii:ss', new Date(creationDate)) %></td>
+		<td><%- $.formatDateTime('dd/mm/y hh:ii:ss', new Date(lastCheckDate)) %></td>
 	</tr>

@@ -6,18 +6,18 @@ define([
 	'views/Dialog',
 	'models/device/DeviceModel',
 	'models/task/TaskModel',
-	'text!templates/devices/takeDeviceSnapshot.html',
+	'text!templates/devices/runDeviceDiagnostics.html',
 	'views/tasks/TaskSchedulerToolbox',
 	'views/tasks/MonitorTaskDialog'
 ], function($, _, Backbone, Dialog, DeviceMode, TaskModel,
-		takeDeviceSnapshotTemplate, TaskSchedulerToolbox, MonitorTaskDialog) {
+		runDeviceDiagnosticsTemplate, TaskSchedulerToolbox, MonitorTaskDialog) {
 
 	return Dialog.extend({
 
-		template: _.template(takeDeviceSnapshotTemplate),
+		template: _.template(runDeviceDiagnosticsTemplate),
 
 		dialogOptions: {
-			title: "Take snapshot",
+			title: "Run diagnostics on a device",
 		},
 
 		buttons: {
@@ -26,10 +26,8 @@ define([
 				var $button = $(event.target).closest("button");
 				$button.button('disable');
 				var task = new TaskModel({
-					'type': "TakeSnapshotTask",
+					'type': "RunDiagnosticsTask",
 					'device': that.model.get('id'),
-					'debugEnabled': that.$('#debugsession').is(":checked"),
-					'dontRunDiagnostics': !that.$('#rundiagnostics').is(':checked'),
 					'dontCheckCompliance': !that.$('#checkcompliance').is(':checked'),
 				});
 				task.set(that.taskSchedulerToolbox.getSchedule());
@@ -52,11 +50,6 @@ define([
 		},
 
 		onCreate: function() {
-			var that = this;
-			this.$("#hidden").hide();
-			this.$(".nsdialog-logo").dblclick(function() {
-				that.$("#hidden").show();
-			});
 			this.taskSchedulerToolbox = new TaskSchedulerToolbox();
 		}
 

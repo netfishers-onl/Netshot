@@ -108,6 +108,7 @@ define([
 					model: that.diagnostics.get(id),
 					onDeleted: function() {
 						that.diagnostic = null;
+						that.renderDiagnostic();
 						that.refreshDiagnostics();
 					},
 				});
@@ -124,13 +125,15 @@ define([
 			if (this.diagnosticView) {
 				this.diagnosticView.destroy();
 			}
-			this.diagnosticView = new DiagnosticView({
-				model: this.diagnostic,
-				deviceTypes: this.deviceTypes,
-				onEdited: function() {
-					that.refreshDiagnostics();
-				}
-			});
+			if (this.diagnostic) {
+				this.diagnosticView = new DiagnosticView({
+					model: this.diagnostic,
+					deviceTypes: this.deviceTypes,
+					onEdited: function() {
+						that.refreshDiagnostics();
+					}
+				});
+			}
 		},
 
 		destroy: function() {

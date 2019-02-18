@@ -18,15 +18,19 @@
  */
 package onl.netfishers.netshot.diagnostic;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
-
 
 /**
  * This is a Javascript-based diagnostic. Declare the diagnostic type along with
@@ -35,24 +39,32 @@ import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType
  * @author sylvain.cadilhac
  */
 @Entity
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
-public class JsDiagnostic extends Diagnostic {
+@XmlRootElement
+@XmlAccessorType(value = XmlAccessType.NONE)
+public class JavaScriptDiagnostic extends Diagnostic {
 
 	/**
 	 * Empty constructor. For Hibernate.
 	 */
-	protected JsDiagnostic() {
+	protected JavaScriptDiagnostic() {
 	}
 
 	/**
 	 * Instantiates a new diagnostic.
-	 * @param name The name
-	 * @param enabled True to enable the diagnostic
-	 * @param targetGroup The group of devices the diagnostic applies to
-	 * @param resultType The type of result expected by this diagnostic
-	 * @param script The Javascript script
+	 * 
+	 * @param name
+	 *                      The name
+	 * @param enabled
+	 *                      True to enable the diagnostic
+	 * @param targetGroup
+	 *                      The group of devices the diagnostic applies to
+	 * @param resultType
+	 *                      The type of result expected by this diagnostic
+	 * @param script
+	 *                      The Javascript script
 	 */
-	public JsDiagnostic(String name, boolean enabled, DeviceGroup targetGroup, AttributeType resultType, String script) {
+	public JavaScriptDiagnostic(String name, boolean enabled, DeviceGroup targetGroup, AttributeType resultType,
+			String script) {
 		super(name, enabled, targetGroup, resultType);
 		this.script = script;
 	}
@@ -64,19 +76,29 @@ public class JsDiagnostic extends Diagnostic {
 
 	/**
 	 * Gets the script.
+	 * 
 	 * @return the script
 	 */
 	@XmlElement
+	@Column(length = 10000000)
 	public String getScript() {
 		return script;
 	}
 
 	/**
 	 * Sets the script.
-	 * @param script the script to set
+	 * 
+	 * @param script
+	 *                 the script to set
 	 */
 	public void setScript(String script) {
 		this.script = script;
+	}
+
+	@Override
+	public Object getJsObject(Device device, ScriptEngine engine, ScriptContext scriptContext) throws ScriptException {
+		engine.eval(this.getScript(), scriptContext);
+		return scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).get("diagnose");
 	}
   
 }

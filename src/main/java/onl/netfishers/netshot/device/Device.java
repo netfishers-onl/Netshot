@@ -1212,14 +1212,24 @@ public class Device {
 		if (result == null) {
 			return;
 		}
+		boolean dontAdd = false;
 		Iterator<DiagnosticResult> existingIterator = this.diagnosticResults.iterator();
 		while (existingIterator.hasNext()) {
 			DiagnosticResult existingResult = existingIterator.next();
 			if (existingResult.getDiagnostic().equals(result.getDiagnostic())) {
-				existingIterator.remove();
+				if (result.equals(existingResult)) {
+					existingResult.setLastCheckDate(result.getLastCheckDate());
+					dontAdd = true;
+				}
+				else {
+					existingIterator.remove();
+				}
+				break;
 			}
 		}
-		this.diagnosticResults.add(result);
+		if (!dontAdd) {
+			this.diagnosticResults.add(result);
+		}
 	}
 	
 

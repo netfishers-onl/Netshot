@@ -27,6 +27,10 @@ import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -36,6 +40,7 @@ import org.hibernate.annotations.NaturalId;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
 
@@ -56,7 +61,7 @@ public abstract class Diagnostic {
 	static {
 		DIAGNOSTIC_CLASSES = new HashSet<Class<? extends Diagnostic>>();
 		DIAGNOSTIC_CLASSES.add(SimpleDiagnostic.class);
-		DIAGNOSTIC_CLASSES.add(JsDiagnostic.class);
+		DIAGNOSTIC_CLASSES.add(JavaScriptDiagnostic.class);
 	}
 
 	/**
@@ -189,6 +194,34 @@ public abstract class Diagnostic {
 	public void setTargetGroup(DeviceGroup targetGroup) {
 		this.targetGroup = targetGroup;
 	}
+
+	/**
+	 * Process and add a result to a device.
+	 * @param device the device
+	 * @param value the diagnostic result
+	 */
+	@Transient
+	public void addResultToDevice(Device device, String value) {
+		switch (this.resultType) {
+		case LONGTEXT:
+			device.addDiagnosticResult(new DiagnosticLongTextResult(device, this, value));
+			break;
+		case TEXT:
+			device.addDiagnosticResult(new DiagnosticTextResult(device, this, value));
+			break;
+		case NUMERIC:
+			device.addDiagnosticResult(new DiagnosticNumericResult(device, this, value));
+			break;
+		case BINARY:
+			device.addDiagnosticResult(new DiagnosticBinaryResult(device, this, value));
+			break;
+		default:
+		}
+	}
+
+	@Transient
+	abstract public Object getJsObject(Device device, ScriptEngine engine,
+			ScriptContext scriptContext) throws ScriptException;
 
 	@Override
 	public int hashCode() {

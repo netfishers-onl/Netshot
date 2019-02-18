@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
+import onl.netfishers.netshot.work.TaskLogger;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
@@ -89,12 +90,12 @@ public class Policy {
 	 *
 	 * @param session the session
 	 */
-	public void check(Session session) {
+	public void check(Session session, TaskLogger taskLogger) {
 		if (targetGroup == null) {
 			return;
 		}
 		for (Device device : targetGroup.getCachedDevices()) {
-			this.check(device, session);
+			this.check(device, session, taskLogger);
 		}
 	}
 
@@ -104,9 +105,9 @@ public class Policy {
 	 * @param device the device
 	 * @param session the session
 	 */
-	public void check(Device device, Session session) {
+	public void check(Device device, Session session, TaskLogger taskLogger) {
 		for (Rule rule : rules) {
-			rule.check(device, session);
+			rule.check(device, session, taskLogger);
 		}
 	}
 

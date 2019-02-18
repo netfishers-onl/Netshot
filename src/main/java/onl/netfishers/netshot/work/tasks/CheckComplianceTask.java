@@ -33,6 +33,7 @@ import onl.netfishers.netshot.compliance.SoftwareRule;
 import onl.netfishers.netshot.compliance.SoftwareRule.ConformanceLevel;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.work.Task;
+import onl.netfishers.netshot.work.TaskLogger;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -110,8 +111,9 @@ public class CheckComplianceTask extends Task {
 				.setLong("id", this.device.getId())
 				.list();
 
+			TaskLogger taskLogger = this.getJsLogger();
 			for (Policy policy : policies) {
-				policy.check(device, session);
+				policy.check(device, session, taskLogger);
 				session.merge(policy);
 			}
 			@SuppressWarnings("unchecked")

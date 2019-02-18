@@ -32,8 +32,9 @@ import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.Rule;
 import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
 import onl.netfishers.netshot.device.Device;
-import onl.netfishers.netshot.device.DeviceDataProvider;
 import onl.netfishers.netshot.device.DeviceDriver;
+import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
+import onl.netfishers.netshot.work.TaskLogger;
 
 import org.hibernate.Session;
 
@@ -239,7 +240,7 @@ public class TextRule extends Rule {
 	}
 
 	@Override
-	public void check(Device device, Session session) {
+	public void check(Device device, Session session, TaskLogger taskLogger) {
 		if (!this.isEnabled()) {
 			this.setCheckResult(device, ResultOption.DISABLED, "", session);
 			return;
@@ -257,9 +258,9 @@ public class TextRule extends Rule {
 			this.setCheckResult(device, ResultOption.EXEMPTED, "", session);
 			return;
 		}
-		DeviceDataProvider provider = new DeviceDataProvider(session, device);
 		try {
-			String content = provider.get(field).toString();
+			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, session, taskLogger, true);
+			String content = deviceHelper.get(field).toString();
 			content = content.replace("\r", "");
 			List<String[]> blocks = new ArrayList<String[]>();
 			blocks.add(new String[] { "", content });
@@ -270,7 +271,7 @@ public class TextRule extends Rule {
 				}
 				blocks = selectedBlocks;
 			}
-			provider.debug(String.format("Found %d block(s) matching the context.", blocks.size()));
+			taskLogger.debug(String.format("Found %d block(s) matching the context.", blocks.size()));
 			int b = 1;
 			for (String[] block : blocks) {
 				boolean doesMatch =
@@ -278,12 +279,12 @@ public class TextRule extends Rule {
 						!regExp && (matchAll && block[1].equals(text) || !matchAll && block[1].contains(text));
 				doesMatch = doesMatch ^ invert;
 				if (!doesMatch) {
-					provider.debug(String.format("Non matching block, number %d (in [%s])", b++, block[0]));
+					taskLogger.debug(String.format("Non matching block, number %d (in [%s])", b++, block[0]));
 					this.setCheckResult(device, ResultOption.NONCONFORMING, "", session);
 					return;
 				}
 				else if (anyBlock) {
-					provider.debug(String.format("Matching block, number %d (in [%s])", b++, block[0]));
+					taskLogger.debug(String.format("Matching block, number %d (in [%s])", b++, block[0]));
 					this.setCheckResult(device, ResultOption.CONFORMING, "", session);
 					return;
 				}
@@ -295,7 +296,7 @@ public class TextRule extends Rule {
 			return;
 		}
 		finally {
-			this.logIt(provider.getLog());
+			taskLogger.debug("End of check");
 		}
 	}
 

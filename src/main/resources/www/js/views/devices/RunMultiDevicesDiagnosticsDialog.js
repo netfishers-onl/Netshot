@@ -6,15 +6,15 @@ define([
 	'views/Dialog',
 	'models/device/DeviceModel',
 	'models/task/TaskModel',
-	'text!templates/devices/checkMultiDevicesCompliance.html'
-], function($, _, Backbone, Dialog, DeviceModel, TaskModel, checkMultiDevicesComplianceTemplate) {
+	'text!templates/devices/runMultiDevicesDiagnostics.html'
+], function($, _, Backbone, Dialog, DeviceModel, TaskModel, runMultiDevicesDiagnosticsTemplate) {
 
 	return Dialog.extend({
 
-		template: _.template(checkMultiDevicesComplianceTemplate),
+		template: _.template(runMultiDevicesDiagnosticsTemplate),
 
 		dialogOptions: {
-			title: "Check compliance",
+			title: "Run diagnostics",
 		},
 		
 		templateData: function() {
@@ -47,7 +47,7 @@ define([
 					}
 					device = devices.pop();
 					var task = new TaskModel({
-						type: "CheckComplianceTask",
+						type: "RunDiagnosticsTask",
 						device: device.get('id'),
 						scheduleType: 'ASAP'
 					});

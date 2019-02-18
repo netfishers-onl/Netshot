@@ -5,17 +5,18 @@ define([
 	'backbone',
 	'tablesort',
 	'models/device/DeviceDiagnosticResultCollection',
+	'views/devices/RunDeviceDiagnosticsDialog',
 	'text!templates/devices/deviceDiagnostics.html',
 	'text!templates/devices/deviceDiagnostic.html'
-], function($, _, Backbone, TableSort, DeviceDiagnosticResultCollection, deviceDiagnosticsTemplate,
-		deviceDiagnosticTemplate) {
+], function($, _, Backbone, TableSort, DeviceDiagnosticResultCollection, RunDeviceDiagnosticsDialog,
+		deviceDiagnosticsTemplate, deviceDiagnosticTemplate) {
 
 	return Backbone.View.extend({
 
 		el: "#nsdevices-devicedetails",
 
 		template: _.template(deviceDiagnosticsTemplate),
-		diagnossticTemplate: _.template(deviceDiagnosticTemplate),
+		diagnosticTemplate: _.template(deviceDiagnosticTemplate),
 
 		initialize: function(options) {
 			this.device = options.device;
@@ -34,9 +35,19 @@ define([
 			this.$el.html(this.template());
 			var $table = this.$("#diagnostics tbody");
 			this.diagnosticResults.each(function(diagnosticResult) {
-				$(that.moduleTemplate(diagnosticResult.toJSON())).appendTo($table);
+				$(that.diagnosticTemplate(diagnosticResult.toJSON())).appendTo($table);
 			});
 			new TableSort(this.$("#diagnostics").get(0));
+			
+			this.$("#rundiagnostics").button({
+				icons: {
+					primary: "ui-icon-seek-next"
+				}
+			}).click(function() {
+				var runDiagnosticsDialog = new RunDeviceDiagnosticsDialog({
+					model: that.device
+				});
+			});
 
 			return this;
 		},

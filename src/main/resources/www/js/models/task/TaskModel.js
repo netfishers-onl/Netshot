@@ -63,7 +63,9 @@ define([
 				'configKeepDays',
 				'driver',
 				'script',
-				'debugEnabled'
+				'debugEnabled',
+				'dontRunDiagnostics',
+				'dontCheckCompliance'
 			]);
 			options.attrs = attrs;
 			return Backbone.Model.prototype.save.call(this, attrs, options);

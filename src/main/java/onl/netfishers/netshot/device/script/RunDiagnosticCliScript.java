@@ -1,8 +1,28 @@
+/**
+ * Copyright 2013-2019 Sylvain Cadilhac (NetFishers)
+ * 
+ * This file is part of Netshot.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package onl.netfishers.netshot.device.script;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -25,7 +45,6 @@ import onl.netfishers.netshot.device.script.helper.JsCliScriptOptions;
 import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
 import onl.netfishers.netshot.device.script.helper.JsDiagnosticHelper;
 import onl.netfishers.netshot.diagnostic.Diagnostic;
-import onl.netfishers.netshot.diagnostic.JsDiagnostic;
 import onl.netfishers.netshot.work.TaskLogger;
 
 public class RunDiagnosticCliScript extends CliScript {
@@ -35,7 +54,6 @@ public class RunDiagnosticCliScript extends CliScript {
 	/** The diagnostics to execute. */
 	private List<Diagnostic> diagnostics;
 
-	
 	/**
 	 * Instantiates a JS-based script.
 	 * @param code The JS code
@@ -52,7 +70,6 @@ public class RunDiagnosticCliScript extends CliScript {
 		JsCliHelper jsCliHelper = new JsCliHelper(cli, cliAccount, this.getJsLogger(), this.getCliLogger());
 		TaskLogger taskLogger = this.getJsLogger();
 		DeviceDriver driver = device.getDeviceDriver();
-		List<Diagnostic> simpleDiagnostics = new ArrayList<Diagnostic>();
 		// Filter on the device driver
 		try {
 			ScriptEngine engine = driver.getEngine();
@@ -60,22 +77,29 @@ public class RunDiagnosticCliScript extends CliScript {
 			scriptContext.setBindings(engine.getContext().getBindings(ScriptContext.ENGINE_SCOPE),
 					ScriptContext.ENGINE_SCOPE);
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper);
-			options.setDevice(new JsDeviceHelper(device, taskLogger));
+			options.setDevice(new JsDeviceHelper(device, null, taskLogger, false));
 
+			Map<String, Object> jsDiagnostics = new HashMap<String, Object>();
 			for (Diagnostic diagnostic : this.diagnostics) {
-				if (diagnostic instanceof JsDiagnostic) {
-					try {
-						engine.eval(((JsDiagnostic) diagnostic).getScript(), scriptContext);
-						Object d = scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).get("diagnose");
+				try {
+					Object jsObject = diagnostic.getJsObject(device, engine, scriptContext);
+					if (jsObject == null) {
+						continue;
 					}
-					catch (Exception e1) {
-
-					}
+					jsDiagnostics.put(diagnostic.getName(), jsObject);
+				}
+				catch (Exception e1) {
+					logger.error("Error while preparing the diagnostic {} for JS: {}.", diagnostic.getName(), e1);
+					taskLogger.error(String.format("Error while preparing the diagnostic %s for JS: '%s'.",
+							diagnostic.getName(), e1.getMessage()));
 				}
 			}
+			options.setDiagnosticHelper(new JsDiagnosticHelper(device, diagnostics, jsDiagnostics, taskLogger));
 
-			options.setDiagnostic(new JsDiagnosticHelper(device, diagnostics, taskLogger));
-			((Invocable) engine).invokeFunction("_connect", "diagnostics", protocol.value(), options, taskLogger);
+			if (jsDiagnostics.size() > 0) {
+				((Invocable) engine).invokeFunction("_connect", "diagnostics", protocol.value(), options, taskLogger);
+			}
+
 		}
 		catch (ScriptException e) {
 			logger.error("Error while running script using driver {}.", driver.getName(), e);

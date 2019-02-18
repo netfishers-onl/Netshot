@@ -226,10 +226,6 @@ define([
 				});
 				that.$('#bar').css('width', '0%');
 				that.$('#status').show();
-				var data = {
-					credentialSetIds: [],
-					clearCredentialSetIds: []
-				};
 
 				var devices = that.options.devices;
 				var total = devices.length;

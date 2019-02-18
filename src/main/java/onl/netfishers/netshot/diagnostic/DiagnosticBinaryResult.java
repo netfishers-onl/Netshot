@@ -84,8 +84,6 @@ public class DiagnosticBinaryResult extends DiagnosticResult {
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
-		if (!super.equals(obj))
-			return false;
 		if (!(obj instanceof DiagnosticBinaryResult))
 			return false;
 		DiagnosticBinaryResult other = (DiagnosticBinaryResult) obj;

@@ -3,7 +3,7 @@
 		<img alt="Diagnostic" src="img/diagnostic_32px.png" />
 	</div>
 
-	<form>
+	<form class="diagnosticform">
 		<table>
 		<tbody>
 			<tr>
@@ -24,7 +24,6 @@
 					<option value="TEXT">Text</option>
 					<option value="NUMERIC">Numeric</option>
 					<option value="BINARY">Binary</option>
-					<option value="DATE">Date</option>
 				</select></td>
 			</tr>
 			<tr>
@@ -39,22 +38,22 @@
 			</tr>
 			<tr class="nsdiagnostics-settings">
 				<td><label for="climode">CLI mode: </label></td>
-				<td><select name="climode" id="climode" class="text ui-widget-content ui-corner-all"></select></td>
+				<td><select name="climode" id="climode" class="text ui-widget-content ui-corner-all cli-text"></select></td>
 			</tr>
 			<tr class="nsdiagnostics-settings">
 				<td><label for="command">CLI command: </label></td>
 				<td><input type="text" name="command" id="command" value="<%- command %>"
-					class="text ui-widget-content ui-corner-all" /></td>
+					class="text ui-widget-content ui-corner-all cli-text" /></td>
 			</tr>
 			<tr class="nsdiagnostics-settings">
 				<td><label for="modifierpattern">RegEx pattern: </label></td>
 				<td><input type="text" name="modifierpattern" id="modifierpattern" value="<%- modifierPattern %>"
-					class="text ui-widget-content ui-corner-all" /></td>
+					class="text ui-widget-content ui-corner-all cli-text" /></td>
 			</tr>
 			<tr class="nsdiagnostics-settings">
 				<td><label for="modifierreplacement">Replace with: </label></td>
 				<td><input type="text" name="modifierreplacement" id="modifierreplacement" value="<%- modifierReplacement %>"
-					class="text ui-widget-content ui-corner-all" /></td>
+					class="text ui-widget-content ui-corner-all cli-text" /></td>
 			</tr>
 		</tbody>
 		</table>

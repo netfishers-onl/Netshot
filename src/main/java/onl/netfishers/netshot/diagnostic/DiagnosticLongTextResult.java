@@ -80,8 +80,6 @@ public class DiagnosticLongTextResult extends DiagnosticResult {
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
-		if (!super.equals(obj))
-			return false;
 		if (!(obj instanceof DiagnosticLongTextResult))
 			return false;
 		DiagnosticLongTextResult other = (DiagnosticLongTextResult) obj;

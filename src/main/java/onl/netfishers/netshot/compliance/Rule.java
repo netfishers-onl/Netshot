@@ -18,9 +18,7 @@
  */
 package onl.netfishers.netshot.compliance;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -33,7 +31,6 @@ import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -50,6 +47,7 @@ import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
 import onl.netfishers.netshot.compliance.rules.JavaScriptRule;
 import onl.netfishers.netshot.compliance.rules.TextRule;
 import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.work.TaskLogger;
 
 
 /**
@@ -95,9 +93,6 @@ public abstract class Rule {
 
 	/** The name. */
 	protected String name = "";
-
-	/** The log. */
-	private List<String> log = new ArrayList<String>();
 
 	/** The exemptions. */
 	private Set<Exemption> exemptions = new HashSet<Exemption>();
@@ -147,8 +142,9 @@ public abstract class Rule {
 	 *
 	 * @param device the device
 	 * @param session the session
+	 * @param taskLogger the task logger
 	 */
-	public void check(Device device, Session session) {
+	public void check(Device device, Session session, TaskLogger taskLogger) {
 		logger.warn("Called generic rule check.");
 		if (!this.isEnabled()) {
 			this.setCheckResult(device, ResultOption.DISABLED, "", session);
@@ -265,50 +261,6 @@ public abstract class Rule {
 	 */
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	/**
-	 * Gets the log.
-	 *
-	 * @return the log
-	 */
-	@Transient
-	public List<String> getLog() {
-		return log;
-	}
-
-	/**
-	 * Gets the plain log.
-	 *
-	 * @return the plain log
-	 */
-	@Transient
-	public String getPlainLog() {
-		StringBuffer buffer = new StringBuffer();
-		for (String log : this.log) {
-			buffer.append(log);
-			buffer.append("\n");
-		}
-		return buffer.toString();
-	}
-
-	/**
-	 * Log a message. Add it to the local buffer.
-	 *
-	 * @param log the log
-	 * @param level the level
-	 */
-	protected void logIt(String log, int level) {
-		this.log.add("[" + level + "] " + log);
-	}
-	
-	/**
-	 * Add a list of logs to the local logs.
-	 *
-	 * @param logs a list of logs
-	 */
-	protected void logIt(List<String> logs) {
-		this.log.addAll(logs);
 	}
 
 	/**

@@ -20,11 +20,15 @@ package onl.netfishers.netshot.diagnostic;
 
 import javax.persistence.Entity;
 import javax.persistence.Transient;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.DeviceGroup;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
@@ -36,8 +40,38 @@ import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType
  * @author sylvain.cadilhac
  */
 @Entity
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(value = XmlAccessType.NONE)
 public class SimpleDiagnostic extends Diagnostic {
+
+	/**
+	 * A simple object to store command and CLI mode, to be passed to Javascript for execution.
+	 */
+	static public class JsSimpleDiagnostic {
+		private String mode;
+		private String command;
+
+		public JsSimpleDiagnostic(String mode, String command) {
+			this.setMode(mode);
+			this.setCommand(command);
+		}
+
+		public String getCommand() {
+			return command;
+		}
+
+		public void setCommand(String command) {
+			this.command = command;
+		}
+
+		public String getMode() {
+			return mode;
+		}
+
+		public void setMode(String mode) {
+			this.mode = mode;
+		}
+	}
 
 	/**
 	 * Instantiates a new SimpleDiagnostic. For Hibernate.
@@ -45,17 +79,25 @@ public class SimpleDiagnostic extends Diagnostic {
 	protected SimpleDiagnostic() {
 	}
 
-
 	/**
 	 * Instantiates a new diagnostic.
-	 * @param name The name
-	 * @param enabled True to enable the diagnostic
-	 * @param targetGroup The group of devices the diagnostic applies to
-	 * @param resultType The type of result expected by this diagnostic
-	 * @param cliMode The CLI mode
-	 * @param command The CLI command to issue
-	 * @param modifierPattern The pattern to match
-	 * @param modifierReplacement The replacement script if the pattern is matched
+	 * 
+	 * @param name
+	 *                              The name
+	 * @param enabled
+	 *                              True to enable the diagnostic
+	 * @param targetGroup
+	 *                              The group of devices the diagnostic applies to
+	 * @param resultType
+	 *                              The type of result expected by this diagnostic
+	 * @param cliMode
+	 *                              The CLI mode
+	 * @param command
+	 *                              The CLI command to issue
+	 * @param modifierPattern
+	 *                              The pattern to match
+	 * @param modifierReplacement
+	 *                              The replacement script if the pattern is matched
 	 */
 	public SimpleDiagnostic(String name, boolean enabled, DeviceGroup targetGroup, AttributeType resultType,
 			String deviceDriver, String cliMode, String command, String modifierPattern, String modifierReplacement) {
@@ -66,36 +108,36 @@ public class SimpleDiagnostic extends Diagnostic {
 		this.modifierPattern = modifierPattern;
 		this.modifierReplacement = modifierReplacement;
 	}
-	
+
 	/**
 	 * The type of device this diagnostic applies to.
 	 */
 	private String deviceDriver;
-	
+
 	/**
 	 * The CLI mode to run the command in.
 	 */
 	private String cliMode;
-	
+
 	/**
 	 * The CLI command to run.
 	 */
 	private String command;
-	
+
 	/**
 	 * The pattern to search for in the result string.
 	 */
 	private String modifierPattern;
-	
+
 	/**
-	 * The replacement string (to replace the modifierPattern with).
-	 * Also supports regular expression backreferences.
+	 * The replacement string (to replace the modifierPattern with). Also supports
+	 * regular expression backreferences.
 	 */
 	private String modifierReplacement;
 
-	
 	/**
 	 * Gets the device driver this diagnostic applies to.
+	 * 
 	 * @return the device driver.
 	 */
 	@XmlElement
@@ -105,7 +147,9 @@ public class SimpleDiagnostic extends Diagnostic {
 
 	/**
 	 * Sets the device driver
-	 * @param deviceDriver the new device driver
+	 * 
+	 * @param deviceDriver
+	 *                       the new device driver
 	 */
 	public void setDeviceDriver(String deviceDriver) {
 		this.deviceDriver = deviceDriver;
@@ -124,7 +168,8 @@ public class SimpleDiagnostic extends Diagnostic {
 	/**
 	 * Sets the cli mode.
 	 *
-	 * @param cliMode the new cli mode
+	 * @param cliMode
+	 *                  the new cli mode
 	 */
 	public void setCliMode(String cliMode) {
 		this.cliMode = cliMode;
@@ -143,7 +188,8 @@ public class SimpleDiagnostic extends Diagnostic {
 	/**
 	 * Sets the command.
 	 *
-	 * @param command the new command
+	 * @param command
+	 *                  the new command
 	 */
 	public void setCommand(String command) {
 		this.command = command;
@@ -162,7 +208,8 @@ public class SimpleDiagnostic extends Diagnostic {
 	/**
 	 * Sets the modifier pattern.
 	 *
-	 * @param modifierPattern the new modifier pattern
+	 * @param modifierPattern
+	 *                          the new modifier pattern
 	 */
 	public void setModifierPattern(String modifierPattern) {
 		this.modifierPattern = modifierPattern;
@@ -181,14 +228,17 @@ public class SimpleDiagnostic extends Diagnostic {
 	/**
 	 * Sets the modifier replacement.
 	 *
-	 * @param modifierReplacement the new modifier replacement
+	 * @param modifierReplacement
+	 *                              the new modifier replacement
 	 */
 	public void setModifierReplacement(String modifierReplacement) {
 		this.modifierReplacement = modifierReplacement;
 	}
-	
+
 	/**
-	 * Gets the description of the device driver. To be sent along with the diagnostic.
+	 * Gets the description of the device driver. To be sent along with the
+	 * diagnostic.
+	 * 
 	 * @return the description of the device driver
 	 */
 	@Transient
@@ -204,6 +254,25 @@ public class SimpleDiagnostic extends Diagnostic {
 		catch (Exception e) {
 			return "Unknown driver";
 		}
+	}
+
+	@Transient
+	@Override
+	public void addResultToDevice(Device device, String value) {
+		String newValue = value;
+		if (this.getModifierPattern() != null) {
+			newValue = value.replaceAll(this.getModifierPattern(), this.getModifierReplacement());
+		}
+		super.addResultToDevice(device, newValue);
+	}
+
+	@Override
+	public Object getJsObject(Device device, ScriptEngine engine,
+			ScriptContext scriptContext) throws ScriptException {
+		if (!device.getDriver().equals(this.getDeviceDriver())) {
+			return null;
+		}
+		return new JsSimpleDiagnostic(this.cliMode, this.command);
 	}
 	
 }

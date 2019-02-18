@@ -10,11 +10,12 @@ define([
 	'views/devices/EnableMultiDevicesDialog',
 	'views/devices/TakeMultiDevicesSnapshotDialog',
 	'views/devices/CheckMultiDevicesComplianceDialog',
-	'views/devices/RunMultiDevicesScriptDialog'
+	'views/devices/RunMultiDevicesScriptDialog',
+	'views/devices/RunMultiDevicesDiagnosticsDialog'
 ], function($, _, Backbone, multiDevicesTemplate, EditMultiDevicesDialog,
 		DeleteMultiDevicesDialog, DisableMultiDevicesDialog, EnableMultiDevicesDialog,
 		TakeMultiDevicesSnapshotDialog, CheckMultiDevicesComplianceDialog,
-		RunMultiDevicesScriptDialog) {
+		RunMultiDevicesScriptDialog, RunMultiDevicesDiagnosticsDialog) {
 
 	return Backbone.View.extend({
 
@@ -132,6 +133,19 @@ define([
 					}
 				}).click(function() {
 					new CheckMultiDevicesComplianceDialog({
+						devices: that.getDevices(),
+						onScheduled: function() {
+							that.options.devicesView.fetchDevices();
+						}
+					});
+					return false;
+				});
+				this.$("#rundiagnostics").button({
+					icons: {
+						primary: "ui-icon-seek-next"
+					}
+				}).click(function() {
+					new RunMultiDevicesDiagnosticsDialog({
 						devices: that.getDevices(),
 						onScheduled: function() {
 							that.options.devicesView.fetchDevices();

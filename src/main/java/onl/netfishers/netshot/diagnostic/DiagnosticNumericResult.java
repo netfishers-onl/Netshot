@@ -79,8 +79,6 @@ public class DiagnosticNumericResult extends DiagnosticResult {
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
-		if (!super.equals(obj))
-			return false;
 		if (!(obj instanceof DiagnosticNumericResult))
 			return false;
 		DiagnosticNumericResult other = (DiagnosticNumericResult) obj;

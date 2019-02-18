@@ -6,6 +6,10 @@ html,button,input,select,textarea {
 	padding: 2px;
 }
 
+.cli-text {
+	font-family: monospace !important;
+}
+
 th[role=columnheader]:not(.no-sort) {
 	cursor: pointer;
 }
@@ -112,12 +116,12 @@ th[role=columnheader]:not(.no-sort):hover:after {
 }
 
 .ui-menu-item>a {
-	text-decoration: none;"
+	text-decoration: none;
 }
 
 .nstoolbar {
 	background-image:
-		url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHZpZXdCb3g9IjAgMCAxIDEiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiPgo8bGluZWFyR3JhZGllbnQgaWQ9Imc4MjQiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CjxzdG9wIHN0b3AtY29sb3I9IiNFRkVGRUYiIG9mZnNldD0iMCIvPjxzdG9wIHN0b3AtY29sb3I9IiNFRkVGRUYiIG9mZnNldD0iMC41Ii8+PHN0b3Agc3RvcC1jb2xvcj0iI0U3RTdFNyIgb2Zmc2V0PSIwLjUiLz48c3RvcCBzdG9wLWNvbG9yPSIjRTdFN0U3IiBvZmZzZXQ9IjEiLz4KPC9saW5lYXJHcmFkaWVudD4KPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNnODI0KSIgLz4KPC9zdmc+);
+		url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHZpZXdCb3g9IjAgMCAxIDEiIHByZXNlcnZlQXNwZWN0UmF0aW89Im5vbmUiPgo8bGluZWFyR3JhZGllbnQgaWQ9Imc4MjQiIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjAlIiB5Mj0iMTAwJSI+CjxzdG9wIHN0b3AtY29sb3I9IiNFRkVGRUYiIG9mZnNldD0iMCIvPjxzdG9wIHN0b3AtY29sb3I9IiNFRkVGRUYiIG9mZnNldD0iMC41Ii8+PHN0b3Agc3RvcC1jb2xvcj0iI0U3RTdFNyIgb2Zmc2V0PSIwLjUiLz48c3RvcCBzdG9wLWNvbG9yPSIjRTdFN0U3IiBvZmZzZXQ9IjEiLz4KPC9saW5lYXJHcmFkaWVudD4KPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNnODI0KSIgLz4KPC9zdmc+');
 	border-bottom: 1px solid #c0c0c0;
 	height: 66px;
 	overflow: hidden;
@@ -559,7 +563,7 @@ h1 {
 	font-size: 9px;
 }
 
-#nsdevices-multidevices-toolbar {
+.nsdevices-multidevices-toolbar {
 	margin-top: 10px;
 	margin-bottom: 10px;
 }
@@ -630,10 +634,6 @@ h1 {
 .nstable {
 	padding: 5px;
 	margin-bottom: 10px;
-}
-
-.nstable thead {
-	
 }
 
 .nstable th {
@@ -1014,7 +1014,7 @@ input.spinner {
 
 .editscriptform #nscompliance-editrule-testerfield {
 	position: absolute;
-	bottom: 15px;
+	bottom: 25px;
 	width: 300px;
 }
 
@@ -1049,9 +1049,6 @@ input.spinner {
 	width: 150px;
 	cursor: pointer;
 }
-
-
-
 
 #nscompliance-editruletextform textarea {
 	resize: none;
@@ -1456,10 +1453,6 @@ input.spinner {
 	font-style: italic;
 }
 
-select#climode {
-	font-family: monospace;
-}
-
 #nsdiagnostics-simplediagnostic-details {
 	font-size: 0.9em;
 	width: 100%;
@@ -1483,10 +1476,6 @@ select#climode {
 #nsdiagnostics-simplediagnostic-details td {
 	padding-top: 5px;
 	padding-bottom: 5px;
-}
-
-#nsdiagnostics-simplediagnostic-details .command {
-	font-family: monospace;
 }
 
 #nsdiagnostics-adddiagnostic-editorfield {
@@ -1518,4 +1507,11 @@ select#climode {
 	right: 5px;
 }
 
+.editscriptform .cli-text {
+	width: 300px;
+}
 
+#nsdevices-devicedetails #rundiagnostics {
+	margin-top: 20px;
+	margin-bottom: 10px;
+}

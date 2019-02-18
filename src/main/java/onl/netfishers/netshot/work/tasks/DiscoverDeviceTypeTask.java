@@ -311,7 +311,7 @@ public class DiscoverDeviceTypeTask extends Task {
 				session.save(device);
 				this.deviceId = device.getId();
 				snapshotTask = new TakeSnapshotTask(device,
-						"Automatic snapshot after discovery", author);
+						"Automatic snapshot after discovery", author, true, false, false);
 				session.save(snapshotTask);
 				session.getTransaction().commit();
 				this.snapshotTaskId = snapshotTask.getId();

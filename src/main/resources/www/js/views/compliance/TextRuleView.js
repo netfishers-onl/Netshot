@@ -16,10 +16,30 @@ define([
 		initialize: function(options) {
 			var that = this;
 			this.deviceTypes = options.deviceTypes;
+			this.diagnostics = options.diagnostics;
 			this.deviceType = this.deviceTypes.findWhere({
 				name: this.model.get("deviceDriver")
 			});
 			this.render();
+		},
+
+		getAttributes: function(driver) {
+			var that = this;
+			var attributes = EditTextRuleDialog.prototype.defaultAttributes;
+			if (typeof driver === "object" && driver) {
+				attributes = _.union(attributes, driver.get("attributes"));
+			}
+			attributes = _.sortBy(attributes, "title");
+			attributes = _.union(attributes, that.diagnostics.map(function(diagnostic) {
+				return {
+					level: "DEVICE",
+					title: diagnostic.get("name") + " (diagnostic)",
+					name: diagnostic.get("name"),
+					type: diagnostic.get("resultType"),
+					checkable: true
+				};
+			}));
+			return attributes;
 		},
 
 		render: function() {
@@ -27,10 +47,7 @@ define([
 			var data = this.model.toJSON();
 			
 			data.fieldDescription = "Unknown";
-			var attributes = EditTextRuleDialog.prototype.defaultAttributes;
-			if (typeof this.deviceType === "object" && this.deviceType) {
-				attributes = _.union(attributes, this.deviceType.get("attributes"));
-			}
+			var attributes = this.getAttributes(this.deviceType);
 			for (var a in attributes) {
 				var attribute = attributes[a];
 				if (!attribute.checkable) continue;

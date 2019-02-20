@@ -5,9 +5,10 @@ define([
 	'backbone',
 	'models/device/DeviceTypeCollection',
 	'models/domain/DomainCollection',
+	'models/diagnostic/DiagnosticCollection',
 	'text!templates/devices/searchToolbox.html',
 	'rangyinput'
-], function($, _, Backbone, DeviceTypeCollection, DomainCollection,
+], function($, _, Backbone, DeviceTypeCollection, DomainCollection, DiagnosticCollection,
 		searchToolboxTemplate) {
 
 	return Backbone.View.extend({
@@ -147,9 +148,29 @@ define([
 			var that = this;
 			this.deviceTypes = new DeviceTypeCollection([]);
 			this.domains = new DomainCollection([]);
-			$.when(this.deviceTypes.fetch(), this.domains.fetch()).done(function() {
+			this.diagnostics = new DiagnosticCollection([]);
+			$.when(this.deviceTypes.fetch(), this.domains.fetch(), this.diagnostics.fetch()).done(function() {
 				that.render();
 			});
+		},
+
+		getAttributes: function(driver) {
+			var that = this;
+			var attributes = this.defaultAttributes;
+			if (typeof driver === "object" && driver) {
+				attributes = _.union(attributes, driver.get("attributes"));
+			}
+			attributes = _.sortBy(attributes, "title");
+			attributes = _.union(attributes, that.diagnostics.map(function(diagnostic) {
+				return {
+					level: "DEVICE",
+					title: 'Diagnostic "' + diagnostic.get("name") + '"',
+					name: diagnostic.get("name") + " (diagnostic)",
+					type: diagnostic.get("resultType"),
+					searchable: true
+				};
+			}));
+			return attributes;
 		},
 		
 		render: function() {
@@ -185,10 +206,7 @@ define([
 			this.$('#fieldname').change(function() {
 				that.$('#fieldbuttons button').button('destroy');
 				that.$('#fieldbuttons').empty();
-				var attributes = that.defaultAttributes;
-				if (typeof that.driver === "object" && that.driver) {
-					attributes = _.union(attributes, that.driver.get("attributes"));
-				}
+				var attributes = that.getAttributes(that.driver);
 				var attribute = _.findWhere(attributes, { name: $(this).val() });
 				var name = attribute.title;
 				var type = attribute.type;
@@ -266,12 +284,8 @@ define([
 			});
 			this.$('#devicetype').change(function() {
 				that.$('#fieldname').empty();
-				var attributes = that.defaultAttributes;
 				that.driver = that.deviceTypes.findWhere({ name: $(this).val() });
-				if (typeof that.driver === "object" && that.driver) {
-					attributes = _.union(attributes, that.driver.get("attributes"));
-				}
-				attributes = _.sortBy(attributes, "title");
+				var attributes = that.getAttributes(that.driver);
 				for (var a in attributes) {
 					var attribute = attributes[a];
 					if (!attribute.searchable) continue;

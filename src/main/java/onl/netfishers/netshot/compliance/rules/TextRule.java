@@ -293,6 +293,7 @@ public class TextRule extends Rule {
 		}
 		catch (Exception e) {
 			this.setCheckResult(device, ResultOption.NOTAPPLICABLE, "No such field.", session);
+			taskLogger.info("No such field '" + field + "' on this device");
 			return;
 		}
 		finally {

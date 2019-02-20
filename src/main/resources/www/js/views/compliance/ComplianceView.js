@@ -16,6 +16,7 @@ define([
 	'models/compliance/SoftwareRuleCollection',
 	'models/compliance/HardwareRuleCollection',
 	'models/device/DeviceTypeCollection',
+	'models/diagnostic/DiagnosticCollection',
 	'views/compliance/AddPolicyDialog',
 	'views/compliance/DeletePolicyDialog',
 	'views/compliance/EditPolicyDialog',
@@ -35,8 +36,8 @@ define([
 		policyListItemTemplate, softwarePolicyListItemTemplate,
 		ruleListItemTemplate, softwareRuleRowTemplate,
 		hardwarePolicyListItemTemplate, hardwareRuleRowTemplate, PolicyCollection, RuleCollection,
-		SoftwareRuleCollection, HardwareRuleCollection, DeviceTypeCollection, AddPolicyDialog,
-		DeletePolicyDialog, EditPolicyDialog, AddRuleDialog, DeleteRuleDialog,
+		SoftwareRuleCollection, HardwareRuleCollection, DeviceTypeCollection, DiagnosticCollection,
+		AddPolicyDialog, DeletePolicyDialog, EditPolicyDialog, AddRuleDialog, DeleteRuleDialog,
 		EditRuleDialog, JsRuleView, TextRuleView, AddSoftwareRuleDialog, EditSoftwareRuleDialog,
 		DeleteSoftwareRuleDialog, SortSoftwareRuleDialog, AddHardwareRuleDialog,
 		EditHardwareRuleDialog, DeleteHardwareRuleDialog) {
@@ -64,6 +65,7 @@ define([
 			this.softwareRules = new SoftwareRuleCollection([]);
 			this.hardwareRules = new HardwareRuleCollection([]);
 			this.deviceTypes = new DeviceTypeCollection([]);
+			this.diagnostics = new DiagnosticCollection([]);
 		},
 
 		render: function() {
@@ -94,7 +96,8 @@ define([
 
 		refreshPolicies: function() {
 			var that = this;
-			$.when(this.policies.fetch({ reset: true }), this.deviceTypes.fetch()).done(function() {
+			$.when(this.policies.fetch({ reset: true }), this.deviceTypes.fetch(),
+					this.diagnostics.fetch()).done(function() {
 				that.renderPolicyList();
 			});
 		},
@@ -542,6 +545,7 @@ define([
 					this.ruleView = new TextRuleView({
 						model: this.rule,
 						deviceTypes: this.deviceTypes,
+						diagnostics: this.diagnostics,
 						onEdited: function() {
 							that.refreshRules();
 						}

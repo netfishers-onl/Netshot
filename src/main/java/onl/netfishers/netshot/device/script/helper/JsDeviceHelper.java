@@ -31,6 +31,7 @@ import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
 import onl.netfishers.netshot.device.attribute.DeviceAttribute;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.work.TaskLogger;
 import onl.netfishers.netshot.device.attribute.DeviceBinaryAttribute;
 import onl.netfishers.netshot.device.attribute.DeviceLongTextAttribute;
@@ -470,6 +471,12 @@ public class JsDeviceHelper {
 					}
 				}
 			}
+			for (DiagnosticResult diagnosticResult : device.getDiagnosticResults()) {
+				String diagnosticName = diagnosticResult.getDiagnosticName();
+				if (diagnosticName != null && diagnosticName.equals(item)) {
+					return diagnosticResult.getData();
+				}
+			}
 		}
 		return null;
 	}
@@ -569,6 +576,10 @@ public class JsDeviceHelper {
 			this.taskLogger.warn(String.format("Unable to get data %s for device named %s.", deviceName));
 		}
 		return null;
+	}
+
+	public void debug(String message) {
+		taskLogger.debug(message);
 	}
 
 	/**

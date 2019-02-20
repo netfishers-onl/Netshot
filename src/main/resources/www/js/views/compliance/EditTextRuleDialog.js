@@ -5,13 +5,14 @@ define([
 	'backbone',
 	'views/Dialog',
 	'models/device/DeviceTypeCollection',
+	'models/diagnostic/DiagnosticCollection',
 	'text!templates/compliance/editTextRule.html',
 	'views/devices/SelectDeviceDialog',
 	'models/compliance/RuleTestModel',
 	'text!templates/compliance/ruleResultInfo.html',
 	'views/compliance/RuleTestLogsDialog'
-], function($, _, Backbone, Dialog, DeviceTypeCollection, editTextRuleTemplate,
-		SelectDeviceDialog, RuleTestModel, ruleResultInfoTemplate,
+], function($, _, Backbone, Dialog, DeviceTypeCollection, DiagnosticCollection,
+		editTextRuleTemplate, SelectDeviceDialog, RuleTestModel, ruleResultInfoTemplate,
 		RuleTestLogsDialog) {
 
 	var EditTextRuleDialog = Dialog.extend({
@@ -27,10 +28,11 @@ define([
 		},
 		
 		deviceTypes: new DeviceTypeCollection([]),
+		diagnostics: new DiagnosticCollection([]),
 
 		initialize: function(options) {
 			var that = this;
-			this.deviceTypes.fetch().done(function() {
+			$.when(this.deviceTypes.fetch(), this.diagnostics.fetch()).done(function() {
 				that.render();
 			});
 		},
@@ -98,6 +100,25 @@ define([
 			EditTextRuleDialog.testDevice = device;
 		},
 
+		getAttributes: function(driver) {
+			var that = this;
+			var attributes = this.defaultAttributes;
+			if (typeof driver === "object" && driver) {
+				attributes = _.union(attributes, driver.get("attributes"));
+			}
+			attributes = _.sortBy(attributes, "title");
+			attributes = _.union(attributes, that.diagnostics.map(function(diagnostic) {
+				return {
+					level: "DEVICE",
+					title: 'Diagnostic "' + diagnostic.get("name") + '"',
+					name: diagnostic.get("name"),
+					type: diagnostic.get("resultType"),
+					checkable: true
+				};
+			}));
+			return attributes;
+		},
+
 		onCreate: function() {
 			var that = this;
 
@@ -108,12 +129,8 @@ define([
 			});
 			this.$('#devicetype').change(function() {
 				that.$('#fieldname').empty();
-				var attributes = that.defaultAttributes;
 				that.driver = that.deviceTypes.findWhere({ name: $(this).val() });
-				if (typeof that.driver == "object" && that.driver) {
-					attributes = _.union(attributes, that.driver.get("attributes"));
-				}
-				attributes = _.sortBy(attributes, "title");
+				var attributes = that.getAttributes(that.driver);
 				for (var a in attributes) {
 					var attribute = attributes[a];
 					if (!attribute.checkable) continue;

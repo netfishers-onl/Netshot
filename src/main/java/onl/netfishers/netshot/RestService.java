@@ -8921,6 +8921,11 @@ public class RestService extends Thread {
 			throw new NetshotBadRequestException("Invalid diagnostic name.",
 					NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC_NAME);
 		}
+		if (name.contains("\"")) {
+			logger.warn("Double-quotes are not allowed in the diagnostic name.");
+			throw new NetshotBadRequestException("Double-quotes are not allowed in the name.",
+					NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC_NAME);
+		}
 		AttributeType resultType;
 		try {
 			resultType = AttributeType.valueOf(rsDiagnostic.getResultType());
@@ -9028,6 +9033,11 @@ public class RestService extends Thread {
 			if (name.isEmpty()) {
 				logger.warn("User posted an empty diagnostic name.");
 				throw new NetshotBadRequestException("Invalid diagnostic name.",
+						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC_NAME);
+			}
+			if (name.contains("\"")) {
+				logger.warn("Double-quotes are not allowed in the diagnostic name.");
+				throw new NetshotBadRequestException("Double-quotes are not allowed in the name.",
 						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC_NAME);
 			}
 			AttributeType resultType;

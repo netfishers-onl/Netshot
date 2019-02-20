@@ -20,6 +20,7 @@ package onl.netfishers.netshot.device;
 
 import java.net.UnknownHostException;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -27,25 +28,67 @@ import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.compliance.SoftwareRule;
 import onl.netfishers.netshot.device.Device.NetworkClass;
 import onl.netfishers.netshot.device.Finder.Expression.FinderParseException;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
+import onl.netfishers.netshot.diagnostic.Diagnostic;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Query;
+import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
  * A Finder finds devices based on a text expression.
  */
 public class Finder {
+
+	/** The logger. */
+	private static Logger logger = LoggerFactory.getLogger(Finder.class);
+
+	public static class ParsingData {
+		private DeviceDriver deviceDriver;
+		private List<Diagnostic> diagnostics;
+
+		public ParsingData(DeviceDriver deviceDriver) {
+			this.deviceDriver = deviceDriver;
+		}
+
+		public DeviceDriver getDeviceDriver() {
+			return this.deviceDriver;
+		}
+
+		@SuppressWarnings("unchecked")
+		public List<Diagnostic> getDiagnostics() throws FinderParseException {
+			if (this.diagnostics != null) {
+				return this.diagnostics;
+			}
+			Session session = Database.getSession();
+			try {
+				this.diagnostics = session.createCriteria(Diagnostic.class).list();
+			}
+			catch (HibernateException e) {
+				logger.error("Unable to fetch the diagnostics.", e);
+				throw new FinderParseException("Unable to fetch the diagnostics. " + e.getMessage());
+			}
+			finally {
+				session.close();
+			}
+			return this.diagnostics;
+		}
+	}
 
 	/**
 	 * The Enum TokenType.
@@ -121,7 +164,7 @@ public class Finder {
 		/** The device. */
 		DEVICE("(?i)^\\s*(\\[device\\])", "DEVICE"),
 		
-		/** The domain token/ */
+		/** The domain token. */
 		DOMAIN("(?i)^\\s*(\\[domain\\])", "DOMAIN"),
 
 		/** The SUBNET v4. */
@@ -150,10 +193,10 @@ public class Finder {
 		QUOTE("^\\s*\"(.*?)(?<!\\\\)\"", ""),
 
 		/** The numeric. */
-		NUMERIC("^\\s*([0-9\\.]+)\\b", ""),
+		NUMERIC("^\\s*([0-9\\.,]+)\\b", ""),
 
 		/** The item. */
-		ITEM("^\\s*\\[([A-Za-z\\-0-9 \\(\\)]+)\\]", "");
+		ITEM("^\\s*\\[([A-Za-z\\-0-9 \\(\\)\"]+)\\]", "");
 
 		/** The pattern. */
 		private Pattern pattern;
@@ -304,15 +347,15 @@ public class Finder {
 		}
 
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			ListIterator<Token> t = tokens.listIterator();
 			int brackets = 0;
 			List<Token> subTokens = new ArrayList<Token>();
@@ -333,7 +376,7 @@ public class Finder {
 					}
 					else if (brackets == 0) {
 						token.type = TokenType.ITEM;
-						token.expression = Expression.parse(subTokens, driver);
+						token.expression = Expression.parse(subTokens, parsingData);
 						subTokens.clear();
 					}
 					else {
@@ -361,67 +404,67 @@ public class Finder {
 
 			Expression expr;
 
-			expr = OrOperator.parse(tokens, driver);
+			expr = OrOperator.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
 
-			expr = AndOperator.parse(tokens, driver);
+			expr = AndOperator.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
 			
-			expr = NotOperator.parse(tokens, driver);
+			expr = NotOperator.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
 			
-			expr = ModuleExpression.parse(tokens, driver);
+			expr = ModuleExpression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
 			
-			expr = InterfaceExpression.parse(tokens, driver);
+			expr = InterfaceExpression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
 			
-			expr = VrfExpression.parse(tokens, driver);
+			expr = VrfExpression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
 			
-			expr = VirtualNameExpression.parse(tokens, driver);
+			expr = VirtualNameExpression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
 
-			expr = DeviceExpression.parse(tokens, driver);
+			expr = DeviceExpression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
 
-			expr = DomainExpression.parse(tokens, driver);
+			expr = DomainExpression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
 
-			expr = Ipv4Expression.parse(tokens, driver);
+			expr = Ipv4Expression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
 
-			expr = Ipv6Expression.parse(tokens, driver);
+			expr = Ipv6Expression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
 
-			expr = MacExpression.parse(tokens, driver);
+			expr = MacExpression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
 
-			expr = AttributeExpression.parse(tokens, driver);
+			expr = AttributeExpression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
@@ -499,15 +542,15 @@ public class Finder {
 		}
 
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			ListIterator<Token> t = tokens.listIterator();
 			while (t.hasNext()) {
 				boolean first = !t.hasPrevious();
@@ -519,10 +562,10 @@ public class Finder {
 										token.position));
 					}
 					else {
-						NotOperator notExpr = new NotOperator(driver);
+						NotOperator notExpr = new NotOperator(parsingData.getDeviceDriver());
 						t.previous();
 						t.remove();
-						notExpr.child = Expression.parse(tokens, driver);
+						notExpr.child = Expression.parse(tokens, parsingData);
 						return notExpr;
 					}
 				}
@@ -601,17 +644,17 @@ public class Finder {
 		}
 
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			ListIterator<Token> t = tokens.listIterator();
-			AndOperator andExpr = new AndOperator(driver);
+			AndOperator andExpr = new AndOperator(parsingData.getDeviceDriver());
 			List<Token> tokenBuffer = new ArrayList<Token>();
 			while (t.hasNext()) {
 				Token token = t.next();
@@ -621,7 +664,7 @@ public class Finder {
 								"Parsing error, nothing before AND at character %d.",
 								token.position));
 					}
-					andExpr.children.add(Expression.parse(tokenBuffer, driver));
+					andExpr.children.add(Expression.parse(tokenBuffer, parsingData));
 					tokenBuffer.clear();
 				}
 				else {
@@ -633,7 +676,7 @@ public class Finder {
 					throw new FinderParseException(
 							"Parsing error, nothing after last AND.");
 				}
-				andExpr.children.add(Expression.parse(tokenBuffer, driver));
+				andExpr.children.add(Expression.parse(tokenBuffer, parsingData));
 				return andExpr;
 			}
 			return null;
@@ -710,17 +753,17 @@ public class Finder {
 		}
 
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			ListIterator<Token> t = tokens.listIterator();
-			OrOperator orExpr = new OrOperator(driver);
+			OrOperator orExpr = new OrOperator(parsingData.getDeviceDriver());
 			List<Token> tokenBuffer = new ArrayList<Token>();
 			while (t.hasNext()) {
 				Token token = t.next();
@@ -730,7 +773,7 @@ public class Finder {
 								"Parsing error, nothing before OR at character %d.",
 								token.position));
 					}
-					orExpr.children.add(Expression.parse(tokenBuffer, driver));
+					orExpr.children.add(Expression.parse(tokenBuffer, parsingData));
 					tokenBuffer.clear();
 				}
 				else {
@@ -742,7 +785,7 @@ public class Finder {
 					throw new FinderParseException(
 							"Parsing error, nothing after last OR.");
 				}
-				orExpr.children.add(Expression.parse(tokenBuffer, driver));
+				orExpr.children.add(Expression.parse(tokenBuffer, parsingData));
 				return orExpr;
 			}
 			return null;
@@ -770,15 +813,15 @@ public class Finder {
 		private String value;
 
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 3 && tokens.get(0).type == TokenType.MODULE) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
@@ -788,7 +831,7 @@ public class Finder {
 				case STARTSWITH:
 				case ENDSWITH:
 					if (value.type == TokenType.QUOTE) {
-						ModuleExpression modExpr = new ModuleExpression(driver);
+						ModuleExpression modExpr = new ModuleExpression(parsingData.getDeviceDriver());
 						modExpr.sign = comparator.type;
 						modExpr.value = TokenType.unescape(value.text);
 						return modExpr;
@@ -873,15 +916,15 @@ public class Finder {
 		private String value;
 
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 3 && tokens.get(0).type == TokenType.INTERFACE) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
@@ -891,7 +934,7 @@ public class Finder {
 				case STARTSWITH:
 				case ENDSWITH:
 					if (value.type == TokenType.QUOTE) {
-						InterfaceExpression modExpr = new InterfaceExpression(driver);
+						InterfaceExpression modExpr = new InterfaceExpression(parsingData.getDeviceDriver());
 						modExpr.sign = comparator.type;
 						modExpr.value = TokenType.unescape(value.text);
 						return modExpr;
@@ -973,15 +1016,15 @@ public class Finder {
 		private Long value;
 
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 3 && tokens.get(0).type == TokenType.DEVICE) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
@@ -995,7 +1038,7 @@ public class Finder {
 							"Expecting a numeric value for DEVICE at character %d.",
 							value.position));
 				}
-				DeviceExpression devExpr = new DeviceExpression(driver);
+				DeviceExpression devExpr = new DeviceExpression(parsingData.getDeviceDriver());
 				devExpr.value = Long.parseLong(value.text);
 				return devExpr;
 			}
@@ -1030,7 +1073,7 @@ public class Finder {
 	}
 
 	/**
-	 * The Class DomainExpress. Matches a device domain.
+	 * The Class DomainExpression. Matches a device domain.
 	 */
 	public static class DomainExpression extends Expression {
 
@@ -1047,15 +1090,15 @@ public class Finder {
 		private Long value;
 
 		/**
-		 * Parses the expression.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 3 && tokens.get(0).type == TokenType.DOMAIN) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
@@ -1069,7 +1112,7 @@ public class Finder {
 							"Expecting a numeric value for DOMAIN at character %d.",
 							value.position));
 				}
-				DomainExpression domExpr = new DomainExpression(driver);
+				DomainExpression domExpr = new DomainExpression(parsingData.getDeviceDriver());
 				domExpr.value = Long.parseLong(value.text);
 				return domExpr;
 			}
@@ -1100,7 +1143,6 @@ public class Finder {
 		public String toString() {
 			return String.format("[%s] %s %d", TokenType.DOMAIN, TokenType.IS, this.value);
 		}
-
 	}
 
 	/**
@@ -1169,15 +1211,15 @@ public class Finder {
 		public int prefixLength;
 
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			if (tokens.get(0).type == TokenType.MAC) {
 				if (tokens.size() != 3) {
 					throw new FinderParseException(String.format(
@@ -1189,7 +1231,7 @@ public class Finder {
 
 				String mac = "";
 
-				MacExpression macExpr = new MacExpression(driver);
+				MacExpression macExpr = new MacExpression(parsingData.getDeviceDriver());
 				if (value.type == TokenType.MACADDRESS) {
 					if (comparator.type != TokenType.IS) {
 						throw new FinderParseException(String.format(
@@ -1301,15 +1343,15 @@ public class Finder {
 		public Network4Address target;
 
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			if (tokens.get(0).type == TokenType.IP) {
 				if (tokens.size() != 3) {
 					throw new FinderParseException(String.format(
@@ -1322,7 +1364,7 @@ public class Finder {
 				int prefixLength = 32;
 				String ip = "";
 
-				Ipv4Expression ipExpr = new Ipv4Expression(driver);
+				Ipv4Expression ipExpr = new Ipv4Expression(parsingData.getDeviceDriver());
 				if (value.type == TokenType.IPV4) {
 					if (comparator.type != TokenType.IS) {
 						throw new FinderParseException(String.format(
@@ -1463,15 +1505,15 @@ public class Finder {
 		public Network6Address target;
 
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			if (tokens.get(0).type == TokenType.IP) {
 				if (tokens.size() != 3) {
 					throw new FinderParseException(String.format(
@@ -1484,7 +1526,7 @@ public class Finder {
 				int prefixLength = 128;
 				String ip = "";
 
-				Ipv6Expression ipExpr = new Ipv6Expression(driver);
+				Ipv6Expression ipExpr = new Ipv6Expression(parsingData.getDeviceDriver());
 				if (value.type == TokenType.IPV6) {
 					if (comparator.type != TokenType.IS) {
 						throw new FinderParseException(String.format(
@@ -1608,6 +1650,9 @@ public class Finder {
 	 */
 	public abstract static class AttributeExpression extends Expression {
 
+		/** Pattern to find a diagnostic in a generic attribute */
+		static protected Pattern DIAGNOSTIC_PATTERN = Pattern.compile("(?i)^Diagnostic \"(.+)\"$");
+
 		/** The item. */
 		public String item;
 
@@ -1641,6 +1686,7 @@ public class Finder {
 		public static enum PropertyLevel {
 			DEVICE("d.", true),
 			CONFIG("c.", true),
+			DIAGNOSTICRESULT("dr.", false),
 			DEVICEATTRIBUTE("da.", false),
 			CONFIGATTRIBUTE("ca.", false);
 
@@ -1677,35 +1723,35 @@ public class Finder {
 		}
 
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 0 || tokens.get(0).type != TokenType.ITEM) {
 				return null;
 			}
-			Expression textExpression = TextAttributeExpression.parse(tokens, driver);
+			Expression textExpression = TextAttributeExpression.parse(tokens, parsingData);
 			if (textExpression != null) {
 				return textExpression;
 			}
-			Expression dateExpression = DateAttributeExpression.parse(tokens, driver);
+			Expression dateExpression = DateAttributeExpression.parse(tokens, parsingData);
 			if (dateExpression != null) {
 				return dateExpression;
 			}
-			Expression enumExpression = EnumAttributeExpression.parse(tokens, driver);
+			Expression enumExpression = EnumAttributeExpression.parse(tokens, parsingData);
 			if (enumExpression != null) {
 				return enumExpression;
 			}
-			Expression numExpression = NumericAttributeExpression.parse(tokens, driver);
+			Expression numExpression = NumericAttributeExpression.parse(tokens, parsingData);
 			if (numExpression != null) {
 				return numExpression;
 			}
-			Expression binaryExpression = BinaryAttributeExpression.parse(tokens, driver);
+			Expression binaryExpression = BinaryAttributeExpression.parse(tokens, parsingData);
 			if (binaryExpression != null) {
 				return binaryExpression;
 			}
@@ -1747,7 +1793,12 @@ public class Finder {
 			case DEVICEATTRIBUTE:
 				criteria.joins.add(String.format("d.attributes %s_da with %s_da.name = :%s_name",
 						itemPrefix, itemPrefix, itemPrefix));
-				
+				break;
+			case DIAGNOSTICRESULT:
+				criteria.joins.add(String.format("d.diagnosticResults %s_dr", itemPrefix));
+				criteria.joins.add(String.format("%s_dr.diagnostic %s_dg with %s_dg.name = :%s_name",
+						itemPrefix, itemPrefix, itemPrefix, itemPrefix));
+				break;
 			default:
 				break;
 			}
@@ -1787,7 +1838,9 @@ public class Finder {
 		 * @see onl.netfishers.netshot.device.Finder.AttributeExpression#getTextValue()
 		 */
 		protected String getTextValue() {
-			return value.toString();
+			NumberFormat format = NumberFormat.getInstance(Locale.ENGLISH);
+			format.setGroupingUsed(false);
+			return format.format(value);
 		}
 
 		/* (non-Javadoc)
@@ -1816,14 +1869,21 @@ public class Finder {
 			super.setVariables(query, itemPrefix);
 			query.setDouble(itemPrefix, value);
 		}
-
+		/**
+		 * Parses the tokens to create an expression.
+		 *
+		 * @param tokens the tokens
+		 * @param parsingData other contextual parsing data
+		 * @return the expression
+		 * @throws FinderParseException the finder parse exception
+		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			String property = null;
 			String item = null;
 			PropertyLevel level = PropertyLevel.DEVICE;
-			if (driver != null) {
-				for (AttributeDefinition attribute : driver.getAttributes()) {
+			if (parsingData.getDeviceDriver() != null) {
+				for (AttributeDefinition attribute : parsingData.getDeviceDriver().getAttributes()) {
 					if (attribute.isSearchable() && attribute.getType() == AttributeType.NUMERIC &&
 							attribute.getTitle().equalsIgnoreCase(tokens.get(0).text)) {
 						property = attribute.getName();
@@ -1835,6 +1895,20 @@ public class Finder {
 							level = PropertyLevel.DEVICEATTRIBUTE;
 						}
 						break;
+					}
+				}
+			}
+			if (item == null) {
+				Matcher diagMatcher = DIAGNOSTIC_PATTERN.matcher(tokens.get(0).text);
+				if (diagMatcher.find()) {
+					String diagnosticName = diagMatcher.group(1);
+					property = diagnosticName;
+					for (Diagnostic diagnostic : parsingData.getDiagnostics()) {
+						if (diagnostic.getResultType().equals(AttributeType.NUMERIC) && diagnostic.getName().equals(diagnosticName)) {
+							item = String.format("Diagnostic \"%s\"", diagnosticName);
+							level = PropertyLevel.DIAGNOSTICRESULT;
+							break;
+						}
 					}
 				}
 			}
@@ -1860,7 +1934,8 @@ public class Finder {
 						"Parsing error, should be a quoted date at character %d.",
 						value.position));
 			}
-			NumericAttributeExpression numExpr = new NumericAttributeExpression(driver, item, property, level);
+			NumericAttributeExpression numExpr =
+					new NumericAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
 			
 			try {
 				numExpr.value = Double.parseDouble(value.text);
@@ -1922,9 +1997,16 @@ public class Finder {
 			query.setParameter(itemPrefix, value);
 		}
 
-
+		/**
+		 * Parses the tokens to create an expression.
+		 *
+		 * @param tokens the tokens
+		 * @param parsingData other contextual parsing data
+		 * @return the expression
+		 * @throws FinderParseException the finder parse exception
+		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			String property = null;
 			String item = null;
 			@SuppressWarnings("rawtypes") Class theEnum = null;
@@ -1964,7 +2046,8 @@ public class Finder {
 						"Parsing error, should be a quoted string at character %d.",
 						value.position));
 			}
-			EnumAttributeExpression enumExpr = new EnumAttributeExpression(driver, item, property, level);
+			EnumAttributeExpression enumExpr =
+					new EnumAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
 			try {
 				@SuppressWarnings("unchecked")
 				Object choice = Enum.valueOf(theEnum, value.text);
@@ -2038,9 +2121,16 @@ public class Finder {
 			}
 			query.setString(itemPrefix, target);
 		}
-
+		/**
+		 * Parses the tokens to create an expression.
+		 *
+		 * @param tokens the tokens
+		 * @param parsingData other contextual parsing data
+		 * @return the expression
+		 * @throws FinderParseException the finder parse exception
+		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			String property = null;
 			String item = null;
 			PropertyLevel level = PropertyLevel.DEVICE;
@@ -2069,8 +2159,8 @@ public class Finder {
 				property = "softwareVersion";
 				item = "Software version";
 			}
-			else if (driver != null) {
-				for (AttributeDefinition attribute : driver.getAttributes()) {
+			else if (parsingData.getDeviceDriver() != null) {
+				for (AttributeDefinition attribute : parsingData.getDeviceDriver().getAttributes()) {
 					if (attribute.isSearchable() &&
 							(attribute.getType() == AttributeType.LONGTEXT || attribute.getType() == AttributeType.TEXT) &&
 							attribute.getTitle().equalsIgnoreCase(tokens.get(0).text)) {
@@ -2084,6 +2174,20 @@ public class Finder {
 						}
 						longText = attribute.getType() == AttributeType.LONGTEXT;
 						break;
+					}
+				}
+			}
+			if (item == null) {
+				Matcher diagMatcher = DIAGNOSTIC_PATTERN.matcher(tokens.get(0).text);
+				if (diagMatcher.find()) {
+					String diagnosticName = diagMatcher.group(1);
+					property = diagnosticName;
+					for (Diagnostic diagnostic : parsingData.getDiagnostics()) {
+						if (diagnostic.getResultType().equals(AttributeType.TEXT) && diagnostic.getName().equals(diagnosticName)) {
+							item = String.format("DIAGNOSTIC (%s)", diagnosticName);
+							level = PropertyLevel.DIAGNOSTICRESULT;
+							break;
+						}
 					}
 				}
 			}
@@ -2109,7 +2213,8 @@ public class Finder {
 						"Parsing error, should be a quoted text, at character %d.",
 						value.position));
 			}
-			TextAttributeExpression textExpr = new TextAttributeExpression(driver, item, property, level);
+			TextAttributeExpression textExpr =
+					new TextAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
 			textExpr.value = value.text;
 			textExpr.sign = sign.type;
 			textExpr.longText = longText;
@@ -2209,9 +2314,16 @@ public class Finder {
 				query.setDate(itemPrefix + "_2", endTime.getTime());
 			}
 		}
-
+		/**
+		 * Parses the tokens to create an expression.
+		 *
+		 * @param tokens the tokens
+		 * @param parsingData other contextual parsing data
+		 * @return the expression
+		 * @throws FinderParseException the finder parse exception
+		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			String property = null;
 			String item = null;
 			PropertyLevel level = PropertyLevel.DEVICE;
@@ -2223,8 +2335,8 @@ public class Finder {
 				property = "changeDate";
 				item = "Last change date";
 			}
-			else if (driver != null) {
-				for (AttributeDefinition attribute : driver.getAttributes()) {
+			else if (parsingData.getDeviceDriver() != null) {
+				for (AttributeDefinition attribute : parsingData.getDeviceDriver().getAttributes()) {
 					if (attribute.isSearchable() && attribute.getType() == AttributeType.DATE &&
 							attribute.getTitle().equalsIgnoreCase(tokens.get(0).text)) {
 						property = attribute.getName();
@@ -2264,7 +2376,7 @@ public class Finder {
 						value.position));
 			}
 			DateAttributeExpression dateExpr = new DateAttributeExpression(
-					driver, item, property, level);
+					parsingData.getDeviceDriver(), item, property, level);
 			dateExpr.sign = sign.type;
 			try {
 				dateExpr.value = dateExpr.format.parse(value.text);
@@ -2327,14 +2439,21 @@ public class Finder {
 			super.setVariables(query, itemPrefix);
 			query.setBoolean(itemPrefix, this.value);
 		}
-
+		/**
+		 * Parses the tokens to create an expression.
+		 *
+		 * @param tokens the tokens
+		 * @param parsingData other contextual parsing data
+		 * @return the expression
+		 * @throws FinderParseException the finder parse exception
+		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			String property = null;
 			String item = null;
 			PropertyLevel level = PropertyLevel.DEVICE;
-			if (driver != null) {
-				for (AttributeDefinition attribute : driver.getAttributes()) {
+			if (parsingData.getDeviceDriver() != null) {
+				for (AttributeDefinition attribute : parsingData.getDeviceDriver().getAttributes()) {
 					if (attribute.isSearchable() && attribute.getType() == AttributeType.BINARY &&
 							attribute.getTitle().equalsIgnoreCase(tokens.get(0).text)) {
 						property = attribute.getName();
@@ -2346,6 +2465,20 @@ public class Finder {
 							level = PropertyLevel.DEVICEATTRIBUTE;
 						}
 						break;
+					}
+				}
+			}
+			if (item == null) {
+				Matcher diagMatcher = DIAGNOSTIC_PATTERN.matcher(tokens.get(0).text);
+				if (diagMatcher.find()) {
+					String diagnosticName = diagMatcher.group(1);
+					property = diagnosticName;
+					for (Diagnostic diagnostic : parsingData.getDiagnostics()) {
+						if (diagnostic.getResultType().equals(AttributeType.BINARY) && diagnostic.getName().equals(diagnosticName)) {
+							item = String.format("DIAGNOSTIC (%s)", diagnosticName);
+							level = PropertyLevel.DIAGNOSTICRESULT;
+							break;
+						}
 					}
 				}
 			}
@@ -2365,7 +2498,7 @@ public class Finder {
 						sign.position));
 			}
 			BinaryAttributeExpression binExpr =
-					new BinaryAttributeExpression(driver, item, property, level);
+					new BinaryAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
 			if (value.type == TokenType.TRUE) {
 				binExpr.value = true;
 			}
@@ -2416,15 +2549,15 @@ public class Finder {
 		private String value;
 	
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 3 && tokens.get(0).type == TokenType.VRF) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
@@ -2434,7 +2567,7 @@ public class Finder {
 				case STARTSWITH:
 				case ENDSWITH:
 					if (value.type == TokenType.QUOTE) {
-						VrfExpression modExpr = new VrfExpression(driver);
+						VrfExpression modExpr = new VrfExpression(parsingData.getDeviceDriver());
 						modExpr.sign = comparator.type;
 						modExpr.value = TokenType.unescape(value.text);
 						return modExpr;
@@ -2512,15 +2645,15 @@ public class Finder {
 		private String value;
 	
 		/**
-		 * Parses the.
+		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param driver the device class
+		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				DeviceDriver driver) throws FinderParseException {
+				ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 3 && tokens.get(0).type == TokenType.VIRTUALNAME) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
@@ -2530,10 +2663,10 @@ public class Finder {
 				case STARTSWITH:
 				case ENDSWITH:
 					if (value.type == TokenType.QUOTE) {
-						VirtualNameExpression modExpr = new VirtualNameExpression(driver);
-						modExpr.sign = comparator.type;
-						modExpr.value = TokenType.unescape(value.text);
-						return modExpr;
+						VirtualNameExpression vnameExpr = new VirtualNameExpression(parsingData.getDeviceDriver());
+						vnameExpr.sign = comparator.type;
+						vnameExpr.value = TokenType.unescape(value.text);
+						return vnameExpr;
 					}
 					else {
 						throw new FinderParseException(String.format(
@@ -2633,7 +2766,7 @@ public class Finder {
 			this.expression = new NullExpression(driver);
 		}
 		else {
-			this.expression = Expression.parse(tokens, driver);
+			this.expression = Expression.parse(tokens, new ParsingData(driver));
 		}
 	}
 
@@ -2659,7 +2792,7 @@ public class Finder {
 			hql.append(", ").append(table);
 		}
 		for (String join : criteria.joins) {
-			hql.append(" left join ").append(join);
+			hql.append(" join ").append(join);
 		}
 		hql.append(" where ");
 		if (this.expression.driver != null) {

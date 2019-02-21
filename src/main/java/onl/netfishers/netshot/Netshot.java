@@ -51,7 +51,7 @@ import onl.netfishers.netshot.device.DeviceDriver;
 public class Netshot extends Thread {
 
 	/** Netshot version. */
-	public static final String VERSION = "0.11.0";
+	public static final String VERSION = "0.12.0";
 
 	/** The list of configuration files to look at, in sequence. */
 	private static final String[] CONFIG_FILENAMES = new String[] {

@@ -8,6 +8,12 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.12.0 - 2019-02-21
+
+* Add the diagnostics feature
+* Add the ability to search (and group) devices based on their family
+* A few driver fixes (IOS, IOS-XR, Nokia)
+
 0.11.O - 2019-01-27
 
 * Fix some bugs with PostgreSQL

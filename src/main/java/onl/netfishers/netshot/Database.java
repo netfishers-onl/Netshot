@@ -310,7 +310,7 @@ public class Database {
 			configuration
 				.setProperty("factory_class", "org.hibernate.transaction.JDBCTransactionFactory")
 				.setProperty("current_session_context_class", "thread")
-				.setProperty("hibernate.hbm2ddl.auto", "update") // "update" or ""
+				//.setProperty("hibernate.hbm2ddl.auto", "update") // "update" or ""
 				//.setProperty("hibernate.show_sql", "true")
 				.addAnnotatedClass(Device.class).addAnnotatedClass(DeviceGroup.class)
 				.addAnnotatedClass(Config.class)

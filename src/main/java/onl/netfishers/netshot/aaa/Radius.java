@@ -185,6 +185,9 @@ public class Radius {
 						if (Attr_ServiceType.AdministrativeUser.equals(serviceType)) {
 							level = User.LEVEL_ADMIN;
 						}
+						else if (Attr_ServiceType.OutboundUser.equals(serviceType)) {
+							level = User.LEVEL_EXECUTEREADWRITE;
+						}
 						else if (Attr_ServiceType.NASPromptUser.equals(serviceType)) {
 							level = User.LEVEL_READWRITE;
 						}

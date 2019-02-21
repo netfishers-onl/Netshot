@@ -245,7 +245,7 @@ task will be executed over a disabled device. Click again on the button to enabl
 
 <h3>Snapshots</h3>
 
-<p class="note">Scheduling snapshot tasks requires read-write permissions.</p>
+<p class="note">Scheduling snapshot tasks requires <em>read-write</em> permissions.</p>
 
 <p>During a snapshot task, Netshot connects to the device (either by SSH or Telnet, depending
 on the available credentials, and also on what the specific <a href="#devicedrivers">driver</a>
@@ -271,6 +271,28 @@ The requirements:
 	</ul>
 </li>
 </ul>
+
+<h2 id="devicediagnostics">Device diagnostics</h2>
+
+<p>The <em>Diagnostics</em> tab of the device view displays the current diagnostic results,
+as they were collected during the last <em>Run diagnostics</em> task on this equipment.</p>
+
+<p>The diagnostics themselves must be defined in the <a href="#diagnostics">Diagnostics</a> main page.</p>
+
+<img alt="Device diagnostic results" src="img/device_diagnostics.png" class="figure" />
+
+<ul>
+	<li>The <em>Name</em> column displays the name of the diagnostic.</li>
+	<li>The <em>Value</em> column displays the last collected value of the given diagnostic.</li>
+	<li>The <em>First seen</em> column gives the date when this value was got for the first time.</li>
+	<li>The <em>Last seen</em> column gives the date when the value was got for the last time (thus
+	the last time the diagnostics were run on the device).</li>
+</ul>
+
+<p class="note">A <em>Run diagnostics</em> task is by default automatically scheduled after snapshot
+tasks, which should collect the up-to-date diagnostic results. You can force a diagnostic task to run
+and refresh the diagnostic values on the given device by clicking the <em>Run diagnostics on this device</em>
+button.</p>
 
 <h3 id="devicecompliance">Device compliance</h3>
 
@@ -322,7 +344,7 @@ or thousands) can be quite slow.</p>
 your script refers to. Only devices of this selected type, among the ones you've selected, will
 actually be processed.</p>
 
-<p class="note">Starting actions on multiple devices requires read-write permission level.</p> 
+<p class="note">Starting actions on multiple devices requires <em>read-write &amp; device commands</em> permission level.</p> 
 
 <h3>Running a script</h3>
 
@@ -335,7 +357,7 @@ require real programming skills.</p>
 
 <img alt="Running a script" src="img/device_runscript.png" class="figure" />
 
-<p class="note">Running scripts requires read-write &amp; execute commands permissions. Obviously, you
+<p class="note">Running scripts requires <em>read-write &amp; device commands</em> permissions. Obviously, you
 have to be very cautious with the commands you run over your network devices. Netshot won't check anything,
 it will simply execute what you write, even if this breaks the target device.</p>
 
@@ -398,6 +420,104 @@ script:</p>
 	}
 }</p>
 
+<h2 id="diagnostics">Diagnostics</h2>
+
+<p>Thanks to the <em>Diagnostics</em> section, you can collect custom data from your equipments,
+by making Netshot run specific commands on the devices (and possibly process the result).</p>
+
+<p>Once the diagnostics are defined within Netshot, the commands are effectively executed, and
+the output is effectively collected by running a <em>Run diagnostics</em> task. This can be done
+manually by scheduling this type of task, and this is, by default, automatic after a snapshot task.</p>
+
+<p>After the data is saved in the database, it is possible to build <a href="#devicesearch">search</a> and
+<a href="#devicegroups">dynamic group</a> queries based on it. One may also create
+<a href="#compliance">compliance rules</a> to check the diagnostic result.</p>
+
+<p class="note">Creating, deleting or modifying diagnostics requires <em>read-write &amp; device commands</em> permissions.</p>
+
+<h3 id="simplediagnostics">Simple diagnostics</h3>
+
+<p><em>Simple diagnostics</em> consist of one command to execute in a specific mode of a certain type of device.
+The output of the command may be further processed by applying a search and replace regular expression.
+</p>
+
+<p>To create a <em>simple diagnostic</em>, click the <em>Create diagnostics...</em> button in the main toolbar,
+in the <em>Diagnostics</em> tab. Then select <em>Simple diagnostic</em> and fill in the required information.
+The <em>RegEx pattern</em> and <em>Replace with</em> fields are optional.</p>
+
+<p>For example, assume you want to collect the reload reason of Cisco IOS devices. A way to collect this information is
+	to look at the output of the <span class="code">show version</span> command:
+</p>
+
+<p class="code">router1#show version
+Cisco IOS XE Software(...)
+
+router1 uptime is 2 days, 23 hours, 21 minutes
+(...)
+Last reload reason: Reload Command
+(...)
+
+Configuration register is 0x2102		
+</p>
+
+<p>Thus the following diagnostic may be added to execute the command and exact the interesting part:</p>
+
+<img alt="A simple diagnostic example" src="img/diagnostics_simple_example.png" class="figure" />
+
+<p class="note">Note the <span class="code">(?s)</span> modifier in the regular expression: this will make <span class="code">.*</span>
+match all the lines before and after the interesting line, to remove them all.</p>
+
+<h3 id="javascriptdiagnostics">Javascript-based diagnostics</h3>
+
+<p>When simple diagnostics are not smart enough to properly collect some diagnostic information,
+<em>Javascript-based diagnostics</em>>should bring all the needed flexibility. </p>
+
+<p>A <em>Javascript-based diagnostic</em> is a piece of Javascript code which must define a
+	<span class="code">diagnose</span> function which will be called by Netshot to run the diagnostic.
+This entry point will be called with the following parameters:</p>
+
+<ul>
+	<li><span class="code">cli</span>: an object to interact with the device through CLI.
+		<ul>
+			<li><span class="code">cli.macro(<i>macro</i>)</span>: use a macro to change mode as defined in the device driver.</li>
+			<li><span class="code">cli.command(<i>command</i>)</span>: sends a command to the device and returns the result.</li>
+		</ul>
+	</li>
+	<li><span class="code">device</span>: an object to retrieve known information about the device.
+		<ul>
+			<li><span class="code">device.get(<i>attributeName</i>)</span>: get the current value of a known attribute.</li>
+		</ul>
+	</li>
+	<li><span class="code">diagnostic</span>: an object to set the diagnostic result value.
+		<ul>
+			<li><span class="code">diagnostic.set(<i>value</i>)</span>: set the diagnostic result for the current device.</li>
+			<li><span class="code">diagnostic.set(<i>diagnosticName</i>, </i><i>value</i>)</span>:
+				set the result of the diagnostic identified by its name.</li>
+		</ul>
+	</li>
+</ul>
+
+<p>For example, the following code retrieved the current OSPF routed-id from IOS-XR devices:</p>
+
+<p class="code">function diagnose(cli, device, diagnostic) {
+	if (device.get("type") !== "Cisco IOS-XR") {
+		return;
+	}
+	cli.macro("exec");
+	var showOspf = cli.command("show ospf");
+	debug("showOspf = " + showOspf);
+	var routerId = showOspf.match(/Routing Process .* with ID ([0-9\.]+)/m);
+	routerId = routerId ? routerId[1] : "Unknown";
+	diagnostic.set(routerId);
+}</p>
+
+
+<p>To create a <em>Javascript-based diagnostic</em>, click the <em>Create diagnostics...</em> button in the main toolbar,
+in the <em>Diagnostics</em> tab. Then select <em>Javascript-based diagnostic</em> and fill in the required information.
+The <em>Result type</em> must be consistent with the value the script will be setting.</p>
+	
+
+
 <h2 id="compliance">Policy, rule and compliance</h2>
 
 <p>The purpose of the <em>Compliance</em> section is to keep your devices in
@@ -412,14 +532,14 @@ be flagged so you can act and fix it.</p>
 
 <p>Once the rules are defined within Netshot, the status of a device is refreshed
 by running a <em>Check compliance</em> task. This can be done manually by scheduling
-such a task, and anyway this is automatic after each snapshot task, to ensure
+such a task, and anyway this is automatic after snapshot and diagnostic tasks, to ensure
 that a device becoming not compliant after a configuration change is immediately
 flagged.</p>
 <p>The software compliance status can be seen in the <a href="#devicecompliance">Compliance</a>
 tab of the device view, or at the global level in the <a href="#reports">Software compliance report</a>.</p>
 
 
-<p class="note">Creating, deleting or modifying policies or rules requires read-write permissions.</p>
+<p class="note">Creating, deleting or modifying policies or rules requires <em>read-write</em> permissions.</p>
 
 <h3>Software rules</h3>
 
@@ -569,7 +689,7 @@ to be configured as point-to-point:</p>
 
 <p>The script-based rules are Javascript code.</p>
 
-<p>Click on <em>Edit the script...</em> to open up the JavaScript editor. While
+<p>Click on <em>Edit the script...</em> to open up the Javascript editor. While
 you are writing your script, you can test it on a specific device by selecting
 a device at the bottom of the editor and clicking on <em>Test...</em>.
 Click on the underlined result to see the logs.</p>
@@ -616,7 +736,7 @@ must be validated by the rule.</p>
 		DNS resolution (either direct or reverse) of the passed name.</li>
 		<li><span class="code">device.findSections(<i>configuration</i>, <i>section</i>)</span>,
 		where <span class="code"><i>text</i></span> is a String and
-		<span class="code"><i>section</i></span> is a JavaScript RegExp object, will find
+		<span class="code"><i>section</i></span> is a Javascript RegExp object, will find
 		in <span class="code"><i>configuration</i></span> all
 		lines matching <span class="code"><i>section</i></span>, and will return them
 		along with their content, i.e. following lines which are more indented.</li> 
@@ -910,12 +1030,21 @@ If the local account exists, it checks the password and accepts or denies the us
 If the local account doesn't exist, and at least one RADIUS server is configured, Netshot will try a RADIUS challenge.
 If RADIUS fails, then the user is rejected. If it succeeds, the user is allowed as visitor by default.
 If the RADIUS response contains a Service-Type attribute equals to <em>AdministrativeUser</em> (well known value),
-then the user is allowed as admin. If the Service-Type attribute equals to <em>NASPromptUser</em> then the user gets
+then the user is allowed as admin. If the Service-Type attributes equals to <em>OutboundUser</em> then the user gets
+read-write and device command permissions. If the Service-Type attribute equals to <em>NASPromptUser</em> then the user gets
 read-write permissions.
 However if the user exists in the database as <em>remote</em> user, and has been successfully authenticated by RADIUS, then the permission level
 locally assigned to the account will override the RADIUS-provided level.</p>
 
 <p>To enable local authentication, simply create <em>local</em> accounts in the Admin page.</p>
+<ul>
+	<li>Users with <em>visitor</em> permissions may only see the content of Netshot, then cannot change anything.</li>
+	<li>Users with <em>read-write</em> permissions may see, create, edit, delete everything, schedule tasks, but they cannot
+		create, edit or create device scripts and diagnostics, nor touch to the items from the Admin tab.</li>
+	<li>Users with <em>read-write &amp; device commands</em> permissions may also alter scripts and diagnostics.</li>
+	<li>Users with <em>admin</em> permissions may do everything.</li>
+</ul>
+
 <p>To enable RADIUS authentication, you have to declare the server(s) in the Netshot configuration file.
 You can have up to 3 servers. They will be tried one by one until one responds. For instance:</p>
 
@@ -952,15 +1081,14 @@ or is associated to a specific credential set.</p>
 
 <p>The credentials used to access devices are globally managed from the Admin page.</p>
 
-<p>You can create SNMP v1, SNMP v2c, Telnet and SSH (versions 1.5, 1.99 or 2.0) credential sets. SNMP v3 is not
-supported at the moment.</p>
+<p>You can create SNMP v1, SNMP v2c, SNMP v3, Telnet and SSH (versions 1.5, 1.99 or 2.0) credential sets.</p>
 
 <p>The SSH authentication can either use a simple password, or can be key-based. To add an SSH key credential set,
 you need the public and the private RSA key couple. Assuming you've generated the keys using <code>ssh-keygen</code>,
 just copy and paste the content of the files, <span class="code">~/.ssh/id_rsa</span> (private key) and
 <span class="code">~/.ssh/id_rsa.pub</span> (public key).</p>
 
-<p class="note">The credentials as stored in clear text in the Netshot database, so it's important to ensure
+<p class="note">Although the credentials are offuscated in the Netshot database, it remains critical to ensure that
 the access to the Netshot database and to its hosting server is properly secured.</p>
 
 <p>If you associate the
@@ -980,7 +1108,7 @@ and reloaded, so any change made to them will be taken into account by Netshot.<
 
 <h2 id="devicedrivers">Device drivers</h2>
 
-<p>Each supported type of device in Netshot rely on a single JavaScript file, which
+<p>Each supported type of device in Netshot rely on a single Javascript file, which
 is often called <em>driver</em>. This file describes the special attributes of
 the device type (e.g. running config and configuration register for a Cisco IOS
 device), and contains runnable code that will be executed when interacting with the
@@ -1006,7 +1134,7 @@ the file system has priority over the built-in driver.</p>
 
 <h3>Driver structure</h3>
 
-<p>A driver is a JavaScript file.</p>
+<p>A driver is a Javascript file.</p>
 
 <p>A driver must contain the following global objects:</p>
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2016 Sylvain Cadilhac (NetFishers)
+ * Copyright 2013-2019 Sylvain Cadilhac (NetFishers)
  * 
  * This file is part of Netshot.
  * 
@@ -21,7 +21,7 @@ var Info = {
 	name: "AlcatelLucentTiMOS",
 	description: "Alcatel-Lucent TiMOS",
 	author: "NetFishers",
-	version: "1.2"
+	version: "1.3"
 };
 
 var Config = {
@@ -243,7 +243,24 @@ function snapshot(cli, device, config) {
 		};
 		device.add("module", module);
 	}
-	
+
+	var showPorts = cli.command("show port");
+	var portListPattern = /(\d+\/\d\/\d+)\s+\S+\s+\S+\s+\S+\s+\d+\s+\d+\s+\S+\s+\S+\s+\S+\s+\S+.+?([0-9A-Z\-]+)/g;
+	var match1;
+	while (match1 = portListPattern.exec(showPorts)) {
+		var showPort = cli.command("show port " + match1[1]);
+		var portPattern = /\nInterface\s+:\s+(\S+)(.|\r|\n)+?Transceiver Type\s+:\s+(\S+)(.|\r|\n)+?Model Number\s+:\s+(\S+)(.|\r|\n)+?Serial Number\s+:\s+(\S+)/g;
+		var match;
+		while (match = portPattern.exec(showPort)) {
+			var module = {
+				slot: match[1],
+				name: match[3],
+				partNumber: match[5],
+				serialNumber: match[7]
+			};
+			device.add("module", module);
+		}
+	}
 	
 	var parseInterfaces = function(service, showInterface, showVrrp, down) {
 		var vrrpInterfaces = [];

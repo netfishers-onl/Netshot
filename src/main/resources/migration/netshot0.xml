@@ -778,116 +778,114 @@
 		</preConditions>
 		<createTable tableName="diagnostic">
 			<column autoIncrement="true" name="id" type="BIGINT">
-				<constraints primaryKey="true" />
+				<constraints primaryKey="true"/>
 			</column>
 			<column name="enabled" type="BIT(1)">
-				<constraints nullable="false" />
+				<constraints nullable="false"/>
 			</column>
 			<column name="name" type="VARCHAR(255)">
-				<constraints unique="true" />
+				<constraints unique="true"/>
 			</column>
-			<column name="result_type" type="INT" />
-			<column name="target_group" type="BIGINT" />
+			<column name="result_type" type="INT"/>
+			<column name="target_group" type="BIGINT"/>
 		</createTable>
 		<createTable tableName="diagnostic_result">
 			<column name="type" type="CHAR(1)">
-				<constraints nullable="false" />
+				<constraints nullable="false"/>
 			</column>
 			<column autoIncrement="true" name="id" type="BIGINT">
-				<constraints primaryKey="true" />
+				<constraints primaryKey="true"/>
 			</column>
-			<column name="creation_date" type="datetime" />
-			<column name="last_check_date" type="datetime" />
-			<column name="assumption" type="BIT(1)" />
-			<column name="number" type="DOUBLE" />
-			<column name="text" type="VARCHAR(255)" />
-			<column name="device" type="BIGINT" />
-			<column name="diagnostic" type="BIGINT" />
-			<column name="long_text" type="BIGINT" />
+			<column name="creation_date" type="datetime"/>
+			<column name="last_check_date" type="datetime"/>
+			<column name="assumption" type="BIT(1)"/>
+			<column name="number" type="DOUBLE"/>
+			<column name="text" type="VARCHAR(255)"/>
+			<column name="device" type="BIGINT"/>
+			<column name="diagnostic" type="BIGINT"/>
+			<column name="long_text" type="BIGINT"/>
 		</createTable>
 		<createTable tableName="java_script_diagnostic">
-			<column name="script" type="LONGTEXT" />
+			<column name="script" type="LONGTEXT"/>
 			<column name="id" type="BIGINT">
-				<constraints primaryKey="true" />
+				<constraints primaryKey="true"/>
 			</column>
 		</createTable>
 		<createTable tableName="run_diagnostics_task">
-			<column name="id" type="BIGINT">
-				<constraints primaryKey="true" />
-			</column>
-			<column name="device" type="BIGINT" />
 			<column name="dont_check_compliance" type="BIT(1)">
-				<constraints nullable="false" />
+				<constraints nullable="false"/>
 			</column>
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="device" type="BIGINT"/>
 		</createTable>
 		<createTable tableName="run_group_diagnostics_task">
 			<column name="dont_check_compliance" type="BIT(1)">
-				<constraints nullable="false" />
+				<constraints nullable="false"/>
 			</column>
 			<column name="id" type="BIGINT">
-				<constraints primaryKey="true" />
+				<constraints primaryKey="true"/>
 			</column>
-			<column name="device_group" type="BIGINT" />
+			<column name="device_group" type="BIGINT"/>
 		</createTable>
 		<createTable tableName="simple_diagnostic">
-			<column name="cli_mode" type="VARCHAR(255)" />
-			<column name="command" type="VARCHAR(255)" />
-			<column name="modifier_pattern" type="VARCHAR(255)" />
-			<column name="modifier_replacement" type="VARCHAR(255)" />
+			<column name="cli_mode" type="VARCHAR(255)"/>
+			<column name="command" type="VARCHAR(255)"/>
+			<column name="device_driver" type="VARCHAR(255)"/>
+			<column name="modifier_pattern" type="VARCHAR(255)"/>
+			<column name="modifier_replacement" type="VARCHAR(255)"/>
 			<column name="id" type="BIGINT">
-				<constraints primaryKey="true" />
+				<constraints primaryKey="true"/>
 			</column>
-			<column name="device_driver" type="VARCHAR(255)" />
 		</createTable>
 		<addColumn tableName="take_group_snapshot_task">
 			<column name="dont_check_compliance" type="BIT(1)">
-				<constraints nullable="false" />
+				<constraints nullable="false"/>
 			</column>
 		</addColumn>
 		<addColumn tableName="take_snapshot_task">
 			<column name="dont_check_compliance" type="BIT(1)">
-				<constraints nullable="false" />
+				<constraints nullable="false"/>
 			</column>
 		</addColumn>
 		<addColumn tableName="take_group_snapshot_task">
 			<column name="dont_run_diagnostics" type="BIT(1)">
-				<constraints nullable="false" />
+				<constraints nullable="false"/>
 			</column>
 		</addColumn>
 		<addColumn tableName="take_snapshot_task">
 			<column name="dont_run_diagnostics" type="BIT(1)">
-				<constraints nullable="false" />
+				<constraints nullable="false"/>
 			</column>
 		</addColumn>
 		<createIndex indexName="FK_1fa1ox5d3abi5ridwnhovpmou" tableName="diagnostic_result">
-			<column name="device" />
+			<column name="device"/>
 		</createIndex>
 		<createIndex indexName="FK_5cyfno9wgsuwo6b8fukyicduq" tableName="run_group_diagnostics_task">
-			<column name="device_group" />
+			<column name="device_group"/>
 		</createIndex>
 		<createIndex indexName="FK_7uk0qd9jqlsfb5a2tvxwwhmul" tableName="diagnostic_result">
-			<column name="diagnostic" />
+			<column name="diagnostic"/>
 		</createIndex>
 		<createIndex indexName="FK_f6kdm9k6olgu4n1ggokqylisw" tableName="diagnostic_result">
-			<column name="long_text" />
+			<column name="long_text"/>
 		</createIndex>
 		<createIndex indexName="FK_i0mefqbc97a2gv82qs0qsppgf" tableName="diagnostic">
-			<column name="target_group" />
+			<column name="target_group"/>
 		</createIndex>
 		<createIndex indexName="FK_ok7b5sevyhg72d7gtlaey7gy" tableName="run_diagnostics_task">
-			<column name="device" />
+			<column name="device"/>
 		</createIndex>
-		<addForeignKeyConstraint baseColumnNames="device" baseTableName="diagnostic_result" constraintName="FK_1fa1ox5d3abi5ridwnhovpmou" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true" />
-		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="run_group_diagnostics_task" constraintName="FK_5cyfno9wgsuwo6b8fukyicduq" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true" />
-		<addForeignKeyConstraint baseColumnNames="id" baseTableName="run_diagnostics_task" constraintName="FK_6ory0yhqt2axjq20cl2k2ekk3" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true" />
-		<addForeignKeyConstraint baseColumnNames="diagnostic" baseTableName="diagnostic_result" constraintName="FK_7uk0qd9jqlsfb5a2tvxwwhmul" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true" />
-		<addForeignKeyConstraint baseColumnNames="id" baseTableName="simple_diagnostic" constraintName="FK_em9dymou96xtfq7u16k2ac1io" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true" />
-		<addForeignKeyConstraint baseColumnNames="long_text" baseTableName="diagnostic_result" constraintName="FK_f6kdm9k6olgu4n1ggokqylisw" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="long_text_configuration" validate="true" />
-		<addForeignKeyConstraint baseColumnNames="id" baseTableName="java_script_diagnostic" constraintName="FK_fo2to76xu9vb547ivf01h6kqv" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true" />
-		<addForeignKeyConstraint baseColumnNames="id" baseTableName="js_diagnostic" constraintName="FK_h2v0hdjnrxm3fpp52yf4vnfxf" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true" />
-		<addForeignKeyConstraint baseColumnNames="target_group" baseTableName="diagnostic" constraintName="FK_i0mefqbc97a2gv82qs0qsppgf" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true" />
-		<addForeignKeyConstraint baseColumnNames="id" baseTableName="run_group_diagnostics_task" constraintName="FK_kosxbt62oj8c1jdvatqjpycdg" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true" />
-		<addForeignKeyConstraint baseColumnNames="device" baseTableName="run_diagnostics_task" constraintName="FK_ok7b5sevyhg72d7gtlaey7gy" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true" />
-		<dropUniqueConstraint constraintName="UK_49k44bri62v926c9f4uw4t68q" tableName="device" />
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="diagnostic_result" constraintName="FK_1fa1ox5d3abi5ridwnhovpmou" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="run_group_diagnostics_task" constraintName="FK_5cyfno9wgsuwo6b8fukyicduq" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="run_diagnostics_task" constraintName="FK_6ory0yhqt2axjq20cl2k2ekk3" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="diagnostic" baseTableName="diagnostic_result" constraintName="FK_7uk0qd9jqlsfb5a2tvxwwhmul" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="simple_diagnostic" constraintName="FK_em9dymou96xtfq7u16k2ac1io" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="long_text" baseTableName="diagnostic_result" constraintName="FK_f6kdm9k6olgu4n1ggokqylisw" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="long_text_configuration" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="java_script_diagnostic" constraintName="FK_fo2to76xu9vb547ivf01h6kqv" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="target_group" baseTableName="diagnostic" constraintName="FK_i0mefqbc97a2gv82qs0qsppgf" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="run_group_diagnostics_task" constraintName="FK_kosxbt62oj8c1jdvatqjpycdg" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="run_diagnostics_task" constraintName="FK_ok7b5sevyhg72d7gtlaey7gy" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
 	</changeSet>
 </databaseChangeLog>

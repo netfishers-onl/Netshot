@@ -8,6 +8,10 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.12.1 - 2019-02-23
+
+* Fixes (PostgreSQL support, RADIUS authentication, diagnostic edition)
+
 0.12.0 - 2019-02-21
 
 * Add the diagnostics feature

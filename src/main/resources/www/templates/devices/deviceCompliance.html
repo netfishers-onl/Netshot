@@ -58,14 +58,14 @@
 <div id="hardwarecompliancestatus" class="compliancestatus hardware noncompliant">
 	<span class="ui-icon ui-icon-alert icon"></span>
 	<span class="message"><b>Hardware:</b>
-	End of sale since <%- $.formatDateTime('dd/mm/y', new Date(eosDate)) %> (module <%- eosModule.partNumber %>)
+	End of sale since <%- formatDateTime(eosDate, "day") %> (module <%- eosModule.partNumber %>)
 	</span>
 </div>
 <% } else { %>
 <div id="hardwarecompliancestatus" class="compliancestatus hardware compliant">
 	<span class="ui-icon ui-icon-check icon"></span>
 	<span class="message"><b>Hardware:</b>
-	Not end of sale yet<% if (typeof eosDate === "number") { %>, planned on <%- $.formatDateTime('dd/mm/y', new Date(eosDate)) %>
+	Not end of sale yet<% if (typeof eosDate === "number") { %>, planned on <%- formatDateTime(eosDate, "day") %>
 	(module <%- eosModule.partNumber %>)<% } %>
 	</span>
 </div>
@@ -75,14 +75,14 @@
 <div id="hardwarecompliancestatus" class="compliancestatus hardware noncompliant">
 	<span class="ui-icon ui-icon-alert icon"></span>
 	<span class="message"><b>Hardware:</b>
-	End of life since <%- $.formatDateTime('dd/mm/y', new Date(eolDate)) %> (module <%- eolModule.partNumber %>)
+	End of life since <%- formatDateTime(eolDate, "day") %> (module <%- eolModule.partNumber %>)
 	</span>
 </div>
 <% } else { %>
 <div id="hardwarecompliancestatus" class="compliancestatus hardware compliant">
 	<span class="ui-icon ui-icon-check icon"></span>
 	<span class="message"><b>Hardware:</b>
-	Not end of life yet<% if (typeof eolDate === "number") { %>, planned on <%- $.formatDateTime('dd/mm/y', new Date(eolDate)) %>
+	Not end of life yet<% if (typeof eolDate === "number") { %>, planned on <%- formatDateTime(eolDate, "day") %>
 	(module <%- eolModule.partNumber %>)<% } %>
 	</span>
 </div>

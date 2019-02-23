@@ -114,6 +114,26 @@ define([
 
 	var initialize = function() {
 
+		window.formatDateTime = function(date, format) {
+			var d = new Date(date);
+			var f = format;
+			if (f === "day") {
+				f = { year: "2-digit", month: "2-digit", day: "2-digit" };
+			}
+			else if (f === "second") {
+				f = { hour: "2-digit", minute: "2-digit", second: "2-digit" };
+			}
+			else if (f === "full") {
+				return d.toLocaleString(undefined, { year: "2-digit", month: "2-digit", day: "2-digit" }) + " "
+						+ d.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+			}
+			if (!f) {
+				return d.toLocaleString(undefined, { year: "2-digit", month: "2-digit", day: "2-digit" }) + " "
+						+ d.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit" });
+			}
+			return d.toLocaleString(undefined, f);
+		}
+
 		window.user = new CurrentUserModel();
 		window.user.fetch().done(function() {
 			start();

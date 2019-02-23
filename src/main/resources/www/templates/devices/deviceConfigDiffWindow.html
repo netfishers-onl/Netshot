@@ -22,11 +22,11 @@
 		<% if (typeof originalDate === "undefined") { %>
 		No capture
 		<% } else { %>
-		Captured <%- $.formatDateTime('dd/mm/y hh:ii', new Date(originalDate)) %>
+		Captured <%- formatDateTime(originalDate) %>
 		<% } %>
 	</th>
 	<th colspan="2">
-		Captured <%- $.formatDateTime('dd/mm/y hh:ii', new Date(revisedDate)) %>
+		Captured <%- formatDateTime(revisedDate) %>
 		<button id="next">Next</button>
 	</th>
 </tr>

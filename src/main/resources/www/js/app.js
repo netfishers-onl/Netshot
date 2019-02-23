@@ -4,8 +4,7 @@ define([
 	'underscore',
 	'backbone',
 	'router',
-	'jquery-ui',
-	'formatDateTime'
+	'jquery-ui'
 ], function($, _, Backbone, Router) {
 
 	$(document).ajaxStart(function() {

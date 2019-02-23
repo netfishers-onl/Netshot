@@ -4,10 +4,10 @@
 	<td><%- family %></td>
 	<td><%- partNumber %></td>
 	<td><% if (typeof endOfSale === "number") { %>
-		<%- $.formatDateTime('dd/mm/y', new Date(endOfSale)) %>
+		<%- formatDateTime(endOfSale, "day") %>
 	<% } else { %>None<% } %></td>
 	<td><% if (typeof endOfLife === "number") { %>
-		<%- $.formatDateTime('dd/mm/y', new Date(endOfLife)) %>
+		<%- formatDateTime(endOfLife, "day") %>
 	<% } else { %>None<% } %></td>
 	<td>
 		<button class="edit">Edit</button>

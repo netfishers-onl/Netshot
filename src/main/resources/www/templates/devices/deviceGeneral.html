@@ -26,10 +26,10 @@
 <tr><th>Serial Number</th><td><%- serialNumber %></td></tr>
 
 <tr><th>Creation Date</th><td>
-	<%- $.formatDateTime('dd/mm/y hh:ii', new Date(createdDate)) %>
+	<%- formatDateTime(createdDate) %>
 	<% if (typeof creator === "string" && creator.length > 0) { %> (added by <%- creator %>)<% } %>
 </td></tr>
-<tr><th>Last Change</th><td><%- $.formatDateTime('dd/mm/y hh:ii', new Date(changeDate)) %></td></tr>
+<tr><th>Last Change</th><td><%- formatDateTime(changeDate) %></td></tr>
 
 <tr><th>Comments</th><td><div><%= $('<div></div>').text(comments).html().replace(/\r?\n/g,"<br />") %></div></td></tr>
 

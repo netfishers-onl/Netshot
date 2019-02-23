@@ -34,7 +34,7 @@
 	</td>
 	<td>
 	<% if (significantDate != 0) { %>
-	<% if (significantDate !== 0) { %><%- (isNaN((new Date(significantDate)).getDate()) ? significantDate : $.formatDateTime('dd/mm/y hh:ii:ss', new Date(significantDate))) %><% } %>
+	<% if (significantDate !== 0) { %><%- (isNaN((new Date(significantDate)).getDate()) ? significantDate : formatDateTime(significantDate, "full")) %><% } %>
 	<% if (repeating) { %>
 	<span class="ui-corner-all nsicon" title="Repeating">
 		<span class="ui-icon ui-icon-arrowrefresh-1-e"></span>

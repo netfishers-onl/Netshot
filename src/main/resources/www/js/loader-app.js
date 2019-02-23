@@ -3,7 +3,6 @@ require.config({
 	paths: {
 		jquery: 'libs/jquery/jquery-min',
 		'jquery-ui': 'libs/jquery-ui/jquery-ui',
-		formatDateTime: 'libs/jquery/jquery.formatDateTime.min',
 		rangyinput: 'libs/jquery/rangyinputs-jquery',
 		underscore: 'libs/underscore/underscore-min',
 		backbone: 'libs/backbone/backbone-min',

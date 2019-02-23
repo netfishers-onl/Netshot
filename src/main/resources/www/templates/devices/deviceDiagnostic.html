@@ -9,6 +9,6 @@
 				<%- text %>
 			<% } %>
 		</td>
-		<td><%- $.formatDateTime('dd/mm/y hh:ii:ss', new Date(creationDate)) %></td>
-		<td><%- $.formatDateTime('dd/mm/y hh:ii:ss', new Date(lastCheckDate)) %></td>
+		<td><%- formatDateTime(creationDate) %></td>
+		<td><%- formatDateTime(lastCheckDate) %></td>
 	</tr>

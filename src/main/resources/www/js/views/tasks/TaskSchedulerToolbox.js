@@ -48,7 +48,7 @@ define([
 				else {
 					$(this).val("00");
 				}
-			}).val($.formatDateTime('hh', in10min));
+			}).val(("0" + in10min.getHours()).slice(-2));
 			this.$('.nstimepicker.min').change(function() {
 				var value = $(this).val();
 				value = value.replace(/^ */, "");
@@ -62,7 +62,7 @@ define([
 				else {
 					$(this).val("00");
 				}
-			}).val($.formatDateTime('ii', in10min));
+			}).val(("0" + in10min.getMinutes()).slice(-2));
 			this.$('.nstimepicker.inmin').change(function() {
 				var value = $(this).val();
 				value = value.replace(/^ */, "");

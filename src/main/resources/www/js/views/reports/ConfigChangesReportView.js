@@ -167,7 +167,7 @@ define([
 				if (changeCount > changeMax) {
 					changeMax = changeCount;
 				}
-				days.push($.formatDateTime('dd/mm', day));
+				days.push(window.formatDateTime(day, { day: "2-digit", month: "2-digit" }));
 				changeCounts.push(changeCount);
 			}
 			var data = {

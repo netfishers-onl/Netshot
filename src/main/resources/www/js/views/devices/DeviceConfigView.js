@@ -25,7 +25,7 @@ define([
 			var d = this.myWindow.document.open("text/html", "replace");
 			d.writeln(deviceConfigWindowTemplate);
 			d.title = this.device.get('name') + ' [' + this.configTitle + ', ' +
-			$.formatDateTime('dd/mm/y hh:ii', new Date(this.deviceConfig.get('changeDate'))) + ']';
+				window.formatDateTime(this.deviceConfig.get('changeDate')) + ']';
 			$.get(this.deviceConfig.getItemUrl(this.configItem)).done(function(data) {
 				var $table = $(d).find('table');
 				var lines = data.replace('\r', '').split('\n');

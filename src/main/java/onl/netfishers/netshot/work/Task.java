@@ -504,31 +504,32 @@ public abstract class Task implements Cloneable {
 	 */
 	@Transient
 	protected TaskLogger getJsLogger() {
+		Task task = this;
 		return new TaskLogger() {
 			
 			@Override
 			public void warn(String message) {
-				warn(message);
+				task.warn(message);
 			}
 			
 			@Override
 			public void trace(String message) {
-				trace(message);
+				task.trace(message);
 			}
 			
 			@Override
 			public void info(String message) {
-				info(message);
+				task.info(message);
 			}
 			
 			@Override
 			public void error(String message) {
-				error(message);
+				task.error(message);
 			}
 			
 			@Override
 			public void debug(String message) {
-				debug(message);
+				task.debug(message);
 			}
 		};
 	}

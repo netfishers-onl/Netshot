@@ -266,12 +266,14 @@ public class Database {
 	 */
 	public static void update() {
 		try {
+			Class.forName("org.postgresql.Driver");
 			Connection connection = DriverManager.getConnection(getUrl(), getUsername(), getPassword());
 			liquibase.database.Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
 			Liquibase liquibase = new Liquibase("migration/netshot0.xml", new ClassLoaderResourceAccessor(), database);
 			liquibase.update(new Contexts(), new LabelExpression());
+			connection.close();
 		}
-		catch (SQLException | LiquibaseException e) {
+		catch (ClassNotFoundException | SQLException | LiquibaseException e) {
 			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to connect to the database (for the initial schema update)", e);
 			throw new RuntimeException("Unable to connect to the database, see logs for more details");
 		}

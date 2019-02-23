@@ -12,6 +12,7 @@ target/*
 *.jks
 src/main/resources/configs/
 netshot.conf
+.vscode
 
 # CMake
 cmake-build-debug/

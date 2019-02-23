@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>onl.netfishers.netshot</groupId>
 	<artifactId>netshot</artifactId>
-	<version>0.12.0a</version>
+	<version>0.12.0b</version>
 	<name>Netshot</name>
 	<build>
 		<finalName>netshot</finalName>
@@ -118,6 +118,11 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>log4j-over-slf4j</artifactId>
 			<version>1.7.25</version>
+		</dependency>
+		<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>jcl-over-slf4j</artifactId>
+				<version>1.7.25</version>
 		</dependency>
 		<dependency>
 			<groupId>net.jradius</groupId>

@@ -1,5 +1,7 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+	<property name="BOOLEAN" value="${BOOLEAN}" dbms="mysql"/>
+	<property name="BOOLEAN" value="BOOLEAN" dbms="postgresql"/>
 <!-- netshot_0_5_2.xml -->
 	<changeSet author="netshot (generated)" id="0.5.2_1">
 		<preConditions onFail="MARK_RAN">
@@ -55,7 +57,7 @@
 			<column name="name" type="VARCHAR(255)"/>
 			<column name="number" type="DOUBLE"/>
 			<column name="text" type="VARCHAR(255)"/>
-			<column name="assumption" type="BIT(1)"/>
+			<column name="assumption" type="${BOOLEAN}"/>
 			<column name="config" type="BIGINT"/>
 			<column name="long_text" type="BIGINT"/>
 		</createTable>
@@ -63,7 +65,7 @@
 			<column autoIncrement="true" name="id" type="BIGINT">
 				<constraints primaryKey="true"/>
 			</column>
-			<column name="auto_try_credentials" type="BIT(1)">
+			<column name="auto_try_credentials" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="change_date" type="datetime"/>
@@ -105,7 +107,7 @@
 			<column name="name" type="VARCHAR(255)"/>
 			<column name="number" type="DOUBLE"/>
 			<column name="text" type="VARCHAR(255)"/>
-			<column name="assumption" type="BIT(1)"/>
+			<column name="assumption" type="${BOOLEAN}"/>
 			<column name="device" type="BIGINT"/>
 			<column name="long_text" type="BIGINT"/>
 		</createTable>
@@ -145,7 +147,7 @@
 			</column>
 			<column name="change_date" type="datetime"/>
 			<column name="folder" type="VARCHAR(1000)"/>
-			<column name="hidden_from_reports" type="BIT(1)">
+			<column name="hidden_from_reports" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="name" type="VARCHAR(255)">
@@ -254,11 +256,11 @@
 			<column name="end_of_life" type="datetime"/>
 			<column name="end_of_sale" type="datetime"/>
 			<column name="family" type="VARCHAR(255)"/>
-			<column name="family_reg_exp" type="BIT(1)">
+			<column name="family_reg_exp" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="part_number" type="VARCHAR(255)"/>
-			<column name="part_number_reg_exp" type="BIT(1)">
+			<column name="part_number_reg_exp" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="target_group" type="BIGINT"/>
@@ -289,11 +291,11 @@
 				<constraints primaryKey="true"/>
 			</column>
 			<column name="description" type="VARCHAR(255)"/>
-			<column name="enabled" type="BIT(1)">
+			<column name="enabled" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="interface_name" type="VARCHAR(255)"/>
-			<column name="level3" type="BIT(1)">
+			<column name="level3" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="physical_address" type="BIGINT"/>
@@ -358,7 +360,7 @@
 			<column autoIncrement="true" name="id" type="BIGINT">
 				<constraints primaryKey="true"/>
 			</column>
-			<column name="enabled" type="BIT(1)">
+			<column name="enabled" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="name" type="VARCHAR(255)"/>
@@ -400,7 +402,7 @@
 			</column>
 			<column name="driver" type="VARCHAR(255)"/>
 			<column name="family" type="VARCHAR(255)"/>
-			<column name="family_reg_exp" type="BIT(1)">
+			<column name="family_reg_exp" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="level" type="INT"/>
@@ -408,7 +410,7 @@
 				<constraints nullable="false"/>
 			</column>
 			<column name="version" type="VARCHAR(255)"/>
-			<column name="version_reg_exp" type="BIT(1)">
+			<column name="version_reg_exp" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="target_group" type="BIGINT"/>
@@ -428,7 +430,7 @@
 			<column name="device_group" type="BIGINT"/>
 		</createTable>
 		<createTable tableName="take_snapshot_task">
-			<column name="automatic" type="BIT(1)">
+			<column name="automatic" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="id" type="BIGINT">
@@ -455,19 +457,19 @@
 			</column>
 		</createTable>
 		<createTable tableName="text_rule">
-			<column name="any_block" type="BIT(1)">
+			<column name="any_block" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="context" type="VARCHAR(10000)"/>
 			<column name="device_driver" type="VARCHAR(255)"/>
 			<column name="field" type="VARCHAR(255)"/>
-			<column name="invert" type="BIT(1)">
+			<column name="invert" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
-			<column name="match_all" type="BIT(1)">
+			<column name="match_all" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
-			<column name="reg_exp" type="BIT(1)">
+			<column name="reg_exp" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="text" type="LONGTEXT"/>
@@ -483,7 +485,7 @@
 			<column name="level" type="INT">
 				<constraints nullable="false"/>
 			</column>
-			<column name="local" type="BIT(1)">
+			<column name="local" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="username" type="VARCHAR(255)">
@@ -671,7 +673,7 @@
 			<not><columnExists tableName="device_credential_set" columnName="device_specific"/></not>
 		</preConditions>
 		<addColumn tableName="device_credential_set">
-			<column name="device_specific" type="BIT(1)">
+			<column name="device_specific" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 		</addColumn>
@@ -720,7 +722,7 @@
 			<column name="part_number" type="VARCHAR(255 BYTE)"/>
 		</addColumn>
 		<addColumn tableName="software_rule">
-			<column name="part_number_reg_exp" type="BIT(1)">
+			<column name="part_number_reg_exp" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 		</addColumn>
@@ -737,7 +739,7 @@
 			<column name="text" type="LONGTEXT"/>
 		</createTable>
 		<addColumn tableName="task">
-			<column name="debug_enabled" type="BIT(1)">
+			<column name="debug_enabled" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 		</addColumn>
@@ -780,7 +782,7 @@
 			<column autoIncrement="true" name="id" type="BIGINT">
 				<constraints primaryKey="true"/>
 			</column>
-			<column name="enabled" type="BIT(1)">
+			<column name="enabled" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="name" type="VARCHAR(255)">
@@ -798,7 +800,7 @@
 			</column>
 			<column name="creation_date" type="datetime"/>
 			<column name="last_check_date" type="datetime"/>
-			<column name="assumption" type="BIT(1)"/>
+			<column name="assumption" type="${BOOLEAN}"/>
 			<column name="number" type="DOUBLE"/>
 			<column name="text" type="VARCHAR(255)"/>
 			<column name="device" type="BIGINT"/>
@@ -812,7 +814,7 @@
 			</column>
 		</createTable>
 		<createTable tableName="run_diagnostics_task">
-			<column name="dont_check_compliance" type="BIT(1)">
+			<column name="dont_check_compliance" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="id" type="BIGINT">
@@ -821,7 +823,7 @@
 			<column name="device" type="BIGINT"/>
 		</createTable>
 		<createTable tableName="run_group_diagnostics_task">
-			<column name="dont_check_compliance" type="BIT(1)">
+			<column name="dont_check_compliance" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 			<column name="id" type="BIGINT">
@@ -840,22 +842,22 @@
 			</column>
 		</createTable>
 		<addColumn tableName="take_group_snapshot_task">
-			<column name="dont_check_compliance" type="BIT(1)">
+			<column name="dont_check_compliance" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 		</addColumn>
 		<addColumn tableName="take_snapshot_task">
-			<column name="dont_check_compliance" type="BIT(1)">
+			<column name="dont_check_compliance" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 		</addColumn>
 		<addColumn tableName="take_group_snapshot_task">
-			<column name="dont_run_diagnostics" type="BIT(1)">
+			<column name="dont_run_diagnostics" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 		</addColumn>
 		<addColumn tableName="take_snapshot_task">
-			<column name="dont_run_diagnostics" type="BIT(1)">
+			<column name="dont_run_diagnostics" type="${BOOLEAN}">
 				<constraints nullable="false"/>
 			</column>
 		</addColumn>
@@ -887,5 +889,12 @@
 		<addForeignKeyConstraint baseColumnNames="target_group" baseTableName="diagnostic" constraintName="FK_i0mefqbc97a2gv82qs0qsppgf" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
 		<addForeignKeyConstraint baseColumnNames="id" baseTableName="run_group_diagnostics_task" constraintName="FK_kosxbt62oj8c1jdvatqjpycdg" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
 		<addForeignKeyConstraint baseColumnNames="device" baseTableName="run_diagnostics_task" constraintName="FK_ok7b5sevyhg72d7gtlaey7gy" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+	</changeSet>
+<!-- netshot_0_12_0_to_0_12_1.xml -->
+	<changeSet author="netshot (generated)" id="0.12.1_1">
+		<preConditions onFail="MARK_RAN">
+			<not><sequenceExists sequenceName="hibernate_sequence" /></not>
+		</preConditions>
+		<createSequence sequenceName="hibernate_sequence"/>
 	</changeSet>
 </databaseChangeLog>

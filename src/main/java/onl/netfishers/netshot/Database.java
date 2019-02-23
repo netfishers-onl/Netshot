@@ -273,7 +273,7 @@ public class Database {
 			liquibase.update(new Contexts(), new LabelExpression());
 			connection.close();
 		}
-		catch (ClassNotFoundException | SQLException | LiquibaseException e) {
+		catch (Exception e) {
 			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to connect to the database (for the initial schema update)", e);
 			throw new RuntimeException("Unable to connect to the database, see logs for more details");
 		}

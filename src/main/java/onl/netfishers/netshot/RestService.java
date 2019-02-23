@@ -2208,7 +2208,7 @@ public class RestService extends Thread {
 					.setEntity("domain", domain)
 					.setBoolean("true", true)
 					.list();
-			if (knownCommunities.size() == 0) {
+			if (knownCommunities.size() == 0 && device.isAutoDiscover()) {
 				logger.error("No available SNMP community");
 				throw new NetshotBadRequestException(
 						"There is no known SNMP community in the database to poll the device.",
@@ -9060,6 +9060,7 @@ public class RestService extends Thread {
 			}
 			diagnostic.setTargetGroup(group);
 
+			diagnostic.setResultType(resultType);
 			diagnostic.setEnabled(rsDiagnostic.isEnabled());
 			if (diagnostic instanceof JavaScriptDiagnostic) {
 				if (!".JavaScriptDiagnostic".equals(rsDiagnostic.getType())) {
@@ -9071,7 +9072,6 @@ public class RestService extends Thread {
 						"Invalid diagnostic script",
 						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
 				}
-				((JavaScriptDiagnostic) diagnostic).setResultType(resultType);
 				((JavaScriptDiagnostic) diagnostic).setScript(rsDiagnostic.getScript());
 			}
 			else if (diagnostic instanceof SimpleDiagnostic) {

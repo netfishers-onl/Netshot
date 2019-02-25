@@ -8,6 +8,12 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.12.2 - 2019-02-25
+
+* Fix the migration file for MariaDB
+* Fix the SNMPv3 dialog (username field was not appearing)
+* Fix deletion of diagnostics by deleting the results in cascade
+
 0.12.1 - 2019-02-23
 
 * Fixes (PostgreSQL support, RADIUS authentication, diagnostic edition)

@@ -72,16 +72,16 @@ define([
 			var that = this;
 			this.$("input[name='credentialstype']").change(function() {
 				if ($(this).val().match(/SNMP v(1|2)/)) {
-					that.$('.nsadmin-credentialscommunity').show();
 					that.$('.nsadmin-credentialscli').hide();
 					that.$('.nsadmin-credentialsclikey').hide();
 					that.$('.nsadmin-credentialssnmpv3').hide();
+					that.$('.nsadmin-credentialscommunity').show();
 				}
 				else if ($(this).val().match(/SNMP v3/)) {
-					that.$('.nsadmin-credentialssnmpv3').show();
 					that.$('.nsadmin-credentialscommunity').hide();
 					that.$('.nsadmin-credentialscli').hide();
 					that.$('.nsadmin-credentialsclikey').hide();
+					that.$('.nsadmin-credentialssnmpv3').show();
 				}
 				else if ($(this).val().match(/(SSH|Telnet)/)) {
 					that.$('.nsadmin-credentialscommunity').hide();

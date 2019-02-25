@@ -83,16 +83,16 @@ define([
 					.prop('checked', true);
 			that.$('input[type="radio"]').prop('disabled', true);
 			if (that.model.get('type').match(/SNMP v(1|2)/)) {
-				that.$('.nsadmin-credentialscommunity').show();
 				that.$('.nsadmin-credentialscli').hide();
 				that.$('.nsadmin-credentialsclikey').hide();
 				that.$('.nsadmin-credentialssnmpv3').hide();
+				that.$('.nsadmin-credentialscommunity').show();
 			}
 			else if (that.model.get('type').match(/SNMP v3/)) {
-				that.$('.nsadmin-credentialssnmpv3').show();
 				that.$('.nsadmin-credentialscommunity').hide();
 				that.$('.nsadmin-credentialscli').hide();
 				that.$('.nsadmin-credentialsclikey').hide();
+				that.$('.nsadmin-credentialssnmpv3').show();
 			}
 			else if (that.model.get('type').match(/(SSH|Telnet)/)) {
 				that.$('.nsadmin-credentialscommunity').hide();

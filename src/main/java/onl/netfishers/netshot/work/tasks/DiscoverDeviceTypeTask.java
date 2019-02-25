@@ -236,10 +236,12 @@ public class DiscoverDeviceTypeTask extends Task {
 			Snmp poller = new Snmp(deviceAddress, cred.getUsername(), cred.getAuthType(), cred.getAuthKey(),
 					cred.getPrivType(), cred.getPrivKey());
 			return snmpDiscover(poller);
-		} catch (UnknownHostException e) {
+		}
+		catch (UnknownHostException e) {
 			logger.warn("SNMPv3 unknown host error.", e);
 			this.warn("SNMPv3 unknown host error: " + e.getMessage());
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			logger.error("SNMPv3 error while polling the device.", e);
 			this.warn("Error while SNMPv3 polling the device: " + e.getMessage());
 		}

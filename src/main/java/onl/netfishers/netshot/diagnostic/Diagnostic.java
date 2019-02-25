@@ -18,15 +18,20 @@
  */
 package onl.netfishers.netshot.diagnostic;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -87,6 +92,9 @@ public abstract class Diagnostic {
 	
 	/** The type of data returned by the diagnostic */
 	protected AttributeType resultType;
+
+	/** The associated results */
+	List<DiagnosticResult> results = new ArrayList<DiagnosticResult>();
 	
 	/**
 	 * Instantiate a new diagnostic.
@@ -193,6 +201,23 @@ public abstract class Diagnostic {
 	 */
 	public void setTargetGroup(DeviceGroup targetGroup) {
 		this.targetGroup = targetGroup;
+	}
+
+	/**
+	 * Gets the results.
+	 * @return the results
+	 */
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "diagnostic", cascade = CascadeType.ALL, orphanRemoval = true)
+	public List<DiagnosticResult> getResults() {
+		return results;
+	}
+
+	/**
+	 * Sets the diagnostic results.
+	 * @param results the results to set
+	 */
+	public void setResults(List<DiagnosticResult> results) {
+		this.results = results;
 	}
 
 	/**

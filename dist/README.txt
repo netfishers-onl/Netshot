@@ -8,6 +8,10 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.12.3 - 2019-02-27
+
+* Fix the usage of device-specific credential sets
+
 0.12.2 - 2019-02-25
 
 * Fix the migration file for MariaDB

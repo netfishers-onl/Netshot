@@ -26,7 +26,6 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -106,7 +105,6 @@ import liquibase.LabelExpression;
 import liquibase.Liquibase;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 
 /**

@@ -8,6 +8,10 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.12.3 - 2019-03-06
+
+* Fix a bug at UI loading time for some browsers
+
 0.12.2 - 2019-02-25
 
 * Fix the migration file for MariaDB

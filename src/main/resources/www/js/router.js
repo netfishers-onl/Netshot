@@ -81,19 +81,19 @@ define([
 		});
 
 		appRouter.on('route:showAdmin', function() {
-			switchToView(AdminView,);
+			switchToView(AdminView);
 		});
 
 		appRouter.on('route:showReports', function() {
-			switchToView(ReportsView,);
+			switchToView(ReportsView);
 		});
 
 		appRouter.on('route:showTasks', function() {
-			switchToView(TasksView,);
+			switchToView(TasksView);
 		});
 
 		appRouter.on('route:showCompliance', function() {
-			switchToView(ComplianceView,);
+			switchToView(ComplianceView);
 		});
 
 		appRouter.on('route:showDiagnostics', function() {

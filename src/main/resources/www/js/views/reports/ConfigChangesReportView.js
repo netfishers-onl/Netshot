@@ -149,27 +149,14 @@ define([
 		renderLastDayChangesChart: function() {
 			var days = [];
 			var changeCounts = [];
-			var colors = [];
-			var borderColors = [];
-			var today = new Date();
-			today.setHours(0);
-			today.setMinutes(0);
-			today.setSeconds(0);
-			today.setMilliseconds(0);
 			var changeMax = 1;
-			for (var d = 6; d >= 0; d--) {
-				var day = new Date(today.getTime() - d * 24 * 3600 * 1000);
-				var changeCountDay = this.lastDayChanges.findWhere({
-					changeDay: day.getTime()
-				});
-				var changeCount = (typeof changeCountDay === "object" && changeCountDay
-						? changeCountDay.get('changeCount') : 0);
-				if (changeCount > changeMax) {
-					changeMax = changeCount;
-				}
+			this.lastDayChanges.each(function(dayChanges) {
+				var changeCount = dayChanges.get('changeCount') || 0;
+				var day = dayChanges.get('changeDay');
+				changeMax = Math.max(changeMax, changeCount);
 				days.push(window.formatDateTime(day, { day: "2-digit", month: "2-digit" }));
 				changeCounts.push(changeCount);
-			}
+			});
 			var data = {
 				labels: days,
 				datasets: [{
@@ -189,7 +176,7 @@ define([
 						yAxes: [{
 							ticks: {
 								min: 0,
-								maxTicksLimit: 5,
+								maxTicksLimit: Math.min(5, changeMax + 2),
 								suggestedMax: changeMax * 1.2
 							}
 						}]

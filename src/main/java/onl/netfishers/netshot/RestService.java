@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -6153,6 +6154,11 @@ public class RestService extends Thread {
 	@XmlAccessorType(XmlAccessType.NONE)
 	public static class RsConfigChangeNumberByDateStat {
 
+		public RsConfigChangeNumberByDateStat(long changeCount, Date changeDay) {
+			this.changeCount = changeCount;
+			this.changeDay = changeDay;
+		}
+
 		/** The change count. */
 		private long changeCount;
 
@@ -6211,16 +6217,36 @@ public class RestService extends Thread {
 	@Path("reports/last7dayschangesbyday")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsConfigChangeNumberByDateStat> getLast7DaysChangesByDayStats() throws WebApplicationException {
+	public List<RsConfigChangeNumberByDateStat> getLast7DaysChangesByDayStats(@QueryParam("tz") String jsTimeZone) throws WebApplicationException {
 		logger.debug("REST request, get last 7 day changes by day stats.");
 		Session session = Database.getSession();
+
+		TimeZone timeZone = TimeZone.getDefault();
 		try {
-			@SuppressWarnings("unchecked")
-			List<RsConfigChangeNumberByDateStat> stats = session
-			.createQuery("select count(c) as changeCount, cast(cast(c.changeDate as date) as timestamp) as changeDay from Config c group by cast(c.changeDate as date) order by changeDay desc")
-			.setMaxResults(7)
-			.setResultTransformer(Transformers.aliasToBean(RsConfigChangeNumberByDateStat.class))
-			.list();
+			timeZone = TimeZone.getTimeZone(jsTimeZone);
+		}
+		catch (Exception e) {
+			logger.warn("Unable to parse timezone '{}'", jsTimeZone);
+		}
+		Calendar today = Calendar.getInstance(timeZone);
+		today.set(Calendar.HOUR_OF_DAY, 0);
+		today.set(Calendar.MINUTE, 0);
+		today.set(Calendar.SECOND, 0);
+		today.set(Calendar.MILLISECOND, 0);
+		try {
+			List<RsConfigChangeNumberByDateStat> stats = new ArrayList<RsConfigChangeNumberByDateStat>();
+			for (int d = 7; d > 0; d--) {
+				Calendar dayStart = (Calendar)today.clone();
+				Calendar dayEnd = (Calendar)today.clone();
+				dayStart.add(Calendar.DATE, -d + 1);
+				dayEnd.add(Calendar.DATE, -d + 2);
+				Long changeCount = (Long)session
+					.createQuery("select count(*) from Config c where c.changeDate >= :dayStart and c.changeDate < :dayEnd")
+					.setTimestamp("dayStart", dayStart.getTime())
+					.setTimestamp("dayEnd", dayEnd.getTime())
+					.uniqueResult();
+				stats.add(new RsConfigChangeNumberByDateStat(changeCount == null ? 0 : changeCount, dayStart.getTime()));
+			}
 			return stats;
 		}
 		catch (HibernateException e) {

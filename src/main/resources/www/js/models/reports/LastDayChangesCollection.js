@@ -8,6 +8,18 @@ define([
 
 		url: "api/reports/last7dayschangesbyday",
 
+		url: function() {
+			var url = "api/reports/last7dayschangesbyday";
+			try {
+				var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+				url += "?tz=" + encodeURIComponent(tz);
+			}
+			catch (e) {
+				// Proceed without TZ
+			}
+			return url;
+		},
+
 	});
 
 });

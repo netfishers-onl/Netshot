@@ -8,6 +8,11 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.12.5 - 2019-03-24
+
+* Fix a couple of bugs on the "Changes over the last days" chart
+* Fix a bug on the migration schema for PostgreSQL
+
 0.12.4 - 2019-03-06
 
 * Fix a bug at UI loading time for some browsers

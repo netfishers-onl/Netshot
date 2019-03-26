@@ -61,7 +61,7 @@ public abstract class Cli {
 	}
 
 	/** The connection timeout. */
-	protected int connectionTimeout = 5000;
+	protected int connectionTimeout = 30000;
 	
 	/**
 	 * Gets the connection timeout.

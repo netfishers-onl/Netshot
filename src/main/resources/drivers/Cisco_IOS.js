@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.6.1"
+	version: "1.6.2"
 };
 
 var Config = {
@@ -529,7 +529,7 @@ function analyzeTrap(trap, debug) {
 }
 
 function snmpAutoDiscover(sysObjectID, sysDesc) {
-	if (sysObjectID.substring(0, 16) == "1.3.6.1.4.1.9.1."
+	if (sysObjectID.match(/^1\.3\.6\.1\.4\.1\.9\.1(\..*|$)/)
 		&& sysDesc.match(/^Cisco (IOS|Internetwork Operating System) Software.*/)) {
 		return true;
 	}

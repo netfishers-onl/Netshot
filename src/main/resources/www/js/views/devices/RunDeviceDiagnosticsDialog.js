@@ -29,6 +29,7 @@ define([
 					'type': "RunDiagnosticsTask",
 					'device': that.model.get('id'),
 					'dontCheckCompliance': !that.$('#checkcompliance').is(':checked'),
+					'debugEnabled': that.$('#debugsession').is(":checked"),
 				});
 				task.set(that.taskSchedulerToolbox.getSchedule());
 				task.save().done(function(data) {
@@ -50,6 +51,11 @@ define([
 		},
 
 		onCreate: function() {
+			var that = this;
+			this.$("#hidden").hide();
+			this.$(".nsdialog-logo").dblclick(function() {
+				that.$("#hidden").show();
+			});
 			this.taskSchedulerToolbox = new TaskSchedulerToolbox();
 		}
 

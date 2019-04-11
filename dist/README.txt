@@ -8,6 +8,12 @@ or contact us at netshot@netfishers.onl.
 
 RELEASE HISTORY:
 
+0.12.6 - 2019-04-11
+
+* Fix an error which might happen while updating diagnostic results
+* Add the debug checkbox option on diagnostic tasks
+* Minor UI improvements
+
 0.12.5 - 2019-03-24
 
 * Fix a couple of bugs on the "Changes over the last days" chart

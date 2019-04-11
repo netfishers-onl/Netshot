@@ -24,6 +24,8 @@ define([
 			title: "Edit rule script",
 			width: 600,
 			height: 500,
+			minWidth: 600,
+			minHeight: 500,
 			resizable: true,
 			resizeStop: function(e, ui) {
 				EditRuleScriptDialog.prototype.dialogOptions.width = ui.size.width;

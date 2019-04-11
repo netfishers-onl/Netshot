@@ -207,7 +207,7 @@ public abstract class Diagnostic {
 	 * Gets the results.
 	 * @return the results
 	 */
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "diagnostic", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "diagnostic", cascade = CascadeType.REMOVE, orphanRemoval = true)
 	public List<DiagnosticResult> getResults() {
 		return results;
 	}

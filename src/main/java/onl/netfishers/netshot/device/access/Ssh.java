@@ -21,6 +21,7 @@ package onl.netfishers.netshot.device.access;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.NetworkAddress;
 
 import com.jcraft.jsch.Channel;
@@ -30,10 +31,29 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.KeyPair;
 import com.jcraft.jsch.Session;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * An SSH CLI access.
  */
 public class Ssh extends Cli {
+	
+	private static Logger logger = LoggerFactory.getLogger(Ssh.class);
+
+	/** Default value for the SSH connection timeout */
+	static private int DEFAULT_CONNECTION_TIMEOUT = 5000;
+
+	static {
+		int configuredConnectionTimeout = Netshot.getConfig("netshot.cli.ssh.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT);
+		if (configuredConnectionTimeout < 1) {
+			logger.error("Invalid value {} for {}", configuredConnectionTimeout, "netshot.cli.ssh.connectiontimeout");			
+		}
+		else {
+			DEFAULT_CONNECTION_TIMEOUT = configuredConnectionTimeout;
+		}
+		logger.info("The default connection timeout value for SSH sessions is {}s", DEFAULT_CONNECTION_TIMEOUT);
+	}
 	
 	/** The port. */
 	private int port = 22;
@@ -73,6 +93,7 @@ public class Ssh extends Cli {
 		this.username = username;
 		this.password = password;
 		this.privateKey = null;
+		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
 	}
 	
 	/**
@@ -91,6 +112,7 @@ public class Ssh extends Cli {
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
 		this.password = passphrase;
+		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
 	}
 	
 	/**
@@ -107,6 +129,7 @@ public class Ssh extends Cli {
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
 		this.password = passphrase;
+		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
 	}
 	
 	
@@ -122,6 +145,7 @@ public class Ssh extends Cli {
 		this.username = username;
 		this.password = password;
 		this.privateKey = null;
+		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
 	}
 
 	/* (non-Javadoc)

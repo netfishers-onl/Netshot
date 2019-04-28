@@ -21,14 +21,33 @@ package onl.netfishers.netshot.device.access;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.NetworkAddress;
 
 import org.apache.commons.net.telnet.TelnetClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A Telnet CLI access.
  */
 public class Telnet extends Cli {
+	
+	private static Logger logger = LoggerFactory.getLogger(Ssh.class);
+
+	/** Default value for the SSH connection timeout */
+	static private int DEFAULT_CONNECTION_TIMEOUT = 5000;
+
+	static {
+		int configuredConnectionTimeout = Netshot.getConfig("netshot.cli.telnet.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT);
+		if (configuredConnectionTimeout < 1) {
+			logger.error("Invalid value {} for {}", configuredConnectionTimeout, "netshot.cli.telnet.connectiontimeout");			
+		}
+		else {
+			DEFAULT_CONNECTION_TIMEOUT = configuredConnectionTimeout;
+		}
+		logger.info("The default connection timeout value for Telnet sessions is {}s", DEFAULT_CONNECTION_TIMEOUT);
+	}
 
 	/** The port. */
 	private int port = 23;
@@ -54,6 +73,7 @@ public class Telnet extends Cli {
 	public Telnet(NetworkAddress host, int port) {
 		this(host);
 		if (port != 0) this.port = port;
+		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
 	}
 	
 	/* (non-Javadoc)

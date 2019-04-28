@@ -85,6 +85,25 @@ public class Netshot extends Thread {
 	}
 
 	/**
+	 * Gets a config item as an Integer
+	 * @param key the config key
+	 * @param defaultValue the default value
+	 * @return the config
+	 */
+	public static int getConfig(String key, int defaultValue) {
+		String textValue = getConfig(key);
+		if (textValue != null) {
+			try {
+				return Integer.parseInt(textValue);
+			}
+			catch (Exception e) {
+				logger.error("Unable to parse the integer value of configuration item '{}'.", key);
+			}
+		}
+		return defaultValue;
+	}
+
+	/**
 	 * Gets the config.
 	 *
 	 * @param key the key

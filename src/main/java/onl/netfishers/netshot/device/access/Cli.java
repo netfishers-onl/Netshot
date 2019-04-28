@@ -248,7 +248,7 @@ public abstract class Cli {
 		
 		long lastActivityTime = System.currentTimeMillis();
 		
-		while (true) {			
+		while (true) {
 			while (this.inStream != null && this.inStream.available() > 0) {
 				int length = this.inStream.read(miniBuffer);
 				String s = new String(miniBuffer, 0, length);

@@ -5,8 +5,17 @@ For more information, visit http://www.netfishers.onl/netshot
 or contact us at netshot@netfishers.onl.
 
 
+INSTALLATION AND UPGRADE INSTRUCTIONS:
+
+Please refer to https://github.com/netfishers-onl/Netshot/wiki
+
 
 RELEASE HISTORY:
+
+0.12.7 - 2019-05-22
+
+* Increase the size of basic text diagnostic result fields
+* Add the ability to customize the SSH/Telnet connection timeout via netshot.conf
 
 0.12.6 - 2019-04-11
 

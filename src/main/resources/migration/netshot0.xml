@@ -897,4 +897,8 @@
 		</preConditions>
 		<createSequence sequenceName="hibernate_sequence"/>
 	</changeSet>
+<!-- netshot_0_12_6_to_0_12_7.xml -->
+	<changeSet author="netshot (generated)" id="0.12.7_1">
+		<modifyDataType columnName="text" newDataType="varchar(16384)" tableName="diagnostic_result"/>
+	</changeSet>
 </databaseChangeLog>

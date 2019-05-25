@@ -40,7 +40,7 @@ public class DiagnosticTextResult extends DiagnosticResult {
 	}
 
 	@XmlElement
-	@Column(length = 255)
+	@Column(length = 16384)
 	public String getText() {
 		return text;
 	}

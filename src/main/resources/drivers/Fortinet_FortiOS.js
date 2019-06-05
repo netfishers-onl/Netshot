@@ -24,7 +24,7 @@ var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "3.1" /* Version will appear in the Admin tab. */
+	version: "4.1" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -136,25 +136,22 @@ function snapshot(cli, device, config) {
 	var status = cli.command("get system status");
 	// The configuration is retrieved by a simple 'show' at the root level. Add grep to avoid paging.
 	var configuration = cli.command("show | grep .", { timeout: 120000 });
-	
-	
-	var removeChangingParts = function(text) {
-		var cleaned = text;
-		cleaned = cleaned.replace(/^ *set (passphrase|password|passwd) ENC .*$/mg, "");
-		cleaned = cleaned.replace(/^ *set private-key "(.|[\r\n])*?"$/mg, "");
-		return cleaned;
+	// Read the HA peer hostname from a 'get system ha status' in global mode.
+	var vdomMode = true;
+	try {
+		cli.command("config global", { clearPrompt: true });
 	}
-	
-	// If only the passwords are changing (they are hashed with a new salt at each 'show') then
-	// just keep the previous configuration.
-	// That means we could miss a password change in the history of configurations, but no choice...
-	var previousConfiguration = device.get("configuration");
-	if (typeof previousConfiguration === "string" &&
-			removeChangingParts(previousConfiguration) === removeChangingParts(configuration)) {
-		config.set("configuration", previousConfiguration);
+	catch (e) {
+		vdomMode = false;
 	}
-	else {
-		config.set("configuration", configuration);
+	// Store the interface config block
+	var showSystemInterface = cli.command("show system interface");
+	// Store the SNMP config block
+	var showSystemSnmp = cli.command("show system snmp sysinfo");
+	// Store the HA status
+	var getHa = cli.command("get system ha status");
+	if (vdomMode) {
+		cli.command("end", { clearPrompt: true });
 	}
 	
 	// Read the device hostname from the 'status' output.
@@ -192,7 +189,7 @@ function snapshot(cli, device, config) {
 	// Read the contact and location fields from the configuration directly.
 	device.set("contact", "");
 	device.set("location", "");
-	var sysInfos = cli.findSections(configuration, /config system snmp sysinfo/);
+	var sysInfos = cli.findSections(showSystemSnmp, /config system snmp sysinfo/);
 	for (var s in sysInfos) {
 		var contact = sysInfos[s].config.match(/set contact-info "(.*)"/);
 		if (contact) {
@@ -202,19 +199,6 @@ function snapshot(cli, device, config) {
 		if (location) {
 			device.set("location", location[1]);
 		}
-	}
-
-	// Read the HA peer hostname from a 'get system ha status' in global mode.
-	var vdomMode = true;
-	try {
-		cli.command("config global", { clearPrompt: true });
-	}
-	catch (e) {
-		vdomMode = false;
-	}
-	var getHa = cli.command("get system ha status");
-	if (vdomMode) {
-		cli.command("end", { clearPrompt: true });
 	}
 	var peerPattern1 = /^(Master|Slave) *: *[0-9]+ (.+?) +([A-Z0-9]+) [0-9]$/gm;
 	var match;
@@ -233,58 +217,74 @@ function snapshot(cli, device, config) {
 		}
 	}
 
-	// Read the list of interfaces from the configuration itself.
-	var systemInterfaceConfig = cli.findSections(configuration, /^config system interface/m);
+	// Read the list of interfaces.
 	var vdomArp = {};
-	for (var c in systemInterfaceConfig) {
-		var interfaces = cli.findSections(systemInterfaceConfig[c].config, /^ *edit "(.*)"/m);
-		for (var i in interfaces) {
-			var networkInterface = {
-				name: interfaces[i].match[1],
-				ip: []
+	var interfaces = cli.findSections(showSystemInterface, /^ *edit "(.*)"/m);
+	for (var i in interfaces) {
+		var networkInterface = {
+			name: interfaces[i].match[1],
+			ip: []
+		};
+		var ipAddress = interfaces[i].config.match(/set ip (\d+\.\d+\.\d+\.\d+) (\d+\.\d+\.\d+\.\d+)/);
+		if (ipAddress) {
+			var ip = {
+				ip: ipAddress[1],
+				mask: ipAddress[2],
+				usage: "PRIMARY"
 			};
-			var ipAddress = interfaces[i].config.match(/set ip (\d+\.\d+\.\d+\.\d+) (\d+\.\d+\.\d+\.\d+)/);
-			if (ipAddress) {
-				var ip = {
-					ip: ipAddress[1],
-					mask: ipAddress[2],
-					usage: "PRIMARY"
-				};
-				networkInterface.ip.push(ip);
-			}
-			var vdom = interfaces[i].config.match(/set vdom "(.*?)"/);
-			if (vdom) {
-				vdom = vdom[1];
-				networkInterface.virtualDevice = vdom;
-				if (typeof(vdomArp[vdom]) != "object") {
-					if (vdomMode) {
-						cli.command("config vdom", { clearPrompt: true });
-						cli.command("edit " + vdom, { clearPrompt: true });
-					}
-					var arp = cli.command("get system arp");
-					if (vdomMode) {
-						cli.command("end", { clearPrompt: true });
-					}
-					vdomArp[vdom] = {};
-					var arpPattern = /^(\d+\.\d+\.\d+\.\d+) +[0-9]+ +([0-9a-f:]+) (.*)/gm;
-					var match;
-					while (match = arpPattern.exec(arp)) {
-						vdomArp[vdom][match[3]] = match[2];
-					}
-				}
-				if (typeof(vdomArp[vdom]) == "object") {
-					if (typeof(vdomArp[vdom][networkInterface.name]) == "string") {
-						networkInterface.mac = vdomArp[vdom][networkInterface.name];
-					}
-				}
-				
-			}
-			if (interfaces[i].config.match(/set status down/)) {
-				networkInterface.disabled = true;
-			}
-			device.add("networkInterface", networkInterface);
+			networkInterface.ip.push(ip);
 		}
-	}	
+		var vdom = interfaces[i].config.match(/set vdom "(.*?)"/);
+		if (vdom) {
+			vdom = vdom[1];
+			networkInterface.virtualDevice = vdom;
+			if (typeof(vdomArp[vdom]) != "object") {
+				if (vdomMode) {
+					cli.command("config vdom", { clearPrompt: true });
+					cli.command("edit " + vdom, { clearPrompt: true });
+				}
+				var arp = cli.command("get system arp");
+				if (vdomMode) {
+					cli.command("end", { clearPrompt: true });
+				}
+				vdomArp[vdom] = {};
+				var arpPattern = /^(\d+\.\d+\.\d+\.\d+) +[0-9]+ +([0-9a-f:]+) (.*)/gm;
+				var match;
+				while (match = arpPattern.exec(arp)) {
+					vdomArp[vdom][match[3]] = match[2];
+				}
+			}
+			if (typeof(vdomArp[vdom]) == "object") {
+				if (typeof(vdomArp[vdom][networkInterface.name]) == "string") {
+					networkInterface.mac = vdomArp[vdom][networkInterface.name];
+				}
+			}
+			
+		}
+		if (interfaces[i].config.match(/set status down/)) {
+			networkInterface.disabled = true;
+		}
+		device.add("networkInterface", networkInterface);
+	}
+	
+	var removeChangingParts = function(text) {
+		var cleaned = text;
+		cleaned = cleaned.replace(/^ *set (passphrase|password|passwd) ENC .*$/mg, "");
+		cleaned = cleaned.replace(/^ *set private-key "(.|[\r\n])*?"$/mg, "");
+		return cleaned;
+	}
+	
+	// If only the passwords are changing (they are hashed with a new salt at each 'show') then
+	// just keep the previous configuration.
+	// That means we could miss a password change in the history of configurations, but no choice...
+	var previousConfiguration = device.get("configuration");
+	if (typeof previousConfiguration === "string" &&
+			removeChangingParts(previousConfiguration) === removeChangingParts(configuration)) {
+		config.set("configuration", previousConfiguration);
+	}
+	else {
+		config.set("configuration", configuration);
+	}
 
 };
 

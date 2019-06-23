@@ -31,7 +31,7 @@ var Info = {
 	name: "CheckpointSPLAT",
 	description: "Checkpoint SPLAT",
 	author: "NetFishers",
-	version: "1.0"
+	version: "1.1"
 };
 
 var Config = {
@@ -263,6 +263,9 @@ function snapshot(cli, device, config, debug) {
 			throw "SCP error: is the user in /etc/scpusers, with /bin/bash as login shell?";
 		}
 		throw e;
+	}
+	finally {
+		cli.command("rm -f /var/log/CPbackup/backups/netshot.tgz")
 	}
 };
 

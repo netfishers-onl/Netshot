@@ -50,7 +50,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 		@Type(value = ConfigNumericAttribute.class, name = "NUMERIC"),
 		@Type(value = ConfigTextAttribute.class, name = "TEXT"),
 		@Type(value = ConfigLongTextAttribute.class, name = "LONGTEXT"),
-		@Type(value = ConfigBinaryAttribute.class, name = "BINARY")
+		@Type(value = ConfigBinaryAttribute.class, name = "BINARY"),
+		@Type(value = ConfigBinaryFileAttribute.class, name = "BINARYFILE")
 })
 @FilterDef(name = "lightAttributesOnly", defaultCondition = "type <> 'T'")
 public abstract class ConfigAttribute {

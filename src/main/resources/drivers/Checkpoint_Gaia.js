@@ -17,11 +17,19 @@
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+/**
+ * NOTES ON THIS DRIVER:
+ * This driver triggers a backup of the target Checkpoint appliance and
+ * download the file using SCP.
+ * In order for SCP to work, the SSH user must have /bin/bash as login shell.
+ */
+
 var Info = {
 	name: "CheckpointGaia",
 	description: "Checkpoint Gaia",
 	author: "NetFishers",
-	version: "1.3"
+	version: "2.0"
 };
 
 var Config = {
@@ -64,7 +72,11 @@ var Config = {
 			preLine: "## ",
 			post: "## End of license"
 		}
-	}
+	},
+	"backupArchive": {
+		type: "BinaryFile",
+		title: "Backup Archive",
+	},
 };
 
 var Device = {
@@ -88,7 +100,7 @@ var CLI = {
 				target: "clish"
 			},
 			expert: {
-				options: [ "username", "clish", "expert" ],
+				options: [ "username", "clish", "expert", "noExpertPassword" ],
 				target: "expert"
 			}
 		}
@@ -138,7 +150,7 @@ var CLI = {
 		macros: {
 			expert: {
 				cmd: "expert",
-				options: [ "expert", "configure" ],
+				options: [ "expert", "noExpertPassword", "expertPassword" ],
 				target: "expert"
 			},
 			save: {
@@ -172,7 +184,7 @@ var CLI = {
 		macros: {
 			auto: {
 				cmd: "$$NetshotSuperPassword$$",
-				options: [ "password", "wrongPassword" ]
+				options: [ "expert", "wrongPassword" ]
 			}
 		}
 	},
@@ -290,6 +302,51 @@ function snapshot(cli, device, config, debug) {
 		if (serialNumber) {
 			device.set("serialNumber", serialNumber[1]);
 		}
+	}
+
+	var addBackup = cli.command("add backup local");
+	if (!addBackup.match(/Creating backup package/)) {
+		throw "Can't start backup: " + addBackup;
+	}
+
+	var maxLoops = 12 * 20;
+	while (true) {
+		backupStatus = cli.command("show backup status");
+		if (backupStatus.match(/backup succeeded/)) {
+			break;
+		}
+		else if (backupStatus.match(/Performing local backup/)) {
+			maxLoops -= 1;
+			if (maxLoops <= 0) {
+				throw "The local backup took too long";
+			}
+			cli.sleep(5000);
+		}
+		else {
+			throw "Invalid Checkpoint backup status";
+		}
+	}
+
+	var backupNameMatch = backupStatus.match(/Backup file location: (.+)/);
+	if (backupNameMatch) {
+		var backupName = backupNameMatch[1];
+		try {
+			config.download("backupArchive", "scp", backupName);
+		}
+		catch (e) {
+			var text = "" + e;
+			if (text.match(/SCP error/)) {
+				throw "SCP error: is /bin/bash the user's login shell?";
+			}
+			throw e;
+		}
+		finally {
+			backupName = backupName.replace(/^.*\//, "");
+			cli.command("delete backup " + backupName);
+		}
+	}
+	else {
+		throw "Unable to find backup file path";
 	}
 };
 

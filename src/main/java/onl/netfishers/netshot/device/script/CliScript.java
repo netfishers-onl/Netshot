@@ -225,11 +225,12 @@ public abstract class CliScript {
 						cli = new Ssh(address, sshPort, ((DeviceSshKeyAccount) credentialSet).getUsername(),
 								((DeviceSshKeyAccount) credentialSet).getPublicKey(),
 								((DeviceSshKeyAccount) credentialSet).getPrivateKey(),
-								((DeviceSshKeyAccount) credentialSet).getPassword());
+								((DeviceSshKeyAccount) credentialSet).getPassword(),
+								taskLogger);
 					}
 					else {
 						cli = new Ssh(address, sshPort, ((DeviceSshAccount) credentialSet).getUsername(),
-								((DeviceSshAccount) credentialSet).getPassword());
+								((DeviceSshAccount) credentialSet).getPassword(), taskLogger);
 					}
 					try {
 						cli.connect();
@@ -262,7 +263,7 @@ public abstract class CliScript {
 		if (deviceDriver.getProtocols().contains(DriverProtocol.TELNET)) {
 			for (DeviceCredentialSet credentialSet : credentialSets) {
 				if (credentialSet instanceof DeviceTelnetAccount) {
-					Cli cli = new Telnet(address, telnetPort);
+					Cli cli = new Telnet(address, telnetPort, taskLogger);
 					try {
 						cli.connect();
 						this.run(session, device, cli, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
@@ -297,11 +298,12 @@ public abstract class CliScript {
 							cli = new Ssh(address, sshPort, ((DeviceSshKeyAccount) credentialSet).getUsername(),
 									((DeviceSshKeyAccount) credentialSet).getPublicKey(),
 									((DeviceSshKeyAccount) credentialSet).getPrivateKey(),
-									((DeviceSshKeyAccount) credentialSet).getPassword());
+									((DeviceSshKeyAccount) credentialSet).getPassword(),
+									taskLogger);
 						}
 						else {
 							cli = new Ssh(address, sshPort, ((DeviceSshAccount) credentialSet).getUsername(),
-									((DeviceSshAccount) credentialSet).getPassword());
+									((DeviceSshAccount) credentialSet).getPassword(), taskLogger);
 						}
 						try {
 							cli.connect();
@@ -342,7 +344,7 @@ public abstract class CliScript {
 				for (DeviceCredentialSet credentialSet : globalCredentialSets) {
 					if (credentialSet instanceof DeviceTelnetAccount) {
 						taskLogger.trace(String.format("Will try Telnet credentials %s.", credentialSet.getName()));
-						Cli cli = new Telnet(address, telnetPort);
+						Cli cli = new Telnet(address, telnetPort, taskLogger);
 						try {
 							cli.connect();
 							this.run(session, device, cli, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);

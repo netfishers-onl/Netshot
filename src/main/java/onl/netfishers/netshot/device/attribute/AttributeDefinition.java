@@ -17,7 +17,8 @@ public class AttributeDefinition {
 		TEXT,
 		LONGTEXT,
 		DATE,
-		BINARY
+		BINARY,
+		BINARYFILE
 	}
 	
 	private AttributeType type;
@@ -68,6 +69,9 @@ public class AttributeDefinition {
 		}
 		else if (type.equals("Binary")) {
 			this.type = AttributeType.BINARY;
+		}
+		else if (type.equals("BinaryFile")) {
+			this.type = AttributeType.BINARYFILE;
 		}
 		else {
 			throw new IllegalArgumentException("Invalid type for item %s.");

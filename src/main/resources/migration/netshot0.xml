@@ -901,4 +901,17 @@
 	<changeSet author="netshot (generated)" id="0.12.7_1">
 		<modifyDataType columnName="text" newDataType="varchar(16384)" tableName="diagnostic_result"/>
 	</changeSet>
+<!-- netshot_0_12_7_to_0_13_0.xml -->
+	<changeSet author="netshot (generated)" id="0.13.0_1">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="config_attribute" columnName="uid"/></not>
+		</preConditions>
+		<addColumn tableName="config_attribute">
+			<column name="uid" type="VARCHAR(255)">
+				<constraints unique="true"/>
+			</column>
+			<column name="original_name" type="VARCHAR(255)"/>
+			<column name="file_size" type="BIGINT"/>
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

@@ -23,6 +23,7 @@ import java.io.PrintStream;
 
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.NetworkAddress;
+import onl.netfishers.netshot.work.TaskLogger;
 
 import org.apache.commons.net.telnet.TelnetClient;
 import org.slf4j.Logger;
@@ -59,9 +60,10 @@ public class Telnet extends Cli {
 	 * Instantiates a new telnet.
 	 *
 	 * @param host the host
+	 * @param taskLogger the current task logger
 	 */
-	public Telnet(NetworkAddress host) {
-		super(host);
+	public Telnet(NetworkAddress host, TaskLogger taskLogger) {
+		super(host, taskLogger);
 	}
 	
 	/**
@@ -69,9 +71,10 @@ public class Telnet extends Cli {
 	 *
 	 * @param host the host
 	 * @param port the port
+	 * @param taskLogger the current task logger
 	 */
-	public Telnet(NetworkAddress host, int port) {
-		this(host);
+	public Telnet(NetworkAddress host, int port, TaskLogger taskLogger) {
+		this(host, taskLogger);
 		if (port != 0) this.port = port;
 		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
 	}

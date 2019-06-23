@@ -162,7 +162,10 @@ public class PurgeDatabaseTask extends Task {
 				Query query;
 				if (configSize > 0) {
 					query = session
-						.createQuery("select c from Config c join c.attributes a where (a.class = ConfigLongTextAttribute) group by c.id having (max(length(a.longText.text)) > :size) and (c.changeDate < :when) order by c.device asc, c.changeDate desc")
+						.createQuery(
+							"select c from Config c join c.attributes a where (a.class = ConfigLongTextAttribute or a.class = ConfigBinaryFileAttribute) " +
+							"group by c.id having ((max(length(a.longText.text)) > :size) or (a.fileSize > :size)) and (c.changeDate < :when) " +
+							"order by c.device asc, c.changeDate desc")
 						.setInteger("size", configSize * 1024);
 				}
 				else {

@@ -73,7 +73,7 @@ public class SnapshotCliScript extends CliScript {
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper);
 			options.setDevice(new JsDeviceHelper(device, session, taskLogger, false));
 			Config config = new Config(device);
-			options.setConfigHelper(new JsConfigHelper(device, config, taskLogger));
+			options.setConfigHelper(new JsConfigHelper(device, config, cli, taskLogger));
 			((Invocable) engine).invokeFunction("_connect", "snapshot", protocol.value(), options, taskLogger);
 			boolean different = false;
 			try {

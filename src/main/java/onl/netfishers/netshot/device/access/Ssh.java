@@ -18,19 +18,29 @@
  */
 package onl.netfishers.netshot.device.access;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.security.Security;
 
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.NetworkAddress;
+import onl.netfishers.netshot.work.TaskLogger;
 
 import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.Identity;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.KeyPair;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +55,8 @@ public class Ssh extends Cli {
 	static private int DEFAULT_CONNECTION_TIMEOUT = 5000;
 
 	static {
+		Security.insertProviderAt(new BouncyCastleProvider(), 1);
+
 		int configuredConnectionTimeout = Netshot.getConfig("netshot.cli.ssh.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT);
 		if (configuredConnectionTimeout < 1) {
 			logger.error("Invalid value {} for {}", configuredConnectionTimeout, "netshot.cli.ssh.connectiontimeout");			
@@ -86,9 +98,10 @@ public class Ssh extends Cli {
 	 * @param port the port
 	 * @param username the username
 	 * @param password the password
+	 * @param taskLogger the current task logger
 	 */
-	public Ssh(NetworkAddress host, int port, String username, String password) {
-		super(host);
+	public Ssh(NetworkAddress host, int port, String username, String password, TaskLogger taskLogger) {
+		super(host, taskLogger);
 		if (port != 0) this.port = port;
 		this.username = username;
 		this.password = password;
@@ -104,9 +117,11 @@ public class Ssh extends Cli {
 	 * @param username the SSH username
 	 * @param privateKey the RSA/DSA private key
 	 * @param passphrase the passphrase which protects the private key
+	 * @param taskLogger the current task logger
 	 */
-	public Ssh(NetworkAddress host, int port, String username, String publicKey, String privateKey, String passphrase) {
-		super(host);
+	public Ssh(NetworkAddress host, int port, String username, String publicKey, String privateKey,
+			String passphrase, TaskLogger taskLogger) {
+		super(host, taskLogger);
 		if (port != 0) this.port = port;
 		this.username = username;
 		this.publicKey = publicKey;
@@ -122,9 +137,11 @@ public class Ssh extends Cli {
 	 * @param username the SSH username
 	 * @param privateKey the RSA/DSA private key
 	 * @param passphrase the passphrase which protects the private key
+	 * @param taskLogger the current task logger
 	 */
-	public Ssh(NetworkAddress host, String username, String publicKey, String privateKey, String passphrase) {
-		super(host);
+	public Ssh(NetworkAddress host, String username, String publicKey, String privateKey,
+			String passphrase, TaskLogger taskLogger) {
+		super(host, taskLogger);
 		this.username = username;
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
@@ -139,9 +156,10 @@ public class Ssh extends Cli {
 	 * @param host the host
 	 * @param username the username
 	 * @param password the password
+	 * @param taskLogger the current task logger
 	 */
-	public Ssh(NetworkAddress host, String username, String password) {
-		super(host);
+	public Ssh(NetworkAddress host, String username, String password, TaskLogger taskLogger) {
+		super(host, taskLogger);
 		this.username = username;
 		this.password = password;
 		this.privateKey = null;
@@ -228,10 +246,177 @@ public class Ssh extends Cli {
 		try {
 			channel.disconnect();
 			session.disconnect();
-		} catch (Exception e) {
-			
 		}
-		
+		catch (Exception e) {
+			logger.warn("Error on SSH disconnect.", e);
+		}
+	}
+
+	private int scpCheckAck(InputStream in) throws IOException {
+		int b = in.read();
+		// 0 = success, 1 = error, 2 = fatal error, -1 = ...
+		if (b == 1 || b == 2) {
+			StringBuffer sb = new StringBuffer("SCP error: ");
+			int c;
+			do {
+				c = in.read();
+				sb.append((char) c);
+			}
+			while (c != '\n');
+			throw new IOException(sb.toString());
+		}
+		return b;
+	}
+
+	/**
+	 * Download a file using SCP.
+	 * @param remoteFileName The file to download (name with full path) from the device
+	 * @param localFileName  The local file name (name with full path) where to write
+	 */
+	public void scpDownload(String remoteFileName, String localFileName) throws IOException {
+		if (localFileName == null) {
+			throw new FileNotFoundException("Invalid destination file name for SCP copy operation. "
+				+ "Have you defined 'netshot.snapshots.binary.path'?");
+		}
+		if (remoteFileName == null) {
+			throw new FileNotFoundException("Invalid source file name for SCP copy operation");
+		}
+		if (!session.isConnected()) {
+			throw new IOException("The SSH session is not connected, can't start the SCP transfer");
+		}
+		this.taskLogger.info(String.format("Downloading '%s' to '%s' using SCP.",
+				remoteFileName, localFileName.toString()));
+
+		Channel channel = null;
+		FileOutputStream fileStream = null;
+		try {
+			String command = String.format("scp -f '%s'", remoteFileName.replace("'", "'\"'\"'"));
+			channel = session.openChannel("exec");
+			((ChannelExec) channel).setCommand(command);
+			OutputStream out = channel.getOutputStream();
+			InputStream in = channel.getInputStream();
+			channel.connect(this.connectionTimeout);
+
+			byte[] buf = new byte[4096];
+
+			// Send null
+			buf[0] = 0;
+			out.write(buf, 0, 1);
+			out.flush();
+
+			if (this.scpCheckAck(in) != 'C') {
+				throw new IOException("SCP error, no file to download");
+			}
+
+			// Read (and ignore) file permissions
+			in.read(buf, 0, 5);
+
+			long fileSize = 0L;
+			while (true) {
+				if (in.read(buf, 0, 1) < 0 || buf[0] == ' ') {
+					break;
+				}
+				fileSize = fileSize * 10L + (long)(buf[0] - '0');
+			}
+			taskLogger.debug(String.format("File size: %d bytes", fileSize));
+
+			String retFileName = null;
+			int i = 0;
+			while (true) {
+				if (in.read(buf, i, 1) < 0) {
+					throw new IOException("Can't receive the file name");
+				}
+				if (buf[i] == (byte)0x0a) {
+					retFileName = new String(buf, 0, i);
+					break;
+				}
+				i += 1;
+			}
+
+			taskLogger.debug(String.format("Name: '%s'", retFileName));
+
+			// Send null
+			buf[0] = 0;
+			out.write(buf, 0, 1);
+			out.flush();
+
+			fileStream = new FileOutputStream(localFileName);
+			while (true) {
+				int len = in.read(buf, 0, Math.min(buf.length, (int)fileSize));
+				if (len < 0) {
+					throw new IOException("SCP read error");
+				}
+				fileStream.write(buf, 0, len);
+				fileSize -= len;
+				if (fileSize == 0L) {
+					break;
+				}
+			}
+			fileStream.close();
+			fileStream = null;
+
+		}
+		catch (JSchException error) {
+			throw new IOException("SCP exception", error);
+		}
+		finally {
+			try {
+				channel.disconnect();
+			}
+			catch (Exception e1) {
+				// This is life
+			}
+			try {
+				fileStream.close();
+			}
+			catch (Exception e1) {
+				// This is life
+			}
+		}
+
+	}
+
+	/**
+	 * Download a file using SFTP.
+	 * @param remoteFileName The file to download (name with full path) from the device
+	 * @param localFileName  The local file name (name with full path) where to write
+	 */
+	public void sftpDownload(String remoteFileName, String localFileName) throws IOException {
+		if (localFileName == null) {
+			throw new FileNotFoundException("Invalid destination file name for SFTP copy operation. "
+				+ "Have you defined 'netshot.snapshots.binary.path'?");
+		}
+		if (remoteFileName == null) {
+			throw new FileNotFoundException("Invalid source file name for SFTP copy operation");
+		}
+		if (!session.isConnected()) {
+			throw new IOException("The SSH session is not connected, can't start the SFTP transfer");
+		}
+		this.taskLogger.info(String.format("Downloading '%s' to '%s' using SFTP.",
+				remoteFileName, localFileName.toString()));
+
+		Channel channel = null;
+		try {
+			channel = session.openChannel("sftp");
+			channel.connect(this.connectionTimeout);
+			ChannelSftp sftpChannel = (ChannelSftp) channel;
+			sftpChannel.get(remoteFileName, localFileName);
+		}
+		catch (JSchException error) {
+			throw new IOException("SSH error: " + error.getMessage(), error);
+		}
+		catch (SftpException error) {
+			throw new IOException("SFTP error: " + error.getCause().getMessage(), error);
+		}
+		finally {
+			try {
+				channel.disconnect();
+			}
+			catch (Exception e1) {
+				// This is life
+			}
+		}
+
 	}
 
 }

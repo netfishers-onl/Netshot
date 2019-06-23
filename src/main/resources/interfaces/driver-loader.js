@@ -45,6 +45,7 @@ function _connect(_function, _protocol, _options, _logger) {
 	var cli = {
 		
 		_mode: _protocol,
+		_modeHistory: [_protocol],
 		_strictPrompt: null,
 		CR: "\r",
 		_recursion: 0,
@@ -150,6 +151,7 @@ function _connect(_function, _protocol, _options, _logger) {
 				}
 			}
 			this._mode = nextOne.options[_cli.lastExpectMatchIndex];
+			this._modeHistory.push(this._mode);
 			this._strictPrompt = _cli.getLastExpectMatchGroup(1);
 			if (this._mode == this._runningTarget) {
 				return;
@@ -164,7 +166,8 @@ function _connect(_function, _protocol, _options, _logger) {
 				this._macro(this._runningMacro);
 			}
 			if (this._mode != this._runningTarget) {
-				throw "Couldn't switch to mode " + this._runningTarget + " using macro " + this._runningMacro + " from mode " + this._originalMode + " (reached mode " + this._mode + ").";
+				throw "Couldn't switch to mode " + this._runningTarget + " using macro " + this._runningMacro + " from mode " +
+						this._originalMode + " (reached mode " + this._mode + ").";
 			}
 		},
 		
@@ -409,6 +412,37 @@ function _connect(_function, _protocol, _options, _logger) {
 				value = String(value);
 			}
 			_options.configHelper.set(key, value);
+		},
+		download: function(key, method, fileName, storeFileName) {
+			if (typeof(key) === "string") {
+				key = String(key);
+			}
+			else {
+				throw "The key should be a string in config.download.";
+			}
+			if (typeof(method) === "string") {
+				method = String(method);
+			}
+			else {
+				throw "The method should be a string in config.download.";
+			}
+			if (typeof(fileName) === "string") {
+				fileName = String(fileName);
+			}
+			else {
+				throw "The fileName should be a string in config.download.";
+			}
+			if (typeof(storeFileName) === "string") {
+				storeFileName = String(storeFileName);
+			}
+			else if (typeof(storeFileName) === "undefined") {
+				storeFileName = String("");
+			}
+			else {
+				throw "The storeFileName should be a string in config.download.";
+			}
+
+			_options.configHelper.download(key, method, fileName, storeFileName);
 		}
 	};
 	

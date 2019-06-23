@@ -57,6 +57,7 @@ import onl.netfishers.netshot.device.PhysicalAddress;
 import onl.netfishers.netshot.device.StaticDeviceGroup;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigBinaryAttribute;
+import onl.netfishers.netshot.device.attribute.ConfigBinaryFileAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigLongTextAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigNumericAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigTextAttribute;
@@ -324,6 +325,7 @@ public class Database {
 				.addAnnotatedClass(ConfigTextAttribute.class)
 				.addAnnotatedClass(ConfigLongTextAttribute.class)
 				.addAnnotatedClass(ConfigBinaryAttribute.class)
+				.addAnnotatedClass(ConfigBinaryFileAttribute.class)
 				.addAnnotatedClass(LongTextConfiguration.class)
 				.addAnnotatedClass(StaticDeviceGroup.class)
 				.addAnnotatedClass(DynamicDeviceGroup.class)

@@ -134,6 +134,16 @@ define([
 			return d.toLocaleString(undefined, f);
 		}
 
+		window.formatFileSize = function(size) {
+			var u = ["GB", "MB", "KB", "B"];
+			var s = size;
+			while (s > 1024 && u.length > 1) {
+				s = s / 1024;
+				u.pop();
+			}
+			return s.toFixed(2) + u.pop();
+		}
+
 		window.user = new CurrentUserModel();
 		window.user.fetch().done(function() {
 			start();

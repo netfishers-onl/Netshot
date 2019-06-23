@@ -25,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import onl.netfishers.netshot.device.NetworkAddress;
+import onl.netfishers.netshot.work.TaskLogger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,81 +64,14 @@ public abstract class Cli {
 	/** The connection timeout. */
 	protected int connectionTimeout = 5000;
 	
-	/**
-	 * Gets the connection timeout.
-	 *
-	 * @return the connection timeout
-	 */
-	public int getConnectionTimeout() {
-		return connectionTimeout;
-	}
-
-	/**
-	 * Sets the connection timeout.
-	 *
-	 * @param connectionTimeout the new connection timeout
-	 */
-	public void setConnectionTimeout(int connectionTimeout) {
-		this.connectionTimeout = connectionTimeout;
-	}
-	
 	/** The receive timeout. */
 	protected int receiveTimeout = 60000;
 
-	/**
-	 * Gets the receive timeout.
-	 *
-	 * @return the receive timeout
-	 */
-	public int getReceiveTimeout() {
-		return receiveTimeout;
-	}
-
-	/**
-	 * Sets the receive timeout.
-	 *
-	 * @param receiveTimeout the new receive timeout
-	 */
-	public void setReceiveTimeout(int receiveTimeout) {
-		this.receiveTimeout = receiveTimeout;
-	}
-
 	/** The command timeout. */
 	protected int commandTimeout = 120000;
-	
-	/**
-	 * Gets the command timeout.
-	 *
-	 * @return the command timeout
-	 */
-	public int getCommandTimeout() {
-		return commandTimeout;
-	}
 
-	/**
-	 * Sets the command idle timeout, i.e. max time without receiving data.
-	 *
-	 * @param commandTimeout the new command timeout
-	 */
-	public void setCommandTimeout(int commandTimeout) {
-		this.commandTimeout = commandTimeout;
-	}
-
-	
-	/** The prompt. */
-	protected String prompt;
-	
-	/** The host. */
-	protected NetworkAddress host;
-	
-	/**
-	 * Instantiates a new cli.
-	 *
-	 * @param host the host
-	 */
-	public Cli(NetworkAddress host) {
-		this.host = host;
-	}
+	/** The current task logger */
+	protected TaskLogger taskLogger;
 	
 	/** The last command. */
 	protected String lastCommand;
@@ -159,6 +93,77 @@ public abstract class Cli {
 	
 	/** The out stream. */
 	protected PrintStream outStream;
+	
+	/** The prompt. */
+	protected String prompt;
+	
+	/** The host. */
+	protected NetworkAddress host;
+	
+	/**
+	 * Instantiates a new cli.
+	 *
+	 * @param host the host
+	 * @param taskLogger the current task logger
+	 */
+	public Cli(NetworkAddress host, TaskLogger taskLogger) {
+		this.host = host;
+		this.taskLogger = taskLogger;
+	}
+	
+	/**
+	 * Gets the connection timeout.
+	 *
+	 * @return the connection timeout
+	 */
+	public int getConnectionTimeout() {
+		return connectionTimeout;
+	}
+
+	/**
+	 * Sets the connection timeout.
+	 *
+	 * @param connectionTimeout the new connection timeout
+	 */
+	public void setConnectionTimeout(int connectionTimeout) {
+		this.connectionTimeout = connectionTimeout;
+	}
+
+	/**
+	 * Gets the receive timeout.
+	 *
+	 * @return the receive timeout
+	 */
+	public int getReceiveTimeout() {
+		return receiveTimeout;
+	}
+
+	/**
+	 * Sets the receive timeout.
+	 *
+	 * @param receiveTimeout the new receive timeout
+	 */
+	public void setReceiveTimeout(int receiveTimeout) {
+		this.receiveTimeout = receiveTimeout;
+	}
+	
+	/**
+	 * Gets the command timeout.
+	 *
+	 * @return the command timeout
+	 */
+	public int getCommandTimeout() {
+		return commandTimeout;
+	}
+
+	/**
+	 * Sets the command idle timeout, i.e. max time without receiving data.
+	 *
+	 * @param commandTimeout the new command timeout
+	 */
+	public void setCommandTimeout(int commandTimeout) {
+		this.commandTimeout = commandTimeout;
+	}
 	
 	/**
 	 * Gets the last command.

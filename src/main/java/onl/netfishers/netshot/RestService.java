@@ -19,6 +19,7 @@
 package onl.netfishers.netshot;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.UnknownHostException;
@@ -106,6 +107,7 @@ import onl.netfishers.netshot.device.Device.Status;
 import onl.netfishers.netshot.device.Finder.Expression.FinderParseException;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
+import onl.netfishers.netshot.device.attribute.ConfigBinaryFileAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigLongTextAttribute;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
@@ -1193,27 +1195,43 @@ public class RestService extends Thread {
 						"Unable to find the configuration set",
 						javax.ws.rs.core.Response.Status.NOT_FOUND);
 			}
-			String text = null;
 			for (ConfigAttribute attribute : config.getAttributes()) {
-				if (attribute.getName().equals(item) && attribute instanceof ConfigLongTextAttribute) {
-					text = ((ConfigLongTextAttribute) attribute).getLongText().getText();
-					break;
+				if (attribute.getName().equals(item)) {
+					if (attribute instanceof ConfigLongTextAttribute) {
+						String text = ((ConfigLongTextAttribute) attribute).getLongText().getText();
+						if (text == null) {
+							throw new WebApplicationException("Configuration item not available",
+									javax.ws.rs.core.Response.Status.BAD_REQUEST);
+						}
+						String fileName = "config.cfg";
+						try {
+							SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd_HH-mm");
+							fileName = String.format("%s_%s_%s.cfg", config.getDevice().getName(), attribute.getName(),
+								formatter.format(config.getChangeDate()));
+						}
+						catch (Exception e) {
+						}
+						return Response.ok(text)
+							.header("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))
+							.build();
+					}
+					else if (attribute instanceof ConfigBinaryFileAttribute) {
+						ConfigBinaryFileAttribute fileAttribute = (ConfigBinaryFileAttribute) attribute;
+						File file = fileAttribute.getFileName();
+						String fileName = fileAttribute.getOriginalName();
+						if (fileName == null) {
+							SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd_HH-mm");
+							fileName = String.format("%s_%s_%s.dat", config.getDevice().getName(), attribute.getName(),
+								formatter.format(config.getChangeDate()));
+						}
+						return Response.ok(file, MediaType.APPLICATION_OCTET_STREAM)
+							.header("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))
+							.build();
+					}
 				}
 			}
-			if (text == null) {
-				throw new WebApplicationException("Configuration item not available",
-						javax.ws.rs.core.Response.Status.BAD_REQUEST);
-			}
-			String fileName = "config.cfg";
-			try {
-				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd_HH-mm");
-				fileName = String.format("%s_%s.cfg", config.getDevice().getName(), formatter.format(config.getChangeDate()));
-			}
-			catch (Exception e) {
-			}
-			return Response.ok(text)
-					.header("Content-Disposition", "attachment; filename=" + fileName)
-					.build();
+			throw new WebApplicationException("Invalid configuration item",
+				javax.ws.rs.core.Response.Status.BAD_REQUEST);
 		}
 		catch (HibernateException e) {
 			throw new WebApplicationException("Unable to get the configuration",

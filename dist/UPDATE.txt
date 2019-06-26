@@ -28,7 +28,14 @@ $ sudo service netshot start
 
 ### Special update steps
 
-### 0.7.0 or 0.7.1 to 0.7.2 onl
+### 0.12.x to 0.13.0
+For binary file attributes (used by Checkpoint drivers), add the following configuration
+to netshot.conf file (/etc/netshot.conf by default):
+
+netshot.snapshots.binary.path = /var/local/netshot
+
+
+### 0.7.0 or 0.7.1 to 0.7.2
 Remove the unique index from the device table on column connect_ipv4_address.
 
 mysql -u netshot -p netshot01

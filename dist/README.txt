@@ -12,6 +12,13 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.13.0 - 2019-06-26
+
+* Add binary file attributes
+* Add SCP and SFTP for the drivers to download files from the devices
+* Update Checkpoint GAIA driver, and add Checkpoint SPLAT
+* Updated FortiGate driver
+
 0.12.7 - 2019-05-22
 
 * Increase the size of basic text diagnostic result fields

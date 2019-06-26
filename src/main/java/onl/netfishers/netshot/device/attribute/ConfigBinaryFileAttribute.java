@@ -25,21 +25,14 @@ import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.PostRemove;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.Config;
 
 @Entity @DiscriminatorValue("F")
 public class ConfigBinaryFileAttribute extends ConfigAttribute {
-
-	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(ConfigBinaryFileAttribute.class);
 
 	/** Unique ID generated before saving */
 	private String uid;
@@ -132,17 +125,6 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 	@XmlElement
 	public void setFileSize(long fileSize) {
 		this.fileSize = fileSize;
-	}
-
-	@PostRemove
-	public void onPostRemove() {
-		File file = this.getFileName();
-		try {
-			file.delete();
-		}
-		catch (Exception e) {
-			logger.error("Error while removing binary file {}", file, e);
-		}
 	}
 
 	@Override

@@ -2352,6 +2352,15 @@ public class RestService extends Thread {
 		logger.debug("REST request, delete device {}.", id);
 		Session session = Database.getSession();
 		try {
+			List<File> toDeleteFiles = new ArrayList<File>();
+			@SuppressWarnings("unchecked")
+			List<ConfigBinaryFileAttribute> attributes = session
+					.createQuery("from ConfigBinaryFileAttribute cfa where cfa.config.device.id = :id")
+					.setLong("id", id)
+					.list();
+			for (ConfigBinaryFileAttribute attribute : attributes) {
+				toDeleteFiles.add(attribute.getFileName());
+			}
 			session.beginTransaction();
 			Device device = (Device) session.load(Device.class, id);
 			for (DeviceGroup group : device.getOwnerGroups()) {
@@ -2359,6 +2368,14 @@ public class RestService extends Thread {
 			}
 			session.delete(device);
 			session.getTransaction().commit();
+			for (File toDeleteFile : toDeleteFiles) {
+				try {
+					toDeleteFile.delete();
+				}
+				catch (Exception e) {
+					logger.error("Error while removing binary file {}", toDeleteFile, e);
+				}
+			}
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -2371,6 +2388,9 @@ public class RestService extends Thread {
 			}
 			throw new NetshotBadRequestException("Unable to delete the device",
 					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		catch (Exception e) {
+			logger.error("Error", e);
 		}
 		finally {
 			session.close();

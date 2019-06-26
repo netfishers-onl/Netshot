@@ -1231,7 +1231,6 @@ public class Device {
 			this.diagnosticResults.add(result);
 		}
 	}
-	
 
 
 	/**

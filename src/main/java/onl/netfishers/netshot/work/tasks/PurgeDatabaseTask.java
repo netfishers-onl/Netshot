@@ -18,8 +18,11 @@
  */
 package onl.netfishers.netshot.work.tasks;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.Transient;
@@ -27,6 +30,8 @@ import javax.xml.bind.annotation.XmlElement;
 
 import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.device.Config;
+import onl.netfishers.netshot.device.attribute.ConfigAttribute;
+import onl.netfishers.netshot.device.attribute.ConfigBinaryFileAttribute;
 import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.CacheMode;
@@ -164,7 +169,7 @@ public class PurgeDatabaseTask extends Task {
 					query = session
 						.createQuery(
 							"select c from Config c join c.attributes a where (a.class = ConfigLongTextAttribute or a.class = ConfigBinaryFileAttribute) " +
-							"group by c.id having ((max(length(a.longText.text)) > :size) or (a.fileSize > :size)) and (c.changeDate < :when) " +
+							"group by c.id having ((max(length(a.longText.text)) > :size) or (max(a.fileSize) > :size)) and (c.changeDate < :when) " +
 							"order by c.device asc, c.changeDate desc")
 						.setInteger("size", configSize * 1024);
 				}
@@ -179,6 +184,7 @@ public class PurgeDatabaseTask extends Task {
 				long dontDeleteDevice = -1;
 				Date dontDeleteBefore = null;
 				int count = 0;
+				List<File> toDeleteFiles = new ArrayList<File>();
 				while (configs.next()) {
 					try {
 						Config config = (Config) configs.get(0);
@@ -193,6 +199,11 @@ public class PurgeDatabaseTask extends Task {
 							}
 						}
 						else {
+							for (ConfigAttribute attribute : config.getAttributes()) {
+								if (attribute instanceof ConfigBinaryFileAttribute) {
+									toDeleteFiles.add(((ConfigBinaryFileAttribute) attribute).getFileName());
+								}
+							}
 							session.delete(config);
 							if (++count % 30 == 0) {
 								session.flush();
@@ -207,6 +218,14 @@ public class PurgeDatabaseTask extends Task {
 				session.getTransaction().commit();
 				logger.trace("Cleaning up done on configurations, {} entries affected.", count);
 				this.info(String.format("Cleaning up done on configurations, %d entries affected.", count));
+				for (File toDeleteFile : toDeleteFiles) {
+					try {
+						toDeleteFile.delete();
+					}
+					catch (Exception e) {
+						logger.error("Error while removing binary file {}", toDeleteFile, e);
+					}
+				}
 			}
 			catch (HibernateException e) {
 				try {

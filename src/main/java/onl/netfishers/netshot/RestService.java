@@ -6404,7 +6404,8 @@ public class RestService extends Thread {
 	@Path("reports/groupconfigcompliancestats")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsGroupConfigComplianceStat> getGroupConfigComplianceStats(@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
+	public List<RsGroupConfigComplianceStat> getGroupConfigComplianceStats(@QueryParam("domain") Set<Long> domains,
+			@QueryParam("group") Set<Long> deviceGroups, @QueryParam("policy") Set<Long> policies) throws WebApplicationException {
 		logger.debug("REST request, group config compliance stats.");
 		Session session = Database.getSession();
 		try {
@@ -6412,16 +6413,31 @@ public class RestService extends Thread {
 			if (domains.size() > 0) {
 				domainFilter = " d.mgmtDomain.id in (:domainIds) and";
 			}
+			String ccrFilter = "";
+			if (policies.size() > 0) {
+				ccrFilter = " rule.policy.id in (:policyIds) and";
+			}
+			String groupFilter = "";
+			if (deviceGroups.size() > 0) {
+				groupFilter = " g.id in (:groupIds) and";
+			}
 			
 			Query query = session
 				.createQuery("select g.id as groupId, g.name as groupName, "
-						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled and (select count(ccr.result) from d.complianceCheckResults ccr where ccr.result = :nonConforming) = 0) as compliantDeviceCount, "
+						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled and (select count(ccr.result) from d.complianceCheckResults ccr join ccr.key.rule rule where"
+							+ ccrFilter + " ccr.result = :nonConforming) = 0) as compliantDeviceCount, "
 						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled) as deviceCount "
-						+ "from DeviceGroup g where g.hiddenFromReports <> true")
+						+ "from DeviceGroup g where" + groupFilter + " g.hiddenFromReports <> true")
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
 				.setParameter("enabled", Device.Status.INPRODUCTION);
 			if (domains.size() > 0) {
 				query.setParameterList("domainIds", domains);
+			}
+			if (policies.size() > 0) {
+				query.setParameterList("policyIds", policies);
+			}
+			if (deviceGroups.size() > 0) {
+				query.setParameterList("groupIds", deviceGroups);
 			}
 			@SuppressWarnings("unchecked")
 			List<RsGroupConfigComplianceStat> stats = query

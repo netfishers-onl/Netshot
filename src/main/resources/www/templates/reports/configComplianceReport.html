@@ -7,6 +7,16 @@
 		<label for="filterdomain">Restrict to the following device domain:</label>
 		<select name="domain" id="domain" disabled="disabled" class="text ui-widget-content ui-corner-all"></select>
 	</fieldset>
+	<fieldset>
+		<input type="checkbox" name="filtergroup" id="filtergroup" />
+		<label for="filtergroup">Restrict to the following device groups:</label>
+		<span id="filtergroups"></span>
+	</fieldset>
+	<fieldset>
+		<input type="checkbox" name="filterpolicy" id="filterpolicy" />
+		<label for="filterpolicy">Restrict to the following compliance policies:</label>
+		<span id="filterpolicies"></span>
+	</fieldset>
 	<p>
 		<button id="update">Update</button>
 	</p>

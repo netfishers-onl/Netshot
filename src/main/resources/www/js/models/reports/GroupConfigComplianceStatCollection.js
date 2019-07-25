@@ -8,6 +8,8 @@ define([
 		
 		initialize: function(models, options) {
 			this.domains = options.domains;
+			this.deviceGroups = options.deviceGroups;
+			this.policies = options.policies;
 		},
 
 		url: function() {
@@ -16,6 +18,16 @@ define([
 			if (this.domains) {
 				_.forEach(this.domains, function(domain) {
 					params.push("domain=" + domain);
+				});
+			}
+			if (this.deviceGroups) {
+				_.forEach(this.deviceGroups, function(group) {
+					params.push("group=" + group);
+				});
+			}
+			if (this.policies) {
+				_.forEach(this.policies, function(policy) {
+					params.push("policy=" + policy);
 				});
 			}
 			if (params.length) {

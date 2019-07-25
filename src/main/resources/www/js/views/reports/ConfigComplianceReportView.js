@@ -8,21 +8,27 @@ define([
 	'models/reports/GroupConfigComplianceStatCollection',
 	'models/reports/GroupNonCompliantDevicesCollection',
 	'models/domain/DomainCollection',
+	'models/compliance/PolicyCollection',
+	'models/device/DeviceGroupCollection',
 	'text!templates/reports/configComplianceReport.html',
 	'text!templates/reports/chartLegend.html',
-	'text!templates/reports/configComplianceNonCompliantDeviceRow.html'
+	'text!templates/reports/configComplianceNonCompliantDeviceRow.html',
+	'text!templates/reports/reportPolicyFilter.html',
+	'text!templates/reports/reportGroupFilter.html',
 	], function($, _, Backbone, Chart, ReportView,
 			GroupConfigComplianceStatCollection, GroupNonCompliantDevicesCollection,
-			DomainCollection,
+			DomainCollection, PolicyCollection, DeviceGroupCollection,
 			configComplianceReportTemplate, chartLegendTemplate,
-			configComplianceNonCompliantDeviceRowTemplate) {
+			configComplianceNonCompliantDeviceRowTemplate, reportPolicyFilterTemplate,
+			reportGroupFilterTemplate) {
 
 	return ReportView.extend({
 
 		template: _.template(configComplianceReportTemplate),
 		chartLegendTemplate: _.template(chartLegendTemplate),
-		nonCompliantDeviceTemplate: _
-		.template(configComplianceNonCompliantDeviceRowTemplate),
+		nonCompliantDeviceTemplate: _.template(configComplianceNonCompliantDeviceRowTemplate),
+		policyFilterTemplate: _.template(reportPolicyFilterTemplate),
+		groupFilterTemplate: _.template(reportGroupFilterTemplate),
 
 		render: function() {
 			var that = this;
@@ -31,6 +37,14 @@ define([
 			
 			this.$('#filterdomain').click(function() {
 				that.$('#domain').prop('disabled', !$(this).prop('checked'));
+			});
+			this.$('#filtergroup').click(function() {
+				that.$('#filtergroups input').prop('disabled', !$(this).prop('checked'));
+				that.enableUpdateButton();
+			});
+			this.$('#filterpolicy').click(function() {
+				that.$('#filterpolicies input').prop('disabled', !$(this).prop('checked'));
+				that.enableUpdateButton();
 			});
 
 			this.$('#update').button({
@@ -44,8 +58,16 @@ define([
 			});
 
 			this.domains = new DomainCollection([]);
-			this.domains.fetch().done(function() {
+			this.deviceGroups = new DeviceGroupCollection([]);
+			this.policies = new PolicyCollection([]);
+			$.when(
+				this.domains.fetch(),
+				this.deviceGroups.fetch(),
+				this.policies.fetch()
+			).done(function() {
 				that.renderDomainList();
+				that.renderDeviceGroupList();
+				that.renderPolicyList();
 				that.refreshGroupConfigComplianceStats();
 			});
 
@@ -64,11 +86,48 @@ define([
 			}
 		},
 
+		enableUpdateButton: function() {
+			var withGroups = !(this.$('#filtergroup').is(':checked')) ||
+				this.$('#filtergroups input:checked').length > 0;
+			var withPolicies = !(this.$('#filterpolicy').is(':checked')) ||
+				this.$('#filterpolicies input:checked').length > 0;
+			this.$('#update').button((withGroups && withPolicies) ? 'enable' : 'disable');
+		},
+
+		renderPolicyList: function() {
+			var that = this;
+			this.htmlBuffer = "";
+			this.policies.each(function(policy) {
+				that.htmlBuffer += that.policyFilterTemplate(policy.toJSON());
+			});
+			this.$('#filterpolicies').html(this.htmlBuffer);
+			this.$('#filterpolicies input').click(function() {
+				that.enableUpdateButton();
+			});
+		},
+
+		renderDeviceGroupList: function() {
+			var that = this;
+			this.htmlBuffer = "";
+			this.deviceGroups.each(function(group) {
+				if (group.get('hiddenFromReports')) {
+					return;
+				}
+				that.htmlBuffer += that.groupFilterTemplate(group.toJSON());
+			});
+			this.$('#filtergroups').html(this.htmlBuffer);
+			this.$('#filtergroups input').click(function() {
+				that.enableUpdateButton();
+			});
+		},
+
 		refreshGroupConfigComplianceStats: function() {
 			var that = this;
 			this.$('#devices').hide();
 			this.groupConfigComplianceStats = new GroupConfigComplianceStatCollection([], {
 				domains: this.$('#filterdomain').prop('checked') ? [this.$('#domain').val()] : undefined,
+				deviceGroups: this.$('#filtergroups input:checked').map(function() { return $(this).data('group-id'); }).get(),
+				policies: this.$('#filterpolicies input:checked').map(function() { return $(this).data('policy-id'); }).get(),
 			});
 			this.groupConfigComplianceStats.fetch().done(function() {
 				that.renderGroupConfigComplianceStats();

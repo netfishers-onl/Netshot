@@ -124,10 +124,18 @@ define([
 		refreshGroupConfigComplianceStats: function() {
 			var that = this;
 			this.$('#devices').hide();
+			this.selectedDeviceGroups = undefined;
+			if (this.$('#filtergroup').is(':checked')) {
+				this.selectedDeviceGroups = this.$('#filtergroups input:checked').map(function() { return $(this).data('group-id'); }).get();
+			}
+			this.selectedPolicies = undefined;
+			if (this.$('#filterpolicy').is(':checked')) {
+				this.selectedPolicies = this.$('#filterpolicies input:checked').map(function() { return $(this).data('policy-id'); }).get();
+			}
 			this.groupConfigComplianceStats = new GroupConfigComplianceStatCollection([], {
 				domains: this.$('#filterdomain').prop('checked') ? [this.$('#domain').val()] : undefined,
-				deviceGroups: this.$('#filtergroups input:checked').map(function() { return $(this).data('group-id'); }).get(),
-				policies: this.$('#filterpolicies input:checked').map(function() { return $(this).data('policy-id'); }).get(),
+				deviceGroups: this.selectedDeviceGroups,
+				policies: this.selectedPolicies,
 			});
 			this.groupConfigComplianceStats.fetch().done(function() {
 				that.renderGroupConfigComplianceStats();
@@ -201,7 +209,8 @@ define([
 			var that = this;
 			this.groupNonCompliantDevices = new GroupNonCompliantDevicesCollection([], {
 				group: id,
-				domains: this.groupConfigComplianceStats.domains
+				domains: this.groupConfigComplianceStats.domains,
+				policies: this.selectedPolicies,
 			});
 			this.groupNonCompliantDevices.fetch().done(function() {
 				that.renderGroupNonCompliantDevices();

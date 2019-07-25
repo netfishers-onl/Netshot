@@ -6822,7 +6822,8 @@ public class RestService extends Thread {
 	@Path("reports/groupconfignoncompliantdevices/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsLightPolicyRuleDevice> getGroupConfigNonCompliantDevices(@PathParam("id") Long id, @QueryParam("domain") Set<Long> domains) throws WebApplicationException {
+	public List<RsLightPolicyRuleDevice> getGroupConfigNonCompliantDevices(@PathParam("id") Long id,
+			@QueryParam("domain") Set<Long> domains, @QueryParam("policy") Set<Long> policies) throws WebApplicationException {
 		logger.debug("REST request, group config non compliant devices.");
 		Session session = Database.getSession();
 		try {
@@ -6830,15 +6831,22 @@ public class RestService extends Thread {
 			if (domains.size() > 0) {
 				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
 			}
+			String policyFilter = "";
+			if (policies.size() > 0) {
+				policyFilter = " and p.id in (:policyIds)";
+			}
 			Query query = session
 				.createQuery(DEVICELIST_BASEQUERY + ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d "
 						+ "join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p "
-						+ "where g.id = :id and ccr.result = :nonConforming and d.status = :enabled" + domainFilter)
+						+ "where g.id = :id and ccr.result = :nonConforming and d.status = :enabled" + domainFilter + policyFilter)
 				.setLong("id", id)
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
 				.setParameter("enabled", Device.Status.INPRODUCTION);
 			if (domains.size() > 0) {
 				query.setParameterList("domainIds", domains);
+			}
+			if (policies.size() > 0) {
+				query.setParameterList("policyIds", policies);
 			}
 			@SuppressWarnings("unchecked")
 			List<RsLightPolicyRuleDevice> devices = query

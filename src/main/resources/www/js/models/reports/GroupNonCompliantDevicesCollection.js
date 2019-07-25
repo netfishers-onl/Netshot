@@ -9,6 +9,7 @@ define([
 		initialize: function(models, options) {
 			this.group = options.group;
 			this.domains = options.domains;
+			this.policies = options.policies;
 		},
 
 		url: function() {
@@ -17,6 +18,11 @@ define([
 			if (this.domains) {
 				_.forEach(this.domains, function(domain) {
 					params.push("domain=" + domain);
+				});
+			}
+			if (this.policies) {
+				_.forEach(this.policies, function(policy) {
+					params.push("policy=" + policy);
 				});
 			}
 			if (params.length) {

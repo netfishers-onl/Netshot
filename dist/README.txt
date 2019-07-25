@@ -12,6 +12,12 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.13.1 - 2019-07-26
+
+* Add more filters to the Config compliance report view
+* Update libraries (vulnerability)
+* Add Bouncy Castle as default security library (for better SSH algo coverage)
+
 0.13.0 - 2019-06-26
 
 * Add binary file attributes

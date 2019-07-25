@@ -20,11 +20,13 @@ package onl.netfishers.netshot;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.security.Security;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -411,6 +413,8 @@ public class Netshot extends Thread {
 		}
 
 		try {
+			logger.info("Enabling BouncyCastle security.");
+			Security.insertProviderAt(new BouncyCastleProvider(), 1);
 			logger.info("Initializing the task manager.");
 			TaskManager.init();
 			logger.info("Updating the database schema, if necessary.");

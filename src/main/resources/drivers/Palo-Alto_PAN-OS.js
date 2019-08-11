@@ -21,7 +21,7 @@
 var Info = {
     name: "Palo Alto PAN-OS",
     description: "PAN-OS",
-    author: "Adrien GANDARIAS",
+    author: "A. Gandarias",
     version: "0.3"
 };
 

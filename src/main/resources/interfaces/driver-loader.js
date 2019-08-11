@@ -20,6 +20,7 @@
 function _connect(_function, _protocol, _options, _logger) {
 	
 	var _cli = _options.cliHelper;
+	var _snmp = _options.snmpHelper;
 	
 	var _toNative = function(o) {
 		if (o == null || typeof(o) == "undefined") {
@@ -306,6 +307,61 @@ function _connect(_function, _protocol, _options, _logger) {
 		}
 		
 	};
+
+
+	var poller = {
+		get: function(oid) {
+			if (typeof(oid) == "string") {
+				oid = String(oid);
+			}
+			else {
+				throw "The OID should be a string in poller.get.";
+			}
+			var result = _snmp.getAsString(oid);
+			if (_snmp.isErrored()) {
+				throw "Error while SNMP polling OID " + oid;
+			}
+			return result;
+		},
+
+		walk: function(oid, reindex) {
+			if (typeof(oid) == "string") {
+				oid = String(oid);
+			}
+			else {
+				throw "The OID should be a string in poller.walk.";
+			}
+			var results = _snmp.walkAsString(oid);
+			if (_snmp.isErrored()) {
+				throw "Error while SNMP polling OID " + oid;
+			}
+			var m = {};
+			for (var r in results) {
+				if (reindex) {
+					if (r.startsWith(oid + ".")) {
+						m[r.slice(oid.length + 1)] = results[r];
+					}
+				}
+				else {
+					m[r] = results[r];
+				}
+			}
+			return m;
+		},
+
+		sleep: function(millis) {
+			if (typeof(millis) != "number") {
+				throw "Invalid number of milliseconds in sleep.";
+			}
+			if (millis < 0) {
+				throw "The number of milliseconds to wait can't be negative in sleep.";
+			}
+			if (millis % 1 !== 0) {
+				throw "The number of milliseconds to wait must be integer in sleep.";
+			}
+			_snmp.sleep(millis);
+		}
+	};
 	
 	var stripPreviousMatch = function(prompt, strictPrompt) {
 		if (typeof(strictPrompt) == "string") {
@@ -467,17 +523,22 @@ function _connect(_function, _protocol, _options, _logger) {
 			}
 		}
 	};
+
+	var commandHelper = cli;
+	if (_protocol == "snmp") {
+		commandHelper = poller;
+	}
 	
 	if (_function === "snapshot") {
 		_options.deviceHelper.reset();
-		snapshot(cli, deviceHelper, configHelper, debug);
+		snapshot(commandHelper, deviceHelper, configHelper, debug);
 	}
 	else if (_function === "run") {
 		if (typeof(run) != "function") {
 			throw "No 'run' function";
 		}
 		
-		run(cli, deviceHelper, configHelper, debug);
+		run(commandHelper, deviceHelper, configHelper, debug);
 	}
 	else if (_function === "diagnostics") {
 		var diagnostics = _options.diagnosticHelper.jsDiagnostics;
@@ -486,7 +547,7 @@ function _connect(_function, _protocol, _options, _logger) {
 			diagnosticHelper.setKey(name);
 			if (typeof diagnostic === "function") {
 				var diagnose = diagnostic;
-				diagnose(cli, deviceHelper, diagnosticHelper, debug);
+				diagnose(commandHelper, deviceHelper, diagnosticHelper, debug);
 			}
 			else {
 				cli.macro(diagnostic.mode);

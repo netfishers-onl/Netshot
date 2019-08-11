@@ -516,6 +516,8 @@ h1 {
 	text-align: left;
 	padding-top: 5px;
 	padding-bottom: 5px;
+	max-width: 100%;
+	white-space: nowrap;
 }
 
 #nsdevices-device .panel {

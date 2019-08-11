@@ -39,10 +39,12 @@ import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.DeviceDriver.DriverProtocol;
 import onl.netfishers.netshot.device.Network4Address;
 import onl.netfishers.netshot.device.access.Cli;
+import onl.netfishers.netshot.device.access.Snmp;
 import onl.netfishers.netshot.device.access.Ssh;
 import onl.netfishers.netshot.device.access.Telnet;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
+import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
 import onl.netfishers.netshot.device.credentials.DeviceSshAccount;
 import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
 import onl.netfishers.netshot.device.credentials.DeviceTelnetAccount;
@@ -184,7 +186,7 @@ public abstract class CliScript {
 		};
 	}
 	
-	protected abstract void run(Session session, Device device, Cli cli, DriverProtocol protocol, DeviceCliAccount cliAccount)
+	protected abstract void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
 			throws InvalidCredentialsException, IOException, ScriptException, MissingDeviceDriverException;
 	
 	public void connectRun(Session session, Device device)
@@ -196,8 +198,9 @@ public abstract class CliScript {
 			throws IOException, MissingDeviceDriverException, InvalidCredentialsException, ScriptException, MissingDeviceDriverException {
 		DeviceDriver deviceDriver = device.getDeviceDriver();
 		
-		boolean sshOpened = true;
-		boolean telnetOpened = true;
+		boolean sshOpened = deviceDriver.getProtocols().contains(DriverProtocol.SSH);
+		boolean telnetOpened = deviceDriver.getProtocols().contains(DriverProtocol.TELNET);
+		boolean snmpWorth = deviceDriver.getProtocols().contains(DriverProtocol.SNMP);
 		TaskLogger taskLogger = this.getJsLogger();
 		
 		Network4Address address = device.getConnectAddress();
@@ -217,7 +220,7 @@ public abstract class CliScript {
 		int sshPort = device.getSshPort();
 		int telnetPort = device.getTelnetPort();
 		
-		if (deviceDriver.getProtocols().contains(DriverProtocol.SSH)) {
+		if (sshOpened) {
 			for (DeviceCredentialSet credentialSet : credentialSets) {
 				if (credentialSet instanceof DeviceSshAccount) {
 					Cli cli;
@@ -234,7 +237,7 @@ public abstract class CliScript {
 					}
 					try {
 						cli.connect();
-						this.run(session, device, cli, DriverProtocol.SSH, (DeviceCliAccount) credentialSet);
+						this.run(session, device, cli, null, DriverProtocol.SSH, (DeviceCliAccount) credentialSet);
 						return;
 					}
 					catch (InvalidCredentialsException e) {
@@ -260,13 +263,13 @@ public abstract class CliScript {
 				}
 			}
 		}
-		if (deviceDriver.getProtocols().contains(DriverProtocol.TELNET)) {
+		if (telnetOpened) {
 			for (DeviceCredentialSet credentialSet : credentialSets) {
 				if (credentialSet instanceof DeviceTelnetAccount) {
 					Cli cli = new Telnet(address, telnetPort, taskLogger);
 					try {
 						cli.connect();
-						this.run(session, device, cli, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
+						this.run(session, device, cli, null, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
 						return;
 					}
 					catch (InvalidCredentialsException e) {
@@ -287,7 +290,33 @@ public abstract class CliScript {
 				}
 			}
 		}
-		if (device.isAutoTryCredentials() && (sshOpened || telnetOpened)) {
+		if (snmpWorth) {
+			for (DeviceCredentialSet credentialSet : credentialSets) {
+				if (credentialSet instanceof DeviceSnmpCommunity) {
+					Snmp poller = new Snmp(address, (DeviceSnmpCommunity)credentialSet);
+					try {
+						try {
+							poller.getAsString("1.3.6.1.2.1.1.3.0"); /* sysUptime.0 */
+						}
+						catch (IOException e1) {
+							if (!e1.getMessage().contains("noSuchObject")) {
+								throw e1;
+							}
+						}
+						this.run(session, device, null, poller, DriverProtocol.SNMP, credentialSet);
+						return;
+					}
+					catch (IOException e) {
+						logger.warn("Unable to poll {} using SNMP credential set {}", address.getIp(), credentialSet.getName());
+						taskLogger.warn("Unable to poll " + address.getIp() + " using SNMP credential set " + credentialSet.getName());
+					}
+					finally {
+						poller.stop();
+					}
+				}
+			}
+		}
+		if (device.isAutoTryCredentials() && (sshOpened || telnetOpened || snmpWorth)) {
 			List<DeviceCredentialSet> globalCredentialSets = device.getAutoCredentialSetList(session);
 			if (sshOpened) {
 				for (DeviceCredentialSet credentialSet : globalCredentialSets) {
@@ -307,7 +336,7 @@ public abstract class CliScript {
 						}
 						try {
 							cli.connect();
-							this.run(session, device, cli, DriverProtocol.SSH, (DeviceCliAccount) credentialSet);
+							this.run(session, device, cli, null, DriverProtocol.SSH, (DeviceCliAccount) credentialSet);
 							Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
 							while (ci.hasNext()) {
 								DeviceCredentialSet c = ci.next();
@@ -347,7 +376,7 @@ public abstract class CliScript {
 						Cli cli = new Telnet(address, telnetPort, taskLogger);
 						try {
 							cli.connect();
-							this.run(session, device, cli, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
+							this.run(session, device, cli, null, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
 							Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
 							while (ci.hasNext()) {
 								DeviceCredentialSet c = ci.next();
@@ -375,6 +404,43 @@ public abstract class CliScript {
 						}
 					}
 				}
+			}
+			if (snmpWorth) {
+				for (DeviceCredentialSet credentialSet : globalCredentialSets) {
+					if (credentialSet instanceof DeviceSnmpCommunity) {
+						taskLogger.trace(String.format("Will try SNMP credentials %s.", credentialSet.getName()));
+						Snmp poller = new Snmp(address, (DeviceSnmpCommunity)credentialSet);
+						try {
+							try {
+								poller.getAsString("1.3.6.1.2.1.1.3.0"); /* sysUptime.0 */
+							}
+							catch (IOException e1) {
+								if (!e1.getMessage().contains("noSuchObject")) {
+									throw e1;
+								}
+							}
+							this.run(session, device, null, poller, DriverProtocol.SNMP, credentialSet);
+							Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
+							while (ci.hasNext()) {
+								DeviceCredentialSet c = ci.next();
+								if (c instanceof DeviceSnmpCommunity) {
+									ci.remove();
+								}
+							}
+							credentialSets.add(credentialSet);
+							return;
+						}
+						catch (IOException e) {
+							logger.warn("Unable to poll {} using SNMP credential set {}", address.getIp(), credentialSet.getName());
+							taskLogger.warn("Unable to poll " + address.getIp() + " using SNMP credential set " + credentialSet.getName());
+							break;
+						}
+						finally {
+							poller.stop();
+						}
+					}
+				}
+				
 			}
 		}
 		if (!sshOpened && !telnetOpened) {

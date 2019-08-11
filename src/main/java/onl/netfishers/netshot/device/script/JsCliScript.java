@@ -36,10 +36,14 @@ import onl.netfishers.netshot.device.Device.MissingDeviceDriverException;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.DeviceDriver.DriverProtocol;
 import onl.netfishers.netshot.device.access.Cli;
+import onl.netfishers.netshot.device.access.Snmp;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
+import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
+import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
 import onl.netfishers.netshot.device.script.helper.JsCliHelper;
 import onl.netfishers.netshot.device.script.helper.JsCliScriptOptions;
 import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
+import onl.netfishers.netshot.device.script.helper.JsSnmpHelper;
 import onl.netfishers.netshot.work.TaskLogger;
 
 /**
@@ -72,9 +76,19 @@ public class JsCliScript extends CliScript {
 	}
 
 	@Override
-	protected void run(Session session, Device device, Cli cli, DriverProtocol protocol, DeviceCliAccount cliAccount)
+	protected void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
 			throws InvalidCredentialsException, IOException, ScriptException, MissingDeviceDriverException {
-		JsCliHelper jsCliHelper = new JsCliHelper(cli, cliAccount, this.getJsLogger(), this.getCliLogger());
+		JsCliHelper jsCliHelper = null;
+		JsSnmpHelper jsSnmpHelper = null;
+		switch (protocol) {
+		case SNMP:
+			jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity)account, this.getJsLogger());
+			break;
+		case TELNET:
+		case SSH:
+			jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount)account, this.getJsLogger(), this.getCliLogger());
+			break;
+		}
 		TaskLogger taskLogger = this.getJsLogger();
 		DeviceDriver driver = device.getDeviceDriver();
 		try {
@@ -83,7 +97,7 @@ public class JsCliScript extends CliScript {
 			scriptContext.setBindings(engine.getContext().getBindings(ScriptContext.ENGINE_SCOPE),
 					ScriptContext.ENGINE_SCOPE);
 			engine.eval(code, scriptContext);
-			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper);
+			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
 			options.setDevice(new JsDeviceHelper(device, null, taskLogger, false));
 			((Invocable) engine).invokeFunction("_connect", "run", protocol.value(), options, taskLogger);
 		}

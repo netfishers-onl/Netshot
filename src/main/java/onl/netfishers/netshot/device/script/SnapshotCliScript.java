@@ -43,14 +43,18 @@ import onl.netfishers.netshot.device.Device.MissingDeviceDriverException;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.DeviceDriver.DriverProtocol;
 import onl.netfishers.netshot.device.access.Cli;
+import onl.netfishers.netshot.device.access.Snmp;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
+import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
+import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
 import onl.netfishers.netshot.device.script.helper.JsCliHelper;
 import onl.netfishers.netshot.device.script.helper.JsCliScriptOptions;
 import onl.netfishers.netshot.device.script.helper.JsConfigHelper;
 import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
+import onl.netfishers.netshot.device.script.helper.JsSnmpHelper;
 import onl.netfishers.netshot.work.TaskLogger;
 
 public class SnapshotCliScript extends CliScript {
@@ -62,15 +66,26 @@ public class SnapshotCliScript extends CliScript {
 	}
 
 	@Override
-	protected void run(Session session, Device device, Cli cli, DriverProtocol protocol, DeviceCliAccount cliAccount)
+	protected void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
 			throws InvalidCredentialsException, IOException, ScriptException, MissingDeviceDriverException {
 
 		TaskLogger taskLogger = this.getJsLogger();
-		JsCliHelper jsCliHelper = new JsCliHelper(cli, cliAccount, taskLogger, this.getCliLogger());
+		JsCliHelper jsCliHelper = null;
+		JsSnmpHelper jsSnmpHelper = null;
+		switch (protocol) {
+		case SNMP:
+			jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity)account, taskLogger);
+			break;
+		case TELNET:
+		case SSH:
+			jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount)account, taskLogger, this.getCliLogger());
+			break;
+		}
+
 		DeviceDriver driver = device.getDeviceDriver();
 		ScriptEngine engine = driver.getEngine();
 		try {
-			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper);
+			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
 			options.setDevice(new JsDeviceHelper(device, session, taskLogger, false));
 			Config config = new Config(device);
 			options.setConfigHelper(new JsConfigHelper(device, config, cli, taskLogger));

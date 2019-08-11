@@ -19,8 +19,15 @@
 package onl.netfishers.netshot.device.access;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import onl.netfishers.netshot.device.NetworkAddress;
+import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
+import onl.netfishers.netshot.device.credentials.DeviceSnmpv1Community;
+import onl.netfishers.netshot.device.credentials.DeviceSnmpv2cCommunity;
+import onl.netfishers.netshot.device.credentials.DeviceSnmpv3Community;
 
 import org.snmp4j.CommunityTarget;
 import org.snmp4j.UserTarget;
@@ -46,6 +53,9 @@ import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.UdpAddress;
 import org.snmp4j.smi.VariableBinding;
 import org.snmp4j.transport.DefaultUdpTransportMapping;
+import org.snmp4j.util.DefaultPDUFactory;
+import org.snmp4j.util.TreeEvent;
+import org.snmp4j.util.TreeUtils;
 import org.snmp4j.TransportMapping;
 
 import org.slf4j.Logger;
@@ -75,6 +85,78 @@ public class Snmp extends Poller {
 	private static Logger logger = LoggerFactory.getLogger(Snmp.class);
 
 	/**
+	 * Instantiates a new SNMP object based on a target address and a Netshot community.
+	 * @param address The target
+	 * @param community The SNMP credentials
+	 * @throws IOException it can happen
+	 */
+	public Snmp(NetworkAddress address, DeviceSnmpCommunity community) throws IOException {
+		if (community instanceof DeviceSnmpv1Community) {
+			this.target = new CommunityTarget(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community.getCommunity()));
+			this.target.setVersion(SnmpConstants.version1);
+			start();
+		}
+		else if (community instanceof DeviceSnmpv2cCommunity) {
+			this.target = new CommunityTarget(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community.getCommunity()));
+			this.target.setVersion(SnmpConstants.version2c);
+			start();
+		}
+		else if (community instanceof DeviceSnmpv3Community) {
+			DeviceSnmpv3Community v3Credentials = (DeviceSnmpv3Community)community;
+			// Prepare target
+			logger.debug("Prepare SNMPv3 context");
+			this.target = new UserTarget();
+			this.target.setTimeout(5000);
+			this.target.setVersion(SnmpConstants.version3);
+			this.target.setAddress(new UdpAddress(address.getInetAddress(), PORT));
+			if (v3Credentials.getAuthKey() == null) {
+				this.target.setSecurityLevel(SecurityLevel.NOAUTH_NOPRIV);
+			}
+			else if (v3Credentials.getPrivKey() == null) {
+				this.target.setSecurityLevel(SecurityLevel.AUTH_NOPRIV);
+			}
+			else {
+				this.target.setSecurityLevel(SecurityLevel.AUTH_PRIV);
+			}
+			this.target.setSecurityName(new OctetString(v3Credentials.getUsername()));
+
+			// Prepare transport
+			logger.debug("Auth Protocol called: {}", v3Credentials.getAuthType());
+			if (v3Credentials.getAuthType().equals("SHA")) {
+				this.authProtocol = AuthSHA.ID;
+				logger.debug("Using SHA Auth");
+			}
+			else {
+				this.authProtocol = AuthMD5.ID;
+			}
+
+			if (v3Credentials.getAuthType().equals("AES128")) {
+				this.privProtocol = PrivAES128.ID;
+			}
+			else if (v3Credentials.getAuthType().equals("AES192")) {
+				this.privProtocol = PrivAES192.ID;
+			}
+			else if (v3Credentials.getAuthType().equals("AES256")) {
+				this.privProtocol = PrivAES256.ID;
+			}
+			else {
+				this.privProtocol = Priv3DES.ID;
+			}
+
+			USM usm = new USM(SecurityProtocols.getInstance(), new OctetString(MPv3.createLocalEngineID()), 0);
+			usm.addUser(
+				new OctetString(v3Credentials.getUsername()),
+				new UsmUser(
+					new OctetString(v3Credentials.getUsername()), this.authProtocol,
+					new OctetString(v3Credentials.getAuthKey()), this.privProtocol,
+					new OctetString(v3Credentials.getPrivKey())));
+			SecurityModels.getInstance().addSecurityModel(usm);
+
+			start();
+		}
+	}
+
+	/**
 	 * Instantiates a new snmp.
 	 *
 	 * @param address the address
@@ -85,85 +167,6 @@ public class Snmp extends Poller {
 	public Snmp(NetworkAddress address, String community, boolean v1) throws IOException {
 		this.target = new CommunityTarget(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community));
 		this.target.setVersion(v1 ? SnmpConstants.version1 : SnmpConstants.version2c);
-		start();
-	}
-
-	/**
-	 * Instantiates a new SNMPv1/2 access.
-	 *
-	 * @param address the address
-	 * @param community the community
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
-	public Snmp(NetworkAddress address, String community) throws IOException {
-		this(address, community, false);
-	}
-
-
-	/**
-	 * Instantiates a new SNMPv3 access.
-	 * @param address the IP address
-	 * @param username the SNMP username
-	 * @param authType the SNMP authType
-	 * @param authKey the SNMP authKey
-	 * @param privType the SNMP privType
-	 * @param privKey The SNMP privKey
-	 * @throws IOException if something went wrong
-	 */
-	public Snmp(NetworkAddress address, String username, String authType, String authKey, String privType, String privKey)
-			throws IOException {
-		// TODO
-		// AuthSHA.ID AuthMD5.ID
-		// AuthHMAC128SHA224.ID AuthHMAC192SHA256.ID AuthHMAC256SHA384.ID
-		// AuthHMAC384SHA512.ID
-		// Priv3DES.ID PrivAES128.ID PrivAES192.ID PrivAES256.ID
-		// AUTH_NOPRIV AUTH_PRIV NOAUTH_NOPRIV
-
-		// Prepare target
-		logger.debug("Prepare SNMPv3 context");
-		this.target = new UserTarget();
-		this.target.setTimeout(5000);
-		this.target.setVersion(SnmpConstants.version3);
-		this.target.setAddress(new UdpAddress(address.getInetAddress(), PORT));
-		if (authKey == null) {
-			this.target.setSecurityLevel(SecurityLevel.NOAUTH_NOPRIV);
-		}
-		else if (privKey == null) {
-			this.target.setSecurityLevel(SecurityLevel.AUTH_NOPRIV);
-		}
-		else {
-			this.target.setSecurityLevel(SecurityLevel.AUTH_PRIV);
-		}
-		this.target.setSecurityName(new OctetString(username));
-
-		// Prepare transport
-		logger.debug("Auth Protocol called: {}", authType);
-		if (authType.equals("SHA")) {
-			this.authProtocol = AuthSHA.ID;
-			logger.debug("Using SHA Auth");
-		}
-		else {
-			this.authProtocol = AuthMD5.ID;
-		}
-
-		if (privType.equals("AES128")) {
-			this.privProtocol = PrivAES128.ID;
-		}
-		else if (privType.equals("AES192")) {
-			this.privProtocol = PrivAES192.ID;
-		}
-		else if (privType.equals("AES256")) {
-			this.privProtocol = PrivAES256.ID;
-		}
-		else {
-			this.privProtocol = Priv3DES.ID;
-		}
-
-		USM usm = new USM(SecurityProtocols.getInstance(), new OctetString(MPv3.createLocalEngineID()), 0);
-		usm.addUser(new OctetString(username), new UsmUser(new OctetString(username), this.authProtocol,
-				new OctetString(authKey), this.privProtocol, new OctetString(privKey)));
-		SecurityModels.getInstance().addSecurityModel(usm);
-
 		start();
 	}
 
@@ -199,6 +202,12 @@ public class Snmp extends Poller {
 		PDU response = event.getResponse();
 		if (response == null || response.size() == 0) {
 			throw new IOException("No SNMP response.");
+		}
+		if (response.size() < 1) {
+			throw new IOException("Empty SNMP response");
+		}
+		if (response.get(0).isException()) {
+			throw new IOException("SNMP error: " + response.get(0).toValueString());
 		}
 		return response.get(0).getVariable().toString();
 	}
@@ -267,5 +276,32 @@ public class Snmp extends Poller {
 		throw new RuntimeException("SNMP Get timed out");
 	}
 
+
+	/**
+	 * Walk over a subtree
+	 * @param oid The base OID
+	 * @return a map of OIDs -> values
+	 */
+	public Map<String, String> walkAsString(String oid) throws IOException {
+		Map<String, String> results = new TreeMap<String, String>();
+		TreeUtils treeUtils = new TreeUtils(snmp, new DefaultPDUFactory());
+		List<TreeEvent> events = treeUtils.getSubtree(target, new OID(oid));
+		if (events != null) {
+			for (TreeEvent event : events) {
+				if (event == null || event.isError()) {
+					continue;
+				}
+				VariableBinding[] varBindings = event.getVariableBindings();
+				if (varBindings != null) {
+					for (VariableBinding varBinding : varBindings) {
+						if (varBinding != null) {
+							results.put(varBinding.getOid().toString(), varBinding.getVariable().toString());
+						}
+					}
+				}
+			}
+		}
+		return results;
+	}
 
 }

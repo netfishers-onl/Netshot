@@ -1,6 +1,15 @@
 <tr>
 	<td><%- name %></td>
 	<td><%- description %></td>
+	<% _.each(["SSH", "TELNET", "SNMP"], function(p) { %>
+		<td>
+			<% if (protocols.indexOf(p) > -1) { %>
+				<span class="ui-icon nsicon ui-icon-bullet"></span>
+			<% } else { %>
+				<span class="ui-icon nsicon ui-icon-radio-off"></span>
+			<% } %>
+		</td>
+	<% }); %>
 	<td><%- version %></td>
 	<td><%- author %></td>
 </tr>

@@ -199,7 +199,7 @@ public class DiscoverDeviceTypeTask extends Task {
 				community.getCommunity());
 		this.trace("Trying SNMPv1 discovery.");
 		try {
-			Snmp poller = new Snmp(deviceAddress, community.getCommunity(), true);
+			Snmp poller = new Snmp(deviceAddress, community);
 			return snmpDiscover(poller);
 		}
 		catch (UnknownHostException e) {
@@ -216,7 +216,7 @@ public class DiscoverDeviceTypeTask extends Task {
 	private boolean snmpv2cDiscover(DeviceSnmpCommunity community) {
 		this.trace("Trying SNMPv2c discovery.");
 		try {
-			Snmp poller = new Snmp(deviceAddress, community.getCommunity());
+			Snmp poller = new Snmp(deviceAddress, community);
 			return snmpDiscover(poller);
 		}
 		catch (UnknownHostException e) {
@@ -233,8 +233,7 @@ public class DiscoverDeviceTypeTask extends Task {
 	private boolean snmpv3Discover(DeviceSnmpv3Community cred) {
 		this.trace("Trying SNMPv3 discovery.");
 		try {
-			Snmp poller = new Snmp(deviceAddress, cred.getUsername(), cred.getAuthType(), cred.getAuthKey(),
-					cred.getPrivType(), cred.getPrivKey());
+			Snmp poller = new Snmp(deviceAddress, cred);
 			return snmpDiscover(poller);
 		}
 		catch (UnknownHostException e) {

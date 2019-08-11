@@ -27,7 +27,6 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -74,7 +73,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 */
 	public static enum DriverProtocol {
 		TELNET("telnet"),
-		SSH("ssh");
+		SSH("ssh"),
+		SNMP("snmp");
 
 		private String protocol;
 
@@ -439,10 +439,16 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 					// Not a problem
 				}
 			}
-
 		}
 		catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("Invalid CLI object.", e);
+		}
+
+		try {
+			JsDeviceHelper.toBindings(engine, "SNMP");
+			this.protocols.add(DriverProtocol.SNMP);
+		}
+		catch (IllegalArgumentException e) {
 		}
 
 		if (this.protocols.size() == 0) {

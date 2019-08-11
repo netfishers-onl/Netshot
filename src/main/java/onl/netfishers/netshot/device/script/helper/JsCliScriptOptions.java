@@ -25,12 +25,14 @@ package onl.netfishers.netshot.device.script.helper;
  */
 public class JsCliScriptOptions {
 	private JsCliHelper cliHelper;
+	private JsSnmpHelper snmpHelper;
 	private JsConfigHelper configHelper;
 	private JsDeviceHelper deviceHelper;
 	private JsDiagnosticHelper diagnosticHelper;
 
-	public JsCliScriptOptions(JsCliHelper cliHelper) {
+	public JsCliScriptOptions(JsCliHelper cliHelper, JsSnmpHelper snmpHelper) {
 		this.cliHelper = cliHelper;
+		this.snmpHelper = snmpHelper;
 	}
 
 	public JsDiagnosticHelper getDiagnosticHelper() {
@@ -53,8 +55,16 @@ public class JsCliScriptOptions {
 		return cliHelper;
 	}
 
-	public void setCli(JsCliHelper cliHelper) {
+	public void setCliHelper(JsCliHelper cliHelper) {
 		this.cliHelper = cliHelper;
+	}
+
+	public JsSnmpHelper getSnmpHelper() {
+		return snmpHelper;
+	}
+
+	public void setSnmpHelper(JsSnmpHelper snmpHelper) {
+		this.snmpHelper = snmpHelper;
 	}
 
 	public JsConfigHelper getConfigHelper() {

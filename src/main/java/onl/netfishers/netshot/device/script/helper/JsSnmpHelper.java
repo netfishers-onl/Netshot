@@ -40,7 +40,7 @@ public class JsSnmpHelper {
 	/** The poller */
 	private Snmp poller;
 	/** The community (SNMP credentials rather) */
-	private DeviceSnmpCommunity community;
+	protected DeviceSnmpCommunity community;
 	/** The JS logger */
 	private TaskLogger taskLogger;
 
@@ -73,7 +73,14 @@ public class JsSnmpHelper {
 	 * @throws IOException It can happen
 	 */
 	public String getAsString(String oid) throws IOException {
-		return this.poller.getAsString(oid);
+		try {
+			return this.poller.getAsString(oid);
+		}
+		catch (IOException e) {
+			logger.error("SNMP I/O error.", e);
+			this.taskLogger.error("I/O error: " + e.getMessage());
+			throw e;
+		}
 	}
 
 	/**
@@ -83,7 +90,14 @@ public class JsSnmpHelper {
 	 * @throws IOException It can happen
 	 */
 	public Map<String, String> walkAsString(String oid) throws IOException {
-		return this.poller.walkAsString(oid);
+		try {
+			return this.poller.walkAsString(oid);
+		}
+		catch (IOException e) {
+			logger.error("SNMP I/O error.", e);
+			this.taskLogger.error("I/O error: " + e.getMessage());
+			throw e;
+		}
 	}
 	
 	/**

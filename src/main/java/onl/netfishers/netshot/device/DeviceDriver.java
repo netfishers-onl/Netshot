@@ -26,10 +26,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
@@ -64,7 +67,7 @@ import onl.netfishers.netshot.work.Task;
  */
 @XmlRootElement()
 @XmlAccessorType(XmlAccessType.NONE)
-public class DeviceDriver {
+public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	/**
 	 * Possible protocols for a device driver.
@@ -174,8 +177,10 @@ public class DeviceDriver {
 	 * Gets all loaded drivers.
 	 * @return the loaded drivers
 	 */
-	public static Collection<DeviceDriver> getAllDrivers() {
-		return drivers.values();
+	public static List<DeviceDriver> getAllDrivers() {
+		List<DeviceDriver> allDrivers = new ArrayList<DeviceDriver>(drivers.values());
+		Collections.sort(allDrivers);
+		return allDrivers;
 	}
 
 	/**
@@ -316,6 +321,10 @@ public class DeviceDriver {
 
 	/** The version of the driver */
 	private String version;
+
+	/** The priority of the driver for autodiscovery (65536 by default,
+	 * larger number gives higher priority) */
+	private int priority;
 	
 	/** The device attributed provided by this driver */
 	Set<AttributeDefinition> attributes = new HashSet<AttributeDefinition>();
@@ -361,6 +370,7 @@ public class DeviceDriver {
 			this.author = JsDeviceHelper.toString(info, "author");
 			this.description = JsDeviceHelper.toString(info, "description");
 			this.version = JsDeviceHelper.toString(info, "version");
+			this.priority = JsDeviceHelper.toInteger(info, "priority", 65536);
 		}
 		catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("Invalid Info object.", e);
@@ -530,6 +540,11 @@ public class DeviceDriver {
 	public String getVersion() {
 		return version;
 	}
+
+	@XmlElement
+	public int getPriority() {
+		return priority;
+	}
 	
 	@Transient
 	public ScriptEngine getEngine() {
@@ -609,6 +624,9 @@ public class DeviceDriver {
 		}
 		builder.append("version=");
 		builder.append(version);
+		builder.append(", ");
+		builder.append("priority=");
+		builder.append(Integer.toString(priority));
 		builder.append("]");
 		return builder.toString();
 	}
@@ -637,6 +655,21 @@ public class DeviceDriver {
 		int result = 1;
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		return result;
+	}
+
+	@Override
+	public int compareTo(DeviceDriver o) {
+		if (o == this) {
+			return 0;
+		}
+		if (o == null) {
+			return -1;
+		}
+		int r = Integer.compare(this.priority, o.priority);
+		if (r != 0) {
+			return -r;
+		}
+		return this.name.compareTo(o.name);
 	}
 
 }

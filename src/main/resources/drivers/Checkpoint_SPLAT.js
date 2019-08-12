@@ -31,7 +31,7 @@ var Info = {
 	name: "CheckpointSPLAT",
 	description: "Checkpoint SPLAT",
 	author: "NetFishers",
-	version: "1.1"
+	version: "1.2"
 };
 
 var Config = {
@@ -88,6 +88,10 @@ var CLI = {
 	},
 	cpshell: {
 		prompt: /^(\[[A-Za-z_0-9\.][A-Za-z\-_0-9\.]*\]# )$/,
+		pager: {
+			match: /^--More--$/,
+			response: " "
+		},
 		error: /^Unknown command .*/m,
 		macros: {
 			expert: {
@@ -163,7 +167,7 @@ function snapshot(cli, device, config, debug) {
 	
 	cli.macro("cpshell");
 	var scroll = cli.command("scroll");
-	var hasPaging = scroll.match(/scroll is on/);
+	var hasPaging = scroll.match(/scrolling is on/);
 	if (hasPaging) {
 		scroll.command("scroll off");
 	}

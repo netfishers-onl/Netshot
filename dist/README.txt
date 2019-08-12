@@ -12,6 +12,15 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.14.0 - 2019-08-12
+
+* Make SNMP poller available to drivers
+* Add a priority system for drivers
+* Add generic SNMP driver
+* Fix for Checkpoint SPLAT driver (paging)
+* Add Catalyst 9000 families to Cisco IOS driver
+* Library update (vulnerability)
+
 0.13.1 - 2019-07-26
 
 * Add more filters to the Config compliance report view

@@ -31,7 +31,7 @@ var Info = {
 	name: "CheckpointSPLAT",
 	description: "Checkpoint SPLAT",
 	author: "NetFishers",
-	version: "1.2"
+	version: "1.3"
 };
 
 var Config = {
@@ -169,7 +169,7 @@ function snapshot(cli, device, config, debug) {
 	var scroll = cli.command("scroll");
 	var hasPaging = scroll.match(/scrolling is on/);
 	if (hasPaging) {
-		scroll.command("scroll off");
+		cli.command("scroll off");
 	}
 
 	var hostname = cli.command("hostname");
@@ -222,7 +222,7 @@ function snapshot(cli, device, config, debug) {
 
 	if (hasPaging) {
 		// Restore scrolling state
-		scroll.command("scroll on");
+		cli.command("scroll on");
 	}
 
 	cli.macro("expert");

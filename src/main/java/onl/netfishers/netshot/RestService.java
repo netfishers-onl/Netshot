@@ -3035,6 +3035,11 @@ public class RestService extends Thread {
 						"Can't delete a device-specific credential set.",
 						NetshotBadRequestException.NETSHOT_USED_CREDENTIALS);
 			}
+			/* HACK! In JPA, this would require updating each task one by one... */
+			session
+					.createSQLQuery("delete from discover_device_type_task_credential_sets where credential_sets = :cs")
+					.setLong("cs", id)
+					.executeUpdate();
 			session.delete(credentialSet);
 			session.getTransaction().commit();
 		}

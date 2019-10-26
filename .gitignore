@@ -10,6 +10,7 @@ target/*
 .settings/*
 *.iml
 *.jks
+*.pfx
 src/main/resources/configs/
 netshot.conf
 .vscode

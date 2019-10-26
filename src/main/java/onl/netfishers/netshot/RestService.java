@@ -332,6 +332,9 @@ public class RestService extends Thread {
 			SSLContextConfigurator sslContext = new SSLContextConfigurator();
 			sslContext.setKeyStoreFile(httpSslKeystoreFile);
 			sslContext.setKeyStorePass(httpSslKeystorePass);
+			if (!httpSslKeystoreFile.endsWith(".jks")) {
+				sslContext.setKeyStoreType("pkcs12");
+			}
 
 			// Create the context and raise any error if anything is wrong with the SSL configuration.
 			sslContext.createSSLContext(true);

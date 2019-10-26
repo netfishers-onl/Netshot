@@ -12,6 +12,13 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.14.1 - 2019-10-26
+
+* Library update (vulnerability fix)
+* Fix an error which could prevent the removal of credential sets
+* Add support for PKCS12 keystores (default now)
+
+
 0.14.0 - 2019-08-12
 
 * Make SNMP poller available to drivers

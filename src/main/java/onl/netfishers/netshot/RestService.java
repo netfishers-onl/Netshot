@@ -63,8 +63,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
@@ -220,7 +223,6 @@ public class RestService extends Thread {
 		@Override
 		public void filter(ContainerRequestContext requestContext) throws IOException {
 			User user = (User) httpRequest.getSession().getAttribute("user");
-			Netshot.aaaLogger.info("HTTP Request {} by user {}.", requestContext.getUriInfo().getRequestUri(), user == null ? "<null>" : user.getUsername());
 			requestContext.setSecurityContext(new Authorizer(user));
 		}
 
@@ -258,7 +260,29 @@ public class RestService extends Thread {
 				return SecurityContext.FORM_AUTH;
 			}
 		}
+	}
 
+	private static class LoggerFilter implements ContainerResponseFilter {
+		@Context
+		private HttpServletRequest httpRequest;
+
+		@Override
+		public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
+				throws IOException {
+			User user = null;
+			try {
+				user = (User)requestContext.getSecurityContext().getUserPrincipal();
+			}
+			catch (Exception e) {
+				//
+			}
+			Netshot.aaaLogger.info("Request from {} ({}) - {} - \"{} {}\" - {}",
+				httpRequest.getRemoteAddr(),
+				requestContext.getHeaderString(HttpHeaders.USER_AGENT),
+				user == null ? "<none>" : user.getUsername(),
+				requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(),
+				responseContext.getStatus());
+		}
 	}
 	
 	public static class NetshotExceptionMapper implements ExceptionMapper<Throwable> {
@@ -288,7 +312,8 @@ public class RestService extends Thread {
 			register(NetshotExceptionMapper.class);
 			register(RolesAllowedDynamicFeature.class);
 			property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, "true");
-			property(ServerProperties.APPLICATION_NAME, "Plumber");
+			property(ServerProperties.APPLICATION_NAME, "Netshot");
+			register(LoggerFilter.class);
 			//property(ServerProperties.TRACING, "ALL");
 			register(JacksonFeature.class);
 		}

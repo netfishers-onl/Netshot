@@ -130,13 +130,13 @@ public class Snmp extends Poller {
 				this.authProtocol = AuthMD5.ID;
 			}
 
-			if (v3Credentials.getAuthType().equals("AES128")) {
+			if (v3Credentials.getPrivType().equals("AES128")) {
 				this.privProtocol = PrivAES128.ID;
 			}
-			else if (v3Credentials.getAuthType().equals("AES192")) {
+			else if (v3Credentials.getPrivType().equals("AES192")) {
 				this.privProtocol = PrivAES192.ID;
 			}
-			else if (v3Credentials.getAuthType().equals("AES256")) {
+			else if (v3Credentials.getPrivType().equals("AES256")) {
 				this.privProtocol = PrivAES256.ID;
 			}
 			else {

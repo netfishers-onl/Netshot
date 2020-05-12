@@ -2184,7 +2184,7 @@ public class Finder {
 					property = diagnosticName;
 					for (Diagnostic diagnostic : parsingData.getDiagnostics()) {
 						if (diagnostic.getResultType().equals(AttributeType.TEXT) && diagnostic.getName().equals(diagnosticName)) {
-							item = String.format("DIAGNOSTIC (%s)", diagnosticName);
+							item = String.format("Diagnostic \"%s\"", diagnosticName);
 							level = PropertyLevel.DIAGNOSTICRESULT;
 							break;
 						}
@@ -2475,7 +2475,7 @@ public class Finder {
 					property = diagnosticName;
 					for (Diagnostic diagnostic : parsingData.getDiagnostics()) {
 						if (diagnostic.getResultType().equals(AttributeType.BINARY) && diagnostic.getName().equals(diagnosticName)) {
-							item = String.format("DIAGNOSTIC (%s)", diagnosticName);
+							item = String.format("Diagnostic \"%s\"", diagnosticName);
 							level = PropertyLevel.DIAGNOSTICRESULT;
 							break;
 						}

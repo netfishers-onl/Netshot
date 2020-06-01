@@ -1247,4 +1247,9 @@ public class Device {
 		this.diagnosticResults = diagnosticResults;
 	}
 
+	@Override
+	public String toString() {
+		return "Device " + id + " (name '" + name + "', driver '" + driver + "', IP address " + mgmtAddress + ")";
+	}
+
 }

@@ -250,5 +250,10 @@ public class DeviceCredentialSet {
 	static public String generateSpecificName() {
 		return String.format("DEVICESPECIFIC-%s", UUID.randomUUID());
 	}
+
+	@Override
+	public String toString() {
+		return "Device Credential Set " + id + " (name '" + name + "', type " + this.getClass().getSimpleName() + ")";
+	}
 	
 }

@@ -389,5 +389,10 @@ abstract public class DeviceGroup {
 	public void setHiddenFromReports(boolean hideInReports) {
 		this.hiddenFromReports = hideInReports;
 	}
+
+	@Override
+	public String toString() {
+		return "Device Group " + id + " (name '" + name + "')";
+	}
 	
 }

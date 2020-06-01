@@ -219,4 +219,9 @@ public class Policy {
 		return true;
 	}
 
+	@Override
+	public String toString() {
+		return "Compliance policy " + id + " (name '" + name + "')";
+	}
+
 }

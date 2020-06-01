@@ -744,4 +744,12 @@ public abstract class Task implements Cloneable {
 		this.version = version;
 	}
 
+	@Override
+	public String toString() {
+		return "Task " + id + " (type " + this.getClass().getSimpleName() + ", target '" + target
+				+ "', author '" + author + "', created on " + creationDate
+				+ ", executed on " + executionDate + ", description '" + getTaskDescription()
+				+ "', schedule type " + scheduleType + ")";
+	}
+
 }

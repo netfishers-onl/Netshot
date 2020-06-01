@@ -307,4 +307,9 @@ public class Domain {
 		this.scanSubnetsTasks = scanSubnetsTasks;
 	}
 
+	@Override
+	public String toString() {
+		return "Device Domain " + id + " (name '" + name + "')";
+	}
+
 }

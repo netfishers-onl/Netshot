@@ -353,4 +353,9 @@ public abstract class Rule {
 		this.checkResults.clear();
 	}
 
+	@Override
+	public String toString() {
+		return "Compliance rule " + id + " (name '" + name + "')";
+	}
+
 }

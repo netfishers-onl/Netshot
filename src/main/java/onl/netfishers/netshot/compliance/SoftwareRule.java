@@ -428,4 +428,9 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 		this.versionRegExp = versionRegExp;
 	}
 
+	@Override
+	public String toString() {
+		return "Software compliance rule " + id;
+	}
+
 }

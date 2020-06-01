@@ -276,12 +276,23 @@ public class RestService extends Thread {
 			catch (Exception e) {
 				//
 			}
-			Netshot.aaaLogger.info("Request from {} ({}) - {} - \"{} {}\" - {}",
-				httpRequest.getRemoteAddr(),
-				requestContext.getHeaderString(HttpHeaders.USER_AGENT),
-				user == null ? "<none>" : user.getUsername(),
-				requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(),
-				responseContext.getStatus());
+			String method = requestContext.getMethod().toUpperCase();
+			if ("GET".equals(method)) {
+				Netshot.aaaLogger.debug("Request from {} ({}) - {} - \"{} {}\" - {}.",
+						httpRequest.getRemoteAddr(),
+						requestContext.getHeaderString(HttpHeaders.USER_AGENT),
+						user == null ? "<none>" : user.getUsername(),
+						requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(),
+						responseContext.getStatus());
+			}
+			else {
+				Netshot.aaaLogger.info("Request from {} ({}) - {} - \"{} {}\" - {}.",
+					httpRequest.getRemoteAddr(),
+					requestContext.getHeaderString(HttpHeaders.USER_AGENT),
+					user == null ? "<none>" : user.getUsername(),
+					requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(),
+					responseContext.getStatus());
+			}
 		}
 	}
 	
@@ -849,6 +860,7 @@ public class RestService extends Thread {
 				session.beginTransaction();
 				session.save(domain);
 				session.getTransaction().commit();
+				Netshot.aaaLogger.info("{} has been created.", domain);
 			}
 			catch (HibernateException e) {
 				session.getTransaction().rollback();
@@ -923,6 +935,7 @@ public class RestService extends Thread {
 			domain.setServer4Address(v4Address);
 			session.update(domain);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been edited.", domain);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -969,6 +982,7 @@ public class RestService extends Thread {
 			Domain domain = (Domain) session.load(Domain.class, id);
 			session.delete(domain);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been deleted.", domain);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -2285,6 +2299,7 @@ public class RestService extends Thread {
 					task.addCredentialSet(credentialSet);
 				}
 				TaskManager.addTask(task);
+				Netshot.aaaLogger.info("{} has been added.", task);
 				return task;
 			}
 			catch (SchedulerException e) {
@@ -2331,6 +2346,7 @@ public class RestService extends Thread {
 				task = new TakeSnapshotTask(newDevice, "Initial snapshot after device creation", user.getUsername(), true, false, false);
 				session.save(task);
 				session.getTransaction().commit();
+				Netshot.aaaLogger.info("{} has been created.", newDevice);
 			}
 			catch (Exception e) {
 				session.getTransaction().rollback();
@@ -2395,6 +2411,7 @@ public class RestService extends Thread {
 			}
 			session.delete(device);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been deleted.", device);
 			for (File toDeleteFile : toDeleteFiles) {
 				try {
 					toDeleteFile.delete();
@@ -2853,6 +2870,7 @@ public class RestService extends Thread {
 			}
 			session.update(device);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been edited.", device); 
 		}
 		catch (UnknownHostException e) {
 			session.getTransaction().rollback();
@@ -3066,6 +3084,7 @@ public class RestService extends Thread {
 					.executeUpdate();
 			session.delete(credentialSet);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been deleted.", credentialSet);
 		}
 		catch (Exception e) {
 			session.getTransaction().rollback();
@@ -3118,6 +3137,7 @@ public class RestService extends Thread {
 			credentialSet.setDeviceSpecific(false);
 			session.save(credentialSet);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been created.", credentialSet);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -3213,6 +3233,7 @@ public class RestService extends Thread {
 			}
 			session.update(credentialSet);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been edited", credentialSet);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -3421,6 +3442,7 @@ public class RestService extends Thread {
 			session.beginTransaction();
 			session.save(deviceGroup);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been created.", deviceGroup);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -3495,6 +3517,7 @@ public class RestService extends Thread {
 			}
 			session.delete(deviceGroup);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been deleted.", deviceGroup);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -3714,6 +3737,7 @@ public class RestService extends Thread {
 			group.setHiddenFromReports(rsGroup.isHiddenFromReports());
 			session.update(group);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been edited.", group);
 			return group;
 		}
 		catch (ObjectNotFoundException e) {
@@ -4198,6 +4222,7 @@ public class RestService extends Thread {
 
 			try {
 				TaskManager.cancelTask(task, "Task manually cancelled by user."); //TODO
+				Netshot.aaaLogger.info("{} has been manually cancelled.", task);
 			}
 			catch (Exception e) {
 				logger.error("Unable to cancel the task {}.", id, e);
@@ -4719,6 +4744,7 @@ public class RestService extends Thread {
 		}
 		try {
 			TaskManager.addTask(task);
+			Netshot.aaaLogger.info("The task {} has been created.", task);
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to add the task.", e);
@@ -5012,7 +5038,7 @@ public class RestService extends Thread {
 		try {
 			@SuppressWarnings("unchecked")
 			List<Policy> policies = session.createQuery("from Policy p left join fetch p.targetGroup")
-			.list();
+				.list();
 			return policies;
 		}
 		catch (HibernateException e) {
@@ -5177,6 +5203,7 @@ public class RestService extends Thread {
 
 			session.save(policy);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been created.", policy);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -5224,6 +5251,7 @@ public class RestService extends Thread {
 			Policy policy = (Policy) session.load(Policy.class, id);
 			session.delete(policy);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been deleted.", policy);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -5290,6 +5318,7 @@ public class RestService extends Thread {
 
 			session.update(policy);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been edited.", policy);
 			return policy;
 		}
 		catch (ObjectNotFoundException e) {
@@ -5594,6 +5623,7 @@ public class RestService extends Thread {
 
 			session.save(rule);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been created.", rule);
 			return rule;
 		}
 		catch (ObjectNotFoundException e) {
@@ -5714,6 +5744,7 @@ public class RestService extends Thread {
 
 			session.update(rule);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been edited.", rule);
 			return rule;
 		}
 		catch (HibernateException e) {
@@ -5758,6 +5789,7 @@ public class RestService extends Thread {
 			Rule rule = (Rule) session.load(Rule.class, id);
 			session.delete(rule);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been deleted.", rule);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -7119,6 +7151,7 @@ public class RestService extends Thread {
 
 			session.save(rule);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been created", rule);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -7142,7 +7175,7 @@ public class RestService extends Thread {
 
 
 	/**
-	 * Delete software rule.
+	 * Delete hardware rule.
 	 *
 	 * @param request the request
 	 * @param id the id
@@ -7161,6 +7194,7 @@ public class RestService extends Thread {
 			HardwareRule rule = (HardwareRule) session.load(HardwareRule.class, id);
 			session.delete(rule);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been deleted", rule);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -7228,6 +7262,7 @@ public class RestService extends Thread {
 
 			session.update(rule);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been edited", rule);
 			return rule;
 		}
 		catch (HibernateException e) {
@@ -7516,6 +7551,7 @@ public class RestService extends Thread {
 
 			session.save(rule);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been created", rule);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -7557,6 +7593,7 @@ public class RestService extends Thread {
 			SoftwareRule rule = (SoftwareRule) session.load(SoftwareRule.class, id);
 			session.delete(rule);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been deleted", rule);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -7626,6 +7663,7 @@ public class RestService extends Thread {
 
 			session.update(rule);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been edited", rule);
 			return rule;
 		}
 		catch (HibernateException e) {
@@ -8232,6 +8270,7 @@ public class RestService extends Thread {
 			session.beginTransaction();
 			session.save(user);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been created", user);
 			return user;
 		}
 		catch (HibernateException e) {
@@ -8307,6 +8346,7 @@ public class RestService extends Thread {
 			user.setLocal(rsUser.isLocal());
 			session.update(user);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been edited", user);
 			return user;
 		}
 		catch (HibernateException e) {
@@ -8350,6 +8390,7 @@ public class RestService extends Thread {
 			User user = (User) session.load(User.class, id);
 			session.delete(user);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been deleted", user);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -8637,6 +8678,7 @@ public class RestService extends Thread {
 			session.beginTransaction();
 			session.save(rsScript);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been created", rsScript);
 			return rsScript;
 		}
 		catch (HibernateException e) {
@@ -8670,6 +8712,7 @@ public class RestService extends Thread {
 			DeviceJsScript script = (DeviceJsScript) session.load(DeviceJsScript.class, id);
 			session.delete(script);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been deleted", script);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -9093,6 +9136,7 @@ public class RestService extends Thread {
 			
 			session.save(diagnostic);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been created", diagnostic);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -9216,6 +9260,7 @@ public class RestService extends Thread {
 
 			session.update(diagnostic);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been edited", diagnostic);
 			return diagnostic;
 		}
 		catch (ObjectNotFoundException e) {
@@ -9267,6 +9312,7 @@ public class RestService extends Thread {
 			Diagnostic diagnostic = (Diagnostic) session.load(Diagnostic.class, id);
 			session.delete(diagnostic);
 			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been deleted", diagnostic);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();

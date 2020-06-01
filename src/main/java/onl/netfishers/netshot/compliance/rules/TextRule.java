@@ -301,4 +301,9 @@ public class TextRule extends Rule {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return "Compliance text-based rule " + id + " (name '" + name + "')";
+	}
+
 }

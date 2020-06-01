@@ -331,5 +331,9 @@ public class HardwareRule {
 		this.partNumberRegExp = partNumberRegExp;
 	}
 
+	@Override
+	public String toString() {
+		return "Hardware compliance rule " + id;
+	}
 
 }

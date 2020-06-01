@@ -227,4 +227,9 @@ public class JavaScriptRule extends Rule {
 		this.setCheckResult(device, ResultOption.INVALIDRULE, "", session);
 	}
 
+	@Override
+	public String toString() {
+		return "Compliance JavaScript-based rule " + id + " (name '" + name + "')";
+	}
+
 }

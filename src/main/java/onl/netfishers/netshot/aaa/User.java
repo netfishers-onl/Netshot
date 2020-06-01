@@ -284,5 +284,9 @@ public class User implements Principal {
 		return User.MAX_IDLE_TIME;
 	}
 
+	@Override
+	public String toString() {
+		return "User " + id + " (username '" + username + "', level " + level + (local ? "" : ", remote user") + ")";
+	}
 
 }

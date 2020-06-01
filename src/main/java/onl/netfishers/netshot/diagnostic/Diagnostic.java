@@ -265,5 +265,10 @@ public abstract class Diagnostic {
 		if (id != other.id) return false;
 		return true;
 	}
+
+	@Override
+	public String toString() {
+		return "Diagnostic " + id + " (name '" + name + "', type " + this.getClass().getSimpleName() + ")";
+	}
 	
 }

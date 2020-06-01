@@ -118,6 +118,8 @@ public class DeviceJsScript {
 		this.name = name;
 	}
 
-
-
+	@Override
+	public String toString() {
+		return "Device JavaScript script " + id + " (name '" + name + "', author '" + author + "')";
+	}
 }

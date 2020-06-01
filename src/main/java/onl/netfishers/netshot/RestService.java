@@ -368,6 +368,7 @@ public class RestService extends Thread {
 			URI url = UriBuilder.fromUri(httpBaseUrl).port(httpBasePort).build();
 			HttpServer server = GrizzlyHttpServerFactory.createHttpServer(
 					url, (GrizzlyHttpContainer) null, true, sslConfig, false);
+			server.getServerConfiguration().setSessionTimeoutSeconds(User.MAX_IDLE_TIME);
 
 			WebappContext context = new WebappContext("GrizzlyContext", httpApiPath);
 			ServletRegistration registration = context.addServlet("Jersey", ServletContainer.class);
@@ -377,8 +378,6 @@ public class RestService extends Thread {
 			context.deploy(server);
 			HttpHandler staticHandler = new CLStaticHttpHandler(Netshot.class.getClassLoader(), "/www/");
 			server.getServerConfiguration().addHttpHandler(staticHandler, httpStaticPath);
-
-
 
 			server.start();
 
@@ -8022,7 +8021,6 @@ public class RestService extends Thread {
 		else {
 			HttpSession httpSession = request.getSession();
 			httpSession.setAttribute("user", user);
-			httpSession.setMaxInactiveInterval(User.MAX_IDLE_TIME);
 			return user;
 		}
 		throw new NetshotAuthenticationRequiredException();

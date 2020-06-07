@@ -401,6 +401,9 @@ public class JsDeviceHelper {
 		else if ("serialNumber".equals(item)) {
 			return device.getSerialNumber();
 		}
+		else if ("comments".equals(item)) {
+			return device.getComments();
+		}
 		else if ("networkClass".equals(item)) {
 			return (device.getNetworkClass() == null ? null : device.getNetworkClass().toString());
 		}

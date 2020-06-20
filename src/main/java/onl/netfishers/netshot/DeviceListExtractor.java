@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2017 Sylvain Cadilhac (NetFishers)
+ * Copyright 2013-2020 Sylvain Cadilhac (NetFishers)
  * 
  * This file is part of Netshot.
  * 
@@ -89,6 +89,7 @@ public class DeviceListExtractor extends Netshot {
 			for (Device device : devices) {
 				DeviceCliAccount cliAccount = null;
 				DeviceSnmpCommunity community = null;
+				
 				for (DeviceCredentialSet credentialSet : device.getCredentialSets()) {
 					if (credentialSet instanceof DeviceSshAccount) {
 						cliAccount = (DeviceSshAccount) credentialSet;
@@ -99,6 +100,9 @@ public class DeviceListExtractor extends Netshot {
 					else if (credentialSet instanceof DeviceSnmpCommunity) {
 						community = (DeviceSnmpCommunity) credentialSet;
 					}
+				}
+				if (device.getSpecificCredentialSet() != null && device.getSpecificCredentialSet() instanceof DeviceCliAccount) {
+					cliAccount = (DeviceCliAccount) device.getSpecificCredentialSet();
 				}
 				if (cliAccount == null) {
 					logger.warn(String.format("No CLI account found for device %s.", device.getName()));

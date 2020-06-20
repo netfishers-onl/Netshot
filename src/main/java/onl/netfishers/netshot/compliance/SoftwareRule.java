@@ -382,7 +382,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 				return;
 			}
 		}
-		if (partNumber != null && partNumber != "") {
+		if (partNumber != null && !partNumber.equals("")) {
 			boolean moduleMatches = false;
 			for (Module module : device.getModules()) {
 				if (partNumberRegExp) {

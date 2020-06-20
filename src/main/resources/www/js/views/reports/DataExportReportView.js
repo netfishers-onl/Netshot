@@ -39,11 +39,12 @@ define([
 			}).click(function() {
 				ReportView.defaultOptions.domain = that.$('#filterdomain').prop('checked') ? that.$('#domain').val() : undefined;
 				var exportParams = new DataExportReportParamsModel({
-					group: (that.$('#filtergroup').prop('checked') ? that.$('#group').val() : -1),
-					domains: (that.$('#filterdomain').prop('checked') ? that.$('#domain').val() : -1),
+					groups: (that.$('#filtergroup').prop('checked') ? [that.$('#group').val()] : undefined),
+					domains: (that.$('#filterdomain').prop('checked') ? [that.$('#domain').val()] : undefined),
 					interfaces: that.$('#filterinterfaces').prop('checked'),
 					inventory: that.$('#filterinventory').prop('checked'),
 					locations: that.$('#filterlocations').prop('checked'),
+					compliance: that.$('#filtercompliance').prop('checked'),
 				});
 				window.location = exportParams.getDownloadUrl();
 				return false;

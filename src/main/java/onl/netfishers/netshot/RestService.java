@@ -6899,6 +6899,78 @@ public class RestService extends Thread {
 			this.result = result;
 		}
 	}
+	
+
+	/**
+	 * Gets the configuration compliance results.
+	 *
+	 * @param request the request
+	 * @param domains optional filter on device domain
+	 * @param groups optional filter on device groups
+	 * @param policies optional filter on compliance policy
+	 * @param resuts optional filter on compliance result
+	 * @return the config compliance results
+	 * @throws WebApplicationException the web application exception
+	 */
+	@GET
+	@Path("reports/configcompliancedevicestatuses")
+	@RolesAllowed("readonly")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	public List<RsLightPolicyRuleDevice> geConfigComplianceDeviceStatuses(
+			@QueryParam("domain") Set<Long> domains,
+			@QueryParam("group") Set<Long> groups,
+			@QueryParam("policy") Set<Long> policies,
+			@QueryParam("result") Set<CheckResult.ResultOption> results) throws WebApplicationException {
+
+		logger.debug("REST request, config compliant device statuses.");
+		Session session = Database.getSession();
+		try {
+			String hqlQuery = "";
+			hqlQuery += DEVICELIST_BASEQUERY;
+			hqlQuery += ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d ";
+			hqlQuery += "left join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p ";
+			hqlQuery += "where d.status = :enabled";
+			if (domains.size() > 0) {
+				hqlQuery += " and d.mgmtDomain.id in (:domainIds)";
+			}
+			if (groups.size() > 0) {
+				hqlQuery += " and g.id in (:groupIds)";
+			}
+			if (policies.size() > 0) {
+				hqlQuery += " and p.id in (:policyIds)";
+			}
+			if (results.size() > 0) {
+				hqlQuery += " and ccr.result in (:results)";
+			}
+			Query query = session.createQuery(hqlQuery);
+			query.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domains.size() > 0) {
+				query.setParameterList("domainIds", domains);
+			}
+			if (groups.size() > 0) {
+				query.setParameterList("groupIds", groups);
+			}
+			if (policies.size() > 0) {
+				query.setParameterList("policyIds", policies);
+			}
+			if (results.size() > 0) {
+				query.setParameterList("results", results);
+			}
+			@SuppressWarnings("unchecked")
+			List<RsLightPolicyRuleDevice> devices = query
+				.setResultTransformer(Transformers.aliasToBean(RsLightPolicyRuleDevice.class))
+				.list();
+			return devices;
+		}
+		catch (HibernateException e) {
+			logger.error("Unable to get the devices.", e);
+			throw new NetshotBadRequestException("Unable to get the stats",
+					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
 
 	/**
 	 * Gets the group config non compliant devices.

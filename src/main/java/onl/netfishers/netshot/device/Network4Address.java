@@ -23,7 +23,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
-import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -271,7 +270,6 @@ public class Network4Address extends NetworkAddress {
 	 * 
 	 * @return the address
 	 */
-	@Column(name = "ipv4address")
 	public int getAddress() {
 		return address;
 	}
@@ -327,7 +325,6 @@ public class Network4Address extends NetworkAddress {
 	 * 
 	 * @return the prefix length
 	 */
-	@Column(name = "ipv4mask")
 	@XmlAttribute
 	public int getPrefixLength() {
 		return prefixLength;
@@ -455,7 +452,6 @@ public class Network4Address extends NetworkAddress {
 	private AddressUsage addressUsage = AddressUsage.PRIMARY;
 
 	@XmlElement
-	@Column(name = "ipv4usage")
 	public AddressUsage getAddressUsage() {
 		return addressUsage;
 	}

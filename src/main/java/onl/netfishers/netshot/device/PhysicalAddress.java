@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.persistence.Transient;
 
 /**
  * A MAC address.
@@ -32,7 +33,6 @@ import javax.persistence.Embeddable;
 public class PhysicalAddress {
 
 	/** The address. */
-	@Column(name = "physicalAddress")
 	private long address;
 
 	/**
@@ -153,10 +153,30 @@ public class PhysicalAddress {
 	}
 	
 	/**
+	 * Gets the MAC address (stored as long).
+	 * 
+	 * @return the MAC address
+	 */
+	@Column(name = "physicalAddress")
+	protected long getAddress() {
+		return this.address;
+	}
+	
+	/**
+	 * Sets the MAC address.
+	 * 
+	 * @param address MAC address as long
+	 */
+	protected void setAddress(long address) {
+		this.address = address;
+	}
+	
+	/**
 	 * Gets the long address.
 	 *
 	 * @return the long address
 	 */
+	@Transient
 	public long getLongAddress() {
 		return this.address;
 	}

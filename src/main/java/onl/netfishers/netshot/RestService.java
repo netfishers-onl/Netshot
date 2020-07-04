@@ -140,14 +140,17 @@ import onl.netfishers.netshot.work.tasks.ScanSubnetsTask;
 import onl.netfishers.netshot.work.tasks.TakeGroupSnapshotTask;
 import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
 
+import org.apache.poi.ss.usermodel.BuiltinFormats;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
@@ -166,7 +169,6 @@ import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.glassfish.jersey.servlet.ServletProperties;
 import org.hibernate.Criteria;
-import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Query;
@@ -6376,6 +6378,9 @@ public class RestService extends Thread {
 		/** The group name. */
 		private String groupName;
 
+		/** The group folder. */
+		private String groupFolder;
+
 		/** The compliant device count. */
 		private long compliantDeviceCount;
 
@@ -6418,6 +6423,25 @@ public class RestService extends Thread {
 		 */
 		public void setGroupName(String groupName) {
 			this.groupName = groupName;
+		}
+
+		/**
+		 * Gets the group folder.
+		 *
+		 * @return the group folder
+		 */
+		@XmlElement
+		public String getGroupFolder() {
+			return groupFolder;
+		}
+
+		/**
+		 * Sets the group folder.
+		 *
+		 * @param groupFolder the new group folder
+		 */
+		public void setGroupFolder(String groupFolder) {
+			this.groupFolder = groupFolder;
 		}
 
 		/**
@@ -6489,7 +6513,7 @@ public class RestService extends Thread {
 			}
 			
 			Query query = session
-				.createQuery("select g.id as groupId, g.name as groupName, "
+				.createQuery("select g.id as groupId, g.name as groupName, g.folder as groupFolder, "
 						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled and (select count(ccr.result) from d.complianceCheckResults ccr join ccr.key.rule rule where"
 							+ ccrFilter + " ccr.result = :nonConforming) = 0) as compliantDeviceCount, "
 						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled) as deviceCount "
@@ -8421,6 +8445,7 @@ public class RestService extends Thread {
 			@DefaultValue("false") @QueryParam("inventory") boolean exportInventory,
 			@DefaultValue("false") @QueryParam("locations") boolean exportLocations,
 			@DefaultValue("false") @QueryParam("compliance") boolean exportCompliance,
+			@DefaultValue("false") @QueryParam("groups") boolean exportGroups,
 			@DefaultValue("xlsx") @QueryParam("format") String fileFormat) throws WebApplicationException {
 		logger.debug("REST request, export data.");
 		User user = (User) request.getSession().getAttribute("user");
@@ -8429,11 +8454,7 @@ public class RestService extends Thread {
 			String fileName = String.format("netshot-export_%s.xlsx", (new SimpleDateFormat("yyyyMMdd-HHmmss")).format(new Date()));
 
 			Session session = Database.getSession();
-			try {				
-				Criteria criteria = session.createCriteria(Device.class);
-				criteria.setFetchMode("mgmtDomain", FetchMode.SELECT);
-				criteria.setFetchMode("specificCredentialSet", FetchMode.SELECT);
-
+			try {
 				Workbook workBook = new SXSSFWorkbook(100);
 				Row row;
 				Cell cell;
@@ -8441,16 +8462,20 @@ public class RestService extends Thread {
 				CreationHelper createHelper = workBook.getCreationHelper();
 				CellStyle datetimeCellStyle = workBook.createCellStyle();
 				datetimeCellStyle.setDataFormat(createHelper.createDataFormat().getFormat("yyyy-mm-dd hh:mm"));
+				datetimeCellStyle.setAlignment(HorizontalAlignment.LEFT);
 				CellStyle dateCellStyle = workBook.createCellStyle();
 				dateCellStyle.setDataFormat(createHelper.createDataFormat().getFormat("yyyy-mm-dd"));
 				CellStyle titleCellStyle = workBook.createCellStyle();
 				Font titleFont = workBook.createFont();
 				titleFont.setBold(true);
 				titleCellStyle.setFont(titleFont);
+				CellStyle percentCellStyle = workBook.createCellStyle();
+				percentCellStyle.setDataFormat(workBook.createDataFormat()
+						.getFormat(BuiltinFormats.getBuiltinFormat(0x09)));
 
 				Sheet summarySheet = workBook.createSheet("Summary");
 				summarySheet.setColumnWidth(0, 5000);
-				summarySheet.setColumnWidth(1, 5000);
+				summarySheet.setColumnWidth(1, 8000);
 
 				{
 					int y = -1;
@@ -8486,8 +8511,6 @@ public class RestService extends Thread {
 							domainNames.add(String.format("%s (%d)", deviceDomain.getName(), deviceDomain.getId()));
 						}
 						row.createCell(1).setCellValue(String.join(", ", domainNames));
-						criteria.createCriteria("mgmtDomain", "md");
-						criteria.add(Restrictions.in("md.id", domains));
 					}
 					row = summarySheet.createRow(++y);
 					row.createCell(0).setCellValue("Selected Group");
@@ -8506,17 +8529,30 @@ public class RestService extends Thread {
 							groupNames.add(String.format("%s (%d)", group.getName(), group.getId()));
 						}
 						row.createCell(1).setCellValue(String.join(", ", groupNames));
-						criteria.createCriteria("ownerGroups", "g");
-						criteria.add(Restrictions.in("g.id", groups));
 					}
 					summarySheet.setDefaultColumnStyle(0, titleCellStyle);
 				}
 
-				@SuppressWarnings("unchecked")
-				List<Device> devices = criteria.list();
-				
-
 				{
+					StringBuffer deviceHqlQuery = new StringBuffer(
+							"select d from Device d left join d.ownerGroups g left join fetch d.mgmtDomain " +
+							"where 1 = 1 order by d.name asc");
+					if (domains.size() > 0) {
+						deviceHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
+					}
+					if (groups.size() > 0) {
+						deviceHqlQuery.append(" and g.id in (:groupIds)");
+					}
+					Query deviceQuery = session.createQuery(deviceHqlQuery.toString());
+					if (domains.size() > 0) {
+						deviceQuery.setParameterList("domainIds", domains);
+					}
+					if (groups.size() > 0) {
+						deviceQuery.setParameterList("groupIds", groups);
+					}
+					@SuppressWarnings("unchecked")
+					List<Device> devices = deviceQuery.list();
+
 					Sheet deviceSheet = workBook.createSheet("Devices");
 					((SXSSFSheet) deviceSheet).setRandomAccessWindowSize(100);
 					int y = -1;
@@ -8610,8 +8646,30 @@ public class RestService extends Thread {
 						}
 					}
 				}
-
+	
 				if (exportInterfaces) {
+					logger.debug("Exporting interface data");
+					StringBuffer interfaceHqlQuery = new StringBuffer(
+							"select ni from NetworkInterface ni " +
+							"left join fetch ni.ip4Addresses left join fetch ni.ip6Addresses " +
+							"join fetch ni.device left join ni.device.ownerGroups g where 1 = 1");
+					if (domains.size() > 0) {
+						interfaceHqlQuery.append(" and ni.device.mgmtDomain.id in (:domainIds)");
+					}
+					if (groups.size() > 0) {
+						interfaceHqlQuery.append(" and g.id in (:groupIds)");
+					}
+					interfaceHqlQuery.append(" order by ni.device.name asc, ni.id asc");
+					Query interfaceQuery = session.createQuery(interfaceHqlQuery.toString());
+					if (domains.size() > 0) {
+						interfaceQuery.setParameterList("domainIds", domains);
+					}
+					if (groups.size() > 0) {
+						interfaceQuery.setParameterList("groupIds", groups);
+					}
+					@SuppressWarnings("unchecked")
+					List<NetworkInterface> networkInterfaces = interfaceQuery.list();
+					
 					Sheet interfaceSheet = workBook.createSheet("Interfaces");
 					((SXSSFSheet) interfaceSheet).setRandomAccessWindowSize(100);
 					int y = -1;
@@ -8659,44 +8717,64 @@ public class RestService extends Thread {
 						interfaceSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
 
-					for (Device device : devices) {
-						for (NetworkInterface networkInterface : device.getNetworkInterfaces()) {
+					for (NetworkInterface networkInterface : networkInterfaces) {
+						Device device = networkInterface.getDevice();
+						if (networkInterface.getIpAddresses().size() == 0) {
+							row = interfaceSheet.createRow(++y);
 							int x = -1;
-							if (networkInterface.getIpAddresses().size() == 0) {
-								row = interfaceSheet.createRow(++y);
-								row.createCell(++x).setCellValue(device.getId());
-								row.createCell(++x).setCellValue(device.getName());
-								row.createCell(++x).setCellValue(networkInterface.getVirtualDevice());
-								row.createCell(++x).setCellValue(networkInterface.getInterfaceName());
-								row.createCell(++x).setCellValue(networkInterface.getDescription());
-								row.createCell(++x).setCellValue(networkInterface.getVrfInstance());
-								row.createCell(++x).setCellValue(networkInterface.getMacAddress());
-								row.createCell(++x).setCellValue(networkInterface.isEnabled());
-								row.createCell(++x).setCellValue(networkInterface.isLevel3());
-								row.createCell(++x).setCellValue("");
-								row.createCell(++x).setCellValue("");
-								row.createCell(++x).setCellValue("");
-							}
-							for (NetworkAddress address : networkInterface.getIpAddresses()) {
-								row = interfaceSheet.createRow(++y);
-								row.createCell(++x).setCellValue(device.getId());
-								row.createCell(++x).setCellValue(device.getName());
-								row.createCell(++x).setCellValue(networkInterface.getVirtualDevice());
-								row.createCell(++x).setCellValue(networkInterface.getInterfaceName());
-								row.createCell(++x).setCellValue(networkInterface.getDescription());
-								row.createCell(++x).setCellValue(networkInterface.getVrfInstance());
-								row.createCell(++x).setCellValue(networkInterface.getMacAddress());
-								row.createCell(++x).setCellValue(networkInterface.isEnabled());
-								row.createCell(++x).setCellValue(networkInterface.isLevel3());
-								row.createCell(++x).setCellValue(address.getIp());
-								row.createCell(++x).setCellValue(address.getPrefixLength());
-								row.createCell(++x).setCellValue(address.getAddressUsage() == null ? "" : address.getAddressUsage().toString());
-							}
+							row.createCell(++x).setCellValue(device.getId());
+							row.createCell(++x).setCellValue(device.getName());
+							row.createCell(++x).setCellValue(networkInterface.getVirtualDevice());
+							row.createCell(++x).setCellValue(networkInterface.getInterfaceName());
+							row.createCell(++x).setCellValue(networkInterface.getDescription());
+							row.createCell(++x).setCellValue(networkInterface.getVrfInstance());
+							row.createCell(++x).setCellValue(networkInterface.getMacAddress());
+							row.createCell(++x).setCellValue(networkInterface.isEnabled());
+							row.createCell(++x).setCellValue(networkInterface.isLevel3());
+							row.createCell(++x).setCellValue("");
+							row.createCell(++x).setCellValue("");
+							row.createCell(++x).setCellValue("");
+						}
+						for (NetworkAddress address : networkInterface.getIpAddresses()) {
+							row = interfaceSheet.createRow(++y);
+							int x = -1;
+							row.createCell(++x).setCellValue(device.getId());
+							row.createCell(++x).setCellValue(device.getName());
+							row.createCell(++x).setCellValue(networkInterface.getVirtualDevice());
+							row.createCell(++x).setCellValue(networkInterface.getInterfaceName());
+							row.createCell(++x).setCellValue(networkInterface.getDescription());
+							row.createCell(++x).setCellValue(networkInterface.getVrfInstance());
+							row.createCell(++x).setCellValue(networkInterface.getMacAddress());
+							row.createCell(++x).setCellValue(networkInterface.isEnabled());
+							row.createCell(++x).setCellValue(networkInterface.isLevel3());
+							row.createCell(++x).setCellValue(address.getIp());
+							row.createCell(++x).setCellValue(address.getPrefixLength());
+							row.createCell(++x).setCellValue(address.getAddressUsage() == null ? "" : address.getAddressUsage().toString());
 						}
 					}
 				}
-
+	
 				if (exportInventory) {
+					logger.debug("Exporting device inventory");
+					StringBuffer moduleHqlQuery = new StringBuffer(
+							"select m from Module m join fetch m.device left join m.device.ownerGroups g where 1 = 1");
+					if (domains.size() > 0) {
+						moduleHqlQuery.append(" and m.device.mgmtDomain.id in (:domainIds)");
+					}
+					if (groups.size() > 0) {
+						moduleHqlQuery.append(" and g.id in (:groupIds)");
+					}
+					moduleHqlQuery.append(" order by m.device.name asc, m.id asc");
+					Query moduleQuery = session.createQuery(moduleHqlQuery.toString());
+					if (domains.size() > 0) {
+						moduleQuery.setParameterList("domainIds", domains);
+					}
+					if (groups.size() > 0) {
+						moduleQuery.setParameterList("groupIds", groups);
+					}
+					@SuppressWarnings("unchecked")
+					List<Module> modules = moduleQuery.list();
+
 					Sheet inventorySheet = workBook.createSheet("Inventory");
 					((SXSSFSheet) inventorySheet).setRandomAccessWindowSize(100);
 					int y = -1;
@@ -8722,21 +8800,40 @@ public class RestService extends Thread {
 						inventorySheet.createFreezePane(0, y + 1);
 						inventorySheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
-
-					for (Device device : devices) {
-						for (Module module : device.getModules()) {
-							int x = -1;
-							row = inventorySheet.createRow(++y);
-							row.createCell(++x).setCellValue(device.getId());
-							row.createCell(++x).setCellValue(device.getName());
-							row.createCell(++x).setCellValue(module.getSlot());
-							row.createCell(++x).setCellValue(module.getPartNumber());
-							row.createCell(++x).setCellValue(module.getSerialNumber());
-						}
+					for (Module module : modules) {
+						Device device = module.getDevice();
+						int x = -1;
+						row = inventorySheet.createRow(++y);
+						row.createCell(++x).setCellValue(device.getId());
+						row.createCell(++x).setCellValue(device.getName());
+						row.createCell(++x).setCellValue(module.getSlot());
+						row.createCell(++x).setCellValue(module.getPartNumber());
+						row.createCell(++x).setCellValue(module.getSerialNumber());
 					}
 				}
-				
+					
 				if (exportCompliance) {
+					logger.debug("Exporting compliance data");
+					StringBuffer checkHqlQuery = new StringBuffer(
+							"select cr from CheckResult as cr join fetch cr.key.rule crr join fetch crr.policy " +
+							"join fetch cr.key.device d left join d.ownerGroups g where 1 = 1");
+					if (domains.size() > 0) {
+						checkHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
+					}
+					if (groups.size() > 0) {
+						checkHqlQuery.append(" and g.id in (:groupIds)");
+					}
+					checkHqlQuery.append(" order by d.name asc, cr.id asc");
+					Query checkQuery = session.createQuery(checkHqlQuery.toString());
+					if (domains.size() > 0) {
+						checkQuery.setParameterList("domainIds", domains);
+					}
+					if (groups.size() > 0) {
+						checkQuery.setParameterList("groupIds", groups);
+					}
+					@SuppressWarnings("unchecked")
+					List<CheckResult> checkResults = checkQuery.list();
+
 					Sheet complianceSheet = workBook.createSheet("Configuration Compliance");
 					((SXSSFSheet) complianceSheet).setRandomAccessWindowSize(100);
 					int y = -1;
@@ -8767,19 +8864,131 @@ public class RestService extends Thread {
 						complianceSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));				
 					}
 
-					for (Device device : devices) {
-						for (CheckResult checkResult : device.getComplianceCheckResults()) {
+					for (CheckResult checkResult : checkResults) {
+						Device device = checkResult.getDevice();
+						int x = -1;
+						row = complianceSheet.createRow(++y);
+						row.createCell(++x).setCellValue(device.getId());
+						row.createCell(++x).setCellValue(device.getName());
+						row.createCell(++x).setCellValue(checkResult.getRule().getPolicy().getName());
+						row.createCell(++x).setCellValue(checkResult.getRule().getName());
+						row.createCell(++x).setCellValue(checkResult.getCheckDate());
+						row.getCell(x).setCellStyle(datetimeCellStyle);
+						row.createCell(++x).setCellValue(checkResult.getResult().toString());
+					}
+				}
+				
+				if (exportGroups) {
+					{
+						logger.debug("Exporting group data");
+						List<RsGroupConfigComplianceStat> groupConfigComplianceStats =
+								this.getGroupConfigComplianceStats(domains, groups, new HashSet<>());
+						
+						Sheet groupSheet = workBook.createSheet("Device Groups");
+						((SXSSFSheet) groupSheet).setRandomAccessWindowSize(100);
+						int y = -1;
+						{
+							row = groupSheet.createRow(++y);
 							int x = -1;
-							row = complianceSheet.createRow(++y);
-							row.createCell(++x).setCellValue(device.getId());
-							row.createCell(++x).setCellValue(device.getName());
-							row.createCell(++x).setCellValue(checkResult.getRule().getPolicy().getName());
-							row.createCell(++x).setCellValue(checkResult.getRule().getName());
-							row.createCell(++x).setCellValue(checkResult.getCheckDate());
-							row.getCell(x).setCellStyle(datetimeCellStyle);
-							row.createCell(++x).setCellValue(checkResult.getResult().toString());
+							row.createCell(++x).setCellValue("Group ID");
+							row.getCell(x).setCellStyle(titleCellStyle);
+							groupSheet.setColumnWidth(x, 2200);
+							row.createCell(++x).setCellValue("Group Name");
+							row.getCell(x).setCellStyle(titleCellStyle);
+							groupSheet.setColumnWidth(x, 5000);
+							row.createCell(++x).setCellValue("Folder");
+							row.getCell(x).setCellStyle(titleCellStyle);
+							groupSheet.setColumnWidth(x, 8000);
+							row.createCell(++x).setCellValue("Device Count");
+							row.getCell(x).setCellStyle(titleCellStyle);
+							groupSheet.setColumnWidth(x, 4000);
+							if (exportCompliance) {
+								row.createCell(++x).setCellValue("Config Compliant Count");
+								row.getCell(x).setCellStyle(titleCellStyle);
+								groupSheet.setColumnWidth(x, 6000);
+								row.createCell(++x).setCellValue("Config Compliance");
+								row.getCell(x).setCellStyle(titleCellStyle);
+								groupSheet.setColumnWidth(x, 5000);
+							}
+							groupSheet.createFreezePane(0, y + 1);
+							groupSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));	
+						}
+						
+						for (RsGroupConfigComplianceStat stat : groupConfigComplianceStats) {
+							row = groupSheet.createRow(++y);
+							int x = -1;
+							row.createCell(++x).setCellValue(stat.getGroupId());
+							row.createCell(++x).setCellValue(stat.getGroupName());
+							row.createCell(++x).setCellValue(stat.getGroupFolder());
+							row.createCell(++x).setCellValue(stat.getDeviceCount());
+							if (exportCompliance) {
+								row.createCell(++x).setCellValue(stat.getCompliantDeviceCount());
+								row.createCell(++x).setCellFormula(String.format("%s%d / %s%d",
+										CellReference.convertNumToColString(x - 1), y + 1,
+										CellReference.convertNumToColString(x - 2), y + 1));
+								row.getCell(x).setCellStyle(percentCellStyle);
+							}
 						}
 					}
+					{
+						logger.debug("Exporting group memberships");
+						StringBuffer deviceHqlQuery = new StringBuffer(
+								"select d from Device d left join fetch d.ownerGroups g left join fetch d.mgmtDomain " +
+								"where 1 = 1 order by d.name asc");
+						if (domains.size() > 0) {
+							deviceHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
+						}
+						if (groups.size() > 0) {
+							deviceHqlQuery.append(" and g.id in (:groupIds)");
+						}
+						Query deviceQuery = session.createQuery(deviceHqlQuery.toString());
+						if (domains.size() > 0) {
+							deviceQuery.setParameterList("domainIds", domains);
+						}
+						if (groups.size() > 0) {
+							deviceQuery.setParameterList("groupIds", groups);
+						}
+						@SuppressWarnings("unchecked")
+						List<Device> devices = deviceQuery.list();
+						
+						Sheet groupSheet = workBook.createSheet("Group Memberships");
+						((SXSSFSheet) groupSheet).setRandomAccessWindowSize(100);
+						int y = -1;
+						{
+							row = groupSheet.createRow(++y);
+							int x = -1;
+							row.createCell(++x).setCellValue("Device ID");
+							row.getCell(x).setCellStyle(titleCellStyle);
+							groupSheet.setColumnWidth(x, 2200);
+							row.createCell(++x).setCellValue("Device Name");
+							row.getCell(x).setCellStyle(titleCellStyle);
+							groupSheet.setColumnWidth(x, 5000);
+							row.createCell(++x).setCellValue("Group ID");
+							row.getCell(x).setCellStyle(titleCellStyle);
+							groupSheet.setColumnWidth(x, 2200);
+							row.createCell(++x).setCellValue("Group Name");
+							row.getCell(x).setCellStyle(titleCellStyle);
+							groupSheet.setColumnWidth(x, 5000);
+							groupSheet.createFreezePane(0, y + 1);
+							groupSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));	
+						}
+						
+						for (Device device : devices) {
+							for (DeviceGroup group : device.getOwnerGroups()) {
+								if (group.isHiddenFromReports()) {
+									continue;
+								}
+								row = groupSheet.createRow(++y);
+								int x = -1;
+								row.createCell(++x).setCellValue(device.getId());
+								row.createCell(++x).setCellValue(device.getName());
+								row.createCell(++x).setCellValue(group.getId());
+								row.createCell(++x).setCellValue(group.getName());
+							}
+						}
+						
+					}
+					
 				}
 
 				ByteArrayOutputStream output = new ByteArrayOutputStream();

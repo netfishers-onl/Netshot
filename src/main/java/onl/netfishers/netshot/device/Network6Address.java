@@ -23,7 +23,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
-import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -168,7 +167,6 @@ public class Network6Address extends NetworkAddress {
 	 *
 	 * @return the address1
 	 */
-	@Column(name = "ipv6address_1")
 	public long getAddress1() {
 		return address1;
 	}
@@ -178,7 +176,6 @@ public class Network6Address extends NetworkAddress {
 	 *
 	 * @return the address2
 	 */
-	@Column(name = "ipv6address_2")
 	public long getAddress2() {
 		return address2;
 	}
@@ -216,7 +213,6 @@ public class Network6Address extends NetworkAddress {
 	 *
 	 * @return the prefix length
 	 */
-	@Column(name = "ipv6mask")
 	@XmlAttribute
 	public int getPrefixLength() {
 		return prefixLength;
@@ -272,7 +268,6 @@ public class Network6Address extends NetworkAddress {
 	private AddressUsage addressUsage = AddressUsage.PRIMARY;
 
 	@XmlElement
-	@Column(name = "ipv6usage")
 	public AddressUsage getAddressUsage() {
 		return addressUsage;
 	}

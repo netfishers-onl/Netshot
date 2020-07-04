@@ -73,6 +73,15 @@ public class Module {
 	}
 
 	/**
+	 * The ID.
+	 *
+	 * @param id the ID
+	 */
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	/**
 	 * Gets the slot.
 	 *
 	 * @return the slot
@@ -146,10 +155,6 @@ public class Module {
 	 */
 	public void setDevice(Device device) {
 		this.device = device;
-	}
-
-	public void setId(long id) {
-		this.id = id;
 	}
 
 }

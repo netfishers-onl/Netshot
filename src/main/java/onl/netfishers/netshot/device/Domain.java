@@ -27,6 +27,7 @@ import javax.persistence.AttributeOverrides;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
@@ -248,7 +249,7 @@ public class Domain {
 	 * 
 	 * @return the credential sets
 	 */
-	@OneToMany(mappedBy = "mgmtDomain", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "mgmtDomain", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	public Set<DeviceCredentialSet> getCredentialSets() {
 		return credentialSets;
 	}

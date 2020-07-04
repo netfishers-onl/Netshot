@@ -439,6 +439,7 @@ public class Netshot extends Thread {
 		}
 		catch (Exception e) {
 			System.err.println("NETSHOT FATAL ERROR: " + e.getMessage());
+			e.printStackTrace();
 			System.exit(1);
 		}
 

@@ -30,15 +30,16 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import onl.netfishers.netshot.device.NetworkAddress.AddressUsage;
-
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+
+import onl.netfishers.netshot.device.NetworkAddress.AddressUsage;
 
 /**
  * A network interface is attached to a device, has a physical
@@ -49,26 +50,21 @@ import org.hibernate.annotations.FetchMode;
 public class NetworkInterface {
 	
 	/** The id. */
-	@Id @GeneratedValue
 	private long id;
 	
 	/** The device. */
-	@ManyToOne
 	protected Device device;
 	
 	/** The interface name. */
 	protected String interfaceName;
 	
 	/** The ip4 addresses. */
-	@ElementCollection(fetch = FetchType.EAGER) @Fetch(FetchMode.SELECT)
 	protected Set<Network4Address> ip4Addresses = new HashSet<Network4Address>();
 	
 	/** The ip6 addresses. */
-	@ElementCollection(fetch = FetchType.EAGER) @Fetch(FetchMode.SELECT)
 	protected Set<Network6Address> ip6Addresses = new HashSet<Network6Address>();
 	
 	/** The physical address. */
-	@Embedded
 	protected PhysicalAddress physicalAddress = new PhysicalAddress(0);
 	
 	/** The vrf instance. */
@@ -82,7 +78,7 @@ public class NetworkInterface {
 	
 	/** The enabled. */
 	protected boolean enabled;
-	
+
 	/** The level3. */
 	protected boolean level3;
 	
@@ -122,8 +118,18 @@ public class NetworkInterface {
 	 * @return the id
 	 */
 	@XmlElement
+	@Id @GeneratedValue
 	public long getId() {
 		return id;
+	}
+
+	/**
+	 * The ID.
+	 *
+	 * @param id the ID
+	 */
+	public void setId(long id) {
+		this.id = id;
 	}
 
 	/**
@@ -137,11 +143,22 @@ public class NetworkInterface {
 	}
 
 	/**
+	 * Gets the device.
+	 *
+	 * @return the device
+	 */
+	@ManyToOne
+	public Device getDevice() {
+		return device;
+	}
+
+	/**
 	 * Gets the ip4 addresses.
 	 *
 	 * @return the ip4 addresses
 	 */
 	@XmlElement
+	@ElementCollection(fetch = FetchType.EAGER) @Fetch(FetchMode.SELECT)
 	public Set<Network4Address> getIp4Addresses() {
 		return ip4Addresses;
 	}
@@ -152,6 +169,7 @@ public class NetworkInterface {
 	 * @return the ip6 addresses
 	 */
 	@XmlElement
+	@ElementCollection(fetch = FetchType.EAGER) @Fetch(FetchMode.SELECT)
 	public Set<Network6Address> getIp6Addresses() {
 		return ip6Addresses;
 	}
@@ -161,10 +179,11 @@ public class NetworkInterface {
 	 *
 	 * @return the ip addresses
 	 */
+	@Transient
 	public List<NetworkAddress> getIpAddresses() {
 		List<NetworkAddress> ipAddresses = new ArrayList<NetworkAddress>();
-		ipAddresses.addAll(ip4Addresses);
-		ipAddresses.addAll(ip6Addresses);
+		ipAddresses.addAll(this.getIp4Addresses());
+		ipAddresses.addAll(this.getIp6Addresses());
 		return ipAddresses;
 	}
 	
@@ -243,6 +262,7 @@ public class NetworkInterface {
 	 * @return the mac address
 	 */
 	@XmlElement
+	@Transient
 	public String getMacAddress() {
 		return physicalAddress.toString();
 	}
@@ -252,6 +272,7 @@ public class NetworkInterface {
 	 *
 	 * @return the physical address
 	 */
+	@Embedded
 	public PhysicalAddress getPhysicalAddress() {
 		return physicalAddress;
 	}
@@ -292,6 +313,15 @@ public class NetworkInterface {
 	@XmlElement
 	public String getDescription() {
 		return description;
+	}
+
+	/**
+	 * Sets the device.
+	 *
+	 * @param device the new device
+	 */
+	public void setDevice(Device device) {
+		this.device = device;
 	}
 
 	/**
@@ -337,6 +367,22 @@ public class NetworkInterface {
 	 */
 	public void setLevel3(boolean level3) {
 		this.level3 = level3;
+	}
+	
+	/**
+	 * Sets the IPv4 addresses.
+	 * @param ip4Addresses the IPv4 addresses
+	 */
+	public void setIp4Addresses(Set<Network4Address> ip4Addresses) {
+		this.ip4Addresses = ip4Addresses;
+	}
+
+	/**
+	 * Sets the IPv6 addresses.
+	 * @param ip6Addresses the IPv6 addresses
+	 */
+	public void setIp6Addresses(Set<Network6Address> ip6Addresses) {
+		this.ip6Addresses = ip6Addresses;
 	}
 
 	/* (non-Javadoc)

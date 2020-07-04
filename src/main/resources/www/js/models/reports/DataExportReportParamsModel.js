@@ -9,10 +9,11 @@ define([
 		initialize: function(options) {
 			this.groups = options.groups;
 			this.domains = options.domains;
-			this.interfaces = options.interfaces;
-			this.inventory = options.inventory;
-			this.locations = options.locations;
-			this.compliance = options.compliance;
+			this.exportGroups = options.exportGroups;
+			this.exportInterfaces = options.exportInterfaces;
+			this.exportInventory = options.exportInventory;
+			this.exportLocations = options.exportLocations;
+			this.exportCompliance = options.exportCompliance;
 		},
 
 		getDownloadUrl: function() {
@@ -31,16 +32,19 @@ define([
 					params.push("group=" + group);
 				});
 			}
-			if (this.interfaces) {
+			if (this.exportGroups) {
+				params.push("groups=true");
+			}
+			if (this.exportInterfaces) {
 				params.push("interfaces=true");
 			}
-			if (this.inventory) {
+			if (this.exportInventory) {
 				params.push("inventory=true");
 			}
-			if (this.locations) {
+			if (this.exportLocations) {
 				params.push("locations=true");
 			}
-			if (this.compliance) {
+			if (this.exportCompliance) {
 				params.push("compliance=true");
 			}
 			if (params.length) {

@@ -41,10 +41,11 @@ define([
 				var exportParams = new DataExportReportParamsModel({
 					groups: (that.$('#filtergroup').prop('checked') ? [that.$('#group').val()] : undefined),
 					domains: (that.$('#filterdomain').prop('checked') ? [that.$('#domain').val()] : undefined),
-					interfaces: that.$('#filterinterfaces').prop('checked'),
-					inventory: that.$('#filterinventory').prop('checked'),
-					locations: that.$('#filterlocations').prop('checked'),
-					compliance: that.$('#filtercompliance').prop('checked'),
+					exportGroups: that.$('#exportgroups').prop('checked'),
+					exportInterfaces: that.$('#exportinterfaces').prop('checked'),
+					exportInventory: that.$('#exportinventory').prop('checked'),
+					exportLocations: that.$('#exportlocations').prop('checked'),
+					exportCompliance: that.$('#exportcompliance').prop('checked'),
 				});
 				window.location = exportParams.getDownloadUrl();
 				return false;

@@ -22,6 +22,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -213,6 +216,11 @@ public class ScanSubnetsTask extends Task {
 	}
 
 	@ElementCollection(fetch = FetchType.EAGER) @Fetch(FetchMode.SELECT)
+	@AttributeOverrides({
+    @AttributeOverride(name = "address", column = @Column(name = "ipv4address")),
+    @AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4usage")),
+    @AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4mask")),
+  })
 	public Set<Network4Address> getSubnets() {
 		return subnets;
 	}

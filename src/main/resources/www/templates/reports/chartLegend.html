@@ -5,7 +5,7 @@
 <div class="nsreport-legend-color" style="background-color: <%- color %>;"></div>
 </td>
 <td class="nsreport-legend-text">
-<a href="#"><%- text %></a>
+<a href="#" data-level="<%- typeof level !== 'undefined' ? level : '' %>"><%- text %></a>
 </td>
 <% if (typeof comment === "string") { %>
 <td class="nsreport-legend-comment">

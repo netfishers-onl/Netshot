@@ -5,12 +5,33 @@
 		<label for="filterdomain">Restrict to the following device domain:</label>
 		<select name="domain" id="domain" disabled="disabled" class="text ui-widget-content ui-corner-all"></select>
 	</fieldset>
+	<fieldset>
+		<label for="displaymode">Display results as </label>
+		<select name="displaymode" id="displaymode" class="text ui-widget-content ui-corner-all">
+			<option selected="selected" value="charts">charts</option>
+			<option value="table">table</option>
+		</select>
+	</fieldset>
 	<p>
 		<button id="update">Update</button>
 	</p>
 </form>
 
-<div id="nsreport-softwarecompliance-groups" />
+<div id="nsreport-softwarecompliance-group-charts" />
+
+<table class="nstable" id="nsreport-softwarecompliance-table" style="display: none;">
+<thead>
+<tr>
+	<th>Group name</th>
+	<th>Gold</th>
+	<th>Silver</th>
+	<th>Bronze</th>
+	<th>Non compliant</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
 
 <div id="devices" style="display: none;">
 
@@ -18,11 +39,11 @@
 
 <table class="nstable">
 <thead>
-	<tr>
+<tr>
 	<th>Device name</th>
 	<th>Management IP</th>
 	<th>Level</th>
-	</tr>
+</tr>
 </thead>
 <tbody>
 </tbody>

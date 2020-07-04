@@ -1,0 +1,13 @@
+<tr data-group-id="<%- groupId %>">
+	<td><%- groupName %></td>
+	<td><a href="#" data-level="gold"><%- goldDeviceCount %> device<% if (goldDeviceCount > 1) { %>s<% } %></a></td>
+	<td><a href="#" data-level="silver"><%- silverDeviceCount %> device<% if (silverDeviceCount > 1) { %>s<% } %></a></td>
+	<td><a href="#" data-level="bronze"><%- bronzeDeviceCount %> device<% if (bronzeDeviceCount > 1) { %>s<% } %></a></td>
+	<td>
+		<a href="#" data-level="non compliant">
+			<%- (deviceCount - goldDeviceCount - silverDeviceCount - bronzeDeviceCount) %>
+			device<% if ((deviceCount - goldDeviceCount - silverDeviceCount - bronzeDeviceCount) > 1) { %>s<% } %>
+		</a>
+	</td>
+	<td></td>
+</tr>

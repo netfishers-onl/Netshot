@@ -1,8 +1,9 @@
-/** Copyright 2013-2014 NetFishers */
+/** Copyright 2013-2020 NetFishers */
 define([
 	'jquery',
 	'underscore',
 	'backbone',
+	'tablesort',
 	'Chart',
 	'views/reports/ReportView',
 	'models/reports/GroupSoftwareComplianceStatCollection',
@@ -11,12 +12,14 @@ define([
 	'text!templates/reports/softwareComplianceReport.html',
 	'text!templates/reports/chartLegend.html',
 	'text!templates/reports/softwareGroupComplianceChart.html',
+	'text!templates/reports/softwareGroupComplianceRow.html',
 	'text!templates/reports/softwareComplianceDeviceRow.html'
-	], function($, _, Backbone, Chart, ReportView,
+	], function($, _, Backbone, TableSort, Chart, ReportView,
 			GroupSoftwareComplianceStatCollection,
 			GroupDevicesBySoftwareLevelCollection, DomainCollection,
 			softwareComplianceReportTemplate,
 			chartLegendTemplate, softwareGroupComplianceChartTemplate,
+			softwareGroupComplianceRowTemplate,
 			softwareComplianceDeviceRow) {
 
 	return ReportView.extend({
@@ -24,6 +27,7 @@ define([
 		template: _.template(softwareComplianceReportTemplate),
 		chartLegendTemplate: _.template(chartLegendTemplate),
 		groupChartTemplate: _.template(softwareGroupComplianceChartTemplate),
+		groupRowRemplate: _.template(softwareGroupComplianceRowTemplate),
 		deviceTemplate: _.template(softwareComplianceDeviceRow),
 
 		render: function() {
@@ -72,26 +76,40 @@ define([
 			this.groupSoftwareComplianceStats = new GroupSoftwareComplianceStatCollection([], {
 				domains: this.$('#filterdomain').prop('checked') ? [this.$('#domain').val()] : undefined,
 			});
+			var displayCharts = this.$('#displaymode').val() === "charts";
+			this.$("#nsreport-softwarecompliance-group-charts").toggle(displayCharts);
+			this.$("#nsreport-softwarecompliance-table").toggle(!displayCharts);
 			this.groupSoftwareComplianceStats.fetch().done(function() {
-				that.$("#nsreport-softwarecompliance-groups").empty();
-				that.groupSoftwareComplianceStats
-					.each(that.renderGroupSoftwareComplianceStats, that);
-				that.$(".nsreport-legend-item a").click(function() {
+				that.$("#nsreport-softwarecompliance-group-charts").empty()
+				that.$("#nsreport-softwarecompliance-table>tbody").empty();
+				that.groupSoftwareComplianceStats.each(
+					displayCharts ? that.renderGroupSoftwareComplianceChart :
+					that.renderGroupSoftwareComplianceRow, that);
+				that.$("a[data-level]").click(function() {
 					var group = $(this).closest("[data-group-id]").data("group-id");
-					var level = $(this).text().toLowerCase();
+					var level = $(this).data("level");
 					that.refreshGroupDevices(group, level);
 					return false;
 				});
+				if (!displayCharts) {
+					new TableSort(that.$("#nsreport-softwarecompliance-table").get(0));
+				}
 			});
 		},
+		
+		renderGroupSoftwareComplianceRow: function(group) {
+			var that = this;
+			var html = this.groupRowRemplate(group.toJSON());
+			this.$("#nsreport-softwarecompliance-table>tbody").append(html);
+		},
 
-		renderGroupSoftwareComplianceStats: function(group) {
+		renderGroupSoftwareComplianceChart: function(group) {
 			var that = this;
 			if (group.get('deviceCount') === 0) {
 				return;
 			}
 			var html = this.groupChartTemplate(group.toJSON());
-			var $group = this.$("#nsreport-softwarecompliance-groups")
+			var $group = this.$("#nsreport-softwarecompliance-group-charts")
 				.append(html).find('.group-chart').last();
 
 			var htmlLegend = "";
@@ -111,6 +129,7 @@ define([
 				id: group.get('groupId'),
 				color: color,
 				text: "Gold",
+				level: "gold",
 				value: group.get('goldDeviceCount')
 			});
 
@@ -122,6 +141,7 @@ define([
 				id: group.get('groupId'),
 				color: color,
 				text: "Silver",
+				level: "silver",
 				value: group.get('silverDeviceCount')
 			});
 
@@ -133,6 +153,7 @@ define([
 				id: group.get('groupId'),
 				color: color,
 				text: "Bronze",
+				level: "bronze",
 				value: group.get('bronzeDeviceCount')
 			});
 
@@ -146,6 +167,7 @@ define([
 				id: group.get('groupId'),
 				color: color,
 				text: "Non compliant",
+				level: "non compliant",
 				value: rest
 			});
 

@@ -46,7 +46,7 @@ define([
 				var aboutDialog = new AboutDialog();
 			});
 			this.$('#nstoolbar-help').button().click(function() {
-				window.open("help.html", "help", "height=600,width=800,menubar=no,location=no,toolbar=no");
+				window.open("https://github.com/netfishers-onl/Netshot/wiki/Netshot-User-Guide", "help");
 			});
 			this.$("#nsuser").click(function() {
 				var userDialog = new UserDialog({

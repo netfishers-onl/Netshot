@@ -28,7 +28,7 @@ define([
 			title: "Edit Javascript diagnostic",
 			width: 530,
 			minWidth: 530,
-			height: 410,
+			height: 500,
 			minHeight: 410,
 			resizable: true,
 			resizeStop: function(e, ui) {

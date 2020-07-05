@@ -20,7 +20,7 @@ define([
 
 		dialogOptions: {
 			title: "Advanced search",
-			width: '600px',
+			width: '750px',
 		},
 
 		buttons: {

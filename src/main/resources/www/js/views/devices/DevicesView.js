@@ -67,18 +67,7 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 			if (!user.isReadWrite()) {
 				$('#nstoolbar-section').empty();
 			}
-			$('#nstoolbar-devices-add #singledevice').unbind('click').button()
-					.click(function() {
-						var addDeviceDialog = new AddDeviceDialog({
-							deviceTypes: that.deviceTypes
-						});
-					});
-			$('#nstoolbar-devices-add #othermethods').unbind('click').button({
-				text: false,
-				icons: {
-					primary: "ui-icon-triangle-1-s"
-				}
-			}).click(function() {
+			$('#nstoolbar-devices-add').unbind('click').button().click(function() {
 				var addDeviceMenu = $('#nstoolbar-devices-addmenu').show()
 						.prependTo('#container').position({
 							my: "left top",

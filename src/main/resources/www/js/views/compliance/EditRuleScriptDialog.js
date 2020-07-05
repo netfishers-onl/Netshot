@@ -22,8 +22,8 @@ define([
 
 		dialogOptions: {
 			title: "Edit rule script",
-			width: 600,
-			height: 500,
+			width: 800,
+			height: 600,
 			minWidth: 600,
 			minHeight: 500,
 			resizable: true,

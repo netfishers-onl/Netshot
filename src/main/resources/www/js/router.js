@@ -172,6 +172,7 @@ define([
 					return false;
 				}).show();
 				$("#splash #authentication-box #authenticate").button('enable');
+				$("#splash #authentication-box #username").focus();
 			}
 			else {
 				$("#splash #connection-error").show();

@@ -17,10 +17,12 @@ define([
 		},
 
 		templateData: function() {
+			var data = {};
 			if (typeof this.model === "object" && this.model) {
-				return this.model.toJSON();
+				data = this.model.toJSON();
+				data.isNew = this.model.isNew();
 			}
-			return {};
+			return data;
 		},
 		buttons: function() {
 			return {};

@@ -24,7 +24,8 @@ define([
 		dialogOptions: {
 			title: "Edit text rule",
 			width: 600,
-			height: 530
+			height: 530,
+			resizable: true
 		},
 		
 		deviceTypes: new DeviceTypeCollection([]),

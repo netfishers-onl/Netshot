@@ -118,6 +118,11 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	padding: 5px;
 }
 
+.ui-dialog.ui-widget .ui-dialog-titlebar {
+	border-bottom-right-radius: 0px !important;
+	border-bottom-left-radius: 0px !important;
+}
+
 .ui-widget {
 	font-size: 0.9em;
 }

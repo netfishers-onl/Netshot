@@ -12,6 +12,20 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.15.0 - 2020-07-10
+
+* Refreshed Web User Interface
+* Library updates (vulnerability fixes)
+* Improve audit logs
+* Make device comments acessible from JS scripts
+* Support device-specific accounts in DeviceListExtractor script
+* Fix for software rule not properly matched
+* Data export - add compliance data, device groups, and basic XLS style
+* Add reports/configcompliancedevicestatuses API endpoint
+* Table view for software compliance report
+* Add Normalize option to text-based compliance rules
+
+
 0.14.1 - 2019-10-26
 
 * Library update (vulnerability fix)

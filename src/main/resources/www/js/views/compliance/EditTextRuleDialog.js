@@ -24,7 +24,9 @@ define([
 		dialogOptions: {
 			title: "Edit text rule",
 			width: 600,
-			height: 530,
+			height: 630,
+			minWidth: 600,
+			minHeight: 530,
 			resizable: true
 		},
 		
@@ -74,7 +76,8 @@ define([
 					enabled: rule.get('enabled'),
 					invert: that.$("#invert").is(":checked"),
 					matchAll: that.$("#matchall").is(":checked"),
-					anyBlock: that.$("#anyblock").is(":checked")
+					anyBlock: that.$("#anyblock").is(":checked"),
+					normalize: that.$("#normalize").is(":checked"),
 				}).done(function(data) {
 					that.close();
 					that.model.set(data);
@@ -149,6 +152,7 @@ define([
 			this.$('#invert').prop("checked", that.model.get("invert"));
 			this.$('#matchall').prop("checked", that.model.get("matchAll"));
 			this.$('#anyblock').prop("checked", that.model.get("anyBlock"));
+			this.$('#normalize').prop("checked", that.model.get("normalize"));
 
 			this.$("#ruledevice").click(function() {
 				var selectDeviceDialog = new SelectDeviceDialog({
@@ -177,6 +181,7 @@ define([
 					invert: that.$("#invert").is(":checked"),
 					matchAll: that.$("#matchall").is(":checked"),
 					anyBlock: that.$("#anyblock").is(":checked"),
+					normalize: that.$("#normalize").is(":checked"),
 					type: ".TextRule"
 				});
 				test.save().done(function(data) {

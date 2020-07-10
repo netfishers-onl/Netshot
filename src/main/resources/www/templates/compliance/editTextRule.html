@@ -18,20 +18,9 @@
 			<tr>
 				<td colspan="2">
 					<input type="radio" id="allblocks" name="blocks" checked="checked" />
-					<label for="allblocks">All blocks</label>
+					<label for="allblocks">All found blocks must be valid</label>
 					<input type="radio" id="anyblock" name="blocks" />
-					<label for="anyblock">At least one block</label>
-				</td>
-			</tr>
-			<tr>
-				<td colspan="2">
-					<div>
-						<label for="text">Text: </label>
-							(<input type="checkbox" name="regexp" id="regexp" /> <label for="regexp">Regular expression</label>
-							<input type="checkbox" name="matchall" id="matchall" /> <label for="matchall">Match whole section</label>)
-						</div><div>
-						<textarea rows="8" cols="80" id="text" class="text ui-widget-content ui-corner-all"></textarea>
-						</div>
+					<label for="anyblock">At least one block must be valid</label>
 				</td>
 			</tr>
 			<tr>
@@ -40,6 +29,34 @@
 					<label for="dontinvert">The text must exist</label>
 					<input type="radio" id="invert" name="ruleinvert" />
 					<label for="invert">The text must not exist</label>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<input type="checkbox" name="regexp" id="regexp" /> <label for="regexp">The provided text is a regular expression</label>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<input type="checkbox" name="matchall" id="matchall" /> <label for="matchall">Compare the text to the whole section</label>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<input type="checkbox" name="normalize" id="normalize" /> <label for="normalize">Normalize the field text</label>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="2">
+					<label for="text">Text or pattern: </label>
+					<div id="text-container">
+						<textarea id="text" class="text ui-widget-content ui-corner-all"></textarea>
+					</div>
+				</td>
+			</tr>
+			
+			<tr>
+				<td colspan="2">
 				</td>
 			</tr>
 			<tr id="nscompliance-editrule-testerfield">

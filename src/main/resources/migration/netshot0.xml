@@ -914,4 +914,15 @@
 			<column name="file_size" type="BIGINT"/>
 		</addColumn>
 	</changeSet>
+<!-- netshot_0_14_1_to_0_15_0.xml -->
+	<changeSet author="netshot (generated)" id="0.15.0_1">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="text_rule" columnName="normalize"/></not>
+		</preConditions>
+		<addColumn tableName="text_rule">
+			<column name="normalize" type="${BOOLEAN}">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

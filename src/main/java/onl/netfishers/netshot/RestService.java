@@ -5391,6 +5391,7 @@ public class RestService extends Thread {
 		private Boolean anyBlock;
 		private Boolean matchAll;
 		private Boolean invert;
+		private Boolean normalize;
 
 		/**
 		 * Gets the id.
@@ -5587,6 +5588,15 @@ public class RestService extends Thread {
 		public void setMatchAll(Boolean matchAll) {
 			this.matchAll = matchAll;
 		}
+
+		@XmlElement
+		public Boolean isNormalize() {
+			return normalize;
+		}
+
+		public void setNormalize(Boolean normalize) {
+			this.normalize = normalize;
+		}
 	}
 
 	/**
@@ -5743,6 +5753,9 @@ public class RestService extends Thread {
 				}
 				if (rsRule.isAnyBlock() != null) {
 					((TextRule) rule).setAnyBlock(rsRule.isAnyBlock());
+				}
+				if (rsRule.isNormalize() != null) {
+					((TextRule) rule).setNormalize(rsRule.isNormalize());
 				}
 			}
 
@@ -5936,6 +5949,7 @@ public class RestService extends Thread {
 				txRule.setText(rsRule.getText());
 				txRule.setAnyBlock(rsRule.isAnyBlock());
 				txRule.setMatchAll(rsRule.isMatchAll());
+				txRule.setNormalize(rsRule.isNormalize());
 				rule = txRule;
 			}
 			else {

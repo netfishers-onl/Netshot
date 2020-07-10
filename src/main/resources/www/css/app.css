@@ -1141,13 +1141,23 @@ input.spinner {
 	cursor: pointer;
 }
 
+#nscompliance-editruletextform #text-container {
+	position: absolute;
+	top: 305px;
+	bottom: 70px;
+	left: 74px;
+	right: 20px;
+	padding: 0px 30px 20px 0px;
+}
+
+#nscompliance-editruletextform #text-container #text {
+	height: 100%;
+	width: 100%;
+}
+
 #nscompliance-editruletextform textarea {
 	resize: none;
 	font-family: monospace;
-}
-
-#nscompliance-editruletextform #text {
-	width: 480px;
 }
 
 #nsdevice-deviceeditform #devicecredentials {

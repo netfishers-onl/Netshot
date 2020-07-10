@@ -55,6 +55,8 @@ public class TextRule extends Rule {
 	
 	private boolean matchAll = false;
 	
+	private boolean normalize = false;
+	
 	private String deviceDriver;
 	
 	private List<Pattern> hierarchy = new ArrayList<Pattern>();
@@ -168,6 +170,15 @@ public class TextRule extends Rule {
 		this.matchAll = matchAll;
 	}
 
+	@XmlElement
+	public boolean isNormalize() {
+		return normalize;
+	}
+
+	public void setNormalize(boolean normalize) {
+		this.normalize = normalize;
+	}
+
 	private void prepare() {
 		if (prepared) {
 			return;
@@ -196,6 +207,13 @@ public class TextRule extends Rule {
 			}
 		}
 		valid = true;
+	}
+	
+	private String normalizeText(String text) {
+		if (text == null) {
+			return null;
+		}
+		return text.replaceAll("[\\x0B\\f\\r]", "").replaceAll(" +\\n", "\n");
 	}
 	
 	private int findIndent(String line) {
@@ -262,6 +280,9 @@ public class TextRule extends Rule {
 			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, session, taskLogger, true);
 			String content = deviceHelper.get(field).toString();
 			content = content.replace("\r", "");
+			if (isNormalize()) {
+				content = this.normalizeText(content);
+			}
 			List<String[]> blocks = new ArrayList<String[]>();
 			blocks.add(new String[] { "", content });
 			for (Pattern pattern : hierarchy) {

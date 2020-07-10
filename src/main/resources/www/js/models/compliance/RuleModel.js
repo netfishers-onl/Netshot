@@ -26,7 +26,8 @@ define([
 				'type',
 				'invert',
 				'matchAll',
-				'anyBlock'
+				'anyBlock',
+				'normalize',
 			]);
 			options.attrs = attrs;
 			return Backbone.Model.prototype.save.call(this, attrs, options);

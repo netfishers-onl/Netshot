@@ -59,7 +59,7 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	top: 50%;
 	left: 50%;
 	width: 400px;
-	height: 180px;
+	height: 200px;
 	margin-top: -100px;
 	margin-left: -200px;
 	border: 1px solid #e1e4e8;
@@ -123,6 +123,10 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	border-bottom-left-radius: 0px !important;
 }
 
+.ui-dialog.ui-widget .ui-dialog-titlebar button.ui-dialog-titlebar-close {
+	border-color: transparent;
+}
+
 .ui-widget {
 	font-size: 0.9em;
 }
@@ -170,10 +174,6 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	border-color: hsla(0,0%,100%,.7);
 }
 
-.nstoolbar .ui-button.ui-state-hover .ui-button-text {
-	color: hsla(0,0%,100%,.7);
-}
-
 .nstoolbar .ui-button.ui-state-active {
 	border: 2px solid #fff;
 	background-color: transparent;
@@ -200,10 +200,39 @@ th[role=columnheader]:not(.no-sort):hover:after {
 }
 
 .ui-button {
+	outline-style: none;
+}
+
+.ui-button.primary {
+	background-color: #2ea44f;
+	color: #fff;
+	border-color: #2ea44f;
+}
+
+.ui-button.ui-state-hover.primary {
+	background-color: #2c974b;
+	border-color: #2c974b;
+}
+
+.ui-button.danger {
+	color: #cb2431;
+	border-color: #cb2431;
+}
+
+.ui-button.ui-state-hover.danger {
+	background-color: #cb2431;
+	border-color: #cb2431;
+	color: #fff;
+}
+
+.ui-widget .ui-button {
+	padding-right: 16px;
+	padding-left: 16px;
 }
 
 .ui-button-text {
 	margin-left: 0.3em;
+	font-weight: bold;
 }
 
 .nstoolbar .ui-button {
@@ -220,6 +249,14 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	display: block;
 	font-size: 1em;
 	color: #fff;
+}
+
+.nstoolbar .ui-button.ui-state-hover .ui-button-text {
+	color: hsla(0,0%,100%,.7);
+}
+
+.nstoolbar .ui-button.ui-state-hover>span>span {
+	color: hsla(0,0%,100%,.7);
 }
 
 .nstoolbar .nstitle {
@@ -1394,14 +1431,14 @@ input.spinner {
 	position: absolute;
 	top: 50px;
 	bottom: 50px;
-	left: 45px;
+	left: 55px;
 	right: 10px;
 }
 
 .editscriptform .loadsavetools {
 	position: absolute;
 	left: 10px;
-	width: 25px;
+	width: 32px;
 	height: 25px;
 	padding: 3px;
 	background-color: white;

@@ -23,7 +23,7 @@ define([
 		},
 
 		buttons: {
-			"Confirm": function(event) {
+			"Delete": function(event) {
 				var that = this;
 				that.$('button').button('disable');
 				var $button = $(event.target).closest('button');

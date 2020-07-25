@@ -64,6 +64,16 @@ define([
 					that.$('#error').hide();
 					that.$('#info').hide();
 					that.onCreate();
+					var $dialog = $(this).closest(".ui-dialog");
+					$dialog.find(".ui-button:contains('Finish')").addClass("primary");
+					$dialog.find(".ui-button:contains('Save')").addClass("primary");
+					$dialog.find(".ui-button:contains('Add')").addClass("primary");
+					$dialog.find(".ui-button:contains('Select')").addClass("primary");
+					$dialog.find(".ui-button:contains('Confirm')").addClass("primary");
+					$dialog.find(".ui-button:contains('Scan')").addClass("primary");
+					$dialog.find(".ui-button:contains('Search')").addClass("primary");
+					$dialog.find(".ui-button:contains('Delete')").addClass("danger");
+					$dialog.find(".ui-button:contains('Logout')").addClass("danger");
 				},
 				close: function() {
 					that.close();

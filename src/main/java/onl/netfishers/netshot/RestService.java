@@ -204,6 +204,9 @@ public class RestService extends Thread {
 
 	/** The static instance service. */
 	private static RestService nsRestService;
+	
+	/** Pagination size for dump queries */
+	private static final int PAGINATION_SIZE = 1000;
 
 	/**
 	 * Initializes the service.
@@ -8636,8 +8639,7 @@ public class RestService extends Thread {
 					if (groups.size() > 0) {
 						deviceQuery.setParameterList("groupIds", groups);
 					}
-					@SuppressWarnings("unchecked")
-					List<Device> devices = deviceQuery.list();
+					deviceQuery.setMaxResults(PAGINATION_SIZE);
 
 					Sheet deviceSheet = workBook.createSheet("Devices");
 					((SXSSFSheet) deviceSheet).setRandomAccessWindowSize(100);
@@ -8695,40 +8697,47 @@ public class RestService extends Thread {
 						deviceSheet.createFreezePane(0, y + 1);
 						deviceSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
-					
-					for (Device device : devices) {
-						int x = -1;
-						row = deviceSheet.createRow(++y);
-						row.createCell(++x).setCellValue(device.getId());
-						row.createCell(++x).setCellValue(device.getName());
-						row.createCell(++x).setCellValue(device.getMgmtAddress().getIp());
-						row.createCell(++x).setCellValue(device.getMgmtDomain().getName());
-						row.createCell(++x).setCellValue(device.getNetworkClass().toString());
-						row.createCell(++x).setCellValue(device.getFamily());
-						cell = row.createCell(++x);
-						cell.setCellValue(device.getCreatedDate());
-						cell.setCellStyle(datetimeCellStyle);
-						cell = row.createCell(++x);
-						cell.setCellValue(device.getChangeDate());
-						cell.setCellStyle(datetimeCellStyle);
-						row.createCell(++x).setCellValue(device.getSoftwareVersion());
-						if (exportCompliance) {
-							row.createCell(++x).setCellValue((device.getSoftwareLevel() == null ?
-									ConformanceLevel.UNKNOWN : device.getSoftwareLevel()).toString());
-							if (device.getEosDate() != null) {
-								cell = row.createCell(++x);
-								cell.setCellValue(device.getEosDate());
-								cell.setCellStyle(dateCellStyle);
+
+					for (int n = 0; true; n += PAGINATION_SIZE) {
+						@SuppressWarnings("unchecked")
+						List<Device> devices = deviceQuery.setFirstResult(n).list();
+						for (Device device : devices) {
+							int x = -1;
+							row = deviceSheet.createRow(++y);
+							row.createCell(++x).setCellValue(device.getId());
+							row.createCell(++x).setCellValue(device.getName());
+							row.createCell(++x).setCellValue(device.getMgmtAddress().getIp());
+							row.createCell(++x).setCellValue(device.getMgmtDomain().getName());
+							row.createCell(++x).setCellValue(device.getNetworkClass().toString());
+							row.createCell(++x).setCellValue(device.getFamily());
+							cell = row.createCell(++x);
+							cell.setCellValue(device.getCreatedDate());
+							cell.setCellStyle(datetimeCellStyle);
+							cell = row.createCell(++x);
+							cell.setCellValue(device.getChangeDate());
+							cell.setCellStyle(datetimeCellStyle);
+							row.createCell(++x).setCellValue(device.getSoftwareVersion());
+							if (exportCompliance) {
+								row.createCell(++x).setCellValue((device.getSoftwareLevel() == null ?
+										ConformanceLevel.UNKNOWN : device.getSoftwareLevel()).toString());
+								if (device.getEosDate() != null) {
+									cell = row.createCell(++x);
+									cell.setCellValue(device.getEosDate());
+									cell.setCellStyle(dateCellStyle);
+								}
+								if (device.getEolDate() != null) {
+									cell = row.createCell(++x);
+									cell.setCellValue(device.getEolDate());
+									cell.setCellStyle(dateCellStyle);
+								}
 							}
-							if (device.getEolDate() != null) {
-								cell = row.createCell(++x);
-								cell.setCellValue(device.getEolDate());
-								cell.setCellStyle(dateCellStyle);
+							if (exportLocations) {
+								row.createCell(++x).setCellValue(device.getLocation());
+								row.createCell(++x).setCellValue(device.getContact());
 							}
 						}
-						if (exportLocations) {
-							row.createCell(++x).setCellValue(device.getLocation());
-							row.createCell(++x).setCellValue(device.getContact());
+						if (devices.size() < PAGINATION_SIZE) {
+							break;
 						}
 					}
 				}
@@ -8753,8 +8762,6 @@ public class RestService extends Thread {
 					if (groups.size() > 0) {
 						interfaceQuery.setParameterList("groupIds", groups);
 					}
-					@SuppressWarnings("unchecked")
-					List<NetworkInterface> networkInterfaces = interfaceQuery.list();
 					
 					Sheet interfaceSheet = workBook.createSheet("Interfaces");
 					((SXSSFSheet) interfaceSheet).setRandomAccessWindowSize(100);
@@ -8803,6 +8810,8 @@ public class RestService extends Thread {
 						interfaceSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
 
+					@SuppressWarnings("unchecked")
+					List<NetworkInterface> networkInterfaces = interfaceQuery.list();
 					for (NetworkInterface networkInterface : networkInterfaces) {
 						Device device = networkInterface.getDevice();
 						if (networkInterface.getIpAddresses().size() == 0) {
@@ -8838,6 +8847,7 @@ public class RestService extends Thread {
 							row.createCell(++x).setCellValue(address.getAddressUsage() == null ? "" : address.getAddressUsage().toString());
 						}
 					}
+					session.clear();
 				}
 	
 				if (exportInventory) {
@@ -8858,8 +8868,7 @@ public class RestService extends Thread {
 					if (groups.size() > 0) {
 						moduleQuery.setParameterList("groupIds", groups);
 					}
-					@SuppressWarnings("unchecked")
-					List<Module> modules = moduleQuery.list();
+					moduleQuery.setMaxResults(PAGINATION_SIZE);
 
 					Sheet inventorySheet = workBook.createSheet("Inventory");
 					((SXSSFSheet) inventorySheet).setRandomAccessWindowSize(100);
@@ -8886,23 +8895,31 @@ public class RestService extends Thread {
 						inventorySheet.createFreezePane(0, y + 1);
 						inventorySheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
-					for (Module module : modules) {
-						Device device = module.getDevice();
-						int x = -1;
-						row = inventorySheet.createRow(++y);
-						row.createCell(++x).setCellValue(device.getId());
-						row.createCell(++x).setCellValue(device.getName());
-						row.createCell(++x).setCellValue(module.getSlot());
-						row.createCell(++x).setCellValue(module.getPartNumber());
-						row.createCell(++x).setCellValue(module.getSerialNumber());
+					for (int n = 0; true; n += PAGINATION_SIZE) {
+						@SuppressWarnings("unchecked")
+						List<Module> modules = moduleQuery.setFirstResult(n).list();
+						for (Module module : modules) {
+							Device device = module.getDevice();
+							int x = -1;
+							row = inventorySheet.createRow(++y);
+							row.createCell(++x).setCellValue(device.getId());
+							row.createCell(++x).setCellValue(device.getName());
+							row.createCell(++x).setCellValue(module.getSlot());
+							row.createCell(++x).setCellValue(module.getPartNumber());
+							row.createCell(++x).setCellValue(module.getSerialNumber());
+						}
+						session.clear();
+						if (modules.size() < PAGINATION_SIZE) {
+							break;
+						}
 					}
 				}
 					
 				if (exportCompliance) {
 					logger.debug("Exporting compliance data");
 					StringBuffer checkHqlQuery = new StringBuffer(
-							"select cr from CheckResult as cr join fetch cr.key.rule crr join fetch crr.policy " +
-							"join fetch cr.key.device d left join d.ownerGroups g where 1 = 1");
+							"select cr from CheckResult as cr join cr.key.rule crr join crr.policy " +
+							"join cr.key.device d left join d.ownerGroups g where 1 = 1");
 					if (domains.size() > 0) {
 						checkHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
 					}
@@ -8917,8 +8934,7 @@ public class RestService extends Thread {
 					if (groups.size() > 0) {
 						checkQuery.setParameterList("groupIds", groups);
 					}
-					@SuppressWarnings("unchecked")
-					List<CheckResult> checkResults = checkQuery.list();
+					checkQuery.setMaxResults(PAGINATION_SIZE);
 
 					Sheet complianceSheet = workBook.createSheet("Configuration Compliance");
 					((SXSSFSheet) complianceSheet).setRandomAccessWindowSize(100);
@@ -8950,17 +8966,25 @@ public class RestService extends Thread {
 						complianceSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));				
 					}
 
-					for (CheckResult checkResult : checkResults) {
-						Device device = checkResult.getDevice();
-						int x = -1;
-						row = complianceSheet.createRow(++y);
-						row.createCell(++x).setCellValue(device.getId());
-						row.createCell(++x).setCellValue(device.getName());
-						row.createCell(++x).setCellValue(checkResult.getRule().getPolicy().getName());
-						row.createCell(++x).setCellValue(checkResult.getRule().getName());
-						row.createCell(++x).setCellValue(checkResult.getCheckDate());
-						row.getCell(x).setCellStyle(datetimeCellStyle);
-						row.createCell(++x).setCellValue(checkResult.getResult().toString());
+					for (int n = 0; true; n += PAGINATION_SIZE) {
+						@SuppressWarnings("unchecked")
+						List<CheckResult> checkResults = checkQuery.setFirstResult(n).list();
+						for (CheckResult checkResult : checkResults) {
+							Device device = checkResult.getDevice();
+							int x = -1;
+							row = complianceSheet.createRow(++y);
+							row.createCell(++x).setCellValue(device.getId());
+							row.createCell(++x).setCellValue(device.getName());
+							row.createCell(++x).setCellValue(checkResult.getRule().getPolicy().getName());
+							row.createCell(++x).setCellValue(checkResult.getRule().getName());
+							row.createCell(++x).setCellValue(checkResult.getCheckDate());
+							row.getCell(x).setCellStyle(datetimeCellStyle);
+							row.createCell(++x).setCellValue(checkResult.getResult().toString());
+						}
+						session.clear();
+						if (checkResults.size() < PAGINATION_SIZE) {
+							break;
+						}
 					}
 				}
 				
@@ -9015,11 +9039,12 @@ public class RestService extends Thread {
 								row.getCell(x).setCellStyle(percentCellStyle);
 							}
 						}
+						session.clear();
 					}
 					{
 						logger.debug("Exporting group memberships");
 						StringBuffer deviceHqlQuery = new StringBuffer(
-								"select d from Device d left join fetch d.ownerGroups g left join fetch d.mgmtDomain " +
+								"select d from Device d left join d.ownerGroups g left join d.mgmtDomain " +
 								"where 1 = 1 order by d.name asc");
 						if (domains.size() > 0) {
 							deviceHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
@@ -9034,8 +9059,7 @@ public class RestService extends Thread {
 						if (groups.size() > 0) {
 							deviceQuery.setParameterList("groupIds", groups);
 						}
-						@SuppressWarnings("unchecked")
-						List<Device> devices = deviceQuery.list();
+						deviceQuery.setMaxResults(PAGINATION_SIZE);
 						
 						Sheet groupSheet = workBook.createSheet("Group Memberships");
 						((SXSSFSheet) groupSheet).setRandomAccessWindowSize(100);
@@ -9059,20 +9083,27 @@ public class RestService extends Thread {
 							groupSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));	
 						}
 						
-						for (Device device : devices) {
-							for (DeviceGroup group : device.getOwnerGroups()) {
-								if (group.isHiddenFromReports()) {
-									continue;
+						for (int n = 0; true; n += PAGINATION_SIZE) {
+							@SuppressWarnings("unchecked")
+							List<Device> devices = deviceQuery.setFirstResult(n).list();
+							for (Device device : devices) {
+								for (DeviceGroup group : device.getOwnerGroups()) {
+									if (group.isHiddenFromReports()) {
+										continue;
+									}
+									row = groupSheet.createRow(++y);
+									int x = -1;
+									row.createCell(++x).setCellValue(device.getId());
+									row.createCell(++x).setCellValue(device.getName());
+									row.createCell(++x).setCellValue(group.getId());
+									row.createCell(++x).setCellValue(group.getName());
 								}
-								row = groupSheet.createRow(++y);
-								int x = -1;
-								row.createCell(++x).setCellValue(device.getId());
-								row.createCell(++x).setCellValue(device.getName());
-								row.createCell(++x).setCellValue(group.getId());
-								row.createCell(++x).setCellValue(group.getName());
+							}
+							session.clear();
+							if (devices.size() < PAGINATION_SIZE) {
+								break;
 							}
 						}
-						
 					}
 					
 				}

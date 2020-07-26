@@ -8919,7 +8919,9 @@ public class RestService extends Thread {
 				if (exportCompliance) {
 					logger.debug("Exporting compliance data");
 					List<RsLightPolicyRuleDevice> checkResults = getConfigComplianceDeviceStatuses(domains, groups,
-							new HashSet<Long>(), new HashSet<CheckResult.ResultOption>());
+							new HashSet<Long>(), new HashSet<CheckResult.ResultOption>(
+									Arrays.asList(new CheckResult.ResultOption[] { CheckResult.ResultOption.CONFORMING,
+											CheckResult.ResultOption.NONCONFORMING, CheckResult.ResultOption.EXEMPTED })));
 
 					Sheet complianceSheet = workBook.createSheet("Configuration Compliance");
 					((SXSSFSheet) complianceSheet).setRandomAccessWindowSize(100);

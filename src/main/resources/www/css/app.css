@@ -60,7 +60,7 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	left: 50%;
 	width: 400px;
 	height: 200px;
-	margin-top: -100px;
+	margin-top: -130px;
 	margin-left: -200px;
 	border: 1px solid #e1e4e8;
 	border-radius: 6px;
@@ -225,7 +225,7 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	color: #fff;
 }
 
-.ui-widget .ui-button {
+.ui-dialog-buttonset .ui-button {
 	padding-right: 16px;
 	padding-left: 16px;
 }

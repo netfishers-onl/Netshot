@@ -127,6 +127,10 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	border-color: transparent;
 }
 
+.ui-buttonset .ui-button {
+	margin-right: 0px;
+}
+
 .ui-widget {
 	font-size: 0.9em;
 }

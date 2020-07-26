@@ -187,8 +187,8 @@ public class RunDiagnosticsTask extends Task {
 			@SuppressWarnings("unchecked")
 			List<Diagnostic> diagnostics = session.createQuery(
 					"select distinct dg from Device d left join d.ownerGroups g left join g.diagnostics dg where d = :device and dg.enabled = :enabled")
-				.setEntity("device", device)
-				.setBoolean("enabled", true)
+				.setParameter("device", device)
+				.setParameter("enabled", true)
 				.list();
 			if (diagnostics.size() > 0) {
 				cliScript = new RunDiagnosticCliScript(diagnostics, this.debugEnabled);

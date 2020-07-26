@@ -84,19 +84,44 @@ import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.tasks.DeviceJsScript;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.model.naming.EntityNaming;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitAnyDiscriminatorColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitAnyKeyColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitCollectionTableNameSource;
+import org.hibernate.boot.model.naming.ImplicitDiscriminatorColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitEntityNameSource;
+import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
+import org.hibernate.boot.model.naming.ImplicitIdentifierColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitIndexColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
+import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitJoinTableNameSource;
+import org.hibernate.boot.model.naming.ImplicitMapKeyColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
+import org.hibernate.boot.model.naming.ImplicitPrimaryKeyJoinColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitTenantIdColumnNameSource;
+import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
+import org.hibernate.boot.model.naming.NamingHelper;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
+import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.ImprovedNamingStrategy;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
-import org.jasypt.hibernate4.encryptor.HibernatePBEEncryptorRegistry;
+import org.jasypt.hibernate5.encryptor.HibernatePBEEncryptorRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -124,12 +149,11 @@ public class Database {
 
 	/** The logger. */
 	private static Logger logger = LoggerFactory.getLogger(Database.class);
-	
-	
+
 	private static class DatabaseInterceptor extends EmptyInterceptor {
 
-		public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, 
-				Object[] previousState, String[] propertyNames, Type[] types) {
+		public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState,
+				String[] propertyNames, Type[] types) {
 			int indexOf = ArrayUtils.indexOf(propertyNames, "changeDate");
 			if (indexOf != ArrayUtils.INDEX_NOT_FOUND) {
 				currentState[indexOf] = new Date(1000 * (System.currentTimeMillis() / 1000));
@@ -138,31 +162,349 @@ public class Database {
 			return false;
 		}
 
-		public boolean onSave(Object entity, Serializable id, Object[] state, 
-				String[] propertyNames, Type[] types) {
+		public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
 			int indexOf = ArrayUtils.indexOf(propertyNames, "changeDate");
 			if (indexOf != ArrayUtils.INDEX_NOT_FOUND) {
-				if (state[indexOf] == null) 
-				state[indexOf] = new Date(1000 * (System.currentTimeMillis() / 1000));
+				if (state[indexOf] == null) state[indexOf] = new Date(1000 * (System.currentTimeMillis() / 1000));
 				return true;
 			}
 			return false;
 		}
 
 		private static final long serialVersionUID = 5897665908529047371L;
-		
+
+	}
+
+	static public class ImprovedPhysicalNamingStrategy implements PhysicalNamingStrategy {
+
+		@Override
+		public Identifier toPhysicalCatalogName(Identifier identifier, JdbcEnvironment jdbcEnv) {
+			return convert(identifier);
+		}
+
+		@Override
+		public Identifier toPhysicalColumnName(Identifier identifier, JdbcEnvironment jdbcEnv) {
+			return convert(identifier);
+		}
+
+		@Override
+		public Identifier toPhysicalSchemaName(Identifier identifier, JdbcEnvironment jdbcEnv) {
+			return convert(identifier);
+		}
+
+		@Override
+		public Identifier toPhysicalSequenceName(Identifier identifier, JdbcEnvironment jdbcEnv) {
+			return convert(identifier);
+		}
+
+		@Override
+		public Identifier toPhysicalTableName(Identifier identifier, JdbcEnvironment jdbcEnv) {
+			return convert(identifier);
+		}
+
+		private Identifier convert(Identifier identifier) {
+			if (identifier == null || StringUtils.isBlank(identifier.getText())) {
+				return identifier;
+			}
+
+			final StringBuilder buf = new StringBuilder(identifier.getText().replace('.', '_'));
+			for (int i = 1; i < buf.length() - 1; i++) {
+				if (Character.isLowerCase(buf.charAt(i - 1)) && Character.isUpperCase(buf.charAt(i))
+						&& Character.isLowerCase(buf.charAt(i + 1))) {
+					buf.insert(i++, '_');
+				}
+			}
+			String newName = buf.toString().toLowerCase();
+			return Identifier.toIdentifier(newName);
+		}
+	}
+
+	static public class ImprovedImplicitNamingStrategy implements ImplicitNamingStrategy {
+		/**
+		 * The INSTANCE.
+		 */
+		public static final ImprovedImplicitNamingStrategy INSTANCE = new ImprovedImplicitNamingStrategy();
+
+		/**
+		 * Constructor.
+		 */
+		public ImprovedImplicitNamingStrategy() {
+		}
+
+		/**
+		 * The determinePrimaryTableName.
+		 *
+		 * @param source
+		 *                 the source.
+		 * @return the identifier.
+		 */
+		@Override
+		public Identifier determinePrimaryTableName(ImplicitEntityNameSource source) {
+			if (source == null) {
+				// should never happen, but to be defensive...
+				throw new HibernateException("Entity naming information was not provided.");
+			}
+
+			String tableName = transformEntityName(source.getEntityNaming());
+
+			if (tableName == null) {
+				// todo : add info to error message - but how to know what to write since we
+				// failed to interpret the naming source
+				throw new HibernateException("Could not determine primary table name for entity");
+			}
+			return toIdentifier(tableName, source.getBuildingContext());
+		}
+
+		/**
+		 * The determinePrimaryTableName.
+		 *
+		 * @param entityNaming
+		 *                       the source.
+		 * @return the identifier.
+		 */
+		protected String transformEntityName(EntityNaming entityNaming) {
+			// prefer the JPA entity name, if specified...
+			if (StringHelper.isNotEmpty(entityNaming.getJpaEntityName())) {
+				return entityNaming.getJpaEntityName();
+			}
+			else {
+				// otherwise, use the Hibernate entity name
+				return StringHelper.unqualify(entityNaming.getEntityName());
+			}
+		}
+
+		/**
+		 * The determinePrimaryTableName.
+		 *
+		 * @param source
+		 *                 the source.
+		 * @return the identifier.
+		 */
+		@Override
+		public Identifier determineJoinTableName(ImplicitJoinTableNameSource source) {
+			final String ownerPortion = source.getOwningPhysicalTableName();
+			final String ownedPortion;
+			if (source.getAssociationOwningAttributePath() != null) {
+				ownedPortion = transformAttributePath(source.getAssociationOwningAttributePath());
+			}
+			else {
+				ownedPortion = source.getNonOwningPhysicalTableName();
+			}
+
+			return toIdentifier(ownerPortion + "_" + ownedPortion, source.getBuildingContext());
+		}
+
+		/**
+		 * The determinePrimaryTableName.
+		 *
+		 * @param source
+		 *                 the source.
+		 * @return the identifier.
+		 */
+		@Override
+		public Identifier determineCollectionTableName(ImplicitCollectionTableNameSource source) {
+			final String owningEntity = transformEntityName(source.getOwningEntityNaming());
+			final String name = transformAttributePath(source.getOwningAttributePath());
+			final String entityName;
+			if (owningEntity != null && !owningEntity.trim().equals("")) {
+				entityName = owningEntity + "_" + name;
+			}
+			else {
+				entityName = name;
+			}
+			return toIdentifier(entityName, source.getBuildingContext());
+		}
+
+		@Override
+		public Identifier determineIdentifierColumnName(ImplicitIdentifierColumnNameSource source) {
+			return toIdentifier(transformAttributePath(source.getIdentifierAttributePath()), source.getBuildingContext());
+		}
+
+		@Override
+		public Identifier determineDiscriminatorColumnName(ImplicitDiscriminatorColumnNameSource source) {
+			return toIdentifier(source.getBuildingContext().getMappingDefaults().getImplicitDiscriminatorColumnName(),
+					source.getBuildingContext());
+		}
+
+		@Override
+		public Identifier determineTenantIdColumnName(ImplicitTenantIdColumnNameSource source) {
+			return toIdentifier(source.getBuildingContext().getMappingDefaults().getImplicitTenantIdColumnName(),
+					source.getBuildingContext());
+		}
+
+		@Override
+		public Identifier determineBasicColumnName(ImplicitBasicColumnNameSource source) {
+			return toIdentifier(transformAttributePath(source.getAttributePath()), source.getBuildingContext());
+		}
+
+		@Override
+		public Identifier determineJoinColumnName(ImplicitJoinColumnNameSource source) {
+			final String name;
+
+			if (source.getNature() == ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION) {
+				name = transformEntityName(source.getEntityNaming()) + '_' + source.getReferencedColumnName().getText();
+			}
+			else {
+				if (source.getAttributePath() == null) {
+					name = source.getReferencedTableName().getText();
+				}
+				else {
+					name = transformAttributePath(source.getAttributePath());
+				}
+			}
+			return toIdentifier(name, source.getBuildingContext());
+		}
+
+		/**
+		 * The determinePrimaryTableName.
+		 *
+		 * @param source
+		 *                 the source.
+		 * @return the identifier.
+		 */
+		@Override
+		public Identifier determinePrimaryKeyJoinColumnName(ImplicitPrimaryKeyJoinColumnNameSource source) {
+			return source.getReferencedPrimaryKeyColumnName();
+		}
+
+		/**
+		 * The determinePrimaryTableName.
+		 *
+		 * @param source
+		 *                 the source.
+		 * @return the identifier.
+		 */
+		@Override
+		public Identifier determineAnyDiscriminatorColumnName(ImplicitAnyDiscriminatorColumnNameSource source) {
+			return toIdentifier(
+					transformAttributePath(source.getAttributePath()) + "_"
+							+ source.getBuildingContext().getMappingDefaults().getImplicitDiscriminatorColumnName(),
+					source.getBuildingContext());
+		}
+
+		/**
+		 * The determinePrimaryTableName.
+		 *
+		 * @param source
+		 *                 the source.
+		 * @return the identifier.
+		 */
+		@Override
+		public Identifier determineAnyKeyColumnName(ImplicitAnyKeyColumnNameSource source) {
+			return toIdentifier(
+					transformAttributePath(source.getAttributePath()) + "_"
+							+ source.getBuildingContext().getMappingDefaults().getImplicitIdColumnName(),
+					source.getBuildingContext());
+		}
+
+		/**
+		 * The determinePrimaryTableName.
+		 *
+		 * @param source
+		 *                 the source.
+		 * @return the identifier.
+		 */
+		@Override
+		public Identifier determineMapKeyColumnName(ImplicitMapKeyColumnNameSource source) {
+			return toIdentifier(transformAttributePath(source.getPluralAttributePath()) + "_KEY",
+					source.getBuildingContext());
+		}
+
+		/**
+		 * The determinePrimaryTableName.
+		 *
+		 * @param source
+		 *                 the source.
+		 * @return the identifier.
+		 */
+		@Override
+		public Identifier determineListIndexColumnName(ImplicitIndexColumnNameSource source) {
+			return toIdentifier(transformAttributePath(source.getPluralAttributePath()) + "_ORDER",
+					source.getBuildingContext());
+		}
+
+		/**
+		 * The determinePrimaryTableName.
+		 *
+		 * @param source
+		 *                 the source.
+		 * @return the identifier.
+		 */
+		@Override
+		public Identifier determineForeignKeyName(ImplicitForeignKeyNameSource source) {
+			return toIdentifier(NamingHelper.INSTANCE.generateHashedFkName("FK", source.getTableName(),
+					source.getReferencedTableName(), source.getColumnNames()), source.getBuildingContext());
+		}
+
+		/**
+		 * The determinePrimaryTableName.
+		 *
+		 * @param source
+		 *                 the source.
+		 * @return the identifier.
+		 */
+		@Override
+		public Identifier determineUniqueKeyName(ImplicitUniqueKeyNameSource source) {
+			return toIdentifier(
+					NamingHelper.INSTANCE.generateHashedConstraintName("UK", source.getTableName(), source.getColumnNames()),
+					source.getBuildingContext());
+		}
+
+		/**
+		 * The determinePrimaryTableName.
+		 *
+		 * @param source
+		 *                 the source.
+		 * @return the identifier.
+		 */
+		@Override
+		public Identifier determineIndexName(ImplicitIndexNameSource source) {
+			return toIdentifier(
+					NamingHelper.INSTANCE.generateHashedConstraintName("IDX", source.getTableName(), source.getColumnNames()),
+					source.getBuildingContext());
+		}
+
+		/**
+		 * For JPA standards we typically need the unqualified name. However, a more
+		 * usable impl tends to use the whole path. This method provides an easy hook
+		 * for subclasses to accomplish that
+		 *
+		 * @param attributePath
+		 *                        The attribute path
+		 * @return The extracted name
+		 */
+		protected String transformAttributePath(AttributePath attributePath) {
+			return attributePath.getProperty();
+		}
+
+		/**
+		 * Easy hook to build an Identifier using the keyword safe IdentifierHelper.
+		 *
+		 * @param stringForm
+		 *                          The String form of the name
+		 * @param buildingContext
+		 *                          Access to the IdentifierHelper
+		 * @return The identifier
+		 */
+		protected Identifier toIdentifier(String stringForm, MetadataBuildingContext buildingContext) {
+
+			return buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment().getIdentifierHelper()
+					.toIdentifier(stringForm);
+		}
 	}
 
 	/**
 	 * List classes in a given package.
 	 *
-	 * @param packageName the package name
+	 * @param packageName
+	 *                      the package name
 	 * @return the list
-	 * @throws ClassNotFoundException the class not found exception
-	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws ClassNotFoundException
+	 *                                  the class not found exception
+	 * @throws IOException
+	 *                                  Signals that an I/O exception has occurred.
 	 */
-	public static List<Class<?>> listClassesInPackage(String packageName)
-			throws ClassNotFoundException, IOException {
+	public static List<Class<?>> listClassesInPackage(String packageName) throws ClassNotFoundException, IOException {
 		String path = packageName.replace('.', '/');
 		Enumeration<URL> resources = ClassLoader.getSystemResources(path);
 		List<String> dirs = new ArrayList<String>();
@@ -184,11 +526,15 @@ public class Database {
 	/**
 	 * Find classes with a path.
 	 *
-	 * @param path the path
-	 * @param packageName the package name
+	 * @param path
+	 *                      the path
+	 * @param packageName
+	 *                      the package name
 	 * @return the tree set
-	 * @throws MalformedURLException the malformed url exception
-	 * @throws IOException Signals that an I/O exception has occurred.
+	 * @throws MalformedURLException
+	 *                                 the malformed url exception
+	 * @throws IOException
+	 *                                 Signals that an I/O exception has occurred.
 	 */
 	private static TreeSet<String> findClasses(String path, String packageName)
 			throws MalformedURLException, IOException {
@@ -200,8 +546,7 @@ public class Database {
 			ZipEntry entry;
 			while ((entry = zip.getNextEntry()) != null) {
 				if (entry.getName().endsWith(".class")) {
-					String className = entry.getName().replaceAll("[$].*", "")
-							.replaceAll("[.]class", "").replace('/', '.');
+					String className = entry.getName().replaceAll("[$].*", "").replaceAll("[.]class", "").replace('/', '.');
 					if (className.startsWith(packageName)) {
 						classes.add(className);
 					}
@@ -216,44 +561,46 @@ public class Database {
 		for (File file : files) {
 			if (file.isDirectory()) {
 				assert !file.getName().contains(".");
-				classes.addAll(findClasses(file.getAbsolutePath(), packageName + "."
-						+ file.getName()));
+				classes.addAll(findClasses(file.getAbsolutePath(), packageName + "." + file.getName()));
 			}
 			else if (file.getName().endsWith(".class")) {
-				String className = packageName + '.'
-						+ file.getName().substring(0, file.getName().length() - 6);
+				String className = packageName + '.' + file.getName().substring(0, file.getName().length() - 6);
 				classes.add(className);
 			}
 		}
 		return classes;
 	}
-	
+
 	/**
 	 * Retrieve the configured driver class.
+	 * 
 	 * @return the configured driver class
 	 */
 	private static String getDriverClass() {
 		return Netshot.getConfig("netshot.db.driver_class", "com.mysql.jdbc.Driver");
 	}
-	
+
 	/**
 	 * Retrieve the DB URL.
+	 * 
 	 * @return the configured DB URL.
 	 */
 	private static String getUrl() {
 		return Netshot.getConfig("netshot.db.url", "jdbc:mysql://localhost/netshot01");
 	}
-	
+
 	/**
 	 * Retrieve the DB username.
+	 * 
 	 * @return the configured DB username
 	 */
 	private static String getUsername() {
 		return Netshot.getConfig("netshot.db.username", "netshot");
 	}
-	
+
 	/**
 	 * Retrieve the DB password.
+	 * 
 	 * @return the configured DB password
 	 */
 	private static String getPassword() {
@@ -267,17 +614,19 @@ public class Database {
 		try {
 			Class.forName("org.postgresql.Driver");
 			Connection connection = DriverManager.getConnection(getUrl(), getUsername(), getPassword());
-			liquibase.database.Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
+			liquibase.database.Database database = DatabaseFactory.getInstance()
+					.findCorrectDatabaseImplementation(new JdbcConnection(connection));
 			Liquibase liquibase = new Liquibase("migration/netshot0.xml", new ClassLoaderResourceAccessor(), database);
 			liquibase.update(new Contexts(), new LabelExpression());
 			connection.close();
 		}
 		catch (Exception e) {
-			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to connect to the database (for the initial schema update)", e);
+			logger.error(MarkerFactory.getMarker("FATAL"),
+					"Unable to connect to the database (for the initial schema update)", e);
 			throw new RuntimeException("Unable to connect to the database, see logs for more details");
 		}
 	}
-	
+
 	/**
 	 * Initializes the database access, with Hibernate.
 	 */
@@ -286,19 +635,14 @@ public class Database {
 
 			configuration = new Configuration();
 
-			configuration
-				.setProperty("hibernate.connection.driver_class", getDriverClass())
-				.setProperty("hibernate.connection.url", getUrl())
-				.setProperty("hibernate.connection.username", getUsername())
-				.setProperty("hibernate.connection.password", getPassword())
-				.setProperty("hibernate.c3p0.min_size", "5")
-				.setProperty("hibernate.c3p0.max_size", "30")
-				.setProperty("hibernate.c3p0.timeout", "1800")
-				.setProperty("hibernate.c3p0.max_statements", "50")
-				.setProperty("hibernate.c3p0.unreturnedConnectionTimeout", "1800")
-				.setProperty("hibernate.c3p0.debugUnreturnedConnectionStackTraces", "true");
+			configuration.setProperty("hibernate.connection.driver_class", getDriverClass())
+					.setProperty("hibernate.connection.url", getUrl()).setProperty("hibernate.connection.username", getUsername())
+					.setProperty("hibernate.connection.password", getPassword()).setProperty("hibernate.c3p0.min_size", "5")
+					.setProperty("hibernate.c3p0.max_size", "30").setProperty("hibernate.c3p0.timeout", "1800")
+					.setProperty("hibernate.c3p0.max_statements", "50")
+					.setProperty("hibernate.c3p0.unreturnedConnectionTimeout", "1800")
+					.setProperty("hibernate.c3p0.debugUnreturnedConnectionStackTraces", "true");
 
-			
 			StandardPBEStringEncryptor credentialEncryptor = new StandardPBEStringEncryptor();
 			String cryptPassword = Netshot.getConfig("netshot.db.encryptionpassword", null);
 			if (cryptPassword == null) {
@@ -308,55 +652,32 @@ public class Database {
 			HibernatePBEEncryptorRegistry encryptorRegistry = HibernatePBEEncryptorRegistry.getInstance();
 			encryptorRegistry.registerPBEStringEncryptor("credentialEncryptor", credentialEncryptor);
 
-			configuration
-				.setProperty("factory_class", "org.hibernate.transaction.JDBCTransactionFactory")
-				.setProperty("current_session_context_class", "thread")
-				//.setProperty("hibernate.hbm2ddl.auto", "update") // "update" or ""
-				//.setProperty("hibernate.show_sql", "true")
-				.addAnnotatedClass(Device.class).addAnnotatedClass(DeviceGroup.class)
-				.addAnnotatedClass(Config.class)
-				.addAnnotatedClass(DeviceAttribute.class)
-				.addAnnotatedClass(DeviceNumericAttribute.class)
-				.addAnnotatedClass(DeviceTextAttribute.class)
-				.addAnnotatedClass(DeviceLongTextAttribute.class)
-				.addAnnotatedClass(DeviceBinaryAttribute.class)
-				.addAnnotatedClass(ConfigAttribute.class)
-				.addAnnotatedClass(ConfigNumericAttribute.class)
-				.addAnnotatedClass(ConfigTextAttribute.class)
-				.addAnnotatedClass(ConfigLongTextAttribute.class)
-				.addAnnotatedClass(ConfigBinaryAttribute.class)
-				.addAnnotatedClass(ConfigBinaryFileAttribute.class)
-				.addAnnotatedClass(LongTextConfiguration.class)
-				.addAnnotatedClass(StaticDeviceGroup.class)
-				.addAnnotatedClass(DynamicDeviceGroup.class)
-				.addAnnotatedClass(Module.class).addAnnotatedClass(Domain.class)
-				.addAnnotatedClass(PhysicalAddress.class)
-				.addAnnotatedClass(NetworkAddress.class)
-				.addAnnotatedClass(Network4Address.class)
-				.addAnnotatedClass(Network6Address.class)
-				.addAnnotatedClass(NetworkInterface.class)
-				.addAnnotatedClass(DeviceSnmpv1Community.class)
-				.addAnnotatedClass(DeviceSnmpv2cCommunity.class)
-				.addAnnotatedClass(DeviceSnmpv3Community.class)
-				.addAnnotatedClass(DeviceSshAccount.class)
-				.addAnnotatedClass(DeviceSshKeyAccount.class)
-				.addAnnotatedClass(DeviceTelnetAccount.class)
-				.addAnnotatedClass(Policy.class).addAnnotatedClass(Rule.class)
-				.addAnnotatedClass(Task.class).addAnnotatedClass(DebugLog.class)
-				.addAnnotatedClass(Exemption.class)
-				.addAnnotatedClass(Exemption.Key.class)
-				.addAnnotatedClass(CheckResult.class)
-				.addAnnotatedClass(CheckResult.Key.class)
-				.addAnnotatedClass(SoftwareRule.class)
-				.addAnnotatedClass(HardwareRule.class)
-				.addAnnotatedClass(DeviceJsScript.class)
-				.addAnnotatedClass(Diagnostic.class)
-				.addAnnotatedClass(DiagnosticResult.class)
-				.addAnnotatedClass(DiagnosticBinaryResult.class)
-				.addAnnotatedClass(DiagnosticNumericResult.class)
-				.addAnnotatedClass(DiagnosticLongTextResult.class)
-				.addAnnotatedClass(DiagnosticTextResult.class)
-				.addAnnotatedClass(User.class);
+			configuration.setProperty("factory_class", "org.hibernate.transaction.JDBCTransactionFactory")
+					.setProperty("current_session_context_class", "thread")
+					// .setProperty("hibernate.hbm2ddl.auto", "update") // "update" or ""
+					.setProperty("hibernate.show_sql", "true").addAnnotatedClass(Device.class)
+					.addAnnotatedClass(DeviceGroup.class).addAnnotatedClass(Config.class).addAnnotatedClass(DeviceAttribute.class)
+					.addAnnotatedClass(DeviceNumericAttribute.class).addAnnotatedClass(DeviceTextAttribute.class)
+					.addAnnotatedClass(DeviceLongTextAttribute.class).addAnnotatedClass(DeviceBinaryAttribute.class)
+					.addAnnotatedClass(ConfigAttribute.class).addAnnotatedClass(ConfigNumericAttribute.class)
+					.addAnnotatedClass(ConfigTextAttribute.class).addAnnotatedClass(ConfigLongTextAttribute.class)
+					.addAnnotatedClass(ConfigBinaryAttribute.class).addAnnotatedClass(ConfigBinaryFileAttribute.class)
+					.addAnnotatedClass(LongTextConfiguration.class).addAnnotatedClass(StaticDeviceGroup.class)
+					.addAnnotatedClass(DynamicDeviceGroup.class).addAnnotatedClass(Module.class).addAnnotatedClass(Domain.class)
+					.addAnnotatedClass(PhysicalAddress.class).addAnnotatedClass(NetworkAddress.class)
+					.addAnnotatedClass(Network4Address.class).addAnnotatedClass(Network6Address.class)
+					.addAnnotatedClass(NetworkInterface.class).addAnnotatedClass(DeviceSnmpv1Community.class)
+					.addAnnotatedClass(DeviceSnmpv2cCommunity.class).addAnnotatedClass(DeviceSnmpv3Community.class)
+					.addAnnotatedClass(DeviceSshAccount.class).addAnnotatedClass(DeviceSshKeyAccount.class)
+					.addAnnotatedClass(DeviceTelnetAccount.class).addAnnotatedClass(Policy.class).addAnnotatedClass(Rule.class)
+					.addAnnotatedClass(Task.class).addAnnotatedClass(DebugLog.class).addAnnotatedClass(Exemption.class)
+					.addAnnotatedClass(Exemption.Key.class).addAnnotatedClass(CheckResult.class)
+					.addAnnotatedClass(CheckResult.Key.class).addAnnotatedClass(SoftwareRule.class)
+					.addAnnotatedClass(HardwareRule.class).addAnnotatedClass(DeviceJsScript.class)
+					.addAnnotatedClass(Diagnostic.class).addAnnotatedClass(DiagnosticResult.class)
+					.addAnnotatedClass(DiagnosticBinaryResult.class).addAnnotatedClass(DiagnosticNumericResult.class)
+					.addAnnotatedClass(DiagnosticLongTextResult.class).addAnnotatedClass(DiagnosticTextResult.class)
+					.addAnnotatedClass(User.class);
 
 			for (Class<?> clazz : Task.getTaskClasses()) {
 				logger.info("Registering task class " + clazz.getName());
@@ -374,20 +695,17 @@ public class Database {
 				configuration.addAnnotatedClass(clazz);
 			}
 
-			configuration.setNamingStrategy(new ImprovedNamingStrategy());
-			
+			configuration.setImplicitNamingStrategy(new ImprovedImplicitNamingStrategy());
+			configuration.setPhysicalNamingStrategy(new ImprovedPhysicalNamingStrategy());
 			configuration.setInterceptor(new DatabaseInterceptor());
 
-			serviceRegistry = new StandardServiceRegistryBuilder().applySettings(
-					configuration.getProperties()).build();
+			serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
 			sessionFactory = configuration.buildSessionFactory(serviceRegistry);
 
 		}
 		catch (HibernateException e) {
-			logger.error(MarkerFactory.getMarker("FATAL"),
-					"Unable to instantiate Hibernate", e);
-			throw new RuntimeException(
-					"Unable to instantiate Hibernate, see logs for more details");
+			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate Hibernate", e);
+			throw new RuntimeException("Unable to instantiate Hibernate, see logs for more details");
 		}
 	}
 
@@ -395,7 +713,8 @@ public class Database {
 	 * Gets the session.
 	 *
 	 * @return the session
-	 * @throws HibernateException the hibernate exception
+	 * @throws HibernateException
+	 *                              the hibernate exception
 	 */
 	public static Session getSession() throws HibernateException {
 		return sessionFactory.openSession();
@@ -404,8 +723,10 @@ public class Database {
 	/**
 	 * Gets the real object from the Hibernate proxy.
 	 *
-	 * @param <T> the generic type
-	 * @param entity the entity
+	 * @param <T>
+	 *                 the generic type
+	 * @param entity
+	 *                 the entity
 	 * @return the t
 	 */
 	@SuppressWarnings("unchecked")

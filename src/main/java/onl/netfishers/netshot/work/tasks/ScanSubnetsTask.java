@@ -119,8 +119,8 @@ public class ScanSubnetsTask extends Task {
 							min, max));
 					List<Integer> existing = session
 							.createQuery("select d.mgmtAddress.address from Device d where d.mgmtAddress.address >= :min and d.mgmtAddress.address <= :max")
-							.setInteger("min", min)
-							.setInteger("max", max)
+							.setParameter("min", min)
+							.setParameter("max", max)
 							.list();
 					for (int a = min; a <= max; a++) {
 						if (!existing.contains(a)) {
@@ -139,7 +139,7 @@ public class ScanSubnetsTask extends Task {
 			try {
 				knownCommunities = session
 						.createQuery("from DeviceSnmpCommunity c where c.mgmtDomain is null or c.mgmtDomain = :domain")
-						.setEntity("domain", domain)
+						.setParameter("domain", domain)
 						.list();
 			}
 			catch (Exception e) {

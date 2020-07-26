@@ -505,7 +505,7 @@ public class JsDeviceHelper {
 	private Device loadDevice(long id) throws HibernateException {
 		Device device = (Device) session
 				.createQuery("from Device d join fetch d.lastConfig where d.id = :id")
-				.setLong("id", id)
+				.setParameter("id", id)
 				.uniqueResult();
 		return device;
 	}
@@ -513,7 +513,7 @@ public class JsDeviceHelper {
 	private Device loadDevice(String name) throws HibernateException {
 		Device device = (Device) session
 				.createQuery("from Device d join fetch d.lastConfig where d.name = :name")
-				.setString("name", name)
+				.setParameter("name", name)
 				.uniqueResult();
 		return device;
 	}

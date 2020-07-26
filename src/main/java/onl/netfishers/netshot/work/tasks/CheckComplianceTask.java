@@ -37,7 +37,6 @@ import onl.netfishers.netshot.work.TaskLogger;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.criterion.Property;
 import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,12 +94,12 @@ public class CheckComplianceTask extends Task {
 			session.beginTransaction();
 			session
 				.createQuery("delete from CheckResult c where c.key.device.id = :id")
-				.setLong("id", this.device.getId())
+				.setParameter("id", this.device.getId())
 				.executeUpdate();
 			session.evict(this.device);
 			Device device = (Device) session
 				.createQuery("from Device d join fetch d.lastConfig where d.id = :id")
-				.setLong("id", this.device.getId()).uniqueResult();
+				.setParameter("id", this.device.getId()).uniqueResult();
 			if (device == null) {
 				logger.info("Unable to fetch the device with its last config... has it been captured at least once?");
 				throw new Exception("No last config for this device. Has it been captured at least once?");
@@ -108,7 +107,7 @@ public class CheckComplianceTask extends Task {
 			@SuppressWarnings("unchecked")
 			List<Policy> policies = session
 				.createQuery("select p from Policy p join p.targetGroup g join g.cachedDevices d where d.id = :id")
-				.setLong("id", this.device.getId())
+				.setParameter("id", this.device.getId())
 				.list();
 
 			TaskLogger taskLogger = this.getJsLogger();
@@ -116,9 +115,9 @@ public class CheckComplianceTask extends Task {
 				policy.check(device, session, taskLogger);
 				session.merge(policy);
 			}
-			@SuppressWarnings("unchecked")
-			List<SoftwareRule> softwareRules = session.createCriteria(SoftwareRule.class)
-				.addOrder(Property.forName("priority").asc()).list();
+			List<SoftwareRule> softwareRules =
+				session.createQuery("select sr from SoftwareRule sr order by sr.priority asc", SoftwareRule.class)
+				.list();
 			device.setSoftwareLevel(ConformanceLevel.UNKNOWN);
 			for (SoftwareRule rule : softwareRules) {
 				rule.check(device);
@@ -126,8 +125,9 @@ public class CheckComplianceTask extends Task {
 					break;
 				}
 			}
-			@SuppressWarnings("unchecked")
-			List<HardwareRule> hardwareRules = session.createCriteria(HardwareRule.class).list();
+			List<HardwareRule> hardwareRules = session
+				.createQuery("select hr from HardwareRule hr", HardwareRule.class)
+				.list();
 			device.resetEoX();
 			for (HardwareRule rule : hardwareRules) {
 				rule.check(device);

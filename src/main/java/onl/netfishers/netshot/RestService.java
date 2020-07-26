@@ -36,6 +36,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -171,11 +172,8 @@ import org.glassfish.jersey.servlet.ServletProperties;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.Property;
-import org.hibernate.criterion.Restrictions;
 import org.hibernate.transform.Transformers;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
@@ -688,7 +686,6 @@ public class RestService extends Thread {
 	 * @return the domains
 	 * @throws WebApplicationException the web application exception
 	 */
-	@SuppressWarnings("unchecked")
 	@GET
 	@Path("domains")
 	@RolesAllowed("readonly")
@@ -698,7 +695,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		List<Domain> domains;
 		try {
-			domains = session.createCriteria(Domain.class).list();
+			domains = session.createQuery("select d from Domain d", Domain.class).list();
 			List<RsDomain> rsDomains = new ArrayList<RsDomain>();
 			for (Domain domain : domains) {
 				rsDomains.add(new RsDomain(domain));
@@ -1021,7 +1018,7 @@ public class RestService extends Thread {
 	 * @return the device interfaces
 	 * @throws WebApplicationException the web application exception
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("deprecation")
 	@GET
 	@Path("devices/{id}/interfaces")
 	@RolesAllowed("readonly")
@@ -1037,8 +1034,9 @@ public class RestService extends Thread {
 							"from NetworkInterface AS networkInterface "
 									+ "left join fetch networkInterface.ip4Addresses "
 									+ "left join fetch networkInterface.ip6Addresses "
-									+ "where device = :device").setLong("device", id)
-									.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
+									+ "where device = :device", NetworkInterface.class)
+					.setParameter("device", id)
+					.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
 			return deviceInterfaces;
 		}
 		catch (HibernateException e) {
@@ -1059,7 +1057,6 @@ public class RestService extends Thread {
 	 * @return the device modules
 	 * @throws WebApplicationException the web application exception
 	 */
-	@SuppressWarnings("unchecked")
 	@GET
 	@Path("devices/{id}/modules")
 	@RolesAllowed("readonly")
@@ -1070,8 +1067,8 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			List<Module> deviceModules = session
-					.createQuery("from Module m where device = :device")
-					.setLong("device", id).list();
+					.createQuery("from Module m where m.device.id = :device", Module.class)
+					.setParameter("device", id).list();
 			return deviceModules;
 		}
 		catch (HibernateException e) {
@@ -1085,46 +1082,40 @@ public class RestService extends Thread {
 	}
 
 	/**
-	 * Gets the device last 20 tasks.
+	 * Gets the device last n (default 20) tasks.
 	 *
 	 * @param request the request
 	 * @param id the id
 	 * @return the device tasks
 	 * @throws WebApplicationException the web application exception
 	 */
-	@SuppressWarnings("unchecked")
 	@GET
 	@Path("devices/{id}/tasks")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<Task> getDeviceTasks(@PathParam("id") Long id)
+	public List<Task> getDeviceTasks(@PathParam("id") Long id,
+			@PathParam("max") @DefaultValue("20") Integer maxCount)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} tasks.", id);
 		Session session = Database.getSession();
 		try {
-			final int max = 20;
-			final Class<?>[] taskTypes = new Class<?>[] {
-					CheckComplianceTask.class,
-					DiscoverDeviceTypeTask.class,
-					TakeSnapshotTask.class,
-					RunDeviceScriptTask.class,
-					RunDiagnosticsTask.class,
-			};
-			final Criterion[] restrictions = new Criterion[] {
-					Restrictions.eq("t.device.id", id),
-					Restrictions.eq("t.deviceId", id),
-					Restrictions.eq("t.device.id", id),
-					Restrictions.eq("t.device.id", id),
-					Restrictions.eq("t.device.id", id)
-			};
 			List<Task> tasks = new ArrayList<Task>();
-			for (int i = 0; i < taskTypes.length; i++) {
-				List<Task> typeTasks = session
-						.createCriteria(taskTypes[i], "t")
-						.add(restrictions[i])
-						.list();
-				tasks.addAll(typeTasks);
-			}
+			tasks.addAll(session.createQuery(
+					"select t from CheckComplianceTask t where t.device.id = :deviceId", CheckComplianceTask.class)
+					.setParameter("deviceId", id).setMaxResults(maxCount).list());
+			tasks.addAll(session.createQuery(
+					"select t from DiscoverDeviceTypeTask t where t.deviceId = :deviceId", DiscoverDeviceTypeTask.class)
+					.setParameter("deviceId", id).setMaxResults(maxCount).list());
+			tasks.addAll(session.createQuery(
+					"select t from TakeSnapshotTask t where t.device.id = :deviceId", TakeSnapshotTask.class)
+					.setParameter("deviceId", id).setMaxResults(maxCount).list());
+			tasks.addAll(session.createQuery(
+					"select t from RunDeviceScriptTask t where t.device.id = :deviceId", RunDeviceScriptTask.class)
+					.setParameter("deviceId", id).setMaxResults(maxCount).list());
+			tasks.addAll(session.createQuery(
+					"select t from RunDiagnosticsTask t where t.device.id = :deviceId", RunDiagnosticsTask.class)
+					.setParameter("deviceId", id).setMaxResults(maxCount).list());
+			
 			Collections.sort(tasks, new Comparator<Task>() {
 				private int getPriority(Task.Status status) {
 					switch (status) {
@@ -1172,7 +1163,7 @@ public class RestService extends Thread {
 					return statusDiff;
 				}
 			});
-			return tasks.subList(0, (max > tasks.size() ? tasks.size() : max));
+			return tasks.subList(0, (maxCount > tasks.size() ? tasks.size() : maxCount));
 		}
 		catch (Exception e) {
 			logger.error("Unable to fetch the tasks.", e);
@@ -1202,10 +1193,9 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.enableFilter("lightAttributesOnly");
-			@SuppressWarnings("unchecked")
 			List<Config> deviceConfigs = session
-				.createQuery("from Config c left join fetch c.attributes ca where c.device = :device")
-				.setLong("device", id).list();
+				.createQuery("from Config c left join fetch c.attributes ca where c.device.id = :device", Config.class)
+				.setParameter("device", id).list();
 			return deviceConfigs;
 		}
 		catch (HibernateException e) {
@@ -1541,8 +1531,8 @@ public class RestService extends Thread {
 			if (config2 != null && id1 == 0) {
 				config1 = (Config) session
 					.createQuery("from Config c where c.device = :device and c.changeDate < :date2 order by c.changeDate desc")
-					.setEntity("device", config2.getDevice())
-					.setTimestamp("date2", config2.getChangeDate())
+					.setParameter("device", config2.getDevice())
+					.setParameter("date2", config2.getChangeDate())
 					.setMaxResults(1)
 					.uniqueResult();
 				if (config1 == null) {
@@ -1624,7 +1614,7 @@ public class RestService extends Thread {
 		try {
 			device = (Device) session
 				.createQuery("from Device d left join fetch d.credentialSets cs left join fetch d.ownerGroups g left join fetch d.complianceCheckResults left join fetch d.attributes where d.id = :id")
-				.setLong("id", id)
+				.setParameter("id", id)
 				.uniqueResult();
 			if (device == null) {
 				throw new NetshotBadRequestException("Can't find this device",
@@ -1787,7 +1777,7 @@ public class RestService extends Thread {
 		logger.debug("REST request, devices.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsLightDevice> devices = session.createQuery(DEVICELIST_BASEQUERY + "from Device d")
 				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
 				.list();
@@ -1893,7 +1883,7 @@ public class RestService extends Thread {
 		logger.debug("REST request, device families.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsDeviceFamily> deviceFamilies = session
 				.createQuery("select distinct d.driver as driver, d.family as deviceFamily from Device d")
 				.setResultTransformer(Transformers.aliasToBean(RsDeviceFamily.class))
@@ -1941,11 +1931,11 @@ public class RestService extends Thread {
 		logger.debug("REST request, dpart numbers.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsPartNumber> partNumbers = session
-			.createQuery("select distinct m.partNumber as partNumber from Module m")
-			.setResultTransformer(Transformers.aliasToBean(RsPartNumber.class))
-			.list();
+				.createQuery("select distinct m.partNumber as partNumber from Module m")
+				.setResultTransformer(Transformers.aliasToBean(RsPartNumber.class))
+				.list();
 			return partNumbers;
 		}
 		catch (HibernateException e) {
@@ -2187,7 +2177,6 @@ public class RestService extends Thread {
 	 * @return the task
 	 * @throws WebApplicationException the web application exception
 	 */
-	@SuppressWarnings("unchecked")
 	@POST
 	@Path("devices")
 	@RolesAllowed("readwrite")
@@ -2260,7 +2249,7 @@ public class RestService extends Thread {
 			logger.debug("Looking for an existing device with this IP address.");
 			Device duplicate = (Device) session
 					.createQuery("from Device d where d.mgmtAddress.address = :ip")
-					.setInteger("ip", deviceAddress.getIntAddress()).uniqueResult();
+					.setParameter("ip", deviceAddress.getIntAddress()).uniqueResult();
 			if (duplicate != null) {
 				logger.error("Device {} is already present with this IP address.",
 						duplicate.getId());
@@ -2271,10 +2260,11 @@ public class RestService extends Thread {
 			}
 			domain = (Domain) session.load(Domain.class, device.getDomainId());
 			knownCommunities = session
-					.createQuery("from DeviceSnmpCommunity c where (mgmtDomain = :domain or mgmtDomain is null) and (not (c.deviceSpecific = :true))")
-					.setEntity("domain", domain)
-					.setBoolean("true", true)
-					.list();
+				.createQuery("from DeviceSnmpCommunity c where (mgmtDomain = :domain or mgmtDomain is null) and (not (c.deviceSpecific = :true))",
+						DeviceCredentialSet.class)
+				.setParameter("domain", domain)
+				.setParameter("true", true)
+				.list();
 			if (knownCommunities.size() == 0 && device.isAutoDiscover()) {
 				logger.error("No available SNMP community");
 				throw new NetshotBadRequestException(
@@ -2403,10 +2393,10 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			List<File> toDeleteFiles = new ArrayList<File>();
-			@SuppressWarnings("unchecked")
 			List<ConfigBinaryFileAttribute> attributes = session
-					.createQuery("from ConfigBinaryFileAttribute cfa where cfa.config.device.id = :id")
-					.setLong("id", id)
+					.createQuery("from ConfigBinaryFileAttribute cfa where cfa.config.device.id = :id",
+							ConfigBinaryFileAttribute.class)
+					.setParameter("id", id)
 					.list();
 			for (ConfigBinaryFileAttribute attribute : attributes) {
 				toDeleteFiles.add(attribute.getFileName());
@@ -3004,9 +2994,8 @@ public class RestService extends Thread {
 		logger.debug("REST request, get tasks.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
 			List<Task> tasks = session
-				.createQuery("from Task t order by t.id desc")
+				.createQuery("from Task t order by t.id desc", Task.class)
 				.list();
 			return tasks;
 		}
@@ -3027,7 +3016,6 @@ public class RestService extends Thread {
 	 * @return the credential sets
 	 * @throws WebApplicationException the web application exception
 	 */
-	@SuppressWarnings("unchecked")
 	@GET
 	@Path("credentialsets")
 	@RolesAllowed("readonly")
@@ -3039,9 +3027,10 @@ public class RestService extends Thread {
 		List<DeviceCredentialSet> credentialSets;
 		try {
 			credentialSets = session
-					.createQuery("select cs from DeviceCredentialSet cs where not (cs.deviceSpecific = :true)")
-					.setBoolean("true", true)
-					.list();
+				.createQuery("select cs from DeviceCredentialSet cs where not (cs.deviceSpecific = :true)",
+						DeviceCredentialSet.class)
+				.setParameter("true", true)
+				.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the credentials.", e);
@@ -3087,7 +3076,7 @@ public class RestService extends Thread {
 			/* HACK! In JPA, this would require updating each task one by one... */
 			session
 					.createSQLQuery("delete from discover_device_type_task_credential_sets where credential_sets = :cs")
-					.setLong("cs", id)
+					.setParameter("cs", id)
 					.executeUpdate();
 			session.delete(credentialSet);
 			session.getTransaction().commit();
@@ -3391,10 +3380,11 @@ public class RestService extends Thread {
 			Finder finder = new Finder(criteria.getQuery(), driver);
 			Session session = Database.getSession();
 			try {
-				Query query = session.createQuery(DEVICELIST_BASEQUERY
+				@SuppressWarnings("unchecked")
+				Query<RsLightDevice> query = session.createQuery(DEVICELIST_BASEQUERY
 						+ finder.getHql());
 				finder.setVariables(query);
-				@SuppressWarnings("unchecked")
+				@SuppressWarnings("deprecation")
 				List<RsLightDevice> devices = query
 					.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
 					.list();
@@ -3485,9 +3475,8 @@ public class RestService extends Thread {
 		logger.debug("REST request, get groups.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
-			List<DeviceGroup> deviceGroups = session
-				.createCriteria(DeviceGroup.class).list();
+			List<DeviceGroup> deviceGroups =
+					session.createQuery("select g from DeviceGroup g", DeviceGroup.class).list();
 			return deviceGroups;
 		}
 		catch (HibernateException e) {
@@ -3793,11 +3782,12 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException("Can't find this group",
 						NetshotBadRequestException.NETSHOT_INVALID_GROUP);
 			}
-			Query query = session.createQuery(
-					RestService.DEVICELIST_BASEQUERY
-					+ "from Device d join d.ownerGroups g where g.id = :id").setLong(
-							"id", id);
 			@SuppressWarnings("unchecked")
+			Query<RsLightDevice> query = session.createQuery(
+					RestService.DEVICELIST_BASEQUERY
+					+ "from Device d join d.ownerGroups g where g.id = :id")
+					.setParameter("id", id);
+			@SuppressWarnings("deprecation")
 			List<RsLightDevice> devices = query
 				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
 				.list();
@@ -4313,12 +4303,15 @@ public class RestService extends Thread {
 
 		Session session = Database.getSession();
 		try {
-			Criteria c = session.createCriteria(Task.class);
+			StringBuilder hqlQuery = new StringBuilder("select t from Task t where (1 = 1)");
+			Map<String, Object> hqlParams = new HashMap<String, Object>();
+			
 			Task.Status status = null;
 			try {
 				if (!"ANY".equals(criteria.getStatus())) {
 					status = Task.Status.valueOf(criteria.getStatus());
-					c.add(Property.forName("status").eq(status));
+					hqlQuery.append(" and status = :status");
+					hqlParams.put("status", status);
 				}
 			}
 			catch (Exception e) {
@@ -4334,27 +4327,31 @@ public class RestService extends Thread {
 			max.add(Calendar.DAY_OF_MONTH, 1);
 
 			if (status == Task.Status.SUCCESS || status == Task.Status.FAILURE) {
-				c.add(Property.forName("executionDate").between(min.getTime(),
-						max.getTime()));
+				hqlQuery.append(" and executionDate >= :minDate and executionDate <= :maxDate");
+				hqlParams.put("minDate", min.getTime());
+				hqlParams.put("maxDate", max.getTime());
 			}
 			else if (status == Task.Status.CANCELLED) {
-				c.add(Property.forName("changeDate").between(min.getTime(),
-						max.getTime()));
+				hqlQuery.append(" and changeDate >= :minDate and changeDate <= :maxDate");
+				hqlParams.put("minDate", min.getTime());
+				hqlParams.put("maxDate", max.getTime());
 			}
 			else if (status == null) {
-				c.add(Restrictions.or(
-						Property.forName("status").eq(Task.Status.RUNNING),
-						Property.forName("status").eq(Task.Status.SCHEDULED),
-						Property.forName("executionDate").between(min.getTime(),
-								max.getTime()), Restrictions.and(
-										Property.forName("executionDate").isNull(),
-										Property.forName("changeDate").between(min.getTime(),
-												max.getTime()))));
+				hqlQuery.append(" and (status = :running or status = :scheduled or (executionDate >= :minDate and executionDate <= :maxDate) " +
+						"or (executionDate is null and (changeDate >= :minDate and changeDate <= :maxDate)))");
+				hqlParams.put("minDate", min.getTime());
+				hqlParams.put("maxDate", max.getTime());
+				hqlParams.put("running", Task.Status.RUNNING);
+				hqlParams.put("scheduled", Task.Status.SCHEDULED);
 			}
-			c.addOrder(Property.forName("id").desc());
-
-			@SuppressWarnings("unchecked")
-			List<Task> tasks = c.list();
+			hqlQuery.append(" order by id desc");
+			
+			Query<Task> query = session.createQuery(hqlQuery.toString(), Task.class);
+			for (Entry<String, Object> k : hqlParams.entrySet()) {
+				query.setParameter(k.getKey(), k.getValue());
+			}
+			
+			List<Task> tasks = query.list();
 			return tasks;
 		}
 		catch (HibernateException e) {
@@ -5009,11 +5006,12 @@ public class RestService extends Thread {
 		logger.debug("REST request, config changes.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsConfigChange> changes = session
-				.createQuery("select c.id as newId, c.changeDate as newChangeDate, c.device.id as deviceId, c.author as author, c.device.name as deviceName from Config c where c.changeDate >= :start and c.changeDate <= :end")
-				.setTimestamp("start", criteria.fromDate)
-				.setTimestamp("end", criteria.toDate)
+				.createQuery("select c.id as newId, c.changeDate as newChangeDate, c.device.id as deviceId, c.author as author, " +
+						"c.device.name as deviceName from Config c where c.changeDate >= :start and c.changeDate <= :end")
+				.setParameter("start", criteria.fromDate)
+				.setParameter("end", criteria.toDate)
 				.setResultTransformer(Transformers.aliasToBean(RsConfigChange.class))
 				.list();
 			return changes;
@@ -5043,8 +5041,8 @@ public class RestService extends Thread {
 		logger.debug("REST request, get policies.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
-			List<Policy> policies = session.createQuery("from Policy p left join fetch p.targetGroup")
+			List<Policy> policies = session
+				.createQuery("from Policy p left join fetch p.targetGroup", Policy.class)
 				.list();
 			return policies;
 		}
@@ -5314,7 +5312,7 @@ public class RestService extends Thread {
 			
 			if (policy.getTargetGroup() != null && policy.getTargetGroup().getId() != rsPolicy.getGroup()) {
 				session.createQuery("delete CheckResult cr where cr.key.rule in (select r from Rule r where r.policy = :id)")
-					.setLong("id", policy.getId())
+					.setParameter("id", policy.getId())
 					.executeUpdate();
 			}
 			DeviceGroup group = null;
@@ -5933,7 +5931,7 @@ public class RestService extends Thread {
 		try {
 			device = (Device) session
 					.createQuery("from Device d join fetch d.lastConfig where d.id = :id")
-					.setLong("id", rsRule.getDevice()).uniqueResult();
+					.setParameter("id", rsRule.getDevice()).uniqueResult();
 			if (device == null) {
 				logger.warn("Unable to find the device {}.", rsRule.getDevice());
 				throw new NetshotBadRequestException("Unable to find the device.",
@@ -6055,12 +6053,12 @@ public class RestService extends Thread {
 		logger.debug("REST request, get exemptions for rule {}.", id);
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsLightExemptedDevice> exemptions = session
-			.createQuery(DEVICELIST_BASEQUERY + ", e.expirationDate as expirationDate from Exemption e join e.key.device d where e.key.rule.id = :id")
-			.setLong("id", id)
-			.setResultTransformer(Transformers.aliasToBean(RsLightExemptedDevice.class))
-			.list();
+				.createQuery(DEVICELIST_BASEQUERY + ", e.expirationDate as expirationDate from Exemption e join e.key.device d where e.key.rule.id = :id")
+				.setParameter("id", id)
+				.setResultTransformer(Transformers.aliasToBean(RsLightExemptedDevice.class))
+				.list();
 			return exemptions;
 		}
 		catch (HibernateException e) {
@@ -6253,11 +6251,14 @@ public class RestService extends Thread {
 		logger.debug("REST request, get compliance results for device {}.", id);
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
-			List<RsDeviceRule> rules = session.createQuery("select r.id as id, r.name as ruleName, p.name as policyName, cr.result as result, cr.checkDate as checkDate, cr.comment as comment, e.expirationDate as expirationDate from Rule r join r.policy p join p.targetGroup g join g.cachedDevices d1 with d1.id = :id left join r.checkResults cr with cr.key.device.id = :id left join r.exemptions e with e.key.device.id = :id")
-			.setLong("id", id)
-			.setResultTransformer(Transformers.aliasToBean(RsDeviceRule.class))
-			.list();
+			@SuppressWarnings({ "deprecation", "unchecked" })
+			List<RsDeviceRule> rules = session.createQuery(
+					"select r.id as id, r.name as ruleName, p.name as policyName, cr.result as result, cr.checkDate as checkDate, cr.comment as comment, " +
+					"e.expirationDate as expirationDate from Rule r join r.policy p join p.targetGroup g join g.cachedDevices d1 with d1.id = :id " +
+					"left join r.checkResults cr with cr.key.device.id = :id left join r.exemptions e with e.key.device.id = :id")
+				.setParameter("id", id)
+				.setResultTransformer(Transformers.aliasToBean(RsDeviceRule.class))
+				.list();
 			return rules;
 		}
 		catch (HibernateException e) {
@@ -6365,8 +6366,8 @@ public class RestService extends Thread {
 				dayEnd.add(Calendar.DATE, -d + 2);
 				Long changeCount = (Long)session
 					.createQuery("select count(*) from Config c where c.changeDate >= :dayStart and c.changeDate < :dayEnd")
-					.setTimestamp("dayStart", dayStart.getTime())
-					.setTimestamp("dayEnd", dayEnd.getTime())
+					.setParameter("dayStart", dayStart.getTime())
+					.setParameter("dayEnd", dayEnd.getTime())
 					.uniqueResult();
 				stats.add(new RsConfigChangeNumberByDateStat(changeCount == null ? 0 : changeCount, dayStart.getTime()));
 			}
@@ -6529,7 +6530,8 @@ public class RestService extends Thread {
 				groupFilter = " g.id in (:groupIds) and";
 			}
 			
-			Query query = session
+			@SuppressWarnings("unchecked")
+			Query<RsGroupConfigComplianceStat> query = session
 				.createQuery("select g.id as groupId, g.name as groupName, g.folder as groupFolder, "
 						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled and (select count(ccr.result) from d.complianceCheckResults ccr join ccr.key.rule rule where"
 							+ ccrFilter + " ccr.result = :nonConforming) = 0) as compliantDeviceCount, "
@@ -6546,7 +6548,7 @@ public class RestService extends Thread {
 			if (deviceGroups.size() > 0) {
 				query.setParameterList("groupIds", deviceGroups);
 			}
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings("deprecation")
 			List<RsGroupConfigComplianceStat> stats = query
 				.setResultTransformer(Transformers.aliasToBean(RsGroupConfigComplianceStat.class))
 				.list();
@@ -6604,18 +6606,18 @@ public class RestService extends Thread {
 		logger.debug("REST request, hardware support stats.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsHardwareSupportStat> eosStats = session
-			.createQuery("select count(d) as deviceCount, d.eosDate AS eoxDate from Device d where d.status = :enabled group by d.eosDate")
-			.setParameter("enabled", Device.Status.INPRODUCTION)
-			.setResultTransformer(Transformers.aliasToBean(RsHardwareSupportEoSStat.class))
-			.list();
-			@SuppressWarnings("unchecked")
+				.createQuery("select count(d) as deviceCount, d.eosDate AS eoxDate from Device d where d.status = :enabled group by d.eosDate")
+				.setParameter("enabled", Device.Status.INPRODUCTION)
+				.setResultTransformer(Transformers.aliasToBean(RsHardwareSupportEoSStat.class))
+				.list();
+			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsHardwareSupportStat> eolStats = session
-			.createQuery("select count(d) as deviceCount, d.eolDate AS eoxDate from Device d where d.status = :enabled group by d.eolDate")
-			.setParameter("enabled", Device.Status.INPRODUCTION)
-			.setResultTransformer(Transformers.aliasToBean(RsHardwareSupportEoLStat.class))
-			.list();
+				.createQuery("select count(d) as deviceCount, d.eolDate AS eoxDate from Device d where d.status = :enabled group by d.eolDate")
+				.setParameter("enabled", Device.Status.INPRODUCTION)
+				.setResultTransformer(Transformers.aliasToBean(RsHardwareSupportEoLStat.class))
+				.list();
 			List<RsHardwareSupportStat> stats = new ArrayList<RsHardwareSupportStat>();
 			stats.addAll(eosStats);
 			stats.addAll(eolStats);
@@ -6792,7 +6794,8 @@ public class RestService extends Thread {
 			if (domains.size() > 0) {
 				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
 			}
-			Query query = session
+			@SuppressWarnings("unchecked")
+			Query<RsGroupSoftwareComplianceStat> query = session
 				.createQuery("select g.id as groupId, g.name as groupName, "
 						+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :gold" + domainFilter + ") as goldDeviceCount, "
 						+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :silver" + domainFilter + ") as silverDeviceCount, "
@@ -6806,7 +6809,7 @@ public class RestService extends Thread {
 			if (domains.size() > 0) {
 				query.setParameterList("domainIds", domains);
 			}
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings("deprecation")
 			List<RsGroupSoftwareComplianceStat> stats = query
 				.setResultTransformer(Transformers.aliasToBean(RsGroupSoftwareComplianceStat.class))
 				.list();
@@ -6933,7 +6936,7 @@ public class RestService extends Thread {
 	@Path("reports/configcompliancedevicestatuses")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<RsLightPolicyRuleDevice> geConfigComplianceDeviceStatuses(
+	public List<RsLightPolicyRuleDevice> getConfigComplianceDeviceStatuses(
 			@QueryParam("domain") Set<Long> domains,
 			@QueryParam("group") Set<Long> groups,
 			@QueryParam("policy") Set<Long> policies,
@@ -6959,7 +6962,8 @@ public class RestService extends Thread {
 			if (results.size() > 0) {
 				hqlQuery += " and ccr.result in (:results)";
 			}
-			Query query = session.createQuery(hqlQuery);
+			@SuppressWarnings("unchecked")
+			Query<RsLightPolicyRuleDevice> query = session.createQuery(hqlQuery);
 			query.setParameter("enabled", Device.Status.INPRODUCTION);
 			if (domains.size() > 0) {
 				query.setParameterList("domainIds", domains);
@@ -6973,7 +6977,7 @@ public class RestService extends Thread {
 			if (results.size() > 0) {
 				query.setParameterList("results", results);
 			}
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings("deprecation")
 			List<RsLightPolicyRuleDevice> devices = query
 				.setResultTransformer(Transformers.aliasToBean(RsLightPolicyRuleDevice.class))
 				.list();
@@ -7014,11 +7018,12 @@ public class RestService extends Thread {
 			if (policies.size() > 0) {
 				policyFilter = " and p.id in (:policyIds)";
 			}
-			Query query = session
+			@SuppressWarnings("unchecked")
+			Query<RsLightPolicyRuleDevice> query = session
 				.createQuery(DEVICELIST_BASEQUERY + ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d "
 						+ "join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p "
 						+ "where g.id = :id and ccr.result = :nonConforming and d.status = :enabled" + domainFilter + policyFilter)
-				.setLong("id", id)
+				.setParameter("id", id)
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
 				.setParameter("enabled", Device.Status.INPRODUCTION);
 			if (domains.size() > 0) {
@@ -7027,7 +7032,7 @@ public class RestService extends Thread {
 			if (policies.size() > 0) {
 				query.setParameterList("policyIds", policies);
 			}
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings("deprecation")
 			List<RsLightPolicyRuleDevice> devices = query
 				.setResultTransformer(Transformers.aliasToBean(RsLightPolicyRuleDevice.class))
 				.list();
@@ -7058,7 +7063,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			if (date == 0) {
-				@SuppressWarnings("unchecked")
+				@SuppressWarnings({ "deprecation", "unchecked" })
 				List<RsLightDevice> devices = session
 				.createQuery(DEVICELIST_BASEQUERY + "from Device d where d." + type + "Date is null and d.status = :enabled")
 				.setParameter("enabled", Device.Status.INPRODUCTION)
@@ -7067,10 +7072,10 @@ public class RestService extends Thread {
 				return devices;
 			}
 			else {
-				@SuppressWarnings("unchecked")
+				@SuppressWarnings({ "deprecation", "unchecked" })
 				List<RsLightDevice> devices = session
 				.createQuery(DEVICELIST_BASEQUERY + "from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled")
-				.setDate("eoxDate", eoxDate)
+				.setParameter("eoxDate", eoxDate)
 				.setParameter("enabled", Device.Status.INPRODUCTION)
 				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
 				.list();
@@ -7102,10 +7107,9 @@ public class RestService extends Thread {
 		logger.debug("REST request, hardware rules.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
 			List<HardwareRule> rules = session
-			.createQuery("from HardwareRule r left join fetch r.targetGroup g")
-			.list();
+				.createQuery("from HardwareRule r left join fetch r.targetGroup g", HardwareRule.class)
+				.list();
 			return rules;
 		}
 		catch (HibernateException e) {
@@ -7411,10 +7415,9 @@ public class RestService extends Thread {
 		logger.debug("REST request, software rules.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
 			List<SoftwareRule> rules = session
-			.createQuery("from SoftwareRule r left join fetch r.targetGroup g")
-			.list();
+				.createQuery("from SoftwareRule r left join fetch r.targetGroup g", SoftwareRule.class)
+				.list();
 			return rules;
 		}
 		catch (HibernateException e) {
@@ -7857,16 +7860,17 @@ public class RestService extends Thread {
 			if (domains.size() > 0) {
 				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
 			}
-			Query query =  session
+			@SuppressWarnings("unchecked")
+			Query<RsLightSoftwareLevelDevice> query =  session
 				.createQuery(DEVICELIST_BASEQUERY + ", d.softwareLevel as softwareLevel "
 						+ "from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled" + domainFilter)
-				.setLong("id", id)
+				.setParameter("id", id)
 				.setParameter("level", filterLevel)
 				.setParameter("enabled", Device.Status.INPRODUCTION);
 			if (domains.size() > 0) {
 				query.setParameterList("domainIds", domains);
 			}
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings("deprecation")
 			List<RsLightSoftwareLevelDevice> devices = query
 				.setResultTransformer(Transformers.aliasToBean(RsLightSoftwareLevelDevice.class))
 				.list();
@@ -7934,7 +7938,8 @@ public class RestService extends Thread {
 				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
 			}
 			
-			Query query = session
+			@SuppressWarnings("unchecked")
+			Query<RsLightAccessFailureDevice> query = session
 				.createQuery(DEVICELIST_BASEQUERY + ", (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, "
 						+ "(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure from Device d where d.status = :enabled"
 						+ domainFilter)
@@ -7944,7 +7949,7 @@ public class RestService extends Thread {
 			if (domainFilter.length() > 0) {
 				query.setParameterList("domainIds", domains);
 			}
-			@SuppressWarnings("unchecked")
+			@SuppressWarnings("deprecation")
 			List<RsLightAccessFailureDevice> devices = query
 				.setResultTransformer(Transformers.aliasToBean(RsLightAccessFailureDevice.class))
 				.list();
@@ -8210,8 +8215,7 @@ public class RestService extends Thread {
 		logger.debug("REST request, get user list.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
-			List<User> users = session.createCriteria(User.class).list();
+			List<User> users = session.createQuery("from onl.netfishers.netshot.aaa.User", User.class).list();
 			return users;
 		}
 		catch (HibernateException e) {
@@ -8398,7 +8402,7 @@ public class RestService extends Thread {
 						NetshotBadRequestException.NETSHOT_DUPLICATE_USER);
 			}
 			throw new NetshotBadRequestException(
-					"Unable to add the group to the database",
+					"Unable to add the user to the database",
 					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
@@ -8590,11 +8594,10 @@ public class RestService extends Thread {
 						row.createCell(1).setCellValue("Any");
 					}
 					else {
-						@SuppressWarnings("unchecked")
 						List<Domain> deviceDomains = session
-								.createQuery("select d from Domain d where d.id in (:domainIds)")
-								.setParameterList("domainIds", domains)
-								.list();
+							.createQuery("select d from Domain d where d.id in (:domainIds)", Domain.class)
+							.setParameterList("domainIds", domains)
+							.list();
 						List<String> domainNames = new ArrayList<String>();
 						for (Domain deviceDomain : deviceDomains) {
 							domainNames.add(String.format("%s (%d)", deviceDomain.getName(), deviceDomain.getId()));
@@ -8608,11 +8611,10 @@ public class RestService extends Thread {
 						row.createCell(1).setCellValue("Any");
 					}
 					else {
-						@SuppressWarnings("unchecked")
 						List<DeviceGroup> deviceGroups = session
-								.createQuery("select g from DeviceGroup g where g.id in (:groupIds)")
-								.setParameterList("groupIds", groups)
-								.list();
+							.createQuery("select g from DeviceGroup g where g.id in (:groupIds)", DeviceGroup.class)
+							.setParameterList("groupIds", groups)
+							.list();
 						List<String> groupNames = new ArrayList<String>();
 						for (DeviceGroup group : deviceGroups) {
 							groupNames.add(String.format("%s (%d)", group.getName(), group.getId()));
@@ -8625,14 +8627,15 @@ public class RestService extends Thread {
 				{
 					StringBuffer deviceHqlQuery = new StringBuffer(
 							"select d from Device d left join d.ownerGroups g left join fetch d.mgmtDomain " +
-							"where 1 = 1 order by d.name asc");
+							"where 1 = 1");
 					if (domains.size() > 0) {
 						deviceHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
 					}
 					if (groups.size() > 0) {
 						deviceHqlQuery.append(" and g.id in (:groupIds)");
 					}
-					Query deviceQuery = session.createQuery(deviceHqlQuery.toString());
+					deviceHqlQuery.append(" order by d.name asc");
+					Query<Device> deviceQuery = session.createQuery(deviceHqlQuery.toString(), Device.class);
 					if (domains.size() > 0) {
 						deviceQuery.setParameterList("domainIds", domains);
 					}
@@ -8699,7 +8702,6 @@ public class RestService extends Thread {
 					}
 
 					for (int n = 0; true; n += PAGINATION_SIZE) {
-						@SuppressWarnings("unchecked")
 						List<Device> devices = deviceQuery.setFirstResult(n).list();
 						for (Device device : devices) {
 							int x = -1;
@@ -8755,7 +8757,8 @@ public class RestService extends Thread {
 						interfaceHqlQuery.append(" and g.id in (:groupIds)");
 					}
 					interfaceHqlQuery.append(" order by ni.device.name asc, ni.id asc");
-					Query interfaceQuery = session.createQuery(interfaceHqlQuery.toString());
+					Query<NetworkInterface> interfaceQuery = session.createQuery(interfaceHqlQuery.toString(),
+							NetworkInterface.class);
 					if (domains.size() > 0) {
 						interfaceQuery.setParameterList("domainIds", domains);
 					}
@@ -8810,7 +8813,6 @@ public class RestService extends Thread {
 						interfaceSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
 
-					@SuppressWarnings("unchecked")
 					List<NetworkInterface> networkInterfaces = interfaceQuery.list();
 					for (NetworkInterface networkInterface : networkInterfaces) {
 						Device device = networkInterface.getDevice();
@@ -8861,7 +8863,7 @@ public class RestService extends Thread {
 						moduleHqlQuery.append(" and g.id in (:groupIds)");
 					}
 					moduleHqlQuery.append(" order by m.device.name asc, m.id asc");
-					Query moduleQuery = session.createQuery(moduleHqlQuery.toString());
+					Query<Module> moduleQuery = session.createQuery(moduleHqlQuery.toString(), Module.class);
 					if (domains.size() > 0) {
 						moduleQuery.setParameterList("domainIds", domains);
 					}
@@ -8896,7 +8898,6 @@ public class RestService extends Thread {
 						inventorySheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
 					for (int n = 0; true; n += PAGINATION_SIZE) {
-						@SuppressWarnings("unchecked")
 						List<Module> modules = moduleQuery.setFirstResult(n).list();
 						for (Module module : modules) {
 							Device device = module.getDevice();
@@ -8917,24 +8918,8 @@ public class RestService extends Thread {
 					
 				if (exportCompliance) {
 					logger.debug("Exporting compliance data");
-					StringBuffer checkHqlQuery = new StringBuffer(
-							"select cr from CheckResult as cr join cr.key.rule crr join crr.policy " +
-							"join cr.key.device d left join d.ownerGroups g where 1 = 1");
-					if (domains.size() > 0) {
-						checkHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
-					}
-					if (groups.size() > 0) {
-						checkHqlQuery.append(" and g.id in (:groupIds)");
-					}
-					checkHqlQuery.append(" order by d.name asc, cr.id asc");
-					Query checkQuery = session.createQuery(checkHqlQuery.toString());
-					if (domains.size() > 0) {
-						checkQuery.setParameterList("domainIds", domains);
-					}
-					if (groups.size() > 0) {
-						checkQuery.setParameterList("groupIds", groups);
-					}
-					checkQuery.setMaxResults(PAGINATION_SIZE);
+					List<RsLightPolicyRuleDevice> checkResults = getConfigComplianceDeviceStatuses(domains, groups,
+							new HashSet<Long>(), new HashSet<CheckResult.ResultOption>());
 
 					Sheet complianceSheet = workBook.createSheet("Configuration Compliance");
 					((SXSSFSheet) complianceSheet).setRandomAccessWindowSize(100);
@@ -8966,26 +8951,18 @@ public class RestService extends Thread {
 						complianceSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));				
 					}
 
-					for (int n = 0; true; n += PAGINATION_SIZE) {
-						@SuppressWarnings("unchecked")
-						List<CheckResult> checkResults = checkQuery.setFirstResult(n).list();
-						for (CheckResult checkResult : checkResults) {
-							Device device = checkResult.getDevice();
-							int x = -1;
-							row = complianceSheet.createRow(++y);
-							row.createCell(++x).setCellValue(device.getId());
-							row.createCell(++x).setCellValue(device.getName());
-							row.createCell(++x).setCellValue(checkResult.getRule().getPolicy().getName());
-							row.createCell(++x).setCellValue(checkResult.getRule().getName());
-							row.createCell(++x).setCellValue(checkResult.getCheckDate());
-							row.getCell(x).setCellStyle(datetimeCellStyle);
-							row.createCell(++x).setCellValue(checkResult.getResult().toString());
-						}
-						session.clear();
-						if (checkResults.size() < PAGINATION_SIZE) {
-							break;
-						}
+					for (RsLightPolicyRuleDevice checkResult : checkResults) {
+						int x = -1;
+						row = complianceSheet.createRow(++y);
+						row.createCell(++x).setCellValue(checkResult.getId());
+						row.createCell(++x).setCellValue(checkResult.getName());
+						row.createCell(++x).setCellValue(checkResult.getPolicyName());
+						row.createCell(++x).setCellValue(checkResult.getRuleName());
+						row.createCell(++x).setCellValue(checkResult.getCheckDate());
+						row.getCell(x).setCellStyle(datetimeCellStyle);
+						row.createCell(++x).setCellValue(checkResult.getResult().toString());
 					}
+					session.clear();
 				}
 				
 				if (exportGroups) {
@@ -9045,14 +9022,15 @@ public class RestService extends Thread {
 						logger.debug("Exporting group memberships");
 						StringBuffer deviceHqlQuery = new StringBuffer(
 								"select d from Device d left join d.ownerGroups g left join d.mgmtDomain " +
-								"where 1 = 1 order by d.name asc");
+								"where 1 = 1");
 						if (domains.size() > 0) {
 							deviceHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
 						}
 						if (groups.size() > 0) {
 							deviceHqlQuery.append(" and g.id in (:groupIds)");
 						}
-						Query deviceQuery = session.createQuery(deviceHqlQuery.toString());
+						deviceHqlQuery.append(" order by d.name asc");
+						Query<Device> deviceQuery = session.createQuery(deviceHqlQuery.toString(), Device.class);
 						if (domains.size() > 0) {
 							deviceQuery.setParameterList("domainIds", domains);
 						}
@@ -9084,7 +9062,6 @@ public class RestService extends Thread {
 						}
 						
 						for (int n = 0; true; n += PAGINATION_SIZE) {
-							@SuppressWarnings("unchecked")
 							List<Device> devices = deviceQuery.setFirstResult(n).list();
 							for (Device device : devices) {
 								for (DeviceGroup group : device.getOwnerGroups()) {
@@ -9259,8 +9236,8 @@ public class RestService extends Thread {
 		logger.debug("REST request, get scripts.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
-			List<DeviceJsScript> scripts = session.createQuery("from DeviceJsScript s").list();
+			List<DeviceJsScript> scripts =
+					session.createQuery("from DeviceJsScript s", DeviceJsScript.class).list();
 			for (DeviceJsScript script : scripts) {
 				script.setScript(null);
 			}
@@ -9549,8 +9526,9 @@ public class RestService extends Thread {
 		logger.debug("REST request, get diagnotics.");
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
-			List<Diagnostic> diagnostics = session.createQuery("select d from Diagnostic d left join fetch d.targetGroup").list();
+			List<Diagnostic> diagnostics =
+					session.createQuery("select d from Diagnostic d left join fetch d.targetGroup", Diagnostic.class)
+					.list();
 			return diagnostics;
 		}
 		catch (HibernateException e) {
@@ -9708,7 +9686,7 @@ public class RestService extends Thread {
 			diagnostic.setName(name);
 			if (diagnostic.getTargetGroup() != null && diagnostic.getTargetGroup().getId() != rsDiagnostic.getTargetGroup()) {
 				session.createQuery("delete DiagnosticResult dr where dr.diagnostic.id = :id")
-					.setLong("id", diagnostic.getId())
+					.setParameter("id", diagnostic.getId())
 					.executeUpdate();
 			}
 			DeviceGroup group = null;
@@ -9841,10 +9819,9 @@ public class RestService extends Thread {
 		logger.debug("REST request, get diagnostic results for device {}.", id);
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
 			List<DiagnosticResult> results = session
-				.createQuery("from DiagnosticResult dr where dr.device.id = :id")
-				.setLong("id", id)
+				.createQuery("from DiagnosticResult dr where dr.device.id = :id", DiagnosticResult.class)
+				.setParameter("id", id)
 				.list();
 			return results;
 		}

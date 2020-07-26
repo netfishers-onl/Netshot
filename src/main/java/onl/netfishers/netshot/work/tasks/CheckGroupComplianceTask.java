@@ -130,21 +130,21 @@ public class CheckGroupComplianceTask extends Task {
 
 		Session session = Database.getSession();
 		try {
-			@SuppressWarnings("unchecked")
-			List<Policy> policies = session.createCriteria(Policy.class).list();
+			List<Policy> policies =
+				session.createQuery("select p from Policy p", Policy.class).list();
 
 			TaskLogger taskLogger = this.getJsLogger();
 
 			session.beginTransaction();
 			session
 				.createQuery("delete from CheckResult c where c.key.device.id in (select d.id as id from DeviceGroup g1 join g1.cachedDevices d where g1.id = :id)")
-				.setLong("id", deviceGroup.getId())
+				.setParameter("id", deviceGroup.getId())
 				.executeUpdate();
 			for (Policy policy : policies) {
 				ScrollableResults devices = session
 						.createQuery("from Device d join fetch d.lastConfig where d.id in (select d.id as id from DeviceGroup g1 join g1.cachedDevices d join d.ownerGroups g2 join g2.appliedPolicies p where g1.id = :id and p.id = :pid)")
-						.setLong("id", deviceGroup.getId())
-						.setLong("pid", policy.getId())
+						.setParameter("id", deviceGroup.getId())
+						.setParameter("pid", policy.getId())
 						.setCacheMode(CacheMode.IGNORE)
 						.scroll(ScrollMode.FORWARD_ONLY);
 				while (devices.next()) {

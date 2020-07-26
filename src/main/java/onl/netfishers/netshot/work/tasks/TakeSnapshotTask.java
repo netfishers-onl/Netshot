@@ -363,7 +363,7 @@ public class TakeSnapshotTask extends Task {
 			logger.trace("Retrieving the device.");
 			device = (Device) session.createQuery("select d from Device d where d.status = :inprod and d.mgmtAddress.address = :ip")
 					.setParameter("inprod", Device.Status.INPRODUCTION)
-					.setInteger("ip", address.getAddress())
+					.setParameter("ip", address.getAddress())
 					.uniqueResult();
 			if (device == null && AUTOSNAPSHOT_ANYIP) {
 				logger.warn("No device with such management IP {} in the database. Looking for this address in the interface table.",
@@ -371,7 +371,7 @@ public class TakeSnapshotTask extends Task {
 				device = (Device) session
 						.createQuery("select d from Device d join d.networkInterfaces ni join ni.ip4Addresses a where d.status = :inprod and a.address = :ip")
 						.setParameter("inprod", Device.Status.INPRODUCTION)
-						.setInteger("ip", address.getAddress())
+						.setParameter("ip", address.getAddress())
 						.uniqueResult();
 			}
 			if (device == null) {

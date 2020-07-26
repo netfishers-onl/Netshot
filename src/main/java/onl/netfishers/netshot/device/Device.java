@@ -36,6 +36,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -382,8 +383,8 @@ public class Device {
 	public List<DeviceCredentialSet> getAutoCredentialSetList(Session session) throws HibernateException {
 		return session
 				.createQuery("from DeviceCredentialSet cs where (cs.mgmtDomain = :domain or cs.mgmtDomain is null) and (not (cs.deviceSpecific = :true))")
-				.setEntity("domain", this.getMgmtDomain())
-				.setBoolean("true", true)
+				.setParameter("domain", this.getMgmtDomain())
+				.setParameter("true", true)
 				.list();
 	}
 
@@ -583,7 +584,7 @@ public class Device {
 	 * @return the id
 	 */
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@XmlAttribute
 	public long getId() {
 		return id;

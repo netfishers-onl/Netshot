@@ -39,7 +39,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.criterion.Property;
 import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -134,17 +133,18 @@ public class CheckGroupSoftwareTask extends Task {
 		Session session = Database.getSession();
 		try {
 			logger.debug("Retrieving the software rules");
-			@SuppressWarnings("unchecked")
-			List<SoftwareRule> softwareRules = session.createCriteria(SoftwareRule.class)
-			.addOrder(Property.forName("priority").asc()).list();
+			List<SoftwareRule> softwareRules = session
+					.createQuery("select sr from SoftwareRule sr order by sr.priority asc", SoftwareRule.class)
+					.list();
 			logger.debug("Retrieving the hardware rules");
-			@SuppressWarnings("unchecked")
-			List<HardwareRule> hardwareRules = session.createCriteria(HardwareRule.class).list();
+			List<HardwareRule> hardwareRules = session
+					.createQuery("select hr from HardwareRule hr", HardwareRule.class)
+					.list();
 
 			session.beginTransaction();
 			ScrollableResults devices = session
 					.createQuery("select d from DeviceGroup g join g.cachedDevices d where g.id = :id")
-					.setLong("id", deviceGroup.getId())
+					.setParameter("id", deviceGroup.getId())
 					.setCacheMode(CacheMode.IGNORE)
 					.scroll(ScrollMode.FORWARD_ONLY);
 			while (devices.next()) {

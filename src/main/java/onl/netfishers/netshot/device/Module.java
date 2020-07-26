@@ -20,6 +20,7 @@ package onl.netfishers.netshot.device;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -67,7 +68,8 @@ public class Module {
 	 * @return the id
 	 */
 	@XmlElement
-	@Id @GeneratedValue
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public long getId() {
 		return id;
 	}

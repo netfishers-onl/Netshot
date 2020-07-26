@@ -44,7 +44,7 @@ import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType
 import onl.netfishers.netshot.diagnostic.Diagnostic;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,14 +70,13 @@ public class Finder {
 			return this.deviceDriver;
 		}
 
-		@SuppressWarnings("unchecked")
 		public List<Diagnostic> getDiagnostics() throws FinderParseException {
 			if (this.diagnostics != null) {
 				return this.diagnostics;
 			}
 			Session session = Database.getSession();
 			try {
-				this.diagnostics = session.createCriteria(Diagnostic.class).list();
+				this.diagnostics = session.createQuery("select d from Diagnostic d", Diagnostic.class).list();
 			}
 			catch (HibernateException e) {
 				logger.error("Unable to fetch the diagnostics.", e);
@@ -487,12 +486,12 @@ public class Finder {
 		/**
 		 * Sets the variables.
 		 *
-		 * @param query the query
+		 * @param Query<?> the query
 		 * @param itemPrefix the item prefix
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			if (driver != null) {
-				query.setString("driver", driver.getName());
+				query.setParameter("driver", driver.getName());
 			}
 		};
 	}
@@ -536,7 +535,7 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			child.setVariables(query, itemPrefix + "_0");
 		}
@@ -634,7 +633,7 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			int i = 0;
 			for (Expression child : children) {
@@ -743,7 +742,7 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			int i = 0;
 			for (Expression child : children) {
@@ -865,7 +864,7 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
@@ -881,7 +880,7 @@ public class Finder {
 			default:
 				target = value;
 			}
-			query.setString(itemPrefix, target);
+			query.setParameter(itemPrefix, target);
 		}
 
 		/* (non-Javadoc)
@@ -968,7 +967,7 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
@@ -984,7 +983,7 @@ public class Finder {
 			default:
 				target = value;
 			}
-			query.setString(itemPrefix, target);
+			query.setParameter(itemPrefix, target);
 		}
 
 		/* (non-Javadoc)
@@ -1057,9 +1056,9 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
-			query.setLong(itemPrefix, value);
+			query.setParameter(itemPrefix, value);
 		}
 
 		/* (non-Javadoc)
@@ -1131,9 +1130,9 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
-			query.setLong(itemPrefix, value);
+			query.setParameter(itemPrefix, value);
 		}
 
 		/* (non-Javadoc)
@@ -1181,7 +1180,7 @@ public class Finder {
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		@Override
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 		}
 
@@ -1303,17 +1302,17 @@ public class Finder {
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		@Override
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			if (this.sign == TokenType.IN) {
 				long mask = 0xFFFFFFFFFFFFFFFFL << (48 - this.prefixLength);
 				long min = this.target.getLongAddress() & mask;
 				long max = this.target.getLongAddress() | ~mask;
-				query.setLong(itemPrefix + "_0", min);
-				query.setLong(itemPrefix + "_1", max);
+				query.setParameter(itemPrefix + "_0", min);
+				query.setParameter(itemPrefix + "_1", max);
 			}
 			else {
-				query.setLong(itemPrefix + "_0", this.target.getLongAddress());
+				query.setParameter(itemPrefix + "_0", this.target.getLongAddress());
 			}
 		}
 
@@ -1458,7 +1457,7 @@ public class Finder {
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		@Override
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			if (this.sign == TokenType.IN) {
 				int min = this.target.getSubnetMin();
@@ -1467,15 +1466,15 @@ public class Finder {
 					max = (int) (0x7FFFFFFF);
 					min = (int) (0x80000000);
 				}
-				query.setInteger(itemPrefix + "_0", (max > min ? min : max));
-				query.setInteger(itemPrefix + "_1", (max > min ? max : min));
+				query.setParameter(itemPrefix + "_0", (max > min ? min : max));
+				query.setParameter(itemPrefix + "_1", (max > min ? max : min));
 			}
 			else if (this.withMask) {
-				query.setInteger(itemPrefix + "_0", this.target.getIntAddress());
-				query.setInteger(itemPrefix + "_1", this.target.getPrefixLength());
+				query.setParameter(itemPrefix + "_0", this.target.getIntAddress());
+				query.setParameter(itemPrefix + "_1", this.target.getPrefixLength());
 			}
 			else {
-				query.setInteger(itemPrefix + "_0", this.target.getIntAddress());
+				query.setParameter(itemPrefix + "_0", this.target.getIntAddress());
 			}
 		}
 
@@ -1611,7 +1610,7 @@ public class Finder {
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		@Override
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			if (this.sign == TokenType.IN) {
 				if (this.target.getPrefixLength() <= 64) {
@@ -1619,27 +1618,27 @@ public class Finder {
 							.getPrefixLength());
 					long min = this.target.getAddress1() & mask;
 					long max = this.target.getAddress1() | ~mask;
-					query.setLong(itemPrefix + "_0", (max > min ? min : max));
-					query.setLong(itemPrefix + "_1", (max > min ? max : min));
+					query.setParameter(itemPrefix + "_0", (max > min ? min : max));
+					query.setParameter(itemPrefix + "_1", (max > min ? max : min));
 				}
 				else {
 					long mask = 0xFFFFFFFFFFFFFFFFL << (128 - this.target
 							.getPrefixLength());
 					long min = this.target.getAddress1() & mask;
 					long max = this.target.getAddress1() | ~mask;
-					query.setLong(itemPrefix + "_0", (max > min ? min : max));
-					query.setLong(itemPrefix + "_1", (max > min ? max : min));
-					query.setLong(itemPrefix + "_2", this.target.getAddress1());
+					query.setParameter(itemPrefix + "_0", (max > min ? min : max));
+					query.setParameter(itemPrefix + "_1", (max > min ? max : min));
+					query.setParameter(itemPrefix + "_2", this.target.getAddress1());
 				}
 			}
 			else if (this.withMask) {
-				query.setLong(itemPrefix + "_0", this.target.getAddress1());
-				query.setLong(itemPrefix + "_1", this.target.getAddress2());
-				query.setInteger(itemPrefix + "_2", this.target.getPrefixLength());
+				query.setParameter(itemPrefix + "_0", this.target.getAddress1());
+				query.setParameter(itemPrefix + "_1", this.target.getAddress2());
+				query.setParameter(itemPrefix + "_2", this.target.getPrefixLength());
 			}
 			else {
-				query.setLong(itemPrefix + "_0", this.target.getAddress1());
-				query.setLong(itemPrefix + "_1", this.target.getAddress2());
+				query.setParameter(itemPrefix + "_0", this.target.getAddress1());
+				query.setParameter(itemPrefix + "_1", this.target.getAddress2());
 			}
 		}
 
@@ -1805,10 +1804,10 @@ public class Finder {
 			return criteria;
 		}
 		
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			if (!propertyLevel.nativeProperty) {
-				query.setString(itemPrefix + "_name", property);
+				query.setParameter(itemPrefix + "_name", property);
 			}
 		}
 	}
@@ -1865,9 +1864,9 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
-			query.setDouble(itemPrefix, value);
+			query.setParameter(itemPrefix, value);
 		}
 		/**
 		 * Parses the tokens to create an expression.
@@ -1992,7 +1991,7 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			query.setParameter(itemPrefix, value);
 		}
@@ -2103,7 +2102,7 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
@@ -2119,7 +2118,7 @@ public class Finder {
 			default:
 				target = value;
 			}
-			query.setString(itemPrefix, target);
+			query.setParameter(itemPrefix, target);
 		}
 		/**
 		 * Parses the tokens to create an expression.
@@ -2287,7 +2286,7 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			Calendar beginTime = Calendar.getInstance();
 			beginTime.setTime(value);
@@ -2304,14 +2303,14 @@ public class Finder {
 			}
 			switch (sign) {
 			case AFTER:
-				query.setTimestamp(itemPrefix, beginTime.getTime());
+				query.setParameter(itemPrefix, beginTime.getTime());
 				break;
 			case BEFORE:
-				query.setTimestamp(itemPrefix, endTime.getTime());
+				query.setParameter(itemPrefix, endTime.getTime());
 				break;
 			default:
-				query.setDate(itemPrefix + "_1", beginTime.getTime());
-				query.setDate(itemPrefix + "_2", endTime.getTime());
+				query.setParameter(itemPrefix + "_1", beginTime.getTime());
+				query.setParameter(itemPrefix + "_2", endTime.getTime());
 			}
 		}
 		/**
@@ -2435,9 +2434,9 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
-			query.setBoolean(itemPrefix, this.value);
+			query.setParameter(itemPrefix, this.value);
 		}
 		/**
 		 * Parses the tokens to create an expression.
@@ -2599,7 +2598,7 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			String target;
 			switch (sign) {
 			case CONTAINS:
@@ -2614,7 +2613,7 @@ public class Finder {
 			default:
 				target = value;
 			}
-			query.setString(itemPrefix, target);
+			query.setParameter(itemPrefix, target);
 		}
 	
 		/* (non-Javadoc)
@@ -2695,7 +2694,7 @@ public class Finder {
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query query, String itemPrefix) {
+		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
@@ -2711,7 +2710,7 @@ public class Finder {
 			default:
 				target = value;
 			}
-			query.setString(itemPrefix, target);
+			query.setParameter(itemPrefix, target);
 		}
 	
 		/* (non-Javadoc)
@@ -2755,7 +2754,7 @@ public class Finder {
 	/**
 	 * Instantiates a new finder.
 	 *
-	 * @param query the query
+	 * @param Query<?> the query
 	 * @param driver the device class
 	 * @throws FinderParseException the finder parse exception
 	 */
@@ -2808,9 +2807,9 @@ public class Finder {
 	/**
 	 * Sets the variables.
 	 *
-	 * @param query the new variables
+	 * @param Query<?> the new variables
 	 */
-	public void setVariables(Query query) {
+	public void setVariables(Query<?> query) {
 		this.expression.setVariables(query, HQLPREFIX);
 	}
 

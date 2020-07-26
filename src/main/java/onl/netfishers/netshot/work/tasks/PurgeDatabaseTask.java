@@ -36,7 +36,7 @@ import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -111,7 +111,7 @@ public class PurgeDatabaseTask extends Task {
 					.setParameter("cancelled", Task.Status.CANCELLED)
 					.setParameter("failure", Task.Status.FAILURE)
 					.setParameter("success", Task.Status.SUCCESS)
-					.setDate("when", when.getTime())
+					.setParameter("when", when.getTime())
 					.setCacheMode(CacheMode.IGNORE)
 					.scroll(ScrollMode.FORWARD_ONLY);
 				int count = 0;
@@ -164,21 +164,21 @@ public class PurgeDatabaseTask extends Task {
 				this.info(String.format("Cleaning up configurations older than %d days...", configDays));
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * configDays);
-				Query query;
+				Query<Config> query;
 				if (configSize > 0) {
 					query = session
 						.createQuery(
 							"select c from Config c join c.attributes a where (a.class = ConfigLongTextAttribute or a.class = ConfigBinaryFileAttribute) " +
 							"group by c.id having ((max(length(a.longText.text)) > :size) or (max(a.fileSize) > :size)) and (c.changeDate < :when) " +
-							"order by c.device asc, c.changeDate desc")
-						.setInteger("size", configSize * 1024);
+							"order by c.device asc, c.changeDate desc", Config.class)
+						.setParameter("size", configSize * 1024);
 				}
 				else {
 					query = session
-						.createQuery("from Config c where (c.changeDate < :when) order by c.device asc, c.changeDate desc");
+						.createQuery("from Config c where (c.changeDate < :when) order by c.device asc, c.changeDate desc", Config.class);
 				}
 				ScrollableResults configs = query
-					.setCalendar("when", when)
+					.setParameter("when", when)
 					.setCacheMode(CacheMode.IGNORE)
 					.scroll(ScrollMode.FORWARD_ONLY);
 				long dontDeleteDevice = -1;

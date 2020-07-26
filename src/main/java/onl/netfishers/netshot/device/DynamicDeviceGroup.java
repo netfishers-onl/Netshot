@@ -29,7 +29,7 @@ import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.device.Finder.Expression.FinderParseException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Query;
+import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,11 +133,10 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	/* (non-Javadoc)
 	 * @see onl.netfishers.netshot.device.DeviceGroup#refreshCache(org.hibernate.Session)
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
 	public void refreshCache(Session session) throws FinderParseException, HibernateException {
 		Finder finder = this.getFinder();
-		Query query = session.createQuery("select d" + finder.getHql());
+		Query<Device> query = session.createQuery("select d" + finder.getHql(), Device.class);
 		finder.setVariables(query);
 		List<Device> devices = query.list();
 		this.updateCachedDevices(devices);
@@ -167,7 +166,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 			String deviceQuery = String.format("[DEVICE] IS %d AND (%s)", id, this.query);
 			logger.trace("Finder query: '{}'.", deviceQuery);
 			Finder finder = new Finder(deviceQuery, this.getDeviceDriver());
-			Query query = session.createQuery("select d.id" + finder.getHql());
+			Query<Device> query = session.createQuery("select d.id" + finder.getHql(), Device.class);
 			finder.setVariables(query);
 			if (query.uniqueResult() == null) {
 				this.cachedDevices.remove(device);
@@ -188,8 +187,9 @@ public class DynamicDeviceGroup extends DeviceGroup {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			@SuppressWarnings("unchecked")
-			List<DynamicDeviceGroup> groups = session.createCriteria(DynamicDeviceGroup.class).list();
+			List<DynamicDeviceGroup> groups = session
+				.createQuery("select ddg from DynamicDeviceGroup ddg", DynamicDeviceGroup.class)
+				.list();
 			for (DynamicDeviceGroup group : groups) {
 				try {
 					group.refreshCache(session, device);

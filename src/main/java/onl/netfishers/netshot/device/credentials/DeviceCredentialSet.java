@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
@@ -40,7 +41,7 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
-import org.jasypt.hibernate4.type.EncryptedStringType;
+import org.jasypt.hibernate5.type.EncryptedStringType;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -156,7 +157,7 @@ public class DeviceCredentialSet {
 	@XmlElement
 	@XmlID
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public long getId() {
 		return id;
 	}

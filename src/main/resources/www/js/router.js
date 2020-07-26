@@ -113,6 +113,10 @@ define([
 	};
 
 	var initialize = function() {
+	
+		$(window).resize(function() {
+			$("body").toggleClass("nssmallscreen", $(window).width() < 1200);
+		}).resize();
 
 		window.formatDateTime = function(date, format) {
 			var d = new Date(date);

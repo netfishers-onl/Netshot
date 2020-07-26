@@ -127,6 +127,10 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	border-color: transparent;
 }
 
+#tabs.ui-buttonset {
+	line-height: 35px;
+}
+
 .ui-buttonset .ui-button {
 	margin-right: 0px;
 }
@@ -157,9 +161,17 @@ th[role=columnheader]:not(.no-sort):hover:after {
 
 .nstoolbar {
 	background-color: #032042;
-	height: 68px;
+	height: 66px;
 	overflow: hidden;
 	padding-top: 1px;
+}
+
+.nssmallscreen .nstoolbar .ui-button>span>span {
+	display: none;
+}
+
+.nssmallscreen .nstoolbar {
+	height: 52px;
 }
 
 .nstoolbar .ui-button {
@@ -172,6 +184,11 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	padding-right: 5px;
 	padding-left: 5px;
 	color: #fff;
+}
+
+.nssmallscreen .nstoolbar .ui-button-text {
+	padding-right: 0px;
+	padding-left: 0px;
 }
 
 .nstoolbar .ui-button.ui-state-hover {
@@ -192,6 +209,10 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	top: 40px;
 	right: 10px;
 	color: #fff;
+}
+
+.nssmallscreen .nstoolbar #nsuser {
+	top: 20px;
 }
 
 #nsuser svg {
@@ -251,7 +272,7 @@ th[role=columnheader]:not(.no-sort):hover:after {
 
 .nstoolbar .ui-button>span>span {
 	display: block;
-	font-size: 1em;
+	font-size: .9em;
 	color: #fff;
 }
 
@@ -269,6 +290,10 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	padding-left: 10px;
 	padding-right: 10px;
 	padding-top: 15px;
+}
+
+.nssmallscreen .nstoolbar .nstitle {
+	padding-top: 8px;
 }
 
 .nstoolbar .nsnetshot {
@@ -554,12 +579,19 @@ h1 {
 #nsdevices-header {
 }
 
+#nsdevices-devicetabs #deviceactionbar {
+	float: right;
+	position: absolute;
+	right: 20px;
+	top: 20px;
+}
+
 #nsdevices-device-noncompliant {
 	float: right;
 	position: absolute;
 	padding: 5px 13px 5px 10px;
-	right: 10px;
-	top: 10px;
+	right: 310px;
+	top: 19px;
 	background-color: #ffe3e6;
 	font-size: .9em;
 	border: 1px solid rgba(158,28,35,.2);
@@ -610,7 +642,7 @@ h1 {
 #nstoolbar-devices-addmenu {
 	width: 300px;
 	z-index: 500;
-    background-color: #fff;
+	background-color: #fff;
 	background-clip: padding-box;
 	border: 1px solid #e1e4e8;
 	border-radius: 6px;

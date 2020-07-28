@@ -166,7 +166,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 			String deviceQuery = String.format("[DEVICE] IS %d AND (%s)", id, this.query);
 			logger.trace("Finder query: '{}'.", deviceQuery);
 			Finder finder = new Finder(deviceQuery, this.getDeviceDriver());
-			Query<Device> query = session.createQuery("select d.id" + finder.getHql(), Device.class);
+			Query<Long> query = session.createQuery("select d.id" + finder.getHql(), Long.class);
 			finder.setVariables(query);
 			if (query.uniqueResult() == null) {
 				this.cachedDevices.remove(device);

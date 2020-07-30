@@ -12,6 +12,13 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.15.1 - 2020-07-30
+
+* Minor UI improvements/fixes
+* Library (Hibernate) major upgrade
+* Report query optimizations
+
+
 0.15.0 - 2020-07-10
 
 * Refreshed Web User Interface

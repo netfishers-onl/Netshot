@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.6.3"
+	version: "1.6.4"
 };
 
 var Config = {
@@ -402,7 +402,11 @@ function snapshot(cli, device, config, debug) {
 		else if (system.match(/cisco C9300/)) {
 			device.set("family", "Cisco Catalyst 9300");
 		}
-		else if (system.match(/cisco C9500/)) {
+		else if (system.match(/cisco C94\d\d/)) {
+			device.set("family", "Cisco Catalyst 9400");
+			device.set("networkClass", "SWITCHROUTER");
+		}
+		else if (system.match(/cisco C95\d\d/)) {
 			device.set("family", "Cisco Catalyst 9500");
 			device.set("networkClass", "SWITCHROUTER");
 		}

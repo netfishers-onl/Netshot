@@ -256,8 +256,16 @@ th[role=columnheader]:not(.no-sort):hover:after {
 }
 
 .ui-button-text {
-	margin-left: 0.3em;
 	font-weight: bold;
+}
+
+.ui-button:not(.ui-button-icon-only) .ui-icon + .ui-button-text {
+	margin-left: 0.3em;
+}
+
+
+.ui-button.small {
+	font-size: 9px;
 }
 
 .nstoolbar .ui-button {
@@ -656,8 +664,10 @@ h1 {
 	border-spacing: 0;
 }
 
-#nsdevices-device .panel table tr:first-child td,
-#nsdevices-device .panel table tr:first-child th {
+#nsdevices-device .panel table thead:first-child tr:first-child td,
+#nsdevices-device .panel table thead:first-child tr:first-child th,
+#nsdevices-device .panel table tbody:first-child tr:first-child td,
+#nsdevices-device .panel table tbody:first-child tr:first-child th {
 	padding-top: 6px;
 	border-top: none;
 }
@@ -690,10 +700,6 @@ h1 {
 
 #nsdevices-device .panel table tr.configdetails {
 	display: none;
-}
-
-.configpreviousdiff {
-	font-size: 9px;
 }
 
 .nsdevices-multidevices-toolbar {
@@ -838,6 +844,10 @@ h1 {
 
 .nsconfig table tr.changed {
 	background-color: #FFFF99;
+}
+
+.nsconfig table.nsconfigtable {
+	table-layout: fixed;
 }
 
 .nsconfig table .linenum {
@@ -1474,7 +1484,7 @@ input.spinner {
 .editscriptform .loadsavetools {
 	position: absolute;
 	left: 10px;
-	width: 32px;
+	width: 28px;
 	height: 25px;
 	padding: 3px;
 	background-color: white;

@@ -17,6 +17,7 @@ define([
 
 		render: function() {
 			var that = this;
+			this.showNumbers = true;
 			this.configDifferences = new DeviceConfigDiffModel({}, {
 				'deviceName': this.options.deviceName,
 				'originalConfigId': this.options.configId1,
@@ -69,6 +70,10 @@ define([
 				else {
 					$(d).find("button").remove();
 				}
+				$(d).find("table").unbind("dblclick").dblclick(function() {
+					that.showNumbers = !that.showNumbers;
+					$(d).find('.linenum').css("visibility", that.showNumbers ? "visible" : "hidden");
+				});
 			});
 			return this;
 		},

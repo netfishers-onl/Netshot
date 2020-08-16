@@ -7,15 +7,20 @@
 	<title>Netshot</title>
 	<link rel="stylesheet" href="css/normalize.css" />
 	<link rel="stylesheet" href="css/common.css" />
-	<link rel="stylesheet" href="css/smoothness/jquery-ui.css" />
+	<link rel="stylesheet" href="css/custom/jquery-ui.css" />
 	<link rel="stylesheet" href="css/app.css" />
 
 </head>
 <body class="nsconfig">
 
-<table>
-<tbody>
-
+<table class="nsconfigtable">
+	<colgroup>
+		<col class="linenum" />
+		<col />
+		<col class="linenum" />
+		<col />
+	</colgroup>
+<thead>
 <tr>
 	<th colspan="2">
 		<button id="previous">Previous</button>
@@ -30,6 +35,8 @@
 		<button id="next">Next</button>
 	</th>
 </tr>
+</thead>
+<tbody>
 
 <% _.each(deltas, function(deltaSet, item) { %>
 

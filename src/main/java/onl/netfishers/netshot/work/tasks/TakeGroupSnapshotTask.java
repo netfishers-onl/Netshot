@@ -110,9 +110,10 @@ public class TakeGroupSnapshotTask extends Task {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Starting snapshot task for group {}.", this.getDeviceGroup().getId());
+		logger.debug("Task {}. Starting snapshot task for group {}.",
+				this.getId(), this.getDeviceGroup().getId());
 		Set<Device> devices = this.getDeviceGroup().getCachedDevices();
-		logger.debug("{} devices in the group.", devices.size());
+		logger.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
 		String comment = String.format("Started due to group %s snapshot", this.getDeviceGroup().getName());
 		Calendar referenceDate = Calendar.getInstance();
 		referenceDate.add(Calendar.HOUR, -this.getLimitToOutofdateDeviceHours());
@@ -129,11 +130,11 @@ public class TakeGroupSnapshotTask extends Task {
 				TaskManager.addTask(task);
 			}
 			catch (Exception e) {
-				logger.error("Error while scheduling the individual snapshot task.", e);
+				logger.error("Task {}. Error while scheduling the individual snapshot task.", this.getId(), e);
 				this.error("Error while scheduling the task.");
 			}
 		}
-		logger.debug("Everything went fine.");
+		logger.debug("Task {}. Everything went fine.", this.getId());
 		this.status = Status.SUCCESS;
 	}
 

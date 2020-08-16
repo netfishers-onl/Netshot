@@ -201,6 +201,8 @@ public abstract class CliScript {
 		boolean sshOpened = deviceDriver.getProtocols().contains(DriverProtocol.SSH);
 		boolean telnetOpened = deviceDriver.getProtocols().contains(DriverProtocol.TELNET);
 		boolean snmpWorth = deviceDriver.getProtocols().contains(DriverProtocol.SNMP);
+		boolean sshTried = false;
+		boolean telnetTried = false;
 		TaskLogger taskLogger = this.getJsLogger();
 		
 		Network4Address address = device.getConnectAddress();
@@ -236,6 +238,7 @@ public abstract class CliScript {
 								((DeviceSshAccount) credentialSet).getPassword(), taskLogger);
 					}
 					try {
+						sshTried = true;
 						cli.connect();
 						this.run(session, device, cli, null, DriverProtocol.SSH, (DeviceCliAccount) credentialSet);
 						return;
@@ -268,6 +271,7 @@ public abstract class CliScript {
 				if (credentialSet instanceof DeviceTelnetAccount) {
 					Cli cli = new Telnet(address, telnetPort, taskLogger);
 					try {
+						telnetTried = true;
 						cli.connect();
 						this.run(session, device, cli, null, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
 						return;
@@ -335,6 +339,7 @@ public abstract class CliScript {
 									((DeviceSshAccount) credentialSet).getPassword(), taskLogger);
 						}
 						try {
+							sshTried = true;
 							cli.connect();
 							this.run(session, device, cli, null, DriverProtocol.SSH, (DeviceCliAccount) credentialSet);
 							Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
@@ -375,6 +380,7 @@ public abstract class CliScript {
 						taskLogger.trace(String.format("Will try Telnet credentials %s.", credentialSet.getName()));
 						Cli cli = new Telnet(address, telnetPort, taskLogger);
 						try {
+							telnetTried = true;
 							cli.connect();
 							this.run(session, device, cli, null, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
 							Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
@@ -443,7 +449,8 @@ public abstract class CliScript {
 				
 			}
 		}
-		if (!sshOpened && !telnetOpened) {
+		if ((sshTried && !sshOpened && !telnetTried) || (telnetTried && !telnetOpened && !sshTried) ||
+				(sshTried && !sshOpened && telnetTried && !telnetOpened)) {
 			throw new IOException("Couldn't open either SSH or Telnet socket with the device.");
 		}
 		throw new InvalidCredentialsException("Couldn't find valid credentials.");

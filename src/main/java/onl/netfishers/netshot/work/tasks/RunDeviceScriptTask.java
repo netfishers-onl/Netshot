@@ -81,7 +81,7 @@ public class RunDeviceScriptTask extends Task {
 
 	@Override
 	public void run() {
-		logger.debug("Starting script task for device {}.", device.getId());
+		logger.debug("Task {}. Starting script task for device {}.", this.getId(), device.getId());
 		this.info(String.format("Run script task for device %s (%s).",
 				device.getName(), device.getMgmtAddress().getIp()));
 
@@ -91,13 +91,13 @@ public class RunDeviceScriptTask extends Task {
 			session.beginTransaction();
 			session.refresh(device);
 			if (deviceDriver == null || !deviceDriver.equals(device.getDriver())) {
-				logger.trace("The script doesn't apply to the driver of the device.");
+				logger.trace("Task {}. The script doesn't apply to the driver of the device.", this.getId());
 				this.error("The script doesn't apply to the driver of the device.");
 				this.status = Status.CANCELLED;
 				return;
 			}
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
-				logger.trace("Device not INPRODUCTION, stopping the run script task.");
+				logger.trace("Task {}. Device not INPRODUCTION, stopping the run script task.", this.getId());
 				this.warn("The device is not enabled (not in production).");
 				this.status = Status.FAILURE;
 				return;
@@ -113,8 +113,13 @@ public class RunDeviceScriptTask extends Task {
 			this.status = Status.SUCCESS;
 		}
 		catch (Exception e) {
-			session.getTransaction().rollback();
-			logger.error("Error while running the script.", e);
+			try {
+				session.getTransaction().rollback();
+			}
+			catch (Exception e1) {
+				logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
+			}
+			logger.error("Task {}. Error while running the script.", this.getId(), e);
 			this.error("Error while running the script: " + e.getMessage());
 			if (cliScript != null) {
 				this.info(String.format("Device logs (%d next lines):", cliScript.getJsLog().size()));

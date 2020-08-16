@@ -85,7 +85,7 @@ public class CheckComplianceTask extends Task {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Starting check compliance task for device {}.", device.getId());
+		logger.debug("Task {}. Starting check compliance task for device {}.", this.getId(), device.getId());
 		this.trace(String.format("Check compliance task for device %s (%s).",
 				device.getName(), device.getMgmtAddress().getIp()));
 
@@ -101,7 +101,8 @@ public class CheckComplianceTask extends Task {
 				.createQuery("from Device d join fetch d.lastConfig where d.id = :id")
 				.setParameter("id", this.device.getId()).uniqueResult();
 			if (device == null) {
-				logger.info("Unable to fetch the device with its last config... has it been captured at least once?");
+				logger.info("Task {}. Unable to fetch the device with its last config... has it been captured at least once?",
+						this.getId());
 				throw new Exception("No last config for this device. Has it been captured at least once?");
 			}
 			@SuppressWarnings("unchecked")
@@ -137,8 +138,13 @@ public class CheckComplianceTask extends Task {
 			this.status = Status.SUCCESS;
 		}
 		catch (Exception e) {
-			session.getTransaction().rollback();
-			logger.error("Error while checking compliance.", e);
+			try {
+				session.getTransaction().rollback();
+			}
+			catch (Exception e1) {
+				logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
+			}
+			logger.error("Task {}. Error while checking compliance.", this.getId(), e);
 			this.error("Error while checking compliance: " + e.getMessage());
 			this.status = Status.FAILURE;
 			return;

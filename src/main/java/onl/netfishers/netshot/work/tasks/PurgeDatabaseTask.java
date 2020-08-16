@@ -95,13 +95,13 @@ public class PurgeDatabaseTask extends Task {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Starting cleanup process.");
+		logger.debug("Task {}. Starting cleanup process.", this.getId());
 
 		{
 			Session session = Database.getSession();
 			try {
 				session.beginTransaction();
-				logger.trace("Cleaning up tasks finished more than {} days ago...", days);
+				logger.trace("Task {}. Cleaning up tasks finished more than {} days ago...", this.getId(), days);
 				this.info(String.format("Cleaning up tasks more than %d days ago...", days));
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * days);
@@ -124,7 +124,7 @@ public class PurgeDatabaseTask extends Task {
 					}
 				}
 				session.getTransaction().commit();
-				logger.trace("Cleaning up done on tasks, {} entries affected.", count);
+				logger.trace("Task {}. Cleaning up done on tasks, {} entries affected.", this.getId(), count);
 				this.info(String.format("Cleaning up done on tasks, %d entries affected.", count));
 			}
 			catch (HibernateException e) {
@@ -134,7 +134,7 @@ public class PurgeDatabaseTask extends Task {
 				catch (Exception e1) {
 	
 				}
-				logger.error("Database error while purging the old tasks from the database.", e);
+				logger.error("Task {}. Database error while purging the old tasks from the database.", this.getId(), e);
 				this.error("Database error during the task purge.");
 				this.status = Status.FAILURE;
 				return;
@@ -146,7 +146,7 @@ public class PurgeDatabaseTask extends Task {
 				catch (Exception e1) {
 					
 				}
-				logger.error("Error while purging the old tasks from the database.", e);
+				logger.error("Task {}. Error while purging the old tasks from the database.", this.getId(), e);
 				this.error("Error during the task purge.");
 				this.status = Status.FAILURE;
 				return;
@@ -160,7 +160,7 @@ public class PurgeDatabaseTask extends Task {
 			Session session = Database.getSession();
 			try {
 				session.beginTransaction();
-				logger.trace("Cleaning up configurations taken more than {} days ago...", configDays);
+				logger.trace("Task {}. Cleaning up configurations taken more than {} days ago...", this.getId(), configDays);
 				this.info(String.format("Cleaning up configurations older than %d days...", configDays));
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * configDays);
@@ -216,7 +216,7 @@ public class PurgeDatabaseTask extends Task {
 					}
 				}
 				session.getTransaction().commit();
-				logger.trace("Cleaning up done on configurations, {} entries affected.", count);
+				logger.trace("Task {}. Cleaning up done on configurations, {} entries affected.", this.getId(), count);
 				this.info(String.format("Cleaning up done on configurations, %d entries affected.", count));
 				for (File toDeleteFile : toDeleteFiles) {
 					try {
@@ -232,9 +232,10 @@ public class PurgeDatabaseTask extends Task {
 					session.getTransaction().rollback();
 				}
 				catch (Exception e1) {
-	
+					logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 				}
-				logger.error("Database error while purging the old configurations from the database.", e);
+				logger.error("Task {}. Database error while purging the old configurations from the database.",
+						this.getId(), e);
 				this.error("Database error during the configuration purge.");
 				this.status = Status.FAILURE;
 				return;
@@ -244,9 +245,10 @@ public class PurgeDatabaseTask extends Task {
 					session.getTransaction().rollback();
 				}
 				catch (Exception e1) {
-					
+					logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 				}
-				logger.error("Error while purging the old configurations from the database.", e);
+				logger.error("Task {}. Error while purging the old configurations from the database.",
+						this.getId(), e);
 				this.error("Error during the configuration purge.");
 				this.status = Status.FAILURE;
 				return;
@@ -257,7 +259,7 @@ public class PurgeDatabaseTask extends Task {
 		}
 
 		this.status = Status.SUCCESS;
-		logger.trace("Cleaning up process finished.");
+		logger.trace("Task {}. Cleaning up process finished.", this.getId());
 	}
 
 	/* (non-Javadoc)

@@ -158,7 +158,8 @@ public class RunDiagnosticsTask extends Task {
 
 	@Override
 	public void run() {
-		logger.debug("Starting diagnostic task for device {}.", device.getId());
+		logger.debug("Task {}. Starting diagnostic task for device {}.",
+				this.getId(), device.getId());
 		this.trace(String.format("Run diagnostic task for device %s (%s).",
 				device.getName(), device.getMgmtAddress().getIp()));
 		boolean locked = false;
@@ -170,14 +171,14 @@ public class RunDiagnosticsTask extends Task {
 			session.beginTransaction();
 			session.refresh(device);
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
-				logger.trace("Device not INPRODUCTION, stopping the diagnostic task.");
+				logger.trace("Task {}. Device not INPRODUCTION, stopping the diagnostic task.", this.getId());
 				this.warn("The device is not enabled (not in production).");
 				this.status = Status.FAILURE;
 				return;
 			}
 			locked = checkRunningDiagnostic(device.getId());
 			if (!locked) {
-				logger.trace("A Diagnostic task already ongoing for this device, cancelling.");
+				logger.trace("Task {}. A Diagnostic task already ongoing for this device, cancelling.", this.getId());
 				this.warn("A diagnostic task is already running for this device, cancelling this task.");
 				this.status = Status.CANCELLED;
 				return;
@@ -201,8 +202,13 @@ public class RunDiagnosticsTask extends Task {
 			
 		}
 		catch (Exception e) {
-			session.getTransaction().rollback();
-			logger.error("Error while executing the diagnostics.", e);
+			try {
+				session.getTransaction().rollback();
+			}
+			catch (Exception e1) {
+				logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
+			}
+			logger.error("Task {}. Error while executing the diagnostics.", this.getId(), e);
 			this.error("Error while executing the diagnostics: " + e.getMessage());
 			if (cliScript != null) {
 				this.log.append(cliScript.getPlainJsLog());
@@ -218,7 +224,7 @@ public class RunDiagnosticsTask extends Task {
 				}
 			}
 			catch (Exception e1) {
-				logger.error("Error while saving the debug logs.", e1);
+				logger.error("Task {}. Error while saving the debug logs.", this.getId(), e1);
 			}
 			session.close();
 			if (locked) {
@@ -226,7 +232,7 @@ public class RunDiagnosticsTask extends Task {
 			}
 		}
 
-		logger.debug("Request to refresh all the groups for the device after the diagnostics.");
+		logger.debug("Task {}. Request to refresh all the groups for the device after the diagnostics.", this.getId());
 		DynamicDeviceGroup.refreshAllGroups(device);
 
 		if (!this.dontCheckCompliance) {
@@ -235,7 +241,7 @@ public class RunDiagnosticsTask extends Task {
 				TaskManager.addTask(checkTask);
 			}
 			catch (Exception e) {
-				logger.error("Error while registering the new task.", e);
+				logger.error("Task {}. Error while registering the new task.", this.getId(), e);
 			}
 		}
 		

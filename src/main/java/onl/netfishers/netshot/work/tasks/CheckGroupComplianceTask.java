@@ -124,7 +124,7 @@ public class CheckGroupComplianceTask extends Task {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Starting check compliance task for group {}.", deviceGroup.getId());
+		logger.debug("Task {}. Starting check compliance task for group {}.", this.getId(), deviceGroup.getId());
 		this.trace(String.format("Check compliance task for group %s.",
 				deviceGroup.getName()));
 
@@ -162,9 +162,9 @@ public class CheckGroupComplianceTask extends Task {
 				session.getTransaction().rollback();
 			}
 			catch (Exception e1) {
-
+				logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 			}
-			logger.error("Error while checking compliance.", e);
+			logger.error("Task {}. Error while checking compliance.", this.getId(), e);
 			this.error("Error while checking compliance: " + e.getMessage());
 			this.status = Status.FAILURE;
 			return;

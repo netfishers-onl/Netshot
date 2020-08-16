@@ -173,7 +173,7 @@ public class TakeSnapshotTask extends Task {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Starting snapshot task for device {}.", device.getId());
+		logger.debug("Task {}. Starting snapshot task for device {}.", this.getId(), device.getId());
 		this.info(String.format("Snapshot task for device %s (%s).",
 				device.getName(), device.getMgmtAddress().getIp()));
 		boolean locked = false;
@@ -184,14 +184,14 @@ public class TakeSnapshotTask extends Task {
 			session.beginTransaction();
 			session.refresh(device);
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
-				logger.trace("Device not INPRODUCTION, stopping the snapshot task.");
+				logger.trace("Task {}. Device not INPRODUCTION, stopping the snapshot task.", this.getId());
 				this.warn("The device is not enabled (not in production).");
 				this.status = Status.FAILURE;
 				return;
 			}
 			locked = checkRunningSnapshot(device.getId());
 			if (!locked) {
-				logger.trace("Snapshot task already ongoing for this device, cancelling.");
+				logger.trace("Task {}. Snapshot task already ongoing for this device, cancelling.", this.getId());
 				this.warn("A snapshot task is already running for this device, cancelling this task.");
 				this.status = Status.CANCELLED;
 				return;
@@ -204,8 +204,13 @@ public class TakeSnapshotTask extends Task {
 			this.status = Status.SUCCESS;
 		}
 		catch (Exception e) {
-			session.getTransaction().rollback();
-			logger.error("Error while taking the snapshot.", e);
+			try {
+				session.getTransaction().rollback();
+			}
+			catch (Exception e1) {
+				logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
+			}
+			logger.error("Task {}. Error while taking the snapshot.", this.getId(), e);
 			this.error("Error while taking the snapshot: " + e.getMessage());
 			this.log.append(cliScript.getPlainJsLog());
 			this.status = Status.FAILURE;
@@ -218,7 +223,7 @@ public class TakeSnapshotTask extends Task {
 				}
 			}
 			catch (Exception e1) {
-				logger.error("Error while saving the debug logs.", e1);
+				logger.error("Task {}. Error while saving the debug logs.", this.getId(), e1);
 			}
 			session.close();
 			if (locked) {
@@ -229,7 +234,7 @@ public class TakeSnapshotTask extends Task {
 			}
 		}
 
-		logger.debug("Request to refresh all the groups for the device after the snapshot.");
+		logger.debug("Task {}. Request to refresh all the groups for the device after the snapshot.", this.getId());
 		DynamicDeviceGroup.refreshAllGroups(device);
 
 		if (!this.dontRunDiagnostics) {
@@ -238,7 +243,7 @@ public class TakeSnapshotTask extends Task {
 				TaskManager.addTask(diagTask);
 			}
 			catch (Exception e) {
-				logger.error("Error while registering the new task.", e);
+				logger.error("Task {}. Error while registering the diagnostic task.", this.getId(), e);
 			}
 
 		}
@@ -248,7 +253,7 @@ public class TakeSnapshotTask extends Task {
 				TaskManager.addTask(checkTask);
 			}
 			catch (Exception e) {
-				logger.error("Error while registering the new task.", e);
+				logger.error("Task {}. Error while registering the check compliance task.", this.getId(), e);
 			}
 		}
 	}

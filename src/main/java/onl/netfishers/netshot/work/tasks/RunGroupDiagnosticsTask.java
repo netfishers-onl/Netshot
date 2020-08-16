@@ -96,9 +96,10 @@ public class RunGroupDiagnosticsTask extends Task {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Starting diagnostics task for group {}.", this.getDeviceGroup().getId());
+		logger.debug("Task {}. Starting diagnostics task for group {}.",
+				this.getId(), this.getDeviceGroup().getId());
 		Set<Device> devices = this.getDeviceGroup().getCachedDevices();
-		logger.debug("{} devices in the group.", devices.size());
+		logger.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
 		String comment = String.format("Started due to group %s diagnotics", this.getDeviceGroup().getName());
 		for (Device device : devices) {
 			this.info(String.format("Scheduling diagnostics task for device %s.", device.getName()));
@@ -107,7 +108,8 @@ public class RunGroupDiagnosticsTask extends Task {
 				TaskManager.addTask(task);
 			}
 			catch (Exception e) {
-				logger.error("Error while scheduling the individual diagnostics task.", e);
+				logger.error("Task {}. Error while scheduling the individual diagnostics task.",
+						this.getId(), e);
 				this.error("Error while scheduling the task.");
 			}
 		}

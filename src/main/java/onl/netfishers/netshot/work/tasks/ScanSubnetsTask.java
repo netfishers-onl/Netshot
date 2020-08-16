@@ -98,7 +98,7 @@ public class ScanSubnetsTask extends Task {
 	@SuppressWarnings("unchecked")
   @Override
 	public void run() {
-		logger.debug("Starting scan subnet process.");
+		logger.debug("Task {}. Starting scan subnet process.", this.getId());
 		
 		Session session = Database.getSession();
 		Set<Integer> toScan = new HashSet<Integer>();
@@ -114,7 +114,7 @@ public class ScanSubnetsTask extends Task {
 						min++; // Avoid subnet network address
 						max--;
 					}
-					logger.trace("Will scan from {} to {}.", min, max);
+					logger.trace("Task {}. Will scan from {} to {}.", this.getId(), min, max);
 					this.info(String.format("Will scan %s (from %d to %d)", subnet.getPrefix(),
 							min, max));
 					List<Integer> existing = session
@@ -130,7 +130,8 @@ public class ScanSubnetsTask extends Task {
 				}
 			}
 			catch (HibernateException e) {
-				logger.error("Error while retrieving the existing devices in the scope.", e);
+				logger.error("Task {}. Error while retrieving the existing devices in the scope.",
+						this.getId(), e);
 				this.error("Error while checking the existing devices.");
 				this.status = Status.FAILURE;
 				return;
@@ -143,7 +144,7 @@ public class ScanSubnetsTask extends Task {
 						.list();
 			}
 			catch (Exception e) {
-				logger.error("Error while retrieving the communities.", e);
+				logger.error("Task {}. Error while retrieving the communities.", this.getId(), e);
 				this.error("Error while getting the communities.");
 				this.status = Status.FAILURE;
 				return;
@@ -153,24 +154,25 @@ public class ScanSubnetsTask extends Task {
 			session.close();
 		}
 		if (knownCommunities.size() == 0) {
-			logger.error("No available SNMP community to scan devices.");
+			logger.error("Task {}. No available SNMP community to scan devices.", this.getId());
 			this.error("No available SNMP community to scan devices.");
 			this.status = Status.FAILURE;
 			return;
 		}
-		logger.trace("Will try {} SNMP communities.", knownCommunities.size());
+		logger.trace("Task {}. Will try {} SNMP communities.", this.getId(), knownCommunities.size());
 		
 
 		for (int a : toScan) {
 			try {
 				Network4Address address = new Network4Address(a, 32);
 				if (!address.isNormalUnicast()) {
-					logger.trace("Bad address {} skipped.", a);
+					logger.trace("Task {}. Bad address {} skipped.", this.getId(), a);
 					this.info(String.format("Skipping %s.", address.getIp()));
 					continue;
 				}
 				this.info("Adding a task to scan " + address.getIp());
-				logger.trace("Will add a discovery task for device with IP {} ({}).", a, address.getIp());
+				logger.trace("Task {}. Will add a discovery task for device with IP {} ({}).",
+						this.getId(), a, address.getIp());
 				DiscoverDeviceTypeTask discoverTask = new DiscoverDeviceTypeTask(address, this.getDomain(), comments, author);
 				for (DeviceCredentialSet credentialSet : knownCommunities) {
 					discoverTask.addCredentialSet(credentialSet);
@@ -178,7 +180,7 @@ public class ScanSubnetsTask extends Task {
 				TaskManager.addTask(discoverTask);
 			}
 			catch (Exception e) {
-				logger.error("Error while adding discovery task.", e);
+				logger.error("Task {}. Error while adding discovery task.", this.getId(), e);
 				this.error("Error while adding discover device type: " + e.getMessage());
 			}
 		}

@@ -244,8 +244,12 @@ public class Ssh extends Cli {
 	@Override
 	public void disconnect() {
 		try {
-			channel.disconnect();
-			session.disconnect();
+			if (channel != null) {
+				channel.disconnect();
+			}
+			if (session != null) {
+				session.disconnect();
+			}
 		}
 		catch (Exception e) {
 			logger.warn("Error on SSH disconnect.", e);

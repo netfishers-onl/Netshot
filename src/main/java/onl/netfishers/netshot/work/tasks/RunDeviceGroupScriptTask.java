@@ -93,14 +93,15 @@ public class RunDeviceGroupScriptTask extends Task {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Starting run script task for group {}.", this.getDeviceGroup().getId());
+		logger.debug("Task {}. Starting run script task for group {}.",
+				this.getId(), this.getDeviceGroup().getId());
 		Set<Device> devices = this.getDeviceGroup().getCachedDevices();
-		logger.debug("{} devices in the group.", devices.size());
+		logger.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
 		String comment = String.format("Started due to group %s script task", this.getDeviceGroup().getName());
 
 		DeviceDriver driver = DeviceDriver.getDriverByName(this.deviceDriver);
 		if (driver == null) {
-			logger.error("No such device driver {}.", deviceDriver);
+			logger.error("Task {}. No such device driver {}.", this.getId(), deviceDriver);
 			this.error("Unknown device driver.");
 			this.status = Status.FAILURE;
 			return;
@@ -113,11 +114,11 @@ public class RunDeviceGroupScriptTask extends Task {
 				TaskManager.addTask(task);
 			}
 			catch (Exception e) {
-				logger.error("Error while scheduling the individual snapshot task.", e);
+				logger.error("Task {}. Error while scheduling the individual snapshot task.", this.getId(), e);
 				this.error("Error while scheduling the task.");
 			}
 		}
-		logger.debug("Everything went fine.");
+		logger.debug("Task {}. Everything went fine.", this.getId());
 		this.status = Status.SUCCESS;
 	}
 

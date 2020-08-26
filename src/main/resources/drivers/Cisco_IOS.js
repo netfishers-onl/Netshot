@@ -300,7 +300,7 @@ function snapshot(cli, device, config, debug) {
 			device.set("family", "Cisco Catalyst 3550");
 			device.set("networkClass", "SWITCH");
 		}
-		else if (system.match(/.*WS-C35.*/)) {
+		else if (system.match(/.*WS-[CX]35[0124].*/)) {
 			device.set("family", "Cisco Catalyst 3500XL");
 			device.set("networkClass", "SWITCH");
 		}

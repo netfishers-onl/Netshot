@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.6.4"
+	version: "1.6.5"
 };
 
 var Config = {
@@ -300,6 +300,10 @@ function snapshot(cli, device, config, debug) {
 			device.set("family", "Cisco Catalyst 3550");
 			device.set("networkClass", "SWITCH");
 		}
+		else if (system.match(/.*WS-C356.*/)) {
+			device.set("family", "Cisco Catalyst 3560");
+			device.set("networkClass", "SWITCH");
+		}
 		else if (system.match(/.*WS-C35.*/)) {
 			device.set("family", "Cisco Catalyst 3500XL");
 			device.set("networkClass", "SWITCH");
@@ -312,10 +316,6 @@ function snapshot(cli, device, config, debug) {
 		}
 		else if (system.match(/^([Cc]isco )?17[0-9][0-9]/)) {
 			device.set("family", "Cisco 1700");
-		}
-		else if (system.match(/.*WS-C356.*/)) {
-			device.set("family", "Cisco Catalyst 3560");
-			device.set("networkClass", "SWITCH");
 		}
 		else if (system.match(/.*WS-C3650.*/)) {
 			device.set("family", "Cisco Catalyst 3650");

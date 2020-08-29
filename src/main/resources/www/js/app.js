@@ -17,6 +17,13 @@ define([
 	var initialize = function() {
 		Router.initialize();
 	};
+	
+	$.escapeSelector = function(sel) {
+		/* https://github.com/jquery/jquery/blob/d0ce00cdfa680f1f0c38460bc51ea14079ae8b07/src/selector/escapeSelector.js */
+		return (sel + "").replace(/([\0-\x1f\x7f]|^-?\d)|^-$|[^\x80-\uFFFF\w-]/g, function(ch) {
+			return "\\" + ch;
+		});
+	};
 
 	return {
 		initialize: initialize

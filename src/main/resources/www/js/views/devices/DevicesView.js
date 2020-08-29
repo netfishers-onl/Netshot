@@ -349,14 +349,14 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 			var $folder = this.$("#nsdevices-groups>ul");
 			var path = group.getPath();
 			for (f in path) {
-				var $child = $folder.children('li[data-folder="' + path[f] + '"]');
+				var $child = $folder.children('li[data-folder="' + $.escapeSelector(path[f]) + '"]');
 				if ($child.length === 0) {
 					var item = this.groupFolderItemTemplate({
 						name: path[f]
 					});
 					$folder.append($(item));
 				}
-				var $folder = $folder.children('li[data-folder="' + path[f] + '"]').children('ul');
+				$folder = $folder.children('li[data-folder="' + $.escapeSelector(path[f]) + '"]').children('ul');
 			}
 			var item = this.groupItemTemplate(group.toJSON());
 			$folder.append($(item));

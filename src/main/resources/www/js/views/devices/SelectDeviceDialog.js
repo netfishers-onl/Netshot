@@ -28,13 +28,13 @@ define([
 		},
 
 		buttons: {
+			"Cancel": function() {
+				this.close();
+			},
 			"Select": function(event) {
 				var that = this;
 				that.close();
 				that.options.onSelected(this.device);
-			},
-			"Cancel": function() {
-				this.close();
 			}
 
 		},

@@ -23,6 +23,9 @@ define([
 		},
 
 		buttons: {
+			"Cancel": function() {
+				this.close();
+			},
 			"Delete": function(event) {
 				var that = this;
 				that.$('button').button('disable');
@@ -58,9 +61,6 @@ define([
 					});
 				};
 				startNext();
-			},
-			"Cancel": function() {
-				this.close();
 			}
 		},
 

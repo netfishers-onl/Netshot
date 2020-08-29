@@ -35,6 +35,9 @@ define([
 		},
 
 		buttons: {
+			"Cancel": function() {
+				this.close();
+			},
 			"Save task": function(event) {
 				var that = this;
 				that.$("#error").hide();
@@ -61,9 +64,6 @@ define([
 					$button.button('enable');
 				});
 
-			},
-			"Cancel": function() {
-				this.close();
 			}
 
 		},

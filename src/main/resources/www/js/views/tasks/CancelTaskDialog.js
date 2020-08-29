@@ -17,6 +17,9 @@ define([
 		},
 
 		buttons: {
+			"Cancel": function() {
+				this.close();
+			},
 			"Delete": function(event) {
 				var that = this;
 				var $button = $(event.target).closest("button");
@@ -33,9 +36,6 @@ define([
 					that.$("#error").show();
 					$button.button('enable');
 				});
-			},
-			"Cancel": function() {
-				this.close();
 			}
 		}
 

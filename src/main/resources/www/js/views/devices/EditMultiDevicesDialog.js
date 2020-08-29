@@ -38,6 +38,9 @@ define([
 		},
 
 		buttons: {
+			"Cancel": function() {
+				this.close();
+			},
 			"Confirm": function(event) {
 				var that = this;
 				that.$('button').button('disable');
@@ -95,9 +98,6 @@ define([
 					});
 				};
 				startNext();
-			},
-			"Cancel": function() {
-				this.close();
 			}
 		},
 		

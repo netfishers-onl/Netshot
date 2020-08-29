@@ -27,6 +27,9 @@ define([
 		},
 
 		buttons: {
+			"Cancel": function() {
+				this.close();
+			},
 			"Save": function(event) {
 				var that = this;
 				that.$("#error").hide();
@@ -59,9 +62,6 @@ define([
 					that.$("#error").show();
 					$button.button('enable');
 				});
-			},
-			"Cancel": function() {
-				this.close();
 			}
 
 		},

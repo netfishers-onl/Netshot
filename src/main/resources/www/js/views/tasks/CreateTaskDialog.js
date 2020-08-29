@@ -35,18 +35,21 @@ define([
 		},
 
 		buttons: {
+			"Cancel": function() {
+				this.close();
+			},
 			"< Previous": function() {
-				this.dialogButtons().eq(0).button('disable');
-				this.dialogButtons().eq(1).show();
-				this.dialogButtons().eq(2).hide();
+				this.dialogButtons().eq(1).button('disable');
+				this.dialogButtons().eq(2).show();
+				this.dialogButtons().eq(3).hide();
 				this.$('.nsdialog-page1').show();
 				this.$('.nsdialog-page2').hide();
 				this.$('#nstasks-specifictask').html("");
 			},
 			"Next >": function() {
-				this.dialogButtons().eq(0).button('enable');
-				this.dialogButtons().eq(1).hide();
-				this.dialogButtons().eq(2).show();
+				this.dialogButtons().eq(1).button('enable');
+				this.dialogButtons().eq(2).hide();
+				this.dialogButtons().eq(3).show();
 				this.$('.nsdialog-page1').hide();
 				this.$('.nsdialog-page2').show();
 				this.taskType = this.$('input[name="tasktype"]:checked').prop('id');
@@ -73,15 +76,12 @@ define([
 					that.$("#error").show();
 					$button.button('enable');
 				});
-			},
-			"Cancel": function() {
-				this.close();
 			}
 		},
 
 		onCreate: function() {
-			this.dialogButtons().eq(0).button('disable');
-			this.dialogButtons().eq(2).hide();
+			this.dialogButtons().eq(1).button('disable');
+			this.dialogButtons().eq(3).hide();
 			if (!user.isAdmin()) {
 				this.$('input[name="tasktype"]').each(function() {
 					if ($(this).data("level") == "admin") {

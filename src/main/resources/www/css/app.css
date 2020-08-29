@@ -127,6 +127,10 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	border-color: transparent;
 }
 
+.ui-icon-alert {
+	background-position-y: -143px;
+}
+
 #tabs.ui-buttonset {
 	line-height: 35px;
 }
@@ -594,25 +598,15 @@ h1 {
 	top: 20px;
 }
 
-#nsdevices-device-noncompliant {
-	float: right;
-	position: absolute;
-	padding: 5px 13px 5px 10px;
-	right: 310px;
-	top: 19px;
-	background-color: #ffe3e6;
-	font-size: .9em;
-	border: 1px solid rgba(158,28,35,.2);
+
+
+#nsdevices-devicetabs #devicetoolbar .ui-button.alert {
+	color: rgba(158,28,35,1);
 }
 
-#nsdevices-device-noncompliant .icon {
-	float: left;
-	margin-right: -.3em;
-	margin-top: .1em;
-}
-
-#nsdevices-device-noncompliant .message {
-	margin-left: 8px;
+#nsdevices-devicetabs #devicetoolbar .ui-button.alert>span.ui-icon {
+	background-image: url(custom/images/ui-icons_cd0a0a_256x240.png);
+	background-position: 0 -143px;
 }
 
 #nsdevices-device .panel {

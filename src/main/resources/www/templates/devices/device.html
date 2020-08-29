@@ -2,13 +2,6 @@
 	<h1><%- name %></h1>
 </div>
 
-<% if (!compliant) { %>
-<div id="nsdevices-device-noncompliant">
-	<span class="ui-icon ui-icon-alert icon"></span>
-	<a href="#" class="message">Non compliant device</a>
-</div>
-<% } %>
-
 <div id="nsdevices-devicetabs">
 
 	<div id="devicetoolbar">
@@ -25,7 +18,7 @@
 		--><input type="radio" id="diagnostics" name="tabs" /><!--
 		--><label for="diagnostics">Diagnostics</label><!--
 		--><input type="radio" id="compliance" name="tabs" /><!--
-		--><label for="compliance">Compliance</label><!--
+		--><label for="compliance" class="<% if (!compliant) { %>alert<% } %>">Compliance</label><!--
 		--><input type="radio" id="tasks" name="tabs" /><!--
 		--><label for="tasks">Tasks</label>
 	</span>

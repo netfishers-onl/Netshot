@@ -239,11 +239,6 @@ define([
 			}
 			this.$('#tabs').trigger('change');
 
-			this.$('#nsdevices-device-noncompliant a').click(function() {
-				that.$('#compliance').click();
-				return false;
-			});
-
 			Backbone.history.navigate("/devices/" + this.model.get('id'));
 
 			return this;

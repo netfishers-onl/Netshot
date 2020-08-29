@@ -1101,19 +1101,19 @@ public class RestService extends Thread {
 		try {
 			List<Task> tasks = new ArrayList<Task>();
 			tasks.addAll(session.createQuery(
-					"select t from CheckComplianceTask t where t.device.id = :deviceId", CheckComplianceTask.class)
+					"select t from CheckComplianceTask t where t.device.id = :deviceId order by t.changeDate desc", CheckComplianceTask.class)
 					.setParameter("deviceId", id).setMaxResults(maxCount).list());
 			tasks.addAll(session.createQuery(
-					"select t from DiscoverDeviceTypeTask t where t.deviceId = :deviceId", DiscoverDeviceTypeTask.class)
+					"select t from DiscoverDeviceTypeTask t where t.deviceId = :deviceId order by t.changeDate desc", DiscoverDeviceTypeTask.class)
 					.setParameter("deviceId", id).setMaxResults(maxCount).list());
 			tasks.addAll(session.createQuery(
-					"select t from TakeSnapshotTask t where t.device.id = :deviceId", TakeSnapshotTask.class)
+					"select t from TakeSnapshotTask t where t.device.id = :deviceId order by t.changeDate desc", TakeSnapshotTask.class)
 					.setParameter("deviceId", id).setMaxResults(maxCount).list());
 			tasks.addAll(session.createQuery(
-					"select t from RunDeviceScriptTask t where t.device.id = :deviceId", RunDeviceScriptTask.class)
+					"select t from RunDeviceScriptTask t where t.device.id = :deviceId order by t.changeDate desc", RunDeviceScriptTask.class)
 					.setParameter("deviceId", id).setMaxResults(maxCount).list());
 			tasks.addAll(session.createQuery(
-					"select t from RunDiagnosticsTask t where t.device.id = :deviceId", RunDiagnosticsTask.class)
+					"select t from RunDiagnosticsTask t where t.device.id = :deviceId order by t.changeDate desc", RunDiagnosticsTask.class)
 					.setParameter("deviceId", id).setMaxResults(maxCount).list());
 			
 			Collections.sort(tasks, new Comparator<Task>() {

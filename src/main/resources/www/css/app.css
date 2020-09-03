@@ -182,6 +182,7 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	border: 2px solid transparent;
 	background-image: none;
 	background-color: transparent;
+	box-shadow: none;
 }
 
 .nstoolbar .ui-button-text {
@@ -230,6 +231,8 @@ th[role=columnheader]:not(.no-sort):hover:after {
 
 .ui-button {
 	outline-style: none;
+	box-shadow: 0 1px 0 rgba(27,31,35,.04), inset 0 1px 0 hsla(0,0%,100%,.25);
+	transition: background-color .2s cubic-bezier(.3,0,.5,1);
 }
 
 .ui-button.primary {

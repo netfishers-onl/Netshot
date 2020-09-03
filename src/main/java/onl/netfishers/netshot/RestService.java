@@ -3820,13 +3820,13 @@ public class RestService extends Thread {
 		private String type = "";
 
 		/** The group. */
-		private Long group = new Long(0);
+		private Long group = 0L;
 
 		/** The device. */
-		private Long device = new Long(0);
+		private Long device = 0L;
 
 		/** The domain. */
-		private Long domain = new Long(0);
+		private Long domain = 0L;
 
 		/** The subnets. */
 		private String subnets = "";

@@ -93,6 +93,7 @@ function _connect(_function, _protocol, _options, _logger) {
 		},
 		
 		_macro: function(macro) {
+			_cli.trace("Macro '" + macro + "' was called (current mode is '" + this._mode + "').");
 			if (this.recursion++ > 10) {
 				throw "Too many steps while switching to a new mode.";
 			}
@@ -155,6 +156,7 @@ function _connect(_function, _protocol, _options, _logger) {
 			this._modeHistory.push(this._mode);
 			this._strictPrompt = _cli.getLastExpectMatchGroup(1);
 			if (this._mode == this._runningTarget) {
+				_cli.trace("Reached target mode '" + this._mode + "'.");
 				return;
 			}
 			if (typeof(CLI[this._mode].fail) == "string") {

@@ -240,6 +240,8 @@ public abstract class CliScript {
 					try {
 						sshTried = true;
 						cli.connect();
+						taskLogger.info(String.format("Connected using SSH to %s:%d using credentials %s.",
+								address.getIp(), sshPort, credentialSet.getName()));
 						this.run(session, device, cli, null, DriverProtocol.SSH, (DeviceCliAccount) credentialSet);
 						return;
 					}
@@ -252,10 +254,12 @@ public abstract class CliScript {
 					catch (Exception e) {
 						logger.warn("Unable to open an SSH connection to {}:{}.", address.getIp(), sshPort, e);
 						if (e.getMessage().contains("Auth fail")) {
-							taskLogger.warn(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()));
+							taskLogger.warn(String.format("Authentication failed %s:%d using SSH credential set %s.",
+									address, sshPort, credentialSet.getName()));
 						}
 						else {
-							taskLogger.warn("Unable to open an SSH socket to the device.");
+							taskLogger.warn(String.format("Unable to open an SSH socket to %s:%d: %s",
+									address.getIp(), sshPort, e.getMessage()));
 							sshOpened = false;
 							break;
 						}
@@ -273,6 +277,7 @@ public abstract class CliScript {
 					try {
 						telnetTried = true;
 						cli.connect();
+						taskLogger.info(String.format("Connected using Telnet to %s:%d.", address.getIp(), telnetPort));
 						this.run(session, device, cli, null, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
 						return;
 					}
@@ -284,7 +289,7 @@ public abstract class CliScript {
 					}
 					catch (IOException e) {
 						logger.warn("Unable to open a Telnet connection to {}:{}.", address.getIp(), telnetPort, e);
-						taskLogger.warn("Unable to open a Telnet socket to the device.");
+						taskLogger.warn(String.format("Unable to open a Telnet socket to %s:%d.", address.getIp(), telnetPort));
 						telnetOpened = false;
 						break;
 					}
@@ -312,7 +317,7 @@ public abstract class CliScript {
 					}
 					catch (IOException e) {
 						logger.warn("Unable to poll {} using SNMP credential set {}", address.getIp(), credentialSet.getName());
-						taskLogger.warn("Unable to poll " + address.getIp() + " using SNMP credential set " + credentialSet.getName());
+						taskLogger.warn(String.format("Unable to poll %s using SNMP credential set %s", address.getIp(), credentialSet.getName()));
 					}
 					finally {
 						poller.stop();
@@ -341,6 +346,8 @@ public abstract class CliScript {
 						try {
 							sshTried = true;
 							cli.connect();
+							taskLogger.info(String.format("Connected using SSH to %s:%d using credentials %s.",
+									address.getIp(), sshPort, credentialSet.getName()));
 							this.run(session, device, cli, null, DriverProtocol.SSH, (DeviceCliAccount) credentialSet);
 							Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
 							while (ci.hasNext()) {
@@ -364,7 +371,8 @@ public abstract class CliScript {
 								taskLogger.warn(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()));
 							}
 							else {
-								taskLogger.warn("Unable to open an SSH socket to the device.");
+								taskLogger.warn(String.format("Unable to open an SSH socket to %s:%d: %s",
+										address.getIp(), sshPort, e.getMessage()));
 								break;
 							}
 						}
@@ -382,6 +390,7 @@ public abstract class CliScript {
 						try {
 							telnetTried = true;
 							cli.connect();
+							taskLogger.info(String.format("Connected using Telnet to %s:%d.", address.getIp(), telnetPort));
 							this.run(session, device, cli, null, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
 							Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
 							while (ci.hasNext()) {
@@ -401,7 +410,7 @@ public abstract class CliScript {
 						}
 						catch (IOException e) {
 							logger.warn("Unable to open a Telnet connection to {}:{}.", address.getIp(), telnetPort, e);
-							taskLogger.warn("Unable to open a Telnet socket to the device.");
+							taskLogger.warn(String.format("Unable to open a Telnet socket to %s:%d.", address.getIp(), telnetPort));
 							telnetOpened = false;
 							break;
 						}
@@ -438,7 +447,7 @@ public abstract class CliScript {
 						}
 						catch (IOException e) {
 							logger.warn("Unable to poll {} using SNMP credential set {}", address.getIp(), credentialSet.getName());
-							taskLogger.warn("Unable to poll " + address.getIp() + " using SNMP credential set " + credentialSet.getName());
+							taskLogger.warn(String.format("Unable to poll %s using SNMP credential set %s", address.getIp(), credentialSet.getName()));
 							break;
 						}
 						finally {

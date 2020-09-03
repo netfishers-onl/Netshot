@@ -53,18 +53,48 @@ public class Ssh extends Cli {
 
 	/** Default value for the SSH connection timeout */
 	static private int DEFAULT_CONNECTION_TIMEOUT = 5000;
+	
+	static private String[] DEFAULT_SSH_KEX_ALGORITHMS = {
+		"diffie-hellman-group18-sha512", "diffie-hellman-group16-sha512", "diffie-hellman-group14-sha256", "diffie-hellman-group14-sha1",
+		"diffie-hellman-group-exchange-sha256", "diffie-hellman-group-exchange-sha1", "diffie-hellman-group1-sha1",
+	};
+	
+	static private String[] DEFAULT_SSH_CIPHERS = {
+		"aes128-gcm@openssh.com", "aes128-ctr", "aes128-cbc", "3des-ctr", "3des-cbc", "blowfish-cbc", "aes192-ctr",
+		"aes192-cbc", "aes256-gcm@openssh.com", "aes256-ctr", "aes256-cbc",
+	};
+	
+	static private String[] DEFAULT_SSH_MACS = {
+		"hmac-md5-etm@openssh.com", "hmac-sha1-etm@openssh.com", "hmac-sha2-256-etm@openssh.com", "hmac-sha2-512-etm@openssh.com",
+		"hmac-sha1-96-etm@openssh.com", "hmac-md5-96-etm@openssh.com", "hmac-md5", "hmac-sha1", "hmac-sha2-256", "hmac-sha2-512",
+		"hmac-sha1-96", "hmac-md5-96",
+	};
+	
+	static private String[] DEFAULT_SSH_HOST_KEY_ALGORITHMS = {
+		"rsa-sha2-256", "rsa-sha2-512", "ssh-rsa", "ssh-dss",
+	};
 
 	static {
 		Security.insertProviderAt(new BouncyCastleProvider(), 1);
 
 		int configuredConnectionTimeout = Netshot.getConfig("netshot.cli.ssh.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT);
 		if (configuredConnectionTimeout < 1) {
-			logger.error("Invalid value {} for {}", configuredConnectionTimeout, "netshot.cli.ssh.connectiontimeout");			
+			logger.error("Invalid value {} for {}", configuredConnectionTimeout, "netshot.cli.ssh.connectiontimeout");
 		}
 		else {
 			DEFAULT_CONNECTION_TIMEOUT = configuredConnectionTimeout;
 		}
 		logger.info("The default connection timeout value for SSH sessions is {}s", DEFAULT_CONNECTION_TIMEOUT);
+		
+
+		JSch.setConfig("kex", Netshot.getConfig("netshot.cli.ssh.kexalgorithms", String.join(",", DEFAULT_SSH_KEX_ALGORITHMS)));
+		JSch.setConfig("server_host_key", Netshot.getConfig("netshot.cli.ssh.hostkeyalgorithms", String.join(",", DEFAULT_SSH_HOST_KEY_ALGORITHMS)));
+		JSch.setConfig("cipher.c2s", Netshot.getConfig("netshot.cli.ssh.ciphers", String.join(",", DEFAULT_SSH_CIPHERS)));
+		JSch.setConfig("cipher.s2c", Netshot.getConfig("netshot.cli.ssh.ciphers", String.join(",", DEFAULT_SSH_CIPHERS)));
+		JSch.setConfig("mac.c2s", Netshot.getConfig("netshot.cli.ssh.macs", String.join(",", DEFAULT_SSH_MACS)));
+		JSch.setConfig("mac.s2c", Netshot.getConfig("netshot.cli.ssh.macs", String.join(",", DEFAULT_SSH_MACS)));
+		JSch.setConfig("CheckKexes", "diffie-hellman-group14-sha1,diffie-hellman-group14-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521");
+		
 	}
 	
 	/** The port. */
@@ -186,11 +216,15 @@ public class Ssh extends Cli {
 					}
 					@Override
 					public byte[] getSignature(byte[] data) {
-					    return kpair.getSignature(data);
+						return kpair.getSignature(data);
+					}
+					@Override
+					public byte[] getSignature(byte[] data, String alg) {
+						return kpair.getSignature(data, alg);
 					}
 					@Override
 					public byte[] getPublicKeyBlob() {
-					    return kpair.getPublicKeyBlob();
+						return kpair.getPublicKeyBlob();
 					}
 					@Override
 					public String getName() {

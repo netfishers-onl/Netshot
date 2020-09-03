@@ -86,7 +86,7 @@ public class TaskJob implements Job {
 			session.close();
 		}
 
-		logger.trace("Running the task {} of type {}", id, task.getClass().getName());
+		logger.warn("Running the task {} of type {}", id, task.getClass().getName());
 		task.run();
 
 		if (task.getStatus() == Status.RUNNING) {
@@ -133,7 +133,7 @@ public class TaskJob implements Job {
 			logger.error("Unable to repeat the task {} again.", id);
 		}
 
-		logger.trace("End of task {}.", id);
+		logger.warn("End of task {}.", id);
 
 	}
 

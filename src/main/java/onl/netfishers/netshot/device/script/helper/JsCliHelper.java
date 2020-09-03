@@ -19,6 +19,7 @@
 package onl.netfishers.netshot.device.script.helper;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.regex.Matcher;
 
 import org.slf4j.Logger;
@@ -57,7 +58,7 @@ public class JsCliHelper {
 	private static String toHexAscii(String text) {
 		StringBuffer hex = new StringBuffer();
 		for (int i = 0; i < text.length(); i++) {
-			if (i % 16 == 0 && i > 0) {
+			if (i % 32 == 0 && i > 0) {
 				hex.append("\n");
 			}
 			hex.append(" ").append(String.format("%02x", (int) text.charAt(i)));
@@ -111,8 +112,10 @@ public class JsCliHelper {
 			command = "";
 		}
 		if (this.cliLogger != null) {
-			this.cliLogger.trace("About to send the following command: '" + command + "'");
-			this.cliLogger.trace("In hex: " + toHexAscii(command));
+			this.cliLogger.trace(Instant.now() + " About to send the following command:");
+			this.cliLogger.trace(command);
+			this.cliLogger.trace("Hexadecimal:");
+			this.cliLogger.trace(toHexAscii(command));
 		}
 		command = command.replaceAll("\\$\\$NetshotUsername\\$\\$",
 				Matcher.quoteReplacement(account.getUsername()));
@@ -126,21 +129,37 @@ public class JsCliHelper {
 		}
 		try {
 			logger.debug("Command to be sent: '{}'.", command);
+			if (this.cliLogger != null) {
+				this.cliLogger.trace("Expecting one of the following " + expects.length +
+						" pattern(s) within " + (timeout > 0 ? timeout : oldTimeout) + "ms:");
+				for (String expect : expects) {
+					this.cliLogger.trace(expect);
+				}
+			}
 			String result = cli.send(command, expects);
 			if (this.cliLogger != null) {
-				this.cliLogger.trace("Received the following output: '" + result + "'");
-				this.cliLogger.trace("In hex: " + toHexAscii(result));
+				this.cliLogger.trace(Instant.now() + " Received the following output:");
+				this.cliLogger.trace(cli.getLastFullOutput());
+				this.cliLogger.trace("Hexadecimal:");
+				this.cliLogger.trace(toHexAscii(cli.getLastFullOutput()));
+				this.cliLogger.trace("The following pattern matched:");
+				this.cliLogger.trace(this.getLastExpectMatchPattern());
 			}
 			return result;
 		}
 		catch (IOException e) {
 			logger.error("CLI I/O error.", e);
 			this.taskLogger.error("I/O error: " + e.getMessage());
+			if (this.cliLogger != null) {
+				this.cliLogger.trace(Instant.now() + " I/O exception: " + e.getMessage());
+			}
 			if (e instanceof WithBufferIOException) {
 				String buffer = ((WithBufferIOException) e).getReceivedBuffer().toString();
 				if (this.cliLogger != null) {
-					this.cliLogger.trace("Received buffer: '" + buffer + "'");
-					this.cliLogger.trace("In hex: " + toHexAscii(buffer));
+					this.cliLogger.trace(Instant.now() + " The receive buffer is:");
+					this.cliLogger.trace(buffer);
+					this.cliLogger.trace("Hexadecimal:");
+					this.cliLogger.trace(toHexAscii(buffer));
 				}
 			}
 			this.errored = true;
@@ -149,6 +168,16 @@ public class JsCliHelper {
 			cli.setCommandTimeout(oldTimeout);
 		}
 		return null;
+	}
+	
+	/**
+	 * Add a trace message to the debug log.
+	 * @param message The message to add
+	 */
+	public void trace(String message) {
+		if (this.cliLogger != null) {
+			this.cliLogger.trace(Instant.now() + " " + message);
+		}
 	}
 
 	/**

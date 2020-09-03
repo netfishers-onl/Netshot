@@ -162,14 +162,14 @@ public class Radius {
 		AttributeList attributeList = new AttributeList();
 		attributeList.add(new Attr_UserName(username));
 		attributeList.add(new Attr_NASPortType(Attr_NASPortType.Ethernet));
-		attributeList.add(new Attr_NASPort(new Long(1)));
+		attributeList.add(new Attr_NASPort(1));
 
 		for (RadiusClient radiusClient : clients) {
 			AccessRequest request = new AccessRequest(radiusClient, attributeList);
 			request.addAttribute(new Attr_UserPassword(password));
 			RadiusResponse reply;
 			try {
-				reply = radiusClient.authenticate(request, authMethod.newInstance(), 3);
+				reply = radiusClient.authenticate(request, authMethod.getDeclaredConstructor().newInstance(), 3);
 				if (reply == null) {
 					logger.error("Request to RADIUS server {} timed out.", radiusClient.getRemoteInetAddress().toString());
 					aaaLogger.error(MarkerFactory.getMarker("AAA"), "Request to RADIUS server {} timed out.",

@@ -138,7 +138,7 @@ public class TaskManager {
 
 		JobDetail job = JobBuilder.newJob(TaskJob.class)
 				.withIdentity(task.getIdentity()).build();
-		job.getJobDataMap().put(TaskJob.NETSHOT_TASK, new Long(task.getId()));
+		job.getJobDataMap().put(TaskJob.NETSHOT_TASK, task.getId());
 		Date when = task.getNextExecutionDate();
 		Trigger trigger;
 		if (when == null) {

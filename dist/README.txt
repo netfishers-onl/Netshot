@@ -12,6 +12,16 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.15.2 - 2020-09-04
+
+* Minor UI improvements/fixes
+* Fix for PostgreSQL mapped table names
+* SSH library upgrade and SSH parameters exposed to netshot.conf
+* Fix for group folders with special characters
+* More debug and logs on tasks
+* Cisco IOS - fix Catalyst 3560 reported family and add more Catalyst 9k
+
+
 0.15.1 - 2020-07-30
 
 * Minor UI improvements/fixes

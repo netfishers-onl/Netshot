@@ -215,7 +215,8 @@ public class Database {
 				}
 			}
 			String newName = buf.toString().toLowerCase();
-			return Identifier.toIdentifier(newName);
+			Identifier newIdentifier = Identifier.toIdentifier(newName, true);
+			return newIdentifier;
 		}
 	}
 
@@ -231,13 +232,6 @@ public class Database {
 		public ImprovedImplicitNamingStrategy() {
 		}
 
-		/**
-		 * The determinePrimaryTableName.
-		 *
-		 * @param source
-		 *                 the source.
-		 * @return the identifier.
-		 */
 		@Override
 		public Identifier determinePrimaryTableName(ImplicitEntityNameSource source) {
 			if (source == null) {
@@ -255,13 +249,6 @@ public class Database {
 			return toIdentifier(tableName, source.getBuildingContext());
 		}
 
-		/**
-		 * The determinePrimaryTableName.
-		 *
-		 * @param entityNaming
-		 *                       the source.
-		 * @return the identifier.
-		 */
 		protected String transformEntityName(EntityNaming entityNaming) {
 			// prefer the JPA entity name, if specified...
 			if (StringHelper.isNotEmpty(entityNaming.getJpaEntityName())) {
@@ -273,13 +260,6 @@ public class Database {
 			}
 		}
 
-		/**
-		 * The determinePrimaryTableName.
-		 *
-		 * @param source
-		 *                 the source.
-		 * @return the identifier.
-		 */
 		@Override
 		public Identifier determineJoinTableName(ImplicitJoinTableNameSource source) {
 			final String ownerPortion = source.getOwningPhysicalTableName();
@@ -294,13 +274,6 @@ public class Database {
 			return toIdentifier(ownerPortion + "_" + ownedPortion, source.getBuildingContext());
 		}
 
-		/**
-		 * The determinePrimaryTableName.
-		 *
-		 * @param source
-		 *                 the source.
-		 * @return the identifier.
-		 */
 		@Override
 		public Identifier determineCollectionTableName(ImplicitCollectionTableNameSource source) {
 			final String owningEntity = transformEntityName(source.getOwningEntityNaming());
@@ -488,8 +461,9 @@ public class Database {
 		 */
 		protected Identifier toIdentifier(String stringForm, MetadataBuildingContext buildingContext) {
 
-			return buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment().getIdentifierHelper()
+			Identifier i = buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment().getIdentifierHelper()
 					.toIdentifier(stringForm);
+			return i;
 		}
 	}
 

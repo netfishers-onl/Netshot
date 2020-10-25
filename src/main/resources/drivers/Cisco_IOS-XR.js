@@ -266,7 +266,7 @@ function snapshot(cli, device, config, debug) {
 			continue;
 		}
 		device.add("module", module);
-		if (module.slot.match(/Chassis/)) {
+		if (module.slot.match(/Chassis|Rack 0/)) {
 			device.set("serialNumber", module.serialNumber);
 			if (module.slot.match(/NCS55[0-9A-Z][0-9A-Z]/)) {
 				device.set("family", "Cisco NCS5500");

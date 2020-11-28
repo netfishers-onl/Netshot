@@ -278,6 +278,7 @@ function _connect(_function, _protocol, _options, _logger) {
 					indent = -1;
 				}
 				if (indent == -1) {
+					regex.lastIndex = 0;
 					var match = regex.exec(line);
 					if (match) {
 						indent = i;

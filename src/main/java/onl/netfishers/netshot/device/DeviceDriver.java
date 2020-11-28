@@ -24,6 +24,7 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -38,16 +39,15 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import javax.persistence.Transient;
-import javax.script.Bindings;
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Engine;
+import org.graalvm.polyglot.Source;
+import org.graalvm.polyglot.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -57,7 +57,6 @@ import onl.netfishers.netshot.collector.SnmpTrapReceiver;
 import onl.netfishers.netshot.collector.SyslogServer;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
-import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
 import onl.netfishers.netshot.work.TaskLogger;
 import onl.netfishers.netshot.work.Task;
 
@@ -140,7 +139,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	};
 
 	/** The Javascript loader code. */
-	private static String JSLOADER;
+	private static Source JSLOADER_SOURCE;
 
 	static {
 		try {
@@ -156,7 +155,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			}
 			reader.close();
 			in.close();
-			JSLOADER = buffer.toString();
+			JSLOADER_SOURCE = Source.create("js", buffer.toString());
 			logger.debug("The JavaScript driver loader code has been read from the resource JS file.");
 		}
 		catch (Exception e) {
@@ -222,9 +221,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 				});
 				for (File file : files) {
 					logger.info("Found user device driver file {}.", file);
+					Reader reader = null;
 					try {
 						InputStream stream = new FileInputStream(file);
-						DeviceDriver driver = new DeviceDriver(stream);
+						reader = new InputStreamReader(stream);
+						DeviceDriver driver = new DeviceDriver(reader, file.getName());
 						if (drivers.containsKey(driver.getName())) {
 							logger.warn("Skipping user device driver file {}, because a similar driver is already loaded.",
 									file);
@@ -235,6 +236,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 					}
 					catch (Exception e) {
 						logger.error("Error while loading user device driver {}.", file, e);
+					}
+					finally {
+						if (reader != null) {
+							reader.close();
+						}
 					}
 				}
 			}
@@ -257,9 +263,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 				});
 				for (File file : files) {
 					logger.info("Found Netshot device driver file {}.", file);
+					Reader reader = null;
 					try {
 						InputStream stream = DeviceDriver.class.getResourceAsStream("/" + driverPathName + file.getName());
-						DeviceDriver driver = new DeviceDriver(stream);
+						reader = new InputStreamReader(stream);
+						DeviceDriver driver = new DeviceDriver(reader, file.getName());
 						if (drivers.containsKey(driver.getName())) {
 							logger.warn("Skipping Netshot device driver file {}, because a similar driver is already loaded.",
 									file);
@@ -270,6 +278,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 					}
 					catch (Exception e1) {
 						logger.error("Error while loading the device driver {}.", file, e1);
+					}
+					finally {
+						if (reader != null) {
+							reader.close();
+						}
 					}
 				}
 			}
@@ -285,9 +298,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 					final JarEntry je = e.nextElement();
 					if (!je.isDirectory() && je.getName().startsWith(driverPathName)) {
 						logger.info("Found Netshot device driver file {} (in jar).", file);
+						Reader reader = null;
 						try {
 							InputStream stream = jar.getInputStream(je);
-							DeviceDriver driver = new DeviceDriver(stream);
+							reader = new InputStreamReader(stream);
+							DeviceDriver driver = new DeviceDriver(reader, je.getName().replace(driverPathName, ""));
 							if (drivers.containsKey(driver.getName())) {
 								logger.warn("Skipping Netshot device driver file {}, because a similar driver is already loaded.",
 										file);
@@ -298,6 +313,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						}
 						catch (Exception e1) {
 							logger.error("Error while loading the device driver {} from jar file.", file, e1);
+						}
+						finally {
+							if (reader != null) {
+								reader.close();
+							}
 						}
 					}
 				}
@@ -343,9 +363,12 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	/** Set to true if the driver can identify a relevant device based on SNMP sysObjectId and name */
 	private boolean canSnmpAutodiscover = true;
-
-	/** The JS engine */
-	private ScriptEngine engine;
+	
+	/** The source code */
+	private Source source;
+	
+	/** The execution engine (for eval caching) */
+	private Engine engine;
 
 	/** Instantiates a new device driver (empty constructor) */
 	protected DeviceDriver() {
@@ -353,37 +376,40 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	/**
 	 * Instantiates a new device driver.
-	 * @param in The stream to read the JavaScript driver code from
+	 * @param reader The reader to access the JavaScript driver code
+	 * @param sourceName The name of the driver source
 	 * @throws Exception something went wrong
 	 */
-	protected DeviceDriver(InputStream in) throws Exception {
-		engine = new ScriptEngineManager().getEngineByName("nashorn");
-
-		engine.eval("delete load, com, edu, java, javafx, javax, org, JavaImporter, Java, loadWithNewGlobal;");
-		engine.eval(new InputStreamReader(in));
-		engine.eval(DeviceDriver.JSLOADER);
-
+	protected DeviceDriver(Reader reader, String sourceName) throws Exception {
+		source = Source.newBuilder("js", reader, sourceName).buildLiteral();
+		this.engine = Engine.create();
+		Context context = getContext();
 
 		try {
-			Object info = JsDeviceHelper.toBindings(engine, "Info");
-			this.name = JsDeviceHelper.toString(info, "name");
-			this.author = JsDeviceHelper.toString(info, "author");
-			this.description = JsDeviceHelper.toString(info, "description");
-			this.version = JsDeviceHelper.toString(info, "version");
-			this.priority = JsDeviceHelper.toInteger(info, "priority", 65536);
+			Value info = context.getBindings("js").getMember("Info");
+			this.name = info.getMember("name").asString();
+			this.author = info.getMember("author").asString();
+			this.description = info.getMember("description").asString();
+			this.version = info.getMember("version").asString();
+			try {
+				this.priority = info.getMember("priority").asInt();
+			}
+			catch (Exception e) {
+				this.priority = 65536;
+			}
 		}
 		catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("Invalid Info object.", e);
 		}
 
 		try {
-			Bindings config = JsDeviceHelper.toBindings(engine, "Config");
-			for (String key : config.keySet()) {
+			Value config = context.getBindings("js").getMember("Config");
+			for (String key : config.getMemberKeys()) {
 				if (key == null || !key.matches("^[a-z][a-zA-Z0-9]+$")) {
 					throw new IllegalArgumentException(String.format("Invalid config item %s.", key));
 				}
 				try {
-					Object data = JsDeviceHelper.toBindings(config, key);
+					Value data = config.getMember(key);
 					AttributeDefinition item = new AttributeDefinition(AttributeLevel.CONFIG, key, data);
 					this.attributes.add(item);
 				}
@@ -396,13 +422,13 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			throw new IllegalArgumentException("Invalid Config object.", e);
 		}
 		try {
-			Bindings device = JsDeviceHelper.toBindings(engine, "Device");
-			for (String key : device.keySet()) {
+			Value device = context.getBindings("js").getMember("Device");
+			for (String key : device.getMemberKeys()) {
 				if (key == null || !key.matches("^[a-z][a-zA-Z0-9]+$")) {
 					throw new IllegalArgumentException(String.format("Invalid device item %s.", key));
 				}
 				try {
-					Object data = JsDeviceHelper.toBindings(device, key);
+					Value data = device.getMember(key);
 					AttributeDefinition item = new AttributeDefinition(AttributeLevel.DEVICE, key, data);
 					this.attributes.add(item);
 				}
@@ -416,27 +442,21 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		}
 
 		try {
-			Bindings cli = JsDeviceHelper.toBindings(engine, "CLI");
-			if (cli.containsKey("ssh") && cli.get("ssh") instanceof Bindings) {
+			Value cli = context.getBindings("js").getMember("CLI");
+			if (cli.hasMember("ssh")) {
 				this.protocols.add(DriverProtocol.SSH);
-				Bindings ssh = (Bindings) cli.get("ssh");
-				try {
-					Bindings macros = (Bindings) ssh.get("macros");
-					this.cliMainModes.addAll(macros.keySet());
-				}
-				catch (Exception e) {
-					// Not a problem
+				Value ssh = cli.getMember("ssh");
+				if (ssh.hasMembers() && ssh.hasMember("macros")) {
+					Value macros = ssh.getMember("macros");
+					this.cliMainModes.addAll(macros.getMemberKeys());
 				}
 			}
-			if (cli.containsKey("telnet") && cli.get("telnet") instanceof Bindings) {
+			if (cli.hasMember("telnet")) {
 				this.protocols.add(DriverProtocol.TELNET);
-				Bindings telnet = (Bindings) cli.get("telnet");
-				try {
-					Bindings macros = (Bindings) telnet.get("macros");
-					this.cliMainModes.addAll(macros.keySet());
-				}
-				catch (Exception e) {
-					// Not a problem
+				Value telnet = cli.getMember("telnet");
+				if (telnet.hasMembers() && telnet.hasMember("macros")) {
+					Value macros = telnet.getMember("macros");
+					this.cliMainModes.addAll(macros.getMemberKeys());
 				}
 			}
 		}
@@ -445,8 +465,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		}
 
 		try {
-			JsDeviceHelper.toBindings(engine, "SNMP");
-			this.protocols.add(DriverProtocol.SNMP);
+			if (context.getBindings("js").hasMember("SNMP")) {
+				this.protocols.add(DriverProtocol.SNMP);
+			}
 		}
 		catch (IllegalArgumentException e) {
 		}
@@ -454,8 +475,15 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		if (this.protocols.size() == 0) {
 			throw new IllegalArgumentException("Invalid driver, it supports neither Telnet nor SSH.");
 		}
-
-		this.testFunction("snapshot");
+		
+		try {
+			if (!context.getBindings("js").getMember("snapshot").canExecute()) {
+				throw new Exception();
+			}
+		}
+		catch (Exception e) {
+			throw new IllegalArgumentException("Invalid driver, the 'snapshot' function cannot be found.");
+		}
 
 		logger.info("Loaded driver {}.", this);
 	}
@@ -471,13 +499,14 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			return false;
 		}
 		try {
-			Object result = ((Invocable) engine).invokeFunction("_analyzeSyslog", message, JS_SYSLOG_LOGGER);
-			if (result != null && result instanceof Boolean && (Boolean) result) {
-				return true;
+			Context context = this.getContext();
+			Value result = context.getBindings("js").getMember("_analyzeSyslog").execute(message, JS_SYSLOG_LOGGER);
+			if (result != null && result.isBoolean()) {
+				return result.asBoolean();
 			}
 		}
 		catch (Exception e) {
-			if (e instanceof ScriptException && e.getMessage() != null &&
+			if (e instanceof UnsupportedOperationException && e.getMessage() != null &&
 					e.getMessage().contains("No analyzeSyslog function.")) {
 				logger.info("The driver {} has no analyzeSyslog function. Won't be called again.", name);
 				this.canAnalyzeSyslog = false;
@@ -494,13 +523,14 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			return false;
 		}
 		try {
-			Object result = ((Invocable) engine).invokeFunction("_analyzeTrap", data, JS_SNMP_LOGGER);
-			if (result != null && result instanceof Boolean && (Boolean) result) {
-				return true;
+			Context context = this.getContext();
+			Value result = context.getBindings("js").getMember("_analyzeTrap").execute(data, JS_SNMP_LOGGER);
+			if (result != null && result.isBoolean()) {
+				return result.asBoolean();
 			}
 		}
 		catch (Exception e) {
-			if (e instanceof ScriptException && e.getMessage() != null &&
+			if (e instanceof UnsupportedOperationException && e.getMessage() != null &&
 					e.getMessage().contains("No analyzeTrap function.")) {
 				logger.info("The driver {} has no analyzeTrap function. Won't be called again.", name);
 				this.canAnalyzeTraps = false;
@@ -553,8 +583,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	}
 	
 	@Transient
-	public ScriptEngine getEngine() {
-		return engine;
+	public Context getContext() {
+		Context context = Context.newBuilder().engine(this.engine).build();
+		context.eval(this.source);
+		context.eval(JSLOADER_SOURCE);
+		return context;
 	}
 	
 	protected void setProtocols(Set<DriverProtocol> protocols) {
@@ -574,39 +607,23 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			return false;
 		}
 		try {
-			Object result = ((Invocable) engine).invokeFunction("_snmpAutoDiscover", sysObjectId, sysDesc, taskLogger);
-			if (result != null && result instanceof Boolean) {
-				return (Boolean) result;
+			Context context = this.getContext();
+			Value result = context.getBindings("js").getMember("_snmpAutoDiscover").execute(sysObjectId, sysDesc, taskLogger);
+			if (result != null && result.isBoolean()) {
+				return result.asBoolean();
 			}
 		}
 		catch (Exception e) {
-			if (e instanceof ScriptException && e.getMessage() != null &&
+			if (e instanceof UnsupportedOperationException && e.getMessage() != null &&
 					e.getMessage().contains("No snmpAutoDiscover function.")) {
 				logger.info("The driver {} has no snmpAutoDiscover function.", name);
 				this.canSnmpAutodiscover = false;
 			}
 			else {
-				logger.error("Error while running _identify function on driver {}.", name, e);
+				logger.error("Error while running _snmpAutoDiscover function on driver {}.", name, e);
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * Test whether a function exists in the Javascript driver code.
-	 * @param function The name of the function to look for
-	 * @throws IllegalArgumentException if something went wrong
-	 */
-	protected void testFunction(String function) throws IllegalArgumentException {
-		try {
-			((Invocable) engine).invokeFunction(function);
-		}
-		catch (NoSuchMethodException e) {
-			throw new IllegalArgumentException(String.format("The function %s doesn't exist.", function));
-		}
-		catch (Exception e) {
-
-		}
 	}
 
 	@Override

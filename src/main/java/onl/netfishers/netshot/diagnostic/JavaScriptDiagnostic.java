@@ -20,13 +20,13 @@ package onl.netfishers.netshot.diagnostic;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.graalvm.polyglot.Context;
 
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
@@ -96,9 +96,9 @@ public class JavaScriptDiagnostic extends Diagnostic {
 	}
 
 	@Override
-	public Object getJsObject(Device device, ScriptEngine engine, ScriptContext scriptContext) throws ScriptException {
-		engine.eval(this.getScript(), scriptContext);
-		return scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).get("diagnose");
+	public Object getJsObject(Device device, Context context) throws ScriptException {
+		context.eval("js", this.getScript());
+		return context.getBindings("js").getMember("diagnose");
 	}
-  
+
 }

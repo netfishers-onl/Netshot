@@ -20,12 +20,8 @@ package onl.netfishers.netshot.device.script;
 
 import java.io.IOException;
 
-import javax.script.Invocable;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
-import javax.script.SimpleScriptContext;
-
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.PolyglotException;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +73,7 @@ public class JsCliScript extends CliScript {
 
 	@Override
 	protected void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
-			throws InvalidCredentialsException, IOException, ScriptException, MissingDeviceDriverException {
+			throws InvalidCredentialsException, IOException, UnsupportedOperationException, MissingDeviceDriverException {
 		JsCliHelper jsCliHelper = null;
 		JsSnmpHelper jsSnmpHelper = null;
 		switch (protocol) {
@@ -92,16 +88,13 @@ public class JsCliScript extends CliScript {
 		TaskLogger taskLogger = this.getJsLogger();
 		DeviceDriver driver = device.getDeviceDriver();
 		try {
-			ScriptEngine engine = driver.getEngine();
-			ScriptContext scriptContext = new SimpleScriptContext();
-			scriptContext.setBindings(engine.getContext().getBindings(ScriptContext.ENGINE_SCOPE),
-					ScriptContext.ENGINE_SCOPE);
-			engine.eval(code, scriptContext);
+			Context context = driver.getContext();
+			context.eval("js", code);
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
 			options.setDevice(new JsDeviceHelper(device, null, taskLogger, false));
-			((Invocable) engine).invokeFunction("_connect", "run", protocol.value(), options, taskLogger);
+			context.getBindings("js").getMember("_connect").execute("run", protocol.value(), options, taskLogger);
 		}
-		catch (ScriptException e) {
+		catch (PolyglotException e) {
 			logger.error("Error while running script using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("Error while running script  using driver %s: '%s'.",
 					driver.getName(), e.getMessage()));
@@ -112,11 +105,11 @@ public class JsCliScript extends CliScript {
 				throw e;
 			}
 		}
-		catch (NoSuchMethodException e) {
+		catch (UnsupportedOperationException e) {
 			logger.error("No such method while using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("No such method while using driver %s to execute script: '%s'.",
 					driver.getName(), e.getMessage()));
-			throw new ScriptException(e);
+			throw new UnsupportedOperationException(e);
 		}
 	}
 }

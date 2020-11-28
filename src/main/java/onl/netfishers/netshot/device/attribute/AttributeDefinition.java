@@ -1,7 +1,8 @@
 package onl.netfishers.netshot.device.attribute;
 
-import javax.script.Bindings;
 import javax.xml.bind.annotation.XmlElement;
+
+import org.graalvm.polyglot.Value;
 
 import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
 
@@ -50,14 +51,14 @@ public class AttributeDefinition {
 		this.checkable = checkable;
 	}
 	
-	public AttributeDefinition(AttributeLevel level, String name, Object data) throws Exception {
+	public AttributeDefinition(AttributeLevel level, String name, Value data) throws Exception {
 		this.level = level;
 		this.name = name;
-		this.title = JsDeviceHelper.toString(data, "title");
+		this.title = data.getMember("title").asString();
 		if (!this.title.matches("^[0-9A-Za-z\\-_\\(\\)][0-9A-Za-z \\-_\\(\\)]+$")) {
 			throw new IllegalArgumentException("Invalid title for item %s.");
 		}
-		String type = JsDeviceHelper.toString(data, "type");
+		String type = data.getMember("type").asString();
 		if (type.equals("Text")) {
 			this.type = AttributeType.TEXT;
 		}
@@ -76,42 +77,34 @@ public class AttributeDefinition {
 		else {
 			throw new IllegalArgumentException("Invalid type for item %s.");
 		}
-		this.searchable = JsDeviceHelper.toBoolean(data, "searchable", false);
-		this.comparable = JsDeviceHelper.toBoolean(data, "comparable", false);
-		this.checkable = JsDeviceHelper.toBoolean(data, "checkable", false);
-		Object dump = JsDeviceHelper.toObject(data, "dump", Boolean.FALSE);
-		if (dump != null) {
-			if (dump instanceof Boolean) {
-				this.dump = (Boolean) dump;
-			}
-			else if (dump instanceof Bindings) {
-				this.dump = true;
-				try {
-					this.preDump = JsDeviceHelper.toString(dump, "pre");
-				}
-				catch (Exception e) {
-				}
-				try {
-					this.preLineDump = JsDeviceHelper.toString(dump, "preLine");
-				}
-				catch (Exception e) {
-				}
-				try {
-					this.postDump = JsDeviceHelper.toString(dump, "post");
-				}
-				catch (Exception e) {
-				}
-				try {
-					this.postLineDump = JsDeviceHelper.toString(dump, "postLine");
-				}
-				catch (Exception e) {
-				}
+		this.searchable = JsDeviceHelper.getBooleanMember(data, "searchable", false);
+		this.comparable = JsDeviceHelper.getBooleanMember(data, "comparable", false);
+		this.checkable = JsDeviceHelper.getBooleanMember(data, "checkable", false);
+		Value dump = data.getMember("dump");
+		if (dump == null) {
+			this.dump = false;
+		}
+		else {
+			if (dump.isBoolean()) {
+				this.dump = dump.asBoolean();
 			}
 			else {
-				throw new IllegalArgumentException("Invalid 'dump' object in Config.");
+				this.dump = true;
+				if (dump.hasMember("pre")) {
+					this.preDump = dump.getMember("pre").asString();
+				}
+				if (dump.hasMember("preLine")) {
+					this.preLineDump = dump.getMember("preLine").asString();
+				}
+				if (dump.hasMember("post")) {
+					this.postDump = dump.getMember("post").asString();
+				}
+				if (dump.hasMember("postLine")) {
+					this.postLineDump = dump.getMember("postLine").asString();
+				}
+				
 			}
 		}
-		
 	}
 
 	@XmlElement

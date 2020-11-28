@@ -23,12 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.script.Invocable;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
-import javax.script.SimpleScriptContext;
-
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.PolyglotException;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +65,7 @@ public class RunDiagnosticCliScript extends CliScript {
 
 	@Override
 	protected void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
-			throws InvalidCredentialsException, IOException, ScriptException, MissingDeviceDriverException {
+			throws InvalidCredentialsException, IOException, UnsupportedOperationException, MissingDeviceDriverException {
 		JsCliHelper jsCliHelper = null;
 		JsSnmpHelper jsSnmpHelper = null;
 		switch (protocol) {
@@ -85,17 +81,14 @@ public class RunDiagnosticCliScript extends CliScript {
 		DeviceDriver driver = device.getDeviceDriver();
 		// Filter on the device driver
 		try {
-			ScriptEngine engine = driver.getEngine();
-			ScriptContext scriptContext = new SimpleScriptContext();
-			scriptContext.setBindings(engine.getContext().getBindings(ScriptContext.ENGINE_SCOPE),
-					ScriptContext.ENGINE_SCOPE);
+			Context context = driver.getContext();
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
 			options.setDevice(new JsDeviceHelper(device, null, taskLogger, false));
 
 			Map<String, Object> jsDiagnostics = new HashMap<String, Object>();
 			for (Diagnostic diagnostic : this.diagnostics) {
 				try {
-					Object jsObject = diagnostic.getJsObject(device, engine, scriptContext);
+					Object jsObject = diagnostic.getJsObject(device, context);
 					if (jsObject == null) {
 						continue;
 					}
@@ -110,11 +103,11 @@ public class RunDiagnosticCliScript extends CliScript {
 			options.setDiagnosticHelper(new JsDiagnosticHelper(device, diagnostics, jsDiagnostics, taskLogger));
 
 			if (jsDiagnostics.size() > 0) {
-				((Invocable) engine).invokeFunction("_connect", "diagnostics", protocol.value(), options, taskLogger);
+				context.getBindings("js").getMember("_connect").execute("diagnostics", protocol.value(), options, taskLogger);
 			}
 
 		}
-		catch (ScriptException e) {
+		catch (PolyglotException e) {
 			logger.error("Error while running script using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("Error while running script  using driver %s: '%s'.",
 					driver.getName(), e.getMessage()));
@@ -125,11 +118,11 @@ public class RunDiagnosticCliScript extends CliScript {
 				throw e;
 			}
 		}
-		catch (NoSuchMethodException e) {
+		catch (UnsupportedOperationException e) {
 			logger.error("No such method while using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("No such method while using driver %s to execute script: '%s'.",
 					driver.getName(), e.getMessage()));
-			throw new ScriptException(e);
+			throw e;
 		}
 	}
 

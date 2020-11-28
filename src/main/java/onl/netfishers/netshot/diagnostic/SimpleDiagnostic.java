@@ -20,13 +20,12 @@ package onl.netfishers.netshot.diagnostic;
 
 import javax.persistence.Entity;
 import javax.persistence.Transient;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.graalvm.polyglot.Context;
 
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
@@ -267,8 +266,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	}
 
 	@Override
-	public Object getJsObject(Device device, ScriptEngine engine,
-			ScriptContext scriptContext) throws ScriptException {
+	public Object getJsObject(Device device, Context context) {
 		if (!device.getDriver().equals(this.getDeviceDriver())) {
 			return null;
 		}

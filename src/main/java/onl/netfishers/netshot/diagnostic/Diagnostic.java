@@ -34,14 +34,13 @@ import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.graalvm.polyglot.Context;
 import org.hibernate.annotations.NaturalId;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -246,8 +245,7 @@ public abstract class Diagnostic {
 	}
 
 	@Transient
-	abstract public Object getJsObject(Device device, ScriptEngine engine,
-			ScriptContext scriptContext) throws ScriptException;
+	abstract public Object getJsObject(Device device, Context context) throws ScriptException;
 
 	@Override
 	public int hashCode() {

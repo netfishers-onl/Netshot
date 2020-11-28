@@ -26,10 +26,9 @@ import java.util.Date;
 import java.util.Map;
 import java.util.regex.Matcher;
 
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
-
+import org.apache.poi.openxml4j.exceptions.InvalidOperationException;
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.PolyglotException;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +66,7 @@ public class SnapshotCliScript extends CliScript {
 
 	@Override
 	protected void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
-			throws InvalidCredentialsException, IOException, ScriptException, MissingDeviceDriverException {
+			throws InvalidCredentialsException, IOException, InvalidOperationException, MissingDeviceDriverException {
 
 		TaskLogger taskLogger = this.getJsLogger();
 		JsCliHelper jsCliHelper = null;
@@ -83,13 +82,13 @@ public class SnapshotCliScript extends CliScript {
 		}
 
 		DeviceDriver driver = device.getDeviceDriver();
-		ScriptEngine engine = driver.getEngine();
 		try {
+			Context context = driver.getContext();
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
 			options.setDevice(new JsDeviceHelper(device, session, taskLogger, false));
 			Config config = new Config(device);
 			options.setConfigHelper(new JsConfigHelper(device, config, cli, taskLogger));
-			((Invocable) engine).invokeFunction("_connect", "snapshot", protocol.value(), options, taskLogger);
+			context.getBindings("js").getMember("_connect").execute("snapshot", protocol.value(), options, taskLogger);
 			boolean different = false;
 			try {
 				Config lastConfig = Database.unproxy(device.getLastConfig());
@@ -186,7 +185,7 @@ public class SnapshotCliScript extends CliScript {
 				}
 			}
 		}
-		catch (ScriptException e) {
+		catch (PolyglotException e) {
 			logger.error("Error while running snapshot using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("Error while running snapshot using driver %s: '%s'.",
 					driver.getName(), e.getMessage()));
@@ -197,11 +196,11 @@ public class SnapshotCliScript extends CliScript {
 				throw e;
 			}
 		}
-		catch (NoSuchMethodException e) {
+		catch (InvalidOperationException e) {
 			logger.error("No such method 'snapshot' while using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("No such method 'snapshot' while using driver %s to take snapshot: '%s'.",
 					driver.getName(), e.getMessage()));
-			throw new ScriptException(e);
+			throw e;
 		}
 	}
 

@@ -7,9 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.script.Bindings;
-import javax.script.ScriptEngine;
-
+import org.graalvm.polyglot.Value;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
@@ -47,84 +45,26 @@ public class JsDeviceHelper {
 	
 	private static Logger logger = LoggerFactory.getLogger(JsDeviceHelper.class);
 	
-	public static Bindings toBindings(Object o, String key) throws IllegalArgumentException {
-		Object v = toObject(o, key);
-		if (!(v instanceof Bindings)) {
-			throw new IllegalArgumentException(String.format("The value of %s is not a Javascript object.", key));
-		}
-		return (Bindings) v;
-	}
-
-	public static Boolean toBoolean(Object o, String key) throws IllegalArgumentException {
-		return toBoolean(o, key, null);
-	}
-
-	public static Boolean toBoolean(Object o, String key, Boolean defaultValue) throws IllegalArgumentException {
-		Object v = toObject(o, key, defaultValue);
-		if (!(v instanceof Boolean)) {
-			throw new IllegalArgumentException(String.format("The value of %s is not a boolean.", key));
-		}
-		return (Boolean) v;
-	}
-
-	public static Integer toInteger(Object o, String key) throws IllegalArgumentException {
-		return toInteger(o, key, null);
-	}
-
-	public static Integer toInteger(Object o, String key, Integer defaultValue) throws IllegalArgumentException {
-		Object v = toObject(o, key, defaultValue);
-		if (!(v instanceof Integer)) {
-			throw new IllegalArgumentException(String.format("The value of %s is not an integer.", key));
-		}
-		return (Integer) v;
-	}
-
-	public static Object toObject(Object o, String key) throws IllegalArgumentException {
-		return toObject(o, key, null);
-	}
-
-	public static Object toObject(Object o, String key, Object defaultValue) throws IllegalArgumentException {
-		if (o == null || !(o instanceof Bindings || o instanceof ScriptEngine)) {
-			throw new IllegalArgumentException("Invalid object.");
-		}
-		Object v = null;
-		if (o instanceof Bindings) {
-			v = ((Bindings) o).get(key);
-		}
-		if (o instanceof ScriptEngine) {
-			v = ((ScriptEngine) o).get(key);
-		}
-		if (v == null) {
-			if (defaultValue == null) {
-				throw new IllegalArgumentException(String.format("The key '%s' doesn't exist.", key));
-			}
-			else {
-				return defaultValue;
-			}
-		}
-		return v;
-	}
-
-	public static String toString(Object o, String key) throws IllegalArgumentException {
-		return toString(o, key, null);
-	}
-
-	public static String toString(Object o, String key, String defaultValue) throws IllegalArgumentException {
-		Object v = toObject(o, key, defaultValue);
-		if (!(v instanceof String)) {
-			throw new IllegalArgumentException(String.format("The value of %s is not a string.", key));
-		}
-		String s = (String) v;
-		if (s.trim().equals("")) {
-			throw new IllegalArgumentException(String.format("The value of %s cannot be empty.", key));
-		}
-		return s;
-	}
-	
 	private Device device;
 	private Session session;
 	private TaskLogger taskLogger;
 	private boolean readOnly;
+	
+	public static String getStringMember(Value value, String key, String defaultResult) {
+		Value result = value.getMember(key);
+		if (result != null) {
+			return result.asString();
+		}
+		return defaultResult;
+	}
+	
+	public static boolean getBooleanMember(Value value, String key, boolean defaultResult) {
+		Value result = value.getMember(key);
+		if (result != null) {
+			return result.asBoolean();
+		}
+		return defaultResult;
+	}
 	
 	public JsDeviceHelper(Device device, Session session, TaskLogger taskLogger, boolean readOnly) throws MissingDeviceDriverException {
 		this.device = device;
@@ -133,7 +73,7 @@ public class JsDeviceHelper {
 		this.session = session;
 	}
 	
-	public void add(String key, Bindings data) {
+	public void add(String key, Value data) {
 		if (readOnly) {
 			logger.warn("Adding key '{}' is forbidden.", key);
 			taskLogger.error(String.format("Adding key %s is forbidden", key));
@@ -144,46 +84,44 @@ public class JsDeviceHelper {
 		}
 		try {
 			if ("module".equals(key)) {
+				
 				Module module = new Module(
-						(String) data.getOrDefault("slot", ""),
-						(String) data.getOrDefault("partNumber", ""),
-						(String) data.getOrDefault("serialNumber", ""),
+						getStringMember(data, "slot", ""),
+						getStringMember(data, "partNumber", ""),
+						getStringMember(data, "serialNumber", ""),
 						device
 				);
 				device.getModules().add(module);
 			}
 			else if ("networkInterface".equals(key)) {
-				Object enabled = data.getOrDefault("enabled", true);
-				enabled = (enabled == null ? false : enabled);
-				Object level3 = data.getOrDefault("level3", true);
-				level3 = (level3 == null ? false : level3);
 				NetworkInterface networkInterface = new NetworkInterface(
 						device,
-						(String) data.get("name"),
-						(String) data.getOrDefault("virtualDevice", ""),
-						(String) data.getOrDefault("vrf", ""),
-						(Boolean) enabled,
-						(Boolean) level3,
-						(String) data.getOrDefault("description", "")
+						data.getMember("name").asString(),
+						getStringMember(data, "virtualDevice", ""),
+						getStringMember(data, "vrf", ""),
+						getBooleanMember(data, "enabled", true),
+						getBooleanMember(data, "level3", true),
+						getStringMember(data, "description", "")
 				);
-				networkInterface.setPhysicalAddress(new PhysicalAddress((String) data.getOrDefault("mac", "0000.0000.0000")));
-				Bindings ipAddresses = (Bindings) (data.get("ip"));
+				networkInterface.setPhysicalAddress(new PhysicalAddress(
+						getStringMember(data, "mac", "0000.0000.0000")));
+				Value ipAddresses = data.getMember("ip");
 				if (ipAddresses != null) {
-					for (Object ipAddress : ipAddresses.values()) {
-						Bindings ip = (Bindings) ipAddress;
+					for (long i = 0; i < ipAddresses.getArraySize(); i++) {
+						Value ip = ipAddresses.getArrayElement(i);
 						NetworkAddress address = null;
-						if (ip.get("ipv6") != null) {
-							address = new Network6Address((String) ip.get("ipv6"), ((Number) ip.get("mask")).intValue());
+						if (ip.hasMember("ipv6")) {
+							address = new Network6Address(ip.getMember("ipv6").asString(), ip.getMember("mask").asInt());
 						}
-						else if (ip.get("mask") instanceof Number) {
-							address = new Network4Address((String) ip.get("ip"), ((Number) ip.get("mask")).intValue());
+						else if (ip.getMember("mask").isNumber()) {
+							address = new Network4Address(ip.getMember("ip").asString(), ip.getMember("mask").asInt());
 						}
 						else {
-							address = new Network4Address((String) ip.get("ip"), (String) ip.get("mask"));
+							address = new Network4Address(ip.getMember("ip").asString(), ip.getMember("mask").asString());
 						}
-						Object usage = ip.get("usage");
+						Value usage = ip.getMember("usage");
 						if (usage != null) {
-							address.setAddressUsage(AddressUsage.valueOf((String) usage));
+							address.setAddressUsage(AddressUsage.valueOf(usage.asString()));
 						}
 						networkInterface.addIpAddress(address);
 					}

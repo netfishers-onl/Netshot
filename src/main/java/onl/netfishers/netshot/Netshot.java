@@ -83,7 +83,8 @@ public class Netshot extends Thread {
 	 * @return the config
 	 */
 	public static String getConfig(String key, String defaultValue) {
-		return config.getProperty(key, defaultValue);
+		String value = getConfig(key);
+		return value == null ? defaultValue : value;
 	}
 
 	/**
@@ -112,6 +113,16 @@ public class Netshot extends Thread {
 	 * @return the config
 	 */
 	public static String getConfig(String key) {
+		String envKey = key.replace(".", "_").toUpperCase();
+		try {
+			String value = System.getenv(envKey);
+			if (value != null) {
+				return value;
+			}
+		}
+		catch (SecurityException e) {
+			logger.warn("Security exception raised while getting environment variable {}", envKey, e);
+		}
 		return config.getProperty(key);
 	}
 

@@ -492,6 +492,13 @@
 				<constraints unique="true"/>
 			</column>
 		</createTable>
+		<insert tableName="user">
+			<column name="id" value="0"/>
+			<column name="level" value="1000"/>
+			<column name="local" value="TRUE"/>
+			<column name="username" value="admin"/>
+			<column name="hashed_password" value="7htrot2BNjUV/g57h/HJ/C1N0Fqrj+QQ"/>
+		</insert>
 		<addUniqueConstraint columnNames="policy, name" constraintName="UK_4v8b8vxv2odk13plyumd9us34" tableName="rule"/>
 		<createIndex indexName="FK_1ritpkb4tkbgfj1ohxvnm72k4" tableName="check_group_compliance_task">
 			<column name="device_group"/>

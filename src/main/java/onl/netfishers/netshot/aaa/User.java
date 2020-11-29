@@ -30,8 +30,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.Netshot;
 
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
 import org.jasypt.util.password.BasicPasswordEncryptor;
 import org.slf4j.Logger;
@@ -78,6 +81,29 @@ public class User implements Principal {
 		catch (Exception e) {
 			MAX_IDLE_TIME = 1800;
 			logger.error("Invalid value for AAA max idle timeout (netshot.aaa.maxidletime), using {}s.", MAX_IDLE_TIME);
+		}
+		if (Netshot.getConfig("netshot.aaa.local.autocreateadmin", "false").equals("true")) {
+			Session session = Database.getSession();
+			try {
+				Long userCount = (Long)session
+						.createQuery("select count(*) from User")
+						.uniqueResult();
+				if (userCount == 0) {
+					User defaultAdmin = new User("admin", User.LEVEL_ADMIN);
+					defaultAdmin.setPassword("netshot");
+					session.beginTransaction();
+					session.save(defaultAdmin);
+					session.getTransaction().commit();
+					Netshot.aaaLogger.info("Default admin user has been created");
+				}
+			}
+			catch (HibernateException e) {
+				session.getTransaction().rollback();
+				logger.error("Cannot check or create the default admin user.", e);
+			}
+			finally {
+				session.close();
+			}
 		}
 	}
 

@@ -342,10 +342,21 @@ public class RestService extends Thread {
 		this.setName("REST Service");
 		httpStaticPath = Netshot.getConfig("netshot.http.staticpath", "/");
 		httpApiPath = Netshot.getConfig("netshot.http.apipath", "/api");
-		httpBaseUrl = Netshot.getConfig("netshot.http.baseurl", "http://localhost:8443");
-		httpSslKeystoreFile = Netshot.getConfig("netshot.http.ssl.keystore.file", "netshot.jks");
-		httpSslKeystorePass = Netshot.getConfig("netshot.http.ssl.keystore.pass", "netshotpass");
-		httpBasePort = 8443;
+		httpUseSsl = true;
+		if (Netshot.getConfig("netshot.http.ssl.enabled", "true").equals("true")) {
+			httpUseSsl = false;
+		}
+		
+		if (httpUseSsl) {
+			httpBaseUrl = Netshot.getConfig("netshot.http.baseurl", "http://localhost:8443");
+			httpSslKeystoreFile = Netshot.getConfig("netshot.http.ssl.keystore.file", "netshot.jks");
+			httpSslKeystorePass = Netshot.getConfig("netshot.http.ssl.keystore.pass", "netshotpass");
+			httpBasePort = 8443;
+		}
+		else {
+			httpBaseUrl = Netshot.getConfig("netshot.http.baseurl", "http://localhost:8080");
+			httpBasePort = 8080;
+		}
 		try {
 			httpBasePort = Integer.parseInt(Netshot.getConfig("netshot.http.baseport",
 					Integer.toString(httpBasePort)));
@@ -359,6 +370,7 @@ public class RestService extends Thread {
 	private String httpStaticPath;
 	private String httpApiPath;
 	private String httpBaseUrl;
+	private boolean httpUseSsl;
 	private String httpSslKeystoreFile;
 	private String httpSslKeystorePass;
 	private int httpBasePort;

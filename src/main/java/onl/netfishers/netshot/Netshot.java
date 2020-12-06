@@ -139,10 +139,11 @@ public class Netshot extends Thread {
 				InputStream fileStream = new FileInputStream(fileName);
 				config.load(fileStream);
 				fileStream.close();
+				logger.warn("Configuration file {} successfully read.", fileName);
 				break;
 			}
 			catch (Exception e) {
-				logger.error("Unable to read the configuration file {}.", fileName);
+				logger.warn("Unable to read the configuration file {}.", fileName);
 			}
 		}
 		if (config.isEmpty()) {

@@ -343,7 +343,7 @@ public class RestService extends Thread {
 		httpStaticPath = Netshot.getConfig("netshot.http.staticpath", "/");
 		httpApiPath = Netshot.getConfig("netshot.http.apipath", "/api");
 		httpUseSsl = true;
-		if (Netshot.getConfig("netshot.http.ssl.enabled", "true").equals("true")) {
+		if (Netshot.getConfig("netshot.http.ssl.enabled", "true").equals("false")) {
 			httpUseSsl = false;
 		}
 		
@@ -382,20 +382,23 @@ public class RestService extends Thread {
 		logger.info("Starting the Web/REST service thread.");
 		try {
 
-			SSLContextConfigurator sslContext = new SSLContextConfigurator();
-			sslContext.setKeyStoreFile(httpSslKeystoreFile);
-			sslContext.setKeyStorePass(httpSslKeystorePass);
-			if (!httpSslKeystoreFile.endsWith(".jks")) {
-				sslContext.setKeyStoreType("pkcs12");
+			SSLEngineConfigurator sslConfig = null;
+			if (httpUseSsl) {
+				SSLContextConfigurator sslContext = new SSLContextConfigurator();
+				sslContext.setKeyStoreFile(httpSslKeystoreFile);
+				sslContext.setKeyStorePass(httpSslKeystorePass);
+				if (!httpSslKeystoreFile.endsWith(".jks")) {
+					sslContext.setKeyStoreType("pkcs12");
+				}
+	
+				// Create the context and raise any error if anything is wrong with the SSL configuration.
+				sslContext.createSSLContext(true);
+				sslConfig = new SSLEngineConfigurator(sslContext)
+						.setClientMode(false).setNeedClientAuth(false).setWantClientAuth(false);
 			}
-
-			// Create the context and raise any error if anything is wrong with the SSL configuration.
-			sslContext.createSSLContext(true);
-			SSLEngineConfigurator sslConfig = new SSLEngineConfigurator(sslContext)
-					.setClientMode(false).setNeedClientAuth(false).setWantClientAuth(false);
 			URI url = UriBuilder.fromUri(httpBaseUrl).port(httpBasePort).build();
 			HttpServer server = GrizzlyHttpServerFactory.createHttpServer(
-					url, (GrizzlyHttpContainer) null, true, sslConfig, false);
+					url, (GrizzlyHttpContainer) null, httpUseSsl, sslConfig, false);
 			server.getServerConfiguration().setSessionTimeoutSeconds(User.MAX_IDLE_TIME);
 
 			WebappContext context = new WebappContext("GrizzlyContext", httpApiPath);

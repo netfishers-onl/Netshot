@@ -476,7 +476,7 @@ public class JsDeviceHelper {
 			return this.get(item);
 		}
 		try {
-			device = loadDevice(deviceId);
+			Device device = loadDevice(deviceId);
 			Object result = this.getDeviceItem(device, item);
 			session.evict(device);
 			return result;
@@ -489,7 +489,7 @@ public class JsDeviceHelper {
 		catch (Exception e) {
 			logger.error("Error on JavaScript get, item {}, device {}.", item,
 					deviceId, e);
-			this.taskLogger.warn(String.format("Unable to get data %s for device %d.", deviceId));
+			this.taskLogger.warn(String.format("Unable to get data %s for device %d.", item, deviceId));
 		}
 		return null;
 	}
@@ -501,7 +501,7 @@ public class JsDeviceHelper {
 			if (device.getName().equals(deviceName)) {
 				return this.get(item);
 			}
-			device = loadDevice(deviceName);
+			Device device = loadDevice(deviceName);
 			Object result = this.getDeviceItem(device, item);
 			session.evict(device);
 			return result;
@@ -514,7 +514,7 @@ public class JsDeviceHelper {
 		catch (Exception e) {
 			logger.error("Error on JavaScript get, item {}, device named {}.", item,
 					deviceName, e);
-			this.taskLogger.warn(String.format("Unable to get data %s for device named %s.", deviceName));
+			this.taskLogger.warn(String.format("Unable to get data %s for device named %s.", item, deviceName));
 		}
 		return null;
 	}

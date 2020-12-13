@@ -38,7 +38,7 @@ public abstract class Cli {
 	
 	private static Logger logger = LoggerFactory.getLogger(Cli.class);
 	
-	private static Pattern ansiEscapePattern = Pattern.compile("\u001B\\[[;\\d]*m");
+	private static Pattern ansiEscapePattern = Pattern.compile("\u001B\\[([;\\d]*m|[\u0030-\u003F]*[\u0020-\u002F]*[\u0040-\u007E])");
 	
 	/**
 	 * An IOException, with an attached buffer.

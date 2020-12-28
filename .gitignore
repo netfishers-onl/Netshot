@@ -6,14 +6,6 @@
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 .idea/*
-target/*
-.settings/*
-*.iml
-*.jks
-*.pfx
-src/main/resources/configs/
-netshot.conf
-.vscode
 
 # CMake
 cmake-build-debug/
@@ -125,4 +117,14 @@ $RECYCLE.BIN/
 .metadata/.plugins/org.eclipse.core.resources/.history/52/f0b35dc8634a00151f22ad7d25da3f55
 *.sw[a-p]
 
-/target/
+
+### Netshot ###
+target
+.settings/*
+*.iml
+*.jks
+*.pfx
+src/main/resources/configs/
+netshot.conf
+.vscode
+certs

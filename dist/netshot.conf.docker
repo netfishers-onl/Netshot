@@ -1,0 +1,61 @@
+# Netshot Configuration File
+# See https://github.com/netfishers-onl/Netshot/wiki/Config-file-(netshot.conf)-reference
+
+# Log file and level
+netshot.log.file = CONSOLE
+netshot.log.level = WARN
+#netshot.log.audit.file = /var/log/netshot/audit.log
+#netshot.log.audit.level = INFO
+#netshot.log.syslog1.host = 10.0.16.16
+
+# Database connection
+#netshot.db.driver_class = com.mysql.cj.jdbc.Driver
+netshot.db.driver_class = org.postgresql.Driver
+#netshot.db.url = jdbc:mysql://localhost/netshot01
+netshot.db.url = jdbc:postgresql://localhost/netshot01
+netshot.db.username = netshot
+netshot.db.password = netshot
+# The following password is used to encrypt the passwords and communities in the database.
+# Changing it will cause all device passwords and communities to be manually reentered within the application.
+netshot.db.encryptionpassword = netshot
+
+# REST
+netshot.http.ssl.enabled = false
+netshot.http.baseurl = http://0.0.0.0
+netshot.http.baseport = 8080
+
+# Embedded syslog server (to react upon configuration change on the devices)
+netshot.syslog.port = 1514
+
+# Embedded SNMP trap receiver (to react upon configuration change on the devices)
+netshot.snmptrap.port = 1162
+netshot.snmptrap.community = Netsh01
+
+# General settings
+# Minimal Interval (in minutes) between two automatic snapshots
+netshot.snapshots.auto.interval = 15
+# Allow a trap received from any IP of a device to trigger an automatic snapshot
+netshot.snapshots.auto.anyip = true
+# After a snapshot, dump the last configuration to a file in this directory
+#netshot.snapshots.dump = /usr/local/netshot/dumps
+# Where to store the binary snapshot files
+netshot.snapshots.binary.path = /var/local/netshot
+
+# Where to look for additional drivers
+netshot.drivers.path = /usr/local/netshot/drivers
+
+
+# Authentication
+netshot.aaa.maxidletime = 1800
+#netshot.aaa.radius1.ip = 1.2.3.4
+#netshot.aaa.radius1.authport = 1812
+#netshot.aaa.radius1.secret = MyKey#1
+#netshot.aaa.radius2.ip = 1.2.3.5
+#netshot.aaa.radius2.authport = 1812
+#netshot.aaa.radius2.secret = MyKey#1
+#netshot.aaa.radius.method = mschapv2
+
+# Connection settings
+#netshot.cli.telnet.connectiontimeout = 5000
+#netshot.cli.ssh.connectiontimeout = 5000
+

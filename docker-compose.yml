@@ -1,0 +1,68 @@
+version: "3.8"
+
+services:
+  netshot:
+    image: netshot
+    restart: always
+    environment:
+      NETSHOT_DB_URL: "jdbc:postgresql://database/netshot01"
+      NETSHOT_DB_USERNAME: "netshot"
+      NETSHOT_DB_PASSWORD: "change_this_pass"
+      NETSHOT_DB_ENCRYPTIONPASSWORD: "change_this_pass_too"
+      VIRTUAL_HOST: "netshot"
+      VIRTUAL_PORT: 8080
+      SELF_SIGNED_HOST: "netshot"
+    expose:
+      - 8080
+    ports:
+      - "162:1162/udp"
+      - "514:1514/udp"
+    networks:
+      - front
+      - database
+
+  database:
+    image: postgres:12
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: "change_this_pass"
+      POSTGRES_USER: "netshot"
+      POSTGRES_DB: "netshot01"
+    volumes:
+      - "dbdata:/var/lib/postgresql/data"
+    expose:
+      - 5432
+    networks:
+      - database
+
+  rproxy:
+    image: jwilder/nginx-proxy:alpine
+    restart: always
+    environment:
+      DEFAULT_HOST: netshot
+    volumes:
+      - ./certs:/etc/nginx/certs
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - front
+
+  rproxy-cert:
+    image: sebastienheyd/self-signed-proxy-companion
+    restart: always
+    environment:
+      NGINX_PROXY_CONTAINER: "netshot_rproxy_1"
+    volumes:
+      - ./certs:/etc/nginx/certs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  dbdata:
+  sslcerts:
+
+networks:
+  front:
+  database:
+

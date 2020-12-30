@@ -155,7 +155,7 @@ public class Radius {
 	 * @param password the password
 	 * @return true, if successful
 	 */
-	public static User authenticate(String username, String password) {
+	public static UiUser authenticate(String username, String password) {
 		if (!isAvailable()) {
 			return null;
 		}
@@ -176,24 +176,24 @@ public class Radius {
 							radiusClient.getRemoteInetAddress().toString());
 				}
 				else if (reply instanceof AccessAccept) {
-					int level = User.LEVEL_READONLY;
+					int level = UiUser.LEVEL_READONLY;
 					try {
 						Long serviceType = (Long) reply.getAttributeValue(Attr_ServiceType.TYPE);
 						if (Attr_ServiceType.AdministrativeUser.equals(serviceType)) {
-							level = User.LEVEL_ADMIN;
+							level = UiUser.LEVEL_ADMIN;
 						}
 						else if (Attr_ServiceType.OutboundUser.equals(serviceType)) {
-							level = User.LEVEL_EXECUTEREADWRITE;
+							level = UiUser.LEVEL_EXECUTEREADWRITE;
 						}
 						else if (Attr_ServiceType.NASPromptUser.equals(serviceType)) {
-							level = User.LEVEL_READWRITE;
+							level = UiUser.LEVEL_READWRITE;
 						}
 					}
 					catch (Exception e1) {
 					}
 					aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} passed authentication on RADIUS server {} (with permission level {}).",
 							username, radiusClient.getRemoteInetAddress().toString(), level);
-					User user = new User(username, level);
+					UiUser user = new UiUser(username, level);
 					return user;
 				}
 				else {

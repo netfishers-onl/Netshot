@@ -932,4 +932,20 @@
 			</column>
 		</addColumn>
 	</changeSet>
+<!-- netshot_0_15_2_to_0_15_3.xml -->
+	<changeSet author="netshot" id="0.15.3_1">
+		<preConditions onFail="MARK_RAN">
+			<not><tableExists tableName="api_token"/></not>
+		</preConditions>
+		<createTable tableName="api_token">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="hashed_token" type="VARCHAR(255)"/>
+			<column name="level" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="description" type="VARCHAR(255)"/>
+		</createTable>
+	</changeSet>
 </databaseChangeLog>

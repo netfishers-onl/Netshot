@@ -36,7 +36,8 @@ import java.util.zip.ZipInputStream;
 
 import javax.persistence.Entity;
 
-import onl.netfishers.netshot.aaa.User;
+import onl.netfishers.netshot.aaa.ApiToken;
+import onl.netfishers.netshot.aaa.UiUser;
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Exemption;
 import onl.netfishers.netshot.compliance.HardwareRule;
@@ -652,7 +653,8 @@ public class Database {
 					.addAnnotatedClass(Diagnostic.class).addAnnotatedClass(DiagnosticResult.class)
 					.addAnnotatedClass(DiagnosticBinaryResult.class).addAnnotatedClass(DiagnosticNumericResult.class)
 					.addAnnotatedClass(DiagnosticLongTextResult.class).addAnnotatedClass(DiagnosticTextResult.class)
-					.addAnnotatedClass(User.class);
+					.addAnnotatedClass(UiUser.class)
+					.addAnnotatedClass(ApiToken.class);
 
 			for (Class<?> clazz : Task.getTaskClasses()) {
 				logger.info("Registering task class " + clazz.getName());

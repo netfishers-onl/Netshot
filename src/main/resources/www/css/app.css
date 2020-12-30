@@ -1701,3 +1701,8 @@ input.spinner {
 	margin-left: 2px;
 	margin-right: 5px;
 }
+
+#nsadmin-apitokenaddform input#token {
+	width: 250px;
+	font-family: monospace;
+}

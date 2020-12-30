@@ -13,9 +13,12 @@ define([
 	'views/admin/EditCredentialSetDialog',
 	'views/admin/DeleteCredentialSetDialog',
 	'models/user/UserCollection',
+	'models/user/ApiTokenCollection',
 	'views/admin/AddUserDialog',
+	'views/admin/AddApiTokenDialog',
 	'views/admin/EditUserDialog',
 	'views/admin/DeleteUserDialog',
+	'views/admin/DeleteApiTokenDialog',
 	'models/device/DeviceTypeCollection',
 	'models/device/RefreshedDeviceTypeCollection',
 	'text!templates/admin/admin.html',
@@ -23,14 +26,16 @@ define([
 	'text!templates/admin/domain.html',
 	'text!templates/admin/credentials.html',
 	'text!templates/admin/user.html',
+	'text!templates/admin/apiToken.html',
 	'text!templates/admin/driver.html'
 ], function($, _, Backbone, TableSort, DomainCollection, AddDomainDialog,
 		EditDomainDialog, DeleteDomainDialog, CredentialSetCollection,
 		AddCredentialSetDialog, EditCredentialSetDialog, DeleteCredentialSetDialog,
-		UserCollection, AddUserDialog, EditUserDialog, DeleteUserDialog,
-		DeviceTypeCollection, RefreshedDeviceTypeCollection,
+		UserCollection, ApiTokenCollection, AddUserDialog, AddApiTokenDialog, EditUserDialog,
+		DeleteUserDialog, DeleteApiTokenDialog, DeviceTypeCollection,
+		RefreshedDeviceTypeCollection,
 		adminTemplate, adminToolbarTemplate, domainRowTemplate,
-		credentialsRowTemplate, userRowTemplate, driverRowTemplate) {
+		credentialsRowTemplate, userRowTemplate, apiTokenRowTemplate, driverRowTemplate) {
 
 	makeLoadProgress(13);
 
@@ -42,11 +47,13 @@ define([
 		domainTemplate: _.template(domainRowTemplate),
 		credentialsTemplate: _.template(credentialsRowTemplate),
 		userTemplate: _.template(userRowTemplate),
+		apiTokenTemplate: _.template(apiTokenRowTemplate),
 		driverTemplate: _.template(driverRowTemplate),
 
 		domains: new DomainCollection([]),
 		credentialSets: new CredentialSetCollection([]),
 		users: new UserCollection([]),
+		apiTokens: new ApiTokenCollection([]),
 		drivers: new DeviceTypeCollection([]),
 
 		initialize: function() {
@@ -61,6 +68,7 @@ define([
 			this.$el.html(this.template);
 
 			this.refreshUsers();
+			this.refreshApiTokens();
 			this.refreshDomains();
 			this.refreshCredentials();
 			this.refreshDrivers();
@@ -73,6 +81,19 @@ define([
 				var addUserDialog = new AddUserDialog({
 					onAdded: function() {
 						that.refreshUsers();
+					}
+				});
+				return false;
+			});
+
+			this.$('#nsadmin-addapitoken').button({
+				'icons': {
+					'primary': "ui-icon-plusthick"
+				},
+			}).click(function() {
+				var addApiTokenDialog = new AddApiTokenDialog({
+					onAdded: function() {
+						that.refreshApiTokens();
 					}
 				});
 				return false;
@@ -247,6 +268,33 @@ define([
 								that.refreshUsers();
 							},
 							model: e.data.user
+						});
+					});
+				});
+				new TableSort($table.parent().get(0));
+			});
+		},
+
+		refreshApiTokens: function() {
+			var that = this;
+			this.apiTokens.fetch().done(function() {
+				var $table = that.$('#nsadmin-apitokens table tbody');
+				$table.empty();
+				that.apiTokens.each(function(t) {
+					var $row = $(that.apiTokenTemplate(t.toJSON())).appendTo($table);
+					$row.find('.delete').button({
+						'icons': {
+							'primary': "ui-icon-trash"
+						},
+						'text': false,
+					}).click({
+						apiToken: t,
+					}, function(e) {
+						var deleteApiTokenDialog = new DeleteApiTokenDialog({
+							onDeleted: function() {
+								that.refreshApiTokens();
+							},
+							model: e.data.apiToken
 						});
 					});
 				});

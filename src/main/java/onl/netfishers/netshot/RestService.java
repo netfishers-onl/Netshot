@@ -41,6 +41,8 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Priority;
 import javax.annotation.security.DenyAll;
@@ -187,6 +189,22 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import difflib.Delta;
 import difflib.DiffUtils;
 import difflib.Patch;
+import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
+import io.swagger.v3.jaxrs2.integration.resources.AcceptHeaderOpenApiResource;
+import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.integration.OpenApiConfigurationException;
+import io.swagger.v3.oas.integration.SwaggerConfiguration;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.security.SecurityScheme.In;
+import io.swagger.v3.oas.models.security.SecurityScheme.Type;
+import io.swagger.v3.oas.models.servers.Server;
 
 /**
  * The RestService class exposes the Netshot methods as a REST service.
@@ -195,8 +213,10 @@ import difflib.Patch;
 @DenyAll
 public class RestService extends Thread {
 
-
-	/** The HQL select query for "light" devices, to be prepended to the actual query. */
+	/**
+	 * The HQL select query for "light" devices, to be prepended to the actual
+	 * query.
+	 */
 	private static final String DEVICELIST_BASEQUERY = "select d.id as id, d.name as name, d.family as family, d.mgmtAddress as mgmtAddress, d.status as status ";
 
 	/** The logger. */
@@ -204,9 +224,15 @@ public class RestService extends Thread {
 
 	/** The static instance service. */
 	private static RestService nsRestService;
-	
+
 	/** Pagination size for dump queries */
 	private static final int PAGINATION_SIZE = 1000;
+
+	private static final String HTTP_STATIC_PATH = Netshot.getConfig("netshot.http.staticpath", "/");
+	private static final String HTTP_API_PATH = Netshot.getConfig("netshot.http.apipath", "/api");
+
+	/** Name of the HTTP header used for API token */
+	private static final String HTTP_API_TOKEN_HEADER = "X-Netshot-API-Token";
 
 	/**
 	 * Initializes the service.
@@ -226,16 +252,14 @@ public class RestService extends Thread {
 
 		@Override
 		public void filter(ContainerRequestContext requestContext) throws IOException {
-			String token = httpRequest.getHeader("X-Netshot-API-Token");
+			String token = httpRequest.getHeader(RestService.HTTP_API_TOKEN_HEADER);
 			if (token != null) {
 				Netshot.aaaLogger.debug("Received request with API token.");
 				String hash = ApiToken.hashToken(token);
 				Session session = Database.getSession();
 				try {
-					ApiToken apiToken = session
-						.createQuery("from ApiToken t where t.hashedToken = :hash", ApiToken.class)
-						.setParameter("hash", hash)
-						.uniqueResult();
+					ApiToken apiToken = session.createQuery("from ApiToken t where t.hashedToken = :hash", ApiToken.class)
+							.setParameter("hash", hash).uniqueResult();
 					if (apiToken == null) {
 						Netshot.aaaLogger.warn("Invalid API token received.");
 					}
@@ -250,9 +274,9 @@ public class RestService extends Thread {
 				finally {
 					session.close();
 				}
-			} 
+			}
 		}
-		
+
 	}
 
 	@Priority(Priorities.AUTHORIZATION)
@@ -285,12 +309,12 @@ public class RestService extends Thread {
 
 			@Override
 			public boolean isUserInRole(String role) {
-				boolean result = (user != null &&
-						(("admin".equals(role) && user.getLevel() >= User.LEVEL_ADMIN) ||
-						("executereadwrite".equals(role) && user.getLevel() >= User.LEVEL_EXECUTEREADWRITE) ||
-						("readwrite".equals(role) && user.getLevel() >= User.LEVEL_READWRITE) ||
-						("readonly".equals(role) && user.getLevel() >= User.LEVEL_READONLY)));
-				Netshot.aaaLogger.debug("Role {} requested for user {}: result {}.", role, user == null ? "<null>" : user.getUsername(), result);
+				boolean result = (user != null && (("admin".equals(role) && user.getLevel() >= User.LEVEL_ADMIN)
+						|| ("executereadwrite".equals(role) && user.getLevel() >= User.LEVEL_EXECUTEREADWRITE)
+						|| ("readwrite".equals(role) && user.getLevel() >= User.LEVEL_READWRITE)
+						|| ("readonly".equals(role) && user.getLevel() >= User.LEVEL_READONLY)));
+				Netshot.aaaLogger.debug("Role {} requested for user {}: result {}.", role,
+						user == null ? "<null>" : user.getUsername(), result);
 				return result;
 			}
 
@@ -320,31 +344,25 @@ public class RestService extends Thread {
 				throws IOException {
 			User user = null;
 			try {
-				user = (User)requestContext.getSecurityContext().getUserPrincipal();
+				user = (User) requestContext.getSecurityContext().getUserPrincipal();
 			}
 			catch (Exception e) {
 				//
 			}
 			String method = requestContext.getMethod().toUpperCase();
 			if ("GET".equals(method)) {
-				Netshot.aaaLogger.debug("Request from {} ({}) - {} - \"{} {}\" - {}.",
-						httpRequest.getRemoteAddr(),
-						requestContext.getHeaderString(HttpHeaders.USER_AGENT),
-						user == null ? "<none>" : user.getUsername(),
-						requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(),
-						responseContext.getStatus());
+				Netshot.aaaLogger.debug("Request from {} ({}) - {} - \"{} {}\" - {}.", httpRequest.getRemoteAddr(),
+						requestContext.getHeaderString(HttpHeaders.USER_AGENT), user == null ? "<none>" : user.getUsername(),
+						requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(), responseContext.getStatus());
 			}
 			else {
-				Netshot.aaaLogger.info("Request from {} ({}) - {} - \"{} {}\" - {}.",
-					httpRequest.getRemoteAddr(),
-					requestContext.getHeaderString(HttpHeaders.USER_AGENT),
-					user == null ? "<none>" : user.getUsername(),
-					requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(),
-					responseContext.getStatus());
+				Netshot.aaaLogger.info("Request from {} ({}) - {} - \"{} {}\" - {}.", httpRequest.getRemoteAddr(),
+						requestContext.getHeaderString(HttpHeaders.USER_AGENT), user == null ? "<none>" : user.getUsername(),
+						requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(), responseContext.getStatus());
 			}
 		}
 	}
-	
+
 	public static class NetshotExceptionMapper implements ExceptionMapper<Throwable> {
 
 		public Response toResponse(Throwable t) {
@@ -360,8 +378,7 @@ public class RestService extends Thread {
 				return ((WebApplicationException) t).getResponse();
 			}
 			else {
-				return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-						.build();
+				return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
 			}
 		}
 	}
@@ -374,8 +391,31 @@ public class RestService extends Thread {
 			property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, "true");
 			property(ServerProperties.APPLICATION_NAME, "Netshot");
 			register(LoggerFilter.class);
-			//property(ServerProperties.TRACING, "ALL");
+			// property(ServerProperties.TRACING, "ALL");
 			register(JacksonFeature.class);
+
+			// Swagger
+			registerClasses(OpenApiResource.class, AcceptHeaderOpenApiResource.class);
+			OpenAPI oas = new OpenAPI();
+			oas.info(new Info()
+				.title("Netshot API")
+				.version("1")
+				.description("Network Infrastructure Configuration and Compliance Management Software")
+				.contact(new Contact().email("contact@netfishers.onl"))
+				.license(new License().name("GPLv3").url("https://www.gnu.org/licenses/gpl-3.0.txt")));
+			oas.servers(Arrays.asList(new Server().url(HTTP_API_PATH)));
+			oas.components(new Components().addSecuritySchemes("ApiTokenAuth",
+				new SecurityScheme().name(HTTP_API_TOKEN_HEADER).type(Type.APIKEY).in(In.HEADER)));
+			oas.addSecurityItem(new SecurityRequirement().addList("ApiTokenAuth"));
+			SwaggerConfiguration oasConfig = new SwaggerConfiguration().openAPI(oas).prettyPrint(true)
+					.resourcePackages(Stream.of(RestService.class.getPackageName()).collect(Collectors.toSet()));
+
+			try {
+				new JaxrsOpenApiContextBuilder<>().application(this).openApiConfiguration(oasConfig).buildContext(true);
+			}
+			catch (OpenApiConfigurationException e) {
+				logger.error("Can't initialize OpenAPI for JAX-RS", e);
+			}
 		}
 	}
 
@@ -384,8 +424,6 @@ public class RestService extends Thread {
 	 */
 	public RestService() {
 		this.setName("REST Service");
-		httpStaticPath = Netshot.getConfig("netshot.http.staticpath", "/");
-		httpApiPath = Netshot.getConfig("netshot.http.apipath", "/api");
 		httpUseSsl = true;
 		if (Netshot.getConfig("netshot.http.ssl.enabled", "true").equals("false")) {
 			httpUseSsl = false;
@@ -411,8 +449,6 @@ public class RestService extends Thread {
 		}
 	}
 
-	private String httpStaticPath;
-	private String httpApiPath;
 	private String httpBaseUrl;
 	private boolean httpUseSsl;
 	private String httpSslKeystoreFile;
@@ -445,14 +481,14 @@ public class RestService extends Thread {
 					url, (GrizzlyHttpContainer) null, httpUseSsl, sslConfig, false);
 			server.getServerConfiguration().setSessionTimeoutSeconds(UiUser.MAX_IDLE_TIME);
 
-			WebappContext context = new WebappContext("GrizzlyContext", httpApiPath);
+			WebappContext context = new WebappContext("GrizzlyContext", HTTP_API_PATH);
 			ServletRegistration registration = context.addServlet("Jersey", ServletContainer.class);
 			registration.setInitParameter(ServletProperties.JAXRS_APPLICATION_CLASS,
 					NetshotWebApplication.class.getName());
-			registration.addMapping(httpApiPath);
+			registration.addMapping(HTTP_API_PATH);
 			context.deploy(server);
 			HttpHandler staticHandler = new CLStaticHttpHandler(Netshot.class.getClassLoader(), "/www/");
-			server.getServerConfiguration().addHttpHandler(staticHandler, httpStaticPath);
+			server.getServerConfiguration().addHttpHandler(staticHandler, HTTP_STATIC_PATH);
 
 			server.start();
 
@@ -752,6 +788,10 @@ public class RestService extends Thread {
 	@Path("/domains")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the device domains",
+		description = "Returns the list of device domains."
+	)
 	public List<RsDomain> getDomains() throws WebApplicationException {
 		logger.debug("REST request, domains.");
 		Session session = Database.getSession();
@@ -903,6 +943,10 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add a device domain",
+		description = "Creates a device domain."
+	)
 	public RsDomain addDomain(RsDomain newDomain) throws WebApplicationException {
 		logger.debug("REST request, add a domain");
 		String name = newDomain.getName().trim();
@@ -967,6 +1011,10 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Update a device domain",
+		description = "Edits a device domain, by ID."
+	)
 	public RsDomain setDomain(@PathParam("id") Long id, RsDomain rsDomain)
 			throws WebApplicationException {
 		logger.debug("REST request, edit domain {}.", id);
@@ -1039,6 +1087,10 @@ public class RestService extends Thread {
 	@Path("/domains/{id}")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Remove a device domain",
+		description = "Remove the given device domain, by ID."
+	)
 	public void deleteDomain(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete domain {}.", id);
@@ -1085,6 +1137,10 @@ public class RestService extends Thread {
 	@Path("/devices/{id}/interfaces")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get device interfaces",
+		description = "Returns the list of interfaces of a given device (by ID)."
+	)
 	public List<NetworkInterface> getDeviceInterfaces(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} interfaces.", id);
@@ -1123,6 +1179,10 @@ public class RestService extends Thread {
 	@Path("/devices/{id}/modules")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get device modules",
+		description = "Returns the list of hardware modules of a given device, by ID."
+	)
 	public List<Module> getDeviceModules(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} modules.", id);
@@ -1155,6 +1215,10 @@ public class RestService extends Thread {
 	@Path("/devices/{id}/tasks")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get device tasks",
+		description = "Returns the list of tasks of a given device (by ID). Up to 'max' tasks are returned, sorted by status and significant date."
+	)
 	public List<Task> getDeviceTasks(@PathParam("id") Long id,
 			@PathParam("max") @DefaultValue("20") Integer maxCount)
 			throws WebApplicationException {
@@ -1249,6 +1313,10 @@ public class RestService extends Thread {
 	@Path("/devices/{id}/configs")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get device configs",
+		description = "Returns the list of configurations of the given device, by ID."
+	)
 	public List<Config> getDeviceConfigs(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} configs.", id);
@@ -1271,7 +1339,7 @@ public class RestService extends Thread {
 	}
 
 	/**
-	 * Gets the device config plain.
+	 * Gets the device config as plain text.
 	 *
 	 * @param request the request
 	 * @param id the id
@@ -1283,6 +1351,10 @@ public class RestService extends Thread {
 	@Path("/configs/{id}/{item}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
+	@Operation(
+		summary = "Get a device configuration item",
+		description = "Retrieves a device configuration item, in plain text."
+	)
 	public Response getDeviceConfigPlain(@PathParam("id") Long id,
 			@PathParam("item") String item) throws WebApplicationException {
 		logger.debug("REST request, get device {} config {}.", id, item);
@@ -1580,6 +1652,10 @@ public class RestService extends Thread {
 	@Path("/configs/{id1}/vs/{id2}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON })
+	@Operation(
+		summary = "Get the diff between two configuration objects",
+		description = "Retrieves the differences between two given device configuration objets, identified by full IDs."
+	)
 	public RsConfigDiff getDeviceConfigDiff(@PathParam("id1") Long id1,
 			@PathParam("id2") Long id2) {
 		logger.debug("REST request, get device config diff, id {} and {}.", id1,
@@ -1668,6 +1744,10 @@ public class RestService extends Thread {
 	@Path("/devices/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get a device",
+		description = "Retrieve a device will all details."
+	)
 	public Device getDevice(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, device {}.", id);
@@ -1835,6 +1915,10 @@ public class RestService extends Thread {
 	@Path("/devices")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the devices",
+		description = "Retrieves the device list with minimal details."
+	)
 	public List<RsLightDevice> getDevices() throws WebApplicationException {
 		logger.debug("REST request, devices.");
 		Session session = Database.getSession();
@@ -1866,6 +1950,10 @@ public class RestService extends Thread {
 	@Path("/devicetypes")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the device types",
+		description = "Returns the list of device types (drivers)."
+	)
 	public List<DeviceDriver> getDeviceTypes() throws WebApplicationException {
 		logger.debug("REST request, device types.");
 		List<DeviceDriver> deviceTypes = new ArrayList<DeviceDriver>();
@@ -1877,6 +1965,10 @@ public class RestService extends Thread {
 	@Path("/refresheddevicetypes")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the device types after refresh",
+		description = "Reloads the device drivers and returns the refreshed list of drivers."
+	)
 	public List<DeviceDriver> getDeviceTypesAndRefresh() throws WebApplicationException {
 		logger.debug("REST request, refresh and get device types.");
 		try {
@@ -1941,6 +2033,10 @@ public class RestService extends Thread {
 	@Path("/devicefamilies")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the existing device families",
+		description = "Returns the list of device families (driver specific) currenly known in the database."
+	)
 	public List<RsDeviceFamily> getDeviceFamilies() throws WebApplicationException {
 		logger.debug("REST request, device families.");
 		Session session = Database.getSession();
@@ -1989,6 +2085,10 @@ public class RestService extends Thread {
 	@Path("/partnumbers")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the known part numbers",
+		description = "Returns the list of all known part numbers currently existing in the module table."
+	)
 	public List<RsPartNumber> getPartNumbers() throws WebApplicationException {
 		logger.debug("REST request, dpart numbers.");
 		Session session = Database.getSession();
@@ -2244,6 +2344,11 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add a device",
+		description = "In auto discovery mode, this will create a 'discover device' task, and the device will be create if the discovery is successful." +
+		" Otherwise, the device will be immediately created in the database, and a 'snapshot' task will be created."
+	)
 	public Task addDevice(@Context HttpServletRequest request, RsNewDevice device) throws WebApplicationException {
 		logger.debug("REST request, new device.");
 		Network4Address deviceAddress;
@@ -2449,6 +2554,10 @@ public class RestService extends Thread {
 	@Path("/devices/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Remove a device",
+		description = "Remove the given device, by ID."
+	)
 	public void deleteDevice(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete device {}.", id);
@@ -2780,6 +2889,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Update a device",
+		description = "Edits a device, by ID."
+	)
 	public Device setDevice(@Context HttpServletRequest request, @PathParam("id") Long id, RsDevice rsDevice)
 			throws WebApplicationException {
 		logger.debug("REST request, edit device {}.", id);
@@ -2977,6 +3090,10 @@ public class RestService extends Thread {
 	@Path("/tasks/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get a task.",
+		description = "Retrieves the status of a given task, by ID."
+	)
 	public Task getTask(@PathParam("id") Long id) {
 		logger.debug("REST request, get task {}", id);
 		Session session = Database.getSession();
@@ -3013,6 +3130,10 @@ public class RestService extends Thread {
 	@Path("/tasks/{id}/debuglog")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
+	@Operation(
+		summary = "Get the debug log of a task",
+		description = "Retrieves the full debug log of a given task, by ID."
+	)
 	public Response getTaskDebugLog(@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get task {} debug log.", id);
 		Session session = Database.getSession();
@@ -3052,12 +3173,17 @@ public class RestService extends Thread {
 	@Path("/tasks")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	public List<Task> getTasks() {
+	@Operation(
+		summary = "Get the tasks",
+		description = "Returns the list of tasks. Up to 'max' tasks are returned."
+	)
+	public List<Task> getTasks(@PathParam("max") @DefaultValue("1000") Integer maxCount) {
 		logger.debug("REST request, get tasks.");
 		Session session = Database.getSession();
 		try {
 			List<Task> tasks = session
 				.createQuery("from Task t order by t.id desc", Task.class)
+				.setMaxResults(maxCount)
 				.list();
 			return tasks;
 		}
@@ -3082,6 +3208,10 @@ public class RestService extends Thread {
 	@Path("/credentialsets")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the global credential sets",
+		description = "Returns the list of global credential sets (SSH, SNMP, etc. accounts) for authentication against the devices."
+	)
 	public List<DeviceCredentialSet> getCredentialSets()
 			throws WebApplicationException {
 		logger.debug("REST request, get credentials.");
@@ -3122,6 +3252,10 @@ public class RestService extends Thread {
 	@Path("/credentialsets/{id}")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Remove a credential set",
+		description = "Removes the given credential set, by ID."
+	)
 	public void deleteCredentialSet(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete credentials {}", id);
@@ -3178,6 +3312,10 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add a credential set",
+		description = "Creates a credential set, which then can be used to authenticate against the devices."
+	)
 	public void addCredentialSet(DeviceCredentialSet credentialSet)
 			throws WebApplicationException {
 		logger.debug("REST request, add credentials.");
@@ -3233,6 +3371,10 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Update a credential set",
+		description = "Edits a credential set, by ID."
+	)
 	public DeviceCredentialSet setCredentialSet(@PathParam("id") Long id,
 			DeviceCredentialSet rsCredentialSet) throws WebApplicationException {
 		logger.debug("REST request, edit credentials {}", id);
@@ -3432,6 +3574,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readonly")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Search for devices",
+		description = "Find devices using a string-based query."
+	)
 	public RsSearchResults searchDevices(RsSearchCriteria criteria)
 			throws WebApplicationException {
 		logger.debug("REST request, search devices, query '{}', driver '{}'.",
@@ -3485,6 +3631,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add a device group",
+		description = "Creates a device group. A group can be either static (fixed list) or dynamic (query-based list)."
+	)
 	public DeviceGroup addGroup(DeviceGroup deviceGroup)
 			throws WebApplicationException {
 		logger.debug("REST request, add group.");
@@ -3533,6 +3683,10 @@ public class RestService extends Thread {
 	@Path("/groups")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the device groups",
+		description = "Returns the list of device groups, including their definition."
+	)
 	public List<DeviceGroup> getGroups() throws WebApplicationException {
 		logger.debug("REST request, get groups.");
 		Session session = Database.getSession();
@@ -3562,6 +3716,10 @@ public class RestService extends Thread {
 	@Path("/groups/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Remove a device group",
+		description = "Removes a device group. This doesn't remove the devices themselves."
+	)
 	public void deleteGroup(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete group {}.", id);
@@ -3753,6 +3911,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Update a device group",
+		description = "Edits a device group, by ID."
+	)
 	public DeviceGroup setGroup(@PathParam("id") Long id, RsDeviceGroup rsGroup)
 			throws WebApplicationException {
 		logger.debug("REST request, edit group {}.", id);
@@ -3832,6 +3994,10 @@ public class RestService extends Thread {
 	@Path("/devices/group/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get members of a device group",
+		description = "Returns the list of devices which belong to the given group, by ID."
+	)
 	public List<RsLightDevice> getGroupDevices(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, get devices from group {}.", id);
@@ -4247,6 +4413,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Update a task",
+		description = "Edits a task, by ID. Set 'cancel' property to true to cancel the task."
+	)
 	public Task setTask(@PathParam("id") Long id, RsTask rsTask)
 			throws WebApplicationException {
 		logger.debug("REST request, edit task {}.", id);
@@ -4358,6 +4528,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readonly")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Search for tasks",
+		description = "Retrieves a list of tasks based on passed criteria."
+	)
 	public List<Task> searchTasks(RsTaskCriteria criteria)
 			throws WebApplicationException {
 
@@ -4439,6 +4613,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add a task",
+		description = "Creates a task and schedule it for execution."
+	)
 	public Task addTask(@Context HttpServletRequest request,
 			@Context SecurityContext securityContext,
 			RsTask rsTask) throws WebApplicationException {
@@ -5064,6 +5242,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readonly")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get last configuration changes",
+		description = "Retrieves the list of last configuration changes, based on passed criteria."
+	)
 	public List<RsConfigChange> getChanges(RsChangeCriteria criteria) throws WebApplicationException {
 		logger.debug("REST request, config changes.");
 		Session session = Database.getSession();
@@ -5099,6 +5281,10 @@ public class RestService extends Thread {
 	@Path("/policies")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the compliance policies",
+		description = "Returns the list of compliance policies."
+	)
 	public List<Policy> getPolicies() throws WebApplicationException {
 		logger.debug("REST request, get policies.");
 		Session session = Database.getSession();
@@ -5130,6 +5316,10 @@ public class RestService extends Thread {
 	@Path("/rules/policy/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the compliance rules of a policy",
+		description = "Returns the rules owned by a given compliance policy."
+	)
 	public List<Rule> getPolicyRules(@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get rules for policy {}.", id);
 		Session session = Database.getSession();
@@ -5248,6 +5438,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add a compliance policy",
+		description = "Creates a compliance policy."
+	)
 	public Policy addPolicy(RsPolicy rsPolicy) throws WebApplicationException {
 		logger.debug("REST request, add policy.");
 		String name = rsPolicy.getName().trim();
@@ -5309,6 +5503,10 @@ public class RestService extends Thread {
 	@Path("/policies/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Remove a compliance policy",
+		description = "Removes a given compliance policy, by ID"
+	)
 	public void deletePolicy(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete policy {}.", id);
@@ -5351,6 +5549,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Update a compliance policy",
+		description = "Edits a compliance policy, by ID."
+	)
 	public Policy setPolicy(@PathParam("id") Long id, RsPolicy rsPolicy)
 			throws WebApplicationException {
 		logger.debug("REST request, edit policy {}.", id);
@@ -5675,6 +5877,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add a compliance rule",
+		description = "Creates a compliance rule. The associated policy must already exist."
+	)
 	public Rule addRule(RsRule rsRule) throws WebApplicationException {
 		logger.debug("REST request, add rule.");
 		if (rsRule.getName() == null || rsRule.getName().trim().isEmpty()) {
@@ -5742,6 +5948,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Update a compliance rule",
+		description = "Edits a compliance rule, by ID."
+	)
 	public Rule setRule(@PathParam("id") Long id, RsRule rsRule)
 			throws WebApplicationException {
 		logger.debug("REST request, edit rule {}.", id);
@@ -5860,6 +6070,10 @@ public class RestService extends Thread {
 	@Path("/rules/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Remove a compliance rule",
+		description = "Removes a compliance rule, by ID."
+	)
 	public void deleteRule(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete rule {}.", id);
@@ -5974,11 +6188,11 @@ public class RestService extends Thread {
 	}
 
 	/**
-	 * Test js rule.
+	 * Test rule.
 	 *
 	 * @param request the request
 	 * @param rsRule the rs rule
-	 * @return the rs js rule test result
+	 * @return the rule test result
 	 * @throws WebApplicationException the web application exception
 	 */
 	@POST
@@ -5986,6 +6200,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readonly")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Test a compliance rule",
+		description = "Test a compliance rule against a given device, in dry run mode."
+	)
 	public RsRuleTestResult testRule(RsRuleTest rsRule) throws WebApplicationException {
 		logger.debug("REST request, rule test.");
 		Device device;
@@ -6111,6 +6329,10 @@ public class RestService extends Thread {
 	@Path("/devices/rule/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the exempted devices of a compliance rule",
+		description = "Returns the list of devices which have an exemption against a given compliance rule, by ID."
+	)
 	public List<RsLightExemptedDevice> getExemptedDevices(@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get exemptions for rule {}.", id);
 		Session session = Database.getSession();
@@ -6309,6 +6531,10 @@ public class RestService extends Thread {
 	@Path("/devices/{id}/complianceresults")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the compliance results for a device",
+		description = "Returns the compliance results for a give device, by ID."
+	)
 	public List<RsDeviceRule> getDeviceComplianceResults(@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get compliance results for device {}.", id);
 		Session session = Database.getSession();
@@ -6403,6 +6629,10 @@ public class RestService extends Thread {
 	@Path("/reports/last7dayschangesbyday")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the number of configuration changes for the last 7 days",
+		description = "Returns the number of device configuration changes per day, for the last 7 days."
+	)
 	public List<RsConfigChangeNumberByDateStat> getLast7DaysChangesByDayStats(@QueryParam("tz") String jsTimeZone) throws WebApplicationException {
 		logger.debug("REST request, get last 7 day changes by day stats.");
 		Session session = Database.getSession();
@@ -6574,6 +6804,10 @@ public class RestService extends Thread {
 	@Path("/reports/groupconfigcompliancestats")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the compliance status of a device group",
+		description = "Returns the compliance status of a given device group, by ID."
+	)
 	public List<RsGroupConfigComplianceStat> getGroupConfigComplianceStats(@QueryParam("domain") Set<Long> domains,
 			@QueryParam("group") Set<Long> deviceGroups, @QueryParam("policy") Set<Long> policies) throws WebApplicationException {
 		logger.debug("REST request, group config compliance stats.");
@@ -6664,6 +6898,10 @@ public class RestService extends Thread {
 	@Path("/reports/hardwaresupportstats")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the global hardware support status",
+		description = "Returns the global hardware support status, i.e. a list of End-of-Life and End-of-Sale dates with the corresponding device count."
+	)
 	public List<RsHardwareSupportStat> getHardwareSupportStats() throws WebApplicationException {
 		logger.debug("REST request, hardware support stats.");
 		Session session = Database.getSession();
@@ -6686,9 +6924,7 @@ public class RestService extends Thread {
 			return stats;
 		}
 		catch (HibernateException e) {
-			logger.error("Unable to ge"
-					+ ""
-					+ "t the stats.", e);
+			logger.error("Unable to get the stats.", e);
 			throw new NetshotBadRequestException("Unable to get the stats",
 					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
@@ -6848,6 +7084,10 @@ public class RestService extends Thread {
 	@Path("/reports/groupsoftwarecompliancestats")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the global software compliance status",
+		description = "Returns the software compliance status of devices, optionally filtered by a list of device domains."
+	)
 	public List<RsGroupSoftwareComplianceStat> getGroupSoftwareComplianceStats(@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, group software compliance stats.");
 		Session session = Database.getSession();
@@ -6998,6 +7238,10 @@ public class RestService extends Thread {
 	@Path("/reports/configcompliancedevicestatuses")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the configuration compliance status of devices",
+		description = "Returns the configuration compliance status of devices; optionally filtered by domain, group, policy or compliance level."
+	)
 	public List<RsLightPolicyRuleDevice> getConfigComplianceDeviceStatuses(
 			@QueryParam("domain") Set<Long> domains,
 			@QueryParam("group") Set<Long> groups,
@@ -7067,6 +7311,10 @@ public class RestService extends Thread {
 	@Path("/reports/groupconfignoncompliantdevices/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the non compliant devices of a group",
+		description = "Returns the list of non-compliance devices part of a given group, optionally filtered by domains and policies"
+	)
 	public List<RsLightPolicyRuleDevice> getGroupConfigNonCompliantDevices(@PathParam("id") Long id,
 			@QueryParam("domain") Set<Long> domains, @QueryParam("policy") Set<Long> policies) throws WebApplicationException {
 		logger.debug("REST request, group config non compliant devices.");
@@ -7114,6 +7362,10 @@ public class RestService extends Thread {
 	@Path("/reports/hardwaresupportdevices/{type}/{date}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the End-of-Life or End-of-Sale devices matching a date.",
+		description = "Returns the list of devices getting End-of-Life (type 'eol') or End-of-Sale (type 'eos') at the given date (or never if 'date' is not given)."
+	)
 	public List<RsLightDevice> getHardwareStatusDevices(@PathParam("type") String type, @PathParam("date") Long date) throws WebApplicationException {
 		logger.debug("REST request, EoX devices by type and date.");
 		if (!type.equals("eol") && !type.equals("eos")) {
@@ -7165,6 +7417,10 @@ public class RestService extends Thread {
 	@Path("/hardwarerules")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the hardware compliance rules",
+		description = "Returns the list of hardware compliance rules."
+	)
 	public List<HardwareRule> getHardwareRules() throws WebApplicationException {
 		logger.debug("REST request, hardware rules.");
 		Session session = Database.getSession();
@@ -7308,6 +7564,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add an hardware compliance rule",
+		description = "Creates an hardware compliance rule."
+	)
 	public HardwareRule addHardwareRule(RsHardwareRule rsRule) throws WebApplicationException {
 		logger.debug("REST request, add hardware rule.");
 
@@ -7366,6 +7626,10 @@ public class RestService extends Thread {
 	@Path("/hardwarerules/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Remove an hardware compliance rule",
+		description = "Removes an hardware compliance rule, by ID."
+	)
 	public void deleteHardwareRule(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete hardware rule {}.", id);
@@ -7409,6 +7673,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Update an hardware compliance rule",
+		description = "Edits an hardware compliance rule, by ID."
+	)
 	public HardwareRule setHardwareRule(@PathParam("id") Long id, RsHardwareRule rsRule)
 			throws WebApplicationException {
 		logger.debug("REST request, edit hardware rule {}.", id);
@@ -7473,6 +7741,10 @@ public class RestService extends Thread {
 	@Path("/softwarerules")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the software compliance rules",
+		description = "Returns the list of software compliance rules."
+	)
 	public List<SoftwareRule> getSoftwareRules() throws WebApplicationException {
 		logger.debug("REST request, software rules.");
 		Session session = Database.getSession();
@@ -7706,6 +7978,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add a software compliance rule",
+		description = "Creates a software compliance rule."
+	)
 	public SoftwareRule addSoftwareRule(RsSoftwareRule rsRule) throws WebApplicationException {
 		logger.debug("REST request, add software rule.");
 
@@ -7764,6 +8040,10 @@ public class RestService extends Thread {
 	@Path("/softwarerules/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Remove a software compliance rule",
+		description = "Removes a software compliance rule, by ID"
+	)
 	public void deleteSoftwareRule(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete software rule {}.", id);
@@ -7807,6 +8087,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Update a software compliance rule",
+		description = "Edits a software compliance rule."
+	)
 	public SoftwareRule setSoftwareRule(@PathParam("id") Long id, RsSoftwareRule rsRule)
 			throws WebApplicationException {
 		logger.debug("REST request, edit software rule {}.", id);
@@ -7904,6 +8188,10 @@ public class RestService extends Thread {
 	@Path("/reports/groupdevicesbysoftwarelevel/{id}/{level}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the devices of a group based on software compliance level",
+		description = "Returns the list of devices of a given group by ID, and matching the given software compliance level."
+	)
 	public List<RsLightSoftwareLevelDevice> getGroupDevicesBySoftwareLevel(@PathParam("id") Long id, @PathParam("level") String level,
 			@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, group {} devices by software level {}.", id, level);
@@ -7981,6 +8269,11 @@ public class RestService extends Thread {
 	@Path("/reports/accessfailuredevices")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the devices without successful snapshot over a given period",
+		description = "Returns the list of devices which didn't have a successful snapshot over the given number of days, optionally "
+			+ "filtered by device domain."
+	)
 	public List<RsLightAccessFailureDevice> getAccessFailureDevices(@QueryParam("days") Integer days, @QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, devices without successful snapshot over the last {} days.", days);
 		
@@ -8118,6 +8411,10 @@ public class RestService extends Thread {
 	@Path("/user/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "User log out",
+		description = "Terminates the current user session (useless when using API tokens)."
+	)
 	public void logout(@Context HttpServletRequest request) throws WebApplicationException {
 		logger.debug("REST logout request.");
 		User sessionUser = (User) request.getSession().getAttribute("user");
@@ -8139,6 +8436,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readonly")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Update a user",
+		description = "Edits a given user, by ID, especially the password for a local user."
+	)
 	public UiUser setPassword(@Context HttpServletRequest request, RsLogin rsLogin) throws WebApplicationException {
 		logger.debug("REST password change request, username {}.", rsLogin.getUsername());
 		User currentUser = (User) request.getAttribute("user");
@@ -8195,6 +8496,10 @@ public class RestService extends Thread {
 	@Path("/user")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Log in",
+		description = "Logs in (create session) by username and password (useless when using API tokens)."
+	)
 	public UiUser login(@Context HttpServletRequest request, RsLogin rsLogin) throws WebApplicationException {
 		logger.debug("REST authentication request, username {}.", rsLogin.getUsername());
 		Netshot.aaaLogger.info("REST authentication request, username {}.", rsLogin.getUsername());
@@ -8257,6 +8562,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readonly")
 	@Path("/user")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the current user",
+		description = "Returns the current logged in user."
+	)
 	public User getUser(@Context HttpServletRequest request) throws WebApplicationException {
 		User user = (User) request.getAttribute("user");
 		return user;
@@ -8273,6 +8582,10 @@ public class RestService extends Thread {
 	@Path("/users")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the users",
+		description = "Returns the list of Netshot users."
+	)
 	public List<UiUser> getUsers() throws WebApplicationException {
 		logger.debug("REST request, get user list.");
 		Session session = Database.getSession();
@@ -8420,6 +8733,10 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add a user to Netshot",
+		description = "Create a Netshot user."
+	)
 	public UiUser addUser(RsUser rsUser) {
 		logger.debug("REST request, add user");
 
@@ -8487,6 +8804,10 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Update a Netshot user",
+		description = "Edits a Netshot user, by ID."
+	)
 	public UiUser setUser(@PathParam("id") Long id, RsUser rsUser)
 			throws WebApplicationException {
 		logger.debug("REST request, edit user {}.", id);
@@ -8561,6 +8882,10 @@ public class RestService extends Thread {
 	@Path("/users/{id}")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Remove a Netshot user.",
+		description = "Removes a user from the Netshot database."
+	)
 	public void deleteUser(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete user {}.", id);
@@ -8697,6 +9022,10 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add a new API token",
+		description = "Creates a new API token."
+	)
 	public ApiToken addApiToken(RsApiToken rsApiToken) {
 		logger.debug("REST request, add API token");
 
@@ -8745,6 +9074,10 @@ public class RestService extends Thread {
 	@Path("/apitokens")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the API tokens",
+		description = "Returns the list of API tokens."
+	)
 	public List<ApiToken> getApiTokens() throws WebApplicationException {
 		logger.debug("REST request, get API token list.");
 		Session session = Database.getSession();
@@ -8772,6 +9105,10 @@ public class RestService extends Thread {
 	@Path("/apitokens/{id}")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Remove an API token",
+		description = "Removes an API token, by ID."
+	)
 	public void deleteApiToken(@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, delete API token {}.", id);
 		Session session = Database.getSession();
@@ -8804,6 +9141,12 @@ public class RestService extends Thread {
 	@Path("/reports/export")
 	@RolesAllowed("readonly")
 	@Produces({ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+	@Operation(
+		summary = "Export data",
+		description = "Exports data as Excel datasheet. The devices can be filtered by groups or domains. " +
+			"The report can be customized to include or not interfaces, inventory, locations, compliance, groups. " +
+			"The only supported and default output format is xlsx (Excel file)."
+	)
 	public Response getDataXLSX(@Context HttpServletRequest request,
 			@QueryParam("group") Set<Long> groups,
 			@QueryParam("domain") Set<Long> domains,
@@ -9393,6 +9736,10 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add a command script",
+		description = "Create a command script (script to be later run over devices)."
+	)
 	public DeviceJsScript addScript(@Context HttpServletRequest request, DeviceJsScript rsScript) throws WebApplicationException {
 		logger.debug("REST request, add device script.");
 		DeviceDriver driver = DeviceDriver.getDriverByName(rsScript.getDeviceDriver());
@@ -9449,6 +9796,10 @@ public class RestService extends Thread {
 	@Path("/scripts/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Remove a script",
+		description = "Removes a given script, by ID."
+	)
 	public void deleteScript(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete script {}.", id);
@@ -9481,6 +9832,10 @@ public class RestService extends Thread {
 	@Path("/scripts/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get a command script",
+		description = "Returns a given command script, by ID."
+	)
 	public DeviceJsScript getScript(@PathParam("id") Long id) {
 		logger.debug("REST request, get script {}", id);
 		Session session = Database.getSession();
@@ -9507,6 +9862,10 @@ public class RestService extends Thread {
 	@Path("/scripts")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get command scripts",
+		description = "Returns the list of command scripts."
+	)
 	public List<DeviceJsScript> getScripts() {
 		logger.debug("REST request, get scripts.");
 		Session session = Database.getSession();
@@ -9797,6 +10156,10 @@ public class RestService extends Thread {
 	@Path("/diagnostics")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get the diagnostics",
+		description = "Returns the list of diagnostics."
+	)
 	public List<Diagnostic> getDiagnostics() throws WebApplicationException {
 		logger.debug("REST request, get diagnotics.");
 		Session session = Database.getSession();
@@ -9822,6 +10185,10 @@ public class RestService extends Thread {
 	@RolesAllowed("executereadwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Add a diagnostic.",
+		description = "Creates a diagnostic."
+	)
 	public Diagnostic addDiagnostic(RsDiagnostic rsDiagnostic) throws WebApplicationException {
 		logger.debug("REST request, add diagnostic");
 		String name = rsDiagnostic.getName().trim();
@@ -9926,6 +10293,10 @@ public class RestService extends Thread {
 	@RolesAllowed("executereadwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Update a diagnostic",
+		description = "Creates a new diagnostic."
+	)
 	public Diagnostic setDiagnostic(@PathParam("id") Long id, RsDiagnostic rsDiagnostic)
 			throws WebApplicationException {
 		logger.debug("REST request, edit diagnostic {}.", id);
@@ -10050,6 +10421,10 @@ public class RestService extends Thread {
 	@Path("/diagnostics/{id}")
 	@RolesAllowed("executereadwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Remove a diagnostic",
+		description = "Removes a given diagnostic, by ID."
+	)
 	public void deleteDiagnostic(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete diagnostic {}.", id);
@@ -10090,6 +10465,10 @@ public class RestService extends Thread {
 	@Path("/devices/{id}/diagnosticresults")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Operation(
+		summary = "Get diagnostic results",
+		description = "Returns the results of a given diagnostic, by ID."
+	)
 	public List<DiagnosticResult> getDeviceDiagnosticResults(@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get diagnostic results for device {}.", id);
 		Session session = Database.getSession();

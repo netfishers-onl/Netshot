@@ -43,13 +43,15 @@
 	<span id="nstoolbar-section"></span>
 	<span class="nstoolbarspacer"></span>
 	<button id="nstoolbar-help">
+		<svg xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 20px; right: -2px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>
 		<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-help-circle"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
 		<span>Help</span>
 	</button>
-	<button id="nstoolbar-about">
-		<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-info"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-		<span>About...</span>
-	</button>
+	<ul id="nstoolbar-helpmenu" class="nstoolbarmenu">
+		<li><a href="#" id="userguide"><span class="ui-icon ui-icon-help"></span>User Guide</a></li>
+		<li><a href="#" id="apibrowser"><span class="ui-icon ui-icon-lightbulb"></span>API Browser</a></li>
+		<li><a href="#" id="about"><span class="ui-icon ui-icon-info"></span>About...</a></li>
+	</ul>
 </div>
 
 

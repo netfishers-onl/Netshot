@@ -42,12 +42,37 @@ define([
 			this.$('#nstoolbar-admin').click(function() {
 				window.location = "#/admin";
 			});
-			this.$('#nstoolbar-about').button().click(function() {
-				var aboutDialog = new AboutDialog();
+			this.$('#nstoolbar-help').unbind('click').button().click(function() {
+				var helpMenu = $('#nstoolbar-helpmenu');
+				$('.nstoolbarmenu').not(helpMenu).hide();
+				helpMenu.toggle()
+						.prependTo('#container').position({
+							my: "left top",
+							at: "left bottom",
+							of: this
+						});
+				$('#nstoolbar-helpmenu #userguide').unbind('click')
+						.click(function() {
+							helpMenu.hide();
+							window.open("https://github.com/netfishers-onl/Netshot/wiki/Netshot-User-Guide", "help");
+							return false;
+						});
+				$('#nstoolbar-helpmenu #apibrowser').unbind('click')
+						.click(function() {
+							helpMenu.hide();
+							window.open("/api-browser/", "api-browser");
+							return false;
+						});
+				$('#nstoolbar-helpmenu #about').unbind('click')
+						.click(function() {
+							helpMenu.hide();
+							var aboutDialog = new AboutDialog();
+							return false;
+						});
+				return false;
 			});
-			this.$('#nstoolbar-help').button().click(function() {
-				window.open("https://github.com/netfishers-onl/Netshot/wiki/Netshot-User-Guide", "help");
-			});
+			this.$('#nstoolbar-help').buttonset();
+			this.$('#nstoolbar-helpmenu').hide().menu();
 			this.$("#nsuser").click(function() {
 				var userDialog = new UserDialog({
 					model: user

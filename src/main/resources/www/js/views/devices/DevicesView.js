@@ -68,7 +68,9 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 				$('#nstoolbar-section').empty();
 			}
 			$('#nstoolbar-devices-add').unbind('click').button().click(function() {
-				var addDeviceMenu = $('#nstoolbar-devices-addmenu').show()
+				var addDeviceMenu = $('#nstoolbar-devices-addmenu');
+				$('.nstoolbarmenu').not(addDeviceMenu).hide();
+				addDeviceMenu.toggle()
 						.prependTo('#container').position({
 							my: "left top",
 							at: "left bottom",

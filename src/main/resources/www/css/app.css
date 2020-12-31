@@ -148,7 +148,7 @@ th[role=columnheader]:not(.no-sort):hover:after {
 }
 
 .ui-menu-item {
-	padding: 8px 15px 8px 15px;
+	padding: 4px 15px 4px 15px;
 }
 
 .ui-menu-item .ui-icon {
@@ -645,6 +645,10 @@ h1 {
 }
 
 #nstoolbar-devices-addmenu {
+	width: 300px;
+}
+
+.nstoolbarmenu {
 	width: 300px;
 	z-index: 500;
 	background-color: #fff;

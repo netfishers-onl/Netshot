@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2016 Sylvain Cadilhac (NetFishers)
+ * Copyright 2013-2020 Sylvain Cadilhac (NetFishers)
  * 
  * This file is part of Netshot.
  * 
@@ -81,7 +81,6 @@ function _check(_device) {
 		},
 		
 		findSections: function(text, regex) {
-			var lines = text.split(/[\r\n]+/g);
 			if (typeof(text) != "string") {
 				throw "Invalid text string in findSections.";
 			}
@@ -91,6 +90,7 @@ function _check(_device) {
 			var sections = [];
 			var section;
 			var indent = -1;
+			var lines = text.split(/[\r\n]+/g);
 			for (var l in lines) {
 				var line = lines[l];
 				var i = line.search(/[^\t\s]/);
@@ -103,6 +103,7 @@ function _check(_device) {
 					indent = -1;
 				}
 				if (indent == -1) {
+					regex.lastIndex = 0;
 					var match = regex.exec(line);
 					if (match) {
 						indent = i;

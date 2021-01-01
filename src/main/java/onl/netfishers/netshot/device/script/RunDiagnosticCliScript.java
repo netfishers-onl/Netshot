@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
+import org.graalvm.polyglot.Value;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,7 +89,7 @@ public class RunDiagnosticCliScript extends CliScript {
 			Map<String, Object> jsDiagnostics = new HashMap<String, Object>();
 			for (Diagnostic diagnostic : this.diagnostics) {
 				try {
-					Object jsObject = diagnostic.getJsObject(device, context);
+					Value jsObject = diagnostic.getJsObject(device, context);
 					if (jsObject == null) {
 						continue;
 					}

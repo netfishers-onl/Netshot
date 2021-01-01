@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.HostAccess.Export;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
@@ -73,6 +74,7 @@ public class JsDeviceHelper {
 		this.session = session;
 	}
 	
+	@Export
 	public void add(String key, Value data) {
 		if (readOnly) {
 			logger.warn("Adding key '{}' is forbidden.", key);
@@ -129,28 +131,11 @@ public class JsDeviceHelper {
 				
 				device.getNetworkInterfaces().add(networkInterface);
 			}
-		}
-		catch (Exception e) {
-			logger.warn("Error during snapshot while adding device attribute key '{}'.", key, e);
-			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
-		}
-	}
-	
-	public void add(String key, String value) {
-		if (readOnly) {
-			logger.warn("Adding key '{}' is forbidden.", key);
-			taskLogger.error(String.format("Adding key %s is forbidden", key));
-			return;
-		}
-		if (value == null) {
-			return;
-		}
-		try {
-			if ("vrf".equals(key)) {
-				device.addVrfInstance(value);
+			else if ("vrf".equals(key)) {
+				device.addVrfInstance(data.asString());
 			}
 			else if ("virtualDevice".equals(key)) {
-				device.addVirtualDevice(value);
+				device.addVirtualDevice(data.asString());
 			}
 		}
 		catch (Exception e) {
@@ -159,6 +144,7 @@ public class JsDeviceHelper {
 		}
 	}
 	
+	@Export
 	public void reset() {
 		if (readOnly) {
 			logger.warn("Resetting device is forbidden.");
@@ -181,6 +167,7 @@ public class JsDeviceHelper {
 		device.setEosDate(null);
 	}
 
+	@Export
 	public void set(String key, Boolean value) {
 		if (readOnly) {
 			logger.warn("Setting key '{}' is forbidden.", key);
@@ -211,6 +198,7 @@ public class JsDeviceHelper {
 	}
 	
 	
+	@Export
 	public void set(String key, Double value) {
 		if (readOnly) {
 			logger.warn("Setting key '{}' is forbidden.", key);
@@ -240,6 +228,7 @@ public class JsDeviceHelper {
 		}
 	}
 	
+	@Export
 	public void set(String key, String value) {
 		if (readOnly) {
 			logger.warn("Setting key '{}' is forbidden.", key);
@@ -300,8 +289,6 @@ public class JsDeviceHelper {
 			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
 		}
 	}
-
-
 
 	/**
 	 * Gets the device item.
@@ -428,6 +415,7 @@ public class JsDeviceHelper {
 	 * @param item the item
 	 * @return the object
 	 */
+	@Export
 	public Object get(String item) {
 		logger.debug("JavaScript request for item {} on current device.", item);
 		return this.getDeviceItem(this.device, item);
@@ -469,6 +457,7 @@ public class JsDeviceHelper {
 	 * @param deviceId the device id
 	 * @return the object
 	 */
+	@Export
 	public Object get(String item, long deviceId) {
 		logger.debug("JavaScript request for item {} on device {}.", item,
 				deviceId);
@@ -494,6 +483,7 @@ public class JsDeviceHelper {
 		return null;
 	}
 
+	@Export
 	public Object get(String item, String deviceName) {
 		logger.debug("JavaScript request for item {} on device named {}.", item,
 				deviceName);
@@ -529,6 +519,7 @@ public class JsDeviceHelper {
 	 * @param host the host
 	 * @return the object
 	 */
+	@Export
 	public Object nslookup(String host) {
 		String name = "";
 		String address = "";

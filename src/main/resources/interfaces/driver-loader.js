@@ -19,8 +19,8 @@
 
 function _connect(_function, _protocol, _options, _logger) {
 	
-	var _cli = _options.cliHelper;
-	var _snmp = _options.snmpHelper;
+	var _cli = _options.getCliHelper();
+	var _snmp = _options.getSnmpHelper();
 	
 	var _toNative = function(o) {
 		if (o == null || typeof(o) == "undefined") {
@@ -152,7 +152,7 @@ function _connect(_function, _protocol, _options, _logger) {
 					throw message;
 				}
 			}
-			this._mode = nextOne.options[_cli.lastExpectMatchIndex];
+			this._mode = nextOne.options[_cli.getLastExpectMatchIndex()];
 			this._modeHistory.push(this._mode);
 			this._strictPrompt = _cli.getLastExpectMatchGroup(1);
 			if (this._mode == this._runningTarget) {
@@ -225,7 +225,7 @@ function _connect(_function, _protocol, _options, _logger) {
 				if (_cli.isErrored()) {
 					throw "Error while waiting for a response from the device after command '" + command + "'";
 				}
-				if (_cli.lastExpectMatchIndex == 1) {
+				if (_cli.getLastExpectMatchIndex() == 1) {
 					result += _cli.lastFullOutput;
 					toSend = this.pagerResponse;
 				}
@@ -415,7 +415,7 @@ function _connect(_function, _protocol, _options, _logger) {
 			else if (typeof(value) == "string") {
 				value = String(value);
 			}
-			_options.deviceHelper.set(key, value);
+			_options.getDeviceHelper().set(key, value);
 		},
 		add: function(collection, value) {
 			if (typeof(collection) == "string") {
@@ -433,20 +433,20 @@ function _connect(_function, _protocol, _options, _logger) {
 			else if (typeof(value) == "string") {
 				value = String(value);
 			}
-			_options.deviceHelper.add(collection, value);
+			_options.getDeviceHelper().add(collection, value);
 		},
 		get: function(key, id) {
 			if (typeof(key) == "string") {
 				key = String(key);
 				if (typeof(id) == "undefined") {
-					return _toNative(_options.deviceHelper.get(key));
+					return _toNative(_options.getDeviceHelper().get(key));
 				}
 				else if (typeof(id) == "number" && !isNaN(id)) {
-					return _toNative(_options.deviceHelper.get(key, id));
+					return _toNative(_options.getDeviceHelper().get(key, id));
 				}
 				else if (typeof(id) == "string") {
 					var name = String(id);
-					return _toNative(_options.deviceHelper.get(key, name));
+					return _toNative(_options.getDeviceHelper().get(key, name));
 				}
 				else {
 					throw "Invalid device id to retrieve data from.";
@@ -470,7 +470,7 @@ function _connect(_function, _protocol, _options, _logger) {
 			else if (typeof(value) == "string") {
 				value = String(value);
 			}
-			_options.configHelper.set(key, value);
+			_options.getConfigHelper().set(key, value);
 		},
 		download: function(key, method, fileName, storeFileName) {
 			if (typeof(key) === "string") {
@@ -501,7 +501,7 @@ function _connect(_function, _protocol, _options, _logger) {
 				throw "The storeFileName should be a string in config.download.";
 			}
 
-			_options.configHelper.download(key, method, fileName, storeFileName);
+			_options.getConfigHelper().download(key, method, fileName, storeFileName);
 		}
 	};
 	
@@ -518,11 +518,11 @@ function _connect(_function, _protocol, _options, _logger) {
 			}
 			if (typeof(value) == "undefined") {
 				value = key;
-				_options.diagnosticHelper.set(this.currentKey, value);
+				_options.getDiagnosticHelper().set(this.currentKey, value);
 			}
 			else {
 				value = String(value);
-				_options.diagnosticHelper.set(key, value);
+				_options.getDiagnosticHelper().set(key, value);
 			}
 		}
 	};
@@ -533,7 +533,7 @@ function _connect(_function, _protocol, _options, _logger) {
 	}
 	
 	if (_function === "snapshot") {
-		_options.deviceHelper.reset();
+		_options.getDeviceHelper().reset();
 		snapshot(commandHelper, deviceHelper, configHelper, debug);
 	}
 	else if (_function === "run") {
@@ -544,7 +544,7 @@ function _connect(_function, _protocol, _options, _logger) {
 		run(commandHelper, deviceHelper, configHelper, debug);
 	}
 	else if (_function === "diagnostics") {
-		var diagnostics = _options.diagnosticHelper.jsDiagnostics;
+		var diagnostics = _options.getDiagnosticHelper().getDiagnostics();
 		for (var name in diagnostics) {
 			var diagnostic = diagnostics[name];
 			diagnosticHelper.setKey(name);
@@ -553,8 +553,8 @@ function _connect(_function, _protocol, _options, _logger) {
 				diagnose(commandHelper, deviceHelper, diagnosticHelper, debug);
 			}
 			else {
-				cli.macro(diagnostic.mode);
-				var output = cli.command(diagnostic.command);
+				cli.macro(diagnostic.getMode());
+				var output = cli.command(diagnostic.getCommand());
 				diagnosticHelper.set(output);
 			}
 		}

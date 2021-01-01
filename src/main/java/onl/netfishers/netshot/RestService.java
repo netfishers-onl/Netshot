@@ -173,6 +173,7 @@ import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.glassfish.jersey.servlet.ServletProperties;
+import org.graalvm.polyglot.HostAccess.Export;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
@@ -6242,29 +6243,34 @@ public class RestService extends Thread {
 			RsRuleTestResult result = new RsRuleTestResult();
 
 			StringBuffer log = new StringBuffer();
-			TaskLogger taskLogger = new TaskLogger(){
+			TaskLogger taskLogger = new TaskLogger() {
 			
 				@Override
+				@Export
 				public void warn(String message) {
 					log.append(String.format("[WARN] %s\n", message));
 				}
 			
 				@Override
+				@Export
 				public void trace(String message) {
 					log.append(String.format("[TRACE] %s\n", message));
 				}
 			
 				@Override
+				@Export
 				public void info(String message) {
 					log.append(String.format("[INFO] %s\n", message));
 				}
 			
 				@Override
+				@Export
 				public void error(String message) {
 					log.append(String.format("[ERROR] %s\n", message));
 				}
 			
 				@Override
+				@Export
 				public void debug(String message) {
 					log.append(String.format("[DEBUG] %s\n", message));
 				}

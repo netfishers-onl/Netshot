@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.regex.Matcher;
 
+import org.graalvm.polyglot.HostAccess.Export;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,6 +87,7 @@ public class JsCliHelper {
 	 * @param command The original command
 	 * @return the text without echoed command
 	 */
+	@Export
 	public String removeEcho(String text, String command) {
 		String output = text;
 		// Remove the echo of the command
@@ -106,6 +108,7 @@ public class JsCliHelper {
 	 * @param timeout The maximum time to wait for the reply
 	 * @return the output from the device, result of the passed command
 	 */
+	@Export
 	public String send(String command, String[] expects, int timeout) {
 		this.errored = false;
 		if (command == null) {
@@ -174,6 +177,7 @@ public class JsCliHelper {
 	 * Add a trace message to the debug log.
 	 * @param message The message to add
 	 */
+	@Export
 	public void trace(String message) {
 		if (this.cliLogger != null) {
 			this.cliLogger.trace(Instant.now() + " " + message);
@@ -186,6 +190,7 @@ public class JsCliHelper {
 	 * @param expects The list of possible outputs to match
 	 * @return the output from the device, result of the passed command
 	 */
+	@Export
 	public String send(String command, String[] expects) throws IOException {
 		return send(command, expects, -1);
 	}
@@ -195,6 +200,7 @@ public class JsCliHelper {
 	 * @param command The command to send
 	 * @return the output from the device, result of the passed command
 	 */
+	@Export
 	public String send(String[] expects) throws IOException {
 		return send(null, expects, -1);
 	}
@@ -203,6 +209,7 @@ public class JsCliHelper {
 	 * Get the last sent command.
 	 * @return the last sent command
 	 */
+	@Export
 	public String getLastCommand() {
 		return cli.getLastCommand();
 	}
@@ -211,6 +218,7 @@ public class JsCliHelper {
 	 * Get the last expect match.
 	 * @return the last matched expect
 	 */
+	@Export
 	public String getLastExpectMatch() {
 		return cli.getLastExpectMatch().group();
 	}
@@ -220,6 +228,7 @@ public class JsCliHelper {
 	 * @param group The specific match to tget
 	 * @return the matched group
 	 */
+	@Export
 	public String getLastExpectMatchGroup(int group) {
 		try {
 			return cli.getLastExpectMatch().group(group);
@@ -233,6 +242,7 @@ public class JsCliHelper {
 	 * Get the last matched pattern.
 	 * @return the last matched pattern
 	 */
+	@Export
 	public String getLastExpectMatchPattern() {
 		return cli.getLastExpectMatchPattern();
 	}
@@ -241,6 +251,7 @@ public class JsCliHelper {
 	 * Get the last match index.
 	 * @return the last matched index
 	 */
+	@Export
 	public int getLastExpectMatchIndex() {
 		return cli.getLastExpectMatchIndex();
 	}
@@ -249,6 +260,7 @@ public class JsCliHelper {
 	 * Get the last full output of the device (after a command was sent).
 	 * @return the last full output
 	 */
+	@Export
 	public String getLastFullOutput() {
 		return cli.getLastFullOutput();
 	}
@@ -257,6 +269,7 @@ public class JsCliHelper {
 	 * Check whether there was an error after the last command.
 	 * @return true if there was an error
 	 */
+	@Export
 	public boolean isErrored() {
 		return errored;
 	}
@@ -265,6 +278,7 @@ public class JsCliHelper {
 	 * Pause the thread for the given number of milliseconds.
 	 * @param millis The number of milliseconds to wait for
 	 */
+	@Export
 	public void sleep(long millis) {
 		try {
 			Thread.sleep(millis);

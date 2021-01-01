@@ -26,6 +26,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.HostAccess.Export;
 
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
@@ -55,6 +57,7 @@ public class SimpleDiagnostic extends Diagnostic {
 			this.setCommand(command);
 		}
 
+		@Export
 		public String getCommand() {
 			return command;
 		}
@@ -63,6 +66,7 @@ public class SimpleDiagnostic extends Diagnostic {
 			this.command = command;
 		}
 
+		@Export
 		public String getMode() {
 			return mode;
 		}
@@ -266,11 +270,11 @@ public class SimpleDiagnostic extends Diagnostic {
 	}
 
 	@Override
-	public Object getJsObject(Device device, Context context) {
+	public Value getJsObject(Device device, Context context) {
 		if (!device.getDriver().equals(this.getDeviceDriver())) {
 			return null;
 		}
-		return new JsSimpleDiagnostic(this.cliMode, this.command);
+		return Value.asValue(new JsSimpleDiagnostic(this.cliMode, this.command));
 	}
 	
 }

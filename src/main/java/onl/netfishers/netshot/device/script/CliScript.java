@@ -28,6 +28,7 @@ import java.util.Set;
 import javax.persistence.Transient;
 import javax.script.ScriptException;
 
+import org.graalvm.polyglot.HostAccess.Export;
 import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,26 +123,31 @@ public abstract class CliScript {
 	protected TaskLogger getJsLogger() {
 		return new TaskLogger() {
 			
+			@Export
 			@Override
 			public void warn(String message) {
 				jsLog.add(String.format("[DEBUG] %s", message));
 			}
 			
+			@Export
 			@Override
 			public void trace(String message) {
 				jsLog.add(String.format("[TRACE] %s", message));
 			}
 			
+			@Export
 			@Override
 			public void info(String message) {
 				jsLog.add(String.format("[INFO] %s", message));
 			}
 			
+			@Export
 			@Override
 			public void error(String message) {
 				jsLog.add(String.format("[ERROR] %s", message));
 			}
 			
+			@Export
 			@Override
 			public void debug(String message) {
 				jsLog.add(String.format("[DEBUG] %s", message));
@@ -159,26 +165,31 @@ public abstract class CliScript {
 		}
 		return new TaskLogger() {
 			
+			@Export
 			@Override
 			public void warn(String message) {
 				cliLog.add(message);
 			}
 			
+			@Export
 			@Override
 			public void trace(String message) {
 				cliLog.add(message);
 			}
 			
+			@Export
 			@Override
 			public void info(String message) {
 				cliLog.add(message);
 			}
 			
+			@Export
 			@Override
 			public void error(String message) {
 				cliLog.add(message);
 			}
 			
+			@Export
 			@Override
 			public void debug(String message) {
 				cliLog.add(message);

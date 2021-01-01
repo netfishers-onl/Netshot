@@ -20,6 +20,8 @@ package onl.netfishers.netshot.device.script.helper;
 
 import java.io.File;
 
+import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.HostAccess.Export;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,32 +59,9 @@ public class JsConfigHelper {
 		this.cli = cli;
 		this.taskLogger = taskLogger;
 	}
-	
-	public void set(String key, Double value) {
-		if (value == null) {
-			return;
-		}
-		try {
-			DeviceDriver driver = device.getDeviceDriver();
-			for (AttributeDefinition attribute : driver.getAttributes()) {
-				if (attribute.getLevel().equals(AttributeLevel.CONFIG) && attribute.getName().equals(key)) {
-					switch (attribute.getType()) {
-					case NUMERIC:
-						config.addAttribute(new ConfigNumericAttribute(config, key, value));
-						break;
-					default:
-					}
-					break;
-				}
-			}
-		}
-		catch (Exception e) {
-			logger.warn("Error during snapshot while setting config attribute key '{}'.", key);
-			
-		}
-	}
-	
-	public void set(String key, Boolean value) {
+
+	@Export
+	public void set(String key, Value value) {
 		if (value == null) {
 			return;
 		}
@@ -92,7 +71,16 @@ public class JsConfigHelper {
 				if (attribute.getLevel().equals(AttributeLevel.CONFIG) && attribute.getName().equals(key)) {
 					switch (attribute.getType()) {
 					case BINARY:
-						config.addAttribute(new ConfigBinaryAttribute(config, key, value));
+						config.addAttribute(new ConfigBinaryAttribute(config, key, value.asBoolean()));
+						break;
+					case NUMERIC:
+						config.addAttribute(new ConfigNumericAttribute(config, key, value.asDouble()));
+						break;
+					case LONGTEXT:
+						config.addAttribute(new ConfigLongTextAttribute(config, key, value.asString()));
+						break;
+					case TEXT:
+						config.addAttribute(new ConfigTextAttribute(config, key, value.asString()));
 						break;
 					default:
 					}
@@ -102,40 +90,6 @@ public class JsConfigHelper {
 		}
 		catch (Exception e) {
 			logger.warn("Error during snapshot while setting config attribute key '{}'.", key);
-			taskLogger.error(String.format("Can't set device attribute %s: %s", key, e.getMessage()));
-		}
-	}
-	
-	public void set(String key, Object value) {
-		if (value == null) {
-			return;
-		}
-		try {
-			DeviceDriver driver = device.getDeviceDriver();
-			if ("author".equals(key)) {
-				config.setAuthor((String) value);
-			}
-			else {
-				for (AttributeDefinition attribute : driver.getAttributes()) {
-					if (attribute.getLevel().equals(AttributeLevel.CONFIG) && attribute.getName().equals(key)) {
-						switch (attribute.getType()) {
-						case LONGTEXT:
-							config.addAttribute(new ConfigLongTextAttribute(config, key, (String) value));
-							break;
-						case TEXT:
-							config.addAttribute(new ConfigTextAttribute(config, key, (String) value));
-							break;
-						default:
-							break;
-						}
-						break;
-					}
-				}
-			}
-		}
-		catch (Exception e) {
-			logger.warn("Error during snapshot while setting config attribute key '{}'.", key);
-			taskLogger.error(String.format("Can't set device attribute %s: %s", key, e.getMessage()));
 		}
 	}
 
@@ -146,6 +100,7 @@ public class JsConfigHelper {
 	 * @param remoteFileName the file (including full path) to download from the device
 	 * @param storeFileName the file name to store (null to use remoreFileName)
 	 */
+	@Export
 	public void download(String key, String method, String remoteFileName, String storeFileName) throws Exception {
 		if (remoteFileName == null) {
 			return;

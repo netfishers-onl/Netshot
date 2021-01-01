@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2019 Sylvain Cadilhac (NetFishers)
+ * Copyright 2013-2020 Sylvain Cadilhac (NetFishers)
  * 
  * This file is part of Netshot.
  * 
@@ -18,6 +18,8 @@
  */
 package onl.netfishers.netshot.device.script.helper;
 
+import org.graalvm.polyglot.HostAccess.Export;
+
 /**
  * The options object to pass data to JavaScript entry function in a generic way.
  * @author sylvain.cadilhac
@@ -35,10 +37,12 @@ public class JsCliScriptOptions {
 		this.snmpHelper = snmpHelper;
 	}
 
+	@Export
 	public JsDiagnosticHelper getDiagnosticHelper() {
 		return diagnosticHelper;
 	}
 
+	@Export
 	public JsDeviceHelper getDeviceHelper() {
 		return deviceHelper;
 	}
@@ -51,6 +55,7 @@ public class JsCliScriptOptions {
 		this.diagnosticHelper = diagnosticHelper;
 	}
 
+	@Export
 	public JsCliHelper getCliHelper() {
 		return cliHelper;
 	}
@@ -59,6 +64,7 @@ public class JsCliScriptOptions {
 		this.cliHelper = cliHelper;
 	}
 
+	@Export
 	public JsSnmpHelper getSnmpHelper() {
 		return snmpHelper;
 	}
@@ -67,6 +73,7 @@ public class JsCliScriptOptions {
 		this.snmpHelper = snmpHelper;
 	}
 
+	@Export
 	public JsConfigHelper getConfigHelper() {
 		return configHelper;
 	}

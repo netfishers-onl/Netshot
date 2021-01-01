@@ -21,6 +21,7 @@ package onl.netfishers.netshot.device.script.helper;
 import java.io.IOException;
 import java.util.Map;
 
+import org.graalvm.polyglot.HostAccess.Export;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +63,7 @@ public class JsSnmpHelper {
 	 * Check whether there was an error after the last command.
 	 * @return true if there was an error
 	 */
+	@Export
 	public boolean isErrored() {
 		return errored;
 	}
@@ -72,6 +74,7 @@ public class JsSnmpHelper {
 	 * @return SNMP result
 	 * @throws IOException It can happen
 	 */
+	@Export
 	public String getAsString(String oid) throws IOException {
 		try {
 			return this.poller.getAsString(oid);
@@ -89,6 +92,7 @@ public class JsSnmpHelper {
 	 * @return a map (OID => value) of results
 	 * @throws IOException It can happen
 	 */
+	@Export
 	public Map<String, String> walkAsString(String oid) throws IOException {
 		try {
 			return this.poller.walkAsString(oid);
@@ -104,6 +108,7 @@ public class JsSnmpHelper {
 	 * Pause the thread for the given number of milliseconds.
 	 * @param millis The number of milliseconds to wait for
 	 */
+	@Export
 	public void sleep(long millis) {
 		try {
 			Thread.sleep(millis);

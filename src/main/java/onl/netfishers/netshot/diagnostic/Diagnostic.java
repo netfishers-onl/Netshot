@@ -41,6 +41,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Value;
 import org.hibernate.annotations.NaturalId;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -245,7 +246,7 @@ public abstract class Diagnostic {
 	}
 
 	@Transient
-	abstract public Object getJsObject(Device device, Context context) throws ScriptException;
+	abstract public Value getJsObject(Device device, Context context) throws ScriptException;
 
 	@Override
 	public int hashCode() {

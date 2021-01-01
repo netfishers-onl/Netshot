@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Value;
 
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
@@ -96,9 +97,13 @@ public class JavaScriptDiagnostic extends Diagnostic {
 	}
 
 	@Override
-	public Object getJsObject(Device device, Context context) throws ScriptException {
+	public Value getJsObject(Device device, Context context) throws ScriptException {
 		context.eval("js", this.getScript());
-		return context.getBindings("js").getMember("diagnose");
+		Value diagnose = context.getBindings("js").getMember("diagnose");
+		if (!diagnose.canExecute()) {
+			throw new ScriptException(String.format("Unable to find 'diagnose' function in '%s' JS diagnostic", this.getName()));
+		}
+		return diagnose;
 	}
 
 }

@@ -21,6 +21,9 @@ package onl.netfishers.netshot.device.script.helper;
 import java.util.List;
 import java.util.Map;
 
+import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.HostAccess.Export;
+import org.graalvm.polyglot.proxy.ProxyObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,11 +43,11 @@ public class JsDiagnosticHelper {
 	private static Logger logger = LoggerFactory.getLogger(JsDiagnosticHelper.class);
 	
 	/** The device the diagnostic is running on. */
-	private final Device device;
+	public final Device device;
 	/** The list of diagnostics. */
-	private List<Diagnostic> diagnostics;
+	public List<Diagnostic> diagnostics;
 	/** The list of JS diagnostics. */
-	private Map<String, Object> jsDiagnostics;
+	public Map<String, Object> jsDiagnostics;
 	/** The JS Logger. */
 	private TaskLogger taskLogger;
 	
@@ -67,71 +70,28 @@ public class JsDiagnosticHelper {
 	 * @param key The key
 	 * @param value The value
 	 */
-	public void set(String key, Double value) {
+	@Export
+	public void set(String key, Value value) {
 		if (value == null) {
+			taskLogger.warn(String.format("Value for diagnostic key '%s' is null", key));
 			return;
 		}
 		try {
 			for (Diagnostic diagnostic : diagnostics) {
 				if (diagnostic.getName().equals(key)) {
 					switch (diagnostic.getResultType()) {
-					case NUMERIC:
-						device.addDiagnosticResult(new DiagnosticNumericResult(device, diagnostic, value));
-						break;
-					default:
+						case BINARY:
+							taskLogger.warn(String.format("Setting binary value for diagnostic key '%s'", key));
+							device.addDiagnosticResult(new DiagnosticBinaryResult(device, diagnostic, value.asBoolean()));
+							break;
+						case NUMERIC:
+							taskLogger.warn(String.format("Setting numeric value for diagnostic key '%s'", key));
+							device.addDiagnosticResult(new DiagnosticNumericResult(device, diagnostic, value.asDouble()));
+							break;
+						default:
+							taskLogger.warn(String.format("Setting string value for diagnostic key '%s'", key));
+							diagnostic.addResultToDevice(device, value.asString());
 					}
-					break;
-				}
-			}
-		}
-		catch (Exception e) {
-			logger.warn("Error while setting the numeric diagnostic result '{}'.", key);
-			taskLogger.error(String.format("Can't set numeric diagnostic result %s: %s", key,  e.getMessage()));
-		}
-	}
-
-	/**
-	 * Set a diagnostic result.
-	 * @param key The key
-	 * @param value The value
-	 */
-	public void set(String key, Boolean value) {
-		if (value == null) {
-			return;
-		}
-		try {
-			for (Diagnostic diagnostic : diagnostics) {
-				if (diagnostic.getName().equals(key)) {
-					switch (diagnostic.getResultType()) {
-					case BINARY:
-						device.addDiagnosticResult(new DiagnosticBinaryResult(device, diagnostic, value));
-						break;
-					default:
-					}
-					break;
-				}
-			}
-		}
-		catch (Exception e) {
-			logger.warn("Error while setting the boolean diagnostic result '{}'.", key);
-			taskLogger.error(String.format("Can't set boolean diagnostic result %s: %s", key,  e.getMessage()));
-		}
-	}
-	
-	/**
-	 * Set a diagnostic result.
-	 * @param key The key
-	 * @param value The value
-	 */
-	public void set(String key, Object value) {
-		if (value == null) {
-			return;
-		}
-		try {
-			for (Diagnostic diagnostic : diagnostics) {
-				if (diagnostic.getName().equals(key)) {
-					diagnostic.addResultToDevice(device, (String)value);
-					break;
 				}
 			}
 		}
@@ -145,8 +105,9 @@ public class JsDiagnosticHelper {
 	 * Get the diagnostics.
 	 * @return the diagnostics
 	 */
-	public Map<String, Object> getJsDiagnostics() {
-		return jsDiagnostics;
+	@Export
+	public ProxyObject getDiagnostics() {
+		return ProxyObject.fromMap(jsDiagnostics);
 	}
 
 }

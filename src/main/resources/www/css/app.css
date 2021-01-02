@@ -944,6 +944,10 @@ h1 {
 	margin-bottom: 10px;
 }
 
+#nstasks-tasks button {
+	font-size: 9px;
+}
+
 .nsdatepicker {
 	text-align: center;
 	width: 100px;

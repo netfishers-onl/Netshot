@@ -1898,30 +1898,19 @@ public class RestService extends Thread {
 		summary = "Get the device types",
 		description = "Returns the list of device types (drivers)."
 	)
-	public List<DeviceDriver> getDeviceTypes() throws WebApplicationException {
+	public List<DeviceDriver> getDeviceTypes(@DefaultValue("false") @QueryParam("refresh") boolean refresh) throws WebApplicationException {
 		logger.debug("REST request, device types.");
+		if (refresh) {
+			try {
+				DeviceDriver.refreshDrivers();
+			}
+			catch (Exception e) {
+				logger.error("Error in REST service while refreshing the device types.", e);
+			}
+		}
 		List<DeviceDriver> deviceTypes = new ArrayList<DeviceDriver>();
 		deviceTypes.addAll(DeviceDriver.getAllDrivers());
 		return deviceTypes;
-	}
-	
-	@GET
-	@Path("/refresheddevicetypes")
-	@RolesAllowed("admin")
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@Operation(
-		summary = "Get the device types after refresh",
-		description = "Reloads the device drivers and returns the refreshed list of drivers."
-	)
-	public List<DeviceDriver> getDeviceTypesAndRefresh() throws WebApplicationException {
-		logger.debug("REST request, refresh and get device types.");
-		try {
-			DeviceDriver.refreshDrivers();
-		}
-		catch (Exception e) {
-			logger.error("Error in REST service while refreshing the device types.", e);
-		}
-		return this.getDeviceTypes();
 	}
 
 	/**

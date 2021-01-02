@@ -20,7 +20,6 @@ define([
 	'views/admin/DeleteUserDialog',
 	'views/admin/DeleteApiTokenDialog',
 	'models/device/DeviceTypeCollection',
-	'models/device/RefreshedDeviceTypeCollection',
 	'text!templates/admin/admin.html',
 	'text!templates/admin/adminToolBar.html',
 	'text!templates/admin/domain.html',
@@ -33,7 +32,6 @@ define([
 		AddCredentialSetDialog, EditCredentialSetDialog, DeleteCredentialSetDialog,
 		UserCollection, ApiTokenCollection, AddUserDialog, AddApiTokenDialog, EditUserDialog,
 		DeleteUserDialog, DeleteApiTokenDialog, DeviceTypeCollection,
-		RefreshedDeviceTypeCollection,
 		adminTemplate, adminToolbarTemplate, domainRowTemplate,
 		credentialsRowTemplate, userRowTemplate, apiTokenRowTemplate, driverRowTemplate) {
 
@@ -133,7 +131,7 @@ define([
 				},
 			}).off('click').on('click', function() {
 				$(this).button("disable");
-				that.drivers = new RefreshedDeviceTypeCollection([]);
+				that.drivers = new RefreshedDeviceTypeCollection([], { refresh: true });
 				that.refreshDrivers();
 			});
 			return this;

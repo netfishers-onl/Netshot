@@ -131,7 +131,7 @@ define([
 				},
 			}).off('click').on('click', function() {
 				$(this).button("disable");
-				that.drivers = new RefreshedDeviceTypeCollection([], { refresh: true });
+				that.drivers = new DeviceTypeCollection([], { refresh: true });
 				that.refreshDrivers();
 			});
 			return this;

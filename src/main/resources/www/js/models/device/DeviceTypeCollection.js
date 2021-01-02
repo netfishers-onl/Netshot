@@ -10,13 +10,15 @@ define([
 		model: DeviceTypeModel,
 
 		initialize: function(models, options) {
-			this.refresh = options.refresh;
+			if (options) {
+				this.refresh = options.refresh;
+			}
 		},
 
 		url: function() {
 			var u = "api/devicetypes";
 			if (this.refresh) {
-				u += "/refresh=true";
+				u += "?refresh=true";
 			}
 			return u;
 		},

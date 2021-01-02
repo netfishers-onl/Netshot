@@ -919,7 +919,7 @@ public class RestService extends Thread {
 				session.getTransaction().rollback();
 				logger.error("Error while adding a domain.", e);
 				Throwable t = e.getCause();
-				if (t != null && t.getMessage().contains("Duplicate entry")) {
+				if (t != null && t.getMessage().contains("uplicate")) {
 					throw new NetshotBadRequestException(
 							"A domain with this name already exists.",
 							NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DOMAIN);
@@ -1004,7 +1004,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Error while editing the domain.", e);
 			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A domain with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DOMAIN);
@@ -2996,7 +2996,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Cannot edit the device.", e);
 			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A device with this IP address already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DEVICE);
@@ -3277,7 +3277,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			Throwable t = e.getCause();
 			logger.error("Can't add the credentials.", e);
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A credential set with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_CREDENTIALS);
@@ -3377,7 +3377,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			Throwable t = e.getCause();
 			logger.error("Unable to save the credentials {}.", id, e);
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A credential set with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_CREDENTIALS);
@@ -3596,7 +3596,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new device group.", e);
 			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A group with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_GROUP);
@@ -5419,7 +5419,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new policy.", e);
 			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A policy with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_POLICY);
@@ -5545,7 +5545,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Unable to save the policy {}.", id, e);
 			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A policy with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_POLICY);
@@ -5864,7 +5864,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new rule.", e);
 			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A rule with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_RULE);
@@ -5985,7 +5985,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new rule.", e);
 			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A rule with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_RULE);
@@ -8731,7 +8731,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new user.", e);
 			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A user with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_USER);
@@ -8810,7 +8810,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Unable to save the user {}.", id, e);
 			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A user with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_USER);
@@ -9738,7 +9738,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new rule.", e);
 			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A script with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_SCRIPT);
@@ -10225,7 +10225,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new diagnostic.", e);
 			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException(
 						"A diagnostic with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DIAGNOSTIC);
@@ -10355,7 +10355,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Unable to save the diagnostic {}.", id, e);
 			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("Duplicate entry")) {
+			if (t != null && t.getMessage().contains("uplicate")) {
 				throw new NetshotBadRequestException("A diagnostic with this name already exists.",
 					NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DIAGNOSTIC);
 			}

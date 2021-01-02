@@ -25,10 +25,13 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.script.JsCliScript;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
@@ -139,6 +142,7 @@ public class RunDeviceScriptTask extends Task {
 	 */
 	@Override
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Device script execution";

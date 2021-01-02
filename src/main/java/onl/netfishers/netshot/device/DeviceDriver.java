@@ -44,6 +44,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Source;
@@ -57,6 +59,7 @@ import onl.netfishers.netshot.collector.SnmpTrapReceiver;
 import onl.netfishers.netshot.collector.SyslogServer;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.TaskLogger;
 import onl.netfishers.netshot.work.Task;
 
@@ -543,41 +546,49 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	}
 	
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public Set<AttributeDefinition> getAttributes() {
 		return attributes;
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getAuthor() {
 		return author;
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDescription() {
 		return description;
 	}
 	
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getName() {
 		return name;
 	}
 	
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public Set<DriverProtocol> getProtocols() {
 		return protocols;
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public Set<String> getCliMainModes() {
 		return cliMainModes;
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getVersion() {
 		return version;
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public int getPriority() {
 		return priority;
 	}

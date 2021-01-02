@@ -30,6 +30,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
+
 /**
  * An IP address - abstract, can be either IPv4 or IPv6.
  */
@@ -98,10 +102,12 @@ public abstract class NetworkAddress {
 	 */
 	@Transient
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public abstract String getIp();
 	
 	@Transient
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public abstract int getPrefixLength();
 	
 	@Transient

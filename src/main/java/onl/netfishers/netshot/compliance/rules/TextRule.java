@@ -28,12 +28,15 @@ import javax.persistence.Entity;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.Rule;
 import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.TaskLogger;
 
 import org.hibernate.Session;
@@ -77,6 +80,7 @@ public class TextRule extends Rule {
 	
 	
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getField() {
 		return field;
 	}
@@ -86,6 +90,7 @@ public class TextRule extends Rule {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Column(length = 10000)
 	public String getContext() {
 		return context;
@@ -96,6 +101,7 @@ public class TextRule extends Rule {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Column(length = 10000000)
 	public String getText() {
 		return text;
@@ -109,6 +115,7 @@ public class TextRule extends Rule {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isRegExp() {
 		return regExp;
 	}
@@ -118,6 +125,7 @@ public class TextRule extends Rule {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isInvert() {
 		return invert;
 	}
@@ -129,12 +137,14 @@ public class TextRule extends Rule {
 	
 	
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDeviceDriver() {
 		return deviceDriver;
 	}
 	
 	@Transient
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDeviceDriverDescription() {
 		if ("".equals(deviceDriver)) {
 			return "";
@@ -153,6 +163,7 @@ public class TextRule extends Rule {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isAnyBlock() {
 		return anyBlock;
 	}
@@ -162,6 +173,7 @@ public class TextRule extends Rule {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isMatchAll() {
 		return matchAll;
 	}
@@ -171,6 +183,7 @@ public class TextRule extends Rule {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isNormalize() {
 		return normalize;
 	}

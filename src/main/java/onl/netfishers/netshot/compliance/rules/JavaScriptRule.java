@@ -27,6 +27,8 @@ import javax.persistence.Entity;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.Rule;
@@ -34,6 +36,7 @@ import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.TaskLogger;
 
 import org.graalvm.polyglot.Context;
@@ -135,6 +138,7 @@ public class JavaScriptRule extends Rule {
 	 * @return the script
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Column(length = 10000000)
 	public String getScript() {
 		return script;

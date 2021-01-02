@@ -47,6 +47,7 @@ import onl.netfishers.netshot.compliance.HardwareRule;
 import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.SoftwareRule;
 import onl.netfishers.netshot.diagnostic.Diagnostic;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.tasks.CheckGroupComplianceTask;
 import onl.netfishers.netshot.work.tasks.CheckGroupSoftwareTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceGroupScriptTask;
@@ -57,6 +58,7 @@ import org.hibernate.annotations.NaturalId;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 /**
@@ -187,6 +189,7 @@ abstract public class DeviceGroup {
 	 * @return the change date
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public Date getChangeDate() {
 		return changeDate;
 	}
@@ -258,6 +261,7 @@ abstract public class DeviceGroup {
 	 */
 	@NaturalId(mutable = true)
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getName() {
 		return name;
 	}
@@ -373,6 +377,7 @@ abstract public class DeviceGroup {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Column(length = 1000)
 	public String getFolder() {
 		return folder;
@@ -383,6 +388,7 @@ abstract public class DeviceGroup {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isHiddenFromReports() {
 		return hiddenFromReports;
 	}

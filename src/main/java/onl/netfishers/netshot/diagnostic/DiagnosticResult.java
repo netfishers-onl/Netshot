@@ -39,10 +39,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
 
 import org.hibernate.annotations.FilterDef;
 
 import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.CHAR)
@@ -125,6 +127,7 @@ public abstract class DiagnosticResult {
 	 * @return the creation date
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public Date getCreationDate() {
 		return creationDate;
 	}
@@ -142,6 +145,7 @@ public abstract class DiagnosticResult {
 	 * @return the last check date
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public Date getLastCheckDate() {
 		return lastCheckDate;
 	}
@@ -192,6 +196,7 @@ public abstract class DiagnosticResult {
 	 */
 	@Transient
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDiagnosticName() {
 		return this.getDiagnostic().getName();
 	}

@@ -10,6 +10,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.quartz.JobKey;
@@ -22,6 +24,7 @@ import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DynamicDeviceGroup;
 import onl.netfishers.netshot.device.script.RunDiagnosticCliScript;
 import onl.netfishers.netshot.diagnostic.Diagnostic;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 
@@ -94,6 +97,7 @@ public class RunDiagnosticsTask extends Task {
 	
 	@Override
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Device diagnostics";
@@ -115,6 +119,7 @@ public class RunDiagnosticsTask extends Task {
 	 * @return the ID of the device
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	protected long getDeviceId() {
 		return device.getId();

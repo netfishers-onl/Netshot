@@ -21,7 +21,11 @@ package onl.netfishers.netshot.device.credentials;
 import javax.persistence.Entity;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import org.hibernate.annotations.Type;
+
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 
 /**
@@ -57,6 +61,7 @@ public abstract class DeviceSnmpCommunity extends DeviceCredentialSet {
 	 * @return the community
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Type(type = "credentialString")
 	public String getCommunity() {
 		return community;

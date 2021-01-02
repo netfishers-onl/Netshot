@@ -25,6 +25,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
@@ -33,6 +35,7 @@ import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.DeviceGroup;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 /**
  * This is a simple diagnostic: runs a CLI command in a CLI mode, and optionally
@@ -144,6 +147,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 * @return the device driver.
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDeviceDriver() {
 		return deviceDriver;
 	}
@@ -164,6 +168,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 * @return the cli mode
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getCliMode() {
 		return cliMode;
 	}
@@ -184,6 +189,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 * @return the command
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getCommand() {
 		return command;
 	}
@@ -204,6 +210,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 * @return the modifier pattern
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getModifierPattern() {
 		return modifierPattern;
 	}
@@ -224,6 +231,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 * @return the modifier replacement
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getModifierReplacement() {
 		return modifierReplacement;
 	}
@@ -246,6 +254,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 */
 	@Transient
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDeviceDriverDescription() {
 		if ("".equals(deviceDriver)) {
 			return "";

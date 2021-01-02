@@ -37,10 +37,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
 import onl.netfishers.netshot.device.NetworkAddress.AddressUsage;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 /**
  * A network interface is attached to a device, has a physical
@@ -119,6 +122,7 @@ public class NetworkInterface {
 	 * @return the id
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public long getId() {
@@ -140,6 +144,7 @@ public class NetworkInterface {
 	 * @return the interface name
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getInterfaceName() {
 		return interfaceName;
 	}
@@ -160,6 +165,7 @@ public class NetworkInterface {
 	 * @return the ip4 addresses
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@ElementCollection(fetch = FetchType.EAGER) @Fetch(FetchMode.SELECT)
 	public Set<Network4Address> getIp4Addresses() {
 		return ip4Addresses;
@@ -171,6 +177,7 @@ public class NetworkInterface {
 	 * @return the ip6 addresses
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@ElementCollection(fetch = FetchType.EAGER) @Fetch(FetchMode.SELECT)
 	public Set<Network6Address> getIp6Addresses() {
 		return ip6Addresses;
@@ -234,6 +241,7 @@ public class NetworkInterface {
 	 * @return the vrf instance
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getVrfInstance() {
 		return vrfInstance;
 	}
@@ -244,6 +252,7 @@ public class NetworkInterface {
 	 * @return true, if is enabled
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isEnabled() {
 		return enabled;
 	}
@@ -254,6 +263,7 @@ public class NetworkInterface {
 	 * @return true, if is level3
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isLevel3() {
 		return level3;
 	}
@@ -264,6 +274,7 @@ public class NetworkInterface {
 	 * @return the mac address
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getMacAddress() {
 		return physicalAddress.toString();
@@ -294,6 +305,7 @@ public class NetworkInterface {
 	 * @return the virtual device
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getVirtualDevice() {
 		return virtualDevice;
 	}
@@ -313,6 +325,7 @@ public class NetworkInterface {
 	 * @return the description
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDescription() {
 		return description;
 	}

@@ -25,8 +25,11 @@ import javax.persistence.Entity;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.device.Finder.Expression.FinderParseException;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 import org.hibernate.HibernateException;
 import org.hibernate.query.Query;
@@ -68,6 +71,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	 * @return the device class
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDriver() {
 		return driver;
 	}
@@ -84,6 +88,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	 */
 	@Column(length = 1000)
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getQuery() {
 		return query;
 	}

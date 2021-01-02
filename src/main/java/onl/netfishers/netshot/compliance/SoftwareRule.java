@@ -31,10 +31,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.DeviceGroup;
 import onl.netfishers.netshot.device.Module;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 /**
  * A software rule defines constraints that apply to the software versions.
@@ -135,6 +138,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public long getId() {
 		return id;
 	}
@@ -154,6 +158,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	 * @return the priority
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public double getPriority() {
 		return priority;
 	}
@@ -174,6 +179,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	 */
 	@ManyToOne
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public DeviceGroup getTargetGroup() {
 		return targetGroup;
 	}
@@ -194,6 +200,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	 * @return the device driver
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDriver() {
 		return driver;
 	}
@@ -208,6 +215,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	 * @return the family
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getFamily() {
 		return family;
 	}
@@ -227,6 +235,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	 * @return the version
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getVersion() {
 		return version;
 	}
@@ -246,6 +255,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	 * @return the part number
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getPartNumber() {
 		return partNumber;
 	}
@@ -265,6 +275,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	 * @return true, if is part number reg exp
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isPartNumberRegExp() {
 		return partNumberRegExp;
 	}
@@ -284,6 +295,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	 * @return the level
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public ConformanceLevel getLevel() {
 		return level;
 	}
@@ -332,6 +344,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	 */
 	@Transient
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDeviceType() {
 		DeviceDriver deviceDriver = DeviceDriver.getDriverByName(driver);
 		if (deviceDriver == null) {
@@ -412,6 +425,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isFamilyRegExp() {
 		return familyRegExp;
 	}
@@ -421,6 +435,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isVersionRegExp() {
 		return versionRegExp;
 	}

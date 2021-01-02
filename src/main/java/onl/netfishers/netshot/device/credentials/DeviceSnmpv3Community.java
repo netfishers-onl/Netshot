@@ -20,8 +20,13 @@ package onl.netfishers.netshot.device.credentials;
 
 import javax.persistence.Entity;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import javax.xml.bind.annotation.XmlElement;
 import org.hibernate.annotations.Type;
+
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 
 /**
@@ -80,6 +85,7 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	 * @return the username
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Type(type = "credentialString")
 	public String getUsername() {
 		return username;
@@ -100,6 +106,7 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	 * @return the auth type
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Type(type = "credentialString")
 	public String getAuthType() {
 		return authType;
@@ -121,6 +128,7 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	 * @return the auth key
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Type(type = "credentialString")
 	public String getAuthKey() {
 		return authKey;
@@ -142,6 +150,7 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	 * @return the priv type
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Type(type = "credentialString")
 	public String getPrivType() {
 		return privType;
@@ -162,6 +171,7 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	 * @return the priv key
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Type(type = "credentialString")
 	public String getPrivKey() {
 		return privKey;

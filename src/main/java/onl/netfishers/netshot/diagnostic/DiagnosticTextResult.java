@@ -24,7 +24,10 @@ import javax.persistence.Entity;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @DiscriminatorValue("S")
 public class DiagnosticTextResult extends DiagnosticResult {
@@ -40,6 +43,7 @@ public class DiagnosticTextResult extends DiagnosticResult {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Column(length = 16384)
 	public String getText() {
 		return text;

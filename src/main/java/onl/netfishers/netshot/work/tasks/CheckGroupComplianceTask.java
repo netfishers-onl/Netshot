@@ -26,10 +26,13 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.TaskLogger;
 
@@ -77,6 +80,7 @@ public class CheckGroupComplianceTask extends Task {
 	 */
 	@Override
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Group compliance check";

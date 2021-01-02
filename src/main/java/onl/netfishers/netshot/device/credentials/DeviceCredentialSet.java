@@ -36,6 +36,7 @@ import javax.xml.bind.annotation.XmlID;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import onl.netfishers.netshot.device.Domain;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Parameter;
@@ -46,6 +47,7 @@ import org.jasypt.hibernate5.type.EncryptedStringType;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
 
 /**
  * A credential set. Authentication data to access a device.
@@ -155,6 +157,7 @@ public class DeviceCredentialSet {
 	 * @return the id
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@XmlID
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -168,6 +171,7 @@ public class DeviceCredentialSet {
 	 * @return the name
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@NaturalId(mutable = true)
 	public String getName() {
 		return name;
@@ -217,6 +221,7 @@ public class DeviceCredentialSet {
 	 * @return the mgmtDomain
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@ManyToOne()
 	public Domain getMgmtDomain() {
 		return mgmtDomain;
@@ -236,6 +241,7 @@ public class DeviceCredentialSet {
 	 * @return true if the credential set is specific;
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isDeviceSpecific() {
 		return deviceSpecific;
 	}

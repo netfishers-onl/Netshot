@@ -33,8 +33,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.TaskLogger;
 
 import org.hibernate.Session;
@@ -120,6 +123,7 @@ public class Policy {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public long getId() {
 		return id;
 	}
@@ -131,6 +135,7 @@ public class Policy {
 	 */
 	@NaturalId(mutable = true)
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getName() {
 		return name;
 	}
@@ -152,6 +157,7 @@ public class Policy {
 	 */
 	@ManyToOne
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public DeviceGroup getTargetGroup() {
 		return targetGroup;
 	}

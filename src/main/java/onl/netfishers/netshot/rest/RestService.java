@@ -115,6 +115,7 @@ import onl.netfishers.netshot.diagnostic.Diagnostic;
 import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.diagnostic.JavaScriptDiagnostic;
 import onl.netfishers.netshot.diagnostic.SimpleDiagnostic;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.TaskLogger;
@@ -170,6 +171,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
 
 import difflib.Delta;
 import difflib.DiffUtils;
@@ -348,6 +350,7 @@ public class RestService extends Thread {
 		 * @return the error message
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getErrorMsg() {
 			return errorMsg;
 		}
@@ -367,6 +370,7 @@ public class RestService extends Thread {
 		 * @return the error code
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public int getErrorCode() {
 			return errorCode;
 		}
@@ -444,6 +448,7 @@ public class RestService extends Thread {
 		 * @return the id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -463,6 +468,7 @@ public class RestService extends Thread {
 		 * @return the name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getName() {
 			return name;
 		}
@@ -482,6 +488,7 @@ public class RestService extends Thread {
 		 * @return the description
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDescription() {
 			return description;
 		}
@@ -501,6 +508,7 @@ public class RestService extends Thread {
 		 * @return the ip address
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getIpAddress() {
 			return ipAddress;
 		}
@@ -1066,6 +1074,7 @@ public class RestService extends Thread {
 		 * @return the original date
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getOriginalDate() {
 			return originalDate;
 		}
@@ -1076,6 +1085,7 @@ public class RestService extends Thread {
 		 * @return the revised date
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getRevisedDate() {
 			return revisedDate;
 		}
@@ -1086,6 +1096,7 @@ public class RestService extends Thread {
 		 * @return the deltas
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Map<String, List<RsConfigDelta>> getDeltas() {
 			return deltas;
 		}
@@ -1172,6 +1183,7 @@ public class RestService extends Thread {
 		 * @return the diff type
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Type getDiffType() {
 			return diffType;
 		}
@@ -1182,6 +1194,7 @@ public class RestService extends Thread {
 		 * @return the original position
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public int getOriginalPosition() {
 			return originalPosition;
 		}
@@ -1192,6 +1205,7 @@ public class RestService extends Thread {
 		 * @return the revised position
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public int getRevisedPosition() {
 			return revisedPosition;
 		}
@@ -1202,6 +1216,7 @@ public class RestService extends Thread {
 		 * @return the original lines
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public List<String> getOriginalLines() {
 			return originalLines;
 		}
@@ -1212,6 +1227,7 @@ public class RestService extends Thread {
 		 * @return the revised lines
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public List<String> getRevisedLines() {
 			return revisedLines;
 		}
@@ -1222,6 +1238,7 @@ public class RestService extends Thread {
 		 * @return the item
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getItem() {
 			return item;
 		}
@@ -1232,6 +1249,7 @@ public class RestService extends Thread {
 		 * @return the pre context
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public List<String> getPreContext() {
 			return preContext;
 		}
@@ -1242,6 +1260,7 @@ public class RestService extends Thread {
 		 * @return the post context
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public List<String> getPostContext() {
 			return postContext;
 		}
@@ -1419,6 +1438,7 @@ public class RestService extends Thread {
 		 * @return the id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -1438,6 +1458,7 @@ public class RestService extends Thread {
 		 * @return the name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getName() {
 			return name;
 		}
@@ -1457,6 +1478,7 @@ public class RestService extends Thread {
 		 * @return the family
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getFamily() {
 			return family;
 		}
@@ -1476,6 +1498,7 @@ public class RestService extends Thread {
 		 * @return the mgmt address
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Network4Address getMgmtAddress() {
 			return mgmtAddress;
 		}
@@ -1495,6 +1518,7 @@ public class RestService extends Thread {
 		 * @return the status
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Device.Status getStatus() {
 			return status;
 		}
@@ -1590,6 +1614,7 @@ public class RestService extends Thread {
 		private String deviceFamily;
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -1604,6 +1629,7 @@ public class RestService extends Thread {
 		 * @return the device family
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDeviceFamily() {
 			return deviceFamily;
 		}
@@ -1660,6 +1686,7 @@ public class RestService extends Thread {
 		private String partNumber;
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getPartNumber() {
 			return partNumber;
 		}
@@ -1749,6 +1776,7 @@ public class RestService extends Thread {
 		 * @return true, if is auto discover
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isAutoDiscover() {
 			return autoDiscover;
 		}
@@ -1768,6 +1796,7 @@ public class RestService extends Thread {
 		 * @return the auto discovery task
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getAutoDiscoveryTask() {
 			return autoDiscoveryTask;
 		}
@@ -1787,6 +1816,7 @@ public class RestService extends Thread {
 		 * @return the ip address
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getIpAddress() {
 			return ipAddress;
 		}
@@ -1806,6 +1836,7 @@ public class RestService extends Thread {
 		 * @return the domain id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getDomainId() {
 			return domainId;
 		}
@@ -1825,6 +1856,7 @@ public class RestService extends Thread {
 		 * @return the name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getName() {
 			return name;
 		}
@@ -1844,6 +1876,7 @@ public class RestService extends Thread {
 		 * @return the device type
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDeviceType() {
 			return deviceType;
 		}
@@ -1863,6 +1896,7 @@ public class RestService extends Thread {
 		 * @return the connect IP address
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getConnectIpAddress() {
 			return connectIpAddress;
 		}
@@ -1880,6 +1914,7 @@ public class RestService extends Thread {
 		 * @return the SSH port
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getSshPort() {
 			return sshPort;
 		}
@@ -1897,6 +1932,7 @@ public class RestService extends Thread {
 		 * @return the Telnet port
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getTelnetPort() {
 			return telnetPort;
 		}
@@ -1914,6 +1950,7 @@ public class RestService extends Thread {
 		 * @return the specific credential set
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public DeviceCredentialSet getSpecificCredentialSet() {
 			return specificCredentialSet;
 		}
@@ -2255,6 +2292,7 @@ public class RestService extends Thread {
 		 * @return the id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -2274,6 +2312,7 @@ public class RestService extends Thread {
 		 * @return the comments
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getComments() {
 			return comments;
 		}
@@ -2293,6 +2332,7 @@ public class RestService extends Thread {
 		 * @return the ip address
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getIpAddress() {
 			return ipAddress;
 		}
@@ -2312,6 +2352,7 @@ public class RestService extends Thread {
 		 * @return true, if is auto try credentials
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Boolean isAutoTryCredentials() {
 			return autoTryCredentials;
 		}
@@ -2331,6 +2372,7 @@ public class RestService extends Thread {
 		 * @return the credential set ids
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public List<Long> getCredentialSetIds() {
 			return credentialSetIds;
 		}
@@ -2357,6 +2399,7 @@ public class RestService extends Thread {
 		 * @return true, if is enable
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Boolean isEnabled() {
 			return enabled;
 		}
@@ -2375,6 +2418,7 @@ public class RestService extends Thread {
 		 * @return the management domain
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Long getMgmtDomain() {
 			return mgmtDomain;
 		}
@@ -2392,6 +2436,7 @@ public class RestService extends Thread {
 		 * @return the list of credential sets
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public List<Long> getClearCredentialSetIds() {
 			return clearCredentialSetIds;
 		}
@@ -2409,6 +2454,7 @@ public class RestService extends Thread {
 		 * @return the connect IP address
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getConnectIpAddress() {
 			return connectIpAddress;
 		}
@@ -2426,6 +2472,7 @@ public class RestService extends Thread {
 		 * @return the SSH port
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getSshPort() {
 			return sshPort;
 		}
@@ -2443,6 +2490,7 @@ public class RestService extends Thread {
 		 * @return the Telnet port
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getTelnetPort() {
 			return telnetPort;
 		}
@@ -2461,6 +2509,7 @@ public class RestService extends Thread {
 		 * @return the specific credential set
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public DeviceCredentialSet getSpecificCredentialSet() {
 			return specificCredentialSet;
 		}
@@ -3082,6 +3131,7 @@ public class RestService extends Thread {
 		 * @return the device class name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -3096,6 +3146,7 @@ public class RestService extends Thread {
 		 * @return the query
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getQuery() {
 			return query;
 		}
@@ -3129,6 +3180,7 @@ public class RestService extends Thread {
 		 * @return the query
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getQuery() {
 			return query;
 		}
@@ -3148,6 +3200,7 @@ public class RestService extends Thread {
 		 * @return the devices
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public List<RsLightDevice> getDevices() {
 			return devices;
 		}
@@ -3389,6 +3442,7 @@ public class RestService extends Thread {
 		 * @return the id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -3415,6 +3469,7 @@ public class RestService extends Thread {
 		 * @return the type
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getType() {
 			return type;
 		}
@@ -3434,6 +3489,7 @@ public class RestService extends Thread {
 		 * @return the static devices
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public List<Long> getStaticDevices() {
 			return staticDevices;
 		}
@@ -3453,6 +3509,7 @@ public class RestService extends Thread {
 		 * @return the device class name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -3467,6 +3524,7 @@ public class RestService extends Thread {
 		 * @return the query
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getQuery() {
 			return query;
 		}
@@ -3481,6 +3539,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getFolder() {
 			return folder;
 		}
@@ -3490,6 +3549,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isHiddenFromReports() {
 			return hiddenFromReports;
 		}
@@ -3702,6 +3762,7 @@ public class RestService extends Thread {
 		 * @return the id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -3722,6 +3783,7 @@ public class RestService extends Thread {
 		 * @return true, if is cancelled
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isCancelled() {
 			return cancelled;
 		}
@@ -3741,6 +3803,7 @@ public class RestService extends Thread {
 		 * @return the type
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getType() {
 			return type;
 		}
@@ -3760,6 +3823,7 @@ public class RestService extends Thread {
 		 * @return the group
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Long getGroup() {
 			return group;
 		}
@@ -3779,6 +3843,7 @@ public class RestService extends Thread {
 		 * @return the device
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Long getDevice() {
 			return device;
 		}
@@ -3798,6 +3863,7 @@ public class RestService extends Thread {
 		 * @return the subnets
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getSubnets() {
 			return subnets;
 		}
@@ -3817,6 +3883,7 @@ public class RestService extends Thread {
 		 * @return the schedule reference
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getScheduleReference() {
 			return scheduleReference;
 		}
@@ -3836,6 +3903,7 @@ public class RestService extends Thread {
 		 * @return the schedule type
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Task.ScheduleType getScheduleType() {
 			return scheduleType;
 		}
@@ -3855,6 +3923,7 @@ public class RestService extends Thread {
 		 * @return the comments
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getComments() {
 			return comments;
 		}
@@ -3874,6 +3943,7 @@ public class RestService extends Thread {
 		 * @return the domain
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Long getDomain() {
 			return domain;
 		}
@@ -3911,6 +3981,7 @@ public class RestService extends Thread {
 		 * @return the limit to outofdate device hours
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public int getLimitToOutofdateDeviceHours() {
 			return limitToOutofdateDeviceHours;
 		}
@@ -3920,6 +3991,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public int getDaysToPurge() {
 			return daysToPurge;
 		}
@@ -3929,6 +4001,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getScript() {
 			return script;
 		}
@@ -3938,6 +4011,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -3947,6 +4021,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public int getConfigDaysToPurge() {
 			return configDaysToPurge;
 		}
@@ -3956,6 +4031,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public int getConfigSizeToPurge() {
 			return configSizeToPurge;
 		}
@@ -3965,6 +4041,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public int getConfigKeepDays() {
 			return configKeepDays;
 		}
@@ -3974,6 +4051,7 @@ public class RestService extends Thread {
 		}
 		
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isDebugEnabled() {
 			return debugEnabled;
 		}
@@ -3983,6 +4061,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isDontRunDiagnostics() {
 			return dontRunDiagnostics;
 		}
@@ -3992,6 +4071,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isDontCheckCompliance() {
 			return dontCheckCompliance;
 		}
@@ -4085,6 +4165,7 @@ public class RestService extends Thread {
 		 * @return the status
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getStatus() {
 			return status;
 		}
@@ -4104,6 +4185,7 @@ public class RestService extends Thread {
 		 * @return the day
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getDay() {
 			return day;
 		}
@@ -4642,6 +4724,7 @@ public class RestService extends Thread {
 		 * @return the device name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDeviceName() {
 			return deviceName;
 		}
@@ -4661,6 +4744,7 @@ public class RestService extends Thread {
 		 * @return the device id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getDeviceId() {
 			return deviceId;
 		}
@@ -4680,6 +4764,7 @@ public class RestService extends Thread {
 		 * @return the author
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getAuthor() {
 			return author;
 		}
@@ -4699,6 +4784,7 @@ public class RestService extends Thread {
 		 * @return the old change date
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getOldChangeDate() {
 			return oldChangeDate;
 		}
@@ -4718,6 +4804,7 @@ public class RestService extends Thread {
 		 * @return the new change date
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getNewChangeDate() {
 			return newChangeDate;
 		}
@@ -4737,6 +4824,7 @@ public class RestService extends Thread {
 		 * @return the old id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getOldId() {
 			return oldId;
 		}
@@ -4756,6 +4844,7 @@ public class RestService extends Thread {
 		 * @return the new id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getNewId() {
 			return newId;
 		}
@@ -4800,6 +4889,7 @@ public class RestService extends Thread {
 		 * @return the from date
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getFromDate() {
 			return fromDate;
 		}
@@ -4819,6 +4909,7 @@ public class RestService extends Thread {
 		 * @return the to date
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getToDate() {
 			return toDate;
 		}
@@ -4977,6 +5068,7 @@ public class RestService extends Thread {
 		 * @return the id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -4996,6 +5088,7 @@ public class RestService extends Thread {
 		 * @return the name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getName() {
 			return name;
 		}
@@ -5015,6 +5108,7 @@ public class RestService extends Thread {
 		 * @return the group
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getGroup() {
 			return group;
 		}
@@ -5270,6 +5364,7 @@ public class RestService extends Thread {
 		 * @return the id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Long getId() {
 			return id;
 		}
@@ -5289,6 +5384,7 @@ public class RestService extends Thread {
 		 * @return the name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getName() {
 			return name;
 		}
@@ -5304,6 +5400,7 @@ public class RestService extends Thread {
 		
 		
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getType() {
 			return type;
 		}
@@ -5318,6 +5415,7 @@ public class RestService extends Thread {
 		 * @return the script
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getScript() {
 			return script;
 		}
@@ -5337,6 +5435,7 @@ public class RestService extends Thread {
 		 * @return the policy
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Long getPolicy() {
 			return policy;
 		}
@@ -5347,6 +5446,7 @@ public class RestService extends Thread {
 		 * @return true, if is enabled
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isEnabled() {
 			return enabled;
 		}
@@ -5375,6 +5475,7 @@ public class RestService extends Thread {
 		 * @return the exemptions
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Map<Long, Date> getExemptions() {
 			return exemptions;
 		}
@@ -5389,6 +5490,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getText() {
 			return text;
 		}
@@ -5398,6 +5500,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Boolean isRegExp() {
 			return regExp;
 		}
@@ -5407,6 +5510,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getContext() {
 			return context;
 		}
@@ -5416,6 +5520,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getField() {
 			return field;
 		}
@@ -5425,6 +5530,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -5434,6 +5540,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Boolean isInvert() {
 			return invert;
 		}
@@ -5443,6 +5550,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Boolean isAnyBlock() {
 			return anyBlock;
 		}
@@ -5452,6 +5560,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Boolean isMatchAll() {
 			return matchAll;
 		}
@@ -5461,6 +5570,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Boolean isNormalize() {
 			return normalize;
 		}
@@ -5726,6 +5836,7 @@ public class RestService extends Thread {
 		 * @return the device
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getDevice() {
 			return device;
 		}
@@ -5761,6 +5872,7 @@ public class RestService extends Thread {
 		 * @return the result
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public CheckResult.ResultOption getResult() {
 			return result;
 		}
@@ -5780,6 +5892,7 @@ public class RestService extends Thread {
 		 * @return the script error
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getScriptError() {
 			return scriptError;
 		}
@@ -5915,6 +6028,7 @@ public class RestService extends Thread {
 		 * @return the expiration date
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getExpirationDate() {
 			return expirationDate;
 		}
@@ -6003,6 +6117,7 @@ public class RestService extends Thread {
 		 * @return the id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Long getId() {
 			return id;
 		}
@@ -6022,6 +6137,7 @@ public class RestService extends Thread {
 		 * @return the rule name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getRuleName() {
 			return ruleName;
 		}
@@ -6041,6 +6157,7 @@ public class RestService extends Thread {
 		 * @return the policy name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getPolicyName() {
 			return policyName;
 		}
@@ -6060,6 +6177,7 @@ public class RestService extends Thread {
 		 * @return the result
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public CheckResult.ResultOption getResult() {
 			return result;
 		}
@@ -6079,6 +6197,7 @@ public class RestService extends Thread {
 		 * @return the check date
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getCheckDate() {
 			return checkDate;
 		}
@@ -6098,6 +6217,7 @@ public class RestService extends Thread {
 		 * @return the expiration date
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getExpirationDate() {
 			return expirationDate;
 		}
@@ -6117,6 +6237,7 @@ public class RestService extends Thread {
 		 * @return the comment
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getComment() {
 			return comment;
 		}
@@ -6196,6 +6317,7 @@ public class RestService extends Thread {
 		 * @return the change count
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getChangeCount() {
 			return changeCount;
 		}
@@ -6215,6 +6337,7 @@ public class RestService extends Thread {
 		 * @return the change day
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getChangeDay() {
 			return changeDay;
 		}
@@ -6316,6 +6439,7 @@ public class RestService extends Thread {
 		 * @return the group id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getGroupId() {
 			return groupId;
 		}
@@ -6335,6 +6459,7 @@ public class RestService extends Thread {
 		 * @return the group name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getGroupName() {
 			return groupName;
 		}
@@ -6354,6 +6479,7 @@ public class RestService extends Thread {
 		 * @return the group folder
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getGroupFolder() {
 			return groupFolder;
 		}
@@ -6373,6 +6499,7 @@ public class RestService extends Thread {
 		 * @return the compliant device count
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getCompliantDeviceCount() {
 			return compliantDeviceCount;
 		}
@@ -6392,6 +6519,7 @@ public class RestService extends Thread {
 		 * @return the device count
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getDeviceCount() {
 			return deviceCount;
 		}
@@ -6481,6 +6609,7 @@ public class RestService extends Thread {
 		private long deviceCount;
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getEoxDate() {
 			return eoxDate;
 		}
@@ -6488,6 +6617,7 @@ public class RestService extends Thread {
 			this.eoxDate = date;
 		}
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getDeviceCount() {
 			return deviceCount;
 		}
@@ -6577,6 +6707,7 @@ public class RestService extends Thread {
 		 * @return the group id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getGroupId() {
 			return groupId;
 		}
@@ -6596,6 +6727,7 @@ public class RestService extends Thread {
 		 * @return the group name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getGroupName() {
 			return groupName;
 		}
@@ -6615,6 +6747,7 @@ public class RestService extends Thread {
 		 * @return the gold device count
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getGoldDeviceCount() {
 			return goldDeviceCount;
 		}
@@ -6634,6 +6767,7 @@ public class RestService extends Thread {
 		 * @return the silver device count
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getSilverDeviceCount() {
 			return silverDeviceCount;
 		}
@@ -6653,6 +6787,7 @@ public class RestService extends Thread {
 		 * @return the bronze device count
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getBronzeDeviceCount() {
 			return bronzeDeviceCount;
 		}
@@ -6672,6 +6807,7 @@ public class RestService extends Thread {
 		 * @return the device count
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getDeviceCount() {
 			return deviceCount;
 		}
@@ -6764,6 +6900,7 @@ public class RestService extends Thread {
 		 * @return the rule name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getRuleName() {
 			return ruleName;
 		}
@@ -6774,6 +6911,7 @@ public class RestService extends Thread {
 		 * @return the policy name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getPolicyName() {
 			return policyName;
 		}
@@ -6784,6 +6922,7 @@ public class RestService extends Thread {
 		 * @return the check date
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getCheckDate() {
 			return checkDate;
 		}
@@ -6794,6 +6933,7 @@ public class RestService extends Thread {
 		 * @return the result
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public ResultOption getResult() {
 			return result;
 		}
@@ -7083,6 +7223,7 @@ public class RestService extends Thread {
 		private Date endOfLife = null;
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -7092,6 +7233,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getGroup() {
 			return group;
 		}
@@ -7101,6 +7243,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -7110,6 +7253,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getPartNumber() {
 			return partNumber;
 		}
@@ -7119,6 +7263,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isPartNumberRegExp() {
 			return partNumberRegExp;
 		}
@@ -7128,6 +7273,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getFamily() {
 			return family;
 		}
@@ -7137,6 +7283,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isFamilyRegExp() {
 			return familyRegExp;
 		}
@@ -7146,6 +7293,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement(nillable = true)
+		@JsonView(DefaultView.class)
 		public Date getEndOfSale() {
 			return endOfSale;
 		}
@@ -7155,6 +7303,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement(nillable = true)
+		@JsonView(DefaultView.class)
 		public Date getEndOfLife() {
 			return endOfLife;
 		}
@@ -7421,6 +7570,7 @@ public class RestService extends Thread {
 		 * @return the id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -7440,6 +7590,7 @@ public class RestService extends Thread {
 		 * @return the group
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getGroup() {
 			return group;
 		}
@@ -7459,6 +7610,7 @@ public class RestService extends Thread {
 		 * @return the device class name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -7473,6 +7625,7 @@ public class RestService extends Thread {
 		 * @return the version
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getVersion() {
 			return version;
 		}
@@ -7492,6 +7645,7 @@ public class RestService extends Thread {
 		 * @return the family
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getFamily() {
 			return family;
 		}
@@ -7511,6 +7665,7 @@ public class RestService extends Thread {
 		 * @return the level
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public SoftwareRule.ConformanceLevel getLevel() {
 			return level;
 		}
@@ -7530,6 +7685,7 @@ public class RestService extends Thread {
 		 * @return the priority
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public double getPriority() {
 			return priority;
 		}
@@ -7544,6 +7700,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isVersionRegExp() {
 			return versionRegExp;
 		}
@@ -7553,6 +7710,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isFamilyRegExp() {
 			return familyRegExp;
 		}
@@ -7562,6 +7720,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getPartNumber() {
 			return partNumber;
 		}
@@ -7571,6 +7730,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isPartNumberRegExp() {
 			return partNumberRegExp;
 		}
@@ -7778,6 +7938,7 @@ public class RestService extends Thread {
 		 * @return the software level
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public ConformanceLevel getSoftwareLevel() {
 			return softwareLevel;
 		}
@@ -7864,6 +8025,7 @@ public class RestService extends Thread {
 		private Date lastFailure;
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getLastSuccess() {
 			return lastSuccess;
 		}
@@ -7873,6 +8035,7 @@ public class RestService extends Thread {
 		}
 
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public Date getLastFailure() {
 			return lastFailure;
 		}
@@ -7965,6 +8128,7 @@ public class RestService extends Thread {
 		 * @return the username
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getUsername() {
 			return username;
 		}
@@ -7984,6 +8148,7 @@ public class RestService extends Thread {
 		 * @return the password
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getPassword() {
 			return password;
 		}
@@ -8003,6 +8168,7 @@ public class RestService extends Thread {
 		 * @return the new password
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getNewPassword() {
 			return newPassword;
 		}
@@ -8249,6 +8415,7 @@ public class RestService extends Thread {
 		 * @return the id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -8268,6 +8435,7 @@ public class RestService extends Thread {
 		 * @return the username
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getUsername() {
 			return username;
 		}
@@ -8287,6 +8455,7 @@ public class RestService extends Thread {
 		 * @return the password
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getPassword() {
 			return password;
 		}
@@ -8306,6 +8475,7 @@ public class RestService extends Thread {
 		 * @return the level
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public int getLevel() {
 			return level;
 		}
@@ -8325,6 +8495,7 @@ public class RestService extends Thread {
 		 * @return true, if is local
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isLocal() {
 			return local;
 		}
@@ -8559,6 +8730,7 @@ public class RestService extends Thread {
 		 * @return the id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -8578,6 +8750,7 @@ public class RestService extends Thread {
 		 * @return the description
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDescription() {
 			return description;
 		}
@@ -8597,6 +8770,7 @@ public class RestService extends Thread {
 		 * @return the token
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getToken() {
 			return token;
 		}
@@ -8616,6 +8790,7 @@ public class RestService extends Thread {
 		 * @return the level
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public int getLevel() {
 			return level;
 		}
@@ -9567,6 +9742,7 @@ public class RestService extends Thread {
 		 * @return the deviceDriver
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getDeviceDriver() {
 			return deviceDriver;
 		}
@@ -9584,6 +9760,7 @@ public class RestService extends Thread {
 		 * @return the id
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -9603,6 +9780,7 @@ public class RestService extends Thread {
 		 * @return the name
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getName() {
 			return name;
 		}
@@ -9622,6 +9800,7 @@ public class RestService extends Thread {
 		 * @return the target group
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public long getTargetGroup() {
 			return targetGroup;
 		}
@@ -9640,6 +9819,7 @@ public class RestService extends Thread {
 		 * @return the enabled True to enable, false to disable
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public boolean isEnabled() {
 			return enabled;
 		}
@@ -9656,6 +9836,7 @@ public class RestService extends Thread {
 		 * @return the script
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getScript() {
 			return script;
 		}
@@ -9672,6 +9853,7 @@ public class RestService extends Thread {
 		 * @return the command
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getCommand() {
 			return command;
 		}
@@ -9688,6 +9870,7 @@ public class RestService extends Thread {
 		 * @return the modifierPattern
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getModifierPattern() {
 			return modifierPattern;
 		}
@@ -9704,6 +9887,7 @@ public class RestService extends Thread {
 		 * @return the modifierReplacement
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getModifierReplacement() {
 			return modifierReplacement;
 		}
@@ -9720,6 +9904,7 @@ public class RestService extends Thread {
 		 * @return the type
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getType() {
 			return type;
 		}
@@ -9737,6 +9922,7 @@ public class RestService extends Thread {
 		 * @return the cliMode
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getCliMode() {
 			return cliMode;
 		}
@@ -9754,6 +9940,7 @@ public class RestService extends Thread {
 		 * @return the resultType
 		 */
 		@XmlElement
+		@JsonView(DefaultView.class)
 		public String getResultType() {
 			return resultType;
 		}

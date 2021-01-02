@@ -30,7 +30,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import org.jasypt.digest.StandardStringDigester;
+
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity
 @XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
@@ -92,6 +96,7 @@ public class ApiToken implements User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public long getId() {
 		return id;
 	}
@@ -138,6 +143,7 @@ public class ApiToken implements User {
 	 * @return the level
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public int getLevel() {
 		return level;
 	}
@@ -152,6 +158,7 @@ public class ApiToken implements User {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDescription() {
 		return description;
 	}

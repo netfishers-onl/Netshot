@@ -31,9 +31,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import org.apache.commons.lang3.StringUtils;
 
 import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 /**
  * A CheckResult object is the result of a compliance test for a given rule,
@@ -237,6 +240,7 @@ public class CheckResult {
 	 * @return the comment
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getComment() {
 		return comment;
 	}
@@ -313,6 +317,7 @@ public class CheckResult {
 	 * @return the check date
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public Date getCheckDate() {
 		return checkDate;
 	}
@@ -333,6 +338,7 @@ public class CheckResult {
 	 * @return the result
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public CheckResult.ResultOption getResult() {
 		return result;
 	}

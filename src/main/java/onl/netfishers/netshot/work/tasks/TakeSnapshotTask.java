@@ -28,6 +28,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.TaskManager;
@@ -36,6 +38,7 @@ import onl.netfishers.netshot.device.DynamicDeviceGroup;
 import onl.netfishers.netshot.device.Network4Address;
 import onl.netfishers.netshot.device.script.CliScript;
 import onl.netfishers.netshot.device.script.SnapshotCliScript;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 
@@ -263,6 +266,7 @@ public class TakeSnapshotTask extends Task {
 	 */
 	@Override
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Device snapshot";
@@ -335,6 +339,7 @@ public class TakeSnapshotTask extends Task {
 	 * @return the ID of the device
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	protected long getDeviceId() {
 		return device.getId();

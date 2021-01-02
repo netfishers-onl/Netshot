@@ -41,9 +41,12 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import org.hibernate.annotations.Filter;
 
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 /**
  * A device configuration.
@@ -96,6 +99,7 @@ public class Config {
 	}
 	
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "config", orphanRemoval = true)
 	@Filter(name = "lightAttributesOnly")
 	public Set<ConfigAttribute> getAttributes() {
@@ -117,6 +121,7 @@ public class Config {
 	 * @return the author
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getAuthor() {
 		return author;
 	}
@@ -127,6 +132,7 @@ public class Config {
 	 * @return the change date
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public Date getChangeDate() {
 		return changeDate;
 	}
@@ -156,6 +162,7 @@ public class Config {
 	 * @return the id
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public long getId() {

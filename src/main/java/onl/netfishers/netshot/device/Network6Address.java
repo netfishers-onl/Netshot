@@ -31,6 +31,10 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
+
 /**
  * An IPv6 address.
  */
@@ -268,6 +272,7 @@ public class Network6Address extends NetworkAddress {
 	private AddressUsage addressUsage = AddressUsage.PRIMARY;
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public AddressUsage getAddressUsage() {
 		return addressUsage;
 	}

@@ -39,7 +39,10 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.tasks.DiscoverDeviceTypeTask;
 import onl.netfishers.netshot.work.tasks.ScanSubnetsTask;
 
@@ -121,6 +124,7 @@ public class Domain {
 	 * @return the name
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@NaturalId(mutable = true)
 	public String getName() {
 		return name;
@@ -132,6 +136,7 @@ public class Domain {
 	 * @return the description
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDescription() {
 		return description;
 	}
@@ -152,6 +157,7 @@ public class Domain {
 	 * @return the server4 address
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@AttributeOverrides({
 		@AttributeOverride(name = "address", column = @Column(name = "ipv4_address")),
 		@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
@@ -266,6 +272,7 @@ public class Domain {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public Date getChangeDate() {
 		return changeDate;
 	}

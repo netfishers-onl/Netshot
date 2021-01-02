@@ -2,9 +2,12 @@ package onl.netfishers.netshot.device.attribute;
 
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import org.graalvm.polyglot.Value;
 
 import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 public class AttributeDefinition {
 	
@@ -108,6 +111,7 @@ public class AttributeDefinition {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public AttributeType getType() {
 		return type;
 	}
@@ -115,6 +119,7 @@ public class AttributeDefinition {
 		this.type = type;
 	}
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public AttributeLevel getLevel() {
 		return level;
 	}
@@ -122,6 +127,7 @@ public class AttributeDefinition {
 		this.level = level;
 	}
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getName() {
 		return name;
 	}
@@ -129,6 +135,7 @@ public class AttributeDefinition {
 		this.name = name;
 	}
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getTitle() {
 		return title;
 	}
@@ -136,6 +143,7 @@ public class AttributeDefinition {
 		this.title = title;
 	}
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isComparable() {
 		return comparable;
 	}
@@ -143,6 +151,7 @@ public class AttributeDefinition {
 		this.comparable = comparable;
 	}
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isCheckable() {
 		return checkable;
 	}
@@ -150,6 +159,7 @@ public class AttributeDefinition {
 		this.checkable = checkable;
 	}
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isSearchable() {
 		return searchable;
 	}

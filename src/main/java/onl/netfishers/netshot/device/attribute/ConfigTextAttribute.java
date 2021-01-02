@@ -23,7 +23,10 @@ import javax.persistence.Entity;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.device.Config;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @DiscriminatorValue("S")
 public class ConfigTextAttribute extends ConfigAttribute {
@@ -39,6 +42,7 @@ public class ConfigTextAttribute extends ConfigAttribute {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getText() {
 		return text;
 	}

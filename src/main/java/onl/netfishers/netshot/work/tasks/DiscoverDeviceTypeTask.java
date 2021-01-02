@@ -34,6 +34,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.device.Device;
@@ -47,6 +49,7 @@ import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpv1Community;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpv2cCommunity;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpv3Community;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
@@ -124,6 +127,7 @@ public class DiscoverDeviceTypeTask extends Task {
 	 * @return the discovered device type description
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getDiscoveredDeviceTypeDescription() {
 		String description = "Unknown";
@@ -441,6 +445,7 @@ public class DiscoverDeviceTypeTask extends Task {
 		@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
 		@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4_usage"))})
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public Network4Address getDeviceAddress() {
 		return deviceAddress;
 	}
@@ -452,6 +457,7 @@ public class DiscoverDeviceTypeTask extends Task {
 	 */
 	@Override
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Device autodiscovery";
@@ -463,6 +469,7 @@ public class DiscoverDeviceTypeTask extends Task {
 	 * @return the device id
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public long getDeviceId() {
 		return deviceId;
 	}
@@ -473,6 +480,7 @@ public class DiscoverDeviceTypeTask extends Task {
 	 * @return the snapshot task id
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public long getSnapshotTaskId() {
 		return snapshotTaskId;
 	}

@@ -26,12 +26,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 /**
  * This is a Javascript-based diagnostic. Declare the diagnostic type along with
@@ -81,6 +84,7 @@ public class JavaScriptDiagnostic extends Diagnostic {
 	 * @return the script
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Column(length = 10000000)
 	public String getScript() {
 		return script;

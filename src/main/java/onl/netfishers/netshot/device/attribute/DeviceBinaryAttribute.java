@@ -23,7 +23,10 @@ import javax.persistence.Entity;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @DiscriminatorValue("B")
 public class DeviceBinaryAttribute extends DeviceAttribute {
@@ -39,6 +42,7 @@ public class DeviceBinaryAttribute extends DeviceAttribute {
 	}
 	
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public Boolean getAssumption() {
 		return assumption;
 	}

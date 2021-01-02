@@ -29,7 +29,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.device.DeviceDriver;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 import org.hibernate.annotations.NaturalId;
 
@@ -63,6 +66,7 @@ public class DeviceJsScript {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public long getId() {
 		return id;
 	}
@@ -72,6 +76,7 @@ public class DeviceJsScript {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Column(length = 10000000)
 	public String getScript() {
 		return script;
@@ -82,12 +87,14 @@ public class DeviceJsScript {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDeviceDriver() {
 		return deviceDriver;
 	}
 	
 	@Transient
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getRealDeviceType() {
 		DeviceDriver driver = DeviceDriver.getDriverByName(deviceDriver);
 		if (driver == null) {
@@ -101,6 +108,7 @@ public class DeviceJsScript {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getAuthor() {
 		return author;
 	}
@@ -110,6 +118,7 @@ public class DeviceJsScript {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@NaturalId
 	public String getName() {
 		return name;

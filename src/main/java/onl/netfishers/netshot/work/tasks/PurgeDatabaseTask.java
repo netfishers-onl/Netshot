@@ -28,10 +28,13 @@ import javax.persistence.Entity;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigBinaryFileAttribute;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.CacheMode;
@@ -85,6 +88,7 @@ public class PurgeDatabaseTask extends Task {
 	 */
 	@Override
 	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Database purge";
@@ -272,6 +276,7 @@ public class PurgeDatabaseTask extends Task {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public int getDays() {
 		return days;
 	}
@@ -281,6 +286,7 @@ public class PurgeDatabaseTask extends Task {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public int getConfigDays() {
 		return configDays;
 	}
@@ -290,6 +296,7 @@ public class PurgeDatabaseTask extends Task {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public int getConfigSize() {
 		return configSize;
 	}
@@ -299,6 +306,7 @@ public class PurgeDatabaseTask extends Task {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public int getConfigKeepDays() {
 		return configKeepDays;
 	}

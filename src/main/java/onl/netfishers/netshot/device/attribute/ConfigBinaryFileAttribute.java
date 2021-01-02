@@ -28,8 +28,11 @@ import javax.persistence.Entity;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.Config;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @DiscriminatorValue("F")
 public class ConfigBinaryFileAttribute extends ConfigAttribute {
@@ -99,6 +102,7 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 	 * @return the original file name
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getOriginalName() {
 		return originalName;
 	}
@@ -115,6 +119,7 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 	 * @return the fileSize
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public long getFileSize() {
 		return fileSize;
 	}
@@ -123,6 +128,7 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 	 * @param fileSize the fileSize to set
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public void setFileSize(long fileSize) {
 		this.fileSize = fileSize;
 	}

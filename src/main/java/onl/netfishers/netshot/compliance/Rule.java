@@ -43,11 +43,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
 
 import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
 import onl.netfishers.netshot.compliance.rules.JavaScriptRule;
 import onl.netfishers.netshot.compliance.rules.TextRule;
 import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.TaskLogger;
 
 
@@ -183,6 +185,7 @@ public abstract class Rule {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public long getId() {
 		return id;
 	}
@@ -214,6 +217,7 @@ public abstract class Rule {
 	 * @return true, if is enabled
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isEnabled() {
 		return enabled;
 	}
@@ -251,6 +255,7 @@ public abstract class Rule {
 	 * @return the name
 	 */
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getName() {
 		return name;
 	}

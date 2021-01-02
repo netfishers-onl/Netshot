@@ -194,6 +194,7 @@ import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.jaxrs2.integration.resources.AcceptHeaderOpenApiResource;
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.integration.OpenApiConfigurationException;
 import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.models.Components;
@@ -234,6 +235,9 @@ public class RestService extends Thread {
 
 	/** Name of the HTTP header used for API token */
 	private static final String HTTP_API_TOKEN_HEADER = "X-Netshot-API-Token";
+
+	/** Request property name to embed the suggested HTTP response code */
+	private static final String SUGGESTED_RESPONSE_CODE = "onl.netfishers.netshot.rest.SuggestedResponseCode";
 
 	/**
 	 * Initializes the service.
@@ -364,6 +368,21 @@ public class RestService extends Thread {
 		}
 	}
 
+	private static class ResponseCodeFilter implements ContainerResponseFilter {
+		@Context
+		private HttpServletRequest httpRequest;
+
+		@Override
+		public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
+			if (responseContext.getStatus() == 200) {
+				Response.Status status = (Response.Status) httpRequest.getAttribute(SUGGESTED_RESPONSE_CODE);
+				if (status != null) {
+					responseContext.setStatus(status.getStatusCode());
+				}
+			}
+		}
+	}
+
 	public static class NetshotExceptionMapper implements ExceptionMapper<Throwable> {
 
 		public Response toResponse(Throwable t) {
@@ -392,6 +411,7 @@ public class RestService extends Thread {
 			property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, "true");
 			property(ServerProperties.APPLICATION_NAME, "Netshot");
 			register(LoggerFilter.class);
+			register(ResponseCodeFilter.class);
 			// property(ServerProperties.TRACING, "ALL");
 			register(JacksonFeature.class);
 
@@ -419,6 +439,15 @@ public class RestService extends Thread {
 			}
 		}
 	}
+
+	private String httpBaseUrl;
+	private int httpBasePort;
+	private boolean httpUseSsl;
+	private String httpSslKeystoreFile;
+	private String httpSslKeystorePass;
+
+	@Context
+	private HttpServletRequest request;
 
 	/**
 	 * Instantiates a new Netshot REST service.
@@ -450,11 +479,14 @@ public class RestService extends Thread {
 		}
 	}
 
-	private String httpBaseUrl;
-	private boolean httpUseSsl;
-	private String httpSslKeystoreFile;
-	private String httpSslKeystorePass;
-	private int httpBasePort;
+	/**
+	 * Attach a suggested return code to the request, so the ResponseCodeFilter
+	 * can in turn change the return code of the response.
+	 * e.g. 201 or 204 instead of default 200
+	 */
+	private void suggestReturnCode(Response.Status status) {
+		this.request.setAttribute(SUGGESTED_RESPONSE_CODE, status);
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Thread#run()
@@ -595,162 +627,70 @@ public class RestService extends Thread {
 
 	/**
 	 * The NetshotBadRequestException class, a WebApplication exception
-	 * embedding an error message, to be sent to the REST client.
+	 * embedding an error message, and HTTP status code, to be sent to the REST client.
 	 */
 	static public class NetshotBadRequestException extends WebApplicationException {
 
-		/** The Constant NETSHOT_DATABASE_ACCESS_ERROR. */
-		public static final int NETSHOT_DATABASE_ACCESS_ERROR = 20;
+		static public enum Reason {
+			NETSHOT_DATABASE_ACCESS_ERROR(20, Response.Status.INTERNAL_SERVER_ERROR),
+			NETSHOT_INVALID_IP_ADDRESS(100, Response.Status.BAD_REQUEST),
+			NETSHOT_MALFORMED_IP_ADDRESS(101, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_PORT(102, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_DOMAIN(110, Response.Status.BAD_REQUEST),
+			NETSHOT_DUPLICATE_DOMAIN(111, Response.Status.CONFLICT),
+			NETSHOT_INVALID_DOMAIN_NAME(112, Response.Status.BAD_REQUEST),
+			NETSHOT_USED_DOMAIN(113, Response.Status.PRECONDITION_FAILED),
+			NETSHOT_INVALID_TASK(120, Response.Status.BAD_REQUEST),
+			NETSHOT_TASK_NOT_CANCELLABLE(121, Response.Status.PRECONDITION_FAILED),
+			NETSHOT_TASK_CANCEL_ERROR(122, Response.Status.INTERNAL_SERVER_ERROR),
+			NETSHOT_USED_CREDENTIALS(130, Response.Status.PRECONDITION_FAILED),
+			NETSHOT_DUPLICATE_CREDENTIALS(131, Response.Status.CONFLICT),
+			NETSHOT_INVALID_CREDENTIALS_TYPE(132, Response.Status.BAD_REQUEST),
+			NETSHOT_CREDENTIALS_NOTFOUND(133, Response.Status.PRECONDITION_FAILED),
+			NETSHOT_INVALID_CREDENTIALS_NAME(134, Response.Status.BAD_REQUEST),
+			NETSHOT_SCHEDULE_ERROR(30, Response.Status.INTERNAL_SERVER_ERROR),
+			NETSHOT_DUPLICATE_DEVICE(140, Response.Status.CONFLICT),
+			NETSHOT_USED_DEVICE(141, Response.Status.PRECONDITION_FAILED),
+			NETSHOT_INVALID_DEVICE(142, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_CONFIG(143, Response.Status.BAD_REQUEST),
+			NETSHOT_INCOMPATIBLE_CONFIGS(144, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_DEVICE_CLASSNAME(150, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_SEARCH_STRING(151, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_GROUP_NAME(160, Response.Status.BAD_REQUEST),
+			NETSHOT_DUPLICATE_GROUP(161, Response.Status.CONFLICT),
+			NETSHOT_INCOMPATIBLE_GROUP_TYPE(162, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_DEVICE_IN_STATICGROUP(163, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_GROUP(164, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_DYNAMICGROUP_QUERY(165, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_SUBNET(170, Response.Status.BAD_REQUEST),
+			NETSHOT_SCAN_SUBNET_TOO_BIG(171, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_POLICY_NAME(180, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_POLICY(181, Response.Status.BAD_REQUEST),
+			NETSHOT_DUPLICATE_POLICY(182, Response.Status.CONFLICT),
+			NETSHOT_INVALID_RULE_NAME(190, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_RULE(191, Response.Status.BAD_REQUEST),
+			NETSHOT_DUPLICATE_RULE(192, Response.Status.CONFLICT),
+			NETSHOT_INVALID_USER(200, Response.Status.BAD_REQUEST),
+			NETSHOT_DUPLICATE_USER(201, Response.Status.CONFLICT),
+			NETSHOT_INVALID_USER_NAME(202, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_PASSWORD(203, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_API_TOKEN_FORMAT(204, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_SCRIPT(220, Response.Status.BAD_REQUEST),
+			NETSHOT_UNKNOWN_SCRIPT(221, Response.Status.BAD_REQUEST),
+			NETSHOT_DUPLICATE_SCRIPT(222, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_DIAGNOSTIC_NAME(230, Response.Status.BAD_REQUEST),
+			NETSHOT_DUPLICATE_DIAGNOSTIC(231, Response.Status.CONFLICT),
+			NETSHOT_INVALID_DIAGNOSTIC_TYPE(232, Response.Status.BAD_REQUEST),
+			NETSHOT_INVALID_DIAGNOSTIC(233, Response.Status.BAD_REQUEST),
+			NETSHOT_INCOMPATIBLE_DIAGNOSTIC(234, Response.Status.BAD_REQUEST);
 
-		/** The Constant NETSHOT_INVALID_IP_ADDRESS. */
-		public static final int NETSHOT_INVALID_IP_ADDRESS = 100;
-
-		/** The Constant NETSHOT_MALFORMED_IP_ADDRESS. */
-		public static final int NETSHOT_MALFORMED_IP_ADDRESS = 101;
-		
-		/** The Constant NETSHOT_INVALID_PORT. */
-		public static final int NETSHOT_INVALID_PORT = 102;
-
-		/** The Constant NETSHOT_INVALID_DOMAIN. */
-		public static final int NETSHOT_INVALID_DOMAIN = 110;
-
-		/** The Constant NETSHOT_DUPLICATE_DOMAIN. */
-		public static final int NETSHOT_DUPLICATE_DOMAIN = 111;
-
-		/** The Constant NETSHOT_INVALID_DOMAIN_NAME. */
-		public static final int NETSHOT_INVALID_DOMAIN_NAME = 112;
-
-		/** The Constant NETSHOT_USED_DOMAIN. */
-		public static final int NETSHOT_USED_DOMAIN = 113;
-
-		/** The Constant NETSHOT_INVALID_TASK. */
-		public static final int NETSHOT_INVALID_TASK = 120;
-
-		/** The Constant NETSHOT_TASK_NOT_CANCELLABLE. */
-		public static final int NETSHOT_TASK_NOT_CANCELLABLE = 121;
-
-		/** The Constant NETSHOT_TASK_CANCEL_ERROR. */
-		public static final int NETSHOT_TASK_CANCEL_ERROR = 122;
-
-		/** The Constant NETSHOT_USED_CREDENTIALS. */
-		public static final int NETSHOT_USED_CREDENTIALS = 130;
-
-		/** The Constant NETSHOT_DUPLICATE_CREDENTIALS. */
-		public static final int NETSHOT_DUPLICATE_CREDENTIALS = 131;
-
-		/** The Constant NETSHOT_INVALID_CREDENTIALS_TYPE. */
-		public static final int NETSHOT_INVALID_CREDENTIALS_TYPE = 132;
-
-		/** The Constant NETSHOT_CREDENTIALS_NOTFOUND. */
-		public static final int NETSHOT_CREDENTIALS_NOTFOUND = 133;
-		
-		/** The Constant NETSHOT_INVALID_CREDENTIALS_NAME. */
-		public static final int NETSHOT_INVALID_CREDENTIALS_NAME = 134;
-
-		/** The Constant NETSHOT_SCHEDULE_ERROR. */
-		public static final int NETSHOT_SCHEDULE_ERROR = 30;
-
-		/** The Constant NETSHOT_DUPLICATE_DEVICE. */
-		public static final int NETSHOT_DUPLICATE_DEVICE = 140;
-
-		/** The Constant NETSHOT_USED_DEVICE. */
-		public static final int NETSHOT_USED_DEVICE = 141;
-
-		/** The Constant NETSHOT_INVALID_DEVICE. */
-		public static final int NETSHOT_INVALID_DEVICE = 142;
-
-		/** The Constant NETSHOT_INVALID_CONFIG. */
-		public static final int NETSHOT_INVALID_CONFIG = 143;
-
-		/** The Constant NETSHOT_INCOMPATIBLE_CONFIGS. */
-		public static final int NETSHOT_INCOMPATIBLE_CONFIGS = 144;
-
-		/** The Constant NETSHOT_INVALID_DEVICE_CLASSNAME. */
-		public static final int NETSHOT_INVALID_DEVICE_CLASSNAME = 150;
-
-		/** The Constant NETSHOT_INVALID_SEARCH_STRING. */
-		public static final int NETSHOT_INVALID_SEARCH_STRING = 151;
-
-		/** The Constant NETSHOT_INVALID_GROUP_NAME. */
-		public static final int NETSHOT_INVALID_GROUP_NAME = 160;
-
-		/** The Constant NETSHOT_DUPLICATE_GROUP. */
-		public static final int NETSHOT_DUPLICATE_GROUP = 161;
-
-		/** The Constant NETSHOT_INCOMPATIBLE_GROUP_TYPE. */
-		public static final int NETSHOT_INCOMPATIBLE_GROUP_TYPE = 162;
-
-		/** The Constant NETSHOT_INVALID_DEVICE_IN_STATICGROUP. */
-		public static final int NETSHOT_INVALID_DEVICE_IN_STATICGROUP = 163;
-
-		/** The Constant NETSHOT_INVALID_GROUP. */
-		public static final int NETSHOT_INVALID_GROUP = 164;
-
-		/** The Constant NETSHOT_INVALID_DYNAMICGROUP_QUERY. */
-		public static final int NETSHOT_INVALID_DYNAMICGROUP_QUERY = 165;
-
-		/** The Constant NETSHOT_INVALID_SUBNET. */
-		public static final int NETSHOT_INVALID_SUBNET = 170;
-
-		/** The Constant NETSHOT_SCAN_SUBNET_TOO_BIG. */
-		public static final int NETSHOT_SCAN_SUBNET_TOO_BIG = 171;
-
-		/** The Constant NETSHOT_INVALID_POLICY_NAME. */
-		public static final int NETSHOT_INVALID_POLICY_NAME = 180;
-
-		/** The Constant NETSHOT_INVALID_POLICY. */
-		public static final int NETSHOT_INVALID_POLICY = 181;
-
-		/** The Constant NETSHOT_DUPLICATE_POLICY. */
-		public static final int NETSHOT_DUPLICATE_POLICY = 182;
-
-		/** The Constant NETSHOT_INVALID_RULE_NAME. */
-		public static final int NETSHOT_INVALID_RULE_NAME = 190;
-
-		/** The Constant NETSHOT_INVALID_RULE. */
-		public static final int NETSHOT_INVALID_RULE = 191;
-
-		/** The Constant NETSHOT_DUPLICATE_RULE. */
-		public static final int NETSHOT_DUPLICATE_RULE = 192;
-
-		/** The Constant NETSHOT_INVALID_USER. */
-		public static final int NETSHOT_INVALID_USER = 200;
-
-		/** The Constant NETSHOT_DUPLICATE_USER. */
-		public static final int NETSHOT_DUPLICATE_USER = 201;
-
-		/** The Constant NETSHOT_INVALID_USER_NAME. */
-		public static final int NETSHOT_INVALID_USER_NAME = 202;
-
-		/** The Constant NETSHOT_INVALID_PASSWORD. */
-		public static final int NETSHOT_INVALID_PASSWORD = 203;
-
-		/** The Constant NETSHOT_INVALID_API_TOKEN_FORMAT. */
-		public static final int NETSHOT_INVALID_API_TOKEN_FORMAT = 204;
-		
-		/** The Constant NETSHOT_INVALID_SCRIPT. */
-		public static final int NETSHOT_INVALID_SCRIPT = 220;
-		
-		/** The Constant NETSHOT_UNKNOWN_SCRIPT. */
-		public static final int NETSHOT_UNKNOWN_SCRIPT = 221;
-		
-		/** The Constant NETSHOT_DUPLICATE_SCRIPT. */
-		public static final int NETSHOT_DUPLICATE_SCRIPT = 222;
-
-		/** The Constant NETSHOT_INVALID_DIAGNOSTIC_NAME. */
-		public static final int NETSHOT_INVALID_DIAGNOSTIC_NAME = 230;
-
-		/** The Constant NETSHOT_DUPLICATE_DIAGNOSTIC. */
-		public static final int NETSHOT_DUPLICATE_DIAGNOSTIC = 231;
-
-		/** The Constant NETSHOT_INVALID_DIAGNOSTIC_TYPE. */
-		public static final int NETSHOT_INVALID_DIAGNOSTIC_TYPE = 232;
-
-		/** The Constant NETSHOT_INVALID_DIAGNOSTIC. */
-		public static final int NETSHOT_INVALID_DIAGNOSTIC = 233;
-
-		/** The Constant NETSHOT_INCOMPATIBLE_DIAGNOSTIC. */
-		public static final int NETSHOT_INCOMPATIBLE_DIAGNOSTIC = 234;
+			int code;
+			Response.Status status;
+			private Reason(int code, Response.Status status) {
+				this.code = code;
+				this.status = status;
+			}
+		}
 
 		/** The Constant serialVersionUID. */
 		private static final long serialVersionUID = -4538169756895835186L;
@@ -761,9 +701,9 @@ public class RestService extends Thread {
 		 * @param message the message
 		 * @param errorCode the error code
 		 */
-		public NetshotBadRequestException(String message, int errorCode) {
-			super(Response.status(Response.Status.BAD_REQUEST)
-					.entity(new RsErrorBean(message, errorCode)).build());
+		public NetshotBadRequestException(String message, Reason reason) {
+			super(Response.status(reason.status)
+					.entity(new RsErrorBean(message, reason.code)).build());
 		}
 	}
 	
@@ -787,6 +727,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/domains")
+	@ApiResponse()
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Operation(
@@ -808,7 +749,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the domains.", e);
 			throw new NetshotBadRequestException("Unable to fetch the domains",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -954,7 +895,7 @@ public class RestService extends Thread {
 		if (name.isEmpty()) {
 			logger.warn("User posted an empty domain name.");
 			throw new NetshotBadRequestException("Invalid domain name.",
-					NetshotBadRequestException.NETSHOT_INVALID_DOMAIN_NAME);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN_NAME);
 		}
 		String description = newDomain.getDescription().trim();
 		try {
@@ -963,7 +904,7 @@ public class RestService extends Thread {
 			if (!v4Address.isNormalUnicast()) {
 				logger.warn("User posted an invalid IP address.");
 				throw new NetshotBadRequestException("Invalid IP address",
-						NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
 			}
 			Domain domain = new Domain(name, description, v4Address, v6Address);
 			Session session = Database.getSession();
@@ -972,6 +913,7 @@ public class RestService extends Thread {
 				session.save(domain);
 				session.getTransaction().commit();
 				Netshot.aaaLogger.info("{} has been created.", domain);
+				this.suggestReturnCode(Response.Status.CREATED);
 			}
 			catch (HibernateException e) {
 				session.getTransaction().rollback();
@@ -980,11 +922,11 @@ public class RestService extends Thread {
 				if (t != null && t.getMessage().contains("Duplicate entry")) {
 					throw new NetshotBadRequestException(
 							"A domain with this name already exists.",
-							NetshotBadRequestException.NETSHOT_DUPLICATE_DOMAIN);
+							NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DOMAIN);
 				}
 				throw new NetshotBadRequestException(
 						"Unable to add the domain to the database",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			finally {
 				session.close();
@@ -994,7 +936,7 @@ public class RestService extends Thread {
 		catch (UnknownHostException e) {
 			logger.warn("User posted an invalid IP address.");
 			throw new NetshotBadRequestException("Malformed IP address",
-					NetshotBadRequestException.NETSHOT_MALFORMED_IP_ADDRESS);
+					NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
 		}
 	}
 
@@ -1023,7 +965,7 @@ public class RestService extends Thread {
 		if (name.isEmpty()) {
 			logger.warn("User posted an invalid domain name.");
 			throw new NetshotBadRequestException("Invalid domain name.",
-					NetshotBadRequestException.NETSHOT_INVALID_DOMAIN_NAME);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN_NAME);
 		}
 		String description = rsDomain.getDescription().trim();
 		Network4Address v4Address;
@@ -1032,13 +974,13 @@ public class RestService extends Thread {
 			if (!v4Address.isNormalUnicast()) {
 				logger.warn("User posted an invalid IP address");
 				throw new NetshotBadRequestException("Invalid IP address",
-						NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
 			}
 		}
 		catch (UnknownHostException e) {
 			logger.warn("Invalid IP address.", e);
 			throw new NetshotBadRequestException("Malformed IP address",
-					NetshotBadRequestException.NETSHOT_MALFORMED_IP_ADDRESS);
+					NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
 		}
 		Session session = Database.getSession();
 		Domain domain;
@@ -1056,7 +998,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("The domain doesn't exist.", e);
 			throw new NetshotBadRequestException("The domain doesn't exist.",
-					NetshotBadRequestException.NETSHOT_INVALID_DOMAIN);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -1065,11 +1007,11 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A domain with this name already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_DOMAIN);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DOMAIN);
 			}
 			throw new NetshotBadRequestException(
 					"Unable to save the domain... is the name already in use?",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -1102,12 +1044,13 @@ public class RestService extends Thread {
 			session.delete(domain);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted.", domain);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The domain doesn't exist.");
 			throw new NetshotBadRequestException("The domain doesn't exist.",
-					NetshotBadRequestException.NETSHOT_INVALID_DOMAIN);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -1115,10 +1058,10 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("foreign key constraint fails")) {
 				throw new NetshotBadRequestException(
 						"Unable to delete the domain, there must be devices or tasks using it.",
-						NetshotBadRequestException.NETSHOT_USED_DOMAIN);
+						NetshotBadRequestException.Reason.NETSHOT_USED_DOMAIN);
 			}
 			throw new NetshotBadRequestException("Unable to delete the domain",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -1161,7 +1104,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the interfaces.", e);
 			throw new NetshotBadRequestException("Unable to fetch the interfaces",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -1197,7 +1140,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the modules.", e);
 			throw new NetshotBadRequestException("Unable to fetch the modules",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -1295,7 +1238,7 @@ public class RestService extends Thread {
 		catch (Exception e) {
 			logger.error("Unable to fetch the tasks.", e);
 			throw new NetshotBadRequestException("Unable to fetch the tasks",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -1332,7 +1275,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the configs.", e);
 			throw new NetshotBadRequestException("Unable to fetch the configs",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -1684,7 +1627,7 @@ public class RestService extends Thread {
 			if (config1 == null || config2 == null) {
 				logger.error("Non existing config, {} or {}.", id1, id2);
 				throw new NetshotBadRequestException("Unable to fetch the configs",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			DeviceDriver driver1;
 			DeviceDriver driver2;
@@ -1695,12 +1638,12 @@ public class RestService extends Thread {
 			catch (MissingDeviceDriverException e) {
 				logger.error("Missing driver.");
 				throw new NetshotBadRequestException("Missing driver",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			if (!driver1.equals(driver2)) {
 				logger.error("Incompatible configurations, {} and {} (different drivers).", id1, id2);
 				throw new NetshotBadRequestException("Incompatible configurations",
-						NetshotBadRequestException.NETSHOT_INCOMPATIBLE_CONFIGS);
+						NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_CONFIGS);
 			}
 			
 			configDiffs = new RsConfigDiff(config1.getChangeDate(),
@@ -1726,7 +1669,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the configs", e);
 			throw new NetshotBadRequestException("Unable to fetch the configs",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -1761,7 +1704,7 @@ public class RestService extends Thread {
 				.uniqueResult();
 			if (device == null) {
 				throw new NetshotBadRequestException("Can't find this device",
-						NetshotBadRequestException.NETSHOT_INVALID_DEVICE);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 			}
 			device.setMgmtDomain(Database.unproxy(device.getMgmtDomain()));
 			device.setEolModule(Database.unproxy(device.getEolModule()));
@@ -1778,7 +1721,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the device", e);
 			throw new NetshotBadRequestException("Unable to fetch the device",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -1933,7 +1876,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the devices", e);
 			throw new NetshotBadRequestException("Unable to fetch the devices",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -2052,7 +1995,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Error while loading device families.", e);
 			throw new NetshotBadRequestException("Database error",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -2104,7 +2047,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Error while loading part numbers.", e);
 			throw new NetshotBadRequestException("Database error",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -2350,7 +2293,7 @@ public class RestService extends Thread {
 		description = "In auto discovery mode, this will create a 'discover device' task, and the device will be create if the discovery is successful." +
 		" Otherwise, the device will be immediately created in the database, and a 'snapshot' task will be created."
 	)
-	public Task addDevice(@Context HttpServletRequest request, RsNewDevice device) throws WebApplicationException {
+	public Task addDevice(RsNewDevice device) throws WebApplicationException {
 		logger.debug("REST request, new device.");
 		Network4Address deviceAddress;
 		try {
@@ -2358,13 +2301,13 @@ public class RestService extends Thread {
 			if (!deviceAddress.isNormalUnicast()) {
 				logger.warn("User posted an invalid IP address (not normal unicast).");
 				throw new NetshotBadRequestException("Invalid IP address",
-						NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
 			}
 		}
 		catch (UnknownHostException e) {
 			logger.warn("User posted an invalid IP address.");
 			throw new NetshotBadRequestException("Malformed IP address",
-					NetshotBadRequestException.NETSHOT_MALFORMED_IP_ADDRESS);
+					NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
 		}
 		Network4Address connectAddress = null;
 		if (device.getConnectIpAddress() != null && !device.getConnectIpAddress().equals("")) {
@@ -2373,13 +2316,13 @@ public class RestService extends Thread {
 				if (!deviceAddress.isNormalUnicast()) {
 					logger.warn("User posted an invalid connect IP address (not normal unicast).");
 					throw new NetshotBadRequestException("Invalid connect IP address",
-							NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
 				}
 			}
 			catch (UnknownHostException e) {
 				logger.warn("User posted an invalid IP address.");
 				throw new NetshotBadRequestException("Malformed connect IP address",
-						NetshotBadRequestException.NETSHOT_MALFORMED_IP_ADDRESS);
+						NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
 			}
 		}
 		Integer sshPort = null;
@@ -2393,7 +2336,7 @@ public class RestService extends Thread {
 			}
 			catch (Exception e) {
 				throw new NetshotBadRequestException("Invalid SSH port",
-						NetshotBadRequestException.NETSHOT_INVALID_PORT);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
 			}
 		}
 		Integer telnetPort = null;
@@ -2407,7 +2350,7 @@ public class RestService extends Thread {
 			}
 			catch (Exception e) {
 				throw new NetshotBadRequestException("Invalid Telnet port",
-						NetshotBadRequestException.NETSHOT_INVALID_PORT);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
 			}
 		}
 		Domain domain;
@@ -2424,7 +2367,7 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException(String.format(
 						"The device '%s' already exists with this IP address.",
 						duplicate.getName()),
-						NetshotBadRequestException.NETSHOT_DUPLICATE_DEVICE);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DEVICE);
 			}
 			domain = (Domain) session.load(Domain.class, device.getDomainId());
 			knownCommunities = session
@@ -2437,18 +2380,18 @@ public class RestService extends Thread {
 				logger.error("No available SNMP community");
 				throw new NetshotBadRequestException(
 						"There is no known SNMP community in the database to poll the device.",
-						NetshotBadRequestException.NETSHOT_CREDENTIALS_NOTFOUND);
+						NetshotBadRequestException.Reason.NETSHOT_CREDENTIALS_NOTFOUND);
 			}
 		}
 		catch (ObjectNotFoundException e) {
 			logger.error("Non existing domain.", e);
 			throw new NetshotBadRequestException("Invalid domain",
-					NetshotBadRequestException.NETSHOT_INVALID_DOMAIN);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
 		}
 		catch (HibernateException e) {
 			logger.error("Error while loading domain or communities.", e);
 			throw new NetshotBadRequestException("Database error",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -2465,17 +2408,18 @@ public class RestService extends Thread {
 				}
 				TaskManager.addTask(task);
 				Netshot.aaaLogger.info("{} has been added.", task);
+				this.suggestReturnCode(Response.Status.CREATED);
 				return task;
 			}
 			catch (SchedulerException e) {
 				logger.error("Unable to schedule the discovery task.", e);
 				throw new NetshotBadRequestException("Unable to schedule the task",
-						NetshotBadRequestException.NETSHOT_SCHEDULE_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_SCHEDULE_ERROR);
 			}
 			catch (HibernateException e) {
 				logger.error("Error while adding the discovery task.", e);
 				throw new NetshotBadRequestException("Database error",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 		}
 		else {
@@ -2483,7 +2427,7 @@ public class RestService extends Thread {
 			if (driver == null) {
 				logger.warn("Invalid posted device driver.");
 				throw new NetshotBadRequestException("Invalid device type.",
-						NetshotBadRequestException.NETSHOT_INVALID_DEVICE_CLASSNAME);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE_CLASSNAME);
 			}
 			session = Database.getSession();
 			TakeSnapshotTask task;
@@ -2517,7 +2461,7 @@ public class RestService extends Thread {
 				session.getTransaction().rollback();
 				logger.error("Error while creating the device", e);
 				throw new NetshotBadRequestException("Database error",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			finally {
 				session.close();
@@ -2527,18 +2471,19 @@ public class RestService extends Thread {
 			}
 			try {
 				TaskManager.addTask(task);
+				this.suggestReturnCode(Response.Status.CREATED);
 				return task;
 			}
 			catch (HibernateException e) {
 				logger.error("Unable to add the task.", e);
 				throw new NetshotBadRequestException(
 						"Unable to add the task to the database.",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			catch (SchedulerException e) {
 				logger.error("Unable to schedule the task.", e);
 				throw new NetshotBadRequestException("Unable to schedule the task.",
-						NetshotBadRequestException.NETSHOT_SCHEDULE_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_SCHEDULE_ERROR);
 			}
 		}
 
@@ -2589,6 +2534,7 @@ public class RestService extends Thread {
 					logger.error("Error while removing binary file {}", toDeleteFile, e);
 				}
 			}
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -2597,10 +2543,10 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("foreign key constraint fails")) {
 				throw new NetshotBadRequestException(
 						"Unable to delete the device, there must be other objects using it.",
-						NetshotBadRequestException.NETSHOT_USED_DEVICE);
+						NetshotBadRequestException.Reason.NETSHOT_USED_DEVICE);
 			}
 			throw new NetshotBadRequestException("Unable to delete the device",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (Exception e) {
 			logger.error("Error", e);
@@ -2894,7 +2840,7 @@ public class RestService extends Thread {
 		summary = "Update a device",
 		description = "Edits a device, by ID."
 	)
-	public Device setDevice(@Context HttpServletRequest request, @PathParam("id") Long id, RsDevice rsDevice)
+	public Device setDevice(@PathParam("id") Long id, RsDevice rsDevice)
 			throws WebApplicationException {
 		logger.debug("REST request, edit device {}.", id);
 		Device device;
@@ -2915,7 +2861,7 @@ public class RestService extends Thread {
 				if (!v4Address.isNormalUnicast()) {
 					session.getTransaction().rollback();
 					throw new NetshotBadRequestException("Invalid IP address",
-							NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
 				}
 				device.setMgmtAddress(v4Address);
 			}
@@ -2928,7 +2874,7 @@ public class RestService extends Thread {
 					if (!v4ConnectAddress.isNormalUnicast() && !v4ConnectAddress.isLoopback()) {
 						session.getTransaction().rollback();
 						throw new NetshotBadRequestException("Invalid Connect IP address",
-								NetshotBadRequestException.NETSHOT_INVALID_IP_ADDRESS);
+								NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
 					}
 					device.setConnectAddress(v4ConnectAddress);
 				}
@@ -2948,7 +2894,7 @@ public class RestService extends Thread {
 					catch (Exception e) {
 						session.getTransaction().rollback();
 						throw new NetshotBadRequestException("Invalid SSH port",
-								NetshotBadRequestException.NETSHOT_INVALID_PORT);
+								NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
 					}
 				}
 			}
@@ -2967,7 +2913,7 @@ public class RestService extends Thread {
 					catch (Exception e) {
 						session.getTransaction().rollback();
 						throw new NetshotBadRequestException("Invalid Telnet port",
-								NetshotBadRequestException.NETSHOT_INVALID_PORT);
+								NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
 					}
 				}
 			}
@@ -3049,13 +2995,13 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.warn("User posted an invalid IP address.", e);
 			throw new NetshotBadRequestException("Malformed IP address",
-					NetshotBadRequestException.NETSHOT_MALFORMED_IP_ADDRESS);
+					NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The device doesn't exist.", e);
 			throw new NetshotBadRequestException("The device doesn't exist anymore.",
-					NetshotBadRequestException.NETSHOT_INVALID_DEVICE);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -3064,14 +3010,14 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A device with this IP address already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_DEVICE);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DEVICE);
 			}
 			if (t != null && t.getMessage().contains("domain")) {
 				throw new NetshotBadRequestException("Unable to find the domain",
-						NetshotBadRequestException.NETSHOT_INVALID_DOMAIN);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
 			}
 			throw new NetshotBadRequestException("Unable to save the device.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -3106,12 +3052,12 @@ public class RestService extends Thread {
 		catch (ObjectNotFoundException e) {
 			logger.error("Unable to find the task {}.", id, e);
 			throw new NetshotBadRequestException("Task not found",
-					NetshotBadRequestException.NETSHOT_INVALID_TASK);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the task {}.", id, e);
 			throw new NetshotBadRequestException("Unable to fetch the task",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -3191,7 +3137,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the tasks.", e);
 			throw new NetshotBadRequestException("Unable to fetch the tasks",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -3228,7 +3174,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the credentials.", e);
 			throw new NetshotBadRequestException("Unable to fetch the credentials",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -3268,7 +3214,7 @@ public class RestService extends Thread {
 			if (credentialSet.isDeviceSpecific()) {
 				throw new NetshotBadRequestException(
 						"Can't delete a device-specific credential set.",
-						NetshotBadRequestException.NETSHOT_USED_CREDENTIALS);
+						NetshotBadRequestException.Reason.NETSHOT_USED_CREDENTIALS);
 			}
 			/* HACK! In JPA, this would require updating each task one by one... */
 			session
@@ -3278,6 +3224,7 @@ public class RestService extends Thread {
 			session.delete(credentialSet);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted.", credentialSet);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (Exception e) {
 			session.getTransaction().rollback();
@@ -3289,11 +3236,11 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("foreign key constraint fails")) {
 				throw new NetshotBadRequestException(
 						"Unable to delete the credential set, there must be devices or tasks using it.",
-						NetshotBadRequestException.NETSHOT_USED_CREDENTIALS);
+						NetshotBadRequestException.Reason.NETSHOT_USED_CREDENTIALS);
 			}
 			throw new NetshotBadRequestException(
 					"Unable to delete the credential set",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -3323,7 +3270,7 @@ public class RestService extends Thread {
 		if (credentialSet.getName() == null || credentialSet.getName().trim().equals("")) {
 			logger.error("Invalid credential set name.");
 			throw new NetshotBadRequestException("Invalid name for the credential set",
-					NetshotBadRequestException.NETSHOT_INVALID_CREDENTIALS_NAME);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS_NAME);
 		}
 		Session session = Database.getSession();
 		try {
@@ -3335,6 +3282,7 @@ public class RestService extends Thread {
 			session.save(credentialSet);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", credentialSet);
+			this.suggestReturnCode(Response.Status.CREATED);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -3343,15 +3291,15 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A credential set with this name already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_CREDENTIALS);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_CREDENTIALS);
 			}
 			else if (t != null && t.getMessage().contains("mgmt_domain")) {
 				throw new NetshotBadRequestException(
 						"The domain doesn't exist.",
-						NetshotBadRequestException.NETSHOT_INVALID_DOMAIN);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
 			}
 			throw new NetshotBadRequestException("Unable to save the credential set",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -3389,13 +3337,13 @@ public class RestService extends Thread {
 				logger.error("Unable to find the credential set {}.", id);
 				throw new NetshotBadRequestException(
 						"Unable to find the credential set.",
-						NetshotBadRequestException.NETSHOT_CREDENTIALS_NOTFOUND);
+						NetshotBadRequestException.Reason.NETSHOT_CREDENTIALS_NOTFOUND);
 			}
 			if (!credentialSet.getClass().equals(rsCredentialSet.getClass())) {
 				logger.error("Wrong posted credential type for credential set {}.", id);
 				throw new NetshotBadRequestException(
 						"The posted credential type doesn't match the existing one.",
-						NetshotBadRequestException.NETSHOT_INVALID_CREDENTIALS_TYPE);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS_TYPE);
 			}
 			if (rsCredentialSet.getMgmtDomain() == null) {
 				credentialSet.setMgmtDomain(null);
@@ -3443,15 +3391,15 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A credential set with this name already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_CREDENTIALS);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_CREDENTIALS);
 			}
 			else if (t != null && t.getMessage().contains("mgmt_domain")) {
 				throw new NetshotBadRequestException(
 						"The domain doesn't exist.",
-						NetshotBadRequestException.NETSHOT_INVALID_DOMAIN);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
 			}
 			throw new NetshotBadRequestException("Unable to save the credential set",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (NetshotBadRequestException e) {
 			session.getTransaction().rollback();
@@ -3605,7 +3553,7 @@ public class RestService extends Thread {
 			catch (HibernateException e) {
 				logger.error("Error while searching for the devices.", e);
 				throw new NetshotBadRequestException("Unable to fetch the devices",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			finally {
 				session.close();
@@ -3615,7 +3563,7 @@ public class RestService extends Thread {
 			logger.warn("User's query is invalid.", e);
 			throw new NetshotBadRequestException("Invalid search string. "
 					+ e.getMessage(),
-					NetshotBadRequestException.NETSHOT_INVALID_SEARCH_STRING);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_SEARCH_STRING);
 		}
 	}
 
@@ -3643,7 +3591,7 @@ public class RestService extends Thread {
 		if (name.isEmpty()) {
 			logger.warn("User posted an empty group name.");
 			throw new NetshotBadRequestException("Invalid group name.",
-					NetshotBadRequestException.NETSHOT_INVALID_GROUP_NAME);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP_NAME);
 		}
 		deviceGroup.setName(name);
 		deviceGroup.setId(0);
@@ -3653,6 +3601,7 @@ public class RestService extends Thread {
 			session.save(deviceGroup);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", deviceGroup);
+			this.suggestReturnCode(Response.Status.CREATED);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -3661,11 +3610,11 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A group with this name already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_GROUP);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_GROUP);
 			}
 			throw new NetshotBadRequestException(
 					"Unable to add the group to the database",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -3699,7 +3648,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the groups.", e);
 			throw new NetshotBadRequestException("Unable to fetch the groups",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -3735,18 +3684,19 @@ public class RestService extends Thread {
 			session.delete(deviceGroup);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted.", deviceGroup);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The group {} to be deleted doesn't exist.", id, e);
 			throw new NetshotBadRequestException("The group doesn't exist.",
-					NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to delete the group {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the group",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -3926,7 +3876,7 @@ public class RestService extends Thread {
 			if (group == null) {
 				logger.error("Unable to find the group {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this group.",
-						NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 			}
 			if (group instanceof StaticDeviceGroup) {
 				StaticDeviceGroup staticGroup = (StaticDeviceGroup) group;
@@ -3947,12 +3897,12 @@ public class RestService extends Thread {
 				catch (FinderParseException e) {
 					throw new NetshotBadRequestException(
 							"Invalid query for the group definition.",
-							NetshotBadRequestException.NETSHOT_INVALID_DYNAMICGROUP_QUERY);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DYNAMICGROUP_QUERY);
 				}
 			}
 			else {
 				throw new NetshotBadRequestException("Unknown group type.",
-						NetshotBadRequestException.NETSHOT_INCOMPATIBLE_GROUP_TYPE);
+						NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_GROUP_TYPE);
 			}
 			group.setFolder(rsGroup.getFolder());
 			group.setHiddenFromReports(rsGroup.isHiddenFromReports());
@@ -3966,13 +3916,13 @@ public class RestService extends Thread {
 			logger.error("Unable to find a device while editing group {}.", id, e);
 			throw new NetshotBadRequestException(
 					"Unable to find a device. Refresh and try again.",
-					NetshotBadRequestException.NETSHOT_INVALID_DEVICE_IN_STATICGROUP);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE_IN_STATICGROUP);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to save the group {}.", id, e);
 			throw new NetshotBadRequestException("Unable to save the group.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
 			session.getTransaction().rollback();
@@ -4009,7 +3959,7 @@ public class RestService extends Thread {
 			if (group == null) {
 				logger.error("Unable to find the group {}.", id);
 				throw new NetshotBadRequestException("Can't find this group",
-						NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 			}
 			@SuppressWarnings("unchecked")
 			Query<RsLightDevice> query = session.createQuery(
@@ -4025,7 +3975,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the devices of group {}.", id, e);
 			throw new NetshotBadRequestException("Unable to fetch the devices",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -4429,7 +4379,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the task {}.", id, e);
 			throw new NetshotBadRequestException("Unable to fetch the task.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -4438,7 +4388,7 @@ public class RestService extends Thread {
 		if (task == null) {
 			logger.error("Unable to find the task {}.", id);
 			throw new NetshotBadRequestException("Unable to find the task.",
-					NetshotBadRequestException.NETSHOT_INVALID_TASK);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 		}
 
 		if (rsTask.isCancelled()) {
@@ -4447,7 +4397,7 @@ public class RestService extends Thread {
 						id);
 				throw new NetshotBadRequestException(
 						"The task isn't in 'SCHEDULED' state.",
-						NetshotBadRequestException.NETSHOT_TASK_NOT_CANCELLABLE);
+						NetshotBadRequestException.Reason.NETSHOT_TASK_NOT_CANCELLABLE);
 			}
 
 			try {
@@ -4457,7 +4407,7 @@ public class RestService extends Thread {
 			catch (Exception e) {
 				logger.error("Unable to cancel the task {}.", id, e);
 				throw new NetshotBadRequestException("Cannot cancel the task.",
-						NetshotBadRequestException.NETSHOT_TASK_CANCEL_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_TASK_CANCEL_ERROR);
 			}
 		}
 
@@ -4594,7 +4544,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Error while searching for tasks.", e);
 			throw new NetshotBadRequestException("Unable to fetch the tasks",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -4640,13 +4590,13 @@ public class RestService extends Thread {
 				if (device == null) {
 					logger.error("Unable to find the device {}.", rsTask.getDevice());
 					throw new NetshotBadRequestException("Unable to find the device.",
-							NetshotBadRequestException.NETSHOT_INVALID_DEVICE);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 				}
 			}
 			catch (HibernateException e) {
 				logger.error("Error while retrieving the device.", e);
 				throw new NetshotBadRequestException("Database error.",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			finally {
 				session.close();
@@ -4663,12 +4613,12 @@ public class RestService extends Thread {
 			if (driver == null) {
 				logger.error("Unknown device driver {}.", rsTask.getType());
 				throw new NetshotBadRequestException("Unknown device driver.",
-						NetshotBadRequestException.NETSHOT_INVALID_DEVICE);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 			}
 			if (rsTask.getScript() == null) {
 				logger.error("The script can't be empty.");
 				throw new NetshotBadRequestException("The script can't be empty.",
-						NetshotBadRequestException.NETSHOT_INVALID_DEVICE);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 			}
 			Device device;
 			Session session = Database.getSession();
@@ -4677,13 +4627,13 @@ public class RestService extends Thread {
 				if (device == null) {
 					logger.error("Unable to find the device {}.", rsTask.getDevice());
 					throw new NetshotBadRequestException("Unable to find the device.",
-							NetshotBadRequestException.NETSHOT_INVALID_DEVICE);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 				}
 			}
 			catch (HibernateException e) {
 				logger.error("Error while retrieving the device.", e);
 				throw new NetshotBadRequestException("Database error.",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			finally {
 				session.close();
@@ -4696,12 +4646,12 @@ public class RestService extends Thread {
 			if (driver == null) {
 				logger.error("Unknown device driver {}.", rsTask.getType());
 				throw new NetshotBadRequestException("Unknown device driver.",
-						NetshotBadRequestException.NETSHOT_INVALID_DEVICE);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 			}
 			if (rsTask.getScript() == null) {
 				logger.error("The script can't be empty.");
 				throw new NetshotBadRequestException("The script can't be empty.",
-						NetshotBadRequestException.NETSHOT_INVALID_DEVICE);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 			}
 			DeviceGroup group;
 			Session session = Database.getSession();
@@ -4710,14 +4660,14 @@ public class RestService extends Thread {
 				if (group == null) {
 					logger.error("Unable to find the group {}.", rsTask.getGroup());
 					throw new NetshotBadRequestException("Unable to find the group.",
-							NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 				}
 				task = new RunDeviceGroupScriptTask(group, rsTask.getScript(), driver, rsTask.getComments(), userName);
 			}
 			catch (HibernateException e) {
 				logger.error("Error while retrieving the group.", e);
 				throw new NetshotBadRequestException("Database error.",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			finally {
 				session.close();
@@ -4732,13 +4682,13 @@ public class RestService extends Thread {
 				if (device == null) {
 					logger.error("Unable to find the device {}.", rsTask.getDevice());
 					throw new NetshotBadRequestException("Unable to find the device.",
-							NetshotBadRequestException.NETSHOT_INVALID_DEVICE);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 				}
 			}
 			catch (HibernateException e) {
 				logger.error("Error while retrieving the device.", e);
 				throw new NetshotBadRequestException("Database error.",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			finally {
 				session.close();
@@ -4754,7 +4704,7 @@ public class RestService extends Thread {
 				if (group == null) {
 					logger.error("Unable to find the group {}.", rsTask.getGroup());
 					throw new NetshotBadRequestException("Unable to find the group.",
-							NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 				}
 				task = new TakeGroupSnapshotTask(group, rsTask.getComments(), userName,
 						rsTask.getLimitToOutofdateDeviceHours(), rsTask.isDontRunDiagnostics(),
@@ -4763,7 +4713,7 @@ public class RestService extends Thread {
 			catch (HibernateException e) {
 				logger.error("Error while retrieving the group.", e);
 				throw new NetshotBadRequestException("Database error.",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			finally {
 				session.close();
@@ -4778,14 +4728,14 @@ public class RestService extends Thread {
 				if (group == null) {
 					logger.error("Unable to find the group {}.", rsTask.getGroup());
 					throw new NetshotBadRequestException("Unable to find the group.",
-							NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 				}
 				task = new CheckGroupComplianceTask(group, rsTask.getComments(), userName);
 			}
 			catch (HibernateException e) {
 				logger.error("Error while retrieving the group.", e);
 				throw new NetshotBadRequestException("Database error.",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			finally {
 				session.close();
@@ -4800,14 +4750,14 @@ public class RestService extends Thread {
 				if (group == null) {
 					logger.error("Unable to find the group {}.", rsTask.getGroup());
 					throw new NetshotBadRequestException("Unable to find the group.",
-							NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 				}
 				task = new CheckGroupSoftwareTask(group, rsTask.getComments(), userName);
 			}
 			catch (HibernateException e) {
 				logger.error("Error while retrieving the group.", e);
 				throw new NetshotBadRequestException("Database error.",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			finally {
 				session.close();
@@ -4822,7 +4772,7 @@ public class RestService extends Thread {
 				if (group == null) {
 					logger.error("Unable to find the group {}.", rsTask.getGroup());
 					throw new NetshotBadRequestException("Unable to find the group.",
-							NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 				}
 				task = new RunGroupDiagnosticsTask(group, rsTask.getComments(), userName,
 					rsTask.isDontCheckCompliance());
@@ -4830,7 +4780,7 @@ public class RestService extends Thread {
 			catch (HibernateException e) {
 				logger.error("Error while retrieving the group.", e);
 				throw new NetshotBadRequestException("Database error.",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			finally {
 				session.close();
@@ -4846,7 +4796,7 @@ public class RestService extends Thread {
 				if (!matcher.find()) {
 					logger.warn("User posted an invalid subnet '{}'.", rsSubnet);
 					throw new NetshotBadRequestException(String.format("Invalid subnet '%s'.", rsSubnet),
-							NetshotBadRequestException.NETSHOT_INVALID_SUBNET);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_SUBNET);
 				}
 				Network4Address subnet;
 				try {
@@ -4860,25 +4810,25 @@ public class RestService extends Thread {
 				catch (Exception e) {
 					logger.warn("User posted an invalid subnet '{}'.", rsSubnet, e);
 					throw new NetshotBadRequestException(String.format("Invalid subnet '%s'.", rsSubnet),
-							NetshotBadRequestException.NETSHOT_INVALID_SUBNET);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_SUBNET);
 				}
 				if (subnet.getPrefixLength() < 22 || subnet.getPrefixLength() > 32) {
 					logger.warn("User posted an invalid prefix length {}.",
 							subnet.getPrefix());
 					throw new NetshotBadRequestException(String.format("Invalid prefix length for '%s'.", rsSubnet),
-							NetshotBadRequestException.NETSHOT_SCAN_SUBNET_TOO_BIG);
+							NetshotBadRequestException.Reason.NETSHOT_SCAN_SUBNET_TOO_BIG);
 				}
 			}
 			if (subnets.size() == 0) {
 				logger.warn("User posted an invalid subnet list '{}'.", rsTask.getSubnets());
 				throw new NetshotBadRequestException(String.format("Invalid subnet list '%s'.", rsTask.getSubnets()),
-						NetshotBadRequestException.NETSHOT_INVALID_SUBNET);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_SUBNET);
 			}
 			Domain domain;
 			if (rsTask.getDomain() == 0) {
 				logger.error("Domain {} is invalid (0).", rsTask.getDomain());
 				throw new NetshotBadRequestException("Invalid domain",
-						NetshotBadRequestException.NETSHOT_INVALID_DOMAIN);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
 			}
 			Session session = Database.getSession();
 			try {
@@ -4887,7 +4837,7 @@ public class RestService extends Thread {
 			catch (Exception e) {
 				logger.error("Unable to load the domain {}.", rsTask.getDomain());
 				throw new NetshotBadRequestException("Invalid domain",
-						NetshotBadRequestException.NETSHOT_INVALID_DOMAIN);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
 			}
 			finally {
 				session.close();
@@ -4908,7 +4858,7 @@ public class RestService extends Thread {
 			if (rsTask.getDaysToPurge() < 2) {
 				logger.error(String.format("Invalid number of days %d for the PurgeDatabaseTask task.", rsTask.getDaysToPurge()));
 				throw new NetshotBadRequestException("Invalid number of days.",
-						NetshotBadRequestException.NETSHOT_INVALID_TASK);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 			}
 			int configDays = rsTask.getConfigDaysToPurge();
 			int configSize = rsTask.getConfigSizeToPurge();
@@ -4920,23 +4870,23 @@ public class RestService extends Thread {
 			else if (configDays <= 3) {
 				logger.error("The number of days of configurations to purge must be greater than 3.");
 				throw new NetshotBadRequestException("The number of days of configurations to purge must be greater than 3.",
-						NetshotBadRequestException.NETSHOT_INVALID_TASK);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 			}
 			else {
 				if (configSize < 0) {
 					logger.error("The configuration size limit can't be negative.");
 					throw new NetshotBadRequestException("The limit on the configuration size can't be negative.",
-							NetshotBadRequestException.NETSHOT_INVALID_TASK);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 				}
 				if (configKeepDays < 0) {
 					logger.error("The interval of days between configurations to keep can't be negative.");
 					throw new NetshotBadRequestException("The number of days of configurations to purge can't be negative.",
-							NetshotBadRequestException.NETSHOT_INVALID_TASK);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 				}
 				if (configDays <= configKeepDays) {
 					logger.error("The number of days of configurations to purge must be greater than the number of days between two successive configurations to keep.");
 					throw new NetshotBadRequestException("The number of days of configurations to purge must be greater than the number of days between two successive configurations to keep.",
-							NetshotBadRequestException.NETSHOT_INVALID_TASK);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 				}
 			}
 			task = new PurgeDatabaseTask(rsTask.getComments(), userName, rsTask.getDaysToPurge(),
@@ -4951,13 +4901,13 @@ public class RestService extends Thread {
 				if (device == null) {
 					logger.error("Unable to find the device {}.", rsTask.getDevice());
 					throw new NetshotBadRequestException("Unable to find the device.",
-							NetshotBadRequestException.NETSHOT_INVALID_DEVICE);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 				}
 			}
 			catch (HibernateException e) {
 				logger.error("Error while retrieving the device.", e);
 				throw new NetshotBadRequestException("Database error.",
-						NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			finally {
 				session.close();
@@ -4967,7 +4917,7 @@ public class RestService extends Thread {
 		else {
 			logger.error("User posted an invalid task type '{}'.", rsTask.getType());
 			throw new NetshotBadRequestException("Invalid task type.",
-					NetshotBadRequestException.NETSHOT_INVALID_TASK);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 		}
 		if (rsTask.getScheduleReference() != null) {
 			task.setDebugEnabled(rsTask.isDebugEnabled());
@@ -4983,24 +4933,25 @@ public class RestService extends Thread {
 							task.getScheduleReference(), inOneMinute.getTime());
 					throw new NetshotBadRequestException(
 							"The schedule occurs in the past.",
-							NetshotBadRequestException.NETSHOT_INVALID_TASK);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 				}
 			}
 		}
 		try {
 			TaskManager.addTask(task);
 			Netshot.aaaLogger.info("The task {} has been created.", task);
+			this.suggestReturnCode(Response.Status.CREATED);
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to add the task.", e);
 			throw new NetshotBadRequestException(
 					"Unable to add the task to the database.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (SchedulerException e) {
 			logger.error("Unable to schedule the task.", e);
 			throw new NetshotBadRequestException("Unable to schedule the task.",
-					NetshotBadRequestException.NETSHOT_SCHEDULE_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_SCHEDULE_ERROR);
 		}
 		return task;
 	}
@@ -5264,7 +5215,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the devices", e);
 			throw new NetshotBadRequestException("Unable to fetch the devices",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -5298,7 +5249,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the policies.", e);
 			throw new NetshotBadRequestException("Unable to fetch the policies",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -5329,7 +5280,7 @@ public class RestService extends Thread {
 			if (policy == null) {
 				logger.error("Invalid policy.");
 				throw new NetshotBadRequestException("Invalid policy",
-						NetshotBadRequestException.NETSHOT_INVALID_POLICY);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY);
 			}
 			List<Rule> rules = new ArrayList<Rule>();
 			rules.addAll(policy.getRules());
@@ -5338,7 +5289,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the rules.", e);
 			throw new NetshotBadRequestException("Unable to fetch the rules",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -5449,7 +5400,7 @@ public class RestService extends Thread {
 		if (name.isEmpty()) {
 			logger.warn("User posted an empty policy name.");
 			throw new NetshotBadRequestException("Invalid policy name.",
-					NetshotBadRequestException.NETSHOT_INVALID_POLICY_NAME);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY_NAME);
 		}
 		Policy policy;
 		Session session = Database.getSession();
@@ -5466,13 +5417,14 @@ public class RestService extends Thread {
 			session.save(policy);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", policy);
+			this.suggestReturnCode(Response.Status.CREATED);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The posted group doesn't exist", e);
 			throw new NetshotBadRequestException(
 					"Invalid group",
-					NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -5481,11 +5433,11 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A policy with this name already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_POLICY);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_POLICY);
 			}
 			throw new NetshotBadRequestException(
 					"Unable to add the policy to the database",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -5518,18 +5470,19 @@ public class RestService extends Thread {
 			session.delete(policy);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted.", policy);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The policy {} to be deleted doesn't exist.", id, e);
 			throw new NetshotBadRequestException("The policy doesn't exist.",
-					NetshotBadRequestException.NETSHOT_INVALID_POLICY);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to delete the policy {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the policy",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -5564,14 +5517,14 @@ public class RestService extends Thread {
 			if (policy == null) {
 				logger.error("Unable to find the policy {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this policy.",
-						NetshotBadRequestException.NETSHOT_INVALID_POLICY);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY);
 			}
 
 			String name = rsPolicy.getName().trim();
 			if (name.isEmpty()) {
 				logger.warn("User posted an empty policy name.");
 				throw new NetshotBadRequestException("Invalid policy name.",
-						NetshotBadRequestException.NETSHOT_INVALID_POLICY_NAME);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY_NAME);
 			}
 			policy.setName(name);
 			
@@ -5597,7 +5550,7 @@ public class RestService extends Thread {
 					rsPolicy.getGroup(), id, e);
 			throw new NetshotBadRequestException(
 					"Unable to find the group.",
-					NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -5606,10 +5559,10 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A policy with this name already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_POLICY);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_POLICY);
 			}
 			throw new NetshotBadRequestException("Unable to save the policy.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
 			session.getTransaction().rollback();
@@ -5887,7 +5840,7 @@ public class RestService extends Thread {
 		if (rsRule.getName() == null || rsRule.getName().trim().isEmpty()) {
 			logger.warn("User posted an empty rule name.");
 			throw new NetshotBadRequestException("Invalid rule name.",
-					NetshotBadRequestException.NETSHOT_INVALID_RULE_NAME);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE_NAME);
 		}
 		String name = rsRule.getName().trim();
 
@@ -5908,6 +5861,7 @@ public class RestService extends Thread {
 			session.save(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", rule);
+			this.suggestReturnCode(Response.Status.CREATED);
 			return rule;
 		}
 		catch (ObjectNotFoundException e) {
@@ -5915,7 +5869,7 @@ public class RestService extends Thread {
 			logger.error("The posted policy doesn't exist.", e);
 			throw new NetshotBadRequestException(
 					"Invalid policy.",
-					NetshotBadRequestException.NETSHOT_INVALID_POLICY);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -5924,11 +5878,11 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A rule with this name already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_RULE);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_RULE);
 			}
 			throw new NetshotBadRequestException(
 					"Unable to add the rule to the database",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -5963,7 +5917,7 @@ public class RestService extends Thread {
 			if (rule == null) {
 				logger.error("Unable to find the rule {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this rule.",
-						NetshotBadRequestException.NETSHOT_INVALID_RULE);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 			}
 
 			if (rsRule.getName() != null) {
@@ -5971,7 +5925,7 @@ public class RestService extends Thread {
 				if (name.isEmpty()) {
 					logger.warn("User posted an empty rule name.");
 					throw new NetshotBadRequestException("Invalid rule name.",
-							NetshotBadRequestException.NETSHOT_INVALID_RULE_NAME);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE_NAME);
 				}
 				rule.setName(name);
 			}
@@ -6045,11 +5999,11 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A rule with this name already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_RULE);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_RULE);
 			}
 			throw new NetshotBadRequestException(
 					"Unable to save the rule.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
 			session.getTransaction().rollback();
@@ -6085,18 +6039,19 @@ public class RestService extends Thread {
 			session.delete(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted.", rule);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The rule {} to be deleted doesn't exist.", id, e);
 			throw new NetshotBadRequestException("The rule doesn't exist.",
-					NetshotBadRequestException.NETSHOT_INVALID_RULE);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to delete the rule {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the rule.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -6216,7 +6171,7 @@ public class RestService extends Thread {
 			if (device == null) {
 				logger.warn("Unable to find the device {}.", rsRule.getDevice());
 				throw new NetshotBadRequestException("Unable to find the device.",
-						NetshotBadRequestException.NETSHOT_INVALID_DEVICE);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 			}
 			
 			Rule rule;
@@ -6286,7 +6241,7 @@ public class RestService extends Thread {
 		catch (Exception e) {
 			logger.error("Unable to retrieve the device {}.", rsRule.getDevice(), e);
 			throw new NetshotBadRequestException("Unable to retrieve the device.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -6354,7 +6309,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the exemptions.", e);
 			throw new NetshotBadRequestException("Unable to fetch the exemptions",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -6558,7 +6513,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the rules.", e);
 			throw new NetshotBadRequestException("Unable to fetch the rules",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -6674,7 +6629,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to get the stats.", e);
 			throw new NetshotBadRequestException("Unable to get the stats",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -6859,7 +6814,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to get the stats.", e);
 			throw new NetshotBadRequestException("Unable to get the stats",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -6932,7 +6887,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to get the stats.", e);
 			throw new NetshotBadRequestException("Unable to get the stats",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -7126,7 +7081,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to get the stats.", e);
 			throw new NetshotBadRequestException("Unable to get the stats",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -7298,7 +7253,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to get the devices.", e);
 			throw new NetshotBadRequestException("Unable to get the stats",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -7357,7 +7312,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to get the devices.", e);
 			throw new NetshotBadRequestException("Unable to get the stats",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -7377,7 +7332,7 @@ public class RestService extends Thread {
 		if (!type.equals("eol") && !type.equals("eos")) {
 			logger.error("Invalid requested EoX type.");
 			throw new NetshotBadRequestException("Unable to get the stats",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		Date eoxDate = new Date(date);
 		Session session = Database.getSession();
@@ -7405,7 +7360,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to get the devices.", e);
 			throw new NetshotBadRequestException("Unable to get the stats",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -7439,7 +7394,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the hardware rules.", e);
 			throw new NetshotBadRequestException("Unable to fetch the hardware rules.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -7599,20 +7554,21 @@ public class RestService extends Thread {
 			session.save(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", rule);
+			this.suggestReturnCode(Response.Status.CREATED);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The posted group doesn't exist", e);
 			throw new NetshotBadRequestException(
 					"Invalid group",
-					NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new rule.", e);
 			throw new NetshotBadRequestException(
 					"Unable to add the rule to the database",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -7646,18 +7602,19 @@ public class RestService extends Thread {
 			session.delete(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted", rule);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The rule {} to be deleted doesn't exist.", id, e);
 			throw new NetshotBadRequestException("The rule doesn't exist.",
-					NetshotBadRequestException.NETSHOT_INVALID_RULE);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to delete the rule {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the rule.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -7693,7 +7650,7 @@ public class RestService extends Thread {
 			if (rule == null) {
 				logger.error("Unable to find the rule {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this rule.",
-						NetshotBadRequestException.NETSHOT_INVALID_RULE);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 			}
 
 			String driver = rsRule.getDriver(); 
@@ -7725,7 +7682,7 @@ public class RestService extends Thread {
 			logger.error("Error while saving the rule.", e);
 			throw new NetshotBadRequestException(
 					"Unable to save the rule.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
 			session.getTransaction().rollback();
@@ -7763,7 +7720,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the software rules.", e);
 			throw new NetshotBadRequestException("Unable to fetch the software rules.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -8014,20 +7971,21 @@ public class RestService extends Thread {
 			session.save(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", rule);
+			this.suggestReturnCode(Response.Status.CREATED);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The posted group doesn't exist", e);
 			throw new NetshotBadRequestException(
 					"Invalid group",
-					NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new rule.", e);
 			throw new NetshotBadRequestException(
 					"Unable to add the policy to the database",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -8060,18 +8018,19 @@ public class RestService extends Thread {
 			session.delete(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted", rule);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The rule {} to be deleted doesn't exist.", id, e);
 			throw new NetshotBadRequestException("The rule doesn't exist.",
-					NetshotBadRequestException.NETSHOT_INVALID_RULE);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to delete the rule {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the rule.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -8107,7 +8066,7 @@ public class RestService extends Thread {
 			if (rule == null) {
 				logger.error("Unable to find the rule {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this rule.",
-						NetshotBadRequestException.NETSHOT_INVALID_RULE);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 			}
 
 			String driver = rsRule.getDriver(); 
@@ -8141,7 +8100,7 @@ public class RestService extends Thread {
 			logger.error("Error while saving the rule.", e);
 			throw new NetshotBadRequestException(
 					"Unable to save the rule.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
 			session.getTransaction().rollback();
@@ -8235,7 +8194,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to get the devices.", e);
 			throw new NetshotBadRequestException("Unable to get the stats",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -8326,7 +8285,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to get the devices.", e);
 			throw new NetshotBadRequestException("Unable to get the stats",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -8427,6 +8386,7 @@ public class RestService extends Thread {
 		HttpSession httpSession = request.getSession();
 		httpSession.invalidate();
 		Netshot.aaaLogger.warn("User {} has logged out.", sessionUser.getUsername());
+		this.suggestReturnCode(Response.Status.NO_CONTENT);
 	}
 
 	/**
@@ -8446,7 +8406,7 @@ public class RestService extends Thread {
 		summary = "Update a user",
 		description = "Edits a given user, by ID, especially the password for a local user."
 	)
-	public UiUser setPassword(@Context HttpServletRequest request, RsLogin rsLogin) throws WebApplicationException {
+	public UiUser setPassword(RsLogin rsLogin) throws WebApplicationException {
 		logger.debug("REST password change request, username {}.", rsLogin.getUsername());
 		User currentUser = (User) request.getAttribute("user");
 		Netshot.aaaLogger.warn("Password change request via REST by user {} for user {}.", currentUser.getUsername(), rsLogin.getUsername());
@@ -8458,18 +8418,18 @@ public class RestService extends Thread {
 			user = (UiUser) session.bySimpleNaturalId(UiUser.class).load(rsLogin.getUsername());
 			if (user == null || !user.getUsername().equals(currentUser.getUsername()) || !user.isLocal()) {
 				throw new NetshotBadRequestException("Invalid user.",
-						NetshotBadRequestException.NETSHOT_INVALID_USER);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
 			}
 
 			if (!user.checkPassword(rsLogin.getPassword())) {
 				throw new NetshotBadRequestException("Invalid current password.",
-						NetshotBadRequestException.NETSHOT_INVALID_USER);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
 			}
 
 			String newPassword = rsLogin.getNewPassword();
 			if (newPassword.equals("")) {
 				throw new NetshotBadRequestException("The password cannot be empty.",
-						NetshotBadRequestException.NETSHOT_INVALID_USER);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
 			}
 
 			user.setPassword(newPassword);
@@ -8482,7 +8442,7 @@ public class RestService extends Thread {
 			session.getTransaction().rollback();
 			logger.error("Unable to retrieve the user {}.", rsLogin.getUsername(), e);
 			throw new NetshotBadRequestException("Unable to retrieve the user.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -8506,7 +8466,7 @@ public class RestService extends Thread {
 		summary = "Log in",
 		description = "Logs in (create session) by username and password (useless when using API tokens)."
 	)
-	public UiUser login(@Context HttpServletRequest request, RsLogin rsLogin) throws WebApplicationException {
+	public UiUser login(RsLogin rsLogin) throws WebApplicationException {
 		logger.debug("REST authentication request, username {}.", rsLogin.getUsername());
 		Netshot.aaaLogger.info("REST authentication request, username {}.", rsLogin.getUsername());
 
@@ -8519,7 +8479,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to retrieve the user {}.", rsLogin.getUsername(), e);
 			throw new NetshotBadRequestException("Unable to retrieve the user.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -8602,7 +8562,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to retrieve the users.", e);
 			throw new NetshotBadRequestException("Unable to retrieve the users.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -8750,7 +8710,7 @@ public class RestService extends Thread {
 		if (username == null || username.trim().isEmpty()) {
 			logger.warn("User posted an empty user name.");
 			throw new NetshotBadRequestException("Invalid user name.",
-					NetshotBadRequestException.NETSHOT_INVALID_USER_NAME);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_USER_NAME);
 		}
 		username = username.trim();
 
@@ -8759,7 +8719,7 @@ public class RestService extends Thread {
 			if (password == null || password.equals("")) {
 				logger.warn("User tries to create a local account without password.");
 				throw new NetshotBadRequestException("Please set a password.",
-						NetshotBadRequestException.NETSHOT_INVALID_PASSWORD);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_PASSWORD);
 			}
 		}
 		else {
@@ -8775,6 +8735,7 @@ public class RestService extends Thread {
 			session.save(user);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", user);
+			this.suggestReturnCode(Response.Status.CREATED);
 			return user;
 		}
 		catch (HibernateException e) {
@@ -8784,11 +8745,11 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A user with this name already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_USER);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_USER);
 			}
 			throw new NetshotBadRequestException(
 					"Unable to add the user to the database",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -8824,14 +8785,14 @@ public class RestService extends Thread {
 			if (user == null) {
 				logger.error("Unable to find the user {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this user.",
-						NetshotBadRequestException.NETSHOT_INVALID_USER);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
 			}
 
 			String username = rsUser.getUsername();
 			if (username == null || username.trim().isEmpty()) {
 				logger.warn("User posted an empty user name.");
 				throw new NetshotBadRequestException("Invalid user name.",
-						NetshotBadRequestException.NETSHOT_INVALID_USER_NAME);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_USER_NAME);
 			}
 			username = username.trim();
 			user.setUsername(username);
@@ -8844,7 +8805,7 @@ public class RestService extends Thread {
 				if (user.getHashedPassword().equals("")) {
 					logger.error("The password cannot be empty for user {}.", id);
 					throw new NetshotBadRequestException("You must set a password.",
-							NetshotBadRequestException.NETSHOT_INVALID_PASSWORD);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_PASSWORD);
 				}
 			}
 			else {
@@ -8863,10 +8824,10 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A user with this name already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_USER);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_USER);
 			}
 			throw new NetshotBadRequestException("Unable to save the user.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
 			session.getTransaction().rollback();
@@ -8902,17 +8863,18 @@ public class RestService extends Thread {
 			session.delete(user);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted", user);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The user doesn't exist.");
 			throw new NetshotBadRequestException("The user doesn't exist.",
-					NetshotBadRequestException.NETSHOT_INVALID_USER);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			throw new NetshotBadRequestException("Unable to delete the user.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -9045,7 +9007,7 @@ public class RestService extends Thread {
 		if (!ApiToken.isValidToken(token)) {
 			logger.warn("The passed token is not valid");
 			throw new NetshotBadRequestException("Invalid token format.",
-					NetshotBadRequestException.NETSHOT_INVALID_API_TOKEN_FORMAT);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_API_TOKEN_FORMAT);
 		}
 
 		ApiToken apiToken = new ApiToken(description, token, rsApiToken.getLevel());
@@ -9056,6 +9018,7 @@ public class RestService extends Thread {
 			session.save(apiToken);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", apiToken);
+			this.suggestReturnCode(Response.Status.CREATED);
 			return apiToken;
 		}
 		catch (HibernateException e) {
@@ -9063,7 +9026,7 @@ public class RestService extends Thread {
 			logger.error("Error while saving the new API token.", e);
 			throw new NetshotBadRequestException(
 					"Unable to add the API token to the database",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -9094,7 +9057,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to retrieve the API tokens.", e);
 			throw new NetshotBadRequestException("Unable to retrieve the API tokens.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -9124,17 +9087,18 @@ public class RestService extends Thread {
 			session.delete(apiToken);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted", apiToken);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The API token doesn't exist.");
 			throw new NetshotBadRequestException("The API token doesn't exist.",
-					NetshotBadRequestException.NETSHOT_INVALID_USER);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			throw new NetshotBadRequestException("Unable to delete the API token.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -9746,23 +9710,23 @@ public class RestService extends Thread {
 		summary = "Add a command script",
 		description = "Create a command script (script to be later run over devices)."
 	)
-	public DeviceJsScript addScript(@Context HttpServletRequest request, DeviceJsScript rsScript) throws WebApplicationException {
+	public DeviceJsScript addScript(DeviceJsScript rsScript) throws WebApplicationException {
 		logger.debug("REST request, add device script.");
 		DeviceDriver driver = DeviceDriver.getDriverByName(rsScript.getDeviceDriver());
 		if (driver == null) {
 			logger.warn("Invalid driver name.");
 			throw new NetshotBadRequestException("Invalid driver name.",
-					NetshotBadRequestException.NETSHOT_INVALID_SCRIPT);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_SCRIPT);
 		}
 		if (rsScript.getName() == null || rsScript.getName().trim().equals("")) {
 			logger.warn("Invalid script name.");
 			throw new NetshotBadRequestException("Invalid script name.",
-					NetshotBadRequestException.NETSHOT_INVALID_SCRIPT);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_SCRIPT);
 		}
 		if (rsScript.getScript() == null) {
 			logger.warn("Invalid script.");
 			throw new NetshotBadRequestException("The script content can't be empty.",
-					NetshotBadRequestException.NETSHOT_INVALID_SCRIPT);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_SCRIPT);
 		}
 		try {
 			User user = (User) request.getAttribute("user");
@@ -9778,6 +9742,7 @@ public class RestService extends Thread {
 			session.save(rsScript);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", rsScript);
+			this.suggestReturnCode(Response.Status.CREATED);
 			return rsScript;
 		}
 		catch (HibernateException e) {
@@ -9787,11 +9752,11 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A script with this name already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_SCRIPT);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_SCRIPT);
 			}
 			throw new NetshotBadRequestException(
 					"Unable to add the script to the database",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -9816,18 +9781,19 @@ public class RestService extends Thread {
 			session.delete(script);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted", script);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The script {} to be deleted doesn't exist.", id, e);
 			throw new NetshotBadRequestException("The script doesn't exist.",
-					NetshotBadRequestException.NETSHOT_INVALID_SCRIPT);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_SCRIPT);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to delete the script {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the script.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -9852,12 +9818,12 @@ public class RestService extends Thread {
 		catch (ObjectNotFoundException e) {
 			logger.error("Unable to find the script {}.", id, e);
 			throw new NetshotBadRequestException("Script not found.",
-					NetshotBadRequestException.NETSHOT_INVALID_SCRIPT);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_SCRIPT);
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the script {}.", id, e);
 			throw new NetshotBadRequestException("Unable to fetch the script.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -9886,7 +9852,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the scripts.", e);
 			throw new NetshotBadRequestException("Unable to fetch the scripts",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -10178,7 +10144,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the diagnostics.", e);
 			throw new NetshotBadRequestException("Unable to fetch the diagnostics",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -10201,12 +10167,12 @@ public class RestService extends Thread {
 		if (name.isEmpty()) {
 			logger.warn("User posted an empty diagnostic name.");
 			throw new NetshotBadRequestException("Invalid diagnostic name.",
-					NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC_NAME);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC_NAME);
 		}
 		if (name.contains("\"")) {
 			logger.warn("Double-quotes are not allowed in the diagnostic name.");
 			throw new NetshotBadRequestException("Double-quotes are not allowed in the name.",
-					NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC_NAME);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC_NAME);
 		}
 		AttributeType resultType;
 		try {
@@ -10214,7 +10180,7 @@ public class RestService extends Thread {
 		}
 		catch (Exception e) {
 			throw new NetshotBadRequestException("Invalid diagnostic result type.",
-				NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+				NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 		}
 
 		Diagnostic diagnostic;
@@ -10230,7 +10196,7 @@ public class RestService extends Thread {
 				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim() == "") {
 					throw new NetshotBadRequestException(
 						"Invalid diagnostic script",
-						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
 				diagnostic = new JavaScriptDiagnostic(name, rsDiagnostic.isEnabled(), group, 
 						resultType, rsDiagnostic.getScript());
@@ -10238,11 +10204,11 @@ public class RestService extends Thread {
 			else if (".SimpleDiagnostic".equals(rsDiagnostic.getType())) {
 				if (rsDiagnostic.getCliMode() == null || rsDiagnostic.getCliMode().trim() == "") {
 					throw new NetshotBadRequestException("The CLI mode must be provided.",
-							NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
 				if (rsDiagnostic.getCommand() == null || rsDiagnostic.getCommand().trim() == "") {
 					throw new NetshotBadRequestException("The command cannot be empty.",
-							NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
 				diagnostic = new SimpleDiagnostic(name, rsDiagnostic.isEnabled(), group, resultType, rsDiagnostic.getDeviceDriver(),
 						rsDiagnostic.getCliMode(), rsDiagnostic.getCommand(), rsDiagnostic.getModifierPattern(),
@@ -10251,19 +10217,20 @@ public class RestService extends Thread {
 			else {
 				throw new NetshotBadRequestException(
 					"Invalid diagnostic type.",
-					NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC_TYPE);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC_TYPE);
 			}
 			
 			session.save(diagnostic);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", diagnostic);
+			this.suggestReturnCode(Response.Status.CREATED);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The posted group doesn't exist", e);
 			throw new NetshotBadRequestException(
 					"Invalid group",
-					NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -10272,11 +10239,11 @@ public class RestService extends Thread {
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException(
 						"A diagnostic with this name already exists.",
-						NetshotBadRequestException.NETSHOT_DUPLICATE_DIAGNOSTIC);
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DIAGNOSTIC);
 			}
 			throw new NetshotBadRequestException(
 					"Unable to add the policy to the database.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -10313,19 +10280,19 @@ public class RestService extends Thread {
 			if (diagnostic == null) {
 				logger.error("Unable to find the diagnostic {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this diagnostic.",
-						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 			}
 			
 			String name = rsDiagnostic.getName().trim();
 			if (name.isEmpty()) {
 				logger.warn("User posted an empty diagnostic name.");
 				throw new NetshotBadRequestException("Invalid diagnostic name.",
-						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC_NAME);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC_NAME);
 			}
 			if (name.contains("\"")) {
 				logger.warn("Double-quotes are not allowed in the diagnostic name.");
 				throw new NetshotBadRequestException("Double-quotes are not allowed in the name.",
-						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC_NAME);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC_NAME);
 			}
 			AttributeType resultType;
 			try {
@@ -10333,7 +10300,7 @@ public class RestService extends Thread {
 			}
 			catch (Exception e) {
 				throw new NetshotBadRequestException("Invalid diagnostic result type.",
-					NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 			}
 			diagnostic.setName(name);
 			if (diagnostic.getTargetGroup() != null && diagnostic.getTargetGroup().getId() != rsDiagnostic.getTargetGroup()) {
@@ -10352,27 +10319,27 @@ public class RestService extends Thread {
 			if (diagnostic instanceof JavaScriptDiagnostic) {
 				if (!".JavaScriptDiagnostic".equals(rsDiagnostic.getType())) {
 					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
-							NetshotBadRequestException.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
+							NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
 				}
 				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim() == "") {
 					throw new NetshotBadRequestException(
 						"Invalid diagnostic script",
-						NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
 				((JavaScriptDiagnostic) diagnostic).setScript(rsDiagnostic.getScript());
 			}
 			else if (diagnostic instanceof SimpleDiagnostic) {
 				if (!".SimpleDiagnostic".equals(rsDiagnostic.getType())) {
 					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
-							NetshotBadRequestException.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
+							NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
 				}
 				if (rsDiagnostic.getCliMode() == null || rsDiagnostic.getCliMode().trim() == "") {
 					throw new NetshotBadRequestException("The CLI mode must be provided.",
-							NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
 				if (rsDiagnostic.getCommand() == null || rsDiagnostic.getCommand().trim() == "") {
 					throw new NetshotBadRequestException("The command cannot be empty.",
-							NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
 				SimpleDiagnostic simpleDiagnostic = (SimpleDiagnostic) diagnostic;
 				simpleDiagnostic.setDeviceDriver(rsDiagnostic.getDeviceDriver());
@@ -10393,7 +10360,7 @@ public class RestService extends Thread {
 					rsDiagnostic.getTargetGroup(), id, e);
 			throw new NetshotBadRequestException(
 					"Unable to find the group.",
-					NetshotBadRequestException.NETSHOT_INVALID_GROUP);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -10401,10 +10368,10 @@ public class RestService extends Thread {
 			Throwable t = e.getCause();
 			if (t != null && t.getMessage().contains("Duplicate entry")) {
 				throw new NetshotBadRequestException("A diagnostic with this name already exists.",
-					NetshotBadRequestException.NETSHOT_DUPLICATE_DIAGNOSTIC);
+					NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DIAGNOSTIC);
 			}
 			throw new NetshotBadRequestException("Unable to save the policy.",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
 			session.getTransaction().rollback();
@@ -10441,18 +10408,19 @@ public class RestService extends Thread {
 			session.delete(diagnostic);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted", diagnostic);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
 			logger.error("The diagnostic {} to be deleted doesn't exist.", id, e);
 			throw new NetshotBadRequestException("The diagnostic doesn't exist.",
-					NetshotBadRequestException.NETSHOT_INVALID_DIAGNOSTIC);
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to delete the diagnostic {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the diagnostic",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -10488,7 +10456,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the diagnostic results.", e);
 			throw new NetshotBadRequestException("Unable to fetch the diagnostic results",
-					NetshotBadRequestException.NETSHOT_DATABASE_ACCESS_ERROR);
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();

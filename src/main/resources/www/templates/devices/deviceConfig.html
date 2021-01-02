@@ -18,17 +18,17 @@
 	<% if (attribute.type == "TEXT") { %><%- attribute.text %><% } %>
 	<% if (attribute.type == "BINARY") { if (attribute.assumption === true) { %>Yes<% } else { %>No<% } } %>
 	<% if (attribute.type == "LONGTEXT") { %>
-		<div style="display: inline-block;">
+		<div class="nsicon-container">
 			<span class="ui-icon ui-icon-extlink" style="float: left;"></span>
 		</div>
 		<a href="#" data-config-item="<%- attribute.name %>" data-config-title="<%- attribute.title %>" data-config-action="view">View</a>
-		<div style="display: inline-block;">
+		<div class="nsicon-container">
 			<span class="ui-icon ui-icon-disk" style="float: left;"></span>
 		</div>
 		<a href="#" data-config-item="<%- attribute.name %>" data-config-action="download">Download</a>
 	<% } %>
 	<% if (attribute.type == "BINARYFILE") { %>
-		<div style="display: inline-block;">
+		<div class="nsicon-container">
 			<span class="ui-icon ui-icon-disk" style="float: left;"></span>
 		</div>
 		<% if (typeof(attribute.fileSize) === "number" && attribute.fileSize > 0) { %>

@@ -1,4 +1,4 @@
-Netshot, Copyright 2013-2016 Sylvain Cadilhac (NetFishers)
+Netshot, Copyright 2013-2021 Sylvain Cadilhac (NetFishers)
 
 Netshot is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

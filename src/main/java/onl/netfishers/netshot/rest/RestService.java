@@ -16,14 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
-package onl.netfishers.netshot;
+package onl.netfishers.netshot.rest;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.UnknownHostException;
-import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,48 +40,37 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import javax.annotation.Priority;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
-import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Priorities;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ContainerResponseContext;
-import javax.ws.rs.container.ContainerResponseFilter;
-import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.ext.ExceptionMapper;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import onl.netfishers.netshot.Database;
+import onl.netfishers.netshot.Netshot;
+import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.aaa.ApiToken;
 import onl.netfishers.netshot.aaa.Radius;
 import onl.netfishers.netshot.aaa.UiUser;
@@ -167,10 +155,6 @@ import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainer;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.glassfish.jersey.servlet.ServletProperties;
 import org.graalvm.polyglot.HostAccess.Export;
@@ -190,23 +174,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import difflib.Delta;
 import difflib.DiffUtils;
 import difflib.Patch;
-import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
-import io.swagger.v3.jaxrs2.integration.resources.AcceptHeaderOpenApiResource;
-import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.integration.OpenApiConfigurationException;
-import io.swagger.v3.oas.integration.SwaggerConfiguration;
-import io.swagger.v3.oas.models.Components;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Contact;
-import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
-import io.swagger.v3.oas.models.security.SecurityRequirement;
-import io.swagger.v3.oas.models.security.SecurityScheme;
-import io.swagger.v3.oas.models.security.SecurityScheme.In;
-import io.swagger.v3.oas.models.security.SecurityScheme.Type;
-import io.swagger.v3.oas.models.servers.Server;
 
 /**
  * The RestService class exposes the Netshot methods as a REST service.
@@ -222,7 +191,7 @@ public class RestService extends Thread {
 	private static final String DEVICELIST_BASEQUERY = "select d.id as id, d.name as name, d.family as family, d.mgmtAddress as mgmtAddress, d.status as status ";
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(RestService.class);
+	static Logger logger = LoggerFactory.getLogger(RestService.class);
 
 	/** The static instance service. */
 	private static RestService nsRestService;
@@ -231,13 +200,7 @@ public class RestService extends Thread {
 	private static final int PAGINATION_SIZE = 1000;
 
 	private static final String HTTP_STATIC_PATH = Netshot.getConfig("netshot.http.staticpath", "/");
-	private static final String HTTP_API_PATH = Netshot.getConfig("netshot.http.apipath", "/api");
-
-	/** Name of the HTTP header used for API token */
-	private static final String HTTP_API_TOKEN_HEADER = "X-Netshot-API-Token";
-
-	/** Request property name to embed the suggested HTTP response code */
-	private static final String SUGGESTED_RESPONSE_CODE = "onl.netfishers.netshot.rest.SuggestedResponseCode";
+	static final String HTTP_API_PATH = Netshot.getConfig("netshot.http.apipath", "/api");
 
 	/**
 	 * Initializes the service.
@@ -246,198 +209,6 @@ public class RestService extends Thread {
 		nsRestService = new RestService();
 		nsRestService.setUncaughtExceptionHandler(Netshot.exceptionHandler);
 		nsRestService.start();
-	}
-
-	@Priority(Priorities.AUTHENTICATION)
-	@PreMatching
-	private static class ApiTokenAuthFilter implements ContainerRequestFilter {
-
-		@Context
-		private HttpServletRequest httpRequest;
-
-		@Override
-		public void filter(ContainerRequestContext requestContext) throws IOException {
-			String token = httpRequest.getHeader(RestService.HTTP_API_TOKEN_HEADER);
-			if (token != null) {
-				Netshot.aaaLogger.debug("Received request with API token.");
-				String hash = ApiToken.hashToken(token);
-				Session session = Database.getSession();
-				try {
-					ApiToken apiToken = session.createQuery("from ApiToken t where t.hashedToken = :hash", ApiToken.class)
-							.setParameter("hash", hash).uniqueResult();
-					if (apiToken == null) {
-						Netshot.aaaLogger.warn("Invalid API token received.");
-					}
-					else {
-						Netshot.aaaLogger.info("Successful API token usage {}.", apiToken);
-						httpRequest.setAttribute("apiToken", apiToken);
-					}
-				}
-				catch (HibernateException e) {
-					logger.error("Database error while looking for API token", e);
-				}
-				finally {
-					session.close();
-				}
-			}
-		}
-
-	}
-
-	@Priority(Priorities.AUTHORIZATION)
-	@PreMatching
-	private static class SecurityFilter implements ContainerRequestFilter {
-
-		@Context
-		private HttpServletRequest httpRequest;
-
-		@Inject
-		javax.inject.Provider<UriInfo> uriInfo;
-
-		@Override
-		public void filter(ContainerRequestContext requestContext) throws IOException {
-			User user = (User) httpRequest.getAttribute("apiToken");
-			if (user == null) {
-				user = (User) httpRequest.getSession().getAttribute("user");
-			}
-			httpRequest.setAttribute("user", user);
-			requestContext.setSecurityContext(new Authorizer(user));
-		}
-
-		private class Authorizer implements SecurityContext {
-
-			private User user;
-
-			public Authorizer(User user) {
-				this.user = user;
-			}
-
-			@Override
-			public boolean isUserInRole(String role) {
-				boolean result = (user != null && (("admin".equals(role) && user.getLevel() >= User.LEVEL_ADMIN)
-						|| ("executereadwrite".equals(role) && user.getLevel() >= User.LEVEL_EXECUTEREADWRITE)
-						|| ("readwrite".equals(role) && user.getLevel() >= User.LEVEL_READWRITE)
-						|| ("readonly".equals(role) && user.getLevel() >= User.LEVEL_READONLY)));
-				Netshot.aaaLogger.debug("Role {} requested for user {}: result {}.", role,
-						user == null ? "<null>" : user.getUsername(), result);
-				return result;
-			}
-
-			@Override
-			public boolean isSecure() {
-				return "https".equals(uriInfo.get().getRequestUri().getScheme());
-			}
-
-			@Override
-			public Principal getUserPrincipal() {
-				return user;
-			}
-
-			@Override
-			public String getAuthenticationScheme() {
-				return SecurityContext.FORM_AUTH;
-			}
-		}
-	}
-
-	private static class LoggerFilter implements ContainerResponseFilter {
-		@Context
-		private HttpServletRequest httpRequest;
-
-		@Override
-		public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
-				throws IOException {
-			User user = null;
-			try {
-				user = (User) requestContext.getSecurityContext().getUserPrincipal();
-			}
-			catch (Exception e) {
-				//
-			}
-			String method = requestContext.getMethod().toUpperCase();
-			if ("GET".equals(method)) {
-				Netshot.aaaLogger.debug("Request from {} ({}) - {} - \"{} {}\" - {}.", httpRequest.getRemoteAddr(),
-						requestContext.getHeaderString(HttpHeaders.USER_AGENT), user == null ? "<none>" : user.getUsername(),
-						requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(), responseContext.getStatus());
-			}
-			else {
-				Netshot.aaaLogger.info("Request from {} ({}) - {} - \"{} {}\" - {}.", httpRequest.getRemoteAddr(),
-						requestContext.getHeaderString(HttpHeaders.USER_AGENT), user == null ? "<none>" : user.getUsername(),
-						requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(), responseContext.getStatus());
-			}
-		}
-	}
-
-	private static class ResponseCodeFilter implements ContainerResponseFilter {
-		@Context
-		private HttpServletRequest httpRequest;
-
-		@Override
-		public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
-			if (responseContext.getStatus() == 200) {
-				Response.Status status = (Response.Status) httpRequest.getAttribute(SUGGESTED_RESPONSE_CODE);
-				if (status != null) {
-					responseContext.setStatus(status.getStatusCode());
-				}
-			}
-		}
-	}
-
-	public static class NetshotExceptionMapper implements ExceptionMapper<Throwable> {
-
-		public Response toResponse(Throwable t) {
-			if (!(t instanceof ForbiddenException)) {
-				if (t instanceof NetshotAuthenticationRequiredException) {
-					logger.info("Authentication required.", t);
-				}
-				else {
-					logger.error("Uncaught exception thrown by REST service", t);
-				}
-			}
-			if (t instanceof WebApplicationException) {
-				return ((WebApplicationException) t).getResponse();
-			}
-			else {
-				return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-			}
-		}
-	}
-
-	public static class NetshotWebApplication extends ResourceConfig {
-		public NetshotWebApplication() {
-			registerClasses(RestService.class, SecurityFilter.class, ApiTokenAuthFilter.class);
-			register(NetshotExceptionMapper.class);
-			register(RolesAllowedDynamicFeature.class);
-			property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, "true");
-			property(ServerProperties.APPLICATION_NAME, "Netshot");
-			register(LoggerFilter.class);
-			register(ResponseCodeFilter.class);
-			// property(ServerProperties.TRACING, "ALL");
-			register(JacksonFeature.class);
-
-			// Swagger
-			registerClasses(OpenApiResource.class, AcceptHeaderOpenApiResource.class);
-			OpenAPI oas = new OpenAPI();
-			oas.info(new Info()
-				.title("Netshot API")
-				.version("1")
-				.description("Network Infrastructure Configuration and Compliance Management Software")
-				.contact(new Contact().email("contact@netfishers.onl"))
-				.license(new License().name("GPLv3").url("https://www.gnu.org/licenses/gpl-3.0.txt")));
-			oas.servers(Arrays.asList(new Server().url(HTTP_API_PATH)));
-			oas.components(new Components().addSecuritySchemes("ApiTokenAuth",
-				new SecurityScheme().name(HTTP_API_TOKEN_HEADER).type(Type.APIKEY).in(In.HEADER)));
-			oas.addSecurityItem(new SecurityRequirement().addList("ApiTokenAuth"));
-			SwaggerConfiguration oasConfig = new SwaggerConfiguration().openAPI(oas).prettyPrint(true)
-					.resourcePackages(Stream.of(RestService.class.getPackageName()).collect(Collectors.toSet()));
-
-			try {
-				new JaxrsOpenApiContextBuilder<>().application(this).openApiConfiguration(oasConfig).buildContext(true);
-			}
-			catch (OpenApiConfigurationException e) {
-				logger.error("Can't initialize OpenAPI for JAX-RS", e);
-			}
-		}
 	}
 
 	private String httpBaseUrl;
@@ -485,7 +256,7 @@ public class RestService extends Thread {
 	 * e.g. 201 or 204 instead of default 200
 	 */
 	private void suggestReturnCode(Response.Status status) {
-		this.request.setAttribute(SUGGESTED_RESPONSE_CODE, status);
+		this.request.setAttribute(ResponseCodeFilter.SUGGESTED_RESPONSE_CODE, status);
 	}
 
 	/* (non-Javadoc)
@@ -610,114 +381,6 @@ public class RestService extends Thread {
 		}
 	}
 	
-	/**
-	 * The NetshotAuthenticationRequiredException class, which indicates that user authentication is required (401 error).
-	 */
-	static public class NetshotAuthenticationRequiredException extends WebApplicationException {
-		/** The Constant serialVersionUID. */
-		private static final long serialVersionUID = -2463854660543944995L;
-		
-		/**
-		 * Default constructor.
-		 */
-		public NetshotAuthenticationRequiredException() {
-			super(Response.status(Response.Status.UNAUTHORIZED).build());
-		}
-	}
-
-	/**
-	 * The NetshotBadRequestException class, a WebApplication exception
-	 * embedding an error message, and HTTP status code, to be sent to the REST client.
-	 */
-	static public class NetshotBadRequestException extends WebApplicationException {
-
-		static public enum Reason {
-			NETSHOT_DATABASE_ACCESS_ERROR(20, Response.Status.INTERNAL_SERVER_ERROR),
-			NETSHOT_INVALID_IP_ADDRESS(100, Response.Status.BAD_REQUEST),
-			NETSHOT_MALFORMED_IP_ADDRESS(101, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_PORT(102, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_DOMAIN(110, Response.Status.BAD_REQUEST),
-			NETSHOT_DUPLICATE_DOMAIN(111, Response.Status.CONFLICT),
-			NETSHOT_INVALID_DOMAIN_NAME(112, Response.Status.BAD_REQUEST),
-			NETSHOT_USED_DOMAIN(113, Response.Status.PRECONDITION_FAILED),
-			NETSHOT_INVALID_TASK(120, Response.Status.BAD_REQUEST),
-			NETSHOT_TASK_NOT_CANCELLABLE(121, Response.Status.PRECONDITION_FAILED),
-			NETSHOT_TASK_CANCEL_ERROR(122, Response.Status.INTERNAL_SERVER_ERROR),
-			NETSHOT_USED_CREDENTIALS(130, Response.Status.PRECONDITION_FAILED),
-			NETSHOT_DUPLICATE_CREDENTIALS(131, Response.Status.CONFLICT),
-			NETSHOT_INVALID_CREDENTIALS_TYPE(132, Response.Status.BAD_REQUEST),
-			NETSHOT_CREDENTIALS_NOTFOUND(133, Response.Status.PRECONDITION_FAILED),
-			NETSHOT_INVALID_CREDENTIALS_NAME(134, Response.Status.BAD_REQUEST),
-			NETSHOT_SCHEDULE_ERROR(30, Response.Status.INTERNAL_SERVER_ERROR),
-			NETSHOT_DUPLICATE_DEVICE(140, Response.Status.CONFLICT),
-			NETSHOT_USED_DEVICE(141, Response.Status.PRECONDITION_FAILED),
-			NETSHOT_INVALID_DEVICE(142, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_CONFIG(143, Response.Status.BAD_REQUEST),
-			NETSHOT_INCOMPATIBLE_CONFIGS(144, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_DEVICE_CLASSNAME(150, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_SEARCH_STRING(151, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_GROUP_NAME(160, Response.Status.BAD_REQUEST),
-			NETSHOT_DUPLICATE_GROUP(161, Response.Status.CONFLICT),
-			NETSHOT_INCOMPATIBLE_GROUP_TYPE(162, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_DEVICE_IN_STATICGROUP(163, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_GROUP(164, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_DYNAMICGROUP_QUERY(165, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_SUBNET(170, Response.Status.BAD_REQUEST),
-			NETSHOT_SCAN_SUBNET_TOO_BIG(171, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_POLICY_NAME(180, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_POLICY(181, Response.Status.BAD_REQUEST),
-			NETSHOT_DUPLICATE_POLICY(182, Response.Status.CONFLICT),
-			NETSHOT_INVALID_RULE_NAME(190, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_RULE(191, Response.Status.BAD_REQUEST),
-			NETSHOT_DUPLICATE_RULE(192, Response.Status.CONFLICT),
-			NETSHOT_INVALID_USER(200, Response.Status.BAD_REQUEST),
-			NETSHOT_DUPLICATE_USER(201, Response.Status.CONFLICT),
-			NETSHOT_INVALID_USER_NAME(202, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_PASSWORD(203, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_API_TOKEN_FORMAT(204, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_SCRIPT(220, Response.Status.BAD_REQUEST),
-			NETSHOT_UNKNOWN_SCRIPT(221, Response.Status.BAD_REQUEST),
-			NETSHOT_DUPLICATE_SCRIPT(222, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_DIAGNOSTIC_NAME(230, Response.Status.BAD_REQUEST),
-			NETSHOT_DUPLICATE_DIAGNOSTIC(231, Response.Status.CONFLICT),
-			NETSHOT_INVALID_DIAGNOSTIC_TYPE(232, Response.Status.BAD_REQUEST),
-			NETSHOT_INVALID_DIAGNOSTIC(233, Response.Status.BAD_REQUEST),
-			NETSHOT_INCOMPATIBLE_DIAGNOSTIC(234, Response.Status.BAD_REQUEST);
-
-			int code;
-			Response.Status status;
-			private Reason(int code, Response.Status status) {
-				this.code = code;
-				this.status = status;
-			}
-		}
-
-		/** The Constant serialVersionUID. */
-		private static final long serialVersionUID = -4538169756895835186L;
-
-		/**
-		 * Instantiates a new netshot bad request exception.
-		 *
-		 * @param message the message
-		 * @param errorCode the error code
-		 */
-		public NetshotBadRequestException(String message, Reason reason) {
-			super(Response.status(reason.status)
-					.entity(new RsErrorBean(message, reason.code)).build());
-		}
-	}
-	
-	static public class NetshotNotAuthorizedException extends WebApplicationException {
-
-		/** The Constant serialVersionUID. */
-		private static final long serialVersionUID = -453816975689585686L;
-
-		public NetshotNotAuthorizedException(String message, int errorCode) {
-			super(Response.status(Response.Status.FORBIDDEN)
-					.entity(new RsErrorBean(message, errorCode)).build());
-		}
-	}
-
 	/**
 	 * Gets the domains.
 	 *

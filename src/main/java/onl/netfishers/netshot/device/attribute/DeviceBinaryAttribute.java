@@ -41,8 +41,7 @@ public class DeviceBinaryAttribute extends DeviceAttribute {
 		this.assumption = value;
 	}
 	
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Boolean getAssumption() {
 		return assumption;
 	}

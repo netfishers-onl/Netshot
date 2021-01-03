@@ -70,8 +70,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	 *
 	 * @return the device class
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getDriver() {
 		return driver;
 	}
@@ -87,8 +86,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	 * @return the query
 	 */
 	@Column(length = 1000)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getQuery() {
 		return query;
 	}

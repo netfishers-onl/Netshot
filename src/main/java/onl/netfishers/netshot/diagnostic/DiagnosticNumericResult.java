@@ -46,8 +46,7 @@ public class DiagnosticNumericResult extends DiagnosticResult {
 		this.number = Double.parseDouble(value);
 	}
 	
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Double getNumber() {
 		return number;
 	}

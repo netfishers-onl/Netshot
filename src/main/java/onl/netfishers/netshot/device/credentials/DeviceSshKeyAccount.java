@@ -54,8 +54,7 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 	}
 
 	@Column(length = 5000)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Type(type = "credentialString")
 	public String getPrivateKey() {
 		return privateKey;
@@ -66,8 +65,7 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 	}
 	
 	@Column(length = 5000)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getPublicKey() {
 		return publicKey;
 	}

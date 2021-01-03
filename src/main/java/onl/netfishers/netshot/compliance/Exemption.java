@@ -187,8 +187,7 @@ public class Exemption {
 	 *
 	 * @return the expiration date
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getExpirationDate() {
 		return expirationDate;
 	}

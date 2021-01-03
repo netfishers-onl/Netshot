@@ -41,8 +41,7 @@ public class DeviceTextAttribute extends DeviceAttribute {
 		this.text = value;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getText() {
 		return text;
 	}

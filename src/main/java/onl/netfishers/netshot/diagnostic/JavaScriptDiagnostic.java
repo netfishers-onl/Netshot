@@ -83,8 +83,7 @@ public class JavaScriptDiagnostic extends Diagnostic {
 	 * 
 	 * @return the script
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Column(length = 10000000)
 	public String getScript() {
 		return script;

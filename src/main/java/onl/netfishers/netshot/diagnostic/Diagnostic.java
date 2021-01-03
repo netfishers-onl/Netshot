@@ -126,8 +126,7 @@ public abstract class Diagnostic {
 	 */
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public long getId() {
 		return id;
 	}
@@ -138,14 +137,12 @@ public abstract class Diagnostic {
 	 * @return the name
 	 */
 	@NaturalId(mutable = true)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getName() {
 		return name;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public AttributeType getResultType() {
 		return resultType;
 	}
@@ -156,8 +153,7 @@ public abstract class Diagnostic {
 	 * @return the target group
 	 */
 	@ManyToOne
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public DeviceGroup getTargetGroup() {
 		return targetGroup;
 	}
@@ -166,8 +162,7 @@ public abstract class Diagnostic {
 	 * Is the diagnostic enabled?
 	 * @return true if it's enabled
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isEnabled() {
 		return enabled;
 	}

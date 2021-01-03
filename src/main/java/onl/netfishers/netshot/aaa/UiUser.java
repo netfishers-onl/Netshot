@@ -119,8 +119,7 @@ public class UiUser implements User {
 	 */
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public long getId() {
 		return id;
 	}
@@ -139,8 +138,7 @@ public class UiUser implements User {
 	 *
 	 * @return true, if is local
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isLocal() {
 		return local;
 	}
@@ -206,8 +204,7 @@ public class UiUser implements User {
 	 *
 	 * @return the username
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@NaturalId(mutable = true)
 	public String getUsername() {
 		return username;
@@ -236,8 +233,7 @@ public class UiUser implements User {
 	 *
 	 * @return the level
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public int getLevel() {
 		return level;
 	}
@@ -257,8 +253,7 @@ public class UiUser implements User {
 	 *
 	 * @return the server version
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public String getServerVersion() {
 		return serverVersion;
@@ -274,8 +269,7 @@ public class UiUser implements User {
 	}
 
 	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public int getMaxIdleTimout() {
 		return UiUser.MAX_IDLE_TIME;
 	}

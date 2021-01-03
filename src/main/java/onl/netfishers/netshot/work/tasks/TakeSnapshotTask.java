@@ -39,6 +39,7 @@ import onl.netfishers.netshot.device.Network4Address;
 import onl.netfishers.netshot.device.script.CliScript;
 import onl.netfishers.netshot.device.script.SnapshotCliScript;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
+import onl.netfishers.netshot.rest.RestViews.TaskHookView;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 
@@ -252,7 +253,7 @@ public class TakeSnapshotTask extends Task {
 		}
 		else if (!this.dontCheckCompliance) {
 			try {
-				Task checkTask = new CheckComplianceTask(device, "Check compliance after device snapshot.", "Auto");
+				Task checkTask = new CheckComplianceTask(device, "Check compliance after device snapshot", "Auto");
 				TaskManager.addTask(checkTask);
 			}
 			catch (Exception e) {
@@ -265,8 +266,7 @@ public class TakeSnapshotTask extends Task {
 	 * @see onl.netfishers.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Device snapshot";
@@ -277,6 +277,7 @@ public class TakeSnapshotTask extends Task {
 	 *
 	 * @return the device
 	 */
+	@XmlElement @JsonView(TaskHookView.class)
 	@ManyToOne(fetch = FetchType.LAZY)
 	protected Device getDevice() {
 		return device;
@@ -287,6 +288,7 @@ public class TakeSnapshotTask extends Task {
 	 * 
 	 * @return true if this is an automatic snapshot
 	 */
+	@XmlElement @JsonView(TaskHookView.class)
 	protected boolean isAutomatic() {
 		return automatic;
 	}
@@ -304,6 +306,7 @@ public class TakeSnapshotTask extends Task {
 	 * Do wee need to bypass the diagnostics execution?
 	 * @return true not to schedule the automatic diagnostics
 	 */
+	@XmlElement @JsonView(TaskHookView.class)
 	public boolean isDontRunDiagnostics() {
 		return dontRunDiagnostics;
 	}
@@ -321,6 +324,7 @@ public class TakeSnapshotTask extends Task {
 	 * 
 	 * @return true not to schedule the automatic compliance check
 	 */
+	@XmlElement @JsonView(TaskHookView.class)
 	public boolean isDontCheckCompliance() {
 		return dontCheckCompliance;
 	}
@@ -338,8 +342,7 @@ public class TakeSnapshotTask extends Task {
 	 * 
 	 * @return the ID of the device
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	protected long getDeviceId() {
 		return device.getId();

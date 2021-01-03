@@ -126,8 +126,7 @@ public abstract class DiagnosticResult {
 	 * Gets the creation date of the result
 	 * @return the creation date
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getCreationDate() {
 		return creationDate;
 	}
@@ -144,8 +143,7 @@ public abstract class DiagnosticResult {
 	 * Gets the last check date (last time this result was got from the device).
 	 * @return the last check date
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getLastCheckDate() {
 		return lastCheckDate;
 	}
@@ -195,8 +193,7 @@ public abstract class DiagnosticResult {
 	 * @return the name of the diagnostic.
 	 */
 	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getDiagnosticName() {
 		return this.getDiagnostic().getName();
 	}

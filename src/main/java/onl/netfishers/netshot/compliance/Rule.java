@@ -184,8 +184,7 @@ public abstract class Rule {
 	 */
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public long getId() {
 		return id;
 	}
@@ -216,8 +215,7 @@ public abstract class Rule {
 	 *
 	 * @return true, if is enabled
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isEnabled() {
 		return enabled;
 	}
@@ -254,8 +252,7 @@ public abstract class Rule {
 	 *
 	 * @return the name
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getName() {
 		return name;
 	}

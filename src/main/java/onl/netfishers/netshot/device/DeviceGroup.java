@@ -188,8 +188,7 @@ abstract public class DeviceGroup {
 	 *
 	 * @return the change date
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getChangeDate() {
 		return changeDate;
 	}
@@ -260,8 +259,7 @@ abstract public class DeviceGroup {
 	 * @return the name
 	 */
 	@NaturalId(mutable = true)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getName() {
 		return name;
 	}
@@ -376,8 +374,7 @@ abstract public class DeviceGroup {
 		this.cachedDevices.retainAll(devices);
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Column(length = 1000)
 	public String getFolder() {
 		return folder;
@@ -387,8 +384,7 @@ abstract public class DeviceGroup {
 		this.folder = folder;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isHiddenFromReports() {
 		return hiddenFromReports;
 	}

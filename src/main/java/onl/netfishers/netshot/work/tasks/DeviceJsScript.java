@@ -65,8 +65,7 @@ public class DeviceJsScript {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public long getId() {
 		return id;
 	}
@@ -75,8 +74,7 @@ public class DeviceJsScript {
 		this.id = id;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Column(length = 10000000)
 	public String getScript() {
 		return script;
@@ -86,15 +84,13 @@ public class DeviceJsScript {
 		this.script = script;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getDeviceDriver() {
 		return deviceDriver;
 	}
 	
 	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getRealDeviceType() {
 		DeviceDriver driver = DeviceDriver.getDriverByName(deviceDriver);
 		if (driver == null) {
@@ -107,8 +103,7 @@ public class DeviceJsScript {
 		this.deviceDriver = deviceDriver;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getAuthor() {
 		return author;
 	}
@@ -117,8 +112,7 @@ public class DeviceJsScript {
 		this.author = author;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@NaturalId
 	public String getName() {
 		return name;

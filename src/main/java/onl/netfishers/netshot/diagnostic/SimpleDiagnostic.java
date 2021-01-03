@@ -146,8 +146,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 * 
 	 * @return the device driver.
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getDeviceDriver() {
 		return deviceDriver;
 	}
@@ -167,8 +166,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 *
 	 * @return the cli mode
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getCliMode() {
 		return cliMode;
 	}
@@ -188,8 +186,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 *
 	 * @return the command
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getCommand() {
 		return command;
 	}
@@ -209,8 +206,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 *
 	 * @return the modifier pattern
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getModifierPattern() {
 		return modifierPattern;
 	}
@@ -230,8 +226,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 *
 	 * @return the modifier replacement
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getModifierReplacement() {
 		return modifierReplacement;
 	}
@@ -253,8 +248,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 * @return the description of the device driver
 	 */
 	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getDeviceDriverDescription() {
 		if ("".equals(deviceDriver)) {
 			return "";

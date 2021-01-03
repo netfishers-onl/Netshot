@@ -87,8 +87,7 @@ public class PurgeDatabaseTask extends Task {
 	 * @see onl.netfishers.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Database purge";
@@ -275,8 +274,7 @@ public class PurgeDatabaseTask extends Task {
 		return task;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public int getDays() {
 		return days;
 	}
@@ -285,8 +283,7 @@ public class PurgeDatabaseTask extends Task {
 		this.days = days;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public int getConfigDays() {
 		return configDays;
 	}
@@ -295,8 +292,7 @@ public class PurgeDatabaseTask extends Task {
 		this.configDays = configDays;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public int getConfigSize() {
 		return configSize;
 	}
@@ -305,8 +301,7 @@ public class PurgeDatabaseTask extends Task {
 		this.configSize = configSize;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public int getConfigKeepDays() {
 		return configKeepDays;
 	}

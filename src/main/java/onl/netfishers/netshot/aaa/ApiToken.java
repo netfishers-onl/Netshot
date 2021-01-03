@@ -95,8 +95,7 @@ public class ApiToken implements User {
 	 */
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public long getId() {
 		return id;
 	}
@@ -142,8 +141,7 @@ public class ApiToken implements User {
 	 *
 	 * @return the level
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public int getLevel() {
 		return level;
 	}
@@ -157,8 +155,7 @@ public class ApiToken implements User {
 		this.level = level;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getDescription() {
 		return description;
 	}

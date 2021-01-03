@@ -49,8 +49,7 @@ public class DiagnosticBinaryResult extends DiagnosticResult {
 		}
 	}
 	
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Boolean getAssumption() {
 		return assumption;
 	}

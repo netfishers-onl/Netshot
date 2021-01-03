@@ -123,8 +123,7 @@ public class Domain {
 	 * 
 	 * @return the name
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@NaturalId(mutable = true)
 	public String getName() {
 		return name;
@@ -135,8 +134,7 @@ public class Domain {
 	 * 
 	 * @return the description
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getDescription() {
 		return description;
 	}
@@ -156,8 +154,7 @@ public class Domain {
 	 * 
 	 * @return the server4 address
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@AttributeOverrides({
 		@AttributeOverride(name = "address", column = @Column(name = "ipv4_address")),
 		@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
@@ -271,8 +268,7 @@ public class Domain {
 		this.credentialSets = credentialSets;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getChangeDate() {
 		return changeDate;
 	}

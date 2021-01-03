@@ -256,8 +256,7 @@ public abstract class Task implements Cloneable {
 		return true;
 	}
 	
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getAuthor() {
 		return author;
 	}
@@ -267,8 +266,7 @@ public abstract class Task implements Cloneable {
 	 *
 	 * @return the change date
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getChangeDate() {
 		return changeDate;
 	}
@@ -278,8 +276,7 @@ public abstract class Task implements Cloneable {
 	 *
 	 * @return the comments
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getComments() {
 		return comments;
 	}
@@ -289,8 +286,7 @@ public abstract class Task implements Cloneable {
 	 *
 	 * @return the creation date
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getCreationDate() {
 		return creationDate;
 	}
@@ -309,8 +305,7 @@ public abstract class Task implements Cloneable {
 	 *
 	 * @return the execution date
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getExecutionDate() {
 		return executionDate;
 	}
@@ -320,8 +315,7 @@ public abstract class Task implements Cloneable {
 	 *
 	 * @return the id
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public long getId() {
@@ -333,8 +327,7 @@ public abstract class Task implements Cloneable {
 	 *
 	 * @return the log
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Column(name = "log", length = 10000000)
 	public String getLog() {
 		return log.toString();
@@ -346,8 +339,7 @@ public abstract class Task implements Cloneable {
 	 * @return the next execution date
 	 */
 	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getNextExecutionDate() {
 		Calendar reference = Calendar.getInstance();
 		reference.setTime(this.scheduleReference);
@@ -398,8 +390,7 @@ public abstract class Task implements Cloneable {
 	 *
 	 * @return the schedule reference
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getScheduleReference() {
 		return scheduleReference;
 	}
@@ -409,8 +400,7 @@ public abstract class Task implements Cloneable {
 	 *
 	 * @return the schedule type
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public ScheduleType getScheduleType() {
 		return scheduleType;
 	}
@@ -420,8 +410,7 @@ public abstract class Task implements Cloneable {
 	 *
 	 * @return the status
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Status getStatus() {
 		return status;
 	}
@@ -431,8 +420,7 @@ public abstract class Task implements Cloneable {
 	 *
 	 * @return the target
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Column(length = 10000)
 	public String getTarget() {
 		return target;
@@ -443,8 +431,7 @@ public abstract class Task implements Cloneable {
 	 *
 	 * @return the task description
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	abstract public String getTaskDescription();
 
@@ -468,8 +455,7 @@ public abstract class Task implements Cloneable {
 	 * Is debug enabled on this task?
 	 * @return true if debug is enabled
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isDebugEnabled() {
 		return debugEnabled;
 	}
@@ -480,8 +466,7 @@ public abstract class Task implements Cloneable {
 	 * @return true, if is repeating
 	 */
 	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isRepeating() {
 		switch (this.scheduleType) {
 		case ASAP:

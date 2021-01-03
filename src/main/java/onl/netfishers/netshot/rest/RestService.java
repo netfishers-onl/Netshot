@@ -116,6 +116,7 @@ import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.diagnostic.JavaScriptDiagnostic;
 import onl.netfishers.netshot.diagnostic.SimpleDiagnostic;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
+import onl.netfishers.netshot.rest.RestViews.RestApiView;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.TaskLogger;
@@ -349,8 +350,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the error message
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getErrorMsg() {
 			return errorMsg;
 		}
@@ -369,8 +369,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the error code
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public int getErrorCode() {
 			return errorCode;
 		}
@@ -397,6 +396,7 @@ public class RestService extends Thread {
 	@ApiResponse()
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the device domains",
 		description = "Returns the list of device domains."
@@ -447,8 +447,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -467,8 +466,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getName() {
 			return name;
 		}
@@ -487,8 +485,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the description
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDescription() {
 			return description;
 		}
@@ -507,8 +504,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the ip address
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getIpAddress() {
 			return ipAddress;
 		}
@@ -556,6 +552,7 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add a device domain",
 		description = "Creates a device domain."
@@ -625,6 +622,7 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Update a device domain",
 		description = "Edits a device domain, by ID."
@@ -701,6 +699,7 @@ public class RestService extends Thread {
 	@Path("/domains/{id}")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Remove a device domain",
 		description = "Remove the given device domain, by ID."
@@ -752,6 +751,7 @@ public class RestService extends Thread {
 	@Path("/devices/{id}/interfaces")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get device interfaces",
 		description = "Returns the list of interfaces of a given device (by ID)."
@@ -794,6 +794,7 @@ public class RestService extends Thread {
 	@Path("/devices/{id}/modules")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get device modules",
 		description = "Returns the list of hardware modules of a given device, by ID."
@@ -830,6 +831,7 @@ public class RestService extends Thread {
 	@Path("/devices/{id}/tasks")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get device tasks",
 		description = "Returns the list of tasks of a given device (by ID). Up to 'max' tasks are returned, sorted by status and significant date."
@@ -928,6 +930,7 @@ public class RestService extends Thread {
 	@Path("/devices/{id}/configs")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get device configs",
 		description = "Returns the list of configurations of the given device, by ID."
@@ -966,6 +969,7 @@ public class RestService extends Thread {
 	@Path("/configs/{id}/{item}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get a device configuration item",
 		description = "Retrieves a device configuration item, in plain text."
@@ -1073,8 +1077,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the original date
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getOriginalDate() {
 			return originalDate;
 		}
@@ -1084,8 +1087,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the revised date
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getRevisedDate() {
 			return revisedDate;
 		}
@@ -1095,8 +1097,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the deltas
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Map<String, List<RsConfigDelta>> getDeltas() {
 			return deltas;
 		}
@@ -1182,8 +1183,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the diff type
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Type getDiffType() {
 			return diffType;
 		}
@@ -1193,8 +1193,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the original position
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public int getOriginalPosition() {
 			return originalPosition;
 		}
@@ -1204,8 +1203,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the revised position
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public int getRevisedPosition() {
 			return revisedPosition;
 		}
@@ -1215,8 +1213,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the original lines
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public List<String> getOriginalLines() {
 			return originalLines;
 		}
@@ -1226,8 +1223,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the revised lines
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public List<String> getRevisedLines() {
 			return revisedLines;
 		}
@@ -1237,8 +1233,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the item
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getItem() {
 			return item;
 		}
@@ -1248,8 +1243,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the pre context
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public List<String> getPreContext() {
 			return preContext;
 		}
@@ -1259,8 +1253,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the post context
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public List<String> getPostContext() {
 			return postContext;
 		}
@@ -1278,6 +1271,7 @@ public class RestService extends Thread {
 	@Path("/configs/{id1}/vs/{id2}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the diff between two configuration objects",
 		description = "Retrieves the differences between two given device configuration objets, identified by full IDs."
@@ -1370,6 +1364,7 @@ public class RestService extends Thread {
 	@Path("/devices/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get a device",
 		description = "Retrieve a device will all details."
@@ -1437,8 +1432,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -1457,8 +1451,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getName() {
 			return name;
 		}
@@ -1477,8 +1470,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the family
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getFamily() {
 			return family;
 		}
@@ -1497,8 +1489,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the mgmt address
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Network4Address getMgmtAddress() {
 			return mgmtAddress;
 		}
@@ -1517,8 +1508,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the status
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Device.Status getStatus() {
 			return status;
 		}
@@ -1546,6 +1536,7 @@ public class RestService extends Thread {
 	@Path("/devices")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the devices",
 		description = "Retrieves the device list with minimal details."
@@ -1581,6 +1572,7 @@ public class RestService extends Thread {
 	@Path("/devicetypes")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the device types",
 		description = "Returns the list of device types (drivers)."
@@ -1613,8 +1605,7 @@ public class RestService extends Thread {
 		/** The device family. */
 		private String deviceFamily;
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -1628,8 +1619,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the device family
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDeviceFamily() {
 			return deviceFamily;
 		}
@@ -1655,6 +1645,7 @@ public class RestService extends Thread {
 	@Path("/devicefamilies")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the existing device families",
 		description = "Returns the list of device families (driver specific) currenly known in the database."
@@ -1685,8 +1676,7 @@ public class RestService extends Thread {
 	public static class RsPartNumber {
 		private String partNumber;
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getPartNumber() {
 			return partNumber;
 		}
@@ -1708,6 +1698,7 @@ public class RestService extends Thread {
 	@Path("/partnumbers")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the known part numbers",
 		description = "Returns the list of all known part numbers currently existing in the module table."
@@ -1775,8 +1766,7 @@ public class RestService extends Thread {
 		 *
 		 * @return true, if is auto discover
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isAutoDiscover() {
 			return autoDiscover;
 		}
@@ -1795,8 +1785,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the auto discovery task
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getAutoDiscoveryTask() {
 			return autoDiscoveryTask;
 		}
@@ -1815,8 +1804,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the ip address
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getIpAddress() {
 			return ipAddress;
 		}
@@ -1835,8 +1823,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the domain id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getDomainId() {
 			return domainId;
 		}
@@ -1855,8 +1842,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getName() {
 			return name;
 		}
@@ -1875,8 +1861,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the device type
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDeviceType() {
 			return deviceType;
 		}
@@ -1895,8 +1880,7 @@ public class RestService extends Thread {
 		 * Gets the connect IP address.
 		 * @return the connect IP address
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getConnectIpAddress() {
 			return connectIpAddress;
 		}
@@ -1913,8 +1897,7 @@ public class RestService extends Thread {
 		 * Gets the SSH port.
 		 * @return the SSH port
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getSshPort() {
 			return sshPort;
 		}
@@ -1931,8 +1914,7 @@ public class RestService extends Thread {
 		 * Gets the Telnet port.
 		 * @return the Telnet port
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getTelnetPort() {
 			return telnetPort;
 		}
@@ -1949,8 +1931,7 @@ public class RestService extends Thread {
 		 * Gets the device-specific credential set.
 		 * @return the specific credential set
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public DeviceCredentialSet getSpecificCredentialSet() {
 			return specificCredentialSet;
 		}
@@ -1977,6 +1958,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add a device",
 		description = "In auto discovery mode, this will create a 'discover device' task, and the device will be create if the discovery is successful." +
@@ -2189,6 +2171,7 @@ public class RestService extends Thread {
 	@Path("/devices/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Remove a device",
 		description = "Remove the given device, by ID."
@@ -2291,8 +2274,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -2311,8 +2293,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the comments
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getComments() {
 			return comments;
 		}
@@ -2331,8 +2312,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the ip address
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getIpAddress() {
 			return ipAddress;
 		}
@@ -2351,8 +2331,7 @@ public class RestService extends Thread {
 		 *
 		 * @return true, if is auto try credentials
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Boolean isAutoTryCredentials() {
 			return autoTryCredentials;
 		}
@@ -2371,8 +2350,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the credential set ids
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public List<Long> getCredentialSetIds() {
 			return credentialSetIds;
 		}
@@ -2398,8 +2376,7 @@ public class RestService extends Thread {
 		 *
 		 * @return true, if is enable
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Boolean isEnabled() {
 			return enabled;
 		}
@@ -2417,8 +2394,7 @@ public class RestService extends Thread {
 		 * Gets the management domain.
 		 * @return the management domain
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Long getMgmtDomain() {
 			return mgmtDomain;
 		}
@@ -2435,8 +2411,7 @@ public class RestService extends Thread {
 		 * Gets the list of credential set IDs.
 		 * @return the list of credential sets
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public List<Long> getClearCredentialSetIds() {
 			return clearCredentialSetIds;
 		}
@@ -2453,8 +2428,7 @@ public class RestService extends Thread {
 		 * Gets the connect IP address.
 		 * @return the connect IP address
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getConnectIpAddress() {
 			return connectIpAddress;
 		}
@@ -2471,8 +2445,7 @@ public class RestService extends Thread {
 		 * Gets the SSH port.
 		 * @return the SSH port
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getSshPort() {
 			return sshPort;
 		}
@@ -2489,8 +2462,7 @@ public class RestService extends Thread {
 		 * Gets the Telnet port.
 		 * @return the Telnet port
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getTelnetPort() {
 			return telnetPort;
 		}
@@ -2508,8 +2480,7 @@ public class RestService extends Thread {
 		 * Gets the device-specific credential set.
 		 * @return the specific credential set
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public DeviceCredentialSet getSpecificCredentialSet() {
 			return specificCredentialSet;
 		}
@@ -2537,6 +2508,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Update a device",
 		description = "Edits a device, by ID."
@@ -2738,6 +2710,7 @@ public class RestService extends Thread {
 	@Path("/tasks/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get a task.",
 		description = "Retrieves the status of a given task, by ID."
@@ -2778,6 +2751,7 @@ public class RestService extends Thread {
 	@Path("/tasks/{id}/debuglog")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the debug log of a task",
 		description = "Retrieves the full debug log of a given task, by ID."
@@ -2821,6 +2795,7 @@ public class RestService extends Thread {
 	@Path("/tasks")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the tasks",
 		description = "Returns the list of tasks. Up to 'max' tasks are returned."
@@ -2856,6 +2831,7 @@ public class RestService extends Thread {
 	@Path("/credentialsets")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the global credential sets",
 		description = "Returns the list of global credential sets (SSH, SNMP, etc. accounts) for authentication against the devices."
@@ -2900,6 +2876,7 @@ public class RestService extends Thread {
 	@Path("/credentialsets/{id}")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Remove a credential set",
 		description = "Removes the given credential set, by ID."
@@ -2961,6 +2938,7 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add a credential set",
 		description = "Creates a credential set, which then can be used to authenticate against the devices."
@@ -3021,6 +2999,7 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Update a credential set",
 		description = "Edits a credential set, by ID."
@@ -3130,8 +3109,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the device class name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -3145,8 +3123,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the query
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getQuery() {
 			return query;
 		}
@@ -3179,8 +3156,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the query
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getQuery() {
 			return query;
 		}
@@ -3199,8 +3175,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the devices
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public List<RsLightDevice> getDevices() {
 			return devices;
 		}
@@ -3228,6 +3203,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readonly")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Search for devices",
 		description = "Find devices using a string-based query."
@@ -3285,6 +3261,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add a device group",
 		description = "Creates a device group. A group can be either static (fixed list) or dynamic (query-based list)."
@@ -3338,6 +3315,7 @@ public class RestService extends Thread {
 	@Path("/groups")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the device groups",
 		description = "Returns the list of device groups, including their definition."
@@ -3371,6 +3349,7 @@ public class RestService extends Thread {
 	@Path("/groups/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Remove a device group",
 		description = "Removes a device group. This doesn't remove the devices themselves."
@@ -3441,8 +3420,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -3468,8 +3446,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the type
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getType() {
 			return type;
 		}
@@ -3488,8 +3465,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the static devices
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public List<Long> getStaticDevices() {
 			return staticDevices;
 		}
@@ -3508,8 +3484,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the device class name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -3523,8 +3498,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the query
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getQuery() {
 			return query;
 		}
@@ -3538,8 +3512,7 @@ public class RestService extends Thread {
 			this.query = query;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getFolder() {
 			return folder;
 		}
@@ -3548,8 +3521,7 @@ public class RestService extends Thread {
 			this.folder = folder;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isHiddenFromReports() {
 			return hiddenFromReports;
 		}
@@ -3574,6 +3546,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Update a device group",
 		description = "Edits a device group, by ID."
@@ -3657,6 +3630,7 @@ public class RestService extends Thread {
 	@Path("/devices/group/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get members of a device group",
 		description = "Returns the list of devices which belong to the given group, by ID."
@@ -3761,8 +3735,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -3782,8 +3755,7 @@ public class RestService extends Thread {
 		 *
 		 * @return true, if is cancelled
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isCancelled() {
 			return cancelled;
 		}
@@ -3802,8 +3774,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the type
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getType() {
 			return type;
 		}
@@ -3822,8 +3793,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the group
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Long getGroup() {
 			return group;
 		}
@@ -3842,8 +3812,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the device
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Long getDevice() {
 			return device;
 		}
@@ -3862,8 +3831,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the subnets
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getSubnets() {
 			return subnets;
 		}
@@ -3882,8 +3850,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the schedule reference
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getScheduleReference() {
 			return scheduleReference;
 		}
@@ -3902,8 +3869,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the schedule type
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Task.ScheduleType getScheduleType() {
 			return scheduleType;
 		}
@@ -3922,8 +3888,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the comments
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getComments() {
 			return comments;
 		}
@@ -3942,8 +3907,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the domain
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Long getDomain() {
 			return domain;
 		}
@@ -3980,8 +3944,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the limit to outofdate device hours
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public int getLimitToOutofdateDeviceHours() {
 			return limitToOutofdateDeviceHours;
 		}
@@ -3990,8 +3953,7 @@ public class RestService extends Thread {
 			this.limitToOutofdateDeviceHours = limitToOutofdateDeviceHours;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public int getDaysToPurge() {
 			return daysToPurge;
 		}
@@ -4000,8 +3962,7 @@ public class RestService extends Thread {
 			this.daysToPurge = days;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getScript() {
 			return script;
 		}
@@ -4010,8 +3971,7 @@ public class RestService extends Thread {
 			this.script = script;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -4020,8 +3980,7 @@ public class RestService extends Thread {
 			this.driver = driver;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public int getConfigDaysToPurge() {
 			return configDaysToPurge;
 		}
@@ -4030,8 +3989,7 @@ public class RestService extends Thread {
 			this.configDaysToPurge = configDaysToPurge;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public int getConfigSizeToPurge() {
 			return configSizeToPurge;
 		}
@@ -4040,8 +3998,7 @@ public class RestService extends Thread {
 			this.configSizeToPurge = configSizeToPurge;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public int getConfigKeepDays() {
 			return configKeepDays;
 		}
@@ -4050,8 +4007,7 @@ public class RestService extends Thread {
 			this.configKeepDays = configKeepDays;
 		}
 		
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isDebugEnabled() {
 			return debugEnabled;
 		}
@@ -4060,8 +4016,7 @@ public class RestService extends Thread {
 			this.debugEnabled = debugEnabled;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isDontRunDiagnostics() {
 			return dontRunDiagnostics;
 		}
@@ -4070,8 +4025,7 @@ public class RestService extends Thread {
 			this.dontRunDiagnostics = dontRunDiagnostics;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isDontCheckCompliance() {
 			return dontCheckCompliance;
 		}
@@ -4096,6 +4050,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Update a task",
 		description = "Edits a task, by ID. Set 'cancel' property to true to cancel the task."
@@ -4164,8 +4119,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the status
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getStatus() {
 			return status;
 		}
@@ -4184,8 +4138,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the day
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getDay() {
 			return day;
 		}
@@ -4213,6 +4166,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readonly")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Search for tasks",
 		description = "Retrieves a list of tasks based on passed criteria."
@@ -4298,6 +4252,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add a task",
 		description = "Creates a task and schedule it for execution."
@@ -4723,8 +4678,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the device name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDeviceName() {
 			return deviceName;
 		}
@@ -4743,8 +4697,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the device id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getDeviceId() {
 			return deviceId;
 		}
@@ -4763,8 +4716,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the author
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getAuthor() {
 			return author;
 		}
@@ -4783,8 +4735,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the old change date
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getOldChangeDate() {
 			return oldChangeDate;
 		}
@@ -4803,8 +4754,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the new change date
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getNewChangeDate() {
 			return newChangeDate;
 		}
@@ -4823,8 +4773,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the old id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getOldId() {
 			return oldId;
 		}
@@ -4843,8 +4792,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the new id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getNewId() {
 			return newId;
 		}
@@ -4888,8 +4836,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the from date
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getFromDate() {
 			return fromDate;
 		}
@@ -4908,8 +4855,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the to date
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getToDate() {
 			return toDate;
 		}
@@ -4937,6 +4883,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readonly")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get last configuration changes",
 		description = "Retrieves the list of last configuration changes, based on passed criteria."
@@ -4976,6 +4923,7 @@ public class RestService extends Thread {
 	@Path("/policies")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the compliance policies",
 		description = "Returns the list of compliance policies."
@@ -5011,6 +4959,7 @@ public class RestService extends Thread {
 	@Path("/rules/policy/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the compliance rules of a policy",
 		description = "Returns the rules owned by a given compliance policy."
@@ -5067,8 +5016,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -5087,8 +5035,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getName() {
 			return name;
 		}
@@ -5107,8 +5054,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the group
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getGroup() {
 			return group;
 		}
@@ -5136,6 +5082,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add a compliance policy",
 		description = "Creates a compliance policy."
@@ -5202,6 +5149,7 @@ public class RestService extends Thread {
 	@Path("/policies/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Remove a compliance policy",
 		description = "Removes a given compliance policy, by ID"
@@ -5249,6 +5197,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Update a compliance policy",
 		description = "Edits a compliance policy, by ID."
@@ -5363,8 +5312,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Long getId() {
 			return id;
 		}
@@ -5383,8 +5331,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getName() {
 			return name;
 		}
@@ -5399,8 +5346,7 @@ public class RestService extends Thread {
 		}
 		
 		
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getType() {
 			return type;
 		}
@@ -5414,8 +5360,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the script
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getScript() {
 			return script;
 		}
@@ -5434,8 +5379,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the policy
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Long getPolicy() {
 			return policy;
 		}
@@ -5445,8 +5389,7 @@ public class RestService extends Thread {
 		 *
 		 * @return true, if is enabled
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isEnabled() {
 			return enabled;
 		}
@@ -5474,8 +5417,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the exemptions
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Map<Long, Date> getExemptions() {
 			return exemptions;
 		}
@@ -5489,8 +5431,7 @@ public class RestService extends Thread {
 			this.exemptions = exemptions;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getText() {
 			return text;
 		}
@@ -5499,8 +5440,7 @@ public class RestService extends Thread {
 			this.text = text;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Boolean isRegExp() {
 			return regExp;
 		}
@@ -5509,8 +5449,7 @@ public class RestService extends Thread {
 			this.regExp = regExp;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getContext() {
 			return context;
 		}
@@ -5519,8 +5458,7 @@ public class RestService extends Thread {
 			this.context = context;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getField() {
 			return field;
 		}
@@ -5529,8 +5467,7 @@ public class RestService extends Thread {
 			this.field = field;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -5539,8 +5476,7 @@ public class RestService extends Thread {
 			this.driver = driver;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Boolean isInvert() {
 			return invert;
 		}
@@ -5549,8 +5485,7 @@ public class RestService extends Thread {
 			this.invert = invert;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Boolean isAnyBlock() {
 			return anyBlock;
 		}
@@ -5559,8 +5494,7 @@ public class RestService extends Thread {
 			this.anyBlock = anyBlock;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Boolean isMatchAll() {
 			return matchAll;
 		}
@@ -5569,8 +5503,7 @@ public class RestService extends Thread {
 			this.matchAll = matchAll;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Boolean isNormalize() {
 			return normalize;
 		}
@@ -5593,6 +5526,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add a compliance rule",
 		description = "Creates a compliance rule. The associated policy must already exist."
@@ -5665,6 +5599,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Update a compliance rule",
 		description = "Edits a compliance rule, by ID."
@@ -5787,6 +5722,7 @@ public class RestService extends Thread {
 	@Path("/rules/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Remove a compliance rule",
 		description = "Removes a compliance rule, by ID."
@@ -5835,8 +5771,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the device
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getDevice() {
 			return device;
 		}
@@ -5871,8 +5806,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the result
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public CheckResult.ResultOption getResult() {
 			return result;
 		}
@@ -5891,8 +5825,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the script error
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getScriptError() {
 			return scriptError;
 		}
@@ -5921,6 +5854,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readonly")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Test a compliance rule",
 		description = "Test a compliance rule against a given device, in dry run mode."
@@ -6027,8 +5961,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the expiration date
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getExpirationDate() {
 			return expirationDate;
 		}
@@ -6056,6 +5989,7 @@ public class RestService extends Thread {
 	@Path("/devices/rule/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the exempted devices of a compliance rule",
 		description = "Returns the list of devices which have an exemption against a given compliance rule, by ID."
@@ -6116,8 +6050,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Long getId() {
 			return id;
 		}
@@ -6136,8 +6069,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the rule name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getRuleName() {
 			return ruleName;
 		}
@@ -6156,8 +6088,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the policy name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getPolicyName() {
 			return policyName;
 		}
@@ -6176,8 +6107,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the result
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public CheckResult.ResultOption getResult() {
 			return result;
 		}
@@ -6196,8 +6126,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the check date
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getCheckDate() {
 			return checkDate;
 		}
@@ -6216,8 +6145,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the expiration date
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getExpirationDate() {
 			return expirationDate;
 		}
@@ -6236,8 +6164,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the comment
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getComment() {
 			return comment;
 		}
@@ -6265,6 +6192,7 @@ public class RestService extends Thread {
 	@Path("/devices/{id}/complianceresults")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the compliance results for a device",
 		description = "Returns the compliance results for a give device, by ID."
@@ -6316,8 +6244,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the change count
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getChangeCount() {
 			return changeCount;
 		}
@@ -6336,8 +6263,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the change day
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getChangeDay() {
 			return changeDay;
 		}
@@ -6365,6 +6291,7 @@ public class RestService extends Thread {
 	@Path("/reports/last7dayschangesbyday")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the number of configuration changes for the last 7 days",
 		description = "Returns the number of device configuration changes per day, for the last 7 days."
@@ -6438,8 +6365,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the group id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getGroupId() {
 			return groupId;
 		}
@@ -6458,8 +6384,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the group name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getGroupName() {
 			return groupName;
 		}
@@ -6478,8 +6403,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the group folder
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getGroupFolder() {
 			return groupFolder;
 		}
@@ -6498,8 +6422,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the compliant device count
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getCompliantDeviceCount() {
 			return compliantDeviceCount;
 		}
@@ -6518,8 +6441,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the device count
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getDeviceCount() {
 			return deviceCount;
 		}
@@ -6545,6 +6467,7 @@ public class RestService extends Thread {
 	@Path("/reports/groupconfigcompliancestats")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the compliance status of a device group",
 		description = "Returns the compliance status of a given device group, by ID."
@@ -6608,16 +6531,14 @@ public class RestService extends Thread {
 		private Date eoxDate;
 		private long deviceCount;
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getEoxDate() {
 			return eoxDate;
 		}
 		public void setEoxDate(Date date) {
 			this.eoxDate = date;
 		}
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getDeviceCount() {
 			return deviceCount;
 		}
@@ -6641,6 +6562,7 @@ public class RestService extends Thread {
 	@Path("/reports/hardwaresupportstats")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the global hardware support status",
 		description = "Returns the global hardware support status, i.e. a list of End-of-Life and End-of-Sale dates with the corresponding device count."
@@ -6706,8 +6628,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the group id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getGroupId() {
 			return groupId;
 		}
@@ -6726,8 +6647,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the group name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getGroupName() {
 			return groupName;
 		}
@@ -6746,8 +6666,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the gold device count
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getGoldDeviceCount() {
 			return goldDeviceCount;
 		}
@@ -6766,8 +6685,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the silver device count
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getSilverDeviceCount() {
 			return silverDeviceCount;
 		}
@@ -6786,8 +6704,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the bronze device count
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getBronzeDeviceCount() {
 			return bronzeDeviceCount;
 		}
@@ -6806,8 +6723,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the device count
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getDeviceCount() {
 			return deviceCount;
 		}
@@ -6833,6 +6749,7 @@ public class RestService extends Thread {
 	@Path("/reports/groupsoftwarecompliancestats")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the global software compliance status",
 		description = "Returns the software compliance status of devices, optionally filtered by a list of device domains."
@@ -6899,8 +6816,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the rule name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getRuleName() {
 			return ruleName;
 		}
@@ -6910,8 +6826,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the policy name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getPolicyName() {
 			return policyName;
 		}
@@ -6921,8 +6836,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the check date
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getCheckDate() {
 			return checkDate;
 		}
@@ -6932,8 +6846,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the result
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public ResultOption getResult() {
 			return result;
 		}
@@ -6991,6 +6904,7 @@ public class RestService extends Thread {
 	@Path("/reports/configcompliancedevicestatuses")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the configuration compliance status of devices",
 		description = "Returns the configuration compliance status of devices; optionally filtered by domain, group, policy or compliance level."
@@ -7064,6 +6978,7 @@ public class RestService extends Thread {
 	@Path("/reports/groupconfignoncompliantdevices/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the non compliant devices of a group",
 		description = "Returns the list of non-compliance devices part of a given group, optionally filtered by domains and policies"
@@ -7115,6 +7030,7 @@ public class RestService extends Thread {
 	@Path("/reports/hardwaresupportdevices/{type}/{date}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the End-of-Life or End-of-Sale devices matching a date.",
 		description = "Returns the list of devices getting End-of-Life (type 'eol') or End-of-Sale (type 'eos') at the given date (or never if 'date' is not given)."
@@ -7170,6 +7086,7 @@ public class RestService extends Thread {
 	@Path("/hardwarerules")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the hardware compliance rules",
 		description = "Returns the list of hardware compliance rules."
@@ -7222,8 +7139,7 @@ public class RestService extends Thread {
 
 		private Date endOfLife = null;
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -7232,8 +7148,7 @@ public class RestService extends Thread {
 			this.id = id;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getGroup() {
 			return group;
 		}
@@ -7242,8 +7157,7 @@ public class RestService extends Thread {
 			this.group = group;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -7252,8 +7166,7 @@ public class RestService extends Thread {
 			this.driver = driver;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getPartNumber() {
 			return partNumber;
 		}
@@ -7262,8 +7175,7 @@ public class RestService extends Thread {
 			this.partNumber = partNumber;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isPartNumberRegExp() {
 			return partNumberRegExp;
 		}
@@ -7272,8 +7184,7 @@ public class RestService extends Thread {
 			this.partNumberRegExp = partNumberRegExp;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getFamily() {
 			return family;
 		}
@@ -7282,8 +7193,7 @@ public class RestService extends Thread {
 			this.family = family;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isFamilyRegExp() {
 			return familyRegExp;
 		}
@@ -7326,6 +7236,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add an hardware compliance rule",
 		description = "Creates an hardware compliance rule."
@@ -7389,6 +7300,7 @@ public class RestService extends Thread {
 	@Path("/hardwarerules/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Remove an hardware compliance rule",
 		description = "Removes an hardware compliance rule, by ID."
@@ -7437,6 +7349,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Update an hardware compliance rule",
 		description = "Edits an hardware compliance rule, by ID."
@@ -7505,6 +7418,7 @@ public class RestService extends Thread {
 	@Path("/softwarerules")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the software compliance rules",
 		description = "Returns the list of software compliance rules."
@@ -7569,8 +7483,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -7589,8 +7502,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the group
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getGroup() {
 			return group;
 		}
@@ -7609,8 +7521,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the device class name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDriver() {
 			return driver;
 		}
@@ -7624,8 +7535,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the version
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getVersion() {
 			return version;
 		}
@@ -7644,8 +7554,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the family
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getFamily() {
 			return family;
 		}
@@ -7664,8 +7573,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the level
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public SoftwareRule.ConformanceLevel getLevel() {
 			return level;
 		}
@@ -7684,8 +7592,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the priority
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public double getPriority() {
 			return priority;
 		}
@@ -7699,8 +7606,7 @@ public class RestService extends Thread {
 			this.priority = priority;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isVersionRegExp() {
 			return versionRegExp;
 		}
@@ -7709,8 +7615,7 @@ public class RestService extends Thread {
 			this.versionRegExp = versionRegExp;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isFamilyRegExp() {
 			return familyRegExp;
 		}
@@ -7719,8 +7624,7 @@ public class RestService extends Thread {
 			this.familyRegExp = familyRegExp;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getPartNumber() {
 			return partNumber;
 		}
@@ -7729,8 +7633,7 @@ public class RestService extends Thread {
 			this.partNumber = partNumber;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isPartNumberRegExp() {
 			return partNumberRegExp;
 		}
@@ -7753,6 +7656,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add a software compliance rule",
 		description = "Creates a software compliance rule."
@@ -7816,6 +7720,7 @@ public class RestService extends Thread {
 	@Path("/softwarerules/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Remove a software compliance rule",
 		description = "Removes a software compliance rule, by ID"
@@ -7864,6 +7769,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Update a software compliance rule",
 		description = "Edits a software compliance rule."
@@ -7937,8 +7843,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the software level
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public ConformanceLevel getSoftwareLevel() {
 			return softwareLevel;
 		}
@@ -7966,6 +7871,7 @@ public class RestService extends Thread {
 	@Path("/reports/groupdevicesbysoftwarelevel/{id}/{level}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the devices of a group based on software compliance level",
 		description = "Returns the list of devices of a given group by ID, and matching the given software compliance level."
@@ -8024,8 +7930,7 @@ public class RestService extends Thread {
 		
 		private Date lastFailure;
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getLastSuccess() {
 			return lastSuccess;
 		}
@@ -8034,8 +7939,7 @@ public class RestService extends Thread {
 			this.lastSuccess = lastSuccess;
 		}
 
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public Date getLastFailure() {
 			return lastFailure;
 		}
@@ -8049,6 +7953,7 @@ public class RestService extends Thread {
 	@Path("/reports/accessfailuredevices")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the devices without successful snapshot over a given period",
 		description = "Returns the list of devices which didn't have a successful snapshot over the given number of days, optionally "
@@ -8127,8 +8032,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the username
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getUsername() {
 			return username;
 		}
@@ -8147,8 +8051,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the password
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getPassword() {
 			return password;
 		}
@@ -8167,8 +8070,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the new password
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getNewPassword() {
 			return newPassword;
 		}
@@ -8194,6 +8096,7 @@ public class RestService extends Thread {
 	@Path("/user/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "User log out",
 		description = "Terminates the current user session (useless when using API tokens)."
@@ -8220,6 +8123,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readonly")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Update a user",
 		description = "Edits a given user, by ID, especially the password for a local user."
@@ -8280,6 +8184,7 @@ public class RestService extends Thread {
 	@Path("/user")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Log in",
 		description = "Logs in (create session) by username and password (useless when using API tokens)."
@@ -8346,6 +8251,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readonly")
 	@Path("/user")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the current user",
 		description = "Returns the current logged in user."
@@ -8366,6 +8272,7 @@ public class RestService extends Thread {
 	@Path("/users")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the users",
 		description = "Returns the list of Netshot users."
@@ -8414,8 +8321,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -8434,8 +8340,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the username
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getUsername() {
 			return username;
 		}
@@ -8454,8 +8359,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the password
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getPassword() {
 			return password;
 		}
@@ -8474,8 +8378,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the level
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public int getLevel() {
 			return level;
 		}
@@ -8494,8 +8397,7 @@ public class RestService extends Thread {
 		 *
 		 * @return true, if is local
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isLocal() {
 			return local;
 		}
@@ -8522,6 +8424,7 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add a user to Netshot",
 		description = "Create a Netshot user."
@@ -8594,6 +8497,7 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Update a Netshot user",
 		description = "Edits a Netshot user, by ID."
@@ -8672,6 +8576,7 @@ public class RestService extends Thread {
 	@Path("/users/{id}")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Remove a Netshot user.",
 		description = "Removes a user from the Netshot database."
@@ -8729,8 +8634,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -8749,8 +8653,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the description
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDescription() {
 			return description;
 		}
@@ -8769,8 +8672,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the token
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getToken() {
 			return token;
 		}
@@ -8789,8 +8691,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the level
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public int getLevel() {
 			return level;
 		}
@@ -8817,6 +8718,7 @@ public class RestService extends Thread {
 	@RolesAllowed("admin")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add a new API token",
 		description = "Creates a new API token."
@@ -8870,6 +8772,7 @@ public class RestService extends Thread {
 	@Path("/apitokens")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the API tokens",
 		description = "Returns the list of API tokens."
@@ -8901,6 +8804,7 @@ public class RestService extends Thread {
 	@Path("/apitokens/{id}")
 	@RolesAllowed("admin")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Remove an API token",
 		description = "Removes an API token, by ID."
@@ -8938,6 +8842,7 @@ public class RestService extends Thread {
 	@Path("/reports/export")
 	@RolesAllowed("readonly")
 	@Produces({ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Export data",
 		description = "Exports data as Excel datasheet. The devices can be filtered by groups or domains. " +
@@ -9533,6 +9438,7 @@ public class RestService extends Thread {
 	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add a command script",
 		description = "Create a command script (script to be later run over devices)."
@@ -9594,6 +9500,7 @@ public class RestService extends Thread {
 	@Path("/scripts/{id}")
 	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Remove a script",
 		description = "Removes a given script, by ID."
@@ -9631,6 +9538,7 @@ public class RestService extends Thread {
 	@Path("/scripts/{id}")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get a command script",
 		description = "Returns a given command script, by ID."
@@ -9661,6 +9569,7 @@ public class RestService extends Thread {
 	@Path("/scripts")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get command scripts",
 		description = "Returns the list of command scripts."
@@ -9741,8 +9650,7 @@ public class RestService extends Thread {
 		/**
 		 * @return the deviceDriver
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getDeviceDriver() {
 			return deviceDriver;
 		}
@@ -9759,8 +9667,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the id
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getId() {
 			return id;
 		}
@@ -9779,8 +9686,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the name
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getName() {
 			return name;
 		}
@@ -9799,8 +9705,7 @@ public class RestService extends Thread {
 		 *
 		 * @return the target group
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public long getTargetGroup() {
 			return targetGroup;
 		}
@@ -9818,8 +9723,7 @@ public class RestService extends Thread {
 		 * Set to yes to enable to diagnostic.
 		 * @return the enabled True to enable, false to disable
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public boolean isEnabled() {
 			return enabled;
 		}
@@ -9835,8 +9739,7 @@ public class RestService extends Thread {
 		/**
 		 * @return the script
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getScript() {
 			return script;
 		}
@@ -9852,8 +9755,7 @@ public class RestService extends Thread {
 		/**
 		 * @return the command
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getCommand() {
 			return command;
 		}
@@ -9869,8 +9771,7 @@ public class RestService extends Thread {
 		/**
 		 * @return the modifierPattern
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getModifierPattern() {
 			return modifierPattern;
 		}
@@ -9886,8 +9787,7 @@ public class RestService extends Thread {
 		/**
 		 * @return the modifierReplacement
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getModifierReplacement() {
 			return modifierReplacement;
 		}
@@ -9903,8 +9803,7 @@ public class RestService extends Thread {
 		 * Gets the type of diagnostic.
 		 * @return the type
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getType() {
 			return type;
 		}
@@ -9921,8 +9820,7 @@ public class RestService extends Thread {
 		 * Gets the CLI mode.
 		 * @return the cliMode
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getCliMode() {
 			return cliMode;
 		}
@@ -9939,8 +9837,7 @@ public class RestService extends Thread {
 		 * Gets the type of result.
 		 * @return the resultType
 		 */
-		@XmlElement
-		@JsonView(DefaultView.class)
+		@XmlElement @JsonView(DefaultView.class)
 		public String getResultType() {
 			return resultType;
 		}
@@ -9967,6 +9864,7 @@ public class RestService extends Thread {
 	@Path("/diagnostics")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the diagnostics",
 		description = "Returns the list of diagnostics."
@@ -9996,6 +9894,7 @@ public class RestService extends Thread {
 	@RolesAllowed("executereadwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Add a diagnostic.",
 		description = "Creates a diagnostic."
@@ -10105,6 +10004,7 @@ public class RestService extends Thread {
 	@RolesAllowed("executereadwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Update a diagnostic",
 		description = "Creates a new diagnostic."
@@ -10233,6 +10133,7 @@ public class RestService extends Thread {
 	@Path("/diagnostics/{id}")
 	@RolesAllowed("executereadwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Remove a diagnostic",
 		description = "Removes a given diagnostic, by ID."
@@ -10278,6 +10179,7 @@ public class RestService extends Thread {
 	@Path("/devices/{id}/diagnosticresults")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get diagnostic results",
 		description = "Returns the results of a given diagnostic, by ID."

@@ -101,8 +101,7 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 	 * Gets the original file name.
 	 * @return the original file name
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getOriginalName() {
 		return originalName;
 	}
@@ -118,8 +117,7 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 	/**
 	 * @return the fileSize
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public long getFileSize() {
 		return fileSize;
 	}
@@ -127,8 +125,7 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 	/**
 	 * @param fileSize the fileSize to set
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public void setFileSize(long fileSize) {
 		this.fileSize = fileSize;
 	}

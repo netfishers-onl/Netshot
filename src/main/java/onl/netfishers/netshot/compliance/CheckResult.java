@@ -239,8 +239,7 @@ public class CheckResult {
 	 *
 	 * @return the comment
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getComment() {
 		return comment;
 	}
@@ -316,8 +315,7 @@ public class CheckResult {
 	 *
 	 * @return the check date
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getCheckDate() {
 		return checkDate;
 	}
@@ -337,8 +335,7 @@ public class CheckResult {
 	 *
 	 * @return the result
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public CheckResult.ResultOption getResult() {
 		return result;
 	}

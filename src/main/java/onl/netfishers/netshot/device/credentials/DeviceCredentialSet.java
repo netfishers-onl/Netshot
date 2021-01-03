@@ -156,8 +156,7 @@ public class DeviceCredentialSet {
 	 *
 	 * @return the id
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@XmlID
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -170,8 +169,7 @@ public class DeviceCredentialSet {
 	 *
 	 * @return the name
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@NaturalId(mutable = true)
 	public String getName() {
 		return name;
@@ -220,8 +218,7 @@ public class DeviceCredentialSet {
 	 *
 	 * @return the mgmtDomain
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@ManyToOne()
 	public Domain getMgmtDomain() {
 		return mgmtDomain;
@@ -240,8 +237,7 @@ public class DeviceCredentialSet {
 	 * Is the credential set specific to a device?
 	 * @return true if the credential set is specific;
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isDeviceSpecific() {
 		return deviceSpecific;
 	}

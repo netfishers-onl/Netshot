@@ -71,8 +71,7 @@ public class Module {
 	 *
 	 * @return the id
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	public long getId() {
@@ -93,8 +92,7 @@ public class Module {
 	 *
 	 * @return the slot
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getSlot() {
 		return slot;
 	}
@@ -113,8 +111,7 @@ public class Module {
 	 *
 	 * @return the part number
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getPartNumber() {
 		return partNumber;
 	}
@@ -133,8 +130,7 @@ public class Module {
 	 *
 	 * @return the serial number
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getSerialNumber() {
 		return serialNumber;
 	}

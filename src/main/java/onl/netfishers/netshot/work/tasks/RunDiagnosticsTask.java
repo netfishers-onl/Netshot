@@ -96,8 +96,7 @@ public class RunDiagnosticsTask extends Task {
 	}
 	
 	@Override
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Device diagnostics";
@@ -118,8 +117,7 @@ public class RunDiagnosticsTask extends Task {
 	 * 
 	 * @return the ID of the device
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	protected long getDeviceId() {
 		return device.getId();
@@ -242,7 +240,7 @@ public class RunDiagnosticsTask extends Task {
 
 		if (!this.dontCheckCompliance) {
 			try {
-				Task checkTask = new CheckComplianceTask(device, "Check compliance after device diagnostics.", "Auto");
+				Task checkTask = new CheckComplianceTask(device, "Check compliance after device diagnostics", "Auto");
 				TaskManager.addTask(checkTask);
 			}
 			catch (Exception e) {

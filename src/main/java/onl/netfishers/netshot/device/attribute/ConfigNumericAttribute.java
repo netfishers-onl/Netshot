@@ -41,8 +41,7 @@ public class ConfigNumericAttribute extends ConfigAttribute {
 		this.number = value;
 	}
 	
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Double getNumber() {
 		return number;
 	}

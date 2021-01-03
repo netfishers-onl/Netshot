@@ -11,5 +11,5 @@ public class RestViews {
 	public static class RestApiView extends DefaultView {};
 
 	// View for hook objects
-	public static class HookView extends DefaultView {};
+	public static class TaskHookView extends DefaultView {};
 }

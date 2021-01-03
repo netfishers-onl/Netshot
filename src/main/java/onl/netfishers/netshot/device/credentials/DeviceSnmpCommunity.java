@@ -60,8 +60,7 @@ public abstract class DeviceSnmpCommunity extends DeviceCredentialSet {
 	 *
 	 * @return the community
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Type(type = "credentialString")
 	public String getCommunity() {
 		return community;

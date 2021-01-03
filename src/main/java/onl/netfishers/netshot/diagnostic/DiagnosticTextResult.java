@@ -42,8 +42,7 @@ public class DiagnosticTextResult extends DiagnosticResult {
 		this.text = value;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Column(length = 16384)
 	public String getText() {
 		return text;

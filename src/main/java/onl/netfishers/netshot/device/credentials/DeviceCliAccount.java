@@ -72,8 +72,7 @@ public abstract class DeviceCliAccount extends DeviceCredentialSet {
 	 *
 	 * @return the username
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getUsername() {
 		return username;
 	}
@@ -92,8 +91,7 @@ public abstract class DeviceCliAccount extends DeviceCredentialSet {
 	 *
 	 * @return the password
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Type(type = "credentialString")
 	public String getPassword() {
 		return password;
@@ -113,8 +111,7 @@ public abstract class DeviceCliAccount extends DeviceCredentialSet {
 	 *
 	 * @return the super password
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Type(type = "credentialString")
 	public String getSuperPassword() {
 		return superPassword;

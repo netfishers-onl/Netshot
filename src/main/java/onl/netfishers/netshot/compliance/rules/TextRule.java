@@ -79,8 +79,7 @@ public class TextRule extends Rule {
 	}
 	
 	
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getField() {
 		return field;
 	}
@@ -89,8 +88,7 @@ public class TextRule extends Rule {
 		this.field = field;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Column(length = 10000)
 	public String getContext() {
 		return context;
@@ -100,8 +98,7 @@ public class TextRule extends Rule {
 		this.context = context;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Column(length = 10000000)
 	public String getText() {
 		return text;
@@ -114,8 +111,7 @@ public class TextRule extends Rule {
 		}
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isRegExp() {
 		return regExp;
 	}
@@ -124,8 +120,7 @@ public class TextRule extends Rule {
 		this.regExp = regExp;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isInvert() {
 		return invert;
 	}
@@ -136,15 +131,13 @@ public class TextRule extends Rule {
 	
 	
 	
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getDeviceDriver() {
 		return deviceDriver;
 	}
 	
 	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getDeviceDriverDescription() {
 		if ("".equals(deviceDriver)) {
 			return "";
@@ -162,8 +155,7 @@ public class TextRule extends Rule {
 		this.deviceDriver = deviceDriver;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isAnyBlock() {
 		return anyBlock;
 	}
@@ -172,8 +164,7 @@ public class TextRule extends Rule {
 		this.anyBlock = anyBlock;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isMatchAll() {
 		return matchAll;
 	}
@@ -182,8 +173,7 @@ public class TextRule extends Rule {
 		this.matchAll = matchAll;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isNormalize() {
 		return normalize;
 	}

@@ -100,8 +100,7 @@ public class HardwareRule {
 	 *
 	 * @return the device driver
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getDriver() {
 		return driver;
 	}
@@ -112,8 +111,7 @@ public class HardwareRule {
 	 * @return the device type
 	 */
 	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getDeviceType() {
 		DeviceDriver deviceDriver = DeviceDriver.getDriverByName(driver);
 		if (deviceDriver == null) {
@@ -133,8 +131,7 @@ public class HardwareRule {
 	 * @return the target group
 	 */
 	@ManyToOne
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public DeviceGroup getTargetGroup() {
 		return targetGroup;
 	}
@@ -153,8 +150,7 @@ public class HardwareRule {
 	 *
 	 * @return the family
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getFamily() {
 		return family;
 	}
@@ -173,8 +169,7 @@ public class HardwareRule {
 	 *
 	 * @return the part number
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getPartNumber() {
 		return partNumber;
 	}
@@ -193,8 +188,7 @@ public class HardwareRule {
 	 *
 	 * @return the end of sale
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getEndOfSale() {
 		return endOfSale;
 	}
@@ -213,8 +207,7 @@ public class HardwareRule {
 	 *
 	 * @return the end of life
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getEndOfLife() {
 		return endOfLife;
 	}
@@ -235,8 +228,7 @@ public class HardwareRule {
 	 */
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public long getId() {
 		return id;
 	}
@@ -310,8 +302,7 @@ public class HardwareRule {
 	 *
 	 * @return true, if is family reg exp
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isFamilyRegExp() {
 		return familyRegExp;
 	}
@@ -330,8 +321,7 @@ public class HardwareRule {
 	 *
 	 * @return true, if is part number reg exp
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isPartNumberRegExp() {
 		return partNumberRegExp;
 	}

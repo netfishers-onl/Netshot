@@ -126,8 +126,7 @@ public class DiscoverDeviceTypeTask extends Task {
 	 * 
 	 * @return the discovered device type description
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public String getDiscoveredDeviceTypeDescription() {
 		String description = "Unknown";
@@ -444,8 +443,7 @@ public class DiscoverDeviceTypeTask extends Task {
 		@AttributeOverride(name = "address", column = @Column(name = "ipv4_address")),
 		@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
 		@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4_usage"))})
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Network4Address getDeviceAddress() {
 		return deviceAddress;
 	}
@@ -456,8 +454,7 @@ public class DiscoverDeviceTypeTask extends Task {
 	 * @see onl.netfishers.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Device autodiscovery";
@@ -468,8 +465,7 @@ public class DiscoverDeviceTypeTask extends Task {
 	 * 
 	 * @return the device id
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public long getDeviceId() {
 		return deviceId;
 	}
@@ -479,8 +475,7 @@ public class DiscoverDeviceTypeTask extends Task {
 	 * 
 	 * @return the snapshot task id
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public long getSnapshotTaskId() {
 		return snapshotTaskId;
 	}

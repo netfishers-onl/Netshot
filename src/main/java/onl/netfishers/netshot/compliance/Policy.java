@@ -122,8 +122,7 @@ public class Policy {
 	 */
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public long getId() {
 		return id;
 	}
@@ -134,8 +133,7 @@ public class Policy {
 	 * @return the name
 	 */
 	@NaturalId(mutable = true)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getName() {
 		return name;
 	}
@@ -156,8 +154,7 @@ public class Policy {
 	 * @return the target group
 	 */
 	@ManyToOne
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public DeviceGroup getTargetGroup() {
 		return targetGroup;
 	}

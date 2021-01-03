@@ -271,8 +271,7 @@ public class Network6Address extends NetworkAddress {
 
 	private AddressUsage addressUsage = AddressUsage.PRIMARY;
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public AddressUsage getAddressUsage() {
 		return addressUsage;
 	}

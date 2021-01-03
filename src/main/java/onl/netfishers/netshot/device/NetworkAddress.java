@@ -101,13 +101,11 @@ public abstract class NetworkAddress {
 	 * @return the ip
 	 */
 	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public abstract String getIp();
 	
 	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public abstract int getPrefixLength();
 	
 	@Transient

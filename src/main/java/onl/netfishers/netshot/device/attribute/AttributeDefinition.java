@@ -110,56 +110,49 @@ public class AttributeDefinition {
 		}
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public AttributeType getType() {
 		return type;
 	}
 	public void setType(AttributeType type) {
 		this.type = type;
 	}
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public AttributeLevel getLevel() {
 		return level;
 	}
 	public void setLevel(AttributeLevel level) {
 		this.level = level;
 	}
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getName() {
 		return name;
 	}
 	public void setName(String name) {
 		this.name = name;
 	}
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getTitle() {
 		return title;
 	}
 	public void setTitle(String title) {
 		this.title = title;
 	}
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isComparable() {
 		return comparable;
 	}
 	public void setComparable(boolean comparable) {
 		this.comparable = comparable;
 	}
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isCheckable() {
 		return checkable;
 	}
 	public void setCheckable(boolean checkable) {
 		this.checkable = checkable;
 	}
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isSearchable() {
 		return searchable;
 	}

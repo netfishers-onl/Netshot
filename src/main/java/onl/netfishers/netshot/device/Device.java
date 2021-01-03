@@ -375,8 +375,7 @@ public class Device {
 		return true;
 	}
 	
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "device", orphanRemoval = true)
 	public Set<DeviceAttribute> getAttributes() {
 		return attributes;
@@ -397,8 +396,7 @@ public class Device {
 	 *
 	 * @return the change date
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getChangeDate() {
 		return changeDate;
 	}
@@ -447,8 +445,7 @@ public class Device {
 	 *
 	 * @return the comments
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getComments() {
 		return comments;
 	}
@@ -488,8 +485,7 @@ public class Device {
 	 *
 	 * @return the contact
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getContact() {
 		return contact;
 	}
@@ -499,14 +495,12 @@ public class Device {
 	 *
 	 * @return the created date
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getCreatedDate() {
 		return createdDate;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getCreator() {
 		return creator;
 	}
@@ -516,8 +510,7 @@ public class Device {
 	 *
 	 * @return the credential set ids
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public List<Long> getCredentialSetIds() {
 		List<Long> l = new ArrayList<Long>();
@@ -551,33 +544,28 @@ public class Device {
 		return deviceDriver;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getDriver() {
 		return driver;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getEolDate() {
 		return eolDate;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@OneToOne(fetch = FetchType.LAZY)
 	public Module getEolModule() {
 		return eolModule;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Date getEosDate() {
 		return eosDate;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@OneToOne(fetch = FetchType.LAZY)
 	public Module getEosModule() {
 		return eosModule;
@@ -588,8 +576,7 @@ public class Device {
 	 *
 	 * @return the family
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getFamily() {
 		return family;
 	}
@@ -622,8 +609,7 @@ public class Device {
 	 *
 	 * @return the location
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getLocation() {
 		return location;
 	}
@@ -639,8 +625,7 @@ public class Device {
 		@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
 		@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4_usage")),
 	})
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Network4Address getMgmtAddress() {
 		return mgmtAddress;
 	}
@@ -652,8 +637,7 @@ public class Device {
 	 * @return the mgmt domain
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Domain getMgmtDomain() {
 		return mgmtDomain;
 	}
@@ -674,8 +658,7 @@ public class Device {
 	 *
 	 * @return the name
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getName() {
 		return name;
 	}
@@ -686,8 +669,7 @@ public class Device {
 	 *
 	 * @return the network class
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public NetworkClass getNetworkClass() {
 		return networkClass;
 	}
@@ -708,8 +690,7 @@ public class Device {
 	 *
 	 * @return the owner groups
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@ManyToMany(fetch = FetchType.LAZY, mappedBy = "cachedDevices")
 	public Set<DeviceGroup> getOwnerGroups() {
 		return ownerGroups;
@@ -722,8 +703,7 @@ public class Device {
 	 * @return the device type
 	 */
 	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getRealDeviceType() {
 		DeviceDriver driver;
 		try {
@@ -741,8 +721,7 @@ public class Device {
 	 *
 	 * @return the serial number
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getSerialNumber() {
 		return serialNumber;
 	}
@@ -763,8 +742,7 @@ public class Device {
 	 *
 	 * @return the software level
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public SoftwareRule.ConformanceLevel getSoftwareLevel() {
 		return softwareLevel;
 	}
@@ -775,8 +753,7 @@ public class Device {
 	 *
 	 * @return the software version
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public String getSoftwareVersion() {
 		return softwareVersion;
 	}
@@ -788,8 +765,7 @@ public class Device {
 	 * @return the status
 	 */
 	@Enumerated(value = EnumType.ORDINAL)
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Status getStatus() {
 		return status;
 	}
@@ -832,8 +808,7 @@ public class Device {
 	 *
 	 * @return true, if is auto try credentials
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public boolean isAutoTryCredentials() {
 		return autoTryCredentials;
 	}
@@ -843,8 +818,7 @@ public class Device {
 	 *
 	 * @return true, if is compliant
 	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public boolean isCompliant() {
 		for (CheckResult check : this.getComplianceCheckResults()) {
@@ -855,15 +829,13 @@ public class Device {
 		return true;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public boolean isEndOfLife() {
 		return (eolDate != null && eolDate.before(new Date()));
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public boolean isEndOfSale() {
 		return (eosDate != null && eosDate.before(new Date()));
@@ -1195,8 +1167,7 @@ public class Device {
 		this.vrfInstances = vrfInstances;
 	}
 	
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public int getSshPort() {
 		return sshPort;
 	}
@@ -1205,8 +1176,7 @@ public class Device {
 		this.sshPort = sshPort;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public int getTelnetPort() {
 		return telnetPort;
 	}
@@ -1215,8 +1185,7 @@ public class Device {
 		this.telnetPort = telnetPort;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@OneToOne(cascade = CascadeType.ALL)
 	public DeviceCredentialSet getSpecificCredentialSet() {
 		return specificCredentialSet;
@@ -1232,8 +1201,7 @@ public class Device {
 		@AttributeOverride(name = "prefixLength", column = @Column(name = "connect_ipv4_pfxlen")),
 		@AttributeOverride(name = "addressUsage", column = @Column(name = "connect_ipv4_usage")),
 	})
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	public Network4Address getConnectAddress() {
 		return connectAddress;
 	}

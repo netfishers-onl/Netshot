@@ -76,8 +76,7 @@ public class RunDeviceGroupScriptTask extends Task {
 	 * @see onl.netfishers.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Group script execution";

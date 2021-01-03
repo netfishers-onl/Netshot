@@ -163,8 +163,7 @@ public class CheckComplianceTask extends Task {
 	 * @see onl.netfishers.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement
-	@JsonView(DefaultView.class)
+	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Device compliance check";

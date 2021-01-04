@@ -22,6 +22,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -43,6 +45,9 @@ import org.slf4j.LoggerFactory;
  */
 @Entity(name = "\"user\"")
 @XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@Table(indexes = {
+		@Index(name = "usernameIndex", columnList = "username") 
+})
 public class UiUser implements User {
 
 	/** The logger. */

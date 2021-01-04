@@ -591,9 +591,6 @@ h1 {
 	font-size: small;
 }
 
-#nsdevices-header {
-}
-
 #nsdevices-devicetabs #deviceactionbar {
 	float: right;
 	position: absolute;
@@ -746,12 +743,13 @@ h1 {
 	font-size: 0.9em;
 	background-color: #ffe3e6;
 	padding: 2px 5px 2px 5px;
+	border-radius: 5px;
 }
 
 .nsdialog .nserror .ui-icon {
 	float: left;
 	margin-right: .3em;
-	margin-top: .2em;
+	margin-top: .1em;
 }
 
 .nsdialog .nsdialog-logo {
@@ -1717,4 +1715,14 @@ input.spinner {
 #nsadmin-apitokenaddform input#token {
 	width: 250px;
 	font-family: monospace;
+}
+
+#nsadmin-webhookaddform #hookurl {
+	width: 300px;
+	font-family: monospace;
+}
+
+#nsadmin-webhookaddform #hooktriggers {
+	padding-left: 10px;
+	margin-top: 5px;
 }

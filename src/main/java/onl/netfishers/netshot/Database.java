@@ -80,6 +80,9 @@ import onl.netfishers.netshot.diagnostic.DiagnosticLongTextResult;
 import onl.netfishers.netshot.diagnostic.DiagnosticNumericResult;
 import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.diagnostic.DiagnosticTextResult;
+import onl.netfishers.netshot.hooks.Hook;
+import onl.netfishers.netshot.hooks.HookTrigger;
+import onl.netfishers.netshot.hooks.WebHook;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.tasks.DeviceJsScript;
@@ -610,7 +613,8 @@ public class Database {
 
 			configuration = new Configuration();
 
-			configuration.setProperty("hibernate.connection.driver_class", getDriverClass())
+			configuration
+					.setProperty("hibernate.connection.driver_class", getDriverClass())
 					.setProperty("hibernate.connection.url", getUrl()).setProperty("hibernate.connection.username", getUsername())
 					.setProperty("hibernate.connection.password", getPassword()).setProperty("hibernate.c3p0.min_size", "5")
 					.setProperty("hibernate.c3p0.max_size", "30").setProperty("hibernate.c3p0.timeout", "1800")
@@ -629,7 +633,7 @@ public class Database {
 
 			configuration.setProperty("factory_class", "org.hibernate.transaction.JDBCTransactionFactory")
 					.setProperty("current_session_context_class", "thread")
-					// .setProperty("hibernate.hbm2ddl.auto", "update") // "update" or ""
+					//.setProperty("hibernate.hbm2ddl.auto", "update") // "update" or "validate" or ""
 					//.setProperty("hibernate.show_sql", "true")
 					.addAnnotatedClass(Device.class)
 					.addAnnotatedClass(DeviceGroup.class).addAnnotatedClass(Config.class).addAnnotatedClass(DeviceAttribute.class)
@@ -654,7 +658,8 @@ public class Database {
 					.addAnnotatedClass(DiagnosticBinaryResult.class).addAnnotatedClass(DiagnosticNumericResult.class)
 					.addAnnotatedClass(DiagnosticLongTextResult.class).addAnnotatedClass(DiagnosticTextResult.class)
 					.addAnnotatedClass(UiUser.class)
-					.addAnnotatedClass(ApiToken.class);
+					.addAnnotatedClass(ApiToken.class)
+					.addAnnotatedClass(Hook.class).addAnnotatedClass(WebHook.class).addAnnotatedClass(HookTrigger.class);
 
 			for (Class<?> clazz : Task.getTaskClasses()) {
 				logger.info("Registering task class " + clazz.getName());

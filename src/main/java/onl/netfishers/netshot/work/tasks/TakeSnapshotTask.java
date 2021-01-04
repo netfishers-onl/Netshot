@@ -39,7 +39,7 @@ import onl.netfishers.netshot.device.Network4Address;
 import onl.netfishers.netshot.device.script.CliScript;
 import onl.netfishers.netshot.device.script.SnapshotCliScript;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
-import onl.netfishers.netshot.rest.RestViews.TaskHookView;
+import onl.netfishers.netshot.rest.RestViews.HookView;
 import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 
@@ -277,7 +277,7 @@ public class TakeSnapshotTask extends Task {
 	 *
 	 * @return the device
 	 */
-	@XmlElement @JsonView(TaskHookView.class)
+	@XmlElement @JsonView(HookView.class)
 	@ManyToOne(fetch = FetchType.LAZY)
 	protected Device getDevice() {
 		return device;
@@ -288,7 +288,7 @@ public class TakeSnapshotTask extends Task {
 	 * 
 	 * @return true if this is an automatic snapshot
 	 */
-	@XmlElement @JsonView(TaskHookView.class)
+	@XmlElement @JsonView(HookView.class)
 	protected boolean isAutomatic() {
 		return automatic;
 	}
@@ -306,7 +306,7 @@ public class TakeSnapshotTask extends Task {
 	 * Do wee need to bypass the diagnostics execution?
 	 * @return true not to schedule the automatic diagnostics
 	 */
-	@XmlElement @JsonView(TaskHookView.class)
+	@XmlElement @JsonView(HookView.class)
 	public boolean isDontRunDiagnostics() {
 		return dontRunDiagnostics;
 	}
@@ -324,7 +324,7 @@ public class TakeSnapshotTask extends Task {
 	 * 
 	 * @return true not to schedule the automatic compliance check
 	 */
-	@XmlElement @JsonView(TaskHookView.class)
+	@XmlElement @JsonView(HookView.class)
 	public boolean isDontCheckCompliance() {
 		return dontCheckCompliance;
 	}

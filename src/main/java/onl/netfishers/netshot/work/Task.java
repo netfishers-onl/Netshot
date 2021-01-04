@@ -57,13 +57,13 @@ import com.fasterxml.jackson.annotation.JsonView;
  * A task.
  */
 @Entity @Inheritance(strategy = InheritanceType.JOINED)
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
 @Table(indexes = {
 		@Index(name = "changeDateIndex", columnList = "changeDate"),
 		@Index(name = "creationDateIndex", columnList = "creationDate"),
 		@Index(name = "statusIndex", columnList = "status"),
 		@Index(name = "executionDateIndex", columnList = "executionDate")
 })
+@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type")
 public abstract class Task implements Cloneable {
 

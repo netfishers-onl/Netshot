@@ -1,0 +1,20 @@
+
+<tr>
+	<td><%- name %></td>
+	<td>
+		<% if (enabled) { %>
+		<span class="ui-corner-all" title="Enabled">
+			<span class="ui-icon nsicon ui-icon-bullet"></span>
+		</span>
+		<% } else { %>
+		<span class="ui-corner-all" title="Disabled">
+			<span class="ui-icon nsicon ui-icon-radio-off"></span>
+		</span>
+		<% } %>
+	</td>
+	<td><%- url %></td>
+	<td>
+		<button class="edit small">Edit...</button>
+		<button class="delete small">Delete</button>
+	</td>
+</tr>

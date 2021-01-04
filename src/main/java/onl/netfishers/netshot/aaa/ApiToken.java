@@ -24,6 +24,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -38,6 +40,9 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity
 @XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@Table(indexes = {
+		@Index(name = "hashedTokenIndex", columnList = "hashedToken") 
+})
 public class ApiToken implements User {
 
 	private static StandardStringDigester digester;

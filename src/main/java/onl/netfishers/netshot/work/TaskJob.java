@@ -20,7 +20,12 @@ package onl.netfishers.netshot.work;
 
 import onl.netfishers.netshot.Database;
 import onl.netfishers.netshot.TaskManager;
+import onl.netfishers.netshot.hooks.Hook;
+import onl.netfishers.netshot.hooks.HookTrigger;
 import onl.netfishers.netshot.work.Task.Status;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.Session;
 import org.quartz.DisallowConcurrentExecution;
@@ -92,6 +97,36 @@ public class TaskJob implements Job {
 		if (task.getStatus() == Status.RUNNING) {
 			logger.error("The task {} exited with a status of RUNNING.", id);
 			task.setStatus(Status.FAILURE);
+		}
+
+		logger.trace("Looking for post-task hooks.");
+		List<Hook> hooks = new ArrayList<Hook>();
+		session = Database.getSession();
+		try {
+			hooks = session
+					.createQuery("select h from Hook h join h.triggers t where t.type = :postTask and t.item = :taskName", Hook.class)
+					.setParameter("postTask", HookTrigger.TriggerType.POST_TASK)
+					.setParameter("taskName", task.getClass().getSimpleName())
+					.list();
+		}
+		catch (Exception e) {
+			logger.error("Error while retrieving hooks.", id, e);
+		}
+		finally  {
+			session.close();
+		}
+
+		for (Hook hook : hooks) {
+			logger.trace("Executing post-task hook {}", hook.getName());
+			task.info(String.format("Executing post-task hook '%s'.", hook.getName()));
+			try {
+				String result = hook.execute(task);
+				task.info(String.format("Result of post-task hook '%s' is: %s", hook.getName(), result));
+			}
+			catch (Exception e) {
+				logger.warn("Error while executing hook {}", hook.getName(), e);
+				task.warn(String.format("Error while executing post-task hook '%s': %s", hook.getName(), e.getMessage()));
+			}
 		}
 
 		logger.trace("Updating the task with the result.");

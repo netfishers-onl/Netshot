@@ -954,9 +954,47 @@
 		</preConditions>
 		<createIndex indexName="hashedTokenIndex" tableName="api_token">
 			<column name="hashed_token"/>
-		 </createIndex>
+		</createIndex>
 		<createIndex indexName="usernameIndex" tableName="user">
 			<column name="username"/>
 		</createIndex>
+	</changeSet>
+	<changeSet author="netshot" id="0.15.3_3">
+		<preConditions onFail="MARK_RAN">
+			<not><tableExists tableName="hook"/></not>
+		</preConditions>
+		<createTable tableName="hook">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="hook_pkey"/>
+			</column>
+			<column name="enabled" type="BOOLEAN">
+				<constraints nullable="false"/>
+			</column>
+			<column name="name" type="VARCHAR(255)"/>
+		</createTable>
+		<createTable tableName="web_hook">
+			<column name="action" type="INTEGER"/>
+			<column name="ssl_validation" type="BOOLEAN">
+				<constraints nullable="false"/>
+			</column>
+			<column name="url" type="VARCHAR(255)"/>
+			<column name="id" type="BIGINT">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="web_hook_pkey"/>
+			</column>
+		</createTable>
+		<createTable tableName="hook_trigger">
+			<column name="type" type="INTEGER">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="hook_trigger_pkey"/>
+			</column>
+			<column name="item" type="VARCHAR(255)">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="hook_trigger_pkey"/>
+			</column>
+			<column name="hook" type="BIGINT">
+				<constraints nullable="false" primaryKey="true" primaryKeyName="hook_trigger_pkey"/>
+			</column>
+		</createTable>
+		<addUniqueConstraint columnNames="name" constraintName="uk_o8yee2mf038o3m34swlrr1uko" tableName="hook"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="web_hook" constraintName="fkh3m6n2ju7ukxcxil5utn1qlln" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="hook" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="hook" baseTableName="hook_trigger" constraintName="fkhq4co2gsk1jnrjt9x9b49kvpo" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="web_hook" validate="true"/>
 	</changeSet>
 </databaseChangeLog>

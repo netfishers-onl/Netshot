@@ -21,6 +21,7 @@ package onl.netfishers.netshot.rest;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
@@ -115,6 +116,9 @@ import onl.netfishers.netshot.diagnostic.Diagnostic;
 import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.diagnostic.JavaScriptDiagnostic;
 import onl.netfishers.netshot.diagnostic.SimpleDiagnostic;
+import onl.netfishers.netshot.hooks.Hook;
+import onl.netfishers.netshot.hooks.HookTrigger;
+import onl.netfishers.netshot.hooks.WebHook;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.rest.RestViews.RestApiView;
 import onl.netfishers.netshot.work.DebugLog;
@@ -178,7 +182,6 @@ import difflib.Delta;
 import difflib.DiffUtils;
 import difflib.Patch;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 /**
  * The RestService class exposes the Netshot methods as a REST service.
@@ -387,13 +390,11 @@ public class RestService extends Thread {
 	/**
 	 * Gets the domains.
 	 *
-	 * @param request the request
 	 * @return the domains
 	 * @throws WebApplicationException the web application exception
 	 */
 	@GET
 	@Path("/domains")
-	@ApiResponse()
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -542,7 +543,6 @@ public class RestService extends Thread {
 	/**
 	 * Adds the domain.
 	 *
-	 * @param request the request
 	 * @param newDomain the new domain
 	 * @return the rs domain
 	 * @throws WebApplicationException the web application exception
@@ -611,7 +611,6 @@ public class RestService extends Thread {
 	/**
 	 * Sets the domain.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param rsDomain the rs domain
 	 * @return the rs domain
@@ -691,7 +690,6 @@ public class RestService extends Thread {
 	/**
 	 * Delete a domain.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -741,7 +739,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the device interfaces.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @return the device interfaces
 	 * @throws WebApplicationException the web application exception
@@ -785,7 +782,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the device modules.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @return the device modules
 	 * @throws WebApplicationException the web application exception
@@ -822,7 +818,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the device last n (default 20) tasks.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @return the device tasks
 	 * @throws WebApplicationException the web application exception
@@ -921,7 +916,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the device configs.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @return the device configs
 	 * @throws WebApplicationException the web application exception
@@ -959,7 +953,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the device config as plain text.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param item the item
 	 * @return the device config plain
@@ -1262,7 +1255,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the device config diff.
 	 *
-	 * @param request the request
 	 * @param id1 the id1
 	 * @param id2 the id2
 	 * @return the device config diff
@@ -1355,7 +1347,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the device.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @return the device
 	 * @throws WebApplicationException the web application exception
@@ -1528,7 +1519,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the devices.
 	 *
-	 * @param request the request
 	 * @return the devices
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -1564,7 +1554,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the device types.
 	 *
-	 * @param request the request
 	 * @return the device types
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -1637,7 +1626,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the device families.
 	 *
-	 * @param request the request
 	 * @return the device families
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -1690,7 +1678,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the known part numbers.
 	 *
-	 * @param request the request
 	 * @return the part numbers
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -1948,7 +1935,6 @@ public class RestService extends Thread {
 	/**
 	 * Adds the device.
 	 *
-	 * @param request the request
 	 * @param device the device
 	 * @return the task
 	 * @throws WebApplicationException the web application exception
@@ -2051,7 +2037,7 @@ public class RestService extends Thread {
 				logger.error("No available SNMP community");
 				throw new NetshotBadRequestException(
 						"There is no known SNMP community in the database to poll the device.",
-						NetshotBadRequestException.Reason.NETSHOT_CREDENTIALS_NOTFOUND);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS);
 			}
 		}
 		catch (ObjectNotFoundException e) {
@@ -2163,7 +2149,6 @@ public class RestService extends Thread {
 	/**
 	 * Delete device.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -2497,7 +2482,6 @@ public class RestService extends Thread {
 	/**
 	 * Sets the device.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param rsDevice the rs device
 	 * @return the device
@@ -2702,7 +2686,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the task.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @return the task
 	 */
@@ -2741,7 +2724,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the debug log of a task
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param item the item
 	 * @return the device config plain
@@ -2788,7 +2770,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the tasks.
 	 *
-	 * @param request the request
 	 * @return the tasks
 	 */
 	@GET
@@ -2823,7 +2804,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the credential sets.
 	 *
-	 * @param request the request
 	 * @return the credential sets
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -2868,7 +2848,6 @@ public class RestService extends Thread {
 	/**
 	 * Delete credential set.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -2928,7 +2907,6 @@ public class RestService extends Thread {
 	/**
 	 * Adds the credential set.
 	 *
-	 * @param request the request
 	 * @param credentialSet the credential set
 	 * @return the device credential set
 	 * @throws WebApplicationException the web application exception
@@ -2988,7 +2966,6 @@ public class RestService extends Thread {
 	/**
 	 * Sets the credential set.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param rsCredentialSet the rs credential set
 	 * @return the device credential set
@@ -3017,7 +2994,7 @@ public class RestService extends Thread {
 				logger.error("Unable to find the credential set {}.", id);
 				throw new NetshotBadRequestException(
 						"Unable to find the credential set.",
-						NetshotBadRequestException.Reason.NETSHOT_CREDENTIALS_NOTFOUND);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS);
 			}
 			if (!credentialSet.getClass().equals(rsCredentialSet.getClass())) {
 				logger.error("Wrong posted credential type for credential set {}.", id);
@@ -3032,6 +3009,11 @@ public class RestService extends Thread {
 				credentialSet.setMgmtDomain((Domain) session.load(Domain.class, rsCredentialSet.getMgmtDomain().getId()));
 			}
 			credentialSet.setName(rsCredentialSet.getName());
+			if (credentialSet.getName() == null || credentialSet.getName().trim().equals("")) {
+				logger.error("Invalid credential set name.");
+				throw new NetshotBadRequestException("Invalid name for the credential set",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS_NAME);
+			}
 			if (DeviceCliAccount.class.isInstance(credentialSet)) {
 				DeviceCliAccount cliAccount = (DeviceCliAccount) credentialSet;
 				DeviceCliAccount rsCliAccount = (DeviceCliAccount) rsCredentialSet;
@@ -3193,7 +3175,6 @@ public class RestService extends Thread {
 	/**
 	 * Search devices.
 	 *
-	 * @param request the request
 	 * @param criteria the criteria
 	 * @return the rs search results
 	 * @throws WebApplicationException the web application exception
@@ -3251,7 +3232,6 @@ public class RestService extends Thread {
 	/**
 	 * Adds the group.
 	 *
-	 * @param request the request
 	 * @param deviceGroup the device group
 	 * @return the device group
 	 * @throws WebApplicationException the web application exception
@@ -3307,7 +3287,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the groups.
 	 *
-	 * @param request the request
 	 * @return the groups
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -3341,7 +3320,6 @@ public class RestService extends Thread {
 	/**
 	 * Delete group.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -3535,7 +3513,6 @@ public class RestService extends Thread {
 	/**
 	 * Sets the group.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param rsGroup the rs group
 	 * @return the device group
@@ -3621,7 +3598,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the group devices.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @return the group devices
 	 * @throws WebApplicationException the web application exception
@@ -4039,7 +4015,6 @@ public class RestService extends Thread {
 	/**
 	 * Sets the task.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param rsTask the rs task
 	 * @return the task
@@ -4156,7 +4131,6 @@ public class RestService extends Thread {
 	/**
 	 * Search tasks.
 	 *
-	 * @param request the request
 	 * @param criteria the criteria
 	 * @return the list
 	 * @throws WebApplicationException the web application exception
@@ -4242,7 +4216,6 @@ public class RestService extends Thread {
 	/**
 	 * Adds the task.
 	 *
-	 * @param request the request
 	 * @param rsTask the rs task
 	 * @return the task
 	 * @throws WebApplicationException the web application exception
@@ -4873,7 +4846,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the changes.
 	 *
-	 * @param request the request
 	 * @param criteria the criteria
 	 * @return the changes
 	 * @throws WebApplicationException the web application exception
@@ -4915,7 +4887,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the policies.
 	 *
-	 * @param request the request
 	 * @return the policies
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -4950,7 +4921,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the policy rules.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @return the policy rules
 	 * @throws WebApplicationException the web application exception
@@ -5072,7 +5042,6 @@ public class RestService extends Thread {
 	/**
 	 * Adds the policy.
 	 *
-	 * @param request the request
 	 * @param rsPolicy the rs policy
 	 * @return the policy
 	 * @throws WebApplicationException the web application exception
@@ -5141,7 +5110,6 @@ public class RestService extends Thread {
 	/**
 	 * Delete policy.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -5186,7 +5154,6 @@ public class RestService extends Thread {
 	/**
 	 * Sets the policy.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param rsPolicy the rs policy
 	 * @return the policy
@@ -5516,7 +5483,6 @@ public class RestService extends Thread {
 	/**
 	 * Adds the js rule.
 	 *
-	 * @param request the request
 	 * @param rsRule the rs rule
 	 * @return the rule
 	 * @throws WebApplicationException the web application exception
@@ -5588,7 +5554,6 @@ public class RestService extends Thread {
 	/**
 	 * Sets the rule.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param rsRule the rs rule
 	 * @return the rule
@@ -5714,7 +5679,6 @@ public class RestService extends Thread {
 	/**
 	 * Delete rule.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -5844,7 +5808,6 @@ public class RestService extends Thread {
 	/**
 	 * Test rule.
 	 *
-	 * @param request the request
 	 * @param rsRule the rs rule
 	 * @return the rule test result
 	 * @throws WebApplicationException the web application exception
@@ -5980,7 +5943,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the exempted devices.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @return the exempted devices
 	 * @throws WebApplicationException the web application exception
@@ -6183,7 +6145,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the device compliance results.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @return the device compliance
 	 * @throws WebApplicationException the web application exception
@@ -6283,7 +6244,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the last7 days changes by day stats.
 	 *
-	 * @param request the request
 	 * @return the last7 days changes by day stats
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -6459,7 +6419,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the group config compliance stats.
 	 *
-	 * @param request the request
 	 * @return the group config compliance stats
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -6741,7 +6700,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the group software compliance stats.
 	 *
-	 * @param request the request
 	 * @return the group software compliance stats
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -6892,7 +6850,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the configuration compliance results.
 	 *
-	 * @param request the request
 	 * @param domains optional filter on device domain
 	 * @param groups optional filter on device groups
 	 * @param policies optional filter on compliance policy
@@ -6969,7 +6926,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the group config non compliant devices.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @return the group config non compliant devices
 	 * @throws WebApplicationException the web application exception
@@ -7078,7 +7034,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the hardware rules.
 	 *
-	 * @param request the request
 	 * @return the harware rules
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -7226,7 +7181,6 @@ public class RestService extends Thread {
 	/**
 	 * Adds an hardware rule.
 	 *
-	 * @param request the request
 	 * @param rsRule the rs rule
 	 * @return the hardware rule
 	 * @throws WebApplicationException the web application exception
@@ -7292,7 +7246,6 @@ public class RestService extends Thread {
 	/**
 	 * Delete hardware rule.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -7338,7 +7291,6 @@ public class RestService extends Thread {
 	/**
 	 * Sets the hardware rule.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param rsRule the rs rule
 	 * @return the hardware rule
@@ -7410,7 +7362,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the software rules.
 	 *
-	 * @param request the request
 	 * @return the software rules
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -7646,7 +7597,6 @@ public class RestService extends Thread {
 	/**
 	 * Adds the software rule.
 	 *
-	 * @param request the request
 	 * @param rsRule the rs rule
 	 * @return the software rule
 	 * @throws WebApplicationException the web application exception
@@ -7712,7 +7662,6 @@ public class RestService extends Thread {
 	/**
 	 * Delete software rule.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -7758,7 +7707,6 @@ public class RestService extends Thread {
 	/**
 	 * Sets the software rule.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param rsRule the rs rule
 	 * @return the software rule
@@ -7861,7 +7809,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the group devices by software level.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param level the level
 	 * @return the group devices by software level
@@ -8088,7 +8035,6 @@ public class RestService extends Thread {
 	/**
 	 * Logout.
 	 *
-	 * @param request the request
 	 * @return the boolean
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -8113,7 +8059,6 @@ public class RestService extends Thread {
 	/**
 	 * Sets the password.
 	 *
-	 * @param request the request
 	 * @param rsLogin the rs login
 	 * @return the user
 	 * @throws WebApplicationException the web application exception
@@ -8174,7 +8119,6 @@ public class RestService extends Thread {
 	/**
 	 * Login.
 	 *
-	 * @param request the request
 	 * @param rsLogin the rs login
 	 * @return the user
 	 * @throws WebApplicationException the web application exception
@@ -8243,7 +8187,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the user.
 	 *
-	 * @param request the request
 	 * @return the user
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -8264,7 +8207,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the users.
 	 *
-	 * @param request the request
 	 * @return the users
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -8415,7 +8357,6 @@ public class RestService extends Thread {
 	/**
 	 * Adds the user.
 	 *
-	 * @param request the request
 	 * @param rsUser the rs user
 	 * @return the user
 	 */
@@ -8486,7 +8427,6 @@ public class RestService extends Thread {
 	/**
 	 * Sets the user.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @param rsUser the rs user
 	 * @return the user
@@ -8568,7 +8508,6 @@ public class RestService extends Thread {
 	/**
 	 * Delete user.
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -8709,7 +8648,6 @@ public class RestService extends Thread {
 	/**
 	 * Adds the API token.
 	 *
-	 * @param request the request
 	 * @param rsAPiToken the rs API token
 	 * @return the API token
 	 */
@@ -9856,7 +9794,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the diagnotics.
 	 *
-	 * @param request the request
 	 * @return the diagnotics
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -9993,7 +9930,6 @@ public class RestService extends Thread {
 	/**
 	 * Updates the diagnostic.
 	 * 
-	 * @param request the request
 	 * @param id the diagnostic ID
 	 * @param rsDiagnostic the passed diagnostic
 	 * @return the updated diagnostic
@@ -10125,7 +10061,6 @@ public class RestService extends Thread {
 	/**
 	 * Delete diagnostic.
 	 *
-	 * @param request the request
 	 * @param id the id of the diagnostic to delete
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -10170,7 +10105,6 @@ public class RestService extends Thread {
 	/**
 	 * Gets the device diagnostic results
 	 *
-	 * @param request the request
 	 * @param id the id
 	 * @return the device compliance
 	 * @throws WebApplicationException the web application exception
@@ -10203,6 +10137,252 @@ public class RestService extends Thread {
 			session.close();
 		}
 	}
+	
+	/**
+	 * Gets the hooks.
+	 *
+	 * @return the current hooks
+	 * @throws WebApplicationException the web application exception
+	 */
+	@GET
+	@Path("/hooks")
+	@RolesAllowed("admin")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Get the hooks",
+		description = "Returns the current list of hooks."
+	)
+	public List<Hook> getHooks() throws WebApplicationException {
+		logger.debug("REST request, hooks.");
+		Session session = Database.getSession();
+		try {
+			List<Hook> hooks = session.createQuery("select h from Hook h left join fetch h.triggers", Hook.class).list();
+			return hooks;
+		}
+		catch (HibernateException e) {
+			logger.error("Unable to fetch the hooks.", e);
+			throw new NetshotBadRequestException("Unable to fetch the hooks",
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+
+	/**
+	 * Adds the hook.
+	 *
+	 * @param hook the hook
+	 * @return the new hook
+	 * @throws WebApplicationException the web application exception
+	 */
+	@POST
+	@Path("/hooks")
+	@RolesAllowed("admin")
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Add a hook",
+		description = "Creates a hook. Based on given criteria, Netshot will run the given action when specific events occur."
+	)
+	public Hook addHook(Hook hook) throws WebApplicationException {
+		logger.debug("REST request, add hook.");
+		if (hook.getName() == null || hook.getName().trim().equals("")) {
+			logger.error("Invalid hook name.");
+			throw new NetshotBadRequestException("Invalid name for the hook",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK_NAME);
+		}
+		if (hook.getTriggers() != null) {
+			for (HookTrigger trigger : hook.getTriggers()) {
+				trigger.setHook(hook);
+			}
+		}
+		if (hook instanceof WebHook) {
+			WebHook webHook = (WebHook)hook;
+			try {
+				webHook.getParsedUrl();
+			}
+			catch (MalformedURLException e) {
+				throw new NetshotBadRequestException("Invalid Web hook target URL",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK_WEB_URL);
+			}
+			if (webHook.getAction() == null) {
+				throw new NetshotBadRequestException("Invalid action",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK_WEB);
+			}
+		}
+		Session session = Database.getSession();
+		try {
+			session.beginTransaction();
+			session.save(hook);
+			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been created.", hook);
+			this.suggestReturnCode(Response.Status.CREATED);
+			return hook;
+		}
+		catch (HibernateException e) {
+			session.getTransaction().rollback();
+			Throwable t = e.getCause();
+			logger.error("Can't add the hook.", e);
+			if (t != null && t.getMessage().contains("uplicate")) {
+				throw new NetshotBadRequestException(
+						"A hook with this name already exists.",
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_HOOK);
+			}
+			throw new NetshotBadRequestException("Unable to save the hook",
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	/**
+	 * Delete hook.
+	 *
+	 * @param id the id of the hook
+	 * @throws WebApplicationException the web application exception
+	 */
+	@DELETE
+	@Path("/hooks/{id}")
+	@RolesAllowed("admin")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Remove a hook",
+		description = "Removes the hook, by ID."
+	)
+	public void deleteHook(@PathParam("id") Long id) throws WebApplicationException {
+		logger.debug("REST request, delete hook {}", id);
+		Session session = Database.getSession();
+		try {
+			session.beginTransaction();
+			Hook hook = session.load(Hook.class, id);
+			session.delete(hook);
+			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been deleted.", hook);
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
+		}
+		catch (ObjectNotFoundException e) {
+			session.getTransaction().rollback();
+			logger.error("The hook {} to be deleted doesn't exist.", id, e);
+			throw new NetshotBadRequestException("The hook doesn't exist.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK);
+		}
+		catch (Exception e) {
+			session.getTransaction().rollback();
+			logger.error("Unable to delete the hook {}", id, e);
+			throw new NetshotBadRequestException(
+					"Unable to delete the hook",
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	/**
+	 * Sets the hook.
+	 *
+	 * @param id the id
+	 * @param rsHook the hook
+	 * @return the updated hook
+	 * @throws WebApplicationException the web application exception
+	 */
+	@PUT
+	@Path("/hooks/{id}")
+	@RolesAllowed("admin")
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Update a hook",
+		description = "Edits a hook, by ID."
+	)
+	public Hook setHook(@PathParam("id") Long id, Hook rsHook) throws WebApplicationException {
+		logger.debug("REST request, edit hook {}", id);
+		rsHook.setId(id);
+		if (rsHook.getName() == null || rsHook.getName().trim().equals("")) {
+			logger.error("Invalid hook name.");
+			throw new NetshotBadRequestException("Invalid name for the hook",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK_NAME);
+		}
+		if (rsHook instanceof WebHook) {
+			WebHook rsWebHook = (WebHook)rsHook;
+			try {
+				rsWebHook.getParsedUrl();
+			}
+			catch (MalformedURLException e) {
+				throw new NetshotBadRequestException("Invalid Web hook target URL",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK_WEB_URL);
+			}
+			if (rsWebHook.getAction() == null) {
+				throw new NetshotBadRequestException("Invalid action",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK_WEB);
+			}
+		}
+		{
+			Session session = Database.getSession();
+			try {
+				session.beginTransaction();
+				Hook hook = session.get(rsHook.getClass(), id);
+				if (hook == null) {
+					logger.error("Unable to find the hook {}.", id);
+					throw new NetshotBadRequestException(
+							"Unable to find the hook.",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK);
+				}
+				if (!hook.getClass().equals(rsHook.getClass())) {
+					logger.error("Wrong posted type for hook {}.", id);
+					throw new NetshotBadRequestException(
+							"The posted hook type doesn't match the existing one.",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK_TYPE);
+				}
+				hook.setEnabled(rsHook.isEnabled());
+				hook.setName(rsHook.getName());
+				for (HookTrigger trigger : rsHook.getTriggers()) {
+					trigger.setHook(hook);
+				}
+				// Ensure we keep the same HookTrigger object instances
+				hook.getTriggers().retainAll(rsHook.getTriggers());
+				hook.getTriggers().addAll(rsHook.getTriggers());
+				if (rsHook instanceof WebHook) {
+					WebHook rsWebHook = (WebHook)rsHook;
+					WebHook webHook = (WebHook)hook;
+					webHook.setAction(rsWebHook.getAction());
+					webHook.setUrl(rsWebHook.getUrl());
+					webHook.setSslValidation(rsWebHook.isSslValidation());
+				}
+				session.update(hook);
+				session.getTransaction().commit();
+				Netshot.aaaLogger.info("{} has been edited", rsHook);
+				return rsHook;
+			}
+			catch (HibernateException e) {
+				session.getTransaction().rollback();
+				Throwable t = e.getCause();
+				logger.error("Unable to save the hook {}.", id, e);
+				if (t != null && t.getMessage().contains("uplicate")) {
+					throw new NetshotBadRequestException(
+							"A hook with this name already exists.",
+							NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_HOOK);
+				}
+				throw new NetshotBadRequestException("Unable to save the hook",
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+			}
+			catch (NetshotBadRequestException e) {
+				session.getTransaction().rollback();
+				throw e;
+			}
+			finally {
+				session.close();
+			}
+		}
+	}
+
 
 }
 

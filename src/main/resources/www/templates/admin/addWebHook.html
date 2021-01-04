@@ -1,0 +1,61 @@
+<div id="nsadmin-webhookaddform" title="Add/Edit Web Hook">
+
+	<div class="nsdialog-logo">
+		<% if (isNew) { %>
+			<svg width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+				<path fill-rule="evenodd" d="M8 3.5a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5H4a.5.5 0 0 1 0-1h3.5V4a.5.5 0 0 1 .5-.5z"/>
+				<path fill-rule="evenodd" d="M7.5 8a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0V8z"/>
+				<path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+			</svg>
+		<% } else { %>
+			<svg width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+				<path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456l-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+				<path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+			</svg>
+		<% } %>
+	</div>
+
+	<form>
+		<fieldset>
+			<label for="hookname">Name: </label> <input type="text"
+				name="hookname" id="hookname" value="<%- name %>"
+				class="text ui-widget-content ui-corner-all" autofocus="autofocus" />
+		</fieldset>
+		<fieldset>
+			<div>
+				<input type="checkbox" id="hookenabled" name="hookenabled" <% if (enabled) { %>checked="checked"<% } %> />
+				<label for="hookenabled">Enabled</label>
+			</div>
+		</fieldset>
+		<fieldset>
+			<div>
+				<input type="radio" id="hookactionpostjson" <% if (action === 'POST_JSON') { %>checked="checked"<% } %>
+					name="hookaction" value="POST_JSON" /> <label
+					for="hookactionpostjson">POST JSON</label>
+			</div>
+			<div>
+				<input type="radio" id="hookactionpostxml" <% if (action === 'POST_XML') { %>checked="checked"<% } %>
+					name="hookaction" value="POST_XML" /> <label
+					for="hookactionpostxml">POST XML</label>
+			</div>
+		</fieldset>
+		<fieldset>
+			<label for="hookurl">URL: </label> <input type="text"
+				name="hookurl" id="hookurl" value="<%- url %>"
+				class="text ui-widget-content ui-corner-all" />
+		</fieldset>
+		<fieldset>
+			<div>
+				<input type="checkbox" id="hooksslvalidation" name="hooksslvalidation" <% if (sslValidation) { %>checked="checked"<% } %> />
+				<label for="hooksslvalidation">SSL validation (strongly recommended)</label>
+			</div>
+		</fieldset>
+		<fieldset>
+			<div>Triggers:</div>
+			<div id="hooktriggers"></div>
+		</fieldset>
+		<div class="nserror" id="error">
+			<span class="ui-icon ui-icon-alert"></span> <span id="errormsg"></span>
+		</div>
+	</form>
+</div>

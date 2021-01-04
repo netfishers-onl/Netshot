@@ -29,7 +29,7 @@ define([
 		dialogOptions: {
 			title: "Edit simple diagnostic",
 			width: 530,
-			height: 410,
+			height: 440,
 		},
 
 		buttons: {

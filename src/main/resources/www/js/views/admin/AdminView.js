@@ -1,39 +1,48 @@
-/** Copyright 2013-2014 NetFishers */
+/** Copyright 2013-2021 NetFishers */
 define([
 	'jquery',
 	'underscore',
 	'backbone',
 	'tablesort',
 	'models/domain/DomainCollection',
+	'models/credentials/CredentialSetCollection',
+	'models/user/UserCollection',
+	'models/user/ApiTokenCollection',
+	'models/device/DeviceTypeCollection',
+	'models/hook/HookCollection',
 	'views/admin/AddDomainDialog',
 	'views/admin/EditDomainDialog',
 	'views/admin/DeleteDomainDialog',
-	'models/credentials/CredentialSetCollection',
 	'views/admin/AddCredentialSetDialog',
 	'views/admin/EditCredentialSetDialog',
 	'views/admin/DeleteCredentialSetDialog',
-	'models/user/UserCollection',
-	'models/user/ApiTokenCollection',
 	'views/admin/AddUserDialog',
-	'views/admin/AddApiTokenDialog',
 	'views/admin/EditUserDialog',
 	'views/admin/DeleteUserDialog',
+	'views/admin/AddApiTokenDialog',
 	'views/admin/DeleteApiTokenDialog',
-	'models/device/DeviceTypeCollection',
+	'views/admin/AddWebHookDialog',
+	'views/admin/EditWebHookDialog',
+	'views/admin/DeleteWebHookDialog',
 	'text!templates/admin/admin.html',
 	'text!templates/admin/adminToolBar.html',
 	'text!templates/admin/domain.html',
 	'text!templates/admin/credentials.html',
 	'text!templates/admin/user.html',
 	'text!templates/admin/apiToken.html',
-	'text!templates/admin/driver.html'
-], function($, _, Backbone, TableSort, DomainCollection, AddDomainDialog,
-		EditDomainDialog, DeleteDomainDialog, CredentialSetCollection,
+	'text!templates/admin/driver.html',
+	'text!templates/admin/webHook.html',
+], function($, _, Backbone, TableSort,
+		DomainCollection, CredentialSetCollection, UserCollection, ApiTokenCollection,
+		DeviceTypeCollection, HookCollection,
+		AddDomainDialog, EditDomainDialog, DeleteDomainDialog,
 		AddCredentialSetDialog, EditCredentialSetDialog, DeleteCredentialSetDialog,
-		UserCollection, ApiTokenCollection, AddUserDialog, AddApiTokenDialog, EditUserDialog,
-		DeleteUserDialog, DeleteApiTokenDialog, DeviceTypeCollection,
+		AddUserDialog, EditUserDialog, DeleteUserDialog,
+		AddApiTokenDialog, DeleteApiTokenDialog, 
+		AddWebHookDialog, EditWebHookDialog, DeleteWebHookDialog,
 		adminTemplate, adminToolbarTemplate, domainRowTemplate,
-		credentialsRowTemplate, userRowTemplate, apiTokenRowTemplate, driverRowTemplate) {
+		credentialsRowTemplate, userRowTemplate, apiTokenRowTemplate, driverRowTemplate,
+		webHookRowTemplate) {
 
 	makeLoadProgress(13);
 
@@ -47,12 +56,14 @@ define([
 		userTemplate: _.template(userRowTemplate),
 		apiTokenTemplate: _.template(apiTokenRowTemplate),
 		driverTemplate: _.template(driverRowTemplate),
+		webHookTemplate: _.template(webHookRowTemplate),
 
 		domains: new DomainCollection([]),
 		credentialSets: new CredentialSetCollection([]),
 		users: new UserCollection([]),
 		apiTokens: new ApiTokenCollection([]),
 		drivers: new DeviceTypeCollection([]),
+		hooks: new HookCollection([]),
 
 		initialize: function() {
 			var that = this;
@@ -66,10 +77,11 @@ define([
 			this.$el.html(this.template);
 
 			this.refreshUsers();
-			this.refreshApiTokens();
 			this.refreshDomains();
 			this.refreshCredentials();
 			this.refreshDrivers();
+			this.refreshApiTokens();
+			this.refreshHooks();
 
 			this.$('#nsadmin-adduser').button({
 				'icons': {
@@ -79,19 +91,6 @@ define([
 				var addUserDialog = new AddUserDialog({
 					onAdded: function() {
 						that.refreshUsers();
-					}
-				});
-				return false;
-			});
-
-			this.$('#nsadmin-addapitoken').button({
-				'icons': {
-					'primary': "ui-icon-plusthick"
-				},
-			}).click(function() {
-				var addApiTokenDialog = new AddApiTokenDialog({
-					onAdded: function() {
-						that.refreshApiTokens();
 					}
 				});
 				return false;
@@ -134,6 +133,33 @@ define([
 				that.drivers = new DeviceTypeCollection([], { refresh: true });
 				that.refreshDrivers();
 			});
+
+			this.$('#nsadmin-addapitoken').button({
+				'icons': {
+					'primary': "ui-icon-plusthick"
+				},
+			}).click(function() {
+				var addApiTokenDialog = new AddApiTokenDialog({
+					onAdded: function() {
+						that.refreshApiTokens();
+					}
+				});
+				return false;
+			});
+
+			this.$('#nsadmin-addwebhook').button({
+				'icons': {
+					'primary': "ui-icon-plusthick"
+				},
+			}).click(function() {
+				var addWebHookDialog = new AddWebHookDialog({
+					onAdded: function() {
+						that.refreshHooks();
+					}
+				});
+				return false;
+			});
+
 			return this;
 		},
 
@@ -272,6 +298,19 @@ define([
 				new TableSort($table.parent().get(0));
 			});
 		},
+		
+		refreshDrivers: function() {
+			var that = this;
+			var $table = that.$('#nsadmin-drivers table tbody');
+			$table.empty();
+			this.drivers.fetch().done(function() {
+				that.drivers.each(function(user) {
+					var $row = $(that.driverTemplate(user.toJSON())).appendTo($table);
+				});
+				$('#nsadmin-refreshdrivers').button("enable");
+			});
+			new TableSort($table.parent().get(0));
+		},
 
 		refreshApiTokens: function() {
 			var that = this;
@@ -299,18 +338,51 @@ define([
 				new TableSort($table.parent().get(0));
 			});
 		},
-		
-		refreshDrivers: function() {
+
+		refreshHooks: function() {
 			var that = this;
-			var $table = that.$('#nsadmin-drivers table tbody');
-			$table.empty();
-			this.drivers.fetch().done(function() {
-				that.drivers.each(function(user) {
-					var $row = $(that.driverTemplate(user.toJSON())).appendTo($table);
+			this.hooks.reset();
+			this.hooks.fetch().done(function() {
+				var $table = that.$el.find('#nsadmin-webhooks table tbody');
+				$table.empty();
+				that.hooks.each(function(hook) {
+					if (hook.get('type') === "Web") {
+						var $row = $(that.webHookTemplate(hook.toJSON()))
+								.appendTo($table);
+						$row.find('.edit').button({
+							'icons': {
+								'primary': "ui-icon-wrench"
+							},
+							'text': false,
+						}).click({
+							hook: hook
+						}, function(e) {
+							var editWebHookDialog = new EditWebHookDialog({
+								onEdited: function() {
+									that.refreshHooks();
+								},
+								model: e.data.hook
+							});
+						});
+						$row.find('.delete').button({
+							'icons': {
+								'primary': "ui-icon-trash"
+							},
+							'text': false,
+						}).click({
+							hook: hook
+						}, function(e) {
+							var deleteWebHookDialog = new DeleteWebHookDialog({
+								onDeleted: function() {
+									that.refreshHooks();
+								},
+								model: e.data.hook
+							});
+						});
+					}
 				});
-				$('#nsadmin-refreshdrivers').button("enable");
+				new TableSort($table.parent().get(0));
 			});
-			new TableSort($table.parent().get(0));
 		},
 
 	});

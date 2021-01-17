@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.security.Security;
 
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.NetworkAddress;
@@ -40,7 +39,6 @@ import com.jcraft.jsch.KeyPair;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +48,41 @@ import org.slf4j.LoggerFactory;
 public class Ssh extends Cli {
 	
 	private static Logger logger = LoggerFactory.getLogger(Ssh.class);
+
+	/**
+	 * Logger bridge for Jsch to SLF4j
+	 */
+	public static class JschLogger implements com.jcraft.jsch.Logger {
+
+		private static Logger logger = LoggerFactory.getLogger(JschLogger.class);
+
+		@Override
+		public boolean isEnabled(int level) {
+			return true;
+		}
+
+		@Override
+		public void log(int level, String message) {
+			switch (level) {
+			case com.jcraft.jsch.Logger.DEBUG:
+				logger.debug(message);
+				break;
+			case com.jcraft.jsch.Logger.INFO:
+				logger.info(message);
+				break;
+			case com.jcraft.jsch.Logger.WARN:
+				logger.warn(message);
+				break;
+			case com.jcraft.jsch.Logger.ERROR:
+				logger.error(message);
+				break;
+			case com.jcraft.jsch.Logger.FATAL:
+				logger.error(message);
+				break;
+			}
+		}
+		
+	}
 
 	/** Default value for the SSH connection timeout */
 	static private int DEFAULT_CONNECTION_TIMEOUT = 5000;
@@ -75,8 +108,6 @@ public class Ssh extends Cli {
 	};
 
 	static {
-		Security.insertProviderAt(new BouncyCastleProvider(), 1);
-
 		int configuredConnectionTimeout = Netshot.getConfig("netshot.cli.ssh.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT);
 		if (configuredConnectionTimeout < 1) {
 			logger.error("Invalid value {} for {}", configuredConnectionTimeout, "netshot.cli.ssh.connectiontimeout");
@@ -86,15 +117,18 @@ public class Ssh extends Cli {
 		}
 		logger.info("The default connection timeout value for SSH sessions is {}s", DEFAULT_CONNECTION_TIMEOUT);
 		
-
+		JSch.setLogger(new JschLogger());
 		JSch.setConfig("kex", Netshot.getConfig("netshot.cli.ssh.kexalgorithms", String.join(",", DEFAULT_SSH_KEX_ALGORITHMS)));
 		JSch.setConfig("server_host_key", Netshot.getConfig("netshot.cli.ssh.hostkeyalgorithms", String.join(",", DEFAULT_SSH_HOST_KEY_ALGORITHMS)));
 		JSch.setConfig("cipher.c2s", Netshot.getConfig("netshot.cli.ssh.ciphers", String.join(",", DEFAULT_SSH_CIPHERS)));
 		JSch.setConfig("cipher.s2c", Netshot.getConfig("netshot.cli.ssh.ciphers", String.join(",", DEFAULT_SSH_CIPHERS)));
 		JSch.setConfig("mac.c2s", Netshot.getConfig("netshot.cli.ssh.macs", String.join(",", DEFAULT_SSH_MACS)));
 		JSch.setConfig("mac.s2c", Netshot.getConfig("netshot.cli.ssh.macs", String.join(",", DEFAULT_SSH_MACS)));
+
 		JSch.setConfig("CheckKexes", "diffie-hellman-group14-sha1,diffie-hellman-group14-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521");
-		
+		JSch.setConfig("CheckCiphers", "chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr,aes256-cbc,aes192-cbc,aes128-cbc,3des-ctr,arcfour,arcfour128,arcfour256");
+		JSch.setConfig("CheckMacs", "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512");
+		JSch.setConfig("CheckSignatures", "rsa-sha2-256,rsa-sha2-512,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,ssh-ed25519,ssh-ed448");
 	}
 	
 	/** The port. */

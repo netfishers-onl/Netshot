@@ -72,8 +72,8 @@ public class WebHook extends Hook {
 			// if we see an error about PKCS#12 loader from BC.
 			// This happens on Debian where the ca-certificates-java package
 			// generates the /etc/ssl/certs/java/cacerts file in JKS format
-			// while the default keystore expected format is PKCS#12.
-			// The default Java security code tries automatically both formats
+			// while the default keystore format in OpenJDK 11 is PKCS#12.
+			// The default Java security code automatically tries both formats
 			// but BouncyCastle is more strict on this.
 			TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).init((KeyStore) null);
 		}

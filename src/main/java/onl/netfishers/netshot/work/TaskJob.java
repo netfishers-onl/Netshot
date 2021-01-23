@@ -24,7 +24,6 @@ import onl.netfishers.netshot.hooks.Hook;
 import onl.netfishers.netshot.hooks.HookTrigger;
 import onl.netfishers.netshot.work.Task.Status;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Session;
@@ -99,36 +98,6 @@ public class TaskJob implements Job {
 			task.setStatus(Status.FAILURE);
 		}
 
-		logger.trace("Looking for post-task hooks.");
-		List<Hook> hooks = new ArrayList<Hook>();
-		session = Database.getSession();
-		try {
-			hooks = session
-					.createQuery("select h from Hook h join h.triggers t where t.type = :postTask and t.item = :taskName", Hook.class)
-					.setParameter("postTask", HookTrigger.TriggerType.POST_TASK)
-					.setParameter("taskName", task.getClass().getSimpleName())
-					.list();
-		}
-		catch (Exception e) {
-			logger.error("Error while retrieving hooks.", id, e);
-		}
-		finally  {
-			session.close();
-		}
-
-		for (Hook hook : hooks) {
-			logger.trace("Executing post-task hook {}", hook.getName());
-			task.info(String.format("Executing post-task hook '%s'.", hook.getName()));
-			try {
-				String result = hook.execute(task);
-				task.info(String.format("Result of post-task hook '%s' is: %s", hook.getName(), result));
-			}
-			catch (Exception e) {
-				logger.warn("Error while executing hook {}", hook.getName(), e);
-				task.warn(String.format("Error while executing post-task hook '%s': %s", hook.getName(), e.getMessage()));
-			}
-		}
-
 		logger.trace("Updating the task with the result.");
 		session = Database.getSession();
 		try {
@@ -156,6 +125,41 @@ public class TaskJob implements Job {
 				logger.error("Error while setting the task {} to FAILED.", id, e1);
 			}
 			throw new JobExecutionException("Unable to save the task.");
+		}
+		finally  {
+			session.close();
+		}
+
+
+		logger.trace("Looking for post-task hooks.");
+		session = Database.getSession();
+		try {
+			task = (Task) session.get(Task.class, id);
+			List<Hook> hooks = session
+				.createQuery("select h from Hook h join h.triggers t where t.type = :postTask and t.item = :taskName", Hook.class)
+				.setParameter("postTask", HookTrigger.TriggerType.POST_TASK)
+				.setParameter("taskName", task.getClass().getSimpleName())
+				.list();
+
+			for (Hook hook : hooks) {
+				logger.trace("Executing post-task hook {}", hook.getName());
+				try {
+					String result = hook.execute(task);
+					logger.info("Result of post-task hook '{}' after task {} is: {}", hook.getName(), task.getId(), result);
+				}
+				catch (Exception e) {
+					logger.warn("Error while executing hook {} after task {}", hook.getName(), task.getId(), e);
+				}
+			}
+		}
+		catch (Exception e) {
+			logger.error("Error while processing hooks after task {}.", id, e);
+			try {
+				session.getTransaction().rollback();
+			}
+			catch (Exception e1) {
+				logger.error("Error during the rollback.", e1);
+			}
 		}
 		finally  {
 			session.close();

@@ -66,6 +66,7 @@ import onl.netfishers.netshot.device.attribute.DeviceAttribute;
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
 import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
+import onl.netfishers.netshot.rest.RestViews.RestApiView;
 import onl.netfishers.netshot.work.tasks.CheckComplianceTask;
 import onl.netfishers.netshot.work.tasks.RunDiagnosticsTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceScriptTask;
@@ -375,7 +376,7 @@ public class Device {
 		return true;
 	}
 	
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement @JsonView(RestApiView.class)
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "device", orphanRemoval = true)
 	public Set<DeviceAttribute> getAttributes() {
 		return attributes;
@@ -637,7 +638,7 @@ public class Device {
 	 * @return the mgmt domain
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement @JsonView(RestApiView.class)
 	public Domain getMgmtDomain() {
 		return mgmtDomain;
 	}
@@ -690,7 +691,7 @@ public class Device {
 	 *
 	 * @return the owner groups
 	 */
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement @JsonView(RestApiView.class)
 	@ManyToMany(fetch = FetchType.LAZY, mappedBy = "cachedDevices")
 	public Set<DeviceGroup> getOwnerGroups() {
 		return ownerGroups;

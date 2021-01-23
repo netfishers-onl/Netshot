@@ -9,7 +9,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<hibernate.version>5.4.18.Final</hibernate.version>
 		<jackson.version>2.11.4</jackson.version>
-		<jersey.version>2.27</jersey.version>
+		<jersey.version>2.33</jersey.version>
 		<graalvm.version>20.3.0</graalvm.version>
 		<swagger.version>2.1.6</swagger.version>
 	</properties>
@@ -186,6 +186,11 @@
 			<version>${jersey.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-jaxb</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>${jackson.version}</version>
@@ -206,8 +211,8 @@
 			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.fasterxml.jackson.dataformat</groupId>
-			<artifactId>jackson-dataformat-xml</artifactId>
+			<groupId>com.fasterxml.jackson.jaxrs</groupId>
+			<artifactId>jackson-jaxrs-xml-provider</artifactId>
 			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
@@ -232,8 +237,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcprov-jdk15on</artifactId>
-			<version>1.66</version>
+			<artifactId>bctls-jdk15on</artifactId>
+			<version>1.68</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -260,11 +265,6 @@
 			<groupId>io.swagger.core.v3</groupId>
 			<artifactId>swagger-jaxrs2</artifactId>
 			<version>${swagger.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.squareup.okhttp3</groupId>
-			<artifactId>okhttp</artifactId>
-			<version>4.9.0</version>
 		</dependency>
 	</dependencies>
 	<repositories>

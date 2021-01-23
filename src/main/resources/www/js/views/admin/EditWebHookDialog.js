@@ -57,10 +57,10 @@ define([
 		
 		onCreate: function() {
 			var that = this;
-			this.$('#hookurl').change(function(event) {
+			this.$('#hookurl').keyup(function(event) {
 				var url = $(event.target).val();
-				that.$('#hostsslvalidation').prop('enabled', url.startsWith("https"));
-			});
+				that.$('#hooksslvalidation').closest("fieldset").toggle(url.startsWith("https"));
+			}).keyup();
 			var modelTriggers = this.model.get("triggers"); 
 			var $triggers = this.$('#hooktriggers');
 			$.each(HookModel.prototype.allTriggers, function(index, trigger) {

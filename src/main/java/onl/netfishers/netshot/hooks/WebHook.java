@@ -20,35 +20,44 @@ package onl.netfishers.netshot.hooks;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.SecureRandom;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 import javax.persistence.Entity;
 import javax.persistence.Transient;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import com.fasterxml.jackson.jaxrs.xml.JacksonJaxbXMLProvider;
 
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import onl.netfishers.netshot.rest.RestViews;
+import org.glassfish.jersey.client.ClientConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
+import onl.netfishers.netshot.rest.RestViews.HookView;
 
 /**
  * A Web hook, called after specific event.
  */
 @Entity
 public class WebHook extends Hook {
+	/* Class logger */
+	private static Logger logger = LoggerFactory.getLogger(WebHook.class);
 
 	/**
 	 * Types of web hook
@@ -57,8 +66,25 @@ public class WebHook extends Hook {
 		POST_XML, POST_JSON,
 	};
 
-	public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-	public static final MediaType XML  = MediaType.parse("application/xml; charset=utf-8");
+	static {
+		try {
+			// Try to instanciate Trust Manager and change the trustStoreType to JKS
+			// if we see an error about PKCS#12 loader from BC.
+			// This happens on Debian where the ca-certificates-java package
+			// generates the /etc/ssl/certs/java/cacerts file in JKS format
+			// while the default keystore expected format is PKCS#12.
+			// The default Java security code tries automatically both formats
+			// but BouncyCastle is more strict on this.
+			TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).init((KeyStore) null);
+		}
+		catch (Exception e) {
+			if (e instanceof KeyStoreException && e.getCause() != null &&
+					"stream does not represent a PKCS12 key store".equals(e.getCause().getMessage())) {
+				logger.info("Changing trustStoreType to JKS");
+				System.setProperty("javax.net.ssl.trustStoreType", "JKS");
+			}
+		}
+	}
 
 	/** Action of the hook */
 	private Action action;
@@ -79,9 +105,9 @@ public class WebHook extends Hook {
 	 * Instantiates a new diagnostic result
 	 * 
 	 * @param device
-	 *                     The device
+	 *                       The device
 	 * @param diagnostic
-	 *                     The diagnostic
+	 *                       The diagnostic
 	 */
 	public WebHook(String url) {
 
@@ -109,7 +135,8 @@ public class WebHook extends Hook {
 		return pUrl;
 	}
 
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public boolean isSslValidation() {
 		return sslValidation;
 	}
@@ -118,7 +145,8 @@ public class WebHook extends Hook {
 		this.sslValidation = sslValidation;
 	}
 
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public Action getAction() {
 		return action;
 	}
@@ -127,76 +155,68 @@ public class WebHook extends Hook {
 		this.action = action;
 	}
 
-	@Transient
-	private OkHttpClient getHttpClient() {
-		if (this.sslValidation) {
-			return new OkHttpClient();
+	static public class InsecureHostnameVerifier implements HostnameVerifier {
+		@Override
+		public boolean verify(String arg0, SSLSession arg1) {
+			return true;
 		}
-		try {
-			final TrustManager[] trustAllCerts = new TrustManager[] {
-				new X509TrustManager(){
-					@Override
-					public void checkClientTrusted(java.security.cert.X509Certificate[] chain,
-																					String authType) throws CertificateException {
-					}
-					@Override
-					public void checkServerTrusted(java.security.cert.X509Certificate[] chain,
-																					String authType) throws CertificateException {
-					}
-					@Override
-					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-						return new java.security.cert.X509Certificate[]{};
-					}
-				}
-			};
- 
-			final SSLContext sslContext = SSLContext.getInstance("SSL");
-			sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-	
-			final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
-	
-			OkHttpClient.Builder builder = new OkHttpClient.Builder();
-			builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
-	
-			builder.hostnameVerifier(new HostnameVerifier(){
-				@Override
-				public boolean verify(String hostname, SSLSession session) {
-						return true;
-				}
-			});
-			
-			return builder.build();
+	}
+
+	static public class InsecureTrustManager implements X509TrustManager {
+		@Override
+		public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
 		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
+
+		@Override
+		public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+		}
+
+		@Override
+		public X509Certificate[] getAcceptedIssuers() {
+			return new X509Certificate[0];
 		}
 	}
 
 	@Override
 	public String execute(Object data) throws Exception {
 		URL url = this.getParsedUrl();
-		RequestBody body = null;
+
+		ClientConfig config = new ClientConfig();
+		MediaType mediaType;
 		switch (this.action) {
 		case POST_JSON:
-			ObjectMapper jsonMapper = new ObjectMapper();
-			String json = jsonMapper.writerWithView(RestViews.HookView.class).writeValueAsString(data);
-			body = RequestBody.create(json, JSON);
+			mediaType = MediaType.APPLICATION_JSON_TYPE;
+			JacksonJaxbJsonProvider jsonProvider = new JacksonJaxbJsonProvider();
+			jsonProvider.setDefaultView(HookView.class);
+			config.register(jsonProvider);
 			break;
 		case POST_XML:
-			XmlMapper xmlMapper = new XmlMapper();
-			String xml = xmlMapper.writerWithView(RestViews.HookView.class).writeValueAsString(data);
-			body = RequestBody.create(xml, XML);
+			mediaType = MediaType.APPLICATION_XML_TYPE;
+			JacksonJaxbXMLProvider xmlProvider = new JacksonJaxbXMLProvider();
+			xmlProvider.setDefaultView(HookView.class);
+			config.register(xmlProvider);
 			break;
 		default:
 			throw new Exception("Invalid action");
 		}
+		
+		TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+		factory.init((KeyStore) null);
 
-		Request httpRequest = new Request.Builder()
-			.url(url)
-			.post(body)
-			.build();
-		OkHttpClient httpClient = this.getHttpClient();
-		Response httpResponse = httpClient.newCall(httpRequest).execute();
-		return String.format("HTTP response code %d", httpResponse.code());
+		SSLContext sslContext = SSLContext.getDefault();
+		if (!this.isSslValidation()) {
+			sslContext.init(null, new TrustManager[] { new InsecureTrustManager() }, new SecureRandom());
+		}
+
+		ClientBuilder clientBuilder = ClientBuilder.newBuilder().sslContext(sslContext);
+		if (!this.isSslValidation()) {
+			clientBuilder.hostnameVerifier(new InsecureHostnameVerifier());
+		}
+		clientBuilder.withConfig(config);
+
+		Client client = clientBuilder.build();
+		Response response = client.target(url.toURI()).request().post(javax.ws.rs.client.Entity.entity(data, mediaType));
+
+		return String.format("HTTP response code %d", response.getStatus());
 	}
 }

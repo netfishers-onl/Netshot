@@ -19,7 +19,7 @@ define([
 		}, {
 			type: "POST_TASK",
 			item: "RunDiagnosticsTask",
-			description: "After diagnostics done on device",
+			description: "After diagnostics performed on device",
 		}],
 
 		defaults: {

@@ -25,6 +25,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.security.SecurityScheme.In;
 import io.swagger.v3.oas.models.security.SecurityScheme.Type;
 import io.swagger.v3.oas.models.servers.Server;
+import onl.netfishers.netshot.rest.RestViews.RestApiView;
 
 /**
  * Netshot Web application definition.
@@ -40,6 +41,7 @@ class NetshotWebApplication extends ResourceConfig {
 		register(ResponseCodeFilter.class);
 		// property(ServerProperties.TRACING, "ALL");
 		JacksonJaxbJsonProvider jacksonProvider = new JacksonJaxbJsonProvider();
+		jacksonProvider.setDefaultView(RestApiView.class);
 		register(jacksonProvider);
 
 		// Swagger

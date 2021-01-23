@@ -25,23 +25,21 @@
 		<tr>
 		
 		<td>
-		Device-based exemptions:
-		
+			<div>Create exemption:</div>
 			<input type="text" id="devicesearch" class="text ui-widget-content ui-corner-all" placeholder="Search..." />
 			<div id="alldevices" class="ui-widget-content ui-corner-all nstreelist">
-			<ul></ul>
+				<ul></ul>
 			</div>
 			<input type="text" id="exemptiondate" class="text ui-widget-content ui-corner-all" readonly="readonly" />
 		</td>
 		
 		<td>
-			<button id="adddevice">Add</button><br/>
-			<button id="removedevice">Remove</button>
+			<button id="selectdevice" class="neutral">Select</button><br/>
+			<button id="unselectdevice" class="neutral">Unselect</button>
 		</td>
 		
 		<td>
-		Selected:
-		
+		Active exemptions:
 			<div id="devices" class="ui-widget-content ui-corner-all nstreelist">
 			<ul></ul>
 			</div>

@@ -1,3 +1,3 @@
 <li data-device-id="<%- id %>" data-exemption-date="<%- exemptionDate.getTime() %>" class="<% if (status != "INPRODUCTION") { %>disabled<% } %>">
-  <%- name %> (until <%- formatDateTime(exemptionData, "day") %>)
+  <%- name %> (until <%- formatDateTime(exemptionDate, "day") %>)
 </li>

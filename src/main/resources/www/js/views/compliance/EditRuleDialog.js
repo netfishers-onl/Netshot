@@ -68,16 +68,13 @@ define([
 		onCreate: function() {
 			var that = this;
 
-			this
-			.$('#adddevice')
-			.button({
+			this.$('#selectdevice').button({
 				icons: {
-					primary: "ui-icon-carat-1-e"
+					primary: "ui-icon-caret-1-e"
 				},
 				text: false,
 				disabled: true
-			})
-			.click(function() {
+			}).click(function() {
 				that.$("#devices>ul li.active").removeClass("active");
 				that
 				.$("#alldevices>ul li.active")
@@ -91,9 +88,9 @@ define([
 				that.refreshRemoveState();
 				return false;
 			});
-			this.$('#removedevice').button({
+			this.$('#unselectdevice').button({
 				icons: {
-					primary: "ui-icon-carat-1-w"
+					primary: "ui-icon-caret-1-w"
 				},
 				text: false,
 				disabled: true
@@ -191,26 +188,25 @@ define([
 
 		refreshAddState: function() {
 			if (this.$('#alldevices>ul li.active').length > 0) {
-				this.$('#adddevice').button('enable');
+				this.$('#selectdevice').button('enable');
 			}
 			else {
-				this.$('#adddevice').button('disable');
+				this.$('#selectdevice').button('disable');
 			}
 		},
 
 		refreshRemoveState: function() {
 			if (this.$('#devices>ul li.active').length > 0) {
-				this.$('#removedevice').button('enable');
+				this.$('#unselectdevice').button('enable');
 			}
 			else {
-				this.$('#removedevice').button('disable');
+				this.$('#unselectdevice').button('disable');
 			}
 		},
 
 		addStaticMember: function(device) {
 			var that = this;
-			device
-			.set("exemptionDate", $("#exemptiondate").datepicker('getDate'));
+			device.set("exemptionDate", $("#exemptiondate").datepicker('getDate'));
 			var item = this.exemptedDeviceListItemTemplate(device.toJSON());
 			$(item).appendTo(this.$("#devices>ul")).mouseenter(function() {
 				var $this = $(this);

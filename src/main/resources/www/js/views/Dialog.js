@@ -65,15 +65,18 @@ define([
 					that.$('#info').hide();
 					that.onCreate();
 					var $dialog = $(this).closest(".ui-dialog");
-					$dialog.find(".ui-button:contains('Finish')").addClass("primary");
-					$dialog.find(".ui-button:contains('Save')").addClass("primary");
-					$dialog.find(".ui-button:contains('Add')").addClass("primary");
-					$dialog.find(".ui-button:contains('Select')").addClass("primary");
-					$dialog.find(".ui-button:contains('Confirm')").addClass("primary");
-					$dialog.find(".ui-button:contains('Scan')").addClass("primary");
-					$dialog.find(".ui-button:contains('Search')").addClass("primary");
-					$dialog.find(".ui-button:contains('Delete')").addClass("danger");
-					$dialog.find(".ui-button:contains('Logout')").addClass("danger");
+					var styledButtons = {
+						"primary": ["Finish", "Save", "Add", "Select", "Confirm", "Scan", "Search"],
+						"danger": ["Delete", "Logout"],
+					};
+					for (var s in styledButtons) {
+						for (var b in styledButtons[s]) {
+							$dialog
+								.find(".ui-button:not(.neutral):contains('" + styledButtons[s][b] + "')")
+								.addClass(s);
+
+						}
+					}
 				},
 				close: function() {
 					that.close();

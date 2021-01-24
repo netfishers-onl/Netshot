@@ -997,4 +997,12 @@
 		<addForeignKeyConstraint baseColumnNames="id" baseTableName="web_hook" constraintName="fkh3m6n2ju7ukxcxil5utn1qlln" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="hook" validate="true"/>
 		<addForeignKeyConstraint baseColumnNames="hook" baseTableName="hook_trigger" constraintName="fkhq4co2gsk1jnrjt9x9b49kvpo" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="web_hook" validate="true"/>
 	</changeSet>
+	<changeSet author="netshot" id="0.15.3_4">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="task" columnName="schedule_factor"/></not>
+		</preConditions>
+		<addColumn tableName="task">
+			<column name="schedule_factor" type="INT" value="1" />
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

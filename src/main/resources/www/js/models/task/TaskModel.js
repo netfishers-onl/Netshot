@@ -55,6 +55,7 @@ define([
 				'subnets',
 				'scheduleReference',
 				'scheduleType',
+				'scheduleFactor',
 				'comments',
 				'limitToOutofdateDeviceHours',
 				'daysToPurge',

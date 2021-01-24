@@ -32,8 +32,7 @@ define([
 			this.$('.nsdatepicker').datepicker({
 				dateFormat: "dd/mm/y",
 				autoSize: true,
-				onSelect: function() {
-				}
+				onSelect: function() {}
 			}).datepicker('setDate', in10min);
 			this.$('.nstimepicker.hour').change(function() {
 				var value = $(this).val();
@@ -89,6 +88,9 @@ define([
 				that.$('.schedule-options').hide();
 				that.$('#schedulerepeat-options').show();
 			});
+			this.$('#schedulerepeatfactor').spinner({
+				min: 1,
+			});
 			if (typeof this.options.onRendered === "function") {
 				this.options.onRendered();
 			}
@@ -99,6 +101,7 @@ define([
 		getSchedule: function() {
 			var type = this.$('input[name="schedule"]:checked').val().toUpperCase();
 			var ref = new Date();
+			var factor = 1;
 			if (type == "IN") {
 				type = "AT";
 				var minutes = parseInt(this.$('#schedulein-min').val());
@@ -111,16 +114,17 @@ define([
 				ref.setTime(ref.getTime() + (hours * 60 + minutes) * 60 * 1000);
 			}
 			else if (type == "REPEAT") {
-				type = this.$('input[name="schedulerepeattype"]:checked').val()
-						.toUpperCase();
+				type = this.$('#schedulerepeatunit').val();
 				var hours = parseInt(this.$('#schedulerepeat-timehour').val());
 				var minutes = parseInt(this.$('#schedulerepeat-timemin').val());
 				ref = this.$('#schedulerepeat-day').datepicker('getDate');
 				ref.setTime(ref.getTime() + (hours * 60 + minutes) * 60 * 1000);
+				factor = this.$('#schedulerepeatfactor').spinner("value");
 			}
 			var schedule = {
 				scheduleType: type,
-				scheduleReference: ref
+				scheduleFactor: factor,
+				scheduleReference: ref,
 			};
 			return schedule;
 		},

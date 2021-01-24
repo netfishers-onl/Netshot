@@ -17,8 +17,20 @@
 			<tr><td>Execution:</td><td>
 			<% if (significantDate !== 0) { %><%- (isNaN((new Date(significantDate)).getDate()) ? significantDate : formatDateTime(significantDate, "full")) %><% } %>
 			(<%
-				if (repeating) { %>repeating, <%- scheduleType.toLowerCase() %><% }
-				else { %>once<% }
+				if (repeating) {
+					var factor = scheduleFactor || 1;
+					var unit = {
+						HOURLY: "hour",
+						DAILY: "day",
+						WEEK: "week",
+						MONTH: "month",
+					}[scheduleType];
+					if (factor > 1) unit = unit + "s";
+					%>repeating every <%- factor %> <%- unit %><%
+				}
+				else {
+					%>once<%
+				}
 			%>)
 			</td></tr>
 			<tr><td>Status:</td><td><%- status %><% if (status == "RUNNING") { %> <img alt="Running" src="img/ajax-loader.gif" /><% } %></td></tr>

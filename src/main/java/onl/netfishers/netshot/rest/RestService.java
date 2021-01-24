@@ -3681,6 +3681,9 @@ public class RestService extends Thread {
 		/** The schedule type. */
 		private Task.ScheduleType scheduleType = ScheduleType.ASAP;
 
+		/** The schedule factor */
+		private int scheduleFactor = 1;
+
 		/** The comments. */
 		private String comments = "";
 
@@ -3857,6 +3860,25 @@ public class RestService extends Thread {
 		 */
 		public void setScheduleType(Task.ScheduleType scheduleType) {
 			this.scheduleType = scheduleType;
+		}
+
+		/**
+		 * Gets the schedule factor.
+		 *
+		 * @return the schedule factor
+		 */
+		@XmlElement @JsonView(DefaultView.class)
+		public int getScheduleFactor() {
+			return scheduleFactor;
+		}
+
+		/**
+		 * Sets the schedule factor.
+		 *
+		 * @param scheduleFactor the new schedule factor
+		 */
+		public void setScheduleFactor(int scheduleFactor) {
+			this.scheduleFactor = scheduleFactor;
 		}
 
 		/**
@@ -4585,18 +4607,24 @@ public class RestService extends Thread {
 			task.setDebugEnabled(rsTask.isDebugEnabled());
 			task.setScheduleReference(rsTask.getScheduleReference());
 			task.setScheduleType(rsTask.getScheduleType());
+			task.setScheduleFactor(rsTask.getScheduleFactor());
 			if (task.getScheduleType() == ScheduleType.AT) {
 				Calendar inOneMinute = Calendar.getInstance();
 				inOneMinute.add(Calendar.MINUTE, 1);
 				if (task.getScheduleReference().before(inOneMinute.getTime())) {
-					logger
-					.error(
+					logger.error(
 							"The schedule for the task occurs in less than one minute ({} vs {}).",
 							task.getScheduleReference(), inOneMinute.getTime());
 					throw new NetshotBadRequestException(
 							"The schedule occurs in the past.",
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 				}
+			}
+			else if (task.getScheduleFactor() < 1) {
+				logger.error("The repeating factor {} is invalid.", task.getScheduleFactor());
+				throw new NetshotBadRequestException(
+						"The repeating factor is invalid.",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 			}
 		}
 		try {

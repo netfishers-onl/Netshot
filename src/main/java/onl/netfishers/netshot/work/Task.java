@@ -18,6 +18,7 @@
  */
 package onl.netfishers.netshot.work;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -71,21 +72,12 @@ public abstract class Task implements Cloneable {
 	 * The Enum ScheduleType.
 	 */
 	public static enum ScheduleType {
-
-		/** The asap. */
 		ASAP,
-
-		/** The at. */
 		AT,
-
-		/** The daily. */
 		DAILY,
-
-		/** The monthly. */
 		MONTHLY,
-
-		/** The weekly. */
-		WEEKLY
+		WEEKLY,
+		HOURLY,
 	}
 
 	/**
@@ -177,6 +169,9 @@ public abstract class Task implements Cloneable {
 
 	/** The schedule type. */
 	protected ScheduleType scheduleType = ScheduleType.ASAP;
+
+	/** The factor (to multiply type) */
+	protected int scheduleFactor = 1;
 	
 	/** The status. */
 	protected Status status = Status.NEW;
@@ -235,6 +230,7 @@ public abstract class Task implements Cloneable {
 		Task task = (Task) super.clone();
 		task.setScheduleReference(this.scheduleReference);
 		task.setScheduleType(this.scheduleType);
+		task.setScheduleFactor(this.scheduleFactor);
 		task.setId(0);
 		return task;
 	}
@@ -347,36 +343,40 @@ public abstract class Task implements Cloneable {
 		Calendar inOneMinute = Calendar.getInstance();
 		inOneMinute.add(Calendar.MINUTE, 1);
 
+		int factor = this.scheduleFactor;
+		if (factor <= 0) {
+			factor = 1;
+		}
+
 		switch (this.scheduleType) {
 		case AT:
 			return this.scheduleReference;
-		case DAILY:
-			target.set(Calendar.HOUR_OF_DAY, reference.get(Calendar.HOUR_OF_DAY));
-			target.set(Calendar.MINUTE, reference.get(Calendar.MINUTE));
-			target.set(Calendar.SECOND, reference.get(Calendar.SECOND));
-			target.set(Calendar.MILLISECOND, 0);
+		case HOURLY:
+			target.setTime(this.scheduleReference);
 			if (target.before(inOneMinute)) {
-				target.add(Calendar.DAY_OF_MONTH, 1);
+				target.add(Calendar.HOUR, factor * (1 + ((int) ChronoUnit.HOURS
+					.between(inOneMinute.toInstant(), target.toInstant()) / factor)));
+			}
+			return target.getTime();
+		case DAILY:
+			target.setTime(this.scheduleReference);
+			if (target.before(inOneMinute)) {
+				target.add(Calendar.DAY_OF_MONTH, factor * (1 + ((int) ChronoUnit.DAYS
+					.between(inOneMinute.toInstant(), target.toInstant()) / factor)));
 			}
 			return target.getTime();
 		case WEEKLY:
-			target.set(Calendar.HOUR_OF_DAY, reference.get(Calendar.HOUR_OF_DAY));
-			target.set(Calendar.MINUTE, reference.get(Calendar.MINUTE));
-			target.set(Calendar.SECOND, reference.get(Calendar.SECOND));
-			target.set(Calendar.MILLISECOND, 0);
-			target.set(Calendar.DAY_OF_WEEK, reference.get(Calendar.DAY_OF_WEEK));
+			target.setTime(this.scheduleReference);
 			if (target.before(inOneMinute)) {
-				target.add(Calendar.WEEK_OF_YEAR, 1);
+				target.add(Calendar.WEEK_OF_YEAR, factor * (1 + ((int) ChronoUnit.WEEKS
+					.between(inOneMinute.toInstant(), target.toInstant()) / factor)));
 			}
 			return target.getTime();
 		case MONTHLY:
-			target.set(Calendar.HOUR_OF_DAY, reference.get(Calendar.HOUR_OF_DAY));
-			target.set(Calendar.MINUTE, reference.get(Calendar.MINUTE));
-			target.set(Calendar.SECOND, reference.get(Calendar.SECOND));
-			target.set(Calendar.MILLISECOND, 0);
-			target.set(Calendar.DAY_OF_MONTH, reference.get(Calendar.DAY_OF_MONTH));
+			target.setTime(this.scheduleReference);
 			if (target.before(inOneMinute)) {
-				target.add(Calendar.MONTH, 1);
+				target.add(Calendar.MONTH, factor * (1 + ((int) ChronoUnit.MONTHS
+					.between(inOneMinute.toInstant(), target.toInstant()) / factor)));
 			}
 			return target.getTime();
 		case ASAP:
@@ -403,6 +403,16 @@ public abstract class Task implements Cloneable {
 	@XmlElement @JsonView(DefaultView.class)
 	public ScheduleType getScheduleType() {
 		return scheduleType;
+	}
+
+	/**
+	 * Gets the schedule factor.
+	 * 
+	 * @return the schedule factor
+	 */
+	@XmlElement @JsonView(DefaultView.class)
+	public int getScheduleFactor() {
+		return scheduleFactor;
 	}
 
 	/**
@@ -568,8 +578,9 @@ public abstract class Task implements Cloneable {
 	 * @param reference the date reference
 	 * @param type the type of schedule
 	 */
-	public void schedule(Date reference, ScheduleType type) {
+	public void schedule(Date reference, ScheduleType type, int factor) {
 		this.scheduleType = type;
+		this.scheduleFactor = factor;
 		this.scheduleReference = reference;
 	}
 
@@ -722,6 +733,15 @@ public abstract class Task implements Cloneable {
 	}
 
 	/**
+	 * Sets the schedule factor.
+	 * 
+	 * @param scheduleFactor the new schedule factor
+	 */
+	public void setScheduleFactor(int scheduleFactor) {
+		this.scheduleFactor = scheduleFactor;
+	}
+
+	/**
 	 * Sets the status.
 	 *
 	 * @param status the new status
@@ -752,7 +772,7 @@ public abstract class Task implements Cloneable {
 		return "Task " + id + " (type " + this.getClass().getSimpleName() + ", target '" + target
 				+ "', author '" + author + "', created on " + creationDate
 				+ ", executed on " + executionDate + ", description '" + getTaskDescription()
-				+ "', schedule type " + scheduleType + ")";
+				+ "', schedule type " + scheduleType + "', schedule factor " + scheduleFactor + ")";
 	}
 
 }

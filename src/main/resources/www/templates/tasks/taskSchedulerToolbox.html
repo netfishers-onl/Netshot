@@ -30,31 +30,34 @@
 	<div>
 		<input type="radio" id="schedulerepeat" name="schedule" value="repeat" />
 		<label for="schedulerepeat">Schedule as a repeating event...</label>
-		<div id="schedulerepeat-options" class="schedule-options"
-			style="display: none;">
-			Date: <input type="text" id="schedulerepeat-day"
-				class="nsdatepicker text ui-widget-content ui-corner-all"
-				readonly="readonly" /> Time: <input type="text"
-				id="schedulerepeat-timehour"
-				class="nstimepicker hour text ui-widget-content ui-corner-all" />:<input
-				type="text" id="schedulerepeat-timemin"
-				class="nstimepicker min text ui-widget-content ui-corner-all" />
-			<div>
-				<input type="radio" id="schedulerepeatdaily"
-					name="schedulerepeattype" value="daily"
-					checked="checked" />
-				<label for="schedulerepeatdaily">Daily</label>
-			</div>
-			<div>
-				<input type="radio" id="schedulerepeatweekly"
-					name="schedulerepeattype" value="weekly" /> <label
-					for="schedulerepeatweekly">Weekly</label>
-			</div>
-			<div>
-				<input type="radio" id="schedulerepeatmonthly"
-					name="schedulerepeattype" value="monthly" /> <label
-					for="schedulerepeatmonthly">Monthly</label>
-			</div>
+		<div id="schedulerepeat-options" class="schedule-options" style="display: none;">
+			<table>
+				<tbody>
+					<tr>
+						<td>Initial:</td>
+						<td>
+							<input type="text" id="schedulerepeat-day" class="nsdatepicker text ui-widget-content ui-corner-all"
+								readonly="readonly" /> at <input type="text" id="schedulerepeat-timehour"
+								class="nstimepicker hour text ui-widget-content ui-corner-all" />:<input
+								type="text" id="schedulerepeat-timemin"
+								class="nstimepicker min text ui-widget-content ui-corner-all" />
+						</td>
+					</tr>
+					<tr>
+						<td>Every:</td>
+						<td>
+							<input type="text" name="schedulerepeatfactor" id="schedulerepeatfactor"
+								class="text spinner" value="1" /> <select id="schedulerepeatunit"
+								class="text ui-widget-content ui-corner-all">
+								<option value="HOURLY">hour(s)</option>
+								<option value="DAILY">day(s)</option>
+								<option value="WEEKLY">week(s)</option>
+								<option value="MONTHLY">month(s)</option>
+							</select>
+						</td>
+					</tr>
+				</tbody>
+			</table>
 		</div>
 	</div>
 </fieldset>

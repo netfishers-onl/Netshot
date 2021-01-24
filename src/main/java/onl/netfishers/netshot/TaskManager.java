@@ -200,12 +200,12 @@ public class TaskManager {
 		}
 
 		logger.trace("Found {} task(s) to reschedule.", tasks.size());
-		Calendar inOneMinute = Calendar.getInstance();
-		inOneMinute.add(Calendar.MINUTE, 1);
+		Calendar inThirtySeconds = Calendar.getInstance();
+		inThirtySeconds.add(Calendar.SECOND, 30);
 		for (Task task : tasks) {
 			try {
 				Date when = task.getNextExecutionDate();
-				if (when != null && when.after(inOneMinute.getTime())) {
+				if (when != null && when.after(inThirtySeconds.getTime())) {
 					TaskManager.addTask(task);
 				}
 				else {

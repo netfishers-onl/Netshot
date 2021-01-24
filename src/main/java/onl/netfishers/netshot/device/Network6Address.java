@@ -282,13 +282,44 @@ public class Network6Address extends NetworkAddress {
 
 	public boolean contains(Network6Address address) {
 		if (prefixLength <= 64) {
-			return (this.address1 >> (64 - this.prefixLength)) == (address
-					.address1 >> (64 - this.prefixLength));
+			return (this.address1 >>> (64 - this.prefixLength)) == (address
+					.address1 >>> (64 - this.prefixLength));
 		}
 		else {
-			return (this.address1 == address.address1) && (this.address2 >> (64 - this.prefixLength))
-					== (address.address2 >> (64 - this.prefixLength));
+			return (this.address1 == address.address1) && (this.address2 >>> (64 - this.prefixLength))
+					== (address.address2 >>> (64 - this.prefixLength));
 		}
+	}
+
+	/**
+	 * Checks if is multicast.
+	 * 
+	 * @return true, if is multicast
+	 */
+	@Transient
+	public boolean isMulticast() {
+		return ((this.address1 >>> 56) & 0xFF) == 0xFF;
+	}
+
+	/**
+	 * Checks if is multicast.
+	 * 
+	 * @return true, if is multicast
+	 */
+	@Transient
+	public boolean isLinkLocal() {
+		return ((this.address1 >>> 48) & 0xFE80) == 0xFE80;
+	}
+
+
+	/**
+	 * Checks if is normal unicast.
+	 * 
+	 * @return true, if is normal unicast
+	 */
+	@Transient
+	public boolean isGlobalUnicast() {
+		return ((this.address1 >>> 61) & 0b111) == 0b001;
 	}
 
 }

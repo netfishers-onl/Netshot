@@ -23,7 +23,7 @@ define([
 	'views/compliance/AddRuleDialog',
 	'views/compliance/DeleteRuleDialog',
 	'views/compliance/EditRuleDialog',
-	'views/compliance/JsRuleView',
+	'views/compliance/ScriptRuleView',
 	'views/compliance/TextRuleView',
 	'views/compliance/AddSoftwareRuleDialog',
 	'views/compliance/EditSoftwareRuleDialog',
@@ -38,7 +38,7 @@ define([
 		hardwarePolicyListItemTemplate, hardwareRuleRowTemplate, PolicyCollection, RuleCollection,
 		SoftwareRuleCollection, HardwareRuleCollection, DeviceTypeCollection, DiagnosticCollection,
 		AddPolicyDialog, DeletePolicyDialog, EditPolicyDialog, AddRuleDialog, DeleteRuleDialog,
-		EditRuleDialog, JsRuleView, TextRuleView, AddSoftwareRuleDialog, EditSoftwareRuleDialog,
+		EditRuleDialog, ScriptRuleView, TextRuleView, AddSoftwareRuleDialog, EditSoftwareRuleDialog,
 		DeleteSoftwareRuleDialog, SortSoftwareRuleDialog, AddHardwareRuleDialog,
 		EditHardwareRuleDialog, DeleteHardwareRuleDialog) {
 
@@ -533,8 +533,8 @@ define([
 				this.ruleView = null;
 			}
 			if (this.rule != null) {
-				if (this.rule.get('type').match(/JavaScriptRule/)) {
-					this.ruleView = new JsRuleView({
+				if (this.rule.get('type').match(/(JavaScript|Python)Rule/)) {
+					this.ruleView = new ScriptRuleView({
 						model: this.rule,
 						onEdited: function() {
 							that.refreshRules();

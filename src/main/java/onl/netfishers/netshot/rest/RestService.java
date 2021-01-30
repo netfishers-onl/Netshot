@@ -85,6 +85,7 @@ import onl.netfishers.netshot.compliance.SoftwareRule;
 import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
 import onl.netfishers.netshot.compliance.SoftwareRule.ConformanceLevel;
 import onl.netfishers.netshot.compliance.rules.JavaScriptRule;
+import onl.netfishers.netshot.compliance.rules.PythonRule;
 import onl.netfishers.netshot.compliance.rules.TextRule;
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.device.Device;
@@ -115,6 +116,7 @@ import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
 import onl.netfishers.netshot.diagnostic.Diagnostic;
 import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.diagnostic.JavaScriptDiagnostic;
+import onl.netfishers.netshot.diagnostic.PythonDiagnostic;
 import onl.netfishers.netshot.diagnostic.SimpleDiagnostic;
 import onl.netfishers.netshot.hooks.Hook;
 import onl.netfishers.netshot.hooks.HookTrigger;
@@ -5544,8 +5546,16 @@ public class RestService extends Thread {
 			if (".TextRule".equals(rsRule.getType())) {
 				rule = new TextRule(name, policy);
 			}
-			else {
+			else if (".JavaScriptRule".equals(rsRule.getType())) {
 				rule = new JavaScriptRule(name, policy);
+			}
+			else if (".PythonRule".equals(rsRule.getType())) {
+				rule = new PythonRule(name, policy);
+			}
+			else {
+				throw new NetshotBadRequestException(
+					"Invalid rule type.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 			}
 
 			session.save(rule);
@@ -5573,6 +5583,11 @@ public class RestService extends Thread {
 			throw new NetshotBadRequestException(
 					"Unable to add the rule to the database",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		catch (NetshotBadRequestException e) {
+			session.getTransaction().rollback();
+			logger.error("Error while saving the new rule.", e);
+			throw e;
 		}
 		finally {
 			session.close();
@@ -5645,6 +5660,12 @@ public class RestService extends Thread {
 				if (rsRule.getScript() != null) {
 					String script = rsRule.getScript().trim();
 					((JavaScriptRule) rule).setScript(script);
+				}
+			}
+			else if (rule instanceof PythonRule) {
+				if (rsRule.getScript() != null) {
+					String script = rsRule.getScript().trim();
+					((PythonRule) rule).setScript(script);
 				}
 			}
 			else if (rule instanceof TextRule) {
@@ -5879,10 +5900,20 @@ public class RestService extends Thread {
 				txRule.setNormalize(rsRule.isNormalize());
 				rule = txRule;
 			}
-			else {
+			else if (".rules.JavaScriptRule".equals(rsRule.getType())) {
 				JavaScriptRule jsRule = new JavaScriptRule("TEST", null);
 				jsRule.setScript(rsRule.getScript());
 				rule = jsRule;
+			}
+			else if (".rules.PythonRule".equals(rsRule.getType())) {
+				PythonRule pyRule = new PythonRule("TEST", null);
+				pyRule.setScript(rsRule.getScript());
+				rule = pyRule;
+			}
+			else {
+				logger.warn("Invalid rule type {}.", rsRule.getType());
+				throw new NetshotBadRequestException("Invalid rule type",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 			}
 
 			RsRuleTestResult result = new RsRuleTestResult();
@@ -9904,6 +9935,15 @@ public class RestService extends Thread {
 				diagnostic = new JavaScriptDiagnostic(name, rsDiagnostic.isEnabled(), group, 
 						resultType, rsDiagnostic.getScript());
 			}
+			else if (".PythonDiagnostic".equals(rsDiagnostic.getType())) {
+				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim() == "") {
+					throw new NetshotBadRequestException(
+						"Invalid diagnostic script",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
+				}
+				diagnostic = new PythonDiagnostic(name, rsDiagnostic.isEnabled(), group, 
+						resultType, rsDiagnostic.getScript());
+			}
 			else if (".SimpleDiagnostic".equals(rsDiagnostic.getType())) {
 				if (rsDiagnostic.getCliMode() == null || rsDiagnostic.getCliMode().trim() == "") {
 					throw new NetshotBadRequestException("The CLI mode must be provided.",
@@ -10030,6 +10070,18 @@ public class RestService extends Thread {
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
 				((JavaScriptDiagnostic) diagnostic).setScript(rsDiagnostic.getScript());
+			}
+			else if (diagnostic instanceof PythonDiagnostic) {
+				if (!".PythonDiagnostic".equals(rsDiagnostic.getType())) {
+					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
+							NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
+				}
+				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim() == "") {
+					throw new NetshotBadRequestException(
+						"Invalid diagnostic script",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
+				}
+				((PythonDiagnostic) diagnostic).setScript(rsDiagnostic.getScript());
 			}
 			else if (diagnostic instanceof SimpleDiagnostic) {
 				if (!".SimpleDiagnostic".equals(rsDiagnostic.getType())) {

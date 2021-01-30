@@ -96,7 +96,7 @@ public class RunDiagnosticCliScript extends CliScript {
 					jsDiagnostics.put(diagnostic.getName(), jsObject);
 				}
 				catch (Exception e1) {
-					logger.error("Error while preparing the diagnostic {} for JS: {}.", diagnostic.getName(), e1);
+					logger.error("Error while preparing the diagnostic {} for JS", diagnostic.getName(), e1);
 					taskLogger.error(String.format("Error while preparing the diagnostic %s for JS: '%s'.",
 							diagnostic.getName(), e1.getMessage()));
 				}

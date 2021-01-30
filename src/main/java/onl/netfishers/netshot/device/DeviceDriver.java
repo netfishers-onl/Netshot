@@ -22,6 +22,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -59,6 +60,7 @@ import onl.netfishers.netshot.collector.SnmpTrapReceiver;
 import onl.netfishers.netshot.collector.SyslogServer;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import onl.netfishers.netshot.device.script.helper.PythonFileSystem;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.TaskLogger;
 import onl.netfishers.netshot.work.Task;
@@ -74,15 +76,14 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 * Possible protocols for a device driver.
 	 */
 	public static enum DriverProtocol {
-		TELNET("telnet"),
-		SSH("ssh"),
-		SNMP("snmp");
+		TELNET("telnet"), SSH("ssh"), SNMP("snmp");
 
 		private String protocol;
 
 		DriverProtocol(String protocol) {
 			this.protocol = protocol;
 		}
+
 		public String value() {
 			return protocol;
 		}
@@ -90,51 +91,61 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	/** The logger. */
 	static Logger logger = LoggerFactory.getLogger(DeviceDriver.class);
-	
+
 	/** JS logger for SNMP-related messages */
 	private static TaskLogger JS_SNMP_LOGGER = new TaskLogger() {
 		Logger snmpLogger = LoggerFactory.getLogger(SnmpTrapReceiver.class);
+
 		@Override
 		public void warn(String message) {
 			snmpLogger.warn("[JSWARN] {}", message);
 		}
+
 		@Override
 		public void trace(String message) {
 			snmpLogger.warn("[JSTRACE] {}", message);
 		}
+
 		@Override
 		public void info(String message) {
 			snmpLogger.warn("[JSINFO] {}", message);
 		}
+
 		@Override
 		public void error(String message) {
 			snmpLogger.warn("[JSERROR] {}", message);
 		}
+
 		@Override
 		public void debug(String message) {
 			snmpLogger.warn("[JSDEBUG] {}", message);
 		}
 	};
-	
+
 	/** JS logger for Syslog-related messages */
 	private static TaskLogger JS_SYSLOG_LOGGER = new TaskLogger() {
 		Logger syslogServer = LoggerFactory.getLogger(SyslogServer.class);
+
 		@Override
 		public void warn(String message) {
 			syslogServer.warn("[JSWARN] {}", message);
 		}
+
 		@Override
 		public void trace(String message) {
 			syslogServer.warn("[JSTRACE] {}", message);
 		}
+
 		@Override
 		public void info(String message) {
 			syslogServer.warn("[JSINFO] {}", message);
 		}
+
 		@Override
 		public void error(String message) {
 			syslogServer.warn("[JSERROR] {}", message);
 		}
+
 		@Override
 		public void debug(String message) {
 			syslogServer.warn("[JSDEBUG] {}", message);
@@ -162,8 +173,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			logger.debug("The JavaScript driver loader code has been read from the resource JS file.");
 		}
 		catch (Exception e) {
-			logger.error(MarkerFactory.getMarker("FATAL"),
-					"Unable to read the Javascript driver loader.", e);
+			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to read the Javascript driver loader.", e);
 			System.err.println("NETSHOT FATAL ERROR");
 			e.printStackTrace();
 			System.exit(1);
@@ -177,6 +187,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	/**
 	 * Gets all loaded drivers.
+	 * 
 	 * @return the loaded drivers
 	 */
 	public static List<DeviceDriver> getAllDrivers() {
@@ -187,7 +198,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	/**
 	 * Gets a driver from its name.
-	 * @param name the name of the device driver
+	 * 
+	 * @param name
+	 *                 the name of the device driver
 	 * @return the device driver from that name, or null if not found
 	 */
 	public static DeviceDriver getDriverByName(String name) {
@@ -199,6 +212,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	/**
 	 * Gets all loaded drivers as a hash.
+	 * 
 	 * @return the hash of loaded drivers
 	 */
 	public static Map<String, DeviceDriver> getDrivers() {
@@ -207,7 +221,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	/**
 	 * Reloads all the drivers from disk.
-	 * @throws Exception something bad
+	 * 
+	 * @throws Exception
+	 *                       something bad
 	 */
 	public static void refreshDrivers() throws Exception {
 		Map<String, DeviceDriver> drivers = new HashMap<String, DeviceDriver>();
@@ -230,7 +246,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						reader = new InputStreamReader(stream);
 						DeviceDriver driver = new DeviceDriver(reader, file.getName());
 						if (drivers.containsKey(driver.getName())) {
-							logger.warn("Skipping user device driver file {}, because a similar driver is already loaded.",
+							logger.warn(
+									"Skipping user device driver file {}, because a similar driver is already loaded.",
 									file);
 						}
 						else {
@@ -268,11 +285,13 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 					logger.info("Found Netshot device driver file {}.", file);
 					Reader reader = null;
 					try {
-						InputStream stream = DeviceDriver.class.getResourceAsStream("/" + driverPathName + file.getName());
+						InputStream stream = DeviceDriver.class
+								.getResourceAsStream("/" + driverPathName + file.getName());
 						reader = new InputStreamReader(stream);
 						DeviceDriver driver = new DeviceDriver(reader, file.getName());
 						if (drivers.containsKey(driver.getName())) {
-							logger.warn("Skipping Netshot device driver file {}, because a similar driver is already loaded.",
+							logger.warn(
+									"Skipping Netshot device driver file {}, because a similar driver is already loaded.",
 									file);
 						}
 						else {
@@ -307,7 +326,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 							reader = new InputStreamReader(stream);
 							DeviceDriver driver = new DeviceDriver(reader, je.getName().replace(driverPathName, ""));
 							if (drivers.containsKey(driver.getName())) {
-								logger.warn("Skipping Netshot device driver file {}, because a similar driver is already loaded.",
+								logger.warn(
+										"Skipping Netshot device driver file {}, because a similar driver is already loaded.",
 										file);
 							}
 							else {
@@ -345,17 +365,22 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	/** The version of the driver */
 	private String version;
 
-	/** The priority of the driver for autodiscovery (65536 by default,
-	 * larger number gives higher priority) */
+	/**
+	 * The priority of the driver for autodiscovery (65536 by default, larger number
+	 * gives higher priority)
+	 */
 	private int priority;
-	
+
 	/** The device attributed provided by this driver */
 	Set<AttributeDefinition> attributes = new HashSet<AttributeDefinition>();
 
 	/** The protocols provided by this driver */
 	private Set<DriverProtocol> protocols = new HashSet<DriverProtocol>();
 
-	/** The main CLI modes supported by this driver (e.g. 'enable', 'configure', etc.) */
+	/**
+	 * The main CLI modes supported by this driver (e.g. 'enable', 'configure',
+	 * etc.)
+	 */
 	private Set<String> cliMainModes = new HashSet<String>();
 
 	/** Set to true if the driver can analyze SNMP traps */
@@ -364,12 +389,15 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	/** Set to true if the driver can analyze syslog messages */
 	private boolean canAnalyzeSyslog = true;
 
-	/** Set to true if the driver can identify a relevant device based on SNMP sysObjectId and name */
+	/**
+	 * Set to true if the driver can identify a relevant device based on SNMP
+	 * sysObjectId and name
+	 */
 	private boolean canSnmpAutodiscover = true;
-	
+
 	/** The source code */
 	private Source source;
-	
+
 	/** The execution engine (for eval caching) */
 	private Engine engine;
 
@@ -379,9 +407,13 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	/**
 	 * Instantiates a new device driver.
-	 * @param reader The reader to access the JavaScript driver code
-	 * @param sourceName The name of the driver source
-	 * @throws Exception something went wrong
+	 * 
+	 * @param reader
+	 *                       The reader to access the JavaScript driver code
+	 * @param sourceName
+	 *                       The name of the driver source
+	 * @throws Exception
+	 *                       something went wrong
 	 */
 	protected DeviceDriver(Reader reader, String sourceName) throws Exception {
 		source = Source.newBuilder("js", reader, sourceName).buildLiteral();
@@ -478,7 +510,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		if (this.protocols.size() == 0) {
 			throw new IllegalArgumentException("Invalid driver, it supports neither Telnet nor SSH.");
 		}
-		
+
 		try {
 			if (!context.getBindings("js").getMember("snapshot").canExecute()) {
 				throw new Exception();
@@ -493,8 +525,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	/**
 	 * Asks the driver to analyze a syslog message.
-	 * @param message The syslog message
-	 * @param ip The IP address the message is coming from
+	 * 
+	 * @param message
+	 *                    The syslog message
+	 * @param ip
+	 *                    The IP address the message is coming from
 	 * @return true to trigger a snapshot of the device
 	 */
 	public boolean analyzeSyslog(String message, Network4Address ip) {
@@ -509,8 +544,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			}
 		}
 		catch (Exception e) {
-			if (e instanceof UnsupportedOperationException && e.getMessage() != null &&
-					e.getMessage().contains("No analyzeSyslog function.")) {
+			if (e instanceof UnsupportedOperationException && e.getMessage() != null
+					&& e.getMessage().contains("No analyzeSyslog function.")) {
 				logger.info("The driver {} has no analyzeSyslog function. Won't be called again.", name);
 				this.canAnalyzeSyslog = false;
 			}
@@ -533,8 +568,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			}
 		}
 		catch (Exception e) {
-			if (e instanceof UnsupportedOperationException && e.getMessage() != null &&
-					e.getMessage().contains("No analyzeTrap function.")) {
+			if (e instanceof UnsupportedOperationException && e.getMessage() != null
+					&& e.getMessage().contains("No analyzeTrap function.")) {
 				logger.info("The driver {} has no analyzeTrap function. Won't be called again.", name);
 				this.canAnalyzeTraps = false;
 			}
@@ -544,50 +579,60 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		}
 		return false;
 	}
-	
-	@XmlElement @JsonView(DefaultView.class)
+
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public Set<AttributeDefinition> getAttributes() {
 		return attributes;
 	}
 
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getAuthor() {
 		return author;
 	}
 
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDescription() {
 		return description;
 	}
-	
-	@XmlElement @JsonView(DefaultView.class)
+
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getName() {
 		return name;
 	}
-	
-	@XmlElement @JsonView(DefaultView.class)
+
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public Set<DriverProtocol> getProtocols() {
 		return protocols;
 	}
 
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public Set<String> getCliMainModes() {
 		return cliMainModes;
 	}
 
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getVersion() {
 		return version;
 	}
 
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public int getPriority() {
 		return priority;
 	}
-	
+
 	@Transient
-	public Context getContext() {
-		Context context = Context.newBuilder().engine(this.engine).build();
+	public Context getContext() throws IOException {
+		Context context = Context.newBuilder()
+			.allowIO(true).fileSystem(new PythonFileSystem())
+			.engine(engine).build();
 		context.eval(this.source);
 		context.eval(JSLOADER_SOURCE);
 		return context;

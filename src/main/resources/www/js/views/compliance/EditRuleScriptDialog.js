@@ -78,7 +78,12 @@ define([
 			var that = this;
 
 			this.scriptEditor = ace.edit('nscompliance-editrule-script');
-			this.scriptEditor.getSession().setMode("ace/mode/javascript");
+			if (that.model.get("type").match(/JavaScriptRule/)) {
+				this.scriptEditor.getSession().setMode("ace/mode/javascript");
+			}
+			else if (that.model.get("type").match(/PythonRule/)) {
+				this.scriptEditor.getSession().setMode("ace/mode/python");
+			}
 			this.scriptEditor.setValue(that.model.get("script"));
 			this.scriptEditor.gotoLine(1);
 			this.$el.on('dialogresizestop', function(even, ui) {
@@ -105,7 +110,7 @@ define([
 				var test = new RuleTestModel({
 					device: that.device.get('id'),
 					script: that.scriptEditor.getValue(),
-					type: ".JavaScriptRule"
+					type: that.model.get('type')
 				});
 				test.save().done(function(data) {
 					$button.button('enable');

@@ -39,9 +39,11 @@
 			<tr>
 				<td colspan="2">
 						<input type="radio" id="nsdiagnostictype-simple" name="diagnostictype" checked="checked" data-type="SimpleDiagnostic" />
-						<label for="nsdiagnostictype-simple">Simple diagnostic</label>
+						<label for="nsdiagnostictype-simple">Simple</label>
 						<input type="radio" id="nsdiagnostictype-js" name="diagnostictype" data-type="JavaScriptDiagnostic" />
-						<label for="nsdiagnostictype-js">Javascript-based diagnostic</label>
+						<label for="nsdiagnostictype-js">Javascript-based</label>
+						<input type="radio" id="nsdiagnostictype-py" name="diagnostictype" data-type="PythonDiagnostic" />
+						<label for="nsdiagnostictype-py">Python-based</label>
 				</td>
 			</tr>
 			<tr class="nsdiagnostics-settings" data-for-type="SimpleDiagnostic">
@@ -69,7 +71,16 @@
 		</tbody>
 		</table>
 
-		<fieldset id="nsdiagnostics-adddiagnostic-editorfield" class="nsdiagnostics-settings" data-for-type="JavaScriptDiagnostic">
+		<fieldset
+			id="nsdiagnostics-adddiagnostic-editorfield-js"
+			class="nsdiagnostics-settings nsdiagnostics-adddiagnostic-editorfield"
+			data-for-type="JavaScriptDiagnostic">
+		</fieldset>
+
+		<fieldset
+			id="nsdiagnostics-adddiagnostic-editorfield-py"
+			class="nsdiagnostics-settings nsdiagnostics-adddiagnostic-editorfield"
+			data-for-type="PythonDiagnostic">
 		</fieldset>
 	
 		<div class="nserror" id="error">

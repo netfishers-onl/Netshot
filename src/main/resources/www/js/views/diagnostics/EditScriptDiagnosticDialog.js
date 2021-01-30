@@ -7,12 +7,12 @@ define([
 	'ace/ace',
 	'models/device/DeviceGroupCollection',
 	'models/diagnostic/DiagnosticModel',
-	'text!templates/diagnostics/editJsDiagnostic.html',
+	'text!templates/diagnostics/editScriptDiagnostic.html',
 	'models/device/DeviceTypeCollection',
 ], function($, _, Backbone, Dialog, ace, DeviceGroupCollection, DiagnosticModel,
 		editDiagnosticTemplate, DeviceTypeCollection) {
 
-	var EditJsDiagnosticDialog = Dialog.extend({
+	var EditScriptDiagnosticDialog = Dialog.extend({
 
 		template: _.template(editDiagnosticTemplate),
 
@@ -25,7 +25,7 @@ define([
 		},
 
 		dialogOptions: {
-			title: "Edit Javascript diagnostic",
+			title: "Edit script diagnostic",
 			width: 530,
 			minWidth: 530,
 			height: 500,
@@ -75,9 +75,14 @@ define([
 			});
 			this.$('#group').val(this.model.get('targetGroup') ? this.model.get('targetGroup').id : -1);
 			this.$('#resulttype').val(this.model.get('resultType'));
-			this.scriptEditor = ace.edit('nsdiagnostic-adddiagnostic-script');
+			this.scriptEditor = ace.edit('nsdiagnostic-editdiagnostic-script');
 			this.scriptEditor.setValue(this.model.get('script'));
-			this.scriptEditor.getSession().setMode("ace/mode/javascript");
+			if (this.model.get("type") === ".JavaScriptDiagnostic") {
+				this.scriptEditor.getSession().setMode("ace/mode/javascript");
+			}
+			else if (this.model.get("type") === ".PythonDiagnostic") {
+				this.scriptEditor.getSession().setMode("ace/mode/python");
+			}
 			this.scriptEditor.gotoLine(1);
 			this.$el.on('dialogresizestop', function(even, ui) {
 				if (that.scriptEditor) {
@@ -96,5 +101,5 @@ define([
 
 	});
 
-	return EditJsDiagnosticDialog;
+	return EditScriptDiagnosticDialog;
 });

@@ -38,19 +38,19 @@ import onl.netfishers.netshot.device.attribute.DeviceNumericAttribute;
 import onl.netfishers.netshot.device.attribute.DeviceTextAttribute;
 
 /**
- * Class used to get  and set data on a device object from JavaScript.
+ * Class used to get  and set data on a device object from Python.
  * @author sylvain.cadilhac
  *
  */
-public class JsDeviceHelper {
-	
-	private static Logger logger = LoggerFactory.getLogger(JsDeviceHelper.class);
-	
+public class PyDeviceHelper {
+
+	private static Logger logger = LoggerFactory.getLogger(PyDeviceHelper.class);
+
 	private Device device;
 	private Session session;
 	private TaskLogger taskLogger;
 	private boolean readOnly;
-	
+
 	public static String getStringMember(Value value, String key, String defaultResult) {
 		Value result = value.getMember(key);
 		if (result != null) {
@@ -58,7 +58,7 @@ public class JsDeviceHelper {
 		}
 		return defaultResult;
 	}
-	
+
 	public static boolean getBooleanMember(Value value, String key, boolean defaultResult) {
 		Value result = value.getMember(key);
 		if (result != null) {
@@ -66,8 +66,9 @@ public class JsDeviceHelper {
 		}
 		return defaultResult;
 	}
-	
-	public JsDeviceHelper(Device device, Session session, TaskLogger taskLogger, boolean readOnly) throws MissingDeviceDriverException {
+
+	public PyDeviceHelper(Device device, Session session, TaskLogger taskLogger, boolean readOnly)
+			throws MissingDeviceDriverException {
 		this.device = device;
 		this.taskLogger = taskLogger;
 		this.readOnly = readOnly;
@@ -89,17 +90,17 @@ public class JsDeviceHelper {
 				
 				Module module = new Module(
 						getStringMember(data, "slot", ""),
-						getStringMember(data, "partNumber", ""),
-						getStringMember(data, "serialNumber", ""),
+						getStringMember(data, "part_number", ""),
+						getStringMember(data, "serial_number", ""),
 						device
 				);
 				device.getModules().add(module);
 			}
-			else if ("networkInterface".equals(key)) {
+			else if ("network_interface".equals(key)) {
 				NetworkInterface networkInterface = new NetworkInterface(
 						device,
 						data.getMember("name").asString(),
-						getStringMember(data, "virtualDevice", ""),
+						getStringMember(data, "virtual_device", ""),
 						getStringMember(data, "vrf", ""),
 						getBooleanMember(data, "enabled", true),
 						getBooleanMember(data, "level3", true),
@@ -134,7 +135,7 @@ public class JsDeviceHelper {
 			else if ("vrf".equals(key)) {
 				device.addVrfInstance(data.asString());
 			}
-			else if ("virtualDevice".equals(key)) {
+			else if ("virtual_device".equals(key)) {
 				device.addVirtualDevice(data.asString());
 			}
 		}
@@ -251,16 +252,16 @@ public class JsDeviceHelper {
 			else if ("contact".equals(key)) {
 				device.setContact(value);
 			}
-			else if ("softwareVersion".equals(key)) {
+			else if ("software_version".equals(key)) {
 				device.setSoftwareVersion(value);
 			}
-			else if ("serialNumber".equals(key)) {
+			else if ("serial_number".equals(key)) {
 				device.setSerialNumber(value);
 			}
 			else if ("comments".equals(key)) {
 				device.setComments(value);
 			}
-			else if ("networkClass".equals(key)) {
+			else if ("network_class".equals(key)) {
 				NetworkClass nc = NetworkClass.valueOf(value);
 				if (nc != null) {
 					device.setNetworkClass(nc);
@@ -320,19 +321,19 @@ public class JsDeviceHelper {
 		else if ("contact".equals(item)) {
 			return device.getContact();
 		}
-		else if ("softwareVersion".equals(item)) {
+		else if ("software_version".equals(item)) {
 			return device.getSoftwareVersion();
 		}
-		else if ("serialNumber".equals(item)) {
+		else if ("serial_number".equals(item)) {
 			return device.getSerialNumber();
 		}
 		else if ("comments".equals(item)) {
 			return device.getComments();
 		}
-		else if ("networkClass".equals(item)) {
+		else if ("network_class".equals(item)) {
 			return (device.getNetworkClass() == null ? null : device.getNetworkClass().toString());
 		}
-		else if ("virtualDevices".equals(item)) {
+		else if ("virtual_devices".equals(item)) {
 			return device.getVirtualDevices().toArray();
 		}
 		else if ("vrfs".equals(item)) {
@@ -343,8 +344,8 @@ public class JsDeviceHelper {
 			for (Module m : device.getModules()) {
 				Map<String, String> module = new HashMap<String, String>();
 				module.put("slot", m.getSlot());
-				module.put("partNumber", m.getPartNumber());
-				module.put("serialNumber", m.getSerialNumber());
+				module.put("part_number", m.getPartNumber());
+				module.put("serial_number", m.getSerialNumber());
 				modules.add(module);
 			}
 			return modules.toArray();
@@ -356,7 +357,7 @@ public class JsDeviceHelper {
 				networkInterface.put("name", ni.getInterfaceName());
 				networkInterface.put("description", ni.getDescription());
 				networkInterface.put("mac", ni.getMacAddress());
-				networkInterface.put("virtualDevice", ni.getVirtualDevice());
+				networkInterface.put("virtual_device", ni.getVirtualDevice());
 				networkInterface.put("vrf", ni.getVrfInstance());
 				networkInterface.put("enabled", ni.isEnabled());
 				networkInterface.put("level3", ni.isLevel3());
@@ -417,7 +418,7 @@ public class JsDeviceHelper {
 	 */
 	@Export
 	public Object get(String item) {
-		logger.debug("JavaScript request for item {} on current device.", item);
+		logger.debug("Python request for item {} on current device.", item);
 		return this.getDeviceItem(this.device, item);
 	}
 
@@ -459,7 +460,7 @@ public class JsDeviceHelper {
 	 */
 	@Export
 	public Object get(String item, long deviceId) {
-		logger.debug("JavaScript request for item {} on device {}.", item,
+		logger.debug("Python request for item {} on device {}.", item,
 				deviceId);
 		if (deviceId == this.device.getId()) {
 			return this.get(item);
@@ -471,12 +472,12 @@ public class JsDeviceHelper {
 			return result;
 		}
 		catch (ObjectNotFoundException e) {
-			logger.error("Device not found on JavaScript get, item {}, device {}.",
+			logger.error("Device not found on Python get, item {}, device {}.",
 					item, deviceId, e);
 			this.taskLogger.warn(String.format("Unable to find the device %d.", deviceId));
 		}
 		catch (Exception e) {
-			logger.error("Error on JavaScript get, item {}, device {}.", item,
+			logger.error("Error on Python get, item {}, device {}.", item,
 					deviceId, e);
 			this.taskLogger.warn(String.format("Unable to get data %s for device %d.", item, deviceId));
 		}
@@ -485,7 +486,7 @@ public class JsDeviceHelper {
 
 	@Export
 	public Object get(String item, String deviceName) {
-		logger.debug("JavaScript request for item {} on device named {}.", item,
+		logger.debug("Python request for item {} on device named {}.", item,
 				deviceName);
 		try {
 			if (device.getName().equals(deviceName)) {
@@ -497,12 +498,12 @@ public class JsDeviceHelper {
 			return result;
 		}
 		catch (ObjectNotFoundException e) {
-			logger.error("Device not found on JavaScript get, item {}, device named {}.",
+			logger.error("Device not found on Python get, item {}, device named {}.",
 					item, deviceName, e);
 			this.taskLogger.warn(String.format("Unable to find the device named %s.", deviceName));
 		}
 		catch (Exception e) {
-			logger.error("Error on JavaScript get, item {}, device named {}.", item,
+			logger.error("Error on Python get, item {}, device named {}.", item,
 					deviceName, e);
 			this.taskLogger.warn(String.format("Unable to get data %s for device named %s.", item, deviceName));
 		}

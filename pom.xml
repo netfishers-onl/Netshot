@@ -256,17 +256,6 @@
 			<version>3.6.2</version>
 		</dependency>
 		<dependency>
-			<groupId>org.graalvm.sdk</groupId>
-			<artifactId>graal-sdk</artifactId>
-			<version>${graalvm.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.graalvm.js</groupId>
-			<artifactId>js</artifactId>
-			<version>${graalvm.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
 			<artifactId>swagger-jaxrs2</artifactId>
 			<version>${swagger.version}</version>

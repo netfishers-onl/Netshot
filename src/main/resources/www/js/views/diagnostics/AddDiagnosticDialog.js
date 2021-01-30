@@ -66,7 +66,12 @@ define([
 				}
 				else if (data.type === ".JavaScriptDiagnostic") {
 					_.extend(data, {
-						'script': that.scriptEditor.getValue(),
+						'script': that.jsScriptEditor.getValue(),
+					});
+				}
+				else if (data.type === ".PythonDiagnostic") {
+					_.extend(data, {
+						'script': that.pyScriptEditor.getValue(),
 					});
 				}
 				diagnostic.save(data).done(function(data) {
@@ -90,13 +95,19 @@ define([
 						.appendTo(that.$('#group'));
 			});
 
-			this.script =
+			this.jsScript =
 				'function diagnose(cli, device, diagnostic) {\n' +
 					'\tcli.macro("enable");\n' +
 					'\tvar output = cli.command("show something");\n' +
 					'\t// Process output somewhat\n' +
 					'\tdiagnostic.set(output);\n' +
 				'}\n';
+			this.pyScript =
+				'def diagnose(cli, device, diagnostic):\n' +
+					'  cli.macro("enable")\n' +
+					'  output = cli.command("show something")\n' +
+					'  # Process output somewhat\n' +
+					'  diagnostic.set(output)\n';
 
 			this.deviceTypes.each(function(deviceType) {
 				$('<option />').attr('value', deviceType.get('name')).text(
@@ -118,32 +129,52 @@ define([
 				var diagnosticType = $('input[name="diagnostictype"]:checked').data('type');
 				that.$('.nsdiagnostics-settings[data-for-type="' + diagnosticType + '"]').show();
 				if (diagnosticType === "JavaScriptDiagnostic") {
-					$('<div id="nsdiagnostic-adddiagnostic-script" />')
-						.appendTo('#nsdiagnostics-adddiagnostic-editorfield');
-					that.scriptEditor = ace.edit('nsdiagnostic-adddiagnostic-script');
-					that.scriptEditor.setValue(that.script);
-					that.scriptEditor.getSession().setMode("ace/mode/javascript");
-					that.scriptEditor.gotoLine(1);
+					$('<div id="nsdiagnostic-adddiagnostic-script-js" class="nsdiagnostic-adddiagnostic-script" />')
+						.appendTo('#nsdiagnostics-adddiagnostic-editorfield-js');
+					that.jsScriptEditor = ace.edit('nsdiagnostic-adddiagnostic-script-js');
+					that.jsScriptEditor.setValue(that.jsScript);
+					that.jsScriptEditor.getSession().setMode("ace/mode/javascript");
+					that.jsScriptEditor.gotoLine(1);
 				}
-				else if (that.scriptEditor) {
-					that.script = that.scriptEditor.getValue();
-					that.scriptEditor.destroy();
-					that.scriptEditor = null;
-					that.$('#nsdiagnostics-editdiagnostic-editorfield').empty();
+				else if (that.jsScriptEditor) {
+					that.jsScript = that.jsScriptEditor.getValue();
+					that.jsScriptEditor.destroy();
+					that.jsScriptEditor = null;
+					that.$('#nsdiagnostics-adddiagnostic-editorfield-js').empty();
+				}
+				if (diagnosticType === "PythonDiagnostic") {
+					$('<div id="nsdiagnostic-adddiagnostic-script-py" class="nsdiagnostic-adddiagnostic-script" />')
+						.appendTo('#nsdiagnostics-adddiagnostic-editorfield-py');
+					that.pyScriptEditor = ace.edit('nsdiagnostic-adddiagnostic-script-py');
+					that.pyScriptEditor.setValue(that.pyScript);
+					that.pyScriptEditor.getSession().setMode("ace/mode/python");
+					that.pyScriptEditor.gotoLine(1);
+				}
+				else if (that.pyScriptEditor) {
+					that.pyScript = that.pyScriptEditor.getValue();
+					that.pyScriptEditor.destroy();
+					that.pyScriptEditor = null;
+					that.$('#nsdiagnostics-adddiagnostic-editorfield-py').empty();
 				}
 				that.$('.nsdiagnostics-settings:not([data-for-type="' + diagnosticType + '"])').hide();
 			}).change();
 			this.$el.on('dialogresizestop', function(even, ui) {
-				if (that.scriptEditor) {
-					that.scriptEditor.resize();
+				if (that.jsScriptEditor) {
+					that.jsScriptEditor.resize();
+				}
+				if (that.pyScriptEditor) {
+					that.pyScriptEditor.resize();
 				}
 			});
 
 		},
 
 		onClose: function() {
-			if (this.scriptEditor) {
-				this.scriptEditor.destroy();
+			if (this.jsScriptEditor) {
+				this.jsScriptEditor.destroy();
+			}
+			if (this.pyScriptEditor) {
+				this.pyScriptEditor.destroy();
 			}
 			this.$el.off('dialogresizestop');
 		}

@@ -2,7 +2,10 @@
   <span class="name"><%- name %></span>
   <div class="details">
 	<% if (type == ".rules.JavaScriptRule") { %>
-	Script rule
+	JavaScript rule
+	<% } %>
+	<% if (type == ".rules.PythonRule") { %>
+	Python rule
 	<% } %>
 	<% if (type == ".rules.TextRule") { %>
 	Text rule

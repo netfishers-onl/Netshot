@@ -6,9 +6,9 @@ define([
 	'ace/ace',
 	'text!templates/diagnostics/diagnostic.html',
 	'views/diagnostics/EditSimpleDiagnosticDialog',
-	'views/diagnostics/EditJsDiagnosticDialog'
+	'views/diagnostics/EditScriptDiagnosticDialog'
 ], function($, _, Backbone, ace, diagnosticTemplate, EditSimpleDiagnosticDialog,
-		EditJsDiagnosticDialog) {
+	EditScriptDiagnosticDialog) {
 
 	return Backbone.View.extend({
 
@@ -42,7 +42,10 @@ define([
 			}).click(function() {
 				var EditDiagnosticDialog = EditSimpleDiagnosticDialog;
 				if (that.model.get('type') === ".JavaScriptDiagnostic") {
-					EditDiagnosticDialog = EditJsDiagnosticDialog;
+					EditDiagnosticDialog = EditScriptDiagnosticDialog;
+				}
+				else if (that.model.get('type') === ".PythonDiagnostic") {
+					EditDiagnosticDialog = EditScriptDiagnosticDialog;
 				}
 				var editDialog = new EditDiagnosticDialog({
 					model: that.model,
@@ -55,6 +58,15 @@ define([
 			if (this.model.get('type') === ".JavaScriptDiagnostic") {
 				this.scriptEditor = ace.edit('nsdiagnostics-diagnostic-script');
 				this.scriptEditor.getSession().setMode("ace/mode/javascript");
+				this.scriptEditor.setReadOnly(true);
+				this.scriptEditor.setValue(that.model.get("script"));
+				this.scriptEditor.setHighlightActiveLine(false);
+				this.scriptEditor.renderer.setShowGutter(false);
+				this.scriptEditor.gotoLine(1);
+			}
+			else if (this.model.get('type') === ".PythonDiagnostic") {
+				this.scriptEditor = ace.edit('nsdiagnostics-diagnostic-script');
+				this.scriptEditor.getSession().setMode("ace/mode/python");
 				this.scriptEditor.setReadOnly(true);
 				this.scriptEditor.setValue(that.model.get("script"));
 				this.scriptEditor.setHighlightActiveLine(false);

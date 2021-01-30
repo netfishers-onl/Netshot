@@ -307,6 +307,13 @@ function _connect(_function, _protocol, _options, _logger) {
 				throw "The number of milliseconds to wait must be integer in sleep.";
 			}
 			_cli.sleep(millis);
+		},
+
+		debug: function(message) {
+			if (typeof(message) == "string") {
+				message = String(message);
+				_logger.debug(message);
+			}
 		}
 		
 	};
@@ -510,17 +517,17 @@ function _connect(_function, _protocol, _options, _logger) {
 			this.currentKey = key;
 		},
 		set: function(key, value) {
-			if (typeof(key) == "string") {
-				key = String(key);
-			}
-			else {
-				throw "The key should be a string in diagnostic.set.";
-			}
 			if (typeof(value) == "undefined") {
 				value = key;
 				_options.getDiagnosticHelper().set(this.currentKey, value);
 			}
 			else {
+				if (typeof(key) == "string") {
+					key = String(key);
+				}
+				else {
+					throw "The key should be a string in diagnostic.set.";
+				}
 				value = String(value);
 				_options.getDiagnosticHelper().set(key, value);
 			}
@@ -534,14 +541,14 @@ function _connect(_function, _protocol, _options, _logger) {
 	
 	if (_function === "snapshot") {
 		_options.getDeviceHelper().reset();
-		snapshot(commandHelper, deviceHelper, configHelper, debug);
+		snapshot(commandHelper, deviceHelper, configHelper);
 	}
 	else if (_function === "run") {
 		if (typeof(run) != "function") {
 			throw "No 'run' function";
 		}
 		
-		run(commandHelper, deviceHelper, configHelper, debug);
+		run(commandHelper, deviceHelper, configHelper);
 	}
 	else if (_function === "diagnostics") {
 		var diagnostics = _options.getDiagnosticHelper().getDiagnostics();
@@ -550,7 +557,7 @@ function _connect(_function, _protocol, _options, _logger) {
 			diagnosticHelper.setKey(name);
 			if (typeof diagnostic === "function") {
 				var diagnose = diagnostic;
-				diagnose(commandHelper, deviceHelper, diagnosticHelper, debug);
+				diagnose(commandHelper, deviceHelper, diagnosticHelper);
 			}
 			else {
 				cli.macro(diagnostic.getMode());

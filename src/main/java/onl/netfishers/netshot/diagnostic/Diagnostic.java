@@ -70,6 +70,7 @@ public abstract class Diagnostic {
 		DIAGNOSTIC_CLASSES = new HashSet<Class<? extends Diagnostic>>();
 		DIAGNOSTIC_CLASSES.add(SimpleDiagnostic.class);
 		DIAGNOSTIC_CLASSES.add(JavaScriptDiagnostic.class);
+		DIAGNOSTIC_CLASSES.add(PythonDiagnostic.class);
 	}
 
 	/**

@@ -47,6 +47,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 
 import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
 import onl.netfishers.netshot.compliance.rules.JavaScriptRule;
+import onl.netfishers.netshot.compliance.rules.PythonRule;
 import onl.netfishers.netshot.compliance.rules.TextRule;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
@@ -72,6 +73,7 @@ public abstract class Rule {
 	static {
 		RULE_CLASSES = new HashSet<Class<? extends Rule>>();
 		RULE_CLASSES.add(JavaScriptRule.class);
+		RULE_CLASSES.add(PythonRule.class);
 		RULE_CLASSES.add(TextRule.class);
 	}
 

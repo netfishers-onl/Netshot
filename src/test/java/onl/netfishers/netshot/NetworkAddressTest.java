@@ -196,8 +196,6 @@ public class NetworkAddressTest {
 			Assertions.assertFalse(address3.isGlobalUnicast(), "The address 3 is global unicast");
 		}
 
-
-
 		@Test
 		@DisplayName("IPv6 Address comparison")
 		void addressComparison() throws UnknownHostException {

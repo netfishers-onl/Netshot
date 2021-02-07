@@ -7,7 +7,7 @@ echo "@@@ Update using GIT"
 git pull --rebase
 
 VERSION_CODE=`sed -nr 's/.* String VERSION *= *"(.*?)".*/\1/p' src/main/java/onl/netfishers/netshot/Netshot.java`
-VERSION_POM=`cat pom.xml | tr -d '\r\n' | sed -r 's/.*<artifactId>netshot<\/artifactId>[ \t]*<version>([^<]+)<\/version>.*/\1/'`
+VERSION_POM=`xmllint --xpath '//*[local-name()="project"]/*[local-name()="version"]/text()' pom.xml`
 
 if [ "$VERSION_CODE" != "$VERSION_POM" ]; then
 	echo "@@@ The Netshot version in code doesn't match the version in pom.xml"

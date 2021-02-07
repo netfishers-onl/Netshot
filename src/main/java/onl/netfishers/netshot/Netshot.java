@@ -409,6 +409,21 @@ public class Netshot extends Thread {
 	}
 
 	/**
+	 * Check the JVM name and print a warning message if it's not GraalVM.
+	 */
+	protected static void checkJvm() {
+		final String vendor = System.getProperty("java.vm.vendor"); // e.g. GraalVM Community
+		final String name = System.getProperty("java.vm.name"); // e.g. OpenJDK 64-Bit Server VM
+		final String version = System.getProperty("java.vm.version"); // e.g. 11.0.10+8-jvmci-21.0-b06
+		if (!vendor.matches("^GraalVM.*") || !name.matches("^OpenJDK.*")) {
+			logger.error("The current JVM  '{}, {} doesn't look like GraalVM, Netshot might not work properly.", name, vendor);
+		}
+		if (!version.matches("^11\\..*")) {
+			logger.error("The JVM version '{}' doesn't look like version 11, Netshot might not work properly.", version);
+		}
+	}
+
+	/**
 	 * The main method.
 	 *
 	 * @param args the arguments
@@ -426,6 +441,8 @@ public class Netshot extends Thread {
 		}
 
 		try {
+			logger.info("Checking current JVM.");
+			Netshot.checkJvm();
 			logger.info("Enabling BouncyCastle security.");
 			Security.insertProviderAt(new BouncyCastleProvider(), 1);
 			logger.info("Initializing the task manager.");

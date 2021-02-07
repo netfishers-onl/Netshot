@@ -2,17 +2,17 @@
  * Copyright 2013-2021 Sylvain Cadilhac (NetFishers)
  * 
  * This file is part of Netshot.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "NetFishers",
-	version: "1.5"
+	version: "1.6"
 };
 
 var Config = {
@@ -155,7 +155,7 @@ var CLI = {
 
 
 function snapshot(cli, device, config, debug) {
-	
+
 	var configCleanup = function(config) {
 		var p = config.search(/^[a-z]/m);
 		if (p > 0) {
@@ -163,26 +163,26 @@ function snapshot(cli, device, config, debug) {
 		}
 		return config;
 	};
-	
+
 	cli.macro("exec");
 	var runningConfig = cli.command("show running-config");
-	
+
 	var author = runningConfig.match(/^\!\! Last configuration change .* by (.*)$/m);
 	if (author != null) {
 		config.set("author", author[1]);
 	}
 	runningConfig = configCleanup(runningConfig);
 	config.set("configuration", runningConfig);
-	
+
 	var adminConfig = cli.command("admin show running-config");
 	adminConfig = configCleanup(adminConfig);
 	config.set("adminConfiguration", adminConfig);
-	
+
 	var showVersion = cli.command("show version");
 	var showInventory = cli.command("admin show inventory");
 	showInventory += cli.command("show inventory");
 	var showInstall = cli.command("admin show install active");
-	
+
 	var hostname = runningConfig.match(/^hostname (.+)/m);
 	if (!hostname) {
 		hostname = showVersion.match(/^ *(.*) uptime is/m);
@@ -191,25 +191,25 @@ function snapshot(cli, device, config, debug) {
 		device.set("name", hostname[1]);
 	}
 	device.set("networkClass", "ROUTER");
-	
+
 	var version = showVersion.match(/^(Cisco )?IOS XR Software.*Version ([0-9\\.A-Z\\(\\):]+)/m);
 	if (version != null) {
 		device.set("softwareVersion", version[2]);
 		config.set("xrVersion", version[2]);
 	}
-	
+
 	device.set("family", "IOS-XR device");
 	var versionDetails = showVersion.match(/^(.*) with (\d+)K(\/(\d+)K)? bytes of memory/m);
 	if (versionDetails) {
 		var system = versionDetails[1];
 		if (system.match(/cisco 12\d\d\d.*/)) {
-			device.set("family", "Cisco 12000 Series");
+			device.set("family", "Cisco 12000");
 		}
 		else if (system.match(/cisco CRS.*/)) {
 			device.set("family", "Cisco CRS");
 		}
 		else if (system.match(/cisco ASR9.*/)) {
-			device.set("family", "Cisco ASR9000 Series");
+			device.set("family", "Cisco ASR9000");
 		}
 		else if (system.match(/cisco IOS XRv Series.*/)) {
 			device.set("family", "Cisco XRv");
@@ -218,9 +218,9 @@ function snapshot(cli, device, config, debug) {
 	if (showVersion.match(/IOS-XRv 9000 /)) {
 		device.set("family", "Cisco XRv 9000");
 	}
-	
+
 	config.set("xrPackages", showInstall);
-	
+
 	var location = runningConfig.match(/^snmp-server location (.*)/m);
 	if (location) {
 		device.set("location", location[1]);
@@ -235,7 +235,7 @@ function snapshot(cli, device, config, debug) {
 	else {
 		device.set("contact", "");
 	}
-	
+
 	var removeQuotes = function(info) {
 		var match = info.match(/^\"(.*)\"$/);
 		if (match) {
@@ -268,23 +268,26 @@ function snapshot(cli, device, config, debug) {
 		device.add("module", module);
 		if (module.slot.match(/Chassis|Rack 0/)) {
 			device.set("serialNumber", module.serialNumber);
-			if (module.slot.match(/NCS55[0-9A-Z][0-9A-Z]/)) {
+			if (module.partNumber.match(/NCS-?55[0-9A-Z][0-9A-Z]/)) {
 				device.set("family", "Cisco NCS5500");
 			}
-			else if (module.slot.match(/NCS5[0-9A-Z][0-9A-Z][0-9A-Z]/)) {
+			else if (module.partNumber.match(/NCS-?5[0-9A-Z][0-9A-Z][0-9A-Z]/)) {
 				device.set("family", "Cisco NCS5000");
 			}
-			else if (module.slot.match(/NCS6[0-9A-Z][0-9A-Z][0-9A-Z]/)) {
+			else if (module.partNumber.match(/NCS-?6[0-9A-Z][0-9A-Z][0-9A-Z]/)) {
 				device.set("family", "Cisco NCS6000");
+			}
+			else if (module.partNumber.match(/ASR-99[0-9][0-9]/)) {
+				device.set("family", "Cisco ASR9000");
 			}
 		}
 	}
-	
+
 	var vrfPattern = /^vrf (.+)/mg;
 	while (match = vrfPattern.exec(runningConfig)) {
 		device.add("vrf", match[1]);
 	}
-	
+
 	var fhrpAddresses = {};
 	var fhrpConfig = cli.findSections(runningConfig, /^ *router (hsrp|vrrp)/m);
 	for (var c in fhrpConfig) {
@@ -320,8 +323,8 @@ function snapshot(cli, device, config, debug) {
 				fhrpAddresses[intName].push(ip);
 			}
 		}
-	} 
-	
+	}
+
 	var interfaces = cli.findSections(runningConfig, /^interface (preconfigure )?([^ ]+)/m);
 	for (var i in interfaces) {
 		var networkInterface = {
@@ -380,7 +383,7 @@ function snapshot(cli, device, config, debug) {
 };
 
 function runCommands(command) {
-	
+
 }
 
 function analyzeSyslog(message) {

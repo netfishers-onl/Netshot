@@ -20,6 +20,7 @@ package onl.netfishers.netshot;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.security.Provider;
 import java.security.Security;
 import java.util.Enumeration;
 import java.util.Properties;
@@ -444,7 +445,10 @@ public class Netshot extends Thread {
 			logger.info("Checking current JVM.");
 			Netshot.checkJvm();
 			logger.info("Enabling BouncyCastle security.");
-			Security.insertProviderAt(new BouncyCastleProvider(), 1);
+			Security.addProvider(new BouncyCastleProvider());
+			for (Provider p : Security.getProviders()) {
+				logger.debug("Security provider {} is registered", p.getName());
+			}
 			logger.info("Initializing the task manager.");
 			TaskManager.init();
 			logger.info("Updating the database schema, if necessary.");

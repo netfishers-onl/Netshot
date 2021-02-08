@@ -203,8 +203,11 @@ public class WebHook extends Hook {
 		TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 		factory.init((KeyStore) null);
 
-		SSLContext sslContext = SSLContext.getDefault();
-		if (!this.isSslValidation()) {
+		SSLContext sslContext = SSLContext.getInstance("TLS");
+		if (this.isSslValidation()) {
+			sslContext.init(null, null, new SecureRandom());
+		}
+		else {
 			sslContext.init(null, new TrustManager[] { new InsecureTrustManager() }, new SecureRandom());
 		}
 

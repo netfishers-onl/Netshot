@@ -368,15 +368,15 @@ public abstract class Task implements Cloneable {
 		case WEEKLY:
 			target.setTime(this.scheduleReference);
 			if (target.before(inOneMinute)) {
-				target.add(Calendar.WEEK_OF_YEAR, factor * (1 + ((int) ChronoUnit.WEEKS
-					.between(inOneMinute.toInstant(), target.toInstant()) / factor)));
+				target.add(Calendar.WEEK_OF_YEAR, factor * (1 + ((int) ChronoUnit.DAYS
+					.between(inOneMinute.toInstant(), target.toInstant()) / (factor * 7))));
 			}
 			return target.getTime();
 		case MONTHLY:
 			target.setTime(this.scheduleReference);
 			if (target.before(inOneMinute)) {
-				target.add(Calendar.MONTH, factor * (1 + ((int) ChronoUnit.MONTHS
-					.between(inOneMinute.toInstant(), target.toInstant()) / factor)));
+				target.add(Calendar.MONTH, factor * (1 + ((int) ChronoUnit.DAYS
+					.between(inOneMinute.toInstant(), target.toInstant()) / (factor * 30))));
 			}
 			return target.getTime();
 		case ASAP:

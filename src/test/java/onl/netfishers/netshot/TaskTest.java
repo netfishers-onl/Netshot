@@ -70,7 +70,7 @@ public class TaskTest {
 			Calendar inTwoHours = (Calendar) inTenSeconds.clone();
 			inTwoHours.add(Calendar.HOUR, 2);
 			Assertions.assertEquals(task.getNextExecutionDate(), inTwoHours.getTime(),
-			"Next execution date for EVERY 2 HOURS task is not in two hours");
+				"Next execution date for EVERY 2 HOURS task is not in two hours");
 		}
 
 		@Test
@@ -82,7 +82,35 @@ public class TaskTest {
 			task.setScheduleType(ScheduleType.HOURLY);
 			task.setScheduleFactor(2);
 			Assertions.assertEquals(task.getNextExecutionDate(), inEightySeconds.getTime(),
-			"Next execution date for EVERY 2 HOURS task is not now");
+				"Next execution date for EVERY 2 HOURS task is not now");
+		}
+
+		@Test
+		@DisplayName("Next execution time of EVERY WEEK task")
+		void everyWeekTask() {
+			Calendar inTenSeconds = Calendar.getInstance();
+			inTenSeconds.add(Calendar.SECOND, 10);
+			task.setScheduleReference(inTenSeconds.getTime());
+			task.setScheduleType(ScheduleType.WEEKLY);
+			task.setScheduleFactor(1);
+			Calendar inOneWeek = (Calendar) inTenSeconds.clone();
+			inOneWeek.add(Calendar.WEEK_OF_YEAR, 1);
+			Assertions.assertEquals(task.getNextExecutionDate(), inOneWeek.getTime(),
+				"Next execution date for EVERY WEEK task is not now");
+		}
+
+		@Test
+		@DisplayName("Next execution time of EVERY SIX MONTHS task")
+		void everySixMonths() {
+			Calendar inTenSeconds = Calendar.getInstance();
+			inTenSeconds.add(Calendar.SECOND, 10);
+			task.setScheduleReference(inTenSeconds.getTime());
+			task.setScheduleType(ScheduleType.MONTHLY);
+			task.setScheduleFactor(6);
+			Calendar inSixMonths = (Calendar) inTenSeconds.clone();
+			inSixMonths.add(Calendar.MONTH, 6);
+			Assertions.assertEquals(task.getNextExecutionDate(), inSixMonths.getTime(),
+				"Next execution date for EVERY SIX MONTHS task is not now");
 		}
 
 	}

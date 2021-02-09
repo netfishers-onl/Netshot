@@ -25,14 +25,14 @@
 		<div class="nsicon-container">
 			<span class="ui-icon ui-icon-disk" style="float: left;"></span>
 		</div>
-		<a href="#" data-config-item="<%- attribute.name %>" data-config-action="download">Download</a>
+		<a href="<%- attribute.downloadLink %>" data-config-item="<%- attribute.name %>" data-config-action="download">Download</a>
 	<% } %>
 	<% if (attribute.type == "BINARYFILE") { %>
 		<div class="nsicon-container">
 			<span class="ui-icon ui-icon-disk" style="float: left;"></span>
 		</div>
 		<% if (typeof(attribute.fileSize) === "number" && attribute.fileSize > 0) { %>
-			<a href="#" data-config-item="<%- attribute.name %>" data-config-action="download"><% if (typeof(attribute.originalName) === "string" && attribute.originalName.length > 0) { %><%- attribute.originalName %><% } else { %>Download<% } %></a>  (<%- formatFileSize(attribute.fileSize) %>)
+			<a href="<%- attribute.downloadLink %>" data-config-item="<%- attribute.name %>" data-config-action="download"><% if (typeof(attribute.originalName) === "string" && attribute.originalName.length > 0) { %><%- attribute.originalName %><% } else { %>Download<% } %></a>  (<%- formatFileSize(attribute.fileSize) %>)
 		<% } else { %>
 			Empty file
 		<% } %>

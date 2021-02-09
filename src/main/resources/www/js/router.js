@@ -165,6 +165,13 @@ define([
 					window.user.save({
 						username: $("#splash #authentication-box #username").val(),
 						password: $("#splash #authentication-box #password").val()
+					}, {
+						success: function(model, response, options) {
+							model.attributes.password = "";
+						},
+						error: function(model, response, options) {
+							model.attributes.password = "";
+						},
 					}).done(function(response) {
 						start();
 					}).fail(function(response) {

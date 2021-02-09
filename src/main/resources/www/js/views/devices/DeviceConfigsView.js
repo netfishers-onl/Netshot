@@ -43,7 +43,9 @@ define([
 					var name = definitions[d].name;
 					var attribute = attributes[name];
 					if (typeof attribute !== "object" || !attribute) { attribute = {}; }
-					fullAttributes.push(_.defaults(attribute, definitions[d]));
+					var fullAttribute = _.defaults(attribute, definitions[d]);
+					fullAttribute.downloadLink = deviceConfig.getItemUrl(name);
+					fullAttributes.push(fullAttribute);
 				}
 			}
 			data.attributes = fullAttributes;
@@ -57,11 +59,6 @@ define([
 			this.deviceConfigs.each(this.renderConfigLine, this);
 			var $table = this.$("#configs tbody").html(this.htmlBuffer);
 
-			this.$('a[data-config-action="download"]').each(function() {
-				var id = $(this).closest('tr.configdetails').prevAll('tr.configline').first().data('config-id');
-				var deviceConfig = that.deviceConfigs.get(id);
-				$(this).prop("href", deviceConfig.getItemUrl($(this).data('config-item')));
-			});
 			this.$('a[data-config-action="view"]').click(function() {
 				var $this = $(this);
 				var id = $(this).closest('tr.configdetails').prevAll('tr.configline').first().data('config-id');

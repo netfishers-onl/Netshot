@@ -259,7 +259,7 @@ define([
 				$table.empty();
 				that.users.each(function(u) {
 					var $row = $(that.userTemplate(u.toJSON())).appendTo($table);
-					if (u.get('id') == user.get('id')) {
+					if (u.get('username') === user.get('username')) {
 						$row.find('button').remove();
 					} 
 					$row.find('.edit').button({

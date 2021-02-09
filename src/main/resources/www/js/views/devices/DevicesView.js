@@ -52,6 +52,18 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 			this.restoreFilter();
 			this.deviceView = null;
 			this.advancedSearchDialog = null;
+			try {
+				DevicesView.savedGroupListHeight = parseInt(localStorage.getItem("DevicesView.savedGroupListHeight"));
+			}
+			catch (e) {
+				// Ignore
+			}
+			try {
+				DevicesView.savedListWidth = parseInt(localStorage.getItem("DevicesView.savedListWidth"));
+			}
+			catch (e) {
+				// Ignore
+			}
 		},
 
 		render: function() {
@@ -175,19 +187,54 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 				}
 			});
 
+			var setGroupHeight = function(h) {
+				that.$("#nsdevices-groups").css("height", (h - 15) + "px");
+				that.$("#nsdevices-list").css("top", (h + 5) + "px");
+			};
+
 			this.$("#nsdevices-sidedivider").draggable({
 				containment: "#nsdevices-sidedividerzone",
 				axis: "y",
 				drag: function(event, ui) {
-					that.$("#nsdevices-groups").css("height", (ui.position.top - 15) + "px");
-					that.$("#nsdevices-list").css("top", (ui.position.top + 5) + "px");
+					setGroupHeight(ui.position.top);
 					DevicesView.savedGroupListHeight = ui.position.top;
+					try {
+						localStorage.setItem("DevicesView.savedGroupListHeight", String(DevicesView.savedGroupListHeight));
+					}
+					catch (e) {
+						// Ignore
+					}
 				}
 			});
 			if (DevicesView.savedGroupListHeight) {
-				this.$("#nsdevices-groups").css("height", (DevicesView.savedGroupListHeight - 15) + "px");
-				this.$("#nsdevices-list").css("top", (DevicesView.savedGroupListHeight + 5) + "px");
+				setGroupHeight(DevicesView.savedGroupListHeight);
 				this.$("#nsdevices-sidedivider").css("top", DevicesView.savedGroupListHeight);
+			}
+
+			var setSideWidth = function(w) {
+				that.$(".nssidebar").css("width", (w - 15) + "px");
+				that.$("#nsdevices-search").css("width", (w - 7) + "px");
+				that.$("#nsdevices-search>input").css("width", (w - 39) + "px");
+				that.$("#nsdevices-listheader").css("width", (w - 70) + "px");
+				that.$("#nsdevices-listbox").css("width", (w - 15) + "px");
+			};
+			this.$("#nsdevices-sidewidthdivider").draggable({
+				containment: "#nsdevices-sidewidthdividerzone",
+				axis: "x",
+				drag: function(event, ui) {
+					setSideWidth(ui.position.left);
+					DevicesView.savedListWidth = ui.position.left;
+					try {
+						localStorage.setItem("DevicesView.savedListWidth", String(DevicesView.savedListWidth));
+					}
+					catch (e) {
+						// Ignore
+					}
+				}
+			});
+			if (DevicesView.savedListWidth) {
+				setSideWidth(DevicesView.savedListWidth);
+				this.$("#nsdevices-sidewidthdivider").css("left", DevicesView.savedListWidth);
 			}
 
 			this.fetchGroups();

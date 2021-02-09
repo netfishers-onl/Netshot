@@ -514,6 +514,24 @@ h1 {
 	width: 226px;
 }
 
+#nsdevices-sidewidthdivider {
+	position: absolute;
+	top: 0px;
+	bottom: 0px;
+	left: 265px;
+	width: 4px;
+	padding: 5px 0px 5px 0px;
+	cursor: col-resize;
+}
+
+#nsdevices-sidewidthdividerzone {
+	position: absolute;
+	top: 0px;
+	bottom: 0px;
+	left: 150px;
+	width: 300px;
+}
+
 #nsdevices-sidedivider {
 	position: absolute;
 	top: 115px;
@@ -530,6 +548,10 @@ h1 {
 	left: 5px;
 	bottom: 100px;
 	border: none;
+}
+
+.nssdivider:hover {
+	background-color: #f1f8ff;
 }
 
 #nsdevices-list {

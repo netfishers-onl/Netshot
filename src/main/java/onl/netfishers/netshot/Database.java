@@ -617,6 +617,8 @@ public class Database {
 					.setProperty("hibernate.connection.driver_class", getDriverClass())
 					.setProperty("hibernate.connection.url", getUrl()).setProperty("hibernate.connection.username", getUsername())
 					.setProperty("hibernate.connection.password", getPassword()).setProperty("hibernate.c3p0.min_size", "5")
+					// Dates/times stored in UTC in the DB, without timezone, up to Java to convert to server local time
+					.setProperty("hibernate.jdbc.time_zone", "UTC")
 					.setProperty("hibernate.c3p0.max_size", "30").setProperty("hibernate.c3p0.timeout", "1800")
 					.setProperty("hibernate.c3p0.max_statements", "50")
 					.setProperty("hibernate.c3p0.unreturnedConnectionTimeout", "1800")

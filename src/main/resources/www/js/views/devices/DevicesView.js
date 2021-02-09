@@ -217,6 +217,7 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 				that.$("#nsdevices-search>input").css("width", (w - 39) + "px");
 				that.$("#nsdevices-listheader").css("width", (w - 70) + "px");
 				that.$("#nsdevices-listbox").css("width", (w - 15) + "px");
+				that.$("#nsdevices-device").css("left", (w + 10) + "px");
 			};
 			this.$("#nsdevices-sidewidthdivider").draggable({
 				containment: "#nsdevices-sidewidthdividerzone",

@@ -49,8 +49,10 @@ import com.fasterxml.jackson.annotation.JsonView;
 
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
+import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.proxy.ProxyObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -544,7 +546,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			}
 		}
 		catch (Exception e) {
-			if (e instanceof UnsupportedOperationException && e.getMessage() != null
+			if (e instanceof PolyglotException && e.getMessage() != null
 					&& e.getMessage().contains("No analyzeSyslog function.")) {
 				logger.info("The driver {} has no analyzeSyslog function. Won't be called again.", name);
 				this.canAnalyzeSyslog = false;
@@ -556,19 +558,19 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		return false;
 	}
 
-	public boolean analyzeTrap(Map<String, String> data, Network4Address ip) {
+	public boolean analyzeTrap(Map<String, Object> data, Network4Address ip) {
 		if (!canAnalyzeTraps) {
 			return false;
 		}
 		try {
 			Context context = this.getContext();
-			Value result = context.getBindings("js").getMember("_analyzeTrap").execute(data, JS_SNMP_LOGGER);
+			Value result = context.getBindings("js").getMember("_analyzeTrap").execute(ProxyObject.fromMap(data), JS_SNMP_LOGGER);
 			if (result != null && result.isBoolean()) {
 				return result.asBoolean();
 			}
 		}
 		catch (Exception e) {
-			if (e instanceof UnsupportedOperationException && e.getMessage() != null
+			if (e instanceof PolyglotException && e.getMessage() != null
 					&& e.getMessage().contains("No analyzeTrap function.")) {
 				logger.info("The driver {} has no analyzeTrap function. Won't be called again.", name);
 				this.canAnalyzeTraps = false;
@@ -662,7 +664,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			}
 		}
 		catch (Exception e) {
-			if (e instanceof UnsupportedOperationException && e.getMessage() != null &&
+			if (e instanceof PolyglotException && e.getMessage() != null &&
 					e.getMessage().contains("No snmpAutoDiscover function.")) {
 				logger.info("The driver {} has no snmpAutoDiscover function.", name);
 				this.canSnmpAutodiscover = false;

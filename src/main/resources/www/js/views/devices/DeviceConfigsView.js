@@ -135,8 +135,7 @@ define([
 		},
 
 		destroy: function() {
-
-			this.$el.empty();
+			this.$el.children().detach().remove();
 		}
 
 	});

@@ -113,5 +113,27 @@ public class TaskTest {
 				"Next execution date for EVERY SIX MONTHS task is not now");
 		}
 
+		@Test
+		@DisplayName("Next execution time of EVERY FIRST OF THE MONTH task")
+		void everyFirstOfTheMonth() {
+			Calendar reference = Calendar.getInstance();
+			reference.set(2016, 01, 01, 16, 00, 00);
+			reference.set(Calendar.MILLISECOND, 0);
+			task.setScheduleReference(reference.getTime());
+			task.setScheduleType(ScheduleType.MONTHLY);
+			task.setScheduleFactor(1);
+			Calendar nextFirst = Calendar.getInstance();
+			nextFirst.set(Calendar.DAY_OF_MONTH, 1);
+			nextFirst.set(Calendar.HOUR_OF_DAY, 16);
+			nextFirst.set(Calendar.MINUTE, 0);
+			nextFirst.set(Calendar.SECOND, 0);
+			nextFirst.set(Calendar.MILLISECOND, 0);
+			if (nextFirst.before(Calendar.getInstance())) {
+				nextFirst.add(Calendar.MONTH, 1);
+			}
+			Assertions.assertEquals(task.getNextExecutionDate(), nextFirst.getTime(),
+				"Next execution date for EVERY FIRST OF THE MONTH is not next first of the month");
+		}
+
 	}
 }

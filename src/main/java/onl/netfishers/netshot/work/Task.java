@@ -18,7 +18,6 @@
  */
 package onl.netfishers.netshot.work;
 
-import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -339,7 +338,6 @@ public abstract class Task implements Cloneable {
 	public Date getNextExecutionDate() {
 		Calendar reference = Calendar.getInstance();
 		reference.setTime(this.scheduleReference);
-		Calendar target = Calendar.getInstance();
 		Calendar inOneMinute = Calendar.getInstance();
 		inOneMinute.add(Calendar.MINUTE, 1);
 
@@ -347,42 +345,44 @@ public abstract class Task implements Cloneable {
 		if (factor <= 0) {
 			factor = 1;
 		}
+		int unit = 0;
 
 		switch (this.scheduleType) {
 		case AT:
 			return this.scheduleReference;
 		case HOURLY:
-			target.setTime(this.scheduleReference);
-			if (target.before(inOneMinute)) {
-				target.add(Calendar.HOUR, factor * (1 + ((int) ChronoUnit.HOURS
-					.between(inOneMinute.toInstant(), target.toInstant()) / factor)));
-			}
-			return target.getTime();
+			unit = Calendar.HOUR;
+			break;
 		case DAILY:
-			target.setTime(this.scheduleReference);
-			if (target.before(inOneMinute)) {
-				target.add(Calendar.DAY_OF_MONTH, factor * (1 + ((int) ChronoUnit.DAYS
-					.between(inOneMinute.toInstant(), target.toInstant()) / factor)));
-			}
-			return target.getTime();
+			unit = Calendar.DAY_OF_MONTH;
+			break;
 		case WEEKLY:
-			target.setTime(this.scheduleReference);
-			if (target.before(inOneMinute)) {
-				target.add(Calendar.WEEK_OF_YEAR, factor * (1 + ((int) ChronoUnit.DAYS
-					.between(inOneMinute.toInstant(), target.toInstant()) / (factor * 7))));
-			}
-			return target.getTime();
+			unit = Calendar.WEEK_OF_YEAR;
+			break;
 		case MONTHLY:
-			target.setTime(this.scheduleReference);
-			if (target.before(inOneMinute)) {
-				target.add(Calendar.MONTH, factor * (1 + ((int) ChronoUnit.DAYS
-					.between(inOneMinute.toInstant(), target.toInstant()) / (factor * 30))));
-			}
-			return target.getTime();
+			unit = Calendar.MONTH;
+			break;
 		case ASAP:
 		default:
 			return null;
 		}
+
+		if (unit > 0) {
+			Calendar target = Calendar.getInstance();
+			target.setTime(this.scheduleReference);
+			if (target.get(Calendar.YEAR) < inOneMinute.get(Calendar.YEAR)) {
+				target.set(Calendar.YEAR, inOneMinute.get(Calendar.YEAR) - 1);
+			}
+			for (int i = 0; i < 100000; i++) {
+				if (target.after(inOneMinute)) {
+					return target.getTime();
+				}
+				target.add(unit, factor);
+			}
+			return target.getTime();
+		}
+
+		return null;
 	}
 
 	/**

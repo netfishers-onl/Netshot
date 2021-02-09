@@ -164,7 +164,7 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 						try {
 							Network4Address source = new Network4Address(
 									(Inet4Address) inetAddress, 32);
-							Map<String, String> data = new HashMap<String, String>();
+							Map<String, Object> data = new HashMap<String, Object>();
 							for (VariableBinding var : event.getPDU().getVariableBindings()) {
 								data.put(var.getOid().toDottedString(), var.getVariable().toString());
 							}

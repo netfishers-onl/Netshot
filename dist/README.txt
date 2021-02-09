@@ -21,11 +21,13 @@ RELEASE HISTORY:
 * SSH logger
 * Ciena SAOS driver (first release)
 * Cisco Viptela driver (first release)
+* Cisco IOS-XR driver improvements
 * OpenAPI definition and embedded UI browser
 * Tokens for API access (rather than session-based)
 * Improved API return codes
 * New config options and files for Docker support
 * Underlying library updates
+* UI minor improvements
 * Various fixes
 
 

@@ -1,6 +1,6 @@
 /**
  * Copyright 2013-2021 Sylvain Cadilhac (NetFishers)
- * 
+ *
  * This file is part of Netshot.
  *
  * Netshot is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "NetFishers",
-	version: "1.6"
+	version: "1.7"
 };
 
 var Config = {
@@ -154,7 +154,7 @@ var CLI = {
 };
 
 
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 
 	var configCleanup = function(config) {
 		var p = config.search(/^[a-z]/m);
@@ -325,10 +325,22 @@ function snapshot(cli, device, config, debug) {
 		}
 	}
 
-	var interfaces = cli.findSections(runningConfig, /^interface (preconfigure )?([^ ]+)/m);
+
+	var showInterfaces = cli.command("show interface | inc \", address is |line protocol\"");
+	var interfaceStatuses = {};
+	var ifPattern = /^([A-Za-z0-9\-\.]+) is .*, line protocol is (.+)\r?\n( +.*, address is ([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4}))?/mg;
+	while (match = ifPattern.exec(showInterfaces)) {
+		interfaceStatuses[match[1]] = {
+			adminDown: match[2] === "administratively down",
+			mac: match[4],
+		};
+	}
+
+	var interfaces = cli.findSections(runningConfig, /^interface (preconfigure )?([^ ]+)( .+)?/m);
 	for (var i in interfaces) {
+		var ifName = interfaces[i].match[2];
 		var networkInterface = {
-			name: interfaces[i].match[2],
+			name: ifName,
 			ip: []
 		};
 		var description = interfaces[i].config.match(/^ *description (.+)/m);
@@ -363,19 +375,24 @@ function snapshot(cli, device, config, debug) {
 			};
 			networkInterface.ip.push(ip);
 		}
-		var showInterface = cli.command("show interface " + networkInterface.name + " | inc \"address|line protocol\"");
-		var macAddress = showInterface.match(/address is ([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})/);
-		if (macAddress) {
-			networkInterface.mac = macAddress[1];
-		}
-		if (showInterface.match(/ is administratively down/)) {
-			networkInterface.enabled = false;
+		var interfaceStatus = interfaceStatuses[ifName];
+		if (interfaceStatus) {
+			if (interfaceStatus.adminDown) {
+				networkInterface.enabled = false;
+			}
+			if (interfaceStatus.mac) {
+				networkInterface.mac = interfaceStatus.mac;
+			}
 		}
 		var otherAddresses = fhrpAddresses[networkInterface.name];
 		if (typeof(otherAddresses) == "object") {
 			for (var o in otherAddresses) {
 				networkInterface.ip.push(otherAddresses[o]);
 			}
+		}
+		if ((interfaces[i].match[3] && interfaces[i].match[3].match(/l2transport/)) ||
+				interfaces[i].config.match(/^ *l2transport$/m)) {
+			networkInterface.level3 = false;
 		}
 		device.add("networkInterface", networkInterface);
 	}

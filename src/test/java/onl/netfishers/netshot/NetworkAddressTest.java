@@ -130,6 +130,14 @@ public class NetworkAddressTest {
 			Assertions.assertEquals(min.getPrefix(), "192.0.2.0/24", "The min IPs don't match");
 			Assertions.assertEquals(max.getPrefix(), "192.0.2.255/24", "The max IPs don't match");
 		}
+
+		@Test
+		@DisplayName("IPv4 without mask length")
+		void noMask() throws UnknownHostException {
+			Network4Address address = new Network4Address("1.1.1.1");
+
+			Assertions.assertTrue(address.isNormalUnicast(), "The prefix is not normal unicast");
+		}
 	}
 
 	@Nested

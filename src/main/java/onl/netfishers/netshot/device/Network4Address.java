@@ -365,7 +365,7 @@ public class Network4Address extends NetworkAddress {
 	 */
 	@Transient
 	public boolean isDirectedBroadcast() {
-		if (this.prefixLength > 30) {
+		if (this.prefixLength > 30 || this.prefixLength == 0) {
 			return false;
 		}
 		return (this.address | Network4Address.prefixLengthToIntAddress(this.getPrefixLength())) == 0xFFFFFFFF;

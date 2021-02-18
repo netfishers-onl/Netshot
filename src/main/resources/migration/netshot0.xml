@@ -3,7 +3,9 @@
 	<property name="BOOLEAN" value="BOOLEAN" dbms="postgresql"/>
 	<property name="BOOLEAN" value="BIT(1)"/>
 <!-- netshot_0_5_2.xml -->
-	<changeSet author="netshot (generated)" validCheckSum="8:1534a0df4e73e7c5877f8f03c0ffde51" id="0.5.2_1">
+	<changeSet author="netshot (generated)" id="0.5.2_1">
+		<validCheckSum>8:1534a0df4e73e7c5877f8f03c0ffde51</validCheckSum>
+		<validCheckSum>8:c9ee33cd3b985b865d875c8a5814cbd6</validCheckSum>
 		<preConditions onFail="MARK_RAN">
 			<not><tableExists tableName="device"/></not>
 		</preConditions>

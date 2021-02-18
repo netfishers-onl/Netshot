@@ -12,6 +12,12 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.16.1 - 2021-02-19
+
+* Fix for IP addresses being rejected
+* Fix for DB schema update
+
+
 0.16.0 - 2021-02-01
 
 * The JavaScript engine is now based on GraalVM

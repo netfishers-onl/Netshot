@@ -55,7 +55,7 @@ import onl.netfishers.netshot.rest.RestService;
 public class Netshot extends Thread {
 
 	/** Netshot version. */
-	public static final String VERSION = "0.16.0";
+	public static final String VERSION = "0.16.1";
 
 	/** The list of configuration files to look at, in sequence. */
 	private static final String[] CONFIG_FILENAMES = new String[] {

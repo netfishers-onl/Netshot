@@ -21,7 +21,7 @@ var Info = {
 	name: "BrocadeFastIron",
 	description: "Brocade FastIron",
 	author: "NetFishers",
-	version: "1.3"
+	version: "1.4"
 };
 
 var Config = {
@@ -136,7 +136,7 @@ var CLI = {
 		}
 	},
 	enableSecret: {
-		prompt: /^Password:/m,
+		prompt: /^(Enable )?Password:/m,
 		macros: {
 			auto: {
 				cmd: "$$NetshotSuperPassword$$",

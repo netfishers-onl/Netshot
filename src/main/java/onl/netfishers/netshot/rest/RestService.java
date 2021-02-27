@@ -5101,7 +5101,7 @@ public class RestService extends Thread {
 
 			DeviceGroup group = null;
 			if (rsPolicy.getGroup() != -1) {
-				group = (DeviceGroup) session.load(DeviceGroup.class, rsPolicy.getGroup());
+				group = (DeviceGroup) session.get(DeviceGroup.class, rsPolicy.getGroup());
 			}
 
 			policy = new Policy(name, group);
@@ -5221,13 +5221,13 @@ public class RestService extends Thread {
 			policy.setName(name);
 			
 			if (policy.getTargetGroup() != null && policy.getTargetGroup().getId() != rsPolicy.getGroup()) {
-				session.createQuery("delete CheckResult cr where cr.key.rule in (select r from Rule r where r.policy = :id)")
+				session.createQuery("delete CheckResult cr where cr.key.rule in (select r from Rule r where r.policy.id = :id)")
 					.setParameter("id", policy.getId())
 					.executeUpdate();
 			}
 			DeviceGroup group = null;
 			if (rsPolicy.getGroup() != -1) {
-				group = (DeviceGroup) session.load(DeviceGroup.class, rsPolicy.getGroup());
+				group = (DeviceGroup) session.get(DeviceGroup.class, rsPolicy.getGroup());
 			}
 			policy.setTargetGroup(group);
 
@@ -7264,7 +7264,7 @@ public class RestService extends Thread {
 
 			DeviceGroup group = null;
 			if (rsRule.getGroup() != -1) {
-				group = (DeviceGroup) session.load(DeviceGroup.class, rsRule.getGroup());
+				group = (DeviceGroup) session.get(DeviceGroup.class, rsRule.getGroup());
 			}
 
 			String driver = rsRule.getDriver(); 
@@ -7386,7 +7386,7 @@ public class RestService extends Thread {
 
 			DeviceGroup group = null;
 			if (rsRule.getGroup() != -1) {
-				group = (DeviceGroup) session.load(DeviceGroup.class, rsRule.getGroup());
+				group = (DeviceGroup) session.get(DeviceGroup.class, rsRule.getGroup());
 			}
 			rule.setTargetGroup(group);
 
@@ -7680,7 +7680,7 @@ public class RestService extends Thread {
 
 			DeviceGroup group = null;
 			if (rsRule.getGroup() != -1) {
-				group = (DeviceGroup) session.load(DeviceGroup.class, rsRule.getGroup());
+				group = (DeviceGroup) session.get(DeviceGroup.class, rsRule.getGroup());
 			}
 			
 			String driver = rsRule.getDriver(); 
@@ -7802,7 +7802,7 @@ public class RestService extends Thread {
 
 			DeviceGroup group = null;
 			if (rsRule.getGroup() != -1) {
-				group = (DeviceGroup) session.load(DeviceGroup.class, rsRule.getGroup());
+				group = (DeviceGroup) session.get(DeviceGroup.class, rsRule.getGroup());
 			}
 			rule.setTargetGroup(group);
 
@@ -9923,7 +9923,7 @@ public class RestService extends Thread {
 			session.beginTransaction();
 			DeviceGroup group = null;
 			if (rsDiagnostic.getTargetGroup() != -1) {
-				group = (DeviceGroup) session.load(DeviceGroup.class, rsDiagnostic.getTargetGroup());
+				group = (DeviceGroup) session.get(DeviceGroup.class, rsDiagnostic.getTargetGroup());
 			}
 
 			if (".JavaScriptDiagnostic".equals(rsDiagnostic.getType())) {
@@ -10053,7 +10053,7 @@ public class RestService extends Thread {
 			}
 			DeviceGroup group = null;
 			if (rsDiagnostic.getTargetGroup() != -1) {
-				group = (DeviceGroup) session.load(DeviceGroup.class, rsDiagnostic.getTargetGroup());
+				group = (DeviceGroup) session.get(DeviceGroup.class, rsDiagnostic.getTargetGroup());
 			}
 			diagnostic.setTargetGroup(group);
 

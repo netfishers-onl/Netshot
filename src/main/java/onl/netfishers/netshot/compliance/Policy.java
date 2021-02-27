@@ -23,6 +23,7 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -153,7 +154,7 @@ public class Policy {
 	 *
 	 * @return the target group
 	 */
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.EAGER)
 	@XmlElement @JsonView(DefaultView.class)
 	public DeviceGroup getTargetGroup() {
 		return targetGroup;

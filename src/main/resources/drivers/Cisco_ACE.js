@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoACE",
 	description: "Cisco ACE",
 	author: "NetFishers",
-	version: "1.5.1"
+	version: "1.6"
 };
 
 var Config = {
@@ -152,7 +152,7 @@ var CLI = {
 	}
 };
 
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 	
 	cli.macro("exec");
 
@@ -276,7 +276,7 @@ function snapshot(cli, device, config, debug) {
 				}
 			}
 			catch (e) {
-				debug("Unable to get interface details for " + networkInterface.name);
+				cli.debug("Unable to get interface details for " + networkInterface.name);
 			}
 			device.add("networkInterface", networkInterface);
 		}

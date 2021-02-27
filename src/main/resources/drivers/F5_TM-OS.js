@@ -111,7 +111,7 @@ var CLI = {
 	}
 };
 
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 	cli.macro("bash");
 	var runningConfig = cli.command("tmsh -q -c 'cd /; show running-config recursive'");
 	runningConfig = runningConfig.replace(/^[^\{]*\r?\n/, ""); // Remove first line if doesn't contain {

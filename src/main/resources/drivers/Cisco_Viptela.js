@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoViptela",
 	description: "Viptela Operating System",
 	author: "NetFishers",
-	version: "1.0"
+	version: "1.1"
 };
 
 var Config = {
@@ -123,7 +123,7 @@ var CLI = {
 	}
 };
 
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 	
 	cli.macro("exec");
 	
@@ -186,7 +186,7 @@ function snapshot(cli, device, config, debug) {
 		}
 	}
 	catch (error) {
-		debug("Cannot get or parse inventory: " + error);
+		cli.debug("Cannot get or parse inventory: " + error);
 	}
 	
 	
@@ -200,7 +200,7 @@ function snapshot(cli, device, config, debug) {
 		device.set("name", hostName);
 	}
 	catch (error) {
-		debug("Cannot get or parse host-name: " + error);
+		cli.debug("Cannot get or parse host-name: " + error);
 	}
 	
 
@@ -210,14 +210,14 @@ function snapshot(cli, device, config, debug) {
 		device.set("location", location);
 	}
 	catch (error) {
-		debug("Cannot get or parse location: " + error);
+		cli.debug("Cannot get or parse location: " + error);
 	}
 	try {
 		var contact = JSON.parse(showRunSnmp).data["viptela-snmp:snmp"].contact;
 		device.set("contact", contact);
 	}
 	catch (error) {
-		debug("Cannot get or parse contact: " + error);
+		cli.debug("Cannot get or parse contact: " + error);
 	}
 
 

@@ -139,7 +139,7 @@ var CLI = {
  * @param device = used to store data at the device level.
  * @param config = used to store data at the configuration revision level.
  */
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 	
 	var configCleanup = function(config) {
 		var p = config.search(/^(set|unset) /m);

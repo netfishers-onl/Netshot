@@ -119,7 +119,7 @@ var CLI = {
 	},
 };
 
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 
 	function parseTable(command) {
 		var output = cli.command(command);

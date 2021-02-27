@@ -116,7 +116,7 @@ var CLI = {
 	}
 };
 
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 	
 	var configCleanup = function(runningConfig, savedConfig) {
 		var config = runningConfig

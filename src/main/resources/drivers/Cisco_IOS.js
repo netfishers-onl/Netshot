@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.6.5"
+	version: "1.7"
 };
 
 var Config = {
@@ -209,7 +209,7 @@ var CLI = {
 	}
 };
 
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 	
 	var configCleanup = function(config) {
 		config = config.replace(/^ntp clock-period [0-9]+$/m, "");
@@ -448,7 +448,7 @@ function snapshot(cli, device, config, debug) {
 		}
 	}
 	catch (e) {
-		debug("show inventory not supported on this device?");
+		cli.debug("show inventory not supported on this device?");
 	}
 	
 	var vrfPattern = /^(?:ip vrf|vrf definition) (.+)/mg;

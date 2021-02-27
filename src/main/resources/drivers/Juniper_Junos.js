@@ -21,7 +21,7 @@ var Info = {
 	name: "JuniperJunos",
 	description: "Juniper Junos",
 	author: "NetFishers",
-	version: "2.12"
+	version: "2.13"
 };
 
 var Config = {
@@ -147,7 +147,7 @@ var CLI = {
 };
 
 
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 	
 	var configCleanup = function(config) {
 		var p = config.search(/^[a-z]/m);
@@ -262,7 +262,7 @@ function snapshot(cli, device, config, debug) {
 		}
 	}
 	catch(e) {
-		debug("Error while reading the inventory");
+		cli.debug("Error while reading the inventory");
 	}
 	
 	var showInterfaces = cli.command("show interfaces");

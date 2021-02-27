@@ -188,7 +188,7 @@ var CLI = {
 	}
 };
 
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 	
 	var configCleanup = function(config) {
 		/* Avoids line wrapping. */

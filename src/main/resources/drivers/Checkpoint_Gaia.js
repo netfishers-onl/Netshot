@@ -194,7 +194,7 @@ var CLI = {
 	}
 };
 
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 	var addMatchSet = function(e) {
 		e.matchSet = function(data, re, field, defaultValue) {
 			var r = data.match(re);

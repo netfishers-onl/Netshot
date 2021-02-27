@@ -21,7 +21,7 @@ var Info = {
 	name: "AristaEOS",
 	description: "Arista EOS",
 	author: "NetFishers",
-	version: "1.0.1"
+	version: "1.1"
 };
 
 var Config = {
@@ -199,7 +199,7 @@ var CLI = {
 	}
 };
 
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 	
 	var match;
 	
@@ -305,7 +305,7 @@ function snapshot(cli, device, config, debug) {
 		
 	}
 	catch (e) {
-		debug("Error while reading the inventory. Does the device support 'json' pipe modifier?");
+		cli.debug("Error while reading the inventory. Does the device support 'json' pipe modifier?");
 	}
 	
 	var vrfPattern = /^(?:ip vrf|vrf definition) (.+)/mg;

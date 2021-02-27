@@ -138,7 +138,7 @@ var CLI = {
     }
 };
 
-function snapshot(cli, device, config, debug) {
+function snapshot(cli, device, config) {
 
     cli.macro("enable");
     cli.command("enable");

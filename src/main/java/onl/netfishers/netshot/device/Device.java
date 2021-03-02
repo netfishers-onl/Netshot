@@ -143,7 +143,7 @@ public class Device {
 	
 
 	/** The attributes. */
-	private Set<DeviceAttribute> attributes = new HashSet<DeviceAttribute>();
+	private Set<DeviceAttribute> attributes = new HashSet<>();
 
 	/** The auto try credentials. */
 	protected boolean autoTryCredentials = true;
@@ -154,28 +154,28 @@ public class Device {
 	private int version;
 
 	/** The check compliance tasks. */
-	protected List<CheckComplianceTask> checkComplianceTasks = new ArrayList<CheckComplianceTask>();
+	protected List<CheckComplianceTask> checkComplianceTasks = new ArrayList<>();
 	
 	/** The run device script tasks. */
-	protected List<RunDeviceScriptTask> runDeviceScriptTasks = new ArrayList<RunDeviceScriptTask>();
+	protected List<RunDeviceScriptTask> runDeviceScriptTasks = new ArrayList<>();
 	
 	/** The diagnostic tasks. */
-	protected List<RunDiagnosticsTask> runDiagnosticsTasks = new ArrayList<RunDiagnosticsTask>();
+	protected List<RunDiagnosticsTask> runDiagnosticsTasks = new ArrayList<>();
 
 	/** The comments. */
 	protected String comments = "";
 
 	/** The compliance check results. */
-	protected Set<CheckResult> complianceCheckResults = new HashSet<CheckResult>();
+	protected Set<CheckResult> complianceCheckResults = new HashSet<>();
 
 	/** The compliance exemptions. */
-	protected Set<Exemption> complianceExemptions = new HashSet<Exemption>();
+	protected Set<Exemption> complianceExemptions = new HashSet<>();
 
 	/** The configs. */
-	protected List<Config> configs = new ArrayList<Config>();
-	
+	protected List<Config> configs = new ArrayList<>();
+
 	/** The diagnostic results. */
-	protected Set<DiagnosticResult> diagnosticResults = new HashSet<DiagnosticResult>();
+	protected Set<DiagnosticResult> diagnosticResults = new HashSet<>();
 
 	/** The contact. */
 	protected String contact = "";
@@ -186,12 +186,12 @@ public class Device {
 	private String creator;
 
 	/** The credential sets. */
-	protected Set<DeviceCredentialSet> credentialSets = new HashSet<DeviceCredentialSet>();
+	protected Set<DeviceCredentialSet> credentialSets = new HashSet<>();
 
 	/** Device-specific credential set/ */
 	protected DeviceCredentialSet specificCredentialSet;
 
-	/** The device driver name. */
+	/** The device deviceDriver name. */
 	protected String driver;
 
 	/** End of Life Date. */
@@ -225,7 +225,7 @@ public class Device {
 	protected Domain mgmtDomain;
 
 	/** The modules. */
-	protected List<Module> modules = new ArrayList<Module>();
+	protected List<Module> modules = new ArrayList<>();
 
 	/** The name. */
 	protected String name = DEFAULTNAME;
@@ -234,16 +234,16 @@ public class Device {
 	protected NetworkClass networkClass = NetworkClass.UNKNOWN;
 
 	/** The network interfaces. */
-	protected List<NetworkInterface> networkInterfaces = new ArrayList<NetworkInterface>();
+	protected List<NetworkInterface> networkInterfaces = new ArrayList<>();
 
 	/** The owner groups. */
-	protected Set<DeviceGroup> ownerGroups = new HashSet<DeviceGroup>();
+	protected Set<DeviceGroup> ownerGroups = new HashSet<>();
 
 	/** The serial number. */
 	protected String serialNumber = "";
 
 	/** The snapshot tasks. */
-	protected List<TakeSnapshotTask> snapshotTasks = new ArrayList<TakeSnapshotTask>();
+	protected List<TakeSnapshotTask> snapshotTasks = new ArrayList<>();
 
 	/** The software level. */
 	protected SoftwareRule.ConformanceLevel softwareLevel = ConformanceLevel.UNKNOWN;
@@ -255,10 +255,10 @@ public class Device {
 	protected Status status = Status.INPRODUCTION;
 
 	/** The virtual devices. */
-	protected Set<String> virtualDevices = new HashSet<String>();
+	protected Set<String> virtualDevices = new HashSet<>();
 
 	/** The vrf instances. */
-	protected Set<String> vrfInstances = new HashSet<String>();
+	protected Set<String> vrfInstances = new HashSet<>();
 	
 	/** SSH TCP port, 22 by default */
 	protected int sshPort = 0;
@@ -514,7 +514,7 @@ public class Device {
 	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public List<Long> getCredentialSetIds() {
-		List<Long> l = new ArrayList<Long>();
+		List<Long> l = new ArrayList<>();
 		for (DeviceCredentialSet credentialSet : credentialSets) {
 			l.add(credentialSet.getId());
 		}
@@ -706,10 +706,10 @@ public class Device {
 	@Transient
 	@XmlElement @JsonView(DefaultView.class)
 	public String getRealDeviceType() {
-		DeviceDriver driver;
+		DeviceDriver deviceDriver;
 		try {
-			driver = getDeviceDriver();
-			return driver.getDescription();
+			deviceDriver = getDeviceDriver();
+			return deviceDriver.getDescription();
 		}
 		catch (MissingDeviceDriverException e) {
 			return "Unknown driver";

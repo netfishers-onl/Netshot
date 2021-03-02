@@ -58,7 +58,7 @@ public class Policy {
 	private String name;
 
 	/** The rules. */
-	private Set<Rule> rules = new HashSet<Rule>();
+	private Set<Rule> rules = new HashSet<>();
 
 	/** The target group. */
 	private DeviceGroup targetGroup;

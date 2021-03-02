@@ -80,7 +80,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	public static enum DriverProtocol {
 		TELNET("telnet"), SSH("ssh"), SNMP("snmp");
 
-		private String protocol;
+		final private String protocol;
 
 		DriverProtocol(String protocol) {
 			this.protocol = protocol;
@@ -92,7 +92,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	}
 
 	/** The logger. */
-	static Logger logger = LoggerFactory.getLogger(DeviceDriver.class);
+	final static Logger logger = LoggerFactory.getLogger(DeviceDriver.class);
 
 	/** JS logger for SNMP-related messages */
 	private static TaskLogger JS_SNMP_LOGGER = new TaskLogger() {
@@ -164,10 +164,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			String path = "interfaces/driver-loader.js";
 			InputStream in = DeviceDriver.class.getResourceAsStream("/" + path);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-			StringBuffer buffer = new StringBuffer();
-			String line = null;
+			StringBuilder buffer = new StringBuilder();
+			String line;
 			while ((line = reader.readLine()) != null) {
-				buffer.append(line + "\n");
+				buffer.append(line);
+				buffer.append("\n");
 			}
 			reader.close();
 			in.close();
@@ -183,17 +184,17 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	}
 
 	/**
-	 * The list of loaded drivers.
+	 * The list of loaded newDrivers.
 	 */
 	private static Map<String, DeviceDriver> drivers = new HashMap<String, DeviceDriver>();
 
 	/**
-	 * Gets all loaded drivers.
+	 * Gets all loaded newDrivers.
 	 * 
-	 * @return the loaded drivers
+	 * @return the loaded newDrivers
 	 */
 	public static List<DeviceDriver> getAllDrivers() {
-		List<DeviceDriver> allDrivers = new ArrayList<DeviceDriver>(drivers.values());
+		List<DeviceDriver> allDrivers = new ArrayList<>(drivers.values());
 		Collections.sort(allDrivers);
 		return allDrivers;
 	}
@@ -213,27 +214,27 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	}
 
 	/**
-	 * Gets all loaded drivers as a hash.
+	 * Gets all loaded newDrivers as a hash.
 	 * 
-	 * @return the hash of loaded drivers
+	 * @return the hash of loaded newDrivers
 	 */
 	public static Map<String, DeviceDriver> getDrivers() {
 		return drivers;
 	}
 
 	/**
-	 * Reloads all the drivers from disk.
+	 * Reloads all the newDrivers from disk.
 	 * 
 	 * @throws Exception
 	 *                       something bad
 	 */
 	public static void refreshDrivers() throws Exception {
-		Map<String, DeviceDriver> drivers = new HashMap<String, DeviceDriver>();
+		Map<String, DeviceDriver> newDrivers = new HashMap<>();
 
 		final String addPath = Netshot.getConfig("netshot.drivers.path");
 		if (addPath != null) {
 			final File folder = new File(addPath);
-			if (folder != null && folder.isDirectory()) {
+			if (folder.isDirectory()) {
 				File[] files = folder.listFiles(new FileFilter() {
 					@Override
 					public boolean accept(File pathname) {
@@ -247,13 +248,13 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						InputStream stream = new FileInputStream(file);
 						reader = new InputStreamReader(stream);
 						DeviceDriver driver = new DeviceDriver(reader, file.getName());
-						if (drivers.containsKey(driver.getName())) {
+						if (newDrivers.containsKey(driver.getName())) {
 							logger.warn(
 									"Skipping user device driver file {}, because a similar driver is already loaded.",
 									file);
 						}
 						else {
-							drivers.put(driver.getName(), driver);
+							newDrivers.put(driver.getName(), driver);
 						}
 					}
 					catch (Exception e) {
@@ -291,13 +292,13 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 								.getResourceAsStream("/" + driverPathName + file.getName());
 						reader = new InputStreamReader(stream);
 						DeviceDriver driver = new DeviceDriver(reader, file.getName());
-						if (drivers.containsKey(driver.getName())) {
+						if (newDrivers.containsKey(driver.getName())) {
 							logger.warn(
 									"Skipping Netshot device driver file {}, because a similar driver is already loaded.",
 									file);
 						}
 						else {
-							drivers.put(driver.getName(), driver);
+							newDrivers.put(driver.getName(), driver);
 						}
 					}
 					catch (Exception e1) {
@@ -327,13 +328,13 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 							InputStream stream = jar.getInputStream(je);
 							reader = new InputStreamReader(stream);
 							DeviceDriver driver = new DeviceDriver(reader, je.getName().replace(driverPathName, ""));
-							if (drivers.containsKey(driver.getName())) {
+							if (newDrivers.containsKey(driver.getName())) {
 								logger.warn(
 										"Skipping Netshot device driver file {}, because a similar driver is already loaded.",
 										file);
 							}
 							else {
-								drivers.put(driver.getName(), driver);
+								newDrivers.put(driver.getName(), driver);
 							}
 						}
 						catch (Exception e1) {
@@ -352,7 +353,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 				logger.error("While looking for device drivers in {}.", path, e);
 			}
 		}
-		DeviceDriver.drivers = drivers;
+		DeviceDriver.drivers = newDrivers;
 	}
 
 	/** The name of the driver */
@@ -374,16 +375,16 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	private int priority;
 
 	/** The device attributed provided by this driver */
-	Set<AttributeDefinition> attributes = new HashSet<AttributeDefinition>();
+	Set<AttributeDefinition> attributes = new HashSet<>();
 
 	/** The protocols provided by this driver */
-	private Set<DriverProtocol> protocols = new HashSet<DriverProtocol>();
+	private Set<DriverProtocol> protocols = new HashSet<>();
 
 	/**
 	 * The main CLI modes supported by this driver (e.g. 'enable', 'configure',
 	 * etc.)
 	 */
-	private Set<String> cliMainModes = new HashSet<String>();
+	private Set<String> cliMainModes = new HashSet<>();
 
 	/** Set to true if the driver can analyze SNMP traps */
 	private boolean canAnalyzeTraps = true;
@@ -509,7 +510,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		catch (IllegalArgumentException e) {
 		}
 
-		if (this.protocols.size() == 0) {
+		if (this.protocols.isEmpty()) {
 			throw new IllegalArgumentException("Invalid driver, it supports neither Telnet nor SSH.");
 		}
 
@@ -522,7 +523,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			throw new IllegalArgumentException("Invalid driver, the 'snapshot' function cannot be found.");
 		}
 
-		logger.info("Loaded driver {}.", this);
+		logger.info("Loaded driver {} version {}.", this.name, this.version);
 	}
 
 	/**
@@ -631,12 +632,14 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	}
 
 	@Transient
-	public Context getContext() throws IOException {
+	public final Context getContext() throws IOException {
+		logger.warn("Getting context");
 		Context context = Context.newBuilder()
 			.allowIO(true).fileSystem(new PythonFileSystem())
 			.engine(engine).build();
 		context.eval(this.source);
 		context.eval(JSLOADER_SOURCE);
+		logger.warn("Context is ready");
 		return context;
 	}
 	

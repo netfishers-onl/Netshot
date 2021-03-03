@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import onl.netfishers.netshot.Netshot;
+import onl.netfishers.netshot.device.NetworkAddress;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ import net.jradius.client.auth.EAPMSCHAPv2Authenticator;
 import net.jradius.client.auth.MSCHAPv2Authenticator;
 import net.jradius.client.auth.PAPAuthenticator;
 import net.jradius.client.auth.RadiusAuthenticator;
+import net.jradius.dictionary.Attr_CallingStationId;
 import net.jradius.dictionary.Attr_NASPort;
 import net.jradius.dictionary.Attr_NASPortType;
 import net.jradius.dictionary.Attr_ServiceType;
@@ -155,7 +157,7 @@ public class Radius {
 	 * @param password the password
 	 * @return true, if successful
 	 */
-	public static UiUser authenticate(String username, String password) {
+	public static UiUser authenticate(String username, String password, NetworkAddress remoteAddress) {
 		if (!isAvailable()) {
 			return null;
 		}
@@ -163,7 +165,11 @@ public class Radius {
 		attributeList.add(new Attr_UserName(username));
 		attributeList.add(new Attr_NASPortType(Attr_NASPortType.Ethernet));
 		attributeList.add(new Attr_NASPort(1));
+		if (remoteAddress != null) {
+			attributeList.add(new Attr_CallingStationId(remoteAddress.getIp()));
+		}
 
+		boolean first = true;
 		for (RadiusClient radiusClient : clients) {
 			AccessRequest request = new AccessRequest(radiusClient, attributeList);
 			request.addAttribute(new Attr_UserPassword(password));
@@ -175,37 +181,45 @@ public class Radius {
 					aaaLogger.error(MarkerFactory.getMarker("AAA"), "Request to RADIUS server {} timed out.",
 							radiusClient.getRemoteInetAddress().toString());
 				}
-				else if (reply instanceof AccessAccept) {
-					int level = UiUser.LEVEL_READONLY;
-					try {
-						Long serviceType = (Long) reply.getAttributeValue(Attr_ServiceType.TYPE);
-						if (Attr_ServiceType.AdministrativeUser.equals(serviceType)) {
-							level = UiUser.LEVEL_ADMIN;
-						}
-						else if (Attr_ServiceType.OutboundUser.equals(serviceType)) {
-							level = UiUser.LEVEL_EXECUTEREADWRITE;
-						}
-						else if (Attr_ServiceType.NASPromptUser.equals(serviceType)) {
-							level = UiUser.LEVEL_READWRITE;
-						}
-					}
-					catch (Exception e1) {
-					}
-					aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} passed authentication on RADIUS server {} (with permission level {}).",
-							username, radiusClient.getRemoteInetAddress().toString(), level);
-					UiUser user = new UiUser(username, level);
-					return user;
-				}
 				else {
-					aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} failed authentication on RADIUS server {}.",
-							username, radiusClient.getRemoteInetAddress().toString());
-					return null;
+					// We got a reply
+					if (!first) {
+						clients.remove(radiusClient);
+						clients.add(0, radiusClient);
+					}
+					if (reply instanceof AccessAccept) {
+						int level = UiUser.LEVEL_READONLY;
+						try {
+							Long serviceType = (Long) reply.getAttributeValue(Attr_ServiceType.TYPE);
+							if (Attr_ServiceType.AdministrativeUser.equals(serviceType)) {
+								level = UiUser.LEVEL_ADMIN;
+							}
+							else if (Attr_ServiceType.OutboundUser.equals(serviceType)) {
+								level = UiUser.LEVEL_EXECUTEREADWRITE;
+							}
+							else if (Attr_ServiceType.NASPromptUser.equals(serviceType)) {
+								level = UiUser.LEVEL_READWRITE;
+							}
+						}
+						catch (Exception e1) {
+						}
+						aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} passed authentication on RADIUS server {} (with permission level {}).",
+								username, radiusClient.getRemoteInetAddress().toString(), level);
+						UiUser user = new UiUser(username, level);
+						return user;
+					}
+					else {
+						aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} failed authentication on RADIUS server {}.",
+								username, radiusClient.getRemoteInetAddress().toString());
+						return null;
+					}
 				}
 			}
 			catch (Exception e) {
 				logger.error("Error while authenticating against RADIUS server {}.",
 						radiusClient.getRemoteInetAddress().toString(), e);
 			}
+			first = false;
 		}
 		return null;
 	}

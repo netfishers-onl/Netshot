@@ -74,6 +74,7 @@ import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.aaa.ApiToken;
 import onl.netfishers.netshot.aaa.Radius;
+import onl.netfishers.netshot.aaa.Tacacs;
 import onl.netfishers.netshot.aaa.UiUser;
 import onl.netfishers.netshot.aaa.User;
 import onl.netfishers.netshot.compliance.CheckResult;
@@ -8196,6 +8197,26 @@ public class RestService extends Thread {
 		logger.debug("REST authentication request, username {}.", rsLogin.getUsername());
 		Netshot.aaaLogger.info("REST authentication request, username {}.", rsLogin.getUsername());
 
+		NetworkAddress remoteAddress = null;
+		{
+			String address = null;
+			try {
+				address = request.getHeader("X-Forwarded-For");
+				if (address == null) {
+					address = request.getRemoteAddr();
+				}
+				remoteAddress = NetworkAddress.getNetworkAddress(address, 0);
+			}
+			catch (UnknownHostException e) {
+				logger.warn("Unable to parse remote address", address);
+				try {
+					remoteAddress = new Network4Address(0, 0);
+				}
+				catch (UnknownHostException e1) {
+				}
+			}
+		}
+
 		UiUser user = null;
 
 		Session session = Database.getSession();
@@ -8213,21 +8234,27 @@ public class RestService extends Thread {
 
 		if (user != null && user.isLocal()) {
 			if (user.checkPassword(rsLogin.getPassword())) {
-				Netshot.aaaLogger.info("Local authentication success for user {}.", rsLogin.getUsername());
+				Netshot.aaaLogger.info("Local authentication success for user {} from {}.", rsLogin.getUsername(), remoteAddress);
 			}
 			else {
-				Netshot.aaaLogger.warn("Local authentication failure for user {}.", rsLogin.getUsername());
+				Netshot.aaaLogger.warn("Local authentication failure for user {} from {}.", rsLogin.getUsername(), remoteAddress);
 				user = null;
 			}
 		}
 		else {
-			UiUser remoteUser = Radius.authenticate(rsLogin.getUsername(), rsLogin.getPassword());
+			UiUser remoteUser = null;
+			if (Radius.isAvailable()) {
+				remoteUser = Radius.authenticate(rsLogin.getUsername(), rsLogin.getPassword(), remoteAddress);
+			}
+			if (remoteUser == null && Tacacs.isAvailable()) {
+				remoteUser = Tacacs.authenticate(rsLogin.getUsername(), rsLogin.getPassword(), remoteAddress);
+			}
 			if (remoteUser != null && user != null) {
 				remoteUser.setLevel(user.getLevel());
-				Netshot.aaaLogger.info("Remote authentication success for user {}.", rsLogin.getUsername());
+				Netshot.aaaLogger.info("Remote authentication success for user {} from {}.", rsLogin.getUsername(), remoteAddress);
 			}
 			else {
-				Netshot.aaaLogger.warn("Remote authentication failure for user {}.", rsLogin.getUsername());
+				Netshot.aaaLogger.warn("Remote authentication failure for user {} from {}.", rsLogin.getUsername(), remoteAddress);
 			}
 			user = remoteUser;
 		}

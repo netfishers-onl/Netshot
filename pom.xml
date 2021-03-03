@@ -272,6 +272,11 @@
 			<version>1.7.0</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.github.markusju</groupId>
+			<artifactId>TACACS</artifactId>
+			<version>31ad30d66bf84522fd03affd96f39af8b98be172</version>
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>
@@ -292,6 +297,10 @@
 			<id>jcenter</id>
 			<name>JCenter Repository</name>
 			<url>https://jcenter.bintray.com/</url>
+		</repository>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
 		</repository>
 	</repositories>
 	<url>http://www.netfishers.onl/netshot</url>

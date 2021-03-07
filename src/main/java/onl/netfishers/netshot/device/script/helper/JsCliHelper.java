@@ -38,7 +38,7 @@ import onl.netfishers.netshot.work.TaskLogger;
  */
 public class JsCliHelper {
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(JsCliHelper.class);
+	final private static Logger logger = LoggerFactory.getLogger(JsCliHelper.class);
 	
 	/** The CLI object to interact with the device via command line */
 	private Cli cli;
@@ -57,7 +57,7 @@ public class JsCliHelper {
 	 * @return the hexadecimal representation of the text
 	 */
 	private static String toHexAscii(String text) {
-		StringBuffer hex = new StringBuffer();
+		StringBuilder hex = new StringBuilder();
 		for (int i = 0; i < text.length(); i++) {
 			if (i % 32 == 0 && i > 0) {
 				hex.append("\n");

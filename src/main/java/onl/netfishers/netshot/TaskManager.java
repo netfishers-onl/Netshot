@@ -52,7 +52,7 @@ public class TaskManager {
 	private static Scheduler scheduler;
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(TaskManager.class);
+	final private static Logger logger = LoggerFactory.getLogger(TaskManager.class);
 
 	/**
 	 * Initializes the task manager.

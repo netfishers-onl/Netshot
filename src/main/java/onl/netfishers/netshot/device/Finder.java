@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
 public class Finder {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(Finder.class);
+	final private static Logger logger = LoggerFactory.getLogger(Finder.class);
 
 	public static class ParsingData {
 		private DeviceDriver deviceDriver;

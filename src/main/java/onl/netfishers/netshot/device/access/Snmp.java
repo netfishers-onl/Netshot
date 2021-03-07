@@ -82,7 +82,7 @@ public class Snmp extends Poller {
 	/** SNMPv3 priv protocol */
 	private OID privProtocol; 	
 	
-	private static Logger logger = LoggerFactory.getLogger(Snmp.class);
+	final private static Logger logger = LoggerFactory.getLogger(Snmp.class);
 
 	/**
 	 * Instantiates a new SNMP object based on a target address and a Netshot community.

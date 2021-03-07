@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Telnet extends Cli {
 	
-	private static Logger logger = LoggerFactory.getLogger(Ssh.class);
+	final private static Logger logger = LoggerFactory.getLogger(Ssh.class);
 
 	/** Default value for the SSH connection timeout */
 	static private int DEFAULT_CONNECTION_TIMEOUT = 5000;

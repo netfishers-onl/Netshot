@@ -53,7 +53,7 @@ public class ConfigBinaryAttribute extends ConfigAttribute {
 	@Override
 	@Transient
 	public String getAsText() {
-		if (Boolean.TRUE == assumption) {
+		if (Boolean.TRUE.equals(assumption)) {
 			return "true";
 		}
 		else {

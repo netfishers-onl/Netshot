@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 
 public class Tester {
 
-	private static Logger logger = LoggerFactory.getLogger(Tester.class);
+	final private static Logger logger = LoggerFactory.getLogger(Tester.class);
 
 	public static void createDevices() {
 

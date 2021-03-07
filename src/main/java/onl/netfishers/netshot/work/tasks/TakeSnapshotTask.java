@@ -56,7 +56,7 @@ import org.slf4j.LoggerFactory;
 public class TakeSnapshotTask extends Task {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(TakeSnapshotTask.class);
+	final private static Logger logger = LoggerFactory.getLogger(TakeSnapshotTask.class);
 
 	/** Allow trap from any IP of a device to trigger a automatic snapshot. */ 
 	private static boolean AUTOSNAPSHOT_ANYIP = false;

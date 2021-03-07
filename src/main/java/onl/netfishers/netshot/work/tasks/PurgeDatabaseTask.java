@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 public class PurgeDatabaseTask extends Task {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(PurgeDatabaseTask.class);
+	final private static Logger logger = LoggerFactory.getLogger(PurgeDatabaseTask.class);
 	
 	private int days;
 	

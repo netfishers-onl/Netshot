@@ -44,7 +44,7 @@ import onl.netfishers.netshot.device.attribute.DeviceTextAttribute;
  */
 public class JsDeviceHelper {
 	
-	private static Logger logger = LoggerFactory.getLogger(JsDeviceHelper.class);
+	final private static Logger logger = LoggerFactory.getLogger(JsDeviceHelper.class);
 	
 	private Device device;
 	private Session session;

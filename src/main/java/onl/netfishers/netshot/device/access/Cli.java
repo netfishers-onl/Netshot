@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class Cli {
 	
-	private static Logger logger = LoggerFactory.getLogger(Cli.class);
+	final private static Logger logger = LoggerFactory.getLogger(Cli.class);
 	
 	private static Pattern ansiEscapePattern = Pattern.compile("\u001B\\[([;\\d]*m|[\u0030-\u003F]*[\u0020-\u002F]*[\u0040-\u007E])");
 	

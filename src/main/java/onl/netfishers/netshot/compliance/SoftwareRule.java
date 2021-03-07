@@ -323,9 +323,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 		if (getClass() != obj.getClass())
 			return false;
 		SoftwareRule other = (SoftwareRule) obj;
-		if (id != other.id)
-			return false;
-		return true;
+		return id == other.id;
 	}
 
 	/**

@@ -45,8 +45,8 @@ import onl.netfishers.netshot.device.NetworkAddress;
 public class Tacacs {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(Tacacs.class);
-	private static Logger aaaLogger = LoggerFactory.getLogger("AAA");
+	final private static Logger logger = LoggerFactory.getLogger(Tacacs.class);
+	final private static Logger aaaLogger = LoggerFactory.getLogger("AAA");
 
 	/** The client. */
 	private static TacacsClient client = null;
@@ -84,8 +84,8 @@ public class Tacacs {
 	}
 
 	static {
-		List<String> hosts = new ArrayList<String>();
-		List<String> keys = new ArrayList<String>();
+		List<String> hosts = new ArrayList<>();
+		List<String> keys = new ArrayList<>();
 		for (int i = 1; i < 4; i++) {
 			loadServerConfig(i, hosts, keys);
 		}
@@ -133,14 +133,16 @@ public class Tacacs {
 					int level = UiUser.LEVEL_READONLY;
 					String role = authoReply.getValue("role");
 					aaaLogger.debug(MarkerFactory.getMarker("AAA"), "The TACACS+ server returned role: {}", role);
-					if ("admin".equals(role)) {
+					switch (role) {
+					case "admin":
 						level = UiUser.LEVEL_ADMIN;
-					}
-					else if ("execute-read-write".equals(role)) {
+						break;
+					case "execute-read-write":
 						level = UiUser.LEVEL_EXECUTEREADWRITE;
-					}
-					else if ("read-write".equals(role)) {
+						break;
+					case "read-write":
 						level = UiUser.LEVEL_READWRITE;
+						break;
 					}
 					aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} passed TACACS+ authentication (with permission level {}).",
 							username, level);

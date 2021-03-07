@@ -45,7 +45,7 @@ public class SyslogServer extends Collector {
 	private int udpPort = 514;
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(SyslogServer.class);
+	final private static Logger logger = LoggerFactory.getLogger(SyslogServer.class);
 
 	/** The static Syslog server. */
 	private static SyslogServer nsSyslogServer;

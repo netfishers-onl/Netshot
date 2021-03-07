@@ -35,7 +35,7 @@ import onl.netfishers.netshot.work.Task;
 public class RunDiagnosticsTask extends Task {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(RunDiagnosticsTask.class);
+	final private static Logger logger = LoggerFactory.getLogger(RunDiagnosticsTask.class);
 
 	/** Device IDs on which diagnostics are currently being executed. */
 	private static Set<Long> runningDiagnostics = ConcurrentHashMap.newKeySet();

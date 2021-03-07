@@ -36,7 +36,7 @@ import onl.netfishers.netshot.work.TaskLogger;
  */
 public class JsSnmpHelper {
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(JsSnmpHelper.class);
+	final private static Logger logger = LoggerFactory.getLogger(JsSnmpHelper.class);
 
 	/** The poller */
 	private Snmp poller;

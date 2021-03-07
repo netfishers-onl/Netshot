@@ -67,7 +67,7 @@ public abstract class Diagnostic {
 	private static final Set<Class<? extends Diagnostic>> DIAGNOSTIC_CLASSES;
 
 	static {
-		DIAGNOSTIC_CLASSES = new HashSet<Class<? extends Diagnostic>>();
+		DIAGNOSTIC_CLASSES = new HashSet<>();
 		DIAGNOSTIC_CLASSES.add(SimpleDiagnostic.class);
 		DIAGNOSTIC_CLASSES.add(JavaScriptDiagnostic.class);
 		DIAGNOSTIC_CLASSES.add(PythonDiagnostic.class);
@@ -98,7 +98,7 @@ public abstract class Diagnostic {
 	protected AttributeType resultType;
 
 	/** The associated results */
-	List<DiagnosticResult> results = new ArrayList<DiagnosticResult>();
+	List<DiagnosticResult> results = new ArrayList<>();
 	
 	/**
 	 * Instantiate a new diagnostic.
@@ -265,8 +265,7 @@ public abstract class Diagnostic {
 		if (obj == null) return false;
 		if (!(obj instanceof Diagnostic)) return false;
 		Diagnostic other = (Diagnostic) obj;
-		if (id != other.id) return false;
-		return true;
+		return id == other.id;
 	}
 
 	@Override

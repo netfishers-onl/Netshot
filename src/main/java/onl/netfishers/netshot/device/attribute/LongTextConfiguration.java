@@ -56,6 +56,7 @@ public class LongTextConfiguration {
 		this.id = id;
 	}
 	
+	@Override
 	public String toString() {
 		return getText();
 	}

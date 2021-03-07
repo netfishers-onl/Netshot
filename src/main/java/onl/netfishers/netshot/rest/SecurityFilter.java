@@ -41,7 +41,7 @@ import onl.netfishers.netshot.aaa.User;
 
 	private class Authorizer implements SecurityContext {
 
-		private User user;
+		final private User user;
 
 		public Authorizer(User user) {
 			this.user = user;

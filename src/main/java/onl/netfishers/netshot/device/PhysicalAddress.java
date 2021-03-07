@@ -64,8 +64,8 @@ public class PhysicalAddress {
 				"^(?<b0>[0-9A-F]{1,2})[\\-\\.:](?<b1>[0-9A-F]{1,2})[\\-\\.:](?<b2>[0-9A-F]{1,2})[\\-\\.:]" +
 						"(?<b3>[0-9A-F]{1,2})[\\-\\.:](?<b4>[0-9A-F]{1,2})[\\-\\.:](?<b5>[0-9A-F]{1,2})$"
 		};
-		for (int i = 0; i < patterns.length; i++) {
-			Pattern p = Pattern.compile(patterns[i], Pattern.CASE_INSENSITIVE);
+		for (String pattern : patterns) {
+			Pattern p = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 			Matcher m = p.matcher(address);
 			if (m.find()) {
 				try {
@@ -110,9 +110,7 @@ public class PhysicalAddress {
 		if (getClass() != obj.getClass())
 			return false;
 		PhysicalAddress other = (PhysicalAddress) obj;
-		if (address != other.address)
-			return false;
-		return true;
+		return address == other.address;
 	}
 
 	/**
@@ -145,6 +143,7 @@ public class PhysicalAddress {
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
+	@Override
 	public String toString() {
 		byte[] macAddress = toBytes();
 		return String.format("%02x%02x.%02x%02x.%02x%02x",

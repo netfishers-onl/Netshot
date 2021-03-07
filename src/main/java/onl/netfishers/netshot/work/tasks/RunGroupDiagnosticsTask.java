@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 public class RunGroupDiagnosticsTask extends Task {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(RunGroupDiagnosticsTask.class);
+	final private static Logger logger = LoggerFactory.getLogger(RunGroupDiagnosticsTask.class);
 
 	/** The device group. */
 	private DeviceGroup deviceGroup;

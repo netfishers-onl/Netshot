@@ -58,7 +58,7 @@ import org.slf4j.MarkerFactory;
 public class JavaScriptRule extends Rule {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(JavaScriptRule.class);
+	final private static Logger logger = LoggerFactory.getLogger(JavaScriptRule.class);
 
 	/** The allowed results. */
 	private static CheckResult.ResultOption[] ALLOWED_RESULTS = new CheckResult.ResultOption[] {
@@ -79,7 +79,8 @@ public class JavaScriptRule extends Rule {
 			StringBuffer buffer = new StringBuffer();
 			String line = null;
 			while ((line = reader.readLine()) != null) {
-				buffer.append(line + "\n");
+				buffer.append(line);
+				buffer.append("\n");
 			}
 			JSLOADER_SOURCE = Source.create("js", buffer.toString());
 			reader.close();

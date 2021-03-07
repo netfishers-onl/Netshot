@@ -56,10 +56,10 @@ public class TftpServer extends Collector {
 	private TFTP tftp;
 
 	/** The transfers. */
-	private Set<TftpTransfer> transfers = new HashSet<TftpTransfer>();
+	final private Set<TftpTransfer> transfers = new HashSet<>();
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(TftpServer.class);
+	final private static Logger logger = LoggerFactory.getLogger(TftpServer.class);
 
 	/** The static TFTP server instance. */
 	private static TftpServer nsTftpServer = null;
@@ -460,10 +460,7 @@ public class TftpServer extends Collector {
 			}
 			String file1 = fileName.replaceFirst("^/", "");
 			String file2 = packet.getFilename().replaceFirst("^/", "");
-			if (!file1.equals(file2)) {
-				return false;
-			}
-			return true;
+			return file1.equals(file2);
 		}
 
 		/**
@@ -518,9 +515,7 @@ public class TftpServer extends Collector {
 			}
 			else if (!source.equals(other.source))
 				return false;
-			if (startTime != other.startTime)
-				return false;
-			return true;
+			return startTime == other.startTime;
 		}
 
 	}

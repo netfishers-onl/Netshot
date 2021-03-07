@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 public class PythonFileSystem implements FileSystem {
 
 	/** The logger. */
-		private static Logger logger = LoggerFactory.getLogger(PythonFileSystem.class);
+		final private static Logger logger = LoggerFactory.getLogger(PythonFileSystem.class);
 		
 
 	private final FileSystem delegate;

@@ -71,7 +71,7 @@ public class Domain {
 	private String description;
 
 	/** The domain credential sets/. */
-	private Set<DeviceCredentialSet> credentialSets = new HashSet<DeviceCredentialSet>();
+	private Set<DeviceCredentialSet> credentialSets = new HashSet<>();
 
 	/** The server4 address. */
 	private Network4Address server4Address;

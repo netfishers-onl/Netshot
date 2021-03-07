@@ -59,7 +59,7 @@ import org.slf4j.MarkerFactory;
 public class PythonRule extends Rule {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(PythonRule.class);
+	final private static Logger logger = LoggerFactory.getLogger(PythonRule.class);
 
 	/** The allowed results. */
 	private static CheckResult.ResultOption[] ALLOWED_RESULTS = new CheckResult.ResultOption[] {
@@ -78,10 +78,11 @@ public class PythonRule extends Rule {
 			String path = "interfaces/rule-loader.py";
 			InputStream in = DeviceDriver.class.getResourceAsStream("/" + path);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-			StringBuffer buffer = new StringBuffer();
-			String line = null;
+			StringBuilder buffer = new StringBuilder();
+			String line;
 			while ((line = reader.readLine()) != null) {
-				buffer.append(line + "\n");
+				buffer.append(line);
+				buffer.append("\n");
 			}
 			PYLOADER_SOURCE = Source.create("python", buffer.toString());
 			reader.close();

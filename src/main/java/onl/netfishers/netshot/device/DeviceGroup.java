@@ -75,16 +75,16 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 abstract public class DeviceGroup {
 	
 	/** The applied policies. */
-	protected Set<Policy> appliedPolicies = new HashSet<Policy>();
+	protected Set<Policy> appliedPolicies = new HashSet<>();
 	
 	/** The applied software rules. */
-	protected Set<SoftwareRule> appliedSoftwareRules = new HashSet<SoftwareRule>();
+	protected Set<SoftwareRule> appliedSoftwareRules = new HashSet<>();
 	
 	/** The applied hardware rules. */
-	protected Set<HardwareRule> appliedHardwareRules = new HashSet<HardwareRule>();
+	protected Set<HardwareRule> appliedHardwareRules = new HashSet<>();
 	
 	/** The cached devices. */
-	protected Set<Device> cachedDevices = new HashSet<Device>();
+	protected Set<Device> cachedDevices = new HashSet<>();
 	
 	/** The change date. */
 	protected Date changeDate;
@@ -92,16 +92,16 @@ abstract public class DeviceGroup {
 	private int version;
 	
 	/** The check compliance tasks. */
-	protected List<CheckGroupComplianceTask> checkComplianceTasks = new ArrayList<CheckGroupComplianceTask>();
+	protected List<CheckGroupComplianceTask> checkComplianceTasks = new ArrayList<>();
 	
 	/** The check software compliance tasks. */
-	protected List<CheckGroupSoftwareTask> checkSoftwareComplianceTasks = new ArrayList<CheckGroupSoftwareTask>();
+	protected List<CheckGroupSoftwareTask> checkSoftwareComplianceTasks = new ArrayList<>();
 	
 	/** The script tasks. */
-	protected List<RunDeviceGroupScriptTask> runDeviceGroupScriptTasks = new ArrayList<RunDeviceGroupScriptTask>();
+	protected List<RunDeviceGroupScriptTask> runDeviceGroupScriptTasks = new ArrayList<>();
 	
 	/** The diagnostics. */
-	protected List<Diagnostic> diagnostics = new ArrayList<Diagnostic>();
+	protected List<Diagnostic> diagnostics = new ArrayList<>();
 	
 	/** The id. */
 	protected long id;
@@ -116,7 +116,7 @@ abstract public class DeviceGroup {
 	protected boolean hiddenFromReports = false;
 	
 	/** The snapshot tasks. */
-	protected List<TakeGroupSnapshotTask> snapshotTasks = new ArrayList<TakeGroupSnapshotTask>();
+	protected List<TakeGroupSnapshotTask> snapshotTasks = new ArrayList<>();
 	
 	/**
 	 * Instantiates a new device group.

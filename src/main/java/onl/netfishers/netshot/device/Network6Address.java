@@ -160,10 +160,7 @@ public class Network6Address extends NetworkAddress {
 			return false;
 		}
 		Network6Address other = (Network6Address) obj;
-		if (address1 != other.address1 || address2 != other.address2 || prefixLength != other.prefixLength) {
-			return false;
-		}
-		return true;
+		return (address1 == other.address1) && (address2 == other.address2) && (prefixLength == other.prefixLength);
 	}
 
 	/**
@@ -198,6 +195,7 @@ public class Network6Address extends NetworkAddress {
 	 */
 	@Transient
 	@XmlAttribute
+	@Override
 	public String getIp() {
 		return Network6Address.intToIP(address1, address2);
 	}
@@ -208,6 +206,7 @@ public class Network6Address extends NetworkAddress {
 	 * @return the prefix
 	 */
 	@Transient
+	@Override
 	public String getPrefix() {
 		return getIp() + "/" + prefixLength;
 	}
@@ -218,6 +217,7 @@ public class Network6Address extends NetworkAddress {
 	 * @return the prefix length
 	 */
 	@XmlAttribute
+	@Override
 	public int getPrefixLength() {
 		return prefixLength;
 	}
@@ -265,6 +265,7 @@ public class Network6Address extends NetworkAddress {
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
+	@Override
 	public String toString() {
 		return this.getPrefix();
 	}
@@ -272,10 +273,12 @@ public class Network6Address extends NetworkAddress {
 	private AddressUsage addressUsage = AddressUsage.PRIMARY;
 
 	@XmlElement @JsonView(DefaultView.class)
+	@Override
 	public AddressUsage getAddressUsage() {
 		return addressUsage;
 	}
 
+	@Override
 	public void setAddressUsage(AddressUsage usage) {
 		this.addressUsage = usage;
 	}

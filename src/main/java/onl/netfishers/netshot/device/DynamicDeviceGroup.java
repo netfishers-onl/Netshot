@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 public class DynamicDeviceGroup extends DeviceGroup {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(DeviceGroup.class);
+	final private static Logger logger = LoggerFactory.getLogger(DeviceGroup.class);
 
 	/** The device class. */
 	private String driver = null;
@@ -139,9 +139,9 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	@Override
 	public void refreshCache(Session session) throws FinderParseException, HibernateException {
 		Finder finder = this.getFinder();
-		Query<Device> query = session.createQuery("select d" + finder.getHql(), Device.class);
-		finder.setVariables(query);
-		List<Device> devices = query.list();
+		Query<Device> cacheQuery = session.createQuery("select d" + finder.getHql(), Device.class);
+		finder.setVariables(cacheQuery);
+		List<Device> devices = cacheQuery.list();
 		this.updateCachedDevices(devices);
 		this.query = finder.getFormattedQuery();
 	}
@@ -156,7 +156,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	 */
 	public void refreshCache(Session session, Device device) throws FinderParseException, HibernateException {
 		logger.debug("Refreshing cache of group {} for device {}.", this.getId(), device.getId());
-		long id = device.getId();
+		long deviceId = device.getId();
 		if (this.query.isEmpty()) {
 			if (this.getDeviceDriver() == null || this.getDeviceDriver().getName().equals(device.getDriver())) {
 				this.cachedDevices.add(device);
@@ -166,12 +166,12 @@ public class DynamicDeviceGroup extends DeviceGroup {
 			}
 		}
 		else {
-			String deviceQuery = String.format("[DEVICE] IS %d AND (%s)", id, this.query);
+			String deviceQuery = String.format("[DEVICE] IS %d AND (%s)", deviceId, this.query);
 			logger.trace("Finder query: '{}'.", deviceQuery);
 			Finder finder = new Finder(deviceQuery, this.getDeviceDriver());
-			Query<Long> query = session.createQuery("select d.id" + finder.getHql(), Long.class);
-			finder.setVariables(query);
-			if (query.uniqueResult() == null) {
+			Query<Long> cacheQuery = session.createQuery("select d.id" + finder.getHql(), Long.class);
+			finder.setVariables(cacheQuery);
+			if (cacheQuery.uniqueResult() == null) {
 				this.cachedDevices.remove(device);
 			}
 			else {

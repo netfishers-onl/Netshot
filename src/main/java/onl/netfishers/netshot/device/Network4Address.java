@@ -263,10 +263,7 @@ public class Network4Address extends NetworkAddress {
 			return false;
 		}
 		Network4Address other = (Network4Address) obj;
-		if (address != other.address || prefixLength != other.prefixLength) {
-			return false;
-		}
-		return true;
+		return (address == other.address) && (prefixLength == other.prefixLength);
 	}
 
 	/**
@@ -284,6 +281,7 @@ public class Network4Address extends NetworkAddress {
 	 * @see onl.netfishers.netshot.device.NetworkAddress#getInetAddress()
 	 */
 	@Transient
+	@Override
 	public InetAddress getInetAddress() {
 		try {
 			return Network4Address.intToInetAddress(this.address);
@@ -310,6 +308,7 @@ public class Network4Address extends NetworkAddress {
 	 */
 	@XmlAttribute
 	@Transient
+	@Override
 	public String getIp() {
 		return intToIP(this.address);
 	}
@@ -320,6 +319,7 @@ public class Network4Address extends NetworkAddress {
 	 * @return the prefix
 	 */
 	@Transient
+	@Override
 	public String getPrefix() {
 		return intToIP(this.address) + "/" + prefixLength;
 	}
@@ -330,6 +330,7 @@ public class Network4Address extends NetworkAddress {
 	 * @return the prefix length
 	 */
 	@XmlAttribute
+	@Override
 	public int getPrefixLength() {
 		return prefixLength;
 	}
@@ -469,10 +470,12 @@ public class Network4Address extends NetworkAddress {
 	private AddressUsage addressUsage = AddressUsage.PRIMARY;
 
 	@XmlElement @JsonView(DefaultView.class)
+	@Override
 	public AddressUsage getAddressUsage() {
 		return addressUsage;
 	}
 
+	@Override
 	public void setAddressUsage(AddressUsage usage) {
 		this.addressUsage = usage;
 	}

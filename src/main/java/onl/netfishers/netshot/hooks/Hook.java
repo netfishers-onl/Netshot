@@ -46,7 +46,7 @@ public abstract class Hook {
 	private boolean enabled = true;
 
 	/** List of associated triggers */
-	private Set<HookTrigger> triggers = new HashSet<HookTrigger>();
+	private Set<HookTrigger> triggers = new HashSet<>();
 
 	/**
 	 * Gets the ID of the webhook.

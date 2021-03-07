@@ -152,10 +152,11 @@ public class Database {
 	private static Configuration configuration;
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(Database.class);
+	final private static Logger logger = LoggerFactory.getLogger(Database.class);
 
 	private static class DatabaseInterceptor extends EmptyInterceptor {
 
+		@Override
 		public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState,
 				String[] propertyNames, Type[] types) {
 			int indexOf = ArrayUtils.indexOf(propertyNames, "changeDate");
@@ -166,6 +167,7 @@ public class Database {
 			return false;
 		}
 
+		@Override
 		public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
 			int indexOf = ArrayUtils.indexOf(propertyNames, "changeDate");
 			if (indexOf != ArrayUtils.INDEX_NOT_FOUND) {
@@ -485,16 +487,16 @@ public class Database {
 	public static List<Class<?>> listClassesInPackage(String packageName) throws ClassNotFoundException, IOException {
 		String path = packageName.replace('.', '/');
 		Enumeration<URL> resources = ClassLoader.getSystemResources(path);
-		List<String> dirs = new ArrayList<String>();
+		List<String> dirs = new ArrayList<>();
 		while (resources.hasMoreElements()) {
 			URL resource = resources.nextElement();
 			dirs.add(URLDecoder.decode(resource.getFile(), "UTF-8"));
 		}
-		TreeSet<String> classes = new TreeSet<String>();
+		TreeSet<String> classes = new TreeSet<>();
 		for (String directory : dirs) {
 			classes.addAll(findClasses(directory, packageName));
 		}
-		ArrayList<Class<?>> classList = new ArrayList<Class<?>>();
+		ArrayList<Class<?>> classList = new ArrayList<>();
 		for (String clazz : classes) {
 			classList.add(Class.forName(clazz));
 		}
@@ -516,7 +518,7 @@ public class Database {
 	 */
 	private static TreeSet<String> findClasses(String path, String packageName)
 			throws MalformedURLException, IOException {
-		TreeSet<String> classes = new TreeSet<String>();
+		TreeSet<String> classes = new TreeSet<>();
 		if (path.startsWith("file:") && path.contains("!")) {
 			String[] split = path.split("!");
 			URL jar = new URL(split[0]);

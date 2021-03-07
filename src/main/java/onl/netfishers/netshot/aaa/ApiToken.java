@@ -45,7 +45,7 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 })
 public class ApiToken implements User {
 
-	private static StandardStringDigester digester;
+	final private static StandardStringDigester digester;
 
 	static {
 		digester = new StandardStringDigester();
@@ -147,6 +147,7 @@ public class ApiToken implements User {
 	 * @return the level
 	 */
 	@XmlElement @JsonView(DefaultView.class)
+	@Override
 	public int getLevel() {
 		return level;
 	}

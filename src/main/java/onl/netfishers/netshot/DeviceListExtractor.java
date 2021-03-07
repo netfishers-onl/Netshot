@@ -39,7 +39,7 @@ import onl.netfishers.netshot.device.credentials.DeviceTelnetAccount;
 public class DeviceListExtractor extends Netshot {
 	
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(DeviceListExtractor.class);
+	final private static Logger logger = LoggerFactory.getLogger(DeviceListExtractor.class);
 	
 	/**
 	 * Initializes the logging.
@@ -110,7 +110,7 @@ public class DeviceListExtractor extends Netshot {
 				if (community == null) {
 					logger.warn(String.format("No SNMP community found for device %s.", device.getName()));
 				}
-				List<String> fields = new ArrayList<String>();
+				List<String> fields = new ArrayList<>();
 				fields.add(device.getMgmtAddress().getInetAddress().getHostAddress());		// Col. 1 = IP Address <<<
 				fields.add(device.getName());			// Col. 2 = Host Name <<<
 				fields.add("");							// Col. 3 = Domain Name

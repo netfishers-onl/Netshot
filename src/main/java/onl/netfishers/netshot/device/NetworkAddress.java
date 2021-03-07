@@ -116,6 +116,7 @@ public abstract class NetworkAddress {
 	 * 
 	 * @see java.lang.Object#toString()
 	 */
+	@Override
 	public String toString() {
 		return getPrefix();
 	}

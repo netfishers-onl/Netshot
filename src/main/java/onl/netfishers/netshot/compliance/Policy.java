@@ -219,9 +219,7 @@ public class Policy {
 		if (getClass() != obj.getClass())
 			return false;
 		Policy other = (Policy) obj;
-		if (id != other.id)
-			return false;
-		return true;
+		return id == other.id;
 	}
 
 	@Override

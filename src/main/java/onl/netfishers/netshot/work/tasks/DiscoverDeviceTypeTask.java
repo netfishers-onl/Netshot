@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory;
 public class DiscoverDeviceTypeTask extends Task {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory
+	final private static Logger logger = LoggerFactory
 			.getLogger(DiscoverDeviceTypeTask.class);
 
 	/** The credential sets. */

@@ -57,7 +57,7 @@ import onl.netfishers.netshot.rest.RestViews.HookView;
 @Entity
 public class WebHook extends Hook {
 	/* Class logger */
-	private static Logger logger = LoggerFactory.getLogger(WebHook.class);
+	final private static Logger logger = LoggerFactory.getLogger(WebHook.class);
 
 	/**
 	 * Types of web hook
@@ -179,7 +179,7 @@ public class WebHook extends Hook {
 
 	@Override
 	public String execute(Object data) throws Exception {
-		URL url = this.getParsedUrl();
+		URL targetUrl = this.getParsedUrl();
 
 		ClientConfig config = new ClientConfig();
 		MediaType mediaType;
@@ -218,7 +218,7 @@ public class WebHook extends Hook {
 		clientBuilder.withConfig(config);
 
 		Client client = clientBuilder.build();
-		Response response = client.target(url.toURI()).request().post(javax.ws.rs.client.Entity.entity(data, mediaType));
+		Response response = client.target(targetUrl.toURI()).request().post(javax.ws.rs.client.Entity.entity(data, mediaType));
 
 		return String.format("HTTP response code %d", response.getStatus());
 	}

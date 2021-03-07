@@ -371,9 +371,7 @@ public class Device {
 		if (getClass() != obj.getClass())
 			return false;
 		Device other = (Device) obj;
-		if (id != other.id)
-			return false;
-		return true;
+		return id == other.id;
 	}
 	
 	@XmlElement @JsonView(RestApiView.class)

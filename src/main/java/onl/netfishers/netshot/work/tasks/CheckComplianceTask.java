@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 public class CheckComplianceTask extends Task {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(CheckComplianceTask.class);
+	final private static Logger logger = LoggerFactory.getLogger(CheckComplianceTask.class);
 
 	/** The device. */
 	private Device device;

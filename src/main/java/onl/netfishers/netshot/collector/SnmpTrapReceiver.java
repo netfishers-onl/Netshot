@@ -56,7 +56,7 @@ import org.snmp4j.util.ThreadPool;
 public class SnmpTrapReceiver extends Collector implements CommandResponder {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory
+	final private static Logger logger = LoggerFactory
 			.getLogger(SnmpTrapReceiver.class);
 
 	/** The dispatcher. */
@@ -154,9 +154,9 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 				&& (event.getSecurityModel() == SecurityModel.SECURITY_MODEL_SNMPv1 || event
 						.getSecurityModel() == SecurityModel.SECURITY_MODEL_SNMPv2c)) {
 
-			String community = new String(event.getSecurityName());
+			String receivedCommunity = new String(event.getSecurityName());
 
-			if (this.community.equals(community)) {
+			if (this.community.equals(receivedCommunity)) {
 				Address address = event.getPeerAddress();
 				if (address instanceof IpAddress) {
 					InetAddress inetAddress = ((IpAddress) address).getInetAddress();
@@ -164,20 +164,21 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 						try {
 							Network4Address source = new Network4Address(
 									(Inet4Address) inetAddress, 32);
-							Map<String, Object> data = new HashMap<String, Object>();
+							Map<String, Object> data = new HashMap<>();
 							for (VariableBinding var : event.getPDU().getVariableBindings()) {
 								data.put(var.getOid().toDottedString(), var.getVariable().toString());
 							}
-							if (event.getSecurityModel() == SecurityModel.SECURITY_MODEL_SNMPv1) {
+							switch (event.getSecurityModel()) {
+							case SecurityModel.SECURITY_MODEL_SNMPv1:
 								data.put("version", "1");
-							}
-							else if (event.getSecurityModel() == SecurityModel.SECURITY_MODEL_SNMPv2c) {
+								break;
+							case SecurityModel.SECURITY_MODEL_SNMPv2c:
 								data.put("version", "2c");
-							}
-							else {
+								break;
+							default:
 								data.put("version", "Unknown");
 							}
-							List<String> matchingDrivers = new ArrayList<String>();
+							List<String> matchingDrivers = new ArrayList<>();
 							for (DeviceDriver driver : DeviceDriver.getAllDrivers()) {
 								if (driver.analyzeTrap(data, source)) {
 									matchingDrivers.add(driver.getName());
@@ -194,10 +195,9 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 				}
 			}
 			else {
-				logger.warn("Invalid community {} (vs {}) received from {}.", community,
+				logger.warn("Invalid community {} (vs {}) received from {}.", receivedCommunity,
 						this.community, event.getPeerAddress());
 			}
-
 		}
 	}
 

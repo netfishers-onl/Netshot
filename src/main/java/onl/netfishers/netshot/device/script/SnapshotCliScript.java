@@ -58,7 +58,7 @@ import onl.netfishers.netshot.work.TaskLogger;
 
 public class SnapshotCliScript extends CliScript {
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(SnapshotCliScript.class);
+	final private static Logger logger = LoggerFactory.getLogger(SnapshotCliScript.class);
 
 	public SnapshotCliScript(boolean cliLogging) {
 		super(cliLogging);

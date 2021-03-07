@@ -50,7 +50,7 @@ import onl.netfishers.netshot.work.TaskLogger;
 
 public class RunDiagnosticCliScript extends CliScript {
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(RunDiagnosticCliScript.class);
+	final private static Logger logger = LoggerFactory.getLogger(RunDiagnosticCliScript.class);
 	
 	/** The diagnostics to execute. */
 	private List<Diagnostic> diagnostics;

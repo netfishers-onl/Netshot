@@ -46,7 +46,7 @@ import onl.netfishers.netshot.work.TaskLogger;
  *
  */
 public class JsConfigHelper {
-	private static Logger logger = LoggerFactory.getLogger(JsConfigHelper.class);
+	final private static Logger logger = LoggerFactory.getLogger(JsConfigHelper.class);
 	
 	private final Device device;
 	private Config config;

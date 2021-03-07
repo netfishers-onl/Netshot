@@ -107,7 +107,7 @@ public abstract class Task implements Cloneable {
 	}
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(Task.class);
+	final private static Logger logger = LoggerFactory.getLogger(Task.class);
 
 	/** The Constant TASK_CLASSES. */
 	private static final Set<Class<? extends Task>> TASK_CLASSES;

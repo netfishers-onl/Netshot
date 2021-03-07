@@ -44,7 +44,7 @@ import onl.netfishers.netshot.device.attribute.DeviceTextAttribute;
  */
 public class PyDeviceHelper {
 
-	private static Logger logger = LoggerFactory.getLogger(PyDeviceHelper.class);
+	final private static Logger logger = LoggerFactory.getLogger(PyDeviceHelper.class);
 
 	private Device device;
 	private Session session;

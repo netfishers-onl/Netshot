@@ -49,7 +49,7 @@ import onl.netfishers.netshot.work.TaskLogger;
  */
 public class JsCliScript extends CliScript {
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(JsCliScript.class);
+	final private static Logger logger = LoggerFactory.getLogger(JsCliScript.class);
 
 	// The JavaScript code to execute
 	private String code;

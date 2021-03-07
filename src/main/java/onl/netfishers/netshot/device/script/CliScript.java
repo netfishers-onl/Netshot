@@ -58,7 +58,7 @@ import onl.netfishers.netshot.work.TaskLogger;
  */
 public abstract class CliScript {
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(CliScript.class);
+	final private static Logger logger = LoggerFactory.getLogger(CliScript.class);
 
 	/** The log. */
 	protected transient List<String> jsLog  = new ArrayList<String>();

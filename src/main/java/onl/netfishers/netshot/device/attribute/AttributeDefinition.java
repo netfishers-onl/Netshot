@@ -61,49 +61,50 @@ public class AttributeDefinition {
 		if (!this.title.matches("^[0-9A-Za-z\\-_\\(\\)][0-9A-Za-z \\-_\\(\\)]+$")) {
 			throw new IllegalArgumentException("Invalid title for item %s.");
 		}
-		String type = data.getMember("type").asString();
-		if (type.equals("Text")) {
+		String textType = data.getMember("type").asString();
+		switch (textType) {
+		case "Text":
 			this.type = AttributeType.TEXT;
-		}
-		else if (type.equals("LongText")) {
+			break;
+		case "LongText":
 			this.type = AttributeType.LONGTEXT;
-		}
-		else if (type.equals("Numeric")) {
+			break;
+		case "Numeric":
 			this.type = AttributeType.NUMERIC;
-		}
-		else if (type.equals("Binary")) {
+			break;
+		case "Binary":
 			this.type = AttributeType.BINARY;
-		}
-		else if (type.equals("BinaryFile")) {
+			break;
+		case "BinaryFile":
 			this.type = AttributeType.BINARYFILE;
-		}
-		else {
+			break;
+		default:
 			throw new IllegalArgumentException("Invalid type for item %s.");
 		}
 		this.searchable = JsDeviceHelper.getBooleanMember(data, "searchable", false);
 		this.comparable = JsDeviceHelper.getBooleanMember(data, "comparable", false);
 		this.checkable = JsDeviceHelper.getBooleanMember(data, "checkable", false);
-		Value dump = data.getMember("dump");
-		if (dump == null) {
+		Value dataDump = data.getMember("dump");
+		if (dataDump == null) {
 			this.dump = false;
 		}
 		else {
-			if (dump.isBoolean()) {
-				this.dump = dump.asBoolean();
+			if (dataDump.isBoolean()) {
+				this.dump = dataDump.asBoolean();
 			}
 			else {
 				this.dump = true;
-				if (dump.hasMember("pre")) {
-					this.preDump = dump.getMember("pre").asString();
+				if (dataDump.hasMember("pre")) {
+					this.preDump = dataDump.getMember("pre").asString();
 				}
-				if (dump.hasMember("preLine")) {
-					this.preLineDump = dump.getMember("preLine").asString();
+				if (dataDump.hasMember("preLine")) {
+					this.preLineDump = dataDump.getMember("preLine").asString();
 				}
-				if (dump.hasMember("post")) {
-					this.postDump = dump.getMember("post").asString();
+				if (dataDump.hasMember("post")) {
+					this.postDump = dataDump.getMember("post").asString();
 				}
-				if (dump.hasMember("postLine")) {
-					this.postLineDump = dump.getMember("postLine").asString();
+				if (dataDump.hasMember("postLine")) {
+					this.postLineDump = dataDump.getMember("postLine").asString();
 				}
 				
 			}

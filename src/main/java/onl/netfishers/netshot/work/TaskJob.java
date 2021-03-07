@@ -44,7 +44,7 @@ public class TaskJob implements Job {
 	public static final String NETSHOT_TASK = "Netshot Task";
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(TaskJob.class);
+	final private static Logger logger = LoggerFactory.getLogger(TaskJob.class);
 
 	/**
 	 * Instantiates a new task job.

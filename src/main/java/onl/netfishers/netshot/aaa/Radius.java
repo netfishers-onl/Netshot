@@ -20,7 +20,7 @@ package onl.netfishers.netshot.aaa;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.security.Security;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +33,6 @@ import org.slf4j.MarkerFactory;
 
 import net.jradius.client.RadiusClient;
 import net.jradius.client.auth.CHAPAuthenticator;
-import net.jradius.client.auth.EAPAuthenticator;
 import net.jradius.client.auth.EAPMD5Authenticator;
 import net.jradius.client.auth.EAPMSCHAPv2Authenticator;
 import net.jradius.client.auth.MSCHAPv2Authenticator;
@@ -54,15 +53,14 @@ import net.jradius.packet.attribute.AttributeList;
 /**
  * The Radius class authenticates the users against a RADIUS server.
  */
-@SuppressWarnings("unused")
 public class Radius {
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(Radius.class);
-	private static Logger aaaLogger = LoggerFactory.getLogger("AAA");
+	final private static Logger logger = LoggerFactory.getLogger(Radius.class);
+	final private static Logger aaaLogger = LoggerFactory.getLogger("AAA");
 
 	/** The clients. */
-	private static List<RadiusClient> clients = new ArrayList<RadiusClient>();
+	final private static List<RadiusClient> clients = new ArrayList<>();
 	
 	/** The authentication method. */
 	private static Class<? extends RadiusAuthenticator> authMethod = MSCHAPv2Authenticator.class;
@@ -79,7 +77,7 @@ public class Radius {
 		try {
 			address = InetAddress.getByName(ip);
 		}
-		catch (Exception e) {
+		catch (UnknownHostException e) {
 			logger.error("Invalid IP address for RADIUS server {}. Will be ignored.", id);
 			return;
 		}
@@ -117,23 +115,23 @@ public class Radius {
 			logger.error("Unable to create the RADIUS client for server {}.", id, e);
 			return;
 		}
-		String method = Netshot.getConfig("netshot.aaa.radius.method");
-		if ("pap".equals(method)) {
+		String method = Netshot.getConfig("netshot.aaa.radius.method", "mschapv2");
+		switch (method) {
+		case "pap":
 			authMethod = PAPAuthenticator.class;
-		}
-		else if ("chap".equals(method)) {
+			break;
+		case "chap":
 			authMethod = CHAPAuthenticator.class;
-		}
-		else if ("eap-md5".equals(method)) {
+			break;
+		case "eap-md5":
 			authMethod = EAPMD5Authenticator.class;
-		}
-		else if ("eap-mschapv2".equals(method)) {
+			break;
+		case "eap-mschapv2":
 			authMethod = EAPMSCHAPv2Authenticator.class;
-		}
-		else if (method == null || "mschapv2".equals(method)) {
-			// Default
-		}
-		else {
+			break;
+		case "mschapv2":
+			break;
+		default:
 			logger.error("Invalid configured RADIUS method '{}'. Defaulting to MSCHAPv2.", method);
 		}
 		clients.add(client);

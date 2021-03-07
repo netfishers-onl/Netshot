@@ -40,7 +40,7 @@ import onl.netfishers.netshot.work.TaskLogger;
  */
 public class JsDiagnosticHelper {
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(JsDiagnosticHelper.class);
+	final private static Logger logger = LoggerFactory.getLogger(JsDiagnosticHelper.class);
 	
 	/** The device the diagnostic is running on. */
 	public final Device device;

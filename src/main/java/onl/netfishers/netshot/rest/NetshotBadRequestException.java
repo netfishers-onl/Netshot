@@ -12,6 +12,7 @@ import onl.netfishers.netshot.rest.RestService.RsErrorBean;
 class NetshotBadRequestException extends WebApplicationException {
 
 	static public enum Reason {
+		NETSHOT_INVALID_REQUEST_PARAMETER(10, Response.Status.BAD_REQUEST),
 		NETSHOT_DATABASE_ACCESS_ERROR(20, Response.Status.INTERNAL_SERVER_ERROR),
 		NETSHOT_INVALID_IP_ADDRESS(100, Response.Status.BAD_REQUEST),
 		NETSHOT_MALFORMED_IP_ADDRESS(101, Response.Status.BAD_REQUEST),

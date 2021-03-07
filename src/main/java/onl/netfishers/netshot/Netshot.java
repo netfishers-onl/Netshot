@@ -65,7 +65,7 @@ public class Netshot extends Thread {
 	private static Properties config;
 
 	/** The logger. */
-	private static Logger logger = LoggerFactory.getLogger(Netshot.class);
+	final private static Logger logger = LoggerFactory.getLogger(Netshot.class);
 	final static public Logger aaaLogger = LoggerFactory.getLogger("AAA");
 
 	/**
@@ -203,7 +203,7 @@ public class Netshot extends Thread {
 		OutputStreamAppender<ILoggingEvent> appender;
 
 		if (logFile.equals("CONSOLE")) {
-			ConsoleAppender<ILoggingEvent> cAppender = new ConsoleAppender<ILoggingEvent>();
+			ConsoleAppender<ILoggingEvent> cAppender = new ConsoleAppender<>();
 			logger.info("Will go on logging to the console.");
 			appender = cAppender;
 		}
@@ -213,7 +213,7 @@ public class Netshot extends Thread {
 
 			loggerContext.reset();
 			try {
-				RollingFileAppender<ILoggingEvent> rfAppender = new RollingFileAppender<ILoggingEvent>();
+				RollingFileAppender<ILoggingEvent> rfAppender = new RollingFileAppender<>();
 				rfAppender.setContext(loggerContext);
 				rfAppender.setFile(logFile);
 
@@ -226,7 +226,7 @@ public class Netshot extends Thread {
 				fwRollingPolicy.start();
 
 				SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new 
-						SizeBasedTriggeringPolicy<ILoggingEvent>();
+						SizeBasedTriggeringPolicy<>();
 				triggeringPolicy.setMaxFileSize(new FileSize(logMaxSize * FileSize.MB_COEFFICIENT));
 				triggeringPolicy.start();
 
@@ -312,7 +312,7 @@ public class Netshot extends Thread {
 		if (auditFile != null) {
 			try {
 				LoggerContext loggerContext = ((ch.qos.logback.classic.Logger) aaaLogger).getLoggerContext();
-				RollingFileAppender<ILoggingEvent> appender = new RollingFileAppender<ILoggingEvent>();
+				RollingFileAppender<ILoggingEvent> appender = new RollingFileAppender<>();
 				appender.setContext(loggerContext);
 				appender.setFile(auditFile);
 
@@ -325,7 +325,7 @@ public class Netshot extends Thread {
 				fwRollingPolicy.start();
 
 				SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new 
-						SizeBasedTriggeringPolicy<ILoggingEvent>();
+						SizeBasedTriggeringPolicy<>();
 				triggeringPolicy.setMaxFileSize(new FileSize(auditMaxSize * FileSize.MB_COEFFICIENT));
 				triggeringPolicy.start();
 
@@ -352,6 +352,7 @@ public class Netshot extends Thread {
 	
 	/** The exception handler. To be used by other threads. */
 	public static Thread.UncaughtExceptionHandler exceptionHandler = new Thread.UncaughtExceptionHandler() {
+		@Override
 		public void uncaughtException(Thread th, Throwable ex) {
 			System.err.println("NETSHOT FATAL ERROR");
 			ex.printStackTrace();

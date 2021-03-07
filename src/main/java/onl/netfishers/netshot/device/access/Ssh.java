@@ -47,14 +47,14 @@ import org.slf4j.LoggerFactory;
  */
 public class Ssh extends Cli {
 	
-	private static Logger logger = LoggerFactory.getLogger(Ssh.class);
+	final private static Logger logger = LoggerFactory.getLogger(Ssh.class);
 
 	/**
 	 * Logger bridge for Jsch to SLF4j
 	 */
 	public static class JschLogger implements com.jcraft.jsch.Logger {
 
-		private static Logger logger = LoggerFactory.getLogger(JschLogger.class);
+		final private static Logger logger = LoggerFactory.getLogger(JschLogger.class);
 
 		@Override
 		public boolean isEnabled(int level) {

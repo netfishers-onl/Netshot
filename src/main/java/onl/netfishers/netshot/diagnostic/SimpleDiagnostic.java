@@ -56,8 +56,8 @@ public class SimpleDiagnostic extends Diagnostic {
 		private String command;
 
 		public JsSimpleDiagnostic(String mode, String command) {
-			this.setMode(mode);
-			this.setCommand(command);
+			this.mode = mode;
+			this.command = command;
 		}
 
 		@Export

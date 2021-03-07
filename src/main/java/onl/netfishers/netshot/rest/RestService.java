@@ -271,6 +271,7 @@ public class RestService extends Thread {
 	/* (non-Javadoc)
 	 * @see java.lang.Thread#run()
 	 */
+	@Override
 	public void run() {
 		logger.info("Starting the Web/REST service thread.");
 		try {
@@ -411,7 +412,7 @@ public class RestService extends Thread {
 		List<Domain> domains;
 		try {
 			domains = session.createQuery("select d from Domain d", Domain.class).list();
-			List<RsDomain> rsDomains = new ArrayList<RsDomain>();
+			List<RsDomain> rsDomains = new ArrayList<>();
 			for (Domain domain : domains) {
 				rsDomains.add(new RsDomain(domain));
 			}
@@ -838,9 +839,13 @@ public class RestService extends Thread {
 			@PathParam("max") @DefaultValue("20") Integer maxCount)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} tasks.", id);
+		if (maxCount < 1) {
+			throw new NetshotBadRequestException("Invalid max parameter",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+		}
 		Session session = Database.getSession();
 		try {
-			List<Task> tasks = new ArrayList<Task>();
+			List<Task> tasks = new ArrayList<>();
 			tasks.addAll(session.createQuery(
 					"select t from CheckComplianceTask t where t.device.id = :deviceId order by t.changeDate desc", CheckComplianceTask.class)
 					.setParameter("deviceId", id).setMaxResults(maxCount).list());
@@ -904,7 +909,11 @@ public class RestService extends Thread {
 					return statusDiff;
 				}
 			});
-			return tasks.subList(0, (maxCount > tasks.size() ? tasks.size() : maxCount));
+			int max =  tasks.size();
+			if (maxCount != null && maxCount < tasks.size()) {
+				max = maxCount;
+			}
+			return tasks.subList(0, max);
 		}
 		catch (Exception e) {
 			logger.error("Unable to fetch the tasks.", e);
@@ -1042,7 +1051,7 @@ public class RestService extends Thread {
 		private Date revisedDate;
 
 		/** The deltas. */
-		private Map<String, List<RsConfigDelta>> deltas = new HashMap<String, List<RsConfigDelta>>();
+		private Map<String, List<RsConfigDelta>> deltas = new HashMap<>();
 
 		/**
 		 * Instantiates a new rs config diff.
@@ -1063,7 +1072,7 @@ public class RestService extends Thread {
 		 */
 		public void addDelta(String item, RsConfigDelta delta) {
 			if (!deltas.containsKey(item)) {
-				deltas.put(item, new ArrayList<RsConfigDelta>());
+				deltas.put(item, new ArrayList<>());
 			}
 			deltas.get(item).add(delta);
 		}
@@ -1277,8 +1286,8 @@ public class RestService extends Thread {
 				id2);
 		RsConfigDiff configDiffs;
 		Session session = Database.getSession();
-		Config config1 = null;
-		Config config2 = null;
+		Config config1;
+		Config config2;
 		try {
 			config2 = (Config) session.get(Config.class, id2);
 			if (config2 != null && id1 == 0) {
@@ -1579,7 +1588,7 @@ public class RestService extends Thread {
 				logger.error("Error in REST service while refreshing the device types.", e);
 			}
 		}
-		List<DeviceDriver> deviceTypes = new ArrayList<DeviceDriver>();
+		List<DeviceDriver> deviceTypes = new ArrayList<>();
 		deviceTypes.addAll(DeviceDriver.getAllDrivers());
 		return deviceTypes;
 	}
@@ -2036,7 +2045,7 @@ public class RestService extends Thread {
 				.setParameter("domain", domain)
 				.setParameter("true", true)
 				.list();
-			if (knownCommunities.size() == 0 && device.isAutoDiscover()) {
+			if (knownCommunities.isEmpty() && device.isAutoDiscover()) {
 				logger.error("No available SNMP community");
 				throw new NetshotBadRequestException(
 						"There is no known SNMP community in the database to poll the device.",
@@ -2169,7 +2178,7 @@ public class RestService extends Thread {
 		logger.debug("REST request, delete device {}.", id);
 		Session session = Database.getSession();
 		try {
-			List<File> toDeleteFiles = new ArrayList<File>();
+			List<File> toDeleteFiles = new ArrayList<>();
 			List<ConfigBinaryFileAttribute> attributes = session
 					.createQuery("from ConfigBinaryFileAttribute cfa where cfa.config.device.id = :id",
 							ConfigBinaryFileAttribute.class)
@@ -3382,7 +3391,7 @@ public class RestService extends Thread {
 		private String type;
 
 		/** The static devices. */
-		private List<Long> staticDevices = new ArrayList<Long>();
+		private List<Long> staticDevices = new ArrayList<>();
 
 		/** The device class name. */
 		private String driver;
@@ -3545,7 +3554,7 @@ public class RestService extends Thread {
 			}
 			if (group instanceof StaticDeviceGroup) {
 				StaticDeviceGroup staticGroup = (StaticDeviceGroup) group;
-				Set<Device> devices = new HashSet<Device>();
+				Set<Device> devices = new HashSet<>();
 				for (Long deviceId : rsGroup.getStaticDevices()) {
 					Device device = (Device) session.load(Device.class, deviceId);
 					devices.add(device);
@@ -4178,7 +4187,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			StringBuilder hqlQuery = new StringBuilder("select t from Task t where (1 = 1)");
-			Map<String, Object> hqlParams = new HashMap<String, Object>();
+			Map<String, Object> hqlParams = new HashMap<>();
 			
 			Task.Status status = null;
 			try {
@@ -4475,7 +4484,7 @@ public class RestService extends Thread {
 		}
 		else if (rsTask.getType().equals("ScanSubnetsTask")) {
 			logger.trace("Adding a ScanSubnetsTask");
-			Set<Network4Address> subnets = new HashSet<Network4Address>();
+			Set<Network4Address> subnets = new HashSet<>();
 			String[] rsSubnets = rsTask.getSubnets().split("(\r\n|\n|;| |,)");
 			Pattern pattern = Pattern.compile("^(?<ip>[0-9\\.]+)(/(?<mask>[0-9]+))?$");
 			for (String rsSubnet : rsSubnets) {
@@ -4506,7 +4515,7 @@ public class RestService extends Thread {
 							NetshotBadRequestException.Reason.NETSHOT_SCAN_SUBNET_TOO_BIG);
 				}
 			}
-			if (subnets.size() == 0) {
+			if (subnets.isEmpty()) {
 				logger.warn("User posted an invalid subnet list '{}'.", rsTask.getSubnets());
 				throw new NetshotBadRequestException(String.format("Invalid subnet list '%s'.", rsTask.getSubnets()),
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_SUBNET);
@@ -4529,7 +4538,7 @@ public class RestService extends Thread {
 			finally {
 				session.close();
 			}
-			StringBuffer target = new StringBuffer();
+			StringBuilder target = new StringBuilder();
 			target.append("{");
 			for (Network4Address subnet : subnets) {
 				if (target.length() > 1) {
@@ -4975,7 +4984,7 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException("Invalid policy",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY);
 			}
-			List<Rule> rules = new ArrayList<Rule>();
+			List<Rule> rules = new ArrayList<>();
 			rules.addAll(policy.getRules());
 			return rules;
 		}
@@ -5293,7 +5302,7 @@ public class RestService extends Thread {
 		private boolean enabled = false;
 
 		/** The exemptions. */
-		private Map<Long, Date> exemptions = new HashMap<Long, Date>();
+		private Map<Long, Date> exemptions = new HashMap<>();
 		
 		private String text = null;
 		private Boolean regExp;
@@ -5637,7 +5646,7 @@ public class RestService extends Thread {
 			}
 			rule.setEnabled(rsRule.isEnabled());
 
-			Map<Long, Date> postedExemptions = new HashMap<Long, Date>();
+			Map<Long, Date> postedExemptions = new HashMap<>();
 			postedExemptions.putAll(rsRule.getExemptions());
 			Iterator<Exemption> i = rule.getExemptions().iterator();
 			while (i.hasNext()) {
@@ -5919,7 +5928,7 @@ public class RestService extends Thread {
 
 			RsRuleTestResult result = new RsRuleTestResult();
 
-			StringBuffer log = new StringBuffer();
+			StringBuilder log = new StringBuilder();
 			TaskLogger taskLogger = new TaskLogger() {
 			
 				@Override
@@ -6333,7 +6342,7 @@ public class RestService extends Thread {
 		today.set(Calendar.SECOND, 0);
 		today.set(Calendar.MILLISECOND, 0);
 		try {
-			List<RsConfigChangeNumberByDateStat> stats = new ArrayList<RsConfigChangeNumberByDateStat>();
+			List<RsConfigChangeNumberByDateStat> stats = new ArrayList<>();
 			for (int d = 7; d > 0; d--) {
 				Calendar dayStart = (Calendar)today.clone();
 				Calendar dayEnd = (Calendar)today.clone();
@@ -6602,7 +6611,7 @@ public class RestService extends Thread {
 				.setParameter("enabled", Device.Status.INPRODUCTION)
 				.setResultTransformer(Transformers.aliasToBean(RsHardwareSupportEoLStat.class))
 				.list();
-			List<RsHardwareSupportStat> stats = new ArrayList<RsHardwareSupportStat>();
+			List<RsHardwareSupportStat> stats = new ArrayList<>();
 			stats.addAll(eosStats);
 			stats.addAll(eolStats);
 			return stats;
@@ -8932,7 +8941,7 @@ public class RestService extends Thread {
 					row = summarySheet.createRow(++y);
 					row.createCell(0).setCellValue("Selected Domain");
 					row.getCell(0).setCellStyle(titleCellStyle);
-					if (domains.size() == 0) {
+					if (domains.isEmpty()) {
 						row.createCell(1).setCellValue("Any");
 					}
 					else {
@@ -8940,7 +8949,7 @@ public class RestService extends Thread {
 							.createQuery("select d from Domain d where d.id in (:domainIds)", Domain.class)
 							.setParameterList("domainIds", domains)
 							.list();
-						List<String> domainNames = new ArrayList<String>();
+						List<String> domainNames = new ArrayList<>();
 						for (Domain deviceDomain : deviceDomains) {
 							domainNames.add(String.format("%s (%d)", deviceDomain.getName(), deviceDomain.getId()));
 						}
@@ -8949,7 +8958,7 @@ public class RestService extends Thread {
 					row = summarySheet.createRow(++y);
 					row.createCell(0).setCellValue("Selected Group");
 					row.getCell(0).setCellStyle(titleCellStyle);
-					if (groups.size() == 0) {
+					if (groups.isEmpty()) {
 						row.createCell(1).setCellValue("Any");
 					}
 					else {
@@ -8957,7 +8966,7 @@ public class RestService extends Thread {
 							.createQuery("select g from DeviceGroup g where g.id in (:groupIds)", DeviceGroup.class)
 							.setParameterList("groupIds", groups)
 							.list();
-						List<String> groupNames = new ArrayList<String>();
+						List<String> groupNames = new ArrayList<>();
 						for (DeviceGroup group : deviceGroups) {
 							groupNames.add(String.format("%s (%d)", group.getName(), group.getId()));
 						}
@@ -8967,7 +8976,7 @@ public class RestService extends Thread {
 				}
 
 				{
-					StringBuffer deviceHqlQuery = new StringBuffer(
+					StringBuilder deviceHqlQuery = new StringBuilder(
 							"select d from Device d left join d.ownerGroups g left join fetch d.mgmtDomain " +
 							"where 1 = 1");
 					if (domains.size() > 0) {
@@ -9088,7 +9097,7 @@ public class RestService extends Thread {
 	
 				if (exportInterfaces) {
 					logger.debug("Exporting interface data");
-					StringBuffer interfaceHqlQuery = new StringBuffer(
+					StringBuilder interfaceHqlQuery = new StringBuilder(
 							"select ni from NetworkInterface ni " +
 							"left join fetch ni.ip4Addresses left join fetch ni.ip6Addresses " +
 							"join fetch ni.device left join ni.device.ownerGroups g where 1 = 1");
@@ -9158,7 +9167,7 @@ public class RestService extends Thread {
 					List<NetworkInterface> networkInterfaces = interfaceQuery.list();
 					for (NetworkInterface networkInterface : networkInterfaces) {
 						Device device = networkInterface.getDevice();
-						if (networkInterface.getIpAddresses().size() == 0) {
+						if (networkInterface.getIpAddresses().isEmpty()) {
 							row = interfaceSheet.createRow(++y);
 							int x = -1;
 							row.createCell(++x).setCellValue(device.getId());
@@ -9196,7 +9205,7 @@ public class RestService extends Thread {
 	
 				if (exportInventory) {
 					logger.debug("Exporting device inventory");
-					StringBuffer moduleHqlQuery = new StringBuffer(
+					StringBuilder moduleHqlQuery = new StringBuilder(
 							"select m from Module m join fetch m.device left join m.device.ownerGroups g where 1 = 1");
 					if (domains.size() > 0) {
 						moduleHqlQuery.append(" and m.device.mgmtDomain.id in (:domainIds)");
@@ -9261,7 +9270,7 @@ public class RestService extends Thread {
 				if (exportCompliance) {
 					logger.debug("Exporting compliance data");
 					List<RsLightPolicyRuleDevice> checkResults = getConfigComplianceDeviceStatuses(domains, groups,
-							new HashSet<Long>(), new HashSet<CheckResult.ResultOption>(
+							new HashSet<Long>(), new HashSet<>(
 									Arrays.asList(new CheckResult.ResultOption[] { CheckResult.ResultOption.CONFORMING,
 											CheckResult.ResultOption.NONCONFORMING, CheckResult.ResultOption.EXEMPTED })));
 
@@ -9364,7 +9373,7 @@ public class RestService extends Thread {
 					}
 					{
 						logger.debug("Exporting group memberships");
-						StringBuffer deviceHqlQuery = new StringBuffer(
+						StringBuilder deviceHqlQuery = new StringBuilder(
 								"select d from Device d left join d.ownerGroups g left join d.mgmtDomain " +
 								"where 1 = 1");
 						if (domains.size() > 0) {
@@ -9954,7 +9963,7 @@ public class RestService extends Thread {
 			}
 
 			if (".JavaScriptDiagnostic".equals(rsDiagnostic.getType())) {
-				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim() == "") {
+				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim().equals("")) {
 					throw new NetshotBadRequestException(
 						"Invalid diagnostic script",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
@@ -9963,7 +9972,7 @@ public class RestService extends Thread {
 						resultType, rsDiagnostic.getScript());
 			}
 			else if (".PythonDiagnostic".equals(rsDiagnostic.getType())) {
-				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim() == "") {
+				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim().equals("")) {
 					throw new NetshotBadRequestException(
 						"Invalid diagnostic script",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
@@ -9972,11 +9981,11 @@ public class RestService extends Thread {
 						resultType, rsDiagnostic.getScript());
 			}
 			else if (".SimpleDiagnostic".equals(rsDiagnostic.getType())) {
-				if (rsDiagnostic.getCliMode() == null || rsDiagnostic.getCliMode().trim() == "") {
+				if (rsDiagnostic.getCliMode() == null || rsDiagnostic.getCliMode().trim().equals("")) {
 					throw new NetshotBadRequestException("The CLI mode must be provided.",
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
-				if (rsDiagnostic.getCommand() == null || rsDiagnostic.getCommand().trim() == "") {
+				if (rsDiagnostic.getCommand() == null || rsDiagnostic.getCommand().trim().equals("")) {
 					throw new NetshotBadRequestException("The command cannot be empty.",
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
@@ -10091,7 +10100,7 @@ public class RestService extends Thread {
 					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
 							NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
 				}
-				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim() == "") {
+				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim().equals("")) {
 					throw new NetshotBadRequestException(
 						"Invalid diagnostic script",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
@@ -10103,7 +10112,7 @@ public class RestService extends Thread {
 					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
 							NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
 				}
-				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim() == "") {
+				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim().equals("")) {
 					throw new NetshotBadRequestException(
 						"Invalid diagnostic script",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
@@ -10115,11 +10124,11 @@ public class RestService extends Thread {
 					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
 							NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
 				}
-				if (rsDiagnostic.getCliMode() == null || rsDiagnostic.getCliMode().trim() == "") {
+				if (rsDiagnostic.getCliMode() == null || rsDiagnostic.getCliMode().trim().equals("")) {
 					throw new NetshotBadRequestException("The CLI mode must be provided.",
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
-				if (rsDiagnostic.getCommand() == null || rsDiagnostic.getCommand().trim() == "") {
+				if (rsDiagnostic.getCommand() == null || rsDiagnostic.getCommand().trim().equals("")) {
 					throw new NetshotBadRequestException("The command cannot be empty.",
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}

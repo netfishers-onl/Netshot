@@ -63,10 +63,10 @@ public class NetworkInterface {
 	protected String interfaceName;
 	
 	/** The ip4 addresses. */
-	protected Set<Network4Address> ip4Addresses = new HashSet<Network4Address>();
+	protected Set<Network4Address> ip4Addresses = new HashSet<>();
 	
 	/** The ip6 addresses. */
-	protected Set<Network6Address> ip6Addresses = new HashSet<Network6Address>();
+	protected Set<Network6Address> ip6Addresses = new HashSet<>();
 	
 	/** The physical address. */
 	protected PhysicalAddress physicalAddress = new PhysicalAddress(0);
@@ -186,7 +186,7 @@ public class NetworkInterface {
 	 */
 	@Transient
 	public List<NetworkAddress> getIpAddresses() {
-		List<NetworkAddress> ipAddresses = new ArrayList<NetworkAddress>();
+		List<NetworkAddress> ipAddresses = new ArrayList<>();
 		ipAddresses.addAll(this.getIp4Addresses());
 		ipAddresses.addAll(this.getIp6Addresses());
 		return ipAddresses;
@@ -413,9 +413,7 @@ public class NetworkInterface {
 		if (!(obj instanceof NetworkInterface))
 			return false;
 		NetworkInterface other = (NetworkInterface) obj;
-		if (id != other.id)
-			return false;
-		return true;
+		return id == other.id;
 	}
 	
 }

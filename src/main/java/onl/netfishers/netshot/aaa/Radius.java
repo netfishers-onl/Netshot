@@ -78,7 +78,9 @@ public class Radius {
 			address = InetAddress.getByName(ip);
 		}
 		catch (UnknownHostException e) {
-			logger.error("Invalid IP address for RADIUS server {}. Will be ignored.", id);
+			if (ip != null) {
+				logger.error("Invalid IP address for RADIUS server {}. Will be ignored.", id);
+			}
 			return;
 		}
 		int authPort = 1812;

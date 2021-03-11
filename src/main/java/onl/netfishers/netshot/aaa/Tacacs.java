@@ -18,9 +18,11 @@
  */
 package onl.netfishers.netshot.aaa;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import com.augur.tacacs.Argument;
 import com.augur.tacacs.AuthenReply;
@@ -29,6 +31,7 @@ import com.augur.tacacs.SessionClient;
 import com.augur.tacacs.TAC_PLUS.AUTHEN.METH;
 import com.augur.tacacs.TAC_PLUS.AUTHEN.SVC;
 import com.augur.tacacs.TAC_PLUS.AUTHEN.TYPE;
+import com.augur.tacacs.TAC_PLUS.ACCT;
 import com.augur.tacacs.TAC_PLUS.PRIV_LVL;
 import com.augur.tacacs.TacacsClient;
 
@@ -51,6 +54,9 @@ public class Tacacs {
 	/** The client. */
 	private static TacacsClient client = null;
 
+	/** Whether TACACS+ accounting is enabled */
+	private static boolean enableAccounting = false;
+
 	/**
 	 * Load server config.
 	 *
@@ -64,7 +70,9 @@ public class Tacacs {
 			address = InetAddress.getByName(ip);
 		}
 		catch (Exception e) {
-			logger.error("Invalid IP address for TACACS+ server {}. Will be ignored.", id);
+			if (ip != null) {
+				logger.error("Invalid IP address for TACACS+ server {}. Will be ignored.", id);
+			}
 			return;
 		}
 		int port = 49;
@@ -98,6 +106,10 @@ public class Tacacs {
 		}
 		if (hosts.size() > 0) {
 			Tacacs.client = new TacacsClient(String.join(", ", hosts), String.join(", ", keys), timeout * 1000, false);
+		}
+		enableAccounting = Netshot.getConfig("netshot.aaa.tacacs.accounting", "false").equals("true");
+		if (enableAccounting) {
+			logger.info("TACACS+ accounting is enabled");
 		}
 	}
 	
@@ -188,4 +200,21 @@ public class Tacacs {
 		return null;
 	}
 
+	/**
+	 * Log a message with TACACS+ accounting.
+	 */
+	public static void account(String method, String path, String username, String response, NetworkAddress remoteAddress) {
+		if (!Tacacs.enableAccounting || !Tacacs.isAvailable()) {
+			return;
+		}
+		SessionClient acctSession = client.newSession(SVC.LOGIN, "rest", remoteAddress == null ? "0.0.0.0" : remoteAddress.getIp(), PRIV_LVL.USER.code());
+		try {
+			acctSession.account(ACCT.FLAG.STOP.code(), username, METH.TACACSPLUS, TYPE.ASCII, SVC.LOGIN, new Argument[] {
+				new Argument(String.format("%s %s => %s", method, path, response))
+			});
+		}
+		catch (TimeoutException | IOException e) {
+			logger.warn("Error while sending TACACS+ accounting message", e);
+		}
+	}
 }

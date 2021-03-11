@@ -77,7 +77,7 @@ public class JavaScriptRule extends Rule {
 			InputStream in = DeviceDriver.class.getResourceAsStream("/" + path);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 			StringBuffer buffer = new StringBuffer();
-			String line = null;
+			String line;
 			while ((line = reader.readLine()) != null) {
 				buffer.append(line);
 				buffer.append("\n");

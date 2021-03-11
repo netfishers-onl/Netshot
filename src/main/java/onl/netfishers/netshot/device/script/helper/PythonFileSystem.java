@@ -39,7 +39,7 @@ public class PythonFileSystem implements FileSystem {
 	}
 
 	private void verifyAccess(Path path) {
-		logger.warn("Checking permission for path {}", path);
+		logger.debug("Checking permission for path {}", path);
 		Path realPath = null;
 		for (Path c = path; c != null; c = c.getParent()) {
 			try {

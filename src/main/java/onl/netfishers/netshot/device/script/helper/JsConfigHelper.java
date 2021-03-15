@@ -66,25 +66,30 @@ public class JsConfigHelper {
 			return;
 		}
 		try {
-			DeviceDriver driver = device.getDeviceDriver();
-			for (AttributeDefinition attribute : driver.getAttributes()) {
-				if (attribute.getLevel().equals(AttributeLevel.CONFIG) && attribute.getName().equals(key)) {
-					switch (attribute.getType()) {
-					case BINARY:
-						config.addAttribute(new ConfigBinaryAttribute(config, key, value.asBoolean()));
+			if ("author".equals(key)) {
+				config.setAuthor(value.asString());
+			}
+			else {
+				DeviceDriver driver = device.getDeviceDriver();
+				for (AttributeDefinition attribute : driver.getAttributes()) {
+					if (attribute.getLevel().equals(AttributeLevel.CONFIG) && attribute.getName().equals(key)) {
+						switch (attribute.getType()) {
+						case BINARY:
+							config.addAttribute(new ConfigBinaryAttribute(config, key, value.asBoolean()));
+							break;
+						case NUMERIC:
+							config.addAttribute(new ConfigNumericAttribute(config, key, value.asDouble()));
+							break;
+						case LONGTEXT:
+							config.addAttribute(new ConfigLongTextAttribute(config, key, value.asString()));
+							break;
+						case TEXT:
+							config.addAttribute(new ConfigTextAttribute(config, key, value.asString()));
+							break;
+						default:
+						}
 						break;
-					case NUMERIC:
-						config.addAttribute(new ConfigNumericAttribute(config, key, value.asDouble()));
-						break;
-					case LONGTEXT:
-						config.addAttribute(new ConfigLongTextAttribute(config, key, value.asString()));
-						break;
-					case TEXT:
-						config.addAttribute(new ConfigTextAttribute(config, key, value.asString()));
-						break;
-					default:
 					}
-					break;
 				}
 			}
 		}

@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
+import org.graalvm.polyglot.proxy.ProxyArray;
+import org.graalvm.polyglot.proxy.ProxyObject;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
@@ -333,26 +335,26 @@ public class JsDeviceHelper {
 			return (device.getNetworkClass() == null ? null : device.getNetworkClass().toString());
 		}
 		else if ("virtualDevices".equals(item)) {
-			return device.getVirtualDevices().toArray();
+			return ProxyArray.fromList(List.copyOf(device.getVirtualDevices()));
 		}
 		else if ("vrfs".equals(item)) {
-			return device.getVrfInstances().toArray();
+			return ProxyArray.fromList(List.copyOf(device.getVrfInstances()));
 		}
 		else if ("modules".equals(item)) {
-			List<Map<String, String>> modules = new ArrayList<Map<String, String>>();
+			List<Object> modules = new ArrayList<>();
 			for (Module m : device.getModules()) {
-				Map<String, String> module = new HashMap<String, String>();
-				module.put("slot", m.getSlot());
-				module.put("partNumber", m.getPartNumber());
-				module.put("serialNumber", m.getSerialNumber());
-				modules.add(module);
+				Map<String, Object> module = new HashMap<>();
+				module.put("slot", Value.asValue(m.getSlot()));
+				module.put("partNumber", Value.asValue(m.getPartNumber()));
+				module.put("serialNumber", Value.asValue(m.getSerialNumber()));
+				modules.add(ProxyObject.fromMap(module));
 			}
-			return modules.toArray();
+			return ProxyArray.fromList(modules);
 		}
 		else if ("interfaces".equals(item)) {
-			List<Map<String, Object>> networkInterfaces = new ArrayList<Map<String, Object>>();
+			List<Object> networkInterfaces = new ArrayList<>();
 			for (NetworkInterface ni : device.getNetworkInterfaces()) {
-				Map<String, Object> networkInterface = new HashMap<String, Object>();
+				Map<String, Object> networkInterface = new HashMap<>();
 				networkInterface.put("name", ni.getInterfaceName());
 				networkInterface.put("description", ni.getDescription());
 				networkInterface.put("mac", ni.getMacAddress());
@@ -360,25 +362,25 @@ public class JsDeviceHelper {
 				networkInterface.put("vrf", ni.getVrfInstance());
 				networkInterface.put("enabled", ni.isEnabled());
 				networkInterface.put("level3", ni.isLevel3());
-				List<Map<String, String>> ips = new ArrayList<Map<String, String>>();
+				List<Object> ips = new ArrayList<>();
 				for (Network4Address address : ni.getIp4Addresses()) {
-					Map<String, String> ip = new HashMap<String, String>();
+					Map<String, Object> ip = new HashMap<>();
 					ip.put("ip", address.getIp());
 					ip.put("mask", Integer.toString(address.getPrefixLength()));
 					ip.put("usage", address.getAddressUsage().toString());
-					ips.add(ip);
+					ips.add(ProxyObject.fromMap(ip));
 				}
 				for (Network6Address address : ni.getIp6Addresses()) {
-					Map<String, String> ip = new HashMap<String, String>();
+					Map<String, Object> ip = new HashMap<>();
 					ip.put("ipv6", address.getIp());
 					ip.put("mask", Integer.toString(address.getPrefixLength()));
 					ip.put("usage", address.getAddressUsage().toString());
-					ips.add(ip);
+					ips.add(ProxyObject.fromMap(ip));
 				}
-				networkInterface.put("ip", ips.toArray());
-				networkInterfaces.add(networkInterface);
+				networkInterface.put("ip", ProxyArray.fromList(ips));
+				networkInterfaces.add(ProxyObject.fromMap(networkInterface));
 			}
-			return networkInterfaces.toArray();
+			return ProxyArray.fromList(networkInterfaces);
 		}
 		else {
 			for (AttributeDefinition definition : driver.getAttributes()) {

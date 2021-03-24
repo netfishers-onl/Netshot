@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Policy;
+import onl.netfishers.netshot.compliance.rules.JavaScriptRule;
 import onl.netfishers.netshot.compliance.rules.TextRule;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
@@ -198,8 +199,293 @@ public class ComplianceRuleTest {
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
 				"The result is not CONFORMING");
 		}
+	}
+	
+	@Nested
+	@DisplayName("JavaScript Rule")
+	class JsRuleTest {
+		
+		Policy policy = new Policy("Fake policy", null);
+		Device device = FakeDeviceFactory.getFakeCiscoIosDevice();
+		FakeTaskLogger taskLogger = new FakeTaskLogger();
+		Session fakeSession = new FakeSession();
+		JavaScriptRule rule;
+
+		JsRuleTest() {
+			this.rule = new JavaScriptRule("Testing rule", policy);
+			rule.setEnabled(true);
+			rule.setScript(
+				"function check(device) {" +
+				"  const type = device.get('type');" +
+				"  if (type !== 'Cisco IOS and IOS-XE') {" +
+				"    return {" +
+				"      result: NOTAPPLICABLE," +
+				"      comment: 'Type is ' + type," +
+				"     };" +
+				"  }" +
+				"  const name = device.get('name');" +
+				"  if (name.match(/router1/)) {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+		}
+
+		@Test
+		@DisplayName("Conforming rule")
+		void conformingRule() {
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Not applicable rule")
+		void notApplicableRule() {
+			device.setDriver("None");
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.NOTAPPLICABLE, result.getResult(), 
+				"The result is not NOTAPPLICABLE");
+		}
+
+		@Test
+		@DisplayName("Non conforming rule")
+		void nonConformingRule() {
+			device.setName("router2");
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.NONCONFORMING, result.getResult(), 
+				"The result is not NONCONFORMING");
+		}
+
+		@Test
+		@DisplayName("Name-based JS rule")
+		void nameRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  if (device.get('name') === 'router1') {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Location-based JS rule")
+		void locationRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  if (device.get('location') === 'Test Location') {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Contact-based JS rule")
+		void contactRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  if (device.get('contact') === 'Test Contact') {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Family-based JS rule")
+		void familyRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  if (device.get('family') === 'Unknown IOS device') {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Class-based JS rule")
+		void classRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  if (device.get('networkClass') === 'ROUTER') {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Software version-based JS rule")
+		void softwareVersionRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  if (device.get('softwareVersion') === '16.1.6') {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Serial-based JS rule")
+		void serialRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  if (device.get('serialNumber') === '16161616TEST16') {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Comments-based JS rule")
+		void commentRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  if (device.get('comments').match(/testing/)) {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("VRF-based JS rule")
+		void vrfRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  const vrfs = device.get('vrfs');" +
+				"  if (vrfs[0] === 'VRF1') {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Module-based JS rule")
+		void moduleRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  const modules = device.get('modules');" +
+				"  if (modules[1].serialNumber === '29038POSD203') {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Interface-based JS rule")
+		void interfaceRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  const interfaces = device.get('interfaces');" +
+				"  if (interfaces[1].name === 'GigabitEthernet0/1' && interfaces[1].ip[0].ip === '10.0.1.1') {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Running config-based JS rule")
+		void runningConfigRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  const runningConfig = device.get('runningConfig');" +
+				"  if (runningConfig.match(/^enable secret .+/m)) {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("JS rule with debug")
+		void debugRule() {
+			rule.setScript(
+				"function check(device, debug) {" +
+				"  debug('Debug message');" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			Assertions.assertTrue(taskLogger.getLog().contains("DEBUG - Debug message\n"),
+				"Debug message is not correct");
+		}
+
 
 
 
 	}
+	
 }

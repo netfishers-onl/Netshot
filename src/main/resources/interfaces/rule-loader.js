@@ -30,22 +30,7 @@ function _check(_deviceHelper) {
 		}
 	};
 
-	const _toNative = (o) => {
-		if (o == null || typeof o === "undefined") {
-			return null;
-		}
-		if (typeof o === "object" && (o instanceof Array || o.class.toString().match(/^class \[/))) {
-			return o.map(_toNative);
-		}
-		if (typeof o === "object") {
-			const m = {};
-			Object.entries(o).forEach(([k, v]) => {
-				m[k] = _toNative(v);
-			});
-			return m;
-		}
-		return o;
-	};
+	const _toNative = (o) => o;
 
 	const device = {
 	

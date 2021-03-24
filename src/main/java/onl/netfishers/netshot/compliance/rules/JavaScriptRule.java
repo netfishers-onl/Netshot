@@ -157,7 +157,10 @@ public class JavaScriptRule extends Rule {
 
 	@Transient
 	public Context getContext() {
-		Context context = Context.newBuilder().engine(this.engine).build();
+		Context context = Context.newBuilder()
+			.engine(this.engine).allowExperimentalOptions(true)
+			.option("js.experimental-foreign-object-prototype", "true")
+			.build();
 		context.eval("js", this.script);
 		context.eval(JSLOADER_SOURCE);
 		return context;

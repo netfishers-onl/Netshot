@@ -159,9 +159,13 @@ public class PythonRule extends Rule {
 
 	@Transient
 	public Context getContext() throws IOException {
-		Context context = Context.newBuilder()
-			.allowIO(true).fileSystem(new PythonFileSystem())
-			.engine(engine).build();
+		Context.Builder builder = Context.newBuilder()
+			.allowIO(true).fileSystem(new PythonFileSystem());
+		if (PythonFileSystem.VENV_FOLDER != null) {
+			builder.allowExperimentalOptions(true)
+				.option("python.Executable", PythonFileSystem.VENV_FOLDER + "/bin/graalpython");
+		}
+		Context context = builder.engine(engine).build();
 		context.eval("python", this.script);
 		context.eval(PYLOADER_SOURCE);
 		return context;

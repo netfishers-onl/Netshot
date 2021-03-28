@@ -1,5 +1,6 @@
 package onl.netfishers.netshot.device.script.helper;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.channels.SeekableByteChannel;
@@ -18,6 +19,8 @@ import org.graalvm.polyglot.io.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import onl.netfishers.netshot.Netshot;
+
 /**
  * Implementation of the FileSystem GraalVM interface to restrict
  * Python code I/O access to the shipping GraalPython libraries,
@@ -26,16 +29,38 @@ import org.slf4j.LoggerFactory;
 public class PythonFileSystem implements FileSystem {
 
 	/** The logger. */
-		final private static Logger logger = LoggerFactory.getLogger(PythonFileSystem.class);
-		
+	final private static Logger logger = LoggerFactory.getLogger(PythonFileSystem.class);
+	
+	/** Python VirtualEnv folder (if any) */
+	public static String VENV_FOLDER = null;
+	
+	static {
+		String venv = Netshot.getConfig("netshot.python.virtualenv");
+		if (venv != null) {
+			File venvFile = new File(venv);
+			if (venvFile.exists() && venvFile.isDirectory()) {
+				VENV_FOLDER = venvFile.getAbsolutePath();
+			}
+			else {
+				logger.warn("Python virtualenv folder {} doesn't exist or is not a directory", venv);
+			}
+		}
+	}
 
 	private final FileSystem delegate;
-	private final Path allowedFolder;
+	private final Path libFolder;
+	private final Path venvFolder;
 
 	public PythonFileSystem() throws IOException {
 		this.delegate = FileSystem.newDefaultFileSystem();
-		String allowedFolder = System.getProperty("java.home") + "/languages/python";
-		this.allowedFolder = delegate.toRealPath(delegate.parsePath(allowedFolder));
+		this.libFolder = delegate.toRealPath(
+			delegate.parsePath(System.getProperty("java.home") + "/languages/python"));
+		if (VENV_FOLDER == null) {
+			this.venvFolder = null;
+		}
+		else {
+			this.venvFolder = delegate.toRealPath(delegate.parsePath(VENV_FOLDER));
+		}
 	}
 
 	private void verifyAccess(Path path) {
@@ -49,7 +74,8 @@ public class PythonFileSystem implements FileSystem {
 			catch (IOException ioe) {
 			}
 		}
-		if (realPath == null || !realPath.startsWith(allowedFolder)) {
+		if (realPath == null || !(realPath.startsWith(libFolder) || (venvFolder != null && realPath.startsWith(venvFolder)))) {
+			logger.info("Access to {} is denied", path);
 			throw new SecurityException("Access to " + path + " is denied.");
 		}
 	}

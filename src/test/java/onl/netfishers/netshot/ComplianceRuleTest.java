@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.rules.JavaScriptRule;
+import onl.netfishers.netshot.compliance.rules.PythonRule;
 import onl.netfishers.netshot.compliance.rules.TextRule;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
@@ -482,10 +483,278 @@ public class ComplianceRuleTest {
 			Assertions.assertTrue(taskLogger.getLog().contains("DEBUG - Debug message\n"),
 				"Debug message is not correct");
 		}
-
-
-
-
 	}
 	
+	@Nested
+	@DisplayName("Python Rule")
+	class PyRuleTest {
+		
+		Policy policy = new Policy("Fake policy", null);
+		Device device = FakeDeviceFactory.getFakeCiscoIosDevice();
+		FakeTaskLogger taskLogger = new FakeTaskLogger();
+		Session fakeSession = new FakeSession();
+		PythonRule rule;
+
+		PyRuleTest() {
+			this.rule = new PythonRule("Testing rule", policy);
+			rule.setEnabled(true);
+			rule.setScript(
+				"import re" + "\n" +
+				"" + "\n" +
+				"def check(device):" + "\n" +
+				"  type = device.get('type')" + "\n" +
+				"  if type != 'Cisco IOS and IOS-XE':" + "\n" +
+				"    return {" + "\n" +
+				"      'result': result_option.NOTAPPLICABLE," + "\n" +
+				"      'comment': 'Type is {}'.format(type)"+ "\n" +
+				"    }" + "\n" +
+				"  name = device.get('name')" + "\n" +
+				"  if re.search(r'router1', name):" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"\n"
+			);
+		}
+
+		@Test
+		@DisplayName("Conforming rule")
+		void conformingRule() {
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Not applicable rule")
+		void notApplicableRule() {
+			device.setDriver("None");
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.NOTAPPLICABLE, result.getResult(), 
+				"The result is not NOTAPPLICABLE");
+		}
+
+		@Test
+		@DisplayName("Non conforming rule")
+		void nonConformingRule() {
+			device.setName("router2");
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.NONCONFORMING, result.getResult(), 
+				"The result is not NONCONFORMING");
+		}
+
+		@Test
+		@DisplayName("Name-based Python rule")
+		void nameRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  if device.get('name') == 'router1':" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Location-based Python rule")
+		void locationRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  if device.get('location') == 'Test Location':" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Contact-based Python rule")
+		void contactRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  if device.get('contact') == 'Test Contact':" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Family-based Python rule")
+		void familyRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  if device.get('family') == 'Unknown IOS device':" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Class-based Python rule")
+		void classRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  if device.get('network_class') == 'ROUTER':" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Software version-based Python rule")
+		void softwareVersionRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  if device.get('software_version') == '16.1.6':" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Serial-based Python rule")
+		void serialRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  if device.get('serial_number') == '16161616TEST16':" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Comments-based Python rule")
+		void commentRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  if 'testing' in device.get('comments'):" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("VRF-based Python rule")
+		void vrfRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  vrfs = device.get('vrfs')" + "\n" +
+				"  if vrfs[0] == 'VRF1':" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Module-based Python rule")
+		void moduleRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  modules = device.get('modules')" + "\n" +
+				"  if modules[1]['serial_number'] == '29038POSD203':" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Interface-based Python rule")
+		void interfaceRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  interfaces = device.get('interfaces')" + "\n" +
+				"  if interfaces[1]['name'] == 'GigabitEthernet0/1' and interfaces[1]['ip'][0]['ip'] == '10.0.1.1':" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Running config-based Python rule")
+		void runningConfigRule() {
+			rule.setScript(
+				"import re" + "\n" +
+				"def check(device):" + "\n" +
+				"  running_config = device.get('running_config')" + "\n" +
+				"  if re.search(r'^enable secret .+', running_config, re.MULTILINE):" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Python rule with debug")
+		void debugRule() {
+			rule.setScript(
+				"import re" + "\n" +
+				"def check(device):" + "\n" +
+				"  debug('Debug message')" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			Assertions.assertTrue(taskLogger.getLog().contains("DEBUG - Debug message\n"),
+				"Debug message is not correct");
+		}
+	}
 }

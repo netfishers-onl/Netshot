@@ -4,7 +4,7 @@ WORKDIR /opt/netshot
 RUN mvn package
 
 
-FROM ghcr.io/graalvm/graalvm-ce:ol7-java11-20.3.0
+FROM oracle/graalvm-ce:20.3.0-java11                     "package not valid anymore it has moved and Im trying to located it"
 RUN gu install python
 RUN mkdir /usr/local/netshot /var/log/netshot
 COPY --from=0 /opt/netshot/target/netshot.jar /usr/local/netshot/netshot.jar

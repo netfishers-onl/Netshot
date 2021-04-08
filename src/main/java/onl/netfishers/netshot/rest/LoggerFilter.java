@@ -12,7 +12,7 @@ import javax.ws.rs.core.HttpHeaders;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.aaa.Tacacs;
 import onl.netfishers.netshot.aaa.User;
-import onl.netfishers.netshot.device.Network4Address;
+import onl.netfishers.netshot.device.NetworkAddress;
 
 /**
  * Filter to log requests.
@@ -43,7 +43,7 @@ class LoggerFilter implements ContainerResponseFilter {
 					requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(), responseContext.getStatus());
 			Tacacs.account(requestContext.getMethod(), requestContext.getUriInfo().getRequestUri().getPath(),
 				user == null ? "<none>" : user.getUsername(), Integer.toString(responseContext.getStatus()),
-				new Network4Address(httpRequest.getRemoteAddr()));
+				NetworkAddress.getNetworkAddress(httpRequest.getRemoteAddr()));
 		}
 	}
 }

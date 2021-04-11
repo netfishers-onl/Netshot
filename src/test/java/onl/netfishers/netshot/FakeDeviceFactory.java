@@ -5,6 +5,8 @@ import java.util.Set;
 
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.device.DeviceGroup;
+import onl.netfishers.netshot.device.DynamicDeviceGroup;
 import onl.netfishers.netshot.device.Module;
 import onl.netfishers.netshot.device.Network4Address;
 import onl.netfishers.netshot.device.Network6Address;
@@ -17,6 +19,11 @@ import onl.netfishers.netshot.device.attribute.DeviceAttribute;
 import onl.netfishers.netshot.device.attribute.DeviceBinaryAttribute;
 import onl.netfishers.netshot.device.attribute.DeviceNumericAttribute;
 import onl.netfishers.netshot.device.attribute.DeviceTextAttribute;
+import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
+import onl.netfishers.netshot.diagnostic.Diagnostic;
+import onl.netfishers.netshot.diagnostic.DiagnosticResult;
+import onl.netfishers.netshot.diagnostic.DiagnosticTextResult;
+import onl.netfishers.netshot.diagnostic.SimpleDiagnostic;
 
 public class FakeDeviceFactory {
 
@@ -105,6 +112,24 @@ public class FakeDeviceFactory {
 		DeviceAttribute configurationSaved = new DeviceBinaryAttribute(device, "configurationSaved", false);
 		device.addAttribute(configurationSaved);
 
+		DiagnosticResult reloadReasonDiagResult = new DiagnosticTextResult(device, getReloadReasonIosSimpleDiagnostic(), "Reload Command");
+		device.addDiagnosticResult(reloadReasonDiagResult);
+
 		return device;
+	}
+
+	static DeviceGroup getAllDevicesGroup() {
+		DeviceGroup group = new DynamicDeviceGroup("All", null, "");
+		return group;
+	}
+
+	static Diagnostic getReloadReasonIosSimpleDiagnostic() {
+		Diagnostic diagnostic = new SimpleDiagnostic("Reload reason", true,
+			getAllDevicesGroup(), AttributeType.TEXT, "CiscoIOS12",
+			"enable",
+			"show version | include reason",
+			"(?s).*Last reload reason: (.+?)[\r\n]+",
+			"$1");
+		return diagnostic;
 	}
 }

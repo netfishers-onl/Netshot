@@ -471,6 +471,24 @@ public class ComplianceRuleTest {
 		}
 
 		@Test
+		@DisplayName("Diagnostic result-based JS rule")
+		void diagnosticResultRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  const reloadReason = device.get('Reload reason');" +
+				"  if (reloadReason === 'Reload Command') {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
 		@DisplayName("JS rule with debug")
 		void debugRule() {
 			rule.setScript(
@@ -732,6 +750,24 @@ public class ComplianceRuleTest {
 				"def check(device):" + "\n" +
 				"  running_config = device.get('running_config')" + "\n" +
 				"  if re.search(r'^enable secret .+', running_config, re.MULTILINE):" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Diagnostic result-based Python rule")
+		void diagnosticResultRule() {
+			rule.setScript(
+				"import re" + "\n" +
+				"def check(device):" + "\n" +
+				"  reload_reason = device.get('Reload reason')" + "\n" +
+				"  if reload_reason == 'Reload Command':" + "\n" +
 				"    return result_option.CONFORMING" + "\n" +
 				"  return result_option.NONCONFORMING" + "\n" +
 				"" + "\n"

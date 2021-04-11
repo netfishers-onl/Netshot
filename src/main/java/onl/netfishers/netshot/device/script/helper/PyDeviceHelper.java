@@ -7,8 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.mchange.v2.lang.StringUtils;
-
+import org.apache.commons.lang3.StringUtils;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
 import org.graalvm.polyglot.proxy.ProxyArray;
@@ -69,6 +68,22 @@ public class PyDeviceHelper {
 			return result.asBoolean();
 		}
 		return defaultResult;
+	}
+
+	/**
+	 * Change a pythonic key into camel case, e.g. 'running_config' into 'runningConfig'.
+	 * @param field = the field name to change
+	 * @return the JS version if applicable, the original field otherwise
+	 */
+	private static String pythonicToJavascriptic(String field) {
+		if (field.matches("^[a-z0-9_]+$")) {
+			String[] parts = field.split("_");
+			for (int i = 1; i < parts.length; i++) {
+				parts[i] = StringUtils.capitalize(parts[i]);
+			}
+			return String.join("", parts);
+		}
+		return field;
 	}
 
 	public PyDeviceHelper(Device device, Session session, TaskLogger taskLogger, boolean readOnly)
@@ -325,19 +340,19 @@ public class PyDeviceHelper {
 		else if ("contact".equals(item)) {
 			return device.getContact();
 		}
-		else if ("softwareVersion".equals(item)) {
+		else if ("software_version".equals(item)) {
 			return device.getSoftwareVersion();
 		}
-		else if ("serialNumber".equals(item)) {
+		else if ("serial_number".equals(item)) {
 			return device.getSerialNumber();
 		}
 		else if ("comments".equals(item)) {
 			return device.getComments();
 		}
-		else if ("networkClass".equals(item)) {
+		else if ("network_class".equals(item)) {
 			return (device.getNetworkClass() == null ? null : device.getNetworkClass().toString());
 		}
-		else if ("virtualDevices".equals(item)) {
+		else if ("virtual_devices".equals(item)) {
 			return ProxyArray.fromList(List.copyOf(device.getVirtualDevices()));
 		}
 		else if ("vrfs".equals(item)) {
@@ -386,18 +401,19 @@ public class PyDeviceHelper {
 			return ProxyArray.fromList(networkInterfaces);
 		}
 		else {
+			String jsItem = pythonicToJavascriptic(item);
 			for (AttributeDefinition definition : driver.getAttributes()) {
-				if ((definition.getName().equals(item) || definition.getTitle().equals(item)) && definition.isCheckable()) {
+				if ((definition.getName().equals(jsItem) || definition.getTitle().equals(jsItem)) && definition.isCheckable()) {
 					if (definition.getLevel() == AttributeLevel.CONFIG && device.getLastConfig() != null) {
 						for (ConfigAttribute attribute : device.getLastConfig().getAttributes()) {
-							if (attribute.getName().equals(item)) {
+							if (attribute.getName().equals(jsItem)) {
 								return attribute.getData();
 							}
 						}
 					}
 					else if (definition.getLevel() == AttributeLevel.DEVICE) {
 						for (DeviceAttribute attribute : device.getAttributes()) {
-							if (attribute.getName().equals(item)) {
+							if (attribute.getName().equals(jsItem)) {
 								return attribute.getData();
 							}
 						}

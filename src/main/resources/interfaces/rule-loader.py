@@ -30,24 +30,13 @@ class Device:
     def __init__(self, _device_helper):
         self._device_helper = _device_helper
 
-    def _camelize(self, s):
-        return "".join(
-            [
-                s[0].lower() if not s[:2].isupper() else s[0],
-                UNDERSCORE_RE.sub(
-                    lambda m: m.group(1) + m.group(2).upper(), s[1:]
-                ),
-            ]
-        )
-
     def get(self, key, id = None):
         if not isinstance(key, str):
             raise TypeError("Invalid key type in get")
-        camelized_key = self._camelize(key)
         if id is None:
-            return self._device_helper.get(camelized_key)
+            return self._device_helper.get(key)
         else:
-            return self._device_helper.get(camelized_key, id)
+            return self._device_helper.get(key, id)
 
     def nslookup(host):
         if not isinstance(host, str):

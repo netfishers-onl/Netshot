@@ -4,7 +4,7 @@ WORKDIR /opt/netshot
 RUN mvn package
 
 
-FROM oracle/graalvm-ce:20.3.0-java11
+FROM oghcr.io/graalvm/graalvm-ce:java11-21.0.0.2
 RUN gu install python
 RUN mkdir /usr/local/netshot /var/log/netshot
 COPY --from=0 /opt/netshot/target/netshot.jar /usr/local/netshot/netshot.jar

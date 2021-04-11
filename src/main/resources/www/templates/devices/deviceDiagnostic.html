@@ -6,7 +6,7 @@
 			<% } else if (typeof number !== "undefined") { %>
 				<%- number %>
 			<% } else if (typeof text !== "undefined") { %>
-				<%- text %>
+				<pre><%- text %></pre>
 			<% } %>
 		</td>
 		<td><%- formatDateTime(creationDate) %></td>

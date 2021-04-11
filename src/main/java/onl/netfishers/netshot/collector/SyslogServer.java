@@ -24,10 +24,13 @@ import java.net.DatagramSocket;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.Network4Address;
+import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,20 +101,21 @@ public class SyslogServer extends Collector {
 				DatagramPacket dato = new DatagramPacket(new byte[4096], 4096);
 				socket.receive(dato);
 				InetAddress address = dato.getAddress();
+				List<String> matchingDrivers = new ArrayList<>();
 				if (address instanceof Inet4Address) {
-					Network4Address source = new Network4Address(
-							(Inet4Address) address, 32);
-					String message = new String(dato.getData(), 0,
-							dato.getLength());
+					Network4Address source = new Network4Address((Inet4Address) address, 32);
+					String message = new String(dato.getData(), 0, dato.getLength());
 					logger.trace("Received Syslog message: '{}'.", message);
 					
 					for (DeviceDriver driver : DeviceDriver.getAllDrivers()) {
 						if (driver.analyzeSyslog(message, source)) {
-							break;
+							matchingDrivers.add(driver.getName());
 						}
 					}
+					if (matchingDrivers.size() > 0) {
+						TakeSnapshotTask.scheduleSnapshotIfNeeded(matchingDrivers, source);
+					}
 				}
-
 			}
 		}
 		catch (SocketException e) {

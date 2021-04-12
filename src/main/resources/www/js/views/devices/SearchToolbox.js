@@ -217,12 +217,14 @@ define([
 						'CONTAINS': '[' + name + '] CONTAINS "text"',
 						'STARTSWITH': '[' + name + '] STARTSWITH "text"',
 						'ENDSWITH': '[' + name + '] ENDSWITH "text"',
+						'MATCHES': '[' + name + '] MATCHES "pattern"',
 					},
 					'LONGTEXT': {
 						'IS': '[' + name + '] IS "text"',
 						'CONTAINS': '[' + name + '] CONTAINS "text"',
 						'STARTSWITH': '[' + name + '] STARTSWITH "text"',
 						'ENDSWITH': '[' + name + '] ENDSWITH "text"',
+						'MATCHES': '[' + name + '] MATCHES "pattern"',
 					},
 					'NUMERIC': {
 						'IS': '[' + name + '] IS 16',

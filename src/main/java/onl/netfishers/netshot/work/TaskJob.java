@@ -18,7 +18,7 @@
  */
 package onl.netfishers.netshot.work;
 
-import onl.netfishers.netshot.Database;
+import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.hooks.Hook;
 import onl.netfishers.netshot.hooks.HookTrigger;

@@ -1469,6 +1469,11 @@ input.spinner {
 	font-family: monospace;
 }
 
+#nsdevices-searchtoolbox #fieldname {
+	float: left;
+	margin-right: 10px;
+}
+
 #nsdevices-searchtoolbox #fieldbuttons {
 	line-height: 2em;
 }

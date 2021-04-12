@@ -46,6 +46,7 @@ import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.util.FileSize;
 import onl.netfishers.netshot.collector.SnmpTrapReceiver;
 import onl.netfishers.netshot.collector.SyslogServer;
+import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.rest.RestService;
 

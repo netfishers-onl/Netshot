@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.TaskJob;
 

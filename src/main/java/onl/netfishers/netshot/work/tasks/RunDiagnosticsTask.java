@@ -18,7 +18,7 @@ import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import onl.netfishers.netshot.Database;
+import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DynamicDeviceGroup;

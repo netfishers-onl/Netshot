@@ -42,7 +42,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import onl.netfishers.netshot.Database;
+import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 import org.quartz.JobKey;

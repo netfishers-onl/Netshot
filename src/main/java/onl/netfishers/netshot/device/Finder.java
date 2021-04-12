@@ -33,8 +33,9 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
-import onl.netfishers.netshot.Database;
+import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.compliance.SoftwareRule;
 import onl.netfishers.netshot.device.Device.NetworkClass;
 import onl.netfishers.netshot.device.Finder.Expression.FinderParseException;
@@ -117,6 +118,9 @@ public class Finder {
 
 		/** The contains. */
 		CONTAINS("(?i)^\\s*(contains)\\b", "CONTAINS"),
+
+		/** REGEXP matches. */
+		MATCHES("(?i)^\\s*(matches)\\b", "MATCHES"),
 
 		/** The startswith. */
 		STARTSWITH("(?i)^\\s*(startswith)\\b", "STARTSWITH"),
@@ -473,6 +477,23 @@ public class Finder {
 		}
 
 		/**
+		 * Check the validity of a RegExp pattern token.
+		 * @param token the token to check
+		 * @throws FinderParseException
+		 */
+		static protected void checkRegExp(Token token) throws FinderParseException {
+			try {
+				Pattern.compile(token.text);
+			}
+			catch (PatternSyntaxException e1) {
+				// Note: should check for POSIX regular expressions, to match with DB RegExp engine.
+				throw new FinderParseException(String.format(
+						"Parsing error, invalid regular expression, at character %d.",
+						token.position));
+			}
+		}
+
+		/**
 		 * Builds the hql string.
 		 *
 		 * @param itemPrefix the item prefix
@@ -493,7 +514,7 @@ public class Finder {
 			if (driver != null) {
 				query.setParameter("driver", driver.getName());
 			}
-		};
+		}
 	}
 
 	/**
@@ -829,7 +850,11 @@ public class Finder {
 				case CONTAINS:
 				case STARTSWITH:
 				case ENDSWITH:
+				case MATCHES:
 					if (value.type == TokenType.QUOTE) {
+						if (comparator.type == TokenType.MATCHES) {
+							checkRegExp(value);
+						}
 						ModuleExpression modExpr = new ModuleExpression(parsingData.getDeviceDriver());
 						modExpr.sign = comparator.type;
 						modExpr.value = TokenType.unescape(value.text);
@@ -854,9 +879,16 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
-			criteria.where = String.format(
-					"(m.serialNumber like :%s or m.partNumber like :%s)", itemPrefix,
-					itemPrefix);
+			if (TokenType.MATCHES.equals(sign)) {
+				criteria.where = String.format(
+						"(regexp_like(m.serialNumber, :%s) = 1 or regexp_like(m.partNumber, :%s) = 1)", itemPrefix,
+						itemPrefix);
+			}
+			else {
+				criteria.where = String.format(
+						"(m.serialNumber like :%s or m.partNumber like :%s)", itemPrefix,
+						itemPrefix);
+			}
 			criteria.joins.add("d.modules m");
 			return criteria;
 		}
@@ -932,7 +964,11 @@ public class Finder {
 				case CONTAINS:
 				case STARTSWITH:
 				case ENDSWITH:
+				case MATCHES:
 					if (value.type == TokenType.QUOTE) {
+						if (comparator.type == TokenType.MATCHES) {
+							checkRegExp(value);
+						}
 						InterfaceExpression modExpr = new InterfaceExpression(parsingData.getDeviceDriver());
 						modExpr.sign = comparator.type;
 						modExpr.value = TokenType.unescape(value.text);
@@ -957,9 +993,16 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
-			criteria.where = String.format(
-					"(ni.interfaceName like :%s or ni.description like :%s)", itemPrefix,
-					itemPrefix);
+			if (TokenType.MATCHES.equals(sign)) {
+				criteria.where = String.format(
+						"(regexp_like(ni.interfaceName, :%s) = 1 or regexp_like(ni.description, :%s) = 1)", itemPrefix,
+						itemPrefix);
+			}
+			else {
+				criteria.where = String.format(
+						"(ni.interfaceName like :%s or ni.description like :%s)", itemPrefix,
+						itemPrefix);
+			}
 			criteria.joins.add("d.networkInterfaces ni");
 			return criteria;
 		}
@@ -1670,6 +1713,16 @@ public class Finder {
 		 * @return the property name
 		 */
 		public String buildWhere(String valueName, String operator, String itemPrefix) {
+			if ("matches".equals(operator)) {
+				if (propertyLevel.nativeProperty) {
+					return "regexp_like(" + propertyLevel.prefix + property + ", :"
+						+ itemPrefix + ") = 1";
+				}
+				else {
+					return "regexp_like(" + itemPrefix + "_" + propertyLevel.prefix + property + ", :"
+						+ itemPrefix + ") = 1";
+				}
+			}
 			if (propertyLevel.nativeProperty) {
 				return propertyLevel.prefix + property + " " + operator + " :" + itemPrefix;
 			}
@@ -2095,7 +2148,11 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
-			criteria.where = this.buildWhere(longText ? "longText.text" : "text", "like", itemPrefix);
+			String operator = "like";
+			if (TokenType.MATCHES.equals(sign)) {
+				operator = "matches";
+			}
+			criteria.where = this.buildWhere(longText ? "longText.text" : "text", operator, itemPrefix);
 			return criteria;
 		}
 
@@ -2201,8 +2258,8 @@ public class Finder {
 			Token sign = tokens.get(1);
 			Token value = tokens.get(2);
 			if (sign.type != TokenType.IS && sign.type != TokenType.CONTAINS &&
-					sign.type != TokenType.STARTSWITH && sign.type != TokenType.STARTSWITH &&
-					sign.type != TokenType.ENDSWITH) {
+					sign.type != TokenType.MATCHES &&
+					sign.type != TokenType.STARTSWITH && sign.type != TokenType.ENDSWITH) {
 				throw new FinderParseException(String.format(
 						"Invalid operator for a text item at character %d.",
 						sign.position));
@@ -2211,6 +2268,9 @@ public class Finder {
 				throw new FinderParseException(String.format(
 						"Parsing error, should be a quoted text, at character %d.",
 						value.position));
+			}
+			if (sign.type == TokenType.MATCHES) {
+				checkRegExp(value);
 			}
 			TextAttributeExpression textExpr =
 					new TextAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
@@ -2532,7 +2592,7 @@ public class Finder {
 	}
 
 	/**
-	 * The Class ModuleExpression.
+	 * The Class VrfExpression.
 	 */
 	public static class VrfExpression extends Expression {
 	
@@ -2565,7 +2625,11 @@ public class Finder {
 				case CONTAINS:
 				case STARTSWITH:
 				case ENDSWITH:
+				case MATCHES:
 					if (value.type == TokenType.QUOTE) {
+						if (comparator.type == TokenType.MATCHES) {
+							checkRegExp(value);
+						}
 						VrfExpression modExpr = new VrfExpression(parsingData.getDeviceDriver());
 						modExpr.sign = comparator.type;
 						modExpr.value = TokenType.unescape(value.text);
@@ -2590,7 +2654,12 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
-			criteria.where = String.format("(v like :%s)", itemPrefix);
+			if (TokenType.MATCHES.equals(sign)) {
+				criteria.where = String.format("(regexp_like(v, :%s) = 1)", itemPrefix);
+			}
+			else {
+				criteria.where = String.format("(v like :%s)", itemPrefix);
+			}
 			criteria.joins.add("d.vrfInstances v");
 			return criteria;
 		}
@@ -2628,7 +2697,7 @@ public class Finder {
 	}
 
 	/**
-	 * The Class ModuleExpression.
+	 * The Class VirtualNameExpression.
 	 */
 	public static class VirtualNameExpression extends Expression {
 	
@@ -2661,7 +2730,11 @@ public class Finder {
 				case CONTAINS:
 				case STARTSWITH:
 				case ENDSWITH:
+				case MATCHES:
 					if (value.type == TokenType.QUOTE) {
+						if (comparator.type == TokenType.MATCHES) {
+							checkRegExp(value);
+						}
 						VirtualNameExpression vnameExpr = new VirtualNameExpression(parsingData.getDeviceDriver());
 						vnameExpr.sign = comparator.type;
 						vnameExpr.value = TokenType.unescape(value.text);
@@ -2686,7 +2759,12 @@ public class Finder {
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
-			criteria.where = String.format("(v like :%s) or (d.name like :%s)", itemPrefix, itemPrefix);
+			if (TokenType.MATCHES.equals(sign)) {
+				criteria.where = String.format("(regexp_like(v, :%s) = 1 or regexp_like(d.name, :%s) = 1)", itemPrefix, itemPrefix);
+			}
+			else {
+				criteria.where = String.format("(v like :%s) or (d.name like :%s)", itemPrefix, itemPrefix);
+			}
 			criteria.joins.add("d.virtualDevices v");
 			return criteria;
 		}

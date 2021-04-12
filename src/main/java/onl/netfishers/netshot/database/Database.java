@@ -16,18 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
-package onl.netfishers.netshot;
+package onl.netfishers.netshot.database;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.TreeSet;
@@ -36,6 +34,7 @@ import java.util.zip.ZipInputStream;
 
 import javax.persistence.Entity;
 
+import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.aaa.ApiToken;
 import onl.netfishers.netshot.aaa.UiUser;
 import onl.netfishers.netshot.compliance.CheckResult;
@@ -87,9 +86,6 @@ import onl.netfishers.netshot.work.DebugLog;
 import onl.netfishers.netshot.work.Task;
 import onl.netfishers.netshot.work.tasks.DeviceJsScript;
 
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -114,16 +110,13 @@ import org.hibernate.boot.model.naming.ImplicitPrimaryKeyJoinColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitTenantIdColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.naming.NamingHelper;
-import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.Type;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.hibernate5.encryptor.HibernatePBEEncryptorRegistry;
 import org.slf4j.Logger;
@@ -153,78 +146,6 @@ public class Database {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(Database.class);
-
-	private static class DatabaseInterceptor extends EmptyInterceptor {
-
-		@Override
-		public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState,
-				String[] propertyNames, Type[] types) {
-			int indexOf = ArrayUtils.indexOf(propertyNames, "changeDate");
-			if (indexOf != ArrayUtils.INDEX_NOT_FOUND) {
-				currentState[indexOf] = new Date(1000 * (System.currentTimeMillis() / 1000));
-				return true;
-			}
-			return false;
-		}
-
-		@Override
-		public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
-			int indexOf = ArrayUtils.indexOf(propertyNames, "changeDate");
-			if (indexOf != ArrayUtils.INDEX_NOT_FOUND) {
-				if (state[indexOf] == null) state[indexOf] = new Date(1000 * (System.currentTimeMillis() / 1000));
-				return true;
-			}
-			return false;
-		}
-
-		private static final long serialVersionUID = 5897665908529047371L;
-
-	}
-
-	static public class ImprovedPhysicalNamingStrategy implements PhysicalNamingStrategy {
-
-		@Override
-		public Identifier toPhysicalCatalogName(Identifier identifier, JdbcEnvironment jdbcEnv) {
-			return convert(identifier);
-		}
-
-		@Override
-		public Identifier toPhysicalColumnName(Identifier identifier, JdbcEnvironment jdbcEnv) {
-			return convert(identifier);
-		}
-
-		@Override
-		public Identifier toPhysicalSchemaName(Identifier identifier, JdbcEnvironment jdbcEnv) {
-			return convert(identifier);
-		}
-
-		@Override
-		public Identifier toPhysicalSequenceName(Identifier identifier, JdbcEnvironment jdbcEnv) {
-			return convert(identifier);
-		}
-
-		@Override
-		public Identifier toPhysicalTableName(Identifier identifier, JdbcEnvironment jdbcEnv) {
-			return convert(identifier);
-		}
-
-		private Identifier convert(Identifier identifier) {
-			if (identifier == null || StringUtils.isBlank(identifier.getText())) {
-				return identifier;
-			}
-
-			final StringBuilder buf = new StringBuilder(identifier.getText().replace('.', '_'));
-			for (int i = 1; i < buf.length() - 1; i++) {
-				if (Character.isLowerCase(buf.charAt(i - 1)) && Character.isUpperCase(buf.charAt(i))
-						&& Character.isLowerCase(buf.charAt(i + 1))) {
-					buf.insert(i++, '_');
-				}
-			}
-			String newName = buf.toString().toLowerCase();
-			Identifier newIdentifier = Identifier.toIdentifier(newName, true);
-			return newIdentifier;
-		}
-	}
 
 	static public class ImprovedImplicitNamingStrategy implements ImplicitNamingStrategy {
 		/**
@@ -617,14 +538,23 @@ public class Database {
 
 			configuration
 					.setProperty("hibernate.connection.driver_class", getDriverClass())
-					.setProperty("hibernate.connection.url", getUrl()).setProperty("hibernate.connection.username", getUsername())
-					.setProperty("hibernate.connection.password", getPassword()).setProperty("hibernate.c3p0.min_size", "5")
+					.setProperty("hibernate.connection.url", getUrl())
+					.setProperty("hibernate.connection.username", getUsername())
+					.setProperty("hibernate.connection.password", getPassword())
+					.setProperty("hibernate.c3p0.min_size", "5")
 					// Dates/times stored in UTC in the DB, without timezone, up to Java to convert to server local time
 					.setProperty("hibernate.jdbc.time_zone", "UTC")
 					.setProperty("hibernate.c3p0.max_size", "30").setProperty("hibernate.c3p0.timeout", "1800")
 					.setProperty("hibernate.c3p0.max_statements", "50")
 					.setProperty("hibernate.c3p0.unreturnedConnectionTimeout", "1800")
 					.setProperty("hibernate.c3p0.debugUnreturnedConnectionStackTraces", "true");
+
+			if ("org.postgresql.Driver".equals(getDriverClass())) {
+				configuration.setProperty("hibernate.dialect", "onl.netfishers.netshot.database.CustomPostgreSQLDialect");
+			}
+			else if ("com.mysql.cj.jdbc.Driver".equals(getDriverClass())) {
+				configuration.setProperty("hibernate.dialect", "onl.netfishers.netshot.database.CustomMySQLDialect");
+			}
 
 			StandardPBEStringEncryptor credentialEncryptor = new StandardPBEStringEncryptor();
 			String cryptPassword = Netshot.getConfig("netshot.db.encryptionpassword", null);

@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import ch.qos.logback.classic.Level;
+import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;

@@ -24,7 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
-import onl.netfishers.netshot.Database;
+import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.Device.NetworkClass;

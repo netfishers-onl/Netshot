@@ -27,7 +27,7 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
-import onl.netfishers.netshot.Database;
+import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.Finder.Expression.FinderParseException;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 

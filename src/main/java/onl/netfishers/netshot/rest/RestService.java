@@ -69,7 +69,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import onl.netfishers.netshot.Database;
+import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.aaa.ApiToken;

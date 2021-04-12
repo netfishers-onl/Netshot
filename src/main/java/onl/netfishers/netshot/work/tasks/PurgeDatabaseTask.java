@@ -30,7 +30,7 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
-import onl.netfishers.netshot.Database;
+import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigBinaryFileAttribute;

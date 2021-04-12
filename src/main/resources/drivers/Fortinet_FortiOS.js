@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2021 Sylvain Cadilhac (NetFishers)
- * 
+ *
  * This file is part of Netshot.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -20,11 +20,11 @@
 /**
  * 'Info' object = Meta data of the driver.
  */
-var Info = {
+ var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "4.1" /* Version will appear in the Admin tab. */
+	version: "4.2" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -56,7 +56,7 @@ var Config = {
 };
 
 /**
- * 'Device' object = Data fields to add to devices of this type. 
+ * 'Device' object = Data fields to add to devices of this type.
  */
 var Device = {
 	"haPeer": { /* This stores the name of an optional HA peer. */
@@ -68,7 +68,7 @@ var Device = {
 };
 
 /**
- * 'CLI' object = Definition of the finite state machine to recognize and handle the CLI prompt changes. 
+ * 'CLI' object = Definition of the finite state machine to recognize and handle the CLI prompt changes.
  */
 var CLI = {
 	telnet: { /* Entry point for Telnet access. */
@@ -134,6 +134,17 @@ function snapshot(cli, device, config) {
 
 	// 'status' will be used to read the version, hostname, etc.
 	var status = cli.command("get system status");
+
+	// Read version and family from the 'status' output.
+	var version = status.match(/Version: (.*) v([0-9]+.*)/);
+	var family = (version ? version[1] : "FortiOS device");
+	device.set("family", family);
+	version = (version ? version[2] : "Unknown");
+	device.set("softwareVersion", version);
+	config.set("osVersion", version);
+
+	device.set("networkClass", "FIREWALL");
+
 	// The configuration is retrieved by a simple 'show' at the root level. Add grep to avoid paging.
 	var configuration = cli.command("show | grep .", { timeout: 120000 });
 	// Read the HA peer hostname from a 'get system ha status' in global mode.
@@ -150,27 +161,26 @@ function snapshot(cli, device, config) {
 	var showSystemSnmp = cli.command("show system snmp sysinfo");
 	// Store the HA status
 	var getHa = cli.command("get system ha status");
+
+
 	if (vdomMode) {
+		if (version.match(/^6\.2\..*/)) {
+			// In 6.2, some config blocks are missing from the root 'show'
+			// We'll take a 'show' in 'config global' mode and replace
+			var globalConfig = cli.command("show | grep .", { timeout: 120000 });
+			configuration = configuration.replace(/^(config global\r?\n)(?:.*\r?\n)*?(^end\r?\nconfig vdom)/m,
+					function(m, p, s) { return p + globalConfig + s; });
+		}
+
 		cli.command("end", { clearPrompt: true });
 	}
-	
+
 	// Read the device hostname from the 'status' output.
 	var hostname = status.match(/Hostname: (.*)$/m);
 	if (hostname) {
 		hostname = hostname[1];
 		device.set("name", hostname);
-	} 
-
-	// Read version and family from the 'status' output.
-	var version = status.match(/Version: (.*) v([0-9]+.*)/);
-	var family = (version ? version[1] : "FortiOS device");
-	device.set("family", family);
-	version = (version ? version[2] : "Unknown");
-	device.set("softwareVersion", version);
-	config.set("osVersion", version);
-
-	device.set("networkClass", "FIREWALL");
-
+	}
 	// Read the serial number from the 'status' output.
 	var serial = status.match(/Serial-Number: (.*)/);
 	if (serial) {
@@ -259,21 +269,21 @@ function snapshot(cli, device, config) {
 					networkInterface.mac = vdomArp[vdom][networkInterface.name];
 				}
 			}
-			
+
 		}
 		if (interfaces[i].config.match(/set status down/)) {
 			networkInterface.disabled = true;
 		}
 		device.add("networkInterface", networkInterface);
 	}
-	
+
 	var removeChangingParts = function(text) {
 		var cleaned = text;
 		cleaned = cleaned.replace(/^ *set (passphrase|password|passwd) ENC .*$/mg, "");
 		cleaned = cleaned.replace(/^ *set private-key "(.|[\r\n])*?"$/mg, "");
 		return cleaned;
 	}
-	
+
 	// If only the passwords are changing (they are hashed with a new salt at each 'show') then
 	// just keep the previous configuration.
 	// That means we could miss a password change in the history of configurations, but no choice...

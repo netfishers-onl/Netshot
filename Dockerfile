@@ -1,10 +1,11 @@
-FROM maven:3-jdk-11 AS builder
+FROM ghcr.io/graalvm/graalvm-ce:java11-21.0.0.2 as builder
 COPY . /opt/netshot
 WORKDIR /opt/netshot
-RUN mvn package
+RUN gu install python
+RUN ./mvnw package
 
 
-FROM oghcr.io/graalvm/graalvm-ce:java11-21.0.0.2
+FROM ghcr.io/graalvm/graalvm-ce:java11-21.0.0.2
 RUN gu install python
 RUN mkdir /usr/local/netshot /var/log/netshot
 COPY --from=0 /opt/netshot/target/netshot.jar /usr/local/netshot/netshot.jar

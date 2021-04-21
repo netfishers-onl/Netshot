@@ -181,8 +181,7 @@ public class PythonRule extends Rule {
 		prepared = true;
 		pyValid = false;
 		
-		try {
-			Context context = getContext();
+		try (Context context = getContext()) {
 			Value checkFunction = context.getBindings("python").getMember("check");
 			if (checkFunction == null || !checkFunction.canExecute()) {
 				logger.warn("The check sub wasn't found in the script");
@@ -218,9 +217,8 @@ public class PythonRule extends Rule {
 			return;
 		}
 
-		try {
+		try (Context context = this.getContext()) {
 			PyDeviceHelper deviceHelper = new PyDeviceHelper(device, session, taskLogger, true);
-			Context context = this.getContext();
 			Value result = context.getBindings("python").getMember("_check").execute(deviceHelper);
 			String txtResult = null;
 			String comment = "";

@@ -177,8 +177,7 @@ public class JavaScriptRule extends Rule {
 		this.engine = Engine.create();
 		jsValid = false;
 		
-		try {
-			Context context = getContext();
+		try (Context context = getContext()) {
 			Value checkFunction = context.getBindings("js").getMember("check");
 			if (checkFunction == null || !checkFunction.canExecute()) {
 				logger.warn("The check function wasn't found in the script");
@@ -214,9 +213,10 @@ public class JavaScriptRule extends Rule {
 			return;
 		}
 
-		try {
+		try (
+			Context context = this.getContext()
+		) {
 			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, session, taskLogger, true);
-			Context context = this.getContext();
 			Value result = context.getBindings("js").getMember("_check").execute(deviceHelper);
 			String txtResult = null;
 			String comment = "";

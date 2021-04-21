@@ -230,19 +230,19 @@ public abstract class Diagnostic {
 	 * @param value the diagnostic result
 	 */
 	@Transient
-	public void addResultToDevice(Device device, String value) {
+	public void addResultToDevice(Device device, Value value) {
 		switch (this.resultType) {
 		case LONGTEXT:
-			device.addDiagnosticResult(new DiagnosticLongTextResult(device, this, value));
+			device.addDiagnosticResult(new DiagnosticLongTextResult(device, this, value.asString()));
 			break;
 		case TEXT:
-			device.addDiagnosticResult(new DiagnosticTextResult(device, this, value));
+			device.addDiagnosticResult(new DiagnosticTextResult(device, this, value.asString()));
 			break;
 		case NUMERIC:
-			device.addDiagnosticResult(new DiagnosticNumericResult(device, this, value));
+			device.addDiagnosticResult(new DiagnosticNumericResult(device, this, value.asDouble()));
 			break;
 		case BINARY:
-			device.addDiagnosticResult(new DiagnosticBinaryResult(device, this, value));
+			device.addDiagnosticResult(new DiagnosticBinaryResult(device, this, value.asBoolean()));
 			break;
 		default:
 		}

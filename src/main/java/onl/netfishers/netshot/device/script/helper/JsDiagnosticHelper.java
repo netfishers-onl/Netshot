@@ -29,8 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.diagnostic.Diagnostic;
-import onl.netfishers.netshot.diagnostic.DiagnosticBinaryResult;
-import onl.netfishers.netshot.diagnostic.DiagnosticNumericResult;
 import onl.netfishers.netshot.work.TaskLogger;
 
 /**
@@ -79,19 +77,8 @@ public class JsDiagnosticHelper {
 		try {
 			for (Diagnostic diagnostic : diagnostics) {
 				if (diagnostic.getName().equals(key)) {
-					switch (diagnostic.getResultType()) {
-						case BINARY:
-							taskLogger.warn(String.format("Setting binary value for diagnostic key '%s'", key));
-							device.addDiagnosticResult(new DiagnosticBinaryResult(device, diagnostic, value.asBoolean()));
-							break;
-						case NUMERIC:
-							taskLogger.warn(String.format("Setting numeric value for diagnostic key '%s'", key));
-							device.addDiagnosticResult(new DiagnosticNumericResult(device, diagnostic, value.asDouble()));
-							break;
-						default:
-							taskLogger.warn(String.format("Setting string value for diagnostic key '%s'", key));
-							diagnostic.addResultToDevice(device, value.asString());
-					}
+					taskLogger.warn(String.format("Setting value for diagnostic key '%s'", key));
+					diagnostic.addResultToDevice(device, value);
 				}
 			}
 		}

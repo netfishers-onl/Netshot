@@ -81,8 +81,7 @@ public class RunDiagnosticCliScript extends CliScript {
 		TaskLogger taskLogger = this.getJsLogger();
 		DeviceDriver driver = device.getDeviceDriver();
 		// Filter on the device driver
-		try {
-			Context context = driver.getContext();
+		try (Context context = driver.getContext()) {
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
 			options.setDevice(new JsDeviceHelper(device, null, taskLogger, false));
 

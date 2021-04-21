@@ -82,8 +82,7 @@ public class SnapshotCliScript extends CliScript {
 		}
 
 		DeviceDriver driver = device.getDeviceDriver();
-		try {
-			Context context = driver.getContext();
+		try (Context context = driver.getContext()) {
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
 			options.setDevice(new JsDeviceHelper(device, session, taskLogger, false));
 			Config config = new Config(device);

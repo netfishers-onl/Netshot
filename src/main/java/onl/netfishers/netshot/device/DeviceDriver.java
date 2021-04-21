@@ -421,109 +421,110 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	protected DeviceDriver(Reader reader, String sourceName) throws Exception {
 		source = Source.newBuilder("js", reader, sourceName).buildLiteral();
 		this.engine = Engine.create();
-		Context context = getContext();
 
-		try {
-			Value info = context.getBindings("js").getMember("Info");
-			this.name = info.getMember("name").asString();
-			this.author = info.getMember("author").asString();
-			this.description = info.getMember("description").asString();
-			this.version = info.getMember("version").asString();
+		try (Context context = this.getContext()) {
 			try {
-				this.priority = info.getMember("priority").asInt();
+				Value info = context.getBindings("js").getMember("Info");
+				this.name = info.getMember("name").asString();
+				this.author = info.getMember("author").asString();
+				this.description = info.getMember("description").asString();
+				this.version = info.getMember("version").asString();
+				try {
+					this.priority = info.getMember("priority").asInt();
+				}
+				catch (Exception e) {
+					this.priority = 65536;
+				}
+			}
+			catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Invalid Info object.", e);
+			}
+
+			try {
+				Value config = context.getBindings("js").getMember("Config");
+				for (String key : config.getMemberKeys()) {
+					if (key == null || !key.matches("^[a-z][a-zA-Z0-9]+$")) {
+						throw new IllegalArgumentException(String.format("Invalid config item %s.", key));
+					}
+					try {
+						Value data = config.getMember(key);
+						AttributeDefinition item = new AttributeDefinition(AttributeLevel.CONFIG, key, data);
+						this.attributes.add(item);
+					}
+					catch (IllegalArgumentException e) {
+						throw new IllegalArgumentException(String.format("Invalid item %s in Config.", key), e);
+					}
+				}
+			}
+			catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Invalid Config object.", e);
+			}
+			try {
+				Value device = context.getBindings("js").getMember("Device");
+				for (String key : device.getMemberKeys()) {
+					if (key == null || !key.matches("^[a-z][a-zA-Z0-9]+$")) {
+						throw new IllegalArgumentException(String.format("Invalid device item %s.", key));
+					}
+					try {
+						Value data = device.getMember(key);
+						AttributeDefinition item = new AttributeDefinition(AttributeLevel.DEVICE, key, data);
+						this.attributes.add(item);
+					}
+					catch (IllegalArgumentException e) {
+						throw new IllegalArgumentException(String.format("Invalid item %s in Device.", key), e);
+					}
+				}
+			}
+			catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Invalid Device object.", e);
+			}
+
+			try {
+				Value cli = context.getBindings("js").getMember("CLI");
+				if (cli.hasMember("ssh")) {
+					this.protocols.add(DriverProtocol.SSH);
+					Value ssh = cli.getMember("ssh");
+					if (ssh.hasMembers() && ssh.hasMember("macros")) {
+						Value macros = ssh.getMember("macros");
+						this.cliMainModes.addAll(macros.getMemberKeys());
+					}
+				}
+				if (cli.hasMember("telnet")) {
+					this.protocols.add(DriverProtocol.TELNET);
+					Value telnet = cli.getMember("telnet");
+					if (telnet.hasMembers() && telnet.hasMember("macros")) {
+						Value macros = telnet.getMember("macros");
+						this.cliMainModes.addAll(macros.getMemberKeys());
+					}
+				}
+			}
+			catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Invalid CLI object.", e);
+			}
+
+			try {
+				if (context.getBindings("js").hasMember("SNMP")) {
+					this.protocols.add(DriverProtocol.SNMP);
+				}
+			}
+			catch (IllegalArgumentException e) {
+			}
+
+			if (this.protocols.isEmpty()) {
+				throw new IllegalArgumentException("Invalid driver, it supports neither Telnet nor SSH.");
+			}
+
+			try {
+				if (!context.getBindings("js").getMember("snapshot").canExecute()) {
+					throw new Exception();
+				}
 			}
 			catch (Exception e) {
-				this.priority = 65536;
+				throw new IllegalArgumentException("Invalid driver, the 'snapshot' function cannot be found.");
 			}
-		}
-		catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException("Invalid Info object.", e);
-		}
 
-		try {
-			Value config = context.getBindings("js").getMember("Config");
-			for (String key : config.getMemberKeys()) {
-				if (key == null || !key.matches("^[a-z][a-zA-Z0-9]+$")) {
-					throw new IllegalArgumentException(String.format("Invalid config item %s.", key));
-				}
-				try {
-					Value data = config.getMember(key);
-					AttributeDefinition item = new AttributeDefinition(AttributeLevel.CONFIG, key, data);
-					this.attributes.add(item);
-				}
-				catch (IllegalArgumentException e) {
-					throw new IllegalArgumentException(String.format("Invalid item %s in Config.", key), e);
-				}
-			}
+			logger.info("Loaded driver {} version {}.", this.name, this.version);
 		}
-		catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException("Invalid Config object.", e);
-		}
-		try {
-			Value device = context.getBindings("js").getMember("Device");
-			for (String key : device.getMemberKeys()) {
-				if (key == null || !key.matches("^[a-z][a-zA-Z0-9]+$")) {
-					throw new IllegalArgumentException(String.format("Invalid device item %s.", key));
-				}
-				try {
-					Value data = device.getMember(key);
-					AttributeDefinition item = new AttributeDefinition(AttributeLevel.DEVICE, key, data);
-					this.attributes.add(item);
-				}
-				catch (IllegalArgumentException e) {
-					throw new IllegalArgumentException(String.format("Invalid item %s in Device.", key), e);
-				}
-			}
-		}
-		catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException("Invalid Device object.", e);
-		}
-
-		try {
-			Value cli = context.getBindings("js").getMember("CLI");
-			if (cli.hasMember("ssh")) {
-				this.protocols.add(DriverProtocol.SSH);
-				Value ssh = cli.getMember("ssh");
-				if (ssh.hasMembers() && ssh.hasMember("macros")) {
-					Value macros = ssh.getMember("macros");
-					this.cliMainModes.addAll(macros.getMemberKeys());
-				}
-			}
-			if (cli.hasMember("telnet")) {
-				this.protocols.add(DriverProtocol.TELNET);
-				Value telnet = cli.getMember("telnet");
-				if (telnet.hasMembers() && telnet.hasMember("macros")) {
-					Value macros = telnet.getMember("macros");
-					this.cliMainModes.addAll(macros.getMemberKeys());
-				}
-			}
-		}
-		catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException("Invalid CLI object.", e);
-		}
-
-		try {
-			if (context.getBindings("js").hasMember("SNMP")) {
-				this.protocols.add(DriverProtocol.SNMP);
-			}
-		}
-		catch (IllegalArgumentException e) {
-		}
-
-		if (this.protocols.isEmpty()) {
-			throw new IllegalArgumentException("Invalid driver, it supports neither Telnet nor SSH.");
-		}
-
-		try {
-			if (!context.getBindings("js").getMember("snapshot").canExecute()) {
-				throw new Exception();
-			}
-		}
-		catch (Exception e) {
-			throw new IllegalArgumentException("Invalid driver, the 'snapshot' function cannot be found.");
-		}
-
-		logger.info("Loaded driver {} version {}.", this.name, this.version);
 	}
 
 	/**
@@ -539,8 +540,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		if (!canAnalyzeSyslog) {
 			return false;
 		}
-		try {
-			Context context = this.getContext();
+		try (Context context = this.getContext()) {
 			Value result = context.getBindings("js").getMember("_analyzeSyslog").execute(message, JS_SYSLOG_LOGGER);
 			if (result != null && result.isBoolean()) {
 				return result.asBoolean();
@@ -563,8 +563,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		if (!canAnalyzeTraps) {
 			return false;
 		}
-		try {
-			Context context = this.getContext();
+		try (Context context = this.getContext()) {
 			Value result = context.getBindings("js").getMember("_analyzeTrap").execute(ProxyObject.fromMap(data), JS_SNMP_LOGGER);
 			if (result != null && result.isBoolean()) {
 				return result.asBoolean();
@@ -633,13 +632,13 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	@Transient
 	public final Context getContext() throws IOException {
-		logger.warn("Getting context");
+		logger.debug("Getting context");
 		Context context = Context.newBuilder()
 			.allowIO(true).fileSystem(new PythonFileSystem())
 			.engine(engine).build();
 		context.eval(this.source);
 		context.eval(JSLOADER_SOURCE);
-		logger.warn("Context is ready");
+		logger.debug("Context is ready");
 		return context;
 	}
 	
@@ -659,8 +658,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		if (!canSnmpAutodiscover) {
 			return false;
 		}
-		try {
-			Context context = this.getContext();
+		try (Context context = this.getContext()) {
 			Value result = context.getBindings("js").getMember("_snmpAutoDiscover").execute(sysObjectId, sysDesc, taskLogger);
 			if (result != null && result.isBoolean()) {
 				return result.asBoolean();

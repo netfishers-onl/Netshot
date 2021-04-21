@@ -213,9 +213,7 @@ public class JavaScriptRule extends Rule {
 			return;
 		}
 
-		try (
-			Context context = this.getContext()
-		) {
+		try (Context context = this.getContext()) {
 			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, session, taskLogger, true);
 			Value result = context.getBindings("js").getMember("_check").execute(deviceHelper);
 			String txtResult = null;

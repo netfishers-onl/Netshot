@@ -87,8 +87,7 @@ public class JsCliScript extends CliScript {
 		}
 		TaskLogger taskLogger = this.getJsLogger();
 		DeviceDriver driver = device.getDeviceDriver();
-		try {
-			Context context = driver.getContext();
+		try (Context context = driver.getContext()) {
 			context.eval("js", code);
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
 			options.setDevice(new JsDeviceHelper(device, null, taskLogger, false));

@@ -404,7 +404,7 @@ public class ComplianceRuleTest {
 			rule.setScript(
 				"function check(device) {" +
 				"  const vrfs = device.get('vrfs');" +
-				"  if (vrfs[0] === 'VRF1') {" +
+				"  if (vrfs.includes('VRF1')) {" +
 				"    return CONFORMING;" +
 				"  }" +
 				"  return NONCONFORMING;" +
@@ -697,7 +697,7 @@ public class ComplianceRuleTest {
 			rule.setScript(
 				"def check(device):" + "\n" +
 				"  vrfs = device.get('vrfs')" + "\n" +
-				"  if vrfs[0] == 'VRF1':" + "\n" +
+				"  if 'VRF1' in vrfs:" + "\n" +
 				"    return result_option.CONFORMING" + "\n" +
 				"  return result_option.NONCONFORMING" + "\n" +
 				"" + "\n"

@@ -152,13 +152,16 @@ public class Tacacs {
 					String role = authoReply.getValue(roleAttribute);
 					aaaLogger.debug(MarkerFactory.getMarker("AAA"), "The TACACS+ server returned role: {}", role);
 
-					if(role == null) {
-						aaaLogger.warn("No role returned from the tacacs server using the {} attribute, user will be read only", roleAttribute);
-					} else if(role.equals(adminLevelRole)) {
+					if (role == null) {
+						aaaLogger.warn("No role returned from the TACACS+ server for user {} using the {} attribute, user will be read only", username, roleAttribute);
+					}
+					else if(role.equals(adminLevelRole)) {
 						level = UiUser.LEVEL_ADMIN;
-					} else if (role.equals(executeReadWriteLevelRole)) {
+					}
+					else if (role.equals(executeReadWriteLevelRole)) {
 						level = UiUser.LEVEL_EXECUTEREADWRITE;
-					} else if (role.equals(readWriteLevelRole)) {
+					}
+					else if (role.equals(readWriteLevelRole)) {
 						level = UiUser.LEVEL_READWRITE;
 					}
 

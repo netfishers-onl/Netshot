@@ -132,6 +132,12 @@ public class Tacacs {
 		try {
 			SessionClient authenSession = client.newSession(SVC.LOGIN, "rest", remoteAddress == null ? "0.0.0.0" : remoteAddress.getIp(), PRIV_LVL.USER.code());
 			AuthenReply authenReply = authenSession.authenticate_ASCII(username, password);
+
+			String roleAttribute = Netshot.getConfig("netshot.aaa.tacacs.role.attributename", "role");
+			String adminLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.adminlevelrole", "admin");
+			String executeReadWriteLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.executereadwriterole", "execute-read-write");
+			String readWriteLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.readwritelevelrole", "read-write");
+
 			if (authenReply.isOK()) {
 				SessionClient authoSession = client.newSession(SVC.LOGIN, "rest", remoteAddress == null ? "0.0.0.0" : remoteAddress.getIp(), PRIV_LVL.USER.code());
 				AuthorReply authoReply = authoSession.authorize(
@@ -143,19 +149,22 @@ public class Tacacs {
 				);
 				if (authoReply.isOK()) {
 					int level = UiUser.LEVEL_READONLY;
-					String role = authoReply.getValue("role");
+					String role = authoReply.getValue(roleAttribute);
 					aaaLogger.debug(MarkerFactory.getMarker("AAA"), "The TACACS+ server returned role: {}", role);
-					switch (role) {
-					case "admin":
-						level = UiUser.LEVEL_ADMIN;
-						break;
-					case "execute-read-write":
-						level = UiUser.LEVEL_EXECUTEREADWRITE;
-						break;
-					case "read-write":
-						level = UiUser.LEVEL_READWRITE;
-						break;
+
+					if (role == null) {
+						aaaLogger.warn("No role returned from the TACACS+ server for user {} using the {} attribute, user will be read only", username, roleAttribute);
 					}
+					else if(role.equals(adminLevelRole)) {
+						level = UiUser.LEVEL_ADMIN;
+					}
+					else if (role.equals(executeReadWriteLevelRole)) {
+						level = UiUser.LEVEL_EXECUTEREADWRITE;
+					}
+					else if (role.equals(readWriteLevelRole)) {
+						level = UiUser.LEVEL_READWRITE;
+					}
+
 					aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} passed TACACS+ authentication (with permission level {}).",
 							username, level);
 					UiUser user = new UiUser(username, level);

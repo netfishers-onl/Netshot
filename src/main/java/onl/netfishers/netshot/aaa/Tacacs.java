@@ -135,7 +135,7 @@ public class Tacacs {
 
 			String roleAttribute = Netshot.getConfig("netshot.aaa.tacacs.role.attributename", "role");
 			String adminLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.adminlevelrole", "admin");
-			String executeReadWriteLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.executereadwriterole", "execute-read-write");
+			String executeReadWriteLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.executereadwritelevelrole", "execute-read-write");
 			String readWriteLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.readwritelevelrole", "read-write");
 
 			if (authenReply.isOK()) {

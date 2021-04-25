@@ -12,6 +12,16 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.16.2 - 2021-04-25
+
+* TACACS+ as backend authentication/accounting method
+* Code cleanup
+* Various application fixes (database schema, UI, Python helpers, Syslog trigger, etc.)
+* Driver Fixes/improvements (FortiOS, Brocade)
+* Dockerfile update
+* MATCHES (RegEx) operator in advanced search
+
+
 0.16.1 - 2021-02-19
 
 * Fix for IP addresses being rejected

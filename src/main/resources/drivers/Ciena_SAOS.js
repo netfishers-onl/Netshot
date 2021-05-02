@@ -21,7 +21,7 @@ var Info = {
 	name: "CienaSAOS",
 	description: "Ciena SAOS",
 	author: "NetFishers",
-	version: "1.0"
+	version: "1.0.1"
 };
 
 var Config = {
@@ -174,7 +174,7 @@ function snapshot(cli, device, config) {
 	}
 	device.add("module", {
 		slot: "Chassis",
-		partNumber: chassisShowDevice["Part Number/Revision"] || "Unknown",
+		partNumber: chassisShowDevice["Part Number/Revision"] || "Unknown",
 		serialNumber: chassisShowDevice["Serial Number"] || "Unknown",
 	});
 
@@ -191,7 +191,7 @@ function snapshot(cli, device, config) {
 
 	var snmpShow = parseTable("snmp show");
 	device.set("contact", snmpShow["System Contact"] || "");
-	device.set("location", snmpShow["System Location"] || "");
+	device.set("location", snmpShow["System Location"] || "");
 
 	device.add("module", {
 		slot: "",
@@ -207,7 +207,7 @@ function snapshot(cli, device, config) {
 		var portShowPort = parseTable("port show port " + portName);
 		var networkInterface = {
 			name: portName,
-			description: portShowPort["Description"] || "",
+			description: portShowPort["Description"] || "",
 			mac: portShowPort["MAC Address"] || undefined,
 			ip: [],
 			level3: false,
@@ -226,8 +226,8 @@ function snapshot(cli, device, config) {
 		var networkInterface = {
 			name: ifName,
 			enabled: interfaceShowRemote["Admin State"] === "Enabled",
-			description: interfaceShowRemote["Domain"] || "",
-			mac: interfaceShowRemote["MAC Address"] || undefined,
+			description: interfaceShowRemote["Domain"] || "",
+			mac: interfaceShowRemote["MAC Address"] || undefined,
 			ip: [],
 		};
 		var ipPattern = /^interface remote set ip (\d+\.\d+\.\d+\.\d+)\/(\d+)/mg;

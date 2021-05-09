@@ -226,7 +226,7 @@ function _connect(_function, _protocol, _options, _logger) {
 					throw "Error while waiting for a response from the device after command '" + command + "'";
 				}
 				if (_cli.getLastExpectMatchIndex() == 1) {
-					result += _cli.lastFullOutput;
+					result += _cli.getLastFullOutput();
 					toSend = this.pagerResponse;
 				}
 				else {

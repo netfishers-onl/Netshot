@@ -24,7 +24,7 @@
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "4.2" /* Version will appear in the Admin tab. */
+	version: "4.3" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -156,11 +156,11 @@ function snapshot(cli, device, config) {
 		vdomMode = false;
 	}
 	// Store the interface config block
-	var showSystemInterface = cli.command("show system interface");
+	var showSystemInterface = cli.command("show system interface | grep .");
 	// Store the SNMP config block
-	var showSystemSnmp = cli.command("show system snmp sysinfo");
+	var showSystemSnmp = cli.command("show system snmp sysinfo | grep .");
 	// Store the HA status
-	var getHa = cli.command("get system ha status");
+	var getHa = cli.command("get system ha status | grep .");
 
 
 	if (vdomMode) {
@@ -253,7 +253,7 @@ function snapshot(cli, device, config) {
 					cli.command("config vdom", { clearPrompt: true });
 					cli.command("edit " + vdom, { clearPrompt: true });
 				}
-				var arp = cli.command("get system arp");
+				var arp = cli.command("get system arp | grep .");
 				if (vdomMode) {
 					cli.command("end", { clearPrompt: true });
 				}

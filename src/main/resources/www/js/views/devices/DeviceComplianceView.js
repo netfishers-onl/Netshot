@@ -35,7 +35,9 @@ define([
 			this.$el.html(this.template(this.device.toJSON()));
 			var $table = this.$("#rules tbody");
 			_.each(this.deviceRules.models, function(deviceRule) {
-				$(that.ruleTemplate(deviceRule.toJSON())).appendTo($table);
+				if (typeof deviceRule.attributes.result === "string" && deviceRule.attributes.result !== "NOTAPPLICABLE") {
+					$(that.ruleTemplate(deviceRule.toJSON())).appendTo($table);
+				}
 			});
 			new TableSort(this.$("#rules").get(0));
 			

@@ -22,8 +22,8 @@
 					var unit = {
 						HOURLY: "hour",
 						DAILY: "day",
-						WEEK: "week",
-						MONTH: "month",
+						WEEKLY: "week",
+						MONTHLY: "month",
 					}[scheduleType];
 					if (factor > 1) unit = unit + "s";
 					%>repeating every <%- factor %> <%- unit %><%

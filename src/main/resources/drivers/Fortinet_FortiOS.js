@@ -110,7 +110,7 @@ var CLI = {
 		fail: "Authentication failed - Telnet authentication failure."
 	},
 	basic: { /* The basic FortiOS prompt. */
-		prompt: /^([A-Za-z0-9_\-]+? (\([A-Za-z0-9_\-]+?\) )?[#$] )$/,
+		prompt: /^([A-Za-z0-9_\-\~]+? (\([A-Za-z0-9_\-]+?\) )?[#$] )$/,
 		error: /^(Unknown action|Command fail)/m,
 		pager: { /* 'pager': define how to handle the pager for long outputs. */
 			match: /^--More-- /,

@@ -24,7 +24,7 @@
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "4.3" /* Version will appear in the Admin tab. */
+	version: "4.4" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -210,17 +210,9 @@ function snapshot(cli, device, config) {
 			device.set("location", location[1]);
 		}
 	}
-	var peerPattern1 = /^(Master|Slave) *: *[0-9]+ (.+?) +([A-Z0-9]+) [0-9]$/gm;
+	var peerPattern = /^(Master|Slave) *: (.+?) *, +([A-Z0-9]+)(, HA cluster index = [0-9]|, cluster index = [0-9])*$/gm;
 	var match;
-	while (match = peerPattern1.exec(getHa)) {
-		if (match[2] != hostname) {
-			device.set("haPeer", match[2]);
-			break;
-		}
-	}
-	// Newer form
-	var peerPattern2 = /^(Master|Slave) *: (.+?) *, +([A-Z0-9]+)$/gm;
-	while (match = peerPattern2.exec(getHa)) {
+	while (match = peerPattern.exec(getHa)) {
 		if (match[2] != hostname) {
 			device.set("haPeer", match[2]);
 			break;

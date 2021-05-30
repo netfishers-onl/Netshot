@@ -38,17 +38,23 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.net.SyslogAppender;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.ConsoleAppender;
 import ch.qos.logback.core.OutputStreamAppender;
 import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.util.FileSize;
+import onl.netfishers.netshot.aaa.Radius;
+import onl.netfishers.netshot.aaa.Tacacs;
 import onl.netfishers.netshot.collector.SnmpTrapReceiver;
 import onl.netfishers.netshot.collector.SyslogServer;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.rest.RestService;
+import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
 
 /**
  * The Class Netshot. Starting point of Netshot
@@ -250,6 +256,9 @@ public class Netshot extends Thread {
 		appender.setEncoder(encoder);
 		appender.setContext(loggerContext);
 		appender.start();
+		final String appenderName = "Netshot appender";
+		appender.setName(appenderName);
+		rootLogger.detachAppender(appenderName);
 		rootLogger.addAppender(appender);
 		
 		Pattern logSetting = Pattern.compile("^netshot\\.log\\.class\\.(?<class>.*)"); 
@@ -457,19 +466,35 @@ public class Netshot extends Thread {
 			Database.update();
 			logger.info("Initializing access to the database.");
 			Database.init();
-			logger.info("Loading the device drivers");
+			logger.info("Loading the device drivers.");
 			DeviceDriver.refreshDrivers();
-			//Tester.createDevices();
 			//logger.info("Starting the TFTP server.");
 			//TftpServer.init();
 			logger.info("Starting the Syslog server.");
 			SyslogServer.init();
-			logger.info("Starting the SNMP v1/v2c trap receiver");
+			logger.info("Starting the SNMP v1/v2c trap receiver.");
 			SnmpTrapReceiver.init();
-			logger.info("Starting the REST service");
+			logger.info("Starting the REST service.");
 			RestService.init();
 			logger.info("Scheduling the existing tasks.");
 			TaskManager.rescheduleAll();
+			logger.info("Loading authentication backend config.");
+			Radius.loadAllServersConfig();
+			Tacacs.loadAllServersConfig();
+
+			logger.info("Starting signal listener.");
+			Signal.handle(new Signal("HUP"), new SignalHandler() {
+				@Override
+				public void handle(Signal sig) {
+					Netshot.initConfig();
+					Netshot.initMainLogging();
+					Netshot.initAuditLogging();
+					Netshot.initSyslogLogging();
+					Radius.loadAllServersConfig();
+					Tacacs.loadAllServersConfig();
+					TakeSnapshotTask.loadConfig();
+				}
+			});
 			logger.warn("Netshot is started");
 
 		}

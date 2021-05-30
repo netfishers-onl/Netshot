@@ -108,7 +108,10 @@ public class TakeSnapshotTask extends Task {
 		return runningSnapshots.add(deviceId);
 	}
 
-	static {
+	/**
+	 * Load TakeSnapshotTask specific configuration from Netshot config file.
+	 */
+	public static void loadConfig() {
 		if (Netshot.getConfig("netshot.snapshots.auto.anyip", "false").equals("true")) {
 			AUTOSNAPSHOT_ANYIP = true;
 		}
@@ -123,6 +126,10 @@ public class TakeSnapshotTask extends Task {
 			logger.error("Invalid value for netshot.snapshots.auto.interval in the configuration file. Using default of {} minutes.",
 					AUTOSNAPSHOT_INTERVAL);
 		}
+	}
+
+	static {
+		TakeSnapshotTask.loadConfig();
 	}
 
 	/** The device. */

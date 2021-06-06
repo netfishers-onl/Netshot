@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoASA",
 	description: "Cisco ASA",
 	author: "NetFishers",
-	version: "1.4"
+	version: "1.5"
 };
 
 var Config = {
@@ -220,7 +220,7 @@ function snapshot(cli, device, config) {
 	config.set("imageFile", (image ? image[1] : ""));
 
 	var showInventory = cli.command("show inventory");
-	var inventoryPattern = /NAME: \"(.*)\", +DESCR: \"(.*)\"[\r\n]+PID: (.*?) *, +VID: (.*), +SN: (.*)/g;
+	var inventoryPattern = /(?:NAME|Name): \"(.*)\", +DESCR: \"(.*)\"[\r\n]+PID: (.*?) *, +VID: (.*), +SN: (.*)/g;
 	var match;
 	while (match = inventoryPattern.exec(showInventory)) {
 		var module = {

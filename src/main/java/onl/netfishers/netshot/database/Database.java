@@ -25,6 +25,7 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -33,6 +34,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.persistence.Entity;
+import javax.sql.DataSource;
+
+import com.mchange.v2.c3p0.C3P0Registry;
 
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.aaa.ApiToken;
@@ -143,6 +147,9 @@ public class Database {
 
 	/** The configuration. */
 	private static Configuration configuration;
+
+	/** C3P0 datasource name to retrieve it easily */
+	private static final String DATASOURCE_NAME = "NetshotHibernate";
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(Database.class);
@@ -535,13 +542,13 @@ public class Database {
 		try {
 
 			configuration = new Configuration();
-
 			configuration
 					.setProperty("hibernate.connection.driver_class", getDriverClass())
 					.setProperty("hibernate.connection.url", getUrl())
 					.setProperty("hibernate.connection.username", getUsername())
 					.setProperty("hibernate.connection.password", getPassword())
 					.setProperty("hibernate.c3p0.min_size", "5")
+					.setProperty("hibernate.c3p0.dataSourceName", Database.DATASOURCE_NAME)
 					// Dates/times stored in UTC in the DB, without timezone, up to Java to convert to server local time
 					.setProperty("hibernate.jdbc.time_zone", "UTC")
 					.setProperty("hibernate.c3p0.max_size", "30").setProperty("hibernate.c3p0.timeout", "1800")
@@ -634,6 +641,17 @@ public class Database {
 	 */
 	public static Session getSession() throws HibernateException {
 		return sessionFactory.openSession();
+	}
+
+	/**
+	 * Retrieves a raw SQL connection.
+	 * 
+	 * @return the connection
+	 * @throws SQLException
+	 */
+	public static Connection getConnection() throws SQLException {
+		final DataSource dataSource = C3P0Registry.pooledDataSourceByName(Database.DATASOURCE_NAME);
+		return dataSource.getConnection();
 	}
 
 	/**

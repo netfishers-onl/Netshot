@@ -50,6 +50,7 @@ import onl.netfishers.netshot.collector.SnmpTrapReceiver;
 import onl.netfishers.netshot.collector.SyslogServer;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.DeviceDriver;
+import onl.netfishers.netshot.ha.HaManager;
 import onl.netfishers.netshot.rest.RestService;
 import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
 import sun.misc.Signal;
@@ -473,6 +474,10 @@ public class Netshot extends Thread {
 			SyslogServer.init();
 			logger.info("Starting the SNMP v1/v2c trap receiver.");
 			SnmpTrapReceiver.init();
+
+			logger.info("Starting the HA manager.");
+			HaManager.init();
+
 			logger.info("Starting the REST service.");
 			RestService.init();
 			logger.info("Scheduling the existing tasks.");

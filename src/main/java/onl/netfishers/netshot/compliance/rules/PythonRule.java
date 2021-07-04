@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.Rule;
@@ -159,8 +160,17 @@ public class PythonRule extends Rule {
 
 	@Transient
 	public Context getContext() throws IOException {
-		Context.Builder builder = Context.newBuilder()
-			.allowIO(true).fileSystem(new PythonFileSystem());
+		Context.Builder builder = Context.newBuilder().allowIO(true);
+		if ("false".equals("netshot.python.filesystemfilter")) {
+			logger.info("Python VM, file system filter is disabled (this is not secured)");
+		}
+		else {
+			builder.fileSystem(new PythonFileSystem());
+		}
+		if ("true".equals(Netshot.getConfig("netshot.python.allowallaccess"))) {
+			logger.info("Python VM, allowing all access (this is not secure)");
+			builder.allowAllAccess(true);
+		}
 		if (PythonFileSystem.VENV_FOLDER != null) {
 			builder.allowExperimentalOptions(true)
 				.option("python.Executable", PythonFileSystem.VENV_FOLDER + "/bin/graalpython");

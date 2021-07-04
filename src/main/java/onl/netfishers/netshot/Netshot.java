@@ -459,7 +459,6 @@ public class Netshot extends Thread {
 			Database.init();
 			logger.info("Loading the device drivers");
 			DeviceDriver.refreshDrivers();
-			//Tester.createDevices();
 			//logger.info("Starting the TFTP server.");
 			//TftpServer.init();
 			logger.info("Starting the Syslog server.");

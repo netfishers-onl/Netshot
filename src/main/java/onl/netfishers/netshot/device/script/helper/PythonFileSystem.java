@@ -54,7 +54,7 @@ public class PythonFileSystem implements FileSystem {
 	public PythonFileSystem() throws IOException {
 		this.delegate = FileSystem.newDefaultFileSystem();
 		this.libFolder = delegate.toRealPath(
-			delegate.parsePath(System.getProperty("java.home") + "/languages/python"));
+			delegate.parsePath(System.getProperty("java.home") + "/languages"));
 		if (VENV_FOLDER == null) {
 			this.venvFolder = null;
 		}
@@ -63,7 +63,7 @@ public class PythonFileSystem implements FileSystem {
 		}
 	}
 
-	private void verifyAccess(Path path) {
+	private void verifyAccess(Path path, String reason) {
 		logger.debug("Checking permission for path {}", path);
 		Path realPath = null;
 		for (Path c = path; c != null; c = c.getParent()) {
@@ -75,8 +75,8 @@ public class PythonFileSystem implements FileSystem {
 			}
 		}
 		if (realPath == null || !(realPath.startsWith(libFolder) || (venvFolder != null && realPath.startsWith(venvFolder)))) {
-			logger.info("Access to {} is denied", path);
-			throw new SecurityException("Access to " + path + " is denied.");
+			logger.info("Access ({}) to {} is denied", reason, path);
+			// throw new SecurityException("Access to " + path + " is denied.");
 		}
 	}
 
@@ -99,7 +99,7 @@ public class PythonFileSystem implements FileSystem {
 				throw new SecurityException("Opening " + path + " with option " + option + " is denied.");
 			}
 		}
-		verifyAccess(path);
+		verifyAccess(path, "newByteChannel");
 		return delegate.newByteChannel(path, options, attrs);
 	}
 
@@ -111,7 +111,7 @@ public class PythonFileSystem implements FileSystem {
 				throw new SecurityException("Opening " + path + " in mode " + mode + " is denied.");
 			}
 		}
-		verifyAccess(path);
+		verifyAccess(path, "checkAccess");
 		delegate.checkAccess(path, modes, linkOptions);
 	}
 
@@ -129,7 +129,7 @@ public class PythonFileSystem implements FileSystem {
 
 	@Override
 	public DirectoryStream<Path> newDirectoryStream(Path dir, Filter<? super Path> filter) throws IOException {
-		verifyAccess(dir);
+		verifyAccess(dir, "newDirectoryStream");
 		return delegate.newDirectoryStream(dir, filter);
 	}
 
@@ -145,7 +145,7 @@ public class PythonFileSystem implements FileSystem {
 
 	@Override
 	public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
-		verifyAccess(path);
+		verifyAccess(path, "readAttributes");
 		return delegate.readAttributes(path, attributes, options);
 	}
 }

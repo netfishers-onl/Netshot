@@ -64,7 +64,10 @@ public class Tacacs {
 	 */
 	private static void loadServerConfig(int id, List<String> hosts, List<String> keys) {
 		String path = String.format("netshot.aaa.tacacs%d", id);
-		String ip = Netshot.getConfig(path + ".ip", ".");
+		String ip = Netshot.getConfig(path + ".ip");
+		if (ip == null) {
+			return;
+		}
 		InetAddress address;
 		try {
 			address = InetAddress.getByName(ip);
@@ -89,9 +92,13 @@ public class Tacacs {
 		}
 		hosts.add(String.format("%s:%d", address.getHostAddress(), port));
 		keys.add(key);
+		logger.info("Added TACACS+ server {}", address.getHostAddress());
 	}
 
-	static {
+	/**
+	 * Load the config of all servers (up to 4) from the config file.
+	 */
+	public static void loadAllServersConfig() {
 		List<String> hosts = new ArrayList<>();
 		List<String> keys = new ArrayList<>();
 		for (int i = 1; i < 4; i++) {
@@ -135,7 +142,7 @@ public class Tacacs {
 
 			String roleAttribute = Netshot.getConfig("netshot.aaa.tacacs.role.attributename", "role");
 			String adminLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.adminlevelrole", "admin");
-			String executeReadWriteLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.executereadwriterole", "execute-read-write");
+			String executeReadWriteLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.executereadwritelevelrole", "execute-read-write");
 			String readWriteLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.readwritelevelrole", "read-write");
 
 			if (authenReply.isOK()) {

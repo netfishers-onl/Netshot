@@ -60,7 +60,7 @@ public class Radius {
 	final private static Logger aaaLogger = LoggerFactory.getLogger("AAA");
 
 	/** The clients. */
-	final private static List<RadiusClient> clients = new ArrayList<>();
+	private static List<RadiusClient> clients = new ArrayList<>();
 	
 	/** The authentication method. */
 	private static Class<? extends RadiusAuthenticator> authMethod = MSCHAPv2Authenticator.class;
@@ -72,7 +72,10 @@ public class Radius {
 	 */
 	private static void loadServerConfig(int id) {
 		String path = String.format("netshot.aaa.radius%d", id);
-		String ip = Netshot.getConfig(path + ".ip", ".");
+		String ip = Netshot.getConfig(path + ".ip");
+		if (ip == null) {
+			return;
+		}
 		InetAddress address;
 		try {
 			address = InetAddress.getByName(ip);
@@ -117,6 +120,7 @@ public class Radius {
 			logger.error("Unable to create the RADIUS client for server {}.", id, e);
 			return;
 		}
+		logger.info("Added RADIUS server {}", address);
 		String method = Netshot.getConfig("netshot.aaa.radius.method", "mschapv2");
 		switch (method) {
 		case "pap":
@@ -139,11 +143,20 @@ public class Radius {
 		clients.add(client);
 	}
 
-	static {
-		AttributeFactory.loadAttributeDictionary("net.jradius.dictionary.AttributeDictionaryImpl");
+	/**
+	 * Load configuration of all servers (up to 4).
+	 */
+	public static void loadAllServersConfig() {
+		synchronized (Radius.clients) {
+			Radius.clients = new ArrayList<>();
+		}
 		for (int i = 1; i < 4; i++) {
 			loadServerConfig(i);
 		}
+	}
+
+	static {
+		AttributeFactory.loadAttributeDictionary("net.jradius.dictionary.AttributeDictionaryImpl");
 	}
 	
 	public static boolean isAvailable() {
@@ -170,6 +183,10 @@ public class Radius {
 		}
 
 		boolean first = true;
+		List<RadiusClient> clients;
+		synchronized (Radius.clients) {
+			clients = Radius.clients;
+		}
 		for (RadiusClient radiusClient : clients) {
 			AccessRequest request = new AccessRequest(radiusClient, attributeList);
 			request.addAttribute(new Attr_UserPassword(password));

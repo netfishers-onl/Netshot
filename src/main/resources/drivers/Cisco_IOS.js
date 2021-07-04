@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.7"
+	version: "1.7.1"
 };
 
 var Config = {
@@ -279,6 +279,9 @@ function snapshot(cli, device, config) {
 		}
 		else if (system.match(/.*Cisco 8\d\d[^\d]/)) {
 			device.set("family", "Cisco ISR 800");
+		}
+		else if (system.match(/^cisco C11\d\d-/)) {
+			device.set("family", "Cisco ISR 1000");
 		}
 		else if (system.match(/.*Cisco 18\d\d .*/)) {
 			device.set("family", "Cisco ISR 1800");

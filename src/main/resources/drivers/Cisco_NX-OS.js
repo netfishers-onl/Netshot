@@ -235,6 +235,7 @@ function snapshot(cli, device, config) {
 	try {
 		license += cli.command("show license usage");
 		license += cli.command("show license");
+		license = license.replace(/Honor Start .*/mg, "Honor Start <Timer>");
 	}
 	catch (error) {
 	}

@@ -76,7 +76,7 @@ public class PythonFileSystem implements FileSystem {
 		}
 		if (realPath == null || !(realPath.startsWith(libFolder) || (venvFolder != null && realPath.startsWith(venvFolder)))) {
 			logger.info("Access ({}) to {} is denied", reason, path);
-			// throw new SecurityException("Access to " + path + " is denied.");
+			throw new SecurityException("Access to " + path + " is denied.");
 		}
 	}
 

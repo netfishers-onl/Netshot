@@ -11,6 +11,9 @@ import onl.netfishers.netshot.ha.HaStatus;
 
 public class HelloHaMessage extends HaMessage {
 
+	/** JVM version, static */
+	static protected String JVM_VERSION = System.getProperty("java.vm.version");
+
 	/** HA version (to check compatibility) */
 	private int haVersion;
 

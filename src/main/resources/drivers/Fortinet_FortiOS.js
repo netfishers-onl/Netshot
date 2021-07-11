@@ -24,7 +24,7 @@
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "4.4" /* Version will appear in the Admin tab. */
+	version: "5.0" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -145,8 +145,13 @@ function snapshot(cli, device, config) {
 
 	device.set("networkClass", "FIREWALL");
 
-	// The configuration is retrieved by a simple 'show' at the root level. Add grep to avoid paging.
-	var configuration = cli.command("show | grep .", { timeout: 120000 });
+	// Whether to use SCP to download the configuration rather than show
+	var useScp = false;
+	// The main configuration
+	var configuration = null;
+	// 
+	var globalConfig = null;
+
 	// Read the HA peer hostname from a 'get system ha status' in global mode.
 	var vdomMode = true;
 	try {
@@ -155,6 +160,17 @@ function snapshot(cli, device, config) {
 	catch (e) {
 		vdomMode = false;
 	}
+
+	try {
+		var getSystemGlobalAdminScp = cli.command("get system global | grep admin-scp");
+		if (getSystemGlobalAdminScp.match(/enable/)) {
+			useScp = true;
+		}
+	}
+	catch (e) {
+		// Ignore
+	}
+
 	// Store the interface config block
 	var showSystemInterface = cli.command("show system interface | grep .");
 	// Store the SNMP config block
@@ -164,7 +180,7 @@ function snapshot(cli, device, config) {
 
 
 	if (vdomMode) {
-		if (version.match(/^6\.2\..*/)) {
+		if (!useScp && version.match(/^6\.2\..*/)) {
 			// In 6.2, some config blocks are missing from the root 'show'
 			// We'll take a 'show' in 'config global' mode and replace
 			var globalConfig = cli.command("show | grep .", { timeout: 120000 });
@@ -173,6 +189,22 @@ function snapshot(cli, device, config) {
 		}
 
 		cli.command("end", { clearPrompt: true });
+	}
+
+	var configuration;
+	if (useScp) {
+		try {
+			configuration = device.textDownload("scp", "sys_config");
+		}
+		catch (e) {
+			cli.debug("Error with SCP method, falling back to show command");
+			useScp = false;
+		}
+	}
+
+	if (!useScp) {
+		// The configuration is retrieved by a simple 'show' at the root level. Add grep to avoid paging.
+		configuration = cli.command("show | grep .", { timeout: 120000 });
 	}
 
 	// Read the device hostname from the 'status' output.

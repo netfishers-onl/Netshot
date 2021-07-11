@@ -350,17 +350,26 @@ public class Ssh extends Cli {
 			throw new FileNotFoundException("Invalid destination file name for SCP copy operation. "
 				+ "Have you defined 'netshot.snapshots.binary.path'?");
 		}
+		try (FileOutputStream fileStream = new FileOutputStream(localFileName)) {
+			this.scpDownload(remoteFileName, fileStream);
+		}
+	}
+
+	/**
+	 * Download a file using SCP.
+	 * @param remoteFileName The file to download (name with full path) from the device
+	 * @param targetStream  Output stream
+	 */
+	public void scpDownload(String remoteFileName, OutputStream targetStream) throws IOException {
 		if (remoteFileName == null) {
 			throw new FileNotFoundException("Invalid source file name for SCP copy operation");
 		}
 		if (!session.isConnected()) {
 			throw new IOException("The SSH session is not connected, can't start the SCP transfer");
 		}
-		this.taskLogger.info(String.format("Downloading '%s' to '%s' using SCP.",
-				remoteFileName, localFileName.toString()));
+		this.taskLogger.info(String.format("Downloading '%s' using SCP.", remoteFileName));
 
 		Channel channel = null;
-		FileOutputStream fileStream = null;
 		try {
 			String command = String.format("scp -f '%s'", remoteFileName.replace("'", "'\"'\"'"));
 			channel = session.openChannel("exec");
@@ -412,21 +421,17 @@ public class Ssh extends Cli {
 			out.write(buf, 0, 1);
 			out.flush();
 
-			fileStream = new FileOutputStream(localFileName);
 			while (true) {
 				int len = in.read(buf, 0, Math.min(buf.length, (int)fileSize));
 				if (len < 0) {
 					throw new IOException("SCP read error");
 				}
-				fileStream.write(buf, 0, len);
+				targetStream.write(buf, 0, len);
 				fileSize -= len;
 				if (fileSize == 0L) {
 					break;
 				}
 			}
-			fileStream.close();
-			fileStream = null;
-
 		}
 		catch (JSchException error) {
 			throw new IOException("SCP exception", error);
@@ -436,16 +441,9 @@ public class Ssh extends Cli {
 				channel.disconnect();
 			}
 			catch (Exception e1) {
-				// This is life
-			}
-			try {
-				fileStream.close();
-			}
-			catch (Exception e1) {
-				// This is life
+				// Ignore
 			}
 		}
-
 	}
 
 	/**

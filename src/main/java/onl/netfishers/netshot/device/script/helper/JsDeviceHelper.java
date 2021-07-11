@@ -1,5 +1,6 @@
 package onl.netfishers.netshot.device.script.helper;
 
+import java.io.ByteArrayOutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -28,6 +29,8 @@ import onl.netfishers.netshot.device.PhysicalAddress;
 import onl.netfishers.netshot.device.Device.MissingDeviceDriverException;
 import onl.netfishers.netshot.device.Device.NetworkClass;
 import onl.netfishers.netshot.device.NetworkAddress.AddressUsage;
+import onl.netfishers.netshot.device.access.Cli;
+import onl.netfishers.netshot.device.access.Ssh;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
 import onl.netfishers.netshot.device.attribute.DeviceAttribute;
@@ -49,6 +52,7 @@ public class JsDeviceHelper {
 	final private static Logger logger = LoggerFactory.getLogger(JsDeviceHelper.class);
 	
 	private Device device;
+	private Cli cli;
 	private Session session;
 	private TaskLogger taskLogger;
 	private boolean readOnly;
@@ -69,11 +73,12 @@ public class JsDeviceHelper {
 		return defaultResult;
 	}
 	
-	public JsDeviceHelper(Device device, Session session, TaskLogger taskLogger, boolean readOnly) throws MissingDeviceDriverException {
+	public JsDeviceHelper(Device device, Cli cli, Session session, TaskLogger taskLogger, boolean readOnly) throws MissingDeviceDriverException {
 		this.device = device;
+		this.cli = cli;
+		this.session = session;
 		this.taskLogger = taskLogger;
 		this.readOnly = readOnly;
-		this.session = session;
 	}
 	
 	@Export
@@ -537,5 +542,45 @@ public class JsDeviceHelper {
 		result.put("name", name);
 		result.put("address", address);
 		return result;
+	}
+
+	/**
+	 * Download a text file from the device, using SCP or SFTP, and return this text.
+	 * @param method "scp" for now
+	 * @param remoteFileName the file (including full path) to download from the device
+	 * @param charset the text charset
+	 * @return the downloaded text
+	 */
+	@Export
+	public String textDownload(String method, String remoteFileName, String charset) throws Exception {
+		if (remoteFileName == null) {
+			return null;
+		}
+		try {
+			if ("scp".equals(method)) {
+				if (cli == null) {
+					throw new IllegalArgumentException("Can't use SCP method as no CLI access exists in this context.");
+				}
+				else if (cli instanceof Ssh) {
+					ByteArrayOutputStream targetStream = new ByteArrayOutputStream();
+					((Ssh) cli).scpDownload(remoteFileName, targetStream);
+					return targetStream.toString(charset);
+				}
+				else {
+					logger.warn("Error during snapshot: can't use SCP method with non-SSH CLI access.");
+					throw new IllegalArgumentException("Can't use SCP method with non-SSH CLI access.");
+				}
+			}
+			else {
+				logger.warn("Invalid download method '{}' during snapshot.", method);
+				taskLogger.error(String.format("Invalid download method %s", method));
+				throw new IllegalArgumentException("Invalid download method");
+			}
+		}
+		catch (Exception e) {
+			logger.warn("Error during while downloading file '{}'.", remoteFileName);
+			taskLogger.error(String.format("Error while downloading file '%s:' %s", remoteFileName, e.getMessage()));
+			throw e;
+		}
 	}
 }

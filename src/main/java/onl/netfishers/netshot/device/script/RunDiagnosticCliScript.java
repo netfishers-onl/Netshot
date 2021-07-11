@@ -83,7 +83,7 @@ public class RunDiagnosticCliScript extends CliScript {
 		// Filter on the device driver
 		try (Context context = driver.getContext()) {
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
-			options.setDevice(new JsDeviceHelper(device, null, taskLogger, false));
+			options.setDevice(new JsDeviceHelper(device, cli, null, taskLogger, false));
 
 			Map<String, Object> jsDiagnostics = new HashMap<String, Object>();
 			for (Diagnostic diagnostic : this.diagnostics) {

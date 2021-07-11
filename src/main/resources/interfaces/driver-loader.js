@@ -461,6 +461,30 @@ function _connect(_function, _protocol, _options, _logger) {
 			}
 			throw "Invalid key to retrieve.";
 		},
+		textDownload: function(method, fileName, charset) {
+			if (typeof(method) === "string") {
+				method = String(method);
+			}
+			else {
+				throw "The method should be a string in device.textDownload.";
+			}
+			if (typeof(fileName) === "string") {
+				fileName = String(fileName);
+			}
+			else {
+				throw "The fileName should be a string in device.textDownload.";
+			}
+			if (typeof(charset) === "string") {
+				charset = String(charset);
+			}
+			else if (typeof(charset) === "undefined") {
+				charset = "UTF-8";
+			}
+			else {
+				throw "The charset should be a string in device.textDownload";
+			}
+			return _options.getDeviceHelper().textDownload(method, fileName, charset);
+		},
 	};
 	
 	var configHelper = {
@@ -508,7 +532,7 @@ function _connect(_function, _protocol, _options, _logger) {
 				throw "The storeFileName should be a string in config.download.";
 			}
 
-			_options.getConfigHelper().download(key, method, fileName, storeFileName);
+			_options.getConfigHelper().download(key, method, fileName, storeFileName, charset);
 		}
 	};
 	

@@ -280,7 +280,7 @@ public class TextRule extends Rule {
 			return;
 		}
 		try {
-			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, session, taskLogger, true);
+			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, null, session, taskLogger, true);
 			String content = deviceHelper.get(field).toString();
 			content = content.replace("\r", "");
 			if (isNormalize()) {

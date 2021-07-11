@@ -90,7 +90,7 @@ public class JsCliScript extends CliScript {
 		try (Context context = driver.getContext()) {
 			context.eval("js", code);
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
-			options.setDevice(new JsDeviceHelper(device, null, taskLogger, false));
+			options.setDevice(new JsDeviceHelper(device, cli, null, taskLogger, false));
 			context.getBindings("js").getMember("_connect").execute("run", protocol.value(), options, taskLogger);
 		}
 		catch (PolyglotException e) {

@@ -101,7 +101,7 @@ public class JsConfigHelper {
 	/**
 	 * Download a binary file from the device, using SCP.
 	 * @param key the name of the config attribute
-	 * @param method "scp" for now
+	 * @param method "scp" or "sftp" for now
 	 * @param remoteFileName the file (including full path) to download from the device
 	 * @param storeFileName the file name to store (null to use remoreFileName)
 	 */
@@ -138,23 +138,23 @@ public class JsConfigHelper {
 			if ("scp".equals(method)) {
 				for (AttributeDefinition attribute : driver.getAttributes()) {
 					if (attribute.getLevel().equals(AttributeLevel.CONFIG) && attribute.getName().equals(key)) {
-						if (AttributeType.BINARYFILE.equals(attribute.getType())) {
-							if (cli instanceof Ssh) {
+						if (cli instanceof Ssh) {
+							if (AttributeType.BINARYFILE.equals(attribute.getType())) {
 								ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, key, storeName);
 								((Ssh) cli).scpDownload(remoteFileName, fileAttribute.getFileName().toString());
 								fileAttribute.setFileSize(fileAttribute.getFileName().length());
 								config.addAttribute(fileAttribute);
 							}
 							else {
-								logger.warn("Error during snapshot: can't use SCP method with non-SSH CLI access (for attribute '{}').", key);
-								taskLogger.error(String.format(
-									"Can't use SCP method with non-SSH CLI access (for attribute '{}').", key));
+								logger.warn("Error during snapshot: can't use SCP download method on attribute '{}' (should be binary or long text type).", key);
+								throw new IllegalArgumentException(String.format(
+									"Can't use SCP download method on attribute '%s' which is not of type binary-file.", key));
 							}
 						}
 						else {
-							logger.warn("Error during snapshot: can't use SCP download method on non-binary-file attribute '{}'.", key);
-							taskLogger.error(String.format(
-								"Can't use SCP download method on attribute '%s' which is not of type binary-file.", key));
+							logger.warn("Error during snapshot: can't use SCP method with non-SSH CLI access (for attribute '{}').", key);
+							throw new IllegalArgumentException(String.format(
+								"Can't use SCP method with non-SSH CLI access (for attribute '{}').", key));
 						}
 						break;
 					}
@@ -172,13 +172,13 @@ public class JsConfigHelper {
 							}
 							else {
 								logger.warn("Error during snapshot: can't use SFTP method with non-SSH CLI access (for attribute '{}').", key);
-								taskLogger.error(String.format(
+								throw new IllegalArgumentException(String.format(
 									"Can't use SFTP method with non-SSH CLI access (for attribute '{}').", key));
 							}
 						}
 						else {
 							logger.warn("Error during snapshot: can't use SFTP download method on non-binary-file attribute '{}'.", key);
-							taskLogger.error(String.format(
+							throw new IllegalArgumentException(String.format(
 								"Can't use SFTPdownload method on attribute '%s' which is not of type binary-file.", key));
 						}
 						break;
@@ -187,7 +187,7 @@ public class JsConfigHelper {
 			}
 			else {
 				logger.warn("Invalid download method '{}' during snapshot.", method);
-				taskLogger.error(String.format("Invalid download method %s", method));
+				throw new IllegalArgumentException(String.format("Invalid download method %s", method));
 			}
 		}
 		catch (Exception e) {
@@ -196,5 +196,4 @@ public class JsConfigHelper {
 			throw e;
 		}
 	}
-	
 }

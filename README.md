@@ -31,3 +31,7 @@ Go to the Wiki page https://github.com/netfishers-onl/Netshot/wiki for installat
 ## Contact
 
 contact@netfishers.onl
+
+## Related Projects
+
+* https://github.com/scaleway/netbox2netshot

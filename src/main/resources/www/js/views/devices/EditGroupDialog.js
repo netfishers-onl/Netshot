@@ -93,7 +93,7 @@ define([
 			});
 			this.$('#adddevice').button({
 				icons: {
-					primary: "ui-icon-carat-1-e"
+					primary: "ui-icon-caret-1-e"
 				},
 				text: false,
 				disabled: true
@@ -116,7 +116,7 @@ define([
 					});
 			this.$('#removedevice').button({
 				icons: {
-					primary: "ui-icon-carat-1-w"
+					primary: "ui-icon-caret-1-w"
 				},
 				text: false,
 				disabled: true

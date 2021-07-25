@@ -28,6 +28,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URI;
 import java.net.URL;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -47,6 +48,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import org.apache.commons.codec.binary.Hex;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.PolyglotException;
@@ -401,6 +403,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	/** The source code */
 	private Source source;
 
+	/** Source hash */
+	private String sourceHash;
+
 	/** The execution engine (for eval caching) */
 	private Engine engine;
 
@@ -419,7 +424,13 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 *                       something went wrong
 	 */
 	protected DeviceDriver(Reader reader, String sourceName) throws Exception {
-		source = Source.newBuilder("js", reader, sourceName).buildLiteral();
+		this.source = Source.newBuilder("js", reader, sourceName).buildLiteral();
+		{
+			// Compute source code hash
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] hash = digest.digest(this.source.getCharacters().toString().getBytes());
+			this.sourceHash = Hex.encodeHexString(hash, true);
+		}
 		this.engine = Engine.create();
 
 		try (Context context = this.getContext()) {
@@ -628,6 +639,12 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	@JsonView(DefaultView.class)
 	public int getPriority() {
 		return priority;
+	}
+
+	@XmlElement
+	@JsonView(DefaultView.class)
+	public String getSourceHash() {
+		return sourceHash;
 	}
 
 	@Transient

@@ -215,6 +215,10 @@ public class RestService extends Thread {
 	 * Initializes the service.
 	 */
 	public static void init() {
+		if (!Netshot.getConfig("netshot.http.enabled", "true").equals("true")) {
+			logger.info("HTTP server is not enabled.");
+			return;
+		}
 		nsRestService = new RestService();
 		nsRestService.setUncaughtExceptionHandler(Netshot.exceptionHandler);
 		nsRestService.start();

@@ -1,7 +1,6 @@
-package onl.netfishers.netshot.ha.messages;
+package onl.netfishers.netshot.cluster.messages;
 
 import java.lang.management.ManagementFactory;
-import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -9,8 +8,11 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 /**
  * HA-related message to be be exchanged with other Netshot instances
@@ -20,14 +22,14 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 @XmlRootElement()
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-	@Type(value = HelloHaMessage.class, name = "hello"),
+	@Type(value = HelloClusterMessage.class, name = "hello"),
 })
-public abstract class HaMessage {
+public abstract class ClusterMessage {
 
 	/** Message ID counter */
-	static protected Long lastMessageId = 0L;
+	static protected Long lastLocalMessageId = 0L;
 
-	private UUID instanceId;
+	private String instanceId;
 
 	/** Current system time */
 	private long currentTime;
@@ -41,16 +43,28 @@ public abstract class HaMessage {
 	/**
 	 * Default constructor
 	 */
-	public HaMessage() {
+	public ClusterMessage(String instanceId) {
+		this.instanceId = instanceId;
 		this.currentTime = System.currentTimeMillis();
 		this.upTime = ManagementFactory.getRuntimeMXBean().getUptime();
-		synchronized (HaMessage.lastMessageId) {
-			HaMessage.lastMessageId += 1;
-			this.messageId = HaMessage.lastMessageId;
+		synchronized (ClusterMessage.lastLocalMessageId) {
+			ClusterMessage.lastLocalMessageId += 1;
+			this.messageId = ClusterMessage.lastLocalMessageId;
 		}
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
+	public String getInstanceId() {
+		return this.instanceId;
+	}
+
+	public void setInstanceId(String instanceId) {
+		this.instanceId = instanceId;
+	}
+
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public long getCurrentTime() {
 		return currentTime;
 	}
@@ -60,6 +74,7 @@ public abstract class HaMessage {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public long getUpTime() {
 		return upTime;
 	}
@@ -69,6 +84,7 @@ public abstract class HaMessage {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public long getMessageId() {
 		return messageId;
 	}
@@ -76,7 +92,5 @@ public abstract class HaMessage {
 	public void setMessageId(long messageId) {
 		this.messageId = messageId;
 	}
-
-	
 
 }

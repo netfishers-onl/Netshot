@@ -6,6 +6,7 @@ import java.util.Set;
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
+import onl.netfishers.netshot.device.Domain;
 import onl.netfishers.netshot.device.DynamicDeviceGroup;
 import onl.netfishers.netshot.device.Module;
 import onl.netfishers.netshot.device.Network4Address;
@@ -28,7 +29,8 @@ import onl.netfishers.netshot.diagnostic.SimpleDiagnostic;
 public class FakeDeviceFactory {
 
 	static Device getFakeCiscoIosDevice() {
-		Device device = new Device("CiscoIOS12", null, null, "test");
+		Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
+		Device device = new Device("CiscoIOS12", null, domain, "test");
 		device.setName("router1");
 		device.setFamily("Unknown IOS device");
 		device.setNetworkClass(NetworkClass.ROUTER);

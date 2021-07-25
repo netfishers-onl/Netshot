@@ -331,6 +331,23 @@ public class ComplianceRuleTest {
 		}
 
 		@Test
+		@DisplayName("Domain-based JS rule")
+		void domainRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  if (device.get('managementDomain') === 'Test domain') {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
 		@DisplayName("Class-based JS rule")
 		void classRule() {
 			rule.setScript(
@@ -617,6 +634,22 @@ public class ComplianceRuleTest {
 			rule.setScript(
 				"def check(device):" + "\n" +
 				"  if device.get('family') == 'Unknown IOS device':" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Domain-based Python rule")
+		void domainRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  if device.get('management_domain') == 'Test domain':" + "\n" +
 				"    return result_option.CONFORMING" + "\n" +
 				"  return result_option.NONCONFORMING" + "\n" +
 				"" + "\n"

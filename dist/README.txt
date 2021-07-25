@@ -12,6 +12,15 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.16.3 - 2021-07-25
+
+* React to HUP signal to reload logging and authentication configuration
+* Add device.textDownload to download text via SCP from device
+* FortiOS driver 5.0 now tries to use SCP to download the config
+* Add managementDomain to compliance rule items
+* Various minor fixes
+
+
 0.16.2 - 2021-04-25
 
 * TACACS+ as backend authentication/accounting method

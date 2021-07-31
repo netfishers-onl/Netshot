@@ -24,7 +24,7 @@
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "5.0" /* Version will appear in the Admin tab. */
+	version: "5.1" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -149,7 +149,7 @@ function snapshot(cli, device, config) {
 	var useScp = false;
 	// The main configuration
 	var configuration = null;
-	// 
+	// Configuration of 'global' mode
 	var globalConfig = null;
 
 	// Read the HA peer hostname from a 'get system ha status' in global mode.
@@ -183,9 +183,7 @@ function snapshot(cli, device, config) {
 		if (!useScp && version.match(/^6\.2\..*/)) {
 			// In 6.2, some config blocks are missing from the root 'show'
 			// We'll take a 'show' in 'config global' mode and replace
-			var globalConfig = cli.command("show | grep .", { timeout: 120000 });
-			configuration = configuration.replace(/^(config global\r?\n)(?:.*\r?\n)*?(^end\r?\nconfig vdom)/m,
-					function(m, p, s) { return p + globalConfig + s; });
+			globalConfig = cli.command("show | grep .", { timeout: 120000 });
 		}
 
 		cli.command("end", { clearPrompt: true });
@@ -205,6 +203,10 @@ function snapshot(cli, device, config) {
 	if (!useScp) {
 		// The configuration is retrieved by a simple 'show' at the root level. Add grep to avoid paging.
 		configuration = cli.command("show | grep .", { timeout: 120000 });
+		if (globalConfig) {
+			configuration = configuration.replace(/^(config global\r?\n)(?:.*\r?\n)*?(^end\r?\nconfig vdom)/m,
+					function(m, p, s) { return p + globalConfig + s; });
+		}
 	}
 
 	// Read the device hostname from the 'status' output.

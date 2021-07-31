@@ -722,9 +722,33 @@ h1 {
 	display: none;
 }
 
+#nsdevices-device .panel table pre {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+#nsdevices-device .panel table tfoot tr td {
+	text-align: right;
+}
+
 .nsdevices-multidevices-toolbar {
 	margin-top: 10px;
 	margin-bottom: 10px;
+}
+
+#nsdevices-device .panel table tr.placeholder td {
+	padding-left: 50px;
+	padding-right: 50px;
+}
+
+.placeholder .title {
+	font-size: 1.2em;
+	font-weight: bold;
+	text-align: center;
+}
+
+.placeholder .content {
+	text-align: center;
 }
 
 .no-close .ui-dialog-titlebar-close {

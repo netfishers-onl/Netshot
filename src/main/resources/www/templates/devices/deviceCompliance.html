@@ -46,13 +46,15 @@
 	<th>Test date/time</th>
 	</tr>
 </thead>
-
 <tbody>
 </tbody>
-
-
+<tfoot>
+	<tr><td colspan="100%">
+		<input type="checkbox" name="filtervalidrules" id="filtervalidrules" />
+		<label for="filtervalidrules">Non confirming only</label>
+	</td></tr>
+</tfoot>
 </table>
-
 
 <% if (endOfSale) { %>
 <div id="hardwarecompliancestatus" class="compliancestatus hardware noncompliant">

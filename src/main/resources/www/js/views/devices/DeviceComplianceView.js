@@ -7,9 +7,12 @@ define([
 	'models/device/DeviceComplianceResultCollection',
 	'views/devices/CheckDeviceComplianceDialog',
 	'text!templates/devices/deviceCompliance.html',
-	'text!templates/devices/deviceRule.html'
+	'text!templates/devices/deviceRule.html',
+	'text!templates/devices/noComplianceRule.html',
 ], function($, _, Backbone, TableSort, DeviceComplianceResultCollection, CheckDeviceComplianceDialog,
-		deviceComplianceTemplate, deviceRuleTemplate) {
+		deviceComplianceTemplate, deviceRuleTemplate, noComplianceRuleTemplate) {
+
+	var displayFullRules = false;
 
 	return Backbone.View.extend({
 
@@ -17,6 +20,7 @@ define([
 
 		template: _.template(deviceComplianceTemplate),
 		ruleTemplate: _.template(deviceRuleTemplate),
+		noRuleTemplate: _.template(noComplianceRuleTemplate),
 
 		initialize: function(options) {
 			this.device = options.device;
@@ -33,10 +37,6 @@ define([
 			var that = this;
 
 			this.$el.html(this.template(this.device.toJSON()));
-			var $table = this.$("#rules tbody");
-			_.each(this.deviceRules.models, function(deviceRule) {
-				$(that.ruleTemplate(deviceRule.toJSON())).appendTo($table);
-			});
 			new TableSort(this.$("#rules").get(0));
 			
 			if (!user.isReadWrite()) {
@@ -53,12 +53,34 @@ define([
 				});
 			});
 
+			if (this.deviceRules.length === 0) {
+				this.$("#rules tbody").html(this.noRuleTemplate());
+				this.$("#rules tfoot").remove();
+			}
+			else {
+				this.$("#filtervalidrules").click(function() {
+					displayFullRules = !$(this).is(":checked");
+					that.renderRules();
+				}).click();
+			}
+
 			return this;
+		},
+
+		renderRules: function() {
+			var that = this;
+			var $table = this.$("#rules tbody");
+			$table.empty();
+			_.each(this.deviceRules.models, function(deviceRule) {
+				if (displayFullRules || deviceRule.get('result') === "NONCONFORMING") {
+					$(that.ruleTemplate(deviceRule.toJSON())).appendTo($table);
+				}
+			});
 		},
 
 		destroy: function() {
 			this.$el.empty();
-		}
+		},
 
 	});
 });

@@ -7,9 +7,10 @@ define([
 	'models/device/DeviceDiagnosticResultCollection',
 	'views/devices/RunDeviceDiagnosticsDialog',
 	'text!templates/devices/deviceDiagnostics.html',
-	'text!templates/devices/deviceDiagnostic.html'
+	'text!templates/devices/deviceDiagnostic.html',
+	'text!templates/devices/noDiagnostic.html',
 ], function($, _, Backbone, TableSort, DeviceDiagnosticResultCollection, RunDeviceDiagnosticsDialog,
-		deviceDiagnosticsTemplate, deviceDiagnosticTemplate) {
+		deviceDiagnosticsTemplate, deviceDiagnosticTemplate, deviceNoDiagnosticTemplate) {
 
 	return Backbone.View.extend({
 
@@ -17,6 +18,7 @@ define([
 
 		template: _.template(deviceDiagnosticsTemplate),
 		diagnosticTemplate: _.template(deviceDiagnosticTemplate),
+		noDiagnosticTemplate: _.template(deviceNoDiagnosticTemplate),
 
 		initialize: function(options) {
 			this.device = options.device;
@@ -33,10 +35,6 @@ define([
 			var that = this;
 
 			this.$el.html(this.template());
-			var $table = this.$("#diagnostics tbody");
-			this.diagnosticResults.each(function(diagnosticResult) {
-				$(that.diagnosticTemplate(diagnosticResult.toJSON())).appendTo($table);
-			});
 			new TableSort(this.$("#diagnostics").get(0));
 			
 			this.$("#rundiagnostics").button({
@@ -48,6 +46,16 @@ define([
 					model: that.device
 				});
 			});
+
+			if (this.diagnosticResults.length === 0) {
+				this.$("#diagnostics tbody").html(this.noDiagnosticTemplate());
+			}
+			else {
+				var $table = this.$("#diagnostics tbody");
+				this.diagnosticResults.each(function(diagnosticResult) {
+					$(that.diagnosticTemplate(diagnosticResult.toJSON())).appendTo($table);
+				});
+			}
 
 			return this;
 		},

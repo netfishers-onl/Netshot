@@ -2,6 +2,6 @@
 	<td><%- policyName %></td>
 	<td class="maincolumn"><%- ruleName %></td>
 	<td class="result"><% if (typeof result === "string") { %><%- result %><% if (result == "EXEMPTED" && typeof expirationDate !== "undefined") { %> (until <%- formatDateTime(expirationDate, "day") %>)<% } %><% } else { %>NOT TESTED<% } %></td>
-	<td><% if (typeof comment === "string") { %><%- comment %><% } %></td>
+	<td><% if (typeof comment === "string") { %><pre><%- comment %></pre><% } %></td>
 	<td><% if (typeof result !== "undefined") { %><%- formatDateTime(checkDate) %><% } %></td>
 </tr>

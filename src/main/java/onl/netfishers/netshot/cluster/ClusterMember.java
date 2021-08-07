@@ -67,7 +67,7 @@ public class ClusterMember implements Comparable<ClusterMember>, Cloneable {
 	 * Default constructor
 	 */
 	public ClusterMember(String instanceId, String hostname, int clusteringVersion, int masterPriority,
-			int runnerPriority, int runnerWeight, String appVersion, String jvmVersion) {
+			int runnerPriority, int runnerWeight, String appVersion, String jvmVersion, String driverHash) {
 		this.local = true;
 		this.instanceId = instanceId;
 		this.hostname = hostname;
@@ -77,6 +77,7 @@ public class ClusterMember implements Comparable<ClusterMember>, Cloneable {
 		this.runnerWeight = runnerWeight;
 		this.appVersion = appVersion;
 		this.jvmVersion = jvmVersion;
+		this.driverHash = driverHash;
 		this.status = MastershipStatus.MEMBER;
 		this.lastStatusChangeTime = System.currentTimeMillis();
 		this.lastSeenTime = 0L;

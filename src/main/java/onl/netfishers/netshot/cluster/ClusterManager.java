@@ -4,7 +4,9 @@ import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.cluster.ClusterMember.MastershipStatus;
 import onl.netfishers.netshot.cluster.messages.ClusterMessage;
 import onl.netfishers.netshot.cluster.messages.HelloClusterMessage;
+import onl.netfishers.netshot.cluster.messages.ReloadDriversMessage;
 import onl.netfishers.netshot.database.Database;
+import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.rest.RestService;
 import onl.netfishers.netshot.rest.RestViews.ClusteringView;
 
@@ -56,6 +58,11 @@ public class ClusterManager extends Thread {
 	private static ClusterManager nsClusterManager = null;
 
 	/**
+	 * Whether a driver reload was just requested.
+	 */
+	private boolean driverReloadRequested = false;
+
+	/**
 	 * Initializes the cluster manager.
 	 */
 	public static void init() {
@@ -67,24 +74,6 @@ public class ClusterManager extends Thread {
 		nsClusterManager = new ClusterManager();
 		nsClusterManager.start();
 	}
-
-	/** JSON reader */
-	private ObjectReader jsonReader;
-
-	/** JSON writer */
-	private ObjectWriter jsonWriter;
-
-	/** Local cluster member  */
-	private ClusterMember localMember;
-
-	/** Last master member  */
-	private ClusterMember master;
-
-	/** All cluster members */
-	private Map<String, ClusterMember> members;
-
-	/** Time (epoch) of last hello message sent */
-	private long lastSentHelloTime;
 
 	/**
 	 * Get the list of cluster members for external use
@@ -104,6 +93,33 @@ public class ClusterManager extends Thread {
 		}
 		return members;
 	}
+
+	/**
+	 * Request driver reload on all cluster members.
+	 */
+	public static void requestDriverReload() {
+		if (nsClusterManager != null) {
+			nsClusterManager.driverReloadRequested = true;
+		}
+	}
+
+	/** JSON reader */
+	private ObjectReader jsonReader;
+
+	/** JSON writer */
+	private ObjectWriter jsonWriter;
+
+	/** Local cluster member  */
+	private ClusterMember localMember;
+
+	/** Last master member  */
+	private ClusterMember master;
+
+	/** All cluster members */
+	private Map<String, ClusterMember> members;
+
+	/** Time (epoch) of last hello message sent */
+	private long lastSentHelloTime;
 
 	/**
 	 * Default constructor
@@ -158,7 +174,7 @@ public class ClusterManager extends Thread {
 		}
 
 		this.localMember = new ClusterMember(localId, Netshot.getHostname(), ClusterManager.CLUSTERING_VERSION,
-			masterPriority, runnerPriority, runnerWeight, Netshot.VERSION, jvmVersion);
+			masterPriority, runnerPriority, runnerWeight, Netshot.VERSION, jvmVersion, DeviceDriver.getAllDriverHash());
 		this.members.put(localId, this.localMember);
 	}
 
@@ -261,6 +277,13 @@ public class ClusterManager extends Thread {
 						this.sendMessage(dbConnection, helloMessage);
 						this.lastSentHelloTime = System.currentTimeMillis();
 					}
+					if (this.driverReloadRequested) {
+						if (MastershipStatus.MASTER.equals(this.localMember.getStatus())) {
+							ReloadDriversMessage reloadMessage = new ReloadDriversMessage(this.localMember);
+							this.sendMessage(dbConnection, reloadMessage);
+						}
+						this.driverReloadRequested = false;
+					}
 					try (
 						Statement fakeStatement = dbConnection.createStatement();
 						ResultSet fakeResultSet = fakeStatement.executeQuery("SELECT 1");
@@ -288,6 +311,14 @@ public class ClusterManager extends Thread {
 								}
 								this.members.put(message.getInstanceId(), member);
 								memberUpdated = true;
+							}
+							else if (message instanceof ReloadDriversMessage) {
+								try {
+									DeviceDriver.refreshDrivers();
+								}
+								catch (Exception e) {
+									logger.warn("Error while refreshing drivers", e);
+								}
 							}
 						}
 						// Check expired members

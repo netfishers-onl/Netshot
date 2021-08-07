@@ -11,7 +11,7 @@ import onl.netfishers.netshot.rest.RestViews.ClusteringView;
 /**
  * Hello message from cluster member.
  */
-@XmlRootElement()
+@XmlRootElement
 public class HelloClusterMessage extends ClusterMessage {
 	
 	/** Member info */

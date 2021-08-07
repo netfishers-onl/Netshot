@@ -191,6 +191,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	private static Map<String, DeviceDriver> drivers = new HashMap<String, DeviceDriver>();
 
 	/**
+	 * Hash for all drivers.
+	 */
+	private static String allDriverHash = "";
+
+	/**
 	 * Gets all loaded newDrivers.
 	 * 
 	 * @return the loaded newDrivers
@@ -222,6 +227,14 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 */
 	public static Map<String, DeviceDriver> getDrivers() {
 		return drivers;
+	}
+
+	/**
+	 * Get a global hash for all drivers combined.
+	 * @return the hash (hex-encoded string)
+	 */
+	public static String getAllDriverHash() {
+		return allDriverHash;
 	}
 
 	/**
@@ -355,6 +368,14 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 				logger.error("While looking for device drivers in {}.", path, e);
 			}
 		}
+
+		StringBuffer hashBuffer = new StringBuffer();
+		for (DeviceDriver driver : newDrivers.values()) {
+			hashBuffer.append(driver.getSourceHash());
+		}
+		MessageDigest digest = MessageDigest.getInstance("SHA-256");
+		byte[] hash = digest.digest(hashBuffer.toString().getBytes());
+		DeviceDriver.allDriverHash = Hex.encodeHexString(hash);
 		DeviceDriver.drivers = newDrivers;
 	}
 

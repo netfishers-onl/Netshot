@@ -1596,6 +1596,7 @@ public class RestService extends Thread {
 	public List<DeviceDriver> getDeviceTypes(@DefaultValue("false") @QueryParam("refresh") boolean refresh) throws WebApplicationException {
 		logger.debug("REST request, device types.");
 		if (refresh) {
+			ClusterManager.requestDriverReload();
 			try {
 				DeviceDriver.refreshDrivers();
 			}

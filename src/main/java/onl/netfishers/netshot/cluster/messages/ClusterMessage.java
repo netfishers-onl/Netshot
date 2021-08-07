@@ -22,7 +22,8 @@ import onl.netfishers.netshot.rest.RestViews.ClusteringView;
 @XmlRootElement()
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-	@Type(value = HelloClusterMessage.class, name = "hello"),
+	@Type(value = HelloClusterMessage.class, name = "Hello"),
+	@Type(value = ReloadDriversMessage.class, name = "ReloadDrivers"),
 })
 public abstract class ClusterMessage {
 

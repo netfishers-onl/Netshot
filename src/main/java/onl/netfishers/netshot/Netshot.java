@@ -18,8 +18,11 @@
  */
 package onl.netfishers.netshot;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.Provider;
 import java.security.Security;
 import java.util.Enumeration;
@@ -74,6 +77,30 @@ public class Netshot extends Thread {
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(Netshot.class);
 	final static public Logger aaaLogger = LoggerFactory.getLogger("AAA");
+
+	/** The machine hostname */
+	private static String hostname = null;
+
+	/**
+	 * Retrieve the local machine hostname;
+	 * @return the local machine hostname
+	 */
+	public static String getHostname() {
+		if (Netshot.hostname == null) {
+			try {
+				Process process = Runtime.getRuntime().exec("hostname");
+				BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+				Netshot.hostname = stdInput.readLine();
+			}
+			catch (IOException e) {
+				logger.error("Error while getting local machine hostname", e);
+			}
+			if (Netshot.hostname == null) {
+				Netshot.hostname = "unknown";
+			}
+		}
+		return Netshot.hostname;
+	}
 
 	/**
 	 * Gets the config.
@@ -475,7 +502,7 @@ public class Netshot extends Thread {
 			logger.info("Starting the SNMP v1/v2c trap receiver.");
 			SnmpTrapReceiver.init();
 
-			logger.info("Starting the HA manager.");
+			logger.info("Starting the clustering manager.");
 			ClusterManager.init();
 
 			logger.info("Starting the REST service.");

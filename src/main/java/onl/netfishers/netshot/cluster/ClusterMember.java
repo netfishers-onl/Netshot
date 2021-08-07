@@ -5,21 +5,33 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
+import onl.netfishers.netshot.rest.RestViews.RestApiView;
+
 @XmlAccessorType(value = XmlAccessType.NONE)
 @XmlRootElement()
-public class ClusterMember {
+public class ClusterMember implements Comparable<ClusterMember>, Cloneable {
 
 	/**
 	 * Mastership status of a cluster member
 	 */
 	public static enum MastershipStatus {
-		MASTER,
 		MEMBER,
+		MASTER,
+		EXPIRED,
 		NEGOTIATING,
 	}
 
+	/** Is it the local server? */
+	private boolean local = false;
+
 	/** Cluster member unique ID */
 	private String instanceId;
+
+	/** Member hostname */
+	private String hostname;
 
 	/** Clustering version (to check compatibility) */
 	private int clusteringVersion;
@@ -45,22 +57,49 @@ public class ClusterMember {
 	/** Current status */
 	private MastershipStatus status;
 
+	/** Last status change */
+	private long lastStatusChangeTime;
+
+	/** Last seen */
+	private long lastSeenTime;
+
 	/**
 	 * Default constructor
 	 */
-	public ClusterMember(String instanceId, int clusteringVersion, int masterPriority,
+	public ClusterMember(String instanceId, String hostname, int clusteringVersion, int masterPriority,
 			int runnerPriority, int runnerWeight, String appVersion, String jvmVersion) {
+		this.local = true;
 		this.instanceId = instanceId;
+		this.hostname = hostname;
 		this.clusteringVersion = clusteringVersion;
 		this.masterPriority = masterPriority;
 		this.runnerPriority = runnerPriority;
 		this.runnerWeight = runnerWeight;
 		this.appVersion = appVersion;
 		this.jvmVersion = jvmVersion;
-		this.status = MastershipStatus.NEGOTIATING;
+		this.status = MastershipStatus.MEMBER;
+		this.lastStatusChangeTime = System.currentTimeMillis();
+		this.lastSeenTime = 0L;
+	}
+
+	/**
+	 * Hidden constructor for deserialization
+	 */
+	public ClusterMember() {
 	}
 
 	@XmlElement
+	@JsonView(RestApiView.class)
+	public boolean isLocal() {
+		return local;
+	}
+
+	public void setLocal(boolean local) {
+		this.local = local;
+	}
+
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getInstanceId() {
 		return instanceId;
 	}
@@ -70,6 +109,17 @@ public class ClusterMember {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
+	public String getHostname() {
+		return hostname;
+	}
+
+	public void setHostname(String hostname) {
+		this.hostname = hostname;
+	}
+
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public int getClusteringVersion() {
 		return clusteringVersion;
 	}
@@ -79,6 +129,7 @@ public class ClusterMember {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public int getMasterPriority() {
 		return masterPriority;
 	}
@@ -88,6 +139,7 @@ public class ClusterMember {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public int getRunnerPriority() {
 		return runnerPriority;
 	}
@@ -97,6 +149,7 @@ public class ClusterMember {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public int getRunnerWeight() {
 		return runnerWeight;
 	}
@@ -106,6 +159,7 @@ public class ClusterMember {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getJvmVersion() {
 		return jvmVersion;
 	}
@@ -115,6 +169,7 @@ public class ClusterMember {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getAppVersion() {
 		return appVersion;
 	}
@@ -124,6 +179,7 @@ public class ClusterMember {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDriverHash() {
 		return driverHash;
 	}
@@ -133,12 +189,36 @@ public class ClusterMember {
 	}
 
 	@XmlElement
+	@JsonView(DefaultView.class)
 	public MastershipStatus getStatus() {
 		return status;
 	}
 
 	public void setStatus(MastershipStatus status) {
+		if (!status.equals(this.status)) {
+			this.lastStatusChangeTime = System.currentTimeMillis();
+		}
 		this.status = status;
+	}
+
+	@XmlElement
+	@JsonView(RestApiView.class)
+	public long getLastSeenTime() {
+		return lastSeenTime;
+	}
+
+	public void setLastSeenTime(long lastSeenTime) {
+		this.lastSeenTime = lastSeenTime;
+	}
+
+	@XmlElement
+	@JsonView(RestApiView.class)
+	public long getLastStatusChangeTime() {
+		return lastStatusChangeTime;
+	}
+
+	public void setLastStatusChangeTime(long lastStatusChangeTime) {
+		this.lastStatusChangeTime = lastStatusChangeTime;
 	}
 
 	@Override
@@ -160,5 +240,30 @@ public class ClusterMember {
 		}
 		else if (!instanceId.equals(other.instanceId)) return false;
 		return true;
+	}
+
+	/**
+	 * Two ClusterMember's are compared based on mastership priority.
+	 */
+	@Override
+	public int compareTo(ClusterMember other) {
+		int r = Long.compare(this.getMasterPriority(), other.getMasterPriority());
+		if (r != 0) {
+			return r;
+		}
+		return this.getInstanceId().compareTo(other.getInstanceId());
+	}
+
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
+	}
+
+	@Override
+	public String toString() {
+		return "ClusterMember [appVersion=" + appVersion + ", clusteringVersion=" + clusteringVersion + ", driverHash="
+				+ driverHash + ", instanceId=" + instanceId + ", jvmVersion=" + jvmVersion + ", lastSeenTime=" + lastSeenTime
+				+ ", lastStatusChangeTime=" + lastStatusChangeTime + ", masterPriority=" + masterPriority + ", runnerPriority="
+				+ runnerPriority + ", runnerWeight=" + runnerWeight + ", status=" + status + "]";
 	}
 }

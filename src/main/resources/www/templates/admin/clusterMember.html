@@ -1,0 +1,26 @@
+
+<tr>
+	<td><%- instanceId %></td>
+	<td>
+		<% if (local) { %>
+		<span class="ui-corner-all" title="Local">
+			<span class="ui-icon nsicon ui-icon-bullet"></span>
+		</span>
+		<% } else { %>
+		<span class="ui-corner-all" title="Remote">
+			<span class="ui-icon nsicon ui-icon-radio-off"></span>
+		</span>
+		<% } %>
+	</td>
+	<td><%- hostname %></td>
+	<td><%- status %></td>
+	<td><%- masterPriority %>/<%- runnerPriority %>/<%- runnerWeight %></td>
+	<td><%- appVersion %></td>
+	<td>
+		<% if (lastSeenTime == 0) { %>
+			-
+		<% } else { %>
+			<%- formatDateTime(lastSeenTime) %>
+		<% } %>
+	</td>
+</tr>

@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
-import onl.netfishers.netshot.rest.RestViews.DefaultView;
+import onl.netfishers.netshot.rest.RestViews.ClusteringView;
 
 /**
  * HA-related message to be be exchanged with other Netshot instances
@@ -53,8 +53,14 @@ public abstract class ClusterMessage {
 		}
 	}
 
+	/**
+	 * Hidden constructor
+	 */
+	protected ClusterMessage() {
+	}
+
 	@XmlElement
-	@JsonView(DefaultView.class)
+	@JsonView(ClusteringView.class)
 	public String getInstanceId() {
 		return this.instanceId;
 	}
@@ -64,7 +70,7 @@ public abstract class ClusterMessage {
 	}
 
 	@XmlElement
-	@JsonView(DefaultView.class)
+	@JsonView(ClusteringView.class)
 	public long getCurrentTime() {
 		return currentTime;
 	}
@@ -74,7 +80,7 @@ public abstract class ClusterMessage {
 	}
 
 	@XmlElement
-	@JsonView(DefaultView.class)
+	@JsonView(ClusteringView.class)
 	public long getUpTime() {
 		return upTime;
 	}
@@ -84,7 +90,7 @@ public abstract class ClusterMessage {
 	}
 
 	@XmlElement
-	@JsonView(DefaultView.class)
+	@JsonView(ClusteringView.class)
 	public long getMessageId() {
 		return messageId;
 	}
@@ -93,4 +99,9 @@ public abstract class ClusterMessage {
 		this.messageId = messageId;
 	}
 
+	@Override
+	public String toString() {
+		return "ClusterMessage [currentTime=" + currentTime + ", instanceId=" + instanceId + ", messageId=" + messageId
+				+ ", upTime=" + upTime + "]";
+	}
 }

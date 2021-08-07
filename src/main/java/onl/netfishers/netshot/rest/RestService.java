@@ -77,6 +77,9 @@ import onl.netfishers.netshot.aaa.Radius;
 import onl.netfishers.netshot.aaa.Tacacs;
 import onl.netfishers.netshot.aaa.UiUser;
 import onl.netfishers.netshot.aaa.User;
+import onl.netfishers.netshot.cluster.ClusterManager;
+import onl.netfishers.netshot.cluster.ClusterMember;
+import onl.netfishers.netshot.cluster.ClusterMember.MastershipStatus;
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Exemption;
 import onl.netfishers.netshot.compliance.HardwareRule;
@@ -210,6 +213,14 @@ public class RestService extends Thread {
 
 	private static final String HTTP_STATIC_PATH = Netshot.getConfig("netshot.http.staticpath", "/");
 	static final String HTTP_API_PATH = Netshot.getConfig("netshot.http.apipath", "/api");
+
+	/**
+	 * Get the current REST service TCP port.
+	 * @return the current REST service TCP port
+	 */
+	public static int getRestPort() {
+		return nsRestService == null ? 0 : nsRestService.httpBasePort;
+	}
 
 	/**
 	 * Initializes the service.
@@ -10503,6 +10514,86 @@ public class RestService extends Thread {
 		}
 	}
 
+	@GET
+	@Path("/cluster/members")
+	@RolesAllowed("admin")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Get cluster members",
+		description = "Returns the members of the Netshot high availability cluster."
+	)
+	public List<ClusterMember> getClusterMembers() throws WebApplicationException {
+		logger.debug("REST request, get cluster members");
+		return ClusterManager.getClusterMembers();
+	}
+
+	@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+	public static class RsClusterMasterCheck {
+
+		/** Is clustering enabled */
+		private boolean clusterEnabled = false;
+
+		/** Is local server master */
+		private boolean isMaster = false;
+
+		/** Current master instance ID */
+		private String currentMasterId = null;
+
+		@XmlElement @JsonView(DefaultView.class)
+		public boolean isClusterEnabled() {
+			return clusterEnabled;
+		}
+
+		public void setClusterEnabled(boolean clusterEnabled) {
+			this.clusterEnabled = clusterEnabled;
+		}
+
+		@XmlElement @JsonView(DefaultView.class)
+		public boolean isMaster() {
+			return isMaster;
+		}
+
+		public void setMaster(boolean isMaster) {
+			this.isMaster = isMaster;
+		}
+
+		@XmlElement @JsonView(DefaultView.class)
+		public String getCurrentMasterId() {
+			return currentMasterId;
+		}
+
+		public void setCurrentMasterId(String currentMasterId) {
+			this.currentMasterId = currentMasterId;
+		}
+	}
+	
+	@GET
+	@PermitAll
+	@Path("/cluster/masterstatus")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Check if local server is cluster master",
+		description = "Returns whether the local server is cluster master or not. " +
+			"Might be used by local-balancer to redirect http to the proper server."
+	)
+	public RsClusterMasterCheck getClusterMasterStatus() throws WebApplicationException {
+		RsClusterMasterCheck check = new RsClusterMasterCheck();
+		List<ClusterMember> members = ClusterManager.getClusterMembers();
+		if (members.size() > 0) {
+			check.setClusterEnabled(true);
+			for (ClusterMember member : members) {
+				if (MastershipStatus.MASTER.equals(member.getStatus())) {
+					check.setCurrentMasterId(member.getInstanceId());
+					if (member.isLocal()) {
+						check.setMaster(true);
+					}
+				}
+			}
+		}
+		return check;
+	}
 
 }
 

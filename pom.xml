@@ -12,6 +12,7 @@
 		<jersey.version>2.33</jersey.version>
 		<graalvm.version>20.3.0</graalvm.version>
 		<swagger.version>2.1.6</swagger.version>
+		<slf4j.version>1.7.32</slf4j.version>
 	</properties>
 	<build>
 		<finalName>netshot</finalName>
@@ -124,12 +125,17 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>log4j-over-slf4j</artifactId>
-			<version>1.7.25</version>
+			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>jcl-over-slf4j</artifactId>
-				<version>1.7.25</version>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.jradius</groupId>
@@ -224,11 +230,6 @@
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>1.2.3</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jul-to-slf4j</artifactId>
-			<version>1.7.25</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.jtds</groupId>

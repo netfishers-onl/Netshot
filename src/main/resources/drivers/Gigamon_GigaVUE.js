@@ -21,7 +21,7 @@ var Info = {
 	name: "GigamonGigaVUE",
 	description: "Gigamon GigaVUE",
 	author: "NetFishers",
-	version: "1.1"
+	version: "1.2"
 };
 
 var Config = {
@@ -57,9 +57,9 @@ var Device = {
 };
 
 var CLI = {
-		telnet: {
-			fail: "Telnet access is not supported."
-		},
+	telnet: {
+		fail: "Telnet access is not supported."
+	},
 	ssh: {
 		macros: {
 			enable: {
@@ -73,7 +73,7 @@ var CLI = {
 		}
 	},
 	disable: {
-		prompt: /^([A-Za-z\-_0-9\.\/]+ \> )$/,
+		prompt: /^([A-Za-z\-_0-9\.\/]+( \[[^\]\r\n]+\])? \> )$/,
 		pager: {
 			avoid: "terminal length 999",
 			match: /^lines [0-9]+-[0-9]+$/,
@@ -107,7 +107,7 @@ var CLI = {
 	},
 
 	enable: {
-		prompt: /^([A-Za-z\-_0-9\.\/]+ # )$/,
+		prompt: /^([A-Za-z\-_0-9\.\/]+( \[[^\]\r\n]+\])? # )$/,
 		error: /^% (.*)/m,
 		pager: {
 			avoid: "terminal length 999",

@@ -24,7 +24,7 @@
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "5.1" /* Version will appear in the Admin tab. */
+	version: "5.2" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -299,6 +299,10 @@ function snapshot(cli, device, config) {
 		}
 		if (interfaces[i].config.match(/set status down/)) {
 			networkInterface.disabled = true;
+		}
+		var descMatch = interfaces[i].config.match(/set description "(.+)"/);
+		if (descMatch) {
+			networkInterface.description = descMatch[1];
 		}
 		device.add("networkInterface", networkInterface);
 	}

@@ -21,7 +21,7 @@ var Info = {
 	name: "GigamonGigaVUE",
 	description: "Gigamon GigaVUE",
 	author: "NetFishers",
-	version: "1.2"
+	version: "1.3"
 };
 
 var Config = {
@@ -75,7 +75,7 @@ var CLI = {
 	disable: {
 		prompt: /^([A-Za-z\-_0-9\.\/]+( \[[^\]\r\n]+\])? \> )$/,
 		pager: {
-			avoid: "terminal length 999",
+			avoid: "no cli session paging enable",
 			match: /^lines [0-9]+-[0-9]+$/,
 			response: "\r"
 		},
@@ -110,7 +110,7 @@ var CLI = {
 		prompt: /^([A-Za-z\-_0-9\.\/]+( \[[^\]\r\n]+\])? # )$/,
 		error: /^% (.*)/m,
 		pager: {
-			avoid: "terminal length 999",
+			avoid: "no cli session paging enable",
 			match: /^lines [0-9]+-[0-9]+$/,
 			response: "\r"
 		},

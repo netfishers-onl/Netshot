@@ -33,6 +33,9 @@
 				}
 			%>)
 			</td></tr>
+			<% if (typeof runnerId === "string") { %>
+			<tr><td>Runner:</td><td><%- runnerId %></td></tr>
+			<% } %>
 			<tr><td>Status:</td><td><%- status %><% if (status == "RUNNING") { %> <img alt="Running" src="img/ajax-loader.gif" /><% } %></td></tr>
 			<% if (status == "SUCCESS" && type == ".DiscoverDeviceTypeTask") { %>
 			<tr><td>Discovered Type:</td><td><%- discoveredDeviceTypeDescription %></td></tr>

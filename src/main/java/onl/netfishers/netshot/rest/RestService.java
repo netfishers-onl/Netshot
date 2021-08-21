@@ -10515,6 +10515,12 @@ public class RestService extends Thread {
 		}
 	}
 
+	/**
+	 * Gets the cluster members.
+	 *
+	 * @return the cluster members
+	 * @throws WebApplicationException the web application exception
+	 */
 	@GET
 	@Path("/cluster/members")
 	@RolesAllowed("admin")
@@ -10522,7 +10528,8 @@ public class RestService extends Thread {
 	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get cluster members",
-		description = "Returns the members of the Netshot high availability cluster."
+		description = "Returns the members of the Netshot high availability cluster " +
+				"(empty list if clustering is not enabled)."
 	)
 	public List<ClusterMember> getClusterMembers() throws WebApplicationException {
 		logger.debug("REST request, get cluster members");
@@ -10536,7 +10543,7 @@ public class RestService extends Thread {
 		private boolean clusterEnabled = false;
 
 		/** Is local server master */
-		private boolean isMaster = false;
+		private boolean master = true;
 
 		/** Current master instance ID */
 		private String currentMasterId = null;
@@ -10552,11 +10559,11 @@ public class RestService extends Thread {
 
 		@XmlElement @JsonView(DefaultView.class)
 		public boolean isMaster() {
-			return isMaster;
+			return master;
 		}
 
-		public void setMaster(boolean isMaster) {
-			this.isMaster = isMaster;
+		public void setMaster(boolean master) {
+			this.master = master;
 		}
 
 		@XmlElement @JsonView(DefaultView.class)
@@ -10569,6 +10576,12 @@ public class RestService extends Thread {
 		}
 	}
 	
+	/**
+	 * Gets the cluster mastership status of the current node.
+	 *
+	 * @return the mastership status
+	 * @throws WebApplicationException the web application exception
+	 */
 	@GET
 	@PermitAll
 	@Path("/cluster/masterstatus")
@@ -10576,14 +10589,16 @@ public class RestService extends Thread {
 	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Check if local server is cluster master",
-		description = "Returns whether the local server is cluster master or not. " +
-			"Might be used by local-balancer to redirect http to the proper server."
+		description = "Returns cluster mastership info of the current node. " +
+			"Might be used by local-balancer to redirect http to the proper server " +
+			"(return code 205 means the local server is not master)."
 	)
 	public RsClusterMasterCheck getClusterMasterStatus() throws WebApplicationException {
 		RsClusterMasterCheck check = new RsClusterMasterCheck();
 		List<ClusterMember> members = ClusterManager.getClusterMembers();
 		if (members.size() > 0) {
 			check.setClusterEnabled(true);
+			check.setMaster(false);
 			for (ClusterMember member : members) {
 				if (MastershipStatus.MASTER.equals(member.getStatus())) {
 					check.setCurrentMasterId(member.getInstanceId());
@@ -10591,6 +10606,9 @@ public class RestService extends Thread {
 						check.setMaster(true);
 					}
 				}
+			}
+			if (!check.isMaster()) {
+				this.suggestReturnCode(Response.Status.RESET_CONTENT);
 			}
 		}
 		return check;

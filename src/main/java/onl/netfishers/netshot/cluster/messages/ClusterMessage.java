@@ -24,6 +24,7 @@ import onl.netfishers.netshot.rest.RestViews.ClusteringView;
 @JsonSubTypes({
 	@Type(value = HelloClusterMessage.class, name = "Hello"),
 	@Type(value = ReloadDriversMessage.class, name = "ReloadDrivers"),
+	@Type(value = LoadTasksMessage.class, name = "LoadTasks"),
 })
 public abstract class ClusterMessage {
 

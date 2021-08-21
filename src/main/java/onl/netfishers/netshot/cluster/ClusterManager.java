@@ -1,9 +1,12 @@
 package onl.netfishers.netshot.cluster;
 
 import onl.netfishers.netshot.Netshot;
+import onl.netfishers.netshot.TaskManager;
+import onl.netfishers.netshot.TaskManager.Mode;
 import onl.netfishers.netshot.cluster.ClusterMember.MastershipStatus;
 import onl.netfishers.netshot.cluster.messages.ClusterMessage;
 import onl.netfishers.netshot.cluster.messages.HelloClusterMessage;
+import onl.netfishers.netshot.cluster.messages.LoadTasksMessage;
 import onl.netfishers.netshot.cluster.messages.ReloadDriversMessage;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.DeviceDriver;
@@ -57,10 +60,11 @@ public class ClusterManager extends Thread {
 	/** Cluster Manager static instance */
 	private static ClusterManager nsClusterManager = null;
 
-	/**
-	 * Whether a driver reload was just requested.
-	 */
+	/** Whether a driver reload was just requested. */
 	private boolean driverReloadRequested = false;
+
+	/** Whether the task manager is requesting other servers to load and execute new tasks. */
+	private boolean loadTasksRequested = false;
 
 	/**
 	 * Initializes the cluster manager.
@@ -71,13 +75,25 @@ public class ClusterManager extends Thread {
 			return;
 		}
 
+		TaskManager.setMode(Mode.CLUSTER_MEMBER);
 		nsClusterManager = new ClusterManager();
 		nsClusterManager.start();
 	}
 
 	/**
-	 * Get the list of cluster members for external use
-	 * @return
+	 * Gets the local cluster member instance ID.
+	 * @return the local instance ID
+	 */
+	public static String getLocalInstanceId() {
+		if (nsClusterManager != null) {
+			return nsClusterManager.localMember.getInstanceId();
+		}
+		return null;
+	}
+
+	/**
+	 * Gets the list of cluster members for external use
+	 * @return the cluster members
 	 */
 	public static List<ClusterMember> getClusterMembers() {
 		List<ClusterMember> members = new ArrayList<>();
@@ -100,6 +116,15 @@ public class ClusterManager extends Thread {
 	public static void requestDriverReload() {
 		if (nsClusterManager != null) {
 			nsClusterManager.driverReloadRequested = true;
+		}
+	}
+
+	/**
+	 * Request all runners to load and execute new tasks.
+	 */
+	public static void requestTasksLoad() {
+		if (nsClusterManager != null) {
+			nsClusterManager.loadTasksRequested = true;
 		}
 	}
 
@@ -137,6 +162,10 @@ public class ClusterManager extends Thread {
 		int masterPriority = Netshot.getConfig("netshot.cluster.master.priority", 100);
 		int runnerPriority = Netshot.getConfig("netshot.cluster.runner.priority", 100);
 		int runnerWeight = Netshot.getConfig("netshot.cluster.runner.weight", 100);
+		if (runnerWeight < 1 || runnerWeight > 1000) {
+			logger.error("Invalid value {} for runner weight, will use 100 by default", runnerWeight);;
+			runnerWeight = 100;
+		}
 
 		String localId = Netshot.getConfig("netshot.cluster.id");
 		if (localId != null) {
@@ -277,12 +306,17 @@ public class ClusterManager extends Thread {
 						this.sendMessage(dbConnection, helloMessage);
 						this.lastSentHelloTime = System.currentTimeMillis();
 					}
-					if (this.driverReloadRequested) {
-						if (MastershipStatus.MASTER.equals(this.localMember.getStatus())) {
+					if (MastershipStatus.MASTER.equals(this.localMember.getStatus())) {
+						if (this.driverReloadRequested) {
 							ReloadDriversMessage reloadMessage = new ReloadDriversMessage(this.localMember);
 							this.sendMessage(dbConnection, reloadMessage);
 						}
 						this.driverReloadRequested = false;
+						if (this.loadTasksRequested) {
+							LoadTasksMessage taskMessage = new LoadTasksMessage(this.localMember);
+							this.sendMessage(dbConnection, taskMessage);
+						}
+						this.loadTasksRequested = false;
 					}
 					try (
 						Statement fakeStatement = dbConnection.createStatement();
@@ -290,8 +324,9 @@ public class ClusterManager extends Thread {
 					) {}
 					List<ClusterMessage> messages = this.receiveMessages(pgConnection);
 					synchronized (this) {
-						long currentTime = System.currentTimeMillis();
+						final long currentTime = System.currentTimeMillis();
 						boolean memberUpdated = false;
+						boolean runnerChanged = false;
 						for (ClusterMessage message : messages) {
 							// Check time difference
 							if (Math.abs(message.getCurrentTime() - currentTime) > HELLO_DRIFTTIME) {
@@ -309,6 +344,11 @@ public class ClusterManager extends Thread {
 										member.getClusteringVersion(), ClusterManager.CLUSTERING_VERSION, message.getInstanceId());
 									continue;
 								}
+								ClusterMember oldMember = this.members.get(message.getInstanceId());
+								if (oldMember == null || oldMember.getRunnerPriority() != member.getRunnerPriority() ||
+										oldMember.getRunnerWeight() != member.getRunnerWeight()) {
+									runnerChanged = true;
+								}
 								this.members.put(message.getInstanceId(), member);
 								memberUpdated = true;
 							}
@@ -318,6 +358,14 @@ public class ClusterManager extends Thread {
 								}
 								catch (Exception e) {
 									logger.warn("Error while refreshing drivers", e);
+								}
+							}
+							else if (message instanceof LoadTasksMessage) {
+								try {
+									TaskManager.scheduleLocalTasks();
+								}
+								catch (Exception e) {
+									logger.warn("Error while scheduling local tasks");
 								}
 							}
 						}
@@ -332,6 +380,7 @@ public class ClusterManager extends Thread {
 									member.getInstanceId(), member.getLastSeenTime());
 								member.setStatus(MastershipStatus.EXPIRED);
 								memberUpdated = true;
+								runnerChanged = true;
 							}
 						}
 						if (memberUpdated) {
@@ -350,6 +399,9 @@ public class ClusterManager extends Thread {
 								}
 							}
 							this.master = newMaster;
+						}
+						if (runnerChanged) {
+
 						}
 						if (this.master == null) {
 							boolean eligible = true;
@@ -371,6 +423,7 @@ public class ClusterManager extends Thread {
 										logger.warn("Local cluster member is switching to MASTER status");
 										this.localMember.setStatus(MastershipStatus.MASTER);
 										this.master = this.localMember;
+										TaskManager.setMode(Mode.CLUSTER_MASTER);
 									}
 								}
 								else {
@@ -385,6 +438,7 @@ public class ClusterManager extends Thread {
 								// Master conflict - Downgrade to normal member
 								logger.warn("Local cluster member is switching back to MEMBER status");
 								this.localMember.setStatus(MastershipStatus.MEMBER);
+								TaskManager.setMode(Mode.CLUSTER_MEMBER);
 							}
 						}
 					}

@@ -487,8 +487,6 @@ public class Netshot extends Thread {
 			for (Provider p : Security.getProviders()) {
 				logger.debug("Security provider {} is registered", p.getName());
 			}
-			logger.info("Initializing the task manager.");
-			TaskManager.init();
 			logger.info("Updating the database schema, if necessary.");
 			Database.update();
 			logger.info("Initializing access to the database.");
@@ -505,6 +503,8 @@ public class Netshot extends Thread {
 			logger.info("Starting the clustering manager.");
 			ClusterManager.init();
 
+			logger.info("Initializing the task manager.");
+			TaskManager.init();
 			logger.info("Starting the REST service.");
 			RestService.init();
 			logger.info("Scheduling the existing tasks.");

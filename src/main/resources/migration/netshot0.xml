@@ -1032,4 +1032,16 @@
 		</createTable>
 		<addForeignKeyConstraint baseColumnNames="id" baseTableName="python_diagnostic" constraintName="FK_lkjsIUekzjds23lkjAZlkj123" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true"/>
 	</changeSet>
+<!-- netshot_0_15_3_to_0_17_0.xml -->
+	<changeSet author="netshot (generated)" id="0.17.0_1">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="task" columnName="runner_id"/></not>
+		</preConditions>
+		<addColumn tableName="task">
+			<column name="runner_id" type="VARCHAR(255)"/>
+		</addColumn>
+		<createIndex indexName="FK_e2jg2k6pxqvzf3xhc8ayvjq9v" tableName="task">
+			<column name="runner_id"/>
+		</createIndex>
+	</changeSet>
 </databaseChangeLog>

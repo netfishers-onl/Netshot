@@ -26,19 +26,19 @@ import onl.netfishers.netshot.cluster.ClusterMember;
  * Cluster message requesting to load (and execute) tasks.
  */
 @XmlRootElement
-public class LoadTasksMessage extends ClusterMessage {
+public class AssignTasksMessage extends ClusterMessage {
 
 	/**
 	 * Constructor.
 	 */
-	public LoadTasksMessage(ClusterMember memberInfo) {
+	public AssignTasksMessage(ClusterMember memberInfo) {
 		super(memberInfo.getInstanceId());
 	}
 
 	/**
 	 * Hidden constructor
 	 */
-	protected LoadTasksMessage() {
+	protected AssignTasksMessage() {
 	}
 	
 }

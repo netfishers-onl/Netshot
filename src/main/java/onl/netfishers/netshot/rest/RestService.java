@@ -10516,10 +10516,14 @@ public class RestService extends Thread {
 	}
 
 	/**
+<<<<<<< Updated upstream
 	 * Gets the cluster members.
 	 *
 	 * @return the cluster members
 	 * @throws WebApplicationException the web application exception
+=======
+	 * Retrieves information about cluster members.
+>>>>>>> Stashed changes
 	 */
 	@GET
 	@Path("/cluster/members")
@@ -10577,10 +10581,14 @@ public class RestService extends Thread {
 	}
 	
 	/**
+<<<<<<< Updated upstream
 	 * Gets the cluster mastership status of the current node.
 	 *
 	 * @return the mastership status
 	 * @throws WebApplicationException the web application exception
+=======
+	 * Retrieves the cluster master status.
+>>>>>>> Stashed changes
 	 */
 	@GET
 	@PermitAll

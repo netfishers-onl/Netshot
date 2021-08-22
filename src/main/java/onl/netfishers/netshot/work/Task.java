@@ -586,6 +586,17 @@ public abstract class Task implements Cloneable {
 	public abstract void run();
 
 	/**
+	 * This can return a hash for the task to select a stable runner.
+	 * This is used to run all the tasks related to the same device
+	 * on the same cluter runner.
+	 * @return the hash or null
+	 */
+	@Transient
+	public long getRunnerHash() {
+		return 0;
+	}
+
+	/**
 	 * Schedule the task.
 	 *
 	 * @param reference the date reference

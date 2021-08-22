@@ -1,9 +1,28 @@
+/**
+ * Copyright 2013-2021 Sylvain Cadilhac (NetFishers)
+ * 
+ * This file is part of Netshot.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package onl.netfishers.netshot.cluster;
 
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.TaskManager.Mode;
 import onl.netfishers.netshot.cluster.ClusterMember.MastershipStatus;
+import onl.netfishers.netshot.cluster.messages.AssignTasksMessage;
 import onl.netfishers.netshot.cluster.messages.ClusterMessage;
 import onl.netfishers.netshot.cluster.messages.HelloClusterMessage;
 import onl.netfishers.netshot.cluster.messages.LoadTasksMessage;
@@ -63,8 +82,11 @@ public class ClusterManager extends Thread {
 	/** Whether a driver reload was just requested. */
 	private boolean driverReloadRequested = false;
 
-	/** Whether the task manager is requesting other servers to load and execute new tasks. */
+	/** Whether the task manager is requesting other servers to load and execute waiting tasks. */
 	private boolean loadTasksRequested = false;
+
+	/** Whether a member is requesting the cluster master to assign new tasks. */
+	private boolean assignTasksRequested = false;
 
 	/**
 	 * Initializes the cluster manager.
@@ -125,6 +147,15 @@ public class ClusterManager extends Thread {
 	public static void requestTasksLoad() {
 		if (nsClusterManager != null) {
 			nsClusterManager.loadTasksRequested = true;
+		}
+	}
+
+	/**
+	 * Request the master to assign new tasks.
+	 */
+	public static void requestTasksAssignment() {
+		if (nsClusterManager != null) {
+			nsClusterManager.assignTasksRequested = true;
 		}
 	}
 
@@ -317,6 +348,11 @@ public class ClusterManager extends Thread {
 							this.sendMessage(dbConnection, taskMessage);
 						}
 						this.loadTasksRequested = false;
+						if (this.assignTasksRequested) {
+							AssignTasksMessage taskMessage = new AssignTasksMessage(this.localMember);
+							this.sendMessage(dbConnection, taskMessage);
+						}
+						this.assignTasksRequested = false;
 					}
 					try (
 						Statement fakeStatement = dbConnection.createStatement();
@@ -328,9 +364,10 @@ public class ClusterManager extends Thread {
 						boolean memberUpdated = false;
 						boolean runnerChanged = false;
 						for (ClusterMessage message : messages) {
+							logger.trace("Clustering message received: {}", message);
 							// Check time difference
 							if (Math.abs(message.getCurrentTime() - currentTime) > HELLO_DRIFTTIME) {
-								logger.info(
+								logger.warn(
 									"Seeing excessive time difference ({} vs {}) with instance {}, please check time synchronization",
 									message.getCurrentTime(), currentTime, message.getInstanceId());
 							}
@@ -357,7 +394,7 @@ public class ClusterManager extends Thread {
 									DeviceDriver.refreshDrivers();
 								}
 								catch (Exception e) {
-									logger.warn("Error while refreshing drivers", e);
+									logger.error("Error while refreshing drivers", e);
 								}
 							}
 							else if (message instanceof LoadTasksMessage) {
@@ -365,8 +402,21 @@ public class ClusterManager extends Thread {
 									TaskManager.scheduleLocalTasks();
 								}
 								catch (Exception e) {
-									logger.warn("Error while scheduling local tasks");
+									logger.error("Error while scheduling local tasks", e);
 								}
+							}
+							else if (message instanceof AssignTasksMessage) {
+								if (MastershipStatus.MASTER.equals(this.localMember.getStatus())) {
+									try {
+										TaskManager.scheduleNewTasks();
+									}
+									catch (Exception e) {
+										logger.error("Error while assigning new tasks", e);
+									}
+								}
+							}
+							else {
+								logger.warn("Unknown clustering message type received");
 							}
 						}
 						// Check expired members

@@ -209,4 +209,18 @@ public class CheckComplianceTask extends Task {
 				String.format("CheckCompliance_%d", this.getDevice().getId()));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see onl.netfishers.netshot.work.Task#getRunnerHash()
+	 */
+	@Override
+	@Transient
+	public long getRunnerHash() {
+		Device device = this.getDevice();
+		if (device == null) {
+			return 0;
+		}
+		return device.getId();
+	}
+
 }

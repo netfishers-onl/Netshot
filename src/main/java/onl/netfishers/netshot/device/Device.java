@@ -117,6 +117,12 @@ public class Device {
 
 		/** The switchrouter. */
 		SWITCHROUTER,
+		
+		/** The accesspoint. */
+		ACCESSPOINT,
+		
+		/** The wirelesscontroller. */
+		WIRELESSCONTROLLER,
 
 		/** The unknown. */
 		UNKNOWN

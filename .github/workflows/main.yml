@@ -13,11 +13,12 @@ jobs:
         uses: docker/build-push-action@v1
         with:
           repository: netshot
-          tags: dev
+          tags: temp
+          push: false
       - name: Extract built JAR
         uses: shrink/actions-docker-extract@v1
         with:
-          image: netshot
+          image: 'netshot:temp'
           path: /usr/local/netshot/netshot.jar
       - name: Upload Dist
         uses: actions/upload-artifact@v2

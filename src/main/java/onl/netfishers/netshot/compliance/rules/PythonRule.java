@@ -235,12 +235,12 @@ public class PythonRule extends Rule {
 			if (result.isString()) {
 				txtResult = result.asString();
 			}
-			else if (result.hasMembers()) {
-				Value jsComment = result.getMember("comment");
+			else if (result.hasHashEntries()) {
+				Value jsComment = result.getHashValue("comment");
 				if (jsComment != null && jsComment.isString()) {
 					comment = jsComment.asString();
 				}
-				Value jsResult = result.getMember("result");
+				Value jsResult = result.getHashValue("result");
 				if (jsResult != null && jsResult.isString()) {
 					txtResult = jsResult.asString();
 				}

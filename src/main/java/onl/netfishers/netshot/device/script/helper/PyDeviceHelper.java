@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
 import org.graalvm.polyglot.proxy.ProxyArray;
-import org.graalvm.polyglot.proxy.ProxyObject;
+import org.graalvm.polyglot.proxy.ProxyHashMap;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
@@ -55,7 +55,7 @@ public class PyDeviceHelper {
 	private boolean readOnly;
 
 	public static String getStringMember(Value value, String key, String defaultResult) {
-		Value result = value.getMember(key);
+		Value result = value.getHashValue(key);
 		if (result != null) {
 			return result.asString();
 		}
@@ -63,7 +63,7 @@ public class PyDeviceHelper {
 	}
 
 	public static boolean getBooleanMember(Value value, String key, boolean defaultResult) {
-		Value result = value.getMember(key);
+		Value result = value.getHashValue(key);
 		if (result != null) {
 			return result.asBoolean();
 		}
@@ -118,7 +118,7 @@ public class PyDeviceHelper {
 			else if ("network_interface".equals(key)) {
 				NetworkInterface networkInterface = new NetworkInterface(
 						device,
-						data.getMember("name").asString(),
+						data.getHashValue("name").asString(),
 						getStringMember(data, "virtual_device", ""),
 						getStringMember(data, "vrf", ""),
 						getBooleanMember(data, "enabled", true),
@@ -127,21 +127,21 @@ public class PyDeviceHelper {
 				);
 				networkInterface.setPhysicalAddress(new PhysicalAddress(
 						getStringMember(data, "mac", "0000.0000.0000")));
-				Value ipAddresses = data.getMember("ip");
+				Value ipAddresses = data.getHashValue("ip");
 				if (ipAddresses != null) {
 					for (long i = 0; i < ipAddresses.getArraySize(); i++) {
 						Value ip = ipAddresses.getArrayElement(i);
 						NetworkAddress address = null;
 						if (ip.hasMember("ipv6")) {
-							address = new Network6Address(ip.getMember("ipv6").asString(), ip.getMember("mask").asInt());
+							address = new Network6Address(ip.getHashValue("ipv6").asString(), ip.getHashValue("mask").asInt());
 						}
-						else if (ip.getMember("mask").isNumber()) {
-							address = new Network4Address(ip.getMember("ip").asString(), ip.getMember("mask").asInt());
+						else if (ip.getHashValue("mask").isNumber()) {
+							address = new Network4Address(ip.getHashValue("ip").asString(), ip.getHashValue("mask").asInt());
 						}
 						else {
-							address = new Network4Address(ip.getMember("ip").asString(), ip.getMember("mask").asString());
+							address = new Network4Address(ip.getHashValue("ip").asString(), ip.getHashValue("mask").asString());
 						}
-						Value usage = ip.getMember("usage");
+						Value usage = ip.getHashValue("usage");
 						if (usage != null) {
 							address.setAddressUsage(AddressUsage.valueOf(usage.asString()));
 						}
@@ -364,18 +364,18 @@ public class PyDeviceHelper {
 		else if ("modules".equals(item)) {
 			List<Object> modules = new ArrayList<>();
 			for (Module m : device.getModules()) {
-				Map<String, Object> module = new HashMap<>();
+				Map<Object, Object> module = new HashMap<>();
 				module.put("slot", Value.asValue(m.getSlot()));
 				module.put("part_number", Value.asValue(m.getPartNumber()));
 				module.put("serial_number", Value.asValue(m.getSerialNumber()));
-				modules.add(ProxyObject.fromMap(module));
+				modules.add(ProxyHashMap.from(module));
 			}
 			return ProxyArray.fromList(modules);
 		}
 		else if ("interfaces".equals(item)) {
 			List<Object> networkInterfaces = new ArrayList<>();
 			for (NetworkInterface ni : device.getNetworkInterfaces()) {
-				Map<String, Object> networkInterface = new HashMap<>();
+				Map<Object, Object> networkInterface = new HashMap<>();
 				networkInterface.put("name", ni.getInterfaceName());
 				networkInterface.put("description", ni.getDescription());
 				networkInterface.put("mac", ni.getMacAddress());
@@ -385,21 +385,21 @@ public class PyDeviceHelper {
 				networkInterface.put("level3", ni.isLevel3());
 				List<Object> ips = new ArrayList<>();
 				for (Network4Address address : ni.getIp4Addresses()) {
-					Map<String, Object> ip = new HashMap<>();
+					Map<Object, Object> ip = new HashMap<>();
 					ip.put("ip", address.getIp());
 					ip.put("mask", Integer.toString(address.getPrefixLength()));
 					ip.put("usage", address.getAddressUsage().toString());
-					ips.add(ProxyObject.fromMap(ip));
+					ips.add(ProxyHashMap.from(ip));
 				}
 				for (Network6Address address : ni.getIp6Addresses()) {
-					Map<String, Object> ip = new HashMap<>();
+					Map<Object, Object> ip = new HashMap<>();
 					ip.put("ipv6", address.getIp());
 					ip.put("mask", Integer.toString(address.getPrefixLength()));
 					ip.put("usage", address.getAddressUsage().toString());
-					ips.add(ProxyObject.fromMap(ip));
+					ips.add(ProxyHashMap.from(ip));
 				}
 				networkInterface.put("ip", ProxyArray.fromList(ips));
-				networkInterfaces.add(ProxyObject.fromMap(networkInterface));
+				networkInterfaces.add(ProxyHashMap.from(networkInterface));
 			}
 			return ProxyArray.fromList(networkInterfaces);
 		}

@@ -17,6 +17,7 @@ jobs:
           push: false
       - name: Extract built JAR
         uses: shrink/actions-docker-extract@v1
+        id: extract
         with:
           image: 'netshot:temp'
           path: /usr/local/netshot/netshot.jar

@@ -1,0 +1,26 @@
+name: Main
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build Docker Image
+        uses: docker/build-push-action@v1
+        with:
+          repository: netshot
+          tags: dev
+      - name: Extract built JAR
+        uses: shrink/actions-docker-extract@v1
+        with:
+          image: netshot
+          path: /usr/local/netshot/netshot.jar
+      - name: Upload Dist
+        uses: actions/upload-artifact@v2
+        with:
+          path: ${{ steps.extract.outputs.destination }}
+          name: dist

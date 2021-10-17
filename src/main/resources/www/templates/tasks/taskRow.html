@@ -30,6 +30,11 @@
 			<span class="ui-icon ui-icon-cancel"></span>
 		<%
 			}
+			else if (status == "NEW") {
+		%>
+			<span class="ui-icon ui-icon-document-b"></span>
+		<%
+			}
 		%>
 		</span>
 		<%- status.toLowerCase().replace(/^(.)/, function(a, l) { return l.toUpperCase(); }) %>

@@ -19,16 +19,20 @@
 package onl.netfishers.netshot;
 
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NavigableMap;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 
 import onl.netfishers.netshot.cluster.ClusterManager;
 import onl.netfishers.netshot.cluster.ClusterMember;
+import onl.netfishers.netshot.cluster.ClusterMember.MastershipStatus;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.work.MasterJob;
 import onl.netfishers.netshot.work.Task;
@@ -42,7 +46,6 @@ import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
@@ -86,18 +89,7 @@ public class TaskManager {
 			double value = random.nextDouble() * total;
 			return map.higherEntry(value).getValue();
 		}
-
-		public String getRunnerIdByHash(long hash) {
-			if (hash == 0) {
-				return this.getNextRunnerId();
-			}
-			double value = (1 / hash) * total;
-			return map.higherEntry(value).getValue();
-		}
 	}
-
-	/** The factory. */
-	private static SchedulerFactory factory;
 
 	/** The master scheduler (used in master mode to dispatch jobs). */
 	private static Scheduler masterScheduler;
@@ -115,19 +107,31 @@ public class TaskManager {
 	 * Initializes the task manager.
 	 */
 	public static void init() {
-		Properties params = new Properties();
-		params.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
-		params.put("org.quartz.threadPool.threadCount", Netshot.getConfig("netshot.tasks.threadcount", "10"));
 		try {
-			factory = new StdSchedulerFactory(params);
-			masterScheduler = factory.getScheduler("master");
+			Properties params = new Properties();
+			params.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
+			params.put("org.quartz.threadPool.threadCount", Netshot.getConfig("netshot.tasks.threadcount", "10"));
+			params.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "NetshotMasterScheduler");
+			StdSchedulerFactory factory = new StdSchedulerFactory(params);
+			masterScheduler = factory.getScheduler();
 			masterScheduler.start();
-			runnerScheduler = factory.getScheduler("runner");
+		}
+		catch (Exception e) {
+			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate the Master Task Manager", e);
+			throw new RuntimeException("Unable to instantiate the Master Task Manager.", e);
+		}
+		try {
+			Properties params = new Properties();
+			params.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
+			params.put("org.quartz.threadPool.threadCount", Netshot.getConfig("netshot.tasks.threadcount", "10"));
+			params.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "NetshotRunnerScheduler");
+			StdSchedulerFactory factory = new StdSchedulerFactory(params);
+			runnerScheduler = factory.getScheduler();
 			runnerScheduler.start();
 		}
 		catch (Exception e) {
-			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate the Task Manager", e);
-			throw new RuntimeException("Unable to instantiate the Task Manager.", e);
+			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate the Runner Task Manager", e);
+			throw new RuntimeException("Unable to instantiate the Runner Task Manager.", e);
 		}
 	}
 
@@ -177,80 +181,40 @@ public class TaskManager {
 	 * @param task the task
 	 */
 	public static void assignTaskRunner(Task task) {
-		String runnerId = TaskManager.runnerSet.getRunnerIdByHash(task.getRunnerHash());
-		logger.info("Task {} is being assigned to runner {}.", task.getId(), runnerId);
+		long hash = task.getRunnerHash();
+		String runnerId = TaskManager.runnerSet.getNextRunnerId();
+		logger.info("Task {} (hash {}) is being assigned to runner {}.", task.getId(), hash, runnerId);
 		task.setRunnerId(runnerId);
 		task.setWaiting();
-	}
-
-	/**
-	 * Finds and reassigns tasks currently assigned to a failed runner.
-	 */
-	private static void reassignOrphanTasks() {
-		logger.info("Looking for orphan tasks after change on the list of runners.");
-		Session session = Database.getSession();
-		try {
-			session.beginTransaction();
-			List<String> runnerIds = session.createQuery(
-					"select distinct t.runnerId from Task t where (t.status = :waiting or t.status = :running) and t.runnerId is not null",
-					String.class)
-				.setParameter("waiting", Task.Status.WAITING)
-				.setParameter("running", Task.Status.RUNNING)
-				.list();
-			Iterator<String> runnerIdIt = runnerIds.iterator();
-			while (runnerIdIt.hasNext()) {
-				String runnerId = runnerIdIt.next();
-				if (TaskManager.runnerSet.map.values().contains(runnerId)) {
-					runnerIdIt.remove();
-				}
-			}
-			if (runnerIds.size() > 0) {
-				List<Task> tasks = session.createQuery(
-						"select t from Task t where (t.status = :waiting or t.status = :running) and "
-						+ "(t.runnerId in :runnerIds or t.runnerId is null)",
-						Task.class)
-					.setParameter("waiting", Task.Status.WAITING)
-					.setParameter("running", Task.Status.RUNNING)
-					.setParameterList("runnerIds", runnerIds)
-					.list();
-				for (Task task : tasks) {
-					assignTaskRunner(task);
-					session.saveOrUpdate(task);
-				}
-				session.getTransaction().commit();
-				ClusterManager.requestTasksLoad();
-			}
-		}
-		catch (HibernateException e) {
-			session.getTransaction().rollback();
-			logger.error("Database error while re-assigning oprhan tasks", e);
-		}
-		finally {
-			session.close();
-		}
 	}
 
 	/**
 	 * Sets the possible task runners (to be called from ClusterManager).
 	 * @param members the list of cluster members.
 	 */
-	public static void setRunners(List<ClusterMember> members) {
+	public static void setRunners(Collection<ClusterMember> members) {
 		Integer maxPriority = null;
+		Set<ClusterMember> activeMembers = new HashSet<>();
 		for (ClusterMember member : members) {
+			if (MastershipStatus.MASTER.equals(member.getStatus()) || MastershipStatus.MEMBER.equals(member.getStatus())) {
+				activeMembers.add(member);
+			}
+		}
+		for (ClusterMember member : activeMembers) {
 			if (maxPriority == null || member.getRunnerPriority() > maxPriority) {
 				maxPriority = member.getRunnerPriority();
 			}
 		}
 		RunnerSet runnerSet = new RunnerSet();
-		for (ClusterMember member : members) {
+		for (ClusterMember member : activeMembers) {
 			if (member.getRunnerPriority() == maxPriority) {
 				runnerSet.add(member.getRunnerWeight(), member.getInstanceId());
 			}
 		}
-		synchronized (TaskManager.runnerSet) {
+		synchronized (TaskManager.masterScheduler) {
 			TaskManager.runnerSet = runnerSet;
-			TaskManager.reassignOrphanTasks();
 		}
+		TaskManager.reassignOrphanTasks();
 	}
 
 	/**
@@ -459,9 +423,9 @@ public class TaskManager {
 		Session session = Database.getSession();
 		try {
 			List<Task> tasks = session.createQuery(
-				"select t from Task t where t.status = :waiting and t.runnerId = :runnerId", Task.class)
+				"select t from Task t where t.status = :waiting and t.runnerId = :myId", Task.class)
 				.setParameter("waiting", Task.Status.WAITING)
-				.setParameter("runnerId", ClusterManager.getLocalInstanceId())
+				.setParameter("myId", ClusterManager.getLocalInstanceId())
 				.list();
 			for (Task task : tasks) {
 				addTaskToScheduler(task, true, true, true);
@@ -479,23 +443,89 @@ public class TaskManager {
 	}
 
 	/**
-	 * Reschedule all tasks.
+	 * Finds and reassigns tasks currently assigned to a failed runner.
+	 */
+	private static void reassignOrphanTasks() {
+		logger.info("Looking for orphan tasks after change on the list of runners.");
+		Session session = Database.getSession();
+		try {
+			session.beginTransaction();
+			List<String> runnerIds = session.createQuery(
+					"select distinct t.runnerId from Task t where (t.status = :waiting or t.status = :running) and t.runnerId is not null",
+					String.class)
+				.setParameter("waiting", Task.Status.WAITING)
+				.setParameter("running", Task.Status.RUNNING)
+				.list();
+			Iterator<String> runnerIdIt = runnerIds.iterator();
+			while (runnerIdIt.hasNext()) {
+				String runnerId = runnerIdIt.next();
+				if (TaskManager.runnerSet.map.values().contains(runnerId)) {
+					runnerIdIt.remove();
+				}
+			}
+			if (runnerIds.size() > 0) {
+				List<Task> tasks = session.createQuery(
+						"select t from Task t where (t.status = :waiting or t.status = :running) and "
+						+ "(t.runnerId in :runnerIds or t.runnerId is null)",
+						Task.class)
+					.setParameter("waiting", Task.Status.WAITING)
+					.setParameter("running", Task.Status.RUNNING)
+					.setParameterList("runnerIds", runnerIds)
+					.list();
+				for (Task task : tasks) {
+					assignTaskRunner(task);
+					session.saveOrUpdate(task);
+				}
+				session.getTransaction().commit();
+				ClusterManager.requestTasksLoad();
+			}
+		}
+		catch (HibernateException e) {
+			session.getTransaction().rollback();
+			logger.error("Database error while re-assigning oprhan tasks", e);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	/**
+	 * Reschedules all tasks. To be executed at startup.
 	 */
 	public static void rescheduleAll() {
-		if (!TaskManager.mode.equals(Mode.SINGLE)) {
-			logger.info("Ignoring rescheduleAll (cluster mode)");
-			return;
-		}
-		logger.debug("Will schedule the tasks that can be found in the database.");
+		logger.debug("Will re-schedule the existing tasks from the database.");
 
 		Session session = Database.getSession();
 		List<Task> tasks;
 		try {
-			tasks = session.createQuery(
-					"select t from Task t where t.status = :status1 or t.status = :status2", Task.class)
-				.setParameter("status1", Task.Status.SCHEDULED)
-				.setParameter("status2", Task.Status.RUNNING)
-				.list();
+			switch (TaskManager.mode) {
+			case CLUSTER_MASTER:
+				tasks = session.createQuery(
+						"select t from Task t where t.status = :new or t.status = :scheduled or ((t.status = :waiting or t.status = :running) and t.runnerId = :myId)",
+						Task.class)
+					.setParameter("new", Task.Status.NEW)
+					.setParameter("scheduled", Task.Status.SCHEDULED)
+					.setParameter("waiting", Task.Status.WAITING)
+					.setParameter("running", Task.Status.RUNNING)
+					.setParameter("myId", ClusterManager.getLocalInstanceId())
+					.list();
+				break;
+			case CLUSTER_MEMBER:
+				tasks = session.createQuery(
+						"select t from Task t where (t.status = :waiting or t.status = :running) and t.runnerId = :myId", Task.class)
+					.setParameter("waiting", Task.Status.WAITING)
+					.setParameter("running", Task.Status.RUNNING)
+					.setParameter("myId", ClusterManager.getLocalInstanceId())
+					.list();
+				break;
+			default:
+				tasks = session.createQuery(
+						"select t from Task t where t.status = :scheduled or t.status = :waiting or t.status = :running", Task.class)
+					.setParameter("scheduled", Task.Status.SCHEDULED)
+					.setParameter("waiting", Task.Status.WAITING)
+					.setParameter("running", Task.Status.RUNNING)
+					.list();
+			}
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to retrieve the tasks from the database.", e);
@@ -510,12 +540,23 @@ public class TaskManager {
 		inThirtySeconds.add(Calendar.SECOND, 30);
 		for (Task task : tasks) {
 			try {
+				if (masterScheduler.checkExists(task.getIdentity())) {
+					continue;
+				}
+				if (runnerScheduler.checkExists(task.getIdentity())) {
+					continue;
+				}
+			}
+			catch (SchedulerException e) {
+				logger.error("Error while checking task existence in the scheduler", e);
+			}
+			try {
 				Date when = task.getNextExecutionDate();
 				if (when != null && when.after(inThirtySeconds.getTime())) {
 					TaskManager.addTask(task);
 				}
 				else {
-					TaskManager.cancelTask(task, "Task skipped, too late to run at server startup.");
+					TaskManager.cancelTask(task, "Task skipped, too late to run.");
 				}
 			}
 			catch (SchedulerException e) {

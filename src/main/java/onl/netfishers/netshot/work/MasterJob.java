@@ -68,7 +68,7 @@ public class MasterJob implements Job {
 			TaskManager.assignTaskRunner(task);
 			session.update(task);
 			session.getTransaction().commit();
-			ClusterManager.requestTasksAssignment();
+			ClusterManager.requestTasksLoad();
 		}
 		catch (Exception e) {
 			logger.error("Error while retrieving and assigning the task to a runner.", e);

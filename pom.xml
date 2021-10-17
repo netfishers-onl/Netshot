@@ -278,6 +278,11 @@
 			<artifactId>TACACS</artifactId>
 			<version>31ad30d66bf84522fd03affd96f39af8b98be172</version>
 		</dependency>
+		<dependency>
+			<groupId>commons-cli</groupId>
+			<artifactId>commons-cli</artifactId>
+			<version>1.4</version>
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>

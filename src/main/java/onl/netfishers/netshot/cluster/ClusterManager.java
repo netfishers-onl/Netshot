@@ -39,10 +39,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -148,6 +148,7 @@ public class ClusterManager extends Thread {
 		if (nsClusterManager != null) {
 			nsClusterManager.loadTasksRequested = true;
 		}
+		TaskManager.scheduleLocalTasks();
 	}
 
 	/**
@@ -184,7 +185,7 @@ public class ClusterManager extends Thread {
 		ObjectMapper jsonMapper = new ObjectMapper();
 		this.jsonReader = jsonMapper.readerWithView(ClusteringView.class);
 		this.jsonWriter = jsonMapper.writerWithView(ClusteringView.class);
-		this.members = new HashMap<>();
+		this.members = new ConcurrentHashMap<>();
 		this.master = null;
 		this.lastSentHelloTime = 0L;
 
@@ -308,6 +309,8 @@ public class ClusterManager extends Thread {
 	public void run() {
 		// Reconnection with exponential backoff
 		int bhFactor = 0;
+		boolean memberUpdated = true;
+		boolean runnerChanged = true;
 
 		while (true) {
 			// Reconnection loop
@@ -348,6 +351,8 @@ public class ClusterManager extends Thread {
 							this.sendMessage(dbConnection, taskMessage);
 						}
 						this.loadTasksRequested = false;
+					}
+					else {
 						if (this.assignTasksRequested) {
 							AssignTasksMessage taskMessage = new AssignTasksMessage(this.localMember);
 							this.sendMessage(dbConnection, taskMessage);
@@ -361,8 +366,6 @@ public class ClusterManager extends Thread {
 					List<ClusterMessage> messages = this.receiveMessages(pgConnection);
 					synchronized (this) {
 						final long currentTime = System.currentTimeMillis();
-						boolean memberUpdated = false;
-						boolean runnerChanged = false;
 						for (ClusterMessage message : messages) {
 							logger.trace("Clustering message received: {}", message);
 							// Check time difference
@@ -449,9 +452,11 @@ public class ClusterManager extends Thread {
 								}
 							}
 							this.master = newMaster;
+							memberUpdated = false;
 						}
 						if (runnerChanged) {
-
+							TaskManager.setRunners(this.members.values());
+							runnerChanged = false;
 						}
 						if (this.master == null) {
 							boolean eligible = true;
@@ -474,6 +479,7 @@ public class ClusterManager extends Thread {
 										this.localMember.setStatus(MastershipStatus.MASTER);
 										this.master = this.localMember;
 										TaskManager.setMode(Mode.CLUSTER_MASTER);
+										TaskManager.rescheduleAll();
 									}
 								}
 								else {

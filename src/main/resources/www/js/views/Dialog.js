@@ -80,7 +80,10 @@ define([
 				},
 				close: function() {
 					that.close();
-				}
+				},
+				beforeClose: function() {
+					// Allow closing by clicking the cross or pressing Escape
+				},
 			};
 
 			var options = _.extend(defaultDialogOptions, this.dialogOptions);

@@ -136,9 +136,10 @@ public class TaskJob implements Job {
 		try {
 			task = (Task) session.get(Task.class, id);
 			List<Hook> hooks = session
-				.createQuery("select h from Hook h join h.triggers t where t.type = :postTask and t.item = :taskName", Hook.class)
+				.createQuery("select h from Hook h join h.triggers t where t.type = :postTask and t.item = :taskName and h.enabled = :true", Hook.class)
 				.setParameter("postTask", HookTrigger.TriggerType.POST_TASK)
 				.setParameter("taskName", task.getClass().getSimpleName())
+				.setParameter("true", true)
 				.list();
 
 			for (Hook hook : hooks) {

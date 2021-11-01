@@ -8,7 +8,7 @@
 		</svg>
 	</div>
 	
-	<form>
+	<form autocomplete="off">
 		<fieldset>
 			<label for="rulename">Name: </label>
 			<input type="text" name="rulename" id="rulename" autofocus="autofocus"
@@ -26,8 +26,13 @@
 		
 		<td>
 			<div>Create exemption:</div>
-			<input type="text" id="devicesearch" class="text ui-widget-content ui-corner-all" placeholder="Search..." />
+			<input type="text" id="devicesearch"
+				class="text ui-widget-content ui-corner-all" placeholder="Device name/IP (&crarr; to search)" />
 			<div id="alldevices" class="ui-widget-content ui-corner-all nstreelist">
+				<div class="placeholder">
+						<p class="title">No result</p>
+						<p class="content">Use the Search field to find devices per name or IP.</p>
+				</div>
 				<ul></ul>
 			</div>
 			<input type="text" id="exemptiondate" class="text ui-widget-content ui-corner-all" readonly="readonly" />

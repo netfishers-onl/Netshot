@@ -413,6 +413,10 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	background-color: #dbedff;
 }
 
+.nstreelist .placeholder {
+	width: 100%;
+}
+
 h1 {
 	font-size: 1.2em;
 	color: #0366d6;
@@ -739,6 +743,10 @@ h1 {
 #nsdevices-device .panel table tr.placeholder td {
 	padding-left: 50px;
 	padding-right: 50px;
+}
+
+.placeholder {
+	opacity: 30%;
 }
 
 .placeholder .title {

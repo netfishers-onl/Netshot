@@ -6,18 +6,22 @@
 		</svg>
 	</div>
 
-	<form>
+	<form autocomplete="off">
 
 		Find a device:
 
 		<table>
 			<tbody>
 				<tr>
-					<td><input type="text" id="devicesearch"
-						class="text ui-widget-content ui-corner-all"
-						placeholder="Search..." />
-						<div id="alldevices"
-							class="ui-widget-content ui-corner-all nstreelist">
+					<td>
+						<input type="text" id="devicesearch"
+							class="text ui-widget-content ui-corner-all"
+							placeholder="Device name/IP (&crarr; to search)" />
+						<div id="alldevices" class="ui-widget-content ui-corner-all nstreelist">
+							<div class="placeholder">
+									<p class="title">No result</p>
+									<p class="content">Use the Search field to find devices per name or IP.</p>
+							</div>
 							<ul></ul>
 						</div></td>
 				</tr>

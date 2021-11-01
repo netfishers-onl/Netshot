@@ -143,6 +143,7 @@ define([
 			this.htmlBuffer = "";
 			this.searchedDevices.each(this.renderSearchedDeviceListItem, this);
 			this.$("#alldevices>ul").html(this.htmlBuffer);
+			this.$(".placeholder").toggle(this.searchedDevices.length === 0);
 			this.refreshAddState();
 			this
 			.$("#alldevices>ul li")
@@ -157,6 +158,8 @@ define([
 			})
 			.click(function(e) {
 				var $this = $(this);
+				that.$("#devices>ul .active").removeClass("active");
+				that.$('#unselectdevice').button('disable');
 				if (e.ctrlKey) {
 					if ($this.hasClass('active')) {
 						$this.removeClass('active');
@@ -217,6 +220,8 @@ define([
 				$(this).removeClass("hover");
 			}).click(function(e) {
 				var $this = $(this);
+				that.$("#alldevices>ul .active").removeClass("active");
+				that.$('#selectdevice').button('disable');
 				if (e.ctrlKey) {
 					if ($this.hasClass('active')) {
 						$this.removeClass('active');

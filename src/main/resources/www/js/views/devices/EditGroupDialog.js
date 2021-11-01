@@ -18,8 +18,7 @@ define([
 	return Dialog.extend({
 
 		template: _.template(editGroupTemplate),
-		staticGroupDeviceListItemTemplate: _
-		.template(editStaticGroupDeviceListItemTemplate),
+		staticGroupDeviceListItemTemplate: _.template(editStaticGroupDeviceListItemTemplate),
 
 		dialogOptions: {
 			title: "Edit group",
@@ -196,6 +195,7 @@ define([
 			this.htmlBuffer = "";
 			this.searchedDevices.each(this.renderSearchedDeviceListItem, this);
 			this.$("#alldevices>ul").html(this.htmlBuffer);
+			this.$(".placeholder").toggle(this.searchedDevices.length === 0);
 			this.refreshAddState();
 			this.$("#alldevices>ul li").mouseenter(function() {
 				var $this = $(this);
@@ -204,35 +204,36 @@ define([
 				}
 			}).mouseleave(function() {
 				$(this).removeClass("hover");
-			}).click(
-					function(e) {
-						var $this = $(this);
-						if (e.ctrlKey) {
-							if ($this.hasClass('active')) {
-								$this.removeClass('active');
-							}
-							else {
-								$this.addClass("active");
-							}
-						}
-						else if (e.shiftKey) {
-							document.getSelection().removeAllRanges();
-							var i = $this.closest('ul').find('.active').last().index();
-							var j = $this.index();
-							$this.closest('ul').find('li').slice(i <= j ? i : j,
-									(i <= j ? j : i) + 1).addClass('active');
-						}
-						else {
-							$this.closest('ul').find('.active').removeClass('active');
-							$this.addClass("active");
-						}
-						that.refreshAddState();
-					}).each(function() {
-						var id = $(this).data('device-id');
-						if (that.$('#devices>ul li[data-device-id="' + id + '"]').length > 0) {
-							$(this).hide();
-						}
-					});
+			}).click(function(e) {
+				that.$("#devices>ul .active").removeClass("active");
+				that.$('#removedevice').button('disable');
+				var $this = $(this);
+				if (e.ctrlKey) {
+					if ($this.hasClass('active')) {
+						$this.removeClass('active');
+					}
+					else {
+						$this.addClass("active");
+					}
+				}
+				else if (e.shiftKey) {
+					document.getSelection().removeAllRanges();
+					var i = $this.closest('ul').find('.active').last().index();
+					var j = $this.index();
+					$this.closest('ul').find('li').slice(i <= j ? i : j,
+							(i <= j ? j : i) + 1).addClass('active');
+				}
+				else {
+					$this.closest('ul').find('.active').removeClass('active');
+					$this.addClass("active");
+				}
+				that.refreshAddState();
+			}).each(function() {
+				var id = $(this).data('device-id');
+				if (that.$('#devices>ul li[data-device-id="' + id + '"]').length > 0) {
+					$(this).hide();
+				}
+			});
 		},
 
 		refreshAddState: function() {
@@ -262,35 +263,36 @@ define([
 				}
 			}).mouseleave(function() {
 				$(this).removeClass("hover");
-			}).click(
-					function(e) {
-						var $this = $(this);
-						if (e.ctrlKey) {
-							if ($this.hasClass('active')) {
-								$this.removeClass('active');
-							}
-							else {
-								$this.addClass("active");
-							}
-						}
-						else if (e.shiftKey) {
-							document.getSelection().removeAllRanges();
-							var i = $this.closest('ul').find('.active').last().index();
-							var j = $this.index();
-							$this.closest('ul').find('li').slice(i <= j ? i : j,
-									(i <= j ? j : i) + 1).addClass('active');
-						}
-						else {
-							$this.closest('ul').find('.active').removeClass('active');
-							$this.addClass("active");
-						}
-						that.refreshRemoveState();
-					});
+			}).click(function(e) {
+				var $this = $(this);
+				that.$("#alldevices>ul .active").removeClass("active");
+				that.$('#adddevice').button('disable');
+				if (e.ctrlKey) {
+					if ($this.hasClass('active')) {
+						$this.removeClass('active');
+					}
+					else {
+						$this.addClass("active");
+					}
+				}
+				else if (e.shiftKey) {
+					document.getSelection().removeAllRanges();
+					var i = $this.closest('ul').find('.active').last().index();
+					var j = $this.index();
+					$this.closest('ul').find('li').slice(i <= j ? i : j,
+							(i <= j ? j : i) + 1).addClass('active');
+				}
+				else {
+					$this.closest('ul').find('.active').removeClass('active');
+					$this.addClass("active");
+				}
+				that.refreshRemoveState();
+			});
 		},
 
 		renderSearchedDeviceListItem: function(device) {
 			this.htmlBuffer += this
-			.staticGroupDeviceListItemTemplate(device.toJSON());
+				.staticGroupDeviceListItemTemplate(device.toJSON());
 		},
 
 	});

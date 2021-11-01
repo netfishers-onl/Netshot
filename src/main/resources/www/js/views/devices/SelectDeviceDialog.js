@@ -77,6 +77,7 @@ define([
 			this.htmlBuffer = "";
 			this.searchedDevices.each(this.renderSearchedDeviceListItem, this);
 			this.$("#alldevices>ul").html(this.htmlBuffer);
+			this.$(".placeholder").toggle(this.searchedDevices.length === 0);
 			this.$("#alldevices>ul li").mouseenter(function() {
 				var $this = $(this);
 				if (!$this.hasClass("active")) {

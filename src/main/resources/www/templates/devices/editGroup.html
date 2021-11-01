@@ -10,7 +10,7 @@
 		</svg>
 	</div>
 	
-	<form>
+	<form autocomplete="off">
 		<fieldset>
 			<p>Name: <strong><%- name %></strong>
 			(<% if (type.match(/StaticDeviceGroup$/)) { %>static group<% } %><% if (type.match(/DynamicDeviceGroup$/)) { %>dynamic group<% } %>)</p>

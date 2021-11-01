@@ -3,9 +3,14 @@
 
 <td>
 	<div>Find devices:</div>
-	<input type="text" id="devicesearch" class="text ui-widget-content ui-corner-all" placeholder="Search..." />
+	<input type="text" id="devicesearch"
+		class="text ui-widget-content ui-corner-all" placeholder="Device name/IP (&crarr; to search)" />
 	<div id="alldevices" class="ui-widget-content ui-corner-all nstreelist">
-	<ul></ul>
+		<div class="placeholder">
+				<p class="title">No result</p>
+				<p class="content">Use the Search field to find devices per name or IP.</p>
+		</div>
+		<ul></ul>
 	</div>
 </td>
 
@@ -18,7 +23,7 @@
 Selected:
 
 	<div id="devices" class="ui-widget-content ui-corner-all nstreelist">
-	<ul></ul>
+		<ul></ul>
 	</div>
 </td>
 

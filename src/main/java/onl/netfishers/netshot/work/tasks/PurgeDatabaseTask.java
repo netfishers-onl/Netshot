@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2021 Sylvain Cadilhac (NetFishers)
- * 
+ *
  * This file is part of Netshot.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -55,9 +55,9 @@ public class PurgeDatabaseTask extends Task {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(PurgeDatabaseTask.class);
-	
+
 	private int days;
-	
+
 	private int configDays = -1;
 	private int configSize = 0;
 	private int configKeepDays = 0;
@@ -135,7 +135,7 @@ public class PurgeDatabaseTask extends Task {
 					session.getTransaction().rollback();
 				}
 				catch (Exception e1) {
-	
+
 				}
 				logger.error("Task {}. Database error while purging the old tasks from the database.", this.getId(), e);
 				this.error("Database error during the task purge.");
@@ -147,7 +147,7 @@ public class PurgeDatabaseTask extends Task {
 					session.getTransaction().rollback();
 				}
 				catch (Exception e1) {
-					
+
 				}
 				logger.error("Task {}. Error while purging the old tasks from the database.", this.getId(), e);
 				this.error("Error during the task purge.");
@@ -158,7 +158,7 @@ public class PurgeDatabaseTask extends Task {
 				session.close();
 			}
 		}
-		
+
 		if (configDays > 0) {
 			Session session = Database.getSession();
 			try {
@@ -181,7 +181,7 @@ public class PurgeDatabaseTask extends Task {
 						.createQuery("from Config c where (c.changeDate < :when) order by c.device asc, c.changeDate desc", Config.class);
 				}
 				ScrollableResults configs = query
-					.setParameter("when", when)
+					.setParameter("when", when.getTime())
 					.setCacheMode(CacheMode.IGNORE)
 					.scroll(ScrollMode.FORWARD_ONLY);
 				long dontDeleteDevice = -1;

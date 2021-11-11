@@ -143,8 +143,8 @@ define([
 				that.getTaskData = function() {
 					var data = {
 						group: that.$('#group').val(),
-						dontRunDiagnostics: !that.$('#rundiagnostics').is(':checked'),
-						dontCheckCompliance: !that.$('#checkcompliance').is(':checked')
+						dontRunDiagnostics: !that.$('#dorundiagnostics').is(':checked'),
+						dontCheckCompliance: !that.$('#docheckcompliance').is(':checked')
 					};
 					if (that.$('#olderthan').is(':checked')) {
 						data.limitToOutofdateDeviceHours = that.$('#olderthanhours').spinner('value');

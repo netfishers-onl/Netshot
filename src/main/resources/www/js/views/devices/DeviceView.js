@@ -121,7 +121,7 @@ define([
 			});
 			this.$('#modules').button({
 				icons: {
-					primary: "ui-icon-link"
+					primary: "ui-icon-puzzle"
 				}
 			});
 			this.$('#diagnostics').button({

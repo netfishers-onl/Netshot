@@ -66,12 +66,13 @@ define([
 				this.model.fetch().complete(function() {
 					setTimeout(function() {
 						that.refresh();
-					}, 10000);
+					}, 5000);
 				});
 			}
 			else {
 				this.$("#nstask-tasklog .nsdialog-log").html(this.model.get('log')
 						.replace(/\n/g, "<br/>"));
+				this.$("#nstask-tasklog").show();
 				this.$("#nstask-showlog").show();
 				if (this.model.get('status') == "SUCCESS"
 						&& this.model.get('type') == ".DiscoverDeviceTypeTask") {

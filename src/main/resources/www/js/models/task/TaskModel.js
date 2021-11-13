@@ -17,9 +17,11 @@ define([
 
 		getSignificantDate: function() {
 			switch (this.get('status')) {
+			case "NEW":
+			case "WAITING":
 			case "SCHEDULED":
 				var d = this.get('nextExecutionDate');
-				if (typeof (d) == "undefined") {
+				if (d === null || typeof (d) === "undefined") {
 					return "As soon as possible";
 				}
 				return this.get('nextExecutionDate');

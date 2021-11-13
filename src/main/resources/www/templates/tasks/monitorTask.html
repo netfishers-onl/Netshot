@@ -37,7 +37,25 @@
 			<% if (typeof runnerId === "string") { %>
 			<tr><td>Runner:</td><td><%- runnerId %></td></tr>
 			<% } %>
-			<tr><td>Status:</td><td><%- status %><% if (status == "RUNNING") { %> <img alt="Running" src="img/ajax-loader.gif" /><% } %></td></tr>
+			<tr>
+				<td>Status:</td>
+				<td>
+					<% if (status == "RUNNING") { %>
+						<span class="ui-icon ui-icon-play"></span>
+					<% } else if (status == "SCHEDULED") { %>
+						<span class="ui-icon ui-icon-calendar"></span>
+					<% } else if (status == "SUCCESS") { %>
+						<span class="ui-icon ui-icon-flag"></span>
+					<% } else if (status == "FAILURE") { %>
+						<span class="ui-icon ui-icon-alert"></span>
+					<% } else if (status == "CANCELLED") { %>
+						<span class="ui-icon ui-icon-cancel"></span>
+					<% } else { %>
+						<span class="ui-icon ui-icon-clock"></span>
+					<% } %>
+					<%- status %><% if (status == "RUNNING") { %> <img alt="Running" src="img/ajax-loader.gif" /><% } %>
+				</td>
+			</tr>
 			<% if (status == "SUCCESS" && type == ".DiscoverDeviceTypeTask") { %>
 			<tr><td>Discovered Type:</td><td><%- discoveredDeviceTypeDescription %></td></tr>
 			<tr><td>Snapshot Task:</td><td><a href="#" id="gotosnapshot">Monitor</a></td></tr>
@@ -48,11 +66,10 @@
 		</tbody>
 	</table>
 	
-	<div id="nstask-tasklog">
-	<div id="nstask-showlog" style="display: none;"><a href="#">Show logs</a></div>
-	<div class="nsdialog-log" style="display: none;">
-	</div>
-	<div id="nstask-showdebuglog" style="display: none;"><a href="#">Download debug logs</a></div>
+	<div id="nstask-tasklog" style="display: none;">
+		<div id="nstask-showlog" style="display: none;"><a href="#">Show logs</a></div>
+		<div class="nsdialog-log" style="display: none;" />
+		<div id="nstask-showdebuglog" style="display: none;"><a href="#">Download debug logs</a></div>
 	</div>
 
 </div>

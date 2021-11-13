@@ -386,6 +386,21 @@ public class Database {
 	}
 
 	/**
+	 * Retrieves a raw SQL connection.
+	 * @param pooled = whether to take the connection from the (C3P0) pool or not
+	 *                  (pooled connection expire with C3P0 timeout mechanisms).
+	 * @return the connection
+	 * @throws SQLException
+	 */
+	public static Connection getConnection(boolean pooled) throws SQLException {
+		if (pooled) {
+			return Database.getConnection();
+		}
+		Connection connection = DriverManager.getConnection(getUrl(), getUsername(), getPassword());
+		return connection;
+	} 
+
+	/**
 	 * Gets the real object from the Hibernate proxy.
 	 *
 	 * @param <T>

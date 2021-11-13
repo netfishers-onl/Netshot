@@ -68,7 +68,6 @@ public class MasterJob implements Job {
 			TaskManager.assignTaskRunner(task);
 			session.update(task);
 			session.getTransaction().commit();
-			ClusterManager.requestTasksLoad();
 		}
 		catch (Exception e) {
 			logger.error("Error while retrieving and assigning the task to a runner.", e);
@@ -83,6 +82,7 @@ public class MasterJob implements Job {
 		finally {
 			session.close();
 		}
+		ClusterManager.requestTasksLoad();
 	}
 
 }

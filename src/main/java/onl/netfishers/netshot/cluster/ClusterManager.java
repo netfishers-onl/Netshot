@@ -39,9 +39,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -125,7 +127,7 @@ public class ClusterManager extends Thread {
 					members.add((ClusterMember) member.clone());
 				}
 				catch (CloneNotSupportedException e) {
-					// Shoudln't happen
+					// Shouldn't happen
 				}
 			}
 		}
@@ -320,7 +322,7 @@ public class ClusterManager extends Thread {
 			catch (InterruptedException e) {
 				logger.error("ClusterManager got InterruptedException", e);
 			}
-			try (Connection dbConnection = Database.getConnection()) {
+			try (Connection dbConnection = Database.getConnection(false)) {
 				PGConnection pgConnection = dbConnection.unwrap(PGConnection.class);
 
 				try (Statement listenStatement = dbConnection.createStatement()) {
@@ -366,6 +368,7 @@ public class ClusterManager extends Thread {
 					List<ClusterMessage> messages = this.receiveMessages(pgConnection);
 					synchronized (this) {
 						final long currentTime = System.currentTimeMillis();
+						final Set<Class<? extends ClusterMessage>> ignoreNextClasses = new HashSet<>();
 						for (ClusterMessage message : messages) {
 							logger.trace("Clustering message received: {}", message);
 							// Check time difference
@@ -373,6 +376,10 @@ public class ClusterManager extends Thread {
 								logger.warn(
 									"Seeing excessive time difference ({} vs {}) with instance {}, please check time synchronization",
 									message.getCurrentTime(), currentTime, message.getInstanceId());
+							}
+							if (ignoreNextClasses.contains(message.getClass())) {
+								logger.trace("Ignored - similar message already processed");
+								continue;
 							}
 							if (message instanceof HelloClusterMessage) {
 								HelloClusterMessage helloMessage = (HelloClusterMessage) message;
@@ -395,6 +402,7 @@ public class ClusterManager extends Thread {
 							else if (message instanceof ReloadDriversMessage) {
 								try {
 									DeviceDriver.refreshDrivers();
+									ignoreNextClasses.add(ReloadDriversMessage.class);
 								}
 								catch (Exception e) {
 									logger.error("Error while refreshing drivers", e);
@@ -403,6 +411,7 @@ public class ClusterManager extends Thread {
 							else if (message instanceof LoadTasksMessage) {
 								try {
 									TaskManager.scheduleLocalTasks();
+									ignoreNextClasses.add(LoadTasksMessage.class);
 								}
 								catch (Exception e) {
 									logger.error("Error while scheduling local tasks", e);
@@ -412,6 +421,7 @@ public class ClusterManager extends Thread {
 								if (MastershipStatus.MASTER.equals(this.localMember.getStatus())) {
 									try {
 										TaskManager.scheduleNewTasks();
+										ignoreNextClasses.add(AssignTasksMessage.class);
 									}
 									catch (Exception e) {
 										logger.error("Error while assigning new tasks", e);
@@ -480,6 +490,7 @@ public class ClusterManager extends Thread {
 										this.master = this.localMember;
 										TaskManager.setMode(Mode.CLUSTER_MASTER);
 										TaskManager.rescheduleAll();
+										TaskManager.reassignOrphanTasks();
 									}
 								}
 								else {
@@ -492,7 +503,7 @@ public class ClusterManager extends Thread {
 							// Checks on the current master
 							if (!MastershipStatus.MEMBER.equals(this.localMember.getStatus()) && !this.master.equals(this.localMember)) {
 								// Master conflict - Downgrade to normal member
-								logger.warn("Local cluster member is switching back to MEMBER status");
+								logger.warn("Local cluster member is switching to MEMBER status");
 								this.localMember.setStatus(MastershipStatus.MEMBER);
 								TaskManager.setMode(Mode.CLUSTER_MEMBER);
 							}

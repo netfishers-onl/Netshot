@@ -159,7 +159,7 @@ public class TaskManager {
 				task.setScheduled();
 				session.saveOrUpdate(task);
 				try {
-					addTaskToScheduler(task, true, true, false);
+					addTaskToScheduler(task, false, true, false);
 				}
 				catch (SchedulerException e) {
 					logger.error("Error while scheduling new task", e);
@@ -169,7 +169,7 @@ public class TaskManager {
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
-			logger.error("Database error while re-assigning oprhan tasks", e);
+			logger.error("Database error while scheduling new tasks (master scheduler)", e);
 		}
 		finally {
 			session.close();
@@ -428,6 +428,8 @@ public class TaskManager {
 				.setParameter("myId", ClusterManager.getLocalInstanceId())
 				.list();
 			for (Task task : tasks) {
+				logger.trace("Found task {}, assigned to local cluster member {}", task.getId(),
+					task.getRunnerId());
 				addTaskToScheduler(task, true, true, true);
 			}
 		}
@@ -445,9 +447,14 @@ public class TaskManager {
 	/**
 	 * Finds and reassigns tasks currently assigned to a failed runner.
 	 */
-	private static void reassignOrphanTasks() {
+	public static void reassignOrphanTasks() {
+		if (!Mode.CLUSTER_MASTER.equals(TaskManager.mode)) {
+			logger.debug("Skipping reassignment of orphan tasks (not in MASTER mode)");
+			return;
+		}
 		logger.info("Looking for orphan tasks after change on the list of runners.");
 		Session session = Database.getSession();
+		int reassignedCount = 0;
 		try {
 			session.beginTransaction();
 			List<String> runnerIds = session.createQuery(
@@ -462,6 +469,9 @@ public class TaskManager {
 				if (TaskManager.runnerSet.map.values().contains(runnerId)) {
 					runnerIdIt.remove();
 				}
+				else {
+					logger.debug("The runner of ID {} doesn't exist anymore", runnerId);
+				}
 			}
 			if (runnerIds.size() > 0) {
 				List<Task> tasks = session.createQuery(
@@ -473,8 +483,11 @@ public class TaskManager {
 					.setParameterList("runnerIds", runnerIds)
 					.list();
 				for (Task task : tasks) {
+					logger.debug("Task {} will be reassigned as its previously assigned runner {} has disappeared.",
+						task.getId(), task.getRunnerId());
 					assignTaskRunner(task);
 					session.saveOrUpdate(task);
+					reassignedCount += 1;
 				}
 				session.getTransaction().commit();
 				ClusterManager.requestTasksLoad();
@@ -482,11 +495,12 @@ public class TaskManager {
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
-			logger.error("Database error while re-assigning oprhan tasks", e);
+			logger.error("Database error while re-assigning orphan tasks", e);
 		}
 		finally {
 			session.close();
 		}
+		logger.info("{} orphan task(s) reassigned", reassignedCount);
 	}
 
 	/**
@@ -541,9 +555,11 @@ public class TaskManager {
 		for (Task task : tasks) {
 			try {
 				if (masterScheduler.checkExists(task.getIdentity())) {
+					logger.trace("The task {} is already in the master scheduler.", task.getId());
 					continue;
 				}
 				if (runnerScheduler.checkExists(task.getIdentity())) {
+					logger.trace("The task {} is already in the runner scheduler.", task.getId());
 					continue;
 				}
 			}
@@ -552,7 +568,7 @@ public class TaskManager {
 			}
 			try {
 				Date when = task.getNextExecutionDate();
-				if (when != null && when.after(inThirtySeconds.getTime())) {
+				if (when == null || when.after(inThirtySeconds.getTime())) {
 					TaskManager.addTask(task);
 				}
 				else {

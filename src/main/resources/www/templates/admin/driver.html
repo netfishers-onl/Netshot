@@ -2,9 +2,9 @@
 	<td><%- name %></td>
 	<td><%- description %></td>
 	<% _.each(["SSH", "TELNET", "SNMP"], function(p) { %>
-		<td>
+		<td class="checkcolumn">
 			<% if (protocols.indexOf(p) > -1) { %>
-				<span class="ui-icon nsicon ui-icon-bullet"></span>
+				<span class="ui-icon nsicon ui-icon-circle-check"></span>
 			<% } else { %>
 				<span class="ui-icon nsicon ui-icon-radio-off"></span>
 			<% } %>

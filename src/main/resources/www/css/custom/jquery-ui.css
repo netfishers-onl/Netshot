@@ -1064,31 +1064,31 @@ a.ui-button:active,
 }
 .ui-icon,
 .ui-widget-content .ui-icon {
-	background-image: url("images/ui-icons_469bdd_256x240.png");
+	color: #469bdd;
 }
 .ui-widget-header .ui-icon {
-	background-image: url("images/ui-icons_d8e7f3_256x240.png");
+	color: #d8e7f3;
 }
 .ui-state-hover .ui-icon,
 .ui-state-focus .ui-icon,
 .ui-button:hover .ui-icon,
 .ui-button:focus .ui-icon {
-	background-image: url("images/ui-icons_217bc0_256x240.png");
+	color: #217bc0;
 }
 .ui-state-active .ui-icon,
 .ui-button:active .ui-icon {
-	background-image: url("images/ui-icons_217bc0_256x240.png");
+	color: #217bc0;
 }
 .ui-state-highlight .ui-icon,
 .ui-button .ui-state-highlight.ui-icon {
-	background-image: url("images/ui-icons_ff2e38_256x240.png");
+	color: #ff2e38;
 }
 .ui-state-error .ui-icon,
 .ui-state-error-text .ui-icon {
-	background-image: url("images/ui-icons_cd0a0a_256x240.png");
+	color: #cd0a0a;
 }
 .ui-button .ui-icon {
-	background-image: url("images/ui-icons_6da8d5_256x240.png");
+	color: #6da8d5;
 }
 
 /* positioning */

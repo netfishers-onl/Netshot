@@ -871,6 +871,9 @@ h1 {
 	padding: 5px 20px 5px 20px;
 }
 
+.nstable .checkcolumn {
+	text-align: center;
+}
 
 
 .nsconfig {
@@ -1784,4 +1787,4 @@ input.spinner {
 #nsadmin-webhookaddform #hooktriggers {
 	padding-left: 10px;
 	margin-top: 5px;
-}
+} 

@@ -71,7 +71,7 @@ import sun.misc.SignalHandler;
 public class Netshot extends Thread {
 
 	/** Netshot version. */
-	public static final String VERSION = "0.16.4";
+	public static final String VERSION = "0.17.0-rc1";
 
 	/** The list of configuration files to look at, in sequence. */
 	private static final String[] CONFIG_FILENAMES = new String[] {

@@ -12,6 +12,13 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.17.0-rc1 - 2021-11-14
+(This is a pre-release)
+
+* Font-based icons
+* High Availability
+
+
 0.16.4 - 2021-11-14
 
 * Minor UI improvements or fixes

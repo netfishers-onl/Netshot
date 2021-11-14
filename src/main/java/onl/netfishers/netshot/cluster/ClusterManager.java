@@ -509,13 +509,19 @@ public class ClusterManager extends Thread {
 							}
 						}
 					}
-					bhFactor = 0;
+					if (bhFactor > 0) {
+						bhFactor = 0;
+						logger.info("ClusterManager recovered from exception state");
+					}
 				}
 			}
 			catch (SQLException | InterruptedException e) {
 				logger.error("ClusterManager got exception", e);
 				bhFactor *= 2;
-				if (bhFactor > 32) {
+				if (bhFactor < 1) {
+					bhFactor = 1;
+				}
+				else if (bhFactor > 32) {
 					bhFactor = 32;
 				}
 			}

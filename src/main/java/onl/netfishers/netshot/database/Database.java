@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -92,9 +93,14 @@ import onl.netfishers.netshot.work.tasks.DeviceJsScript;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
+import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.ServiceRegistry;
@@ -116,20 +122,19 @@ import liquibase.resource.ClassLoaderResourceAccessor;
  */
 public class Database {
 
+	/** The logger. */
+	final private static Logger logger = LoggerFactory.getLogger(Database.class);
+
 	/** The session factory. */
 	private static SessionFactory sessionFactory;
 
 	/** The service registry. */
 	private static ServiceRegistry serviceRegistry;
 
-	/** The configuration. */
-	private static Configuration configuration;
-
-	/** C3P0 datasource name to retrieve it easily */
-	private static final String DATASOURCE_NAME = "NetshotHibernate";
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(Database.class);
+	/** Read-only tenant name */
+	public static final String DATASOURCE_TENANT_READONLY = "Read";
+	/** Read-write tenant name  */
+	public static final String DATASOURCE_TENANT_READWRITE = "Write";
 
 	/**
 	 * List classes in a given package.
@@ -210,6 +215,149 @@ public class Database {
 	}
 
 	/**
+	 * Update the database schema (to be run at startup).
+	 */
+	public static void update() {
+		try {
+			Class.forName("org.postgresql.Driver");
+			Connection connection = Database.getConnection(false);
+			liquibase.database.Database database = DatabaseFactory.getInstance()
+					.findCorrectDatabaseImplementation(new JdbcConnection(connection));
+			Liquibase liquibase = new Liquibase("migration/netshot0.xml", new ClassLoaderResourceAccessor(), database);
+			liquibase.update(new Contexts(), new LabelExpression());
+			connection.close();
+		}
+		catch (Exception e) {
+			logger.error("Unable to perform initial schema update", e);
+		}
+	}
+
+	/**
+	 * Initializes the database access, with Hibernate.
+	 */
+	public static void init() {
+		try {
+			Properties serviceProperties = new Properties();
+			serviceProperties.setProperty(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jdbc");
+			serviceProperties.setProperty(AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread");
+			// serviceProperties.setProperty(AvailableSettings.HBM2DDL_AUTO, "update") // "update" or "validate" or ""
+			// serviceProperties.setProperty(AvailableSettings.SHOW_SQL, "true")
+			// Dates/times stored in UTC in the DB, without timezone, up to Java to convert to server local time
+			serviceProperties.setProperty("hibernate.jdbc.time_zone", "UTC");
+
+			// Use the custom Multi Tenant connection provider (to handle read vs read-write connections)
+			final CustomConnectionProvider connectionProvider = new CustomConnectionProvider();
+
+
+			final Properties connectionProviderProperties = new Properties();
+			connectionProviderProperties.setProperty(AvailableSettings.DRIVER, getDriverClass());
+			connectionProviderProperties.setProperty(AvailableSettings.USER, getUsername());
+			connectionProviderProperties.setProperty(AvailableSettings.PASS, getPassword());
+			connectionProviderProperties.setProperty("hibernate.c3p0.min_size", "5");
+			connectionProviderProperties.setProperty("hibernate.c3p0.max_size", "30");
+			connectionProviderProperties.setProperty("hibernate.c3p0.timeout", "1800");
+			connectionProviderProperties.setProperty("hibernate.c3p0.max_statements", "50");
+			connectionProviderProperties.setProperty("hibernate.c3p0.unreturnedConnectionTimeout", "1800");
+			connectionProviderProperties.setProperty("hibernate.c3p0.debugUnreturnedConnectionStackTraces", "true");
+			if ("org.postgresql.Driver".equals(getDriverClass())) {
+				connectionProviderProperties.setProperty(AvailableSettings.DIALECT, "onl.netfishers.netshot.database.CustomPostgreSQLDialect");
+			}
+			else if ("com.mysql.cj.jdbc.Driver".equals(getDriverClass())) {
+				connectionProviderProperties.setProperty(AvailableSettings.DIALECT, "onl.netfishers.netshot.database.CustomMySQLDialect");
+			}
+
+			connectionProviderProperties.setProperty(AvailableSettings.URL, getUrl());
+			connectionProviderProperties.setProperty("hibernate.c3p0.dataSourceName", DATASOURCE_TENANT_READWRITE);
+			connectionProvider.registerConnectionProvider(DATASOURCE_TENANT_READWRITE, connectionProviderProperties, true);
+
+			String readDbUrl = getReadUrl();
+			if (readDbUrl != null) {
+				connectionProviderProperties.setProperty(AvailableSettings.URL, readDbUrl);
+				connectionProviderProperties.setProperty("hibernate.c3p0.dataSourceName", DATASOURCE_TENANT_READONLY);
+				connectionProvider.registerConnectionProvider(DATASOURCE_TENANT_READONLY, connectionProviderProperties, true);
+			}
+
+			serviceProperties.put(AvailableSettings.MULTI_TENANT, MultiTenancyStrategy.DATABASE.name());
+			serviceProperties.put(AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER, connectionProvider);
+
+
+
+
+
+
+			serviceRegistry = new StandardServiceRegistryBuilder().applySettings(serviceProperties).build();
+
+			MetadataSources sources = new MetadataSources(serviceRegistry)
+				.addAnnotatedClass(Device.class)
+				.addAnnotatedClass(DeviceGroup.class).addAnnotatedClass(Config.class).addAnnotatedClass(DeviceAttribute.class)
+				.addAnnotatedClass(DeviceNumericAttribute.class).addAnnotatedClass(DeviceTextAttribute.class)
+				.addAnnotatedClass(DeviceLongTextAttribute.class).addAnnotatedClass(DeviceBinaryAttribute.class)
+				.addAnnotatedClass(ConfigAttribute.class).addAnnotatedClass(ConfigNumericAttribute.class)
+				.addAnnotatedClass(ConfigTextAttribute.class).addAnnotatedClass(ConfigLongTextAttribute.class)
+				.addAnnotatedClass(ConfigBinaryAttribute.class).addAnnotatedClass(ConfigBinaryFileAttribute.class)
+				.addAnnotatedClass(LongTextConfiguration.class).addAnnotatedClass(StaticDeviceGroup.class)
+				.addAnnotatedClass(DynamicDeviceGroup.class).addAnnotatedClass(Module.class).addAnnotatedClass(Domain.class)
+				.addAnnotatedClass(PhysicalAddress.class).addAnnotatedClass(NetworkAddress.class)
+				.addAnnotatedClass(Network4Address.class).addAnnotatedClass(Network6Address.class)
+				.addAnnotatedClass(NetworkInterface.class).addAnnotatedClass(DeviceSnmpv1Community.class)
+				.addAnnotatedClass(DeviceSnmpv2cCommunity.class).addAnnotatedClass(DeviceSnmpv3Community.class)
+				.addAnnotatedClass(DeviceSshAccount.class).addAnnotatedClass(DeviceSshKeyAccount.class)
+				.addAnnotatedClass(DeviceTelnetAccount.class).addAnnotatedClass(Policy.class).addAnnotatedClass(Rule.class)
+				.addAnnotatedClass(Task.class).addAnnotatedClass(DebugLog.class).addAnnotatedClass(Exemption.class)
+				.addAnnotatedClass(Exemption.Key.class).addAnnotatedClass(CheckResult.class)
+				.addAnnotatedClass(CheckResult.Key.class).addAnnotatedClass(SoftwareRule.class)
+				.addAnnotatedClass(HardwareRule.class).addAnnotatedClass(DeviceJsScript.class)
+				.addAnnotatedClass(Diagnostic.class).addAnnotatedClass(DiagnosticResult.class)
+				.addAnnotatedClass(DiagnosticBinaryResult.class).addAnnotatedClass(DiagnosticNumericResult.class)
+				.addAnnotatedClass(DiagnosticLongTextResult.class).addAnnotatedClass(DiagnosticTextResult.class)
+				.addAnnotatedClass(UiUser.class)
+				.addAnnotatedClass(ApiToken.class)
+				.addAnnotatedClass(Hook.class).addAnnotatedClass(WebHook.class).addAnnotatedClass(HookTrigger.class);
+			for (Class<?> clazz : Task.getTaskClasses()) {
+				logger.info("Registering task class " + clazz.getName());
+				sources.addAnnotatedClass(clazz);
+			}
+			for (Class<?> clazz : Rule.getRuleClasses()) {
+				sources.addAnnotatedClass(clazz);
+				for (Class<?> subClass : clazz.getClasses()) {
+					if (subClass.getAnnotation(Entity.class) != null) {
+						sources.addAnnotatedClass(subClass);
+					}
+				}
+			}
+			for (Class<?> clazz : Diagnostic.getDiagnosticClasses()) {
+				sources.addAnnotatedClass(clazz);
+			}
+
+
+			Metadata metadata = sources.getMetadataBuilder()
+				.applyImplicitNamingStrategy(new ImprovedImplicitNamingStrategy())
+				.applyPhysicalNamingStrategy(new ImprovedPhysicalNamingStrategy())
+				.build();
+
+
+			StandardPBEStringEncryptor credentialEncryptor = new StandardPBEStringEncryptor();
+			String cryptPassword = Netshot.getConfig("netshot.db.encryptionpassword", null);
+			if (cryptPassword == null) {
+				cryptPassword = Netshot.getConfig("netshot.db.encryptionPassword", "NETSHOT"); // Historical reasons
+			}
+			credentialEncryptor.setPassword(cryptPassword);
+			HibernatePBEEncryptorRegistry encryptorRegistry = HibernatePBEEncryptorRegistry.getInstance();
+			encryptorRegistry.registerPBEStringEncryptor("credentialEncryptor", credentialEncryptor);
+
+			SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
+			sessionFactoryBuilder.applyInterceptor(new DatabaseInterceptor());
+			sessionFactory = sessionFactoryBuilder.build();
+
+		}
+		catch (HibernateException e) {
+			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate Hibernate", e);
+			throw new RuntimeException("Unable to instantiate Hibernate, see logs for more details");
+		}
+	}
+
+
+	/**
 	 * Retrieve the configured driver class.
 	 * 
 	 * @return the configured driver class
@@ -225,6 +373,15 @@ public class Database {
 	 */
 	private static String getUrl() {
 		return Netshot.getConfig("netshot.db.url", "jdbc:postgresql://localhost:5432/netshot01?sslmode=disable");
+	}
+
+	/**
+	 * Retrieve the read-only DB URL.
+	 * 
+	 * @return the configured DB URL.
+	 */
+	private static String getReadUrl() {
+		return Netshot.getConfig("netshot.db.readurl");
 	}
 
 	/**
@@ -246,132 +403,24 @@ public class Database {
 	}
 
 	/**
-	 * Update the database schema (to be run at startup).
+	 * Gets the session.
+	 *
+	 * @return the session
+	 * @throws HibernateException the hibernate exception
 	 */
-	public static void update() {
-		try {
-			Class.forName("org.postgresql.Driver");
-			Connection connection = DriverManager.getConnection(getUrl(), getUsername(), getPassword());
-			liquibase.database.Database database = DatabaseFactory.getInstance()
-					.findCorrectDatabaseImplementation(new JdbcConnection(connection));
-			Liquibase liquibase = new Liquibase("migration/netshot0.xml", new ClassLoaderResourceAccessor(), database);
-			liquibase.update(new Contexts(), new LabelExpression());
-			connection.close();
-		}
-		catch (Exception e) {
-			logger.error(MarkerFactory.getMarker("FATAL"),
-					"Unable to connect to the database (for the initial schema update)", e);
-			throw new RuntimeException("Unable to connect to the database, see logs for more details");
-		}
-	}
-
-	/**
-	 * Initializes the database access, with Hibernate.
-	 */
-	public static void init() {
-		try {
-
-			configuration = new Configuration();
-			configuration
-					.setProperty("hibernate.connection.driver_class", getDriverClass())
-					.setProperty("hibernate.connection.url", getUrl())
-					.setProperty("hibernate.connection.username", getUsername())
-					.setProperty("hibernate.connection.password", getPassword())
-					.setProperty("hibernate.c3p0.min_size", "5")
-					.setProperty("hibernate.c3p0.dataSourceName", Database.DATASOURCE_NAME)
-					// Dates/times stored in UTC in the DB, without timezone, up to Java to convert to server local time
-					.setProperty("hibernate.jdbc.time_zone", "UTC")
-					.setProperty("hibernate.c3p0.max_size", "30")
-					.setProperty("hibernate.c3p0.timeout", "1800")
-					.setProperty("hibernate.c3p0.max_statements", "50")
-					.setProperty("hibernate.c3p0.unreturnedConnectionTimeout", "1800")
-					.setProperty("hibernate.c3p0.debugUnreturnedConnectionStackTraces", "true");
-
-			if ("org.postgresql.Driver".equals(getDriverClass())) {
-				configuration.setProperty("hibernate.dialect", "onl.netfishers.netshot.database.CustomPostgreSQLDialect");
-			}
-			else if ("com.mysql.cj.jdbc.Driver".equals(getDriverClass())) {
-				configuration.setProperty("hibernate.dialect", "onl.netfishers.netshot.database.CustomMySQLDialect");
-			}
-
-			StandardPBEStringEncryptor credentialEncryptor = new StandardPBEStringEncryptor();
-			String cryptPassword = Netshot.getConfig("netshot.db.encryptionpassword", null);
-			if (cryptPassword == null) {
-				cryptPassword = Netshot.getConfig("netshot.db.encryptionPassword", "NETSHOT"); // Historical reasons
-			}
-			credentialEncryptor.setPassword(cryptPassword);
-			HibernatePBEEncryptorRegistry encryptorRegistry = HibernatePBEEncryptorRegistry.getInstance();
-			encryptorRegistry.registerPBEStringEncryptor("credentialEncryptor", credentialEncryptor);
-
-			configuration.setProperty("factory_class", "org.hibernate.transaction.JDBCTransactionFactory")
-					.setProperty("current_session_context_class", "thread")
-					//.setProperty("hibernate.hbm2ddl.auto", "update") // "update" or "validate" or ""
-					//.setProperty("hibernate.show_sql", "true")
-					.addAnnotatedClass(Device.class)
-					.addAnnotatedClass(DeviceGroup.class).addAnnotatedClass(Config.class).addAnnotatedClass(DeviceAttribute.class)
-					.addAnnotatedClass(DeviceNumericAttribute.class).addAnnotatedClass(DeviceTextAttribute.class)
-					.addAnnotatedClass(DeviceLongTextAttribute.class).addAnnotatedClass(DeviceBinaryAttribute.class)
-					.addAnnotatedClass(ConfigAttribute.class).addAnnotatedClass(ConfigNumericAttribute.class)
-					.addAnnotatedClass(ConfigTextAttribute.class).addAnnotatedClass(ConfigLongTextAttribute.class)
-					.addAnnotatedClass(ConfigBinaryAttribute.class).addAnnotatedClass(ConfigBinaryFileAttribute.class)
-					.addAnnotatedClass(LongTextConfiguration.class).addAnnotatedClass(StaticDeviceGroup.class)
-					.addAnnotatedClass(DynamicDeviceGroup.class).addAnnotatedClass(Module.class).addAnnotatedClass(Domain.class)
-					.addAnnotatedClass(PhysicalAddress.class).addAnnotatedClass(NetworkAddress.class)
-					.addAnnotatedClass(Network4Address.class).addAnnotatedClass(Network6Address.class)
-					.addAnnotatedClass(NetworkInterface.class).addAnnotatedClass(DeviceSnmpv1Community.class)
-					.addAnnotatedClass(DeviceSnmpv2cCommunity.class).addAnnotatedClass(DeviceSnmpv3Community.class)
-					.addAnnotatedClass(DeviceSshAccount.class).addAnnotatedClass(DeviceSshKeyAccount.class)
-					.addAnnotatedClass(DeviceTelnetAccount.class).addAnnotatedClass(Policy.class).addAnnotatedClass(Rule.class)
-					.addAnnotatedClass(Task.class).addAnnotatedClass(DebugLog.class).addAnnotatedClass(Exemption.class)
-					.addAnnotatedClass(Exemption.Key.class).addAnnotatedClass(CheckResult.class)
-					.addAnnotatedClass(CheckResult.Key.class).addAnnotatedClass(SoftwareRule.class)
-					.addAnnotatedClass(HardwareRule.class).addAnnotatedClass(DeviceJsScript.class)
-					.addAnnotatedClass(Diagnostic.class).addAnnotatedClass(DiagnosticResult.class)
-					.addAnnotatedClass(DiagnosticBinaryResult.class).addAnnotatedClass(DiagnosticNumericResult.class)
-					.addAnnotatedClass(DiagnosticLongTextResult.class).addAnnotatedClass(DiagnosticTextResult.class)
-					.addAnnotatedClass(UiUser.class)
-					.addAnnotatedClass(ApiToken.class)
-					.addAnnotatedClass(Hook.class).addAnnotatedClass(WebHook.class).addAnnotatedClass(HookTrigger.class);
-
-			for (Class<?> clazz : Task.getTaskClasses()) {
-				logger.info("Registering task class " + clazz.getName());
-				configuration.addAnnotatedClass(clazz);
-			}
-			for (Class<?> clazz : Rule.getRuleClasses()) {
-				configuration.addAnnotatedClass(clazz);
-				for (Class<?> subClass : clazz.getClasses()) {
-					if (subClass.getAnnotation(Entity.class) != null) {
-						configuration.addAnnotatedClass(subClass);
-					}
-				}
-			}
-			for (Class<?> clazz : Diagnostic.getDiagnosticClasses()) {
-				configuration.addAnnotatedClass(clazz);
-			}
-
-			configuration.setImplicitNamingStrategy(new ImprovedImplicitNamingStrategy());
-			configuration.setPhysicalNamingStrategy(new ImprovedPhysicalNamingStrategy());
-			configuration.setInterceptor(new DatabaseInterceptor());
-
-			serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
-			sessionFactory = configuration.buildSessionFactory(serviceRegistry);
-
-		}
-		catch (HibernateException e) {
-			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate Hibernate", e);
-			throw new RuntimeException("Unable to instantiate Hibernate, see logs for more details");
-		}
+	public static Session getSession() throws HibernateException {
+		return getSession(false);
 	}
 
 	/**
 	 * Gets the session.
 	 *
 	 * @return the session
-	 * @throws HibernateException
-	 *                              the hibernate exception
+	 * @throws HibernateException the hibernate exception
 	 */
-	public static Session getSession() throws HibernateException {
-		return sessionFactory.openSession();
+	public static Session getSession(boolean readOnly) throws HibernateException {
+		return sessionFactory.withOptions().tenantIdentifier(
+			readOnly ? Database.DATASOURCE_TENANT_READONLY : Database.DATASOURCE_TENANT_READWRITE).openSession();
 	}
 
 	/**
@@ -381,7 +430,7 @@ public class Database {
 	 * @throws SQLException
 	 */
 	public static Connection getConnection() throws SQLException {
-		final DataSource dataSource = C3P0Registry.pooledDataSourceByName(Database.DATASOURCE_NAME);
+		final DataSource dataSource = C3P0Registry.pooledDataSourceByName(Database.DATASOURCE_TENANT_READWRITE);
 		return dataSource.getConnection();
 	}
 
@@ -396,8 +445,7 @@ public class Database {
 		if (pooled) {
 			return Database.getConnection();
 		}
-		Connection connection = DriverManager.getConnection(getUrl(), getUsername(), getPassword());
-		return connection;
+		return DriverManager.getConnection(getUrl(), getUsername(), getPassword());
 	} 
 
 	/**

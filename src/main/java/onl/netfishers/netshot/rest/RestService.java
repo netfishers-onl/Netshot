@@ -423,7 +423,7 @@ public class RestService extends Thread {
 	)
 	public List<RsDomain> getDomains() throws WebApplicationException {
 		logger.debug("REST request, domains.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		List<Domain> domains;
 		try {
 			domains = session.createQuery("select d from Domain d", Domain.class).list();
@@ -775,7 +775,7 @@ public class RestService extends Thread {
 	public List<NetworkInterface> getDeviceInterfaces(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} interfaces.", id);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<NetworkInterface> deviceInterfaces;
 			deviceInterfaces = session
@@ -817,7 +817,7 @@ public class RestService extends Thread {
 	public List<Module> getDeviceModules(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} modules.", id);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<Module> deviceModules = session
 					.createQuery("from Module m where m.device.id = :device", Module.class)
@@ -858,7 +858,7 @@ public class RestService extends Thread {
 			throw new NetshotBadRequestException("Invalid max parameter",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
 		}
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<Task> tasks = new ArrayList<>();
 			tasks.addAll(session.createQuery(
@@ -959,7 +959,7 @@ public class RestService extends Thread {
 	public List<Config> getDeviceConfigs(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} configs.", id);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			session.enableFilter("lightAttributesOnly");
 			List<Config> deviceConfigs = session
@@ -997,7 +997,7 @@ public class RestService extends Thread {
 	public Response getDeviceConfigPlain(@PathParam("id") Long id,
 			@PathParam("item") String item) throws WebApplicationException {
 		logger.debug("REST request, get device {} config {}.", id, item);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			Config config = (Config) session.get(Config.class, id);
 			if (config == null) {
@@ -1300,7 +1300,7 @@ public class RestService extends Thread {
 		logger.debug("REST request, get device config diff, id {} and {}.", id1,
 				id2);
 		RsConfigDiff configDiffs;
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		Config config1;
 		Config config2;
 		try {
@@ -1390,7 +1390,7 @@ public class RestService extends Thread {
 	public Device getDevice(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, device {}.", id);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		Device device;
 		try {
 			device = (Device) session
@@ -1560,7 +1560,7 @@ public class RestService extends Thread {
 	)
 	public List<RsLightDevice> getDevices() throws WebApplicationException {
 		logger.debug("REST request, devices.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsLightDevice> devices = session.createQuery(DEVICELIST_BASEQUERY + "from Device d")
@@ -1668,7 +1668,7 @@ public class RestService extends Thread {
 	)
 	public List<RsDeviceFamily> getDeviceFamilies() throws WebApplicationException {
 		logger.debug("REST request, device families.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsDeviceFamily> deviceFamilies = session
@@ -1719,8 +1719,8 @@ public class RestService extends Thread {
 		description = "Returns the list of all known part numbers currently existing in the module table."
 	)
 	public List<RsPartNumber> getPartNumbers() throws WebApplicationException {
-		logger.debug("REST request, dpart numbers.");
-		Session session = Database.getSession();
+		logger.debug("REST request, part numbers.");
+		Session session = Database.getSession(true);
 		try {
 			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsPartNumber> partNumbers = session
@@ -2728,7 +2728,7 @@ public class RestService extends Thread {
 	)
 	public Task getTask(@PathParam("id") Long id) {
 		logger.debug("REST request, get task {}", id);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		Task task;
 		try {
 			task = (Task) session.get(Task.class, id);
@@ -2768,7 +2768,7 @@ public class RestService extends Thread {
 	)
 	public Response getTaskDebugLog(@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get task {} debug log.", id);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		Task task;
 		try {
 			task = (Task) session.get(Task.class, id);
@@ -2811,7 +2811,7 @@ public class RestService extends Thread {
 	)
 	public List<Task> getTasks(@PathParam("max") @DefaultValue("1000") Integer maxCount) {
 		logger.debug("REST request, get tasks.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<Task> tasks = session
 				.createQuery("from Task t order by t.id desc", Task.class)
@@ -2847,7 +2847,7 @@ public class RestService extends Thread {
 	public List<DeviceCredentialSet> getCredentialSets()
 			throws WebApplicationException {
 		logger.debug("REST request, get credentials.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		List<DeviceCredentialSet> credentialSets;
 		try {
 			credentialSets = session
@@ -3329,7 +3329,7 @@ public class RestService extends Thread {
 	)
 	public List<DeviceGroup> getGroups() throws WebApplicationException {
 		logger.debug("REST request, get groups.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<DeviceGroup> deviceGroups =
 					session.createQuery("select g from DeviceGroup g", DeviceGroup.class).list();
@@ -3642,7 +3642,7 @@ public class RestService extends Thread {
 	public List<RsLightDevice> getGroupDevices(@PathParam("id") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, get devices from group {}.", id);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		DeviceGroup group;
 		try {
 			group = (DeviceGroup) session.get(DeviceGroup.class, id);
@@ -4200,7 +4200,7 @@ public class RestService extends Thread {
 
 		logger.debug("REST request, search for tasks.");
 
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			StringBuilder hqlQuery = new StringBuilder("select t from Task t where (1 = 1)");
 			Map<String, Object> hqlParams = new HashMap<>();
@@ -4918,7 +4918,7 @@ public class RestService extends Thread {
 	)
 	public List<RsConfigChange> getChanges(RsChangeCriteria criteria) throws WebApplicationException {
 		logger.debug("REST request, config changes.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsConfigChange> changes = session
@@ -4957,7 +4957,7 @@ public class RestService extends Thread {
 	)
 	public List<Policy> getPolicies() throws WebApplicationException {
 		logger.debug("REST request, get policies.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<Policy> policies = session
 				.createQuery("from Policy p left join fetch p.targetGroup", Policy.class)
@@ -4992,7 +4992,7 @@ public class RestService extends Thread {
 	)
 	public List<Rule> getPolicyRules(@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get rules for policy {}.", id);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			Policy policy = (Policy) session.load(Policy.class, id);
 			if (policy == null) {
@@ -5900,7 +5900,7 @@ public class RestService extends Thread {
 	public RsRuleTestResult testRule(RsRuleTest rsRule) throws WebApplicationException {
 		logger.debug("REST request, rule test.");
 		Device device;
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			device = (Device) session
 					.createQuery("from Device d join fetch d.lastConfig where d.id = :id")
@@ -6043,7 +6043,7 @@ public class RestService extends Thread {
 	)
 	public List<RsLightExemptedDevice> getExemptedDevices(@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get exemptions for rule {}.", id);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsLightExemptedDevice> exemptions = session
@@ -6245,7 +6245,7 @@ public class RestService extends Thread {
 	)
 	public List<RsDeviceRule> getDeviceComplianceResults(@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get compliance results for device {}.", id);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsDeviceRule> rules = session.createQuery(
@@ -6343,7 +6343,7 @@ public class RestService extends Thread {
 	)
 	public List<RsConfigChangeNumberByDateStat> getLast7DaysChangesByDayStats(@QueryParam("tz") String jsTimeZone) throws WebApplicationException {
 		logger.debug("REST request, get last 7 day changes by day stats.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 
 		TimeZone timeZone = TimeZone.getDefault();
 		try {
@@ -6519,7 +6519,7 @@ public class RestService extends Thread {
 	public List<RsGroupConfigComplianceStat> getGroupConfigComplianceStats(@QueryParam("domain") Set<Long> domains,
 			@QueryParam("group") Set<Long> deviceGroups, @QueryParam("policy") Set<Long> policies) throws WebApplicationException {
 		logger.debug("REST request, group config compliance stats.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			String domainFilter = "";
 			if (domains.size() > 0) {
@@ -6613,7 +6613,7 @@ public class RestService extends Thread {
 	)
 	public List<RsHardwareSupportStat> getHardwareSupportStats() throws WebApplicationException {
 		logger.debug("REST request, hardware support stats.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsHardwareSupportStat> eosStats = session
@@ -6799,7 +6799,7 @@ public class RestService extends Thread {
 	)
 	public List<RsGroupSoftwareComplianceStat> getGroupSoftwareComplianceStats(@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, group software compliance stats.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			String domainFilter = "";
 			if (domains.size() > 0) {
@@ -6958,7 +6958,7 @@ public class RestService extends Thread {
 			@QueryParam("result") Set<CheckResult.ResultOption> results) throws WebApplicationException {
 
 		logger.debug("REST request, config compliant device statuses.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			String hqlQuery = "";
 			hqlQuery += DEVICELIST_BASEQUERY;
@@ -7027,7 +7027,7 @@ public class RestService extends Thread {
 	public List<RsLightPolicyRuleDevice> getGroupConfigNonCompliantDevices(@PathParam("id") Long id,
 			@QueryParam("domain") Set<Long> domains, @QueryParam("policy") Set<Long> policies) throws WebApplicationException {
 		logger.debug("REST request, group config non compliant devices.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			String domainFilter = "";
 			if (domains.size() > 0) {
@@ -7084,7 +7084,7 @@ public class RestService extends Thread {
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		Date eoxDate = new Date(date);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			if (date == 0) {
 				@SuppressWarnings({ "deprecation", "unchecked" })
@@ -7133,7 +7133,7 @@ public class RestService extends Thread {
 	)
 	public List<HardwareRule> getHardwareRules() throws WebApplicationException {
 		logger.debug("REST request, hardware rules.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<HardwareRule> rules = session
 				.createQuery("from HardwareRule r left join fetch r.targetGroup g", HardwareRule.class)
@@ -7461,7 +7461,7 @@ public class RestService extends Thread {
 	)
 	public List<SoftwareRule> getSoftwareRules() throws WebApplicationException {
 		logger.debug("REST request, software rules.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<SoftwareRule> rules = session
 				.createQuery("from SoftwareRule r left join fetch r.targetGroup g", SoftwareRule.class)
@@ -7911,7 +7911,7 @@ public class RestService extends Thread {
 	public List<RsLightSoftwareLevelDevice> getGroupDevicesBySoftwareLevel(@PathParam("id") Long id, @PathParam("level") String level,
 			@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
 		logger.debug("REST request, group {} devices by software level {}.", id, level);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 
 		ConformanceLevel filterLevel = ConformanceLevel.UNKNOWN;
 		for (ConformanceLevel l : ConformanceLevel.values()) {
@@ -7999,7 +7999,7 @@ public class RestService extends Thread {
 			days = 3;
 		}
 		
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 
 		try {
 			Calendar when = Calendar.getInstance();
@@ -8332,7 +8332,7 @@ public class RestService extends Thread {
 	)
 	public List<UiUser> getUsers() throws WebApplicationException {
 		logger.debug("REST request, get user list.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<UiUser> users = session.createQuery("from onl.netfishers.netshot.aaa.UiUser", UiUser.class).list();
 			return users;
@@ -8828,7 +8828,7 @@ public class RestService extends Thread {
 	)
 	public List<ApiToken> getApiTokens() throws WebApplicationException {
 		logger.debug("REST request, get API token list.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<ApiToken> apiTokens = session.createQuery("from ApiToken", ApiToken.class).list();
 			return apiTokens;
@@ -8913,7 +8913,7 @@ public class RestService extends Thread {
 		if (fileFormat.compareToIgnoreCase("xlsx") == 0) {
 			String fileName = String.format("netshot-export_%s.xlsx", (new SimpleDateFormat("yyyyMMdd-HHmmss")).format(new Date()));
 
-			Session session = Database.getSession();
+			Session session = Database.getSession(true);
 			try {
 				Workbook workBook = new SXSSFWorkbook(100);
 				Row row;
@@ -9594,7 +9594,7 @@ public class RestService extends Thread {
 	)
 	public DeviceJsScript getScript(@PathParam("id") Long id) {
 		logger.debug("REST request, get script {}", id);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			DeviceJsScript script = (DeviceJsScript) session.get(DeviceJsScript.class, id);
 			return script;
@@ -9625,7 +9625,7 @@ public class RestService extends Thread {
 	)
 	public List<DeviceJsScript> getScripts() {
 		logger.debug("REST request, get scripts.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<DeviceJsScript> scripts =
 					session.createQuery("from DeviceJsScript s", DeviceJsScript.class).list();
@@ -9919,7 +9919,7 @@ public class RestService extends Thread {
 	)
 	public List<Diagnostic> getDiagnostics() throws WebApplicationException {
 		logger.debug("REST request, get diagnotics.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<Diagnostic> diagnostics =
 					session.createQuery("select d from Diagnostic d left join fetch d.targetGroup", Diagnostic.class)
@@ -10252,7 +10252,7 @@ public class RestService extends Thread {
 	)
 	public List<DiagnosticResult> getDeviceDiagnosticResults(@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get diagnostic results for device {}.", id);
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<DiagnosticResult> results = session
 				.createQuery("from DiagnosticResult dr where dr.device.id = :id", DiagnosticResult.class)
@@ -10287,7 +10287,7 @@ public class RestService extends Thread {
 	)
 	public List<Hook> getHooks() throws WebApplicationException {
 		logger.debug("REST request, hooks.");
-		Session session = Database.getSession();
+		Session session = Database.getSession(true);
 		try {
 			List<Hook> hooks = session.createQuery("select h from Hook h left join fetch h.triggers", Hook.class).list();
 			return hooks;

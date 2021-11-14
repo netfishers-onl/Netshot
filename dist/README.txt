@@ -12,6 +12,14 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.16.4 - 2021-11-14
+
+* Minor UI improvements or fixes
+* GraalVM 20.3.0
+* Fix on purge job
+* Gigamon and FortiGate driver updates
+
+
 0.16.3 - 2021-07-25
 
 * React to HUP signal to reload logging and authentication configuration

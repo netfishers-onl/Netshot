@@ -1,0 +1,41 @@
+<tr>
+	<td><%- instanceId %></td>
+	<td class="checkcolumn">
+		<% if (local) { %>
+		<span class="ui-corner-all" title="Local instance">
+			<span class="ui-icon nsicon ui-icon-circle-check"></span>
+		</span>
+		<% } else { %>
+		<span class="ui-corner-all" title="Remote instance">
+			<span class="ui-icon nsicon ui-icon-radio-off"></span>
+		</span>
+		<% } %>
+	</td>
+	<td><%- hostname %></td>
+	<td>
+		<% if (status === "MASTER") { %>
+			<span class="ui-icon nsicon ui-icon-flag" />
+		<% } else if (status === "NEGOTIATING") { %>
+			<span class="ui-icon nsicon ui-icon-arrow-2-e-w" />
+		<% } else if (status === "MEMBER") { %>
+			<span class="ui-icon nsicon ui-icon-link" />
+		<% } else if (status === "EXPIRED") { %>
+			<span class="ui-icon nsicon ui-icon-link-broken" />
+		<% } %>
+		<span><%- status %></span>
+	</td>
+	<td>
+		<span class="ui-corner-all" title="Master Prio./Runner Prio./Runner Weight">
+			<%- masterPriority %>/<%- runnerPriority %>/<%- runnerWeight %>
+		</span>
+	</td>
+	<td><%- appVersion %></td>
+	<td><%- driverHash.substring(0, 8) %></td>
+	<td>
+		<% if (lastSeenTime == 0) { %>
+			-
+		<% } else { %>
+			<%- formatDateTime(lastSeenTime) %>
+		<% } %>
+	</td>
+</tr>

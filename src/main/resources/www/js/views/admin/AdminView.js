@@ -10,6 +10,7 @@ define([
 	'models/user/ApiTokenCollection',
 	'models/device/DeviceTypeCollection',
 	'models/hook/HookCollection',
+	'models/cluster/ClusterMemberCollection',
 	'views/admin/AddDomainDialog',
 	'views/admin/EditDomainDialog',
 	'views/admin/DeleteDomainDialog',
@@ -32,9 +33,10 @@ define([
 	'text!templates/admin/apiToken.html',
 	'text!templates/admin/driver.html',
 	'text!templates/admin/webHook.html',
+	'text!templates/admin/clusterMember.html',
 ], function($, _, Backbone, TableSort,
 		DomainCollection, CredentialSetCollection, UserCollection, ApiTokenCollection,
-		DeviceTypeCollection, HookCollection,
+		DeviceTypeCollection, HookCollection, ClusterMemberCollection,
 		AddDomainDialog, EditDomainDialog, DeleteDomainDialog,
 		AddCredentialSetDialog, EditCredentialSetDialog, DeleteCredentialSetDialog,
 		AddUserDialog, EditUserDialog, DeleteUserDialog,
@@ -42,7 +44,7 @@ define([
 		AddWebHookDialog, EditWebHookDialog, DeleteWebHookDialog,
 		adminTemplate, adminToolbarTemplate, domainRowTemplate,
 		credentialsRowTemplate, userRowTemplate, apiTokenRowTemplate, driverRowTemplate,
-		webHookRowTemplate) {
+		webHookRowTemplate, clusterMemberTemplate) {
 
 	makeLoadProgress(13);
 
@@ -57,6 +59,7 @@ define([
 		apiTokenTemplate: _.template(apiTokenRowTemplate),
 		driverTemplate: _.template(driverRowTemplate),
 		webHookTemplate: _.template(webHookRowTemplate),
+		clusterMemberTemplate: _.template(clusterMemberTemplate),
 
 		domains: new DomainCollection([]),
 		credentialSets: new CredentialSetCollection([]),
@@ -64,6 +67,7 @@ define([
 		apiTokens: new ApiTokenCollection([]),
 		drivers: new DeviceTypeCollection([]),
 		hooks: new HookCollection([]),
+		clusterMembers: new ClusterMemberCollection([]),
 
 		initialize: function() {
 			var that = this;
@@ -82,6 +86,7 @@ define([
 			this.refreshDrivers();
 			this.refreshApiTokens();
 			this.refreshHooks();
+			this.refreshClusterMembers();
 
 			this.$('#nsadmin-adduser').button({
 				'icons': {
@@ -158,6 +163,15 @@ define([
 					}
 				});
 				return false;
+			});
+
+			$('#nsadmin-refreshclusterinfo').button({
+				'icons': {
+					'primary': "ui-icon-refresh"
+				},
+			}).off('click').on('click', function() {
+				$(this).button("disable");
+				that.refreshClusterMembers();
 			});
 
 			return this;
@@ -384,6 +398,20 @@ define([
 				new TableSort($table.parent().get(0));
 			});
 		},
+
+		refreshClusterMembers: function() {
+			var that = this;
+			this.clusterMembers.reset();
+			this.clusterMembers.fetch().done(function() {
+				var $table = that.$el.find('#nsadmin-clustermembers table tbody');
+				$table.empty();
+				that.clusterMembers.each(function(member) {
+					$(that.clusterMemberTemplate(member.toJSON())).appendTo($table);
+				});
+				new TableSort($table.parent().get(0));
+				$('#nsadmin-refreshclusterinfo').button("enable");
+			});
+		}
 
 	});
 });

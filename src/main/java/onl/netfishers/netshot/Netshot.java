@@ -18,8 +18,11 @@
  */
 package onl.netfishers.netshot;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.Provider;
 import java.security.Security;
 import java.util.Enumeration;
@@ -27,6 +30,12 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +55,7 @@ import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.util.FileSize;
 import onl.netfishers.netshot.aaa.Radius;
 import onl.netfishers.netshot.aaa.Tacacs;
+import onl.netfishers.netshot.cluster.ClusterManager;
 import onl.netfishers.netshot.collector.SnmpTrapReceiver;
 import onl.netfishers.netshot.collector.SyslogServer;
 import onl.netfishers.netshot.database.Database;
@@ -73,6 +83,30 @@ public class Netshot extends Thread {
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(Netshot.class);
 	final static public Logger aaaLogger = LoggerFactory.getLogger("AAA");
+
+	/** The machine hostname */
+	private static String hostname = null;
+
+	/**
+	 * Retrieve the local machine hostname;
+	 * @return the local machine hostname
+	 */
+	public static String getHostname() {
+		if (Netshot.hostname == null) {
+			try {
+				Process process = Runtime.getRuntime().exec("hostname");
+				BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+				Netshot.hostname = stdInput.readLine();
+			}
+			catch (IOException e) {
+				logger.error("Error while getting local machine hostname", e);
+			}
+			if (Netshot.hostname == null) {
+				Netshot.hostname = "unknown";
+			}
+		}
+		return Netshot.hostname;
+	}
 
 	/**
 	 * Gets the config.
@@ -135,13 +169,22 @@ public class Netshot extends Thread {
 	}
 
 	/**
-	 * Read the application configuration from the files.
+	 * Read the application configuration from default files.
 	 *
 	 * @return true, if successful
 	 */
 	protected static boolean initConfig() {
+		return initConfig(Netshot.CONFIG_FILENAMES);
+	}
+
+	/**
+	 * Read the application configuration from the files.
+	 *
+	 * @return true, if successful
+	 */
+	protected static boolean initConfig(String[] filenames) {
 		config = new Properties();
-		for (String fileName : CONFIG_FILENAMES) {
+		for (String fileName : filenames) {
 			try {
 				logger.trace("Trying to load the configuration file {}.", fileName);
 				InputStream fileStream = new FileInputStream(fileName);
@@ -440,11 +483,42 @@ public class Netshot extends Thread {
 	 * @param args the arguments
 	 */
 	public static void main(String[] args) {
-		System.out.println(String.format("Starting Netshot version %s.",
-				Netshot.VERSION));
+		Options options = new Options();
+		options.addOption("h", "help", false, "print this help and exit");
+		options.addOption("c", "config", true, "path to configuration file");
+		options.addOption("v", "version", false, "print the current version and exit");
+		CommandLineParser parser = new DefaultParser();
+		CommandLine commandLine;
+		try {
+			commandLine = parser.parse(options, args);
+		}
+		catch (ParseException e) {
+			System.err.println("Error while parsing arguments. " + e.getMessage());
+			System.exit(1);
+			return;
+		}
+
+		if (commandLine.hasOption("h")) {
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp("netshot", options);
+			return;
+		}
+
+		if (commandLine.hasOption("v")) {
+			System.out.println(String.format("Netshot version %s", Netshot.VERSION));
+			return;
+		}
+
+		System.out.println(String.format("Starting Netshot version %s.", Netshot.VERSION));
 		logger.info("Starting Netshot");
 
-		if (!Netshot.initConfig()) {
+		String[] configFileNames = Netshot.CONFIG_FILENAMES;
+		String configFilename = commandLine.getOptionValue("c");
+		if (configFilename != null) {
+			configFileNames = new String[] { configFilename };
+		}
+
+		if (!Netshot.initConfig(configFileNames)) {
 			System.exit(1);
 		}
 		if (!Netshot.initMainLogging() || !Netshot.initAuditLogging() || !Netshot.initSyslogLogging()) {
@@ -459,8 +533,6 @@ public class Netshot extends Thread {
 			for (Provider p : Security.getProviders()) {
 				logger.debug("Security provider {} is registered", p.getName());
 			}
-			logger.info("Initializing the task manager.");
-			TaskManager.init();
 			logger.info("Updating the database schema, if necessary.");
 			Database.update();
 			logger.info("Initializing access to the database.");
@@ -473,6 +545,12 @@ public class Netshot extends Thread {
 			SyslogServer.init();
 			logger.info("Starting the SNMP v1/v2c trap receiver.");
 			SnmpTrapReceiver.init();
+
+			logger.info("Starting the clustering manager.");
+			ClusterManager.init();
+
+			logger.info("Initializing the task manager.");
+			TaskManager.init();
 			logger.info("Starting the REST service.");
 			RestService.init();
 			logger.info("Scheduling the existing tasks.");

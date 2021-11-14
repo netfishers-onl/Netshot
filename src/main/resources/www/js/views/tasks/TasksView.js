@@ -114,7 +114,7 @@ define([
 			});
 			this.$('#scheduled').button({
 				icons: {
-					primary: "ui-icon-clock"
+					primary: "ui-icon-calendar"
 				}
 			});
 			this.$('#cancelled').button({

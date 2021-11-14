@@ -260,4 +260,14 @@ public class RunDiagnosticsTask extends Task {
 		return new JobKey(String.format("Task_%d", this.getId()), 
 				String.format("RunDevice_%d", this.getDevice().getId()));
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see onl.netfishers.netshot.work.Task#getRunnerHash()
+	 */
+	@Override
+	@Transient
+	public long getRunnerHash() {
+		return this.getDeviceId();
+	}
 }

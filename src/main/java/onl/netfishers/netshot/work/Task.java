@@ -103,7 +103,7 @@ public abstract class Task implements Cloneable {
 		SUCCESS,
 
 		/** The task is waiting. */
-		WAITING
+		WAITING,
 	}
 
 	/** The logger. */
@@ -180,6 +180,9 @@ public abstract class Task implements Cloneable {
 
 	/** DB version field. */
 	private int version;
+
+	/** Runner ID (clustering mode) */
+	private String runnerId;
 
 	/**
 	 * Instantiates a new task.
@@ -450,6 +453,16 @@ public abstract class Task implements Cloneable {
 		return version;
 	}
 
+	/**
+	 * Gets the runner ID.
+	 *
+	 * @return the runner ID
+	 */
+	@XmlElement @JsonView(DefaultView.class)
+	public String getRunnerId() {
+		return runnerId;
+	}
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -571,6 +584,17 @@ public abstract class Task implements Cloneable {
 	 * Run.
 	 */
 	public abstract void run();
+
+	/**
+	 * This can return a hash for the task to select a stable runner.
+	 * This is used to run all the tasks related to the same device
+	 * on the same cluter runner.
+	 * @return the hash or null
+	 */
+	@Transient
+	public long getRunnerHash() {
+		return 0;
+	}
 
 	/**
 	 * Schedule the task.
@@ -715,6 +739,13 @@ public abstract class Task implements Cloneable {
 	}
 
 	/**
+	 * Sets the task as waiting.
+	 */
+	public void setWaiting() {
+		this.status = Status.WAITING;
+	}
+
+	/**
 	 * Sets the schedule reference.
 	 *
 	 * @param scheduleReference the new schedule reference
@@ -765,6 +796,15 @@ public abstract class Task implements Cloneable {
 	 */
 	public void setVersion(int version) {
 		this.version = version;
+	}
+
+	/**
+	 * Sets the runner ID.
+	 *
+	 * @param runnerId the new runner ID
+	 */
+	public void setRunnerId(String runnerId) {
+		this.runnerId = runnerId;
 	}
 
 	@Override

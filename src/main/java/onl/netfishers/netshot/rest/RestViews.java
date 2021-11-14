@@ -12,4 +12,7 @@ public class RestViews {
 
 	// View for hook objects
 	public static class HookView extends DefaultView {};
+
+	// Clustering view
+	public static class ClusteringView extends DefaultView {};
 }

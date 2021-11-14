@@ -70,6 +70,7 @@ public class TaskJob implements Job {
 				logger.error("The retrieved task {} is null.", id);
 			}
 			task.setRunning();
+			logger.trace("The task runner ID for {} is {}", task.getId(), task.getRunnerId());
 			session.update(task);
 			session.getTransaction().commit();
 			logger.trace("Got the task.");

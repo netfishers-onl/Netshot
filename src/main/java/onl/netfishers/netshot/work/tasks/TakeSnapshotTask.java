@@ -456,4 +456,14 @@ public class TakeSnapshotTask extends Task {
 				String.format("RunDevice_%d", this.getDevice().getId()));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see onl.netfishers.netshot.work.Task#getRunnerHash()
+	 */
+	@Override
+	@Transient
+	public long getRunnerHash() {
+		return this.getDeviceId();
+	}
+
 }

@@ -200,7 +200,7 @@ public class RestService extends Thread {
 	 * The HQL select query for "light" devices, to be prepended to the actual
 	 * query.
 	 */
-	private static final String DEVICELIST_BASEQUERY = "select d.id as id, d.name as name, d.family as family, d.mgmtAddress as mgmtAddress, d.status as status ";
+	private static final String DEVICELIST_BASEQUERY = "select distinct d.id as id, d.name as name, d.family as family, d.mgmtAddress as mgmtAddress, d.status as status ";
 
 	/** The logger. */
 	static Logger logger = LoggerFactory.getLogger(RestService.class);

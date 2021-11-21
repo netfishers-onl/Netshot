@@ -64,7 +64,7 @@ public class PythonFileSystem implements FileSystem {
 	}
 
 	private void verifyAccess(Path path, String reason) {
-		logger.debug("Checking permission for path {}", path);
+		logger.debug("Checking permission ({}) for path {}", reason, path);
 		Path realPath = null;
 		for (Path c = path; c != null; c = c.getParent()) {
 			try {
@@ -74,8 +74,9 @@ public class PythonFileSystem implements FileSystem {
 			catch (IOException ioe) {
 			}
 		}
-		if (realPath == null || !(realPath.startsWith(libFolder) || (venvFolder != null && realPath.startsWith(venvFolder)))) {
-			logger.info("Access ({}) to {} is denied", reason, path);
+		if (realPath == null || !(realPath.startsWith(libFolder) || (venvFolder != null && realPath.startsWith(venvFolder)) ||
+				(realPath.startsWith("/proc/")))) {
+			logger.info("Access ({}) to {} [{}] is denied", reason, path, realPath);
 			throw new SecurityException("Access to " + path + " is denied.");
 		}
 	}
@@ -145,7 +146,6 @@ public class PythonFileSystem implements FileSystem {
 
 	@Override
 	public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
-		verifyAccess(path, "readAttributes");
 		return delegate.readAttributes(path, attributes, options);
 	}
 }

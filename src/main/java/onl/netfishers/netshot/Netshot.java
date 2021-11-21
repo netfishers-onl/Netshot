@@ -217,7 +217,6 @@ public class Netshot extends Thread {
 			logger.info("Switching to file logging, into {}, level {}, rotation using {} files of max {}MB.",
 					logFile, logLevel, logCount, logMaxSize);
 
-			loggerContext.reset();
 			try {
 				RollingFileAppender<ILoggingEvent> rfAppender = new RollingFileAppender<>();
 				rfAppender.setContext(loggerContext);
@@ -247,6 +246,7 @@ public class Netshot extends Thread {
 			}
 		}
 
+		loggerContext.reset();
 		rootLogger.setLevel(logLevel);
 		PatternLayoutEncoder encoder = new PatternLayoutEncoder();
 		encoder.setContext(loggerContext);

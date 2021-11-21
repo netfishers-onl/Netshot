@@ -5888,7 +5888,8 @@ public class RestService extends Thread {
 		try {
 			device = (Device) session
 					.createQuery("from Device d join fetch d.lastConfig where d.id = :id")
-					.setParameter("id", rsRule.getDevice()).uniqueResult();
+					.setParameter("id", rsRule.getDevice())
+					.uniqueResult();
 			if (device == null) {
 				logger.warn("Unable to find the device {}.", rsRule.getDevice());
 				throw new NetshotBadRequestException("Unable to find the device.",

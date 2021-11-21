@@ -67,7 +67,11 @@ public class JavaScriptRule extends Rule {
 		CheckResult.ResultOption.NOTAPPLICABLE,
 	};
 	
+	/** Rule loader JavaScript source */
 	private static Source JSLOADER_SOURCE;
+
+	/** The Python execution engine (for eval caching) */
+	private static Engine engine = Engine.create();
 	
 	static {
 		try {
@@ -95,9 +99,6 @@ public class JavaScriptRule extends Rule {
 			System.exit(1);
 		}
 	}
-
-	/** The JS execution engine (for eval caching) */
-	private Engine engine;
 
 	/** The prepared. */
 	private boolean prepared = false;
@@ -157,10 +158,13 @@ public class JavaScriptRule extends Rule {
 
 	@Transient
 	public Context getContext() {
-		Context context = Context.newBuilder()
-			.engine(this.engine).allowExperimentalOptions(true)
-			.option("js.experimental-foreign-object-prototype", "true")
-			.build();
+		Context context;
+		synchronized (engine) {
+			context = Context.newBuilder()
+				.engine(engine).allowExperimentalOptions(true)
+				.option("js.experimental-foreign-object-prototype", "true")
+				.build();
+		}
 		context.eval("js", this.script);
 		context.eval(JSLOADER_SOURCE);
 		return context;
@@ -169,15 +173,14 @@ public class JavaScriptRule extends Rule {
 	/**
 	 * Prepare.
 	 */
-	private void prepare(TaskLogger taskLogger) {
+	private void prepare(Context context, TaskLogger taskLogger) {
 		if (prepared) {
 			return;
 		}
 		prepared = true;
-		this.engine = Engine.create();
 		jsValid = false;
 		
-		try (Context context = getContext()) {
+		try {
 			Value checkFunction = context.getBindings("js").getMember("check");
 			if (checkFunction == null || !checkFunction.canExecute()) {
 				logger.warn("The check function wasn't found in the script");
@@ -203,17 +206,17 @@ public class JavaScriptRule extends Rule {
 			this.setCheckResult(device, ResultOption.DISABLED, "", session);
 			return;
 		}
-		prepare(taskLogger);
-		if (!this.jsValid) {
-			this.setCheckResult(device, ResultOption.INVALIDRULE, "", session);
-			return;
-		}
-		if (device.isExempted(this)) {
-			this.setCheckResult(device, ResultOption.EXEMPTED, "", session);
-			return;
-		}
 
 		try (Context context = this.getContext()) {
+			prepare(context, taskLogger);
+			if (!this.jsValid) {
+				this.setCheckResult(device, ResultOption.INVALIDRULE, "", session);
+				return;
+			}
+			if (device.isExempted(this)) {
+				this.setCheckResult(device, ResultOption.EXEMPTED, "", session);
+				return;
+			}
 			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, null, session, taskLogger, true);
 			Value result = context.getBindings("js").getMember("_check").execute(deviceHelper);
 			String txtResult = null;

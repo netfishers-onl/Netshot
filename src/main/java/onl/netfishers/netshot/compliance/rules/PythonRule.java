@@ -22,6 +22,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -67,7 +74,23 @@ public class PythonRule extends Rule {
 			CheckResult.ResultOption.CONFORMING, CheckResult.ResultOption.NONCONFORMING,
 			CheckResult.ResultOption.NOTAPPLICABLE, };
 
+	/** Rule loader Python source. */
 	private static Source PYLOADER_SOURCE;
+
+	public static class CachedContext {
+		private Context context;
+		private long scriptHash;
+		public CachedContext(Context context, long scriptHash) {
+			this.context = context;
+			this.scriptHash = scriptHash;
+		}
+	}
+
+	/** Cached contexts, indexed by rule ID. */
+	private static Map<Long, CachedContext> cachedContexts = new HashMap<>();
+
+	/** Old cached contexts, to be closed. */
+	private static List<CachedContext> oldCachedContexts = new ArrayList<>();
 
 	/** The Python execution engine (for eval caching) */
 	private static Engine engine = Engine.create();
@@ -85,7 +108,7 @@ public class PythonRule extends Rule {
 				buffer.append(line);
 				buffer.append("\n");
 			}
-			PYLOADER_SOURCE = Source.create("python", buffer.toString());
+			PYLOADER_SOURCE = Source.newBuilder("python", buffer.toString(), "PythonRuleLoader").buildLiteral();
 			reader.close();
 			in.close();
 			logger.debug("The Python rule loader code has been read from the resource Python file.");
@@ -116,6 +139,9 @@ public class PythonRule extends Rule {
 		+ "  return result_option.CONFORMING\n"
 		+ "  # return {'result': result_option.NONCONFORMING, 'comment': 'Why it is not fine'}\n"
 		+ "  # return result_option.NOTAPPLICABLE\n";
+
+	/** Script as Graal source */
+	private Source source = null;
 
 	/**
 	 * Instantiates a new Python rule.
@@ -158,11 +184,37 @@ public class PythonRule extends Rule {
 		this.script = script;
 	}
 
+	/**
+	 * Prepare the polyglot source.
+	 * @return the source
+	 */
 	@Transient
-	public Context getContext() throws IOException {
-		Context.Builder builder = Context.newBuilder().allowIO(true);
-		if ("false".equals("netshot.python.filesystemfilter")) {
-			logger.info("Python VM, file system filter is disabled (this is not secured)");
+	protected Source getSource() {
+		if (this.source == null) {
+			this.source = Source.newBuilder("python", this.script.toString(), "PythonRule" + this.getId()).buildLiteral();
+		}
+		return this.source;
+	}
+
+	/**
+	 * Create a GraalVM context and load the rule script.
+	 * @return the context
+	 * @throws IOException
+	 */
+	@Transient
+	protected Context getContext() throws IOException {
+		int scriptHash = this.script.hashCode();
+		CachedContext cachedContext = null;
+		synchronized (PythonRule.cachedContexts) {
+			cachedContext = PythonRule.cachedContexts.get(this.getId());
+		}
+		if (cachedContext != null && cachedContext.scriptHash == scriptHash) {
+			return cachedContext.context;
+		}
+
+		Context.Builder builder = Context.newBuilder("python").allowIO(true);
+		if ("false".equals(Netshot.getConfig("netshot.python.filesystemfilter"))) {
+			logger.info("Python VM, file system filter is disabled (this is not secure)");
 		}
 		else {
 			builder.fileSystem(new PythonFileSystem());
@@ -175,23 +227,56 @@ public class PythonRule extends Rule {
 			builder.allowExperimentalOptions(true)
 				.option("python.Executable", PythonFileSystem.VENV_FOLDER + "/bin/graalpython");
 		}
-		Context context = builder.engine(engine).build();
-		context.eval("python", this.script);
+		int beforeCacheSize = engine.getCachedSources().size();
+		Date beforeTime = new Date();
+		Context context;
+		synchronized (engine) {
+			context = builder.engine(engine).build();
+		}
+		context.eval(this.getSource());
+		context.enter();
 		context.eval(PYLOADER_SOURCE);
+		Date afterTime = new Date();
+		int afterCacheSize = engine.getCachedSources().size();
+		logger.debug("Python rule {} evalution time {}ms, using {} ({} {}) cached sources",
+			this.getId(), afterTime.getTime() - beforeTime.getTime(), afterCacheSize,
+			Math.abs(afterCacheSize - beforeCacheSize), afterCacheSize >= beforeCacheSize ? "more" : "less");
+
+		// Add to cached contexts
+		synchronized (PythonRule.cachedContexts) {
+			PythonRule.cachedContexts.put(this.getId(), new CachedContext(context, scriptHash));
+		}
+
+		// Clean up old cached contexts
+		synchronized (PythonRule.oldCachedContexts) {
+			if (cachedContext != null) {
+				oldCachedContexts.add(cachedContext);
+			}
+			Iterator<CachedContext> oldContextIt = PythonRule.oldCachedContexts.iterator();
+			while (oldContextIt.hasNext()) {
+				try {
+					oldContextIt.next().context.close();
+					oldContextIt.remove();
+				}
+				catch (IllegalStateException e) {
+					// continue without removing
+				}
+			}
+		}
 		return context;
 	}
 
 	/**
-	 * Prepare.
+	 * Prepare the rule (try to evaluate the script).
 	 */
-	private void prepare(TaskLogger taskLogger) {
+	private void prepare(Context context, TaskLogger taskLogger) {
 		if (prepared) {
 			return;
 		}
 		prepared = true;
 		pyValid = false;
 		
-		try (Context context = getContext()) {
+		try {
 			Value checkFunction = context.getBindings("python").getMember("check");
 			if (checkFunction == null || !checkFunction.canExecute()) {
 				logger.warn("The check sub wasn't found in the script");
@@ -201,7 +286,7 @@ public class PythonRule extends Rule {
 				pyValid = true;
 			}
 		}
-		catch (PolyglotException | IOException e) {
+		catch (PolyglotException e) {
 			taskLogger.error("Error while evaluating the Python script.");
 			logger.warn("Error while evaluating the Python script.", e);
 			pyValid = false;
@@ -217,17 +302,18 @@ public class PythonRule extends Rule {
 			this.setCheckResult(device, ResultOption.DISABLED, "", session);
 			return;
 		}
-		prepare(taskLogger);
-		if (!this.pyValid) {
-			this.setCheckResult(device, ResultOption.INVALIDRULE, "", session);
-			return;
-		}
-		if (device.isExempted(this)) {
-			this.setCheckResult(device, ResultOption.EXEMPTED, "", session);
-			return;
-		}
 
-		try (Context context = this.getContext()) {
+		try {
+			Context context = this.getContext();
+			prepare(context, taskLogger);
+			if (!this.pyValid) {
+				this.setCheckResult(device, ResultOption.INVALIDRULE, "", session);
+				return;
+			}
+			if (device.isExempted(this)) {
+				this.setCheckResult(device, ResultOption.EXEMPTED, "", session);
+				return;
+			}
 			PyDeviceHelper deviceHelper = new PyDeviceHelper(device, session, taskLogger, true);
 			Value result = context.getBindings("python").getMember("_check").execute(deviceHelper);
 			String txtResult = null;
@@ -253,6 +339,11 @@ public class PythonRule extends Rule {
 					return;
 				}
 			}
+		}
+		catch (IOException e) {
+			taskLogger.error("Error while evaluating the Python script.");
+			logger.warn("Error while evaluating the Python script.", e);
+			pyValid = false;
 		}
 		catch (Exception e) {
 			taskLogger.error("Error while running the script: " + e.getMessage());

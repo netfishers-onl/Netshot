@@ -8,7 +8,7 @@ Deploy Custom Netshot Image to Kubernetes
 * Deploy postgresVolumeClaim.yaml first
 * Deploy postgres.yaml second 
     * This is a stateful set deployment for Postgres offering some redundancy.
-    * Verify Postgress is running by using kubectl get pods
+    * Verify Postgres is running by using kubectl get pods
 * Deploy netshot.yaml
     * You must run the docker build netshot commands to build the netshot image
     * After you build the image you must store it in dockerhub or internal image repo.

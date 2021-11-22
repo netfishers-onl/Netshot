@@ -12,6 +12,11 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.16.6 - 2021-11-22
+
+* Don't stop diagnostic task on individual diagnostic failure
+
+
 0.16.5 - 2021-11-21
 
 * Python-based compliance rule performance optimization

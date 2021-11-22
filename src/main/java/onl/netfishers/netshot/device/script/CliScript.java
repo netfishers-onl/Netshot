@@ -126,7 +126,7 @@ public abstract class CliScript {
 			@Export
 			@Override
 			public void warn(String message) {
-				jsLog.add(String.format("[DEBUG] %s", message));
+				jsLog.add(String.format("[WARN] %s", message));
 			}
 			
 			@Export

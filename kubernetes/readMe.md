@@ -12,3 +12,5 @@ Deploy Custom Netshot Image to Kubernetes
 * Deploy netshot.yaml
     * You must run the docker build netshot commands to build the netshot image
     * After you build the image you must store it in dockerhub or internal image repo.
+* This deploys to a kubernetes namespace with the name netshot
+* We could create a docker image and host it on dockerhub that could be used for this

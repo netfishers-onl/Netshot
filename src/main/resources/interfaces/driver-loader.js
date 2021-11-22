@@ -577,16 +577,22 @@ function _connect(_function, _protocol, _options, _logger) {
 	else if (_function === "diagnostics") {
 		var diagnostics = _options.getDiagnosticHelper().getDiagnostics();
 		for (var name in diagnostics) {
-			var diagnostic = diagnostics[name];
-			diagnosticHelper.setKey(name);
-			if (typeof diagnostic === "function") {
-				var diagnose = diagnostic;
-				diagnose(commandHelper, deviceHelper, diagnosticHelper);
+			try {
+				var diagnostic = diagnostics[name];
+				diagnosticHelper.setKey(name);
+				if (typeof diagnostic === "function") {
+					var diagnose = diagnostic;
+					diagnose(commandHelper, deviceHelper, diagnosticHelper);
+				}
+				else {
+					cli.macro(diagnostic.getMode());
+					var output = cli.command(diagnostic.getCommand());
+					diagnosticHelper.set(output);
+				}
 			}
-			else {
-				cli.macro(diagnostic.getMode());
-				var output = cli.command(diagnostic.getCommand());
-				diagnosticHelper.set(output);
+			catch (diagError) {
+				_logger.warn("Error while running diagnostic '" + name + "'");
+				_logger.warn(String(diagError));
 			}
 		}
 	}

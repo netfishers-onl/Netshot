@@ -3,7 +3,7 @@ Deploy Custom Netshot Image to Kubernetes
 
 ## How to start
 
-* Gather the name of your Kuberntes storage
+* Gather the name of your Kubernetes storage
     * Replace storage variables in the postgres and postgresVolumeClaim yaml files
 * Deploy postgresVolumeClaim.yaml first
 * Deploy postgres.yaml second 

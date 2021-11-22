@@ -45,6 +45,14 @@ var Config = {
 		comparable: true,
 		searchable: false,
 		checkable: true
+	},
+	"systemPackages": {
+		type: "LongText",
+		title: "System Packages",
+		comparable: true,
+		searchable: false,
+		checkable: true
+
 	}
 };
 
@@ -68,70 +76,144 @@ var CLI = {
 				options: [ "exec" ],
 				target: "exec"
 			}
-		}
+		},
+		pager: {
+			match: /^\[more\]$/,
+			response: " "
+		},
 	},
 	exec: {
-		prompt: /^([A-Za-z0-9\.\-_]+@[A-Za-z\-_0-9\.]+):\//,
+		prompt: /^([A-Za-z0-9\.\-_]+@[A-Za-z\-_0-9\.]+):\/#/,
 	}
 };
 
 function snapshot(cli, device, config) {
-	var systemHardwareCleanup = function(config) {
-		config = config.replace(/^Boot time.*$/mg, "");
-		config = config.replace(/^Load averages.*$/mg, "");
+	let systemHardwareCleanup = function(config) {
+		config = config.replace(/^Boot time.*$\n/mg, "");
+		config = config.replace(/^Load averages.*$\n/mg, "");
 		return config;
 	};
 
 	cli.macro("exec");
 
-	var systemVersionResult = cli.command("system version");
-
+	// Device type
+	device.set("networkClass", "SERVER");
+	device.set("family", "Arbor ArbOS");
+	
+	// System version
+	let systemVersionResult = cli.command("system version");
 	systemVersion = systemVersionResult.match(/Version: (.*)/m);
 	if (systemVersion != null) {
 	    config.set("systemVersion", systemVersion[1]);
 		device.set("softwareVersion", systemVersion[1]);
 	}
 
-	device.set("networkClass", "SERVER");
-	device.set("family", "Arbor ArbOS");
+	// System packages
+	let systemPackagesResult = cli.command("system files show");
+	config.set("systemPackages", systemPackagesResult);
 
-	var systemHardwareResult = systemHardwareCleanup(cli.command("system hardware"));
+	// System hardware
+	let systemHardwareResult = systemHardwareCleanup(cli.command("system hardware").replace(/\r\n/g, "\n"));
 	config.set("systemHardware", systemHardwareResult);
 
-	var memoryPattern = /Memory Device: (.*) MB .*/mg;
-	var memory = 0;
-	var memoryMatch;
+	// Total memory size
+	let memoryPattern = /Memory Device: (.*) MB .*/mg;
+	let memory = 0;
+	let memoryMatch;
 	while (memoryMatch = memoryPattern.exec(systemHardwareResult)) {
 	        memory += parseInt(memoryMatch[1]);
 	}
 	device.set("memorySize", memory);
 
-    var serialMatch = systemHardwareResult.match(/Serial Number: (.*)/m);
+	// Serial number
+    let serialMatch = systemHardwareResult.match(/Serial Number: (.*)/m);
     if (serialMatch != null) {
 	    device.set("serialNumber", serialMatch[1]);
     }
 
-	var systemConfiguration = cli.command("config show");
+	// System configuration
+	let systemConfiguration = cli.command("config show");
 	config.set("systemConfiguration", systemConfiguration);
 	
-	var hostname = systemConfiguration.match(/^system name set (.+)$/m);
+	// Hostname
+	let hostname = systemConfiguration.match(/^system name set (.+)$/m);
 	if (hostname != null) {
 		device.set("name", hostname[1]);
 	}
 	
-	var location = systemConfiguration.match(/^services sp device edit .* snmp location set (.+)$/m);
+	// System location information
+	let location = systemConfiguration.match(/^services sp device edit .* snmp location set (.+)$/m);
 	if (location != null) {
 		device.set("location", location[1]);
 	}
 	
-	var contact = systemConfiguration.match(/^services sp preferences support_email set (.+)$/m);
+	// System contact information
+	let contact = systemConfiguration.match(/^services sp preferences support_email set (.+)$/m);
 	if (contact != null) {
 		device.set("contact", contact[1]);
 	}
-};
+
+	// Check if the configuration has been committed (check for existing diff)
+	let configDiffResult = cli.command("config diff").replace(/\r\n/g, "\n");
+	if (configDiffResult.split("\n").length === 1) {
+		device.set("configurationCommitted", true);
+	} else {
+		device.set("configurationCommitted", false)
+	}
+
+	// Gather network interfaces information
+	let interfaces = cli.command("ip interfaces show").replace(/\r\n/g, "\n").trim().split("\n\n");
+	for (let interface of interfaces) {
+		let ifName = interface.split(" ")[0];
+		let ifMac = interface.match(/Hardware: ([0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2})/)[1];
+		let ifStatus = interface.match(/.* Interface is (\w*),.*/);
+		//let ifSpeed = interface.match(/Status: (.*) .*\n/); // not used
+		let ifIPv4 = interface.match(/Inet: (\d+\.\d+\.\d+\.\d+) netmask (\d+\.\d+\.\d+\.\d+) .*/);
+		let ifIPv6 = interface.match(/Inet6: ([0-9A-Fa-f:]+) prefixlen (\d+)/)
+
+		let networkInterface = {
+			name: ifName,
+			mac: ifMac,
+			ip: []
+		};
+
+		if(ifStatus[1] === "UP") {
+			networkInterface.enabled = true;
+		} else {
+			networkInterface.enabled = false;
+		}
+
+		if(ifIPv4) {
+			let ip = {
+				ip: ifIPv4[1],
+				mask: ifIPv4[2],
+				usage: "PRIMARY"
+			};
+			networkInterface.ip.push(ip);
+		}
+
+		if(ifIPv6) {
+			let ip = {
+				ipv6: ifIPv6[1],
+				mask: parseInt(ifIPv6[2]),
+				usage: "PRIMARY"
+			};
+			networkInterface.ip.push(ip);
+		}
+
+		device.add("networkInterface", networkInterface);
+	}
+}
 
 function runCommands(command) {
 	
+}
+
+function analyzeSyslog(message) {
+	if (message.match(/CONF-WRITE-END/)) {
+		return true;
+	}
+	return false;
 }
 
 function snmpAutoDiscover(sysObjectID, sysDesc) {

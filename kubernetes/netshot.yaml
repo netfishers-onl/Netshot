@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netshot
+  labels:
+    app: netshot
+  namespace: netshot
+spec:
+  selector:
+    matchLabels:
+      app: netshot
+  template:
+    metadata:
+      labels:
+        app: netshot
+    spec:
+      imagePullSecrets:
+        - name: <registry_secret>
+      containers:
+      - name: netshot
+        image: <imageLocation>/netshot:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+          - name: NETSHOT_DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: dbpass
+                key: SECRET_KEY
+          - name: NETSHOT_DB_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: dbuser
+                key: SECRET_KEY
+          - name: NETSHOT_DB_URL
+            value: 'jdbc:postgresql://postgres/netshot' #this assumes your using postgres
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netshot
+  labels:
+    app: netshot
+  namespace: netshot
+spec:
+  ports:
+  - name: netshot
+    port: 80
+    targetPort: 8080
+  selector:
+    app: netshot
+  type: ClusterIP

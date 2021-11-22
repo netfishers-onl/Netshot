@@ -12,6 +12,14 @@ Please refer to https://github.com/netfishers-onl/Netshot/wiki
 
 RELEASE HISTORY:
 
+0.16.5 - 2021-11-21
+
+* Python-based compliance rule performance optimization
+* Remove duplicates from device queries in REST API
+* Ignore disabled task hooks
+* Font-based icons
+
+
 0.16.4 - 2021-11-14
 
 * Minor UI improvements or fixes

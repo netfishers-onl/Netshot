@@ -73,7 +73,7 @@ var CLI = {
 	ssh: {
 		macros: {
 			exec: {
-				options: [ "exec" ],
+				options: ["exec"],
 				target: "exec"
 			}
 		},
@@ -88,7 +88,7 @@ var CLI = {
 };
 
 function snapshot(cli, device, config) {
-	let systemHardwareCleanup = function(config) {
+	let systemHardwareCleanup = function (config) {
 		config = config.replace(/^Boot time.*$\n/mg, "");
 		config = config.replace(/^Load averages.*$\n/mg, "");
 		return config;
@@ -99,12 +99,12 @@ function snapshot(cli, device, config) {
 	// Device type
 	device.set("networkClass", "SERVER");
 	device.set("family", "Arbor ArbOS");
-	
+
 	// System version
 	let systemVersionResult = cli.command("system version");
 	systemVersion = systemVersionResult.match(/Version: (.*)/m);
 	if (systemVersion != null) {
-	    config.set("systemVersion", systemVersion[1]);
+		config.set("systemVersion", systemVersion[1]);
 		device.set("softwareVersion", systemVersion[1]);
 	}
 
@@ -121,32 +121,32 @@ function snapshot(cli, device, config) {
 	let memory = 0;
 	let memoryMatch;
 	while (memoryMatch = memoryPattern.exec(systemHardwareResult)) {
-	        memory += parseInt(memoryMatch[1]);
+		memory += parseInt(memoryMatch[1]);
 	}
 	device.set("memorySize", memory);
 
 	// Serial number
-    let serialMatch = systemHardwareResult.match(/Serial Number: (.*)/m);
-    if (serialMatch != null) {
-	    device.set("serialNumber", serialMatch[1]);
-    }
+	let serialMatch = systemHardwareResult.match(/Serial Number: (.*)/m);
+	if (serialMatch != null) {
+		device.set("serialNumber", serialMatch[1]);
+	}
 
 	// System configuration
 	let systemConfiguration = cli.command("config show");
 	config.set("systemConfiguration", systemConfiguration);
-	
+
 	// Hostname
 	let hostname = systemConfiguration.match(/^system name set (.+)$/m);
 	if (hostname != null) {
 		device.set("name", hostname[1]);
 	}
-	
+
 	// System location information
 	let location = systemConfiguration.match(/^services sp device edit .* snmp location set (.+)$/m);
 	if (location != null) {
 		device.set("location", location[1]);
 	}
-	
+
 	// System contact information
 	let contact = systemConfiguration.match(/^services sp preferences support_email set (.+)$/m);
 	if (contact != null) {
@@ -177,13 +177,13 @@ function snapshot(cli, device, config) {
 			ip: []
 		};
 
-		if(ifStatus[1] === "UP") {
+		if (ifStatus[1] === "UP") {
 			networkInterface.enabled = true;
 		} else {
 			networkInterface.enabled = false;
 		}
 
-		if(ifIPv4) {
+		if (ifIPv4) {
 			let ip = {
 				ip: ifIPv4[1],
 				mask: ifIPv4[2],
@@ -192,7 +192,7 @@ function snapshot(cli, device, config) {
 			networkInterface.ip.push(ip);
 		}
 
-		if(ifIPv6) {
+		if (ifIPv6) {
 			let ip = {
 				ipv6: ifIPv6[1],
 				mask: parseInt(ifIPv6[2]),
@@ -206,7 +206,7 @@ function snapshot(cli, device, config) {
 }
 
 function runCommands(command) {
-	
+
 }
 
 function analyzeSyslog(message) {

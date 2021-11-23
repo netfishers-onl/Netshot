@@ -18,7 +18,7 @@
  */
 
 var Info = {
-	name: "ArbOS",
+	name: "ArborArbOS",
 	description: "Arbor ArbOS 7.2+",
 	author: "Mathieu Poussin",
 	version: "1.0"
@@ -88,7 +88,7 @@ var CLI = {
 };
 
 function snapshot(cli, device, config) {
-	let systemHardwareCleanup = function (config) {
+	const systemHardwareCleanup = function (config) {
 		config = config.replace(/^Boot time.*$\n/mg, "");
 		config = config.replace(/^Load averages.*$\n/mg, "");
 		return config;
@@ -101,7 +101,7 @@ function snapshot(cli, device, config) {
 	device.set("family", "Arbor ArbOS");
 
 	// System version
-	let systemVersionResult = cli.command("system version");
+	const systemVersionResult = cli.command("system version");
 	systemVersion = systemVersionResult.match(/Version: (.*)/m);
 	if (systemVersion != null) {
 		config.set("systemVersion", systemVersion[1]);
@@ -109,15 +109,15 @@ function snapshot(cli, device, config) {
 	}
 
 	// System packages
-	let systemPackagesResult = cli.command("system files show");
+	const systemPackagesResult = cli.command("system files show");
 	config.set("systemPackages", systemPackagesResult);
 
 	// System hardware
-	let systemHardwareResult = systemHardwareCleanup(cli.command("system hardware").replace(/\r\n/g, "\n"));
+	const systemHardwareResult = systemHardwareCleanup(cli.command("system hardware").replace(/\r\n/g, "\n"));
 	config.set("systemHardware", systemHardwareResult);
 
 	// Total memory size
-	let memoryPattern = /Memory Device: (.*) MB .*/mg;
+	const memoryPattern = /Memory Device: (.*) MB .*/mg;
 	let memory = 0;
 	let memoryMatch;
 	while (memoryMatch = memoryPattern.exec(systemHardwareResult)) {
@@ -126,35 +126,35 @@ function snapshot(cli, device, config) {
 	device.set("memorySize", memory);
 
 	// Serial number
-	let serialMatch = systemHardwareResult.match(/Serial Number: (.*)/m);
+	const serialMatch = systemHardwareResult.match(/Serial Number: (.*)/m);
 	if (serialMatch != null) {
 		device.set("serialNumber", serialMatch[1]);
 	}
 
 	// System configuration
-	let systemConfiguration = cli.command("config show");
+	const systemConfiguration = cli.command("config show");
 	config.set("systemConfiguration", systemConfiguration);
 
 	// Hostname
-	let hostname = systemConfiguration.match(/^system name set (.+)$/m);
+	const hostname = systemConfiguration.match(/^system name set (.+)$/m);
 	if (hostname != null) {
 		device.set("name", hostname[1]);
 	}
 
 	// System location information
-	let location = systemConfiguration.match(/^services sp device edit .* snmp location set (.+)$/m);
+	const location = systemConfiguration.match(/^services sp device edit .* snmp location set (.+)$/m);
 	if (location != null) {
 		device.set("location", location[1]);
 	}
 
 	// System contact information
-	let contact = systemConfiguration.match(/^services sp preferences support_email set (.+)$/m);
+	const contact = systemConfiguration.match(/^services sp preferences support_email set (.+)$/m);
 	if (contact != null) {
 		device.set("contact", contact[1]);
 	}
 
 	// Check if the configuration has been committed (check for existing diff)
-	let configDiffResult = cli.command("config diff").replace(/\r\n/g, "\n");
+	const configDiffResult = cli.command("config diff").replace(/\r\n/g, "\n");
 	if (configDiffResult.split("\n").length === 1) {
 		device.set("configurationCommitted", true);
 	} else {
@@ -162,7 +162,7 @@ function snapshot(cli, device, config) {
 	}
 
 	// Gather network interfaces information
-	let interfaces = cli.command("ip interfaces show").replace(/\r\n/g, "\n").trim().split("\n\n");
+	const interfaces = cli.command("ip interfaces show").replace(/\r\n/g, "\n").trim().split("\n\n");
 	for (let interface of interfaces) {
 		let ifName = interface.split(" ")[0];
 		let ifMac = interface.match(/Hardware: ([0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2})/)[1];

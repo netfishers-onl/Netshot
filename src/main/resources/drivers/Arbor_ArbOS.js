@@ -164,14 +164,14 @@ function snapshot(cli, device, config) {
 	// Gather network interfaces information
 	const interfaces = cli.command("ip interfaces show").replace(/\r\n/g, "\n").trim().split("\n\n");
 	for (let interface of interfaces) {
-		let ifName = interface.split(" ")[0];
-		let ifMac = interface.match(/Hardware: ([0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2})/)[1];
-		let ifStatus = interface.match(/.* Interface is (\w*),.*/);
-		//let ifSpeed = interface.match(/Status: (.*) .*\n/); // not used
-		let ifIPv4 = interface.match(/Inet: (\d+\.\d+\.\d+\.\d+) netmask (\d+\.\d+\.\d+\.\d+) .*/);
-		let ifIPv6 = interface.match(/Inet6: ([0-9A-Fa-f:]+) prefixlen (\d+)/)
+		const ifName = interface.split(" ")[0];
+		const ifMac = interface.match(/Hardware: ([0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2})/)[1];
+		const ifStatus = interface.match(/.* Interface is (\w*),.*/);
+		//const ifSpeed = interface.match(/Status: (.*) .*\n/); // not used
+		const ifIPv4 = interface.match(/Inet: (\d+\.\d+\.\d+\.\d+) netmask (\d+\.\d+\.\d+\.\d+) .*/);
+		const ifIPv6 = interface.match(/Inet6: ([0-9A-Fa-f:]+) prefixlen (\d+)/)
 
-		let networkInterface = {
+		const networkInterface = {
 			name: ifName,
 			mac: ifMac,
 			ip: []
@@ -184,21 +184,21 @@ function snapshot(cli, device, config) {
 		}
 
 		if (ifIPv4) {
-			let ip = {
+			const ipv4 = {
 				ip: ifIPv4[1],
 				mask: ifIPv4[2],
 				usage: "PRIMARY"
 			};
-			networkInterface.ip.push(ip);
+			networkInterface.ip.push(ipv4);
 		}
 
 		if (ifIPv6) {
-			let ip = {
+			const ipv6 = {
 				ipv6: ifIPv6[1],
 				mask: parseInt(ifIPv6[2]),
 				usage: "PRIMARY"
 			};
-			networkInterface.ip.push(ip);
+			networkInterface.ip.push(ipv6);
 		}
 
 		device.add("networkInterface", networkInterface);

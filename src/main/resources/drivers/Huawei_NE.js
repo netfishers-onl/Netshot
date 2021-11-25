@@ -288,7 +288,7 @@ function snapshot(cli, device, config) {
 		device.add("vrf", match[1]);
 	}
 	
-	var interfaces = cli.findSections(currentConfig, /^interface (.+)/m);
+	var interfaces = cli.findSections(currentConfig, /^interface (.+\.[0-9]+)/m);
 	for (var i in interfaces) {
 		var networkInterface = {
 			name: interfaces[i].match[1],

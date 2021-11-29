@@ -2869,7 +2869,7 @@ public class Finder {
 			hql.append(", ").append(table);
 		}
 		for (String join : criteria.joins) {
-			hql.append(" join ").append(join);
+			hql.append(" left join ").append(join);
 		}
 		hql.append(" where ");
 		if (this.expression.driver != null) {

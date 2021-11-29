@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: netshot
+  labels:
+    name: postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: <storage_class_name>
+  resources:
+    requests:
+      storage: 200Gi

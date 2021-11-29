@@ -2832,7 +2832,7 @@ public class Finder {
 	/**
 	 * Instantiates a new finder.
 	 *
-	 * @param Query<?> the query
+	 * @param query the query
 	 * @param driver the device class
 	 * @throws FinderParseException the finder parse exception
 	 */
@@ -2890,5 +2890,7 @@ public class Finder {
 	public void setVariables(Query<?> query) {
 		this.expression.setVariables(query, HQLPREFIX);
 	}
+
+	
 
 }

@@ -21,7 +21,7 @@ var Info = {
 	name: "ArborArbOS",
 	description: "Arbor ArbOS 7.2+",
 	author: "Mathieu Poussin",
-	version: "1.0"
+	version: "1.1"
 };
 
 var Config = {
@@ -94,6 +94,19 @@ function snapshot(cli, device, config) {
 		return config;
 	};
 
+	// Arbor would randomly add the command to the output in the first line, messing up with the history
+	// Wrap all command calls in this to fix them automatically
+	const execCommand = function (cliHandler, command) {
+		const output = cliHandler.command(command).trim().replace(/\r\n/g, "\n");
+		const lines = output.split("\n");
+		// Sometime, the first line contains the command itself, it so, we remove it and trim() again
+		if (lines[0].includes(command)) {
+			lines.splice(0, 1);
+			return lines.join("\n").trim();
+		}
+		return output;
+	};
+
 	cli.macro("exec");
 
 	// Device type
@@ -101,7 +114,7 @@ function snapshot(cli, device, config) {
 	device.set("family", "Arbor ArbOS");
 
 	// System version
-	const systemVersionResult = cli.command("system version");
+	const systemVersionResult = execCommand(cli, "system version");
 	systemVersion = systemVersionResult.match(/Version: (.*)/m);
 	if (systemVersion != null) {
 		config.set("systemVersion", systemVersion[1]);
@@ -109,11 +122,11 @@ function snapshot(cli, device, config) {
 	}
 
 	// System packages
-	const systemPackagesResult = cli.command("system files show");
+	const systemPackagesResult = execCommand(cli, "system files show");
 	config.set("systemPackages", systemPackagesResult);
 
 	// System hardware
-	const systemHardwareResult = systemHardwareCleanup(cli.command("system hardware").replace(/\r\n/g, "\n"));
+	const systemHardwareResult = systemHardwareCleanup(execCommand(cli, "system hardware"));
 	config.set("systemHardware", systemHardwareResult);
 
 	// Total memory size
@@ -132,7 +145,7 @@ function snapshot(cli, device, config) {
 	}
 
 	// System configuration
-	const systemConfiguration = cli.command("config show");
+	const systemConfiguration = execCommand(cli, "config show");
 	config.set("systemConfiguration", systemConfiguration);
 
 	// Hostname
@@ -154,7 +167,7 @@ function snapshot(cli, device, config) {
 	}
 
 	// Check if the configuration has been committed (check for existing diff)
-	const configDiffResult = cli.command("config diff").replace(/\r\n/g, "\n");
+	const configDiffResult = execCommand(cli, "config diff");
 	if (configDiffResult.split("\n").length === 1) {
 		device.set("configurationCommitted", true);
 	} else {
@@ -162,7 +175,7 @@ function snapshot(cli, device, config) {
 	}
 
 	// Gather network interfaces information
-	const interfaces = cli.command("ip interfaces show").replace(/\r\n/g, "\n").trim().split("\n\n");
+	const interfaces = execCommand(cli, "ip interfaces show").split("\n\n");
 	for (let interface of interfaces) {
 		const ifName = interface.split(" ")[0];
 		const ifMac = interface.match(/Hardware: ([0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2}\:[0-9a-fA-F]{2})/)[1];

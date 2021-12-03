@@ -99,7 +99,7 @@ function snapshot(cli, device, config) {
 	const execCommand = function (cliHandler, command) {
 		const output = cliHandler.command(command).trim().replace(/\r\n/g, "\n");
 		const lines = output.split("\n");
-		// Sometime, the first line contains the command itself, it so, we remove it and trim() again
+		// Sometime, the first line contains the command itself, if so, we remove it and trim() again
 		if (lines[0].includes(command)) {
 			lines.splice(0, 1);
 			return lines.join("\n").trim();

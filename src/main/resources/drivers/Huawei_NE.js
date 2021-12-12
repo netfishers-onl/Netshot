@@ -21,7 +21,7 @@ var Info = {
 	name: "HuaweiNE",
 	description: "Huawei NE Router",
 	author: "NetFishers",
-	version: "1.1"
+	version: "1.2"
 };
 
 var Config = {
@@ -288,7 +288,7 @@ function snapshot(cli, device, config) {
 		device.add("vrf", match[1]);
 	}
 	
-	var interfaces = cli.findSections(currentConfig, /^interface (.+)/m);
+	var interfaces = cli.findSections(currentConfig, /^interface ([^ ]+)( .+)?/m);
 	for (var i in interfaces) {
 		var networkInterface = {
 			name: interfaces[i].match[1],

@@ -1,6 +1,9 @@
 package onl.netfishers.netshot.rest;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -12,14 +15,41 @@ import javax.ws.rs.core.HttpHeaders;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.aaa.Tacacs;
 import onl.netfishers.netshot.aaa.User;
+import onl.netfishers.netshot.device.Network4Address;
 import onl.netfishers.netshot.device.NetworkAddress;
 
 /**
  * Filter to log requests.
  */
-class LoggerFilter implements ContainerResponseFilter {
+public class LoggerFilter implements ContainerResponseFilter {
+
+	static private boolean trustXForwardedFor = false;
+
+	static public void init() {
+		trustXForwardedFor = Netshot.getConfig("netshot.http.trustxforwardedfor", "false").equals("true");
+	}
+
 	@Context
 	private HttpServletRequest httpRequest;
+
+	/**
+	 * Guess the client IP address based on X-Forwarded-For header (if present).
+	 * @return the probable client IP address
+	 */
+	private String getClientAddress() {
+		String address = null;
+		if (trustXForwardedFor) {
+			String forwardedFor = httpRequest.getHeader("X-Forwarded-For");
+			if (forwardedFor != null) {
+				String[] addresses = forwardedFor.split(",");
+				address = addresses[0].trim();
+			}
+		}
+		if (address == null) {
+			address = httpRequest.getRemoteAddr();
+		}
+		return address;
+	}
 
 	@Override
 	public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
@@ -32,18 +62,25 @@ class LoggerFilter implements ContainerResponseFilter {
 			//
 		}
 		String method = requestContext.getMethod().toUpperCase();
+		String remoteAddr = this.getClientAddress();
 		if ("GET".equals(method)) {
-			Netshot.aaaLogger.debug("Request from {} ({}) - {} - \"{} {}\" - {}.", httpRequest.getRemoteAddr(),
+			Netshot.aaaLogger.debug("Request from {} ({}) - {} - \"{} {}\" - {}.",remoteAddr,
 					requestContext.getHeaderString(HttpHeaders.USER_AGENT), user == null ? "<none>" : user.getUsername(),
 					requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(), responseContext.getStatus());
 		}
 		else {
-			Netshot.aaaLogger.info("Request from {} ({}) - {} - \"{} {}\" - {}.", httpRequest.getRemoteAddr(),
+			Netshot.aaaLogger.info("Request from {} ({}) - {} - \"{} {}\" - {}.", remoteAddr,
 					requestContext.getHeaderString(HttpHeaders.USER_AGENT), user == null ? "<none>" : user.getUsername(),
 					requestContext.getMethod(), requestContext.getUriInfo().getRequestUri(), responseContext.getStatus());
+			NetworkAddress na;
+			try {
+				na = NetworkAddress.getNetworkAddress(remoteAddr);
+			}
+			catch (UnknownHostException e) {
+				na = new Network4Address(0, 0);
+			}
 			Tacacs.account(requestContext.getMethod(), requestContext.getUriInfo().getRequestUri().getPath(),
-				user == null ? "<none>" : user.getUsername(), Integer.toString(responseContext.getStatus()),
-				NetworkAddress.getNetworkAddress(httpRequest.getRemoteAddr()));
+				user == null ? "<none>" : user.getUsername(), Integer.toString(responseContext.getStatus()), na);
 		}
 	}
 }

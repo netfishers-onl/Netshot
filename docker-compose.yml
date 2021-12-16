@@ -9,6 +9,7 @@ services:
       NETSHOT_DB_USERNAME: "netshot"
       NETSHOT_DB_PASSWORD: "change_this_pass"
       NETSHOT_DB_ENCRYPTIONPASSWORD: "change_this_pass_too"
+      NETSHOT_HTTP_TRUSTXFORWARDEDFOR: "true
       VIRTUAL_HOST: "netshot"
       VIRTUAL_PORT: 8080
       SELF_SIGNED_HOST: "netshot"

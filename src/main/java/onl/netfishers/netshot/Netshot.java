@@ -60,6 +60,7 @@ import onl.netfishers.netshot.collector.SnmpTrapReceiver;
 import onl.netfishers.netshot.collector.SyslogServer;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.DeviceDriver;
+import onl.netfishers.netshot.rest.LoggerFilter;
 import onl.netfishers.netshot.rest.RestService;
 import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
 import sun.misc.Signal;
@@ -399,6 +400,7 @@ public class Netshot extends Thread {
 				logger.error("Unable to log AAA data into file {}. Exiting.", auditFile, e);
 			}
 		}
+		LoggerFilter.init();
 		return true;
 	}
 	

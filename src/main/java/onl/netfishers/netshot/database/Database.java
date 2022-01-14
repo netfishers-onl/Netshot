@@ -258,12 +258,6 @@ public class Database {
 			connectionProviderProperties.setProperty("hibernate.c3p0.max_statements", "50");
 			connectionProviderProperties.setProperty("hibernate.c3p0.unreturnedConnectionTimeout", "1800");
 			connectionProviderProperties.setProperty("hibernate.c3p0.debugUnreturnedConnectionStackTraces", "true");
-			if ("org.postgresql.Driver".equals(getDriverClass())) {
-				connectionProviderProperties.setProperty(AvailableSettings.DIALECT, "onl.netfishers.netshot.database.CustomPostgreSQLDialect");
-			}
-			else if ("com.mysql.cj.jdbc.Driver".equals(getDriverClass())) {
-				connectionProviderProperties.setProperty(AvailableSettings.DIALECT, "onl.netfishers.netshot.database.CustomMySQLDialect");
-			}
 
 			connectionProviderProperties.setProperty(AvailableSettings.URL, getUrl());
 			connectionProviderProperties.setProperty("hibernate.c3p0.dataSourceName", DATASOURCE_TENANT_READWRITE);
@@ -278,12 +272,12 @@ public class Database {
 
 			serviceProperties.put(AvailableSettings.MULTI_TENANT, MultiTenancyStrategy.DATABASE.name());
 			serviceProperties.put(AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER, connectionProvider);
-
-
-
-
-
-
+			if ("org.postgresql.Driver".equals(getDriverClass())) {
+				serviceProperties.setProperty(AvailableSettings.DIALECT, "onl.netfishers.netshot.database.CustomPostgreSQLDialect");
+			}
+			else if ("com.mysql.cj.jdbc.Driver".equals(getDriverClass())) {
+				serviceProperties.setProperty(AvailableSettings.DIALECT, "onl.netfishers.netshot.database.CustomMySQLDialect");
+			}
 			serviceRegistry = new StandardServiceRegistryBuilder().applySettings(serviceProperties).build();
 
 			MetadataSources sources = new MetadataSources(serviceRegistry)

@@ -2832,7 +2832,7 @@ public class Finder {
 	/**
 	 * Instantiates a new finder.
 	 *
-	 * @param Query<?> the query
+	 * @param query the query
 	 * @param driver the device class
 	 * @throws FinderParseException the finder parse exception
 	 */
@@ -2869,7 +2869,7 @@ public class Finder {
 			hql.append(", ").append(table);
 		}
 		for (String join : criteria.joins) {
-			hql.append(" join ").append(join);
+			hql.append(" left join ").append(join);
 		}
 		hql.append(" where ");
 		if (this.expression.driver != null) {
@@ -2890,5 +2890,7 @@ public class Finder {
 	public void setVariables(Query<?> query) {
 		this.expression.setVariables(query, HQLPREFIX);
 	}
+
+	
 
 }

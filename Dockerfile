@@ -1,5 +1,14 @@
 FROM ghcr.io/graalvm/graalvm-ce:java11-21.3.0 as builder
-COPY . /opt/netshot
+
+COPY ./src /opt/netshot/src
+COPY ./tools /opt/netshot/tools
+#COPY ./.settings /opt/netshot/.settings
+COPY ./mvnw /opt/netshot/mvnw
+COPY ./pom.xml /opt/netshot/pom.xml
+COPY ./Netshot.svg /opt/netshot/Netshot.svg
+COPY ./.mvn /opt/netshot/.mvn
+
+
 WORKDIR /opt/netshot
 RUN gu install python
 RUN ./mvnw package

@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.7.1"
+	version: "1.7.2"
 };
 
 var Config = {
@@ -109,7 +109,7 @@ var CLI = {
 		}
 	},
 	password: {
-		prompt: /^[Pp]assword: $/,
+		prompt: /^[Pp]assword:\s?$/,
 		macros: {
 			auto: {
 				cmd: "$$NetshotPassword$$",

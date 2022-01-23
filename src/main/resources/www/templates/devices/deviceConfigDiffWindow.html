@@ -8,6 +8,7 @@
 	<link rel="stylesheet" href="css/normalize.css" />
 	<link rel="stylesheet" href="css/common.css" />
 	<link rel="stylesheet" href="css/custom/jquery-ui.css" />
+	<link rel="stylesheet" href="css/custom/jquery-ui.icon-font.css" type="text/css" />
 	<link rel="stylesheet" href="css/app.css" />
 
 </head>
@@ -52,10 +53,30 @@
 	var rLine = delta.revisedPosition - delta.preContext.length + 1;
 %>
 
+<% _.each(delta.hierarchy, function(entry) {
+	if (entry.position + 1 > maxLine && entry.position + 1 < oLine) {
+		if (entry.position + 1 > maxLine + 1) { 
+%>
+<tr class="etc <% if (currentLine++ % 2 == 0) { %>even<% } %>">
+	<td class="linenum"></td><td class="left">...</td>
+	<td class="linenum"></td><td class="right"></td>
+</tr>
+<%
+		}
+%>
+<tr class="etc <% if (currentLine++ % 2 == 0) { %>even<% } %>">
+	<td class="linenum"><%- entry.position + 1 %></td><td class="left"><%- entry.line.replace(/ /g, '\u00a0') %></td>
+	<td class="linenum"></td><td class="right"></td>
+</tr>
+<%
+		maxLine = entry.position + 1;
+	}
+}); %>
+
 <% if (oLine > maxLine + 1) { %>
-<tr<% if (currentLine++ % 2 == 0) { %> class="even"<% } %>>
-	<td class="linenum"></td><td>...</td>
-	<td class="linenum"></td><td>...</td>
+	<tr class="etc <% if (currentLine++ % 2 == 0) { %>even<% } %>">
+	<td class="linenum"></td><td class="left">...</td>
+	<td class="linenum"></td><td class="right">...</td>
 </tr>
 <% } %>
 
@@ -63,8 +84,8 @@
 	if (oLine < maxLine) { oLine++; rLine++; return; }
 %>
 <tr<% if (currentLine++ % 2 == 0) { %> class="even"<% } %>>
-	<td class="linenum"><%- oLine++ %></td><td><%- line.replace(/ /g, '\u00a0') %></td>
-	<td class="linenum"><%- rLine++ %></td><td><%- line.replace(/ /g, '\u00a0') %></td>
+	<td class="linenum"><%- oLine++ %></td><td class="left"><%- line.replace(/ /g, '\u00a0') %></td>
+	<td class="linenum"><%- rLine++ %></td><td class="right"><%- line.replace(/ /g, '\u00a0') %></td>
 </tr>
 <% }); %>
 
@@ -73,14 +94,14 @@
 <% for (var i = 0; i < Math.max(delta.originalLines.length, delta.revisedLines.length); i++) { %>
 <tr class="changed">
 	<% if (i < delta.originalLines.length) { %>
-	<td class="linenum"><%- oLine++ %></td><td><%- delta.originalLines[i].replace(/ /g, '\u00a0') %></td>
+	<td class="linenum"><%- oLine++ %></td><td class="left"><%- delta.originalLines[i].replace(/ /g, '\u00a0') %></td>
 	<% } else { %>
-	<td class="linenum"></td><td></td>
+	<td class="linenum"></td><td class="left"></td>
 	<% } %>
 	<% if (i < delta.revisedLines.length) { %>
-	<td class="linenum"><%- rLine++ %></td><td><%- delta.revisedLines[i].replace(/ /g, '\u00a0') %></td>
+	<td class="linenum"><%- rLine++ %></td><td class="right"><%- delta.revisedLines[i].replace(/ /g, '\u00a0') %></td>
 	<% } else { %>
-	<td class="linenum"></td><td></td>
+	<td class="linenum"></td><td class="right"></td>
 	<% } %>
 </tr>
 <% } %>
@@ -89,8 +110,8 @@
 <% if (delta.diffType == "INSERT") { %>
 <% _.each(delta.revisedLines, function(line) { %>
 <tr class="inserted">
-	<td class="linenum"></td><td></td>
-	<td class="linenum"><%- rLine++ %></td><td><%- line.replace(/ /g, '\u00a0') %></td>
+	<td class="linenum"></td><td class="left"></td>
+	<td class="linenum"><%- rLine++ %></td><td class="right"><%- line.replace(/ /g, '\u00a0') %></td>
 </tr>
 <% }); %>
 <% } %>
@@ -98,16 +119,16 @@
 <% if (delta.diffType == "DELETE") { %>
 <% _.each(delta.originalLines, function(line) { %>
 <tr class="deleted">
-	<td class="linenum"><%- oLine++ %></td><td><%- line.replace(/ /g, '\u00a0') %></td>
-	<td class="linenum"></td><td></td>
+	<td class="linenum"><%- oLine++ %></td><td class="left"><%- line.replace(/ /g, '\u00a0') %></td>
+	<td class="linenum"></td><td class="right"></td>
 </tr>
 <% }); %>
 <% } %>
 
 <% _.each(delta.postContext, function(line) { %>
 <tr<% if (currentLine++ % 2 == 0) { %> class="even"<% } %>>
-	<td class="linenum"><%- oLine++ %></td><td><%- line.replace(/ /g, '\u00a0') %></td>
-	<td class="linenum"><%- rLine++ %></td><td><%- line.replace(/ /g, '\u00a0') %></td>
+	<td class="linenum"><%- oLine++ %></td><td class="left"><%- line.replace(/ /g, '\u00a0') %></td>
+	<td class="linenum"><%- rLine++ %></td><td class="right"><%- line.replace(/ /g, '\u00a0') %></td>
 </tr>
 <% }); %>
 

@@ -183,10 +183,10 @@ import org.slf4j.MarkerFactory;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.github.difflib.DiffUtils;
+import com.github.difflib.patch.AbstractDelta;
+import com.github.difflib.patch.Patch;
 
-import difflib.Delta;
-import difflib.DiffUtils;
-import difflib.Patch;
 import io.swagger.v3.oas.annotations.Operation;
 
 /**
@@ -1144,6 +1144,30 @@ public class RestService extends Thread {
 			INSERT;
 		}
 
+		/**
+		 * Class representing a line in configuration with its number (position).
+		 */
+		@XmlRootElement
+		public static class LineWithPosition {
+			private String line;
+			private int position;
+
+			public LineWithPosition(String line, int position) {
+				this.line = line;
+				this.position = position;
+			}
+
+			@XmlElement @JsonView(DefaultView.class)
+			public String getLine() {
+				return this.line;
+			}
+			
+			@XmlElement @JsonView(DefaultView.class)
+			public int getPosition() {
+				return this.position;
+			}
+		}
+
 		/** The item. */
 		private String item;
 
@@ -1168,13 +1192,16 @@ public class RestService extends Thread {
 		/** The post context. */
 		private List<String> postContext;
 
+		/** The (indentation-based) hierarchy lines and positions */
+		private List<LineWithPosition> hierarchy;
+
 		/**
 		 * Instantiates a new rs config delta.
 		 *
 		 * @param delta the delta
 		 * @param context the context
 		 */
-		public RsConfigDelta(Delta<String> delta, List<String> context) {
+		public RsConfigDelta(AbstractDelta<String> delta, List<String> allOldLines, int[] oldLineParents) {
 			switch (delta.getType()) {
 			case INSERT:
 				this.diffType = Type.INSERT;
@@ -1186,16 +1213,24 @@ public class RestService extends Thread {
 			default:
 				this.diffType = Type.CHANGE;
 			}
-			this.originalPosition = delta.getOriginal().getPosition();
-			this.originalLines = delta.getOriginal().getLines();
-			this.revisedPosition = delta.getRevised().getPosition();
-			this.revisedLines = delta.getRevised().getLines();
-			this.preContext = context.subList(Math.max(this.originalPosition - 3, 0),
+			this.originalPosition = delta.getSource().getPosition();
+			this.originalLines = delta.getSource().getLines();
+			this.revisedPosition = delta.getTarget().getPosition();
+			this.revisedLines = delta.getTarget().getLines();
+			this.preContext = allOldLines.subList(Math.max(this.originalPosition - 3, 0),
 					this.originalPosition);
-			this.postContext = context.subList(Math.min(this.originalPosition
-					+ this.originalLines.size(), context.size() - 1),
+			this.postContext = allOldLines.subList(Math.min(this.originalPosition
+					+ this.originalLines.size(), allOldLines.size() - 1),
 					Math.min(this.originalPosition + this.originalLines.size() + 3,
-							context.size() - 1));
+						allOldLines.size() - 1));
+			this.hierarchy = new ArrayList<>();
+			int p = this.originalPosition;
+			p = oldLineParents[p];
+			while (p >= 0) {
+				this.hierarchy.add(new LineWithPosition(allOldLines.get(p), p));
+				p = oldLineParents[p];
+			}
+			Collections.reverse(this.hierarchy);
 		}
 
 		/**
@@ -1277,6 +1312,17 @@ public class RestService extends Thread {
 		public List<String> getPostContext() {
 			return postContext;
 		}
+
+
+		/**
+		 * Gets the hierarchy.
+		 *
+		 * @return the hierarchy
+		 */
+		@XmlElement @JsonView(DefaultView.class)
+		public List<LineWithPosition> getHierarchy() {
+			return hierarchy;
+		}
 	}
 
 	/**
@@ -1352,10 +1398,11 @@ public class RestService extends Thread {
 					String text1 = (attribute1 == null ? "" : attribute1.getAsText());
 					String text2 = (attribute2 == null ? "" : attribute2.getAsText());
 					List<String> lines1 = Arrays.asList(text1.replace("\r", "").split("\n"));
+					int[] lineParents1 = Config.getLineParents(lines1);
 					List<String> lines2 = Arrays.asList(text2.replace("\r", "").split("\n"));
 					Patch<String> patch = DiffUtils.diff(lines1, lines2);
-					for (Delta<String> delta : patch.getDeltas()) {
-						configDiffs.addDelta(definition.getTitle(), new RsConfigDelta(delta, lines1));
+					for (AbstractDelta<String> delta : patch.getDeltas()) {
+						configDiffs.addDelta(definition.getTitle(), new RsConfigDelta(delta, lines1, lineParents1));
 					}
 				}
 			}

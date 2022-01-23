@@ -270,6 +270,10 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	margin-left: 0.3em;
 }
 
+.ui-button:not(.ui-button-icon-only) .ui-button-text + .ui-icon {
+	margin-left: 0.3em;
+}
+
 
 .ui-button.small {
 	font-size: 9px;
@@ -906,6 +910,11 @@ h1 {
 	background-color: #FFFF99;
 }
 
+.nsconfig table tr.etc {
+	color: #888;
+}
+
+
 .nsconfig table.nsconfigtable {
 	table-layout: fixed;
 }
@@ -914,6 +923,7 @@ h1 {
 	text-align: right;
 	color: #CCC;
 	width: 50px;
+	user-select: none;
 }
 
 #nsconfig-differ {

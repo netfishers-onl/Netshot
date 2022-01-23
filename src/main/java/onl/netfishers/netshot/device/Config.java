@@ -21,6 +21,8 @@ package onl.netfishers.netshot.device;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,6 +45,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.annotations.Filter;
 
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
@@ -57,6 +60,30 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 		@Index(name = "changeDateIndex", columnList = "changeDate")
 })
 public class Config {
+
+	/**
+	 * From a list of config lines, get an array of pointers to the parent line,
+	 * based on indentation (either the direct parent line index, or -1 if no parent).
+	 * @param lines the config lines
+	 * @return an array, the indice of the direct parent line for each line of the passed list
+	 */
+	public static int[] getLineParents(List<String> lines) {
+		List<Pair<Integer, Integer>> lastLevels = new LinkedList<>();
+		int lineCount = lines.size();
+		int[] lineParents = new int[lineCount];
+		for (int lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+			String line = lines.get(lineIndex);
+			int l = 0;
+			while (l < line.length() && Character.isWhitespace(line.charAt(l))) {
+				l += 1;
+			}
+			final int level = l < line.length() ? l : 0;
+			lastLevels.removeIf(le -> le.getKey() >= level);
+			lastLevels.add(Pair.of(level, lineIndex));
+			lineParents[lineIndex] = (lastLevels.size() > 1) ? lastLevels.get(lastLevels.size() - 2).getValue() : -1;
+		}
+		return lineParents;
+	}
 
 	/** The attributes. */
 	private Set<ConfigAttribute> attributes = new HashSet<ConfigAttribute>();

@@ -2,11 +2,13 @@ package onl.netfishers.netshot;
 
 import org.junit.jupiter.api.Test;
 
+import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.Finder;
 import onl.netfishers.netshot.device.Finder.Expression.FinderParseException;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import org.junit.jupiter.api.Assertions;
@@ -148,5 +150,85 @@ public class DeviceTest {
 				() -> new Finder("[INVALID] IS TRUE", null),
 				"Parser didn't throw exception as expected");
 		}
+	}
+
+	@Nested
+	@DisplayName("Device config tests")
+	class ConfigTest {
+
+		@Test
+		@DisplayName("Config line parents")
+		void configLineParents() {
+			String[] configLines = new String[]{
+				/* 00 */ "version 16",
+				/* 01 */ "!",
+				/* 02 */ "service timestamps debug datetime msec",
+				/* 03 */ "no service password-encryption",
+				/* 04 */ "",
+				/* 05 */ "vrf definition VRF1",
+				/* 06 */ " rd 16:16",
+				/* 07 */ " address-family ipv4",
+				/* 08 */ " exit-address-family",
+				/* 09 */ "!",
+				/* 10 */ "!",
+				/* 11 */ "ip cef",
+				/* 12 */ "no ipv6 cef",
+				/* 13 */ "!",
+				/* 14 */ "!",
+				/* 15 */ "spanning-tree mode rapid-pvst",
+				/* 16 */ "!",
+				/* 17 */ "interface GigabitEthernet0/1",
+				/* 18 */ " description Some description",
+				/* 19 */ " ip address 192.168.1.254 255.255.255.0",
+				/* 20 */ " bandwidth 100000",
+				/* 21 */ " negotiation auto",
+				/* 22 */ "!",
+				/* 23 */ "interface GigabitEthernet0/2",
+				/* 24 */ " description Some description",
+				/* 25 */ " ip address 192.168.2.254 255.255.255.0",
+				/* 26 */ " ip ospf network point-to-point",
+				/* 27 */ " negotiation auto",
+				/* 28 */ " shutdown",
+				/* 29 */ "!",
+				/* 30 */ "router bgp 16",
+				/* 31 */ " bgp log-neighbor-changes",
+				/* 32 */ " no bgp default ipv4-unicast",
+				/* 33 */ " neighbor 192.168.255.1 remote-as 17",
+				/* 34 */ " !",
+				/* 35 */ " address-family ipv4",
+				/* 36 */ "  neigbor 192.168.255.1 activate",
+				/* 37 */ " exit-address-family",
+				/* 38 */ " !",
+				/* 39 */ " address-family ipv4 vrf VRF1",
+				/* 40 */ "  neighbor 192.168.254.3 remote-as 18",
+				/* 41 */ "  neighbor 192.168.254.3 activate",
+				/* 42 */ " exit-address-family",
+				/* 43 */ "!",
+				/* 44 */ "ip forward-protocol nd",
+				/* 45 */ "!",
+				/* 46 */ "no ip http server",
+				/* 47 */ "end",
+				/* 48 */ ""
+			};
+			int[] parents = new int[] {
+				-1, -1, -1, -1, -1, -1,
+				5,  5,  5,
+				-1, -1, -1, -1, -1, -1, -1, -1, -1,
+				17, 17, 17, 17,
+				-1, -1,
+				23, 23, 23, 23, 23,
+				-1, -1,
+				30, 30, 30, 30, 30,
+				35,
+				30, 30, 30,
+				39, 39,
+				30,
+				-1 ,-1, -1, -1, -1, -1,
+			};
+			int[] computedParents = Config.getLineParents(Arrays.asList(configLines));
+			Assertions.assertArrayEquals(parents, computedParents,
+				"Parent line indices do not match the expected ones");
+		}
+
 	}
 }

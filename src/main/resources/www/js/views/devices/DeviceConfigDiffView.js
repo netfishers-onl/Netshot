@@ -74,6 +74,15 @@ define([
 					that.showNumbers = !that.showNumbers;
 					$(d).find('.linenum').css("visibility", that.showNumbers ? "visible" : "hidden");
 				});
+				/* Stupid hack to allow user selecting text by column */
+				$(d).find("table .right").unbind("mousedown").mousedown(function() {
+					$(d).find("table .right").css("user-select", "text");
+					$(d).find("table .left").css("user-select", "none");
+				});
+				$(d).find("table .left").unbind("mousedown").mousedown(function() {
+					$(d).find("table .left").css("user-select", "text");
+					$(d).find("table .right").css("user-select", "none");
+				});
 			});
 			return this;
 		},

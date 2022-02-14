@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.7.2"
+	version: "1.7.3"
 };
 
 var Config = {

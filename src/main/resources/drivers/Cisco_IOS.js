@@ -100,7 +100,7 @@ var CLI = {
 		}
 	},
 	username: {
-		prompt: /^[Uu]sername: $/,
+		prompt: /^[Uu]ser[Nn]ame: $/,
 		macros: {
 			auto: {
 				cmd: "$$NetshotUsername$$",

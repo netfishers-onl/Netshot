@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoASA",
 	description: "Cisco ASA",
 	author: "NetFishers",
-	version: "1.5"
+	version: "1.6"
 };
 
 var Config = {

@@ -114,7 +114,7 @@ var CLI = {
 		fail: "Authentication failed - Telnet authentication failure."
 	},
 	disable: {
-		prompt: /^([A-Za-z\-_0-9\.]+(\/[A-Za-z\-]+)?\> )$/,
+		prompt: /^([A-Za-z\-_0-9\.]+(\/[A-Za-z\-]+)*\> )$/,
 		macros: {
 			enable: {
 				cmd: "enable",
@@ -143,7 +143,7 @@ var CLI = {
 	},
 
 	enable: {
-		prompt: /^([A-Za-z\-_0-9\.]+(\/[A-Za-z\-]+)?# )$/,
+		prompt: /^([A-Za-z\-_0-9\.]+(\/[A-Za-z\-]+)*# )$/,
 		error: /^% (.*)/m,
 		pager: {
 			avoid: "terminal pager 0",
@@ -174,7 +174,7 @@ var CLI = {
 	},
 	
 	configure: {
-		prompt: /^([A-Za-z\-_0-9\.]+\/[A-Za-z\-]\(conf[0-9\-a-zA-Z]+\)# )$/,
+		prompt: /^([A-Za-z\-_0-9\.]+(\/[A-Za-z\-]+)*\(conf[0-9\-a-zA-Z]+\)# )$/,
 		error: /^% (.*)/m,
 		clearPrompt: true,
 		macros: {

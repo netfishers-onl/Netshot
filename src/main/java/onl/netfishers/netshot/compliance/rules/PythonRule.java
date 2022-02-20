@@ -22,12 +22,18 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -76,6 +82,9 @@ public class PythonRule extends Rule {
 	/** Rule loader Python source. */
 	private static Source PYLOADER_SOURCE;
 
+	/** Max time (ms) to wait for script to execute */
+	private static long MAX_EXECUTION_TIME;
+
 	public static class CachedContext {
 		private Context context;
 		private long scriptHash;
@@ -93,6 +102,23 @@ public class PythonRule extends Rule {
 
 	/** The Python execution engine (for eval caching) */
 	private static Engine engine = Engine.create();
+
+	/**
+	 * Initialize some additional static variables from global configuration.
+	 */
+	public static void loadConfig() {
+		long maxExecutionTime = 60000;
+		try {
+			maxExecutionTime = Long.parseLong(Netshot.getConfig("netshot.python.maxexecutiontime",
+					Long.toString(maxExecutionTime)));
+		}
+		catch (IllegalArgumentException e) {
+			logger.error(
+				"Invalid value for Python max execution time (netshot.python.maxexecutiontime), using {}ms.",
+				maxExecutionTime);
+		}
+		PythonRule.MAX_EXECUTION_TIME = maxExecutionTime;
+	}
 
 	static {
 		try {
@@ -118,6 +144,7 @@ public class PythonRule extends Rule {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		PythonRule.loadConfig();
 	}
 
 	/** Was the execution prepared? */
@@ -314,7 +341,26 @@ public class PythonRule extends Rule {
 				return;
 			}
 			PyDeviceHelper deviceHelper = new PyDeviceHelper(device, session, taskLogger, true);
-			Value result = context.getBindings("python").getMember("_check").execute(deviceHelper);
+			Future<Value> futureResult = Executors.newSingleThreadExecutor().submit(new Callable<Value>() {
+				@Override
+				public Value call() throws Exception {
+					return context.getBindings("python").getMember("_check").execute(deviceHelper);
+				}
+			});
+			Value result;
+			try {
+				result = futureResult.get(PythonRule.MAX_EXECUTION_TIME, TimeUnit.MILLISECONDS);
+			}
+			catch (TimeoutException e1) {
+				try {
+					context.close(true);
+				}
+				catch (Exception e2) {
+					logger.warn("Error while closing abnormally long Python context", e2);
+				}
+				throw new TimeoutException(
+					"The rule took too long to execute (check for endless loop in the script or adjust netshot.python.maxexecutiontime value)");
+			}
 			String txtResult = null;
 			String comment = "";
 			if (result.isString()) {

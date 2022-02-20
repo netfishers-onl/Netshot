@@ -21,6 +21,12 @@ package onl.netfishers.netshot.compliance.rules;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.Duration;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -29,6 +35,7 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.Rule;
@@ -70,8 +77,28 @@ public class JavaScriptRule extends Rule {
 	/** Rule loader JavaScript source */
 	private static Source JSLOADER_SOURCE;
 
+	/** Max time (ms) to wait for script to execute */
+	private static long MAX_EXECUTION_TIME;
+
 	/** The Python execution engine (for eval caching) */
 	private static Engine engine = Engine.create();
+
+	/**
+	 * Initialize some additional static variables from global configuration.
+	 */
+	public static void loadConfig() {
+		long maxExecutionTime = 60000;
+		try {
+			maxExecutionTime = Long.parseLong(Netshot.getConfig("netshot.javascript.maxexecutiontime",
+					Long.toString(maxExecutionTime)));
+		}
+		catch (IllegalArgumentException e) {
+			logger.error(
+				"Invalid value for JavaScript max execution time (netshot.javascript.maxexecutiontime), using {}ms.",
+				maxExecutionTime);
+		}
+		JavaScriptRule.MAX_EXECUTION_TIME = maxExecutionTime;
+	}
 	
 	static {
 		try {
@@ -98,6 +125,7 @@ public class JavaScriptRule extends Rule {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		JavaScriptRule.loadConfig();
 	}
 
 	/** The prepared. */
@@ -120,14 +148,14 @@ public class JavaScriptRule extends Rule {
 			"}\n";
 
 	/**
-	 * Instantiates a new java script rule.
+	 * Instantiates a new JavaScript rule.
 	 */
 	protected JavaScriptRule() {
 
 	}
 
 	/**
-	 * Instantiates a new java script rule.
+	 * Instantiates a new JavaScript rule.
 	 *
 	 * @param name the name
 	 * @param policy the policy
@@ -158,12 +186,13 @@ public class JavaScriptRule extends Rule {
 
 	@Transient
 	public Context getContext() {
+		Context.Builder builder = Context
+			.newBuilder("js")
+			.allowExperimentalOptions(true)
+			.option("js.experimental-foreign-object-prototype", "true");
 		Context context;
 		synchronized (engine) {
-			context = Context.newBuilder()
-				.engine(engine).allowExperimentalOptions(true)
-				.option("js.experimental-foreign-object-prototype", "true")
-				.build();
+			context = builder.engine(engine).build();
 		}
 		context.eval("js", this.script);
 		context.eval(JSLOADER_SOURCE);
@@ -218,7 +247,26 @@ public class JavaScriptRule extends Rule {
 				return;
 			}
 			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, null, session, taskLogger, true);
-			Value result = context.getBindings("js").getMember("_check").execute(deviceHelper);
+			Future<Value> futureResult = Executors.newSingleThreadExecutor().submit(new Callable<Value>() {
+				@Override
+				public Value call() throws Exception {
+					return context.getBindings("js").getMember("_check").execute(deviceHelper);
+				}
+			});
+			Value result;
+			try {
+				result = futureResult.get(JavaScriptRule.MAX_EXECUTION_TIME, TimeUnit.MILLISECONDS);
+			}
+			catch (TimeoutException e1) {
+				try {
+					context.close(true);
+				}
+				catch (Exception e2) {
+					logger.warn("Error while closing abnormally long JavaScript context", e2);
+				}
+				throw new TimeoutException(
+					"The rule took too long to execute (check for endless loop in the script or adjust netshot.javascript.maxexecutiontime value)");
+			}
 			String txtResult = null;
 			String comment = "";
 			if (result.isString()) {

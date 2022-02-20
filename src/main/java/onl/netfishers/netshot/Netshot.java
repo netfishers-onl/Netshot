@@ -58,6 +58,8 @@ import onl.netfishers.netshot.aaa.Tacacs;
 import onl.netfishers.netshot.cluster.ClusterManager;
 import onl.netfishers.netshot.collector.SnmpTrapReceiver;
 import onl.netfishers.netshot.collector.SyslogServer;
+import onl.netfishers.netshot.compliance.rules.JavaScriptRule;
+import onl.netfishers.netshot.compliance.rules.PythonRule;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.rest.LoggerFilter;
@@ -572,6 +574,8 @@ public class Netshot extends Thread {
 					Radius.loadAllServersConfig();
 					Tacacs.loadAllServersConfig();
 					TakeSnapshotTask.loadConfig();
+					JavaScriptRule.loadConfig();
+					PythonRule.loadConfig();
 				}
 			});
 			logger.warn("Netshot is started");

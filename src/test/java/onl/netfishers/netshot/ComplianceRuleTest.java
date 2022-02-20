@@ -1,5 +1,7 @@
 package onl.netfishers.netshot;
 
+import java.lang.reflect.Field;
+
 import org.hibernate.Session;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -518,6 +520,28 @@ public class ComplianceRuleTest {
 			Assertions.assertTrue(taskLogger.getLog().contains("DEBUG - Debug message\n"),
 				"Debug message is not correct");
 		}
+		
+		@Test
+		@DisplayName("Endless JS rule")
+		void endlessRule() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+			rule.setScript(
+				"function check(device) {" +
+				" while (true) {}" +
+				" return CONFORMING;" +
+				"}"
+			);
+			// Use reflection to set the max execution time
+			Field maxTimeField = JavaScriptRule.class.getDeclaredField("MAX_EXECUTION_TIME");
+			maxTimeField.setAccessible(true);
+			maxTimeField.setLong(null, 5000);
+			// Check
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.INVALIDRULE, result.getResult(), 
+				"The result is not INVALIDRULE");
+			Assertions.assertTrue(taskLogger.getLog().contains("rule took too long"),
+				"Error message is not correct");
+		}
 	}
 	
 	@Nested
@@ -824,6 +848,29 @@ public class ComplianceRuleTest {
 			rule.check(device, fakeSession, taskLogger);
 			Assertions.assertTrue(taskLogger.getLog().contains("DEBUG - Debug message\n"),
 				"Debug message is not correct");
+		}
+		
+		@Test
+		@DisplayName("Endless Python rule")
+		void endlessRule() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  while True:" + "\n" +
+				"    pass" + "\n" +
+				"  return result_option.CONFORMING" + "\n" +
+				"" + "\n"
+			);
+			// Use reflection to set the max execution time
+			Field maxTimeField = PythonRule.class.getDeclaredField("MAX_EXECUTION_TIME");
+			maxTimeField.setAccessible(true);
+			maxTimeField.setLong(null, 5000);
+			// Check
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.INVALIDRULE, result.getResult(), 
+				"The result is not INVALIDRULE");
+			Assertions.assertTrue(taskLogger.getLog().contains("rule took too long"),
+				"Error message is not correct");
 		}
 	}
 }

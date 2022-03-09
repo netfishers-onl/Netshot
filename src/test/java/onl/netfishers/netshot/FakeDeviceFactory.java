@@ -1,6 +1,7 @@
 package onl.netfishers.netshot;
 
 import java.net.UnknownHostException;
+import java.util.HashSet;
 import java.util.Set;
 
 import onl.netfishers.netshot.device.Config;
@@ -40,7 +41,7 @@ public class FakeDeviceFactory {
 		device.setCreator("tester");
 		device.setSerialNumber("16161616TEST16");
 		device.setComments("Comments for testing");
-		device.setVrfInstances(Set.of("VRF1", "VRF2"));
+		device.setVrfInstances(new HashSet<String>(Set.of("VRF1", "VRF2")));
 		device.getModules().add(new Module("chassis", "TESTCHASSIS", "16161616TEST16", device));
 		device.getModules().add(new Module("slot", "TESTSLOT", "29038POSD203", device));
 		{

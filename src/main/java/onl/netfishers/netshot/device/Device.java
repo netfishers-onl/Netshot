@@ -386,6 +386,21 @@ public class Device {
 		return attributes;
 	}
 
+	/**
+	 * Return a device attribute based on name
+	 * @param name = name of the attribute to find
+	 * @return the found attribute or null if none
+	 */
+	@Transient
+	public DeviceAttribute getAttribute(String name) {
+		for (DeviceAttribute attribute : this.attributes) {
+			if (attribute.getName().equals(name)) {
+				return attribute;
+			}
+		}
+		return null;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Transient
 	public List<DeviceCredentialSet> getAutoCredentialSetList(Session session) throws HibernateException {
@@ -687,6 +702,21 @@ public class Device {
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "device", orphanRemoval = true)
 	public List<NetworkInterface> getNetworkInterfaces() {
 		return networkInterfaces;
+	}
+
+	/**
+	 * Get a network interface based on its name.
+	 * @param name = the name of the interface to look for
+	 * @return the found interface or null if none was found
+	 */
+	@Transient
+	public NetworkInterface getNetworkInterface(String name) {
+		for (NetworkInterface networkInterface: this.networkInterfaces) {
+			if (networkInterface.getInterfaceName().equals(name)) {
+				return networkInterface;
+			}
+		}
+		return null;
 	}
 
 

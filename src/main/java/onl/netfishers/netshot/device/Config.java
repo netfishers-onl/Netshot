@@ -142,6 +142,21 @@ public class Config {
 	}
 
 	/**
+	 * Return a config attribute based on name
+	 * @param name = name of the attribute to find
+	 * @return the found attribute or null if none
+	 */
+	@Transient
+	public ConfigAttribute getAttribute(String name) {
+		for (ConfigAttribute attribute : this.attributes) {
+			if (attribute.getName().equals(name)) {
+				return attribute;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Gets the author.
 	 *
 	 * @return the author

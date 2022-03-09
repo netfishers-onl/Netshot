@@ -188,7 +188,7 @@ public class SnapshotCliScript extends CliScript {
 			logger.error("Error while running snapshot using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("Error while running snapshot using driver %s: '%s'.",
 					driver.getName(), e.getMessage()));
-			if (e.getMessage().contains("Authentication failed")) {
+			if (e.getMessage() != null && e.getMessage().contains("Authentication failed")) {
 				throw new InvalidCredentialsException("Authentication failed");
 			}
 			else {

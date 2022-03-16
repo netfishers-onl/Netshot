@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.7.2"
+	version: "1.7.3"
 };
 
 var Config = {
@@ -271,7 +271,7 @@ function snapshot(cli, device, config) {
 			device.set("family", "Cisco Catalyst 1900");
 			device.set("networkClass", "SWITCH");
 		}
-		else if (system.match(/^(AS)?25[12][12].*/)) {
+		else if (system.match(/(^cisco )?(AS)?25[0-9][0-9].*/)) {
 			device.set("family", "Cisco 2500");
 		}
 		else if (system.match(/.*26[12][01].*/)) {

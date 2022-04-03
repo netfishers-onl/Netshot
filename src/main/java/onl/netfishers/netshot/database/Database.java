@@ -219,12 +219,13 @@ public class Database {
 	public static void update() {
 		try {
 			Class.forName("org.postgresql.Driver");
-			Connection connection = Database.getConnection(false);
-			liquibase.database.Database database = DatabaseFactory.getInstance()
-					.findCorrectDatabaseImplementation(new JdbcConnection(connection));
-			Liquibase liquibase = new Liquibase("migration/netshot0.xml", new ClassLoaderResourceAccessor(), database);
-			liquibase.update(new Contexts(), new LabelExpression());
-			connection.close();
+			try (Connection connection = Database.getConnection(false)) {
+				liquibase.database.Database database = DatabaseFactory.getInstance()
+						.findCorrectDatabaseImplementation(new JdbcConnection(connection));
+				try (Liquibase liquibase = new Liquibase("migration/netshot0.xml", new ClassLoaderResourceAccessor(), database)) {
+					liquibase.update(new Contexts(), new LabelExpression());
+				}
+			}
 		}
 		catch (Exception e) {
 			logger.error("Unable to perform initial schema update", e);

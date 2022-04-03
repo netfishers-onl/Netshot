@@ -9,8 +9,7 @@ define([
 
 		url: "api/devices",
 		searchUrl: "api/devices/search",
-		groupUrl: "api/devices/group/",
-		ruleUrl: "api/devices/rule/",
+		ruleUrl: "api/rule/",
 		model: DeviceModel,
 
 		initialize: function() {
@@ -33,10 +32,10 @@ define([
 			var data = (options.data || {});
 
 			if (this.filter.type == "group") {
-				options.url = this.groupUrl + this.filter.group;
+				options.url = this.url + "?group=" + this.filter.group;
 			}
 			else if (this.filter.type == "rule") {
-				options.url = this.ruleUrl + this.filter.rule;
+				options.url = this.ruleUrl + this.filter.rule + "/exempteddevices";
 			}
 			else if (this.filter.type == "simple" || this.filter.type == "advanced") {
 				options.url = this.searchUrl;

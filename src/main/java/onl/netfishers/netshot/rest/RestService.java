@@ -47,6 +47,7 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -213,6 +214,32 @@ public class RestService extends Thread {
 
 	private static final String HTTP_STATIC_PATH = Netshot.getConfig("netshot.http.staticpath", "/");
 	static final String HTTP_API_PATH = Netshot.getConfig("netshot.http.apipath", "/api");
+
+	/** Pagination default query params */
+	public static class PaginationParams {
+		@QueryParam("offset")
+		Integer offset;
+
+		@QueryParam("limit")
+		Integer limit;
+
+		public void apply(Query<?> query) {
+			if (this.offset != null) {
+				if (this.offset < 0) {
+					throw new NetshotBadRequestException("Invalid offset parameter",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+				}
+				query.setFirstResult(this.offset);
+			}
+			if (this.limit != null) {
+				if (this.limit < 1) {
+					throw new NetshotBadRequestException("Invalid limit parameter",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+				}
+				query.setMaxResults(this.limit);
+			}
+		}
+	}
 
 	/**
 	 * Get the current REST service TCP port.
@@ -421,12 +448,13 @@ public class RestService extends Thread {
 		summary = "Get the device domains",
 		description = "Returns the list of device domains."
 	)
-	public List<RsDomain> getDomains() throws WebApplicationException {
+	public List<RsDomain> getDomains(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, domains.");
 		Session session = Database.getSession(true);
-		List<Domain> domains;
 		try {
-			domains = session.createQuery("select d from Domain d", Domain.class).list();
+			Query<Domain> query = session.createQuery("select d from Domain d", Domain.class);
+			paginationParams.apply(query);
+			List<Domain> domains = query.list();
 			List<RsDomain> rsDomains = new ArrayList<>();
 			for (Domain domain : domains) {
 				rsDomains.add(new RsDomain(domain));
@@ -772,20 +800,23 @@ public class RestService extends Thread {
 		summary = "Get device interfaces",
 		description = "Returns the list of interfaces of a given device (by ID)."
 	)
-	public List<NetworkInterface> getDeviceInterfaces(@PathParam("id") Long id)
+	public List<NetworkInterface> getDeviceInterfaces(@PathParam("id") Long id,
+			@BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} interfaces.", id);
 		Session session = Database.getSession(true);
 		try {
 			List<NetworkInterface> deviceInterfaces;
-			deviceInterfaces = session
-					.createQuery(
-							"from NetworkInterface AS networkInterface "
-									+ "left join fetch networkInterface.ip4Addresses "
-									+ "left join fetch networkInterface.ip6Addresses "
-									+ "where device = :device", NetworkInterface.class)
-					.setParameter("device", id)
-					.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
+			Query<NetworkInterface> query = session
+				.createQuery(
+						"from NetworkInterface AS networkInterface "
+								+ "left join fetch networkInterface.ip4Addresses "
+								+ "left join fetch networkInterface.ip6Addresses "
+								+ "where device = :device", NetworkInterface.class)
+				.setParameter("device", id)
+				.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+			paginationParams.apply(query);
+			deviceInterfaces = query.list();
 			return deviceInterfaces;
 		}
 		catch (HibernateException e) {
@@ -814,14 +845,16 @@ public class RestService extends Thread {
 		summary = "Get device modules",
 		description = "Returns the list of hardware modules of a given device, by ID."
 	)
-	public List<Module> getDeviceModules(@PathParam("id") Long id)
+	public List<Module> getDeviceModules(@PathParam("id") Long id, @BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} modules.", id);
 		Session session = Database.getSession(true);
 		try {
-			List<Module> deviceModules = session
-					.createQuery("from Module m where m.device.id = :device", Module.class)
-					.setParameter("device", id).list();
+			Query<Module> query = session
+				.createQuery("from Module m where m.device.id = :device", Module.class)
+				.setParameter("device", id);
+			paginationParams.apply(query);
+			List<Module> deviceModules = query.list();
 			return deviceModules;
 		}
 		catch (HibernateException e) {
@@ -850,32 +883,34 @@ public class RestService extends Thread {
 		summary = "Get device tasks",
 		description = "Returns the list of tasks of a given device (by ID). Up to 'max' tasks are returned, sorted by status and significant date."
 	)
-	public List<Task> getDeviceTasks(@PathParam("id") Long id,
-			@PathParam("max") @DefaultValue("20") Integer maxCount)
+	public List<Task> getDeviceTasks(@PathParam("id") Long id, @BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} tasks.", id);
-		if (maxCount < 1) {
-			throw new NetshotBadRequestException("Invalid max parameter",
+		if (paginationParams.offset != null) {
+			throw new NetshotBadRequestException("Offset is not supported on this endpoint",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+		}
+		if (paginationParams.limit == null) {
+			paginationParams.limit = 1000;
 		}
 		Session session = Database.getSession(true);
 		try {
 			List<Task> tasks = new ArrayList<>();
 			tasks.addAll(session.createQuery(
 					"select t from CheckComplianceTask t where t.device.id = :deviceId order by t.changeDate desc", CheckComplianceTask.class)
-					.setParameter("deviceId", id).setMaxResults(maxCount).list());
+					.setParameter("deviceId", id).setMaxResults(paginationParams.limit).list());
 			tasks.addAll(session.createQuery(
 					"select t from DiscoverDeviceTypeTask t where t.deviceId = :deviceId order by t.changeDate desc", DiscoverDeviceTypeTask.class)
-					.setParameter("deviceId", id).setMaxResults(maxCount).list());
+					.setParameter("deviceId", id).setMaxResults(paginationParams.limit).list());
 			tasks.addAll(session.createQuery(
 					"select t from TakeSnapshotTask t where t.device.id = :deviceId order by t.changeDate desc", TakeSnapshotTask.class)
-					.setParameter("deviceId", id).setMaxResults(maxCount).list());
+					.setParameter("deviceId", id).setMaxResults(paginationParams.limit).list());
 			tasks.addAll(session.createQuery(
 					"select t from RunDeviceScriptTask t where t.device.id = :deviceId order by t.changeDate desc", RunDeviceScriptTask.class)
-					.setParameter("deviceId", id).setMaxResults(maxCount).list());
+					.setParameter("deviceId", id).setMaxResults(paginationParams.limit).list());
 			tasks.addAll(session.createQuery(
 					"select t from RunDiagnosticsTask t where t.device.id = :deviceId order by t.changeDate desc", RunDiagnosticsTask.class)
-					.setParameter("deviceId", id).setMaxResults(maxCount).list());
+					.setParameter("deviceId", id).setMaxResults(paginationParams.limit).list());
 			
 			Collections.sort(tasks, new Comparator<Task>() {
 				private int getPriority(Task.Status status) {
@@ -925,8 +960,8 @@ public class RestService extends Thread {
 				}
 			});
 			int max =  tasks.size();
-			if (maxCount != null && maxCount < tasks.size()) {
-				max = maxCount;
+			if (paginationParams.limit < tasks.size()) {
+				max = paginationParams.limit;
 			}
 			return tasks.subList(0, max);
 		}
@@ -956,16 +991,17 @@ public class RestService extends Thread {
 		summary = "Get device configs",
 		description = "Returns the list of configurations of the given device, by ID."
 	)
-	public List<Config> getDeviceConfigs(@PathParam("id") Long id)
+	public List<Config> getDeviceConfigs(@PathParam("id") Long id, @BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} configs.", id);
 		Session session = Database.getSession(true);
 		try {
 			session.enableFilter("lightAttributesOnly");
-			List<Config> deviceConfigs = session
+			Query<Config> query = session
 				.createQuery("from Config c left join fetch c.attributes ca where c.device.id = :device", Config.class)
-				.setParameter("device", id).list();
-			return deviceConfigs;
+				.setParameter("device", id);
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the configs.", e);
@@ -1605,15 +1641,23 @@ public class RestService extends Thread {
 		summary = "Get the devices",
 		description = "Retrieves the device list with minimal details."
 	)
-	public List<RsLightDevice> getDevices() throws WebApplicationException {
+	public List<RsLightDevice> getDevices(@BeanParam PaginationParams paginationParams,
+			@QueryParam("group") Long groupId) throws WebApplicationException {
 		logger.debug("REST request, devices.");
 		Session session = Database.getSession(true);
 		try {
-			@SuppressWarnings({ "deprecation", "unchecked" })
-			List<RsLightDevice> devices = session.createQuery(DEVICELIST_BASEQUERY + "from Device d")
-				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
-				.list();
-			return devices;
+			String hqlQuery = DEVICELIST_BASEQUERY + "from Device d";
+			if (groupId != null) {
+				hqlQuery += " join d.ownerGroups g where g.id = :groupId";
+			}
+			@SuppressWarnings({ "unchecked", "deprecation" })
+			Query<RsLightDevice> query = session.createQuery(hqlQuery)
+				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class));
+			if (groupId != null) {
+				query.setParameter("groupId", groupId);
+			}
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the devices", e);
@@ -1713,16 +1757,16 @@ public class RestService extends Thread {
 		summary = "Get the existing device families",
 		description = "Returns the list of device families (driver specific) currenly known in the database."
 	)
-	public List<RsDeviceFamily> getDeviceFamilies() throws WebApplicationException {
+	public List<RsDeviceFamily> getDeviceFamilies(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, device families.");
 		Session session = Database.getSession(true);
 		try {
 			@SuppressWarnings({ "deprecation", "unchecked" })
-			List<RsDeviceFamily> deviceFamilies = session
+			Query<RsDeviceFamily> query = session
 				.createQuery("select distinct d.driver as driver, d.family as deviceFamily from Device d")
-				.setResultTransformer(Transformers.aliasToBean(RsDeviceFamily.class))
-				.list();
-			return deviceFamilies;
+				.setResultTransformer(Transformers.aliasToBean(RsDeviceFamily.class));
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Error while loading device families.", e);
@@ -1765,16 +1809,16 @@ public class RestService extends Thread {
 		summary = "Get the known part numbers",
 		description = "Returns the list of all known part numbers currently existing in the module table."
 	)
-	public List<RsPartNumber> getPartNumbers() throws WebApplicationException {
+	public List<RsPartNumber> getPartNumbers(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, part numbers.");
 		Session session = Database.getSession(true);
 		try {
 			@SuppressWarnings({ "deprecation", "unchecked" })
-			List<RsPartNumber> partNumbers = session
+			Query<RsPartNumber> query = session
 				.createQuery("select distinct m.partNumber as partNumber from Module m")
-				.setResultTransformer(Transformers.aliasToBean(RsPartNumber.class))
-				.list();
-			return partNumbers;
+				.setResultTransformer(Transformers.aliasToBean(RsPartNumber.class));
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Error while loading part numbers.", e);
@@ -2856,15 +2900,13 @@ public class RestService extends Thread {
 		summary = "Get the tasks",
 		description = "Returns the list of tasks. Up to 'max' tasks are returned."
 	)
-	public List<Task> getTasks(@PathParam("max") @DefaultValue("1000") Integer maxCount) {
+	public List<Task> getTasks(@BeanParam PaginationParams paginationParams) {
 		logger.debug("REST request, get tasks.");
 		Session session = Database.getSession(true);
 		try {
-			List<Task> tasks = session
-				.createQuery("from Task t order by t.id desc", Task.class)
-				.setMaxResults(maxCount)
-				.list();
-			return tasks;
+			Query<Task> query = session.createQuery("from Task t order by t.id desc", Task.class);
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the tasks.", e);
@@ -2891,17 +2933,18 @@ public class RestService extends Thread {
 		summary = "Get the global credential sets",
 		description = "Returns the list of global credential sets (SSH, SNMP, etc. accounts) for authentication against the devices."
 	)
-	public List<DeviceCredentialSet> getCredentialSets()
+	public List<DeviceCredentialSet> getCredentialSets(@BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
 		logger.debug("REST request, get credentials.");
 		Session session = Database.getSession(true);
 		List<DeviceCredentialSet> credentialSets;
 		try {
-			credentialSets = session
+			Query<DeviceCredentialSet> query = session
 				.createQuery("select cs from DeviceCredentialSet cs where not (cs.deviceSpecific = :true)",
 						DeviceCredentialSet.class)
-				.setParameter("true", true)
-				.list();
+				.setParameter("true", true);
+			paginationParams.apply(query);
+			credentialSets = query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the credentials.", e);
@@ -3374,13 +3417,14 @@ public class RestService extends Thread {
 		summary = "Get the device groups",
 		description = "Returns the list of device groups, including their definition."
 	)
-	public List<DeviceGroup> getGroups() throws WebApplicationException {
+	public List<DeviceGroup> getGroups(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, get groups.");
 		Session session = Database.getSession(true);
 		try {
-			List<DeviceGroup> deviceGroups =
-					session.createQuery("select g from DeviceGroup g", DeviceGroup.class).list();
-			return deviceGroups;
+			Query<DeviceGroup> query =
+					session.createQuery("select g from DeviceGroup g", DeviceGroup.class);
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the groups.", e);
@@ -3664,55 +3708,6 @@ public class RestService extends Thread {
 		catch (WebApplicationException e) {
 			session.getTransaction().rollback();
 			throw e;
-		}
-		finally {
-			session.close();
-		}
-	}
-
-	/**
-	 * Gets the group devices.
-	 *
-	 * @param id the id
-	 * @return the group devices
-	 * @throws WebApplicationException the web application exception
-	 */
-	@GET
-	@Path("/devices/group/{id}")
-	@RolesAllowed("readonly")
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
-	@JsonView(RestApiView.class)
-	@Operation(
-		summary = "Get members of a device group",
-		description = "Returns the list of devices which belong to the given group, by ID."
-	)
-	public List<RsLightDevice> getGroupDevices(@PathParam("id") Long id)
-			throws WebApplicationException {
-		logger.debug("REST request, get devices from group {}.", id);
-		Session session = Database.getSession(true);
-		DeviceGroup group;
-		try {
-			group = (DeviceGroup) session.get(DeviceGroup.class, id);
-			if (group == null) {
-				logger.error("Unable to find the group {}.", id);
-				throw new NetshotBadRequestException("Can't find this group",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
-			}
-			@SuppressWarnings("unchecked")
-			Query<RsLightDevice> query = session.createQuery(
-					RestService.DEVICELIST_BASEQUERY
-					+ "from Device d join d.ownerGroups g where g.id = :id")
-					.setParameter("id", id);
-			@SuppressWarnings("deprecation")
-			List<RsLightDevice> devices = query
-				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
-				.list();
-			return devices;
-		}
-		catch (HibernateException e) {
-			logger.error("Unable to fetch the devices of group {}.", id, e);
-			throw new NetshotBadRequestException("Unable to fetch the devices",
-					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
 			session.close();
@@ -5002,14 +4997,14 @@ public class RestService extends Thread {
 		summary = "Get the compliance policies",
 		description = "Returns the list of compliance policies."
 	)
-	public List<Policy> getPolicies() throws WebApplicationException {
+	public List<Policy> getPolicies(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, get policies.");
 		Session session = Database.getSession(true);
 		try {
-			List<Policy> policies = session
-				.createQuery("from Policy p left join fetch p.targetGroup", Policy.class)
-				.list();
-			return policies;
+			Query<Policy> query = session
+				.createQuery("from Policy p left join fetch p.targetGroup", Policy.class);
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the policies.", e);
@@ -6081,7 +6076,7 @@ public class RestService extends Thread {
 	 * @throws WebApplicationException the web application exception
 	 */
 	@GET
-	@Path("/devices/rule/{id}")
+	@Path("/rule/{id}/exempteddevices")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -6089,17 +6084,18 @@ public class RestService extends Thread {
 		summary = "Get the exempted devices of a compliance rule",
 		description = "Returns the list of devices which have an exemption against a given compliance rule, by ID."
 	)
-	public List<RsLightExemptedDevice> getExemptedDevices(@PathParam("id") Long id) throws WebApplicationException {
+	public List<RsLightExemptedDevice> getExemptedDevices(@BeanParam PaginationParams paginationParams,
+			@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get exemptions for rule {}.", id);
 		Session session = Database.getSession(true);
 		try {
 			@SuppressWarnings({ "deprecation", "unchecked" })
-			List<RsLightExemptedDevice> exemptions = session
+			Query<RsLightExemptedDevice> query = session
 				.createQuery(DEVICELIST_BASEQUERY + ", e.expirationDate as expirationDate from Exemption e join e.key.device d where e.key.rule.id = :id")
 				.setParameter("id", id)
-				.setResultTransformer(Transformers.aliasToBean(RsLightExemptedDevice.class))
-				.list();
-			return exemptions;
+				.setResultTransformer(Transformers.aliasToBean(RsLightExemptedDevice.class));
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the exemptions.", e);
@@ -6291,19 +6287,20 @@ public class RestService extends Thread {
 		summary = "Get the compliance results for a device",
 		description = "Returns the compliance results for a give device, by ID."
 	)
-	public List<RsDeviceRule> getDeviceComplianceResults(@PathParam("id") Long id) throws WebApplicationException {
+	public List<RsDeviceRule> getDeviceComplianceResults(@BeanParam PaginationParams paginationParams,
+			@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get compliance results for device {}.", id);
 		Session session = Database.getSession(true);
 		try {
 			@SuppressWarnings({ "deprecation", "unchecked" })
-			List<RsDeviceRule> rules = session.createQuery(
+			Query<RsDeviceRule> query = session.createQuery(
 					"select r.id as id, r.name as ruleName, p.name as policyName, cr.result as result, cr.checkDate as checkDate, cr.comment as comment, " +
 					"e.expirationDate as expirationDate from Rule r join r.policy p join p.targetGroup g join g.cachedDevices d1 with d1.id = :id " +
 					"left join r.checkResults cr with cr.key.device.id = :id left join r.exemptions e with e.key.device.id = :id")
 				.setParameter("id", id)
-				.setResultTransformer(Transformers.aliasToBean(RsDeviceRule.class))
-				.list();
-			return rules;
+				.setResultTransformer(Transformers.aliasToBean(RsDeviceRule.class));
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the rules.", e);
@@ -7507,14 +7504,14 @@ public class RestService extends Thread {
 		summary = "Get the software compliance rules",
 		description = "Returns the list of software compliance rules."
 	)
-	public List<SoftwareRule> getSoftwareRules() throws WebApplicationException {
+	public List<SoftwareRule> getSoftwareRules(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, software rules.");
 		Session session = Database.getSession(true);
 		try {
-			List<SoftwareRule> rules = session
-				.createQuery("from SoftwareRule r left join fetch r.targetGroup g", SoftwareRule.class)
-				.list();
-			return rules;
+			Query<SoftwareRule> query = session
+				.createQuery("from SoftwareRule r left join fetch r.targetGroup g", SoftwareRule.class);
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the software rules.", e);
@@ -8378,12 +8375,13 @@ public class RestService extends Thread {
 		summary = "Get the users",
 		description = "Returns the list of Netshot users."
 	)
-	public List<UiUser> getUsers() throws WebApplicationException {
+	public List<UiUser> getUsers(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, get user list.");
 		Session session = Database.getSession(true);
 		try {
-			List<UiUser> users = session.createQuery("from onl.netfishers.netshot.aaa.UiUser", UiUser.class).list();
-			return users;
+			Query<UiUser> query = session.createQuery("from onl.netfishers.netshot.aaa.UiUser", UiUser.class);
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to retrieve the users.", e);
@@ -8874,12 +8872,13 @@ public class RestService extends Thread {
 		summary = "Get the API tokens",
 		description = "Returns the list of API tokens."
 	)
-	public List<ApiToken> getApiTokens() throws WebApplicationException {
+	public List<ApiToken> getApiTokens(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, get API token list.");
 		Session session = Database.getSession(true);
 		try {
-			List<ApiToken> apiTokens = session.createQuery("from ApiToken", ApiToken.class).list();
-			return apiTokens;
+			Query<ApiToken> query = session.createQuery("from ApiToken", ApiToken.class);
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to retrieve the API tokens.", e);
@@ -9671,12 +9670,13 @@ public class RestService extends Thread {
 		summary = "Get command scripts",
 		description = "Returns the list of command scripts."
 	)
-	public List<DeviceJsScript> getScripts() {
+	public List<DeviceJsScript> getScripts(@BeanParam PaginationParams paginationParams) {
 		logger.debug("REST request, get scripts.");
 		Session session = Database.getSession(true);
 		try {
-			List<DeviceJsScript> scripts =
-					session.createQuery("from DeviceJsScript s", DeviceJsScript.class).list();
+			Query<DeviceJsScript> query = session.createQuery("from DeviceJsScript s", DeviceJsScript.class);
+			paginationParams.apply(query);
+			List<DeviceJsScript> scripts = query.list();
 			for (DeviceJsScript script : scripts) {
 				script.setScript(null);
 			}
@@ -9965,14 +9965,14 @@ public class RestService extends Thread {
 		summary = "Get the diagnostics",
 		description = "Returns the list of diagnostics."
 	)
-	public List<Diagnostic> getDiagnostics() throws WebApplicationException {
+	public List<Diagnostic> getDiagnostics(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, get diagnotics.");
 		Session session = Database.getSession(true);
 		try {
-			List<Diagnostic> diagnostics =
-					session.createQuery("select d from Diagnostic d left join fetch d.targetGroup", Diagnostic.class)
-					.list();
-			return diagnostics;
+			Query<Diagnostic> query =
+					session.createQuery("select d from Diagnostic d left join fetch d.targetGroup", Diagnostic.class);
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the diagnostics.", e);
@@ -10298,15 +10298,16 @@ public class RestService extends Thread {
 		summary = "Get diagnostic results",
 		description = "Returns the results of a given diagnostic, by ID."
 	)
-	public List<DiagnosticResult> getDeviceDiagnosticResults(@PathParam("id") Long id) throws WebApplicationException {
+	public List<DiagnosticResult> getDeviceDiagnosticResults(@BeanParam PaginationParams paginationParams,
+			@PathParam("id") Long id) throws WebApplicationException {
 		logger.debug("REST request, get diagnostic results for device {}.", id);
 		Session session = Database.getSession(true);
 		try {
-			List<DiagnosticResult> results = session
+			Query<DiagnosticResult> query = session
 				.createQuery("from DiagnosticResult dr where dr.device.id = :id", DiagnosticResult.class)
-				.setParameter("id", id)
-				.list();
-			return results;
+				.setParameter("id", id);
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the diagnostic results.", e);
@@ -10333,12 +10334,13 @@ public class RestService extends Thread {
 		summary = "Get the hooks",
 		description = "Returns the current list of hooks."
 	)
-	public List<Hook> getHooks() throws WebApplicationException {
+	public List<Hook> getHooks(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, hooks.");
 		Session session = Database.getSession(true);
 		try {
-			List<Hook> hooks = session.createQuery("select h from Hook h left join fetch h.triggers", Hook.class).list();
-			return hooks;
+			Query<Hook> query = session.createQuery("select h from Hook h left join fetch h.triggers", Hook.class);
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the hooks.", e);
@@ -10564,14 +10566,10 @@ public class RestService extends Thread {
 	}
 
 	/**
-<<<<<<< Updated upstream
 	 * Gets the cluster members.
 	 *
 	 * @return the cluster members
 	 * @throws WebApplicationException the web application exception
-=======
-	 * Retrieves information about cluster members.
->>>>>>> Stashed changes
 	 */
 	@GET
 	@Path("/cluster/members")
@@ -10629,14 +10627,10 @@ public class RestService extends Thread {
 	}
 	
 	/**
-<<<<<<< Updated upstream
 	 * Gets the cluster mastership status of the current node.
 	 *
 	 * @return the mastership status
 	 * @throws WebApplicationException the web application exception
-=======
-	 * Retrieves the cluster master status.
->>>>>>> Stashed changes
 	 */
 	@GET
 	@PermitAll

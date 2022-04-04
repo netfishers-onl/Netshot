@@ -24,7 +24,7 @@
 	name: "AvocentACS", /* Unique identifier of the driver within Netshot. */
 	description: "Avocent ACS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "1.1" /* Version will appear in the Admin tab. */
+	version: "1.3" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -110,7 +110,7 @@ var CLI = {
 		}
 	},
 	cli: { /* The basic Avocent prompt. */
-		prompt: /^((\*\*|--):-\s[A-Za-z\.-_\/]+\scli->)(\s)?(\x07)?$/,
+		prompt: /^((\*\*|--)(:-|:#-)\s[a-z\.-_]+\scli->)(\s)?(\x07)?$/,
 		clearPrompt: true,
 		error: /^(Error: .*)/m,
 		pager: { /* 'pager': define how to handle the pager for long outputs. */
@@ -130,6 +130,16 @@ var CLI = {
 			},
 			revert: {
 				cmd: "revert",
+				options: [ "cli" ],
+				target: "cli",
+			},
+			delete: {
+				cmd: "delete -",
+				options: [ "cli" ],
+				target: "cli",
+			},
+			save: {
+				cmd: "save --cancelOnError",
 				options: [ "cli" ],
 				target: "cli",
 			},

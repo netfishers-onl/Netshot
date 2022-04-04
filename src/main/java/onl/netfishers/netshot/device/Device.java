@@ -124,6 +124,9 @@ public class Device {
 		/** The wirelesscontroller. */
 		WIRELESSCONTROLLER,
 
+		/** The consoleserver. */
+		CONSOLESERVER,
+
 		/** The unknown. */
 		UNKNOWN
 	}

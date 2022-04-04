@@ -249,7 +249,7 @@ function snapshot(cli, device, config) {
 	}
 
 	// Static network class
-	device.set("networkClass", "SWITCH");
+	device.set("networkClass", "CONSOLESERVER");
 
 	// Extract contact and location from configuration
 	const contactMatch = configuration.match(/^set syscontact=(.*)/m);

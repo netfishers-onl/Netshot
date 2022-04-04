@@ -335,6 +335,6 @@ function analyzeTrap(trap) {
  * @returns true if the scanned device is supported by this driver.
  */
 function snmpAutoDiscover(sysObjectID, sysDesc) {
-	return !!(sysObjectID.startsWith("1.3.6.1.4.1.10418.16.1.")
-			&& sysDesc.match(/Cyclades ACS/));
+	return !!(sysObjectID.startsWith("1.3.6.1.4.1.10418.")
+			&& sysDesc.match(/^(Cyclades|Avocent) ACS [0-9]{4}$/));
 }

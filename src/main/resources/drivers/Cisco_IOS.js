@@ -277,7 +277,6 @@ function snapshot(cli, device, config) {
 		}
 		else if (system.match(/.*26[12][01].*/)) {
 			device.set("family", "Cisco 2600");
-			device.set("networkClass", "CONSOLESERVER");
 		}
 		else if (system.match(/.*Cisco 8\d\d[^\d]/)) {
 			device.set("family", "Cisco ISR 800");

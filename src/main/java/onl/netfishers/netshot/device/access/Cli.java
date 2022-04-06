@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2021 Sylvain Cadilhac (NetFishers)
- * 
+ *
  * This file is part of Netshot.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -35,11 +35,11 @@ import org.slf4j.LoggerFactory;
  * Abstract - real implementations are Telnet, SSH.
  */
 public abstract class Cli {
-	
+
 	final private static Logger logger = LoggerFactory.getLogger(Cli.class);
-	
+
 	private static Pattern ansiEscapePattern = Pattern.compile("\u001B\\[([;\\d]*m|[\u0030-\u003F]*[\u0020-\u002F]*[\u0040-\u007E])");
-	
+
 	/**
 	 * An IOException, with an attached buffer.
 	 * @author sylvain.cadilhac
@@ -52,18 +52,18 @@ public abstract class Cli {
 			super(message);
 			this.receivedBuffer = receivedBuffer;
 		}
-		
+
 		private StringBuffer receivedBuffer;
-		
+
 		public StringBuffer getReceivedBuffer() {
 			return receivedBuffer;
 		}
-		
+
 	}
 
 	/** The connection timeout. */
 	protected int connectionTimeout = 5000;
-	
+
 	/** The receive timeout. */
 	protected int receiveTimeout = 60000;
 
@@ -72,34 +72,34 @@ public abstract class Cli {
 
 	/** The current task logger */
 	protected TaskLogger taskLogger;
-	
+
 	/** The last command. */
 	protected String lastCommand;
-	
+
 	/** The last expect match. */
 	protected Matcher lastExpectMatch;
-	
+
 	/** The last expect match pattern. */
 	protected String lastExpectMatchPattern;
-	
+
 	/** The last expect match index. */
 	protected int lastExpectMatchIndex = -1;
-	
+
 	/** The last full output. */
 	protected String lastFullOutput;
-	
+
 	/** The in stream. */
 	protected InputStream inStream;
-	
+
 	/** The out stream. */
 	protected PrintStream outStream;
-	
+
 	/** The prompt. */
 	protected String prompt;
-	
+
 	/** The host. */
 	protected NetworkAddress host;
-	
+
 	/**
 	 * Instantiates a new cli.
 	 *
@@ -110,7 +110,7 @@ public abstract class Cli {
 		this.host = host;
 		this.taskLogger = taskLogger;
 	}
-	
+
 	/**
 	 * Gets the connection timeout.
 	 *
@@ -146,7 +146,7 @@ public abstract class Cli {
 	public void setReceiveTimeout(int receiveTimeout) {
 		this.receiveTimeout = receiveTimeout;
 	}
-	
+
 	/**
 	 * Gets the command timeout.
 	 *
@@ -164,7 +164,7 @@ public abstract class Cli {
 	public void setCommandTimeout(int commandTimeout) {
 		this.commandTimeout = commandTimeout;
 	}
-	
+
 	/**
 	 * Gets the last command.
 	 *
@@ -182,7 +182,7 @@ public abstract class Cli {
 	public Matcher getLastExpectMatch() {
 		return lastExpectMatch;
 	}
-	
+
 	/**
 	 * Gets the last expect match pattern.
 	 *
@@ -191,7 +191,7 @@ public abstract class Cli {
 	public String getLastExpectMatchPattern() {
 		return lastExpectMatchPattern;
 	}
-	
+
 	/**
 	 * Gets the last expect match index.
 	 *
@@ -200,7 +200,7 @@ public abstract class Cli {
 	public int getLastExpectMatchIndex() {
 		return lastExpectMatchIndex;
 	}
-	
+
 	/**
 	 * Gets the last full output.
 	 *
@@ -216,7 +216,7 @@ public abstract class Cli {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public abstract void connect() throws IOException;
-	
+
 	/**
 	 * Send.
 	 *
@@ -230,7 +230,7 @@ public abstract class Cli {
 		expects[0] = expect;
 		return send(command, expects);
 	}
-	
+
 	/**
 	 * Disconnect.
 	 */
@@ -250,9 +250,9 @@ public abstract class Cli {
 		for (int i = 0; i < expects.length; i++) {
 			patterns[i] = Pattern.compile(expects[i], Pattern.MULTILINE);
 		}
-		
+
 		long lastActivityTime = System.currentTimeMillis();
-		
+
 		while (true) {
 			while (this.inStream != null && this.inStream.available() > 0) {
 				int length = this.inStream.read(miniBuffer);
@@ -304,6 +304,6 @@ public abstract class Cli {
 		this.lastCommand = command;
 		return this.readUntil(expects);
 	}
-	
+
 
 }

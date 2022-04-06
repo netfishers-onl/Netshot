@@ -44,6 +44,7 @@ import net.jradius.dictionary.Attr_NASPortType;
 import net.jradius.dictionary.Attr_ServiceType;
 import net.jradius.dictionary.Attr_UserName;
 import net.jradius.dictionary.Attr_UserPassword;
+import net.jradius.dictionary.Attr_NASIdentifier;
 import net.jradius.packet.AccessAccept;
 import net.jradius.packet.AccessRequest;
 import net.jradius.packet.RadiusResponse;
@@ -64,6 +65,9 @@ public class Radius {
 	
 	/** The authentication method. */
 	private static Class<? extends RadiusAuthenticator> authMethod = MSCHAPv2Authenticator.class;
+	
+	/** The nasIdentifier */
+	private static String nasIdentifier = null;
 
 	/**
 	 * Load server config.
@@ -140,6 +144,7 @@ public class Radius {
 		default:
 			logger.error("Invalid configured RADIUS method '{}'. Defaulting to MSCHAPv2.", method);
 		}
+		nasIdentifier = Netshot.getConfig("netshot.aaa.radius.nasidentifier", null);
 		clients.add(client);
 	}
 
@@ -178,6 +183,9 @@ public class Radius {
 		attributeList.add(new Attr_UserName(username));
 		attributeList.add(new Attr_NASPortType(Attr_NASPortType.Ethernet));
 		attributeList.add(new Attr_NASPort(1));
+		if (nasIdentifier != null) {
+			attributeList.add(new Attr_NASIdentifier(nasIdentifier));
+		}
 		if (remoteAddress != null) {
 			attributeList.add(new Attr_CallingStationId(remoteAddress.getIp()));
 		}

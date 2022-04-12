@@ -24,7 +24,7 @@
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "5.2" /* Version will appear in the Admin tab. */
+	version: "5.3" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -110,7 +110,7 @@ var CLI = {
 		fail: "Authentication failed - Telnet authentication failure."
 	},
 	basic: { /* The basic FortiOS prompt. */
-		prompt: /^([A-Za-z0-9_\-\~]+? (\([A-Za-z0-9_\-]+?\) )?[#$] )$/,
+		prompt: /^[A-Za-z0-9_\-\~]+?\s(\([A-Za-z0-9_\-\~]+?\)\s)?[#$]\s?$/,
 		error: /^(Unknown action|Command fail)/m,
 		pager: { /* 'pager': define how to handle the pager for long outputs. */
 			match: /^--More-- /,

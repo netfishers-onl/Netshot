@@ -240,8 +240,8 @@ public class Database {
 			Properties serviceProperties = new Properties();
 			serviceProperties.setProperty(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jdbc");
 			serviceProperties.setProperty(AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread");
-			// serviceProperties.setProperty(AvailableSettings.HBM2DDL_AUTO, "update") // "update" or "validate" or ""
-			// serviceProperties.setProperty(AvailableSettings.SHOW_SQL, "true")
+			// serviceProperties.setProperty(AvailableSettings.HBM2DDL_AUTO, "update"); // "update" or "validate" or ""
+			serviceProperties.setProperty(AvailableSettings.SHOW_SQL, "true");
 			// Dates/times stored in UTC in the DB, without timezone, up to Java to convert to server local time
 			serviceProperties.setProperty("hibernate.jdbc.time_zone", "UTC");
 
@@ -283,30 +283,57 @@ public class Database {
 
 			MetadataSources sources = new MetadataSources(serviceRegistry)
 				.addAnnotatedClass(Device.class)
-				.addAnnotatedClass(DeviceGroup.class).addAnnotatedClass(Config.class).addAnnotatedClass(DeviceAttribute.class)
-				.addAnnotatedClass(DeviceNumericAttribute.class).addAnnotatedClass(DeviceTextAttribute.class)
-				.addAnnotatedClass(DeviceLongTextAttribute.class).addAnnotatedClass(DeviceBinaryAttribute.class)
-				.addAnnotatedClass(ConfigAttribute.class).addAnnotatedClass(ConfigNumericAttribute.class)
-				.addAnnotatedClass(ConfigTextAttribute.class).addAnnotatedClass(ConfigLongTextAttribute.class)
-				.addAnnotatedClass(ConfigBinaryAttribute.class).addAnnotatedClass(ConfigBinaryFileAttribute.class)
-				.addAnnotatedClass(LongTextConfiguration.class).addAnnotatedClass(StaticDeviceGroup.class)
-				.addAnnotatedClass(DynamicDeviceGroup.class).addAnnotatedClass(Module.class).addAnnotatedClass(Domain.class)
-				.addAnnotatedClass(PhysicalAddress.class).addAnnotatedClass(NetworkAddress.class)
-				.addAnnotatedClass(Network4Address.class).addAnnotatedClass(Network6Address.class)
-				.addAnnotatedClass(NetworkInterface.class).addAnnotatedClass(DeviceSnmpv1Community.class)
-				.addAnnotatedClass(DeviceSnmpv2cCommunity.class).addAnnotatedClass(DeviceSnmpv3Community.class)
-				.addAnnotatedClass(DeviceSshAccount.class).addAnnotatedClass(DeviceSshKeyAccount.class)
-				.addAnnotatedClass(DeviceTelnetAccount.class).addAnnotatedClass(Policy.class).addAnnotatedClass(Rule.class)
-				.addAnnotatedClass(Task.class).addAnnotatedClass(DebugLog.class).addAnnotatedClass(Exemption.class)
-				.addAnnotatedClass(Exemption.Key.class).addAnnotatedClass(CheckResult.class)
-				.addAnnotatedClass(CheckResult.Key.class).addAnnotatedClass(SoftwareRule.class)
-				.addAnnotatedClass(HardwareRule.class).addAnnotatedClass(DeviceJsScript.class)
-				.addAnnotatedClass(Diagnostic.class).addAnnotatedClass(DiagnosticResult.class)
-				.addAnnotatedClass(DiagnosticBinaryResult.class).addAnnotatedClass(DiagnosticNumericResult.class)
-				.addAnnotatedClass(DiagnosticLongTextResult.class).addAnnotatedClass(DiagnosticTextResult.class)
+				.addAnnotatedClass(DeviceGroup.class)
+				.addAnnotatedClass(Config.class)
+				.addAnnotatedClass(DeviceAttribute.class)
+				.addAnnotatedClass(DeviceNumericAttribute.class)
+				.addAnnotatedClass(DeviceTextAttribute.class)
+				.addAnnotatedClass(DeviceLongTextAttribute.class)
+				.addAnnotatedClass(DeviceBinaryAttribute.class)
+				.addAnnotatedClass(ConfigAttribute.class)
+				.addAnnotatedClass(ConfigNumericAttribute.class)
+				.addAnnotatedClass(ConfigTextAttribute.class)
+				.addAnnotatedClass(ConfigLongTextAttribute.class)
+				.addAnnotatedClass(ConfigBinaryAttribute.class)
+				.addAnnotatedClass(ConfigBinaryFileAttribute.class)
+				.addAnnotatedClass(LongTextConfiguration.class)
+				.addAnnotatedClass(StaticDeviceGroup.class)
+				.addAnnotatedClass(DynamicDeviceGroup.class)
+				.addAnnotatedClass(Module.class)
+				.addAnnotatedClass(Domain.class)
+				.addAnnotatedClass(PhysicalAddress.class)
+				.addAnnotatedClass(NetworkAddress.class)
+				.addAnnotatedClass(Network4Address.class)
+				.addAnnotatedClass(Network6Address.class)
+				.addAnnotatedClass(NetworkInterface.class)
+				.addAnnotatedClass(DeviceSnmpv1Community.class)
+				.addAnnotatedClass(DeviceSnmpv2cCommunity.class)
+				.addAnnotatedClass(DeviceSnmpv3Community.class)
+				.addAnnotatedClass(DeviceSshAccount.class)
+				.addAnnotatedClass(DeviceSshKeyAccount.class)
+				.addAnnotatedClass(DeviceTelnetAccount.class)
+				.addAnnotatedClass(Policy.class)
+				.addAnnotatedClass(Rule.class)
+				.addAnnotatedClass(Task.class)
+				.addAnnotatedClass(DebugLog.class)
+				.addAnnotatedClass(Exemption.class)
+				.addAnnotatedClass(Exemption.Key.class)
+				.addAnnotatedClass(CheckResult.class)
+				.addAnnotatedClass(CheckResult.Key.class)
+				.addAnnotatedClass(SoftwareRule.class)
+				.addAnnotatedClass(HardwareRule.class)
+				.addAnnotatedClass(DeviceJsScript.class)
+				.addAnnotatedClass(Diagnostic.class)
+				.addAnnotatedClass(DiagnosticResult.class)
+				.addAnnotatedClass(DiagnosticBinaryResult.class)
+				.addAnnotatedClass(DiagnosticNumericResult.class)
+				.addAnnotatedClass(DiagnosticLongTextResult.class)
+				.addAnnotatedClass(DiagnosticTextResult.class)
 				.addAnnotatedClass(UiUser.class)
 				.addAnnotatedClass(ApiToken.class)
-				.addAnnotatedClass(Hook.class).addAnnotatedClass(WebHook.class).addAnnotatedClass(HookTrigger.class);
+				.addAnnotatedClass(Hook.class)
+				.addAnnotatedClass(WebHook.class)
+				.addAnnotatedClass(HookTrigger.class);
 			for (Class<?> clazz : Task.getTaskClasses()) {
 				logger.info("Registering task class " + clazz.getName());
 				sources.addAnnotatedClass(clazz);
@@ -322,7 +349,6 @@ public class Database {
 			for (Class<?> clazz : Diagnostic.getDiagnosticClasses()) {
 				sources.addAnnotatedClass(clazz);
 			}
-
 
 			Metadata metadata = sources.getMetadataBuilder()
 				.applyImplicitNamingStrategy(new ImprovedImplicitNamingStrategy())

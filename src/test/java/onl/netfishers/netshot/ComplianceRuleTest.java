@@ -350,6 +350,23 @@ public class ComplianceRuleTest {
 		}
 
 		@Test
+		@DisplayName("Management IP-based JS rule")
+		void managementIpRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  if (device.get('managementIpAddress').startsWith('172.16.')) {" +
+				"    return CONFORMING;" +
+				"  }" +
+				"  return NONCONFORMING;" +
+				"}"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
 		@DisplayName("Class-based JS rule")
 		void classRule() {
 			rule.setScript(
@@ -674,6 +691,22 @@ public class ComplianceRuleTest {
 			rule.setScript(
 				"def check(device):" + "\n" +
 				"  if device.get('management_domain') == 'Test domain':" + "\n" +
+				"    return result_option.CONFORMING" + "\n" +
+				"  return result_option.NONCONFORMING" + "\n" +
+				"" + "\n"
+			);
+			rule.check(device, fakeSession, taskLogger);
+			CheckResult result = rule.getCheckResults().iterator().next();
+			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(), 
+				"The result is not CONFORMING");
+		}
+
+		@Test
+		@DisplayName("Management IP-based Python rule")
+		void managementIpRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  if device.get('management_ip_address').startswith('172.16.'):" + "\n" +
 				"    return result_option.CONFORMING" + "\n" +
 				"  return result_option.NONCONFORMING" + "\n" +
 				"" + "\n"

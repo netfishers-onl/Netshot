@@ -31,7 +31,13 @@ public class FakeDeviceFactory {
 
 	static Device getFakeCiscoIosDevice() {
 		Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
-		Device device = new Device("CiscoIOS12", null, domain, "test");
+		Network4Address mgmtIp = null;
+		try {
+			mgmtIp = new Network4Address("172.16.1.16");
+		}
+		catch (UnknownHostException e) {
+		}
+		Device device = new Device("CiscoIOS12", mgmtIp, domain, "test");
 		device.setName("router1");
 		device.setFamily("Unknown IOS device");
 		device.setNetworkClass(NetworkClass.ROUTER);

@@ -341,6 +341,9 @@ public class JsDeviceHelper {
 		else if ("family".equals(item)) {
 			return device.getFamily();
 		}
+		else if ("managementIpAddress".equals(item)) {
+			return device.getMgmtAddress().getIp();
+		}
 		else if ("managementDomain".equals(item)) {
 			return device.getMgmtDomain().getName();
 		}

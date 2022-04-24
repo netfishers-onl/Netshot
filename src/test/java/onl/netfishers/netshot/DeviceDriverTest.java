@@ -379,7 +379,8 @@ public class DeviceDriverTest {
 				"bootflash:packages.conf", "The IOS image file is incorrect");
 			Assertions.assertTrue(((ConfigLongTextAttribute)config.getAttribute("runningConfig"))
 				.getLongText().getText().contains("ip ssh version 2"), "The running config is not correct");
-			Assertions.assertEquals(device.getModules().get(0).getSerialNumber(),
+			Assertions.assertTrue(device.getModules().get(0).isRemoved(), "The first module is not set as removed");
+			Assertions.assertEquals(device.getModules().get(2).getSerialNumber(),
 				"96NETS96HOT", "The first module serial number is incorrect");
 			Assertions.assertEquals(device.getNetworkInterface("GigabitEthernet1").getIp4Addresses().iterator().next(),
 				Network4Address.getNetworkAddress("192.168.200.101", 24), "The first interface IP address is incorrect");

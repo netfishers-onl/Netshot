@@ -88,6 +88,8 @@ public class SnapshotCliScript extends CliScript {
 			Config config = new Config(device);
 			options.setConfigHelper(new JsConfigHelper(device, config, cli, taskLogger));
 			context.getBindings("js").getMember("_connect").execute("snapshot", protocol.value(), options, taskLogger);
+
+			// Check whether the config has actually changed
 			boolean different = false;
 			try {
 				Config lastConfig = Database.unproxy(device.getLastConfig());
@@ -126,7 +128,6 @@ public class SnapshotCliScript extends CliScript {
 			else {
 				taskLogger.info("The configuration hasn't changed. Not storing a new one in the DB.");
 			}
-			
 
 			String path = Netshot.getConfig("netshot.snapshots.dump");
 			if (path != null) {

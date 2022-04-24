@@ -667,6 +667,18 @@ h1 {
 	font-size: 0.9em;
 }
 
+#nsdevices-device #modules .history {
+	display: none;
+}
+
+#nsdevices-device #modules tr.removed {
+	color: #6a737d;
+}
+
+#nsdevices-device #modules tr.removed .nsicon {
+	color: #6a737d;
+}
+
 #nstoolbar-devices-add #othermethods {
 	width: 16px;
 }
@@ -1091,6 +1103,10 @@ input.spinner {
 
 .nsreports-submit {
 	margin-top: 20px;
+}
+
+#nsreports-report fieldset fieldset {
+	margin-left: 8px;
 }
 
 #nscompliance-list {

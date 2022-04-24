@@ -1044,4 +1044,24 @@
 			<column name="runner_id"/>
 		</createIndex>
 	</changeSet>
+<!-- netshot_0_17_0_to_0_17_1.xml -->
+	<changeSet author="netshot (generated)" id="0.17.1_1">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="module" columnName="first_seen_date"/></not>
+		</preConditions>
+		<addColumn tableName="module">
+			<column name="first_seen_date" type="datetime"/>
+		</addColumn>
+		<addColumn tableName="module">
+			<column name="last_seen_date" type="datetime"/>
+		</addColumn>
+		<addColumn tableName="module">
+			<column name="removed" type="${BOOLEAN}" defaultValueBoolean="false">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+		<createIndex indexName="FK_krwcp6w6qwhb862fwbdrqf2ys" tableName="module">
+			<column name="removed"/>
+		</createIndex>
+	</changeSet>
 </databaseChangeLog>

@@ -32,6 +32,13 @@ define([
 				that.$('#group').prop('disabled', !$(this).prop('checked'));
 			});
 
+			this.$('#exportinventory').click(function() {
+				that.$('#exportinventoryhistory').prop('disabled', !$(this).prop('checked'));
+				if (!$(this).prop('checked')) {
+					that.$('#exportinventoryhistory').prop('checked', false);
+				}
+			});
+
 			this.$('#export').button({
 				icons: {
 					primary: "ui-icon-arrowstop-1-s"
@@ -44,6 +51,7 @@ define([
 					exportGroups: that.$('#exportgroups').prop('checked'),
 					exportInterfaces: that.$('#exportinterfaces').prop('checked'),
 					exportInventory: that.$('#exportinventory').prop('checked'),
+					exportInventoryHistory: that.$('#exportinventoryhistory').prop('checked'),
 					exportLocations: that.$('#exportlocations').prop('checked'),
 					exportCompliance: that.$('#exportcompliance').prop('checked'),
 				});

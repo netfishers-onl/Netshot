@@ -4,9 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
@@ -45,7 +47,6 @@ import onl.netfishers.netshot.device.attribute.DeviceTextAttribute;
 /**
  * Class used to get  and set data on a device object from JavaScript.
  * @author sylvain.cadilhac
- *
  */
 public class JsDeviceHelper {
 	
@@ -56,6 +57,9 @@ public class JsDeviceHelper {
 	private Session session;
 	private TaskLogger taskLogger;
 	private boolean readOnly;
+
+	/** Common update date for modules and other items */
+	private Date updateDate;
 	
 	public static String getStringMember(Value value, String key, String defaultResult) {
 		Value result = value.getMember(key);
@@ -79,6 +83,7 @@ public class JsDeviceHelper {
 		this.session = session;
 		this.taskLogger = taskLogger;
 		this.readOnly = readOnly;
+		this.updateDate = new Date();
 	}
 	
 	@Export
@@ -93,14 +98,29 @@ public class JsDeviceHelper {
 		}
 		try {
 			if ("module".equals(key)) {
-				
+				boolean found = false;
 				Module module = new Module(
 						getStringMember(data, "slot", ""),
 						getStringMember(data, "partNumber", ""),
 						getStringMember(data, "serialNumber", ""),
 						device
 				);
-				device.getModules().add(module);
+				for (Module existingModule : device.getModules()) {
+					if (existingModule.isRemoved() &&
+							Objects.equals(existingModule.getSlot(), module.getSlot()) &&
+							Objects.equals(existingModule.getPartNumber(), module.getPartNumber()) &&
+							Objects.equals(existingModule.getSerialNumber(), module.getSerialNumber())) {
+						existingModule.setRemoved(false);
+						existingModule.setLastSeenDate(this.updateDate);
+						found = true;
+						break;
+					}
+				}
+				if (!found) {
+					module.setFirstSeenDate(this.updateDate);
+					module.setLastSeenDate(this.updateDate);
+					device.getModules().add(module);
+				}
 			}
 			else if ("networkInterface".equals(key)) {
 				NetworkInterface networkInterface = new NetworkInterface(
@@ -166,8 +186,8 @@ public class JsDeviceHelper {
 		device.clearAttributes();
 		device.clearVrfInstance();
 		device.clearVirtualDevices();
+		device.setModulesRemoved();
 		device.getNetworkInterfaces().clear();
-		device.getModules().clear();
 		device.setEolModule(null);
 		device.setEosModule(null);
 		device.setEolDate(null);

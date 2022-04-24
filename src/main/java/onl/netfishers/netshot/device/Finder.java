@@ -158,10 +158,10 @@ public class Finder {
 		/** Interface. */
 		INTERFACE("(?i)^\\s*(\\[interface\\])", "INTERFACE"),
 
-		/** The module. */
+		/** The VRF. */
 		VRF("(?i)^\\s*(\\[vrf\\])", "VRF"),
 		
-		/** The module. */
+		/** The virtual name. */
 		VIRTUALNAME("(?i)^\\s*(\\[virtual name\\])", "VIRTUAL NAME"),
 
 		/** The device. */
@@ -881,12 +881,12 @@ public class Finder {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			if (TokenType.MATCHES.equals(sign)) {
 				criteria.where = String.format(
-						"(regexp_like(m.serialNumber, :%s) = 1 or regexp_like(m.partNumber, :%s) = 1)", itemPrefix,
+						"((regexp_like(m.serialNumber, :%s) = 1 or regexp_like(m.partNumber, :%s) = 1) and m.removed is not true)", itemPrefix,
 						itemPrefix);
 			}
 			else {
 				criteria.where = String.format(
-						"(m.serialNumber like :%s or m.partNumber like :%s)", itemPrefix,
+						"((m.serialNumber like :%s or m.partNumber like :%s) and m.removed is not true)", itemPrefix,
 						itemPrefix);
 			}
 			criteria.joins.add("d.modules m");

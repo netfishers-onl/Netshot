@@ -9,10 +9,15 @@ define([
 
 		initialize: function(models, options) {
 			this.device = options.device;
+			this.includeHistory = options.includeHistory;
 		},
 
 		url: function() {
-			return "api/devices/" + this.device.get('id') + "/modules"
+			var url = "api/devices/" + this.device.get('id') + "/modules";
+			if (this.includeHistory) {
+				url += "?history=true"
+			}
+			return url;
 		},
 
 		model: DeviceModuleModel,

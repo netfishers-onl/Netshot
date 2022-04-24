@@ -1,5 +1,18 @@
-<tr>
+<tr <% if ((typeof removed === "boolean") && removed) { %>class="removed"<% } %>>
 	<td class="maincolumn"><%- slot %></td>
 	<td><%- partNumber %></td>
 	<td><%- serialNumber %></td>
+	<td class="history">
+		<% if (typeof firstSeenDate === "number") { %><%- formatDateTime(firstSeenDate) %><% } %>
+	</td>
+	<td class="history">
+		<% if (typeof lastSeenDate === "number") { %><%- formatDateTime(lastSeenDate) %><% } %>
+	</td>
+	<td class="history">
+		<% if ((typeof removed === "boolean") && removed) { %>
+			<span class="ui-corner-all" title="Removed">
+				<span class="ui-icon nsicon ui-icon-history"></span>
+			</span>
+		<% } %>
+	</td>
 </tr>

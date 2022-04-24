@@ -18,6 +18,8 @@
  */
 package onl.netfishers.netshot.device;
 
+import java.util.Date;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -54,6 +56,15 @@ public class Module {
 	/** The device. */
 	protected Device device;
 
+	/** When the module was first seen */
+	protected Date firstSeenDate;
+
+	/** When the module was last seen */
+	protected Date lastSeenDate;
+
+	/** Whether the module was removed or is still present */
+	protected boolean removed;
+
 
 	public Module() {
 
@@ -64,6 +75,7 @@ public class Module {
 		this.partNumber = (partNumber == null ? "" : partNumber);
 		this.serialNumber = (serialNumber == null ? "" : serialNumber);
 		this.device = device;
+		this.removed = false;
 	}
 
 	/**
@@ -161,6 +173,63 @@ public class Module {
 	 */
 	public void setDevice(Device device) {
 		this.device = device;
+	}
+
+	/**
+	 * Gets the first seen date.
+	 * 
+	 * @return the date
+	 */
+	@XmlElement @JsonView(DefaultView.class)
+	public Date getFirstSeenDate() {
+		return firstSeenDate;
+	}
+
+	/**
+	 * Sets the first seen date.
+	 * 
+	 * @param firstSeenDate the date
+	 */
+	public void setFirstSeenDate(Date firstSeenDate) {
+		this.firstSeenDate = firstSeenDate;
+	}
+
+	/**
+	 * Gets the last seen date.
+	 * 
+	 * @return the date
+	 */
+	@XmlElement @JsonView(DefaultView.class)
+	public Date getLastSeenDate() {
+		return lastSeenDate;
+	}
+
+	/**
+	 * Sets the last seen date.
+	 * 
+	 * @param lastSeenDate the date
+	 */
+	public void setLastSeenDate(Date lastSeenDate) {
+		this.lastSeenDate = lastSeenDate;
+	}
+
+	/**
+	 * Returns whether the module has been removed.
+	 * 
+	 * @return the state
+	 */
+	@XmlElement @JsonView(DefaultView.class)
+	public boolean isRemoved() {
+		return this.removed;
+	}
+
+	/**
+	 * Sets the module as removed or not.
+	 * 
+	 * @param removed the state
+	 */
+	public void setRemoved(boolean removed) {
+		this.removed = removed;
 	}
 
 }

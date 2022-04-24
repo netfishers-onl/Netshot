@@ -10,6 +10,8 @@ define([
 ], function($, _, Backbone, TableSort, DeviceModuleCollection, deviceModulesTemplate,
 		deviceModuleTemplate) {
 
+	var displayHistory = false;
+
 	return Backbone.View.extend({
 
 		el: "#nsdevices-devicedetails",
@@ -19,26 +21,45 @@ define([
 
 		initialize: function(options) {
 			this.device = options.device;
-			this.deviceModules = new DeviceModuleCollection({}, {
-				'device': this.device
-			});
-			var that = this;
-			this.deviceModules.fetch().done(function() {
-				that.render();
-			});
+			this.render();
 		},
 
 		render: function() {
 			var that = this;
 
 			this.$el.html(this.template());
-			var $table = this.$("#modules tbody");
-			this.deviceModules.each(function(deviceModule) {
-				$(that.moduleTemplate(deviceModule.toJSON())).appendTo($table);
-			});
-			new TableSort(this.$("#modules").get(0));
 
+			this.$("#displayhistory").click(function() {
+				displayHistory = $(this).is(":checked");
+				that.fetchModules();
+			}).click();
+			this.tableSort = new TableSort(this.$("#modules").get(0));
 			return this;
+		},
+
+		fetchModules: function() {
+			var that = this;
+			this.deviceModules = new DeviceModuleCollection({}, {
+				device: this.device,
+				includeHistory: displayHistory,
+			});
+			this.deviceModules.fetch().done(function() {
+				that.renderModules();
+			});
+		},
+
+		renderModuleLine: function(deviceModule) {
+			this.htmlBuffer += this.moduleTemplate(deviceModule.toJSON());
+		},
+
+		renderModules: function() {
+			var that = this;
+			var $table = this.$("#modules tbody");
+			this.htmlBuffer = "";
+			this.deviceModules.each(this.renderModuleLine, this);
+			$table.html(this.htmlBuffer);
+			this.$(".history").toggle(displayHistory);
+			this.tableSort.refresh();
 		},
 
 		destroy: function() {

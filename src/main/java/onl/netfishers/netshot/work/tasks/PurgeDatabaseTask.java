@@ -261,6 +261,45 @@ public class PurgeDatabaseTask extends Task {
 			}
 		}
 
+
+		if (configDays > 0) {
+			Session session = Database.getSession();
+			try {
+				session.beginTransaction();
+				logger.trace("Task {}. Cleaning up hardware modules removed more than {} days ago...", this.getId(), configDays);
+				this.info(String.format("Cleaning up hardware modules removed more than %d days...", configDays));
+				Calendar when = Calendar.getInstance();
+				when.add(Calendar.DATE, -1 * configDays);
+
+				int count = session
+					.createQuery("delete from Module m where m.removed = :true and m.lastSeenDate <= :when")
+					.setParameter("true", true)
+					.setParameter("when", when)
+					.executeUpdate();
+
+				session.getTransaction().commit();
+				logger.trace("Task {}. Cleaning up done on modules, {} entries affected.", this.getId(), count);
+				this.info(String.format("Cleaning up done on modules, %d entries affected.", count));
+				
+			}
+			catch (Exception e) {
+				try {
+					session.getTransaction().rollback();
+				}
+				catch (Exception e1) {
+					logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
+				}
+				logger.error("Task {}. Error while purging the old modules from the database.",
+						this.getId(), e);
+				this.error("Error during the module purge.");
+				this.status = Status.FAILURE;
+				return;
+			}
+			finally {
+				session.close();
+			}
+		}
+
 		this.status = Status.SUCCESS;
 		logger.trace("Task {}. Cleaning up process finished.", this.getId());
 	}

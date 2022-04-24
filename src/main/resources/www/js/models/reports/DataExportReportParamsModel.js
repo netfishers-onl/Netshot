@@ -12,6 +12,7 @@ define([
 			this.exportGroups = options.exportGroups;
 			this.exportInterfaces = options.exportInterfaces;
 			this.exportInventory = options.exportInventory;
+			this.exportInventoryHistory = options.exportInventoryHistory;
 			this.exportLocations = options.exportLocations;
 			this.exportCompliance = options.exportCompliance;
 		},
@@ -40,6 +41,9 @@ define([
 			}
 			if (this.exportInventory) {
 				params.push("inventory=true");
+				if (this.exportInventoryHistory) {
+					params.push("inventoryhistory=true");
+				}
 			}
 			if (this.exportLocations) {
 				params.push("locations=true");

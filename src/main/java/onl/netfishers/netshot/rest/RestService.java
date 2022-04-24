@@ -149,6 +149,7 @@ import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
 import org.apache.poi.ss.usermodel.BuiltinFormats;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
@@ -845,14 +846,22 @@ public class RestService extends Thread {
 		summary = "Get device modules",
 		description = "Returns the list of hardware modules of a given device, by ID."
 	)
-	public List<Module> getDeviceModules(@PathParam("id") Long id, @BeanParam PaginationParams paginationParams)
+	public List<Module> getDeviceModules(@PathParam("id") Long id, @QueryParam("history") boolean includeHistory,
+			@BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} modules.", id);
 		Session session = Database.getSession(true);
 		try {
+			String hqlQuery = "from Module m where m.device.id = :device";
+			if (!includeHistory) {
+				hqlQuery += " and m.removed = :false";
+			}
 			Query<Module> query = session
-				.createQuery("from Module m where m.device.id = :device", Module.class)
+				.createQuery(hqlQuery, Module.class)
 				.setParameter("device", id);
+			if (!includeHistory) {
+				query.setParameter("false", false);
+			}
 			paginationParams.apply(query);
 			List<Module> deviceModules = query.list();
 			return deviceModules;
@@ -881,7 +890,7 @@ public class RestService extends Thread {
 	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get device tasks",
-		description = "Returns the list of tasks of a given device (by ID). Up to 'max' tasks are returned, sorted by status and significant date."
+		description = "Returns the list of tasks of a given device (by ID). Tasks are returned sorted by status and significant date."
 	)
 	public List<Task> getDeviceTasks(@PathParam("id") Long id, @BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
@@ -8950,6 +8959,7 @@ public class RestService extends Thread {
 			@QueryParam("domain") Set<Long> domains,
 			@DefaultValue("false") @QueryParam("interfaces") boolean exportInterfaces,
 			@DefaultValue("false") @QueryParam("inventory") boolean exportInventory,
+			@DefaultValue("false") @QueryParam("inventoryhistory") boolean exportInventoryHistory,
 			@DefaultValue("false") @QueryParam("locations") boolean exportLocations,
 			@DefaultValue("false") @QueryParam("compliance") boolean exportCompliance,
 			@DefaultValue("false") @QueryParam("groups") boolean exportGroups,
@@ -9269,14 +9279,17 @@ public class RestService extends Thread {
 				if (exportInventory) {
 					logger.debug("Exporting device inventory");
 					StringBuilder moduleHqlQuery = new StringBuilder(
-							"select m from Module m join fetch m.device left join m.device.ownerGroups g where 1 = 1");
+							"select distinct m from Module m join fetch m.device left join m.device.ownerGroups g where 1 = 1");
+					if (!exportInventoryHistory) {
+						moduleHqlQuery.append(" and m.removed is not true");
+					}
 					if (domains.size() > 0) {
 						moduleHqlQuery.append(" and m.device.mgmtDomain.id in (:domainIds)");
 					}
 					if (groups.size() > 0) {
 						moduleHqlQuery.append(" and g.id in (:groupIds)");
 					}
-					moduleHqlQuery.append(" order by m.device.name asc, m.id asc");
+					moduleHqlQuery.append(" order by m.device.id asc, m.id asc");
 					Query<Module> moduleQuery = session.createQuery(moduleHqlQuery.toString(), Module.class);
 					if (domains.size() > 0) {
 						moduleQuery.setParameterList("domainIds", domains);
@@ -9308,6 +9321,17 @@ public class RestService extends Thread {
 						row.getCell(x).setCellStyle(titleCellStyle);
 						inventorySheet.setColumnWidth(x, 4000);
 						row.setRowStyle(titleCellStyle);
+						if (exportInventoryHistory) {
+							row.createCell(++x).setCellValue("First seen");
+							row.getCell(x).setCellStyle(titleCellStyle);
+							inventorySheet.setColumnWidth(x, 4200);
+							row.createCell(++x).setCellValue("Last seen");
+							row.getCell(x).setCellStyle(titleCellStyle);
+							inventorySheet.setColumnWidth(x, 4200);
+							row.createCell(++x).setCellValue("Removed");
+							row.getCell(x).setCellStyle(titleCellStyle);
+							inventorySheet.setColumnWidth(x, 4200);
+						}
 						inventorySheet.createFreezePane(0, y + 1);
 						inventorySheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
@@ -9322,6 +9346,16 @@ public class RestService extends Thread {
 							row.createCell(++x).setCellValue(module.getSlot());
 							row.createCell(++x).setCellValue(module.getPartNumber());
 							row.createCell(++x).setCellValue(module.getSerialNumber());
+							if (exportInventoryHistory) {
+								cell = row.createCell(++x);
+								cell.setCellValue(module.getFirstSeenDate());
+								cell.setCellStyle(datetimeCellStyle);
+								cell = row.createCell(++x);
+								cell.setCellValue(module.getLastSeenDate());
+								cell.setCellStyle(datetimeCellStyle);
+								cell = row.createCell(++x, CellType.BOOLEAN);
+								cell.setCellValue(module.isRemoved());
+							}
 						}
 						session.clear();
 						if (modules.size() < PAGINATION_SIZE) {

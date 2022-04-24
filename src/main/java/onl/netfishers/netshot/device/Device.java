@@ -56,6 +56,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Where;
 
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Exemption;
@@ -362,10 +363,19 @@ public class Device {
 
 
 	/**
-	 * Clear vrf instance.
+	 * Clear VRF instance.
 	 */
 	public void clearVrfInstance() {
 		this.vrfInstances.clear();
+	}
+
+	/**
+	 * Set all modules as removed.
+	 */
+	public void setModulesRemoved() {
+		for (Module module : this.modules) {
+			module.setRemoved(true);
+		}
 	}
 	
 	/* (non-Javadoc)
@@ -671,6 +681,7 @@ public class Device {
 	 * @return the modules
 	 */
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "device", orphanRemoval = true)
+	@Where(clause = "removed is not true")
 	public List<Module> getModules() {
 		return modules;
 	}

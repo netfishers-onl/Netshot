@@ -11,7 +11,7 @@
 		<jackson.version>2.13.2</jackson.version>
 		<jackson-databind.version>2.13.2.2</jackson-databind.version>
 		<jersey.version>2.35</jersey.version>
-		<swagger.version>2.1.13</swagger.version>
+		<swagger.version>2.2.0</swagger.version>
 		<slf4j.version>1.7.36</slf4j.version>
 		<jasypt.version>1.9.3</jasypt.version>
 	</properties>

@@ -218,12 +218,36 @@ public class RestService extends Thread {
 
 	/** Pagination default query params */
 	public static class PaginationParams {
+		/** Pagination offset */
 		@QueryParam("offset")
-		Integer offset;
+		private Integer offset;
 
+		/** Pagination limit */
 		@QueryParam("limit")
-		Integer limit;
+		private Integer limit;
 
+		@XmlElement @JsonView(DefaultView.class)
+		public Integer getOffset() {
+			return offset;
+		}
+
+		public void setOffset(Integer offset) {
+			this.offset = offset;
+		}
+
+		@XmlElement @JsonView(DefaultView.class)
+		public Integer getLimit() {
+			return limit;
+		}
+
+		public void setLimit(Integer limit) {
+			this.limit = limit;
+		}
+
+		/**
+		 * Apply the pagination parameters to the HQL query.
+		 * @param query The query being prepared
+		 */
 		public void apply(Query<?> query) {
 			if (this.offset != null) {
 				if (this.offset < 0) {
@@ -900,7 +924,7 @@ public class RestService extends Thread {
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
 		}
 		if (paginationParams.limit == null) {
-			paginationParams.limit = 1000;
+			paginationParams.limit = 100;
 		}
 		Session session = Database.getSession(true);
 		try {

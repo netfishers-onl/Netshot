@@ -16,13 +16,29 @@ define([
 		url: "api/tasks",
 		searchUrl: "api/tasks/search",
 		deviceUrl: function() {
-			return "api/devices/" + this.device.get('id') + "/tasks";
+			var params = {
+				limit: this.limit,
+				offset: this.offset,
+			};
+			var queryParams = [];
+			for (p in params) {
+				if (params[p]) {
+					queryParams.push(p + "=" + params[p]);
+				}
+			}
+			var u = "api/devices/" + this.device.get('id') + "/tasks";
+			if (queryParams.length) {
+				u += "?" + queryParams.join("&");
+			}
+			return u;
 		},
 		model: TaskModel,
 
 		status: "ANY",
 		day: new Date(),
 		device: null,
+		limit: 20,
+		offset: 0,
 
 		fetch: function(options) {
 			options || (options = {});

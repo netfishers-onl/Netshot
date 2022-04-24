@@ -3527,6 +3527,9 @@ public class RestService extends Thread {
 		/** The id. */
 		private long id = -1;
 
+		/** The name. */
+		private String name;
+
 		/** The type. */
 		private String type;
 
@@ -3562,6 +3565,25 @@ public class RestService extends Thread {
 		 */
 		public void setId(long id) {
 			this.id = id;
+		}
+
+		/**
+		 * Gets the name.
+		 *
+		 * @return the name
+		 */
+		@XmlElement @JsonView(DefaultView.class)
+		public String getName() {
+			return name;
+		}
+
+		/**
+		 * Sets the name.
+		 *
+		 * @param id the new name
+		 */
+		public void setName(String name) {
+			this.name = name;
 		}
 
 		/**
@@ -3718,6 +3740,13 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException("Unknown group type.",
 						NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_GROUP_TYPE);
 			}
+			String name = rsGroup.getName().trim();
+			if (name.isEmpty()) {
+				logger.warn("User posted an empty group name.");
+				throw new NetshotBadRequestException("Invalid group name.",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP_NAME);
+			}
+			group.setName(name);
 			group.setFolder(rsGroup.getFolder());
 			group.setHiddenFromReports(rsGroup.isHiddenFromReports());
 			session.update(group);

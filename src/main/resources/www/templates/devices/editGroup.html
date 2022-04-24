@@ -12,13 +12,14 @@
 	
 	<form autocomplete="off">
 		<fieldset>
-			<p>Name: <strong><%- name %></strong>
+			<label for="groupname">Name: </label>
+			<input type="text" name="groupname" id="groupname" autofocus="autofocus"
+				class="text ui-widget-content ui-corner-all" value="<%- name %>" />
 			(<% if (type.match(/StaticDeviceGroup$/)) { %>static group<% } %><% if (type.match(/DynamicDeviceGroup$/)) { %>dynamic group<% } %>)</p>
 		</fieldset>
 		<fieldset>
 			<label for="groupfolder">Folder: </label>
-			<input type="text" name="groupfolder" id="groupfolder" autofocus="autofocus"
-				class="text ui-widget-content ui-corner-all" value="<%- folder %>" />
+			<input type="text" name="groupfolder" id="groupfolder" class="text ui-widget-content ui-corner-all" value="<%- folder %>" />
 		</fieldset>
 		<fieldset>
 			<input type="checkbox" name="hiddenfromreports" id="hiddenfromreports"<% if (hiddenFromReports) { %> checked="checked"<% } %> />

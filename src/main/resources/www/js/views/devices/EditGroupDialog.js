@@ -36,6 +36,7 @@ define([
 				$button.button('disable');
 				var saveModel = that.model.clone();
 				var group = {
+					'name': that.$('#groupname').val(),
 					'folder': that.$('#groupfolder').val(),
 					'hiddenFromReports': that.$('#hiddenfromreports').prop('checked')
 				};

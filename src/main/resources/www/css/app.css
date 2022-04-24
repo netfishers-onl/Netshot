@@ -979,6 +979,15 @@ h1 {
 	background-color: #F1FF99;
 }
 
+
+#nsdevice-groupeditform #groupname {
+	width: 250px;
+}
+
+#nsdevice-groupeditform #groupfolder {
+	width: 250px;
+}
+
 #nsdevice-groupeditform #devicesearch {
 	margin-top: 5px;
 	width: 230px;

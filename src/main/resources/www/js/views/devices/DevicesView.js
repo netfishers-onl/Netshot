@@ -486,6 +486,7 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 						var item = that
 								.$('#nsdevices-groups li.nsdevices-list-group[data-group-id="'
 										+ that.group.get('id') + '"]');
+						item.find('.name').text(that.group.get('name'));
 						var parent = item.closest('ul');
 						item = item.detach();
 						$folder.append($(item));

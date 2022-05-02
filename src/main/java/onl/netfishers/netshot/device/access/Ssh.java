@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2021 Sylvain Cadilhac (NetFishers)
- * 
+ *
  * This file is part of Netshot.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * An SSH CLI access.
  */
 public class Ssh extends Cli {
-	
+
 	final private static Logger logger = LoggerFactory.getLogger(Ssh.class);
 
 	/**
@@ -81,28 +81,34 @@ public class Ssh extends Cli {
 				break;
 			}
 		}
-		
+
 	}
 
 	/** Default value for the SSH connection timeout */
 	static private int DEFAULT_CONNECTION_TIMEOUT = 5000;
-	
+
+	/** Default value for the SSH receive timeout */
+	static private int DEFAULT_RECEIVE_TIMEOUT = 60000;
+
+	/** Default value for the SSH command timeout */
+	static private int DEFAULT_COMMAND_TIMEOUT = 120000;
+
 	static private String[] DEFAULT_SSH_KEX_ALGORITHMS = {
 		"diffie-hellman-group18-sha512", "diffie-hellman-group16-sha512", "diffie-hellman-group14-sha256", "diffie-hellman-group14-sha1",
 		"diffie-hellman-group-exchange-sha256", "diffie-hellman-group-exchange-sha1", "diffie-hellman-group1-sha1",
 	};
-	
+
 	static private String[] DEFAULT_SSH_CIPHERS = {
 		"aes128-gcm@openssh.com", "aes128-ctr", "aes128-cbc", "3des-ctr", "3des-cbc", "blowfish-cbc", "aes192-ctr",
 		"aes192-cbc", "aes256-gcm@openssh.com", "aes256-ctr", "aes256-cbc",
 	};
-	
+
 	static private String[] DEFAULT_SSH_MACS = {
 		"hmac-md5-etm@openssh.com", "hmac-sha1-etm@openssh.com", "hmac-sha2-256-etm@openssh.com", "hmac-sha2-512-etm@openssh.com",
 		"hmac-sha1-96-etm@openssh.com", "hmac-md5-96-etm@openssh.com", "hmac-md5", "hmac-sha1", "hmac-sha2-256", "hmac-sha2-512",
 		"hmac-sha1-96", "hmac-md5-96",
 	};
-	
+
 	static private String[] DEFAULT_SSH_HOST_KEY_ALGORITHMS = {
 		"rsa-sha2-256", "rsa-sha2-512", "ssh-rsa", "ssh-dss",
 	};
@@ -116,7 +122,25 @@ public class Ssh extends Cli {
 			DEFAULT_CONNECTION_TIMEOUT = configuredConnectionTimeout;
 		}
 		logger.info("The default connection timeout value for SSH sessions is {}s", DEFAULT_CONNECTION_TIMEOUT);
-		
+
+    int configuredReceiveTimeout = Netshot.getConfig("netshot.cli.ssh.receivetimeout", DEFAULT_RECEIVE_TIMEOUT);
+		if (configuredReceiveTimeout < 1) {
+			logger.error("Invalid value {} for {}", configuredReceiveTimeout, "netshot.cli.ssh.receivetimeout");
+		}
+		else {
+			DEFAULT_RECEIVE_TIMEOUT = configuredReceiveTimeout;
+		}
+		logger.info("The default receive timeout value for SSH sessions is {}s", DEFAULT_RECEIVE_TIMEOUT);
+
+		int configuredCommandTimeout = Netshot.getConfig("netshot.cli.ssh.commandtimeout", DEFAULT_COMMAND_TIMEOUT);
+		if (configuredCommandTimeout < 1) {
+			logger.error("Invalid value {} for {}", configuredCommandTimeout, "netshot.cli.ssh.commandtimeout");
+		}
+		else {
+			DEFAULT_COMMAND_TIMEOUT = configuredCommandTimeout;
+		}
+		logger.info("The default command timeout value for SSH sessions is {}s", DEFAULT_COMMAND_TIMEOUT);
+
 		JSch.setLogger(new JschLogger());
 		JSch.setConfig("kex", Netshot.getConfig("netshot.cli.ssh.kexalgorithms", String.join(",", DEFAULT_SSH_KEX_ALGORITHMS)));
 		JSch.setConfig("server_host_key", Netshot.getConfig("netshot.cli.ssh.hostkeyalgorithms", String.join(",", DEFAULT_SSH_HOST_KEY_ALGORITHMS)));
@@ -130,31 +154,31 @@ public class Ssh extends Cli {
 		JSch.setConfig("CheckMacs", "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512");
 		JSch.setConfig("CheckSignatures", "rsa-sha2-256,rsa-sha2-512,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,ssh-ed25519,ssh-ed448");
 	}
-	
+
 	/** The port. */
 	private int port = 22;
-	
+
 	/** The jsch. */
 	private JSch jsch;
-	
+
 	/** The session. */
 	private Session session;
-	
+
 	/** The channel. */
 	private Channel channel;
-	
+
 	/** The username. */
 	private String username;
-	
+
 	/** The password or passphrase. */
 	private String password;
-	
+
 	/** The public key. */
 	private String publicKey = null;
-	
+
 	/** The private key. */
 	private String privateKey = null;
-	
+
 	/**
 	 * Instantiates a new SSH connection (password authentication).
 	 *
@@ -171,11 +195,13 @@ public class Ssh extends Cli {
 		this.password = password;
 		this.privateKey = null;
 		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+		this.commandTimeout = DEFAULT_COMMAND_TIMEOUT;
+		this.receiveTimeout = DEFAULT_RECEIVE_TIMEOUT;
 	}
-	
+
 	/**
 	 * Instantiates a new SSH connection (private key authentication).
-	 * 
+	 *
 	 * @param host the host
 	 * @param port the port
 	 * @param username the SSH username
@@ -192,11 +218,13 @@ public class Ssh extends Cli {
 		this.privateKey = privateKey;
 		this.password = passphrase;
 		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+		this.commandTimeout = DEFAULT_COMMAND_TIMEOUT;
+		this.receiveTimeout = DEFAULT_RECEIVE_TIMEOUT;
 	}
-	
+
 	/**
 	 * Instantiates a new SSH connection (private key authentication).
-	 * 
+	 *
 	 * @param host the host
 	 * @param username the SSH username
 	 * @param privateKey the RSA/DSA private key
@@ -211,9 +239,11 @@ public class Ssh extends Cli {
 		this.privateKey = privateKey;
 		this.password = passphrase;
 		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+		this.commandTimeout = DEFAULT_COMMAND_TIMEOUT;
+		this.receiveTimeout = DEFAULT_RECEIVE_TIMEOUT;
 	}
-	
-	
+
+
 	/**
 	 * Instantiates a new ssh.
 	 *
@@ -228,6 +258,8 @@ public class Ssh extends Cli {
 		this.password = password;
 		this.privateKey = null;
 		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+		this.commandTimeout = DEFAULT_COMMAND_TIMEOUT;
+		this.receiveTimeout = DEFAULT_RECEIVE_TIMEOUT;
 	}
 
 	/* (non-Javadoc)
@@ -303,7 +335,7 @@ public class Ssh extends Cli {
 		catch (JSchException e) {
 			throw new IOException(e.getMessage(), e);
 		}
-		
+
 	}
 
 	/* (non-Javadoc)

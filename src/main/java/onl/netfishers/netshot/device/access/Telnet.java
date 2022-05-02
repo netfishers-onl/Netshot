@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2021 Sylvain Cadilhac (NetFishers)
- * 
+ *
  * This file is part of Netshot.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -33,29 +33,53 @@ import org.slf4j.LoggerFactory;
  * A Telnet CLI access.
  */
 public class Telnet extends Cli {
-	
+
 	final private static Logger logger = LoggerFactory.getLogger(Ssh.class);
 
-	/** Default value for the SSH connection timeout */
+	/** Default value for the Telnet connection timeout */
 	static private int DEFAULT_CONNECTION_TIMEOUT = 5000;
+
+	/** Default value for the Telnet receive timeout */
+	static private int DEFAULT_RECEIVE_TIMEOUT = 60000;
+
+	/** Default value for the Telnet command timeout */
+	static private int DEFAULT_COMMAND_TIMEOUT = 120000;
 
 	static {
 		int configuredConnectionTimeout = Netshot.getConfig("netshot.cli.telnet.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT);
 		if (configuredConnectionTimeout < 1) {
-			logger.error("Invalid value {} for {}", configuredConnectionTimeout, "netshot.cli.telnet.connectiontimeout");			
+			logger.error("Invalid value {} for {}", configuredConnectionTimeout, "netshot.cli.telnet.connectiontimeout");
 		}
 		else {
 			DEFAULT_CONNECTION_TIMEOUT = configuredConnectionTimeout;
 		}
 		logger.info("The default connection timeout value for Telnet sessions is {}s", DEFAULT_CONNECTION_TIMEOUT);
+
+		int configuredReceiveTimeout = Netshot.getConfig("netshot.cli.telnet.receivetimeout", DEFAULT_RECEIVE_TIMEOUT);
+		if (configuredReceiveTimeout < 1) {
+			logger.error("Invalid value {} for {}", configuredReceiveTimeout, "netshot.cli.telnet.receivetimeout");
+		}
+		else {
+			DEFAULT_RECEIVE_TIMEOUT = configuredReceiveTimeout;
+		}
+		logger.info("The default receive timeout value for Telnet sessions is {}s", DEFAULT_RECEIVE_TIMEOUT);
+
+		int configuredCommandTimeout = Netshot.getConfig("netshot.cli.telnet.commandtimeout", DEFAULT_COMMAND_TIMEOUT);
+		if (configuredCommandTimeout < 1) {
+			logger.error("Invalid value {} for {}", configuredCommandTimeout, "netshot.cli.telnet.commandtimeout");
+		}
+		else {
+			DEFAULT_COMMAND_TIMEOUT = configuredCommandTimeout;
+		}
+		logger.info("The default command timeout value for Telnet sessions is {}s", DEFAULT_COMMAND_TIMEOUT);
 	}
 
 	/** The port. */
 	private int port = 23;
-	
+
 	/** The telnet. */
 	private TelnetClient telnet = null;
-	
+
 	/**
 	 * Instantiates a new telnet.
 	 *
@@ -65,7 +89,7 @@ public class Telnet extends Cli {
 	public Telnet(NetworkAddress host, TaskLogger taskLogger) {
 		super(host, taskLogger);
 	}
-	
+
 	/**
 	 * Instantiates a new telnet.
 	 *
@@ -77,8 +101,10 @@ public class Telnet extends Cli {
 		this(host, taskLogger);
 		if (port != 0) this.port = port;
 		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+		this.commandTimeout = DEFAULT_COMMAND_TIMEOUT;
+		this.receiveTimeout = DEFAULT_RECEIVE_TIMEOUT;
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see onl.netfishers.netshot.device.access.Cli#connect()
 	 */
@@ -102,6 +128,6 @@ public class Telnet extends Cli {
 		} catch (Exception e) {
 		}
 	}
-	
-	
+
+
 }

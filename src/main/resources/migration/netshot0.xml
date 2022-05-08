@@ -1,5 +1,5 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.10.xsd">
 	<property name="BOOLEAN" value="BOOLEAN" dbms="postgresql"/>
 	<property name="BOOLEAN" value="BIT(1)"/>
 <!-- netshot_0_5_2.xml -->
@@ -1083,5 +1083,12 @@
 		<addForeignKeyConstraint baseColumnNames="target_groups" baseTableName="policy_target_groups" constraintName="FK_a1nv7171xijo5i832bg71tit5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
 		<sql>INSERT INTO policy_target_groups (applied_policies, target_groups) SELECT id, target_group FROM policy WHERE target_group IS NOT NULL</sql>
 		<dropColumn tableName="policy" columnName="target_group" />
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.17.1_3">
+		<preConditions onFail="MARK_RAN">
+			<uniqueConstraintExists tableName="device" constraintName="UK_49k44bri62v926c9f4uw4t68q"/>
+		</preConditions>
+		<dropUniqueConstraint constraintName="UK_49k44bri62v926c9f4uw4t68q" tableName="device"/>
+		<addUniqueConstraint columnNames="connect_ipv4_address, telnet_port, ssh_port" constraintName="UK_d884xdfb8fkx9hgptyjds2ebs" tableName="device"/>
 	</changeSet>
 </databaseChangeLog>

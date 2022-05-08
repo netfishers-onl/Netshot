@@ -116,8 +116,11 @@ public class Finder {
 		/** The bracketout. */
 		BRACKETOUT("^\\s*(\\))", ")"),
 
-		/** The contains. */
+		/** Contains text, case sensitive */
 		CONTAINS("(?i)^\\s*(contains)\\b", "CONTAINS"),
+
+		/** Contains text, case insensitive */
+		CONTAINSNOCASE("(?i)^\\s*(containsnocase)\\b", "CONTAINSNOCASE"),
 
 		/** REGEXP matches. */
 		MATCHES("(?i)^\\s*(matches)\\b", "MATCHES"),
@@ -848,6 +851,7 @@ public class Finder {
 				switch (comparator.type) {
 				case IS:
 				case CONTAINS:
+				case CONTAINSNOCASE:
 				case STARTSWITH:
 				case ENDSWITH:
 				case MATCHES:
@@ -884,6 +888,11 @@ public class Finder {
 						"((regexp_like(m.serialNumber, :%s) = 1 or regexp_like(m.partNumber, :%s) = 1) and m.removed is not true)", itemPrefix,
 						itemPrefix);
 			}
+			else if (TokenType.CONTAINSNOCASE.equals(sign)) {
+				criteria.where = String.format(
+						"((lower(m.serialNumber) like :%s or lower(m.partNumber) like :%s) and m.removed is not true)",
+						itemPrefix, itemPrefix);
+			}
 			else {
 				criteria.where = String.format(
 						"((m.serialNumber like :%s or m.partNumber like :%s) and m.removed is not true)", itemPrefix,
@@ -902,6 +911,9 @@ public class Finder {
 			switch (sign) {
 			case CONTAINS:
 				target = "%" + value + "%";
+				break;
+			case CONTAINSNOCASE:
+				target = "%" + value.toLowerCase() + "%";
 				break;
 			case STARTSWITH:
 				target = value + "%";
@@ -962,6 +974,7 @@ public class Finder {
 				switch (comparator.type) {
 				case IS:
 				case CONTAINS:
+				case CONTAINSNOCASE:
 				case STARTSWITH:
 				case ENDSWITH:
 				case MATCHES:
@@ -998,6 +1011,11 @@ public class Finder {
 						"(regexp_like(ni.interfaceName, :%s) = 1 or regexp_like(ni.description, :%s) = 1)", itemPrefix,
 						itemPrefix);
 			}
+			else if (TokenType.CONTAINSNOCASE.equals(sign)) {
+				criteria.where = String.format(
+						"(lower(ni.interfaceName) like :%s or lower(ni.description) like :%s)",
+						itemPrefix, itemPrefix);
+			}
 			else {
 				criteria.where = String.format(
 						"(ni.interfaceName like :%s or ni.description like :%s)", itemPrefix,
@@ -1016,6 +1034,9 @@ public class Finder {
 			switch (sign) {
 			case CONTAINS:
 				target = "%" + value + "%";
+				break;
+			case CONTAINSNOCASE:
+				target = "%" + value.toLowerCase() + "%";
 				break;
 			case STARTSWITH:
 				target = value + "%";
@@ -1708,28 +1729,39 @@ public class Finder {
 		public PropertyLevel propertyLevel;
 
 		/**
-		 * Gets the property name.
+		 * Build 'where' statement for the expression.
 		 *
-		 * @return the property name
+		 * @return the 'where' statement
 		 */
-		public String buildWhere(String valueName, String operator, String itemPrefix) {
+		public String buildWhere(String valueName, String operator, String itemPrefix, String propertyFunction) {
+			String preModifier = "";
+			String postModifier = "";
+			if (propertyFunction != null) {
+				preModifier = propertyFunction + "(";
+				postModifier = ")";
+			}
 			if ("matches".equals(operator)) {
 				if (propertyLevel.nativeProperty) {
-					return "regexp_like(" + propertyLevel.prefix + property + ", :"
+					return "regexp_like(" + preModifier + propertyLevel.prefix + property + postModifier + ", :"
 						+ itemPrefix + ") = 1";
 				}
 				else {
-					return "regexp_like(" + itemPrefix + "_" + propertyLevel.prefix + property + ", :"
+					return "regexp_like(" + preModifier + itemPrefix + "_"
+						+ propertyLevel.prefix + property + postModifier + ", :"
 						+ itemPrefix + ") = 1";
 				}
 			}
 			if (propertyLevel.nativeProperty) {
-				return propertyLevel.prefix + property + " " + operator + " :" + itemPrefix;
+				return preModifier + propertyLevel.prefix + property + postModifier + " " + operator + " :" + itemPrefix;
 			}
 			else {
-				return itemPrefix + "_" + propertyLevel.prefix + valueName + " " + operator
+				return preModifier + itemPrefix + "_" + propertyLevel.prefix + valueName + postModifier + " " + operator
 						+ " :" + itemPrefix;
 			}
+		}
+
+		public String buildWhere(String valueName, String operator, String itemPrefix) {
+			return this.buildWhere(valueName, operator, itemPrefix, null);
 		}
 
 		/**
@@ -2149,10 +2181,15 @@ public class Finder {
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			String operator = "like";
+			String modifier = null;
 			if (TokenType.MATCHES.equals(sign)) {
 				operator = "matches";
 			}
-			criteria.where = this.buildWhere(longText ? "longText.text" : "text", operator, itemPrefix);
+			if (TokenType.CONTAINSNOCASE.equals(sign)) {
+				modifier = "lower";
+			}
+			criteria.where = this.buildWhere(longText ? "longText.text" : "text", operator, itemPrefix, modifier);
+			
 			return criteria;
 		}
 
@@ -2165,6 +2202,9 @@ public class Finder {
 			switch (sign) {
 			case CONTAINS:
 				target = "%" + value + "%";
+				break;
+			case CONTAINSNOCASE:
+				target = "%" + value.toLowerCase() + "%";
 				break;
 			case STARTSWITH:
 				target = value + "%";
@@ -2257,7 +2297,9 @@ public class Finder {
 			}
 			Token sign = tokens.get(1);
 			Token value = tokens.get(2);
-			if (sign.type != TokenType.IS && sign.type != TokenType.CONTAINS &&
+			if (sign.type != TokenType.IS &&
+					sign.type != TokenType.CONTAINS &&
+					sign.type != TokenType.CONTAINSNOCASE &&
 					sign.type != TokenType.MATCHES &&
 					sign.type != TokenType.STARTSWITH && sign.type != TokenType.ENDSWITH) {
 				throw new FinderParseException(String.format(
@@ -2623,6 +2665,7 @@ public class Finder {
 				switch (comparator.type) {
 				case IS:
 				case CONTAINS:
+				case CONTAINSNOCASE:
 				case STARTSWITH:
 				case ENDSWITH:
 				case MATCHES:
@@ -2657,6 +2700,9 @@ public class Finder {
 			if (TokenType.MATCHES.equals(sign)) {
 				criteria.where = String.format("(regexp_like(v, :%s) = 1)", itemPrefix);
 			}
+			else if (TokenType.CONTAINSNOCASE.equals(sign)) {
+				criteria.where = String.format("(lower(v) like :%s)", itemPrefix);
+			}
 			else {
 				criteria.where = String.format("(v like :%s)", itemPrefix);
 			}
@@ -2672,6 +2718,9 @@ public class Finder {
 			switch (sign) {
 			case CONTAINS:
 				target = "%" + value + "%";
+				break;
+			case CONTAINSNOCASE:
+				target = "%" + value.toLowerCase() + "%";
 				break;
 			case STARTSWITH:
 				target = value + "%";
@@ -2728,6 +2777,7 @@ public class Finder {
 				switch (comparator.type) {
 				case IS:
 				case CONTAINS:
+				case CONTAINSNOCASE:
 				case STARTSWITH:
 				case ENDSWITH:
 				case MATCHES:
@@ -2762,6 +2812,9 @@ public class Finder {
 			if (TokenType.MATCHES.equals(sign)) {
 				criteria.where = String.format("(regexp_like(v, :%s) = 1 or regexp_like(d.name, :%s) = 1)", itemPrefix, itemPrefix);
 			}
+			else if (TokenType.CONTAINSNOCASE.equals(sign)) {
+				criteria.where = String.format("(lower(v) like :%s) or (lower(d.name) like :%s)", itemPrefix, itemPrefix);
+			}
 			else {
 				criteria.where = String.format("(v like :%s) or (d.name like :%s)", itemPrefix, itemPrefix);
 			}
@@ -2778,6 +2831,9 @@ public class Finder {
 			switch (sign) {
 			case CONTAINS:
 				target = "%" + value + "%";
+				break;
+			case CONTAINSNOCASE:
+				target = "%" + value.toLowerCase() + "%";
 				break;
 			case STARTSWITH:
 				target = value + "%";

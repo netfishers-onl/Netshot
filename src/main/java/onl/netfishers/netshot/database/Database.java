@@ -241,7 +241,7 @@ public class Database {
 			serviceProperties.setProperty(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jdbc");
 			serviceProperties.setProperty(AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS, "thread");
 			// serviceProperties.setProperty(AvailableSettings.HBM2DDL_AUTO, "update"); // "update" or "validate" or ""
-			serviceProperties.setProperty(AvailableSettings.SHOW_SQL, "true");
+			// serviceProperties.setProperty(AvailableSettings.SHOW_SQL, "true");
 			// Dates/times stored in UTC in the DB, without timezone, up to Java to convert to server local time
 			serviceProperties.setProperty("hibernate.jdbc.time_zone", "UTC");
 

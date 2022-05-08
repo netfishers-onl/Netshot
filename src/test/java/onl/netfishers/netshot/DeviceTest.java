@@ -76,6 +76,14 @@ public class DeviceTest {
 		}
 
 		@Test
+		@DisplayName("Query device by name containing text, case insensitive")
+		void queryByNameContainingNoCase() throws Exception {
+			assertFinder("[NAME] CONTAINSNOCASE \"Name Example\"", null,
+				" from Device d where (lower(d.name) like :var)",
+				Map.of("var", "%name example%"));
+		}
+
+		@Test
 		@DisplayName("Query device by name matching text")
 		void queryByNameMatching() throws Exception {
 			assertFinder("[NAME] MATCHES \"^Na.*$\"", null,
@@ -105,6 +113,14 @@ public class DeviceTest {
 			assertFinder("[INTERFACE] IS \"some description\"", null,
 				" from Device d left join d.networkInterfaces ni where ((ni.interfaceName like :var or ni.description like :var))",
 				Map.of("var", "some description"));
+		}
+
+		@Test
+		@DisplayName("Query device by module containing text, case insensitive")
+		void queryByModuleText() throws Exception {
+			assertFinder("[MODULE] CONTAINSNOCASE \"abcDEFgh01\"", null,
+				" from Device d left join d.modules m where (((lower(m.serialNumber) like :var or lower(m.partNumber) like :var) and m.removed is not true))",
+				Map.of("var", "%abcdefgh01%"));
 		}
 
 		@Test

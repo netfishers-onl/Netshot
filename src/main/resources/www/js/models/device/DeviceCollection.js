@@ -77,7 +77,7 @@ define([
 				query = "[IP] IS " + text;
 			}
 			else {
-				query = '[Name] CONTAINS "' + text.replace(/"/, "\\\"") + '"';
+				query = '[Name] CONTAINSNOCASE "' + text.replace(/"/, "\\\"") + '"';
 			}
 			this.filter.query = query;
 			this.filter.driver = "";

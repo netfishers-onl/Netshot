@@ -56,7 +56,11 @@ define([
 			name: "networkClass",
 			title: "Network class",
 			type: "ENUM",
-			values: [ "FIREWALL", "ROUTER", "SWITCH", "SWITCHROUTER", "FIREWALL", "UNKNOWN", "LOADBALANCER" ],
+			values: [
+				"FIREWALL", "LOADBALANCER", "ROUTER", "SERVER", "SWITCH",
+				"SWITCHROUTER", "ACCESSPOINT", "WIRELESSCONTROLLER",
+				"CONSOLESERVER", "UNKNOWN",
+			],
 			searchable: true
 		}, {
 			level: "DEVICE",
@@ -215,6 +219,7 @@ define([
 					'TEXT': {
 						'IS': '[' + name + '] IS "text"',
 						'CONTAINS': '[' + name + '] CONTAINS "text"',
+						'CONTAINSNOCASE': '[' + name + '] CONTAINSNOCASE "text"',
 						'STARTSWITH': '[' + name + '] STARTSWITH "text"',
 						'ENDSWITH': '[' + name + '] ENDSWITH "text"',
 						'MATCHES': '[' + name + '] MATCHES "pattern"',
@@ -222,6 +227,7 @@ define([
 					'LONGTEXT': {
 						'IS': '[' + name + '] IS "text"',
 						'CONTAINS': '[' + name + '] CONTAINS "text"',
+						'CONTAINSNOCASE': '[' + name + '] CONTAINSNOCASE "text"',
 						'STARTSWITH': '[' + name + '] STARTSWITH "text"',
 						'ENDSWITH': '[' + name + '] ENDSWITH "text"',
 						'MATCHES': '[' + name + '] MATCHES "pattern"',

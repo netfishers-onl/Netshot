@@ -1,8 +1,14 @@
 <li class="nscompliance-list-policy config-policy" data-policy-id="<%- id %>">
 	<span class="name"><%- name %></span>
 	<div class="details">
-		<% if (typeof targetGroup === "object" && targetGroup) { %>
-		Applies to <span class="group"><%- targetGroup.name %></span>
+		<% 
+			if (typeof targetGroups === "object" && targetGroups.length > 0) {
+				var groupOutputs = [];
+				for (t in targetGroups) {
+					groupOutputs.push('<span class="group">' + targetGroups[t].name + '</span>');
+				}
+		%>
+		Applies to <%= groupOutputs.join(", ") %>
 		<% } else { %>
 		Not applied
 		<% } %>

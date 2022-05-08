@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
 import javax.annotation.security.DenyAll;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.persistence.PersistenceException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.BeanParam;
@@ -333,6 +334,23 @@ public class RestService extends Thread {
 	 */
 	private void suggestReturnCode(Response.Status status) {
 		this.request.setAttribute(ResponseCodeFilter.SUGGESTED_RESPONSE_CODE, status);
+	}
+
+	/**
+	 * Check whether a PersistenceException is caused by key conflict (duplicate key).
+	 */
+	private boolean isDuplicateException(PersistenceException e) {
+		Throwable t = e;
+		for (int i = 0; i < 2; i++) {
+			t = t.getCause();
+			if (t == null) {
+				return false;
+			}
+			if (t.getMessage().toLowerCase().contains("duplicate")) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/* (non-Javadoc)
@@ -658,8 +676,7 @@ public class RestService extends Thread {
 			catch (HibernateException e) {
 				session.getTransaction().rollback();
 				logger.error("Error while adding a domain.", e);
-				Throwable t = e.getCause();
-				if (t != null && t.getMessage().contains("uplicate")) {
+				if (this.isDuplicateException(e)) {
 					throw new NetshotBadRequestException(
 							"A domain with this name already exists.",
 							NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DOMAIN);
@@ -743,8 +760,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Error while editing the domain.", e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("uplicate")) {
+			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
 						"A domain with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DOMAIN);
@@ -2815,12 +2831,12 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Cannot edit the device.", e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("uplicate")) {
+			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
 						"A device with this IP address already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DEVICE);
 			}
+			Throwable t = e.getCause();
 			if (t != null && t.getMessage().contains("domain")) {
 				throw new NetshotBadRequestException("Unable to find the domain",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
@@ -3419,8 +3435,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new device group.", e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("uplicate")) {
+			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
 						"A group with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_GROUP);
@@ -3492,7 +3507,7 @@ public class RestService extends Thread {
 			session.beginTransaction();
 			DeviceGroup deviceGroup = (DeviceGroup) session.load(DeviceGroup.class, id);
 			for (Policy policy : deviceGroup.getAppliedPolicies()) {
-				policy.setTargetGroup(null);
+				policy.getTargetGroups().remove(deviceGroup);
 				session.save(policy);
 			}
 			session.delete(deviceGroup);
@@ -3761,9 +3776,14 @@ public class RestService extends Thread {
 					"Unable to find a device. Refresh and try again.",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE_IN_STATICGROUP);
 		}
-		catch (HibernateException e) {
+		catch (PersistenceException e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to save the group {}.", id, e);
+			if (this.isDuplicateException(e)) {
+				throw new NetshotBadRequestException(
+						"A group with this name already exists.",
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_GROUP);
+			}
 			throw new NetshotBadRequestException("Unable to save the group.",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
@@ -5064,7 +5084,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession(true);
 		try {
 			Query<Policy> query = session
-				.createQuery("from Policy p left join fetch p.targetGroup", Policy.class);
+				.createQuery("from Policy p left join fetch p.targetGroups", Policy.class);
 			paginationParams.apply(query);
 			return query.list();
 		}
@@ -5131,8 +5151,8 @@ public class RestService extends Thread {
 		/** The name. */
 		private String name = "";
 
-		/** The group. */
-		private long group = 0;
+		/** The groups. */
+		private Set<Long> targetGroups = new HashSet<>();
 
 		/**
 		 * Instantiates a new rs policy.
@@ -5180,13 +5200,13 @@ public class RestService extends Thread {
 		}
 
 		/**
-		 * Gets the group.
+		 * Gets the groups.
 		 *
-		 * @return the group
+		 * @return the groups
 		 */
 		@XmlElement @JsonView(DefaultView.class)
-		public long getGroup() {
-			return group;
+		public Set<Long> getTargetGroups() {
+			return targetGroups;
 		}
 
 		/**
@@ -5194,8 +5214,8 @@ public class RestService extends Thread {
 		 *
 		 * @param group the new group
 		 */
-		public void setGroup(long group) {
-			this.group = group;
+		public void setTargetGroup(Set<Long> groups) {
+			this.targetGroups = groups;
 		}
 	}
 
@@ -5229,12 +5249,13 @@ public class RestService extends Thread {
 		try {
 			session.beginTransaction();
 
-			DeviceGroup group = null;
-			if (rsPolicy.getGroup() != -1) {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsPolicy.getGroup());
+			Set<DeviceGroup> groups = new HashSet<>();
+			for (Long groupId : rsPolicy.getTargetGroups()) {
+				DeviceGroup group = (DeviceGroup) session.get(DeviceGroup.class, groupId);
+				groups.add(group);
 			}
 
-			policy = new Policy(name, group);
+			policy = new Policy(name, groups);
 
 			session.save(policy);
 			session.getTransaction().commit();
@@ -5251,8 +5272,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new policy.", e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("uplicate")) {
+			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
 						"A policy with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_POLICY);
@@ -5349,17 +5369,23 @@ public class RestService extends Thread {
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY_NAME);
 			}
 			policy.setName(name);
-			
-			if (policy.getTargetGroup() != null && policy.getTargetGroup().getId() != rsPolicy.getGroup()) {
-				session.createQuery("delete CheckResult cr where cr.key.rule in (select r from Rule r where r.policy.id = :id)")
-					.setParameter("id", policy.getId())
-					.executeUpdate();
+
+			// Remove orphan check results
+			for (DeviceGroup group : policy.getTargetGroups()) {
+				if (!rsPolicy.getTargetGroups().contains(group.getId())) {
+					session.createQuery(
+						"delete CheckResult cr where cr.key.rule in (select r from Rule r where r.policy.id = :policyId) " +
+							"and cr.key.device in (select d from DeviceGroup g join g.cachedDevices d where g.id = :groupId)")
+						.setParameter("policyId", policy.getId())
+						.setParameter("groupId", group.getId())
+						.executeUpdate();
+				}
 			}
-			DeviceGroup group = null;
-			if (rsPolicy.getGroup() != -1) {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsPolicy.getGroup());
+			policy.getTargetGroups().clear();
+			for (Long groupId : rsPolicy.getTargetGroups()) {
+				DeviceGroup group = (DeviceGroup) session.get(DeviceGroup.class, groupId);
+				policy.getTargetGroups().add(group);
 			}
-			policy.setTargetGroup(group);
 
 			session.update(policy);
 			session.getTransaction().commit();
@@ -5368,8 +5394,7 @@ public class RestService extends Thread {
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
-			logger.error("Unable to find the group {} to be assigned to the policy {}.",
-					rsPolicy.getGroup(), id, e);
+			logger.error("Unable to find a group to be assigned to the policy {}.", id, e);
 			throw new NetshotBadRequestException(
 					"Unable to find the group.",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
@@ -5377,8 +5402,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to save the policy {}.", id, e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("uplicate")) {
+			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
 						"A policy with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_POLICY);
@@ -5704,8 +5728,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new rule.", e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("uplicate")) {
+			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
 						"A rule with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_RULE);
@@ -5836,8 +5859,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new rule.", e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("uplicate")) {
+			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
 						"A rule with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_RULE);
@@ -6084,8 +6106,8 @@ public class RestService extends Thread {
 			};
 
 			rule.setEnabled(true);
-			rule.check(device, session, taskLogger);
-			result.setResult(rule.getCheckResults().iterator().next().getResult());
+			CheckResult check = rule.check(device, session, taskLogger);
+			result.setResult(check.getResult());
 			result.setScriptError(log.toString());
 
 			return result;
@@ -6357,8 +6379,8 @@ public class RestService extends Thread {
 			@SuppressWarnings({ "deprecation", "unchecked" })
 			Query<RsDeviceRule> query = session.createQuery(
 					"select r.id as id, r.name as ruleName, p.name as policyName, cr.result as result, cr.checkDate as checkDate, cr.comment as comment, " +
-					"e.expirationDate as expirationDate from Rule r join r.policy p join p.targetGroup g join g.cachedDevices d1 with d1.id = :id " +
-					"left join r.checkResults cr with cr.key.device.id = :id left join r.exemptions e with e.key.device.id = :id")
+					"e.expirationDate as expirationDate from Rule r join r.policy p join p.targetGroups g join g.cachedDevices d1 with d1.id = :id " +
+					"left join CheckResult cr with cr.key.rule.id = r.id and cr.key.device.id = :id left join r.exemptions e with e.key.device.id = :id")
 				.setParameter("id", id)
 				.setResultTransformer(Transformers.aliasToBean(RsDeviceRule.class));
 			paginationParams.apply(query);
@@ -8627,8 +8649,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new user.", e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("uplicate")) {
+			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
 						"A user with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_USER);
@@ -8706,8 +8727,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to save the user {}.", id, e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("uplicate")) {
+			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
 						"A user with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_USER);
@@ -9664,8 +9684,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new rule.", e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("uplicate")) {
+			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
 						"A script with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_SCRIPT);
@@ -10165,8 +10184,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Error while saving the new diagnostic.", e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("uplicate")) {
+			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
 						"A diagnostic with this name already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DIAGNOSTIC);
@@ -10307,8 +10325,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			logger.error("Unable to save the diagnostic {}.", id, e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("uplicate")) {
+			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException("A diagnostic with this name already exists.",
 					NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DIAGNOSTIC);
 			}

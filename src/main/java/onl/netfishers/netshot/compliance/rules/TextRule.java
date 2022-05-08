@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.Rule;
 import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
@@ -261,23 +262,19 @@ public class TextRule extends Rule {
 	}
 
 	@Override
-	public void check(Device device, Session session, TaskLogger taskLogger) {
+	public CheckResult check(Device device, Session session, TaskLogger taskLogger) {
 		if (!this.isEnabled()) {
-			this.setCheckResult(device, ResultOption.DISABLED, "", session);
-			return;
+			return new CheckResult(this, device, ResultOption.DISABLED);
 		}
 		prepare();
 		if (!valid) {
-			this.setCheckResult(device, ResultOption.INVALIDRULE, "", session);
-			return;
+			return new CheckResult(this, device, ResultOption.INVALIDRULE);
 		}
 		if (deviceDriver != null && !"".equals(deviceDriver) && !deviceDriver.equals(device.getDriver())) {
-			this.setCheckResult(device, ResultOption.NOTAPPLICABLE, "", session);
-			return;
+			return new CheckResult(this, device, ResultOption.NOTAPPLICABLE);
 		}
 		if (device.isExempted(this)) {
-			this.setCheckResult(device, ResultOption.EXEMPTED, "", session);
-			return;
+			return new CheckResult(this, device, ResultOption.EXEMPTED);
 		}
 		try {
 			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, null, session, taskLogger, true);
@@ -304,21 +301,18 @@ public class TextRule extends Rule {
 				doesMatch = doesMatch ^ invert;
 				if (!doesMatch) {
 					taskLogger.debug(String.format("Non matching block, number %d (in [%s])", b++, block[0]));
-					this.setCheckResult(device, ResultOption.NONCONFORMING, "", session);
-					return;
+					return new CheckResult(this, device, ResultOption.NONCONFORMING);
 				}
 				else if (anyBlock) {
 					taskLogger.debug(String.format("Matching block, number %d (in [%s])", b++, block[0]));
-					this.setCheckResult(device, ResultOption.CONFORMING, "", session);
-					return;
+					return new CheckResult(this, device, ResultOption.CONFORMING);
 				}
 			}
-			this.setCheckResult(device, ResultOption.CONFORMING, "", session);
+			return new CheckResult(this, device, ResultOption.CONFORMING);
 		}
 		catch (Exception e) {
-			this.setCheckResult(device, ResultOption.NOTAPPLICABLE, "No such field.", session);
 			taskLogger.info("No such field '" + field + "' on this device");
-			return;
+			return new CheckResult(this, device, ResultOption.NOTAPPLICABLE, "No such field.");
 		}
 		finally {
 			taskLogger.debug("End of check");

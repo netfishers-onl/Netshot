@@ -1064,4 +1064,24 @@
 			<column name="removed"/>
 		</createIndex>
 	</changeSet>
+	<changeSet author="netshot (generated)" id="0.17.1_2">
+		<preConditions onFail="MARK_RAN">
+			<not><tableExists tableName="policy_target_groups"/></not>
+		</preConditions>
+		<createTable tableName="policy_target_groups">
+			<column name="applied_policies" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="target_groups" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+		</createTable>
+		<createIndex indexName="FK_7ybgzypms15zlafcltchhotnz" tableName="policy_target_groups">
+			<column name="target_groups"/>
+		</createIndex>
+		<addForeignKeyConstraint baseColumnNames="applied_policies" baseTableName="policy_target_groups" constraintName="FK_6w08sem0ms71bpc960qp1qtmi" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="policy" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="target_groups" baseTableName="policy_target_groups" constraintName="FK_a1nv7171xijo5i832bg71tit5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<sql>INSERT INTO policy_target_groups (applied_policies, target_groups) SELECT id, target_group FROM policy WHERE target_group IS NOT NULL</sql>
+		<dropColumn tableName="policy" columnName="target_group" />
+	</changeSet>
 </databaseChangeLog>

@@ -102,9 +102,6 @@ public abstract class Rule {
 	/** The exemptions. */
 	private Set<Exemption> exemptions = new HashSet<>();
 
-	/** The check results. */
-	private Set<CheckResult> checkResults = new HashSet<>();
-
 	/**
 	 * Instantiates a new rule.
 	 */
@@ -124,42 +121,21 @@ public abstract class Rule {
 	}
 
 	/**
-	 * Sets the check result.
-	 *
-	 * @param device the device
-	 * @param result the result
-	 * @param comment the comment
-	 * @param session the session
-	 */
-	protected void setCheckResult(Device device, CheckResult.ResultOption result, String comment, Session session) {
-		CheckResult checkResult = new CheckResult(this, device, result);
-		checkResult.setComment(comment);
-		if (session.contains(this)) {
-			session.saveOrUpdate(checkResult);
-		}
-		else {
-			this.checkResults.add(checkResult);
-		}
-	}
-
-	/**
 	 * Check.
 	 *
 	 * @param device the device
 	 * @param session the session
 	 * @param taskLogger the task logger
 	 */
-	public void check(Device device, Session session, TaskLogger taskLogger) {
+	public CheckResult check(Device device, Session session, TaskLogger taskLogger) {
 		logger.warn("Called generic rule check.");
 		if (!this.isEnabled()) {
-			this.setCheckResult(device, ResultOption.DISABLED, "", session);
+			return new CheckResult(this, device, ResultOption.DISABLED);
 		}
 		else if (device.isExempted(this)) {
-			this.setCheckResult(device, ResultOption.EXEMPTED, "", session);
+			return new CheckResult(this, device, ResultOption.EXEMPTED);
 		}
-		else {
-			this.setCheckResult(device, ResultOption.NOTAPPLICABLE, "", session);
-		}
+		return new CheckResult(this, device, ResultOption.NOTAPPLICABLE);
 	}
 
 	/* (non-Javadoc)
@@ -308,52 +284,6 @@ public abstract class Rule {
 	 */
 	public void clearExemptions() {
 		this.exemptions.clear();
-	}
-
-	/**
-	 * Gets the check results.
-	 *
-	 * @return the check results
-	 */
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "key.rule", cascade = CascadeType.ALL, orphanRemoval = true)
-	public Set<CheckResult> getCheckResults() {
-		return checkResults;
-	}
-
-	/**
-	 * Sets the check results.
-	 *
-	 * @param checkResults the new check results
-	 */
-	public void setCheckResults(Set<CheckResult> checkResults) {
-		this.checkResults = checkResults;
-	}
-
-	/**
-	 * Delete check result.
-	 *
-	 * @param checkResult the check result
-	 * @return true, if successful
-	 */
-	public boolean deleteCheckResult(CheckResult checkResult) {
-		return this.checkResults.remove(checkResult);
-	}
-
-	/**
-	 * Adds the check result.
-	 *
-	 * @param checkResult the check result
-	 * @return true, if successful
-	 */
-	public boolean addCheckResult(CheckResult checkResult) {
-		return this.checkResults.add(checkResult);
-	}
-
-	/**
-	 * Clear check results.
-	 */
-	public void clearCheckResults() {
-		this.checkResults.clear();
 	}
 
 	@Override

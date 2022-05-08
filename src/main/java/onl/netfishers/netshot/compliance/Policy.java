@@ -23,11 +23,10 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -61,7 +60,7 @@ public class Policy {
 	private Set<Rule> rules = new HashSet<>();
 
 	/** The target group. */
-	private DeviceGroup targetGroup;
+	private Set<DeviceGroup> targetGroups;
 
 	/**
 	 * Instantiates a new policy.
@@ -75,9 +74,9 @@ public class Policy {
 	 * @param name the name
 	 * @param deviceGroup the device group
 	 */
-	public Policy(String name, DeviceGroup deviceGroup) {
+	public Policy(String name, Set<DeviceGroup> deviceGroups) {
 		this.name = name;
-		this.targetGroup = deviceGroup;
+		this.targetGroups = deviceGroups;
 	}
 
 	/**
@@ -91,28 +90,32 @@ public class Policy {
 	}
 
 	/**
-	 * Check.
+	 * Check all devices of the target groups against the policy.
 	 *
 	 * @param session the session
 	 */
 	public void check(Session session, TaskLogger taskLogger) {
-		if (targetGroup == null) {
+		if (targetGroups == null) {
 			return;
 		}
-		for (Device device : targetGroup.getCachedDevices()) {
+		Set<Device> devices = new HashSet<>();
+		for (DeviceGroup group : this.targetGroups) {
+			devices.addAll(group.getCachedDevices());
+		}
+		for (Device device : devices) {
 			this.check(device, session, taskLogger);
 		}
 	}
 
 	/**
-	 * Check.
+	 * Check a given device against the policy.
 	 *
 	 * @param device the device
 	 * @param session the session
 	 */
 	public void check(Device device, Session session, TaskLogger taskLogger) {
 		for (Rule rule : rules) {
-			rule.check(device, session, taskLogger);
+			device.getComplianceCheckResults().add(rule.check(device, session, taskLogger));
 		}
 	}
 
@@ -150,14 +153,14 @@ public class Policy {
 	}
 
 	/**
-	 * Gets the target group.
+	 * Gets the target groups.
 	 *
-	 * @return the target group
+	 * @return the target groups
 	 */
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToMany()
 	@XmlElement @JsonView(DefaultView.class)
-	public DeviceGroup getTargetGroup() {
-		return targetGroup;
+	public Set<DeviceGroup> getTargetGroups() {
+		return targetGroups;
 	}
 
 	/**
@@ -188,12 +191,12 @@ public class Policy {
 	}
 
 	/**
-	 * Sets the target group.
+	 * Sets the target groups.
 	 *
-	 * @param targetGroup the new target group
+	 * @param targetGroup the new target groups
 	 */
-	public void setTargetGroup(DeviceGroup targetGroup) {
-		this.targetGroup = targetGroup;
+	public void setTargetGroups(Set<DeviceGroup> targetGroups) {
+		this.targetGroups = targetGroups;
 	}
 
 	/* (non-Javadoc)

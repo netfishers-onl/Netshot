@@ -14,7 +14,7 @@ define([
 			attrs = _.pick(attrs, [
 				'id',
 				'name',
-				'group'
+				'targetGroups'
 			]);
 			options.attrs = attrs;
 			return Backbone.Model.prototype.save.call(this, attrs, options);

@@ -153,6 +153,7 @@ public class CheckGroupComplianceTask extends Task {
 				while (devices.next()) {
 					Device device = (Device) devices.get(0);
 					policy.check(device, session, taskLogger);
+					session.save(device);
 					session.flush();
 					session.evict(device);
 				}

@@ -16,11 +16,12 @@
 					class="text ui-widget-content ui-corner-all" value="<%- name %>" /></td>
 			</tr>
 			<tr>
-				<td><label for="group">Group: </label></td>
+				<td><label for="group">Apply to groups: </label></td>
 				<td>
-					<select name="group" id="group" class="text ui-widget-content ui-corner-all">
-						<option value="-1">None (not applied)</option>
-					</select>
+					<div id="groups" class="nsdevices-groupselector ui-widget-content ui-corner-all">
+						<div class="placeholder">No group selected</div>
+						<ul></ul>
+					</div>
 				</td>
 			</tr>
 		</tbody>
@@ -32,3 +33,4 @@
 		</div>
 	</form>
 </div>
+<div id="nsdialog-child"></div>

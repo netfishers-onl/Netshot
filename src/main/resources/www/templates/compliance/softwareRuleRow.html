@@ -1,5 +1,5 @@
 <tr data-rule-id="<%- id %>" class="rulerow">
-	<td><%- order + 1 %></td>
+	<td class="sort"><%- order + 1 %></td>
 	<td><% if (typeof targetGroup === "object" && targetGroup) { %><%- targetGroup.name %><% } else { %>[Any]<% } %></td>
 	<td><% if (driver) { %><%- deviceType %><% } else { %>[Any]<% } %></td>
 	<td><%- family %></td>

@@ -229,21 +229,18 @@ public class JavaScriptRule extends Rule {
 	 * @see onl.netfishers.netshot.compliance.Rule#check(onl.netfishers.netshot.device.Device, org.hibernate.Session)
 	 */
 	@Override
-	public void check(Device device, Session session, TaskLogger taskLogger) {
+	public CheckResult check(Device device, Session session, TaskLogger taskLogger) {
 		if (!this.isEnabled()) {
-			this.setCheckResult(device, ResultOption.DISABLED, "", session);
-			return;
+			return new CheckResult(this, device, ResultOption.DISABLED);
 		}
 
 		try (Context context = this.getContext()) {
 			prepare(context, taskLogger);
 			if (!this.jsValid) {
-				this.setCheckResult(device, ResultOption.INVALIDRULE, "", session);
-				return;
+				return new CheckResult(this, device, ResultOption.INVALIDRULE);
 			}
 			if (device.isExempted(this)) {
-				this.setCheckResult(device, ResultOption.EXEMPTED, "", session);
-				return;
+				return new CheckResult(this, device, ResultOption.EXEMPTED);
 			}
 			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, null, session, taskLogger, true);
 			Future<Value> futureResult = Executors.newSingleThreadExecutor().submit(new Callable<Value>() {
@@ -285,8 +282,7 @@ public class JavaScriptRule extends Rule {
 				if (allowedResult.toString().equals(txtResult)) {
 					taskLogger.info(String.format("The script returned %s (%d), comment '%s'.",
 							allowedResult.toString(), allowedResult.getValue(), comment));
-					this.setCheckResult(device, allowedResult, comment, session);
-					return;
+					return new CheckResult(this, device, allowedResult, comment);
 				}
 			}
 		}
@@ -297,7 +293,7 @@ public class JavaScriptRule extends Rule {
 		finally {
 			taskLogger.debug("End of check");
 		}
-		this.setCheckResult(device, ResultOption.INVALIDRULE, "", session);
+		return new CheckResult(this, device, ResultOption.INVALIDRULE);
 	}
 
 	@Override

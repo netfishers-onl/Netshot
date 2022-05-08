@@ -232,6 +232,22 @@ public class CheckResult {
 		this.key.setRule(rule);
 		this.key.setDevice(device);
 		this.result = result;
+		this.comment = "";
+	}
+
+	/**
+	 * Instantiates a new check result.
+	 *
+	 * @param rule the rule
+	 * @param device the device
+	 * @param result the result
+	 * @param comment the comments
+	 */
+	public CheckResult(Rule rule, Device device, CheckResult.ResultOption result, String comment) {
+		this.key.setRule(rule);
+		this.key.setDevice(device);
+		this.result = result;
+		this.comment = comment;
 	}
 
 	/**

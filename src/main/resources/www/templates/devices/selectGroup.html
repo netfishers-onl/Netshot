@@ -1,0 +1,36 @@
+<div id="nsdevices-selectgroupform" title="Select group(s)">
+
+	<form autocomplete="off">
+		<% if (constraints.min === 1 && constraints.max === 1) { %>
+			Select one group:
+		<% } else if (constraints.min === 0 && constraints.max === Number.POSITIVE_INFINITY) { %>
+			Select 0, 1 or multiple groups:
+		<% } else if (constraints.min === 1 && constraints.max === Number.POSITIVE_INFINITY) { %>
+			Select one or multiple groups:
+		<% } else if (constraints.min === 0) { %>
+			Select none or up to <%- constraints.max %> groups:
+		<% } else if (constraints.min === 1) { %>
+			Select one or up to <%- constraints.max %> groups:
+		<% } else { %>
+			Select between <%- constraints.min %> and <%- constraints.max %> groups:
+		<% } %>
+
+		<table>
+			<tbody>
+				<tr>
+					<td>
+						<div id="grouptree" class="ui-widget-content ui-corner-all nstreelist">
+							<div class="placeholder">
+									<p class="title">No group available</p>
+							</div>
+							<ul></ul>
+						</div></td>
+				</tr>
+			</tbody>
+		</table>
+	</form>
+</div>
+
+<div class="nserror" id="error">
+	<span class="ui-icon ui-icon-alert"></span> <span id="errormsg"></span>
+</div>

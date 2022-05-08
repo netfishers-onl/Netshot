@@ -79,8 +79,6 @@ public class CheckComplianceTask extends Task {
 	@Override
 	public void prepare() {
 		Hibernate.initialize(device);
-		Hibernate.initialize(device.getComplianceCheckResults());
-		Hibernate.initialize(device.getComplianceExemptions());
 	}
 
 	/* (non-Javadoc)
@@ -99,25 +97,21 @@ public class CheckComplianceTask extends Task {
 				.createQuery("delete from CheckResult c where c.key.device.id = :id")
 				.setParameter("id", this.device.getId())
 				.executeUpdate();
-			session.evict(this.device);
-			Device device = (Device) session
-				.createQuery("from Device d join fetch d.lastConfig where d.id = :id")
-				.setParameter("id", this.device.getId()).uniqueResult();
-			if (device == null) {
+			session.refresh(this.device);
+			if (this.device.getLastConfig() == null) {
 				logger.info("Task {}. Unable to fetch the device with its last config... has it been captured at least once?",
 						this.getId());
 				throw new Exception("No last config for this device. Has it been captured at least once?");
 			}
 			@SuppressWarnings("unchecked")
 			List<Policy> policies = session
-				.createQuery("select p from Policy p join p.targetGroup g join g.cachedDevices d where d.id = :id")
+				.createQuery("select distinct p from Policy p join p.targetGroups g join g.cachedDevices d with d.id = :id")
 				.setParameter("id", this.device.getId())
 				.list();
 
 			TaskLogger taskLogger = this.getJsLogger();
 			for (Policy policy : policies) {
 				policy.check(device, session, taskLogger);
-				session.merge(policy);
 			}
 			List<SoftwareRule> softwareRules =
 				session.createQuery("select sr from SoftwareRule sr order by sr.priority asc", SoftwareRule.class)
@@ -136,7 +130,7 @@ public class CheckComplianceTask extends Task {
 			for (HardwareRule rule : hardwareRules) {
 				rule.check(device);
 			}
-			session.merge(device);
+			session.save(device);
 			session.getTransaction().commit();
 			this.status = Status.SUCCESS;
 		}

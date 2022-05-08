@@ -4,15 +4,18 @@ define([
 	'underscore',
 	'backbone',
 	'views/Dialog',
+	'views/devices/SelectGroupDialog',
 	'models/compliance/PolicyModel',
 	'models/device/DeviceGroupCollection',
 	'text!templates/compliance/editPolicy.html',
-], function($, _, Backbone, Dialog, PolicyModel, DeviceGroupCollection,
-		editPolicyTemplate) {
+	'text!templates/devices/groupStaticItem.html',
+], function($, _, Backbone, Dialog, SelectGroupDialog, PolicyModel, DeviceGroupCollection,
+		editPolicyTemplate, groupStaticItemTemplate) {
 
 	return Dialog.extend({
 
 		template: _.template(editPolicyTemplate),
+		staticGroupTemplate: _.template(groupStaticItemTemplate),
 
 		dialogOptions: {
 			title: "Edit policy",
@@ -24,6 +27,7 @@ define([
 			this.groups.fetch().done(function() {
 				that.render();
 			});
+			this.selectedGroupIds = _.map(this.model.get("targetGroups"), function(g) { return g.id });
 		},
 
 		buttons: {
@@ -36,7 +40,7 @@ define([
 
 				saveModel.save({
 					'name': that.$('#policyname').val(),
-					'group': that.$('#group').val()
+					'targetGroups': this.selectedGroupIds,
 				}).done(function(data) {
 					that.close();
 					that.model.set(data);
@@ -51,16 +55,40 @@ define([
 			"Cancel": function() {
 				this.close();
 			}
+		},
 
+		renderGroupField: function() {
+			var that = this;
+			this.$('#groups>.placeholder').toggle(this.selectedGroupIds.length === 0);
+			this.$('#groups>ul').toggle(this.selectedGroupIds.length > 0);
+			var $groupField = this.$('#groups>ul');
+			$groupField.empty();
+			_.each(this.selectedGroupIds, function(groupId) {
+				var group = that.groups.get(groupId);
+				if (group) {
+					$groupField.append($(that.staticGroupTemplate(group.toJSON())));
+				}
+			});
 		},
 
 		onCreate: function() {
 			var that = this;
-			this.groups.each(function(group) {
-				$('<option />').attr('value', group.get('id')).text(group.get('name'))
-						.appendTo(that.$('#group'));
+			this.renderGroupField();
+			this.$('#groups').click(function(event) {
+				new SelectGroupDialog({
+					groups: that.groups,
+					preselectedGroupIds: that.selectedGroupIds,
+					constraints: {
+						min: 0,
+						max: Number.POSITIVE_INFINITY,
+					},
+					onSelected: function(groupIds) {
+						that.selectedGroupIds = groupIds;
+						that.renderGroupField();
+					},
+				});
+				return false;
 			});
-			this.$('#group').val(this.model.get('targetGroup') ? this.model.get('targetGroup').id : -1);
 		},
 
 	});

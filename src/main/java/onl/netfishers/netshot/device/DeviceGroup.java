@@ -148,7 +148,7 @@ abstract public class DeviceGroup {
 	 *
 	 * @return the applied policies
 	 */
-	@OneToMany(mappedBy = "targetGroup")
+	@ManyToMany(mappedBy = "targetGroups")
 	public Set<Policy> getAppliedPolicies() {
 		return appliedPolicies;
 	}

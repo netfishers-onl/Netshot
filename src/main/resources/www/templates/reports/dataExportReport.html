@@ -10,9 +10,11 @@
 	</fieldset>
 	
 	<fieldset>
-		<input type="checkbox" name="filtergroup" id="filtergroup" />
-		<label for="filtergroup">Restrict export to the following device group:</label>
-		<select name="group" id="group" disabled="disabled" class="text ui-widget-content ui-corner-all"></select>
+		<label for="groups">Restrict export to the following device group:</label>
+		<div id="groups" class="nsdevices-groupselector ui-widget-content ui-corner-all">
+			<div class="placeholder">All groups</div>
+			<ul></ul>
+		</div>
 	</fieldset>
 
 	<fieldset>
@@ -49,3 +51,4 @@
 	</fieldset>
 
 </form>
+<div id="nsdialog-child"></div>

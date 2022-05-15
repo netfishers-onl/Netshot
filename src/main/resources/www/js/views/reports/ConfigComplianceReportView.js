@@ -5,6 +5,7 @@ define([
 	'backbone',
 	'Chart',
 	'views/reports/ReportView',
+	'views/devices/SelectGroupDialog',
 	'models/reports/GroupConfigComplianceStatCollection',
 	'models/reports/GroupNonCompliantDevicesCollection',
 	'models/domain/DomainCollection',
@@ -15,12 +16,13 @@ define([
 	'text!templates/reports/configComplianceNonCompliantDeviceRow.html',
 	'text!templates/reports/reportPolicyFilter.html',
 	'text!templates/reports/reportGroupFilter.html',
-	], function($, _, Backbone, Chart, ReportView,
+	'text!templates/devices/groupStaticItem.html',
+	], function($, _, Backbone, Chart, ReportView, SelectGroupDialog,
 			GroupConfigComplianceStatCollection, GroupNonCompliantDevicesCollection,
 			DomainCollection, PolicyCollection, DeviceGroupCollection,
 			configComplianceReportTemplate, chartLegendTemplate,
 			configComplianceNonCompliantDeviceRowTemplate, reportPolicyFilterTemplate,
-			reportGroupFilterTemplate) {
+			reportGroupFilterTemplate, groupStaticItemTemplate) {
 
 	return ReportView.extend({
 
@@ -29,6 +31,8 @@ define([
 		nonCompliantDeviceTemplate: _.template(configComplianceNonCompliantDeviceRowTemplate),
 		policyFilterTemplate: _.template(reportPolicyFilterTemplate),
 		groupFilterTemplate: _.template(reportGroupFilterTemplate),
+		staticGroupTemplate: _.template(groupStaticItemTemplate),
+		selectedGroupIds: [],
 
 		render: function() {
 			var that = this;
@@ -38,9 +42,20 @@ define([
 			this.$('#filterdomain').click(function() {
 				that.$('#domain').prop('disabled', !$(this).prop('checked'));
 			});
-			this.$('#filtergroup').click(function() {
-				that.$('#filtergroups input').prop('disabled', !$(this).prop('checked'));
-				that.enableUpdateButton();
+			this.$('#groups').click(function(event) {
+				new SelectGroupDialog({
+					groups: that.deviceGroups,
+					preselectedGroupIds: that.selectedGroupIds,
+					constraints: {
+						min: 0,
+						max: Number.POSITIVE_INFINITY,
+					},
+					onSelected: function(groupIds) {
+						that.selectedGroupIds = groupIds;
+						that.renderGroupField();
+					},
+				});
+				return false;
 			});
 			this.$('#filterpolicy').click(function() {
 				that.$('#filterpolicies input').prop('disabled', !$(this).prop('checked'));
@@ -66,12 +81,26 @@ define([
 				this.policies.fetch()
 			).done(function() {
 				that.renderDomainList();
-				that.renderDeviceGroupList();
 				that.renderPolicyList();
 				that.refreshGroupConfigComplianceStats();
+				that.renderGroupField();
 			});
 
 			return this;
+		},
+
+		renderGroupField: function() {
+			var that = this;
+			this.$('#groups>.placeholder').toggle(this.selectedGroupIds.length === 0);
+			this.$('#groups>ul').toggle(this.selectedGroupIds.length > 0);
+			var $groupField = this.$('#groups>ul');
+			$groupField.empty();
+			_.each(this.selectedGroupIds, function(groupId) {
+				var group = that.deviceGroups.get(groupId);
+				if (group) {
+					$groupField.append($(that.staticGroupTemplate(group.toJSON())));
+				}
+			});
 		},
 		
 		renderDomainList: function() {
@@ -87,8 +116,7 @@ define([
 		},
 
 		enableUpdateButton: function() {
-			var withGroups = !(this.$('#filtergroup').is(':checked')) ||
-				this.$('#filtergroups input:checked').length > 0;
+			var withGroups = this.groupIds.length > 0;
 			var withPolicies = !(this.$('#filterpolicy').is(':checked')) ||
 				this.$('#filterpolicies input:checked').length > 0;
 			this.$('#update').button((withGroups && withPolicies) ? 'enable' : 'disable');
@@ -106,35 +134,16 @@ define([
 			});
 		},
 
-		renderDeviceGroupList: function() {
-			var that = this;
-			this.htmlBuffer = "";
-			this.deviceGroups.each(function(group) {
-				if (group.get('hiddenFromReports')) {
-					return;
-				}
-				that.htmlBuffer += that.groupFilterTemplate(group.toJSON());
-			});
-			this.$('#filtergroups').html(this.htmlBuffer);
-			this.$('#filtergroups input').click(function() {
-				that.enableUpdateButton();
-			});
-		},
-
 		refreshGroupConfigComplianceStats: function() {
 			var that = this;
 			this.$('#devices').hide();
-			this.selectedDeviceGroups = undefined;
-			if (this.$('#filtergroup').is(':checked')) {
-				this.selectedDeviceGroups = this.$('#filtergroups input:checked').map(function() { return $(this).data('group-id'); }).get();
-			}
 			this.selectedPolicies = undefined;
 			if (this.$('#filterpolicy').is(':checked')) {
 				this.selectedPolicies = this.$('#filterpolicies input:checked').map(function() { return $(this).data('policy-id'); }).get();
 			}
 			this.groupConfigComplianceStats = new GroupConfigComplianceStatCollection([], {
 				domains: this.$('#filterdomain').prop('checked') ? [this.$('#domain').val()] : undefined,
-				deviceGroups: this.selectedDeviceGroups,
+				deviceGroups: (this.selectedGroupIds.length > 0) ? this.selectedGroupIds : undefined,
 				policies: this.selectedPolicies,
 			});
 			this.groupConfigComplianceStats.fetch().done(function() {

@@ -8,9 +8,11 @@
 		<select name="domain" id="domain" disabled="disabled" class="text ui-widget-content ui-corner-all"></select>
 	</fieldset>
 	<fieldset>
-		<input type="checkbox" name="filtergroup" id="filtergroup" />
-		<label for="filtergroup">Restrict to the following device groups:</label>
-		<span id="filtergroups"></span>
+		<label for="groups">Restrict to the following device groups:</label>
+		<div id="groups" class="nsdevices-groupselector ui-widget-content ui-corner-all">
+			<div class="placeholder">All groups</div>
+			<ul></ul>
+		</div>
 	</fieldset>
 	<fieldset>
 		<input type="checkbox" name="filterpolicy" id="filterpolicy" />
@@ -50,3 +52,4 @@
 </table>
 
 </div>
+<div id="nsdialog-child"></div>

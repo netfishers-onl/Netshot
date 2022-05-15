@@ -4,16 +4,21 @@ define([
 	'underscore',
 	'backbone',
 	'views/reports/ReportView',
+	'views/devices/SelectGroupDialog',
 	'models/device/DeviceGroupCollection',
 	'models/reports/DataExportReportParamsModel',
 	'models/domain/DomainCollection',
 	'text!templates/reports/dataExportReport.html',
-], function($, _, Backbone, ReportView, DeviceGroupCollection,
-		DataExportReportParamsModel, DomainCollection, dataExportReportTemplate) {
+	'text!templates/devices/groupStaticItem.html',
+], function($, _, Backbone, ReportView, SelectGroupDialog, DeviceGroupCollection,
+		DataExportReportParamsModel, DomainCollection, dataExportReportTemplate,
+		groupStaticItemTemplate) {
 
 	return ReportView.extend({
 
 		template: _.template(dataExportReportTemplate),
+		staticGroupTemplate: _.template(groupStaticItemTemplate),
+		selectedGroupIds: [],
 
 		render: function() {
 			var that = this;
@@ -21,15 +26,27 @@ define([
 			this.$el.html(this.template());
 			this.groups = new DeviceGroupCollection([]);
 			this.groups.fetch().done(function() {
-				that.renderGroupList();
+				that.renderGroupField();
 			});
 
 			this.$('#filterdomain').click(function() {
 				that.$('#domain').prop('disabled', !$(this).prop('checked'));
 			});
 
-			this.$('#filtergroup').click(function() {
-				that.$('#group').prop('disabled', !$(this).prop('checked'));
+			this.$('#groups').click(function(event) {
+				new SelectGroupDialog({
+					groups: that.groups,
+					preselectedGroupIds: that.selectedGroupIds,
+					constraints: {
+						min: 0,
+						max: Number.POSITIVE_INFINITY,
+					},
+					onSelected: function(groupIds) {
+						that.selectedGroupIds = groupIds;
+						that.renderGroupField();
+					},
+				});
+				return false;
 			});
 
 			this.$('#exportinventory').click(function() {
@@ -46,7 +63,7 @@ define([
 			}).click(function() {
 				ReportView.defaultOptions.domain = that.$('#filterdomain').prop('checked') ? that.$('#domain').val() : undefined;
 				var exportParams = new DataExportReportParamsModel({
-					groups: (that.$('#filtergroup').prop('checked') ? [that.$('#group').val()] : undefined),
+					groups: (that.selectedGroupIds.length > 0) ? that.selectedGroupIds : undefined,
 					domains: (that.$('#filterdomain').prop('checked') ? [that.$('#domain').val()] : undefined),
 					exportGroups: that.$('#exportgroups').prop('checked'),
 					exportInterfaces: that.$('#exportinterfaces').prop('checked'),
@@ -67,11 +84,17 @@ define([
 			return this;
 		},
 
-		renderGroupList: function() {
+		renderGroupField: function() {
 			var that = this;
-			this.groups.each(function(group) {
-				$('<option />').attr('value', group.get('id')).text(group.get('name'))
-						.appendTo(that.$('#group'));
+			this.$('#groups>.placeholder').toggle(this.selectedGroupIds.length === 0);
+			this.$('#groups>ul').toggle(this.selectedGroupIds.length > 0);
+			var $groupField = this.$('#groups>ul');
+			$groupField.empty();
+			_.each(this.selectedGroupIds, function(groupId) {
+				var group = that.groups.get(groupId);
+				if (group) {
+					$groupField.append($(that.staticGroupTemplate(group.toJSON())));
+				}
 			});
 		},
 

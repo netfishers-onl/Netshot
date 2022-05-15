@@ -1150,6 +1150,12 @@ input.spinner {
 	margin-left: 8px;
 }
 
+#nsreports-report .nsdevices-groupselector {
+	display: inline-block;
+	margin-top: 3px;
+	margin-bottom: 3px;
+}
+
 #nscompliance-list {
 	position: absolute;
 	top: 5px;

@@ -98,7 +98,7 @@ define([
 					});
 				};
 				startNext();
-			}
+			},
 		},
 		
 		onCreate: function() {

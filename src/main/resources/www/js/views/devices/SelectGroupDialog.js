@@ -45,7 +45,7 @@ define([
 				var that = this;
 				that.options.onSelected(this.getSelectedGroupIds());
 				that.close();
-			}
+			},
 		},
 
 		updateSelectState: function() {

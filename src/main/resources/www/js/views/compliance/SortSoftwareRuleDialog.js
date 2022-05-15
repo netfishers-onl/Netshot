@@ -17,6 +17,10 @@ define([
 		},
 
 		buttons: {
+			"Cancel": function() {
+				this.close();
+				this.options.onCancel();
+			},
 			"Confirm": function(event) {
 				var that = this;
 				var $button = $(event.target).closest("button");
@@ -37,10 +41,6 @@ define([
 					$button.button('enable');
 				});
 			},
-			"Cancel": function() {
-				this.close();
-				this.options.onCancel();
-			}
 		},
 
 	});

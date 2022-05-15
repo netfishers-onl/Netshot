@@ -89,7 +89,7 @@ define([
 					});
 				};
 				startNext();
-			}
+			},
 		}
 
 	});

@@ -24,7 +24,7 @@ define([
 		buttons: {
 			"Close": function() {
 				this.close();
-			}
+			},
 		}
 
 	});

@@ -40,7 +40,7 @@ define([
 			},
 			"Close": function() {
 				this.close();
-			}
+			},
 		},
 
 		onCreate: function() {

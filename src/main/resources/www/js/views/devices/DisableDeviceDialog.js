@@ -38,8 +38,7 @@ define([
 					this.$("#error").show();
 					$button.button('enable');
 				});
-
-			}
+			},
 		},
 
 	});

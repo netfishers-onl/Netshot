@@ -34,7 +34,7 @@ define([
 					that.$("#error").show();
 					$button.button('enable');
 				});
-			}
+			},
 		},
 
 	});

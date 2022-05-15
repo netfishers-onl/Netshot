@@ -40,7 +40,7 @@ define([
 					that.$("#error").show();
 					$button.button('enable');
 				});
-			}
+			},
 		},
 
 		onCreate: function() {

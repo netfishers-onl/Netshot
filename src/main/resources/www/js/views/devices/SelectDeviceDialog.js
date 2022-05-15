@@ -35,16 +35,15 @@ define([
 				var that = this;
 				that.close();
 				that.options.onSelected(this.device);
-			}
-
+			},
 		},
 
 		disableSelectButton: function() {
-			this.dialogButtons().eq(0).button('disable');
+			this.dialogButtons().eq(1).button('disable');
 		},
 
 		enableSelectButton: function() {
-			this.dialogButtons().eq(0).button('enable');
+			this.dialogButtons().eq(1).button('enable');
 		},
 
 		onCreate: function() {

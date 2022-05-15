@@ -65,7 +65,7 @@ define([
 					$button.button('enable');
 				});
 
-			}
+			},
 		},
 
 		onCreate: function() {

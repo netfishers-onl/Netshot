@@ -101,7 +101,7 @@ define([
 
 		dialogButtons: function() {
 			return this.$el.closest('[role="dialog"]')
-					.find('.ui-dialog-buttonpane button');
+					.find('.ui-dialog-buttonset button');
 		}
 
 	});

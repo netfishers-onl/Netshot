@@ -23,8 +23,10 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.DeviceDriver;
@@ -74,8 +76,8 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 	/** The UDP port to listen for traps on. */
 	private int udpPort = 162;
 
-	/** The community. */
-	private String community;
+	/** The communities. */
+	private Set<String> communities;
 
 	/** The static SNMP trap receiver instance. */
 	private static SnmpTrapReceiver nsSnmpTrapReceiver;
@@ -108,7 +110,15 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 		if (port != null) {
 			this.udpPort = Integer.parseInt(port);
 		}
-		this.community = Netshot.getConfig("netshot.snmptrap.community", "NETSHOT");
+		this.communities = new HashSet<>();
+		try {
+			for (String community : Netshot.getConfig("netshot.snmptrap.community", "NETSHOT").split(" +")) {
+				this.communities.add(community);
+			}
+		}
+		catch (Exception e) {
+			logger.warn("Error while parsing SNMP trap community option", e);
+		}
 	}
 
 	/*
@@ -156,7 +166,7 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 
 			String receivedCommunity = new String(event.getSecurityName());
 
-			if (this.community.equals(receivedCommunity)) {
+			if (this.communities.contains(receivedCommunity)) {
 				Address address = event.getPeerAddress();
 				if (address instanceof IpAddress) {
 					InetAddress inetAddress = ((IpAddress) address).getInetAddress();
@@ -196,7 +206,7 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 			}
 			else {
 				logger.warn("Invalid community {} (vs {}) received from {}.", receivedCommunity,
-						this.community, event.getPeerAddress());
+						String.join(" ", this.communities), event.getPeerAddress());
 			}
 		}
 	}

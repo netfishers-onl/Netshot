@@ -32,8 +32,8 @@ define([
 					'type': "TakeSnapshotTask",
 					'device': that.model.get('id'),
 					'debugEnabled': that.$('#debugsession').is(":checked"),
-					'dontRunDiagnostics': !that.$('#rundiagnostics').is(':checked'),
-					'dontCheckCompliance': !that.$('#checkcompliance').is(':checked'),
+					'dontRunDiagnostics': !that.$('#thenrundiagnostics').is(':checked'),
+					'dontCheckCompliance': !that.$('#thencheckcompliance').is(':checked'),
 				});
 				task.set(that.taskSchedulerToolbox.getSchedule());
 				task.save().done(function(data) {

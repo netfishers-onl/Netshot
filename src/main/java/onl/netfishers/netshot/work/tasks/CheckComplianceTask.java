@@ -103,9 +103,8 @@ public class CheckComplianceTask extends Task {
 						this.getId());
 				throw new Exception("No last config for this device. Has it been captured at least once?");
 			}
-			@SuppressWarnings("unchecked")
 			List<Policy> policies = session
-				.createQuery("select distinct p from Policy p join p.targetGroups g join g.cachedDevices d with d.id = :id")
+				.createQuery("select distinct p from Policy p join p.targetGroups g join g.cachedDevices d with d.id = :id", Policy.class)
 				.setParameter("id", this.device.getId())
 				.list();
 
@@ -113,8 +112,11 @@ public class CheckComplianceTask extends Task {
 			for (Policy policy : policies) {
 				policy.check(device, session, taskLogger);
 			}
-			List<SoftwareRule> softwareRules =
-				session.createQuery("select sr from SoftwareRule sr order by sr.priority asc", SoftwareRule.class)
+			session.save(this.device);
+			session.flush();
+			List<SoftwareRule> softwareRules = session
+				.createQuery("select sr from SoftwareRule sr join sr.targetGroup g join g.cachedDevices d with d.id = :id order by sr.priority asc", SoftwareRule.class)
+				.setParameter("id", this.device.getId())
 				.list();
 			device.setSoftwareLevel(ConformanceLevel.UNKNOWN);
 			for (SoftwareRule rule : softwareRules) {
@@ -123,6 +125,7 @@ public class CheckComplianceTask extends Task {
 					break;
 				}
 			}
+			session.save(this.device);
 			List<HardwareRule> hardwareRules = session
 				.createQuery("select hr from HardwareRule hr", HardwareRule.class)
 				.list();

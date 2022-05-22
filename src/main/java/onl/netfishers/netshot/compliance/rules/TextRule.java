@@ -271,7 +271,7 @@ public class TextRule extends Rule {
 			return new CheckResult(this, device, ResultOption.INVALIDRULE);
 		}
 		if (deviceDriver != null && !"".equals(deviceDriver) && !deviceDriver.equals(device.getDriver())) {
-			return new CheckResult(this, device, ResultOption.NOTAPPLICABLE);
+			return new CheckResult(this, device, ResultOption.NOTAPPLICABLE, "The rule doesn't apply to the device's driver");
 		}
 		if (device.isExempted(this)) {
 			return new CheckResult(this, device, ResultOption.EXEMPTED);
@@ -309,6 +309,10 @@ public class TextRule extends Rule {
 				}
 			}
 			return new CheckResult(this, device, ResultOption.CONFORMING);
+		}
+		catch (StackOverflowError e) {
+			taskLogger.info("Overflow error (you might want to rewrite the regular expression)");
+			return new CheckResult(this, device, ResultOption.INVALIDRULE, "Overflow error.");
 		}
 		catch (Exception e) {
 			taskLogger.info("No such field '" + field + "' on this device");

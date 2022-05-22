@@ -5966,6 +5966,9 @@ public class RestService extends Thread {
 		/** The script error. */
 		private String scriptError;
 
+		/** Result comment. */
+		private String comment;
+
 		/**
 		 * Gets the result.
 		 *
@@ -6004,6 +6007,25 @@ public class RestService extends Thread {
 			this.scriptError = scriptError;
 		}
 
+		/**
+		 * Gets the commnet.
+		 *
+		 * @return the comment
+		 */
+		@XmlElement @JsonView(DefaultView.class)
+		public String getComment() {
+			return comment;
+		}
+
+		/**
+		 * Sets the comment.
+		 *
+		 * @param scriptError the comment
+		 */
+		public void setComment(String comment) {
+			this.comment = comment;
+		}
+
 	}
 
 	/**
@@ -6027,6 +6049,7 @@ public class RestService extends Thread {
 		logger.debug("REST request, rule test.");
 		Device device;
 		Session session = Database.getSession(true);
+		RsRuleTestResult result = new RsRuleTestResult();
 		try {
 			device = (Device) session
 					.createQuery("from Device d join fetch d.lastConfig where d.id = :id")
@@ -6034,8 +6057,9 @@ public class RestService extends Thread {
 					.uniqueResult();
 			if (device == null) {
 				logger.warn("Unable to find the device {}.", rsRule.getDevice());
-				throw new NetshotBadRequestException("Unable to find the device.",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
+				result.setResult(CheckResult.ResultOption.NOTAPPLICABLE);
+				result.setComment("Unable to find the device");
+				return result;
 			}
 			
 			Rule rule;
@@ -6069,7 +6093,6 @@ public class RestService extends Thread {
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 			}
 
-			RsRuleTestResult result = new RsRuleTestResult();
 
 			StringBuilder log = new StringBuilder();
 			TaskLogger taskLogger = new TaskLogger() {
@@ -6109,8 +6132,12 @@ public class RestService extends Thread {
 			CheckResult check = rule.check(device, session, taskLogger);
 			result.setResult(check.getResult());
 			result.setScriptError(log.toString());
+			result.setComment(check.getComment());
 
 			return result;
+		}
+		catch (NetshotBadRequestException e) {
+			throw e;
 		}
 		catch (Exception e) {
 			logger.error("Unable to retrieve the device {}.", rsRule.getDevice(), e);

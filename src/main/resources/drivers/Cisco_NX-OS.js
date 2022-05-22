@@ -67,7 +67,19 @@ var Config = {
 			pre: "!! NX-OS license(s):",
 			preLine: "!! "
 		}
-	}
+	},
+	"nxosPackages": {
+		type: "LongText",
+		title: "NX-OS packages",
+		comparable: true,
+		searchable: true,
+		checkable: true,
+		dump: {
+			pre: "!! NX-OS active packages:",
+			preLine: "!!  ",
+			post: "!! End of NX-OS packages"
+		}
+	},
 };
 
 var Device = {
@@ -214,6 +226,11 @@ function snapshot(cli, device, config) {
 	if (version) {
 		device.set("softwareVersion", version[2]);
 		config.set("nxosVersion", version[2]);
+	}
+
+	var activePackages = showVersion.match(/^Active Package\(s\):\r?\n(( +.*\r?\n)*)/m);
+	if (activePackages) {
+		config.set("nxosPackages", activePackages[1]);
 	}
 	
 	var showInventory = cli.command("show inventory");

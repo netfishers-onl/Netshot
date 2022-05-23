@@ -196,7 +196,9 @@ public class TaskManager {
 		Integer maxPriority = null;
 		Set<ClusterMember> activeMembers = new HashSet<>();
 		for (ClusterMember member : members) {
-			if (MastershipStatus.MASTER.equals(member.getStatus()) || MastershipStatus.MEMBER.equals(member.getStatus())) {
+			if (MastershipStatus.MASTER.equals(member.getStatus()) ||
+					MastershipStatus.MEMBER.equals(member.getStatus()) ||
+					MastershipStatus.NEGOTIATING.equals(member.getStatus())) {
 				activeMembers.add(member);
 			}
 		}

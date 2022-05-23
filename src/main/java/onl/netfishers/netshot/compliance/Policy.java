@@ -115,6 +115,7 @@ public class Policy {
 	 */
 	public void check(Device device, Session session, TaskLogger taskLogger) {
 		for (Rule rule : rules) {
+			taskLogger.info(String.format("Evaluating rule %s (policy %s)...", rule.getName(), this.getName()));
 			device.getComplianceCheckResults().add(rule.check(device, session, taskLogger));
 		}
 	}

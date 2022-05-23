@@ -152,6 +152,7 @@ public class CheckGroupComplianceTask extends Task {
 						.scroll(ScrollMode.FORWARD_ONLY);
 				while (devices.next()) {
 					Device device = (Device) devices.get(0);
+					taskLogger.info(String.format("Checking configuration compliance of device %s (%d)", device.getName(), device.getId()));
 					policy.check(device, session, taskLogger);
 					session.save(device);
 					session.flush();

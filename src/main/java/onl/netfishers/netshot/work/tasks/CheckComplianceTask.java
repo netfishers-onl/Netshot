@@ -109,6 +109,8 @@ public class CheckComplianceTask extends Task {
 				.list();
 
 			TaskLogger taskLogger = this.getJsLogger();
+			taskLogger.info(String.format("Checking configuration compliance of device %s (%d)...",
+				this.device.getName(), this.device.getId()));
 			for (Policy policy : policies) {
 				policy.check(device, session, taskLogger);
 			}

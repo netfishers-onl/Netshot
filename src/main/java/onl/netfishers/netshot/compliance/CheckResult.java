@@ -23,6 +23,7 @@ import java.util.Date;
 
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
@@ -256,6 +257,7 @@ public class CheckResult {
 	 * @return the comment
 	 */
 	@XmlElement @JsonView(DefaultView.class)
+	@Column(length = 10000)
 	public String getComment() {
 		return comment;
 	}

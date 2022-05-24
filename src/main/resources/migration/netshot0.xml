@@ -1091,4 +1091,8 @@
 		<dropUniqueConstraint constraintName="UK_49k44bri62v926c9f4uw4t68q" tableName="device"/>
 		<addUniqueConstraint columnNames="connect_ipv4_address, telnet_port, ssh_port" constraintName="UK_d884xdfb8fkx9hgptyjds2ebs" tableName="device"/>
 	</changeSet>
+<!-- netshot_0_18_0_to_0_18_1.xml -->
+	<changeSet author="netshot (generated)" id="0.18.1_1">
+		<modifyDataType tableName="check_result" columnName="comment" newDataType="varchar(10000)"/>
+	</changeSet>
 </databaseChangeLog>

@@ -17,11 +17,11 @@
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var Info = {
+ var Info = {
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "NetFishers",
-	version: "1.7"
+	version: "1.8"
 };
 
 var Config = {
@@ -268,7 +268,7 @@ function snapshot(cli, device, config) {
 		device.add("module", module);
 		if (module.slot.match(/Chassis|Rack 0/)) {
 			device.set("serialNumber", module.serialNumber);
-			if (module.partNumber.match(/NCS-?55[0-9A-Z][0-9A-Z]/)) {
+			if (module.partNumber.match(/NCS-?5[57][0-9A-Z][0-9A-Z]/)) {
 				device.set("family", "Cisco NCS5500");
 			}
 			else if (module.partNumber.match(/NCS-?5[0-9A-Z][0-9A-Z][0-9A-Z]/)) {
@@ -277,7 +277,7 @@ function snapshot(cli, device, config) {
 			else if (module.partNumber.match(/NCS-?6[0-9A-Z][0-9A-Z][0-9A-Z]/)) {
 				device.set("family", "Cisco NCS6000");
 			}
-			else if (module.partNumber.match(/ASR-99[0-9][0-9]/)) {
+			else if (module.partNumber.match(/ASR-9[09][0-9][0-9]/)) {
 				device.set("family", "Cisco ASR9000");
 			}
 		}

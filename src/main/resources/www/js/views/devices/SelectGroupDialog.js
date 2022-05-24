@@ -90,8 +90,8 @@ define([
 					var f = path[p];
 					if (!branch.folders[f]) {
 						branch.folders[f] = { groups: [], folders: {} };
-						branch = branch.folders[f];
 					}
+					branch = branch.folders[f];
 				}
 				var groupData = group.toJSON();
 				groupData['preselected'] = that.preselectedGroupIds.indexOf(group.get('id')) > -1;

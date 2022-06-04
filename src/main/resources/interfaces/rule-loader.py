@@ -38,10 +38,11 @@ class Device:
         else:
             return self._device_helper.get(key, id)
 
-    def nslookup(host):
+    def nslookup(self, host):
         if not isinstance(host, str):
-            raise TypeError("Invalid key type in get")
-        _device_helper.nslookup(host)
+            raise TypeError("Invalid host type in nslookup")
+        record = self._device_helper.nslookup(host)
+        return record
 
 
 def _check(_device_helper):

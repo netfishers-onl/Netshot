@@ -564,10 +564,10 @@ public class JsDeviceHelper {
 		}
 		catch (UnknownHostException e) {
 		}
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, Object> result = new HashMap<>();
 		result.put("name", name);
 		result.put("address", address);
-		return result;
+		return ProxyObject.fromMap(result);
 	}
 
 	/**

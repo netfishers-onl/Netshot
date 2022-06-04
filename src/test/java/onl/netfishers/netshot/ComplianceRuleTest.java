@@ -1,6 +1,7 @@
 package onl.netfishers.netshot;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 
 import org.hibernate.Session;
 import org.junit.jupiter.api.Assertions;
@@ -505,6 +506,35 @@ public class ComplianceRuleTest {
 			Assertions.assertTrue(taskLogger.getLog().contains("DEBUG - Debug message\n"),
 				"Debug message is not correct");
 		}
+
+		@Test
+		@DisplayName("JS rule with direct DNS resolution")
+		void directNsRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  const record = device.nslookup('dns.google');" +
+				"  return { result: CONFORMING, comment: record.address };" +
+				"}"
+			);
+			CheckResult result = rule.check(device, fakeSession, taskLogger);
+			String comment = result.getComment();
+			Assertions.assertTrue("8.8.8.8".equals(comment) || "8.8.4.4".equals(comment),
+				"The resolved IP is not 8.8.8.8 nor 8.8.4.4");
+		}
+
+		@Test
+		@DisplayName("JS rule with reverse DNS resolution")
+		void reverseNsRule() {
+			rule.setScript(
+				"function check(device) {" +
+				"  const record = device.nslookup('8.8.8.8');" +
+				"  return { result: CONFORMING, comment: record.name };" +
+				"}"
+			);
+			CheckResult result = rule.check(device, fakeSession, taskLogger);
+			Assertions.assertEquals(result.getComment(), "dns.google",
+				"The resolved name is not dns.google");
+		}
 		
 		@Test
 		@DisplayName("Endless JS rule")
@@ -830,6 +860,39 @@ public class ComplianceRuleTest {
 			rule.check(device, fakeSession, taskLogger);
 			Assertions.assertTrue(taskLogger.getLog().contains("DEBUG - Debug message\n"),
 				"Debug message is not correct");
+		}
+
+		@Test
+		@DisplayName("Python rule with direct DNS resolution")
+		void directNsRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  record = device.nslookup('dns.google')" + "\n" +
+				"  return {" + "\n" +
+				"    'result': result_option.CONFORMING," + "\n" +
+				"    'comment': record['address']"+ "\n" +
+				"  }" + "\n"
+			);
+			CheckResult result = rule.check(device, fakeSession, taskLogger);
+			String comment = result.getComment();
+			Assertions.assertTrue("8.8.8.8".equals(comment) || "8.8.4.4".equals(comment),
+				"The resolved IP is not 8.8.8.8 nor 8.8.4.4");
+		}
+
+		@Test
+		@DisplayName("Python rule with reverse DNS resolution")
+		void reverseNsRule() {
+			rule.setScript(
+				"def check(device):" + "\n" +
+				"  record = device.nslookup('8.8.8.8')" + "\n" +
+				"  return {" + "\n" +
+				"    'result': result_option.CONFORMING," + "\n" +
+				"    'comment': record['name']"+ "\n" +
+				"  }" + "\n"
+			);
+			CheckResult result = rule.check(device, fakeSession, taskLogger);
+			Assertions.assertEquals(result.getComment(), "dns.google",
+				"The resolved name is not dns.google");
 		}
 		
 		@Test

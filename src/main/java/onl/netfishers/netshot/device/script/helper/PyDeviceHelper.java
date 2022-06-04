@@ -12,6 +12,7 @@ import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
 import org.graalvm.polyglot.proxy.ProxyArray;
 import org.graalvm.polyglot.proxy.ProxyHashMap;
+import org.graalvm.polyglot.proxy.ProxyObject;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
@@ -558,9 +559,9 @@ public class PyDeviceHelper {
 		}
 		catch (UnknownHostException e) {
 		}
-		Map<String, String> result = new HashMap<String, String>();
+		Map<Object, Object> result = new HashMap<>();
 		result.put("name", name);
 		result.put("address", address);
-		return result;
+		return ProxyHashMap.from(result);
 	}
 }

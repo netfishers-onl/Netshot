@@ -573,6 +573,7 @@ public class Netshot extends Thread {
 					Netshot.initSyslogLogging();
 					Radius.loadAllServersConfig();
 					Tacacs.loadAllServersConfig();
+					SnmpTrapReceiver.loadConfig();
 					TakeSnapshotTask.loadConfig();
 					JavaScriptRule.loadConfig();
 					PythonRule.loadConfig();

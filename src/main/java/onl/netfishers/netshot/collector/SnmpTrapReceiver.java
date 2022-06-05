@@ -23,10 +23,10 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.DeviceDriver;
@@ -55,29 +55,17 @@ import org.snmp4j.util.ThreadPool;
 /**
  * A SNMP trap receiver listens for SNMP traps and triggers snapshots if needed.
  */
-public class SnmpTrapReceiver extends Collector implements CommandResponder {
+public class SnmpTrapReceiver implements CommandResponder {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory
 			.getLogger(SnmpTrapReceiver.class);
 
-	/** The dispatcher. */
-	private MultiThreadedMessageDispatcher dispatcher;
-
-	/** The SNMP object. */
-	private Snmp snmp = null;
-
-	/** The listen address. */
-	private UdpAddress listenAddress;
-
-	/** The thread pool. */
-	private ThreadPool threadPool;
-
 	/** The UDP port to listen for traps on. */
-	private int udpPort = 162;
+	private static int UDP_PORT = 162;
 
 	/** The communities. */
-	private Set<String> communities;
+	private static Set<String> communities = ConcurrentHashMap.newKeySet();
 
 	/** The static SNMP trap receiver instance. */
 	private static SnmpTrapReceiver nsSnmpTrapReceiver;
@@ -96,45 +84,59 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 			logger.warn("The SNMP trap receiver is disabled by configuration.");
 			return;
 		}
+		String port = Netshot.getConfig("netshot.snmptrap.port");
+		if (port != null) {
+			UDP_PORT = Integer.parseInt(port);
+		}
+		SnmpTrapReceiver.loadConfig();
 		nsSnmpTrapReceiver = new SnmpTrapReceiver();
 		nsSnmpTrapReceiver.start();
 	}
 
 	/**
-	 * Instantiates a new snmp trap receiver.
+	 * (Re)load the trap receiver live configuration.
 	 */
-	public SnmpTrapReceiver() {
-		this.setName("SNMP Receiver");
-		this.setDaemon(true);
-		String port = Netshot.getConfig("netshot.snmptrap.port");
-		if (port != null) {
-			this.udpPort = Integer.parseInt(port);
-		}
-		this.communities = new HashSet<>();
+	public static void loadConfig() {
+		communities.clear();
 		try {
 			for (String community : Netshot.getConfig("netshot.snmptrap.community", "NETSHOT").split(" +")) {
-				this.communities.add(community);
+				communities.add(community);
 			}
 		}
 		catch (Exception e) {
 			logger.warn("Error while parsing SNMP trap community option", e);
 		}
+
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Thread#start()
-	 */
-	@Override
-	public void start() {
+	/** The dispatcher. */
+	private MultiThreadedMessageDispatcher dispatcher;
 
+	/** The SNMP object. */
+	private Snmp snmp = null;
+
+	/** The listen address. */
+	private UdpAddress listenAddress;
+
+	/** The thread pool. */
+	private ThreadPool threadPool;
+
+	/**
+	 * Instantiates a new snmp trap receiver.
+	 */
+	public SnmpTrapReceiver() {
+	}
+
+	/**
+	 * Start the trap receiver.
+	 */
+	public void start() {
 		try {
 			running = true;
 			threadPool = ThreadPool.create("SNMP Receiver Pool", 2);
 			dispatcher = new MultiThreadedMessageDispatcher(threadPool,
 					new MessageDispatcherImpl());
-			listenAddress = new UdpAddress(udpPort);
+			listenAddress = new UdpAddress(UDP_PORT);
 			TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping(
 					listenAddress);
 
@@ -143,7 +145,7 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 			snmp.getMessageDispatcher().addMessageProcessingModel(new MPv2c());
 			snmp.listen();
 			snmp.addCommandResponder(this);
-			logger.debug("Now listening for SNMP traps on UDP port {}.", udpPort);
+			logger.debug("Now listening for SNMP traps on UDP port {}.", UDP_PORT);
 		}
 		catch (IOException e) {
 			logger.error("I/O error with the SNMP trap receiver.", e);
@@ -166,7 +168,7 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 
 			String receivedCommunity = new String(event.getSecurityName());
 
-			if (this.communities.contains(receivedCommunity)) {
+			if (communities.contains(receivedCommunity)) {
 				Address address = event.getPeerAddress();
 				if (address instanceof IpAddress) {
 					InetAddress inetAddress = ((IpAddress) address).getInetAddress();
@@ -206,7 +208,7 @@ public class SnmpTrapReceiver extends Collector implements CommandResponder {
 			}
 			else {
 				logger.warn("Invalid community {} (vs {}) received from {}.", receivedCommunity,
-						String.join(" ", this.communities), event.getPeerAddress());
+						String.join(" ", communities), event.getPeerAddress());
 			}
 		}
 	}

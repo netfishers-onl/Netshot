@@ -23,6 +23,7 @@ import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.TaskManager.Mode;
 import onl.netfishers.netshot.cluster.ClusterMember.MastershipStatus;
 import onl.netfishers.netshot.cluster.messages.AssignTasksMessage;
+import onl.netfishers.netshot.cluster.messages.AutoSnapshotMessage;
 import onl.netfishers.netshot.cluster.messages.ClusterMessage;
 import onl.netfishers.netshot.cluster.messages.HelloClusterMessage;
 import onl.netfishers.netshot.cluster.messages.LoadTasksMessage;
@@ -31,6 +32,7 @@ import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.rest.RestService;
 import onl.netfishers.netshot.rest.RestViews.ClusteringView;
+import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -89,6 +91,9 @@ public class ClusterManager extends Thread {
 
 	/** Whether a member is requesting the cluster master to assign new tasks. */
 	private boolean assignTasksRequested = false;
+
+	/** IDs of devices to request auto snapshots for */
+	private Set<Long> autoSnapshotDeviceIds = new HashSet<>();
 
 	/**
 	 * Initializes the cluster manager.
@@ -159,6 +164,18 @@ public class ClusterManager extends Thread {
 	public static void requestTasksAssignment() {
 		if (nsClusterManager != null) {
 			nsClusterManager.assignTasksRequested = true;
+		}
+	}
+
+	/**
+	 * Add a device ID to the list of IDs to request the master snapshots.
+	 * @param deviceId the device ID
+	 */
+	public static void requestAutoSnapshot(Long deviceId) {
+		if (nsClusterManager != null) {
+			synchronized (nsClusterManager.autoSnapshotDeviceIds) {
+				nsClusterManager.autoSnapshotDeviceIds.add(deviceId);
+			}
 		}
 	}
 
@@ -360,6 +377,17 @@ public class ClusterManager extends Thread {
 							this.sendMessage(dbConnection, taskMessage);
 						}
 						this.assignTasksRequested = false;
+						AutoSnapshotMessage snapshotMessage = null;
+						synchronized (this.autoSnapshotDeviceIds) {
+							if (this.autoSnapshotDeviceIds.size() > 0) {
+								snapshotMessage = new AutoSnapshotMessage(this.localMember);
+								snapshotMessage.addDeviceIds(this.autoSnapshotDeviceIds);
+							}
+							this.autoSnapshotDeviceIds.clear();
+						}
+						if (snapshotMessage != null) {
+							this.sendMessage(dbConnection, snapshotMessage);
+						}
 					}
 					try (
 						Statement fakeStatement = dbConnection.createStatement();
@@ -425,6 +453,14 @@ public class ClusterManager extends Thread {
 									}
 									catch (Exception e) {
 										logger.error("Error while assigning new tasks", e);
+									}
+								}
+							}
+							else if (message instanceof AutoSnapshotMessage) {
+								if (MastershipStatus.MASTER.equals(this.localMember.getStatus())) {
+									AutoSnapshotMessage snapshotMessage = (AutoSnapshotMessage) message;
+									for (long deviceId : snapshotMessage.getDeviceIds()) {
+										TakeSnapshotTask.scheduleSnapshotIfNeeded(deviceId);
 									}
 								}
 							}

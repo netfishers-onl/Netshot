@@ -144,6 +144,14 @@ public class TaskManager {
 	}
 
 	/**
+	 * Returns the current TaskManager mode.
+	 * @return the mode
+	 */
+	public static Mode getMode() {
+		return TaskManager.mode;
+	}
+
+	/**
 	 * Add new tasks to master scheduler.
 	 */
 	public static void scheduleNewTasks() {

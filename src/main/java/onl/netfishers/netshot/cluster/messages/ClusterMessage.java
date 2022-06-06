@@ -44,6 +44,7 @@ import onl.netfishers.netshot.rest.RestViews.ClusteringView;
 	@Type(value = ReloadDriversMessage.class, name = "ReloadDrivers"),
 	@Type(value = LoadTasksMessage.class, name = "LoadTasks"),
 	@Type(value = AssignTasksMessage.class, name = "AssignTasks"),
+	@Type(value = AutoSnapshotMessage.class, name = "AutoSnapshot"),
 })
 public abstract class ClusterMessage {
 

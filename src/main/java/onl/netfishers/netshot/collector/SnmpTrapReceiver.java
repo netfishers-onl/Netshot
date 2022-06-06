@@ -190,6 +190,7 @@ public class SnmpTrapReceiver implements CommandResponder {
 							default:
 								data.put("version", "Unknown");
 							}
+							logger.debug("SNMP trap content: " + data);
 							List<String> matchingDrivers = new ArrayList<>();
 							for (DeviceDriver driver : DeviceDriver.getAllDrivers()) {
 								if (driver.analyzeTrap(data, source)) {

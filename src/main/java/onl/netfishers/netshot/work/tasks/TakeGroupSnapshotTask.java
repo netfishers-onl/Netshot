@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * given group.
  */
 @Entity
-public class TakeGroupSnapshotTask extends Task {
+public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(TakeGroupSnapshotTask.class);

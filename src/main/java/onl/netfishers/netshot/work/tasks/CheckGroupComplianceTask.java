@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
  * This task checks the configuration compliance status of a group of devices.
  */
 @Entity
-public class CheckGroupComplianceTask extends Task {
+public class CheckGroupComplianceTask extends Task implements GroupBasedTask {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(CheckGroupComplianceTask.class);

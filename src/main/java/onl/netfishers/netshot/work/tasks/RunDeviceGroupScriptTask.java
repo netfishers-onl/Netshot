@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * given group.
  */
 @Entity
-public class RunDeviceGroupScriptTask extends Task {
+public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(RunDeviceGroupScriptTask.class);

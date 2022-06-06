@@ -126,7 +126,8 @@ public class Config {
 	}
 	
 	@XmlElement @JsonView(DefaultView.class)
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "config", orphanRemoval = true)
+	@OneToMany(mappedBy = "config", orphanRemoval = true,
+			cascade = CascadeType.ALL)
 	@Filter(name = "lightAttributesOnly")
 	public Set<ConfigAttribute> getAttributes() {
 		return attributes;

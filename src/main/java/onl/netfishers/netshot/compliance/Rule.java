@@ -23,7 +23,6 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -247,7 +246,8 @@ public abstract class Rule {
 	 *
 	 * @return the exemptions
 	 */
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "key.rule", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "key.rule", orphanRemoval = true,
+			cascade = CascadeType.ALL)
 	public Set<Exemption> getExemptions() {
 		return exemptions;
 	}

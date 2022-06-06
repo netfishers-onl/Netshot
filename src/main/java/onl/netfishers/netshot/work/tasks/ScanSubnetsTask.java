@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * This task scans a subnet to discover devices.
  */
 @Entity
-public class ScanSubnetsTask extends Task {
+public class ScanSubnetsTask extends Task implements DomainBasedTask {
 	
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(ScanSubnetsTask.class);

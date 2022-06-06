@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * This task checks the configuration compliance of a device.
  */
 @Entity
-public class CheckComplianceTask extends Task {
+public class CheckComplianceTask extends Task implements DeviceBasedTask {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(CheckComplianceTask.class);
@@ -174,7 +174,7 @@ public class CheckComplianceTask extends Task {
 	 * @return the device
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
-	protected Device getDevice() {
+	public Device getDevice() {
 		return device;
 	}
 
@@ -183,7 +183,7 @@ public class CheckComplianceTask extends Task {
 	 *
 	 * @param device the new device
 	 */
-	protected void setDevice(Device device) {
+	public void setDevice(Device device) {
 		this.device = device;
 	}
 

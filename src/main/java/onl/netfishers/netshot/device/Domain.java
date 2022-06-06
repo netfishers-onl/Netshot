@@ -27,7 +27,6 @@ import javax.persistence.AttributeOverrides;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -43,8 +42,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
-import onl.netfishers.netshot.work.tasks.DiscoverDeviceTypeTask;
-import onl.netfishers.netshot.work.tasks.ScanSubnetsTask;
 
 import org.hibernate.annotations.NaturalId;
 
@@ -253,7 +250,8 @@ public class Domain {
 	 * 
 	 * @return the credential sets
 	 */
-	@OneToMany(mappedBy = "mgmtDomain", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@OneToMany(mappedBy = "mgmtDomain",
+			cascade = CascadeType.ALL)
 	public Set<DeviceCredentialSet> getCredentialSets() {
 		return credentialSets;
 	}
@@ -288,28 +286,6 @@ public class Domain {
 
 	protected void setId(long id) {
 		this.id = id;
-	}
-
-	private Set<DiscoverDeviceTypeTask> discoverDeviceTypeTasks;
-	private Set<ScanSubnetsTask> scanSubnetsTasks;
-
-	@OneToMany(mappedBy = "domain", cascade = CascadeType.ALL)
-	public Set<DiscoverDeviceTypeTask> getDiscoverDeviceTypeTasks() {
-		return discoverDeviceTypeTasks;
-	}
-
-	public void setDiscoverDeviceTypeTasks(
-			Set<DiscoverDeviceTypeTask> discoverDeviceTypeTasks) {
-		this.discoverDeviceTypeTasks = discoverDeviceTypeTasks;
-	}
-
-	@OneToMany(mappedBy = "domain", cascade = CascadeType.ALL)
-	public Set<ScanSubnetsTask> getScanSubnetsTasks() {
-		return scanSubnetsTasks;
-	}
-
-	public void setScanSubnetsTasks(Set<ScanSubnetsTask> scanSubnetsTasks) {
-		this.scanSubnetsTasks = scanSubnetsTasks;
 	}
 
 	@Override

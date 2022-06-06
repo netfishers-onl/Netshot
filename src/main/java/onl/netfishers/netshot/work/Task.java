@@ -293,7 +293,7 @@ public abstract class Task implements Cloneable {
 	 * Gets the debug log.
 	 * @return the debug log
 	 */
-	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@OneToOne(orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	public DebugLog getDebugLog() {
 		return debugLog;
 	}

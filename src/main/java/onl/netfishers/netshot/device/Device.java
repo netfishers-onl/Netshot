@@ -50,13 +50,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.fasterxml.jackson.annotation.JsonView;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Where;
+
+import com.fasterxml.jackson.annotation.JsonView;
 
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Exemption;
@@ -68,10 +68,6 @@ import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
 import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.rest.RestViews.RestApiView;
-import onl.netfishers.netshot.work.tasks.CheckComplianceTask;
-import onl.netfishers.netshot.work.tasks.RunDiagnosticsTask;
-import onl.netfishers.netshot.work.tasks.RunDeviceScriptTask;
-import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
 
 /**
  * A device.
@@ -163,15 +159,6 @@ public class Device {
 	
 	private int version;
 
-	/** The check compliance tasks. */
-	protected List<CheckComplianceTask> checkComplianceTasks = new ArrayList<>();
-	
-	/** The run device script tasks. */
-	protected List<RunDeviceScriptTask> runDeviceScriptTasks = new ArrayList<>();
-	
-	/** The diagnostic tasks. */
-	protected List<RunDiagnosticsTask> runDiagnosticsTasks = new ArrayList<>();
-
 	/** The comments. */
 	protected String comments = "";
 
@@ -251,9 +238,6 @@ public class Device {
 
 	/** The serial number. */
 	protected String serialNumber = "";
-
-	/** The snapshot tasks. */
-	protected List<TakeSnapshotTask> snapshotTasks = new ArrayList<>();
 
 	/** The software level. */
 	protected SoftwareRule.ConformanceLevel softwareLevel = ConformanceLevel.UNKNOWN;
@@ -394,7 +378,8 @@ public class Device {
 	}
 	
 	@XmlElement @JsonView(RestApiView.class)
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "device", orphanRemoval = true)
+	@OneToMany(mappedBy = "device", orphanRemoval = true,
+			cascade = CascadeType.ALL)
 	public Set<DeviceAttribute> getAttributes() {
 		return attributes;
 	}
@@ -418,10 +403,10 @@ public class Device {
 	@Transient
 	public List<DeviceCredentialSet> getAutoCredentialSetList(Session session) throws HibernateException {
 		return session
-				.createQuery("from DeviceCredentialSet cs where (cs.mgmtDomain = :domain or cs.mgmtDomain is null) and (not (cs.deviceSpecific = :true))")
-				.setParameter("domain", this.getMgmtDomain())
-				.setParameter("true", true)
-				.list();
+			.createQuery("from DeviceCredentialSet cs where (cs.mgmtDomain = :domain or cs.mgmtDomain is null) and (not (cs.deviceSpecific = :true))")
+			.setParameter("domain", this.getMgmtDomain())
+			.setParameter("true", true)
+			.list();
 	}
 
 	/**
@@ -444,36 +429,6 @@ public class Device {
 	}
 
 	/**
-	 * Gets the check compliance tasks.
-	 *
-	 * @return the check compliance tasks
-	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "device")
-	public List<CheckComplianceTask> getCheckComplianceTasks() {
-		return checkComplianceTasks;
-	}
-
-	/**
-	 * Gets the run device script tasks.
-	 *
-	 * @return the run device script tasks
-	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "device")
-	public List<RunDeviceScriptTask> getRunDeviceScriptTasks() {
-		return runDeviceScriptTasks;
-	}
-
-	/**
-	 * Gets the run diagnostics tasks.
-	 *
-	 * @return the run diagnostics tasks
-	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "device")
-	public List<RunDiagnosticsTask> getRunDiagnosticsTasks() {
-		return runDiagnosticsTasks;
-	}
-
-	/**
 	 * Gets the comments.
 	 *
 	 * @return the comments
@@ -488,7 +443,8 @@ public class Device {
 	 *
 	 * @return the compliance check results
 	 */
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "key.device", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "key.device", orphanRemoval = true,
+			cascade = CascadeType.ALL)
 	public Set<CheckResult> getComplianceCheckResults() {
 		return complianceCheckResults;
 	}
@@ -498,7 +454,8 @@ public class Device {
 	 *
 	 * @return the compliance exemptions
 	 */
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "key.device", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "key.device", 
+			cascade = CascadeType.ALL, orphanRemoval = true)
 	public Set<Exemption> getComplianceExemptions() {
 		return complianceExemptions;
 	}
@@ -508,7 +465,8 @@ public class Device {
 	 *
 	 * @return the configs
 	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "device")
+	@OneToMany(mappedBy = "device",
+			cascade = CascadeType.ALL)
 	public List<Config> getConfigs() {
 		return configs;
 	}
@@ -558,7 +516,7 @@ public class Device {
 	 *
 	 * @return the credential sets
 	 */
-	@ManyToMany(fetch = FetchType.LAZY) @Fetch(FetchMode.SELECT)
+	@ManyToMany() @Fetch(FetchMode.SELECT)
 	public Set<DeviceCredentialSet> getCredentialSets() {
 		return credentialSets;
 	}
@@ -631,7 +589,8 @@ public class Device {
 	 *
 	 * @return the last config
 	 */
-	@OneToOne(fetch = FetchType.LAZY)
+	@OneToOne(fetch = FetchType.LAZY,
+			cascade = CascadeType.ALL)
 	public Config getLastConfig() {
 		return lastConfig;
 	}
@@ -680,7 +639,8 @@ public class Device {
 	 *
 	 * @return the modules
 	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "device", orphanRemoval = true)
+	@OneToMany(mappedBy = "device", orphanRemoval = true,
+			cascade = CascadeType.ALL)
 	@Where(clause = "removed is not true")
 	public List<Module> getModules() {
 		return modules;
@@ -713,7 +673,8 @@ public class Device {
 	 *
 	 * @return the network interfaces
 	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "device", orphanRemoval = true)
+	@OneToMany(mappedBy = "device", orphanRemoval = true,
+			cascade = CascadeType.ALL)
 	public List<NetworkInterface> getNetworkInterfaces() {
 		return networkInterfaces;
 	}
@@ -740,7 +701,7 @@ public class Device {
 	 * @return the owner groups
 	 */
 	@XmlElement @JsonView(RestApiView.class)
-	@ManyToMany(fetch = FetchType.LAZY, mappedBy = "cachedDevices")
+	@ManyToMany(mappedBy = "cachedDevices")
 	public Set<DeviceGroup> getOwnerGroups() {
 		return ownerGroups;
 	}
@@ -773,16 +734,6 @@ public class Device {
 	@XmlElement @JsonView(DefaultView.class)
 	public String getSerialNumber() {
 		return serialNumber;
-	}
-
-	/**
-	 * Gets the snapshot tasks.
-	 *
-	 * @return the snapshot tasks
-	 */
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "device")
-	public List<TakeSnapshotTask> getSnapshotTasks() {
-		return snapshotTasks;
 	}
 
 
@@ -937,32 +888,6 @@ public class Device {
 	 */
 	public void setChangeDate(Date changeDate) {
 		this.changeDate = changeDate;
-	}
-
-	/**
-	 * Sets the check compliance tasks.
-	 *
-	 * @param checkComplianceTasks the new check compliance tasks
-	 */
-	public void setCheckComplianceTasks(
-			List<CheckComplianceTask> checkComplianceTasks) {
-		this.checkComplianceTasks = checkComplianceTasks;
-	}
-	
-	/**
-	 * Sets the run device script tasks.
-	 * @param tasks the new device script tasks
-	 */
-	public void setRunDeviceScriptTasks(List<RunDeviceScriptTask> tasks) {
-		this.runDeviceScriptTasks = tasks;
-	}
-	
-	/**
-	 * Sets the run diagnostics tasks.
-	 * @param tasks the new run diagnostics tasks
-	 */
-	public void setRunDiagnosticsTasks(List<RunDiagnosticsTask> tasks) {
-		this.runDiagnosticsTasks = tasks;
 	}
 
 	/**
@@ -1162,15 +1087,6 @@ public class Device {
 	}
 
 	/**
-	 * Sets the snapshot tasks.
-	 *
-	 * @param snapshotTaks the new snapshot tasks
-	 */
-	protected void setSnapshotTasks(List<TakeSnapshotTask> snapshotTaks) {
-		this.snapshotTasks = snapshotTaks;
-	}
-
-	/**
 	 * Sets the software level.
 	 *
 	 * @param softwareLevel the new software level
@@ -1258,21 +1174,20 @@ public class Device {
 	public void setConnectAddress(Network4Address connectAddress) {
 		this.connectAddress = connectAddress;
 	}
-	
-	
-	
+
+
 	public void addDiagnosticResult(DiagnosticResult result) {
 		if (result == null) {
 			return;
 		}
-		boolean dontAdd = false;
+		boolean doAdd = true;
 		Iterator<DiagnosticResult> existingIterator = this.diagnosticResults.iterator();
 		while (existingIterator.hasNext()) {
 			DiagnosticResult existingResult = existingIterator.next();
 			if (existingResult.getDiagnostic().equals(result.getDiagnostic())) {
 				if (result.equals(existingResult)) {
 					existingResult.setLastCheckDate(result.getLastCheckDate());
-					dontAdd = true;
+					doAdd = false;
 				}
 				else {
 					existingIterator.remove();
@@ -1280,7 +1195,7 @@ public class Device {
 				break;
 			}
 		}
-		if (!dontAdd) {
+		if (doAdd) {
 			this.diagnosticResults.add(result);
 		}
 	}
@@ -1291,7 +1206,8 @@ public class Device {
 	 *
 	 * @return the diagnostic results
 	 */
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "device", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "device", orphanRemoval = true,
+			cascade = CascadeType.ALL)
 	public Set<DiagnosticResult> getDiagnosticResults() {
 		return diagnosticResults;
 	}

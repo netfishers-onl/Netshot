@@ -33,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.TaskManager;
+import onl.netfishers.netshot.cluster.ClusterManager;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DynamicDeviceGroup;
 import onl.netfishers.netshot.device.Network4Address;
@@ -53,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * This task takes a snapshot of a device.
  */
 @Entity
-public class TakeSnapshotTask extends Task {
+public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(TakeSnapshotTask.class);
@@ -94,7 +95,7 @@ public class TakeSnapshotTask extends Task {
 	 * @param deviceId the device
 	 * @return true, if successful
 	 */
-	public static boolean checkAutoSnasphot(Long deviceId) {
+	public static boolean checkAutoSnapshot(Long deviceId) {
 		return scheduledAutoSnapshots.add(deviceId);
 	}
 
@@ -210,7 +211,7 @@ public class TakeSnapshotTask extends Task {
 			
 			cliScript.connectRun(session, device);
 			this.log.append(cliScript.getPlainJsLog());
-			session.update(device);
+			session.save(device);
 			session.getTransaction().commit();
 			this.status = Status.SUCCESS;
 		}
@@ -286,7 +287,7 @@ public class TakeSnapshotTask extends Task {
 	 */
 	@XmlElement @JsonView(HookView.class)
 	@ManyToOne(fetch = FetchType.LAZY)
-	protected Device getDevice() {
+	public Device getDevice() {
 		return device;
 	}
 
@@ -360,7 +361,7 @@ public class TakeSnapshotTask extends Task {
 	 *
 	 * @param device the new device
 	 */
-	protected void setDevice(Device device) {
+	public void setDevice(Device device) {
 		this.device = device;
 	}
 
@@ -403,9 +404,34 @@ public class TakeSnapshotTask extends Task {
 						device.getDriver(), device.getId(), device.getMgmtAddress());
 				return false;
 			}
-			if (!checkAutoSnasphot(device.getId())) {
-				logger.debug("A snapshot task is already scheduled.");
-				return true;
+		}
+		catch (Exception e) {
+			logger.error("Error while checking whether the snapshot is needed or not.", e);
+			return true;
+		}
+		finally {
+			session.close();
+		}
+
+		if (TaskManager.Mode.CLUSTER_MEMBER.equals(TaskManager.getMode())) {
+			logger.debug("The local instance is cluster member: sending notification to master for an auto snapshot of device ID {}", device.getId());
+			ClusterManager.requestAutoSnapshot(device.getId());
+			return true;
+		}
+
+		return scheduleSnapshotIfNeeded(device);
+	}
+
+	public static boolean scheduleSnapshotIfNeeded(long deviceId) {
+		logger.debug("Request to take a snapshot of device ID {}.", deviceId);
+		Device device;
+		Session session = Database.getSession();
+		try {
+			logger.trace("Retrieving the device.");
+			device = session.get(Device.class, deviceId);
+			if (device == null) {
+				logger.warn("No device with such ID {} in the database.", deviceId);
+				return false;
 			}
 		}
 		catch (Exception e) {
@@ -416,6 +442,14 @@ public class TakeSnapshotTask extends Task {
 			session.close();
 		}
 
+		return scheduleSnapshotIfNeeded(device);
+	}
+
+	private static boolean scheduleSnapshotIfNeeded(Device device) {
+		if (!checkAutoSnapshot(device.getId())) {
+			logger.debug("A snapshot task is already scheduled.");
+			return true;
+		}
 		try {
 			Task snapshot = new TakeSnapshotTask(device, "Automatic snapshot after config change", "Auto", true, false, false);
 			snapshot.schedule(TakeSnapshotTask.AUTOSNAPSHOT_INTERVAL);
@@ -433,7 +467,7 @@ public class TakeSnapshotTask extends Task {
 	@Override
 	public void onSchedule() {
 		if (automatic) {
-			checkAutoSnasphot(device.getId());
+			checkAutoSnapshot(device.getId());
 		}
 	}
 

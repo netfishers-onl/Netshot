@@ -1095,4 +1095,18 @@
 	<changeSet author="netshot (generated)" id="0.18.1_1">
 		<modifyDataType tableName="check_result" columnName="comment" newDataType="varchar(10000)"/>
 	</changeSet>
+<!-- netshot_0_18_1_to_0_18_2.xml -->
+	<changeSet author="netshot (generated)" id="0.18.2_1">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="discover_device_type_task" columnName="device"/></not>
+		</preConditions>
+		<dropNotNullConstraint tableName="discover_device_type_task" columnName="device_id" columnDataType="BIGINT"/>
+		<renameColumn tableName="discover_device_type_task" oldColumnName="device_id" newColumnName="device"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.18.2_2">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="policy_target_groups" columnName="policy"/></not>
+		</preConditions>
+		<renameColumn tableName="policy_target_groups" oldColumnName="applied_policies" newColumnName="policy"/>
+	</changeSet>
 </databaseChangeLog>

@@ -148,7 +148,8 @@ public class Policy {
 	 *
 	 * @return the rules
 	 */
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "policy")
+	@OneToMany(mappedBy = "policy",
+			cascade = CascadeType.ALL)
 	public Set<Rule> getRules() {
 		return rules;
 	}

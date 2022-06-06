@@ -136,8 +136,11 @@ import onl.netfishers.netshot.work.Task.ScheduleType;
 import onl.netfishers.netshot.work.tasks.CheckComplianceTask;
 import onl.netfishers.netshot.work.tasks.CheckGroupComplianceTask;
 import onl.netfishers.netshot.work.tasks.CheckGroupSoftwareTask;
+import onl.netfishers.netshot.work.tasks.DeviceBasedTask;
 import onl.netfishers.netshot.work.tasks.DeviceJsScript;
 import onl.netfishers.netshot.work.tasks.DiscoverDeviceTypeTask;
+import onl.netfishers.netshot.work.tasks.DomainBasedTask;
+import onl.netfishers.netshot.work.tasks.GroupBasedTask;
 import onl.netfishers.netshot.work.tasks.PurgeDatabaseTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceGroupScriptTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceScriptTask;
@@ -797,7 +800,18 @@ public class RestService extends Thread {
 		try {
 			session.beginTransaction();
 			Domain domain = (Domain) session.load(Domain.class, id);
-			session.delete(domain);
+			// Remove the tasks
+			for (Class<? extends Task> taskClass : Task.getTaskClasses()) {
+				if (DomainBasedTask.class.isAssignableFrom(taskClass)) {
+					session.createQuery(
+							String.format("delete from %s t where t.domain = :domain", taskClass.getSimpleName()))
+						.setParameter("domain", domain)
+						.executeUpdate();
+				}
+			}
+			session.createQuery("delete from Domain d where d = :domain")
+				.setParameter("domain", domain)
+				.executeUpdate();
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted.", domain);
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
@@ -945,21 +959,17 @@ public class RestService extends Thread {
 		Session session = Database.getSession(true);
 		try {
 			List<Task> tasks = new ArrayList<>();
-			tasks.addAll(session.createQuery(
-					"select t from CheckComplianceTask t where t.device.id = :deviceId order by t.changeDate desc", CheckComplianceTask.class)
-					.setParameter("deviceId", id).setMaxResults(paginationParams.limit).list());
-			tasks.addAll(session.createQuery(
-					"select t from DiscoverDeviceTypeTask t where t.deviceId = :deviceId order by t.changeDate desc", DiscoverDeviceTypeTask.class)
-					.setParameter("deviceId", id).setMaxResults(paginationParams.limit).list());
-			tasks.addAll(session.createQuery(
-					"select t from TakeSnapshotTask t where t.device.id = :deviceId order by t.changeDate desc", TakeSnapshotTask.class)
-					.setParameter("deviceId", id).setMaxResults(paginationParams.limit).list());
-			tasks.addAll(session.createQuery(
-					"select t from RunDeviceScriptTask t where t.device.id = :deviceId order by t.changeDate desc", RunDeviceScriptTask.class)
-					.setParameter("deviceId", id).setMaxResults(paginationParams.limit).list());
-			tasks.addAll(session.createQuery(
-					"select t from RunDiagnosticsTask t where t.device.id = :deviceId order by t.changeDate desc", RunDiagnosticsTask.class)
-					.setParameter("deviceId", id).setMaxResults(paginationParams.limit).list());
+			
+			for (Class<? extends Task> taskClass : Task.getTaskClasses()) {
+				if (DeviceBasedTask.class.isAssignableFrom(taskClass)) {
+					tasks.addAll(session.createQuery(
+							String.format("select t from %s t where t.device.id = :deviceId order by t.changeDate desc",
+							taskClass.getSimpleName()), taskClass)
+						.setParameter("deviceId", id)
+						.setMaxResults(paginationParams.limit)
+						.list());
+				}
+			}
 			
 			Collections.sort(tasks, new Comparator<Task>() {
 				private int getPriority(Task.Status status) {
@@ -2334,23 +2344,111 @@ public class RestService extends Thread {
 		logger.debug("REST request, delete device {}.", id);
 		Session session = Database.getSession();
 		try {
+			session.beginTransaction();
+			Device device = session.load(Device.class, id);
 			List<File> toDeleteFiles = new ArrayList<>();
 			List<ConfigBinaryFileAttribute> attributes = session
-					.createQuery("from ConfigBinaryFileAttribute cfa where cfa.config.device.id = :id",
-							ConfigBinaryFileAttribute.class)
-					.setParameter("id", id)
-					.list();
+				.createQuery("from ConfigBinaryFileAttribute cfa where cfa.config.device.id = :id",
+						ConfigBinaryFileAttribute.class)
+				.setParameter("id", id)
+				.list();
 			for (ConfigBinaryFileAttribute attribute : attributes) {
 				toDeleteFiles.add(attribute.getFileName());
 			}
-			session.beginTransaction();
-			Device device = (Device) session.load(Device.class, id);
-			for (DeviceGroup group : device.getOwnerGroups()) {
-				group.deleteCachedDevice(device);
+			// Remove the attributes
+			session
+				.createQuery("delete from DeviceAttribute da where da.device = :device")
+				.setParameter("device", device)
+				.executeUpdate();
+			// Remove the compliance check results
+			session
+				.createQuery("delete from CheckResult cr where cr.key.device = :device")
+				.setParameter("device", device)
+				.executeUpdate();
+			// Remove the compliance exemptions
+			session
+				.createQuery("delete from Exemption e where e.key.device = :device")
+				.setParameter("device", device)
+				.executeUpdate();
+			// Remove the configurations
+			session
+				.createQuery("update Device d set d.lastConfig = null where d = :device")
+				.setParameter("device", device)
+				.executeUpdate();
+			session
+				.createQuery("delete from ConfigAttribute ca where ca in " +
+						"(select ca from Config c join c.attributes ca where c.device = :device)")
+				.setParameter("device", device)
+				.executeUpdate();
+			session
+				.createQuery("delete from Config c where c.device = :device")
+				.setParameter("device", device)
+				.executeUpdate();
+			// Remove the diagnostic results
+			session
+				.createQuery("delete from DiagnosticResult dr where dr.device = :device")
+				.setParameter("device", device)
+				.executeUpdate();
+			// Remove orphan long texts
+			session
+				.createQuery("delete from LongTextConfiguration tc where " +
+					" (tc not in (select lca.longText from ConfigLongTextAttribute lca)) and " +
+					" (tc not in (select lda.longText from DeviceLongTextAttribute lda)) and " +
+					" (tc not in (select ldr.longText from DiagnosticLongTextResult ldr))")
+				.executeUpdate();
+			// Remove the modules
+			session
+				.createQuery("delete from Module m where m.device = :device")
+				.setParameter("device", device)
+				.executeUpdate();
+			// Remove the network interfaces
+			session
+				.createSQLQuery("delete from network_interface_ip4addresses where " +
+						"network_interface in (select id from network_interface where device = :id)")
+				.setParameter("id", id)
+				.executeUpdate();
+			session
+				.createSQLQuery("delete from network_interface_ip6addresses where " +
+						"network_interface in (select id from network_interface where device = :id)")
+				.setParameter("id", id)
+				.executeUpdate();
+			session
+				.createQuery("delete from NetworkInterface ni where ni.device = :device")
+				.setParameter("device", device)
+				.executeUpdate();
+			// Remove associated device-specific credential sets
+			session
+				.createQuery("delete from DeviceCredentialSet cs where cs.deviceSpecific = :true and " +
+						"cs in (select cs from Device d join d.credentialSets cs where d = :device)")
+				.setParameter("true", true)
+				.setParameter("device", device)
+				.executeUpdate();
+			// Use native SQL to batch remove credential set associations
+			session
+				.createSQLQuery("delete from device_credential_sets where device = :id")
+				.setParameter("id", id)
+				.executeUpdate();
+			// Use native SQL to batch remove many to many join table entries
+			session
+				.createSQLQuery("delete from device_group_cached_devices where cached_devices = :id")
+				.setParameter("id", id)
+				.executeUpdate();
+			// Remove the tasks
+			for (Class<? extends Task> taskClass : Task.getTaskClasses()) {
+				if (DeviceBasedTask.class.isAssignableFrom(taskClass)) {
+					session.createQuery(
+							String.format("delete from %s t where t.device.id = :deviceId", taskClass.getSimpleName()))
+						.setParameter("deviceId", id)
+						.executeUpdate();
+				}
 			}
-			session.delete(device);
+			// Remove the device
+			session
+				.createQuery("delete from Device d where d = :device")
+				.setParameter("device", device)
+				.executeUpdate();
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been deleted.", device);
+			Netshot.aaaLogger.info("Device ID {} has been deleted.", id);
 			for (File toDeleteFile : toDeleteFiles) {
 				try {
 					toDeleteFile.delete();
@@ -3506,13 +3604,42 @@ public class RestService extends Thread {
 		try {
 			session.beginTransaction();
 			DeviceGroup deviceGroup = (DeviceGroup) session.load(DeviceGroup.class, id);
-			for (Policy policy : deviceGroup.getAppliedPolicies()) {
-				policy.getTargetGroups().remove(deviceGroup);
-				session.save(policy);
+			// Remove the linked tasks
+			for (Class<? extends Task> taskClass : Task.getTaskClasses()) {
+				if (GroupBasedTask.class.isAssignableFrom(taskClass)) {
+					session.createQuery(
+							String.format("delete from %s t where t.deviceGroup = :group", taskClass.getSimpleName()))
+						.setParameter("group", deviceGroup)
+						.executeUpdate();
+				}
 			}
-			session.delete(deviceGroup);
+			// Remove the software rules
+			session
+				.createQuery("delete from SoftwareRule r where r.targetGroup = :group")
+				.setParameter("group", deviceGroup)
+				.executeUpdate();
+			// Remove the hardware rules
+			session
+				.createQuery("delete from HardwareRule r where r.targetGroup = :group")
+				.setParameter("group", deviceGroup)
+				.executeUpdate();
+			// Unset from diagnostics
+			session
+				.createQuery("update Diagnostic dc set dc.targetGroup = null where dc.targetGroup = :group")
+				.setParameter("group", deviceGroup)
+				.executeUpdate();
+			// Remove from the policies using native SQL
+			session
+				.createSQLQuery("delete from policy_target_groups where target_groups = :id")
+				.setParameter("id", id)
+				.executeUpdate();
+			// Remove the group
+			session
+				.createQuery("delete from DeviceGroup g where g = :group")
+				.setParameter("group", deviceGroup)
+				.executeUpdate();
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been deleted.", deviceGroup);
+			Netshot.aaaLogger.info("Device group ID {} has been deleted.", id);
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
@@ -5899,6 +6026,11 @@ public class RestService extends Thread {
 		try {
 			session.beginTransaction();
 			Rule rule = (Rule) session.load(Rule.class, id);
+			/* HACK! In JPA, this would require updating each task one by one... */
+			session
+					.createSQLQuery("delete from check_result where rule = :r")
+					.setParameter("r", id)
+					.executeUpdate();
 			session.delete(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted.", rule);
@@ -10391,7 +10523,16 @@ public class RestService extends Thread {
 		try {
 			session.beginTransaction();
 			Diagnostic diagnostic = (Diagnostic) session.load(Diagnostic.class, id);
-			session.delete(diagnostic);
+			// Remove the related results
+			session
+				.createQuery("delete from DiagnosticResult dr where dr.diagnostic = :diagnostic")
+				.setParameter("diagnostic", diagnostic)
+				.executeUpdate();
+			// Remove the diagnostic
+			session
+				.createQuery("delete from Diagnostic d where d = :diagnostic")
+				.setParameter("diagnostic", diagnostic)
+				.executeUpdate();
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted", diagnostic);
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
@@ -10435,7 +10576,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession(true);
 		try {
 			Query<DiagnosticResult> query = session
-				.createQuery("from DiagnosticResult dr where dr.device.id = :id", DiagnosticResult.class)
+				.createQuery("from DiagnosticResult dr join fetch dr.diagnostic where dr.device.id = :id", DiagnosticResult.class)
 				.setParameter("id", id);
 			paginationParams.apply(query);
 			return query.list();

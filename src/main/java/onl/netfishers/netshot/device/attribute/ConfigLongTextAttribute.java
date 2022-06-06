@@ -40,7 +40,8 @@ public class ConfigLongTextAttribute extends ConfigAttribute {
 		this.longText = new LongTextConfiguration(value);
 	}
 
-	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@OneToOne(orphanRemoval = true, fetch = FetchType.LAZY,
+			cascade = CascadeType.ALL)
 	public LongTextConfiguration getLongText() {
 		return longText;
 	}

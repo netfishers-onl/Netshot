@@ -1,7 +1,6 @@
 package onl.netfishers.netshot;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 
 import org.hibernate.Session;
 import org.junit.jupiter.api.Assertions;

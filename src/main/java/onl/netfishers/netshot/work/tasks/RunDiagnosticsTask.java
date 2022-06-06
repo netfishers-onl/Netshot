@@ -32,7 +32,7 @@ import onl.netfishers.netshot.work.Task;
  * This task runs the diagnostics (if any is defined) on the specified device.
  */
 @Entity
-public class RunDiagnosticsTask extends Task {
+public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(RunDiagnosticsTask.class);
@@ -108,7 +108,7 @@ public class RunDiagnosticsTask extends Task {
 	 * @return the device
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
-	protected Device getDevice() {
+	public Device getDevice() {
 		return device;
 	}
 
@@ -119,7 +119,7 @@ public class RunDiagnosticsTask extends Task {
 	 */
 	@XmlElement @JsonView(DefaultView.class)
 	@Transient
-	protected long getDeviceId() {
+	public long getDeviceId() {
 		return device.getId();
 	}
 
@@ -128,7 +128,7 @@ public class RunDiagnosticsTask extends Task {
 	 *
 	 * @param device the new device
 	 */
-	protected void setDevice(Device device) {
+	public void setDevice(Device device) {
 		this.device = device;
 	}
 
@@ -186,11 +186,10 @@ public class RunDiagnosticsTask extends Task {
 				this.status = Status.CANCELLED;
 				return;
 			}
-			
 
 			@SuppressWarnings("unchecked")
 			List<Diagnostic> diagnostics = session.createQuery(
-					"select distinct dg from Device d left join d.ownerGroups g left join g.diagnostics dg where d = :device and dg.enabled = :enabled")
+				"select distinct dg from Diagnostic dg where dg.enabled = :enabled and dg.targetGroup in (select g from Device d join d.ownerGroups g where d = :device)")
 				.setParameter("device", device)
 				.setParameter("enabled", true)
 				.list();

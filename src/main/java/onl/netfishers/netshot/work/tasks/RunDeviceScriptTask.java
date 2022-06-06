@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * This task runs a JS script on a device.
  */
 @Entity
-public class RunDeviceScriptTask extends Task {
+public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(RunDeviceScriptTask.class);
@@ -153,7 +153,7 @@ public class RunDeviceScriptTask extends Task {
 	 * @return the device
 	 */
 	@ManyToOne(fetch = FetchType.LAZY)
-	protected Device getDevice() {
+	public Device getDevice() {
 		return device;
 	}
 
@@ -162,7 +162,7 @@ public class RunDeviceScriptTask extends Task {
 	 *
 	 * @param device the new device
 	 */
-	protected void setDevice(Device device) {
+	public void setDevice(Device device) {
 		this.device = device;
 	}
 

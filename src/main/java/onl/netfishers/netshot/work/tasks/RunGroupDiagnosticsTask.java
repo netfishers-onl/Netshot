@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * given group.
  */
 @Entity
-public class RunGroupDiagnosticsTask extends Task {
+public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(RunGroupDiagnosticsTask.class);

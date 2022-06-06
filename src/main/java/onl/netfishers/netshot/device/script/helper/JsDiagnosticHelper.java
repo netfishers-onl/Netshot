@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.diagnostic.Diagnostic;
+import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.work.TaskLogger;
 
 /**
@@ -78,7 +79,10 @@ public class JsDiagnosticHelper {
 			for (Diagnostic diagnostic : diagnostics) {
 				if (diagnostic.getName().equals(key)) {
 					taskLogger.warn(String.format("Setting value for diagnostic key '%s'", key));
-					diagnostic.addResultToDevice(device, value);
+					DiagnosticResult result = diagnostic.makeResult(device, value);
+					if (result != null) {
+						device.addDiagnosticResult(result);
+					}
 				}
 			}
 		}

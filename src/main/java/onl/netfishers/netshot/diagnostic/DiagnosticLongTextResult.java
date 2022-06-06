@@ -41,7 +41,8 @@ public class DiagnosticLongTextResult extends DiagnosticResult {
 		this.longText = new LongTextConfiguration(value);
 	}
 
-	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@OneToOne(cascade = CascadeType.ALL,
+			orphanRemoval = true, fetch = FetchType.LAZY)
 	public LongTextConfiguration getLongText() {
 		return longText;
 	}

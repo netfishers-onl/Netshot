@@ -262,28 +262,26 @@ public class SimpleDiagnostic extends Diagnostic {
 		}
 	}
 
+
 	@Transient
 	@Override
-	public void addResultToDevice(Device device, Value value) {
+	public DiagnosticResult makeResult(Device device, Value value) {
 		String newValue = value.asString();
 		if (this.getModifierPattern() != null) {
 			newValue = newValue.replaceAll(this.getModifierPattern(), this.getModifierReplacement());
 		}
 		switch (this.resultType) {
 		case LONGTEXT:
-			device.addDiagnosticResult(new DiagnosticLongTextResult(device, this, newValue));
-			break;
+			return new DiagnosticLongTextResult(device, this, newValue);
 		case TEXT:
-			device.addDiagnosticResult(new DiagnosticTextResult(device, this, newValue));
-			break;
+			return new DiagnosticTextResult(device, this, newValue);
 		case NUMERIC:
-			device.addDiagnosticResult(new DiagnosticNumericResult(device, this, Double.parseDouble(newValue)));
-			break;
+			return new DiagnosticNumericResult(device, this, Double.parseDouble(newValue));
 		case BINARY:
 			boolean booleanValue = !"".equals(newValue) && !"false".equals(newValue.toLowerCase()) && !"no".equals(newValue.toLowerCase());
-			device.addDiagnosticResult(new DiagnosticBinaryResult(device, this, booleanValue));
-			break;
+			return new DiagnosticBinaryResult(device, this, booleanValue);
 		default:
+			return null;
 		}
 	}
 

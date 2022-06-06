@@ -18,21 +18,16 @@
  */
 package onl.netfishers.netshot.diagnostic;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -96,9 +91,6 @@ public abstract class Diagnostic {
 	
 	/** The type of data returned by the diagnostic */
 	protected AttributeType resultType;
-
-	/** The associated results */
-	List<DiagnosticResult> results = new ArrayList<>();
 	
 	/**
 	 * Instantiate a new diagnostic.
@@ -208,43 +200,23 @@ public abstract class Diagnostic {
 	}
 
 	/**
-	 * Gets the results.
-	 * @return the results
-	 */
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "diagnostic", cascade = CascadeType.REMOVE, orphanRemoval = true)
-	public List<DiagnosticResult> getResults() {
-		return results;
-	}
-
-	/**
-	 * Sets the diagnostic results.
-	 * @param results the results to set
-	 */
-	public void setResults(List<DiagnosticResult> results) {
-		this.results = results;
-	}
-
-	/**
-	 * Process and add a result to a device.
+	 * Build a diagnostic result.
 	 * @param device the device
 	 * @param value the diagnostic result
 	 */
 	@Transient
-	public void addResultToDevice(Device device, Value value) {
+	public DiagnosticResult makeResult(Device device, Value value) {
 		switch (this.resultType) {
 		case LONGTEXT:
-			device.addDiagnosticResult(new DiagnosticLongTextResult(device, this, value.asString()));
-			break;
+			return new DiagnosticLongTextResult(device, this, value.asString());
 		case TEXT:
-			device.addDiagnosticResult(new DiagnosticTextResult(device, this, value.asString()));
-			break;
+			return new DiagnosticTextResult(device, this, value.asString());
 		case NUMERIC:
-			device.addDiagnosticResult(new DiagnosticNumericResult(device, this, value.asDouble()));
-			break;
+			return new DiagnosticNumericResult(device, this, value.asDouble());
 		case BINARY:
-			device.addDiagnosticResult(new DiagnosticBinaryResult(device, this, value.asBoolean()));
-			break;
+			return new DiagnosticBinaryResult(device, this, value.asBoolean());
 		default:
+			return null;
 		}
 	}
 

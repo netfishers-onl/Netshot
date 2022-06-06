@@ -87,7 +87,7 @@ public abstract class Hook {
 	}
 
 	@XmlElement @JsonView(DefaultView.class)
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "hook", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "hook", orphanRemoval = true, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 	public Set<HookTrigger> getTriggers() {
 		return triggers;
 	}

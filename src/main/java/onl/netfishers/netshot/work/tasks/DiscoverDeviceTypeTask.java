@@ -50,11 +50,14 @@ import onl.netfishers.netshot.device.credentials.DeviceSnmpv1Community;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpv2cCommunity;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpv3Community;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
+import onl.netfishers.netshot.rest.RestViews.HookView;
 import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +66,7 @@ import org.slf4j.LoggerFactory;
  * This task discovers the type of the given device.
  */
 @Entity
-public class DiscoverDeviceTypeTask extends Task {
+public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, DomainBasedTask {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory
@@ -83,8 +86,8 @@ public class DiscoverDeviceTypeTask extends Task {
 	/** The domain. */
 	private Domain domain;
 
-	/** The device id. */
-	private long deviceId = 0;
+	/** The device. */
+	private Device device = null;
 
 	/** The snapshot task id. */
 	private long snapshotTaskId = 0;
@@ -307,13 +310,12 @@ public class DiscoverDeviceTypeTask extends Task {
 		if (this.status == Status.SUCCESS) {
 			Task snapshotTask = null;
 			Session session = Database.getSession();
-			Device device = null;
+			this.device = null;
 			try {
 				session.beginTransaction();
 				device = new Device(this.discoveredDeviceType, deviceAddress, domain, this.author);
 				device.addCredentialSet(successCredentialSet);
 				session.save(device);
-				this.deviceId = device.getId();
 				snapshotTask = new TakeSnapshotTask(device,
 						"Automatic snapshot after discovery", author, true, false, false);
 				session.save(snapshotTask);
@@ -461,16 +463,6 @@ public class DiscoverDeviceTypeTask extends Task {
 	}
 
 	/**
-	 * Gets the device id.
-	 * 
-	 * @return the device id
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public long getDeviceId() {
-		return deviceId;
-	}
-
-	/**
 	 * Gets the snapshot task id.
 	 * 
 	 * @return the snapshot task id
@@ -485,7 +477,7 @@ public class DiscoverDeviceTypeTask extends Task {
 	 * 
 	 * @return the credential sets
 	 */
-	@ManyToMany(fetch = FetchType.LAZY)
+	@ManyToMany() @Fetch(FetchMode.SELECT)
 	protected Set<DeviceCredentialSet> getCredentialSets() {
 		return credentialSets;
 	}
@@ -521,18 +513,6 @@ public class DiscoverDeviceTypeTask extends Task {
 		this.successCredentialSet = successCredentialSet;
 	}
 
-
-
-	/**
-	 * Sets the device id.
-	 * 
-	 * @param deviceId
-	 *          the new device id
-	 */
-	protected void setDeviceId(long deviceId) {
-		this.deviceId = deviceId;
-	}
-
 	/**
 	 * Sets the snapshot task id.
 	 * 
@@ -552,6 +532,35 @@ public class DiscoverDeviceTypeTask extends Task {
 	public JobKey getIdentity() {
 		return new JobKey(String.format("Task_%d", this.getId()),
 				String.format("DiscoverDeviceType_%s", this.getDeviceAddress().getIp()));
+	}
+
+	@XmlElement @JsonView(HookView.class)
+	@ManyToOne(fetch = FetchType.LAZY)
+	public Device getDevice() {
+		return device;
+	}
+
+	/**
+	 * Sets the device.
+	 *
+	 * @param device the new device
+	 */
+	public void setDevice(Device device) {
+		this.device = device;
+	}
+
+	/**
+	 * Get the ID of the device
+	 * 
+	 * @return the ID of the device
+	 */
+	@XmlElement @JsonView(DefaultView.class)
+	@Transient
+	protected long getDeviceId() {
+		if (device == null) {
+			return 0;
+		}
+		return device.getId();
 	}
 
 }

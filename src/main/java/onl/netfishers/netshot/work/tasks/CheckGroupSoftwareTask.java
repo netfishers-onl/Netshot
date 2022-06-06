@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * of devices.
  */
 @Entity
-public class CheckGroupSoftwareTask extends Task {
+public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 
 	/** The logger. */
 	final private static Logger logger = LoggerFactory.getLogger(CheckGroupSoftwareTask.class);

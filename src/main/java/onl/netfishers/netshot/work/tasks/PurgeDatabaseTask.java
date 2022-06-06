@@ -274,7 +274,7 @@ public class PurgeDatabaseTask extends Task {
 				int count = session
 					.createQuery("delete from Module m where m.removed = :true and m.lastSeenDate <= :when")
 					.setParameter("true", true)
-					.setParameter("when", when)
+					.setParameter("when", when.getTime())
 					.executeUpdate();
 
 				session.getTransaction().commit();

@@ -25,6 +25,9 @@ import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import onl.netfishers.netshot.device.Config;
 
 @Entity @DiscriminatorValue("T")
@@ -42,6 +45,7 @@ public class ConfigLongTextAttribute extends ConfigAttribute {
 
 	@OneToOne(orphanRemoval = true, fetch = FetchType.LAZY,
 			cascade = CascadeType.ALL)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	public LongTextConfiguration getLongText() {
 		return longText;
 	}

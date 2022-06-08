@@ -1109,4 +1109,48 @@
 		</preConditions>
 		<renameColumn tableName="policy_target_groups" oldColumnName="applied_policies" newColumnName="policy"/>
 	</changeSet>
+	<changeSet author="netshot (generated)" id="0.18.2_3">
+		<dropForeignKeyConstraint baseTableName="config_attribute" constraintName="FK_k22df6wt1rev0sewgyiv69wt1"/>
+		<addForeignKeyConstraint baseColumnNames="long_text" baseTableName="config_attribute" constraintName="FK_k22df6wt1rev0sewgyiv69wt1" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="long_text_configuration" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="device_attribute" constraintName="FK_t74v5mfn55fq6kb9gb2ynftwx"/>
+		<addForeignKeyConstraint baseColumnNames="long_text" baseTableName="device_attribute" constraintName="FK_t74v5mfn55fq6kb9gb2ynftwx" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="long_text_configuration" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="diagnostic_result" constraintName="FK_f6kdm9k6olgu4n1ggokqylisw"/>
+		<addForeignKeyConstraint baseColumnNames="long_text" baseTableName="diagnostic_result" constraintName="FK_f6kdm9k6olgu4n1ggokqylisw" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="long_text_configuration" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.18.2_4">
+		<dropForeignKeyConstraint baseTableName="device_vrf_instances" constraintName="FK_1x5sdn329t8d12efpn0sillef"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="device_vrf_instances" constraintName="FK_1x5sdn329t8d12efpn0sillef" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="device_virtual_devices" constraintName="FK_r07wpc4nloww05wbebu3w9eys"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="device_virtual_devices" constraintName="FK_r07wpc4nloww05wbebu3w9eys" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="exemption" constraintName="FK_46nq9o72v3f83yi6ix6f2mksk"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="exemption" constraintName="FK_46nq9o72v3f83yi6ix6f2mksk" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="module" constraintName="FK_62er5lohw2iuq4q7omo344i8n"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="module" constraintName="FK_62er5lohw2iuq4q7omo344i8n" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="device_credential_sets" constraintName="FK_8ef54qntljb5yg34cyt3mt8n0"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="device_credential_sets" constraintName="FK_8ef54qntljb5yg34cyt3mt8n0" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="device_attribute" constraintName="FK_ad969re21gdfwgujgmp5wkdhd"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="device_attribute" constraintName="FK_ad969re21gdfwgujgmp5wkdhd" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="config" constraintName="FK_h4jb4a8i8qcu1l6xkqb3iycu6"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="config" constraintName="FK_h4jb4a8i8qcu1l6xkqb3iycu6" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="check_result" constraintName="FK_j0aws3rbmlvcd8td8re2f0g35"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="check_result" constraintName="FK_j0aws3rbmlvcd8td8re2f0g35" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="network_interface" constraintName="FK_kgxdkl1nyj7t6v5xqc7ucd3t2"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="network_interface" constraintName="FK_kgxdkl1nyj7t6v5xqc7ucd3t2" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.18.2_5">
+		<dropForeignKeyConstraint baseTableName="diagnostic_result" constraintName="FK_1fa1ox5d3abi5ridwnhovpmou"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="diagnostic_result" constraintName="FK_1fa1ox5d3abi5ridwnhovpmou" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.18.2_6">
+		<dropForeignKeyConstraint baseTableName="config_attribute" constraintName="FK_djshbk3sfsartfxdfx8u9n4go"/>
+		<addForeignKeyConstraint baseColumnNames="config" baseTableName="config_attribute" constraintName="FK_djshbk3sfsartfxdfx8u9n4go" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="config" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="device" constraintName="FK_9eujdpbu4mqg91nhxqcyvvy5i"/>
+		<addForeignKeyConstraint baseColumnNames="last_config" baseTableName="device" constraintName="FK_9eujdpbu4mqg91nhxqcyvvy5i" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="config" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.18.2_7">
+		<dropForeignKeyConstraint baseTableName="network_interface_ip4addresses" constraintName="FK_igqlkeru1uy3prmexodxj2d6l"/>
+		<addForeignKeyConstraint baseColumnNames="network_interface" baseTableName="network_interface_ip4addresses" constraintName="FK_igqlkeru1uy3prmexodxj2d6l" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="network_interface" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="network_interface_ip6addresses" constraintName="FK_afmunli6ag9lxgherj3e8jkrw"/>
+		<addForeignKeyConstraint baseColumnNames="network_interface" baseTableName="network_interface_ip6addresses" constraintName="FK_afmunli6ag9lxgherj3e8jkrw" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="network_interface" validate="true"/>
+	</changeSet>
 </databaseChangeLog>

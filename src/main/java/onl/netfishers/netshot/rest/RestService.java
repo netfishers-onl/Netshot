@@ -2355,83 +2355,18 @@ public class RestService extends Thread {
 			for (ConfigBinaryFileAttribute attribute : attributes) {
 				toDeleteFiles.add(attribute.getFileName());
 			}
-			// Remove the attributes
+			// Remove the long text attributes (due to delete cascade constraint)
 			session
-				.createQuery("delete from DeviceAttribute da where da.device = :device")
-				.setParameter("device", device)
-				.executeUpdate();
-			// Remove the compliance check results
-			session
-				.createQuery("delete from CheckResult cr where cr.key.device = :device")
-				.setParameter("device", device)
-				.executeUpdate();
-			// Remove the compliance exemptions
-			session
-				.createQuery("delete from Exemption e where e.key.device = :device")
-				.setParameter("device", device)
-				.executeUpdate();
-			// Remove the configurations
-			session
-				.createQuery("update Device d set d.lastConfig = null where d = :device")
+				.createQuery("delete from LongTextConfiguration ltc where ltc in (select da.longText from DeviceLongTextAttribute da where da.device = :device)")
 				.setParameter("device", device)
 				.executeUpdate();
 			session
-				.createQuery("delete from ConfigAttribute ca where ca in " +
-						"(select ca from Config c join c.attributes ca where c.device = :device)")
+				.createQuery("delete from LongTextConfiguration ltc where ltc in (select ca.longText from Config c join c.attributes ca where c.device = :device)")
 				.setParameter("device", device)
 				.executeUpdate();
 			session
-				.createQuery("delete from Config c where c.device = :device")
+				.createQuery("delete from LongTextConfiguration ltc where ltc in (select dr.longText from DiagnosticLongTextResult dr where dr.device = :device)")
 				.setParameter("device", device)
-				.executeUpdate();
-			// Remove the diagnostic results
-			session
-				.createQuery("delete from DiagnosticResult dr where dr.device = :device")
-				.setParameter("device", device)
-				.executeUpdate();
-			// Remove orphan long texts
-			session
-				.createQuery("delete from LongTextConfiguration tc where " +
-					" (tc not in (select lca.longText from ConfigLongTextAttribute lca)) and " +
-					" (tc not in (select lda.longText from DeviceLongTextAttribute lda)) and " +
-					" (tc not in (select ldr.longText from DiagnosticLongTextResult ldr))")
-				.executeUpdate();
-			// Remove the modules
-			session
-				.createQuery("delete from Module m where m.device = :device")
-				.setParameter("device", device)
-				.executeUpdate();
-			// Remove the network interfaces
-			session
-				.createSQLQuery("delete from network_interface_ip4addresses where " +
-						"network_interface in (select id from network_interface where device = :id)")
-				.setParameter("id", id)
-				.executeUpdate();
-			session
-				.createSQLQuery("delete from network_interface_ip6addresses where " +
-						"network_interface in (select id from network_interface where device = :id)")
-				.setParameter("id", id)
-				.executeUpdate();
-			session
-				.createQuery("delete from NetworkInterface ni where ni.device = :device")
-				.setParameter("device", device)
-				.executeUpdate();
-			// Remove associated device-specific credential sets
-			session
-				.createQuery("delete from DeviceCredentialSet cs where cs.deviceSpecific = :true and " +
-						"cs in (select cs from Device d join d.credentialSets cs where d = :device)")
-				.setParameter("true", true)
-				.setParameter("device", device)
-				.executeUpdate();
-			// Use native SQL to batch remove credential set associations
-			session
-				.createSQLQuery("delete from device_credential_sets where device = :id")
-				.setParameter("id", id)
-				.executeUpdate();
-			// Use native SQL to batch remove many to many join table entries
-			session
-				.createSQLQuery("delete from device_group_cached_devices where cached_devices = :id")
-				.setParameter("id", id)
 				.executeUpdate();
 			// Remove the tasks
 			for (Class<? extends Task> taskClass : Task.getTaskClasses()) {

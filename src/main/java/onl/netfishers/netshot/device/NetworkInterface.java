@@ -41,6 +41,8 @@ import com.fasterxml.jackson.annotation.JsonView;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import onl.netfishers.netshot.device.NetworkAddress.AddressUsage;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;

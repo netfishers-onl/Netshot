@@ -25,6 +25,9 @@ import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.attribute.LongTextConfiguration;
 
@@ -41,8 +44,8 @@ public class DiagnosticLongTextResult extends DiagnosticResult {
 		this.longText = new LongTextConfiguration(value);
 	}
 
-	@OneToOne(cascade = CascadeType.ALL,
-			orphanRemoval = true, fetch = FetchType.LAZY)
+	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	public LongTextConfiguration getLongText() {
 		return longText;
 	}

@@ -144,10 +144,11 @@ public class CheckGroupComplianceTask extends Task implements GroupBasedTask {
 				.setParameter("id", deviceGroup.getId())
 				.executeUpdate();
 			for (Policy policy : policies) {
+				// Get devices which are part of the target group and which are in a group which the policy is applied to
 				ScrollableResults devices = session
-						.createQuery("from Device d join fetch d.lastConfig where d.id in (select d.id as id from DeviceGroup g1 join g1.cachedDevices d join d.ownerGroups g2 join g2.appliedPolicies p where g1.id = :id and p.id = :pid)")
-						.setParameter("id", deviceGroup.getId())
-						.setParameter("pid", policy.getId())
+						.createQuery("select d from Device d where d in (select d1 from DeviceGroup g join g.cachedDevices d1 where g.id = :groupId) and d in (select d1 from Policy p join p.targetGroups g1 join g1.cachedDevices d1 where p.id = :policyId)")
+						.setParameter("groupId", deviceGroup.getId())
+						.setParameter("policyId", policy.getId())
 						.setCacheMode(CacheMode.IGNORE)
 						.scroll(ScrollMode.FORWARD_ONLY);
 				while (devices.next()) {

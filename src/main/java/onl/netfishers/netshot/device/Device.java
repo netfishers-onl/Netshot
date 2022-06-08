@@ -54,6 +54,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Where;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -380,6 +382,7 @@ public class Device {
 	@XmlElement @JsonView(RestApiView.class)
 	@OneToMany(mappedBy = "device", orphanRemoval = true,
 			cascade = CascadeType.ALL)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	public Set<DeviceAttribute> getAttributes() {
 		return attributes;
 	}
@@ -445,6 +448,7 @@ public class Device {
 	 */
 	@OneToMany(mappedBy = "key.device", orphanRemoval = true,
 			cascade = CascadeType.ALL)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	public Set<CheckResult> getComplianceCheckResults() {
 		return complianceCheckResults;
 	}
@@ -456,6 +460,7 @@ public class Device {
 	 */
 	@OneToMany(fetch = FetchType.LAZY, mappedBy = "key.device", 
 			cascade = CascadeType.ALL, orphanRemoval = true)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	public Set<Exemption> getComplianceExemptions() {
 		return complianceExemptions;
 	}
@@ -465,8 +470,8 @@ public class Device {
 	 *
 	 * @return the configs
 	 */
-	@OneToMany(mappedBy = "device",
-			cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	public List<Config> getConfigs() {
 		return configs;
 	}
@@ -642,6 +647,7 @@ public class Device {
 	@OneToMany(mappedBy = "device", orphanRemoval = true,
 			cascade = CascadeType.ALL)
 	@Where(clause = "removed is not true")
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	public List<Module> getModules() {
 		return modules;
 	}
@@ -675,6 +681,7 @@ public class Device {
 	 */
 	@OneToMany(mappedBy = "device", orphanRemoval = true,
 			cascade = CascadeType.ALL)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	public List<NetworkInterface> getNetworkInterfaces() {
 		return networkInterfaces;
 	}
@@ -1208,6 +1215,7 @@ public class Device {
 	 */
 	@OneToMany(mappedBy = "device", orphanRemoval = true,
 			cascade = CascadeType.ALL)
+	@OnDelete(action = OnDeleteAction.CASCADE)
 	public Set<DiagnosticResult> getDiagnosticResults() {
 		return diagnosticResults;
 	}

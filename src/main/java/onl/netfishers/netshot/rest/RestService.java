@@ -159,7 +159,6 @@ import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
@@ -9138,8 +9137,8 @@ public class RestService extends Thread {
 			String fileName = String.format("netshot-export_%s.xlsx", (new SimpleDateFormat("yyyyMMdd-HHmmss")).format(new Date()));
 
 			Session session = Database.getSession(true);
+			SXSSFWorkbook workBook = new SXSSFWorkbook(100);
 			try {
-				Workbook workBook = new SXSSFWorkbook(100);
 				Row row;
 				Cell cell;
 
@@ -9704,7 +9703,6 @@ public class RestService extends Thread {
 
 				ByteArrayOutputStream output = new ByteArrayOutputStream();
 				workBook.write(output);
-				workBook.close();
 				return Response.ok(output.toByteArray()).header("Content-Disposition", "attachment; filename=" + fileName).build();
 			}
 			catch (IOException e) {
@@ -9720,6 +9718,13 @@ public class RestService extends Thread {
 			}
 			finally {
 				session.close();
+				try {
+					workBook.close();
+					workBook.dispose();
+				}
+				catch (IOException e) {
+					logger.warn("Error while closing work book", e);
+				}
 			}
 		}
 

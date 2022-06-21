@@ -24,7 +24,7 @@
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "5.3" /* Version will appear in the Admin tab. */
+	version: "5.4" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -275,14 +275,16 @@ function snapshot(cli, device, config) {
 			vdom = vdom[1];
 			networkInterface.virtualDevice = vdom;
 			if (typeof(vdomArp[vdom]) != "object") {
+				var arp;
 				if (vdomMode) {
-					cli.command("config vdom", { clearPrompt: true });
-					cli.command("edit " + vdom, { clearPrompt: true });
-				}
-				var arp = cli.command("get system arp | grep .");
-				if (vdomMode) {
+					cli.command("config global", { clearPrompt: true });
+					arp = cli.command("sudo " + vdom + " get system arp | grep .");
 					cli.command("end", { clearPrompt: true });
 				}
+				else {
+					arp = cli.command("get system arp | grep .");
+				}
+
 				vdomArp[vdom] = {};
 				var arpPattern = /^(\d+\.\d+\.\d+\.\d+) +[0-9]+ +([0-9a-f:]+) (.*)/gm;
 				var match;

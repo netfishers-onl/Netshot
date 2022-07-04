@@ -204,9 +204,9 @@ public class DynamicDeviceGroup extends DeviceGroup {
 			}
 			session.getTransaction().commit();
 		}
-		catch (HibernateException e) {
+		catch (Exception e) {
 			session.getTransaction().rollback();
-			logger.error("Error while updating the groups.", e);
+			logger.error("Error while refreshing the dynamic groups.", e);
 		}
 		finally {
 			session.close();

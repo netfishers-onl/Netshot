@@ -24,7 +24,7 @@
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "5.4" /* Version will appear in the Admin tab. */
+	version: "5.5" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -311,7 +311,8 @@ function snapshot(cli, device, config) {
 
 	var removeChangingParts = function(text) {
 		var cleaned = text;
-		cleaned = cleaned.replace(/^ *set (passphrase|password|passwd) ENC .*$/mg, "");
+		cleaned = cleaned.replace(/^#conf_file_ver=.*/mg, "");
+		cleaned = cleaned.replace(/^ *set (passphrase|password|passwd|secondary-secret) ENC .*$/mg, "");
 		cleaned = cleaned.replace(/^ *set private-key "(.|[\r\n])*?"$/mg, "");
 		return cleaned;
 	}

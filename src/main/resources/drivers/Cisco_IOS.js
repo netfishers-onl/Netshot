@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.7.3"
+	version: "1.8.0"
 };
 
 var Config = {
@@ -222,17 +222,33 @@ function snapshot(cli, device, config) {
 	
 	cli.macro("enable");
 	var runningConfig = cli.command("show running-config");
-	
-	var author = runningConfig.match(/^\! Last configuration change .* by (.*)$/m);
-	if (author != null) {
-		config.set("author", author[1]);
+
+	var changePattern = /^\! Last configuration change at (.+) by (.+)$/m;
+	var runningChangeMatch = runningConfig.match(changePattern);
+	if (runningChangeMatch != null) {
+		config.set("author", runningChangeMatch[2]);
 	}
 	runningConfig = configCleanup(runningConfig);
 	config.set("runningConfig", runningConfig);
-	
-	var startupConfig = cli.command("show startup-config");
-	startupConfig = configCleanup(startupConfig);
-	device.set("configurationSaved", startupConfig == runningConfig);
+
+	var configSaved = false;
+	if (runningChangeMatch) {
+		var startupComments = cli.command("show startup-config | i ^! .*");
+		var startupChangeMatch = startupComments.match(changePattern);
+		if (startupChangeMatch && runningChangeMatch[1] === startupChangeMatch[1]) {
+			configSaved = true;
+		}
+	}
+	else {
+		// Fallback to comparing full text configurations
+		var startupConfig = cli.command("show startup-config");
+		startupConfig = configCleanup(startupConfig);
+		if (startupConfig == runningConfig) {
+			configSaved = true;
+		}
+	}
+	device.set("configurationSaved", configSaved);
+
 	
 	var showVersion = cli.command("show version");
 	

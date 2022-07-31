@@ -32,6 +32,7 @@ import onl.netfishers.netshot.device.access.Cli;
 import onl.netfishers.netshot.device.access.Snmp;
 import onl.netfishers.netshot.device.attribute.ConfigLongTextAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigTextAttribute;
+import onl.netfishers.netshot.device.attribute.DeviceBinaryAttribute;
 import onl.netfishers.netshot.device.attribute.DeviceNumericAttribute;
 import onl.netfishers.netshot.device.attribute.DeviceTextAttribute;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
@@ -371,6 +372,9 @@ public class DeviceDriverTest {
 			Assertions.assertEquals(
 				((DeviceTextAttribute)device.getAttribute("configRegister")).getText(),
 				"0x2102", "The config register is incorrect");
+			Assertions.assertEquals(
+				((DeviceBinaryAttribute)device.getAttribute("configurationSaved")).getAssumption(),
+				true, "The configuration is not seen as saved");
 			Config config = device.getLastConfig();
 			Assertions.assertNotNull(config, "The config doesn't exist");
 			Assertions.assertEquals(config.getAuthor(), "admin", "The config author is incorrect");

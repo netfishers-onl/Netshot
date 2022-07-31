@@ -56,9 +56,6 @@ public class UiUser implements User {
 	/** The max idle time. */
 	public static int MAX_IDLE_TIME;
 
-	/** Netshot Server Version *. */
-	private String serverVersion = Netshot.VERSION;
-
 	/** The password encryptor. */
 	private static BasicPasswordEncryptor passwordEncryptor = new BasicPasswordEncryptor();
 
@@ -254,33 +251,6 @@ public class UiUser implements User {
 	 */
 	public void setLevel(int level) {
 		this.level = level;
-	}
-
-	/**
-	 * Gets the server version
-	 * Placed here to send the version to the client along with the user details
-	 *
-	 * @return the server version
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Transient
-	public String getServerVersion() {
-		return serverVersion;
-	}
-
-	/**
-	 * Sets the server version.
-	 *
-	 * @param serverVersion the new server version
-	 */
-	public void setServerVersion(String serverVersion) {
-		this.serverVersion = serverVersion;
-	}
-
-	@Transient
-	@XmlElement @JsonView(DefaultView.class)
-	public int getMaxIdleTimout() {
-		return UiUser.MAX_IDLE_TIME;
 	}
 
 	@Override

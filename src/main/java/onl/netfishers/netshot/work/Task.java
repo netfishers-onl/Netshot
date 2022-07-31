@@ -44,13 +44,27 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
+import onl.netfishers.netshot.work.tasks.CheckComplianceTask;
+import onl.netfishers.netshot.work.tasks.CheckGroupComplianceTask;
+import onl.netfishers.netshot.work.tasks.CheckGroupSoftwareTask;
+import onl.netfishers.netshot.work.tasks.DiscoverDeviceTypeTask;
+import onl.netfishers.netshot.work.tasks.PurgeDatabaseTask;
+import onl.netfishers.netshot.work.tasks.RunDeviceGroupScriptTask;
+import onl.netfishers.netshot.work.tasks.RunDeviceScriptTask;
+import onl.netfishers.netshot.work.tasks.RunDiagnosticsTask;
+import onl.netfishers.netshot.work.tasks.RunGroupDiagnosticsTask;
+import onl.netfishers.netshot.work.tasks.ScanSubnetsTask;
+import onl.netfishers.netshot.work.tasks.TakeGroupSnapshotTask;
+import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
 
 import org.quartz.JobKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 
 /**
@@ -65,6 +79,20 @@ import com.fasterxml.jackson.annotation.JsonView;
 })
 @XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes({
+	@Type(value = CheckComplianceTask.class),
+	@Type(value = CheckGroupComplianceTask.class),
+	@Type(value = CheckGroupSoftwareTask.class),
+	@Type(value = DiscoverDeviceTypeTask.class),
+	@Type(value = PurgeDatabaseTask.class),
+	@Type(value = RunDeviceGroupScriptTask.class),
+	@Type(value = RunDeviceScriptTask.class),
+	@Type(value = RunDiagnosticsTask.class),
+	@Type(value = RunGroupDiagnosticsTask.class),
+	@Type(value = ScanSubnetsTask.class),
+	@Type(value = TakeGroupSnapshotTask.class),
+	@Type(value = TakeSnapshotTask.class),
+})
 public abstract class Task implements Cloneable {
 
 	/**

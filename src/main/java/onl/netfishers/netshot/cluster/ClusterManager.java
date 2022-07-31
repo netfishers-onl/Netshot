@@ -424,7 +424,21 @@ public class ClusterManager extends Thread {
 										oldMember.getRunnerWeight() != member.getRunnerWeight()) {
 									runnerChanged = true;
 								}
-								this.members.put(message.getInstanceId(), member);
+								if (oldMember == null) {
+									this.members.put(message.getInstanceId(), member);
+								}
+								else {
+									oldMember.setHostname(member.getHostname());
+									oldMember.setClusteringVersion(member.getClusteringVersion());
+									oldMember.setMasterPriority(member.getMasterPriority());
+									oldMember.setRunnerPriority(member.getRunnerPriority());
+									oldMember.setRunnerWeight(member.getRunnerWeight());
+									oldMember.setAppVersion(member.getAppVersion());
+									oldMember.setJvmVersion(member.getJvmVersion());
+									oldMember.setDriverHash(member.getDriverHash());
+									oldMember.setStatus(member.getStatus());
+									oldMember.setLastSeenTime(member.getLastSeenTime());
+								}
 								memberUpdated = true;
 							}
 							else if (message instanceof ReloadDriversMessage) {

@@ -103,14 +103,28 @@ public class TaskManager {
 	/** Available runners */
 	private static RunnerSet runnerSet;
 
+	/** Max thread count for task execution */
+	public static int THREAD_COUNT = 10;
+
 	/**
 	 * Initializes the task manager.
 	 */
 	public static void init() {
+		String count = Netshot.getConfig("netshot.tasks.threadcount");
+		if (count != null) {
+			try {
+				TaskManager.THREAD_COUNT = Integer.parseInt(count);
+			}
+			catch (NumberFormatException e) {
+				logger.warn(
+					"Unable to parse thread count configuration line: ignoring, using {} default value",
+					TaskManager.THREAD_COUNT);
+			}
+		}
 		try {
 			Properties params = new Properties();
 			params.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
-			params.put("org.quartz.threadPool.threadCount", Netshot.getConfig("netshot.tasks.threadcount", "10"));
+			params.put("org.quartz.threadPool.threadCount", Integer.toString(TaskManager.THREAD_COUNT));
 			params.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "NetshotMasterScheduler");
 			StdSchedulerFactory factory = new StdSchedulerFactory(params);
 			masterScheduler = factory.getScheduler();

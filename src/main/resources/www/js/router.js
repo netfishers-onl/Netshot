@@ -29,10 +29,12 @@ define([
 				if (typeof window.reauth !== "undefined") {
 					clearTimeout(window.reauth);
 				}
-				window.reauth = setTimeout(function() {
-					new ReAuthDialog();
-				}, (window.serverInfo.get("maxIdleTimout") - 5) * 1000);
-				
+				var timeout = window.serverInfo.get("maxIdleTimout");
+				if (timeout) {
+					window.reauth = setTimeout(function() {
+						new ReAuthDialog();
+					}, (timeout - 5) * 1000);
+				}
 			}
 		});
 

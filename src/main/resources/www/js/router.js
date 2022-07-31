@@ -11,9 +11,11 @@ define([
 	'views/reports/ReportsView',
 	'views/compliance/ComplianceView',
 	'models/user/CurrentUserModel',
+	'models/user/ServerInfoModel',
 	'views/users/ReAuthDialog'
 ], function($, _, Backbone, HeaderView, DevicesView, DiagnosticsView, AdminView,
-		TasksView, ReportsView, ComplianceView, CurrentUserModel, ReAuthDialog) {
+		TasksView, ReportsView, ComplianceView, CurrentUserModel, ServerInfoModel,
+		ReAuthDialog) {
 
 	makeLoadProgress(100);
 
@@ -29,7 +31,7 @@ define([
 				}
 				window.reauth = setTimeout(function() {
 					new ReAuthDialog();
-				}, (window.user.get("maxIdleTimout") - 5) * 1000);
+				}, (window.serverInfo.get("maxIdleTimout") - 5) * 1000);
 				
 			}
 		});
@@ -149,9 +151,13 @@ define([
 		}
 
 		window.user = new CurrentUserModel();
-		window.user.fetch().done(function() {
-			start();
-		}).fail(function(response) {
+		window.serverInfo = new ServerInfoModel();
+		window.user.fetch().then(function() {
+			serverInfo.fetch().done(function() {
+				start();
+			});
+		})
+		.fail(function(response) {
 			if (response.status == 401 || response.status == 403) {
 				$("#splash #authentication-box #authenticate").button({
 					icons: {

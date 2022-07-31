@@ -193,6 +193,9 @@ import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Patch;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
  * The RestService class exposes the Netshot methods as a REST service.
@@ -222,10 +225,12 @@ public class RestService extends Thread {
 	/** Pagination default query params */
 	public static class PaginationParams {
 		/** Pagination offset */
+		@Parameter(description = "Pagination offset for the first item to return")
 		@QueryParam("offset")
 		private Integer offset;
 
 		/** Pagination limit */
+		@Parameter(description = "Maximum number of items to return")
 		@QueryParam("limit")
 		private Integer limit;
 
@@ -493,6 +498,7 @@ public class RestService extends Thread {
 		summary = "Get the device domains",
 		description = "Returns the list of device domains."
 	)
+	@Tag(name = "Admin", description = "Administrative actions")
 	public List<RsDomain> getDomains(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, domains.");
 		Session session = Database.getSession(true);
@@ -649,6 +655,7 @@ public class RestService extends Thread {
 		summary = "Add a device domain",
 		description = "Creates a device domain."
 	)
+	@Tag(name = "Admin", description = "Administrative actions")
 	public RsDomain addDomain(RsDomain newDomain) throws WebApplicationException {
 		logger.debug("REST request, add a domain");
 		String name = newDomain.getName().trim();
@@ -717,7 +724,8 @@ public class RestService extends Thread {
 		summary = "Update a device domain",
 		description = "Edits a device domain, by ID."
 	)
-	public RsDomain setDomain(@PathParam("id") Long id, RsDomain rsDomain)
+	@Tag(name = "Admin", description = "Administrative actions")
+	public RsDomain setDomain(@PathParam("id") @Parameter(description = "Domain ID") Long id, RsDomain rsDomain)
 			throws WebApplicationException {
 		logger.debug("REST request, edit domain {}.", id);
 		String name = rsDomain.getName().trim();
@@ -792,7 +800,8 @@ public class RestService extends Thread {
 		summary = "Remove a device domain",
 		description = "Remove the given device domain, by ID."
 	)
-	public void deleteDomain(@PathParam("id") Long id)
+	@Tag(name = "Admin", description = "Administrative actions")
+	public void deleteDomain(@PathParam("id") @Parameter(description = "Domain ID") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete domain {}.", id);
 		Session session = Database.getSession();
@@ -854,7 +863,8 @@ public class RestService extends Thread {
 		summary = "Get device interfaces",
 		description = "Returns the list of interfaces of a given device (by ID)."
 	)
-	public List<NetworkInterface> getDeviceInterfaces(@PathParam("id") Long id,
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	public List<NetworkInterface> getDeviceInterfaces(@PathParam("id") @Parameter(description = "Device ID") Long id,
 			@BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} interfaces.", id);
@@ -899,7 +909,9 @@ public class RestService extends Thread {
 		summary = "Get device modules",
 		description = "Returns the list of hardware modules of a given device, by ID."
 	)
-	public List<Module> getDeviceModules(@PathParam("id") Long id, @QueryParam("history") boolean includeHistory,
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	public List<Module> getDeviceModules(@PathParam("id") @Parameter(description = "Device ID") Long id,
+			@Parameter(description = "Whether to include history (removed modules with dates)") @QueryParam("history") boolean includeHistory,
 			@BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} modules.", id);
@@ -945,7 +957,9 @@ public class RestService extends Thread {
 		summary = "Get device tasks",
 		description = "Returns the list of tasks of a given device (by ID). Tasks are returned sorted by status and significant date."
 	)
-	public List<Task> getDeviceTasks(@PathParam("id") Long id, @BeanParam PaginationParams paginationParams)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	@Tag(name = "Tasks", description = "Task management")
+	public List<Task> getDeviceTasks(@PathParam("id") @Parameter(description = "Device ID") Long id, @BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} tasks.", id);
 		if (paginationParams.offset != null) {
@@ -1049,7 +1063,8 @@ public class RestService extends Thread {
 		summary = "Get device configs",
 		description = "Returns the list of configurations of the given device, by ID."
 	)
-	public List<Config> getDeviceConfigs(@PathParam("id") Long id, @BeanParam PaginationParams paginationParams)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	public List<Config> getDeviceConfigs(@PathParam("id") @Parameter(description = "Device ID") Long id, @BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
 		logger.debug("REST request, get device {} configs.", id);
 		Session session = Database.getSession(true);
@@ -1088,8 +1103,9 @@ public class RestService extends Thread {
 		summary = "Get a device configuration item",
 		description = "Retrieves a device configuration item, in plain text."
 	)
-	public Response getDeviceConfigPlain(@PathParam("id") Long id,
-			@PathParam("item") String item) throws WebApplicationException {
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	public Response getDeviceConfigPlain(@PathParam("id") @Parameter(description = "Config ID") Long id,
+			@PathParam("item") @Parameter(description = "Config item name") String item) throws WebApplicationException {
 		logger.debug("REST request, get device {} config {}.", id, item);
 		Session session = Database.getSession(true);
 		try {
@@ -1437,8 +1453,9 @@ public class RestService extends Thread {
 		summary = "Get the diff between two configuration objects",
 		description = "Retrieves the differences between two given device configuration objets, identified by full IDs."
 	)
-	public RsConfigDiff getDeviceConfigDiff(@PathParam("id1") Long id1,
-			@PathParam("id2") Long id2) {
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	public RsConfigDiff getDeviceConfigDiff(@PathParam("id1") @Parameter(description = "First config ID") Long id1,
+			@PathParam("id2") @Parameter(description = "Second config ID") Long id2) {
 		logger.debug("REST request, get device config diff, id {} and {}.", id1,
 				id2);
 		RsConfigDiff configDiffs;
@@ -1530,7 +1547,8 @@ public class RestService extends Thread {
 		summary = "Get a device",
 		description = "Retrieve a device will all details."
 	)
-	public Device getDevice(@PathParam("id") Long id)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	public Device getDevice(@PathParam("id") @Parameter(description = "Device ID") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, device {}.", id);
 		Session session = Database.getSession(true);
@@ -1701,8 +1719,9 @@ public class RestService extends Thread {
 		summary = "Get the devices",
 		description = "Retrieves the device list with minimal details."
 	)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
 	public List<RsLightDevice> getDevices(@BeanParam PaginationParams paginationParams,
-			@QueryParam("group") Long groupId) throws WebApplicationException {
+			@QueryParam("group") @Parameter(description = "Filter on devices of the given group ID") Long groupId) throws WebApplicationException {
 		logger.debug("REST request, devices.");
 		Session session = Database.getSession(true);
 		try {
@@ -1744,7 +1763,10 @@ public class RestService extends Thread {
 		summary = "Get the device types",
 		description = "Returns the list of device types (drivers)."
 	)
-	public List<DeviceDriver> getDeviceTypes(@DefaultValue("false") @QueryParam("refresh") boolean refresh) throws WebApplicationException {
+	@Tag(name = "Admin", description = "Administrative actions")
+	public List<DeviceDriver> getDeviceTypes(
+			@DefaultValue("false") @QueryParam("refresh") @Parameter(description = "Whether to reload all drivers from sources") boolean refresh)
+			throws WebApplicationException {
 		logger.debug("REST request, device types.");
 		if (refresh) {
 			ClusterManager.requestDriverReload();
@@ -1817,6 +1839,7 @@ public class RestService extends Thread {
 		summary = "Get the existing device families",
 		description = "Returns the list of device families (driver specific) currenly known in the database."
 	)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
 	public List<RsDeviceFamily> getDeviceFamilies(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, device families.");
 		Session session = Database.getSession(true);
@@ -1869,6 +1892,7 @@ public class RestService extends Thread {
 		summary = "Get the known part numbers",
 		description = "Returns the list of all known part numbers currently existing in the module table."
 	)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
 	public List<RsPartNumber> getPartNumbers(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, part numbers.");
 		Session session = Database.getSession(true);
@@ -2129,6 +2153,7 @@ public class RestService extends Thread {
 		description = "In auto discovery mode, this will create a 'discover device' task, and the device will be create if the discovery is successful." +
 		" Otherwise, the device will be immediately created in the database, and a 'snapshot' task will be created."
 	)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
 	public Task addDevice(RsNewDevice device) throws WebApplicationException {
 		logger.debug("REST request, new device.");
 		Network4Address deviceAddress;
@@ -2340,7 +2365,8 @@ public class RestService extends Thread {
 		summary = "Remove a device",
 		description = "Remove the given device, by ID."
 	)
-	public void deleteDevice(@PathParam("id") Long id)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	public void deleteDevice(@PathParam("id") @Parameter(description = "Device ID") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete device {}.", id);
 		Session session = Database.getSession();
@@ -2699,7 +2725,8 @@ public class RestService extends Thread {
 		summary = "Update a device",
 		description = "Edits a device, by ID."
 	)
-	public Device setDevice(@PathParam("id") Long id, RsDevice rsDevice)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	public Device setDevice(@PathParam("id") @Parameter(description = "Device ID") Long id, RsDevice rsDevice)
 			throws WebApplicationException {
 		logger.debug("REST request, edit device {}.", id);
 		Device device;
@@ -2900,7 +2927,8 @@ public class RestService extends Thread {
 		summary = "Get a task.",
 		description = "Retrieves the status of a given task, by ID."
 	)
-	public Task getTask(@PathParam("id") Long id) {
+	@Tag(name = "Tasks", description = "Task management")
+	public Task getTask(@PathParam("id") @Parameter(description = "Task ID") Long id) {
 		logger.debug("REST request, get task {}", id);
 		Session session = Database.getSession(true);
 		Task task;
@@ -2940,7 +2968,8 @@ public class RestService extends Thread {
 		summary = "Get the debug log of a task",
 		description = "Retrieves the full debug log of a given task, by ID."
 	)
-	public Response getTaskDebugLog(@PathParam("id") Long id) throws WebApplicationException {
+	@Tag(name = "Tasks", description = "Task management")
+	public Response getTaskDebugLog(@PathParam("id") @Parameter(description = "Task ID") Long id) throws WebApplicationException {
 		logger.debug("REST request, get task {} debug log.", id);
 		Session session = Database.getSession(true);
 		Task task;
@@ -2981,15 +3010,48 @@ public class RestService extends Thread {
 	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the tasks",
-		description = "Returns the list of tasks. Up to 'max' tasks are returned."
+		description = "Returns the list of tasks. Limited to 100 if no specific limit is provided."
 	)
-	public List<Task> getTasks(@BeanParam PaginationParams paginationParams) {
+	@Tag(name = "Tasks", description = "Task management")
+	public List<Task> getTasks(@BeanParam PaginationParams paginationParams,
+			@QueryParam("status") @Parameter(description = "Include tasks of given status(es)") Set<Task.Status> statuses,
+			@QueryParam("after") @Parameter(description = "Tasks executed or changed after this date (as milliseconds since 1970)") Long minDate,
+			@QueryParam("before") @Parameter(description = "Tasks executed or changed before this date (as milliseconds since 1970)") Long maxDate) {
+
 		logger.debug("REST request, get tasks.");
+		if (paginationParams.limit == null) {
+			paginationParams.limit = 100;
+		}
+
 		Session session = Database.getSession(true);
 		try {
-			Query<Task> query = session.createQuery("from Task t order by t.id desc", Task.class);
+			StringBuilder hqlQuery = new StringBuilder("select t from Task t where (1 = 1)");
+			Map<String, Object> hqlParams = new HashMap<>();
+
+			if (statuses.size() > 0) {
+				hqlQuery.append(" and t.status in :statuses");
+				hqlParams.put("statuses", statuses);
+			}
+			if (minDate != null) {
+				hqlQuery.append(" and (((t.executionDate is not null) and (t.executionDate >= :minDate)) " +
+					"or ((t.executionDate is null) and (t.changeDate >= :minDate)))");
+					hqlParams.put("minDate", new Date(minDate));
+			}
+			if (maxDate != null) {
+				hqlQuery.append(" and (((t.executionDate is not null) and (t.executionDate <= :maxDate)) " +
+					"or ((t.executionDate is null) and (t.changeDate < :maxDate)))");
+					hqlParams.put("maxDate", new Date(maxDate));
+			}
+			hqlQuery.append(" order by id desc");
+			
+			Query<Task> query = session.createQuery(hqlQuery.toString(), Task.class);
+			for (Entry<String, Object> k : hqlParams.entrySet()) {
+				query.setParameter(k.getKey(), k.getValue());
+			}
+			
 			paginationParams.apply(query);
-			return query.list();
+			List<Task> tasks = query.list();
+			return tasks;
 		}
 		catch (HibernateException e) {
 			logger.error("Unable to fetch the tasks.", e);
@@ -3016,6 +3078,7 @@ public class RestService extends Thread {
 		summary = "Get the global credential sets",
 		description = "Returns the list of global credential sets (SSH, SNMP, etc. accounts) for authentication against the devices."
 	)
+	@Tag(name = "Admin", description = "Administrative actions")
 	public List<DeviceCredentialSet> getCredentialSets(@BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
 		logger.debug("REST request, get credentials.");
@@ -3061,7 +3124,8 @@ public class RestService extends Thread {
 		summary = "Remove a credential set",
 		description = "Removes the given credential set, by ID."
 	)
-	public void deleteCredentialSet(@PathParam("id") Long id)
+	@Tag(name = "Admin", description = "Administrative actions")
+	public void deleteCredentialSet(@PathParam("id") @Parameter(description = "Credential set ID") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete credentials {}", id);
 		Session session = Database.getSession();
@@ -3122,6 +3186,7 @@ public class RestService extends Thread {
 		summary = "Add a credential set",
 		description = "Creates a credential set, which then can be used to authenticate against the devices."
 	)
+	@Tag(name = "Admin", description = "Administrative actions")
 	public void addCredentialSet(DeviceCredentialSet credentialSet)
 			throws WebApplicationException {
 		logger.debug("REST request, add credentials.");
@@ -3182,7 +3247,8 @@ public class RestService extends Thread {
 		summary = "Update a credential set",
 		description = "Edits a credential set, by ID."
 	)
-	public DeviceCredentialSet setCredentialSet(@PathParam("id") Long id,
+	@Tag(name = "Admin", description = "Administrative actions")
+	public DeviceCredentialSet setCredentialSet(@PathParam("id") @Parameter(description = "Credential set ID") Long id,
 			DeviceCredentialSet rsCredentialSet) throws WebApplicationException {
 		logger.debug("REST request, edit credentials {}", id);
 		Session session = Database.getSession();
@@ -3207,7 +3273,7 @@ public class RestService extends Thread {
 				credentialSet.setMgmtDomain(null);
 			}
 			else {
-				credentialSet.setMgmtDomain((Domain) session.load(Domain.class, rsCredentialSet.getMgmtDomain().getId()));
+				credentialSet.setMgmtDomain((Domain) session.get(Domain.class, rsCredentialSet.getMgmtDomain().getId()));
 			}
 			credentialSet.setName(rsCredentialSet.getName());
 			if (credentialSet.getName() == null || credentialSet.getName().trim().equals("")) {
@@ -3390,6 +3456,7 @@ public class RestService extends Thread {
 		summary = "Search for devices",
 		description = "Find devices using a string-based query."
 	)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
 	public RsSearchResults searchDevices(RsSearchCriteria criteria)
 			throws WebApplicationException {
 		logger.debug("REST request, search devices, query '{}', driver '{}'.",
@@ -3447,6 +3514,7 @@ public class RestService extends Thread {
 		summary = "Add a device group",
 		description = "Creates a device group. A group can be either static (fixed list) or dynamic (query-based list)."
 	)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
 	public DeviceGroup addGroup(DeviceGroup deviceGroup)
 			throws WebApplicationException {
 		logger.debug("REST request, add group.");
@@ -3499,6 +3567,7 @@ public class RestService extends Thread {
 		summary = "Get the device groups",
 		description = "Returns the list of device groups, including their definition."
 	)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
 	public List<DeviceGroup> getGroups(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, get groups.");
 		Session session = Database.getSession(true);
@@ -3533,7 +3602,8 @@ public class RestService extends Thread {
 		summary = "Remove a device group",
 		description = "Removes a device group. This doesn't remove the devices themselves."
 	)
-	public void deleteGroup(@PathParam("id") Long id)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	public void deleteGroup(@PathParam("id") @Parameter(description = "Group ID") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete group {}.", id);
 		Session session = Database.getSession();
@@ -3780,7 +3850,8 @@ public class RestService extends Thread {
 		summary = "Update a device group",
 		description = "Edits a device group, by ID."
 	)
-	public DeviceGroup setGroup(@PathParam("id") Long id, RsDeviceGroup rsGroup)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	public DeviceGroup setGroup(@PathParam("id") @Parameter(description = "Group ID") Long id, RsDeviceGroup rsGroup)
 			throws WebApplicationException {
 		logger.debug("REST request, edit group {}.", id);
 		Session session = Database.getSession();
@@ -3867,61 +3938,79 @@ public class RestService extends Thread {
 	public static class RsTask {
 
 		/** The id. */
+		@Schema(description = "Task unique ID")
 		private long id;
 
 		/** The cancelled. */
+		@Schema(description = "Set to cancel the task")
 		private boolean cancelled = false;
 
 		/** The type. */
+		@Schema(description = "Type of task")
 		private String type = "";
 
 		/** The group. */
+		@Schema(description = "The group ID for group-based task")
 		private Long group = 0L;
 
 		/** The device. */
+		@Schema(description = "The device ID for device-based task")
 		private Long device = 0L;
 
 		/** The domain. */
+		@Schema(description = "The domain ID when applicable")
 		private Long domain = 0L;
 
 		/** The subnets. */
+		@Schema(description = "Subnets to scan (comma, space or new line separated)")
 		private String subnets = "";
 
-		/** The IP addresses. */
-		private String ipAddresses = "";
-
 		/** The schedule reference. */
+		@Schema(description = "Scheduling reference date for scheduled task")
 		private Date scheduleReference = new Date();
 
 		/** The schedule type. */
+		@Schema(description = "Scheduling mode (ASAP, once, recurring...)")
 		private Task.ScheduleType scheduleType = ScheduleType.ASAP;
 
 		/** The schedule factor */
+		@Schema(description = "Scheduling factor for recurring task")
 		private int scheduleFactor = 1;
 
 		/** The comments. */
+		@Schema(description = "Task comment")
 		private String comments = "";
 
+		@Schema(description = "Ignore devices that had a successful snapshot in the last given hours")
 		private int limitToOutofdateDeviceHours = -1;
 		
+		@Schema(description = "Purge tasks older than this number of days")
 		private int daysToPurge = 90;
 		
+		@Schema(description = "Purge configurations older than this number of days")
 		private int configDaysToPurge = -1;
 		
+		@Schema(description = "Purge configurations bigger than this size (KB)")
 		private int configSizeToPurge = 0;
 		
+		@Schema(description = "When purging old configurations, keep a configuration every n days")
 		private int configKeepDays = 0;
 		
+		@Schema(description = "The script to execute")
 		private String script = "";
 		
+		@Schema(description = "The device driver to use")
 		private String driver;
 		
+		@Schema(description = "Enable task debugging")
 		private boolean debugEnabled = false;
 
 		/** Disable automatic diagnostic task (applies to snapshot tasks) */
+		@Schema(description = "Disable automatic diagnostic task (applies to snapshot tasks)")
 		private boolean dontRunDiagnostics = false;
 
 		/** Disable automatic check compliance task (applies to snapshot and diagnostic tasks)  */
+		@Schema(description = "Disable automatic check compliance task (applies to snapshot and diagnostic tasks)")
 		private boolean dontCheckCompliance = false;
 
 		/**
@@ -4135,24 +4224,6 @@ public class RestService extends Thread {
 		}
 
 		/**
-		 * Gets the ip addresses.
-		 *
-		 * @return the ip addresses
-		 */
-		public String getIpAddresses() {
-			return ipAddresses;
-		}
-
-		/**
-		 * Sets the ip addresses.
-		 *
-		 * @param ipAddresses the new ip addresses
-		 */
-		public void setIpAddresses(String ipAddresses) {
-			this.ipAddresses = ipAddresses;
-		}
-
-		/**
 		 * Gets the limit to outofdate device hours.
 		 *
 		 * @return the limit to outofdate device hours
@@ -4267,7 +4338,8 @@ public class RestService extends Thread {
 		summary = "Update a task",
 		description = "Edits a task, by ID. Set 'cancel' property to true to cancel the task."
 	)
-	public Task setTask(@PathParam("id") Long id, RsTask rsTask)
+	@Tag(name = "Tasks", description = "Task management")
+	public Task setTask(@PathParam("id") @Parameter(description = "Task ID") Long id, RsTask rsTask)
 			throws WebApplicationException {
 		logger.debug("REST request, edit task {}.", id);
 		Task task = null;
@@ -4314,135 +4386,95 @@ public class RestService extends Thread {
 	}
 
 	/**
-	 * The Class RsTaskCriteria.
+	 * Task status and corresponding count.
 	 */
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.NONE)
-	public static class RsTaskCriteria {
+	public static class RsTaskStatusCount {
 
-		/** The status. */
-		private String status = "";
+		private Task.Status status;
+		private long count;
 
-		/** The day. */
-		private Date day = new Date();
+		public RsTaskStatusCount(Task.Status status, long count) {
+			this.status = status;
+			this.count = count;
+		}
+		public RsTaskStatusCount() {
+		}
 
-		/**
-		 * Gets the status.
-		 *
-		 * @return the status
-		 */
 		@XmlElement @JsonView(DefaultView.class)
-		public String getStatus() {
+		public Task.Status getStatus() {
 			return status;
 		}
-
-		/**
-		 * Sets the status.
-		 *
-		 * @param status the new status
-		 */
-		public void setStatus(String status) {
+		public void setStatus(Task.Status status) {
 			this.status = status;
 		}
-
-		/**
-		 * Gets the day.
-		 *
-		 * @return the day
-		 */
 		@XmlElement @JsonView(DefaultView.class)
-		public Date getDay() {
-			return day;
+		public long getCount() {
+			return count;
 		}
-
-		/**
-		 * Sets the day.
-		 *
-		 * @param day the new day
-		 */
-		public void setDay(Date day) {
-			this.day = day;
+		public void setCount(long count) {
+			this.count = count;
 		}
 	}
 
-	/**
-	 * Search tasks.
-	 *
-	 * @param criteria the criteria
-	 * @return the list
-	 * @throws WebApplicationException the web application exception
-	 */
-	@POST
-	@Path("/tasks/search")
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.NONE)
+	public static class RsTaskSummary {
+
+		private Map<Task.Status, Long> countByStatus = new HashMap<>();
+		private int threadCount = TaskManager.THREAD_COUNT;
+
+		@XmlElement @JsonView(DefaultView.class)
+		public  Map<Task.Status, Long> getCountByStatus() {
+			return countByStatus;
+		}
+		public void setCountByStatus(Map<Task.Status, Long> countByStatus) {
+			this.countByStatus = countByStatus;
+		}
+
+		@XmlElement @JsonView(DefaultView.class)
+		public int getThreadCount() {
+			return threadCount;
+		}
+		public void setThreadCount(int threadCount) {
+			this.threadCount = threadCount;
+		}
+	}
+
+	@GET
+	@Path("/tasks/summary")
 	@RolesAllowed("readonly")
-	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
-		summary = "Search for tasks",
-		description = "Retrieves a list of tasks based on passed criteria."
+		summary = "Get summary/overview of tasks",
+		description = "Retrieves global info about tasks."
 	)
-	public List<Task> searchTasks(RsTaskCriteria criteria)
-			throws WebApplicationException {
+	@Tag(name = "Tasks", description = "Task management")
+	public RsTaskSummary getTaskSummary() throws WebApplicationException {
 
-		logger.debug("REST request, search for tasks.");
+		logger.debug("REST request, get task summary.");
 
+		RsTaskSummary summary = new RsTaskSummary();
 		Session session = Database.getSession(true);
 		try {
-			StringBuilder hqlQuery = new StringBuilder("select t from Task t where (1 = 1)");
-			Map<String, Object> hqlParams = new HashMap<>();
-			
-			Task.Status status = null;
-			try {
-				if (!"ANY".equals(criteria.getStatus())) {
-					status = Task.Status.valueOf(criteria.getStatus());
-					hqlQuery.append(" and status = :status");
-					hqlParams.put("status", status);
-				}
+			@SuppressWarnings({ "deprecation", "unchecked" })
+			List<RsTaskStatusCount> counts = session
+				.createQuery("select t.status as status, count(t.id) as count from Task t group by t.status")
+				.setResultTransformer(Transformers.aliasToBean(RsTaskStatusCount.class))
+				.list();
+			for (Task.Status status : Task.Status.values()) {
+				summary.getCountByStatus().put(status, 0L);
 			}
-			catch (Exception e) {
-				logger.warn("Invalid status {}.", criteria.getStatus());
+			for (RsTaskStatusCount taskCount : counts) {
+				summary.getCountByStatus().put(taskCount.getStatus(), taskCount.getCount());
 			}
-			Calendar min = Calendar.getInstance();
-			min.setTime(criteria.getDay());
-			min.set(Calendar.HOUR_OF_DAY, 0);
-			min.set(Calendar.MINUTE, 0);
-			min.set(Calendar.SECOND, 0);
-			min.set(Calendar.MILLISECOND, 0);
-			Calendar max = (Calendar) min.clone();
-			max.add(Calendar.DAY_OF_MONTH, 1);
-
-			if (status == Task.Status.SUCCESS || status == Task.Status.FAILURE) {
-				hqlQuery.append(" and executionDate >= :minDate and executionDate <= :maxDate");
-				hqlParams.put("minDate", min.getTime());
-				hqlParams.put("maxDate", max.getTime());
-			}
-			else if (status == Task.Status.CANCELLED) {
-				hqlQuery.append(" and changeDate >= :minDate and changeDate <= :maxDate");
-				hqlParams.put("minDate", min.getTime());
-				hqlParams.put("maxDate", max.getTime());
-			}
-			else if (status == null) {
-				hqlQuery.append(" and (status = :running or status = :scheduled or (executionDate >= :minDate and executionDate <= :maxDate) " +
-						"or (executionDate is null and (changeDate >= :minDate and changeDate <= :maxDate)))");
-				hqlParams.put("minDate", min.getTime());
-				hqlParams.put("maxDate", max.getTime());
-				hqlParams.put("running", Task.Status.RUNNING);
-				hqlParams.put("scheduled", Task.Status.SCHEDULED);
-			}
-			hqlQuery.append(" order by id desc");
-			
-			Query<Task> query = session.createQuery(hqlQuery.toString(), Task.class);
-			for (Entry<String, Object> k : hqlParams.entrySet()) {
-				query.setParameter(k.getKey(), k.getValue());
-			}
-			
-			List<Task> tasks = query.list();
-			return tasks;
+			return summary;
 		}
 		catch (HibernateException e) {
-			logger.error("Error while searching for tasks.", e);
-			throw new NetshotBadRequestException("Unable to fetch the tasks",
+			logger.error("Unable to fetch the task counts", e);
+			throw new NetshotBadRequestException("Unable to fetch the task counts",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
@@ -4451,7 +4483,7 @@ public class RestService extends Thread {
 	}
 
 	/**
-	 * Adds the task.
+	 * Adds a new task.
 	 *
 	 * @param rsTask the rs task
 	 * @return the task
@@ -4467,6 +4499,7 @@ public class RestService extends Thread {
 		summary = "Add a task",
 		description = "Creates a task and schedule it for execution."
 	)
+	@Tag(name = "Tasks", description = "Task management")
 	public Task addTask(@Context HttpServletRequest request,
 			@Context SecurityContext securityContext,
 			RsTask rsTask) throws WebApplicationException {
@@ -5112,6 +5145,7 @@ public class RestService extends Thread {
 		summary = "Get last configuration changes",
 		description = "Retrieves the list of last configuration changes, based on passed criteria."
 	)
+	@Tag(name = "Reports", description = "Report and statistics")
 	public List<RsConfigChange> getChanges(RsChangeCriteria criteria) throws WebApplicationException {
 		logger.debug("REST request, config changes.");
 		Session session = Database.getSession(true);
@@ -5151,6 +5185,7 @@ public class RestService extends Thread {
 		summary = "Get the compliance policies",
 		description = "Returns the list of compliance policies."
 	)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public List<Policy> getPolicies(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, get policies.");
 		Session session = Database.getSession(true);
@@ -5186,7 +5221,8 @@ public class RestService extends Thread {
 		summary = "Get the compliance rules of a policy",
 		description = "Returns the rules owned by a given compliance policy."
 	)
-	public List<Rule> getPolicyRules(@PathParam("id") Long id) throws WebApplicationException {
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public List<Rule> getPolicyRules(@PathParam("id") @Parameter(description = "Policy ID") Long id) throws WebApplicationException {
 		logger.debug("REST request, get rules for policy {}.", id);
 		Session session = Database.getSession(true);
 		try {
@@ -5308,6 +5344,7 @@ public class RestService extends Thread {
 		summary = "Add a compliance policy",
 		description = "Creates a compliance policy."
 	)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public Policy addPolicy(RsPolicy rsPolicy) throws WebApplicationException {
 		logger.debug("REST request, add policy.");
 		String name = rsPolicy.getName().trim();
@@ -5374,7 +5411,8 @@ public class RestService extends Thread {
 		summary = "Remove a compliance policy",
 		description = "Removes a given compliance policy, by ID"
 	)
-	public void deletePolicy(@PathParam("id") Long id)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public void deletePolicy(@PathParam("id") @Parameter(description = "Policy ID") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete policy {}.", id);
 		Session session = Database.getSession();
@@ -5421,7 +5459,8 @@ public class RestService extends Thread {
 		summary = "Update a compliance policy",
 		description = "Edits a compliance policy, by ID."
 	)
-	public Policy setPolicy(@PathParam("id") Long id, RsPolicy rsPolicy)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public Policy setPolicy(@PathParam("id") @Parameter(description = "Policy ID") Long id, RsPolicy rsPolicy)
 			throws WebApplicationException {
 		logger.debug("REST request, edit policy {}.", id);
 		Session session = Database.getSession();
@@ -5753,6 +5792,7 @@ public class RestService extends Thread {
 		summary = "Add a compliance rule",
 		description = "Creates a compliance rule. The associated policy must already exist."
 	)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public Rule addRule(RsRule rsRule) throws WebApplicationException {
 		logger.debug("REST request, add rule.");
 		if (rsRule.getName() == null || rsRule.getName().trim().isEmpty()) {
@@ -5837,7 +5877,8 @@ public class RestService extends Thread {
 		summary = "Update a compliance rule",
 		description = "Edits a compliance rule, by ID."
 	)
-	public Rule setRule(@PathParam("id") Long id, RsRule rsRule)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public Rule setRule(@PathParam("id") @Parameter(description = "Rule ID") Long id, RsRule rsRule)
 			throws WebApplicationException {
 		logger.debug("REST request, edit rule {}.", id);
 		Session session = Database.getSession();
@@ -5964,7 +6005,8 @@ public class RestService extends Thread {
 		summary = "Remove a compliance rule",
 		description = "Removes a compliance rule, by ID."
 	)
-	public void deleteRule(@PathParam("id") Long id)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public void deleteRule(@PathParam("id") @Parameter(description = "Rule ID") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete rule {}.", id);
 		Session session = Database.getSession();
@@ -6122,6 +6164,7 @@ public class RestService extends Thread {
 		summary = "Test a compliance rule",
 		description = "Test a compliance rule against a given device, in dry run mode."
 	)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public RsRuleTestResult testRule(RsRuleTest rsRule) throws WebApplicationException {
 		logger.debug("REST request, rule test.");
 		Device device;
@@ -6272,8 +6315,9 @@ public class RestService extends Thread {
 		summary = "Get the exempted devices of a compliance rule",
 		description = "Returns the list of devices which have an exemption against a given compliance rule, by ID."
 	)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public List<RsLightExemptedDevice> getExemptedDevices(@BeanParam PaginationParams paginationParams,
-			@PathParam("id") Long id) throws WebApplicationException {
+			@PathParam("id") @Parameter(description = "Rule ID") Long id) throws WebApplicationException {
 		logger.debug("REST request, get exemptions for rule {}.", id);
 		Session session = Database.getSession(true);
 		try {
@@ -6475,8 +6519,10 @@ public class RestService extends Thread {
 		summary = "Get the compliance results for a device",
 		description = "Returns the compliance results for a give device, by ID."
 	)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public List<RsDeviceRule> getDeviceComplianceResults(@BeanParam PaginationParams paginationParams,
-			@PathParam("id") Long id) throws WebApplicationException {
+			@PathParam("id") @Parameter(description = "Device ID") Long id) throws WebApplicationException {
 		logger.debug("REST request, get compliance results for device {}.", id);
 		Session session = Database.getSession(true);
 		try {
@@ -6574,7 +6620,9 @@ public class RestService extends Thread {
 		summary = "Get the number of configuration changes for the last 7 days",
 		description = "Returns the number of device configuration changes per day, for the last 7 days."
 	)
-	public List<RsConfigChangeNumberByDateStat> getLast7DaysChangesByDayStats(@QueryParam("tz") String jsTimeZone) throws WebApplicationException {
+	@Tag(name = "Reports", description = "Report and statistics")
+	public List<RsConfigChangeNumberByDateStat> getLast7DaysChangesByDayStats(
+			@QueryParam("tz") @Parameter(description = "Time zone") String jsTimeZone) throws WebApplicationException {
 		logger.debug("REST request, get last 7 day changes by day stats.");
 		Session session = Database.getSession(true);
 
@@ -6749,8 +6797,13 @@ public class RestService extends Thread {
 		summary = "Get the compliance status of a device group",
 		description = "Returns the compliance status of a given device group, by ID."
 	)
-	public List<RsGroupConfigComplianceStat> getGroupConfigComplianceStats(@QueryParam("domain") Set<Long> domains,
-			@QueryParam("group") Set<Long> deviceGroups, @QueryParam("policy") Set<Long> policies) throws WebApplicationException {
+	@Tag(name = "Reports", description = "Report and statistics")
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public List<RsGroupConfigComplianceStat> getGroupConfigComplianceStats(
+			@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains,
+			@QueryParam("group") @Parameter(description = "Filter on given group ID(s)") Set<Long> deviceGroups,
+			@QueryParam("policy") @Parameter(description = "Filter on given policy ID(s)") Set<Long> policies)
+			throws WebApplicationException {
 		logger.debug("REST request, group config compliance stats.");
 		Session session = Database.getSession(true);
 		try {
@@ -6844,6 +6897,8 @@ public class RestService extends Thread {
 		summary = "Get the global hardware support status",
 		description = "Returns the global hardware support status, i.e. a list of End-of-Life and End-of-Sale dates with the corresponding device count."
 	)
+	@Tag(name = "Reports", description = "Report and statistics")
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public List<RsHardwareSupportStat> getHardwareSupportStats() throws WebApplicationException {
 		logger.debug("REST request, hardware support stats.");
 		Session session = Database.getSession(true);
@@ -7030,7 +7085,11 @@ public class RestService extends Thread {
 		summary = "Get the global software compliance status",
 		description = "Returns the software compliance status of devices, optionally filtered by a list of device domains."
 	)
-	public List<RsGroupSoftwareComplianceStat> getGroupSoftwareComplianceStats(@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
+	@Tag(name = "Reports", description = "Report and statistics")
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public List<RsGroupSoftwareComplianceStat> getGroupSoftwareComplianceStats(
+			@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains)
+			throws WebApplicationException {
 		logger.debug("REST request, group software compliance stats.");
 		Session session = Database.getSession(true);
 		try {
@@ -7184,11 +7243,14 @@ public class RestService extends Thread {
 		summary = "Get the configuration compliance status of devices",
 		description = "Returns the configuration compliance status of devices; optionally filtered by domain, group, policy or compliance level."
 	)
+	@Tag(name = "Reports", description = "Report and statistics")
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public List<RsLightPolicyRuleDevice> getConfigComplianceDeviceStatuses(
-			@QueryParam("domain") Set<Long> domains,
-			@QueryParam("group") Set<Long> groups,
-			@QueryParam("policy") Set<Long> policies,
-			@QueryParam("result") Set<CheckResult.ResultOption> results) throws WebApplicationException {
+			@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains,
+			@QueryParam("group") @Parameter(description = "Filter on given group ID(s)") Set<Long> groups,
+			@QueryParam("policy") @Parameter(description = "Filter on given policy ID(s)") Set<Long> policies,
+			@QueryParam("result") @Parameter(description = "Filter on given result(s)") Set<CheckResult.ResultOption> results)
+			throws WebApplicationException {
 
 		logger.debug("REST request, config compliant device statuses.");
 		Session session = Database.getSession(true);
@@ -7257,8 +7319,13 @@ public class RestService extends Thread {
 		summary = "Get the non compliant devices of a group",
 		description = "Returns the list of non-compliance devices part of a given group, optionally filtered by domains and policies"
 	)
-	public List<RsLightPolicyRuleDevice> getGroupConfigNonCompliantDevices(@PathParam("id") Long id,
-			@QueryParam("domain") Set<Long> domains, @QueryParam("policy") Set<Long> policies) throws WebApplicationException {
+	@Tag(name = "Reports", description = "Report and statistics")
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public List<RsLightPolicyRuleDevice> getGroupConfigNonCompliantDevices(
+			@PathParam("id") @Parameter(description = "Group ID") Long id,
+			@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains,
+			@QueryParam("policy") @Parameter(description = "Filter on given policy ID(s)") Set<Long> policies)
+			throws WebApplicationException {
 		logger.debug("REST request, group config non compliant devices.");
 		Session session = Database.getSession(true);
 		try {
@@ -7309,7 +7376,11 @@ public class RestService extends Thread {
 		summary = "Get the End-of-Life or End-of-Sale devices matching a date.",
 		description = "Returns the list of devices getting End-of-Life (type 'eol') or End-of-Sale (type 'eos') at the given date (or never if 'date' is not given)."
 	)
-	public List<RsLightDevice> getHardwareStatusDevices(@PathParam("type") String type, @PathParam("date") Long date) throws WebApplicationException {
+	@Tag(name = "Reports", description = "Report and statistics")
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public List<RsLightDevice> getHardwareStatusDevices(
+		@PathParam("type") @Parameter(description = "eos (end-of-sale) or eol (end-of-life), type of date") String type,
+		@PathParam("date") @Parameter(description = "EoX date to filter on") Long date) throws WebApplicationException {
 		logger.debug("REST request, EoX devices by type and date.");
 		if (!type.equals("eol") && !type.equals("eos")) {
 			logger.error("Invalid requested EoX type.");
@@ -7322,20 +7393,20 @@ public class RestService extends Thread {
 			if (date == 0) {
 				@SuppressWarnings({ "deprecation", "unchecked" })
 				List<RsLightDevice> devices = session
-				.createQuery(DEVICELIST_BASEQUERY + "from Device d where d." + type + "Date is null and d.status = :enabled")
-				.setParameter("enabled", Device.Status.INPRODUCTION)
-				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
-				.list();
+					.createQuery(DEVICELIST_BASEQUERY + "from Device d where d." + type + "Date is null and d.status = :enabled")
+					.setParameter("enabled", Device.Status.INPRODUCTION)
+					.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
+					.list();
 				return devices;
 			}
 			else {
 				@SuppressWarnings({ "deprecation", "unchecked" })
 				List<RsLightDevice> devices = session
-				.createQuery(DEVICELIST_BASEQUERY + "from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled")
-				.setParameter("eoxDate", eoxDate)
-				.setParameter("enabled", Device.Status.INPRODUCTION)
-				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
-				.list();
+					.createQuery(DEVICELIST_BASEQUERY + "from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled")
+					.setParameter("eoxDate", eoxDate)
+					.setParameter("enabled", Device.Status.INPRODUCTION)
+					.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
+					.list();
 				return devices;
 			}
 		}
@@ -7364,6 +7435,7 @@ public class RestService extends Thread {
 		summary = "Get the hardware compliance rules",
 		description = "Returns the list of hardware compliance rules."
 	)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public List<HardwareRule> getHardwareRules() throws WebApplicationException {
 		logger.debug("REST request, hardware rules.");
 		Session session = Database.getSession(true);
@@ -7513,6 +7585,7 @@ public class RestService extends Thread {
 		summary = "Add an hardware compliance rule",
 		description = "Creates an hardware compliance rule."
 	)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public HardwareRule addHardwareRule(RsHardwareRule rsRule) throws WebApplicationException {
 		logger.debug("REST request, add hardware rule.");
 
@@ -7576,7 +7649,8 @@ public class RestService extends Thread {
 		summary = "Remove an hardware compliance rule",
 		description = "Removes an hardware compliance rule, by ID."
 	)
-	public void deleteHardwareRule(@PathParam("id") Long id)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public void deleteHardwareRule(@PathParam("id") @Parameter(description = "Hardware rule ID") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete hardware rule {}.", id);
 		Session session = Database.getSession();
@@ -7624,7 +7698,10 @@ public class RestService extends Thread {
 		summary = "Update an hardware compliance rule",
 		description = "Edits an hardware compliance rule, by ID."
 	)
-	public HardwareRule setHardwareRule(@PathParam("id") Long id, RsHardwareRule rsRule)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public HardwareRule setHardwareRule(
+			@PathParam("id") @Parameter(description = "Hardware rule ID") Long id,
+			RsHardwareRule rsRule)
 			throws WebApplicationException {
 		logger.debug("REST request, edit hardware rule {}.", id);
 		Session session = Database.getSession();
@@ -7692,6 +7769,7 @@ public class RestService extends Thread {
 		summary = "Get the software compliance rules",
 		description = "Returns the list of software compliance rules."
 	)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public List<SoftwareRule> getSoftwareRules(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, software rules.");
 		Session session = Database.getSession(true);
@@ -7929,6 +8007,7 @@ public class RestService extends Thread {
 		summary = "Add a software compliance rule",
 		description = "Creates a software compliance rule."
 	)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public SoftwareRule addSoftwareRule(RsSoftwareRule rsRule) throws WebApplicationException {
 		logger.debug("REST request, add software rule.");
 
@@ -7992,7 +8071,8 @@ public class RestService extends Thread {
 		summary = "Remove a software compliance rule",
 		description = "Removes a software compliance rule, by ID"
 	)
-	public void deleteSoftwareRule(@PathParam("id") Long id)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public void deleteSoftwareRule(@PathParam("id") @Parameter(description = "Software rule ID") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete software rule {}.", id);
 		Session session = Database.getSession();
@@ -8040,7 +8120,10 @@ public class RestService extends Thread {
 		summary = "Update a software compliance rule",
 		description = "Edits a software compliance rule."
 	)
-	public SoftwareRule setSoftwareRule(@PathParam("id") Long id, RsSoftwareRule rsRule)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public SoftwareRule setSoftwareRule(
+			@PathParam("id") @Parameter(description = "Software rule ID") Long id,
+			RsSoftwareRule rsRule)
 			throws WebApplicationException {
 		logger.debug("REST request, edit software rule {}.", id);
 		Session session = Database.getSession();
@@ -8141,8 +8224,13 @@ public class RestService extends Thread {
 		summary = "Get the devices of a group based on software compliance level",
 		description = "Returns the list of devices of a given group by ID, and matching the given software compliance level."
 	)
-	public List<RsLightSoftwareLevelDevice> getGroupDevicesBySoftwareLevel(@PathParam("id") Long id, @PathParam("level") String level,
-			@QueryParam("domain") Set<Long> domains) throws WebApplicationException {
+	@Tag(name = "Reports", description = "Report and statistics")
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public List<RsLightSoftwareLevelDevice> getGroupDevicesBySoftwareLevel(
+			@PathParam("id") @Parameter(description = "Group ID") Long id,
+			@PathParam("level") @Parameter(description = "Software compliance level") String level,
+			@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains)
+			throws WebApplicationException {
 		logger.debug("REST request, group {} devices by software level {}.", id, level);
 		Session session = Database.getSession(true);
 
@@ -8224,7 +8312,11 @@ public class RestService extends Thread {
 		description = "Returns the list of devices which didn't have a successful snapshot over the given number of days, optionally "
 			+ "filtered by device domain."
 	)
-	public List<RsLightAccessFailureDevice> getAccessFailureDevices(@QueryParam("days") Integer days, @QueryParam("domain") Set<Long> domains) throws WebApplicationException {
+	@Tag(name = "Reports", description = "Report and statistics")
+	public List<RsLightAccessFailureDevice> getAccessFailureDevices(
+			@QueryParam("days") @Parameter(description = "Look for the given number of last days") Integer days,
+			@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains)
+			throws WebApplicationException {
 		logger.debug("REST request, devices without successful snapshot over the last {} days.", days);
 		
 		if (days == null || days < 1) {
@@ -8365,7 +8457,10 @@ public class RestService extends Thread {
 		summary = "User log out",
 		description = "Terminates the current user session (useless when using API tokens)."
 	)
-	public void logout(@Context HttpServletRequest request) throws WebApplicationException {
+	@Tag(name = "Login", description = "Login and password management for standard user")
+	public void logout(@Context HttpServletRequest request,
+			@PathParam("id") @Parameter(description = "User ID - not used") Long id)
+			throws WebApplicationException {
 		logger.debug("REST logout request.");
 		User sessionUser = (User) request.getSession().getAttribute("user");
 		HttpSession httpSession = request.getSession();
@@ -8391,7 +8486,10 @@ public class RestService extends Thread {
 		summary = "Update a user",
 		description = "Edits a given user, by ID, especially the password for a local user."
 	)
-	public UiUser setPassword(RsLogin rsLogin) throws WebApplicationException {
+	@Tag(name = "Login", description = "Login and password management for standard user")
+	public UiUser setPassword(RsLogin rsLogin,
+			@PathParam("id") @Parameter(description = "User ID") Long id)
+			throws WebApplicationException {
 		logger.debug("REST password change request, username {}.", rsLogin.getUsername());
 		User currentUser = (User) request.getAttribute("user");
 		Netshot.aaaLogger.warn("Password change request via REST by user {} for user {}.", currentUser.getUsername(), rsLogin.getUsername());
@@ -8451,6 +8549,7 @@ public class RestService extends Thread {
 		summary = "Log in",
 		description = "Logs in (create session) by username and password (useless when using API tokens)."
 	)
+	@Tag(name = "Login", description = "Login and password management for standard user")
 	public UiUser login(RsLogin rsLogin) throws WebApplicationException {
 		logger.debug("REST authentication request, username {}.", rsLogin.getUsername());
 		Netshot.aaaLogger.info("REST authentication request, username {}.", rsLogin.getUsername());
@@ -8546,8 +8645,9 @@ public class RestService extends Thread {
 		summary = "Get the current user",
 		description = "Returns the current logged in user."
 	)
-	public User getUser(@Context HttpServletRequest request) throws WebApplicationException {
-		User user = (User) request.getAttribute("user");
+	@Tag(name = "Login", description = "Login and password management for standard user")
+	public UiUser getUser(@Context HttpServletRequest request) throws WebApplicationException {
+		UiUser user = (UiUser) request.getAttribute("user");
 		return user;
 	}
 
@@ -8566,6 +8666,7 @@ public class RestService extends Thread {
 		summary = "Get the users",
 		description = "Returns the list of Netshot users."
 	)
+	@Tag(name = "Admin", description = "Administrative actions")
 	public List<UiUser> getUsers(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, get user list.");
 		Session session = Database.getSession(true);
@@ -8718,6 +8819,7 @@ public class RestService extends Thread {
 		summary = "Add a user to Netshot",
 		description = "Create a Netshot user."
 	)
+	@Tag(name = "Admin", description = "Administrative actions")
 	public UiUser addUser(RsUser rsUser) {
 		logger.debug("REST request, add user");
 
@@ -8789,7 +8891,8 @@ public class RestService extends Thread {
 		summary = "Update a Netshot user",
 		description = "Edits a Netshot user, by ID."
 	)
-	public UiUser setUser(@PathParam("id") Long id, RsUser rsUser)
+	@Tag(name = "Admin", description = "Administrative actions")
+	public UiUser setUser(@PathParam("id") @Parameter(description = "User ID") Long id, RsUser rsUser)
 			throws WebApplicationException {
 		logger.debug("REST request, edit user {}.", id);
 		Session session = Database.getSession();
@@ -8866,7 +8969,8 @@ public class RestService extends Thread {
 		summary = "Remove a Netshot user.",
 		description = "Removes a user from the Netshot database."
 	)
-	public void deleteUser(@PathParam("id") Long id)
+	@Tag(name = "Admin", description = "Administrative actions")
+	public void deleteUser(@PathParam("id") @Parameter(description = "User ID") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete user {}.", id);
 		Session session = Database.getSession();
@@ -9007,6 +9111,7 @@ public class RestService extends Thread {
 		summary = "Add a new API token",
 		description = "Creates a new API token."
 	)
+	@Tag(name = "Admin", description = "Administrative actions")
 	public ApiToken addApiToken(RsApiToken rsApiToken) {
 		logger.debug("REST request, add API token");
 
@@ -9061,6 +9166,7 @@ public class RestService extends Thread {
 		summary = "Get the API tokens",
 		description = "Returns the list of API tokens."
 	)
+	@Tag(name = "Admin", description = "Administrative actions")
 	public List<ApiToken> getApiTokens(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, get API token list.");
 		Session session = Database.getSession(true);
@@ -9094,7 +9200,8 @@ public class RestService extends Thread {
 		summary = "Remove an API token",
 		description = "Removes an API token, by ID."
 	)
-	public void deleteApiToken(@PathParam("id") Long id) throws WebApplicationException {
+	@Tag(name = "Admin", description = "Administrative actions")
+	public void deleteApiToken(@PathParam("id") @Parameter(description = "Token ID") Long id) throws WebApplicationException {
 		logger.debug("REST request, delete API token {}.", id);
 		Session session = Database.getSession();
 		try {
@@ -9134,16 +9241,17 @@ public class RestService extends Thread {
 			"The report can be customized to include or not interfaces, inventory, locations, compliance, groups. " +
 			"The only supported and default output format is xlsx (Excel file)."
 	)
+	@Tag(name = "Reports", description = "Report and statistics")
 	public Response getDataXLSX(@Context HttpServletRequest request,
-			@QueryParam("group") Set<Long> groups,
-			@QueryParam("domain") Set<Long> domains,
-			@DefaultValue("false") @QueryParam("interfaces") boolean exportInterfaces,
-			@DefaultValue("false") @QueryParam("inventory") boolean exportInventory,
-			@DefaultValue("false") @QueryParam("inventoryhistory") boolean exportInventoryHistory,
-			@DefaultValue("false") @QueryParam("locations") boolean exportLocations,
-			@DefaultValue("false") @QueryParam("compliance") boolean exportCompliance,
-			@DefaultValue("false") @QueryParam("groups") boolean exportGroups,
-			@DefaultValue("xlsx") @QueryParam("format") String fileFormat) throws WebApplicationException {
+			@QueryParam("group") @Parameter(description = "Filter on given group ID(s)") Set<Long> groups,
+			@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains,
+			@DefaultValue("false") @QueryParam("interfaces") @Parameter(description = "Whether to export interface data") boolean exportInterfaces,
+			@DefaultValue("false") @QueryParam("inventory") @Parameter(description = "Whether to export inventory data") boolean exportInventory,
+			@DefaultValue("false") @QueryParam("inventoryhistory") @Parameter(description = "Whether to export interface history") boolean exportInventoryHistory,
+			@DefaultValue("false") @QueryParam("locations") @Parameter(description = "Whether to export locations") boolean exportLocations,
+			@DefaultValue("false") @QueryParam("compliance") @Parameter(description = "Whether to export compliance results") boolean exportCompliance,
+			@DefaultValue("false") @QueryParam("groups") @Parameter(description = "Whether to export group info") boolean exportGroups,
+			@DefaultValue("xlsx") @QueryParam("format") @Parameter(description = "Export format (xlsx is supported)") String fileFormat) throws WebApplicationException {
 		logger.debug("REST request, export data.");
 		User user = (User) request.getAttribute("user");
 
@@ -9759,6 +9867,7 @@ public class RestService extends Thread {
 		summary = "Add a command script",
 		description = "Create a command script (script to be later run over devices)."
 	)
+	@Tag(name = "Scripts", description = "Script management (push changes to devices)")
 	public DeviceJsScript addScript(DeviceJsScript rsScript) throws WebApplicationException {
 		logger.debug("REST request, add device script.");
 		DeviceDriver driver = DeviceDriver.getDriverByName(rsScript.getDeviceDriver());
@@ -9820,7 +9929,8 @@ public class RestService extends Thread {
 		summary = "Remove a script",
 		description = "Removes a given script, by ID."
 	)
-	public void deleteScript(@PathParam("id") Long id)
+	@Tag(name = "Scripts", description = "Script management (push changes to devices)")
+	public void deleteScript(@PathParam("id") @Parameter(description = "Script ID") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete script {}.", id);
 		Session session = Database.getSession();
@@ -9858,7 +9968,8 @@ public class RestService extends Thread {
 		summary = "Get a command script",
 		description = "Returns a given command script, by ID."
 	)
-	public DeviceJsScript getScript(@PathParam("id") Long id) {
+	@Tag(name = "Scripts", description = "Script management (push changes to devices)")
+	public DeviceJsScript getScript(@PathParam("id") @Parameter(description = "Script ID") Long id) {
 		logger.debug("REST request, get script {}", id);
 		Session session = Database.getSession(true);
 		try {
@@ -9889,6 +10000,7 @@ public class RestService extends Thread {
 		summary = "Get command scripts",
 		description = "Returns the list of command scripts."
 	)
+	@Tag(name = "Scripts", description = "Script management (push changes to devices)")
 	public List<DeviceJsScript> getScripts(@BeanParam PaginationParams paginationParams) {
 		logger.debug("REST request, get scripts.");
 		Session session = Database.getSession(true);
@@ -10184,6 +10296,10 @@ public class RestService extends Thread {
 		summary = "Get the diagnostics",
 		description = "Returns the list of diagnostics."
 	)
+	@Tag(
+		name = "Diagnostics",
+		description = "Diagnostic management (execute commands and retrieve custom data from devices)"
+	)
 	public List<Diagnostic> getDiagnostics(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, get diagnotics.");
 		Session session = Database.getSession(true);
@@ -10213,6 +10329,10 @@ public class RestService extends Thread {
 	@Operation(
 		summary = "Add a diagnostic.",
 		description = "Creates a diagnostic."
+	)
+	@Tag(
+		name = "Diagnostics",
+		description = "Diagnostic management (execute commands and retrieve custom data from devices)"
 	)
 	public Diagnostic addDiagnostic(RsDiagnostic rsDiagnostic) throws WebApplicationException {
 		logger.debug("REST request, add diagnostic");
@@ -10331,7 +10451,11 @@ public class RestService extends Thread {
 		summary = "Update a diagnostic",
 		description = "Creates a new diagnostic."
 	)
-	public Diagnostic setDiagnostic(@PathParam("id") Long id, RsDiagnostic rsDiagnostic)
+	@Tag(
+		name = "Diagnostics",
+		description = "Diagnostic management (execute commands and retrieve custom data from devices)"
+	)
+	public Diagnostic setDiagnostic(@PathParam("id") @Parameter(description = "Diagnostic ID") Long id, RsDiagnostic rsDiagnostic)
 			throws WebApplicationException {
 		logger.debug("REST request, edit diagnostic {}.", id);
 		Session session = Database.getSession();
@@ -10470,7 +10594,11 @@ public class RestService extends Thread {
 		summary = "Remove a diagnostic",
 		description = "Removes a given diagnostic, by ID."
 	)
-	public void deleteDiagnostic(@PathParam("id") Long id)
+	@Tag(
+		name = "Diagnostics",
+		description = "Diagnostic management (execute commands and retrieve custom data from devices)"
+	)
+	public void deleteDiagnostic(@PathParam("id") @Parameter(description = "Diagnostic ID") Long id)
 			throws WebApplicationException {
 		logger.debug("REST request, delete diagnostic {}.", id);
 		Session session = Database.getSession();
@@ -10524,8 +10652,13 @@ public class RestService extends Thread {
 		summary = "Get diagnostic results",
 		description = "Returns the results of a given diagnostic, by ID."
 	)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	@Tag(
+		name = "Diagnostics",
+		description = "Diagnostic management (execute commands and retrieve custom data from devices)"
+	)
 	public List<DiagnosticResult> getDeviceDiagnosticResults(@BeanParam PaginationParams paginationParams,
-			@PathParam("id") Long id) throws WebApplicationException {
+			@PathParam("id") @Parameter(description = "Device ID") Long id) throws WebApplicationException {
 		logger.debug("REST request, get diagnostic results for device {}.", id);
 		Session session = Database.getSession(true);
 		try {
@@ -10560,11 +10693,12 @@ public class RestService extends Thread {
 		summary = "Get the hooks",
 		description = "Returns the current list of hooks."
 	)
+	@Tag(name = "Admin", description = "Administrative actions")
 	public List<Hook> getHooks(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
 		logger.debug("REST request, hooks.");
 		Session session = Database.getSession(true);
 		try {
-			Query<Hook> query = session.createQuery("select h from Hook h left join fetch h.triggers", Hook.class);
+			Query<Hook> query = session.createQuery("select distinct h from Hook h left join fetch h.triggers", Hook.class);
 			paginationParams.apply(query);
 			return query.list();
 		}
@@ -10596,6 +10730,7 @@ public class RestService extends Thread {
 		summary = "Add a hook",
 		description = "Creates a hook. Based on given criteria, Netshot will run the given action when specific events occur."
 	)
+	@Tag(name = "Admin", description = "Administrative actions")
 	public Hook addHook(Hook hook) throws WebApplicationException {
 		logger.debug("REST request, add hook.");
 		if (hook.getName() == null || hook.getName().trim().equals("")) {
@@ -10663,7 +10798,8 @@ public class RestService extends Thread {
 		summary = "Remove a hook",
 		description = "Removes the hook, by ID."
 	)
-	public void deleteHook(@PathParam("id") Long id) throws WebApplicationException {
+	@Tag(name = "Admin", description = "Administrative actions")
+	public void deleteHook(@PathParam("id") @Parameter(description = "Hook ID") Long id) throws WebApplicationException {
 		logger.debug("REST request, delete hook {}", id);
 		Session session = Database.getSession();
 		try {
@@ -10710,7 +10846,8 @@ public class RestService extends Thread {
 		summary = "Update a hook",
 		description = "Edits a hook, by ID."
 	)
-	public Hook setHook(@PathParam("id") Long id, Hook rsHook) throws WebApplicationException {
+	@Tag(name = "Admin", description = "Administrative actions")
+	public Hook setHook(@PathParam("id") @Parameter(description = "Hook ID") Long id, Hook rsHook) throws WebApplicationException {
 		logger.debug("REST request, edit hook {}", id);
 		rsHook.setId(id);
 		if (rsHook.getName() == null || rsHook.getName().trim().equals("")) {
@@ -10807,6 +10944,7 @@ public class RestService extends Thread {
 		description = "Returns the members of the Netshot high availability cluster " +
 				"(empty list if clustering is not enabled)."
 	)
+	@Tag(name = "Admin", description = "Administrative actions")
 	public List<ClusterMember> getClusterMembers() throws WebApplicationException {
 		logger.debug("REST request, get cluster members");
 		return ClusterManager.getClusterMembers();
@@ -10869,6 +11007,7 @@ public class RestService extends Thread {
 			"Might be used by local-balancer to redirect http to the proper server " +
 			"(return code 205 means the local server is not master)."
 	)
+	@Tag(name = "Admin", description = "Administrative actions")
 	public RsClusterMasterCheck getClusterMasterStatus() throws WebApplicationException {
 		RsClusterMasterCheck check = new RsClusterMasterCheck();
 		List<ClusterMember> members = ClusterManager.getClusterMembers();
@@ -10888,6 +11027,48 @@ public class RestService extends Thread {
 			}
 		}
 		return check;
+	}
+
+	/**
+	 * Utility class to send server information
+	 */
+	@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+	public static class RsServerInfo {
+
+		/**
+		 * Gets the server version
+		 *
+		 * @return the server version
+		 */
+		@XmlElement @JsonView(DefaultView.class)
+		public String getServerVersion() {
+			return Netshot.VERSION;
+		}
+
+		/**
+		 * Gets the user max idle time (in seconds)
+		 * 
+		 * @return the max idle time
+		 */
+		@XmlElement @JsonView(DefaultView.class)
+		public int getMaxIdleTimout() {
+			return UiUser.MAX_IDLE_TIME;
+		}
+	}
+
+	@GET
+	@Path("/serverinfo")
+	@RolesAllowed("readonly")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Get Netshot server info.",
+		description = "Retrieves some general info about Netshot server."
+	)
+	@Tag(name = "Admin", description = "Administrative actions")
+	public RsServerInfo getServerInfo() {
+		logger.debug("REST request, get server info");
+		return new RsServerInfo();
 	}
 
 }

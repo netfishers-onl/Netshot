@@ -95,6 +95,54 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		}
 	}
 
+	/**
+	 * Possible location types for driver files.
+	 */
+	public static enum LocationType {
+		EMBEDDED,
+		FILE,
+	}
+
+	/**
+	 * Driver location
+	 */
+	@XmlRootElement
+	@XmlAccessorType(value = XmlAccessType.NONE)
+	public static class Location {
+		/** Location type */
+		private LocationType type;
+
+		/** File name */
+		private String fileName;
+
+		public Location(LocationType type, String fileName) {
+			this.type = type;
+			this.fileName = fileName;
+		}
+
+		@XmlElement
+		@JsonView(DefaultView.class)
+		public LocationType getType() {
+			return type;
+		}
+
+		public void setType(LocationType type) {
+			this.type = type;
+		}
+
+		@XmlElement
+		@JsonView(DefaultView.class)
+		public String getFileName() {
+			return fileName;
+		}
+
+		public void setFileName(String fileName) {
+			this.fileName = fileName;
+		}
+	}
+
+
+
 	/** The logger. */
 	final static Logger logger = LoggerFactory.getLogger(DeviceDriver.class);
 
@@ -264,7 +312,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 					try {
 						InputStream stream = new FileInputStream(file);
 						reader = new InputStreamReader(stream);
-						DeviceDriver driver = new DeviceDriver(reader, file.getName());
+						DeviceDriver driver = new DeviceDriver(reader, file.getName(),
+							new Location(LocationType.FILE, file.getAbsolutePath()));
 						if (newDrivers.containsKey(driver.getName())) {
 							logger.warn(
 									"Skipping user device driver file {}, because a similar driver is already loaded.",
@@ -308,7 +357,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						InputStream stream = DeviceDriver.class
 								.getResourceAsStream("/" + driverPathName + file.getName());
 						reader = new InputStreamReader(stream);
-						DeviceDriver driver = new DeviceDriver(reader, file.getName());
+						DeviceDriver driver = new DeviceDriver(reader, file.getName(),
+							new Location(LocationType.EMBEDDED, file.getAbsolutePath()));
 						if (newDrivers.containsKey(driver.getName())) {
 							logger.warn(
 									"Skipping Netshot device driver file {}, because a similar driver is already loaded.",
@@ -344,7 +394,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						try {
 							InputStream stream = jar.getInputStream(je);
 							reader = new InputStreamReader(stream);
-							DeviceDriver driver = new DeviceDriver(reader, je.getName().replace(driverPathName, ""));
+							DeviceDriver driver = new DeviceDriver(reader,
+									je.getName().replace(driverPathName, ""),
+									new Location(LocationType.EMBEDDED, jar.getName()));
 							if (newDrivers.containsKey(driver.getName())) {
 								logger.warn(
 										"Skipping Netshot device driver file {}, because a similar driver is already loaded.",
@@ -429,6 +481,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	/** Source hash */
 	private String sourceHash;
 
+	/** Driver file location */
+	private Location location;
+
 	/** The execution engine (for eval caching) */
 	private Engine engine;
 
@@ -452,7 +507,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 * @throws Exception
 	 *                       something went wrong
 	 */
-	protected DeviceDriver(Reader reader, String sourceName) throws Exception {
+	protected DeviceDriver(Reader reader, String sourceName, Location location) throws Exception {
+		this.location = location;
 		this.source = Source.newBuilder("js", reader, sourceName).buildLiteral();
 		{
 			// Compute source code hash
@@ -783,6 +839,12 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	@JsonView(DefaultView.class)
 	public TelnetConfig getTelnetConfig() {
 		return telnetConfig;
+	}
+
+	@XmlElement
+	@JsonView(DefaultView.class)
+	public Location getLocation() {
+		return location;
 	}
 
 	@Transient

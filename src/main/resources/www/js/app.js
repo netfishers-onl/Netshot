@@ -25,6 +25,10 @@ define([
 		});
 	};
 
+	$.escapeSingleQuotes = function(attr) {
+		return (attr + "").replace(/'/g, "\\'");
+	}
+
 	return {
 		initialize: initialize
 	};

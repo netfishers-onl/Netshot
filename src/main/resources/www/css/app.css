@@ -473,6 +473,7 @@ h1 {
 
 #nsdevices-groups li.nsdevices-list-groupfolder>ul {
 	margin-left: -10px;
+	margin-top: 3px;
 	padding-left: 3px;
 	border-left: 1px dotted #e1e4e8;
 	display: none;

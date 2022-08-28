@@ -140,6 +140,14 @@ public class DeviceDriverTest {
 			);
 		}
 
+		protected void cmdShowStartupHead() {
+			this.srvOutStream.print(
+				"!\r\n" +
+				"! Last configuration change at 12:12:12 UTC Sat Jan 12 2022 by admin\r\n" +
+				"!\r\n"
+			);
+		}
+
 		protected void cmdShowRunning() {
 			this.srvOutStream.print(
 				"!\r\n" +
@@ -285,6 +293,10 @@ public class DeviceDriverTest {
 					this.cmdShowRunning();
 					this.printPrompt();
 				}
+				else if (this.cliMode.equals(CliMode.ENABLE) && "show startup-config | i ^! .*".equals(command)) {
+					this.cmdShowStartupHead();
+					this.printPrompt();
+				}
 				else if (this.cliMode.equals(CliMode.ENABLE) && "show inventory".equals(command)) {
 					this.cmdShowInventory();
 					this.printPrompt();
@@ -322,8 +334,8 @@ public class DeviceDriverTest {
 					this.srvOutStream.printf("Password: ");
 				}
 				else if ((this.cliMode.equals(CliMode.ENABLE) || this.cliMode.equals(CliMode.DISABLE))) {
-					this.srvOutStream.printf(
-						"% Bad IP address or host name% Unknown command or computer name, or unable to find computer address\n");
+					this.srvOutStream.print(
+						"% Unknown command or computer name, or unable to find computer address\n");
 					this.printPrompt();
 				}
 				else if (this.cliMode.equals(CliMode.ENABLE_PASSWORD)) {

@@ -21,7 +21,7 @@ var Info = {
 	name: "CitrixNetscaler",
 	description: "Citrix NetScaler",
 	author: "NetFishers",
-	version: "1.1"
+	version: "1.2"
 };
 
 var Config = {
@@ -212,8 +212,13 @@ function snapshot(cli, device, config) {
 	cli.macro("cli");
 
 	var runningConfig = cli.command("show ns runningConfig");
-	var savedConfig = cli.command("show ns savedConfig");
-	runningConfig = configCleanup(runningConfig, savedConfig);
+	try {
+		var savedConfig = cli.command("show ns savedConfig");
+		runningConfig = configCleanup(runningConfig, savedConfig);
+	}
+	catch (error) {
+		// May happen if config was not saved: ignore.
+	}
 
 	var showNsHostname = cli.command("show ns hostname");
 	var hostname = showNsHostname.match(/Hostname:\s+(.+)/);

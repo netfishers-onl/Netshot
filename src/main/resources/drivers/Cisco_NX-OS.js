@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoNXOS",
 	description: "Cisco NX-OS 5+",
 	author: "NetFishers",
-	version: "1.8.1"
+	version: "1.9.0"
 };
 
 var Config = {
@@ -278,6 +278,11 @@ function snapshot(cli, device, config) {
 	catch (error) {
 		runningConfig = cli.command("show running-config");
 	}
+	var runningDate = NaN;
+	var runningDateMatch = runningConfig.match(/^!Running configuration last done at: (.+)/m);
+	if (runningDateMatch) {
+		runningDate = Date.parse(runningDateMatch[1]);
+	}
 	runningConfig = configCleanup(runningConfig);
 	config.set("runningConfig", runningConfig);
 	
@@ -288,8 +293,19 @@ function snapshot(cli, device, config) {
 	catch (error) {
 		startupConfig = cli.command("show startup-config");
 	}
+	var startupDate = NaN;
+	var startupDateMatch = startupConfig.match(/^!Startup config saved at: (.+)/m);
+	if (startupDateMatch) {
+		startupDate = Date.parse(startupDateMatch[1]);
+	}
 	startupConfig = configCleanup(startupConfig);
-	device.set("configurationSaved", startupConfig == runningConfig);
+
+	if (!isNaN(runningDate) && !isNaN(startupDate)) {
+		device.set("configurationSaved", startupDate >= runningDate);
+	}
+	else {
+		device.set("configurationSaved", startupConfig == runningConfig);
+	}
 	
 	
 	var hostname = runningConfig.match(/^hostname (.+)$/m);

@@ -181,7 +181,7 @@ public class Radius {
 		}
 		AttributeList attributeList = new AttributeList();
 		attributeList.add(new Attr_UserName(username));
-		attributeList.add(new Attr_NASPortType(Attr_NASPortType.Ethernet));
+		attributeList.add(new Attr_NASPortType(Attr_NASPortType.Virtual));
 		attributeList.add(new Attr_NASPort(1));
 		if (nasIdentifier != null) {
 			attributeList.add(new Attr_NASIdentifier(nasIdentifier));

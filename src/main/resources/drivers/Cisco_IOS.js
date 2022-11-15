@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2021 Sylvain Cadilhac (NetFishers)
- * 
+ *
  * This file is part of Netshot.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.8.0"
+	version: "1.9.0"
 };
 
 var Config = {
@@ -194,7 +194,7 @@ var CLI = {
 			}
 		}
 	},
-	
+
 	configure: {
 		prompt: /^([A-Za-z\-_0-9\.\/]+\(conf[0-9\-a-zA-Z]+\)#)$/,
 		error: /^% (.*)/m,
@@ -210,7 +210,7 @@ var CLI = {
 };
 
 function snapshot(cli, device, config) {
-	
+
 	var configCleanup = function(config) {
 		config = config.replace(/^ntp clock-period [0-9]+$/m, "");
 		var p = config.search(/^[a-z]/m);
@@ -219,7 +219,7 @@ function snapshot(cli, device, config) {
 		}
 		return config;
 	};
-	
+
 	cli.macro("enable");
 	var runningConfig = cli.command("show running-config");
 
@@ -249,14 +249,14 @@ function snapshot(cli, device, config) {
 	}
 	device.set("configurationSaved", configSaved);
 
-	
+
 	var showVersion = cli.command("show version");
-	
+
 	var hostname = showVersion.match(/^ *(.*) uptime is/m);
 	if (hostname != null) {
 		device.set("name", hostname[1]);
 	}
-	
+
 	var version = showVersion.match(/(?:Cisco )?IOS.*Software.*Version ([0-9\.A-Za-z\(\):]+),/m);
 	if (!version) {
 		version = showVersion.match(/(?:Cisco )?IOS.*Software.*Version ([0-9\.A-Za-z\(\):]+)/m);
@@ -435,7 +435,7 @@ function snapshot(cli, device, config) {
 	if (configRegister != null) {
 		device.set("configRegister", configRegister[1]);
 	}
-	
+
 	var location = runningConfig.match(/^snmp-server location (.*)/m);
 	if (location) {
 		device.set("location", location[1]);
@@ -451,7 +451,7 @@ function snapshot(cli, device, config) {
 		device.set("contact", "");
 	}
 
-	try {	
+	try {
 		var showInventory = cli.command("show inventory");
 		var inventoryPattern = /NAME: \"(.*)\", +DESCR: \"(.*)\"[\r\n]+PID: (.*?) *, +VID: (.*), +SN: (.*)/g;
 		var match;
@@ -470,12 +470,12 @@ function snapshot(cli, device, config) {
 	catch (e) {
 		cli.debug("show inventory not supported on this device?");
 	}
-	
+
 	var vrfPattern = /^(?:ip vrf|vrf definition) (.+)/mg;
 	while (match = vrfPattern.exec(runningConfig)) {
 		device.add("vrf", match[1]);
 	}
-	
+
 	var interfaces = cli.findSections(runningConfig, /^interface ([^ ]+)/m);
 	for (var i in interfaces) {
 		var networkInterface = {
@@ -555,9 +555,13 @@ function analyzeSyslog(message) {
 
 function analyzeTrap(trap, debug) {
 	for (var t in trap) {
-		if (trap[t] == "3" && t.substring(0, 28) == "1.3.6.1.4.1.9.9.43.1.1.6.1.5") {
+		if (trap[t] === "3" && t.startsWith("1.3.6.1.4.1.9.9.43.1.1.6.1.5")) {
 			return true;
 		}
+        if (t === "1.3.6.1.6.3.1.1.4.1.0" && trap[t] === "1.3.6.1.4.1.9.9.43.2.0.2") {
+            // ccmCLIRunningConfigChanged
+            return true;
+        }
 	}
 	return false;
 }

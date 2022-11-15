@@ -558,10 +558,10 @@ function analyzeTrap(trap, debug) {
 		if (trap[t] === "3" && t.startsWith("1.3.6.1.4.1.9.9.43.1.1.6.1.5")) {
 			return true;
 		}
-        if (t === "1.3.6.1.6.3.1.1.4.1.0" && trap[t] === "1.3.6.1.4.1.9.9.43.2.0.2") {
-            // ccmCLIRunningConfigChanged
-            return true;
-        }
+		if (t === "1.3.6.1.6.3.1.1.4.1.0" && trap[t] === "1.3.6.1.4.1.9.9.43.2.0.2") {
+			// ccmCLIRunningConfigChanged
+			return true;
+		}
 	}
 	return false;
 }

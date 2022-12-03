@@ -22,12 +22,12 @@ import org.junit.jupiter.api.Test;
 
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.device.Device.NetworkClass;
 import onl.netfishers.netshot.device.DeviceDriver;
+import onl.netfishers.netshot.device.DeviceDriver.DriverProtocol;
 import onl.netfishers.netshot.device.Domain;
 import onl.netfishers.netshot.device.Network4Address;
 import onl.netfishers.netshot.device.NetworkAddress;
-import onl.netfishers.netshot.device.Device.NetworkClass;
-import onl.netfishers.netshot.device.DeviceDriver.DriverProtocol;
 import onl.netfishers.netshot.device.access.Cli;
 import onl.netfishers.netshot.device.access.Snmp;
 import onl.netfishers.netshot.device.attribute.ConfigLongTextAttribute;
@@ -88,8 +88,8 @@ public class DeviceDriverTest {
 		}
 
 		private CliMode cliMode = CliMode.INIT;
-		private String hostname = "router1";
-		private Pattern commandPattern = Pattern.compile("(.+)\r");
+		private final String hostname = "router1";
+		private final Pattern commandPattern = Pattern.compile("(.+)\r");
 
 		public CiscoIOS12FakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskLogger taskLogger) throws IOException {
 			super(host, cliAccount, taskLogger);
@@ -276,7 +276,7 @@ public class DeviceDriverTest {
 		}
 
 
-
+		@Override
 		protected void write(String value) {
 			if (this.cliMode == CliMode.INIT) {
 				this.cliMode = CliMode.DISABLE;
@@ -357,7 +357,6 @@ public class DeviceDriverTest {
 	class CiscoIOS12Test {
 
 		TaskLogger taskLogger = new FakeTaskLogger();
-		Session fakeSession = new FakeSession();
 
 		@Test
 		@DisplayName("CiscoIOS12 Snapshot")
@@ -372,34 +371,36 @@ public class DeviceDriverTest {
 				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
 			runMethod.setAccessible(true);
 			runMethod.invoke(script, fakeSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
-			Assertions.assertEquals(device.getName(), "router1", "The device name is incorrect");
-			Assertions.assertEquals(device.getSoftwareVersion(), "15.5(3)S7b", "The software version is incorrect");
-			Assertions.assertEquals(device.getFamily(), "Cisco CSR1000V", "The device family is incorrect");
-			Assertions.assertEquals(device.getLocation(), "SNMPLOCATION", "The location is incorrect");
-			Assertions.assertEquals(device.getContact(), "SNMPCONTACT", "The contact is incorrect");
-			Assertions.assertEquals(device.getNetworkClass(), NetworkClass.ROUTER, "The network class is incorrect");
-			Assertions.assertEquals(
-				((DeviceNumericAttribute)device.getAttribute("mainMemorySize")).getNumber(),
-				1071.0, "The memory size is incorrect");
-			Assertions.assertEquals(
+			Assertions.assertEquals("router1", device.getName(), "The device name is incorrect");
+			Assertions.assertEquals("15.5(3)S7b", device.getSoftwareVersion(), "The software version is incorrect");
+			Assertions.assertEquals("Cisco CSR1000V", device.getFamily(), "The device family is incorrect");
+			Assertions.assertEquals("SNMPLOCATION", device.getLocation(), "The location is incorrect");
+			Assertions.assertEquals("SNMPCONTACT", device.getContact(), "The contact is incorrect");
+			Assertions.assertEquals(NetworkClass.ROUTER, device.getNetworkClass(), "The network class is incorrect");
+			Assertions.assertEquals(1071.0,
+				((DeviceNumericAttribute)device.getAttribute("mainMemorySize")).getNumber().doubleValue(),
+				"The memory size is incorrect");
+			Assertions.assertEquals("0x2102",
 				((DeviceTextAttribute)device.getAttribute("configRegister")).getText(),
-				"0x2102", "The config register is incorrect");
+				"The config register is incorrect");
 			Assertions.assertEquals(
+				Boolean.TRUE,
 				((DeviceBinaryAttribute)device.getAttribute("configurationSaved")).getAssumption(),
-				true, "The configuration is not seen as saved");
+				"The configuration is not seen as saved");
 			Config config = device.getLastConfig();
 			Assertions.assertNotNull(config, "The config doesn't exist");
-			Assertions.assertEquals(config.getAuthor(), "admin", "The config author is incorrect");
-			Assertions.assertEquals(
+			Assertions.assertEquals("admin", config.getAuthor(), "The config author is incorrect");
+			Assertions.assertEquals("bootflash:packages.conf",
 				((ConfigTextAttribute)config.getAttribute("iosImageFile")).getText(),
-				"bootflash:packages.conf", "The IOS image file is incorrect");
+				"The IOS image file is incorrect");
 			Assertions.assertTrue(((ConfigLongTextAttribute)config.getAttribute("runningConfig"))
 				.getLongText().getText().contains("ip ssh version 2"), "The running config is not correct");
 			Assertions.assertTrue(device.getModules().get(0).isRemoved(), "The first module is not set as removed");
-			Assertions.assertEquals(device.getModules().get(2).getSerialNumber(),
-				"96NETS96HOT", "The first module serial number is incorrect");
-			Assertions.assertEquals(device.getNetworkInterface("GigabitEthernet1").getIp4Addresses().iterator().next(),
-				Network4Address.getNetworkAddress("192.168.200.101", 24), "The first interface IP address is incorrect");
+			Assertions.assertEquals("96NETS96HOT",
+				device.getModules().get(2).getSerialNumber(), "The first module serial number is incorrect");
+			Assertions.assertEquals(Network4Address.getNetworkAddress("192.168.200.101", 24),
+				device.getNetworkInterface("GigabitEthernet1").getIp4Addresses().iterator().next(),
+				"The first interface IP address is incorrect");
 		}
 	}
 
@@ -415,9 +416,9 @@ public class DeviceDriverTest {
 		}
 
 		private CliMode cliMode = CliMode.INIT;
-		private Pattern commandPattern = Pattern.compile("(.*)\r");
-		private String hostname = "NODEGRID-1";
-		private String currentPath = "/";
+		private final Pattern commandPattern = Pattern.compile("(.*)\r");
+		private final String hostname = "NODEGRID-1";
+		private final String currentPath = "/";
 		private List<String> pagedLines;
 
 		public ZPENodeGridFakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskLogger taskLogger) throws IOException {
@@ -447,7 +448,7 @@ public class DeviceDriverTest {
 				lineIt.remove();
 			}
 			this.srvOutStream.print(output);
-			if (this.pagedLines.size() > 0) {
+			if (!this.pagedLines.isEmpty()) {
 				this.cliMode = CliMode.PAGING;
 				this.srvOutStream.print("-- more --:");
 			}
@@ -577,6 +578,7 @@ public class DeviceDriverTest {
 			);
 		}
 
+		@Override
 		protected void write(String value) {
 			if (this.cliMode == CliMode.INIT) {
 				this.cliMode = CliMode.BASIC;
@@ -631,7 +633,6 @@ public class DeviceDriverTest {
 	class ZPENodeGridTest {
 
 		TaskLogger taskLogger = new FakeTaskLogger();
-		Session fakeSession = new FakeSession();
 
 		@Test
 		@DisplayName("ZPENodeGrid Snapshot")
@@ -647,37 +648,507 @@ public class DeviceDriverTest {
 				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
 			runMethod.setAccessible(true);
 			runMethod.invoke(script, fakeSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
-			Assertions.assertEquals(device.getName(), "NODEGRID-1", "The device name is incorrect");
-			Assertions.assertEquals(device.getSoftwareVersion(), "3.1.16", "The software version is incorrect");
-			Assertions.assertEquals(device.getFamily(), "NSC-T16S", "The device family is incorrect");
-			Assertions.assertEquals(device.getLocation(), "Nodegrid", "The location is incorrect");
-			Assertions.assertEquals(device.getContact(), "support@zpesystems.com", "The contact is incorrect");
-			Assertions.assertEquals(device.getNetworkClass(), NetworkClass.SWITCH, "The network class is incorrect");
+			Assertions.assertEquals("NODEGRID-1", device.getName(), "The device name is incorrect");
+			Assertions.assertEquals("3.1.16", device.getSoftwareVersion(), "The software version is incorrect");
+			Assertions.assertEquals("NSC-T16S", device.getFamily(), "The device family is incorrect");
+			Assertions.assertEquals("Nodegrid", device.getLocation(), "The location is incorrect");
+			Assertions.assertEquals("support@zpesystems.com", device.getContact(), "The contact is incorrect");
+			Assertions.assertEquals(NetworkClass.SWITCH, device.getNetworkClass(), "The network class is incorrect");
 			Assertions.assertEquals(
-				((DeviceNumericAttribute)device.getAttribute("mainMemorySize")).getNumber(),
-				3842.0, "The memory size is incorrect");
+				3842.0,
+				((DeviceNumericAttribute)device.getAttribute("mainMemorySize")).getNumber().doubleValue(),
+				"The memory size is incorrect");
 			Assertions.assertEquals(
-				((DeviceNumericAttribute)device.getAttribute("licenseCount")).getNumber(),
-				16, "The license count is incorrect");
+				16, ((DeviceNumericAttribute)device.getAttribute("licenseCount")).getNumber().doubleValue(),
+				"The license count is incorrect");
 			Assertions.assertEquals(
+				"Intel(R) Atom(TM) CPU E3827  @ 1.74GHz (2 core(s))",
 				((DeviceTextAttribute)device.getAttribute("cpuInfo")).getText(),
-				"Intel(R) Atom(TM) CPU E3827  @ 1.74GHz (2 core(s))", "The CPU info is incorrect");
+				"The CPU info is incorrect");
 			Config config = device.getLastConfig();
 			Assertions.assertNotNull(config, "The config doesn't exist");
-			Assertions.assertEquals(config.getAuthor(), "homer", "The config author is incorrect");
-			Assertions.assertEquals(
+			Assertions.assertEquals("homer", config.getAuthor(), "The config author is incorrect");
+			Assertions.assertEquals("3.1.16",
 				((ConfigTextAttribute)config.getAttribute("softwareVersion")).getText(),
-				"3.1.16", "The software version (in config) is incorrect");
+				"The software version (in config) is incorrect");
 			Assertions.assertTrue(((ConfigLongTextAttribute)config.getAttribute("settings"))
 				.getLongText().getText().contains("enable_banner=no"), "The settings are not correct");
-			Assertions.assertEquals(device.getModules().get(0).getSerialNumber(),
-				"1416161616", "The first module serial number is incorrect");
-			Assertions.assertEquals(device.getNetworkInterface("bond").getIp4Addresses().iterator().next(),
-				Network4Address.getNetworkAddress("10.10.16.16", 24), "The bond interface IP address is incorrect");
+			Assertions.assertEquals("1416161616",
+				device.getModules().get(0).getSerialNumber(), "The first module serial number is incorrect");
+			Assertions.assertEquals(Network4Address.getNetworkAddress("10.10.16.16", 24),
+				device.getNetworkInterface("bond").getIp4Addresses().iterator().next(),
+				"The bond interface IP address is incorrect");
 			Assertions.assertNotNull(device.getNetworkInterface("usbS1"), "The usbS1 interface does not exist");
-			Assertions.assertEquals(device.getNetworkInterface("ttyS10").getDescription(), "JJJ-JJJ-JJJ-JJJ-JJJJ",
+			Assertions.assertEquals("JJJ-JJJ-JJJ-JJJ-JJJJ",
+				device.getNetworkInterface("ttyS10").getDescription(),
 				"The description of ttyS10 is incorrect");
 		}
 	}
 	
+
+
+	/**
+	 * Fake AristaMOS CLI.
+	 */
+	public static class AristaMOSFakeCli extends FakeCli {
+		public static enum CliMode {
+			INIT,
+			DISABLE,
+			ENABLE,
+			ENABLE_PASSWORD,
+		}
+
+		private CliMode cliMode = CliMode.INIT;
+		private final String hostname = "switch1";
+		private final Pattern commandPattern = Pattern.compile("(.+)\r");
+
+		public AristaMOSFakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskLogger taskLogger) throws IOException {
+			super(host, cliAccount, taskLogger);
+		}
+
+		private void printPrompt() {
+			switch (this.cliMode) {
+				case DISABLE:
+					this.srvOutStream.printf("%s>", this.hostname);
+					break;
+				case ENABLE:
+					this.srvOutStream.printf("%s#", this.hostname);
+					break;
+				default:
+					break;
+			}
+		}
+
+		protected void cmdShowVersion() {
+			this.srvOutStream.print(
+				"Device: Metamako MetaConnect 48\n" +
+				"SKU: DCS-7130-48\n" +
+				"Serial number: C48-A6-21567-0\n" +
+				" \n" +
+				"Software image version: 0.31.0\n" +
+				"Internal build ID: mos-0.31+12\n" +
+				"Applications: netconf-0.9\n" +
+				" \n" +
+				"System management controller version: 1.3.2 release-platmicro-1.3+2\n" +
+				" \n" +
+				"Uptime: 177 days, 9:00:05.700000\n" +
+				" \n"
+			);
+		}
+
+		protected void cmdShowRunning() {
+			this.srvOutStream.print(
+				"! command: show running-config\n" +
+				"! time: Tue 11 Oct 2022 09:02:39\n" +
+				"! device: switch1 (C48-A6, MOS-0.31.0)\n" +
+				" \n" +
+				"hostname switch1\n" +
+				"username admin secret sha512 $6$Iwn/TscxWEdXQVcu$yeqcWHWUt1qVmldsfPVM/O9z2hiYs/iL35WNP6zOcM.PwkGRVgTO8r3kWp3k4DpRGHYnohK/xx3gw//rxqlPo1\n" +
+				"tacacs-server host 10.18.18.1 key 7 095C4F1A0A1218000F\n" +
+				"tacacs-server host 10.18.19.1 key 7 12090404011C03162E\n" +
+				" \n" +
+				"clock timezone GB\n" +
+				"ntp server 10.18.18.12 prefer\n" +
+				"ntp server 10.18.19.12\n" +
+				" \n" +
+				"logging host 10.1.18.10\n" +
+				" \n" +
+				"interface et1\n" +
+				"    source et3\n" +
+				" \n" +
+				"interface et2\n" +
+				"    source et1\n" +
+				" \n" +
+				"interface et3\n" +
+				"    source et1\n" +
+				" \n" +
+				"interface et4\n" +
+				"    source et3\n" +
+				" \n" +
+				"interface et5\n" +
+				"    source et7\n" +
+				" \n" +
+				"interface et6\n" +
+				"    source et5\n" +
+				" \n" +
+				"interface et7\n" +
+				"    source et5\n" +
+				" \n" +
+				"interface et8\n" +
+				"    source et7\n" +
+				" \n" +
+				"interface et9\n" +
+				"    source et11\n" +
+				" \n" +
+				"interface et10\n" +
+				"    source et9\n" +
+				" \n" +
+				"interface et11\n" +
+				"    source et9\n" +
+				" \n" +
+				"interface et12\n" +
+				"    source et11\n" +
+				" \n" +
+				"interface et13\n" +
+				"    description to switch2\n" +
+				"    source et15\n" +
+				" \n" +
+				"interface et14\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et15\n" +
+				"    description to switch2\n" +
+				"    source et13\n" +
+				" \n" +
+				"interface et16\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et17\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et18\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et19\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et20\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et21\n" +
+				"    description to switch3\n" +
+				"    source et23\n" +
+				" \n" +
+				"interface et22\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et23\n" +
+				"    description to switch4\n" +
+				"    negotiation\n" +
+				"    source et21\n" +
+				" \n" +
+				"interface et24\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et25\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et26\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et27\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et28\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et29\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et30\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et31\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et32\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et33\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et34\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et35\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et36\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et37\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et38\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et39\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et40\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et41\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et42\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et43\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et44\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et45\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et46\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et47\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface et48\n" +
+				"    shutdown\n" +
+				" \n" +
+				"interface ma1\n" +
+				"    ip address 10.18.25.40 255.255.255.0\n" +
+				"    ip default-gateway 10.18.25.254\n" +
+				" \n" +
+				"management snmp\n" +
+				"    snmp-server community comm1 ro\n" +
+				"    snmp-server community comm2 ro\n" +
+				"    snmp-server community comm3 ro\n" +
+				"    snmp-server host 10.1.18.135 version 2c comm1\n" +
+				"    snmp-server host 10.1.20.135 version 2c comm1\n" +
+				"    snmp-server host 10.2.18.135 version 2c comm2\n" +
+				"    snmp-server host 10.2.18.135 version 2c comm2\n" +
+				" \n" +
+				"end\n"
+			);
+		}
+
+		protected void cmdShowInventory() {
+			this.srvOutStream.print(
+				"System Information:\n" +
+				"    Model: C48-A6\n" +
+				"    Serial number: C48-A6-12627-0\n" +
+				"    Software image version: 0.31.0\n" +
+				"    System management controller version: 1.3.2 release-platmicro-1.3+2\n" +
+				"    Description: 1RU 48-port layer-1 crosspoint switch\n" +
+				" \n" +
+				"PLD:\n" +
+				"    Specification: 2.4\n" +
+				"    Version: P505.001C\n" +
+				" \n" +
+				"Mezzanine Module Information:\n" +
+				" \n" +
+				"FPGA Information:\n" +
+				" \n" +
+				"Clock Module Information:\n" +
+				" \n" +
+				"Power Supply Information: System has 2 power supply slots\n" +
+				" \n" +
+				"Slot Model            Serial           Airflow              Capacity\n" +
+				"---- ---------------- ---------------- -------------------- --------\n" +
+				"1    DS460S-3-002     J756TY005WZBZ    FRONT-TO-BACK (STD)      460W\n" +
+				"2    DS460S-3-002     J756TY005WZBY    FRONT-TO-BACK (STD)      460W\n" +
+				" \n" +
+				"Fan Information: System has 4 fan modules\n" +
+				" \n" +
+				"Fan  Airflow\n" +
+				"---- ------------------------\n" +
+				"1    FRONT-TO-BACK (STD)\n" +
+				"2    FRONT-TO-BACK (STD)\n" +
+				"3    FRONT-TO-BACK (STD)\n" +
+				"4    FRONT-TO-BACK (STD)\n" +
+				" \n" +
+				"Port Information: System has 49 ports\n" +
+				"    Switched: 48\n" +
+				"    Management: 1\n" +
+				" \n" +
+				"Transceiver Information:\n" +
+				" \n" +
+				"Port Name                   Type        Vendor          Vendor PN        Vendor SN\n" +
+				"---- ---------------------- ----------- --------------- ---------------- ---------------\n" +
+				"et1                         10GBASE-SR  OEM             SFP-10G-SR-CURV  XN2353C7756\n" +
+				"et2                         10GBASE-SR  OEM             SFP-10G-SR-CURV  XN2353C7856\n" +
+				"et3                         1000BASE-LX CISCO           RTXM191-404-C88  ACW21170215\n" +
+				"et4                         10GBASE-SR  OEM             SFP-10G-SR-CURV  XN2353C7956\n" +
+				"et5\n" +
+				"et6\n" +
+				"et7\n" +
+				"et8\n" +
+				"et9\n" +
+				"et10                        10GBASE-SR  OEM             SFP-10G-SR-CURV  XN2353C7156\n" +
+				"et11\n" +
+				"et12                        10GBASE-SR  OEM             SFP-10G-SR-CURV  XN2353C7256\n" +
+				"et13 to switch2             10GBASE-SR  OEM             SFP-10G-SR-CURV  XN2353C7356\n" +
+				"et14\n" +
+				"et15 to switch2             10GBASE-SR  OEM             SFP-10G-SR-CURV  XN2353C7655\n" +
+				"et16\n" +
+				"et17\n" +
+				"et18\n" +
+				"et19\n" +
+				"et20\n" +
+				"et21 to switch3             10GBASE-SR  OEM             SFP-10G-SR-CURV  XN2353C7658\n" +
+				"et22\n" +
+				"et23 to switch4             10GBASE-LR  OEM             SFP-10G-LR-CURV  XN2353C7651\n" +
+				"et24\n" +
+				"et25\n" +
+				"et26\n" +
+				"et27\n" +
+				"et28\n" +
+				"et29\n" +
+				"et30\n" +
+				"et31\n" +
+				"et32\n" +
+				"et33\n" +
+				"et34\n" +
+				"et35\n" +
+				"et36\n" +
+				"et37\n" +
+				"et38\n" +
+				"et39\n" +
+				"et40\n" +
+				"et41                        1000BASE-SX OEM             GLC-SX-MM-CURV   XN2353C7642\n" +
+				"et42\n" +
+				"et43                        1000BASE-LX OEM             GLC-LH-SM-CURV   XN2353C7643\n" +
+				"et44                        10GBASE-SR  OEM             SFP-10G-SR-CURV  XN2353C7646\n" +
+				"et45                        10GBASE-LR  OEM             SFP-10G-LR-CURV  N153517EF105\n" +
+				"et46                        10GBASE-SR  OEM             SFP-10G-SR-CURV  XN2353C7658\n" +
+				"et47                        10GBASE-LR  CISCO-FINISAR   FTLX1474D3BCL-C1 FNS170566J9\n" +
+				"et48                        10GBASE-SR  OEM             SFP-10G-SR-CURV  XN2353C7659\n" +
+				"ma1                         100/1000\n" +
+				"Drives:\n" +
+				"    Count: 1\n" +
+				"    /dev/sda (internal):\n" +
+				"        User Capacity: 64,023,257,088 bytes [64.0 GB]\n" +
+				"        ATA Version is: ACS-2 (minor revision not indicated)\n" +
+				"        Local Time is: Tue Oct 15 11:18:09 2022 BST\n" +
+				"        SATA Version is: SATA 3.1, 6.0 Gb/s (current: 3.0 Gb/s)\n" +
+				"        Power mode is: ACTIVE or IDLE\n" +
+				"        Serial Number: D271220319\n" +
+				"        Device Model: TS64GMTS400\n" +
+				"        Sector Size: 512 bytes logical/physical\n" +
+				"        Firmware Version: O1225G\n" +
+				"        Model Family: Silicon Motion based SSDs\n" +
+				"        SMART support is: Enabled\n" +
+				"        Rotation Rate: Solid State Device\n" +
+				" \n"
+			);
+		}
+
+		protected void cmdShowLogging() {
+			this.srvOutStream.print(
+				"Oct 10 09:21:11 switch1 user.info cli: Configured from cli by other on pts/0 (10.218.2.3)\n" +
+				"Oct 11 09:01:15 switch1 user.info cli: Configured from cli by admin on pts/0 (10.218.2.3)\n"
+			);
+		}
+
+		protected void cmdShowSnmpLocation() {
+			this.srvOutStream.print(
+				"Location: SNMPLOCATION\n"
+			);
+		}
+
+		protected void cmdShowSnmpContact() {
+			this.srvOutStream.print(
+				"Contact: SNMPCONTACT\n"
+			);
+		}
+
+		@Override
+		protected void write(String value) {
+			if (this.cliMode == CliMode.INIT) {
+				this.cliMode = CliMode.DISABLE;
+				this.printPrompt();
+			}
+			Matcher commandMatcher = commandPattern.matcher(value);
+			while (commandMatcher.find()) {
+				String command = commandMatcher.group(1);
+				// Echo command back
+				this.srvOutStream.print(command + "\r\n");
+
+				if (this.cliMode.equals(CliMode.ENABLE) && "show running-config".equals(command)) {
+					this.cmdShowRunning();
+					this.printPrompt();
+				}
+				else if (this.cliMode.equals(CliMode.ENABLE) && "show inventory".equals(command)) {
+					this.cmdShowInventory();
+					this.printPrompt();
+				}
+				else if (this.cliMode.equals(CliMode.ENABLE) && "show logging system | include Configured".equals(command)) {
+					this.cmdShowLogging();
+					this.printPrompt();
+				}
+				else if ((this.cliMode.equals(CliMode.ENABLE) || this.cliMode.equals(CliMode.DISABLE)) &&
+						"show version".equals(command)) {
+					this.cmdShowVersion();
+					this.printPrompt();
+				}
+				else if ((this.cliMode.equals(CliMode.ENABLE) || this.cliMode.equals(CliMode.DISABLE)) &&
+						"show snmp v2-mib location".equals(command)) {
+					this.cmdShowSnmpLocation();
+					this.printPrompt();
+				}
+				else if ((this.cliMode.equals(CliMode.ENABLE) || this.cliMode.equals(CliMode.DISABLE)) &&
+						"show snmp v2-mib contact".equals(command)) {
+					this.cmdShowSnmpContact();
+					this.printPrompt();
+				}
+				else if ((this.cliMode.equals(CliMode.ENABLE) || this.cliMode.equals(CliMode.DISABLE)) &&
+						"terminal length 0".equals(command)) {
+					this.printPrompt();
+				}
+				else if (this.cliMode.equals(CliMode.DISABLE) && "enable".equals(command)) {
+					this.cliMode = CliMode.ENABLE;
+					this.printPrompt();
+				}
+				else if ((this.cliMode.equals(CliMode.ENABLE) || this.cliMode.equals(CliMode.DISABLE))) {
+					this.srvOutStream.print(
+						"           ^\n" +
+						"% Invalid input detected at '^' marker.\n");
+					this.printPrompt();
+				}
+			}
+		}
+	}
+
+	@Nested
+	@DisplayName("Arista MOS driver test")
+	class AristaMOSTest {
+
+		TaskLogger taskLogger = new FakeTaskLogger();
+
+		@Test
+		@DisplayName("Arista MOS Snapshot")
+		void snapshot() throws NoSuchMethodException, SecurityException, IOException,
+					IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+			DeviceCliAccount credentials = new DeviceSshAccount("admin", "admin", "admin", "admin/admin");
+			Cli fakeCli = new AristaMOSFakeCli(null, credentials, taskLogger);
+			Session fakeSession = new FakeSession();
+			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
+			Device device = new Device("AristaMOS", null, domain, "test");
+			SnapshotCliScript script = new SnapshotCliScript(true);
+			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
+				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
+			runMethod.setAccessible(true);
+			runMethod.invoke(script, fakeSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
+			Assertions.assertEquals("switch1", device.getName(), "The device name is incorrect");
+			Assertions.assertEquals("0.31.0", device.getSoftwareVersion(), "The software version is incorrect");
+			Assertions.assertEquals("MetaConnect 48", device.getFamily(), "The device family is incorrect");
+			Assertions.assertEquals("SNMPLOCATION", device.getLocation(), "The location is incorrect");
+			Assertions.assertEquals("SNMPCONTACT", device.getContact(), "The contact is incorrect");
+			Assertions.assertEquals(NetworkClass.SWITCH, device.getNetworkClass(), "The network class is incorrect");
+			Assertions.assertEquals(
+				61057.0, ((DeviceNumericAttribute)device.getAttribute("totalDiskSize")).getNumber().doubleValue(),
+				"The disk size is incorrect");
+			Config config = device.getLastConfig();
+			Assertions.assertNotNull(config, "The config doesn't exist");
+			Assertions.assertEquals("admin", config.getAuthor(), "The config author is incorrect");
+			Assertions.assertTrue(((ConfigLongTextAttribute)config.getAttribute("runningConfig"))
+				.getLongText().getText().contains("username admin"), "The running config is not correct");
+			Assertions.assertEquals(3, device.getModules().size(), "The number of modules is incorrect");
+			Assertions.assertEquals("C48-A6-12627-0", device.getModules().get(0).getSerialNumber(),
+				"The chassis module serial number is incorrect");
+			Assertions.assertEquals(
+				Network4Address.getNetworkAddress("10.18.25.40", 24),
+				device.getNetworkInterface("ma1").getIp4Addresses().iterator().next(),
+				"The ma1 interface IP address is incorrect");
+		}
+	}
+
+
 }

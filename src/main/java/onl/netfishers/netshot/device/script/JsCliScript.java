@@ -23,9 +23,8 @@ import java.io.IOException;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.Device.InvalidCredentialsException;
 import onl.netfishers.netshot.device.Device.MissingDeviceDriverException;
@@ -47,9 +46,8 @@ import onl.netfishers.netshot.work.TaskLogger;
  * @author sylvain.cadilhac
  *
  */
+@Slf4j
 public class JsCliScript extends CliScript {
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(JsCliScript.class);
 
 	// The JavaScript code to execute
 	private String code;
@@ -90,11 +88,11 @@ public class JsCliScript extends CliScript {
 		try (Context context = driver.getContext()) {
 			context.eval("js", code);
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
-			options.setDevice(new JsDeviceHelper(device, cli, null, taskLogger, false));
+			options.setDeviceHelper(new JsDeviceHelper(device, cli, null, taskLogger, false));
 			context.getBindings("js").getMember("_connect").execute("run", protocol.value(), options, taskLogger);
 		}
 		catch (PolyglotException e) {
-			logger.error("Error while running script using driver {}.", driver.getName(), e);
+			log.error("Error while running script using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("Error while running script  using driver %s: '%s'.",
 					driver.getName(), e.getMessage()));
 			if (e.getMessage().contains("Authentication failed")) {
@@ -105,7 +103,7 @@ public class JsCliScript extends CliScript {
 			}
 		}
 		catch (UnsupportedOperationException e) {
-			logger.error("No such method while using driver {}.", driver.getName(), e);
+			log.error("No such method while using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("No such method while using driver %s to execute script: '%s'.",
 					driver.getName(), e.getMessage()));
 			throw new UnsupportedOperationException(e);

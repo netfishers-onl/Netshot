@@ -32,13 +32,13 @@ import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.Network4Address;
 import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A Syslog server receives the syslog messages from devices and triggers
  * snapshots if needed.
  */
+@Slf4j
 public class SyslogServer extends Collector {
 
 	/** The socket. */
@@ -46,9 +46,6 @@ public class SyslogServer extends Collector {
 
 	/** The UDP port to listen Syslog messages on. */
 	private int udpPort = 514;
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(SyslogServer.class);
 
 	/** The static Syslog server. */
 	private static SyslogServer nsSyslogServer;
@@ -65,7 +62,7 @@ public class SyslogServer extends Collector {
 	public static void init() {
 		if (Netshot.getConfig("netshot.syslog.disabled", "false")
 				.equals("true")) {
-			logger.warn("The Syslog server is disabled by configuration.");
+			log.warn("The Syslog server is disabled by configuration.");
 			return;
 		}
 		nsSyslogServer = new SyslogServer();
@@ -94,7 +91,7 @@ public class SyslogServer extends Collector {
 
 		try {
 			socket = new DatagramSocket(udpPort);
-			logger.debug("Now listening for Syslog messages on UDP port {}.",
+			log.debug("Now listening for Syslog messages on UDP port {}.",
 					udpPort);
 			running = true;
 			while (true) {
@@ -105,7 +102,7 @@ public class SyslogServer extends Collector {
 				if (address instanceof Inet4Address) {
 					Network4Address source = new Network4Address((Inet4Address) address, 32);
 					String message = new String(dato.getData(), 0, dato.getLength());
-					logger.trace("Received Syslog message: '{}'.", message);
+					log.trace("Received Syslog message: '{}'.", message);
 					
 					for (DeviceDriver driver : DeviceDriver.getAllDrivers()) {
 						if (driver.analyzeSyslog(message, source)) {
@@ -119,19 +116,19 @@ public class SyslogServer extends Collector {
 			}
 		}
 		catch (SocketException e) {
-			logger.error("Error while starting the Syslog server.", e);
+			log.error("Error while starting the Syslog server.", e);
 		}
 		catch (IOException e) {
-			logger.error("Error while receivng Syslog server datagram.", e);
+			log.error("Error while receivng Syslog server datagram.", e);
 		}
 		catch (Exception e) {
-			logger.error("Error with the Syslog server", e);
+			log.error("Error with the Syslog server", e);
 		}
 		finally {
 			running = false;
 			socket.close();
 		}
-		logger.error("The Syslog server is stopping due to an error.");
+		log.error("The Syslog server is stopping due to an error.");
 	}
 
 }

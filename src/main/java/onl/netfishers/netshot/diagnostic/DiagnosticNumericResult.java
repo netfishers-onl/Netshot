@@ -25,12 +25,18 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @DiscriminatorValue("N")
 public class DiagnosticNumericResult extends DiagnosticResult {
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Double number;
 
 	protected DiagnosticNumericResult() {
@@ -44,15 +50,6 @@ public class DiagnosticNumericResult extends DiagnosticResult {
 	public DiagnosticNumericResult(Device device, Diagnostic diagnostic, String value) {
 		super(device, diagnostic);
 		this.number = Double.parseDouble(value);
-	}
-	
-	@XmlElement @JsonView(DefaultView.class)
-	public Double getNumber() {
-		return number;
-	}
-
-	public void setNumber(Double value) {
-		this.number = value;
 	}
 
 	@Override

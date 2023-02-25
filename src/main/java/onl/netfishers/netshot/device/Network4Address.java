@@ -18,6 +18,7 @@
  */
 package onl.netfishers.netshot.device;
 
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -32,6 +33,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
 
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
@@ -144,6 +152,21 @@ public class Network4Address extends NetworkAddress {
 	 */
 	public static int prefixLengthToIntAddress(int length) {
 		return 0xFFFFFFFF << (32 - length);
+	}
+
+	public static class AddressOnlySerializer extends JsonSerializer<Network4Address> {
+		@Override
+		public void serialize(Network4Address value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+			gen.writeString(value.getIp());
+		}
+	}
+
+	public static class AddressOnlyDeserializer extends JsonDeserializer<Network4Address> {
+		@Override
+		public Network4Address deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+			String text = p.getText();
+			return new Network4Address(text);
+		}
 	}
 
 

@@ -16,9 +16,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.graalvm.polyglot.io.FileSystem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.Netshot;
 
 /**
@@ -26,10 +25,8 @@ import onl.netfishers.netshot.Netshot;
  * Python code I/O access to the shipping GraalPython libraries,
  * in read-only mode.
  */
+@Slf4j
 public class PythonFileSystem implements FileSystem {
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(PythonFileSystem.class);
 	
 	/** Python VirtualEnv folder (if any) */
 	public static String VENV_FOLDER = null;
@@ -42,7 +39,7 @@ public class PythonFileSystem implements FileSystem {
 				VENV_FOLDER = venvFile.getAbsolutePath();
 			}
 			else {
-				logger.warn("Python virtualenv folder {} doesn't exist or is not a directory", venv);
+				log.warn("Python virtualenv folder {} doesn't exist or is not a directory", venv);
 			}
 		}
 	}
@@ -64,7 +61,7 @@ public class PythonFileSystem implements FileSystem {
 	}
 
 	private void verifyAccess(Path path, String reason) {
-		logger.debug("Checking permission ({}) for path {}", reason, path);
+		log.debug("Checking permission ({}) for path {}", reason, path);
 		Path realPath = null;
 		for (Path c = path; c != null; c = c.getParent()) {
 			try {
@@ -76,7 +73,7 @@ public class PythonFileSystem implements FileSystem {
 		}
 		if (realPath == null || !(realPath.startsWith(libFolder) || (venvFolder != null && realPath.startsWith(venvFolder)) ||
 				(realPath.startsWith("/proc/")))) {
-			logger.info("Access ({}) to {} [{}] is denied", reason, path, realPath);
+			log.info("Access ({}) to {} [{}] is denied", reason, path, realPath);
 			throw new SecurityException("Access to " + path + " is denied.");
 		}
 	}
@@ -96,7 +93,7 @@ public class PythonFileSystem implements FileSystem {
 			throws IOException {
 		for (OpenOption option : options) {
 			if (!option.equals(StandardOpenOption.READ)) {
-				logger.warn("Denying new Byte channel for {} with option {}", path, option);
+				log.warn("Denying new Byte channel for {} with option {}", path, option);
 				throw new SecurityException("Opening " + path + " with option " + option + " is denied.");
 			}
 		}
@@ -108,7 +105,7 @@ public class PythonFileSystem implements FileSystem {
 	public void checkAccess(Path path, Set<? extends AccessMode> modes, LinkOption... linkOptions) throws IOException {
 		for (AccessMode mode : modes) {
 			if (!mode.equals(AccessMode.READ)) {
-				logger.warn("Denying access to file {} in {} mode", path, mode);
+				log.warn("Denying access to file {} in {} mode", path, mode);
 				throw new SecurityException("Opening " + path + " in mode " + mode + " is denied.");
 			}
 		}
@@ -118,13 +115,13 @@ public class PythonFileSystem implements FileSystem {
 
 	@Override
 	public void createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException {
-		logger.warn("Denying creation of directory {}", dir);
+		log.warn("Denying creation of directory {}", dir);
 		throw new SecurityException("Creation of directory " + dir + " is denied.");
 	}
 
 	@Override
 	public void delete(Path path) throws IOException {
-		logger.warn("Denying deletion of {}", path);
+		log.warn("Denying deletion of {}", path);
 		throw new SecurityException("Deletion of file " + path + " is denied.");
 	}
 

@@ -32,13 +32,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 import org.hibernate.annotations.NaturalId;
 import org.jasypt.util.password.BasicPasswordEncryptor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The User class represents a Netshot user.
@@ -48,10 +49,8 @@ import org.slf4j.LoggerFactory;
 @Table(indexes = {
 		@Index(name = "usernameIndex", columnList = "username") 
 })
+@Slf4j
 public class UiUser implements User {
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(UiUser.class);
 
 	/** The max idle time. */
 	public static int MAX_IDLE_TIME;
@@ -69,25 +68,46 @@ public class UiUser implements User {
 		}
 		catch (IllegalArgumentException e) {
 			maxIdleTime = 1800;
-			logger.error("Invalid value for AAA max idle timeout (netshot.aaa.maxidletime), using {}s.", maxIdleTime);
+			log.error("Invalid value for AAA max idle timeout (netshot.aaa.maxidletime), using {}s.", maxIdleTime);
 		}
 		MAX_IDLE_TIME = maxIdleTime;
 	}
 
 
 	/** The id. */
+	@Getter(onMethod=@__({
+		@Id,
+		@GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private long id;
 
 	/** The local. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private boolean local;
 
 	/** The hashed password. */
+	@Getter
+	@Setter
 	private String hashedPassword;
 
 	/** The username. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@NaturalId(mutable = true)
+	}))
+	@Setter
 	private String username;
 
 	/** The level. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+	}))
+	@Setter
 	private int level = User.LEVEL_ADMIN;
 
 	/**
@@ -114,64 +134,6 @@ public class UiUser implements User {
 		this.username = name;
 		this.level = level;
 		this.local = false;
-	}
-
-	/**
-	 * Gets the id.
-	 *
-	 * @return the id
-	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement @JsonView(DefaultView.class)
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * Sets the id.
-	 *
-	 * @param id the new id
-	 */
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	/**
-	 * Checks if is local.
-	 *
-	 * @return true, if is local
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isLocal() {
-		return local;
-	}
-
-	/**
-	 * Sets the local.
-	 *
-	 * @param local the new local
-	 */
-	public void setLocal(boolean local) {
-		this.local = local;
-	}
-
-	/**
-	 * Gets the hashed password.
-	 *
-	 * @return the hashed password
-	 */
-	public String getHashedPassword() {
-		return hashedPassword;
-	}
-
-	/**
-	 * Sets the hashed password.
-	 *
-	 * @param hashedPassword the new hashed password
-	 */
-	public void setHashedPassword(String hashedPassword) {
-		this.hashedPassword = hashedPassword;
 	}
 
 	/**
@@ -203,27 +165,6 @@ public class UiUser implements User {
 		return passwordEncryptor.encryptPassword(password);
 	}
 
-	/**
-	 * Gets the username.
-	 *
-	 * @return the username
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@NaturalId(mutable = true)
-	@Override
-	public String getUsername() {
-		return username;
-	}
-
-	/**
-	 * Sets the username.
-	 *
-	 * @param username the new username
-	 */
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
 	/* (non-Javadoc)
 	 * @see java.security.Principal#getName()
 	 */
@@ -231,26 +172,6 @@ public class UiUser implements User {
 	@Transient
 	public String getName() {
 		return username;
-	}
-
-	/**
-	 * Gets the level.
-	 *
-	 * @return the level
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Override
-	public int getLevel() {
-		return level;
-	}
-
-	/**
-	 * Sets the level.
-	 *
-	 * @param level the new level
-	 */
-	public void setLevel(int level) {
-		this.level = level;
 	}
 
 	@Override

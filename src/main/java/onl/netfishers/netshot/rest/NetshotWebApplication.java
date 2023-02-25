@@ -4,11 +4,11 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
+
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.jaxrs2.integration.resources.AcceptHeaderOpenApiResource;
@@ -64,7 +64,7 @@ class NetshotWebApplication extends ResourceConfig {
 			new JaxrsOpenApiContextBuilder<>().application(this).openApiConfiguration(oasConfig).buildContext(true);
 		}
 		catch (OpenApiConfigurationException e) {
-			RestService.logger.error("Can't initialize OpenAPI for JAX-RS", e);
+			RestService.log.error("Can't initialize OpenAPI for JAX-RS", e);
 		}
 	}
 }

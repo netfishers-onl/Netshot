@@ -56,15 +56,16 @@ import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.util.DefaultPDUFactory;
 import org.snmp4j.util.TreeEvent;
 import org.snmp4j.util.TreeUtils;
-import org.snmp4j.TransportMapping;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
+import org.snmp4j.TransportMapping;
 
 
 /**
  * A SNMP poller class, to poll data from a device via SNMP.
  */
+@Slf4j
 public class Snmp extends Poller {
 
 	/** The snmp. */
@@ -80,9 +81,7 @@ public class Snmp extends Poller {
 	private OID authProtocol; 
 
 	/** SNMPv3 priv protocol */
-	private OID privProtocol; 	
-	
-	final private static Logger logger = LoggerFactory.getLogger(Snmp.class);
+	private OID privProtocol;
 
 	/**
 	 * Instantiates a new SNMP object based on a target address and a Netshot community.
@@ -104,7 +103,7 @@ public class Snmp extends Poller {
 		else if (community instanceof DeviceSnmpv3Community) {
 			DeviceSnmpv3Community v3Credentials = (DeviceSnmpv3Community)community;
 			// Prepare target
-			logger.debug("Prepare SNMPv3 context");
+			log.debug("Prepare SNMPv3 context");
 			this.target = new UserTarget();
 			this.target.setTimeout(5000);
 			this.target.setVersion(SnmpConstants.version3);
@@ -121,10 +120,10 @@ public class Snmp extends Poller {
 			this.target.setSecurityName(new OctetString(v3Credentials.getUsername()));
 
 			// Prepare transport
-			logger.debug("Auth Protocol called: {}", v3Credentials.getAuthType());
+			log.debug("Auth Protocol called: {}", v3Credentials.getAuthType());
 			if (v3Credentials.getAuthType().equals("SHA")) {
 				this.authProtocol = AuthSHA.ID;
-				logger.debug("Using SHA Auth");
+				log.debug("Using SHA Auth");
 			}
 			else {
 				this.authProtocol = AuthMD5.ID;

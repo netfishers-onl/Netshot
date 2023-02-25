@@ -34,6 +34,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Policy;
@@ -51,8 +54,6 @@ import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
 
 /**
@@ -61,10 +62,8 @@ import org.slf4j.MarkerFactory;
  * or not.
  */
 @Entity
+@Slf4j
 public class JavaScriptRule extends Rule {
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(JavaScriptRule.class);
 
 	/** The allowed results. */
 	private static CheckResult.ResultOption[] ALLOWED_RESULTS = new CheckResult.ResultOption[] {
@@ -92,7 +91,7 @@ public class JavaScriptRule extends Rule {
 					Long.toString(maxExecutionTime)));
 		}
 		catch (IllegalArgumentException e) {
-			logger.error(
+			log.error(
 				"Invalid value for JavaScript max execution time (netshot.javascript.maxexecutiontime), using {}ms.",
 				maxExecutionTime);
 		}
@@ -101,7 +100,7 @@ public class JavaScriptRule extends Rule {
 	
 	static {
 		try {
-			logger.info("Reading the JavaScript rule loader code from the resource JS file.");
+			log.info("Reading the JavaScript rule loader code from the resource JS file.");
 			// Read the JavaScript loader code from the resource file.
 			String path = "interfaces/rule-loader.js";
 			InputStream in = DeviceDriver.class.getResourceAsStream("/" + path);
@@ -115,10 +114,10 @@ public class JavaScriptRule extends Rule {
 			JSLOADER_SOURCE = Source.create("js", buffer.toString());
 			reader.close();
 			in.close();
-			logger.debug("The JavaScript rule loader code has been read from the resource JS file.");
+			log.debug("The JavaScript rule loader code has been read from the resource JS file.");
 		}
 		catch (Exception e) {
-			logger.error(MarkerFactory.getMarker("FATAL"),
+			log.error(MarkerFactory.getMarker("FATAL"),
 					"Unable to read the Javascript rule loader.", e);
 			System.err.println("NETSHOT FATAL ERROR");
 			e.printStackTrace();
@@ -134,6 +133,11 @@ public class JavaScriptRule extends Rule {
 	private boolean jsValid = false;
 
 	/** The script. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Column(length = 10000000)
+	}))
+	@Setter
 	private String script = "" +
 			"/*\n" +
 			" * Script template - to be customized.\n" +
@@ -161,26 +165,6 @@ public class JavaScriptRule extends Rule {
 	 */
 	public JavaScriptRule(String name, Policy policy) {
 		super(name, policy);
-	}
-
-	/**
-	 * Gets the script.
-	 *
-	 * @return the script
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Column(length = 10000000)
-	public String getScript() {
-		return script;
-	}
-
-	/**
-	 * Sets the script.
-	 *
-	 * @param script the new script
-	 */
-	public void setScript(String script) {
-		this.script = script;
 	}
 
 	@Transient
@@ -211,7 +195,7 @@ public class JavaScriptRule extends Rule {
 		try {
 			Value checkFunction = context.getBindings("js").getMember("check");
 			if (checkFunction == null || !checkFunction.canExecute()) {
-				logger.warn("The check function wasn't found in the script");
+				log.warn("The check function wasn't found in the script");
 				taskLogger.error("The 'check' function couldn't be found in the script.");
 			}
 			else {
@@ -220,7 +204,7 @@ public class JavaScriptRule extends Rule {
 		}
 		catch (PolyglotException e) {
 			taskLogger.error("Error while evaluating the Javascript script.");
-			logger.warn("Error while evaluating the Javascript script.", e);
+			log.warn("Error while evaluating the Javascript script.", e);
 			jsValid = false;
 		}
 	}
@@ -258,7 +242,7 @@ public class JavaScriptRule extends Rule {
 					context.close(true);
 				}
 				catch (Exception e2) {
-					logger.warn("Error while closing abnormally long JavaScript context", e2);
+					log.warn("Error while closing abnormally long JavaScript context", e2);
 				}
 				throw new TimeoutException(
 					"The rule took too long to execute (check for endless loop in the script or adjust netshot.javascript.maxexecutiontime value)");
@@ -288,7 +272,7 @@ public class JavaScriptRule extends Rule {
 		}
 		catch (Exception e) {
 			taskLogger.error("Error while running the script: " + e.getMessage());
-			logger.error("Error while running the script on device {}.", device.getId(), e);
+			log.error("Error while running the script on device {}.", device.getId(), e);
 		}
 		finally {
 			taskLogger.debug("End of check");

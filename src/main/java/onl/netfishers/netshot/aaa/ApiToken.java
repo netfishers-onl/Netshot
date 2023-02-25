@@ -34,6 +34,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.jasypt.digest.StandardStringDigester;
 
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
@@ -69,15 +72,31 @@ public class ApiToken implements User {
 	}
 
 	/** The id. */
+	@Getter(onMethod=@__({
+		@Id,
+		@GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private long id;
 
 	/** The hashed token. */
+	@Getter
+	@Setter
 	private String hashedToken;
 
 	/** The description. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String description;
 
 	/** The level. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private int level = User.LEVEL_ADMIN;
 
 	/**
@@ -90,36 +109,6 @@ public class ApiToken implements User {
 		this.description = description;
 		this.setToken(token);
 		this.level = level;
-	}
-
-
-	/**
-	 * Gets the id.
-	 *
-	 * @return the id
-	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement @JsonView(DefaultView.class)
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * Sets the id.
-	 *
-	 * @param id the new id
-	 */
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public String getHashedToken() {
-		return hashedToken;
-	}
-
-	public void setHashedToken(String hashedToken) {
-		this.hashedToken = hashedToken;
 	}
 
 	public void setToken(String token) {
@@ -139,35 +128,6 @@ public class ApiToken implements User {
 	@Transient
 	public String getUsername() {
 		return getName();
-	}
-
-	/**
-	 * Gets the level.
-	 *
-	 * @return the level
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Override
-	public int getLevel() {
-		return level;
-	}
-
-	/**
-	 * Sets the level.
-	 *
-	 * @param level the new level
-	 */
-	public void setLevel(int level) {
-		this.level = level;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
 	}
 
 	@Override

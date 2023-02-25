@@ -30,6 +30,8 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.rest.RestViews.ClusteringView;
 
 /**
@@ -51,15 +53,31 @@ public abstract class ClusterMessage {
 	/** Message ID counter */
 	static protected Long lastLocalMessageId = 0L;
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(ClusteringView.class)
+	}))
+	@Setter
 	private String instanceId;
 
 	/** Current system time */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(ClusteringView.class)
+	}))
+	@Setter
 	private long currentTime;
 
 	/** Current Netshot uptime */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(ClusteringView.class)
+	}))
+	@Setter
 	private long upTime;
 
 	/** Message ID */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(ClusteringView.class)
+	}))
+	@Setter
 	private long messageId;
 
 	/**
@@ -79,46 +97,6 @@ public abstract class ClusterMessage {
 	 * Hidden constructor
 	 */
 	protected ClusterMessage() {
-	}
-
-	@XmlElement
-	@JsonView(ClusteringView.class)
-	public String getInstanceId() {
-		return this.instanceId;
-	}
-
-	public void setInstanceId(String instanceId) {
-		this.instanceId = instanceId;
-	}
-
-	@XmlElement
-	@JsonView(ClusteringView.class)
-	public long getCurrentTime() {
-		return currentTime;
-	}
-
-	public void setCurrentTime(long currentTime) {
-		this.currentTime = currentTime;
-	}
-
-	@XmlElement
-	@JsonView(ClusteringView.class)
-	public long getUpTime() {
-		return upTime;
-	}
-
-	public void setUpTime(long upTime) {
-		this.upTime = upTime;
-	}
-
-	@XmlElement
-	@JsonView(ClusteringView.class)
-	public long getMessageId() {
-		return messageId;
-	}
-
-	public void setMessageId(long messageId) {
-		this.messageId = messageId;
 	}
 
 	@Override

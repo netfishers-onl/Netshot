@@ -40,13 +40,14 @@ import org.apache.commons.net.tftp.TFTPDataPacket;
 import org.apache.commons.net.tftp.TFTPPacket;
 import org.apache.commons.net.tftp.TFTPPacketException;
 import org.apache.commons.net.tftp.TFTPWriteRequestPacket;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A TFTP server waits for TFTP uploads from the devices. The TFTP transfer must
  * be prepared before it can be accepted by the server.
  */
+@Slf4j
 public class TftpServer extends Collector {
 
 	/** The UDP port to listen TFTP packets on. */
@@ -57,9 +58,6 @@ public class TftpServer extends Collector {
 
 	/** The transfers. */
 	final private Set<TftpTransfer> transfers = new HashSet<>();
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(TftpServer.class);
 
 	/** The static TFTP server instance. */
 	private static TftpServer nsTftpServer = null;
@@ -76,7 +74,7 @@ public class TftpServer extends Collector {
 	 */
 	public static void init() {
 		if (Netshot.getConfig("netshot.tftpserver.disabled", "true").equals("true")) {
-			logger.warn("The TFTP server is disabled.");
+			log.warn("The TFTP server is disabled.");
 			return;
 		}
 		nsTftpServer = new TftpServer();
@@ -115,7 +113,7 @@ public class TftpServer extends Collector {
 		try {
 			tftp.setDefaultTimeout(0);
 			tftp.open(udpPort);
-			logger.debug("Now listening for TFTP packets on UDP port {}.",
+			log.debug("Now listening for TFTP packets on UDP port {}.",
 					udpPort);
 			running = true;
 			while (true) {
@@ -144,7 +142,7 @@ public class TftpServer extends Collector {
 			}
 		}
 		catch (SocketException e) {
-			logger.error("Couldn't start the TFTP server");
+			log.error("Couldn't start the TFTP server");
 		}
 		running = false;
 	}

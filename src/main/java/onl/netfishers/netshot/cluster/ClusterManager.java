@@ -53,18 +53,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.postgresql.PGConnection;
 import org.postgresql.PGNotification;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Cluster Manager - main component of clustering feature
  */
+@Slf4j
 public class ClusterManager extends Thread {
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(ClusterManager.class);
 
 	/** Name of the PSQL notification channel */
 	final private static String NOTIFICATION_CHANNEL = "clustering";
@@ -100,7 +98,7 @@ public class ClusterManager extends Thread {
 	 */
 	public static void init() {
 		if (!Netshot.getConfig("netshot.cluster.enabled", "false").equals("true")) {
-			logger.info("High Availability is not enabled.");
+			log.info("High Availability is not enabled.");
 			return;
 		}
 
@@ -214,7 +212,7 @@ public class ClusterManager extends Thread {
 		int runnerPriority = Netshot.getConfig("netshot.cluster.runner.priority", 100);
 		int runnerWeight = Netshot.getConfig("netshot.cluster.runner.weight", 100);
 		if (runnerWeight < 1 || runnerWeight > 1000) {
-			logger.error("Invalid value {} for runner weight, will use 100 by default", runnerWeight);;
+			log.error("Invalid value {} for runner weight, will use 100 by default", runnerWeight);;
 			runnerWeight = 100;
 		}
 
@@ -222,7 +220,7 @@ public class ClusterManager extends Thread {
 		if (localId != null) {
 			// First option: configured ID
 			if (!localId.matches("^[0-9a-z]{20}$")) {
-				logger.error("Invalid netshot.cluster.id parameter (invalid format), will generate one");
+				log.error("Invalid netshot.cluster.id parameter (invalid format), will generate one");
 				localId = null;
 			}
 		}
@@ -236,11 +234,11 @@ public class ClusterManager extends Thread {
 						|| mainMac[2] != 0 || mainMac[3] != 0 || mainMac[4] != 0 || mainMac[5] != 0)) {
 					localId = String.format("01ff%02x%02x%02x%02x%02x%02x%04x",
 						mainMac[0], mainMac[1], mainMac[2], mainMac[3], mainMac[4], mainMac[5], RestService.getRestPort());
-					logger.info("Cluster ID {} was automatically generated based on main local MAC address", localId);
+					log.info("Cluster ID {} was automatically generated based on main local MAC address", localId);
 				}
 			}
 			catch (Exception e) {
-				logger.debug("Error while generating cluster ID based on MAC address", e);
+				log.debug("Error while generating cluster ID based on MAC address", e);
 			}
 		}
 		if (localId == null) {
@@ -249,7 +247,7 @@ public class ClusterManager extends Thread {
 			new Random().nextBytes(randomBase);
 			localId = String.format("09ff%02x%02x%02x%02x%02x%02x0000",
 			randomBase[0], randomBase[1], randomBase[2], randomBase[3], randomBase[4], randomBase[5]);
-			logger.warn("Cluster ID {} was randomly generated - you should rather configure netshot.cluster.id",
+			log.warn("Cluster ID {} was randomly generated - you should rather configure netshot.cluster.id",
 				localId);
 		}
 
@@ -270,15 +268,15 @@ public class ClusterManager extends Thread {
 			// Can't make it work with a prepared statement so escape the quotes
 			content = content.replace("'", "''");
 			if (content.length() > 7999) {
-				logger.error("Cluster message {} is too long, cannot send it", message.getClass().getSimpleName());
+				log.error("Cluster message {} is too long, cannot send it", message.getClass().getSimpleName());
 			}
 			else {
-				logger.trace("Sending message to {}: {}", ClusterManager.NOTIFICATION_CHANNEL, content);
+				log.trace("Sending message to {}: {}", ClusterManager.NOTIFICATION_CHANNEL, content);
 				statement.execute(String.format("NOTIFY %s, '%s'", ClusterManager.NOTIFICATION_CHANNEL, content));
 			}
 		}
 		catch (JsonProcessingException e) {
-			logger.error("Can't serialize Hello cluster message");
+			log.error("Can't serialize Hello cluster message");
 		}
 	}
 
@@ -294,7 +292,7 @@ public class ClusterManager extends Thread {
 		PGNotification notifications[] = pgConnection.getNotifications(RECEIVE_TIMEOUT);
 		if (notifications != null) {
 			for (PGNotification notification : notifications) {
-				logger.trace("Received notification (name {}): {}", notification.getName(), notification.getParameter());
+				log.trace("Received notification (name {}): {}", notification.getName(), notification.getParameter());
 				try {
 					ClusterMessage message = this.jsonReader.forType(ClusterMessage.class)
 						.readValue(notification.getParameter());
@@ -302,7 +300,7 @@ public class ClusterManager extends Thread {
 						if (message instanceof HelloClusterMessage) {
 							String receivedHostname = ((HelloClusterMessage) message).getMemberInfo().getHostname();
 							if (!this.localMember.getHostname().equals(receivedHostname)) {
-								logger.error(
+								log.error(
 									"Received hello message from our instance ID but with different hostname ({})... please check cluster member ID conflict",
 									receivedHostname);
 							}
@@ -313,7 +311,7 @@ public class ClusterManager extends Thread {
 					messages.add(message);
 				}
 				catch (JsonProcessingException e) {
-					logger.error("Error while parsing PGSQL notification as cluster message", e);
+					log.error("Error while parsing PGSQL notification as cluster message", e);
 				}
 			}
 		}
@@ -337,7 +335,7 @@ public class ClusterManager extends Thread {
 				Thread.sleep(500 * bhFactor);
 			}
 			catch (InterruptedException e) {
-				logger.error("ClusterManager got InterruptedException", e);
+				log.error("ClusterManager got InterruptedException", e);
 			}
 			try (Connection dbConnection = Database.getConnection(false)) {
 				PGConnection pgConnection = dbConnection.unwrap(PGConnection.class);
@@ -398,15 +396,15 @@ public class ClusterManager extends Thread {
 						final long currentTime = System.currentTimeMillis();
 						final Set<Class<? extends ClusterMessage>> ignoreNextClasses = new HashSet<>();
 						for (ClusterMessage message : messages) {
-							logger.trace("Clustering message received: {}", message);
+							log.trace("Clustering message received: {}", message);
 							// Check time difference
 							if (Math.abs(message.getCurrentTime() - currentTime) > HELLO_DRIFTTIME) {
-								logger.warn(
+								log.warn(
 									"Seeing excessive time difference ({} vs {}) with instance {}, please check time synchronization",
 									message.getCurrentTime(), currentTime, message.getInstanceId());
 							}
 							if (ignoreNextClasses.contains(message.getClass())) {
-								logger.trace("Ignored - similar message already processed");
+								log.trace("Ignored - similar message already processed");
 								continue;
 							}
 							if (message instanceof HelloClusterMessage) {
@@ -415,7 +413,7 @@ public class ClusterManager extends Thread {
 								member.setLastSeenTime(System.currentTimeMillis()); // Set last seen time
 								// Check clustering version
 								if (member.getClusteringVersion() != ClusterManager.CLUSTERING_VERSION) {
-									logger.error("Incompatible clustering version {} vs local {} message received from {} - ignoring message",
+									log.error("Incompatible clustering version {} vs local {} message received from {} - ignoring message",
 										member.getClusteringVersion(), ClusterManager.CLUSTERING_VERSION, message.getInstanceId());
 									continue;
 								}
@@ -447,7 +445,7 @@ public class ClusterManager extends Thread {
 									ignoreNextClasses.add(ReloadDriversMessage.class);
 								}
 								catch (Exception e) {
-									logger.error("Error while refreshing drivers", e);
+									log.error("Error while refreshing drivers", e);
 								}
 							}
 							else if (message instanceof LoadTasksMessage) {
@@ -456,7 +454,7 @@ public class ClusterManager extends Thread {
 									ignoreNextClasses.add(LoadTasksMessage.class);
 								}
 								catch (Exception e) {
-									logger.error("Error while scheduling local tasks", e);
+									log.error("Error while scheduling local tasks", e);
 								}
 							}
 							else if (message instanceof AssignTasksMessage) {
@@ -466,7 +464,7 @@ public class ClusterManager extends Thread {
 										ignoreNextClasses.add(AssignTasksMessage.class);
 									}
 									catch (Exception e) {
-										logger.error("Error while assigning new tasks", e);
+										log.error("Error while assigning new tasks", e);
 									}
 								}
 							}
@@ -479,7 +477,7 @@ public class ClusterManager extends Thread {
 								}
 							}
 							else {
-								logger.warn("Unknown clustering message type received");
+								log.warn("Unknown clustering message type received");
 							}
 						}
 						// Check expired members
@@ -489,7 +487,7 @@ public class ClusterManager extends Thread {
 							}
 							if (member.getLastSeenTime() < currentTime - HELLO_HOLDTIME &&
 									!MastershipStatus.EXPIRED.equals(member.getStatus())) {
-								logger.warn("Member {} not seen since {}, going into EXPIRED state",
+								log.warn("Member {} not seen since {}, going into EXPIRED state",
 									member.getInstanceId(), member.getLastSeenTime());
 								member.setStatus(MastershipStatus.EXPIRED);
 								memberUpdated = true;
@@ -508,7 +506,7 @@ public class ClusterManager extends Thread {
 							}
 							if (newMaster != null) {
 								if (!newMaster.equals(this.master)) {
-									logger.warn("Cluster member {} is now master", newMaster);
+									log.warn("Cluster member {} is now master", newMaster);
 								}
 							}
 							this.master = newMaster;
@@ -535,7 +533,7 @@ public class ClusterManager extends Thread {
 									// Already in negotiating status
 									if (this.localMember.getLastStatusChangeTime() + NEGOTIATION_DURATION < currentTime) {
 										// Negotiation done, upgrade to master
-										logger.warn("Local cluster member is switching to MASTER status");
+										log.warn("Local cluster member is switching to MASTER status");
 										this.localMember.setStatus(MastershipStatus.MASTER);
 										this.master = this.localMember;
 										TaskManager.setMode(Mode.CLUSTER_MASTER);
@@ -544,7 +542,7 @@ public class ClusterManager extends Thread {
 									}
 								}
 								else {
-									logger.warn("Local cluster member is switching to NEGOTIATING status");
+									log.warn("Local cluster member is switching to NEGOTIATING status");
 									this.localMember.setStatus(MastershipStatus.NEGOTIATING);
 								}
 							}
@@ -553,7 +551,7 @@ public class ClusterManager extends Thread {
 							// Checks on the current master
 							if (!MastershipStatus.MEMBER.equals(this.localMember.getStatus()) && !this.master.equals(this.localMember)) {
 								// Master conflict - Downgrade to normal member
-								logger.warn("Local cluster member is switching to MEMBER status");
+								log.warn("Local cluster member is switching to MEMBER status");
 								this.localMember.setStatus(MastershipStatus.MEMBER);
 								TaskManager.setMode(Mode.CLUSTER_MEMBER);
 							}
@@ -561,12 +559,12 @@ public class ClusterManager extends Thread {
 					}
 					if (bhFactor > 0) {
 						bhFactor = 0;
-						logger.info("ClusterManager recovered from exception state");
+						log.info("ClusterManager recovered from exception state");
 					}
 				}
 			}
 			catch (SQLException | InterruptedException e) {
-				logger.error("ClusterManager got exception", e);
+				log.error("ClusterManager got exception", e);
 				bhFactor *= 2;
 				if (bhFactor < 1) {
 					bhFactor = 1;

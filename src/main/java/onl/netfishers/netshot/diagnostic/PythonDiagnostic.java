@@ -28,6 +28,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 
@@ -46,6 +49,16 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.NONE)
 public class PythonDiagnostic extends Diagnostic {
+
+	/**
+	 * The JS script to execute on the device.
+	 */
+	@Getter(onMethod=@__({
+		@Column(length = 10000000),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private String script;
 
 	/**
 	 * Empty constructor. For Hibernate.
@@ -70,32 +83,6 @@ public class PythonDiagnostic extends Diagnostic {
 	public PythonDiagnostic(String name, boolean enabled, DeviceGroup targetGroup, AttributeType resultType,
 			String script) {
 		super(name, enabled, targetGroup, resultType);
-		this.script = script;
-	}
-
-	/**
-	 * The JS script to execute on the device.
-	 */
-	private String script;
-
-	/**
-	 * Gets the script.
-	 * 
-	 * @return the script
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Column(length = 10000000)
-	public String getScript() {
-		return script;
-	}
-
-	/**
-	 * Sets the script.
-	 * 
-	 * @param script
-	 *                 the script to set
-	 */
-	public void setScript(String script) {
 		this.script = script;
 	}
 

@@ -36,12 +36,11 @@ import onl.netfishers.netshot.device.NetworkInterface;
 import onl.netfishers.netshot.device.PhysicalAddress;
 import onl.netfishers.netshot.device.attribute.ConfigLongTextAttribute;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class Tester {
-
-	final private static Logger logger = LoggerFactory.getLogger(Tester.class);
 
 	public static void createDevices() {
 
@@ -216,7 +215,7 @@ public class Tester {
 					configs.add(config);
 					device.setLastConfig(config);
 					if (j % 10 == 0) {
-						logger.warn(String.format("Device %05d, config %05d", i, j));
+						log.warn(String.format("Device %05d, config %05d", i, j));
 					}
 				}
 				device.setConfigs(configs);
@@ -247,7 +246,7 @@ public class Tester {
 			e.printStackTrace();
 		}
 		
-		logger.warn("Done");
+		log.warn("Done");
 
 	}
 

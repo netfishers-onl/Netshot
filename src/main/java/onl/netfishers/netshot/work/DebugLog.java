@@ -24,10 +24,22 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
 public class DebugLog {
-	
+
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY)
+	}))
+	@Setter
 	private long id;
+
+	@Getter(onMethod=@__({
+		@Column(length = 10000000)
+	}))
+	@Setter
 	private String text = "";
 	
 	protected DebugLog() {
@@ -35,25 +47,6 @@ public class DebugLog {
 	
 	public DebugLog(String text) {
 		this.text = text;
-	}
-	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	public long getId() {
-		return id;
-	}
-
-	@Column(length = 10000000)
-	public String getText() {
-		return text;
-	}
-
-	public void setText(String text) {
-		this.text = text;
-	}
-
-	public void setId(long id) {
-		this.id = id;
 	}
 	
 	public String toString() {

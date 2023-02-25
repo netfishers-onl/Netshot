@@ -23,9 +23,8 @@ import java.time.Instant;
 import java.util.regex.Matcher;
 
 import org.graalvm.polyglot.HostAccess.Export;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.device.access.Cli;
 import onl.netfishers.netshot.device.access.Cli.WithBufferIOException;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
@@ -36,9 +35,8 @@ import onl.netfishers.netshot.work.TaskLogger;
  * @author sylvain.cadilhac
  *
  */
+@Slf4j
 public class JsCliHelper {
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(JsCliHelper.class);
 	
 	/** The CLI object to interact with the device via command line */
 	private Cli cli;
@@ -131,7 +129,7 @@ public class JsCliHelper {
 			cli.setCommandTimeout(timeout);
 		}
 		try {
-			logger.debug("Command to be sent: '{}'.", command);
+			log.debug("Command to be sent: '{}'.", command);
 			if (this.cliLogger != null) {
 				this.cliLogger.trace("Expecting one of the following " + expects.length +
 						" pattern(s) within " + (timeout > 0 ? timeout : oldTimeout) + "ms:");
@@ -151,7 +149,7 @@ public class JsCliHelper {
 			return result;
 		}
 		catch (IOException e) {
-			logger.error("CLI I/O error.", e);
+			log.error("CLI I/O error.", e);
 			this.taskLogger.error("I/O error: " + e.getMessage());
 			if (this.cliLogger != null) {
 				this.cliLogger.trace(Instant.now() + " I/O exception: " + e.getMessage());

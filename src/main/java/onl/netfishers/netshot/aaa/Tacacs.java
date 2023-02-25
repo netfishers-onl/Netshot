@@ -31,6 +31,9 @@ import com.augur.tacacs.SessionClient;
 import com.augur.tacacs.TAC_PLUS.AUTHEN.METH;
 import com.augur.tacacs.TAC_PLUS.AUTHEN.SVC;
 import com.augur.tacacs.TAC_PLUS.AUTHEN.TYPE;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.augur.tacacs.TAC_PLUS.ACCT;
 import com.augur.tacacs.TAC_PLUS.PRIV_LVL;
 import com.augur.tacacs.TacacsClient;
@@ -45,10 +48,10 @@ import onl.netfishers.netshot.device.NetworkAddress;
 /**
  * The Tacacs class authenticates the users against a TACACS+ server.
  */
+@Slf4j
 public class Tacacs {
 
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(Tacacs.class);
+	/** The log. */
 	final private static Logger aaaLogger = LoggerFactory.getLogger("AAA");
 
 	/** The client. */
@@ -74,7 +77,7 @@ public class Tacacs {
 		}
 		catch (Exception e) {
 			if (ip != null) {
-				logger.error("Invalid IP address for TACACS+ server {}. Will be ignored.", id);
+				log.error("Invalid IP address for TACACS+ server {}. Will be ignored.", id);
 			}
 			return;
 		}
@@ -83,16 +86,16 @@ public class Tacacs {
 			port = Integer.parseInt(Netshot.getConfig(path + ".port", "49"));
 		}
 		catch (NumberFormatException e) {
-			logger.error("Invalid authentication port number for TACACS+ server {}. Will use {}.", id, port);
+			log.error("Invalid authentication port number for TACACS+ server {}. Will use {}.", id, port);
 		}
 		String key = Netshot.getConfig(path + ".secret");
 		if (key == null) {
-			logger.error("No key configured for TACACS+ server {}. Will be ignored.", id);
+			log.error("No key configured for TACACS+ server {}. Will be ignored.", id);
 			return;
 		}
 		hosts.add(String.format("%s:%d", address.getHostAddress(), port));
 		keys.add(key);
-		logger.info("Added TACACS+ server {}", address.getHostAddress());
+		log.info("Added TACACS+ server {}", address.getHostAddress());
 	}
 
 	/**
@@ -109,14 +112,14 @@ public class Tacacs {
 			timeout = Integer.parseInt(Netshot.getConfig("netshot.aaa.tacacs.timeout", "5"));
 		}
 		catch (NumberFormatException e) {
-			logger.error("Invalid timeout value for TACACS+. Will use {}.", timeout);
+			log.error("Invalid timeout value for TACACS+. Will use {}.", timeout);
 		}
 		if (hosts.size() > 0) {
 			Tacacs.client = new TacacsClient(String.join(", ", hosts), String.join(", ", keys), timeout * 1000, false);
 		}
 		enableAccounting = Netshot.getConfig("netshot.aaa.tacacs.accounting", "false").equals("true");
 		if (enableAccounting) {
-			logger.info("TACACS+ accounting is enabled");
+			log.info("TACACS+ accounting is enabled");
 		}
 	}
 	
@@ -212,7 +215,7 @@ public class Tacacs {
 			}
 		}
 		catch (Exception e) {
-			logger.error("Error while authenticating against RADIUS server.", e);
+			log.error("Error while authenticating against RADIUS server.", e);
 		}
 		finally {
 			client.shutdown();
@@ -234,7 +237,7 @@ public class Tacacs {
 			});
 		}
 		catch (TimeoutException | IOException e) {
-			logger.warn("Error while sending TACACS+ accounting message", e);
+			log.warn("Error while sending TACACS+ accounting message", e);
 		}
 	}
 }

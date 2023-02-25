@@ -13,10 +13,10 @@ public class NetshotExceptionMapper implements ExceptionMapper<Throwable> {
 	public Response toResponse(Throwable t) {
 		if (!(t instanceof ForbiddenException)) {
 			if (t instanceof NetshotAuthenticationRequiredException) {
-				RestService.logger.info("Authentication required.", t);
+				RestService.log.info("Authentication required.", t);
 			}
 			else {
-				RestService.logger.error("Uncaught exception thrown by REST service", t);
+				RestService.log.error("Uncaught exception thrown by REST service", t);
 			}
 		}
 		if (t instanceof WebApplicationException) {

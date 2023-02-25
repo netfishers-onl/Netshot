@@ -28,12 +28,19 @@ import javax.persistence.Transient;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.attribute.LongTextConfiguration;
 
 @Entity @DiscriminatorValue("T")
 public class DiagnosticLongTextResult extends DiagnosticResult {
 
+	@Getter(onMethod=@__({
+		@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY),
+		@OnDelete(action = OnDeleteAction.CASCADE)
+	}))
+	@Setter
 	private LongTextConfiguration longText;
 	
 	protected DiagnosticLongTextResult() {
@@ -42,16 +49,6 @@ public class DiagnosticLongTextResult extends DiagnosticResult {
 	public DiagnosticLongTextResult(Device device, Diagnostic diagnostic, String value) {
 		super(device, diagnostic);
 		this.longText = new LongTextConfiguration(value);
-	}
-
-	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	public LongTextConfiguration getLongText() {
-		return longText;
-	}
-
-	public void setLongText(LongTextConfiguration value) {
-		this.longText = value;
 	}
 
 	@Override

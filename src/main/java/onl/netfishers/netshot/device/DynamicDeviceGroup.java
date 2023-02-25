@@ -27,6 +27,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.Finder.Expression.FinderParseException;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
@@ -34,22 +37,27 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import org.hibernate.HibernateException;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A dynamic group of devices is defined by search criteria.
  */
 @Entity
+@Slf4j
 public class DynamicDeviceGroup extends DeviceGroup {
 
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(DeviceGroup.class);
-
 	/** The device class. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String driver = null;
 
 	/** The query. */
+	@Getter(onMethod=@__({
+		@Column(length = 1000),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String query = "[Name] IS \"Example\"";
 
 	/**
@@ -65,44 +73,9 @@ public class DynamicDeviceGroup extends DeviceGroup {
 		this.query = query;
 	}
 
-	/**
-	 * Gets the device class.
-	 *
-	 * @return the device class
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getDriver() {
-		return driver;
-	}
-
 	@Transient
 	public DeviceDriver getDeviceDriver() {
 		return DeviceDriver.getDriverByName(driver);
-	}
-
-	/**
-	 * Gets the query.
-	 *
-	 * @return the query
-	 */
-	@Column(length = 1000)
-	@XmlElement @JsonView(DefaultView.class)
-	public String getQuery() {
-		return query;
-	}
-
-
-	public void setDriver(String driver) {
-		this.driver = driver;
-	}
-
-	/**
-	 * Sets the query.
-	 *
-	 * @param query the new query
-	 */
-	public void setQuery(String query) {
-		this.query = query;
 	}
 
 	/**
@@ -155,7 +128,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	 * @throws HibernateException the hibernate exception
 	 */
 	public void refreshCache(Session session, Device device) throws FinderParseException, HibernateException {
-		logger.debug("Refreshing cache of group {} for device {}.", this.getId(), device.getId());
+		log.debug("Refreshing cache of group {} for device {}.", this.getId(), device.getId());
 		long deviceId = device.getId();
 		if (this.query.isEmpty()) {
 			if (this.getDeviceDriver() == null || this.getDeviceDriver().getName().equals(device.getDriver())) {
@@ -167,7 +140,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 		}
 		else {
 			String deviceQuery = String.format("[DEVICE] IS %d AND (%s)", deviceId, this.query);
-			logger.trace("Finder query: '{}'.", deviceQuery);
+			log.trace("Finder query: '{}'.", deviceQuery);
 			Finder finder = new Finder(deviceQuery, this.getDeviceDriver());
 			Query<Long> cacheQuery = session.createQuery("select d.id" + finder.getHql(), Long.class);
 			finder.setVariables(cacheQuery);
@@ -186,7 +159,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	 * @param device the device
 	 */
 	static synchronized public void refreshAllGroups(Device device) {
-		logger.debug("Refreshing all groups for device {}.", device.getId());
+		log.debug("Refreshing all groups for device {}.", device.getId());
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
@@ -199,14 +172,14 @@ public class DynamicDeviceGroup extends DeviceGroup {
 					session.update(group);
 				}
 				catch (FinderParseException e) {
-					logger.error("Parse error while updating the group {}.", group.getId(), e);
+					log.error("Parse error while updating the group {}.", group.getId(), e);
 				}
 			}
 			session.getTransaction().commit();
 		}
 		catch (Exception e) {
 			session.getTransaction().rollback();
-			logger.error("Error while refreshing the dynamic groups.", e);
+			log.error("Error while refreshing the dynamic groups.", e);
 		}
 		finally {
 			session.close();

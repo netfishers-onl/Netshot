@@ -34,6 +34,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.device.Domain;
@@ -47,22 +50,32 @@ import org.hibernate.Session;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.quartz.JobKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This task scans a subnet to discover devices.
  */
 @Entity
+@Slf4j
 public class ScanSubnetsTask extends Task implements DomainBasedTask {
 	
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(ScanSubnetsTask.class);
-	
 	/** The subnets. */
+	@Getter(onMethod=@__({
+		@Fetch(FetchMode.SELECT),
+		@ElementCollection(fetch = FetchType.EAGER),
+		@AttributeOverrides({
+			@AttributeOverride(name = "address", column = @Column(name = "ipv4address")),
+			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4usage")),
+			@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4mask")),
+		})
+	}))
+	@Setter
 	private Set<Network4Address> subnets;
 	
 	/** The domain. */
+	@Getter(onMethod=@__({
+		@ManyToOne(fetch = FetchType.LAZY)
+	}))
+	@Setter
 	private Domain domain;
 	
 	/**
@@ -101,7 +114,7 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 	@SuppressWarnings("unchecked")
   @Override
 	public void run() {
-		logger.debug("Task {}. Starting scan subnet process.", this.getId());
+		log.debug("Task {}. Starting scan subnet process.", this.getId());
 		
 		Session session = Database.getSession();
 		Set<Integer> toScan = new HashSet<Integer>();
@@ -117,7 +130,7 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 						min++; // Avoid subnet network address
 						max--;
 					}
-					logger.trace("Task {}. Will scan from {} to {}.", this.getId(), min, max);
+					log.trace("Task {}. Will scan from {} to {}.", this.getId(), min, max);
 					this.info(String.format("Will scan %s (from %d to %d)", subnet.getPrefix(),
 							min, max));
 					List<Integer> existing = session
@@ -133,7 +146,7 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 				}
 			}
 			catch (HibernateException e) {
-				logger.error("Task {}. Error while retrieving the existing devices in the scope.",
+				log.error("Task {}. Error while retrieving the existing devices in the scope.",
 						this.getId(), e);
 				this.error("Error while checking the existing devices.");
 				this.status = Status.FAILURE;
@@ -147,7 +160,7 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 						.list();
 			}
 			catch (Exception e) {
-				logger.error("Task {}. Error while retrieving the communities.", this.getId(), e);
+				log.error("Task {}. Error while retrieving the communities.", this.getId(), e);
 				this.error("Error while getting the communities.");
 				this.status = Status.FAILURE;
 				return;
@@ -157,24 +170,24 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 			session.close();
 		}
 		if (knownCommunities.size() == 0) {
-			logger.error("Task {}. No available SNMP community to scan devices.", this.getId());
+			log.error("Task {}. No available SNMP community to scan devices.", this.getId());
 			this.error("No available SNMP community to scan devices.");
 			this.status = Status.FAILURE;
 			return;
 		}
-		logger.trace("Task {}. Will try {} SNMP communities.", this.getId(), knownCommunities.size());
+		log.trace("Task {}. Will try {} SNMP communities.", this.getId(), knownCommunities.size());
 		
 
 		for (int a : toScan) {
 			try {
 				Network4Address address = new Network4Address(a, 32);
 				if (!address.isNormalUnicast()) {
-					logger.trace("Task {}. Bad address {} skipped.", this.getId(), a);
+					log.trace("Task {}. Bad address {} skipped.", this.getId(), a);
 					this.info(String.format("Skipping %s.", address.getIp()));
 					continue;
 				}
 				this.info("Adding a task to scan " + address.getIp());
-				logger.trace("Task {}. Will add a discovery task for device with IP {} ({}).",
+				log.trace("Task {}. Will add a discovery task for device with IP {} ({}).",
 						this.getId(), a, address.getIp());
 				DiscoverDeviceTypeTask discoverTask = new DiscoverDeviceTypeTask(address, this.getDomain(), comments, author);
 				for (DeviceCredentialSet credentialSet : knownCommunities) {
@@ -183,7 +196,7 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 				TaskManager.addTask(discoverTask);
 			}
 			catch (Exception e) {
-				logger.error("Task {}. Error while adding discovery task.", this.getId(), e);
+				log.error("Task {}. Error while adding discovery task.", this.getId(), e);
 				this.error("Error while adding discover device type: " + e.getMessage());
 			}
 		}
@@ -200,39 +213,6 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 	  task.setSubnets(this.subnets);
 	  return task;
   }
-
-	/**
-	 * Gets the domain.
-	 *
-	 * @return the domain
-	 */
-	@ManyToOne(fetch = FetchType.LAZY)
-	public Domain getDomain() {
-		return domain;
-	}
-
-	/**
-	 * Sets the domain.
-	 *
-	 * @param domain the new domain
-	 */
-	public void setDomain(Domain domain) {
-		this.domain = domain;
-	}
-
-	@ElementCollection(fetch = FetchType.EAGER) @Fetch(FetchMode.SELECT)
-	@AttributeOverrides({
-    @AttributeOverride(name = "address", column = @Column(name = "ipv4address")),
-    @AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4usage")),
-    @AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4mask")),
-  })
-	public Set<Network4Address> getSubnets() {
-		return subnets;
-	}
-
-	public void setSubnets(Set<Network4Address> subnets) {
-		this.subnets = subnets;
-	}
 
 	/*
 	 * (non-Javadoc)

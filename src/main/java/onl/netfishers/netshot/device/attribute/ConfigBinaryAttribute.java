@@ -25,12 +25,18 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @DiscriminatorValue("B")
 public class ConfigBinaryAttribute extends ConfigAttribute {
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Boolean assumption;
 
 	protected ConfigBinaryAttribute() {
@@ -39,15 +45,6 @@ public class ConfigBinaryAttribute extends ConfigAttribute {
 	public ConfigBinaryAttribute(Config config, String name, boolean value) {
 		super(config, name);
 		this.assumption = value;
-	}
-	
-	@XmlElement @JsonView(DefaultView.class)
-	public Boolean getAssumption() {
-		return assumption;
-	}
-
-	public void setAssumption(Boolean assumption) {
-		this.assumption = assumption;
 	}
 
 	@Override

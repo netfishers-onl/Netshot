@@ -23,6 +23,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.cluster.ClusterMember;
 import onl.netfishers.netshot.rest.RestViews.ClusteringView;
 
@@ -33,6 +35,10 @@ import onl.netfishers.netshot.rest.RestViews.ClusteringView;
 public class HelloClusterMessage extends ClusterMessage {
 	
 	/** Member info */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(ClusteringView.class)
+	}))
+	@Setter
 	private ClusterMember memberInfo;
 
 	public HelloClusterMessage(ClusterMember memberInfo) {
@@ -44,16 +50,6 @@ public class HelloClusterMessage extends ClusterMessage {
 	 * Hidden constructor
 	 */
 	protected HelloClusterMessage() {
-	}
-
-	@XmlElement
-	@JsonView(ClusteringView.class)
-	public ClusterMember getMemberInfo() {
-		return this.memberInfo;
-	}
-
-	public void setMemberInfo(ClusterMember memberInfo) {
-		this.memberInfo = memberInfo;
 	}
 
 	@Override

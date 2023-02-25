@@ -33,6 +33,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
@@ -55,9 +57,17 @@ public class Exemption {
 		private static final long serialVersionUID = 1684160749155998836L;
 
 		/** The rule. */
+		@Getter(onMethod=@__({
+			@ManyToOne
+		}))
+		@Setter
 		private Rule rule = null;
 
 		/** The device. */
+		@Getter(onMethod=@__({
+			@ManyToOne
+		}))
+		@Setter
 		private Device device = null;
 
 		/**
@@ -75,44 +85,6 @@ public class Exemption {
 		 */
 		public Key(Rule rule, Device device) {
 			this.rule = rule;
-			this.device = device;
-		}
-
-		/**
-		 * Gets the rule.
-		 *
-		 * @return the rule
-		 */
-		@ManyToOne
-		public Rule getRule() {
-			return rule;
-		}
-
-		/**
-		 * Sets the rule.
-		 *
-		 * @param rule the new rule
-		 */
-		public void setRule(Rule rule) {
-			this.rule = rule;
-		}
-
-		/**
-		 * Gets the device.
-		 *
-		 * @return the device
-		 */
-		@ManyToOne
-		public Device getDevice() {
-			return device;
-		}
-
-		/**
-		 * Sets the device.
-		 *
-		 * @param device the new device
-		 */
-		public void setDevice(Device device) {
 			this.device = device;
 		}
 
@@ -158,9 +130,17 @@ public class Exemption {
 	}
 
 	/** The key. */
+	@Getter(onMethod=@__({
+		@EmbeddedId
+	}))
+	@Setter
 	private Key key = new Key();
 
 	/** The expiration date. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Date expirationDate;
 
 	/**
@@ -180,25 +160,6 @@ public class Exemption {
 		this.key.setRule(rule);
 		this.key.setDevice(device);
 		this.expirationDate = expiration;
-	}
-
-	/**
-	 * Gets the expiration date.
-	 *
-	 * @return the expiration date
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getExpirationDate() {
-		return expirationDate;
-	}
-
-	/**
-	 * Sets the expiration date.
-	 *
-	 * @param expirationDate the new expiration date
-	 */
-	public void setExpirationDate(Date expirationDate) {
-		this.expirationDate = expirationDate;
 	}
 
 	/**
@@ -237,25 +198,6 @@ public class Exemption {
 	 */
 	public void setDevice(Device device) {
 		this.key.setDevice(device);
-	}
-
-	/**
-	 * Gets the key.
-	 *
-	 * @return the key
-	 */
-	@EmbeddedId
-	public Key getKey() {
-		return key;
-	}
-
-	/**
-	 * Sets the key.
-	 *
-	 * @param key the new key
-	 */
-	protected void setKey(Key key) {
-		this.key = key;
 	}
 
 	/* (non-Javadoc)

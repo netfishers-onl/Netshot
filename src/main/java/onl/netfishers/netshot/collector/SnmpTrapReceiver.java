@@ -33,8 +33,6 @@ import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.Network4Address;
 import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.snmp4j.CommandResponder;
 import org.snmp4j.CommandResponderEvent;
 import org.snmp4j.MessageDispatcherImpl;
@@ -52,14 +50,13 @@ import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.util.MultiThreadedMessageDispatcher;
 import org.snmp4j.util.ThreadPool;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * A SNMP trap receiver listens for SNMP traps and triggers snapshots if needed.
  */
+@Slf4j
 public class SnmpTrapReceiver implements CommandResponder {
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory
-			.getLogger(SnmpTrapReceiver.class);
 
 	/** The UDP port to listen for traps on. */
 	private static int UDP_PORT = 162;
@@ -81,7 +78,7 @@ public class SnmpTrapReceiver implements CommandResponder {
 	 */
 	public static void init() {
 		if (Netshot.getConfig("netshot.snmptrap.disabled", "false").equals("true")) {
-			logger.warn("The SNMP trap receiver is disabled by configuration.");
+			log.warn("The SNMP trap receiver is disabled by configuration.");
 			return;
 		}
 		String port = Netshot.getConfig("netshot.snmptrap.port");
@@ -104,7 +101,7 @@ public class SnmpTrapReceiver implements CommandResponder {
 			}
 		}
 		catch (Exception e) {
-			logger.warn("Error while parsing SNMP trap community option", e);
+			log.warn("Error while parsing SNMP trap community option", e);
 		}
 
 	}
@@ -145,10 +142,10 @@ public class SnmpTrapReceiver implements CommandResponder {
 			snmp.getMessageDispatcher().addMessageProcessingModel(new MPv2c());
 			snmp.listen();
 			snmp.addCommandResponder(this);
-			logger.debug("Now listening for SNMP traps on UDP port {}.", UDP_PORT);
+			log.debug("Now listening for SNMP traps on UDP port {}.", UDP_PORT);
 		}
 		catch (IOException e) {
-			logger.error("I/O error with the SNMP trap receiver.", e);
+			log.error("I/O error with the SNMP trap receiver.", e);
 			running = false;
 		}
 	}
@@ -161,7 +158,7 @@ public class SnmpTrapReceiver implements CommandResponder {
 	 */
 	@Override
 	public void processPdu(CommandResponderEvent event) {
-		logger.trace("Incoming SNMP message from {}.", event.getPeerAddress());
+		log.trace("Incoming SNMP message from {}.", event.getPeerAddress());
 		if (event.getSecurityLevel() == SecurityLevel.NOAUTH_NOPRIV
 				&& (event.getSecurityModel() == SecurityModel.SECURITY_MODEL_SNMPv1 || event
 						.getSecurityModel() == SecurityModel.SECURITY_MODEL_SNMPv2c)) {
@@ -190,7 +187,7 @@ public class SnmpTrapReceiver implements CommandResponder {
 							default:
 								data.put("version", "Unknown");
 							}
-							logger.debug("SNMP trap content: " + data);
+							log.debug("SNMP trap content: " + data);
 							List<String> matchingDrivers = new ArrayList<>();
 							for (DeviceDriver driver : DeviceDriver.getAllDrivers()) {
 								if (driver.analyzeTrap(data, source)) {
@@ -202,13 +199,13 @@ public class SnmpTrapReceiver implements CommandResponder {
 							}
 						}
 						catch (Exception e) {
-							logger.warn("Error on trap received from {}.", address, e);
+							log.warn("Error on trap received from {}.", address, e);
 						}
 					}
 				}
 			}
 			else {
-				logger.warn("Invalid community {} (vs {}) received from {}.", receivedCommunity,
+				log.warn("Invalid community {} (vs {}) received from {}.", receivedCommunity,
 						String.join(" ", communities), event.getPeerAddress());
 			}
 		}

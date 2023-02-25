@@ -24,6 +24,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.hibernate.annotations.Type;
 
 import onl.netfishers.netshot.rest.RestViews.RestApiView;
@@ -36,12 +39,26 @@ import onl.netfishers.netshot.rest.RestViews.RestApiView;
 public abstract class DeviceCliAccount extends DeviceCredentialSet {
 
 	/** The username. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(RestApiView.class)
+	}))
+	@Setter
 	private String username;
 	
 	/** The password. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(RestApiView.class),
+		@Type(type = "credentialString")
+	}))
+	@Setter
 	private String password;
 	
 	/** The super password. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(RestApiView.class),
+		@Type(type = "credentialString")
+	}))
+	@Setter
 	private String superPassword;
 	
 	/**
@@ -64,65 +81,6 @@ public abstract class DeviceCliAccount extends DeviceCredentialSet {
 		super(name);
 		this.username = username;
 		this.password = password;
-		this.superPassword = superPassword;
-	}
-	
-	/**
-	 * Gets the username.
-	 *
-	 * @return the username
-	 */
-	@XmlElement @JsonView(RestApiView.class)
-	public String getUsername() {
-		return username;
-	}
-	
-	/**
-	 * Sets the username.
-	 *
-	 * @param username the new username
-	 */
-	public void setUsername(String username) {
-		this.username = username;
-	}
-	
-	/**
-	 * Gets the password.
-	 *
-	 * @return the password
-	 */
-	@XmlElement @JsonView(RestApiView.class)
-	@Type(type = "credentialString")
-	public String getPassword() {
-		return password;
-	}
-	
-	/**
-	 * Sets the password.
-	 *
-	 * @param password the new password
-	 */
-	public void setPassword(String password) {
-		this.password = password;
-	}
-	
-	/**
-	 * Gets the super password.
-	 *
-	 * @return the super password
-	 */
-	@XmlElement @JsonView(RestApiView.class)
-	@Type(type = "credentialString")
-	public String getSuperPassword() {
-		return superPassword;
-	}
-	
-	/**
-	 * Sets the super password.
-	 *
-	 * @param superPassword the new super password
-	 */
-	public void setSuperPassword(String superPassword) {
 		this.superPassword = superPassword;
 	}
 

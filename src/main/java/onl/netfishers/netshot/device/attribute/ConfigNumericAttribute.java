@@ -25,12 +25,18 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @DiscriminatorValue("N")
 public class ConfigNumericAttribute extends ConfigAttribute {
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Double number;
 
 	protected ConfigNumericAttribute() {
@@ -38,15 +44,6 @@ public class ConfigNumericAttribute extends ConfigAttribute {
 	
 	public ConfigNumericAttribute(Config config, String name, double value) {
 		super(config, name);
-		this.number = value;
-	}
-	
-	@XmlElement @JsonView(DefaultView.class)
-	public Double getNumber() {
-		return number;
-	}
-
-	public void setNumber(Double value) {
 		this.number = value;
 	}
 

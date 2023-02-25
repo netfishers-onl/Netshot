@@ -30,6 +30,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 /**
@@ -50,43 +52,29 @@ public class HookTrigger implements Serializable {
 	};
 
 	/** Type of trigger */
+	@Getter(onMethod=@__({
+		@Id,
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private TriggerType type;
 
 	/** Item to be matched */
+	@Getter(onMethod=@__({
+		@Id,
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String item;
 
 	/** Associated hook */
+	@Getter(onMethod=@__({
+		@Id
+,		@ManyToOne
+	}))
+	@Setter
 	private Hook hook;
 
-	@Id
-	@XmlElement @JsonView(DefaultView.class)
-	public TriggerType getType() {
-		return type;
-	}
-
-	public void setType(TriggerType type) {
-		this.type = type;
-	}
-
-	@Id
-	@XmlElement @JsonView(DefaultView.class)
-	public String getItem() {
-		return item;
-	}
-
-	public void setItem(String item) {
-		this.item = item;
-	}
-
-	@Id
-	@ManyToOne()
-	public Hook getHook() {
-		return hook;
-	}
-
-	public void setHook(Hook hook) {
-		this.hook = hook;
-	}
 
 	@Override
 	public int hashCode() {

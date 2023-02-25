@@ -47,17 +47,15 @@ import onl.netfishers.netshot.diagnostic.Diagnostic;
 import org.hibernate.HibernateException;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
  * A Finder finds devices based on a text expression.
  */
+@Slf4j
 public class Finder {
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(Finder.class);
 
 	public static class ParsingData {
 		private DeviceDriver deviceDriver;
@@ -80,7 +78,7 @@ public class Finder {
 				this.diagnostics = session.createQuery("select d from Diagnostic d", Diagnostic.class).list();
 			}
 			catch (HibernateException e) {
-				logger.error("Unable to fetch the diagnostics.", e);
+				log.error("Unable to fetch the diagnostics.", e);
 				throw new FinderParseException("Unable to fetch the diagnostics. " + e.getMessage());
 			}
 			finally {

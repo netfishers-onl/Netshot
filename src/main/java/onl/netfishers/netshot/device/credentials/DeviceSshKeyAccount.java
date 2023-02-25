@@ -25,6 +25,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.hibernate.annotations.Type;
 
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
@@ -39,7 +42,19 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 @XmlRootElement()
 public class DeviceSshKeyAccount extends DeviceSshAccount {
 	
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Column(length = 5000)
+	}))
+	@Setter
 	private String publicKey;
+
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Column(length = 5000),
+		@Type(type = "credentialString")
+	}))
+	@Setter
 	private String privateKey;
 	
 	protected DeviceSshKeyAccount() {
@@ -51,27 +66,6 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 		super(username, passphrase, superPassword, name);
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
-	}
-
-	@Column(length = 5000)
-	@XmlElement @JsonView(DefaultView.class)
-	@Type(type = "credentialString")
-	public String getPrivateKey() {
-		return privateKey;
-	}
-
-	public void setPrivateKey(String privateKey) {
-		this.privateKey = privateKey;
-	}
-	
-	@Column(length = 5000)
-	@XmlElement @JsonView(DefaultView.class)
-	public String getPublicKey() {
-		return publicKey;
-	}
-
-	public void setPublicKey(String publicKey) {
-		this.publicKey = publicKey;
 	}
 
 	@Override

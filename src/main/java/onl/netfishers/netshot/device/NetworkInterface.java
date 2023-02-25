@@ -34,10 +34,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
+
+import lombok.Getter;
+import lombok.Setter;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -54,36 +58,83 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 public class NetworkInterface {
 	
 	/** The id. */
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlAttribute, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private long id;
 	
 	/** The device. */
+	@Getter(onMethod=@__({
+		@ManyToOne
+	}))
+	@Setter
 	protected Device device;
 	
 	/** The interface name. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String interfaceName;
 	
 	/** The ip4 addresses. */
+	@Getter(onMethod=@__({
+		@ElementCollection(fetch = FetchType.EAGER), @Fetch(FetchMode.SELECT),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected Set<Network4Address> ip4Addresses = new HashSet<>();
 	
 	/** The ip6 addresses. */
+	@Getter(onMethod=@__({
+		@ElementCollection(fetch = FetchType.EAGER), @Fetch(FetchMode.SELECT),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected Set<Network6Address> ip6Addresses = new HashSet<>();
 	
 	/** The physical address. */
+	@Getter(onMethod=@__({
+		@Embedded
+	}))
+	@Setter
 	protected PhysicalAddress physicalAddress = new PhysicalAddress(0);
 	
 	/** The vrf instance. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String vrfInstance;
 	
 	/** The virtual device. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String virtualDevice;
 	
 	/** The description. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String description;
 	
 	/** The enabled. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected boolean enabled;
 
 	/** The level3. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected boolean level3;
 	
 	/**
@@ -114,69 +165,6 @@ public class NetworkInterface {
 		this.enabled = enabled;
 		this.level3 = level3;
 		this.description = description;
-	}
-	
-	/**
-	 * Gets the id.
-	 *
-	 * @return the id
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * The ID.
-	 *
-	 * @param id the ID
-	 */
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	/**
-	 * Gets the interface name.
-	 *
-	 * @return the interface name
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getInterfaceName() {
-		return interfaceName;
-	}
-
-	/**
-	 * Gets the device.
-	 *
-	 * @return the device
-	 */
-	@ManyToOne
-	public Device getDevice() {
-		return device;
-	}
-
-	/**
-	 * Gets the ip4 addresses.
-	 *
-	 * @return the ip4 addresses
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@ElementCollection(fetch = FetchType.EAGER) @Fetch(FetchMode.SELECT)
-	public Set<Network4Address> getIp4Addresses() {
-		return ip4Addresses;
-	}
-	
-	/**
-	 * Gets the ip6 addresses.
-	 *
-	 * @return the ip6 addresses
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@ElementCollection(fetch = FetchType.EAGER) @Fetch(FetchMode.SELECT)
-	public Set<Network6Address> getIp6Addresses() {
-		return ip6Addresses;
 	}
 	
 	/**
@@ -229,37 +217,6 @@ public class NetworkInterface {
 			ip6Addresses.add((Network6Address) address);
 		}
 	}
-	
-
-	/**
-	 * Gets the vrf instance.
-	 *
-	 * @return the vrf instance
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getVrfInstance() {
-		return vrfInstance;
-	}
-
-	/**
-	 * Checks if is enabled.
-	 *
-	 * @return true, if is enabled
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	/**
-	 * Checks if is level3.
-	 *
-	 * @return true, if is level3
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isLevel3() {
-		return level3;
-	}
 
 	/**
 	 * Gets the mac address.
@@ -270,124 +227,6 @@ public class NetworkInterface {
 	@Transient
 	public String getMacAddress() {
 		return physicalAddress.toString();
-	}
-	
-	/**
-	 * Gets the physical address.
-	 *
-	 * @return the physical address
-	 */
-	@Embedded
-	public PhysicalAddress getPhysicalAddress() {
-		return physicalAddress;
-	}
-
-	/**
-	 * Sets the physical address.
-	 *
-	 * @param physicalAddress the new physical address
-	 */
-	public void setPhysicalAddress(PhysicalAddress physicalAddress) {
-		this.physicalAddress = physicalAddress;
-	}
-
-	/**
-	 * Gets the virtual device.
-	 *
-	 * @return the virtual device
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getVirtualDevice() {
-		return virtualDevice;
-	}
-
-	/**
-	 * Sets the virtual device.
-	 *
-	 * @param virtualDevice the new virtual device
-	 */
-	public void setVirtualDevice(String virtualDevice) {
-		this.virtualDevice = virtualDevice;
-	}
-
-	/**
-	 * Gets the description.
-	 *
-	 * @return the description
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getDescription() {
-		return description;
-	}
-
-	/**
-	 * Sets the device.
-	 *
-	 * @param device the new device
-	 */
-	public void setDevice(Device device) {
-		this.device = device;
-	}
-
-	/**
-	 * Sets the description.
-	 *
-	 * @param description the new description
-	 */
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	/**
-	 * Sets the interface name.
-	 *
-	 * @param interfaceName the new interface name
-	 */
-	public void setInterfaceName(String interfaceName) {
-		this.interfaceName = interfaceName;
-	}
-
-	/**
-	 * Sets the vrf instance.
-	 *
-	 * @param vrfInstance the new vrf instance
-	 */
-	public void setVrfInstance(String vrfInstance) {
-		this.vrfInstance = vrfInstance;
-	}
-
-	/**
-	 * Sets the enabled.
-	 *
-	 * @param enabled the new enabled
-	 */
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-
-	/**
-	 * Sets the level3.
-	 *
-	 * @param level3 the new level3
-	 */
-	public void setLevel3(boolean level3) {
-		this.level3 = level3;
-	}
-	
-	/**
-	 * Sets the IPv4 addresses.
-	 * @param ip4Addresses the IPv4 addresses
-	 */
-	public void setIp4Addresses(Set<Network4Address> ip4Addresses) {
-		this.ip4Addresses = ip4Addresses;
-	}
-
-	/**
-	 * Sets the IPv6 addresses.
-	 * @param ip6Addresses the IPv6 addresses
-	 */
-	public void setIp6Addresses(Set<Network6Address> ip6Addresses) {
-		this.ip6Addresses = ip6Addresses;
 	}
 
 	/* (non-Javadoc)

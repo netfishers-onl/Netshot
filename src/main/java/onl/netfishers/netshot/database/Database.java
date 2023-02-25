@@ -105,8 +105,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.ServiceRegistry;
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.hibernate5.encryptor.HibernatePBEEncryptorRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
 
 import liquibase.Contexts;
@@ -115,14 +113,13 @@ import liquibase.Liquibase;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Database class, utilities to access the database.
  */
+@Slf4j
 public class Database {
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(Database.class);
 
 	/** The session factory. */
 	private static SessionFactory sessionFactory;
@@ -228,7 +225,7 @@ public class Database {
 			}
 		}
 		catch (Exception e) {
-			logger.error("Unable to perform initial schema update", e);
+			log.error("Unable to perform initial schema update", e);
 		}
 	}
 
@@ -336,7 +333,7 @@ public class Database {
 				.addAnnotatedClass(WebHook.class)
 				.addAnnotatedClass(HookTrigger.class);
 			for (Class<?> clazz : Task.getTaskClasses()) {
-				logger.info("Registering task class " + clazz.getName());
+				log.info("Registering task class " + clazz.getName());
 				sources.addAnnotatedClass(clazz);
 			}
 			for (Class<?> clazz : Rule.getRuleClasses()) {
@@ -372,7 +369,7 @@ public class Database {
 
 		}
 		catch (HibernateException e) {
-			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate Hibernate", e);
+			log.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate Hibernate", e);
 			throw new RuntimeException("Unable to instantiate Hibernate, see logs for more details");
 		}
 	}

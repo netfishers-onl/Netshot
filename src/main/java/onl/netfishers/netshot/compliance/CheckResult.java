@@ -34,6 +34,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.apache.commons.lang3.StringUtils;
 
 import onl.netfishers.netshot.device.Device;
@@ -56,10 +59,17 @@ public class CheckResult {
 		/** The Constant serialVersionUID. */
 		private static final long serialVersionUID = 8277228096576043644L;
 
-		/** The rule. */
+		@Getter(onMethod=@__({
+			@ManyToOne
+		}))
+		@Setter
 		private Rule rule = null;
 
 		/** The device. */
+		@Getter(onMethod=@__({
+			@ManyToOne
+		}))
+		@Setter
 		private Device device = null;
 
 		/**
@@ -77,44 +87,6 @@ public class CheckResult {
 		 */
 		public Key(Rule rule, Device device) {
 			this.rule = rule;
-			this.device = device;
-		}
-
-		/**
-		 * Gets the rule.
-		 *
-		 * @return the rule
-		 */
-		@ManyToOne
-		public Rule getRule() {
-			return rule;
-		}
-
-		/**
-		 * Sets the rule.
-		 *
-		 * @param rule the new rule
-		 */
-		public void setRule(Rule rule) {
-			this.rule = rule;
-		}
-
-		/**
-		 * Gets the device.
-		 *
-		 * @return the device
-		 */
-		@ManyToOne
-		public Device getDevice() {
-			return device;
-		}
-
-		/**
-		 * Sets the device.
-		 *
-		 * @param device the new device
-		 */
-		public void setDevice(Device device) {
 			this.device = device;
 		}
 
@@ -183,6 +155,7 @@ public class CheckResult {
 		NOTAPPLICABLE(2);
 
 		/** The value. */
+		@Getter
 		final private int value;
 
 		/**
@@ -193,27 +166,34 @@ public class CheckResult {
 		private ResultOption(int value) {
 			this.value = value;
 		}
-
-		/**
-		 * Gets the value.
-		 *
-		 * @return the value
-		 */
-		public int getValue() {
-			return value;
-		}
 	}
 
 	/** The key. */
+	@Getter(onMethod=@__({
+		@EmbeddedId
+	}))
+	@Setter
 	private Key key = new Key();
 
 	/** The check date. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Date checkDate = new Date();
 
 	/** The comment. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Column(length = 10000)
+	}))
 	private String comment = "";
 
 	/** The result. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private CheckResult.ResultOption result = CheckResult.ResultOption.NOTAPPLICABLE;
 
 	/**
@@ -252,23 +232,12 @@ public class CheckResult {
 	}
 
 	/**
-	 * Gets the comment.
-	 *
-	 * @return the comment
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Column(length = 10000)
-	public String getComment() {
-		return comment;
-	}
-
-	/**
 	 * Sets the comment.
 	 *
 	 * @param comment the new comment
 	 */
 	public void setComment(String comment) {
-		this.comment = StringUtils.abbreviate(comment, 255);
+		this.comment = StringUtils.abbreviate(comment, 9900);
 	}
 
 	/**
@@ -307,64 +276,6 @@ public class CheckResult {
 	 */
 	public void setDevice(Device device) {
 		this.key.setDevice(device);
-	}
-
-	/**
-	 * Gets the key.
-	 *
-	 * @return the key
-	 */
-	@EmbeddedId
-	public Key getKey() {
-		return key;
-	}
-
-	/**
-	 * Sets the key.
-	 *
-	 * @param key the new key
-	 */
-	protected void setKey(Key key) {
-		this.key = key;
-	}
-
-	/**
-	 * Gets the check date.
-	 *
-	 * @return the check date
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getCheckDate() {
-		return checkDate;
-	}
-
-	/**
-	 * Sets the check date.
-	 *
-	 * @param checkDate the new check date
-	 */
-	public void setCheckDate(Date checkDate) {
-		this.checkDate = checkDate;
-	}
-
-
-	/**
-	 * Gets the result.
-	 *
-	 * @return the result
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public CheckResult.ResultOption getResult() {
-		return result;
-	}
-
-	/**
-	 * Sets the result.
-	 *
-	 * @param result the new result
-	 */
-	public void setResult(CheckResult.ResultOption result) {
-		this.result = result;
 	}
 
 	/* (non-Javadoc)

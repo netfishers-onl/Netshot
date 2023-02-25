@@ -26,6 +26,9 @@ import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Transient;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * A MAC address.
  */
@@ -33,6 +36,10 @@ import javax.persistence.Transient;
 public class PhysicalAddress {
 
 	/** The address. */
+	@Getter(onMethod=@__({
+		@Column(name = "physicalAddress")
+	}))
+	@Setter
 	private long address;
 
 	/**
@@ -149,25 +156,6 @@ public class PhysicalAddress {
 		return String.format("%02x%02x.%02x%02x.%02x%02x",
 				macAddress[0], macAddress[1], macAddress[2],
 				macAddress[3], macAddress[4], macAddress[5]);
-	}
-	
-	/**
-	 * Gets the MAC address (stored as long).
-	 * 
-	 * @return the MAC address
-	 */
-	@Column(name = "physicalAddress")
-	protected long getAddress() {
-		return this.address;
-	}
-	
-	/**
-	 * Sets the MAC address.
-	 * 
-	 * @param address MAC address as long
-	 */
-	protected void setAddress(long address) {
-		this.address = address;
 	}
 	
 	/**

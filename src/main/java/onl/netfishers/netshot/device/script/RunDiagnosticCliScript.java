@@ -27,9 +27,8 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Value;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.Device.InvalidCredentialsException;
@@ -48,9 +47,8 @@ import onl.netfishers.netshot.device.script.helper.JsSnmpHelper;
 import onl.netfishers.netshot.diagnostic.Diagnostic;
 import onl.netfishers.netshot.work.TaskLogger;
 
+@Slf4j
 public class RunDiagnosticCliScript extends CliScript {
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(RunDiagnosticCliScript.class);
 	
 	/** The diagnostics to execute. */
 	private List<Diagnostic> diagnostics;
@@ -83,7 +81,7 @@ public class RunDiagnosticCliScript extends CliScript {
 		// Filter on the device driver
 		try (Context context = driver.getContext()) {
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
-			options.setDevice(new JsDeviceHelper(device, cli, null, taskLogger, false));
+			options.setDeviceHelper(new JsDeviceHelper(device, cli, null, taskLogger, false));
 
 			Map<String, Object> jsDiagnostics = new HashMap<String, Object>();
 			for (Diagnostic diagnostic : this.diagnostics) {
@@ -95,7 +93,7 @@ public class RunDiagnosticCliScript extends CliScript {
 					jsDiagnostics.put(diagnostic.getName(), jsObject);
 				}
 				catch (Exception e1) {
-					logger.error("Error while preparing the diagnostic {} for JS", diagnostic.getName(), e1);
+					log.error("Error while preparing the diagnostic {} for JS", diagnostic.getName(), e1);
 					taskLogger.error(String.format("Error while preparing the diagnostic %s for JS: '%s'.",
 							diagnostic.getName(), e1.getMessage()));
 				}
@@ -108,7 +106,7 @@ public class RunDiagnosticCliScript extends CliScript {
 
 		}
 		catch (PolyglotException e) {
-			logger.error("Error while running script using driver {}.", driver.getName(), e);
+			log.error("Error while running script using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("Error while running script  using driver %s: '%s'.",
 					driver.getName(), e.getMessage()));
 			if (e.getMessage().contains("Authentication failed")) {
@@ -119,7 +117,7 @@ public class RunDiagnosticCliScript extends CliScript {
 			}
 		}
 		catch (UnsupportedOperationException e) {
-			logger.error("No such method while using driver {}.", driver.getName(), e);
+			log.error("No such method while using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("No such method while using driver %s to execute script: '%s'.",
 					driver.getName(), e.getMessage()));
 			throw e;

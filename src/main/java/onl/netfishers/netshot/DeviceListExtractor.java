@@ -23,11 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import ch.qos.logback.classic.Level;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
@@ -36,11 +36,8 @@ import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
 import onl.netfishers.netshot.device.credentials.DeviceSshAccount;
 import onl.netfishers.netshot.device.credentials.DeviceTelnetAccount;
 
-
+@Slf4j
 public class DeviceListExtractor extends Netshot {
-	
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(DeviceListExtractor.class);
 	
 	/**
 	 * Initializes the logging.
@@ -65,7 +62,7 @@ public class DeviceListExtractor extends Netshot {
 	public static void main(String[] args) {
 		System.out.println("Netshot Device List Extractor -- extracts and formats device data.");
 		System.out.println(String.format("Based on Netshot version %s.", Netshot.VERSION));
-		logger.info("Starting now.");
+		log.info("Starting now.");
 		
 		if (!Netshot.initConfig()) {
 			System.exit(1);
@@ -77,10 +74,10 @@ public class DeviceListExtractor extends Netshot {
 		StringBuffer output = new StringBuffer();
 
 		try {
-			logger.info("Initializing access to the database.");
+			log.info("Initializing access to the database.");
 			Database.init();
 			
-			logger.info("Requesting data from the DB...");
+			log.info("Requesting data from the DB...");
 			Session session = Database.getSession();
 			@SuppressWarnings("unchecked")
 			List<Device> devices = session
@@ -106,10 +103,10 @@ public class DeviceListExtractor extends Netshot {
 					cliAccount = (DeviceCliAccount) device.getSpecificCredentialSet();
 				}
 				if (cliAccount == null) {
-					logger.warn(String.format("No CLI account found for device %s.", device.getName()));
+					log.warn(String.format("No CLI account found for device %s.", device.getName()));
 				}
 				if (community == null) {
-					logger.warn(String.format("No SNMP community found for device %s.", device.getName()));
+					log.warn(String.format("No SNMP community found for device %s.", device.getName()));
 				}
 				List<String> fields = new ArrayList<>();
 				fields.add(device.getMgmtAddress().getInetAddress().getHostAddress());		// Col. 1 = IP Address <<<

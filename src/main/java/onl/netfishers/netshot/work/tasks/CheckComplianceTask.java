@@ -28,6 +28,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.compliance.HardwareRule;
 import onl.netfishers.netshot.compliance.Policy;
@@ -41,19 +44,19 @@ import onl.netfishers.netshot.work.TaskLogger;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.quartz.JobKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This task checks the configuration compliance of a device.
  */
 @Entity
+@Slf4j
 public class CheckComplianceTask extends Task implements DeviceBasedTask {
 
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(CheckComplianceTask.class);
-
 	/** The device. */
+	@Getter(onMethod=@__({
+		@ManyToOne(fetch = FetchType.LAZY)
+	}))
+	@Setter
 	private Device device;
 
 	/**
@@ -86,7 +89,7 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Task {}. Starting check compliance task for device {}.", this.getId(), device.getId());
+		log.debug("Task {}. Starting check compliance task for device {}.", this.getId(), device.getId());
 		this.trace(String.format("Check compliance task for device %s (%s).",
 				device.getName(), device.getMgmtAddress().getIp()));
 
@@ -99,7 +102,7 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 				.executeUpdate();
 			session.refresh(this.device);
 			if (this.device.getLastConfig() == null) {
-				logger.info("Task {}. Unable to fetch the device with its last config... has it been captured at least once?",
+				log.info("Task {}. Unable to fetch the device with its last config... has it been captured at least once?",
 						this.getId());
 				throw new Exception("No last config for this device. Has it been captured at least once?");
 			}
@@ -144,9 +147,9 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 				session.getTransaction().rollback();
 			}
 			catch (Exception e1) {
-				logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
+				log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 			}
-			logger.error("Task {}. Error while checking compliance.", this.getId(), e);
+			log.error("Task {}. Error while checking compliance.", this.getId(), e);
 			this.error("Error while checking compliance: " + e.getMessage());
 			this.status = Status.FAILURE;
 			return;
@@ -166,25 +169,6 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 	@Transient
 	public String getTaskDescription() {
 		return "Device compliance check";
-	}
-
-	/**
-	 * Gets the device.
-	 *
-	 * @return the device
-	 */
-	@ManyToOne(fetch = FetchType.LAZY)
-	public Device getDevice() {
-		return device;
-	}
-
-	/**
-	 * Sets the device.
-	 *
-	 * @param device the new device
-	 */
-	public void setDevice(Device device) {
-		this.device = device;
 	}
 
 	/* (non-Javadoc)

@@ -30,6 +30,8 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
@@ -38,12 +40,24 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 public class ConfigBinaryFileAttribute extends ConfigAttribute {
 
 	/** Unique ID generated before saving */
+	@Getter(onMethod=@__({
+		@Column(unique = true)
+	}))
+	@Setter
 	private String uid;
 
 	/** Original name of the file */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String originalName;
 
 	/** File size (in bytes) */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private long fileSize = 0L;
 	
 	protected ConfigBinaryFileAttribute() {
@@ -53,23 +67,6 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 		super(config, name);
 		this.uid = UUID.randomUUID().toString();
 		this.originalName = originalName;
-	}
-
-	/**
-	 * Get the uid
-	 * @return the uid
-	 */
-	@Column(unique =  true)
-	public String getUid() {
-		return uid;
-	}
-
-	/**
-	 * Set the uid
-	 * @param uid the uid to set
-	 */
-	public void setUid(String uid) {
-		this.uid = uid;
 	}
 
 	/**
@@ -95,39 +92,6 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 	@Transient
 	public Object getData() {
 		return null;
-	}
-
-	/**
-	 * Gets the original file name.
-	 * @return the original file name
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getOriginalName() {
-		return originalName;
-	}
-
-	/**
-	 * Sets the original file name
-	 * @param originalName the original file name
-	 */
-	public void setOriginalName(String originalName) {
-		this.originalName = originalName;
-	}
-
-	/**
-	 * @return the fileSize
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public long getFileSize() {
-		return fileSize;
-	}
-
-	/**
-	 * @param fileSize the fileSize to set
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public void setFileSize(long fileSize) {
-		this.fileSize = fileSize;
 	}
 
 	@Override

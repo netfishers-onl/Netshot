@@ -7,6 +7,8 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.cluster.ClusterMember;
 
 /**
@@ -18,6 +20,10 @@ import onl.netfishers.netshot.cluster.ClusterMember;
 public class AutoSnapshotMessage extends ClusterMessage {
 
 	/** Device IDs */
+	@Getter(onMethod=@__({
+		@XmlElement
+	}))
+	@Setter
 	Set<Long> deviceIds = new HashSet<>();
 
 	/**
@@ -31,15 +37,6 @@ public class AutoSnapshotMessage extends ClusterMessage {
 	 * Hidden constructor
 	 */
 	protected AutoSnapshotMessage() {
-	}
-
-	@XmlElement
-	public Set<Long> getDeviceIds() {
-		return deviceIds;
-	}
-
-	public void setDeviceIds(Set<Long> deviceIds) {
-		this.deviceIds = deviceIds;
 	}
 
 	public void addDeviceIds(Collection<Long> deviceIds) {

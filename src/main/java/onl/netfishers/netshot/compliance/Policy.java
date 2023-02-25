@@ -30,11 +30,14 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
@@ -51,15 +54,34 @@ import org.hibernate.annotations.NaturalId;
 public class Policy {
 
 	/** The id. */
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlAttribute, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private long id;
 
 	/** The name. */
+	@Getter(onMethod=@__({
+		@NaturalId(mutable = true),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String name;
 
 	/** The rules. */
+	@Getter(onMethod=@__({
+		@OneToMany(mappedBy = "policy", cascade = CascadeType.ALL)
+	}))
+	@Setter
 	private Set<Rule> rules = new HashSet<>();
 
 	/** The target group. */
+	@Getter(onMethod=@__({
+		@ManyToMany(),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Set<DeviceGroup> targetGroups;
 
 	/**
@@ -118,87 +140,6 @@ public class Policy {
 			taskLogger.info(String.format("Evaluating rule %s (policy %s)...", rule.getName(), this.getName()));
 			device.getComplianceCheckResults().add(rule.check(device, session, taskLogger));
 		}
-	}
-
-	/**
-	 * Gets the id.
-	 *
-	 * @return the id
-	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement @JsonView(DefaultView.class)
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * Gets the name.
-	 *
-	 * @return the name
-	 */
-	@NaturalId(mutable = true)
-	@XmlElement @JsonView(DefaultView.class)
-	public String getName() {
-		return name;
-	}
-
-	/**
-	 * Gets the rules.
-	 *
-	 * @return the rules
-	 */
-	@OneToMany(mappedBy = "policy",
-			cascade = CascadeType.ALL)
-	public Set<Rule> getRules() {
-		return rules;
-	}
-
-	/**
-	 * Gets the target groups.
-	 *
-	 * @return the target groups
-	 */
-	@ManyToMany()
-	@XmlElement @JsonView(DefaultView.class)
-	public Set<DeviceGroup> getTargetGroups() {
-		return targetGroups;
-	}
-
-	/**
-	 * Sets the id.
-	 *
-	 * @param id the new id
-	 */
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	/**
-	 * Sets the name.
-	 *
-	 * @param name the new name
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	/**
-	 * Sets the rules.
-	 *
-	 * @param rules the new rules
-	 */
-	public void setRules(Set<Rule> rules) {
-		this.rules = rules;
-	}
-
-	/**
-	 * Sets the target groups.
-	 *
-	 * @param targetGroup the new target groups
-	 */
-	public void setTargetGroups(Set<DeviceGroup> targetGroups) {
-		this.targetGroups = targetGroups;
 	}
 
 	/* (non-Javadoc)

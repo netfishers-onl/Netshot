@@ -48,6 +48,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.codec.binary.Hex;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
@@ -76,6 +80,7 @@ import onl.netfishers.netshot.work.Task;
  */
 @XmlRootElement()
 @XmlAccessorType(XmlAccessType.NONE)
+@Slf4j
 public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	/**
@@ -110,41 +115,24 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	@XmlAccessorType(value = XmlAccessType.NONE)
 	public static class Location {
 		/** Location type */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
 		private LocationType type;
 
 		/** File name */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
 		private String fileName;
 
 		public Location(LocationType type, String fileName) {
 			this.type = type;
 			this.fileName = fileName;
 		}
-
-		@XmlElement
-		@JsonView(DefaultView.class)
-		public LocationType getType() {
-			return type;
-		}
-
-		public void setType(LocationType type) {
-			this.type = type;
-		}
-
-		@XmlElement
-		@JsonView(DefaultView.class)
-		public String getFileName() {
-			return fileName;
-		}
-
-		public void setFileName(String fileName) {
-			this.fileName = fileName;
-		}
 	}
-
-
-
-	/** The logger. */
-	final static Logger logger = LoggerFactory.getLogger(DeviceDriver.class);
 
 	/** JS logger for SNMP-related messages */
 	private static TaskLogger JS_SNMP_LOGGER = new TaskLogger() {
@@ -211,7 +199,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	static {
 		try {
-			logger.info("Reading the JavaScript driver loader code from the resource JS file.");
+			log.info("Reading the JavaScript driver loader code from the resource JS file.");
 			// Read the JavaScript loader code from the resource file.
 			String path = "interfaces/driver-loader.js";
 			InputStream in = DeviceDriver.class.getResourceAsStream("/" + path);
@@ -225,10 +213,10 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			reader.close();
 			in.close();
 			JSLOADER_SOURCE = Source.create("js", buffer.toString());
-			logger.debug("The JavaScript driver loader code has been read from the resource JS file.");
+			log.debug("The JavaScript driver loader code has been read from the resource JS file.");
 		}
 		catch (Exception e) {
-			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to read the Javascript driver loader.", e);
+			log.error(MarkerFactory.getMarker("FATAL"), "Unable to read the Javascript driver loader.", e);
 			System.err.println("NETSHOT FATAL ERROR");
 			e.printStackTrace();
 			System.exit(1);
@@ -307,7 +295,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 					}
 				});
 				for (File file : files) {
-					logger.info("Found user device driver file {}.", file);
+					log.info("Found user device driver file {}.", file);
 					Reader reader = null;
 					try {
 						InputStream stream = new FileInputStream(file);
@@ -315,7 +303,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						DeviceDriver driver = new DeviceDriver(reader, file.getName(),
 							new Location(LocationType.FILE, file.getAbsolutePath()));
 						if (newDrivers.containsKey(driver.getName())) {
-							logger.warn(
+							log.warn(
 									"Skipping user device driver file {}, because a similar driver is already loaded.",
 									file);
 						}
@@ -324,7 +312,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						}
 					}
 					catch (Exception e) {
-						logger.error("Error while loading user device driver {}.", file, e);
+						log.error("Error while loading user device driver {}.", file, e);
 					}
 					finally {
 						if (reader != null) {
@@ -334,14 +322,14 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 				}
 			}
 			else {
-				logger.error("Unable to open {} to find device drivers.", addPath);
+				log.error("Unable to open {} to find device drivers.", addPath);
 			}
 		}
 
 		String driverPathName = "drivers/";
 		final URL driverUrl = DeviceDriver.class.getResource("/" + driverPathName);
 		if (driverUrl != null && "file".equals(driverUrl.getProtocol())) {
-			logger.debug("Scanning folder {} for device drivers (.js).", driverUrl);
+			log.debug("Scanning folder {} for device drivers (.js).", driverUrl);
 			final File folder = new File(driverUrl.toURI());
 			if (folder.isDirectory()) {
 				File[] files = folder.listFiles(new FileFilter() {
@@ -351,7 +339,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 					}
 				});
 				for (File file : files) {
-					logger.info("Found Netshot device driver file {}.", file);
+					log.info("Found Netshot device driver file {}.", file);
 					Reader reader = null;
 					try {
 						InputStream stream = DeviceDriver.class
@@ -360,7 +348,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						DeviceDriver driver = new DeviceDriver(reader, file.getName(),
 							new Location(LocationType.EMBEDDED, file.getAbsolutePath()));
 						if (newDrivers.containsKey(driver.getName())) {
-							logger.warn(
+							log.warn(
 									"Skipping Netshot device driver file {}, because a similar driver is already loaded.",
 									file);
 						}
@@ -369,7 +357,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						}
 					}
 					catch (Exception e1) {
-						logger.error("Error while loading the device driver {}.", file, e1);
+						log.error("Error while loading the device driver {}.", file, e1);
 					}
 					finally {
 						if (reader != null) {
@@ -389,7 +377,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 				while (e.hasMoreElements()) {
 					final JarEntry je = e.nextElement();
 					if (!je.isDirectory() && je.getName().startsWith(driverPathName)) {
-						logger.info("Found Netshot device driver file {} (in jar).", file);
+						log.info("Found Netshot device driver file {} (in jar).", file);
 						Reader reader = null;
 						try {
 							InputStream stream = jar.getInputStream(je);
@@ -398,7 +386,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 									je.getName().replace(driverPathName, ""),
 									new Location(LocationType.EMBEDDED, jar.getName()));
 							if (newDrivers.containsKey(driver.getName())) {
-								logger.warn(
+								log.warn(
 										"Skipping Netshot device driver file {}, because a similar driver is already loaded.",
 										file);
 							}
@@ -407,7 +395,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 							}
 						}
 						catch (Exception e1) {
-							logger.error("Error while loading the device driver {} from jar file.", file, e1);
+							log.error("Error while loading the device driver {} from jar file.", file, e1);
 						}
 						finally {
 							if (reader != null) {
@@ -419,7 +407,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 				jar.close();
 			}
 			catch (Exception e) {
-				logger.error("While looking for device drivers in {}.", path, e);
+				log.error("While looking for device drivers in {}.", path, e);
 			}
 		}
 
@@ -434,33 +422,58 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	}
 
 	/** The name of the driver */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
 	private String name;
 
 	/** The author of the driver */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
 	private String author;
 
 	/** The description of the driver */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
 	private String description;
 
 	/** The version of the driver */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
 	private String version;
 
 	/**
 	 * The priority of the driver for autodiscovery (65536 by default, larger number
 	 * gives higher priority)
 	 */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
 	private int priority;
 
 	/** The device attributed provided by this driver */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
 	Set<AttributeDefinition> attributes = new HashSet<>();
 
 	/** The protocols provided by this driver */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Set<DriverProtocol> protocols = new HashSet<>();
 
 	/**
 	 * The main CLI modes supported by this driver (e.g. 'enable', 'configure',
 	 * etc.)
 	 */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
 	private Set<String> cliMainModes = new HashSet<>();
 
 	/** Set to true if the driver can analyze SNMP traps */
@@ -479,18 +492,32 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	private Source source;
 
 	/** Source hash */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
 	private String sourceHash;
 
 	/** Driver file location */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
 	private Location location;
 
 	/** The execution engine (for eval caching) */
 	private Engine engine;
 
 	/** Driver-specific SSH config */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private SshConfig sshConfig;
 
 	/** Driver-specific Telnet config */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private TelnetConfig telnetConfig;
 
 	/** Instantiates a new device driver (empty constructor) */
@@ -716,7 +743,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 				throw new IllegalArgumentException("Invalid driver, the 'snapshot' function cannot be found.");
 			}
 
-			logger.info("Loaded driver {} version {}.", this.name, this.version);
+			log.info("Loaded driver {} version {}.", this.name, this.version);
 		}
 	}
 
@@ -742,11 +769,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		catch (Exception e) {
 			if (e instanceof PolyglotException && e.getMessage() != null
 					&& e.getMessage().contains("No analyzeSyslog function.")) {
-				logger.info("The driver {} has no analyzeSyslog function. Won't be called again.", name);
+				log.info("The driver {} has no analyzeSyslog function. Won't be called again.", name);
 				this.canAnalyzeSyslog = false;
 			}
 			else {
-				logger.error("Error while running _analyzeSyslog function on driver {}.", name, e);
+				log.error("Error while running _analyzeSyslog function on driver {}.", name, e);
 			}
 		}
 		return false;
@@ -765,102 +792,26 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		catch (Exception e) {
 			if (e instanceof PolyglotException && e.getMessage() != null
 					&& e.getMessage().contains("No analyzeTrap function.")) {
-				logger.info("The driver {} has no analyzeTrap function. Won't be called again.", name);
+				log.info("The driver {} has no analyzeTrap function. Won't be called again.", name);
 				this.canAnalyzeTraps = false;
 			}
 			else {
-				logger.error("Error while running _analyzeTrap function on driver {}.", name, e);
+				log.error("Error while running _analyzeTrap function on driver {}.", name, e);
 			}
 		}
 		return false;
 	}
 
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public Set<AttributeDefinition> getAttributes() {
-		return attributes;
-	}
-
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public String getAuthor() {
-		return author;
-	}
-
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public String getDescription() {
-		return description;
-	}
-
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public String getName() {
-		return name;
-	}
-
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public Set<DriverProtocol> getProtocols() {
-		return protocols;
-	}
-
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public Set<String> getCliMainModes() {
-		return cliMainModes;
-	}
-
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public String getVersion() {
-		return version;
-	}
-
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public int getPriority() {
-		return priority;
-	}
-
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public String getSourceHash() {
-		return sourceHash;
-	}
-
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public SshConfig getSshConfig() {
-		return sshConfig;
-	}
-
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public TelnetConfig getTelnetConfig() {
-		return telnetConfig;
-	}
-
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public Location getLocation() {
-		return location;
-	}
-
 	@Transient
 	public final Context getContext() throws IOException {
-		logger.debug("Getting context");
+		log.debug("Getting context");
 		Context context = Context.newBuilder()
 			.allowIO(true).fileSystem(new PythonFileSystem())
 			.engine(engine).build();
 		context.eval(this.source);
 		context.eval(JSLOADER_SOURCE);
-		logger.debug("Context is ready");
+		log.debug("Context is ready");
 		return context;
-	}
-	
-	protected void setProtocols(Set<DriverProtocol> protocols) {
-		this.protocols = protocols;
 	}
 	
 	/**
@@ -884,11 +835,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		catch (Exception e) {
 			if (e instanceof PolyglotException && e.getMessage() != null &&
 					e.getMessage().contains("No snmpAutoDiscover function.")) {
-				logger.info("The driver {} has no snmpAutoDiscover function.", name);
+				log.info("The driver {} has no snmpAutoDiscover function.", name);
 				this.canSnmpAutodiscover = false;
 			}
 			else {
-				logger.error("Error while running _snmpAutoDiscover function on driver {}.", name, e);
+				log.error("Error while running _snmpAutoDiscover function on driver {}.", name, e);
 			}
 		}
 		return false;

@@ -44,7 +44,7 @@ define([
 			this.refreshTasks();
 
 			$('#nstoolbar-section').html(this.toolBarTemplate);
-			if (!user.isReadWrite()) {
+			if (!user.isOperator()) {
 				$('#nstoolbar-section').empty();
 			}
 			$('#nstoolbar-section button').button();

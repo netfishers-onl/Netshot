@@ -25,6 +25,9 @@ public interface User extends Principal {
 	/** Read-only authorization level. */
 	public final static int LEVEL_READONLY = 10;
 
+	/** Operator authorization level. */
+	public final static int LEVEL_OPERATOR = 50;
+
 	/** Read-write authorization level. */
 	public final static int LEVEL_READWRITE = 100;
 

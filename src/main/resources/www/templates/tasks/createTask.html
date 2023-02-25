@@ -9,13 +9,9 @@
 	</div>
 	
 	<form>
-		<div class="nsdialog-page1">	
+		<div class="nsdialog-page1">
 			<div>
-				<input type="radio" id="ScanSubnetsTask" name="tasktype" checked="checked" />
-				<label for="ScanSubnetsTask">Scan subnets to discover devices</label>
-			</div>
-			<div>
-				<input type="radio" id="TakeGroupSnapshotTask" name="tasktype" />
+				<input type="radio" id="TakeGroupSnapshotTask" name="tasktype" checked="checked" />
 				<label for="TakeGroupSnapshotTask">Take a snapshot of a group of devices</label>
 			</div>
 			<div>
@@ -31,7 +27,11 @@
 				<label for="CheckGroupSoftwareTask">Check the software compliance and hardware support status of a group of devices</label>
 			</div>
 			<div>
-				<input type="radio" id="PurgeDatabaseTask" name="tasktype" data-level="admin" />
+				<input type="radio" id="ScanSubnetsTask" name="tasktype" data-level="100" />
+				<label for="ScanSubnetsTask">Scan subnets to discover devices</label>
+			</div>
+			<div>
+				<input type="radio" id="PurgeDatabaseTask" name="tasktype" data-level="1000" />
 				<label for="PurgeDatabaseTask">Purge old entries from the database</label>
 			</div>
 		</div>

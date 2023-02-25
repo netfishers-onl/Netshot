@@ -50,6 +50,25 @@ define([
 				selectedDeviceNumber: this.getDeviceItems().length
 			}));
 			
+			if (user.isExecuteReadWrite()) {
+				this.$('#runscript').button({
+					icons: {
+						primary: "ui-icon-play"
+					}
+				}).click(function() {
+					new RunMultiDevicesScriptDialog({
+						devices: that.getDevices(),
+						deviceTypes: that.deviceTypes,
+						onScheduled: function() {
+							that.options.devicesView.fetchDevices();
+						}
+					});
+					return false;
+				});
+			}
+			else {
+				this.$('#runscript').remove();
+			}
 			if (user.isReadWrite()) {
 				this.$('#edit').button({
 					icons: {
@@ -100,20 +119,14 @@ define([
 					});
 					return false;
 				}).parent().buttonset();
-				this.$('#runscript').button({
-					icons: {
-						primary: "ui-icon-play"
-					}
-				}).click(function() {
-					new RunMultiDevicesScriptDialog({
-						devices: that.getDevices(),
-						deviceTypes: that.deviceTypes,
-						onScheduled: function() {
-							that.options.devicesView.fetchDevices();
-						}
-					});
-					return false;
-				});
+			}
+			else {
+				this.$('#edit').remove();
+				this.$("#delete").remove();
+				this.$('#enable').remove();
+				this.$('#disable').remove();
+			}
+			if (user.isOperator()) {
 				this.$('#snapshot').button({
 					icons: {
 						primary: "ui-icon ui-icon-arrowreturnthick-1-e"

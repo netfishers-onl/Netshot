@@ -20,6 +20,10 @@ define([
 			return this.get('level') >= 100;
 		},
 
+		isOperator: function() {
+			return this.get('level') >= 50;
+		},
+
 		save: function(attrs, options) {
 			attrs = attrs || this.toJSON();
 			options = options || {};

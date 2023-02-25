@@ -217,6 +217,13 @@ define([
 						return false;
 					});
 				}
+			}
+			else {
+				this.$('#edit').remove();
+				this.$('#delete').remove();
+				this.$('#enable').next().addBack().remove();
+			}
+			if (user.isOperator()) {
 				this.$('#snapshot').button({
 					icons: {
 						primary: "ui-icon ui-icon-arrowreturnthick-1-e"
@@ -228,9 +235,6 @@ define([
 				});
 			}
 			else {
-				this.$('#edit').remove();
-				this.$('#delete').remove();
-				this.$('#enable').next().addBack().remove();
 				this.$('#snapshot').remove();
 			}
 			if (DeviceView.savedTab) {

@@ -76,7 +76,7 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 			// The following is needed, otherwise this item gets a duplicate
 			$('#nstoolbar-devices-addmenu').remove();
 			$('#nstoolbar-section').html(_.template(devicesToolbarTemplate));
-			if (!user.isReadWrite()) {
+			if (!user.isOperator()) {
 				$('#nstoolbar-section').empty();
 			}
 			$('#nstoolbar-devices-add').unbind('click').button().click(function() {
@@ -118,7 +118,12 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 				});
 				return false;
 			});
-			$('#nstoolbar-devices-add').buttonset();
+			if (user.isReadWrite()) {
+				$('#nstoolbar-devices-add').buttonset();
+			}
+			else {
+				$('#nstoolbar-devices-add').remove();
+			}
 			$('#nstoolbar-devices-addmenu').hide().menu();
 			this.$('#nsdevices-openadvancedsearch').unbind('click').button({
 				icons: {

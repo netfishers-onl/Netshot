@@ -225,6 +225,9 @@ public class Radius {
 							else if (Attr_ServiceType.NASPromptUser.equals(serviceType)) {
 								level = UiUser.LEVEL_READWRITE;
 							}
+							else if (Attr_ServiceType.AuthenticateOnly.equals(serviceType)) {
+								level = UiUser.LEVEL_OPERATOR;
+							}
 						}
 						catch (Exception e1) {
 						}

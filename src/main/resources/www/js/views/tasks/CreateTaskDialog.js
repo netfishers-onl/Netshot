@@ -82,13 +82,12 @@ define([
 		onCreate: function() {
 			this.dialogButtons().eq(1).button('disable');
 			this.dialogButtons().eq(3).hide();
-			if (!user.isAdmin()) {
-				this.$('input[name="tasktype"]').each(function() {
-					if ($(this).data("level") == "admin") {
-						$(this).next().andSelf().remove();
-					}
-				});
-			}
+			this.$('input[name="tasktype"]').each(function() {
+				var requiredLevel = $(this).data("level") || 0;
+				if (user.get('level') < requiredLevel) {
+					$(this).next().andSelf().remove();
+				}
+			});
 		},
 
 		renderCreateScanSubnetsTask: function() {

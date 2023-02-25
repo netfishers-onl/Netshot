@@ -2931,7 +2931,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/tasks/{id}/debuglog")
-	@RolesAllowed("readonly")
+	@RolesAllowed("readwrite")
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -4457,7 +4457,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/tasks")
-	@RolesAllowed("readwrite")
+	@RolesAllowed("operator")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -4538,6 +4538,9 @@ public class RestService extends Thread {
 			task = new RunDeviceScriptTask(device, rsTask.getScript(), driver, rsTask.getComments(), userName);
 		}
 		else if (rsTask.getType().equals("RunDeviceGroupScriptTask")) {
+			if (!securityContext.isUserInRole("executereadwrite")) {
+				throw new NetshotNotAuthorizedException("Insufficient permissions to run scripts on devices.", 0);
+			}
 			logger.trace("Adding a RunDeviceGroupScriptTask");
 			DeviceDriver driver = DeviceDriver.getDriverByName(rsTask.getDriver());
 			if (driver == null) {
@@ -4684,6 +4687,9 @@ public class RestService extends Thread {
 			}
 		}
 		else if (rsTask.getType().equals("ScanSubnetsTask")) {
+			if (!securityContext.isUserInRole("readwrite")) {
+				throw new NetshotNotAuthorizedException("Insufficient permissions to scan for devices.", 0);
+			}
 			logger.trace("Adding a ScanSubnetsTask");
 			Set<Network4Address> subnets = new HashSet<>();
 			String[] rsSubnets = rsTask.getSubnets().split("(\r\n|\n|;| |,)");
@@ -4751,6 +4757,9 @@ public class RestService extends Thread {
 			task = new ScanSubnetsTask(subnets, domain, rsTask.getComments(), target.toString(), userName);
 		}
 		else if (rsTask.getType().equals("PurgeDatabaseTask")) {
+			if (!securityContext.isUserInRole("admin")) {
+				throw new NetshotNotAuthorizedException("Insufficient permissions to purge database.", 0);
+			}
 			logger.trace("Adding a PurgeDatabaseTask");
 			if (rsTask.getDaysToPurge() < 2) {
 				logger.error(String.format("Invalid number of days %d for the PurgeDatabaseTask task.", rsTask.getDaysToPurge()));
@@ -6103,7 +6112,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/rules/test")
-	@RolesAllowed("readonly")
+	@RolesAllowed("readwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -9737,7 +9746,7 @@ public class RestService extends Thread {
 	
 	@POST
 	@Path("/scripts")
-	@RolesAllowed("readwrite")
+	@RolesAllowed("executereadwrite")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -9799,7 +9808,7 @@ public class RestService extends Thread {
 	
 	@DELETE
 	@Path("/scripts/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed("executereadwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -9837,7 +9846,7 @@ public class RestService extends Thread {
 	
 	@GET
 	@Path("/scripts/{id}")
-	@RolesAllowed("readonly")
+	@RolesAllowed("executereadwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -9868,7 +9877,7 @@ public class RestService extends Thread {
 	
 	@GET
 	@Path("/scripts")
-	@RolesAllowed("readonly")
+	@RolesAllowed("executereadwrite")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(

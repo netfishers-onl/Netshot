@@ -22,8 +22,12 @@
 		</fieldset>
 		<fieldset>
 			<div>
-				<input type="radio" id="roleuser" name="role" value="user" <% if (level < 100) { %>checked="checked"<% } %> data-level="10" />
+				<input type="radio" id="roleuser" name="role" value="user" <% if (level < 50) { %>checked="checked"<% } %> data-level="10" />
 				<label for="roleuser">Visitor</label>
+			</div>
+			<div>
+				<input type="radio" id="roleuser" name="role" value="user" <% if (level >= 100 && level < 100) { %>checked="checked"<% } %> data-level="50" />
+				<label for="roleuser">Operator</label>
 			</div>
 			<div>
 				<input type="radio" id="rolereadwrite" name="role" value="readwrite" <% if (level >= 100 && level < 500) { %>checked="checked"<% } %> data-level="100" />

@@ -49,10 +49,12 @@ import onl.netfishers.netshot.aaa.User;
 
 		@Override
 		public boolean isUserInRole(String role) {
-			boolean result = (user != null && (("admin".equals(role) && user.getLevel() >= User.LEVEL_ADMIN)
-					|| ("executereadwrite".equals(role) && user.getLevel() >= User.LEVEL_EXECUTEREADWRITE)
-					|| ("readwrite".equals(role) && user.getLevel() >= User.LEVEL_READWRITE)
-					|| ("readonly".equals(role) && user.getLevel() >= User.LEVEL_READONLY)));
+			boolean result = (user != null && (
+					("admin".equals(role) && user.getLevel() >= User.LEVEL_ADMIN) ||
+					("executereadwrite".equals(role) && user.getLevel() >= User.LEVEL_EXECUTEREADWRITE) ||
+					("readwrite".equals(role) && user.getLevel() >= User.LEVEL_READWRITE) ||
+					("operator".equals(role) && user.getLevel() >= User.LEVEL_OPERATOR) ||
+					("readonly".equals(role) && user.getLevel() >= User.LEVEL_READONLY)));
 			Netshot.aaaLogger.debug("Role {} requested for user {}: result {}.", role,
 					user == null ? "<null>" : user.getUsername(), result);
 			return result;

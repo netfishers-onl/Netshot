@@ -144,6 +144,7 @@ public class Tacacs {
 			String adminLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.adminlevelrole", "admin");
 			String executeReadWriteLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.executereadwritelevelrole", "execute-read-write");
 			String readWriteLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.readwritelevelrole", "read-write");
+			String operatorLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.operatorrole", "operator");
 
 			if (authenReply.isOK()) {
 				SessionClient authoSession = client.newSession(SVC.LOGIN, "rest", remoteAddress == null ? "0.0.0.0" : remoteAddress.getIp(), PRIV_LVL.USER.code());
@@ -170,6 +171,9 @@ public class Tacacs {
 					}
 					else if (role.equals(readWriteLevelRole)) {
 						level = UiUser.LEVEL_READWRITE;
+					}
+					else if (role.equals(operatorLevelRole)) {
+						level = UiUser.LEVEL_OPERATOR;
 					}
 
 					aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} passed TACACS+ authentication (with permission level {}).",

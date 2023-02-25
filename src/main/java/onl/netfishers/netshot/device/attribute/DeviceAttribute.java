@@ -31,14 +31,19 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.CHAR)
@@ -53,8 +58,22 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 })
 public abstract class DeviceAttribute {
 
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY)
+	}))
+	@Setter
 	protected long id;
+
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String name;
+
+	@Getter(onMethod=@__({
+		@ManyToOne
+	}))
+	@Setter
 	protected Device device;
 	
 	protected DeviceAttribute() {
@@ -64,33 +83,6 @@ public abstract class DeviceAttribute {
 	public DeviceAttribute(Device device, String name) {
 		this.device = device;
 		this.name = name;
-	}
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	public long getId() {
-		return id;
-	}
-
-	public void setId(long id) {
-		this.id = id;
-	}
-	
-	@XmlAttribute
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	@ManyToOne
-	public Device getDevice() {
-		return device;
-	}
-
-	public void setDevice(Device device) {
-		this.device = device;
 	}
 	
 	@Transient
@@ -121,7 +113,4 @@ public abstract class DeviceAttribute {
 			return false;
 		return true;
 	}
-	
-	
-	
 }

@@ -30,6 +30,8 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Policy;
 import onl.netfishers.netshot.compliance.Rule;
@@ -45,22 +47,59 @@ import org.hibernate.Session;
 @Entity
 public class TextRule extends Rule {
 	
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String field;
 	
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Column(length = 10000)
+	}))
+	@Setter
 	private String context;
 	
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Column(length = 10000000)
+	}))
 	private String text;
 	
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private boolean regExp = false;
 	
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private boolean invert = false;
 	
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private boolean anyBlock = false;
 	
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private boolean matchAll = false;
 	
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private boolean normalize = false;
 	
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String deviceDriver;
 	
 	private List<Pattern> hierarchy = new ArrayList<Pattern>();
@@ -78,63 +117,12 @@ public class TextRule extends Rule {
 	public TextRule(String name, Policy policy) {
 		super(name, policy);
 	}
-	
-	
-	@XmlElement @JsonView(DefaultView.class)
-	public String getField() {
-		return field;
-	}
-
-	public void setField(String field) {
-		this.field = field;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	@Column(length = 10000)
-	public String getContext() {
-		return context;
-	}
-
-	public void setContext(String context) {
-		this.context = context;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	@Column(length = 10000000)
-	public String getText() {
-		return text;
-	}
 
 	public void setText(String text) {
 		this.text = text;
 		if (this.text != null) {
 			this.text = this.text.replace("\r", "");
 		}
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isRegExp() {
-		return regExp;
-	}
-
-	public void setRegExp(boolean regExp) {
-		this.regExp = regExp;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isInvert() {
-		return invert;
-	}
-
-	public void setInvert(boolean invert) {
-		this.invert = invert;
-	}
-	
-	
-	
-	@XmlElement @JsonView(DefaultView.class)
-	public String getDeviceDriver() {
-		return deviceDriver;
 	}
 	
 	@Transient
@@ -150,37 +138,6 @@ public class TextRule extends Rule {
 		catch (Exception e) {
 			return "Unknown driver";
 		}
-	}
-
-	public void setDeviceDriver(String deviceDriver) {
-		this.deviceDriver = deviceDriver;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isAnyBlock() {
-		return anyBlock;
-	}
-
-	public void setAnyBlock(boolean anyBlock) {
-		this.anyBlock = anyBlock;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isMatchAll() {
-		return matchAll;
-	}
-
-	public void setMatchAll(boolean matchAll) {
-		this.matchAll = matchAll;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isNormalize() {
-		return normalize;
-	}
-
-	public void setNormalize(boolean normalize) {
-		this.normalize = normalize;
 	}
 
 	private void prepare() {

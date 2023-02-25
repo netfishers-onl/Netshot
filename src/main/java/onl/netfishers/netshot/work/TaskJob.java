@@ -31,20 +31,18 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A Quartz job which runs a Netshot task.
  */
 @DisallowConcurrentExecution
+@Slf4j
 public class TaskJob implements Job {
 
 	/** The Constant NETSHOT_TASK. */
 	public static final String NETSHOT_TASK = "Netshot Task";
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(TaskJob.class);
 
 	/**
 	 * Instantiates a new task job.
@@ -56,10 +54,10 @@ public class TaskJob implements Job {
 	 * @see org.quartz.Job#execute(org.quartz.JobExecutionContext)
 	 */
 	public void execute(JobExecutionContext context) throws JobExecutionException {
-		logger.debug("Starting job.");
+		log.debug("Starting job.");
 		Long id = (Long) context.getJobDetail().getJobDataMap()
 				.get(NETSHOT_TASK);
-		logger.trace("The task id is {}.", id);
+		log.trace("The task id is {}.", id);
 		Task task = null;
 		Session session = Database.getSession();
 		try {
@@ -67,18 +65,18 @@ public class TaskJob implements Job {
 			session.beginTransaction();
 			task = (Task) session.get(Task.class, id);
 			if (task == null) {
-				logger.error("The retrieved task {} is null.", id);
+				log.error("The retrieved task {} is null.", id);
 			}
 			task.setRunning();
-			logger.trace("The task runner ID for {} is {}", task.getId(), task.getRunnerId());
+			log.trace("The task runner ID for {} is {}", task.getId(), task.getRunnerId());
 			session.update(task);
 			session.getTransaction().commit();
-			logger.trace("Got the task.");
+			log.trace("Got the task.");
 			task.prepare();
-			logger.trace("The task has prepared its fields.");
+			log.trace("The task has prepared its fields.");
 		}
 		catch (Exception e) {
-			logger.error("Error while retrieving and updating the task.", e);
+			log.error("Error while retrieving and updating the task.", e);
 			try {
 				session.getTransaction().rollback();
 			}
@@ -91,20 +89,20 @@ public class TaskJob implements Job {
 			session.close();
 		}
 
-		logger.warn("Running the task {} of type {}", id, task.getClass().getName());
+		log.warn("Running the task {} of type {}", id, task.getClass().getName());
 		try {
 			task.run();
 		}
 		catch (Error e) {
-			logger.error("Error while running the task {}.", id, e);
+			log.error("Error while running the task {}.", id, e);
 		}
 
 		if (task.getStatus() == Status.RUNNING) {
-			logger.error("The task {} exited with a status of RUNNING.", id);
+			log.error("The task {} exited with a status of RUNNING.", id);
 			task.setStatus(Status.FAILURE);
 		}
 
-		logger.trace("Updating the task with the result.");
+		log.trace("Updating the task with the result.");
 		session = Database.getSession();
 		try {
 			session.beginTransaction();
@@ -112,12 +110,12 @@ public class TaskJob implements Job {
 			session.getTransaction().commit();
 		}
 		catch (Exception e) {
-			logger.error("Error while updating the task {} after execution.", id, e);
+			log.error("Error while updating the task {} after execution.", id, e);
 			try {
 				session.getTransaction().rollback();
 			}
 			catch (Exception e1) {
-				logger.error("Error during the rollback.", e1);
+				log.error("Error during the rollback.", e1);
 			}
 			try {
 				session.clear();
@@ -128,7 +126,7 @@ public class TaskJob implements Job {
 				session.getTransaction().commit();
 			}
 			catch (Exception e1) {
-				logger.error("Error while setting the task {} to FAILED.", id, e1);
+				log.error("Error while setting the task {} to FAILED.", id, e1);
 			}
 			throw new JobExecutionException("Unable to save the task.");
 		}
@@ -137,7 +135,7 @@ public class TaskJob implements Job {
 		}
 
 
-		logger.trace("Looking for post-task hooks.");
+		log.trace("Looking for post-task hooks.");
 		session = Database.getSession();
 		try {
 			task = (Task) session.get(Task.class, id);
@@ -149,23 +147,23 @@ public class TaskJob implements Job {
 				.list();
 
 			for (Hook hook : hooks) {
-				logger.trace("Executing post-task hook {}", hook.getName());
+				log.trace("Executing post-task hook {}", hook.getName());
 				try {
 					String result = hook.execute(task);
-					logger.info("Result of post-task hook '{}' after task {} is: {}", hook.getName(), task.getId(), result);
+					log.info("Result of post-task hook '{}' after task {} is: {}", hook.getName(), task.getId(), result);
 				}
 				catch (Exception e) {
-					logger.warn("Error while executing hook {} after task {}", hook.getName(), task.getId(), e);
+					log.warn("Error while executing hook {} after task {}", hook.getName(), task.getId(), e);
 				}
 			}
 		}
 		catch (Exception e) {
-			logger.error("Error while processing hooks after task {}.", id, e);
+			log.error("Error while processing hooks after task {}.", id, e);
 			try {
 				session.getTransaction().rollback();
 			}
 			catch (Exception e1) {
-				logger.error("Error during the rollback.", e1);
+				log.error("Error during the rollback.", e1);
 			}
 		}
 		finally  {
@@ -176,10 +174,10 @@ public class TaskJob implements Job {
 			TaskManager.repeatTask(task);
 		}
 		catch (Exception e) {
-			logger.error("Unable to repeat the task {} again.", id);
+			log.error("Unable to repeat the task {} again.", id);
 		}
 
-		logger.warn("End of task {}.", id);
+		log.warn("End of task {}.", id);
 
 	}
 

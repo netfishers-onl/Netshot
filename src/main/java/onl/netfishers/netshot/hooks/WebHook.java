@@ -40,14 +40,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.annotation.XmlElement;
 
+import org.glassfish.jersey.client.ClientConfig;
+
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.xml.JacksonJaxbXMLProvider;
 
-import org.glassfish.jersey.client.ClientConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.rest.RestViews.HookView;
 
@@ -55,9 +54,8 @@ import onl.netfishers.netshot.rest.RestViews.HookView;
  * A Web hook, called after specific event.
  */
 @Entity
+@Slf4j
 public class WebHook extends Hook {
-	/* Class logger */
-	final private static Logger logger = LoggerFactory.getLogger(WebHook.class);
 
 	/**
 	 * Types of web hook
@@ -80,7 +78,7 @@ public class WebHook extends Hook {
 		catch (Exception e) {
 			if (e instanceof KeyStoreException && e.getCause() != null &&
 					"stream does not represent a PKCS12 key store".equals(e.getCause().getMessage())) {
-				logger.info("Changing trustStoreType to JKS");
+				log.info("Changing trustStoreType to JKS");
 				System.setProperty("javax.net.ssl.trustStoreType", "JKS");
 			}
 		}
@@ -96,21 +94,9 @@ public class WebHook extends Hook {
 	private boolean sslValidation = true;
 
 	/**
-	 * Instantiates a new diagnostic result (for Hibernate)
+	 * Instantiates a new web hook.
 	 */
 	protected WebHook() {
-	}
-
-	/**
-	 * Instantiates a new diagnostic result
-	 * 
-	 * @param device
-	 *                       The device
-	 * @param diagnostic
-	 *                       The diagnostic
-	 */
-	public WebHook(String url) {
-
 	}
 
 	@XmlElement

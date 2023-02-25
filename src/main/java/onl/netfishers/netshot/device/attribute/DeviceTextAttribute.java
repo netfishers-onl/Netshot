@@ -25,12 +25,18 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @DiscriminatorValue("S")
 public class DeviceTextAttribute extends DeviceAttribute {
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String text;
 
 	protected DeviceTextAttribute() {
@@ -38,15 +44,6 @@ public class DeviceTextAttribute extends DeviceAttribute {
 
 	public DeviceTextAttribute(Device device, String name, String value) {
 		super(device, name);
-		this.text = value;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public String getText() {
-		return text;
-	}
-
-	public void setText(String value) {
 		this.text = value;
 	}
 

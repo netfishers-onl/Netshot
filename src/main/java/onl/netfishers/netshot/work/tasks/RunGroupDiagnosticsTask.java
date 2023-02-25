@@ -28,31 +28,39 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
+import onl.netfishers.netshot.rest.RestViews.HookView;
 import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
 import org.quartz.JobKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This task schedules new tasks to run diagnostics on each device of the
  * given group.
  */
 @Entity
+@Slf4j
 public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(RunGroupDiagnosticsTask.class);
-
 	/** The device group. */
+	@Getter(onMethod=@__({
+		@ManyToOne(fetch = FetchType.LAZY)
+	}))
+	@Setter
 	private DeviceGroup deviceGroup;
 
 	/** Do not automatically start a check compliance task */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(HookView.class)
+	}))
+	@Setter
 	private boolean dontCheckCompliance = false;
 
 
@@ -99,10 +107,10 @@ public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Task {}. Starting diagnostics task for group {}.",
+		log.debug("Task {}. Starting diagnostics task for group {}.",
 				this.getId(), this.getDeviceGroup().getId());
 		Set<Device> devices = this.getDeviceGroup().getCachedDevices();
-		logger.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
+		log.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
 		String comment = String.format("Started due to group %s diagnotics", this.getDeviceGroup().getName());
 		for (Device device : devices) {
 			this.info(String.format("Scheduling diagnostics task for device %s.", device.getName()));
@@ -111,49 +119,13 @@ public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 				TaskManager.addTask(task);
 			}
 			catch (Exception e) {
-				logger.error("Task {}. Error while scheduling the individual diagnostics task.",
+				log.error("Task {}. Error while scheduling the individual diagnostics task.",
 						this.getId(), e);
 				this.error("Error while scheduling the task.");
 			}
 		}
-		logger.debug("Everything went fine.");
+		log.debug("Everything went fine.");
 		this.status = Status.SUCCESS;
-	}
-
-	/**
-	 * Gets the device group.
-	 *
-	 * @return the device group
-	 */
-	@ManyToOne(fetch = FetchType.LAZY)
-	public DeviceGroup getDeviceGroup() {
-		return deviceGroup;
-	}
-
-	/**
-	 * Sets the device group.
-	 *
-	 * @param deviceGroup the new device group
-	 */
-	public void setDeviceGroup(DeviceGroup deviceGroup) {
-		this.deviceGroup = deviceGroup;
-	}
-
-	/**
-	 * Do we need to bypass the compliance check?
-	 * 
-	 * @return true not to schedule the automatic compliance check
-	 */
-	public boolean isDontCheckCompliance() {
-		return dontCheckCompliance;
-	}
-
-	/**
-	 * Enables or disables the automatic compliance check.
-	 * @param dontCheckCompliance true to bypass the compliance check
-	 */
-	public void setDontCheckCompliance(boolean dontCheckCompliance) {
-		this.dontCheckCompliance = dontCheckCompliance;
 	}
 
 	/* (non-Javadoc)

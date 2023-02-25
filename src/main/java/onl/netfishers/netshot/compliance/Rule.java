@@ -34,16 +34,18 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.compliance.CheckResult.ResultOption;
 import onl.netfishers.netshot.compliance.rules.JavaScriptRule;
 import onl.netfishers.netshot.compliance.rules.PythonRule;
@@ -61,10 +63,8 @@ import onl.netfishers.netshot.work.TaskLogger;
 @Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"policy", "name"})})
 @XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@Slf4j
 public abstract class Rule {
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(Rule.class);
 
 	/** The set of real rule types. */
 	private static final Set<Class<? extends Rule>> RULE_CLASSES;
@@ -85,20 +85,40 @@ public abstract class Rule {
 		return RULE_CLASSES;
 	}
 
-
 	/** The enabled. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected boolean enabled = false;
 
 	/** The id. */
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlAttribute, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected long id;
 
 	/** The policy. */
+	@Getter(onMethod=@__({
+		@ManyToOne
+	}))
+	@Setter
 	protected Policy policy = null;
 
 	/** The name. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String name = "";
 
 	/** The exemptions. */
+	@Getter(onMethod=@__({
+		@OneToMany(mappedBy = "key.rule", orphanRemoval = true, cascade = CascadeType.ALL)
+	}))
+	@Setter
 	private Set<Exemption> exemptions = new HashSet<>();
 
 	/**
@@ -127,7 +147,7 @@ public abstract class Rule {
 	 * @param taskLogger the task logger
 	 */
 	public CheckResult check(Device device, Session session, TaskLogger taskLogger) {
-		logger.warn("Called generic rule check.");
+		log.warn("Called generic rule check.");
 		if (!this.isEnabled()) {
 			return new CheckResult(this, device, ResultOption.DISABLED);
 		}
@@ -152,28 +172,6 @@ public abstract class Rule {
 		return id == other.id;
 	}
 
-	/**
-	 * Gets the id.
-	 *
-	 * @return the id
-	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement @JsonView(DefaultView.class)
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * Gets the policy.
-	 *
-	 * @return the policy
-	 */
-	@ManyToOne
-	public Policy getPolicy() {
-		return policy;
-	}
-
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -183,82 +181,6 @@ public abstract class Rule {
 		int result = 1;
 		result = prime * result + (int) (id ^ (id >>> 32));
 		return result;
-	}
-
-	/**
-	 * Checks if is enabled.
-	 *
-	 * @return true, if is enabled
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	/**
-	 * Sets the enabled.
-	 *
-	 * @param enabled the new enabled
-	 */
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-
-	/**
-	 * Sets the id.
-	 *
-	 * @param id the new id
-	 */
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	/**
-	 * Sets the policy.
-	 *
-	 * @param policy the new policy
-	 */
-	public void setPolicy(Policy policy) {
-		this.policy = policy;
-	}
-
-	/**
-	 * Gets the name.
-	 *
-	 * @return the name
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getName() {
-		return name;
-	}
-
-	/**
-	 * Sets the name.
-	 *
-	 * @param name the new name
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	/**
-	 * Gets the exemptions.
-	 *
-	 * @return the exemptions
-	 */
-	@OneToMany(mappedBy = "key.rule", orphanRemoval = true,
-			cascade = CascadeType.ALL)
-	public Set<Exemption> getExemptions() {
-		return exemptions;
-	}
-
-	/**
-	 * Sets the exemptions.
-	 *
-	 * @param exemptions the new exemptions
-	 */
-	public void setExemptions(Set<Exemption> exemptions) {
-		this.exemptions = exemptions;
 	}
 
 	/**

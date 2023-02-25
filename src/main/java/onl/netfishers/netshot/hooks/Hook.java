@@ -20,6 +20,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
+import lombok.Getter;
+import lombok.Setter;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -37,64 +41,35 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 public abstract class Hook {
 
 	/** Unique ID of the webhook **/
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private long id;
 
 	/** Name of the webhook */
+	@Getter(onMethod=@__({
+		@Column(unique = true),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String name;
 
 	/** Whether the hook is enabled */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private boolean enabled = true;
 
 	/** List of associated triggers */
+	@Getter(onMethod=@__({
+		@OneToMany(mappedBy = "hook", orphanRemoval = true, fetch = FetchType.EAGER, cascade = CascadeType.ALL),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Set<HookTrigger> triggers = new HashSet<>();
-
-	/**
-	 * Gets the ID of the webhook.
-	 * @return the ID
-	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement @JsonView(DefaultView.class)
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * Sets the ID of the webhook.
-	 * @param id
-	 */
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	@Column(unique = true)
-	@XmlElement @JsonView(DefaultView.class)
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	@OneToMany(mappedBy = "hook", orphanRemoval = true, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-	public Set<HookTrigger> getTriggers() {
-		return triggers;
-	}
-
-	public void setTriggers(Set<HookTrigger> triggers) {
-		this.triggers = triggers;
-	}
 
 	/**
 	 * Execute the hook.

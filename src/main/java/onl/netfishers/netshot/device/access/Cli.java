@@ -27,16 +27,16 @@ import java.util.regex.Pattern;
 import onl.netfishers.netshot.device.NetworkAddress;
 import onl.netfishers.netshot.work.TaskLogger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A CLI object to access a device through command line.
  * Abstract - real implementations are Telnet, SSH.
  */
+@Slf4j
 public abstract class Cli {
-
-	final private static Logger logger = LoggerFactory.getLogger(Cli.class);
 
 	private static Pattern ansiEscapePattern = Pattern.compile("\u001B\\[([;\\d]*m|[\u0030-\u003F]*[\u0020-\u002F]*[\u0040-\u007E])");
 
@@ -62,30 +62,41 @@ public abstract class Cli {
 	}
 
 	/** The connection timeout. */
+	@Getter
+	@Setter
 	protected int connectionTimeout = 5000;
 
 	/** The receive timeout. */
+	@Getter
+	@Setter
 	protected int receiveTimeout = 60000;
 
 	/** The command timeout. */
+	@Getter
+	@Setter
 	protected int commandTimeout = 120000;
 
 	/** The current task logger */
 	protected TaskLogger taskLogger;
 
 	/** The last command. */
+	@Getter
 	protected String lastCommand;
 
 	/** The last expect match. */
+	@Getter
 	protected Matcher lastExpectMatch;
 
 	/** The last expect match pattern. */
+	@Getter
 	protected String lastExpectMatchPattern;
 
 	/** The last expect match index. */
+	@Getter
 	protected int lastExpectMatchIndex = -1;
 
 	/** The last full output. */
+	@Getter
 	protected String lastFullOutput;
 
 	/** The in stream. */
@@ -109,105 +120,6 @@ public abstract class Cli {
 	public Cli(NetworkAddress host, TaskLogger taskLogger) {
 		this.host = host;
 		this.taskLogger = taskLogger;
-	}
-
-	/**
-	 * Gets the connection timeout.
-	 *
-	 * @return the connection timeout
-	 */
-	public int getConnectionTimeout() {
-		return connectionTimeout;
-	}
-
-	/**
-	 * Sets the connection timeout.
-	 *
-	 * @param connectionTimeout the new connection timeout
-	 */
-	public void setConnectionTimeout(int connectionTimeout) {
-		this.connectionTimeout = connectionTimeout;
-	}
-
-	/**
-	 * Gets the receive timeout.
-	 *
-	 * @return the receive timeout
-	 */
-	public int getReceiveTimeout() {
-		return receiveTimeout;
-	}
-
-	/**
-	 * Sets the receive timeout.
-	 *
-	 * @param receiveTimeout the new receive timeout
-	 */
-	public void setReceiveTimeout(int receiveTimeout) {
-		this.receiveTimeout = receiveTimeout;
-	}
-
-	/**
-	 * Gets the command timeout.
-	 *
-	 * @return the command timeout
-	 */
-	public int getCommandTimeout() {
-		return commandTimeout;
-	}
-
-	/**
-	 * Sets the command idle timeout, i.e. max time without receiving data.
-	 *
-	 * @param commandTimeout the new command timeout
-	 */
-	public void setCommandTimeout(int commandTimeout) {
-		this.commandTimeout = commandTimeout;
-	}
-
-	/**
-	 * Gets the last command.
-	 *
-	 * @return the last command
-	 */
-	public String getLastCommand() {
-		return lastCommand;
-	}
-
-	/**
-	 * Gets the last expect match.
-	 *
-	 * @return the last expect match
-	 */
-	public Matcher getLastExpectMatch() {
-		return lastExpectMatch;
-	}
-
-	/**
-	 * Gets the last expect match pattern.
-	 *
-	 * @return the last expect match pattern
-	 */
-	public String getLastExpectMatchPattern() {
-		return lastExpectMatchPattern;
-	}
-
-	/**
-	 * Gets the last expect match index.
-	 *
-	 * @return the last expect match index
-	 */
-	public int getLastExpectMatchIndex() {
-		return lastExpectMatchIndex;
-	}
-
-	/**
-	 * Gets the last full output.
-	 *
-	 * @return the last full output
-	 */
-	public String getLastFullOutput() {
-		return lastFullOutput;
 	}
 
 	/**
@@ -257,7 +169,7 @@ public abstract class Cli {
 			while (this.inStream != null && this.inStream.available() > 0) {
 				int length = this.inStream.read(miniBuffer);
 				String s = new String(miniBuffer, 0, length);
-				logger.debug("Received data '{}'.", s);
+				log.debug("Received data '{}'.", s);
 				buffer.append(s);
 				lastActivityTime = System.currentTimeMillis();
 			}
@@ -299,7 +211,7 @@ public abstract class Cli {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public String send(String command, String[] expects) throws IOException {
-		logger.debug("Command to send: '{}'.", command);
+		log.debug("Command to send: '{}'.", command);
 		this.write(command);
 		this.lastCommand = command;
 		return this.readUntil(expects);

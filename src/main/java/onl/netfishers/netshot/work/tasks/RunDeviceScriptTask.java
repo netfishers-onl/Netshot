@@ -27,6 +27,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
@@ -37,23 +40,29 @@ import onl.netfishers.netshot.work.Task;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.quartz.JobKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This task runs a JS script on a device.
  */
 @Entity
+@Slf4j
 public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(RunDeviceScriptTask.class);
-
 	/** The device. */
+	@Getter(onMethod=@__({
+		@ManyToOne(fetch = FetchType.LAZY)
+	}))
+	@Setter
 	private Device device;
 	
+	@Getter(onMethod=@__({
+		@Column(length = 10000000)
+	}))
+	@Setter
 	private String script;
 	
+	@Getter
+	@Setter
 	private String deviceDriver;
 
 	/**
@@ -84,7 +93,7 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 
 	@Override
 	public void run() {
-		logger.debug("Task {}. Starting script task for device {}.", this.getId(), device.getId());
+		log.debug("Task {}. Starting script task for device {}.", this.getId(), device.getId());
 		this.info(String.format("Run script task for device %s (%s).",
 				device.getName(), device.getMgmtAddress().getIp()));
 
@@ -94,13 +103,13 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 			session.beginTransaction();
 			session.refresh(device);
 			if (deviceDriver == null || !deviceDriver.equals(device.getDriver())) {
-				logger.trace("Task {}. The script doesn't apply to the driver of the device.", this.getId());
+				log.trace("Task {}. The script doesn't apply to the driver of the device.", this.getId());
 				this.error("The script doesn't apply to the driver of the device.");
 				this.status = Status.CANCELLED;
 				return;
 			}
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
-				logger.trace("Task {}. Device not INPRODUCTION, stopping the run script task.", this.getId());
+				log.trace("Task {}. Device not INPRODUCTION, stopping the run script task.", this.getId());
 				this.warn("The device is not enabled (not in production).");
 				this.status = Status.FAILURE;
 				return;
@@ -110,7 +119,7 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 			cliScript.connectRun(session, device);
 			
 			this.info(String.format("Device logs (%d next lines):", cliScript.getJsLog().size()));
-			this.log.append(cliScript.getPlainJsLog());
+			this.logs.append(cliScript.getPlainJsLog());
 			session.update(device);
 			session.getTransaction().commit();
 			this.status = Status.SUCCESS;
@@ -120,13 +129,13 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 				session.getTransaction().rollback();
 			}
 			catch (Exception e1) {
-				logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
+				log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 			}
-			logger.error("Task {}. Error while running the script.", this.getId(), e);
+			log.error("Task {}. Error while running the script.", this.getId(), e);
 			this.error("Error while running the script: " + e.getMessage());
 			if (cliScript != null) {
 				this.info(String.format("Device logs (%d next lines):", cliScript.getJsLog().size()));
-				this.log.append(cliScript.getPlainJsLog());
+				this.logs.append(cliScript.getPlainJsLog());
 			}
 			
 			this.status = Status.FAILURE;
@@ -147,25 +156,6 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 		return "Device script execution";
 	}
 
-	/**
-	 * Gets the device.
-	 *
-	 * @return the device
-	 */
-	@ManyToOne(fetch = FetchType.LAZY)
-	public Device getDevice() {
-		return device;
-	}
-
-	/**
-	 * Sets the device.
-	 *
-	 * @param device the new device
-	 */
-	public void setDevice(Device device) {
-		this.device = device;
-	}
-
 	/* (non-Javadoc)
 	 * @see onl.netfishers.netshot.work.Task#clone()
 	 */
@@ -174,23 +164,6 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 		RunDeviceScriptTask task = (RunDeviceScriptTask) super.clone();
 		task.setDevice(this.device);
 		return task;
-	}
-
-	@Column(length = 10000000)
-	public String getScript() {
-		return script;
-	}
-
-	public void setScript(String script) {
-		this.script = script;
-	}
-
-	public String getDeviceDriver() {
-		return deviceDriver;
-	}
-
-	public void setDeviceDriver(String deviceDriver) {
-		this.deviceDriver = deviceDriver;
 	}
 
 	/*

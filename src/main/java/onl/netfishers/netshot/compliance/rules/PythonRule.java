@@ -41,6 +41,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Policy;
@@ -59,8 +62,6 @@ import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
 
 /**
@@ -68,10 +69,8 @@ import org.slf4j.MarkerFactory;
  * including config, and return whether the device is compliant or not.
  */
 @Entity
+@Slf4j
 public class PythonRule extends Rule {
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(PythonRule.class);
 
 	/** The allowed results. */
 	private static CheckResult.ResultOption[] ALLOWED_RESULTS = new CheckResult.ResultOption[] {
@@ -112,7 +111,7 @@ public class PythonRule extends Rule {
 					Long.toString(maxExecutionTime)));
 		}
 		catch (IllegalArgumentException e) {
-			logger.error(
+			log.error(
 				"Invalid value for Python max execution time (netshot.python.maxexecutiontime), using {}ms.",
 				maxExecutionTime);
 		}
@@ -121,7 +120,7 @@ public class PythonRule extends Rule {
 
 	static {
 		try {
-			logger.info("Reading the Python rule loader code from the resource Python file.");
+			log.info("Reading the Python rule loader code from the resource Python file.");
 			// Read the JavaScript loader code from the resource file.
 			String path = "interfaces/rule-loader.py";
 			InputStream in = DeviceDriver.class.getResourceAsStream("/" + path);
@@ -135,10 +134,10 @@ public class PythonRule extends Rule {
 			PYLOADER_SOURCE = Source.newBuilder("python", buffer.toString(), "PythonRuleLoader").buildLiteral();
 			reader.close();
 			in.close();
-			logger.debug("The Python rule loader code has been read from the resource Python file.");
+			log.debug("The Python rule loader code has been read from the resource Python file.");
 		}
 		catch (Exception e) {
-			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to read the Python rule loader.", e);
+			log.error(MarkerFactory.getMarker("FATAL"), "Unable to read the Python rule loader.", e);
 			System.err.println("NETSHOT FATAL ERROR");
 			e.printStackTrace();
 			System.exit(1);
@@ -153,6 +152,11 @@ public class PythonRule extends Rule {
 	private boolean pyValid = false;
 
 	/** The default example script. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Column(length = 10000000)
+	}))
+	@Setter
 	private String script = ""
 		+ "# Script template - to be customized\n"
 		+ "def check(device):\n"
@@ -188,28 +192,6 @@ public class PythonRule extends Rule {
 	}
 
 	/**
-	 * Gets the script.
-	 *
-	 * @return the script
-	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
-	@Column(length = 10000000)
-	public String getScript() {
-		return script;
-	}
-
-	/**
-	 * Sets the script.
-	 *
-	 * @param script
-	 *                   the new script
-	 */
-	public void setScript(String script) {
-		this.script = script;
-	}
-
-	/**
 	 * Prepare the polyglot source.
 	 * @return the source
 	 */
@@ -239,13 +221,13 @@ public class PythonRule extends Rule {
 
 		Context.Builder builder = Context.newBuilder("python").allowIO(true);
 		if ("false".equals(Netshot.getConfig("netshot.python.filesystemfilter"))) {
-			logger.info("Python VM, file system filter is disabled (this is not secure)");
+			log.info("Python VM, file system filter is disabled (this is not secure)");
 		}
 		else {
 			builder.fileSystem(new PythonFileSystem());
 		}
 		if ("true".equals(Netshot.getConfig("netshot.python.allowallaccess"))) {
-			logger.info("Python VM, allowing all access (this is not secure)");
+			log.info("Python VM, allowing all access (this is not secure)");
 			builder.allowAllAccess(true);
 		}
 		if (PythonFileSystem.VENV_FOLDER != null) {
@@ -263,7 +245,7 @@ public class PythonRule extends Rule {
 		context.eval(PYLOADER_SOURCE);
 		Date afterTime = new Date();
 		int afterCacheSize = engine.getCachedSources().size();
-		logger.debug("Python rule {} evalution time {}ms, using {} ({} {}) cached sources",
+		log.debug("Python rule {} evalution time {}ms, using {} ({} {}) cached sources",
 			this.getId(), afterTime.getTime() - beforeTime.getTime(), afterCacheSize,
 			Math.abs(afterCacheSize - beforeCacheSize), afterCacheSize >= beforeCacheSize ? "more" : "less");
 
@@ -304,7 +286,7 @@ public class PythonRule extends Rule {
 		try {
 			Value checkFunction = context.getBindings("python").getMember("check");
 			if (checkFunction == null || !checkFunction.canExecute()) {
-				logger.warn("The check sub wasn't found in the script");
+				log.warn("The check sub wasn't found in the script");
 				taskLogger.error("The 'check' sub couldn't be found in the script.");
 			}
 			else {
@@ -313,7 +295,7 @@ public class PythonRule extends Rule {
 		}
 		catch (PolyglotException e) {
 			taskLogger.error("Error while evaluating the Python script.");
-			logger.warn("Error while evaluating the Python script.", e);
+			log.warn("Error while evaluating the Python script.", e);
 			pyValid = false;
 		}
 	}
@@ -352,7 +334,7 @@ public class PythonRule extends Rule {
 					context.close(true);
 				}
 				catch (Exception e2) {
-					logger.warn("Error while closing abnormally long Python context", e2);
+					log.warn("Error while closing abnormally long Python context", e2);
 				}
 				throw new TimeoutException(
 					"The rule took too long to execute (check for endless loop in the script or adjust netshot.python.maxexecutiontime value)");
@@ -382,12 +364,12 @@ public class PythonRule extends Rule {
 		}
 		catch (IOException e) {
 			taskLogger.error("Error while evaluating the Python script.");
-			logger.warn("Error while evaluating the Python script.", e);
+			log.warn("Error while evaluating the Python script.", e);
 			pyValid = false;
 		}
 		catch (Exception e) {
 			taskLogger.error("Error while running the script: " + e.getMessage());
-			logger.error("Error while running the script on device {}.", device.getId(), e);
+			log.error("Error while running the script on device {}.", device.getId(), e);
 		}
 		finally {
 			taskLogger.debug("End of check");

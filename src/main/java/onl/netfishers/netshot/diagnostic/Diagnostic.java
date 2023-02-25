@@ -32,6 +32,7 @@ import javax.persistence.Transient;
 import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -42,6 +43,8 @@ import org.hibernate.annotations.NaturalId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
@@ -78,18 +81,41 @@ public abstract class Diagnostic {
 	}
 
 	/** The id. */
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlAttribute, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private long id;
 
 	/** The name of the diagnostic. */
+	@Getter(onMethod=@__({
+		@NaturalId(mutable = true),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String name;
 
 	/** The target group. */
+	@Getter(onMethod=@__({
+		@ManyToOne,
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private DeviceGroup targetGroup;
 	
 	/** Is the diagnostic enabled? */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected boolean enabled = false;
 	
 	/** The type of data returned by the diagnostic */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected AttributeType resultType;
 	
 	/**
@@ -110,93 +136,6 @@ public abstract class Diagnostic {
 		this.enabled = enabled;
 		this.targetGroup = targetGroup;
 		this.resultType = resultType;
-	}
-
-	/**
-	 * Gets the id.
-	 *
-	 * @return the id
-	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement @JsonView(DefaultView.class)
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * Gets the name.
-	 *
-	 * @return the name
-	 */
-	@NaturalId(mutable = true)
-	@XmlElement @JsonView(DefaultView.class)
-	public String getName() {
-		return name;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public AttributeType getResultType() {
-		return resultType;
-	}
-
-	/**
-	 * Gets the target group.
-	 *
-	 * @return the target group
-	 */
-	@ManyToOne
-	@XmlElement @JsonView(DefaultView.class)
-	public DeviceGroup getTargetGroup() {
-		return targetGroup;
-	}
-
-	/**
-	 * Is the diagnostic enabled?
-	 * @return true if it's enabled
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isEnabled() {
-		return enabled;
-	}
-
-	/**
-	 * Sets the diagnostic as enabled or disabled.
-	 * @param enabled true if the diagnostic is enabled
-	 */
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
-
-	/**
-	 * Sets the id.
-	 *
-	 * @param id the new id
-	 */
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	/**
-	 * Sets the name.
-	 *
-	 * @param name the new name
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setResultType(AttributeType resultType) {
-		this.resultType = resultType;
-	}
-
-	/**
-	 * Sets the target group.
-	 *
-	 * @param targetGroup the new target group
-	 */
-	public void setTargetGroup(DeviceGroup targetGroup) {
-		this.targetGroup = targetGroup;
 	}
 
 	/**

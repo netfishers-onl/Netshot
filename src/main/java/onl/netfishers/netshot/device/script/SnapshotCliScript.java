@@ -30,9 +30,8 @@ import org.apache.poi.openxml4j.exceptions.InvalidOperationException;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.device.Config;
@@ -56,9 +55,8 @@ import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
 import onl.netfishers.netshot.device.script.helper.JsSnmpHelper;
 import onl.netfishers.netshot.work.TaskLogger;
 
+@Slf4j
 public class SnapshotCliScript extends CliScript {
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(SnapshotCliScript.class);
 
 	public SnapshotCliScript(boolean cliLogging) {
 		super(cliLogging);
@@ -84,7 +82,7 @@ public class SnapshotCliScript extends CliScript {
 		DeviceDriver driver = device.getDeviceDriver();
 		try (Context context = driver.getContext()) {
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
-			options.setDevice(new JsDeviceHelper(device, cli, session, taskLogger, false));
+			options.setDeviceHelper(new JsDeviceHelper(device, cli, session, taskLogger, false));
 			Config config = new Config(device);
 			options.setConfigHelper(new JsConfigHelper(device, config, cli, taskLogger));
 			context.getBindings("js").getMember("_connect").execute("snapshot", protocol.value(), options, taskLogger);
@@ -119,7 +117,7 @@ public class SnapshotCliScript extends CliScript {
 				}
 			}
 			catch (Exception e) {
-				logger.error("Error while comparing old and new configuration. Will save the new configuration.", e);
+				log.error("Error while comparing old and new configuration. Will save the new configuration.", e);
 			}
 			if (different) {
 				device.setLastConfig(config);
@@ -180,13 +178,13 @@ public class SnapshotCliScript extends CliScript {
 					taskLogger.info("The configuration has been saved as a file in the dump folder.");
 				}
 				catch (Exception e) {
-					logger.warn("Couldn't write the configuration into file.", e);
+					log.warn("Couldn't write the configuration into file.", e);
 					taskLogger.warn("Unable to write the configuration as a file.");
 				}
 			}
 		}
 		catch (PolyglotException e) {
-			logger.error("Error while running snapshot using driver {}.", driver.getName(), e);
+			log.error("Error while running snapshot using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("Error while running snapshot using driver %s: '%s'.",
 					driver.getName(), e.getMessage()));
 			if (e.getMessage() != null && e.getMessage().contains("Authentication failed")) {
@@ -197,7 +195,7 @@ public class SnapshotCliScript extends CliScript {
 			}
 		}
 		catch (InvalidOperationException e) {
-			logger.error("No such method 'snapshot' while using driver {}.", driver.getName(), e);
+			log.error("No such method 'snapshot' while using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("No such method 'snapshot' while using driver %s to take snapshot: '%s'.",
 					driver.getName(), e.getMessage()));
 			throw e;

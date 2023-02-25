@@ -49,17 +49,15 @@ import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The TaskManager schedules and runs the tasks.
  */
+@Slf4j
 public class TaskManager {
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(TaskManager.class);
 
 	/** Possible modes for the task manager */
 	public static enum Mode {
@@ -116,7 +114,7 @@ public class TaskManager {
 				TaskManager.THREAD_COUNT = Integer.parseInt(count);
 			}
 			catch (NumberFormatException e) {
-				logger.warn(
+				log.warn(
 					"Unable to parse thread count configuration line: ignoring, using {} default value",
 					TaskManager.THREAD_COUNT);
 			}
@@ -131,7 +129,7 @@ public class TaskManager {
 			masterScheduler.start();
 		}
 		catch (Exception e) {
-			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate the Master Task Manager", e);
+			log.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate the Master Task Manager", e);
 			throw new RuntimeException("Unable to instantiate the Master Task Manager.", e);
 		}
 		try {
@@ -144,7 +142,7 @@ public class TaskManager {
 			runnerScheduler.start();
 		}
 		catch (Exception e) {
-			logger.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate the Runner Task Manager", e);
+			log.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate the Runner Task Manager", e);
 			throw new RuntimeException("Unable to instantiate the Runner Task Manager.", e);
 		}
 	}
@@ -169,7 +167,7 @@ public class TaskManager {
 	 * Add new tasks to master scheduler.
 	 */
 	public static void scheduleNewTasks() {
-		logger.debug("Looking for new tasks to assign to available runners");
+		log.debug("Looking for new tasks to assign to available runners");
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
@@ -184,14 +182,14 @@ public class TaskManager {
 					addTaskToScheduler(task, false, true, false);
 				}
 				catch (SchedulerException e) {
-					logger.error("Error while scheduling new task", e);
+					log.error("Error while scheduling new task", e);
 				}
 			}
 			session.getTransaction().commit();
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
-			logger.error("Database error while scheduling new tasks (master scheduler)", e);
+			log.error("Database error while scheduling new tasks (master scheduler)", e);
 		}
 		finally {
 			session.close();
@@ -205,7 +203,7 @@ public class TaskManager {
 	public static void assignTaskRunner(Task task) {
 		long hash = task.getRunnerHash();
 		String runnerId = TaskManager.runnerSet.getNextRunnerId();
-		logger.info("Task {} (hash {}) is being assigned to runner {}.", task.getId(), hash, runnerId);
+		log.info("Task {} (hash {}) is being assigned to runner {}.", task.getId(), hash, runnerId);
 		task.setRunnerId(runnerId);
 		task.setWaiting();
 	}
@@ -250,9 +248,9 @@ public class TaskManager {
 	 * @throws HibernateException the hibernate exception
 	 */
 	public static void cancelTask(Task task, String reason) throws SchedulerException, HibernateException {
-		logger.debug("Cancelling task {}.", task);
+		log.debug("Cancelling task {}.", task);
 		runnerScheduler.deleteJob(task.getIdentity());
-		logger.trace("The task has been deleted from the scheduler.");
+		log.trace("The task has been deleted from the scheduler.");
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
@@ -261,11 +259,11 @@ public class TaskManager {
 			task.warn(reason);
 			session.saveOrUpdate(task);
 			session.getTransaction().commit();
-			logger.trace("Task successfully cancelled.");
+			log.trace("Task successfully cancelled.");
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
-			logger.error("Error while updating the cancelled task.", e);
+			log.error("Error while updating the cancelled task.", e);
 			throw e;
 		}
 		finally {
@@ -286,7 +284,7 @@ public class TaskManager {
 		Scheduler scheduler = runnerTask ? runnerScheduler : masterScheduler;
 		if (checkExistence) {
 			if (scheduler.checkExists(task.getIdentity())) {
-				logger.debug("Task already in the scheduler");
+				log.debug("Task already in the scheduler");
 				return;
 			}
 		}
@@ -305,7 +303,7 @@ public class TaskManager {
 			trigger = TriggerBuilder.newTrigger().startAt(when).build();
 		}
 		scheduler.scheduleJob(job, trigger);
-		logger.trace("Task successfully added to the scheduler.");
+		log.trace("Task successfully added to the scheduler.");
 	}
 
 	/**
@@ -323,11 +321,11 @@ public class TaskManager {
 			session.saveOrUpdate(task);
 			session.getTransaction().commit();
 			session.evict(task);
-			logger.trace("Task successfully added to the database.");
+			log.trace("Task successfully added to the database.");
 		}
 		catch (Exception e) {
 			session.getTransaction().rollback();
-			logger.error("Error while saving the new task.", e);
+			log.error("Error while saving the new task.", e);
 			throw e;
 		}
 		finally {
@@ -351,11 +349,11 @@ public class TaskManager {
 			session.saveOrUpdate(task);
 			session.getTransaction().commit();
 			session.evict(task);
-			logger.trace("Task successfully added to the database.");
+			log.trace("Task successfully added to the database.");
 		}
 		catch (Exception e) {
 			session.getTransaction().rollback();
-			logger.error("Error while saving the new task.", e);
+			log.error("Error while saving the new task.", e);
 			throw e;
 		}
 		finally {
@@ -378,11 +376,11 @@ public class TaskManager {
 			session.saveOrUpdate(task);
 			session.getTransaction().commit();
 			session.evict(task);
-			logger.trace("Task successfully added to the database.");
+			log.trace("Task successfully added to the database.");
 		}
 		catch (Exception e) {
 			session.getTransaction().rollback();
-			logger.error("Error while saving the new task.", e);
+			log.error("Error while saving the new task.", e);
 			throw e;
 		}
 		finally {
@@ -399,7 +397,7 @@ public class TaskManager {
 	 * @throws HibernateException the Hibernate exception
 	 */
 	public static void addTask(Task task) throws SchedulerException, HibernateException {
-		logger.debug("Adding task {} to the system.", task.getId());
+		log.debug("Adding task {} to the system.", task.getId());
 
 		switch (TaskManager.mode) {
 		case SINGLE:
@@ -423,19 +421,19 @@ public class TaskManager {
 	 * @throws HibernateException the hibernate exception
 	 */
 	public static void repeatTask(Task task) throws SchedulerException, HibernateException {
-		logger.debug("Repeating task {} if necessary.", task.getId());
+		log.debug("Repeating task {} if necessary.", task.getId());
 		if (!task.isRepeating()) {
-			logger.trace("Not necessary.");
+			log.trace("Not necessary.");
 			return;
 		}
 		Task newTask;
 		try {
 			newTask = (Task) task.clone();
-			logger.trace("Got a clone, will schedule it.");
+			log.trace("Got a clone, will schedule it.");
 			TaskManager.addTask(newTask);
 		}
 		catch (CloneNotSupportedException e) {
-			logger.error("Unable to clone the task {}.", task.getId(), e);
+			log.error("Unable to clone the task {}.", task.getId(), e);
 		}
 	}
 
@@ -443,7 +441,7 @@ public class TaskManager {
 	 * Retrieve the tasks assigned to the local instance and add them to the runner scheduler.
 	 */
 	public static void scheduleLocalTasks() {
-		logger.debug("Will retrieve the waiting tasks assigned to the local cluster member.");
+		log.debug("Will retrieve the waiting tasks assigned to the local cluster member.");
 		Session session = Database.getSession();
 		try {
 			List<Task> tasks = session.createQuery(
@@ -452,16 +450,16 @@ public class TaskManager {
 				.setParameter("myId", ClusterManager.getLocalInstanceId())
 				.list();
 			for (Task task : tasks) {
-				logger.trace("Found task {}, assigned to local cluster member {}", task.getId(),
+				log.trace("Found task {}, assigned to local cluster member {}", task.getId(),
 					task.getRunnerId());
 				addTaskToScheduler(task, true, true, true);
 			}
 		}
 		catch (HibernateException e) {
-			logger.error("Unable to retrieve the waiting tasks from the database", e);
+			log.error("Unable to retrieve the waiting tasks from the database", e);
 		}
 		catch (SchedulerException e) {
-			logger.error("Unable to schedule the task", e);
+			log.error("Unable to schedule the task", e);
 		}
 		finally {
 			session.close();
@@ -473,10 +471,10 @@ public class TaskManager {
 	 */
 	public static void reassignOrphanTasks() {
 		if (!Mode.CLUSTER_MASTER.equals(TaskManager.mode)) {
-			logger.debug("Skipping reassignment of orphan tasks (not in MASTER mode)");
+			log.debug("Skipping reassignment of orphan tasks (not in MASTER mode)");
 			return;
 		}
-		logger.info("Looking for orphan tasks after change on the list of runners.");
+		log.info("Looking for orphan tasks after change on the list of runners.");
 		Session session = Database.getSession();
 		int reassignedCount = 0;
 		try {
@@ -494,7 +492,7 @@ public class TaskManager {
 					runnerIdIt.remove();
 				}
 				else {
-					logger.debug("The runner of ID {} doesn't exist anymore", runnerId);
+					log.debug("The runner of ID {} doesn't exist anymore", runnerId);
 				}
 			}
 			if (runnerIds.size() > 0) {
@@ -507,7 +505,7 @@ public class TaskManager {
 					.setParameterList("runnerIds", runnerIds)
 					.list();
 				for (Task task : tasks) {
-					logger.debug("Task {} will be reassigned as its previously assigned runner {} has disappeared.",
+					log.debug("Task {} will be reassigned as its previously assigned runner {} has disappeared.",
 						task.getId(), task.getRunnerId());
 					assignTaskRunner(task);
 					session.saveOrUpdate(task);
@@ -519,19 +517,19 @@ public class TaskManager {
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
-			logger.error("Database error while re-assigning orphan tasks", e);
+			log.error("Database error while re-assigning orphan tasks", e);
 		}
 		finally {
 			session.close();
 		}
-		logger.info("{} orphan task(s) reassigned", reassignedCount);
+		log.info("{} orphan task(s) reassigned", reassignedCount);
 	}
 
 	/**
 	 * Reschedules all tasks. To be executed at startup.
 	 */
 	public static void rescheduleAll() {
-		logger.debug("Will re-schedule the existing tasks from the database.");
+		log.debug("Will re-schedule the existing tasks from the database.");
 
 		Session session = Database.getSession();
 		List<Task> tasks;
@@ -566,29 +564,29 @@ public class TaskManager {
 			}
 		}
 		catch (HibernateException e) {
-			logger.error("Unable to retrieve the tasks from the database.", e);
+			log.error("Unable to retrieve the tasks from the database.", e);
 			throw e;
 		}
 		finally {
 			session.close();
 		}
 
-		logger.trace("Found {} task(s) to reschedule.", tasks.size());
+		log.trace("Found {} task(s) to reschedule.", tasks.size());
 		Calendar inThirtySeconds = Calendar.getInstance();
 		inThirtySeconds.add(Calendar.SECOND, 30);
 		for (Task task : tasks) {
 			try {
 				if (masterScheduler.checkExists(task.getIdentity())) {
-					logger.trace("The task {} is already in the master scheduler.", task.getId());
+					log.trace("The task {} is already in the master scheduler.", task.getId());
 					continue;
 				}
 				if (runnerScheduler.checkExists(task.getIdentity())) {
-					logger.trace("The task {} is already in the runner scheduler.", task.getId());
+					log.trace("The task {} is already in the runner scheduler.", task.getId());
 					continue;
 				}
 			}
 			catch (SchedulerException e) {
-				logger.error("Error while checking task existence in the scheduler", e);
+				log.error("Error while checking task existence in the scheduler", e);
 			}
 			try {
 				Date when = task.getNextExecutionDate();
@@ -600,7 +598,7 @@ public class TaskManager {
 				}
 			}
 			catch (SchedulerException e) {
-				logger.error("Unable to schedule the task {}.", task.getId(), e);
+				log.error("Unable to schedule the task {}.", task.getId(), e);
 			}
 		}
 	}

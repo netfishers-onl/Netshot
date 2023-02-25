@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
 
+import lombok.extern.slf4j.Slf4j;
 import net.jradius.client.RadiusClient;
 import net.jradius.client.auth.CHAPAuthenticator;
 import net.jradius.client.auth.EAPMD5Authenticator;
@@ -54,10 +55,10 @@ import net.jradius.packet.attribute.AttributeList;
 /**
  * The Radius class authenticates the users against a RADIUS server.
  */
+@Slf4j
 public class Radius {
 
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(Radius.class);
+	/** The log. */
 	final private static Logger aaaLogger = LoggerFactory.getLogger("AAA");
 
 	/** The clients. */
@@ -86,7 +87,7 @@ public class Radius {
 		}
 		catch (UnknownHostException e) {
 			if (ip != null) {
-				logger.error("Invalid IP address for RADIUS server {}. Will be ignored.", id);
+				log.error("Invalid IP address for RADIUS server {}. Will be ignored.", id);
 			}
 			return;
 		}
@@ -95,25 +96,25 @@ public class Radius {
 			authPort = Integer.parseInt(Netshot.getConfig(path + ".authport", "1812"));
 		}
 		catch (NumberFormatException e) {
-			logger.error("Invalid authentication port number for RADIUS server {}. Will use {}.", id, authPort);
+			log.error("Invalid authentication port number for RADIUS server {}. Will use {}.", id, authPort);
 		}
 		int acctPort = 1813;
 		try {
 			acctPort = Integer.parseInt(Netshot.getConfig(path + ".acctport", "1813"));
 		}
 		catch (NumberFormatException e) {
-			logger.error("Invalid accounting port number for RADIUS server {}. Will use {}.", id, acctPort);
+			log.error("Invalid accounting port number for RADIUS server {}. Will use {}.", id, acctPort);
 		}
 		int timeout = 5;
 		try {
 			timeout = Integer.parseInt(Netshot.getConfig(path + ".timeout", "5"));
 		}
 		catch (NumberFormatException e) {
-			logger.error("Invalid timeout value for RADIUS server {}. Will use {}.", id, timeout);
+			log.error("Invalid timeout value for RADIUS server {}. Will use {}.", id, timeout);
 		}
 		String key = Netshot.getConfig(path + ".secret");
 		if (key == null) {
-			logger.error("No key configured for RADIUS server {}. Will be ignored.", id);
+			log.error("No key configured for RADIUS server {}. Will be ignored.", id);
 			return;
 		}
 		RadiusClient client;
@@ -121,10 +122,10 @@ public class Radius {
 			client = new RadiusClient(address, key, authPort, acctPort, timeout);
 		}
 		catch (IOException e) {
-			logger.error("Unable to create the RADIUS client for server {}.", id, e);
+			log.error("Unable to create the RADIUS client for server {}.", id, e);
 			return;
 		}
-		logger.info("Added RADIUS server {}", address);
+		log.info("Added RADIUS server {}", address);
 		String method = Netshot.getConfig("netshot.aaa.radius.method", "mschapv2");
 		switch (method) {
 		case "pap":
@@ -142,7 +143,7 @@ public class Radius {
 		case "mschapv2":
 			break;
 		default:
-			logger.error("Invalid configured RADIUS method '{}'. Defaulting to MSCHAPv2.", method);
+			log.error("Invalid configured RADIUS method '{}'. Defaulting to MSCHAPv2.", method);
 		}
 		nasIdentifier = Netshot.getConfig("netshot.aaa.radius.nasidentifier", null);
 		clients.add(client);
@@ -202,7 +203,7 @@ public class Radius {
 			try {
 				reply = radiusClient.authenticate(request, authMethod.getDeclaredConstructor().newInstance(), 3);
 				if (reply == null) {
-					logger.error("Request to RADIUS server {} timed out.", radiusClient.getRemoteInetAddress().toString());
+					log.error("Request to RADIUS server {} timed out.", radiusClient.getRemoteInetAddress().toString());
 					aaaLogger.error(MarkerFactory.getMarker("AAA"), "Request to RADIUS server {} timed out.",
 							radiusClient.getRemoteInetAddress().toString());
 				}
@@ -244,7 +245,7 @@ public class Radius {
 				}
 			}
 			catch (Exception e) {
-				logger.error("Error while authenticating against RADIUS server {}.",
+				log.error("Error while authenticating against RADIUS server {}.",
 						radiusClient.getRemoteInetAddress().toString(), e);
 			}
 			first = false;

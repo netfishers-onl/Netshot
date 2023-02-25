@@ -30,6 +30,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
@@ -44,22 +47,36 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.quartz.JobKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This task makes some clean up on the database.
  */
 @Entity
+@Slf4j
 public class PurgeDatabaseTask extends Task {
 
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(PurgeDatabaseTask.class);
-
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private int days;
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private int configDays = -1;
+
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private int configSize = 0;
+
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private int configKeepDays = 0;
 
 
@@ -98,13 +115,13 @@ public class PurgeDatabaseTask extends Task {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Task {}. Starting cleanup process.", this.getId());
+		log.debug("Task {}. Starting cleanup process.", this.getId());
 
 		{
 			Session session = Database.getSession();
 			try {
 				session.beginTransaction();
-				logger.trace("Task {}. Cleaning up tasks finished more than {} days ago...", this.getId(), days);
+				log.trace("Task {}. Cleaning up tasks finished more than {} days ago...", this.getId(), days);
 				this.info(String.format("Cleaning up tasks more than %d days ago...", days));
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * days);
@@ -127,7 +144,7 @@ public class PurgeDatabaseTask extends Task {
 					}
 				}
 				session.getTransaction().commit();
-				logger.trace("Task {}. Cleaning up done on tasks, {} entries affected.", this.getId(), count);
+				log.trace("Task {}. Cleaning up done on tasks, {} entries affected.", this.getId(), count);
 				this.info(String.format("Cleaning up done on tasks, %d entries affected.", count));
 			}
 			catch (HibernateException e) {
@@ -137,7 +154,7 @@ public class PurgeDatabaseTask extends Task {
 				catch (Exception e1) {
 
 				}
-				logger.error("Task {}. Database error while purging the old tasks from the database.", this.getId(), e);
+				log.error("Task {}. Database error while purging the old tasks from the database.", this.getId(), e);
 				this.error("Database error during the task purge.");
 				this.status = Status.FAILURE;
 				return;
@@ -149,7 +166,7 @@ public class PurgeDatabaseTask extends Task {
 				catch (Exception e1) {
 
 				}
-				logger.error("Task {}. Error while purging the old tasks from the database.", this.getId(), e);
+				log.error("Task {}. Error while purging the old tasks from the database.", this.getId(), e);
 				this.error("Error during the task purge.");
 				this.status = Status.FAILURE;
 				return;
@@ -163,7 +180,7 @@ public class PurgeDatabaseTask extends Task {
 			Session session = Database.getSession();
 			try {
 				session.beginTransaction();
-				logger.trace("Task {}. Cleaning up configurations taken more than {} days ago...", this.getId(), configDays);
+				log.trace("Task {}. Cleaning up configurations taken more than {} days ago...", this.getId(), configDays);
 				this.info(String.format("Cleaning up configurations older than %d days...", configDays));
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * configDays);
@@ -219,14 +236,14 @@ public class PurgeDatabaseTask extends Task {
 					}
 				}
 				session.getTransaction().commit();
-				logger.trace("Task {}. Cleaning up done on configurations, {} entries affected.", this.getId(), count);
+				log.trace("Task {}. Cleaning up done on configurations, {} entries affected.", this.getId(), count);
 				this.info(String.format("Cleaning up done on configurations, %d entries affected.", count));
 				for (File toDeleteFile : toDeleteFiles) {
 					try {
 						toDeleteFile.delete();
 					}
 					catch (Exception e) {
-						logger.error("Error while removing binary file {}", toDeleteFile, e);
+						log.error("Error while removing binary file {}", toDeleteFile, e);
 					}
 				}
 			}
@@ -235,9 +252,9 @@ public class PurgeDatabaseTask extends Task {
 					session.getTransaction().rollback();
 				}
 				catch (Exception e1) {
-					logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
+					log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 				}
-				logger.error("Task {}. Database error while purging the old configurations from the database.",
+				log.error("Task {}. Database error while purging the old configurations from the database.",
 						this.getId(), e);
 				this.error("Database error during the configuration purge.");
 				this.status = Status.FAILURE;
@@ -248,9 +265,9 @@ public class PurgeDatabaseTask extends Task {
 					session.getTransaction().rollback();
 				}
 				catch (Exception e1) {
-					logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
+					log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 				}
-				logger.error("Task {}. Error while purging the old configurations from the database.",
+				log.error("Task {}. Error while purging the old configurations from the database.",
 						this.getId(), e);
 				this.error("Error during the configuration purge.");
 				this.status = Status.FAILURE;
@@ -266,7 +283,7 @@ public class PurgeDatabaseTask extends Task {
 			Session session = Database.getSession();
 			try {
 				session.beginTransaction();
-				logger.trace("Task {}. Cleaning up hardware modules removed more than {} days ago...", this.getId(), configDays);
+				log.trace("Task {}. Cleaning up hardware modules removed more than {} days ago...", this.getId(), configDays);
 				this.info(String.format("Cleaning up hardware modules removed more than %d days...", configDays));
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * configDays);
@@ -278,7 +295,7 @@ public class PurgeDatabaseTask extends Task {
 					.executeUpdate();
 
 				session.getTransaction().commit();
-				logger.trace("Task {}. Cleaning up done on modules, {} entries affected.", this.getId(), count);
+				log.trace("Task {}. Cleaning up done on modules, {} entries affected.", this.getId(), count);
 				this.info(String.format("Cleaning up done on modules, %d entries affected.", count));
 				
 			}
@@ -287,9 +304,9 @@ public class PurgeDatabaseTask extends Task {
 					session.getTransaction().rollback();
 				}
 				catch (Exception e1) {
-					logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
+					log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 				}
-				logger.error("Task {}. Error while purging the old modules from the database.",
+				log.error("Task {}. Error while purging the old modules from the database.",
 						this.getId(), e);
 				this.error("Error during the module purge.");
 				this.status = Status.FAILURE;
@@ -301,7 +318,7 @@ public class PurgeDatabaseTask extends Task {
 		}
 
 		this.status = Status.SUCCESS;
-		logger.trace("Task {}. Cleaning up process finished.", this.getId());
+		log.trace("Task {}. Cleaning up process finished.", this.getId());
 	}
 
 	/* (non-Javadoc)
@@ -311,42 +328,6 @@ public class PurgeDatabaseTask extends Task {
 	public Object clone() throws CloneNotSupportedException {
 		PurgeDatabaseTask task = (PurgeDatabaseTask) super.clone();
 		return task;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public int getDays() {
-		return days;
-	}
-
-	public void setDays(int days) {
-		this.days = days;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public int getConfigDays() {
-		return configDays;
-	}
-
-	public void setConfigDays(int configDays) {
-		this.configDays = configDays;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public int getConfigSize() {
-		return configSize;
-	}
-
-	public void setConfigSize(int configSize) {
-		this.configSize = configSize;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public int getConfigKeepDays() {
-		return configKeepDays;
-	}
-
-	public void setConfigKeepDays(int configKeepDays) {
-		this.configKeepDays = configKeepDays;
 	}
 
 	/*

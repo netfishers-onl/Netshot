@@ -31,16 +31,22 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.annotations.FilterDef;
 
 import onl.netfishers.netshot.device.Config;
+import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
+import lombok.Getter;
+import lombok.Setter;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
 
 @Entity @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.CHAR)
@@ -57,8 +63,22 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @FilterDef(name = "lightAttributesOnly", defaultCondition = "type <> 'T'")
 public abstract class ConfigAttribute {
 
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY)
+	}))
+	@Setter
 	protected long id;
+
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String name;
+
+	@Getter(onMethod=@__({
+		@ManyToOne
+	}))
+	@Setter
 	protected Config config;
 	
 	protected ConfigAttribute() {
@@ -70,32 +90,6 @@ public abstract class ConfigAttribute {
 		this.name = name;
 	}
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	public long getId() {
-		return id;
-	}
-
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	@XmlAttribute
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	@ManyToOne
-	public Config getConfig() {
-		return config;
-	}
-
-	public void setConfig(Config config) {
-		this.config = config;
-	}
 	
 	@Transient
 	public abstract String getAsText();

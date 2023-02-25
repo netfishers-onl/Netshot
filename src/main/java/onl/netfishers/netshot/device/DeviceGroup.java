@@ -43,6 +43,10 @@ import org.hibernate.annotations.NaturalId;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
+import lombok.Getter;
+import lombok.Setter;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -62,24 +66,55 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 abstract public class DeviceGroup {
 	
 	/** The cached devices. */
+	@Getter(onMethod=@__({
+		@ManyToMany
+	}))
+	@Setter
 	protected Set<Device> cachedDevices = new HashSet<>();
 	
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	/** The change date. */
 	protected Date changeDate;
 	
 	/** Version internal field */
+	@Getter(onMethod=@__({
+		@Version
+	}))
+	@Setter
 	private int version;
 	
 	/** The id. */
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlAttribute, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected long id;
 	
 	/** The name. */
+	@Getter(onMethod=@__({
+		@NaturalId(mutable = true),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String name;
 	
 	/** Folder containing the group. */
+	@Getter(onMethod=@__({
+		@Column(length = 1000),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String folder = "";
 	
 	/** Whether the group should be hidden in reports. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected boolean hiddenFromReports = false;
 	
 	/**
@@ -108,100 +143,12 @@ abstract public class DeviceGroup {
 	}
 	
 	/**
-	 * Gets the cached devices.
-	 *
-	 * @return the cached devices
-	 */
-	@ManyToMany()
-	public Set<Device> getCachedDevices() {
-		return cachedDevices;
-	}
-
-	/**
-	 * Gets the change date.
-	 *
-	 * @return the change date
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getChangeDate() {
-		return changeDate;
-	}
-	
-	@Version
-	public int getVersion() {
-		return version;
-	}
-	
-	public void setVersion(int version) {
-		this.version = version;
-	}
-
-	/**
-	 * Gets the id.
-	 *
-	 * @return the id
-	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlAttribute
-	public long getId() {
-		return id;
-	}
-	
-	/**
-	 * Gets the name.
-	 *
-	 * @return the name
-	 */
-	@NaturalId(mutable = true)
-	@XmlElement @JsonView(DefaultView.class)
-	public String getName() {
-		return name;
-	}
-	
-	/**
 	 * Refresh cache.
 	 *
 	 * @param session the session
 	 * @throws Exception the exception
 	 */
 	public abstract void refreshCache(Session session) throws Exception;
-	
-	/**
-	 * Sets the cached devices.
-	 *
-	 * @param cachedDevices the new cached devices
-	 */
-	public void setCachedDevices(Set<Device> cachedDevices) {
-		this.cachedDevices = cachedDevices;
-	}
-	
-	/**
-	 * Sets the change date.
-	 *
-	 * @param changeDate the new change date
-	 */
-	public void setChangeDate(Date changeDate) {
-		this.changeDate = changeDate;
-	}
-	
-	/**
-	 * Sets the id.
-	 *
-	 * @param id the new id
-	 */
-	public void setId(long id) {
-		this.id = id;
-	}
-	
-	/**
-	 * Sets the name.
-	 *
-	 * @param name the new name
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
 	
 	/**
 	 * Update cached devices.
@@ -211,25 +158,6 @@ abstract public class DeviceGroup {
 	public void updateCachedDevices(Collection<Device> devices) {
 		this.cachedDevices.addAll(devices);
 		this.cachedDevices.retainAll(devices);
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	@Column(length = 1000)
-	public String getFolder() {
-		return folder;
-	}
-
-	public void setFolder(String folder) {
-		this.folder = folder;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isHiddenFromReports() {
-		return hiddenFromReports;
-	}
-
-	public void setHiddenFromReports(boolean hideInReports) {
-		this.hiddenFromReports = hideInReports;
 	}
 
 	@Override

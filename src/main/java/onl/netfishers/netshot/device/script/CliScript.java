@@ -30,9 +30,9 @@ import javax.script.ScriptException;
 
 import org.graalvm.polyglot.HostAccess.Export;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.Device.InvalidCredentialsException;
 import onl.netfishers.netshot.device.Device.MissingDeviceDriverException;
@@ -56,11 +56,13 @@ import onl.netfishers.netshot.work.TaskLogger;
  * @author sylvain.cadilhac
  *
  */
+@Slf4j
 public abstract class CliScript {
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(CliScript.class);
 
 	/** The log. */
+	@Getter(onMethod=@__({
+		@Transient
+	}))
 	protected transient List<String> jsLog  = new ArrayList<String>();
 	
 	/** Session debug log. */
@@ -103,17 +105,6 @@ public abstract class CliScript {
 			buffer.append("\n");
 		}
 		return buffer.toString();
-	}
-	
-
-	/**
-	 * Gets the log.
-	 *
-	 * @return the log
-	 */
-	@Transient
-	public List<String> getJsLog() {
-		return jsLog;
 	}
 	
 	/**
@@ -266,7 +257,7 @@ public abstract class CliScript {
 						throw e;
 					}
 					catch (Exception e) {
-						logger.warn("Unable to open an SSH connection to {}:{}.", address.getIp(), sshPort, e);
+						log.warn("Unable to open an SSH connection to {}:{}.", address.getIp(), sshPort, e);
 						if (e.getMessage().contains("Auth fail")) {
 							taskLogger.warn(String.format("Authentication failed %s:%d using SSH credential set %s.",
 									address, sshPort, credentialSet.getName()));
@@ -305,7 +296,7 @@ public abstract class CliScript {
 						throw e;
 					}
 					catch (IOException e) {
-						logger.warn("Unable to open a Telnet connection to {}:{}.", address.getIp(), telnetPort, e);
+						log.warn("Unable to open a Telnet connection to {}:{}.", address.getIp(), telnetPort, e);
 						taskLogger.warn(String.format("Unable to open a Telnet socket to %s:%d.", address.getIp(), telnetPort));
 						telnetOpened = false;
 						break;
@@ -333,7 +324,7 @@ public abstract class CliScript {
 						return;
 					}
 					catch (IOException e) {
-						logger.warn("Unable to poll {} using SNMP credential set {}", address.getIp(), credentialSet.getName());
+						log.warn("Unable to poll {} using SNMP credential set {}", address.getIp(), credentialSet.getName());
 						taskLogger.warn(String.format("Unable to poll %s using SNMP credential set %s", address.getIp(), credentialSet.getName()));
 					}
 					finally {
@@ -384,7 +375,7 @@ public abstract class CliScript {
 							throw e;
 						}
 						catch (IOException e) {
-							logger.warn("Unable to open an SSH connection to {}:{}.", address.getIp(), sshPort, e);
+							log.warn("Unable to open an SSH connection to {}:{}.", address.getIp(), sshPort, e);
 							if (e.getMessage().contains("Auth fail") || e.getMessage().contains("authentication failure")) {
 								taskLogger.warn(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()));
 							}
@@ -428,7 +419,7 @@ public abstract class CliScript {
 							throw e;
 						}
 						catch (IOException e) {
-							logger.warn("Unable to open a Telnet connection to {}:{}.", address.getIp(), telnetPort, e);
+							log.warn("Unable to open a Telnet connection to {}:{}.", address.getIp(), telnetPort, e);
 							taskLogger.warn(String.format("Unable to open a Telnet socket to %s:%d.", address.getIp(), telnetPort));
 							telnetOpened = false;
 							break;
@@ -465,7 +456,7 @@ public abstract class CliScript {
 							return;
 						}
 						catch (IOException e) {
-							logger.warn("Unable to poll {} using SNMP credential set {}", address.getIp(), credentialSet.getName());
+							log.warn("Unable to poll {} using SNMP credential set {}", address.getIp(), credentialSet.getName());
 							taskLogger.warn(String.format("Unable to poll %s using SNMP credential set %s", address.getIp(), credentialSet.getName()));
 							break;
 						}

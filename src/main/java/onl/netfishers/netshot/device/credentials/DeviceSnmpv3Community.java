@@ -23,6 +23,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.xml.bind.annotation.XmlElement;
 import org.hibernate.annotations.Type;
 
@@ -37,18 +40,43 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 
 	/** The username. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Type(type = "credentialString")
+	}))
+	@Setter
 	private String username;
-	
-	/** The auth type. */
+		/** The auth type. */
+
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Type(type = "credentialString")
+	}))
+	@Setter
 	private String authType;
 	
 	/** The auth key. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Type(type = "credentialString")
+	}))
+	@Setter
 	private String authKey;
 	
 	/** The priv type. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Type(type = "credentialString")
+	}))
+	@Setter
 	private String privType;
 	
 	/** The priv key. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Type(type = "credentialString")
+	}))
+	@Setter
 	private String privKey;
 
 	/**
@@ -77,109 +105,6 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 		this.authKey = authKey;
 		this.privType = privType;
 		this.privKey = privKey;
-	}
-
-	/**
-	 * Gets the username.
-	 *
-	 * @return the username
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Type(type = "credentialString")
-	public String getUsername() {
-		return username;
-	}
-
-	/**
-	 * Sets the username.
-	 *
-	 * @param snmpv3Username the new username
-	 */
-	public void setUsername(String snmpv3Username) {
-		this.username = snmpv3Username;
-	}
-
-	/**
-	 * Gets the auth type.
-	 *
-	 * @return the auth type
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Type(type = "credentialString")
-	public String getAuthType() {
-		return authType;
-	}
-
-	/**
-	 * Sets the auth type.
-	 *
-	 * @param snmpv3AuthType the new auth type
-	 */
-	public void setAuthType(String snmpv3AuthType) {
-		this.authType = snmpv3AuthType;
-	}
-
-
-	/**
-	 * Gets the auth key.
-	 *
-	 * @return the auth key
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Type(type = "credentialString")
-	public String getAuthKey() {
-		return authKey;
-	}
-
-
-	/**
-	 * Sets the auth key.
-	 *
-	 * @param snmpv3AuthKey the new auth key
-	 */
-	public void setAuthKey(String snmpv3AuthKey) {
-		this.authKey = snmpv3AuthKey;
-	}
-
-	/**
-	 * Gets the priv type.
-	 *
-	 * @return the priv type
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Type(type = "credentialString")
-	public String getPrivType() {
-		return privType;
-	}
-
-	/**
-	 * Sets the priv type.
-	 *
-	 * @param snmpv3PrivType the new priv type
-	 */
-	public void setPrivType(String snmpv3PrivType) {
-		this.privType = snmpv3PrivType;
-	}
-
-	/**
-	 * Gets the priv key.
-	 *
-	 * @return the priv key
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Type(type = "credentialString")
-	public String getPrivKey() {
-		return privKey;
-	}
-
-	
-	/**
-	 * Sets the priv key.
-	 *
-	 * @param snmpv3PrivKey the new priv key
-	 */
-	public void setPrivKey(String snmpv3PrivKey) {
-		this.privKey = snmpv3PrivKey;
 	}
 
 	/*

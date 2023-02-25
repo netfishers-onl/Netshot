@@ -23,6 +23,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.hibernate.annotations.Type;
 
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
@@ -35,6 +38,11 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 public abstract class DeviceSnmpCommunity extends DeviceCredentialSet {
 	
 	/** The community. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@Type(type = "credentialString")
+	}))
+	@Setter
 	private String community;
 	
 	/**
@@ -52,26 +60,6 @@ public abstract class DeviceSnmpCommunity extends DeviceCredentialSet {
 	 */
 	public DeviceSnmpCommunity(String community, String name) {
 		super(name);
-		this.community = community;
-	}
-	
-	/**
-	 * Gets the community.
-	 *
-	 * @return the community
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Type(type = "credentialString")
-	public String getCommunity() {
-		return community;
-	}
-	
-	/**
-	 * Sets the community.
-	 *
-	 * @param community the new community
-	 */
-	public void setCommunity(String community) {
 		this.community = community;
 	}
 

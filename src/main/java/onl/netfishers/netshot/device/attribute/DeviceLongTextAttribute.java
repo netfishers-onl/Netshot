@@ -25,11 +25,17 @@ import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 import javax.persistence.Transient;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Device;
 
 @Entity @DiscriminatorValue("T")
 public class DeviceLongTextAttribute extends DeviceAttribute {
 
+	@Getter(onMethod=@__({
+		@OneToOne(orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	}))
+	@Setter
 	private LongTextConfiguration longText;
 	
 	protected DeviceLongTextAttribute() {
@@ -38,16 +44,6 @@ public class DeviceLongTextAttribute extends DeviceAttribute {
 	public DeviceLongTextAttribute(Device device, String name, String value) {
 		super(device, name);
 		this.longText = new LongTextConfiguration(value);
-	}
-
-	@OneToOne(orphanRemoval = true, fetch = FetchType.LAZY,
-			cascade = CascadeType.ALL)
-	public LongTextConfiguration getLongText() {
-		return longText;
-	}
-
-	public void setLongText(LongTextConfiguration value) {
-		this.longText = value;
 	}
 
 	@Override

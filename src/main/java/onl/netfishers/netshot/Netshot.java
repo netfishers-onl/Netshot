@@ -53,6 +53,7 @@ import ch.qos.logback.core.rolling.FixedWindowRollingPolicy;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.util.FileSize;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.aaa.Radius;
 import onl.netfishers.netshot.aaa.Tacacs;
 import onl.netfishers.netshot.cluster.ClusterManager;
@@ -71,6 +72,7 @@ import sun.misc.SignalHandler;
 /**
  * The Class Netshot. Starting point of Netshot
  */
+@Slf4j
 public class Netshot extends Thread {
 
 	/** Netshot version. */
@@ -83,8 +85,7 @@ public class Netshot extends Thread {
 	/** The application configuration as retrieved from the configuration file. */
 	private static Properties config;
 
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(Netshot.class);
+	/** The log. */
 	final static public Logger aaaLogger = LoggerFactory.getLogger("AAA");
 
 	/** The machine hostname */
@@ -102,7 +103,7 @@ public class Netshot extends Thread {
 				Netshot.hostname = stdInput.readLine();
 			}
 			catch (IOException e) {
-				logger.error("Error while getting local machine hostname", e);
+				log.error("Error while getting local machine hostname", e);
 			}
 			if (Netshot.hostname == null) {
 				Netshot.hostname = "unknown";
@@ -145,7 +146,7 @@ public class Netshot extends Thread {
 				return Integer.parseInt(textValue);
 			}
 			catch (Exception e) {
-				logger.error("Unable to parse the integer value of configuration item '{}'.", key);
+				log.error("Unable to parse the integer value of configuration item '{}'.", key);
 			}
 		}
 		return defaultValue;
@@ -166,7 +167,7 @@ public class Netshot extends Thread {
 			}
 		}
 		catch (SecurityException e) {
-			logger.warn("Security exception raised while getting environment variable {}", envKey, e);
+			log.warn("Security exception raised while getting environment variable {}", envKey, e);
 		}
 		return config.getProperty(key);
 	}
@@ -189,19 +190,19 @@ public class Netshot extends Thread {
 		config = new Properties();
 		for (String fileName : filenames) {
 			try {
-				logger.trace("Trying to load the configuration file {}.", fileName);
+				log.trace("Trying to load the configuration file {}.", fileName);
 				InputStream fileStream = new FileInputStream(fileName);
 				config.load(fileStream);
 				fileStream.close();
-				logger.warn("Configuration file {} successfully read.", fileName);
+				log.warn("Configuration file {} successfully read.", fileName);
 				break;
 			}
 			catch (Exception e) {
-				logger.warn("Unable to read the configuration file {}.", fileName);
+				log.warn("Unable to read the configuration file {}.", fileName);
 			}
 		}
 		if (config.isEmpty()) {
-			logger.error(MarkerFactory.getMarker("FATAL"), "No configuration file was found. Exiting.");
+			log.error(MarkerFactory.getMarker("FATAL"), "No configuration file was found. Exiting.");
 			return false;
 		}
 		return true;
@@ -233,7 +234,7 @@ public class Netshot extends Thread {
 			logCount = Integer.parseInt(logCountCfg);
 		}
 		catch (NumberFormatException e) {
-			logger.error("Invalid number of log files (netshot.log.count config line). Using {}.", logCount);
+			log.error("Invalid number of log files (netshot.log.count config line). Using {}.", logCount);
 		}
 		
 		int logMaxSize = 5;
@@ -244,23 +245,23 @@ public class Netshot extends Thread {
 			}
 		}
 		catch (NumberFormatException e1) {
-			logger.error("Invalid max size of log files (netshot.log.maxsize config line). Using {}.", logMaxSize);
+			log.error("Invalid max size of log files (netshot.log.maxsize config line). Using {}.", logMaxSize);
 		}
 
 		Level logLevel = Level.toLevel(logLevelCfg, Level.WARN);
 		if (logLevelCfg != null && !logLevel.toString().equals(logLevelCfg)) {
-			logger.error("Invalid log level (netshot.log.level) '{}'. Using {}.", logLevelCfg, logLevel);
+			log.error("Invalid log level (netshot.log.level) '{}'. Using {}.", logLevelCfg, logLevel);
 		}
 		
 		OutputStreamAppender<ILoggingEvent> appender;
 
 		if (logFile.equals("CONSOLE")) {
 			ConsoleAppender<ILoggingEvent> cAppender = new ConsoleAppender<>();
-			logger.info("Will go on logging to the console.");
+			log.info("Will go on logging to the console.");
 			appender = cAppender;
 		}
 		else {
-			logger.info("Switching to file logging, into {}, level {}, rotation using {} files of max {}MB.",
+			log.info("Switching to file logging, into {}, level {}, rotation using {} files of max {}MB.",
 					logFile, logLevel, logCount, logMaxSize);
 
 			try {
@@ -287,7 +288,7 @@ public class Netshot extends Thread {
 				
 			}
 			catch (Exception e) {
-				logger.error(MarkerFactory.getMarker("FATAL"), "Unable to log into file {}. Exiting.", logFile, e);
+				log.error(MarkerFactory.getMarker("FATAL"), "Unable to log into file {}. Exiting.", logFile, e);
 				return false;
 			}
 		}
@@ -319,10 +320,10 @@ public class Netshot extends Thread {
 				try {
 					Level classLevel = Level.valueOf(propertyValue);
 					classLogger.setLevel(classLevel);
-					logger.info("Assigning level {} to class {}.", classLevel, className);
+					log.info("Assigning level {} to class {}.", classLevel, className);
 				}
 				catch (Exception e) {
-					logger.error("Invalid log level for class {}.", className);
+					log.error("Invalid log level for class {}.", className);
 				}
 			}
 		}
@@ -344,7 +345,7 @@ public class Netshot extends Thread {
 			auditCount = Integer.parseInt(auditCountCfg);
 		}
 		catch (NumberFormatException e) {
-			logger.error("Invalid number of log files (netshot.log.audit.count config line). Using {}.", auditCount);
+			log.error("Invalid number of log files (netshot.log.audit.count config line). Using {}.", auditCount);
 		}
 		
 		int auditMaxSize = 5;
@@ -355,12 +356,12 @@ public class Netshot extends Thread {
 			}
 		}
 		catch (NumberFormatException e1) {
-			logger.error("Invalid max size of log files (netshot.log.audit.maxsize config line). Using {}.", auditMaxSize);
+			log.error("Invalid max size of log files (netshot.log.audit.maxsize config line). Using {}.", auditMaxSize);
 		}
 		((ch.qos.logback.classic.Logger) aaaLogger).setAdditive(false);
 		Level logLevel = Level.toLevel(auditLevelCfg, Level.OFF);
 		if (auditLevelCfg != null && !logLevel.toString().equals(auditLevelCfg)) {
-			logger.error("Invalid log level (netshot.log.audit.level) '{}'. Using {}.", auditLevelCfg, logLevel);
+			log.error("Invalid log level (netshot.log.audit.level) '{}'. Using {}.", auditLevelCfg, logLevel);
 		}
 		((ch.qos.logback.classic.Logger) aaaLogger).setLevel(logLevel);
 		
@@ -395,11 +396,11 @@ public class Netshot extends Thread {
 				
 				appender.start();
 				((ch.qos.logback.classic.Logger) aaaLogger).addAppender(appender);
-				logger.warn("Audit information will be logged to {}.", auditFile);
+				log.warn("Audit information will be logged to {}.", auditFile);
 				aaaLogger.error("Audit starting.");
 			}
 			catch (Exception e) {
-				logger.error("Unable to log AAA data into file {}. Exiting.", auditFile, e);
+				log.error("Unable to log AAA data into file {}. Exiting.", auditFile, e);
 			}
 		}
 		LoggerFilter.init();
@@ -446,7 +447,7 @@ public class Netshot extends Thread {
 					appender.setPort(Integer.parseInt(port));
 				}
 				catch (NumberFormatException e) {
-					logger.error("Invalid syslog port number ({}).", String.format("netshot.log.syslog%d.port", syslogIndex));
+					log.error("Invalid syslog port number ({}).", String.format("netshot.log.syslog%d.port", syslogIndex));
 				}
 			}
 			String facility = Netshot.getConfig(String.format("netshot.log.syslog%d.facility", syslogIndex));
@@ -457,9 +458,9 @@ public class Netshot extends Thread {
 				appender.start();
 			}
 			catch (Exception e) {
-				logger.error("Unable to start syslog instance {}: {}.", syslogIndex, e.getMessage());
+				log.error("Unable to start syslog instance {}: {}.", syslogIndex, e.getMessage());
 			}
-			logger.warn("Logging to syslog {}:{} has started", appender.getSyslogHost(), appender.getPort());
+			log.warn("Logging to syslog {}:{} has started", appender.getSyslogHost(), appender.getPort());
 			syslogIndex++;
 		}
 		
@@ -474,10 +475,10 @@ public class Netshot extends Thread {
 		final String name = System.getProperty("java.vm.name"); // e.g. OpenJDK 64-Bit Server VM
 		final String version = System.getProperty("java.vm.version"); // e.g. 11.0.10+8-jvmci-21.0-b06
 		if (!vendor.matches("^GraalVM.*") || !name.matches("^OpenJDK.*")) {
-			logger.error("The current JVM  '{}, {} doesn't look like GraalVM, Netshot might not work properly.", name, vendor);
+			log.error("The current JVM  '{}, {} doesn't look like GraalVM, Netshot might not work properly.", name, vendor);
 		}
 		if (!version.matches("^11\\..*")) {
-			logger.error("The JVM version '{}' doesn't look like version 11, Netshot might not work properly.", version);
+			log.error("The JVM version '{}' doesn't look like version 11, Netshot might not work properly.", version);
 		}
 	}
 
@@ -514,7 +515,7 @@ public class Netshot extends Thread {
 		}
 
 		System.out.println(String.format("Starting Netshot version %s.", Netshot.VERSION));
-		logger.info("Starting Netshot");
+		log.info("Starting Netshot");
 
 		String[] configFileNames = Netshot.CONFIG_FILENAMES;
 		String configFilename = commandLine.getOptionValue("c");
@@ -530,40 +531,40 @@ public class Netshot extends Thread {
 		}
 
 		try {
-			logger.info("Checking current JVM.");
+			log.info("Checking current JVM.");
 			Netshot.checkJvm();
-			logger.info("Enabling BouncyCastle security.");
+			log.info("Enabling BouncyCastle security.");
 			Security.addProvider(new BouncyCastleProvider());
 			for (Provider p : Security.getProviders()) {
-				logger.debug("Security provider {} is registered", p.getName());
+				log.debug("Security provider {} is registered", p.getName());
 			}
-			logger.info("Updating the database schema, if necessary.");
+			log.info("Updating the database schema, if necessary.");
 			Database.update();
-			logger.info("Initializing access to the database.");
+			log.info("Initializing access to the database.");
 			Database.init();
-			logger.info("Loading the device drivers.");
+			log.info("Loading the device drivers.");
 			DeviceDriver.refreshDrivers();
-			//logger.info("Starting the TFTP server.");
+			//log.info("Starting the TFTP server.");
 			//TftpServer.init();
-			logger.info("Starting the Syslog server.");
+			log.info("Starting the Syslog server.");
 			SyslogServer.init();
-			logger.info("Starting the SNMP v1/v2c trap receiver.");
+			log.info("Starting the SNMP v1/v2c trap receiver.");
 			SnmpTrapReceiver.init();
 
-			logger.info("Starting the clustering manager.");
+			log.info("Starting the clustering manager.");
 			ClusterManager.init();
 
-			logger.info("Initializing the task manager.");
+			log.info("Initializing the task manager.");
 			TaskManager.init();
-			logger.info("Starting the REST service.");
+			log.info("Starting the REST service.");
 			RestService.init();
-			logger.info("Scheduling the existing tasks.");
+			log.info("Scheduling the existing tasks.");
 			TaskManager.rescheduleAll();
-			logger.info("Loading authentication backend config.");
+			log.info("Loading authentication backend config.");
 			Radius.loadAllServersConfig();
 			Tacacs.loadAllServersConfig();
 
-			logger.info("Starting signal listener.");
+			log.info("Starting signal listener.");
 			Signal.handle(new Signal("HUP"), new SignalHandler() {
 				@Override
 				public void handle(Signal sig) {
@@ -579,7 +580,7 @@ public class Netshot extends Thread {
 					PythonRule.loadConfig();
 				}
 			});
-			logger.warn("Netshot is started");
+			log.warn("Netshot is started");
 
 		}
 		catch (Exception e) {

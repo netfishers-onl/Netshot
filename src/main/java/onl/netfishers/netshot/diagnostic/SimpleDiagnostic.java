@@ -27,6 +27,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
@@ -52,32 +55,69 @@ public class SimpleDiagnostic extends Diagnostic {
 	 * A simple object to store command and CLI mode, to be passed to Javascript for execution.
 	 */
 	static public class JsSimpleDiagnostic {
+		@Getter(onMethod=@__({
+			@Export
+		}))
+		@Setter
 		private String mode;
+
+		@Getter(onMethod=@__({
+			@Export
+		}))
+		@Setter
 		private String command;
 
 		public JsSimpleDiagnostic(String mode, String command) {
 			this.mode = mode;
 			this.command = command;
 		}
-
-		@Export
-		public String getCommand() {
-			return command;
-		}
-
-		public void setCommand(String command) {
-			this.command = command;
-		}
-
-		@Export
-		public String getMode() {
-			return mode;
-		}
-
-		public void setMode(String mode) {
-			this.mode = mode;
-		}
 	}
+
+	/**
+	 * The type of device this diagnostic applies to.
+	 */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private String deviceDriver;
+
+	/**
+	 * The CLI mode to run the command in.
+	 */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private String cliMode;
+
+	/**
+	 * The CLI command to run.
+	 */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private String command;
+
+	/**
+	 * The pattern to search for in the result string.
+	 */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private String modifierPattern;
+
+	/**
+	 * The replacement string (to replace the modifierPattern with). Also supports
+	 * regular expression backreferences.
+	 */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private String modifierReplacement;
 
 	/**
 	 * Instantiates a new SimpleDiagnostic. For Hibernate.
@@ -112,132 +152,6 @@ public class SimpleDiagnostic extends Diagnostic {
 		this.cliMode = cliMode;
 		this.command = command;
 		this.modifierPattern = modifierPattern;
-		this.modifierReplacement = modifierReplacement;
-	}
-
-	/**
-	 * The type of device this diagnostic applies to.
-	 */
-	private String deviceDriver;
-
-	/**
-	 * The CLI mode to run the command in.
-	 */
-	private String cliMode;
-
-	/**
-	 * The CLI command to run.
-	 */
-	private String command;
-
-	/**
-	 * The pattern to search for in the result string.
-	 */
-	private String modifierPattern;
-
-	/**
-	 * The replacement string (to replace the modifierPattern with). Also supports
-	 * regular expression backreferences.
-	 */
-	private String modifierReplacement;
-
-	/**
-	 * Gets the device driver this diagnostic applies to.
-	 * 
-	 * @return the device driver.
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getDeviceDriver() {
-		return deviceDriver;
-	}
-
-	/**
-	 * Sets the device driver
-	 * 
-	 * @param deviceDriver
-	 *                       the new device driver
-	 */
-	public void setDeviceDriver(String deviceDriver) {
-		this.deviceDriver = deviceDriver;
-	}
-
-	/**
-	 * Gets the cli mode.
-	 *
-	 * @return the cli mode
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getCliMode() {
-		return cliMode;
-	}
-
-	/**
-	 * Sets the cli mode.
-	 *
-	 * @param cliMode
-	 *                  the new cli mode
-	 */
-	public void setCliMode(String cliMode) {
-		this.cliMode = cliMode;
-	}
-
-	/**
-	 * Gets the command.
-	 *
-	 * @return the command
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getCommand() {
-		return command;
-	}
-
-	/**
-	 * Sets the command.
-	 *
-	 * @param command
-	 *                  the new command
-	 */
-	public void setCommand(String command) {
-		this.command = command;
-	}
-
-	/**
-	 * Gets the modifier pattern.
-	 *
-	 * @return the modifier pattern
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getModifierPattern() {
-		return modifierPattern;
-	}
-
-	/**
-	 * Sets the modifier pattern.
-	 *
-	 * @param modifierPattern
-	 *                          the new modifier pattern
-	 */
-	public void setModifierPattern(String modifierPattern) {
-		this.modifierPattern = modifierPattern;
-	}
-
-	/**
-	 * Gets the modifier replacement.
-	 *
-	 * @return the modifier replacement
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getModifierReplacement() {
-		return modifierReplacement;
-	}
-
-	/**
-	 * Sets the modifier replacement.
-	 *
-	 * @param modifierReplacement
-	 *                              the new modifier replacement
-	 */
-	public void setModifierReplacement(String modifierReplacement) {
 		this.modifierReplacement = modifierReplacement;
 	}
 

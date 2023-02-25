@@ -17,9 +17,8 @@ import org.graalvm.polyglot.proxy.ProxyObject;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.Module;
@@ -48,9 +47,8 @@ import onl.netfishers.netshot.device.attribute.DeviceTextAttribute;
  * Class used to get  and set data on a device object from JavaScript.
  * @author sylvain.cadilhac
  */
+@Slf4j
 public class JsDeviceHelper {
-	
-	final private static Logger logger = LoggerFactory.getLogger(JsDeviceHelper.class);
 	
 	private Device device;
 	private Cli cli;
@@ -89,7 +87,7 @@ public class JsDeviceHelper {
 	@Export
 	public void add(String key, Value data) {
 		if (readOnly) {
-			logger.warn("Adding key '{}' is forbidden.", key);
+			log.warn("Adding key '{}' is forbidden.", key);
 			taskLogger.error(String.format("Adding key %s is forbidden", key));
 			return;
 		}
@@ -166,7 +164,7 @@ public class JsDeviceHelper {
 			}
 		}
 		catch (Exception e) {
-			logger.warn("Error during snapshot while adding device attribute key '{}'.", key, e);
+			log.warn("Error during snapshot while adding device attribute key '{}'.", key, e);
 			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
 		}
 	}
@@ -174,7 +172,7 @@ public class JsDeviceHelper {
 	@Export
 	public void reset() {
 		if (readOnly) {
-			logger.warn("Resetting device is forbidden.");
+			log.warn("Resetting device is forbidden.");
 			taskLogger.error(String.format("Resetting key is forbidden"));
 			return;
 		}
@@ -197,7 +195,7 @@ public class JsDeviceHelper {
 	@Export
 	public void set(String key, Boolean value) {
 		if (readOnly) {
-			logger.warn("Setting key '{}' is forbidden.", key);
+			log.warn("Setting key '{}' is forbidden.", key);
 			taskLogger.error(String.format("Setting key %s is forbidden", key));
 			return;
 		}
@@ -219,7 +217,7 @@ public class JsDeviceHelper {
 			}
 		}
 		catch (Exception e) {
-			logger.warn("Error during snapshot while setting device attribute key '{}'.", key);
+			log.warn("Error during snapshot while setting device attribute key '{}'.", key);
 			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
 		}
 	}
@@ -228,7 +226,7 @@ public class JsDeviceHelper {
 	@Export
 	public void set(String key, Double value) {
 		if (readOnly) {
-			logger.warn("Setting key '{}' is forbidden.", key);
+			log.warn("Setting key '{}' is forbidden.", key);
 			taskLogger.error(String.format("Setting key %s is forbidden", key));
 			return;
 		}
@@ -250,7 +248,7 @@ public class JsDeviceHelper {
 			}
 		}
 		catch (Exception e) {
-			logger.warn("Error during snapshot while setting device attribute key '{}'.", key);
+			log.warn("Error during snapshot while setting device attribute key '{}'.", key);
 			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
 		}
 	}
@@ -258,7 +256,7 @@ public class JsDeviceHelper {
 	@Export
 	public void set(String key, String value) {
 		if (readOnly) {
-			logger.warn("Setting key '{}' is forbidden.", key);
+			log.warn("Setting key '{}' is forbidden.", key);
 			taskLogger.error(String.format("Setting key %s is forbidden", key));
 			return;
 		}
@@ -312,7 +310,7 @@ public class JsDeviceHelper {
 			}
 		}
 		catch (Exception e) {
-			logger.warn("Error during snapshot while setting device attribute key '{}'.", key);
+			log.warn("Error during snapshot while setting device attribute key '{}'.", key);
 			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
 		}
 	}
@@ -450,7 +448,7 @@ public class JsDeviceHelper {
 	 */
 	@Export
 	public Object get(String item) {
-		logger.debug("JavaScript request for item {} on current device.", item);
+		log.debug("JavaScript request for item {} on current device.", item);
 		return this.getDeviceItem(this.device, item);
 	}
 
@@ -492,7 +490,7 @@ public class JsDeviceHelper {
 	 */
 	@Export
 	public Object get(String item, long deviceId) {
-		logger.debug("JavaScript request for item {} on device {}.", item,
+		log.debug("JavaScript request for item {} on device {}.", item,
 				deviceId);
 		if (deviceId == this.device.getId()) {
 			return this.get(item);
@@ -504,12 +502,12 @@ public class JsDeviceHelper {
 			return result;
 		}
 		catch (ObjectNotFoundException e) {
-			logger.error("Device not found on JavaScript get, item {}, device {}.",
+			log.error("Device not found on JavaScript get, item {}, device {}.",
 					item, deviceId, e);
 			this.taskLogger.warn(String.format("Unable to find the device %d.", deviceId));
 		}
 		catch (Exception e) {
-			logger.error("Error on JavaScript get, item {}, device {}.", item,
+			log.error("Error on JavaScript get, item {}, device {}.", item,
 					deviceId, e);
 			this.taskLogger.warn(String.format("Unable to get data %s for device %d.", item, deviceId));
 		}
@@ -518,7 +516,7 @@ public class JsDeviceHelper {
 
 	@Export
 	public Object get(String item, String deviceName) {
-		logger.debug("JavaScript request for item {} on device named {}.", item,
+		log.debug("JavaScript request for item {} on device named {}.", item,
 				deviceName);
 		try {
 			if (device.getName().equals(deviceName)) {
@@ -530,12 +528,12 @@ public class JsDeviceHelper {
 			return result;
 		}
 		catch (ObjectNotFoundException e) {
-			logger.error("Device not found on JavaScript get, item {}, device named {}.",
+			log.error("Device not found on JavaScript get, item {}, device named {}.",
 					item, deviceName, e);
 			this.taskLogger.warn(String.format("Unable to find the device named %s.", deviceName));
 		}
 		catch (Exception e) {
-			logger.error("Error on JavaScript get, item {}, device named {}.", item,
+			log.error("Error on JavaScript get, item {}, device named {}.", item,
 					deviceName, e);
 			this.taskLogger.warn(String.format("Unable to get data %s for device named %s.", item, deviceName));
 		}
@@ -593,18 +591,18 @@ public class JsDeviceHelper {
 					return targetStream.toString(charset);
 				}
 				else {
-					logger.warn("Error during snapshot: can't use SCP method with non-SSH CLI access.");
+					log.warn("Error during snapshot: can't use SCP method with non-SSH CLI access.");
 					throw new IllegalArgumentException("Can't use SCP method with non-SSH CLI access.");
 				}
 			}
 			else {
-				logger.warn("Invalid download method '{}' during snapshot.", method);
+				log.warn("Invalid download method '{}' during snapshot.", method);
 				taskLogger.error(String.format("Invalid download method %s", method));
 				throw new IllegalArgumentException("Invalid download method");
 			}
 		}
 		catch (Exception e) {
-			logger.warn("Error during while downloading file '{}'.", remoteFileName);
+			log.warn("Error during while downloading file '{}'.", remoteFileName);
 			taskLogger.error(String.format("Error while downloading file '%s:' %s", remoteFileName, e.getMessage()));
 			throw e;
 		}

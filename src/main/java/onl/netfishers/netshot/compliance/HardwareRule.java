@@ -29,11 +29,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.DeviceGroup;
@@ -48,30 +51,68 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 public class HardwareRule {
 
 	/** The id. */
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlAttribute, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private long id;
 
 	/** The device class. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String driver = null;
 
 	/** The target group. */
+	@Getter(onMethod=@__({
+		@ManyToOne,
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private DeviceGroup targetGroup;
 
 	/** The family. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String family = "";
 
 	/** The family reg exp. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private boolean familyRegExp = false;
 
 	/** The part number. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String partNumber;
 
 	/** The part number reg exp. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private boolean partNumberRegExp = false;
 
 	/** The end of sale. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Date endOfSale;
 
 	/** The end of life. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Date endOfLife;
 
 	/**
@@ -96,16 +137,6 @@ public class HardwareRule {
 	}
 
 	/**
-	 * Gets the device driver.
-	 *
-	 * @return the device driver
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getDriver() {
-		return driver;
-	}
-
-	/**
 	 * Gets the device type.
 	 *
 	 * @return the device type
@@ -118,128 +149,6 @@ public class HardwareRule {
 			return "";
 		}
 		return deviceDriver.getDescription();
-	}
-
-
-	public void setDriver(String driver) {
-		this.driver = driver;
-	}
-
-	/**
-	 * Gets the target group.
-	 *
-	 * @return the target group
-	 */
-	@ManyToOne
-	@XmlElement @JsonView(DefaultView.class)
-	public DeviceGroup getTargetGroup() {
-		return targetGroup;
-	}
-
-	/**
-	 * Sets the target group.
-	 *
-	 * @param targetGroup the new target group
-	 */
-	public void setTargetGroup(DeviceGroup targetGroup) {
-		this.targetGroup = targetGroup;
-	}
-
-	/**
-	 * Gets the family.
-	 *
-	 * @return the family
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getFamily() {
-		return family;
-	}
-
-	/**
-	 * Sets the family.
-	 *
-	 * @param family the new family
-	 */
-	public void setFamily(String family) {
-		this.family = family;
-	}
-
-	/**
-	 * Gets the part number.
-	 *
-	 * @return the part number
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getPartNumber() {
-		return partNumber;
-	}
-
-	/**
-	 * Sets the part number.
-	 *
-	 * @param partNumber the new part number
-	 */
-	public void setPartNumber(String partNumber) {
-		this.partNumber = partNumber;
-	}
-
-	/**
-	 * Gets the end of sale.
-	 *
-	 * @return the end of sale
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getEndOfSale() {
-		return endOfSale;
-	}
-
-	/**
-	 * Sets the end of sale.
-	 *
-	 * @param endOfSale the new end of sale
-	 */
-	public void setEndOfSale(Date endOfSale) {
-		this.endOfSale = endOfSale;
-	}
-
-	/**
-	 * Gets the end of life.
-	 *
-	 * @return the end of life
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getEndOfLife() {
-		return endOfLife;
-	}
-
-	/**
-	 * Sets the end of life.
-	 *
-	 * @param endOfLife the new end of life
-	 */
-	public void setEndOfLife(Date endOfLife) {
-		this.endOfLife = endOfLife;
-	}
-
-	/**
-	 * Gets the id.
-	 *
-	 * @return the id
-	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement @JsonView(DefaultView.class)
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * Sets the id.
-	 *
-	 * @param id the new id
-	 */
-	public void setId(long id) {
-		this.id = id;
 	}
 
 	/**
@@ -297,47 +206,8 @@ public class HardwareRule {
 		}
 	}
 
-	/**
-	 * Checks if is family reg exp.
-	 *
-	 * @return true, if is family reg exp
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isFamilyRegExp() {
-		return familyRegExp;
-	}
-
-	/**
-	 * Sets the family reg exp.
-	 *
-	 * @param familyRegExp the new family reg exp
-	 */
-	public void setFamilyRegExp(boolean familyRegExp) {
-		this.familyRegExp = familyRegExp;
-	}
-
-	/**
-	 * Checks if is part number reg exp.
-	 *
-	 * @return true, if is part number reg exp
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isPartNumberRegExp() {
-		return partNumberRegExp;
-	}
-
-	/**
-	 * Sets the part number reg exp.
-	 *
-	 * @param partNumberRegExp the new part number reg exp
-	 */
-	public void setPartNumberRegExp(boolean partNumberRegExp) {
-		this.partNumberRegExp = partNumberRegExp;
-	}
-
 	@Override
 	public String toString() {
 		return "Hardware compliance rule " + id;
 	}
-
 }

@@ -22,9 +22,8 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.graalvm.polyglot.HostAccess.Export;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.device.access.Snmp;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
 import onl.netfishers.netshot.work.TaskLogger;
@@ -34,9 +33,8 @@ import onl.netfishers.netshot.work.TaskLogger;
  * @author sylvain.cadilhac
  *
  */
+@Slf4j
 public class JsSnmpHelper {
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(JsSnmpHelper.class);
 
 	/** The poller */
 	private Snmp poller;
@@ -80,7 +78,7 @@ public class JsSnmpHelper {
 			return this.poller.getAsString(oid);
 		}
 		catch (IOException e) {
-			logger.error("SNMP I/O error.", e);
+			log.error("SNMP I/O error.", e);
 			this.taskLogger.error("I/O error: " + e.getMessage());
 			throw e;
 		}
@@ -98,7 +96,7 @@ public class JsSnmpHelper {
 			return this.poller.walkAsString(oid);
 		}
 		catch (IOException e) {
-			logger.error("SNMP I/O error.", e);
+			log.error("SNMP I/O error.", e);
 			this.taskLogger.error("I/O error: " + e.getMessage());
 			throw e;
 		}

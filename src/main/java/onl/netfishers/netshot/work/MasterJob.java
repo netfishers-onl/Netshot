@@ -27,20 +27,18 @@ import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A Quartz job which runs a Netshot task.
  */
 @DisallowConcurrentExecution
+@Slf4j
 public class MasterJob implements Job {
 
 	/** The Constant NETSHOT_TASK. */
 	public static final String NETSHOT_TASK = "Netshot Task";
-
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(MasterJob.class);
 
 	/**
 	 * Instantiates a new task job.
@@ -52,10 +50,10 @@ public class MasterJob implements Job {
 	 * @see org.quartz.Job#execute(org.quartz.JobExecutionContext)
 	 */
 	public void execute(JobExecutionContext context) throws JobExecutionException {
-		logger.debug("Starting master task job.");
+		log.debug("Starting master task job.");
 		Long id = (Long) context.getJobDetail().getJobDataMap()
 				.get(NETSHOT_TASK);
-		logger.trace("The task id is {}.", id);
+		log.trace("The task id is {}.", id);
 		Task task = null;
 		Session session = Database.getSession();
 		try {
@@ -63,14 +61,14 @@ public class MasterJob implements Job {
 			session.beginTransaction();
 			task = (Task) session.get(Task.class, id);
 			if (task == null) {
-				logger.error("The retrieved task {} is null.", id);
+				log.error("The retrieved task {} is null.", id);
 			}
 			TaskManager.assignTaskRunner(task);
 			session.update(task);
 			session.getTransaction().commit();
 		}
 		catch (Exception e) {
-			logger.error("Error while retrieving and assigning the task to a runner.", e);
+			log.error("Error while retrieving and assigning the task to a runner.", e);
 			try {
 				session.getTransaction().rollback();
 			}

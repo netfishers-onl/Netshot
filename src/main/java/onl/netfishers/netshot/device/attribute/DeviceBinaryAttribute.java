@@ -25,12 +25,18 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @DiscriminatorValue("B")
 public class DeviceBinaryAttribute extends DeviceAttribute {
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Boolean assumption;
 
 	protected DeviceBinaryAttribute() {
@@ -39,15 +45,6 @@ public class DeviceBinaryAttribute extends DeviceAttribute {
 	public DeviceBinaryAttribute(Device device, String name, boolean value) {
 		super(device, name);
 		this.assumption = value;
-	}
-	
-	@XmlElement @JsonView(DefaultView.class)
-	public Boolean getAssumption() {
-		return assumption;
-	}
-
-	public void setAssumption(Boolean assumption) {
-		this.assumption = assumption;
 	}
 
 	@Override

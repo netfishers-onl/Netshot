@@ -24,9 +24,8 @@ import java.util.Map;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
 import org.graalvm.polyglot.proxy.ProxyObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.diagnostic.Diagnostic;
 import onl.netfishers.netshot.diagnostic.DiagnosticResult;
@@ -37,9 +36,8 @@ import onl.netfishers.netshot.work.TaskLogger;
  * @author sylvain.cadilhac
  *
  */
+@Slf4j
 public class JsDiagnosticHelper {
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(JsDiagnosticHelper.class);
 	
 	/** The device the diagnostic is running on. */
 	public final Device device;
@@ -87,7 +85,7 @@ public class JsDiagnosticHelper {
 			}
 		}
 		catch (Exception e) {
-			logger.warn("Error while setting the diagnostic result '{}'.", key);
+			log.warn("Error while setting the diagnostic result '{}'.", key);
 			taskLogger.error(String.format("Can't set diagnostic result %s: %s", key,  e.toString()));
 		}
 	}

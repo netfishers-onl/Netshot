@@ -46,6 +46,10 @@ import org.jasypt.hibernate5.type.EncryptedStringType;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
+import lombok.Getter;
+import lombok.Setter;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -74,22 +78,51 @@ import com.fasterxml.jackson.annotation.JsonView;
 	)
 })
 public class DeviceCredentialSet {
+	
+	static public String generateSpecificName() {
+		return String.format("DEVICESPECIFIC-%s", UUID.randomUUID());
+	}
 
 	/** The change date. */
+	@Getter
+	@Setter
 	protected Date changeDate;
 	
+	@Getter(onMethod=@__({
+		@Version
+	}))
+	@Setter
 	private int version;
 	
 	/** The id. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@XmlID, @Id, @GeneratedValue(strategy = GenerationType.IDENTITY)
+	}))
+	@Setter
 	protected long id;
 	
 	/** The name. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@NaturalId(mutable = true)
+	}))
+	@Setter
 	protected String name;
 	
 	/** The mgmtDomain. */
+	@Getter(onMethod=@__({
+		@ManyToOne,
+		@XmlElement, @JsonView(DefaultView.class),
+	}))
+	@Setter
 	protected Domain mgmtDomain;
 	
 	/** Device-specific credential set */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected boolean deviceSpecific = false;
 
 	/**
@@ -131,48 +164,6 @@ public class DeviceCredentialSet {
 			return false;
 		}
 		return true;
-	} 
-
-	/**
-	 * Gets the change date.
-	 *
-	 * @return the change date
-	 */
-	public Date getChangeDate() {
-		return changeDate;
-	}
-	
-	@Version
-	public int getVersion() {
-		return version;
-	}
-	
-	public void setVersion(int version) {
-		this.version = version;
-	}
-	
-	/**
-	 * Gets the id.
-	 *
-	 * @return the id
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@XmlID
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * Gets the name.
-	 *
-	 * @return the name
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@NaturalId(mutable = true)
-	public String getName() {
-		return name;
 	}
 	
 	/* (non-Javadoc)
@@ -184,74 +175,6 @@ public class DeviceCredentialSet {
 		int result = 1;
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		return result;
-	}
-	
-	/**
-	 * Sets the change date.
-	 *
-	 * @param changeDate the new change date
-	 */
-	public void setChangeDate(Date changeDate) {
-		this.changeDate = changeDate;
-	}
-
-	/**
-	 * Sets the id.
-	 *
-	 * @param id the new id
-	 */
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	/**
-	 * Sets the name.
-	 *
-	 * @param name the new name
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	/**
-	 * Gets the mgmtDomain.
-	 *
-	 * @return the mgmtDomain
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@ManyToOne()
-	public Domain getMgmtDomain() {
-		return mgmtDomain;
-	}
-
-	/**
-	 * Sets the mgmtDomain.
-	 *
-	 * @param mgmtDomain the new mgmtDomain
-	 */
-	public void setMgmtDomain(Domain domain) {
-		this.mgmtDomain = domain;
-	}
-
-	/**
-	 * Is the credential set specific to a device?
-	 * @return true if the credential set is specific;
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isDeviceSpecific() {
-		return deviceSpecific;
-	}
-
-	/**
-	 * Sets whether the credential set is specific to a device.
-	 * @param specific true if the credential set is specific.
-	 */
-	public void setDeviceSpecific(boolean specific) {
-		this.deviceSpecific = specific;
-	}
-	
-	static public String generateSpecificName() {
-		return String.format("DEVICESPECIFIC-%s", UUID.randomUUID());
 	}
 
 	@Override

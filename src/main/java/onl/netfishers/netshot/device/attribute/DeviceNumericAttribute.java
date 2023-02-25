@@ -25,12 +25,18 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @DiscriminatorValue("N")
 public class DeviceNumericAttribute extends DeviceAttribute {
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Double number;
 
 	protected DeviceNumericAttribute() {
@@ -40,20 +46,11 @@ public class DeviceNumericAttribute extends DeviceAttribute {
 		super(device, name);
 		this.number = value;
 	}
-	
-	@XmlElement @JsonView(DefaultView.class)
-	public Double getNumber() {
-		return number;
-	}
-
-	public void setNumber(Double value) {
-		this.number = value;
-	}
 
 	@Override
 	@Transient
 	public Object getData() {
-		return getNumber();
+		return this.number;
 	}
 
 }

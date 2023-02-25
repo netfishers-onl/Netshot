@@ -25,12 +25,18 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @DiscriminatorValue("S")
 public class ConfigTextAttribute extends ConfigAttribute {
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String text;
 	
 	protected ConfigTextAttribute() {
@@ -38,15 +44,6 @@ public class ConfigTextAttribute extends ConfigAttribute {
 	
 	public ConfigTextAttribute(Config config, String name, String value) {
 		super(config, name);
-		this.text = value;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public String getText() {
-		return text;
-	}
-
-	public void setText(String value) {
 		this.text = value;
 	}
 

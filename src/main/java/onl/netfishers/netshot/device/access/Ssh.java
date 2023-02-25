@@ -40,22 +40,19 @@ import com.jcraft.jsch.KeyPair;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * An SSH CLI access.
  */
+@Slf4j
 public class Ssh extends Cli {
-
-	final private static Logger logger = LoggerFactory.getLogger(Ssh.class);
 
 	/**
 	 * Logger bridge for Jsch to SLF4j
 	 */
+	@Slf4j
 	public static class JschLogger implements com.jcraft.jsch.Logger {
-
-		final private static Logger logger = LoggerFactory.getLogger(JschLogger.class);
 
 		@Override
 		public boolean isEnabled(int level) {
@@ -66,19 +63,19 @@ public class Ssh extends Cli {
 		public void log(int level, String message) {
 			switch (level) {
 			case com.jcraft.jsch.Logger.DEBUG:
-				logger.debug(message);
+				log.debug(message);
 				break;
 			case com.jcraft.jsch.Logger.INFO:
-				logger.info(message);
+				log.info(message);
 				break;
 			case com.jcraft.jsch.Logger.WARN:
-				logger.warn(message);
+				log.warn(message);
 				break;
 			case com.jcraft.jsch.Logger.ERROR:
-				logger.error(message);
+				log.error(message);
 				break;
 			case com.jcraft.jsch.Logger.FATAL:
-				logger.error(message);
+				log.error(message);
 				break;
 			}
 		}
@@ -268,30 +265,30 @@ public class Ssh extends Cli {
 	static {
 		int configuredConnectionTimeout = Netshot.getConfig("netshot.cli.ssh.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT);
 		if (configuredConnectionTimeout < 1) {
-			logger.error("Invalid value {} for {}", configuredConnectionTimeout, "netshot.cli.ssh.connectiontimeout");
+			log.error("Invalid value {} for {}", configuredConnectionTimeout, "netshot.cli.ssh.connectiontimeout");
 		}
 		else {
 			DEFAULT_CONNECTION_TIMEOUT = configuredConnectionTimeout;
 		}
-		logger.info("The default connection timeout value for SSH sessions is {}s", DEFAULT_CONNECTION_TIMEOUT);
+		log.info("The default connection timeout value for SSH sessions is {}s", DEFAULT_CONNECTION_TIMEOUT);
 
     int configuredReceiveTimeout = Netshot.getConfig("netshot.cli.ssh.receivetimeout", DEFAULT_RECEIVE_TIMEOUT);
 		if (configuredReceiveTimeout < 1) {
-			logger.error("Invalid value {} for {}", configuredReceiveTimeout, "netshot.cli.ssh.receivetimeout");
+			log.error("Invalid value {} for {}", configuredReceiveTimeout, "netshot.cli.ssh.receivetimeout");
 		}
 		else {
 			DEFAULT_RECEIVE_TIMEOUT = configuredReceiveTimeout;
 		}
-		logger.info("The default receive timeout value for SSH sessions is {}s", DEFAULT_RECEIVE_TIMEOUT);
+		log.info("The default receive timeout value for SSH sessions is {}s", DEFAULT_RECEIVE_TIMEOUT);
 
 		int configuredCommandTimeout = Netshot.getConfig("netshot.cli.ssh.commandtimeout", DEFAULT_COMMAND_TIMEOUT);
 		if (configuredCommandTimeout < 1) {
-			logger.error("Invalid value {} for {}", configuredCommandTimeout, "netshot.cli.ssh.commandtimeout");
+			log.error("Invalid value {} for {}", configuredCommandTimeout, "netshot.cli.ssh.commandtimeout");
 		}
 		else {
 			DEFAULT_COMMAND_TIMEOUT = configuredCommandTimeout;
 		}
-		logger.info("The default command timeout value for SSH sessions is {}s", DEFAULT_COMMAND_TIMEOUT);
+		log.info("The default command timeout value for SSH sessions is {}s", DEFAULT_COMMAND_TIMEOUT);
 	}
 
 	/** The port. */
@@ -506,7 +503,7 @@ public class Ssh extends Cli {
 			}
 		}
 		catch (Exception e) {
-			logger.warn("Error on SSH disconnect.", e);
+			log.warn("Error on SSH disconnect.", e);
 		}
 	}
 

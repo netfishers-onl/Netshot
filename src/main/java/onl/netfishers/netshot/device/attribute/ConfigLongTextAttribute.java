@@ -28,11 +28,18 @@ import javax.persistence.Transient;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Config;
 
 @Entity @DiscriminatorValue("T")
 public class ConfigLongTextAttribute extends ConfigAttribute {
 
+	@Getter(onMethod=@__({
+		@OneToOne(orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.ALL),
+		@OnDelete(action = OnDeleteAction.CASCADE)
+	}))
+	@Setter
 	private LongTextConfiguration longText;
 	
 	protected ConfigLongTextAttribute() {
@@ -41,17 +48,6 @@ public class ConfigLongTextAttribute extends ConfigAttribute {
 	public ConfigLongTextAttribute(Config config, String name, String value) {
 		super(config, name);
 		this.longText = new LongTextConfiguration(value);
-	}
-
-	@OneToOne(orphanRemoval = true, fetch = FetchType.LAZY,
-			cascade = CascadeType.ALL)
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	public LongTextConfiguration getLongText() {
-		return longText;
-	}
-
-	public void setLongText(LongTextConfiguration value) {
-		this.longText = value;
 	}
 
 	@Override

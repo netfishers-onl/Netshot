@@ -40,6 +40,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
@@ -54,26 +56,69 @@ import org.hibernate.annotations.NaturalId;
 public class Domain {
 
 	/** The id. */
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlAttribute, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private long id;
 
 	/** The change date. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Date changeDate;
 	
+	@Getter(onMethod=@__({
+		@Version
+	}))
+	@Setter
 	private int version;
 
 	/** The name. */
+	@Getter(onMethod=@__({
+		@NaturalId(mutable = true),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String name;
 
 	/** The description. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String description;
 
-	/** The domain credential sets/. */
+	/** The domain credential sets. */
+	@Getter(onMethod=@__({
+		@OneToMany(mappedBy = "mgmtDomain", cascade = CascadeType.ALL)
+	}))
+	@Setter
 	private Set<DeviceCredentialSet> credentialSets = new HashSet<>();
 
 	/** The server4 address. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@AttributeOverrides({
+			@AttributeOverride(name = "address", column = @Column(name = "ipv4_address")),
+			@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
+			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4_usage")) })
+	}))
+	@Setter
 	private Network4Address server4Address;
 
 	/** The server6 address. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@AttributeOverrides({
+			@AttributeOverride(name = "address1", column = @Column(name = "ipv6_address1")),
+			@AttributeOverride(name = "address2", column = @Column(name = "ipv6_address2")),
+			@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv6_pfxlen")),
+			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv6_usage")) })
+	}))
+	@Setter
 	private Network6Address server6Address;
 
 	/**
@@ -100,107 +145,6 @@ public class Domain {
 		this.name = name;
 		this.description = description;
 		this.server4Address = server4Address;
-		this.server6Address = server6Address;
-	}
-
-	/**
-	 * Gets the id.
-	 * 
-	 * @return the id
-	 */
-	@XmlAttribute
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * Gets the name.
-	 * 
-	 * @return the name
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@NaturalId(mutable = true)
-	public String getName() {
-		return name;
-	}
-
-	/**
-	 * Gets the description.
-	 * 
-	 * @return the description
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getDescription() {
-		return description;
-	}
-
-	/**
-	 * Sets the description.
-	 * 
-	 * @param description
-	 *          the new description
-	 */
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-	/**
-	 * Gets the server4 address.
-	 * 
-	 * @return the server4 address
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@AttributeOverrides({
-		@AttributeOverride(name = "address", column = @Column(name = "ipv4_address")),
-		@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
-		@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4_usage")) })
-	public Network4Address getServer4Address() {
-		return server4Address;
-	}
-
-	/**
-	 * Gets the server6 address.
-	 * 
-	 * @return the server6 address
-	 */
-	@AttributeOverrides({
-		@AttributeOverride(name = "address1", column = @Column(name = "ipv6_address1")),
-		@AttributeOverride(name = "address2", column = @Column(name = "ipv6_address2")),
-		@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv6_pfxlen")),
-		@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv6_usage")) })
-	public Network6Address getServer6Address() {
-		return server6Address;
-	}
-
-	/**
-	 * Sets the name.
-	 * 
-	 * @param name
-	 *          the new name
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	/**
-	 * Sets the server4 address.
-	 * 
-	 * @param server4Address
-	 *          the new server4 address
-	 */
-	public void setServer4Address(Network4Address server4Address) {
-		this.server4Address = server4Address;
-	}
-
-	/**
-	 * Sets the server6 address.
-	 * 
-	 * @param server6Address
-	 *          the new server6 address
-	 */
-	public void setServer6Address(Network6Address server6Address) {
 		this.server6Address = server6Address;
 	}
 
@@ -243,49 +187,6 @@ public class Domain {
 			return false;
 		}
 		return true;
-	}
-
-	/**
-	 * Gets the credential sets.
-	 * 
-	 * @return the credential sets
-	 */
-	@OneToMany(mappedBy = "mgmtDomain",
-			cascade = CascadeType.ALL)
-	public Set<DeviceCredentialSet> getCredentialSets() {
-		return credentialSets;
-	}
-
-	/**
-	 * Sets the credential sets.
-	 * 
-	 * @param credentialSets
-	 *          the new credential sets
-	 */
-	public void setCredentialSets(Set<DeviceCredentialSet> credentialSets) {
-		this.credentialSets = credentialSets;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getChangeDate() {
-		return changeDate;
-	}
-
-	public void setChangeDate(Date changeDate) {
-		this.changeDate = changeDate;
-	}
-	
-	@Version
-	public int getVersion() {
-		return version;
-	}
-	
-	public void setVersion(int version) {
-		this.version = version;
-	}
-
-	protected void setId(long id) {
-		this.id = id;
 	}
 
 	@Override

@@ -25,12 +25,18 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 @Entity @DiscriminatorValue("B")
 public class DiagnosticBinaryResult extends DiagnosticResult {
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Boolean assumption;
 
 	protected DiagnosticBinaryResult() {
@@ -47,15 +53,6 @@ public class DiagnosticBinaryResult extends DiagnosticResult {
 		if (value == null || "false".equals(value) || "FALSE".equals(value) || "False".equals(value) || "0".equals(value)) {
 			this.assumption = false;
 		}
-	}
-	
-	@XmlElement @JsonView(DefaultView.class)
-	public Boolean getAssumption() {
-		return assumption;
-	}
-
-	public void setAssumption(Boolean assumption) {
-		this.assumption = assumption;
 	}
 
 	@Override

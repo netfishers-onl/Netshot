@@ -20,66 +20,48 @@ package onl.netfishers.netshot.device.script.helper;
 
 import org.graalvm.polyglot.HostAccess.Export;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * The options object to pass data to JavaScript entry function in a generic way.
  * @author sylvain.cadilhac
  *
  */
 public class JsCliScriptOptions {
+	@Getter(onMethod=@__({
+		@Export
+	}))
+	@Setter
 	private JsCliHelper cliHelper;
+
+	@Getter(onMethod=@__({
+		@Export
+	}))
+	@Setter
 	private JsSnmpHelper snmpHelper;
+
+	@Getter(onMethod=@__({
+		@Export
+	}))
+	@Setter
 	private JsConfigHelper configHelper;
+
+	@Getter(onMethod=@__({
+		@Export
+	}))
+	@Setter
 	private JsDeviceHelper deviceHelper;
+
+	@Getter(onMethod=@__({
+		@Export
+	}))
+	@Setter
 	private JsDiagnosticHelper diagnosticHelper;
 
 	public JsCliScriptOptions(JsCliHelper cliHelper, JsSnmpHelper snmpHelper) {
 		this.cliHelper = cliHelper;
 		this.snmpHelper = snmpHelper;
-	}
-
-	@Export
-	public JsDiagnosticHelper getDiagnosticHelper() {
-		return diagnosticHelper;
-	}
-
-	@Export
-	public JsDeviceHelper getDeviceHelper() {
-		return deviceHelper;
-	}
-
-	public void setDevice(JsDeviceHelper deviceHelper) {
-		this.deviceHelper = deviceHelper;
-	}
-
-	public void setDiagnosticHelper(JsDiagnosticHelper diagnosticHelper) {
-		this.diagnosticHelper = diagnosticHelper;
-	}
-
-	@Export
-	public JsCliHelper getCliHelper() {
-		return cliHelper;
-	}
-
-	public void setCliHelper(JsCliHelper cliHelper) {
-		this.cliHelper = cliHelper;
-	}
-
-	@Export
-	public JsSnmpHelper getSnmpHelper() {
-		return snmpHelper;
-	}
-
-	public void setSnmpHelper(JsSnmpHelper snmpHelper) {
-		this.snmpHelper = snmpHelper;
-	}
-
-	@Export
-	public JsConfigHelper getConfigHelper() {
-		return configHelper;
-	}
-
-	public void setConfigHelper(JsConfigHelper configHelper) {
-		this.configHelper = configHelper;
 	}
 
 }

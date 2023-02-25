@@ -28,6 +28,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.compliance.HardwareRule;
 import onl.netfishers.netshot.compliance.SoftwareRule;
@@ -43,20 +46,20 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.quartz.JobKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This task checks the compliance of the software version of a given group
  * of devices.
  */
 @Entity
+@Slf4j
 public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(CheckGroupSoftwareTask.class);
-
 	/** The device group. */
+	@Getter(onMethod=@__({
+		@ManyToOne(fetch = FetchType.LAZY)
+	}))
+	@Setter
 	private DeviceGroup deviceGroup;
 
 	/**
@@ -95,25 +98,6 @@ public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 		Hibernate.initialize(this.getDeviceGroup());
 	}
 
-	/**
-	 * Gets the device group.
-	 *
-	 * @return the device group
-	 */
-	@ManyToOne(fetch = FetchType.LAZY)
-	public DeviceGroup getDeviceGroup() {
-		return deviceGroup;
-	}
-
-	/**
-	 * Sets the device group.
-	 *
-	 * @param deviceGroup the new device group
-	 */
-	public void setDeviceGroup(DeviceGroup deviceGroup) {
-		this.deviceGroup = deviceGroup;
-	}
-
 	/* (non-Javadoc)
 	 * @see onl.netfishers.netshot.work.Task#clone()
 	 */
@@ -129,18 +113,18 @@ public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Task {}. Starting check software compliance and hardware support status task for group {}.",
+		log.debug("Task {}. Starting check software compliance and hardware support status task for group {}.",
 				this.getId(), deviceGroup.getId());
 		this.trace(String.format("Check software compliance task for group %s.",
 				deviceGroup.getName()));
 
 		Session session = Database.getSession();
 		try {
-			logger.debug("Task {}. Retrieving the software rules", this.getId());
+			log.debug("Task {}. Retrieving the software rules", this.getId());
 			List<SoftwareRule> softwareRules = session
 					.createQuery("select sr from SoftwareRule sr order by sr.priority asc", SoftwareRule.class)
 					.list();
-			logger.debug("Task {}. Retrieving the hardware rules", this.getId());
+			log.debug("Task {}. Retrieving the hardware rules", this.getId());
 			List<HardwareRule> hardwareRules = session
 					.createQuery("select hr from HardwareRule hr", HardwareRule.class)
 					.list();
@@ -176,9 +160,9 @@ public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 				session.getTransaction().rollback();
 			}
 			catch (Exception e1) {
-				logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
+				log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 			}
-			logger.error("Task {}. Error while checking compliance.", this.getId(), e);
+			log.error("Task {}. Error while checking compliance.", this.getId(), e);
 			this.error("Error while checking compliance: " + e.getMessage());
 			this.status = Status.FAILURE;
 			return;

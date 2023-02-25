@@ -12,9 +12,8 @@ import javax.ws.rs.core.Context;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.aaa.ApiToken;
@@ -24,10 +23,8 @@ import onl.netfishers.netshot.aaa.ApiToken;
  */
 @Priority(Priorities.AUTHENTICATION)
 @PreMatching
+@Slf4j
 class ApiTokenAuthFilter implements ContainerRequestFilter {
-
-	/** The logger. */
-	static Logger logger = LoggerFactory.getLogger(ApiTokenAuthFilter.class);
 
 	/** Name of the HTTP header used for API token */
 	static public final String HTTP_API_TOKEN_HEADER = "X-Netshot-API-Token";
@@ -54,7 +51,7 @@ class ApiTokenAuthFilter implements ContainerRequestFilter {
 				}
 			}
 			catch (HibernateException e) {
-				logger.error("Database error while looking for API token", e);
+				log.error("Database error while looking for API token", e);
 			}
 			finally {
 				session.close();

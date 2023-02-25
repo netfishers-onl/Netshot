@@ -9,9 +9,6 @@ window.onload = function() {
     presets: [
       SwaggerUIBundle.presets.apis
     ],
-    plugins: [
-      SwaggerUIBundle.plugins.DownloadUrl
-    ]
   });
 
   //</editor-fold>

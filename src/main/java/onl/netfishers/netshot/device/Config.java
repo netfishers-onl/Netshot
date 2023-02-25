@@ -40,10 +40,14 @@ import javax.persistence.Transient;
 import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
+
+import lombok.Getter;
+import lombok.Setter;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.annotations.Filter;
@@ -86,20 +90,47 @@ public class Config {
 	}
 
 	/** The attributes. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@OneToMany(mappedBy = "config", orphanRemoval = true, cascade = CascadeType.ALL),
+		@Filter(name = "lightAttributesOnly")
+	}))
+	@Setter
 	private Set<ConfigAttribute> attributes = new HashSet<ConfigAttribute>();
 
 	/** The author. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String author = "";
 
 	/** The change date. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected Date changeDate;
 	
+	@Getter(onMethod=@__({
+		@Version
+	}))
+	@Setter
 	private int version;
 
 	/** The device. */
+	@Getter(onMethod=@__({
+		@ManyToOne(fetch = FetchType.LAZY)
+	}))
+	@Setter
 	protected Device device;
 
 	/** The id. */
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlAttribute, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected long id;
 
 	/**
@@ -125,14 +156,6 @@ public class Config {
 		attributes.clear();
 	}
 	
-	@XmlElement @JsonView(DefaultView.class)
-	@OneToMany(mappedBy = "config", orphanRemoval = true,
-			cascade = CascadeType.ALL)
-	@Filter(name = "lightAttributesOnly")
-	public Set<ConfigAttribute> getAttributes() {
-		return attributes;
-	}
-	
 	@Transient
 	public Map<String, ConfigAttribute> getAttributeMap() {
 		Map<String, ConfigAttribute> map = new HashMap<String, ConfigAttribute>();
@@ -155,97 +178,6 @@ public class Config {
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Gets the author.
-	 *
-	 * @return the author
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getAuthor() {
-		return author;
-	}
-
-	/**
-	 * Gets the change date.
-	 *
-	 * @return the change date
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getChangeDate() {
-		return changeDate;
-	}
-	
-	@Version
-	public int getVersion() {
-		return version;
-	}
-	
-	public void setVersion(int version) {
-		this.version = version;
-	}
-
-	/**
-	 * Gets the device.
-	 *
-	 * @return the device
-	 */
-	@ManyToOne(fetch = FetchType.LAZY)
-	public Device getDevice() {
-		return device;
-	}
-
-	/**
-	 * Gets the id.
-	 *
-	 * @return the id
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	public long getId() {
-		return id;
-	}
-
-	public void setAttributes(Set<ConfigAttribute> attributes) {
-		this.attributes = attributes;
-	}
-
-	/**
-	 * Sets the author.
-	 *
-	 * @param author the new author
-	 */
-	public void setAuthor(String author) {
-		this.author = author;
-	}
-
-	/**
-	 * Sets the change date.
-	 *
-	 * @param changeDate the new change date
-	 */
-	public void setChangeDate(Date changeDate) {
-		this.changeDate = changeDate;
-	}
-
-	/**
-	 * Sets the device.
-	 *
-	 * @param device the new device
-	 */
-	public void setDevice(Device device) {
-		this.device = device;
-	}
-
-	/**
-	 * Sets the id.
-	 *
-	 * @param id the new id
-	 */
-	public void setId(long id) {
-		this.id = id;
 	}
 
 }

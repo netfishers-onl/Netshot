@@ -39,6 +39,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
+import lombok.Getter;
+import lombok.Setter;
+
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -62,14 +66,38 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 public abstract class DiagnosticResult {
 
 	/** Unique ID of the diagnostic result **/
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY)
+	}))
+	@Setter
 	protected long id;
+
 	/** The date this result was created on **/
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Date creationDate = new Date();
+
 	/** The last date this result was returned **/
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private Date lastCheckDate = new Date();
+
 	/** The diagnostic which created that result **/
+	@Getter(onMethod=@__({
+		@ManyToOne(fetch = FetchType.LAZY)
+	}))
+	@Setter
 	private Diagnostic diagnostic;
+
 	/** The device which created that result **/
+	@Getter(onMethod=@__({
+		@ManyToOne
+	}))
+	@Setter
 	private Device device;
 	
 	/**
@@ -86,92 +114,6 @@ public abstract class DiagnosticResult {
 	public DiagnosticResult(Device device, Diagnostic diagnostic) {
 		this.device = device;
 		this.diagnostic = diagnostic;
-	}
-
-	/**
-	 * Gets the ID of the result.
-	 * @return the ID
-	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * Sets the ID of the result.
-	 * @param id
-	 */
-	public void setId(long id) {
-		this.id = id;
-	}
-	
-	/**
-	 * Gets the related diagnostic.
-	 * @return the diagnostic
-	 */
-	@ManyToOne(fetch = FetchType.LAZY)
-	public Diagnostic getDiagnostic() {
-		return diagnostic;
-	}
-
-	/**
-	 * Sets the related diagnostic
-	 * @param diagnostic the diagnostic
-	 */
-	public void setDiagnostic(Diagnostic diagnostic) {
-		this.diagnostic = diagnostic;
-	}
-	
-	/**
-	 * Gets the creation date of the result
-	 * @return the creation date
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getCreationDate() {
-		return creationDate;
-	}
-
-	/**
-	 * Sets the creation date of the result.
-	 * @param creationDate the creation date
-	 */
-	public void setCreationDate(Date creationDate) {
-		this.creationDate = creationDate;
-	}
-
-	/**
-	 * Gets the last check date (last time this result was got from the device).
-	 * @return the last check date
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getLastCheckDate() {
-		return lastCheckDate;
-	}
-
-	/**
-	 * Sets the last check date.
-	 * @param lastCheckDate the last check date
-	 */
-	public void setLastCheckDate(Date lastCheckDate) {
-		this.lastCheckDate = lastCheckDate;
-	}
-
-	/**
-	 * Gets the device of this result.
-	 * @return the device
-	 */
-	@ManyToOne
-	public Device getDevice() {
-		return device;
-	}
-
-	/**
-	 * Sets the device of the result.
-	 * @param device the device to set
-	 */
-	public void setDevice(Device device) {
-		this.device = device;
 	}
 
 	/**

@@ -26,11 +26,14 @@ import javax.persistence.Id;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
@@ -40,14 +43,37 @@ import org.hibernate.annotations.NaturalId;
 @XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
 public class DeviceJsScript {
 
+	@Getter(onMethod=@__({
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlAttribute, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private long id;
 	
+	@Getter(onMethod=@__({
+		@NaturalId,
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String name;
 
+	@Getter(onMethod=@__({
+		@Column(length = 10000000),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String script;
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String deviceDriver;
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String author;
 
 	protected DeviceJsScript() {
@@ -60,34 +86,6 @@ public class DeviceJsScript {
 		this.deviceDriver = deviceDriver;
 		this.author = author;
 	}
-
-
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlElement @JsonView(DefaultView.class)
-	public long getId() {
-		return id;
-	}
-
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	@Column(length = 10000000)
-	public String getScript() {
-		return script;
-	}
-
-	public void setScript(String script) {
-		this.script = script;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public String getDeviceDriver() {
-		return deviceDriver;
-	}
 	
 	@Transient
 	@XmlElement @JsonView(DefaultView.class)
@@ -97,29 +95,6 @@ public class DeviceJsScript {
 			return "Unknwon driver";
 		}
 		return driver.getDescription();
-	}
-
-	public void setDeviceDriver(String deviceDriver) {
-		this.deviceDriver = deviceDriver;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public String getAuthor() {
-		return author;
-	}
-
-	public void setAuthor(String author) {
-		this.author = author;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	@NaturalId
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	@Override

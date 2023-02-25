@@ -4,6 +4,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import org.graalvm.polyglot.Value;
 
 import onl.netfishers.netshot.device.script.helper.JsDeviceHelper;
@@ -25,17 +28,66 @@ public class AttributeDefinition {
 		BINARYFILE
 	}
 	
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private AttributeType type;
+
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private AttributeLevel level;
+
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String name;
+
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String title;
+
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private boolean comparable = false;
+
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private boolean searchable = false;
+
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private boolean checkable = false;
+
+	@Getter
+	@Setter
 	private boolean dump = false;
+
+	@Getter
+	@Setter
 	private String preDump = null;
+
+	@Getter
+	@Setter
 	private String postDump = null;
+
+	@Getter
+	@Setter
 	private String preLineDump = null;
+
+	@Getter
+	@Setter
 	private String postLineDump = null;
 	
 	protected AttributeDefinition() {
@@ -111,85 +163,6 @@ public class AttributeDefinition {
 		}
 	}
 
-	@XmlElement @JsonView(DefaultView.class)
-	public AttributeType getType() {
-		return type;
-	}
-	public void setType(AttributeType type) {
-		this.type = type;
-	}
-	@XmlElement @JsonView(DefaultView.class)
-	public AttributeLevel getLevel() {
-		return level;
-	}
-	public void setLevel(AttributeLevel level) {
-		this.level = level;
-	}
-	@XmlElement @JsonView(DefaultView.class)
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	@XmlElement @JsonView(DefaultView.class)
-	public String getTitle() {
-		return title;
-	}
-	public void setTitle(String title) {
-		this.title = title;
-	}
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isComparable() {
-		return comparable;
-	}
-	public void setComparable(boolean comparable) {
-		this.comparable = comparable;
-	}
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isCheckable() {
-		return checkable;
-	}
-	public void setCheckable(boolean checkable) {
-		this.checkable = checkable;
-	}
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isSearchable() {
-		return searchable;
-	}
-	public void setSearchable(boolean searchable) {
-		this.searchable = searchable;
-	}
-	public boolean isDump() {
-		return dump;
-	}
-	public void setDump(boolean dump) {
-		this.dump = dump;
-	}
-	public String getPreDump() {
-		return preDump;
-	}
-	public void setPreDump(String preDump) {
-		this.preDump = preDump;
-	}
-	public String getPostDump() {
-		return postDump;
-	}
-	public void setPostDump(String postDump) {
-		this.postDump = postDump;
-	}
-	public String getPreLineDump() {
-		return preLineDump;
-	}
-	public void setPreLineDump(String preLineDump) {
-		this.preLineDump = preLineDump;
-	}
-	public String getPostLineDump() {
-		return postLineDump;
-	}
-	public void setPostLineDump(String postLineDump) {
-		this.postLineDump = postLineDump;
-	}
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();

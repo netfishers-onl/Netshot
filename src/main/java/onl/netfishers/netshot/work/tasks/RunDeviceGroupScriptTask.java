@@ -29,6 +29,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceDriver;
@@ -38,26 +41,31 @@ import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
 import org.quartz.JobKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This task schedules new tasks to take a new snapshot of each device of the
  * given group.
  */
 @Entity
+@Slf4j
 public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 
-	/** The logger. */
-	final private static Logger logger = LoggerFactory.getLogger(RunDeviceGroupScriptTask.class);
-
 	/** The device group. */
+	@Getter(onMethod=@__({
+		@ManyToOne(fetch = FetchType.LAZY)
+	}))
+	@Setter
 	private DeviceGroup deviceGroup;
 
+	@Getter(onMethod=@__({
+		@Column(length = 10000000)
+	}))
+	@Setter
 	private String script;
 
+	@Getter
+	@Setter
 	private String deviceDriver;
-
 
 
 	public RunDeviceGroupScriptTask() {
@@ -96,15 +104,15 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 	 */
 	@Override
 	public void run() {
-		logger.debug("Task {}. Starting run script task for group {}.",
+		log.debug("Task {}. Starting run script task for group {}.",
 				this.getId(), this.getDeviceGroup().getId());
 		Set<Device> devices = this.getDeviceGroup().getCachedDevices();
-		logger.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
+		log.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
 		String comment = String.format("Started due to group %s script task", this.getDeviceGroup().getName());
 
 		DeviceDriver driver = DeviceDriver.getDriverByName(this.deviceDriver);
 		if (driver == null) {
-			logger.error("Task {}. No such device driver {}.", this.getId(), deviceDriver);
+			log.error("Task {}. No such device driver {}.", this.getId(), deviceDriver);
 			this.error("Unknown device driver.");
 			this.status = Status.FAILURE;
 			return;
@@ -117,31 +125,12 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 				TaskManager.addTask(task);
 			}
 			catch (Exception e) {
-				logger.error("Task {}. Error while scheduling the individual snapshot task.", this.getId(), e);
+				log.error("Task {}. Error while scheduling the individual snapshot task.", this.getId(), e);
 				this.error("Error while scheduling the task.");
 			}
 		}
-		logger.debug("Task {}. Everything went fine.", this.getId());
+		log.debug("Task {}. Everything went fine.", this.getId());
 		this.status = Status.SUCCESS;
-	}
-
-	/**
-	 * Gets the device group.
-	 *
-	 * @return the device group
-	 */
-	@ManyToOne(fetch = FetchType.LAZY)
-	public DeviceGroup getDeviceGroup() {
-		return deviceGroup;
-	}
-
-	/**
-	 * Sets the device group.
-	 *
-	 * @param deviceGroup the new device group
-	 */
-	public void setDeviceGroup(DeviceGroup deviceGroup) {
-		this.deviceGroup = deviceGroup;
 	}
 
 	/* (non-Javadoc)
@@ -152,23 +141,6 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 		RunDeviceGroupScriptTask task = (RunDeviceGroupScriptTask) super.clone();
 		task.setDeviceGroup(this.deviceGroup);
 		return task;
-	}
-
-	@Column(length = 10000000)
-	public String getScript() {
-		return script;
-	}
-
-	public void setScript(String script) {
-		this.script = script;
-	}
-
-	public String getDeviceDriver() {
-		return deviceDriver;
-	}
-
-	public void setDeviceDriver(String deviceDriver) {
-		this.deviceDriver = deviceDriver;
 	}
 
 	/*

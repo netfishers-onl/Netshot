@@ -59,7 +59,11 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Where;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import lombok.Getter;
+import lombok.Setter;
 import onl.netfishers.netshot.compliance.CheckResult;
 import onl.netfishers.netshot.compliance.Exemption;
 import onl.netfishers.netshot.compliance.Rule;
@@ -151,118 +155,307 @@ public class Device {
 	
 
 	/** The attributes. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(RestApiView.class),
+		@OneToMany(mappedBy = "device", orphanRemoval = true,
+				cascade = CascadeType.ALL),
+		@OnDelete(action = OnDeleteAction.CASCADE)
+	}))
+	@Setter
 	private Set<DeviceAttribute> attributes = new HashSet<>();
 
 	/** The auto try credentials. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected boolean autoTryCredentials = true;
 	
 	/** The change date. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected Date changeDate;
 	
+	@Getter(onMethod=@__({
+		@Version
+	}))
+	@Setter
 	private int version;
 
 	/** The comments. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String comments = "";
 
 	/** The compliance check results. */
+	@Getter(onMethod=@__({
+		@OneToMany(mappedBy = "key.device", orphanRemoval = true, cascade = CascadeType.ALL),
+		@OnDelete(action = OnDeleteAction.CASCADE)
+	}))
+	@Setter
 	protected Set<CheckResult> complianceCheckResults = new HashSet<>();
 
 	/** The compliance exemptions. */
+	@Getter(onMethod=@__({
+		@OneToMany(fetch = FetchType.LAZY, mappedBy = "key.device", cascade = CascadeType.ALL, orphanRemoval = true),
+		@OnDelete(action = OnDeleteAction.CASCADE)
+	}))
+	@Setter
 	protected Set<Exemption> complianceExemptions = new HashSet<>();
 
 	/** The configs. */
+	@Getter(onMethod=@__({
+		@OneToMany(mappedBy = "device", cascade = CascadeType.ALL),
+		@OnDelete(action = OnDeleteAction.CASCADE)
+	}))
+	@Setter
 	protected List<Config> configs = new ArrayList<>();
 
 	/** The diagnostic results. */
+	@Getter(onMethod=@__({
+		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL),
+		@OnDelete(action = OnDeleteAction.CASCADE)
+	}))
+	@Setter
 	protected Set<DiagnosticResult> diagnosticResults = new HashSet<>();
 
 	/** The contact. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String contact = "";
 
 	/** The created date. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected Date createdDate = new Date();
 
+	/** The creator. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	private String creator;
 
 	/** The credential sets. */
+	@Getter(onMethod=@__({
+		@ManyToMany(), @Fetch(FetchMode.SELECT)
+	}))
+	@Setter
 	protected Set<DeviceCredentialSet> credentialSets = new HashSet<>();
 
-	/** Device-specific credential set/ */
+	/** Device-specific credential set */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@OneToOne(cascade = CascadeType.ALL)
+	}))
+	@Setter
 	protected DeviceCredentialSet specificCredentialSet;
 
 	/** The device deviceDriver name. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String driver;
 
 	/** End of Life Date. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected Date eolDate = null;
 
 	/** End of Life responsible component. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@OneToOne(fetch = FetchType.LAZY)
+	}))
+	@Setter
 	protected Module eolModule = null;
 
 	/** End of Sale Date. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected Date eosDate = null;
 
 	/** End of Sale responsible component. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@OneToOne(fetch = FetchType.LAZY)
+	}))
+	@Setter
 	protected Module eosModule = null;
 
 	/** The family. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String family = "";
 
 	/** The id. */
+	@Getter(onMethod=@__({
+		@Id,
+		@GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlAttribute, @JsonView(RestApiView.class)
+	}))
+	@Setter
 	protected long id;
 
 	/** The last config. */
+	@Getter(onMethod=@__({
+		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	}))
+	@Setter
 	protected Config lastConfig = null;
 
 	/** The location. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String location = "";
 
 	/** The mgmt address. */
+	@Getter(onMethod=@__({
+		@Embedded,
+		@AttributeOverrides({
+			@AttributeOverride(name = "address", column = @Column(name = "ipv4_address", unique = true)),
+			@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
+			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4_usage")),
+		}),
+		@XmlElement, @JsonView(DefaultView.class),
+		@JsonSerialize(using = Network4Address.AddressOnlySerializer.class),
+		@JsonDeserialize(using = Network4Address.AddressOnlyDeserializer.class)
+	}))
+	@Setter
 	protected Network4Address mgmtAddress;
 
 	/** The mgmt domain. */
+	@Getter(onMethod=@__({
+		@ManyToOne(fetch = FetchType.LAZY),
+		@XmlElement, @JsonView(RestApiView.class)
+	}))
+	@Setter
 	protected Domain mgmtDomain;
 
 	/** The modules. */
+	@Getter(onMethod=@__({
+		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL),
+		@Where(clause = "removed is not true"),
+		@OnDelete(action = OnDeleteAction.CASCADE)
+	}))
+	@Setter
 	protected List<Module> modules = new ArrayList<>();
 
 	/** The name. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String name = DEFAULTNAME;
 
 	/** The network class. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected NetworkClass networkClass = NetworkClass.UNKNOWN;
 
 	/** The network interfaces. */
+	@Getter(onMethod=@__({
+		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL),
+		@OnDelete(action = OnDeleteAction.CASCADE)
+	}))
+	@Setter
 	protected List<NetworkInterface> networkInterfaces = new ArrayList<>();
 
 	/** The owner groups. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(RestApiView.class),
+		@ManyToMany(mappedBy = "cachedDevices")
+	}))
+	@Setter
 	protected Set<DeviceGroup> ownerGroups = new HashSet<>();
 
 	/** The serial number. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String serialNumber = "";
 
 	/** The software level. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected SoftwareRule.ConformanceLevel softwareLevel = ConformanceLevel.UNKNOWN;
 
 	/** The software version. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected String softwareVersion = "";
 
 	/** The status. */
+	@Getter(onMethod=@__({
+		@Enumerated(value = EnumType.ORDINAL),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected Status status = Status.INPRODUCTION;
 
 	/** The virtual devices. */
+	@Getter(onMethod=@__({
+		@ElementCollection
+	}))
+	@Setter
 	protected Set<String> virtualDevices = new HashSet<>();
 
 	/** The vrf instances. */
+	@Getter(onMethod=@__({
+		@ElementCollection
+	}))
+	@Setter
 	protected Set<String> vrfInstances = new HashSet<>();
 	
 	/** SSH TCP port, 22 by default */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected int sshPort = 0;
 	
 	/** Telnet TCP port, 23 by default */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected int telnetPort = 0;
 	
 	/** An optional connection address, in case the management address can't be used to connect to the device. */
+	@Getter(onMethod=@__({
+		@Embedded,
+		@AttributeOverrides({
+			@AttributeOverride(name = "address", column = @Column(name = "connect_ipv4_address")),
+			@AttributeOverride(name = "prefixLength", column = @Column(name = "connect_ipv4_pfxlen")),
+			@AttributeOverride(name = "addressUsage", column = @Column(name = "connect_ipv4_usage")),
+		}),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
 	protected Network4Address connectAddress;
 	
 	/**
@@ -275,8 +468,10 @@ public class Device {
 	/**
 	 * Instantiates a new device.
 	 *
+	 * @param driver the driver name
 	 * @param address the address
 	 * @param domain the domain
+	 * @param creator the username who is creating the device
 	 */
 	public Device(String driver, Network4Address address, Domain domain, String creator) {
 		this.driver = driver;
@@ -378,14 +573,6 @@ public class Device {
 		Device other = (Device) obj;
 		return id == other.id;
 	}
-	
-	@XmlElement @JsonView(RestApiView.class)
-	@OneToMany(mappedBy = "device", orphanRemoval = true,
-			cascade = CascadeType.ALL)
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	public Set<DeviceAttribute> getAttributes() {
-		return attributes;
-	}
 
 	/**
 	 * Return a device attribute based on name
@@ -412,94 +599,6 @@ public class Device {
 			.list();
 	}
 
-	/**
-	 * Gets the change date.
-	 *
-	 * @return the change date
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getChangeDate() {
-		return changeDate;
-	}
-	
-	@Version
-	public int getVersion() {
-		return version;
-	}
-	
-	public void setVersion(int version) {
-		this.version = version;
-	}
-
-	/**
-	 * Gets the comments.
-	 *
-	 * @return the comments
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getComments() {
-		return comments;
-	}
-
-	/**
-	 * Gets the compliance check results.
-	 *
-	 * @return the compliance check results
-	 */
-	@OneToMany(mappedBy = "key.device", orphanRemoval = true,
-			cascade = CascadeType.ALL)
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	public Set<CheckResult> getComplianceCheckResults() {
-		return complianceCheckResults;
-	}
-
-	/**
-	 * Gets the compliance exemptions.
-	 *
-	 * @return the compliance exemptions
-	 */
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "key.device", 
-			cascade = CascadeType.ALL, orphanRemoval = true)
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	public Set<Exemption> getComplianceExemptions() {
-		return complianceExemptions;
-	}
-
-	/**
-	 * Gets the configs.
-	 *
-	 * @return the configs
-	 */
-	@OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	public List<Config> getConfigs() {
-		return configs;
-	}
-
-	/**
-	 * Gets the contact.
-	 *
-	 * @return the contact
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getContact() {
-		return contact;
-	}
-
-	/**
-	 * Gets the created date.
-	 *
-	 * @return the created date
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getCreatedDate() {
-		return createdDate;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public String getCreator() {
-		return creator;
-	}
 
 	/**
 	 * Gets the credential set ids.
@@ -514,16 +613,6 @@ public class Device {
 			l.add(credentialSet.getId());
 		}
 		return l;
-	}
-
-	/**
-	 * Gets the credential sets.
-	 *
-	 * @return the credential sets
-	 */
-	@ManyToMany() @Fetch(FetchMode.SELECT)
-	public Set<DeviceCredentialSet> getCredentialSets() {
-		return credentialSets;
 	}
 	
 	@Transient
@@ -540,151 +629,6 @@ public class Device {
 		return deviceDriver;
 	}
 
-	@XmlElement @JsonView(DefaultView.class)
-	public String getDriver() {
-		return driver;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getEolDate() {
-		return eolDate;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	@OneToOne(fetch = FetchType.LAZY)
-	public Module getEolModule() {
-		return eolModule;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public Date getEosDate() {
-		return eosDate;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	@OneToOne(fetch = FetchType.LAZY)
-	public Module getEosModule() {
-		return eosModule;
-	}
-
-	/**
-	 * Gets the family.
-	 *
-	 * @return the family
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getFamily() {
-		return family;
-	}
-
-	/**
-	 * Gets the id.
-	 *
-	 * @return the id
-	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@XmlAttribute
-	public long getId() {
-		return id;
-	}
-
-	/**
-	 * Gets the last config.
-	 *
-	 * @return the last config
-	 */
-	@OneToOne(fetch = FetchType.LAZY,
-			cascade = CascadeType.ALL)
-	public Config getLastConfig() {
-		return lastConfig;
-	}
-
-
-	/**
-	 * Gets the location.
-	 *
-	 * @return the location
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getLocation() {
-		return location;
-	}
-
-	/**
-	 * Gets the mgmt address.
-	 *
-	 * @return the mgmt address
-	 */
-	@Embedded
-	@AttributeOverrides({
-		@AttributeOverride(name = "address", column = @Column(name = "ipv4_address", unique = true)),
-		@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
-		@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4_usage")),
-	})
-	@XmlElement @JsonView(DefaultView.class)
-	public Network4Address getMgmtAddress() {
-		return mgmtAddress;
-	}
-
-
-	/**
-	 * Gets the mgmt domain.
-	 *
-	 * @return the mgmt domain
-	 */
-	@ManyToOne(fetch = FetchType.LAZY)
-	@XmlElement @JsonView(RestApiView.class)
-	public Domain getMgmtDomain() {
-		return mgmtDomain;
-	}
-
-	/**
-	 * Gets the modules.
-	 *
-	 * @return the modules
-	 */
-	@OneToMany(mappedBy = "device", orphanRemoval = true,
-			cascade = CascadeType.ALL)
-	@Where(clause = "removed is not true")
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	public List<Module> getModules() {
-		return modules;
-	}
-
-
-	/**
-	 * Gets the name.
-	 *
-	 * @return the name
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getName() {
-		return name;
-	}
-
-
-	/**
-	 * Gets the network class.
-	 *
-	 * @return the network class
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public NetworkClass getNetworkClass() {
-		return networkClass;
-	}
-
-	/**
-	 * Gets the network interfaces.
-	 *
-	 * @return the network interfaces
-	 */
-	@OneToMany(mappedBy = "device", orphanRemoval = true,
-			cascade = CascadeType.ALL)
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	public List<NetworkInterface> getNetworkInterfaces() {
-		return networkInterfaces;
-	}
 
 	/**
 	 * Get a network interface based on its name.
@@ -699,18 +643,6 @@ public class Device {
 			}
 		}
 		return null;
-	}
-
-
-	/**
-	 * Gets the owner groups.
-	 *
-	 * @return the owner groups
-	 */
-	@XmlElement @JsonView(RestApiView.class)
-	@ManyToMany(mappedBy = "cachedDevices")
-	public Set<DeviceGroup> getOwnerGroups() {
-		return ownerGroups;
 	}
 
 
@@ -733,71 +665,6 @@ public class Device {
 	}
 
 
-	/**
-	 * Gets the serial number.
-	 *
-	 * @return the serial number
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getSerialNumber() {
-		return serialNumber;
-	}
-
-
-	/**
-	 * Gets the software level.
-	 *
-	 * @return the software level
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public SoftwareRule.ConformanceLevel getSoftwareLevel() {
-		return softwareLevel;
-	}
-
-
-	/**
-	 * Gets the software version.
-	 *
-	 * @return the software version
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public String getSoftwareVersion() {
-		return softwareVersion;
-	}
-
-
-	/**
-	 * Gets the status.
-	 *
-	 * @return the status
-	 */
-	@Enumerated(value = EnumType.ORDINAL)
-	@XmlElement @JsonView(DefaultView.class)
-	public Status getStatus() {
-		return status;
-	}
-
-
-	/**
-	 * Gets the virtual devices.
-	 *
-	 * @return the virtual devices
-	 */
-	@ElementCollection
-	public Set<String> getVirtualDevices() {
-		return virtualDevices;
-	}
-
-
-	/**
-	 * Gets the vrf instances.
-	 *
-	 * @return the vrf instances
-	 */
-	@ElementCollection
-	public Set<String> getVrfInstances() {
-		return vrfInstances;
-	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
@@ -810,15 +677,6 @@ public class Device {
 		return result;
 	}
 
-	/**
-	 * Checks if is auto try credentials.
-	 *
-	 * @return true, if is auto try credentials
-	 */
-	@XmlElement @JsonView(DefaultView.class)
-	public boolean isAutoTryCredentials() {
-		return autoTryCredentials;
-	}
 
 	/**
 	 * Checks if is compliant.
@@ -874,314 +732,6 @@ public class Device {
 		this.eolModule = null;
 	}
 
-	public void setAttributes(Set<DeviceAttribute> attributes) {
-		this.attributes = attributes;
-	}
-
-	/**
-	 * Sets the auto try credentials.
-	 *
-	 * @param autoTryCredentials the new auto try credentials
-	 */
-	public void setAutoTryCredentials(boolean autoTryCredentials) {
-		this.autoTryCredentials = autoTryCredentials;
-	}
-
-
-	/**
-	 * Sets the change date.
-	 *
-	 * @param changeDate the new change date
-	 */
-	public void setChangeDate(Date changeDate) {
-		this.changeDate = changeDate;
-	}
-
-	/**
-	 * Sets the comments.
-	 *
-	 * @param comments the new comments
-	 */
-	public void setComments(String comments) {
-		this.comments = comments;
-	}
-
-	/**
-	 * Sets the compliance check results.
-	 *
-	 * @param complianceChecks the new compliance check results
-	 */
-	protected void setComplianceCheckResults(Set<CheckResult> complianceChecks) {
-		this.complianceCheckResults = complianceChecks;
-	}
-
-	/**
-	 * Sets the compliance exemptions.
-	 *
-	 * @param complianceExemptions the new compliance exemptions
-	 */
-	protected void setComplianceExemptions(Set<Exemption> complianceExemptions) {
-		this.complianceExemptions = complianceExemptions;
-	}
-
-	/**
-	 * Sets the configs.
-	 *
-	 * @param configs the new configs
-	 */
-	public void setConfigs(List<Config> configs) {
-		this.configs = configs;
-	}
-
-	/**
-	 * Sets the contact.
-	 *
-	 * @param contact the new contact
-	 */
-	public void setContact(String contact) {
-		this.contact = contact;
-	}
-
-	/**
-	 * Sets the created date.
-	 *
-	 * @param createdDate the new created date
-	 */
-	protected void setCreatedDate(Date createdDate) {
-		this.createdDate = createdDate;
-	}
-
-	public void setCreator(String creator) {
-		this.creator = creator;
-	}
-
-	/**
-	 * Sets the credential sets.
-	 *
-	 * @param credentialSets the new credential sets
-	 */
-	protected void setCredentialSets(Set<DeviceCredentialSet> credentialSets) {
-		this.credentialSets = credentialSets;
-	}
-
-	public void setDriver(String driver) {
-		this.driver = driver;
-	}
-
-	public void setEolDate(Date eolDate) {
-		this.eolDate = eolDate;
-	}
-
-	public void setEolModule(Module eolModule) {
-		this.eolModule = eolModule;
-	}
-
-
-	public void setEosDate(Date eosDate) {
-		this.eosDate = eosDate;
-	}
-
-	public void setEosModule(Module eosModule) {
-		this.eosModule = eosModule;
-	}
-
-	/**
-	 * Sets the family.
-	 *
-	 * @param family the new family
-	 */
-	public void setFamily(String family) {
-		this.family = family;
-	}
-
-	/**
-	 * Sets the id.
-	 *
-	 * @param id the new id
-	 */
-	protected void setId(long id) {
-		this.id = id;
-	}
-
-	/**
-	 * Sets the last config.
-	 *
-	 * @param lastConfig the new last config
-	 */
-	public void setLastConfig(Config lastConfig) {
-		this.lastConfig = lastConfig;
-	}
-
-	/**
-	 * Sets the location.
-	 *
-	 * @param location the new location
-	 */
-	public void setLocation(String location) {
-		this.location = location;
-	}
-
-	/**
-	 * Sets the mgmt address.
-	 *
-	 * @param mgmtAddress the new mgmt address
-	 */
-	public void setMgmtAddress(Network4Address mgmtAddress) {
-		this.mgmtAddress = mgmtAddress;
-	}
-
-	/**
-	 * Sets the mgmt domain.
-	 *
-	 * @param mgmtDomain the new mgmt domain
-	 */
-	public void setMgmtDomain(Domain mgmtDomain) {
-		this.mgmtDomain = mgmtDomain;
-	}
-
-	/**
-	 * Sets the modules.
-	 *
-	 * @param modules the new modules
-	 */
-	public void setModules(List<Module> modules) {
-		this.modules = modules;
-	}
-
-	/**
-	 * Sets the name.
-	 *
-	 * @param name the new name
-	 */
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	/**
-	 * Sets the network class.
-	 *
-	 * @param networkClass the new network class
-	 */
-	public void setNetworkClass(NetworkClass networkClass) {
-		this.networkClass = networkClass;
-	}
-
-	/**
-	 * Sets the network interfaces.
-	 *
-	 * @param networkInterfaces the new network interfaces
-	 */
-	public void setNetworkInterfaces(List<NetworkInterface> networkInterfaces) {
-		this.networkInterfaces = networkInterfaces;
-	}
-
-	/**
-	 * Sets the owner groups.
-	 *
-	 * @param ownerGroups the new owner groups
-	 */
-	public void setOwnerGroups(Set<DeviceGroup> ownerGroups) {
-		this.ownerGroups = ownerGroups;
-	}
-
-	/**
-	 * Sets the serial number.
-	 *
-	 * @param serialNumber the new serial number
-	 */
-	public void setSerialNumber(String serialNumber) {
-		this.serialNumber = serialNumber;
-	}
-
-	/**
-	 * Sets the software level.
-	 *
-	 * @param softwareLevel the new software level
-	 */
-	public void setSoftwareLevel(SoftwareRule.ConformanceLevel softwareLevel) {
-		this.softwareLevel = softwareLevel;
-	}
-
-	/**
-	 * Sets the software version.
-	 *
-	 * @param softwareVersion the new software version
-	 */
-	public void setSoftwareVersion(String softwareVersion) {
-		this.softwareVersion = softwareVersion;
-	}
-
-	/**
-	 * Sets the status.
-	 *
-	 * @param status the new status
-	 */
-	public void setStatus(Status status) {
-		this.status = status;
-	}
-
-
-	/**
-	 * Sets the virtual devices.
-	 *
-	 * @param virtualDevices the new virtual devices
-	 */
-	public void setVirtualDevices(Set<String> virtualDevices) {
-		this.virtualDevices = virtualDevices;
-	}
-
-	/**
-	 * Sets the vrf instances.
-	 *
-	 * @param vrfInstances the new vrf instances
-	 */
-	public void setVrfInstances(Set<String> vrfInstances) {
-		this.vrfInstances = vrfInstances;
-	}
-	
-	@XmlElement @JsonView(DefaultView.class)
-	public int getSshPort() {
-		return sshPort;
-	}
-
-	public void setSshPort(int sshPort) {
-		this.sshPort = sshPort;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	public int getTelnetPort() {
-		return telnetPort;
-	}
-
-	public void setTelnetPort(int telnetPort) {
-		this.telnetPort = telnetPort;
-	}
-
-	@XmlElement @JsonView(DefaultView.class)
-	@OneToOne(cascade = CascadeType.ALL)
-	public DeviceCredentialSet getSpecificCredentialSet() {
-		return specificCredentialSet;
-	}
-
-	public void setSpecificCredentialSet(DeviceCredentialSet specificCredentialSet) {
-		this.specificCredentialSet = specificCredentialSet;
-	}
-
-	@Embedded
-	@AttributeOverrides({
-		@AttributeOverride(name = "address", column = @Column(name = "connect_ipv4_address")),
-		@AttributeOverride(name = "prefixLength", column = @Column(name = "connect_ipv4_pfxlen")),
-		@AttributeOverride(name = "addressUsage", column = @Column(name = "connect_ipv4_usage")),
-	})
-	@XmlElement @JsonView(DefaultView.class)
-	public Network4Address getConnectAddress() {
-		return connectAddress;
-	}
-
-	public void setConnectAddress(Network4Address connectAddress) {
-		this.connectAddress = connectAddress;
-	}
-
 
 	public void addDiagnosticResult(DiagnosticResult result) {
 		if (result == null) {
@@ -1205,23 +755,6 @@ public class Device {
 		if (doAdd) {
 			this.diagnosticResults.add(result);
 		}
-	}
-
-
-	/**
-	 * Gets the diagnostic results.
-	 *
-	 * @return the diagnostic results
-	 */
-	@OneToMany(mappedBy = "device", orphanRemoval = true,
-			cascade = CascadeType.ALL)
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	public Set<DiagnosticResult> getDiagnosticResults() {
-		return diagnosticResults;
-	}
-	
-	public void setDiagnosticResults(Set<DiagnosticResult> diagnosticResults) {
-		this.diagnosticResults = diagnosticResults;
 	}
 
 	@Override

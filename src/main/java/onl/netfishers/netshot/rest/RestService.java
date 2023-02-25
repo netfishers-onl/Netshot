@@ -3074,7 +3074,7 @@ public class RestService extends Thread {
 			}
 			/* HACK! In JPA, this would require updating each task one by one... */
 			session
-					.createSQLQuery("delete from discover_device_type_task_credential_sets where credential_sets = :cs")
+					.createNativeQuery("delete from discover_device_type_task_credential_sets where credential_sets = :cs")
 					.setParameter("cs", id)
 					.executeUpdate();
 			session.delete(credentialSet);
@@ -3564,7 +3564,7 @@ public class RestService extends Thread {
 				.executeUpdate();
 			// Remove from the policies using native SQL
 			session
-				.createSQLQuery("delete from policy_target_groups where target_groups = :id")
+				.createNativeQuery("delete from policy_target_groups where target_groups = :id")
 				.setParameter("id", id)
 				.executeUpdate();
 			// Remove the group
@@ -5971,7 +5971,7 @@ public class RestService extends Thread {
 			Rule rule = (Rule) session.load(Rule.class, id);
 			/* HACK! In JPA, this would require updating each task one by one... */
 			session
-					.createSQLQuery("delete from check_result where rule = :r")
+					.createNativeQuery("delete from check_result where rule = :r")
 					.setParameter("r", id)
 					.executeUpdate();
 			session.delete(rule);

@@ -21,7 +21,7 @@ var Info = {
 	name: "JuniperJunos",
 	description: "Juniper Junos",
 	author: "NetFishers",
-	version: "2.13"
+	version: "2.14"
 };
 
 var Config = {
@@ -257,6 +257,9 @@ function snapshot(cli, device, config) {
 						partNumber: description,
 						serialNumber: serialNumber
 					});
+					if (slot.match(/[Cc]hassis/)) {
+						device.set("serialNumber", serialNumber);
+					}
 				}
 			}
 		}

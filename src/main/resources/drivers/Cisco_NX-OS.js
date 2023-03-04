@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoNXOS",
 	description: "Cisco NX-OS 5+",
 	author: "NetFishers",
-	version: "1.9.0"
+	version: "1.9.1"
 };
 
 var Config = {
@@ -301,6 +301,7 @@ function snapshot(cli, device, config) {
 	startupConfig = configCleanup(startupConfig);
 
 	if (!isNaN(runningDate) && !isNaN(startupDate)) {
+		cli.debug("Using dates to compare startup and running configs");
 		device.set("configurationSaved", startupDate >= runningDate);
 	}
 	else {

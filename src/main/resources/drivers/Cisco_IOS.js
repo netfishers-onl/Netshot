@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "NetFishers",
-	version: "1.9.0"
+	version: "1.9.1"
 };
 
 var Config = {
@@ -451,6 +451,10 @@ function snapshot(cli, device, config) {
 		device.set("contact", "");
 	}
 
+	var processorId = showVersion.match(/^Processor board ID (.+)/m);
+	if (processorId) {
+		device.set("serialNumber", processorId[1]);
+	}
 	try {
 		var showInventory = cli.command("show inventory");
 		var inventoryPattern = /NAME: \"(.*)\", +DESCR: \"(.*)\"[\r\n]+PID: (.*?) *, +VID: (.*), +SN: (.*)/g;
@@ -462,7 +466,7 @@ function snapshot(cli, device, config) {
 				serialNumber: match[5]
 			};
 			device.add("module", module);
-			if (module.slot.match(/Chassis/)) {
+			if (module.slot.match(/[Cc]hassis/)) {
 				device.set("serialNumber", module.serialNumber);
 			}
 		}

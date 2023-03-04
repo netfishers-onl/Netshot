@@ -21,7 +21,7 @@
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "NetFishers",
-	version: "1.8"
+	version: "1.8.1"
 };
 
 var Config = {
@@ -266,7 +266,7 @@ function snapshot(cli, device, config) {
 			continue;
 		}
 		device.add("module", module);
-		if (module.slot.match(/Chassis|Rack 0/)) {
+		if (module.slot.match(/[Cc]hassis|Rack 0/)) {
 			device.set("serialNumber", module.serialNumber);
 			if (module.partNumber.match(/NCS-?5[57][0-9A-Z][0-9A-Z]/)) {
 				device.set("family", "Cisco NCS5500");

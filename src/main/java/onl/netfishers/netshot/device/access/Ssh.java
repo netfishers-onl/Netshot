@@ -32,6 +32,7 @@ import onl.netfishers.netshot.work.TaskLogger;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.ChannelShell;
 import com.jcraft.jsch.Identity;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
@@ -84,6 +85,177 @@ public class Ssh extends Cli {
 
 	}
 
+	/**
+	 * Embedded class to represent SSH-specific configuration.
+	 */
+	public static class SshConfig {
+
+		static private String[] DEFAULT_SSH_KEX_ALGORITHMS = {
+			"diffie-hellman-group18-sha512", "diffie-hellman-group16-sha512", "diffie-hellman-group14-sha256", "diffie-hellman-group14-sha1",
+			"diffie-hellman-group-exchange-sha256", "diffie-hellman-group-exchange-sha1", "diffie-hellman-group1-sha1",
+		};
+	
+		static private String[] DEFAULT_SSH_CIPHERS = {
+			"aes128-gcm@openssh.com", "aes128-ctr", "aes128-cbc", "3des-ctr", "3des-cbc", "blowfish-cbc", "aes192-ctr",
+			"aes192-cbc", "aes256-gcm@openssh.com", "aes256-ctr", "aes256-cbc",
+		};
+	
+		static private String[] DEFAULT_SSH_MACS = {
+			"hmac-md5-etm@openssh.com", "hmac-sha1-etm@openssh.com", "hmac-sha2-256-etm@openssh.com", "hmac-sha2-512-etm@openssh.com",
+			"hmac-sha1-96-etm@openssh.com", "hmac-md5-96-etm@openssh.com", "hmac-md5", "hmac-sha1", "hmac-sha2-256", "hmac-sha2-512",
+			"hmac-sha1-96", "hmac-md5-96",
+		};
+	
+		static private String[] DEFAULT_SSH_HOST_KEY_ALGORITHMS = {
+			"rsa-sha2-256", "rsa-sha2-512", "ssh-rsa", "ssh-dss",
+		};
+
+		static {
+			String sshSetting;
+	
+			sshSetting = Netshot.getConfig("netshot.cli.ssh.kexalgorithms");
+			if (sshSetting != null) {
+				DEFAULT_SSH_KEX_ALGORITHMS = sshSetting.split(", *");
+			}
+			sshSetting = Netshot.getConfig("netshot.cli.ssh.hostkeyalgorithms");
+			if (sshSetting != null) {
+				DEFAULT_SSH_HOST_KEY_ALGORITHMS = sshSetting.split(", *");
+			}
+			sshSetting = Netshot.getConfig("netshot.cli.ssh.ciphers");
+			if (sshSetting != null) {
+				DEFAULT_SSH_CIPHERS = sshSetting.split(", *");
+			}
+			sshSetting = Netshot.getConfig("netshot.cli.ssh.macs");
+			if (sshSetting != null) {
+				DEFAULT_SSH_MACS = sshSetting.split(", *");
+			}
+	
+			JSch.setLogger(new JschLogger());
+	
+			JSch.setConfig("CheckKexes", "diffie-hellman-group14-sha1,diffie-hellman-group14-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521");
+			JSch.setConfig("CheckCiphers", "chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr,aes256-cbc,aes192-cbc,aes128-cbc,3des-ctr,arcfour,arcfour128,arcfour256");
+			JSch.setConfig("CheckMacs", "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512");
+			JSch.setConfig("CheckSignatures", "rsa-sha2-256,rsa-sha2-512,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,ssh-ed25519,ssh-ed448");
+		}
+
+		/** Key exchange algorithms allowed for the session */
+		private String[] kexAlgorithms = DEFAULT_SSH_KEX_ALGORITHMS.clone();
+
+		/** Host key algorithms allowed for the session */
+		private String[] hostKeyAlgorithms = DEFAULT_SSH_HOST_KEY_ALGORITHMS.clone();
+
+		/** Ciphers allowed for the session */
+		private String[] ciphers = DEFAULT_SSH_CIPHERS.clone();
+
+		/** MACs allowed for the session */
+		private String[] macs = DEFAULT_SSH_MACS.clone();
+
+		/** Whether to allocate a PTY or not */
+		private boolean usePty = false;
+
+		/** Type of terminal */
+		private String terminalType = "vt100";
+
+		/** Number of columns in the terminal */
+		private int terminalCols = 80;
+
+		/** Number of rows in the terminal */
+		private int terminalRows = 24;
+
+		/** Height of the terminal */
+		private int terminalHeight = 640;
+
+		/** Width of the terminal */
+		private int terminalWidth = 480;
+
+		/*
+		 * Default constructor.
+		 */
+		public SshConfig() {
+			
+		}
+
+		public String[] getKexAlgorithms() {
+			return kexAlgorithms;
+		}
+	
+		public void setKexAlgorithms(String[] kexAlgorithms) {
+			this.kexAlgorithms = kexAlgorithms;
+		}
+	
+		public String[] getHostKeyAlgorithms() {
+			return hostKeyAlgorithms;
+		}
+	
+		public void setHostKeyAlgorithms(String[] hostKeyAlgorithms) {
+			this.hostKeyAlgorithms = hostKeyAlgorithms;
+		}
+	
+		public String[] getCiphers() {
+			return ciphers;
+		}
+	
+		public void setCiphers(String[] ciphers) {
+			this.ciphers = ciphers;
+		}
+	
+		public String[] getMacs() {
+			return macs;
+		}
+	
+		public void setMacs(String[] macs) {
+			this.macs = macs;
+		}
+	
+		public boolean isUsePty() {
+			return usePty;
+		}
+	
+		public void setUsePty(boolean usePty) {
+			this.usePty = usePty;
+		}
+	
+		public String getTerminalType() {
+			return terminalType;
+		}
+	
+		public void setTerminalType(String terminalType) {
+			this.terminalType = terminalType;
+		}
+	
+		public int getTerminalCols() {
+			return terminalCols;
+		}
+	
+		public void setTerminalCols(int terminalCols) {
+			this.terminalCols = terminalCols;
+		}
+	
+		public int getTerminalRows() {
+			return terminalRows;
+		}
+	
+		public void setTerminalRows(int terminalRows) {
+			this.terminalRows = terminalRows;
+		}
+	
+		public int getTerminalHeight() {
+			return terminalHeight;
+		}
+	
+		public void setTerminalHeight(int terminalHeight) {
+			this.terminalHeight = terminalHeight;
+		}
+	
+		public int getTerminalWidth() {
+			return terminalWidth;
+		}
+	
+		public void setTerminalWidth(int terminalWidth) {
+			this.terminalWidth = terminalWidth;
+		}
+	}
+
 	/** Default value for the SSH connection timeout */
 	static private int DEFAULT_CONNECTION_TIMEOUT = 5000;
 
@@ -92,26 +264,6 @@ public class Ssh extends Cli {
 
 	/** Default value for the SSH command timeout */
 	static private int DEFAULT_COMMAND_TIMEOUT = 120000;
-
-	static private String[] DEFAULT_SSH_KEX_ALGORITHMS = {
-		"diffie-hellman-group18-sha512", "diffie-hellman-group16-sha512", "diffie-hellman-group14-sha256", "diffie-hellman-group14-sha1",
-		"diffie-hellman-group-exchange-sha256", "diffie-hellman-group-exchange-sha1", "diffie-hellman-group1-sha1",
-	};
-
-	static private String[] DEFAULT_SSH_CIPHERS = {
-		"aes128-gcm@openssh.com", "aes128-ctr", "aes128-cbc", "3des-ctr", "3des-cbc", "blowfish-cbc", "aes192-ctr",
-		"aes192-cbc", "aes256-gcm@openssh.com", "aes256-ctr", "aes256-cbc",
-	};
-
-	static private String[] DEFAULT_SSH_MACS = {
-		"hmac-md5-etm@openssh.com", "hmac-sha1-etm@openssh.com", "hmac-sha2-256-etm@openssh.com", "hmac-sha2-512-etm@openssh.com",
-		"hmac-sha1-96-etm@openssh.com", "hmac-md5-96-etm@openssh.com", "hmac-md5", "hmac-sha1", "hmac-sha2-256", "hmac-sha2-512",
-		"hmac-sha1-96", "hmac-md5-96",
-	};
-
-	static private String[] DEFAULT_SSH_HOST_KEY_ALGORITHMS = {
-		"rsa-sha2-256", "rsa-sha2-512", "ssh-rsa", "ssh-dss",
-	};
 
 	static {
 		int configuredConnectionTimeout = Netshot.getConfig("netshot.cli.ssh.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT);
@@ -140,19 +292,6 @@ public class Ssh extends Cli {
 			DEFAULT_COMMAND_TIMEOUT = configuredCommandTimeout;
 		}
 		logger.info("The default command timeout value for SSH sessions is {}s", DEFAULT_COMMAND_TIMEOUT);
-
-		JSch.setLogger(new JschLogger());
-		JSch.setConfig("kex", Netshot.getConfig("netshot.cli.ssh.kexalgorithms", String.join(",", DEFAULT_SSH_KEX_ALGORITHMS)));
-		JSch.setConfig("server_host_key", Netshot.getConfig("netshot.cli.ssh.hostkeyalgorithms", String.join(",", DEFAULT_SSH_HOST_KEY_ALGORITHMS)));
-		JSch.setConfig("cipher.c2s", Netshot.getConfig("netshot.cli.ssh.ciphers", String.join(",", DEFAULT_SSH_CIPHERS)));
-		JSch.setConfig("cipher.s2c", Netshot.getConfig("netshot.cli.ssh.ciphers", String.join(",", DEFAULT_SSH_CIPHERS)));
-		JSch.setConfig("mac.c2s", Netshot.getConfig("netshot.cli.ssh.macs", String.join(",", DEFAULT_SSH_MACS)));
-		JSch.setConfig("mac.s2c", Netshot.getConfig("netshot.cli.ssh.macs", String.join(",", DEFAULT_SSH_MACS)));
-
-		JSch.setConfig("CheckKexes", "diffie-hellman-group14-sha1,diffie-hellman-group14-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521");
-		JSch.setConfig("CheckCiphers", "chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr,aes256-cbc,aes192-cbc,aes128-cbc,3des-ctr,arcfour,arcfour128,arcfour256");
-		JSch.setConfig("CheckMacs", "hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com,hmac-sha2-256,hmac-sha2-512");
-		JSch.setConfig("CheckSignatures", "rsa-sha2-256,rsa-sha2-512,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,ssh-ed25519,ssh-ed448");
 	}
 
 	/** The port. */
@@ -165,7 +304,7 @@ public class Ssh extends Cli {
 	private Session session;
 
 	/** The channel. */
-	private Channel channel;
+	private ChannelShell channel;
 
 	/** The username. */
 	private String username;
@@ -178,6 +317,9 @@ public class Ssh extends Cli {
 
 	/** The private key. */
 	private String privateKey = null;
+
+	/** The SSH connection config */
+	private SshConfig sshConfig = new SshConfig();
 
 	/**
 	 * Instantiates a new SSH connection (password authentication).
@@ -325,9 +467,21 @@ public class Ssh extends Cli {
 			}
 			// Disable Strict Key checking
 			session.setConfig("StrictHostKeyChecking", "no");
+			session.setConfig("kex", String.join(",", this.sshConfig.kexAlgorithms));
+			session.setConfig("server_host_key", String.join(",", this.sshConfig.hostKeyAlgorithms));
+			session.setConfig("cipher.c2s", String.join(",", this.sshConfig.ciphers));
+			session.setConfig("cipher.s2c", String.join(",", this.sshConfig.ciphers));
+			session.setConfig("mac.c2s", String.join(",", this.sshConfig.macs));
+			session.setConfig("mac.s2c", String.join(",", this.sshConfig.macs));
 			session.setTimeout(this.receiveTimeout);
 			session.connect(this.connectionTimeout);
-			channel = session.openChannel("shell");
+			channel = (ChannelShell)session.openChannel("shell");
+			if (this.sshConfig.usePty) {
+				channel.setPty(true);
+				channel.setPtyType(this.sshConfig.terminalType,
+						this.sshConfig.terminalCols, this.sshConfig.terminalRows,
+						this.sshConfig.terminalWidth, this.sshConfig.terminalWidth);
+			}
 			this.inStream = channel.getInputStream();
 			this.outStream = new PrintStream(channel.getOutputStream());
 			channel.connect(this.connectionTimeout);
@@ -518,7 +672,14 @@ public class Ssh extends Cli {
 				// This is life
 			}
 		}
-
 	}
 
+	public SshConfig getSshConfig() {
+		return sshConfig;
+	}
+
+	public void setSshConfig(SshConfig sshConfig) {
+		this.sshConfig = sshConfig;
+	}
+	
 }

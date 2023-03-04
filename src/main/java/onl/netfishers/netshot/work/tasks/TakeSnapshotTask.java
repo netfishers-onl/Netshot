@@ -222,9 +222,9 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 			catch (Exception e1) {
 				logger.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 			}
+			this.log.append(cliScript.getPlainJsLog());
 			logger.error("Task {}. Error while taking the snapshot.", this.getId(), e);
 			this.error("Error while taking the snapshot: " + e.getMessage());
-			this.log.append(cliScript.getPlainJsLog());
 			this.status = Status.FAILURE;
 			return;
 		}

@@ -236,7 +236,7 @@ public abstract class CliScript {
 		if (sshOpened) {
 			for (DeviceCredentialSet credentialSet : credentialSets) {
 				if (credentialSet instanceof DeviceSshAccount) {
-					Cli cli;
+					final Ssh cli;
 					if (credentialSet instanceof DeviceSshKeyAccount) {
 						cli = new Ssh(address, sshPort, ((DeviceSshKeyAccount) credentialSet).getUsername(),
 								((DeviceSshKeyAccount) credentialSet).getPublicKey(),
@@ -250,6 +250,9 @@ public abstract class CliScript {
 					}
 					try {
 						sshTried = true;
+						cli.setSshConfig(deviceDriver.getSshConfig());
+						taskLogger.info(String.format("Trying SSH to %s:%d using credentials %s.",
+								address.getIp(), sshPort, credentialSet.getName()));
 						cli.connect();
 						taskLogger.info(String.format("Connected using SSH to %s:%d using credentials %s.",
 								address.getIp(), sshPort, credentialSet.getName()));
@@ -284,9 +287,12 @@ public abstract class CliScript {
 		if (telnetOpened) {
 			for (DeviceCredentialSet credentialSet : credentialSets) {
 				if (credentialSet instanceof DeviceTelnetAccount) {
-					Cli cli = new Telnet(address, telnetPort, taskLogger);
+					final Telnet cli = new Telnet(address, telnetPort, taskLogger);
 					try {
 						telnetTried = true;
+						cli.setTelnetConfig(deviceDriver.getTelnetConfig());
+						taskLogger.info(String.format("Trying Telnet to %s:%d with credentials %s.",
+								address.getIp(), telnetPort, credentialSet.getName()));
 						cli.connect();
 						taskLogger.info(String.format("Connected using Telnet to %s:%d.", address.getIp(), telnetPort));
 						this.run(session, device, cli, null, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
@@ -341,8 +347,8 @@ public abstract class CliScript {
 			if (sshOpened) {
 				for (DeviceCredentialSet credentialSet : globalCredentialSets) {
 					if (credentialSet instanceof DeviceSshAccount) {
-						taskLogger.trace(String.format("Will try SSH credentials %s.", credentialSet.getName()));
-						Cli cli;
+						taskLogger.info(String.format("Auto-trying SSH with credentials %s.", credentialSet.getName()));
+						Ssh cli;
 						if (credentialSet instanceof DeviceSshKeyAccount) {
 							cli = new Ssh(address, sshPort, ((DeviceSshKeyAccount) credentialSet).getUsername(),
 									((DeviceSshKeyAccount) credentialSet).getPublicKey(),
@@ -356,6 +362,7 @@ public abstract class CliScript {
 						}
 						try {
 							sshTried = true;
+							cli.setSshConfig(deviceDriver.getSshConfig());
 							cli.connect();
 							taskLogger.info(String.format("Connected using SSH to %s:%d using credentials %s.",
 									address.getIp(), sshPort, credentialSet.getName()));
@@ -371,7 +378,7 @@ public abstract class CliScript {
 							return;
 						}
 						catch (InvalidCredentialsException e) {
-							taskLogger.warn(String.format("Authentication failed using Telnet credential set %s.", credentialSet.getName()));
+							taskLogger.warn(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()));
 						}
 						catch (ScriptException e) {
 							throw e;
@@ -396,10 +403,11 @@ public abstract class CliScript {
 			if (telnetOpened) {
 				for (DeviceCredentialSet credentialSet : globalCredentialSets) {
 					if (credentialSet instanceof DeviceTelnetAccount) {
-						taskLogger.trace(String.format("Will try Telnet credentials %s.", credentialSet.getName()));
-						Cli cli = new Telnet(address, telnetPort, taskLogger);
+						taskLogger.info(String.format("Auto-trying Telnet with credentials %s.", credentialSet.getName()));
+						final Telnet cli = new Telnet(address, telnetPort, taskLogger);
 						try {
 							telnetTried = true;
+							cli.setTelnetConfig(deviceDriver.getTelnetConfig());
 							cli.connect();
 							taskLogger.info(String.format("Connected using Telnet to %s:%d.", address.getIp(), telnetPort));
 							this.run(session, device, cli, null, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);

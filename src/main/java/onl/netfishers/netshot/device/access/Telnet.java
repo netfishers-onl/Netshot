@@ -45,6 +45,30 @@ public class Telnet extends Cli {
 	/** Default value for the Telnet command timeout */
 	static private int DEFAULT_COMMAND_TIMEOUT = 120000;
 
+	/**
+	 * Embedded class to represent Telnet-specific configuration.
+	 */
+	public static class TelnetConfig {
+
+		/** Type of terminal */
+		private String terminalType = "vt100";
+
+		/*
+		 * Default constructor.
+		 */
+		public TelnetConfig() {
+			
+		}
+	
+		public String getTerminalType() {
+			return terminalType;
+		}
+	
+		public void setTerminalType(String terminalType) {
+			this.terminalType = terminalType;
+		}
+	}
+
 	static {
 		int configuredConnectionTimeout = Netshot.getConfig("netshot.cli.telnet.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT);
 		if (configuredConnectionTimeout < 1) {
@@ -80,6 +104,9 @@ public class Telnet extends Cli {
 	/** The telnet. */
 	private TelnetClient telnet = null;
 
+	/** The Telnet connection config */
+	private TelnetConfig telnetConfig = new TelnetConfig();
+
 	/**
 	 * Instantiates a new telnet.
 	 *
@@ -110,7 +137,7 @@ public class Telnet extends Cli {
 	 */
 	@Override
 	public void connect() throws IOException {
-		this.telnet = new TelnetClient("VT100");
+		this.telnet = new TelnetClient(this.telnetConfig.terminalType.toUpperCase());
 		telnet.setConnectTimeout(this.connectionTimeout);
 		telnet.connect(this.host.getInetAddress(), this.port);
 		telnet.setSoTimeout(this.receiveTimeout);
@@ -125,9 +152,18 @@ public class Telnet extends Cli {
 	public void disconnect() {
 		try {
 			this.telnet.disconnect();
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
+			//
 		}
 	}
 
+	public TelnetConfig getTelnetConfig() {
+		return telnetConfig;
+	}
+
+	public void setTelnetConfig(TelnetConfig telnetConfig) {
+		this.telnetConfig = telnetConfig;
+	}
 
 }

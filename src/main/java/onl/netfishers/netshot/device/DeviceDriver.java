@@ -62,6 +62,8 @@ import org.slf4j.MarkerFactory;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.collector.SnmpTrapReceiver;
 import onl.netfishers.netshot.collector.SyslogServer;
+import onl.netfishers.netshot.device.access.Ssh.SshConfig;
+import onl.netfishers.netshot.device.access.Telnet.TelnetConfig;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import onl.netfishers.netshot.device.script.helper.PythonFileSystem;
@@ -430,6 +432,12 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	/** The execution engine (for eval caching) */
 	private Engine engine;
 
+	/** Driver-specific SSH config */
+	private SshConfig sshConfig;
+
+	/** Driver-specific Telnet config */
+	private TelnetConfig telnetConfig;
+
 	/** Instantiates a new device driver (empty constructor) */
 	protected DeviceDriver() {
 	}
@@ -453,6 +461,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			this.sourceHash = Hex.encodeHexString(hash, true);
 		}
 		this.engine = Engine.create();
+
+		this.sshConfig = new SshConfig();
+		this.telnetConfig = new TelnetConfig();
 
 		try (Context context = this.getContext()) {
 			try {
@@ -513,20 +524,114 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 			try {
 				Value cli = context.getBindings("js").getMember("CLI");
-				if (cli.hasMember("ssh")) {
-					this.protocols.add(DriverProtocol.SSH);
+				if (cli.hasMembers()) {
 					Value ssh = cli.getMember("ssh");
-					if (ssh.hasMembers() && ssh.hasMember("macros")) {
+					if (ssh != null && ssh.hasMembers()) {
+						this.protocols.add(DriverProtocol.SSH);
+						Value sshConfig = ssh.getMember("config");
+						if (sshConfig != null && sshConfig.hasMembers()) {
+							Value terminal = sshConfig.getMember("terminal");
+							if (terminal != null && terminal.hasMembers()) {
+								Value usePty = terminal.getMember("pty");
+								if (usePty != null) {
+									this.sshConfig.setUsePty(usePty.asBoolean());
+								}
+								Value vtType = terminal.getMember("type");
+								if (vtType != null) {
+									this.sshConfig.setTerminalType(vtType.asString());
+								}
+								Value vtHeight = terminal.getMember("height");
+								if (vtHeight != null) {
+									this.sshConfig.setTerminalHeight(vtHeight.asInt());
+								}
+								Value vtWidth = terminal.getMember("width");
+								if (vtWidth != null) {
+									this.sshConfig.setTerminalWidth(vtWidth.asInt());
+								}
+								Value vtRows = terminal.getMember("rows");
+								if (vtRows != null) {
+									this.sshConfig.setTerminalRows(vtRows.asInt());
+									if (vtHeight == null) {
+										this.sshConfig.setTerminalHeight(vtRows.asInt() * 8);
+									}
+								}
+								Value vtCols = terminal.getMember("cols");
+								if (vtCols != null) {
+									this.sshConfig.setTerminalCols(vtCols.asInt());
+									if (vtWidth == null) {
+										this.sshConfig.setTerminalWidth(vtCols.asInt() * 20);
+									}
+								}
+							}
+							{
+								Value kexAlgorithms = sshConfig.getMember("kexAlgorithms");
+								if (kexAlgorithms != null && kexAlgorithms.hasArrayElements()) {
+									Set<String> algos = new HashSet<>();
+									for (long i = 0; i < kexAlgorithms.getArraySize(); i++) {
+										Value algo = kexAlgorithms.getArrayElement(i);
+										algos.add(algo.asString());
+									}
+									this.sshConfig.setKexAlgorithms(algos.toArray(new String[0]));
+								}
+							}
+							{
+								Value hostKeyAlgorithms = sshConfig.getMember("hostKeyAlgorithms");
+								if (hostKeyAlgorithms != null && hostKeyAlgorithms.hasArrayElements()) {
+									Set<String> algos = new HashSet<>();
+									for (long i = 0; i < hostKeyAlgorithms.getArraySize(); i++) {
+										Value algo = hostKeyAlgorithms.getArrayElement(i);
+										algos.add(algo.asString());
+									}
+									this.sshConfig.setHostKeyAlgorithms(algos.toArray(new String[0]));
+								}
+							}
+							{
+								Value ciphers = sshConfig.getMember("ciphers");
+								if (ciphers != null && ciphers.hasArrayElements()) {
+									Set<String> algos = new HashSet<>();
+									for (long i = 0; i < ciphers.getArraySize(); i++) {
+										Value algo = ciphers.getArrayElement(i);
+										algos.add(algo.asString());
+									}
+									this.sshConfig.setCiphers(algos.toArray(new String[0]));
+								}
+							}
+							{
+								Value macs = sshConfig.getMember("macs");
+								if (macs != null && macs.hasArrayElements()) {
+									Set<String> algos = new HashSet<>();
+									for (long i = 0; i < macs.getArraySize(); i++) {
+										Value algo = macs.getArrayElement(i);
+										algos.add(algo.asString());
+									}
+									this.sshConfig.setMacs(algos.toArray(new String[0]));
+								}
+							}
+						}
 						Value macros = ssh.getMember("macros");
-						this.cliMainModes.addAll(macros.getMemberKeys());
+						if (macros != null && macros.hasMembers()) {
+							this.cliMainModes.addAll(macros.getMemberKeys());
+						}
 					}
-				}
-				if (cli.hasMember("telnet")) {
-					this.protocols.add(DriverProtocol.TELNET);
 					Value telnet = cli.getMember("telnet");
-					if (telnet.hasMembers() && telnet.hasMember("macros")) {
+					if (telnet != null && telnet.hasMembers()) {
+						this.protocols.add(DriverProtocol.TELNET);
+						Value telnetConfig = telnet.getMember("config");
+						if (telnetConfig != null && telnetConfig.hasMembers()) {
+							Value terminal = telnetConfig.getMember("terminal");
+							if (terminal != null && terminal.hasMembers()) {
+								Value vtType = terminal.getMember("type");
+								if (vtType != null) {
+									this.telnetConfig.setTerminalType(vtType.asString());
+								}
+							}
+						}
 						Value macros = telnet.getMember("macros");
-						this.cliMainModes.addAll(macros.getMemberKeys());
+						if (macros != null && macros.hasMembers()) {
+							this.cliMainModes.addAll(macros.getMemberKeys());
+						}
+
+
 					}
 				}
 			}
@@ -666,6 +771,18 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	@JsonView(DefaultView.class)
 	public String getSourceHash() {
 		return sourceHash;
+	}
+
+	@XmlElement
+	@JsonView(DefaultView.class)
+	public SshConfig getSshConfig() {
+		return sshConfig;
+	}
+
+	@XmlElement
+	@JsonView(DefaultView.class)
+	public TelnetConfig getTelnetConfig() {
+		return telnetConfig;
 	}
 
 	@Transient

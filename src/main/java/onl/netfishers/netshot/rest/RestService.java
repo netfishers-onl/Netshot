@@ -1319,10 +1319,12 @@ public class RestService extends Thread {
 						allOldLines.size() - 1));
 			this.hierarchy = new ArrayList<>();
 			int p = this.originalPosition;
-			p = oldLineParents[p];
-			while (p >= 0) {
-				this.hierarchy.add(new LineWithPosition(allOldLines.get(p), p));
+			if (p < oldLineParents.length) {
 				p = oldLineParents[p];
+				while (p >= 0) {
+					this.hierarchy.add(new LineWithPosition(allOldLines.get(p), p));
+					p = oldLineParents[p];
+				}
 			}
 			Collections.reverse(this.hierarchy);
 		}

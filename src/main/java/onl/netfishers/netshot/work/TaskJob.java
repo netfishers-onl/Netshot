@@ -92,7 +92,12 @@ public class TaskJob implements Job {
 		}
 
 		logger.warn("Running the task {} of type {}", id, task.getClass().getName());
-		task.run();
+		try {
+			task.run();
+		}
+		catch (Error e) {
+			logger.error("Error while running the task {}.", id, e);
+		}
 
 		if (task.getStatus() == Status.RUNNING) {
 			logger.error("The task {} exited with a status of RUNNING.", id);

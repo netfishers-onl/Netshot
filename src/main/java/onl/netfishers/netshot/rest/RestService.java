@@ -8507,12 +8507,15 @@ public class RestService extends Thread {
 			if (remoteUser == null && Tacacs.isAvailable()) {
 				remoteUser = Tacacs.authenticate(rsLogin.getUsername(), rsLogin.getPassword(), remoteAddress);
 			}
-			if (remoteUser != null && user != null) {
-				remoteUser.setLevel(user.getLevel());
-				Netshot.aaaLogger.info("Remote authentication success for user {} from {}.", rsLogin.getUsername(), remoteAddress);
+			if (remoteUser == null) {
+				Netshot.aaaLogger.warn("Remote authentication failure for user {} from {}.", rsLogin.getUsername(), remoteAddress);
 			}
 			else {
-				Netshot.aaaLogger.warn("Remote authentication failure for user {} from {}.", rsLogin.getUsername(), remoteAddress);
+				Netshot.aaaLogger.info("Remote authentication success for user {} from {}.", rsLogin.getUsername(), remoteAddress);
+				if (user != null) {
+					remoteUser.setLevel(user.getLevel());
+					Netshot.aaaLogger.info("Level permission for user {} is locally overriden: {}.", rsLogin.getUsername(), user.getLevel());
+				}
 			}
 			user = remoteUser;
 		}

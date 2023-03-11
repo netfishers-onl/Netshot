@@ -209,6 +209,9 @@ public class Snmp extends Poller {
 		if (response.get(0).isException()) {
 			throw new IOException("SNMP error: " + response.get(0).toValueString());
 		}
+		if (response.get(0).getOid().toString().equals("1.3.6.1.6.3.15.1.1.3.0")) {
+			throw new IOException("SNMP error: invalid username");
+		}
 		return response.get(0).getVariable().toString();
 	}
 
@@ -284,7 +287,7 @@ public class Snmp extends Poller {
 	 */
 	public Map<String, String> walkAsString(String oid) throws IOException {
 		Map<String, String> results = new TreeMap<String, String>();
-		TreeUtils treeUtils = new TreeUtils(snmp, new DefaultPDUFactory());
+		TreeUtils treeUtils = new TreeUtils(snmp, new DefaultPDUFactory(PDU.GETBULK));
 		List<TreeEvent> events = treeUtils.getSubtree(target, new OID(oid));
 		if (events != null) {
 			for (TreeEvent event : events) {

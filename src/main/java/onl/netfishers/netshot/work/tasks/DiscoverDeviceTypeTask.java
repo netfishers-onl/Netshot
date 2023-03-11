@@ -201,9 +201,9 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	}
 
 	private boolean snmpv1Discover(DeviceSnmpCommunity community) {
-		logger.trace("Task {}. SNMPv1 discovery with community {}.",
-				this.getId(), community.getCommunity());
-		this.trace("Trying SNMPv1 discovery.");
+		logger.trace("Task {}. SNMPv1 discovery with credential set {}.",
+				this.getId(), community.getName());
+		this.trace(String.format("Trying SNMPv1 discovery (credential set %s)", community.getName()));
 		try {
 			Snmp poller = new Snmp(deviceAddress, community);
 			return snmpDiscover(poller);
@@ -220,7 +220,9 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	}
 
 	private boolean snmpv2cDiscover(DeviceSnmpCommunity community) {
-		this.trace("Trying SNMPv2c discovery.");
+		logger.trace("Task {}. SNMPv2c discovery with credential set {}.",
+				this.getId(), community.getName());
+		this.trace(String.format("Trying SNMPv2c discovery (credential set %s)", community.getName()));
 		try {
 			Snmp poller = new Snmp(deviceAddress, community);
 			return snmpDiscover(poller);
@@ -237,7 +239,9 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	}
 
 	private boolean snmpv3Discover(DeviceSnmpv3Community cred) {
-		this.trace("Trying SNMPv3 discovery.");
+		logger.trace("Task {}. SNMPv3 discovery with credential set {}.",
+				this.getId(), cred.getName());
+		this.trace(String.format("Trying SNMPv3 discovery (credential set %s)", cred.getName()));
 		try {
 			Snmp poller = new Snmp(deviceAddress, cred);
 			return snmpDiscover(poller);

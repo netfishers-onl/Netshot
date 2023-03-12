@@ -223,10 +223,6 @@ public abstract class Task implements Cloneable {
 	protected long id;
 
 	/** The log. */
-	@Getter(onMethod=@__({
-		@Column(name = "log", length = 10000000),
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
 	protected StringBuffer logs = new StringBuffer();
 
 	/** The schedule reference. */
@@ -593,6 +589,26 @@ public abstract class Task implements Cloneable {
 	 */
 	public void setLogs(StringBuffer logs) {
 		this.logs = logs;
+	}
+
+	/**
+	 * Gets the log as text.
+	 *
+	 * @return the log
+	 */
+	@XmlElement @JsonView(DefaultView.class)
+	@Column(name = "log", length = 10000000)
+	public String getLog() {
+		return logs.toString();
+	}
+
+	/**
+	 * Sets the log.
+	 *
+	 * @param log the new log
+	 */
+	public void setLog(String log) {
+		this.logs = new StringBuffer(log);
 	}
 
 	/**

@@ -56,10 +56,10 @@ define([
 			});
 			this.$('input[type="password"]').on("keyup", function() {
 				if (that.$('#password1').val() == that.$('#password2').val()) {
-					that.dialogButtons().eq(0).button('enable');
+					that.dialogButtons().eq(1).button('enable');
 				}
 				else {
-					that.dialogButtons().eq(0).button('disable');
+					that.dialogButtons().eq(1).button('disable');
 				}
 			});
 			this.$("#username").select();

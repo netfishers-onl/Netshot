@@ -39,7 +39,7 @@ define([
 			this.$el.html(this.template(this.device.toJSON()));
 			new TableSort(this.$("#rules").get(0));
 			
-			if (!user.isReadWrite()) {
+			if (!user.isOperator()) {
 				this.$("#checkcompliance").remove();
 			}
 			

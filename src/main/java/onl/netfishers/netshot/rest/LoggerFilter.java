@@ -10,6 +10,9 @@ import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 
+import com.augur.tacacs.TacacsException;
+
+import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.aaa.Tacacs;
 import onl.netfishers.netshot.aaa.User;
@@ -19,6 +22,7 @@ import onl.netfishers.netshot.device.NetworkAddress;
 /**
  * Filter to log requests.
  */
+@Slf4j
 public class LoggerFilter implements ContainerResponseFilter {
 
 	static private boolean trustXForwardedFor = false;
@@ -77,8 +81,13 @@ public class LoggerFilter implements ContainerResponseFilter {
 			catch (UnknownHostException e) {
 				na = new Network4Address(0, 0);
 			}
-			Tacacs.account(requestContext.getMethod(), requestContext.getUriInfo().getRequestUri().getPath(),
-				user == null ? "<none>" : user.getUsername(), Integer.toString(responseContext.getStatus()), na);
+			try {
+				Tacacs.account(requestContext.getMethod(), requestContext.getUriInfo().getRequestUri().getPath(),
+					user == null ? "<none>" : user.getUsername(), Integer.toString(responseContext.getStatus()), na);
+			}
+			catch (TacacsException e) {
+				log.warn("Unable to send accounting message to TACACS+ server", e);
+			}
 		}
 	}
 }

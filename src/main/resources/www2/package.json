@@ -1,0 +1,45 @@
+{
+  "name": "netshot-ui",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "generate-api": "npx @openapitools/openapi-generator-cli generate -i http://localhost:8080/api/openapi.json -g typescript-axios -o src/api --additional-properties=supportsES6=true"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.0",
+    "@mantine/core": "^6.0.10",
+    "@mantine/dates": "^6.0.10",
+    "@mantine/form": "^6.0.10",
+    "@mantine/hooks": "^6.0.10",
+    "@mantine/modals": "^6.0.10",
+    "@mantine/notifications": "^6.0.10",
+    "@mantine/nprogress": "^6.0.10",
+    "@tabler/icons-react": "^2.17.0",
+    "axios": "^1.2.1",
+    "chart.js": "^4.1.1",
+    "chartjs-adapter-dayjs-4": "^1.0.4",
+    "dayjs": "^1.11.7",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.1.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.6.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.26",
+    "@types/react-dom": "^18.0.9",
+    "@typescript-eslint/eslint-plugin": "^5.47.0",
+    "@typescript-eslint/parser": "^5.47.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "eslint": "^8.30.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jsx-a11y": "^6.6.1",
+    "eslint-plugin-react": "^7.31.11",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "typescript": "^5.0.4",
+    "vite": "^4.3.5"
+  }
+}

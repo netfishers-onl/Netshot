@@ -458,7 +458,10 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
-	Set<AttributeDefinition> attributes = new HashSet<>();
+	private Set<AttributeDefinition> attributes = new HashSet<>();
+
+	/** The device attributes as map for faster lookup */
+	private Map<AttributeDefinition.AttributeLevel, Map<String, AttributeDefinition>> attributesByName;
 
 	/** The protocols provided by this driver */
 	@Getter(onMethod=@__({
@@ -535,6 +538,10 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 *                       something went wrong
 	 */
 	protected DeviceDriver(Reader reader, String sourceName, Location location) throws Exception {
+		this.attributesByName = new HashMap<>();
+		for (AttributeDefinition.AttributeLevel level : AttributeDefinition.AttributeLevel.values()) {
+			this.attributesByName.put(level, new HashMap<>());
+		}
 		this.location = location;
 		this.source = Source.newBuilder("js", reader, sourceName).buildLiteral();
 		{
@@ -576,6 +583,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						Value data = config.getMember(key);
 						AttributeDefinition item = new AttributeDefinition(AttributeLevel.CONFIG, key, data);
 						this.attributes.add(item);
+						this.attributesByName.get(AttributeLevel.CONFIG).put(item.getName(), item);
 					}
 					catch (IllegalArgumentException e) {
 						throw new IllegalArgumentException(String.format("Invalid item %s in Config.", key), e);
@@ -595,6 +603,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						Value data = device.getMember(key);
 						AttributeDefinition item = new AttributeDefinition(AttributeLevel.DEVICE, key, data);
 						this.attributes.add(item);
+						this.attributesByName.get(AttributeLevel.DEVICE).put(item.getName(), item);
 					}
 					catch (IllegalArgumentException e) {
 						throw new IllegalArgumentException(String.format("Invalid item %s in Device.", key), e);
@@ -843,6 +852,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			}
 		}
 		return false;
+	}
+
+	@Transient
+	public AttributeDefinition getAttributeDefinition(AttributeDefinition.AttributeLevel level, String name) {
+		return this.attributesByName.get(level).get(name);
 	}
 
 	@Override

@@ -113,6 +113,8 @@ import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigBinaryFileAttribute;
 import onl.netfishers.netshot.device.attribute.ConfigLongTextAttribute;
+import onl.netfishers.netshot.device.attribute.DeviceAttribute;
+import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeType;
 import onl.netfishers.netshot.device.credentials.DeviceCliAccount;
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
@@ -7142,6 +7144,7 @@ public class RestService extends Thread {
 			@DefaultValue("false") @QueryParam("locations") @Parameter(description = "Whether to export locations") boolean exportLocations,
 			@DefaultValue("false") @QueryParam("compliance") @Parameter(description = "Whether to export compliance results") boolean exportCompliance,
 			@DefaultValue("false") @QueryParam("groups") @Parameter(description = "Whether to export group info") boolean exportGroups,
+			@DefaultValue("false") @QueryParam("devicedriverattributes") @Parameter(description = "Whether to export driver-specific attributes for devices") boolean exportDeviceDriverAttributes,
 			@DefaultValue("xlsx") @QueryParam("format") @Parameter(description = "Export format (xlsx is supported)") String fileFormat) throws WebApplicationException {
 		log.debug("REST request, export data.");
 		User user = (User) request.getAttribute("user");
@@ -7712,6 +7715,79 @@ public class RestService extends Thread {
 						}
 					}
 					
+				}
+
+				if (exportDeviceDriverAttributes) {
+					log.debug("Exporting driver-specific device attributes");
+					StringBuilder attributeHqlQuery = new StringBuilder(
+							"select da from DeviceAttribute da " +
+							"join fetch da.device where 1 = 1");
+					if (domains.size() > 0) {
+						attributeHqlQuery.append(" and da.device.mgmtDomain.id in (:domainIds)");
+					}
+					if (groups.size() > 0) {
+						attributeHqlQuery.append(" and da.device.id in (select d.id from Device d left join d.ownerGroups g where g.id in (:groupIds))");
+					}
+					attributeHqlQuery.append(" order by da.device.name asc, da.id asc");
+					Query<DeviceAttribute> attributeQuery = session.createQuery(attributeHqlQuery.toString(),
+							DeviceAttribute.class);
+					if (domains.size() > 0) {
+						attributeQuery.setParameterList("domainIds", domains);
+					}
+					if (groups.size() > 0) {
+						attributeQuery.setParameterList("groupIds", groups);
+					}
+
+					Sheet attributeSheet = workBook.createSheet("Device Attributes");
+					((SXSSFSheet) attributeSheet).setRandomAccessWindowSize(100);
+					int y = -1;
+					{
+						row = attributeSheet.createRow(++y);
+						int x = -1;
+						row.createCell(++x).setCellValue("Device ID");
+						row.getCell(x).setCellStyle(titleCellStyle);
+						attributeSheet.setColumnWidth(x, 2200);
+						row.createCell(++x).setCellValue("Device Name");
+						row.getCell(x).setCellStyle(titleCellStyle);
+						attributeSheet.setColumnWidth(x, 5000);
+						row.createCell(++x).setCellValue("Attribute Name");
+						row.getCell(x).setCellStyle(titleCellStyle);
+						attributeSheet.setColumnWidth(x, 5000);
+						row.createCell(++x).setCellValue("Attribute Value");
+						row.getCell(x).setCellStyle(titleCellStyle);
+						attributeSheet.setColumnWidth(x, 7000);
+						row.setRowStyle(titleCellStyle);
+						attributeSheet.createFreezePane(0, y + 1);
+						attributeSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
+					}
+
+					for (int n = 0; true; n += PAGINATION_SIZE) {
+						List<DeviceAttribute> attributes = attributeQuery.setFirstResult(n).list();
+						for (DeviceAttribute attribute : attributes) {
+							try {
+								String value = attribute.getData().toString();
+								Device device = attribute.getDevice();
+								DeviceDriver driver = device.getDeviceDriver();
+								AttributeDefinition definition = driver.getAttributeDefinition(AttributeLevel.DEVICE, attribute.getName());
+								int x = -1;
+								row = attributeSheet.createRow(++y);
+								row.createCell(++x).setCellValue(device.getId());
+								row.createCell(++x).setCellValue(device.getName());
+								row.createCell(++x).setCellValue(definition.getTitle());
+								row.createCell(++x).setCellValue(value);
+								attribute.getData();
+							}
+							catch (Exception e) {
+								log.warn("Error while exporting attribute (ID {}, name {})... skipping",
+									attribute.getId(), attribute.getName(), e);
+							}
+						}
+						session.clear();
+						if (attributes.size() < PAGINATION_SIZE) {
+							break;
+						}
+						session.clear();
+					}
 				}
 
 				ByteArrayOutputStream output = new ByteArrayOutputStream();

@@ -15,6 +15,7 @@ define([
 			this.exportInventoryHistory = options.exportInventoryHistory;
 			this.exportLocations = options.exportLocations;
 			this.exportCompliance = options.exportCompliance;
+			this.exportDeviceDriverAttributes = options.exportDeviceDriverAttributes;
 		},
 
 		getDownloadUrl: function() {
@@ -50,6 +51,9 @@ define([
 			}
 			if (this.exportCompliance) {
 				params.push("compliance=true");
+			}
+			if (this.exportDeviceDriverAttributes) {
+				params.push("devicedriverattributes=true");
 			}
 			if (params.length) {
 				url += "?" + params.join("&");

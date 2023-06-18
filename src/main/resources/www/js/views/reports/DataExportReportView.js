@@ -71,6 +71,7 @@ define([
 					exportInventoryHistory: that.$('#exportinventoryhistory').prop('checked'),
 					exportLocations: that.$('#exportlocations').prop('checked'),
 					exportCompliance: that.$('#exportcompliance').prop('checked'),
+					exportDeviceDriverAttributes: that.$('#exportdevicedriverattributes').prop('checked'),
 				});
 				window.location = exportParams.getDownloadUrl();
 				return false;

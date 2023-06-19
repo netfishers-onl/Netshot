@@ -90,7 +90,7 @@ define([
 				}
 			});
 			this.$('#day').datepicker({
-				dateFormat: "dd/mm/y",
+				dateFormat: window.dateFormats.picker,
 				autoSize: true,
 				onSelect: function() {
 					that.configChanges.fromDate = $(this).datepicker('getDate');
@@ -127,8 +127,8 @@ define([
 						.data("change-id"));
 				var diffView = new DeviceConfigDiffView({
 					deviceName: configChange.get('deviceName'),
-					configId1: configChange.get('oldId'),
-					configId2: configChange.get('newId')
+					configId1: 0,
+					configId2: configChange.get('id'),
 				});
 			});
 		},
@@ -151,16 +151,16 @@ define([
 			var changeCounts = [];
 			var changeMax = 1;
 			this.lastDayChanges.each(function(dayChanges) {
-				var changeCount = dayChanges.get('changeCount') || 0;
+				var changeCount = dayChanges.get('changeCount') || 0;
 				var day = dayChanges.get('changeDay');
 				changeMax = Math.max(changeMax, changeCount);
-				days.push(window.formatDateTime(day, { day: "2-digit", month: "2-digit" }));
+				days.push(window.formatDateTime(day, "month"));
 				changeCounts.push(changeCount);
 			});
 			var data = {
 				labels: days,
 				datasets: [{
-					label: "Changes per day",
+					label: " Changes per day",
 					backgroundColor: "rgba(220, 220,220, 0.5)",
 					borderColor: "rgba(220, 220, 220, 1)",
 					data: changeCounts,

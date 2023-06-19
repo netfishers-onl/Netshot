@@ -14,19 +14,8 @@ define([
 		toDate: new Date(),
 		fromDate: new Date(),
 
-		fetch: function(options) {
-			options || (options = {});
-			var data = (options.data || {});
-
-			options.url = this.url;
-			options.type = "POST";
-			options.contentType = "application/json; charset=utf-8";
-			options.data = JSON.stringify({
-				fromDate: this.fromDate.getTime(),
-				toDate: this.toDate.getTime()
-			});
-
-			return Backbone.Collection.prototype.fetch.call(this, options);
+		url: function() {
+			return "api/configs" + "?after=" + this.fromDate.getTime() + "&before=" + this.toDate.getTime();
 		},
 
 	});

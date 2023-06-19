@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -5072,6 +5073,123 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			log.error("Unable to fetch the rules.", e);
 			throw new NetshotBadRequestException("Unable to fetch the rules",
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	/**
+	 * The Class RsConfigChangeNumberByDateStat.
+	 */
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.NONE)
+	public static class RsConfigChangeNumberByDateStat {
+
+		public RsConfigChangeNumberByDateStat(long changeCount, Date changeDay) {
+			this.changeCount = changeCount;
+			this.changeDay = changeDay;
+		}
+
+		/** The change count. */
+		private long changeCount;
+
+		/** The change day. */
+		private Date changeDay;
+
+		/**
+		 * Gets the change count.
+		 *
+		 * @return the change count
+		 */
+		@XmlElement @JsonView(DefaultView.class)
+		public long getChangeCount() {
+			return changeCount;
+		}
+
+		/**
+		 * Sets the change count.
+		 *
+		 * @param changes the new change count
+		 */
+		public void setChangeCount(long changes) {
+			this.changeCount = changes;
+		}
+
+		/**
+		 * Gets the change day.
+		 *
+		 * @return the change day
+		 */
+		@XmlElement @JsonView(DefaultView.class)
+		public Date getChangeDay() {
+			return changeDay;
+		}
+
+		/**
+		 * Sets the change day.
+		 *
+		 * @param date the new change day
+		 */
+		public void setChangeDay(Date date) {
+			this.changeDay = date;
+		}
+
+
+	}
+
+	/**
+	 * Gets the last7 days changes by day stats.
+	 *
+	 * @return the last7 days changes by day stats
+	 * @throws WebApplicationException the web application exception
+	 */
+	@GET
+	@Path("/reports/last7dayschangesbyday")
+	@RolesAllowed("readonly")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Get the number of configuration changes for the last 7 days",
+		description = "Returns the number of device configuration changes per day, for the last 7 days."
+	)
+	@Deprecated
+	public List<RsConfigChangeNumberByDateStat> getLast7DaysChangesByDayStats(@QueryParam("tz") String jsTimeZone) throws WebApplicationException {
+		log.debug("REST request, get last 7 day changes by day stats.");
+		Session session = Database.getSession(true);
+
+		TimeZone timeZone = TimeZone.getDefault();
+		try {
+			timeZone = TimeZone.getTimeZone(jsTimeZone);
+		}
+		catch (Exception e) {
+			log.warn("Unable to parse timezone '{}'", jsTimeZone);
+		}
+		Calendar today = Calendar.getInstance(timeZone);
+		today.set(Calendar.HOUR_OF_DAY, 0);
+		today.set(Calendar.MINUTE, 0);
+		today.set(Calendar.SECOND, 0);
+		today.set(Calendar.MILLISECOND, 0);
+		try {
+			List<RsConfigChangeNumberByDateStat> stats = new ArrayList<>();
+			for (int d = 7; d > 0; d--) {
+				Calendar dayStart = (Calendar)today.clone();
+				Calendar dayEnd = (Calendar)today.clone();
+				dayStart.add(Calendar.DATE, -d + 1);
+				dayEnd.add(Calendar.DATE, -d + 2);
+				Long changeCount = (Long)session
+					.createQuery("select count(*) from Config c where c.changeDate >= :dayStart and c.changeDate < :dayEnd")
+					.setParameter("dayStart", dayStart.getTime())
+					.setParameter("dayEnd", dayEnd.getTime())
+					.uniqueResult();
+				stats.add(new RsConfigChangeNumberByDateStat(changeCount == null ? 0 : changeCount, dayStart.getTime()));
+			}
+			return stats;
+		}
+		catch (HibernateException e) {
+			log.error("Unable to get the stats.", e);
+			throw new NetshotBadRequestException("Unable to get the stats",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {

@@ -3,6 +3,7 @@ define([
 	'jquery',
 	'underscore',
 	'backbone',
+	'dayjs',
 	'views/header/HeaderView',
 	'views/devices/DevicesView',
 	'views/diagnostics/DiagnosticsView',
@@ -13,7 +14,7 @@ define([
 	'models/user/CurrentUserModel',
 	'models/user/ServerInfoModel',
 	'views/users/ReAuthDialog'
-], function($, _, Backbone, HeaderView, DevicesView, DiagnosticsView, AdminView,
+], function($, _, Backbone, dayjs, HeaderView, DevicesView, DiagnosticsView, AdminView,
 		TasksView, ReportsView, ComplianceView, CurrentUserModel, ServerInfoModel,
 		ReAuthDialog) {
 
@@ -122,24 +123,19 @@ define([
 			$("body").toggleClass("nssmallscreen", $(window).width() < 1200);
 		}).resize();
 
+		// dayjs formats, except date picker
+		window.dateFormats = {
+			day: "YYYY-MM-DD",
+			second: "HH:mm:ss",
+			month: "YYYY-MM",
+			full: "YYYY-MM-DD HH:mm:ss",
+			picker: "yy-mm-dd",
+			default: "YYYY-MM-DD HH:mm",
+		};
+
 		window.formatDateTime = function(date, format) {
-			var d = new Date(date);
-			var f = format;
-			if (f === "day") {
-				f = { year: "2-digit", month: "2-digit", day: "2-digit" };
-			}
-			else if (f === "second") {
-				f = { hour: "2-digit", minute: "2-digit", second: "2-digit" };
-			}
-			else if (f === "full") {
-				return d.toLocaleString(undefined, { year: "2-digit", month: "2-digit", day: "2-digit" }) + " "
-						+ d.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-			}
-			if (!f) {
-				return d.toLocaleString(undefined, { year: "2-digit", month: "2-digit", day: "2-digit" }) + " "
-						+ d.toLocaleString(undefined, { hour: "2-digit", minute: "2-digit" });
-			}
-			return d.toLocaleString(undefined, f);
+			var format = dateFormats[format] || dateFormats.default;
+			return dayjs(date).format(format);
 		}
 
 		window.formatFileSize = function(size) {

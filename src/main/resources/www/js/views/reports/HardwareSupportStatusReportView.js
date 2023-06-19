@@ -81,7 +81,7 @@ define([
 						}
 					}
 				});
-				var label = (month.getMonth() == 0 ? window.formatDateTime(month, { month: "2-digit", year: "2-digit" }) : "");
+				var label = (month.getMonth() == 0 ? window.formatDateTime(month, "month") : "");
 				labels.push(label);
 				eosData.push(eosCount);
 				eolData.push(eolCount);

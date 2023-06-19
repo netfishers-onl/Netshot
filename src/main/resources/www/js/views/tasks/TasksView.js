@@ -123,7 +123,7 @@ define([
 				}
 			});
 			this.$('#day').datepicker({
-				dateFormat: "dd/mm/y",
+				dateFormat: window.dateFormats.picker,
 				autoSize: true,
 				onSelect: function() {
 					that.tasks.day = $(this).datepicker('getDate');

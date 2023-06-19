@@ -122,7 +122,7 @@ define([
 				}
 			});
 			this.$('#exemptiondate').datepicker({
-				dateFormat: "'End date: 'dd/mm/y",
+				dateFormat: "'End date: '" + window.dateFormats.picker,
 				autoSize: true,
 				onSelect: function() {
 				}

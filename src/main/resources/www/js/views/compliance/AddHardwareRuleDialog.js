@@ -95,7 +95,7 @@ define([
 				source: partNumbers
 			});
 			this.$('.nsdatepicker').datepicker({
-				dateFormat: "dd/mm/y",
+				dateFormat: window.dateFormats.picker,
 				changeMonth: true,
 				changeYear: true,
 				autoSize: true,

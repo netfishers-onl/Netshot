@@ -8,6 +8,7 @@ require.config({
 		backbone: 'libs/backbone/backbone-min',
 		ace: 'libs/ace',
 		Chart: 'libs/Chart.js/Chart.min',
+		dayjs: 'libs/dayjs/dayjs.min',
 		tablesort: 'libs/tablesort/tablesort.min',
 		templates: '../templates'
 	},
@@ -39,6 +40,9 @@ require.config({
 		},
 		Chart: {
 			exports: 'Chart'
+		},
+		dayjs: {
+			exports: 'dayjs'
 		},
 		tablesort: {
 			exports: 'Tablesort',

@@ -30,7 +30,7 @@ define([
 			var in10min = new Date();
 			in10min.setTime(in10min.getTime() + 10 * 60 * 1000);
 			this.$('.nsdatepicker').datepicker({
-				dateFormat: "dd/mm/y",
+				dateFormat: window.dateFormats.picker,
 				autoSize: true,
 				onSelect: function() {}
 			}).datepicker('setDate', in10min);

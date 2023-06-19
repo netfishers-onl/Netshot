@@ -103,7 +103,7 @@ define([
 				source: partNumbers
 			})
 			this.$('.nsdatepicker').datepicker({
-				dateFormat: "dd/mm/y",
+				dateFormat: window.dateFormats.picker,
 				autoSize: true,
 				changeMonth: true,
 				changeYear: true,

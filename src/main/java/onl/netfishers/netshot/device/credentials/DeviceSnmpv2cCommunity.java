@@ -46,6 +46,10 @@ public class DeviceSnmpv2cCommunity extends DeviceSnmpCommunity {
 		super(community, name);
 	}
 
+	public void removeSensitive() {
+		//
+	}
+
 	/* (non-Javadoc)
 	 * @see onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity#hashCode()
 	 */

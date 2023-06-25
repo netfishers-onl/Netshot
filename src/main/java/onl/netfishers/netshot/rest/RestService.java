@@ -1414,11 +1414,11 @@ public class RestService extends Thread {
 			device.setEosModule(Database.unproxy(device.getEosModule()));
 			if (device.getSpecificCredentialSet() != null) {
 				DeviceCredentialSet credentialSet = Database.unproxy(device.getSpecificCredentialSet());
-				if (DeviceCliAccount.class.isInstance(credentialSet)) {
-					((DeviceCliAccount) credentialSet).setPassword("=");
-					((DeviceCliAccount) credentialSet).setSuperPassword("=");
-				}
+				credentialSet.removeSensitive();
 				device.setSpecificCredentialSet(credentialSet);
+			}
+			for (DeviceCredentialSet cs : device.getCredentialSets()) {
+				cs.removeSensitive();
 			}
 		}
 		catch (HibernateException e) {
@@ -2733,11 +2733,16 @@ public class RestService extends Thread {
 				}
 			}
 			else if (DeviceSnmpv3Community.class.isInstance(credentialSet)) {
-				((DeviceSnmpv3Community) credentialSet).setUsername( ((DeviceSnmpv3Community) rsCredentialSet).getUsername() ); 
-				((DeviceSnmpv3Community) credentialSet).setAuthType( ((DeviceSnmpv3Community) rsCredentialSet).getAuthType() ); 
-				((DeviceSnmpv3Community) credentialSet).setAuthKey( ((DeviceSnmpv3Community) rsCredentialSet).getAuthKey() ); 
-				((DeviceSnmpv3Community) credentialSet).setPrivType( ((DeviceSnmpv3Community) rsCredentialSet).getPrivType() ); 
-				((DeviceSnmpv3Community) credentialSet).setPrivKey( ((DeviceSnmpv3Community) rsCredentialSet).getPrivKey() ); 
+				DeviceSnmpv3Community rsSnmp3 = (DeviceSnmpv3Community)rsCredentialSet;
+				((DeviceSnmpv3Community) credentialSet).setUsername(rsSnmp3.getUsername());
+				((DeviceSnmpv3Community) credentialSet).setAuthType(rsSnmp3.getAuthType());
+				if (!rsSnmp3.getAuthKey().equals("-")) {
+					((DeviceSnmpv3Community) credentialSet).setAuthKey(rsSnmp3.getAuthKey());
+				}
+				((DeviceSnmpv3Community) credentialSet).setPrivType(rsSnmp3.getPrivType());
+				if (!rsSnmp3.getPrivKey().equals("-")) {
+					((DeviceSnmpv3Community) credentialSet).setPrivKey(rsSnmp3.getPrivKey());
+				}
 				
 			}
 			else if (DeviceSnmpCommunity.class.isInstance(credentialSet)) {

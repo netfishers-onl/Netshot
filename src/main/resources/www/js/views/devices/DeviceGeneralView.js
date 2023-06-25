@@ -36,6 +36,7 @@ define([
 				}
 			}
 			data.attributes = fullAttributes;
+			data.connectUri = this.device.getConnectUri();
 			this.$el.html(this.template(data));
 
 			return this;

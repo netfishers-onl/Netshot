@@ -40,6 +40,42 @@ define([
 			return Backbone.Model.prototype.save.call(this, attrs, options);
 		},
 
+		getPrimaryCredentialSet: function() {
+			var primary = null;
+			var all = this.get("credentialSets");
+			if (all && all[0]) {
+				primary = all[0];
+			}
+			var specific = this.get("specificCredentialSet");
+			if (specific) {
+				primary = specific;
+			}
+			return primary;
+		},
+
+		getConnectUri: function() {
+			var protocol = null;
+			var host = null;
+			var port = null;
+			var primaryCredSet = this.getPrimaryCredentialSet();
+			if (!primaryCredSet) {
+				return null;
+			}
+			if (primaryCredSet.type === "SSH") {
+				protocol = "ssh://";
+				port = this.get("sshPort") || 22;
+			}
+			else if (primaryCredSet.type === "Telnet") {
+				protocol = "telnet://";
+				port = this.get("telnetPort") || 23;
+			}
+			else {
+				return null;
+			}
+			host = this.get("connectAddress") || this.get("mgmtAddress");
+			return protocol + host + ":" + port;
+		},
+
 	});
 
 });

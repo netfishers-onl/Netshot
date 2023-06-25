@@ -244,6 +244,7 @@ define([
 						'IS': '[' + name + '] IS "2012-01-16"',
 						'BEFORE': '[' + name + '] BEFORE "2012-01-16"',
 						'AFTER': '[' + name + '] AFTER "2012-01-16"',
+						'BEFORE (relative)': '[' + name + '] BEFORE "NOW -1d"',
 					},
 					'IPADDRESS': {
 						'IS': '[' + name + '] IS 16.16.16.16',

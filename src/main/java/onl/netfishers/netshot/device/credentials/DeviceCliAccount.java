@@ -84,6 +84,11 @@ public abstract class DeviceCliAccount extends DeviceCredentialSet {
 		this.superPassword = superPassword;
 	}
 
+	public void removeSensitive() {
+		this.password = "-";
+		this.superPassword = "-";
+	}
+
 	/* (non-Javadoc)
 	 * @see onl.netfishers.netshot.device.credentials.DeviceCredentialSet#hashCode()
 	 */

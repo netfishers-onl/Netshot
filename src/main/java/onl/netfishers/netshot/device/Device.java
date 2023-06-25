@@ -246,7 +246,7 @@ public class Device {
 
 	/** The credential sets. */
 	@Getter(onMethod=@__({
-		@ManyToMany(), @Fetch(FetchMode.SELECT)
+		@XmlElement, @ManyToMany(), @Fetch(FetchMode.SELECT)
 	}))
 	@Setter
 	protected Set<DeviceCredentialSet> credentialSets = new HashSet<>();
@@ -453,7 +453,9 @@ public class Device {
 			@AttributeOverride(name = "prefixLength", column = @Column(name = "connect_ipv4_pfxlen")),
 			@AttributeOverride(name = "addressUsage", column = @Column(name = "connect_ipv4_usage")),
 		}),
-		@XmlElement, @JsonView(DefaultView.class)
+		@XmlElement, @JsonView(DefaultView.class),
+		@JsonSerialize(using = Network4Address.AddressOnlySerializer.class),
+		@JsonDeserialize(using = Network4Address.AddressOnlyDeserializer.class)
 	}))
 	@Setter
 	protected Network4Address connectAddress;

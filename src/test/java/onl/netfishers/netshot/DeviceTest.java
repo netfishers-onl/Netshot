@@ -8,6 +8,10 @@ import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.Finder;
 import onl.netfishers.netshot.device.Finder.Expression.FinderParseException;
 
+import java.sql.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -39,8 +43,8 @@ public class DeviceTest {
 			Finder finder = new Finder(nsQuery, DeviceDriver.getDriverByName(driverName));
 			finder.setVariables(fakeQuery);
 			String hqlQuery = finder.getHql();
-			Assertions.assertEquals(hqlQuery, expectedHql, "Unexpected HQL");
-			Assertions.assertEquals(fakeQuery.getParameterHash(), expectedParameters, "Unexpected query parameters");
+			Assertions.assertEquals(expectedHql, hqlQuery, "Unexpected HQL");
+			Assertions.assertEquals(expectedParameters, fakeQuery.getParameterHash(), "Unexpected query parameters");
 		}
 
 		@Test
@@ -156,6 +160,59 @@ public class DeviceTest {
 					"var_0_0", "Name 1",
 					"var_0_1", "Name 2",
 					"var_1_0", "Name 3"
+				));
+		}
+
+		@Test
+		@DisplayName("Query device by creation date with absolute date")
+		void queryByChangeDateAbsolute1() throws Exception {
+			assertFinder("[Creation date] AFTER \"2023-01-02\"", null,
+				" from Device d where (d.createdDate >= :var)",
+				Map.of(
+					"var", Date.from(LocalDate.parse("2023-01-02").atStartOfDay(ZoneId.systemDefault()).toInstant())
+				));
+		}
+
+		@Test
+		@DisplayName("Query device by creation date range with absolute date")
+		void queryByChangeDateAbsolute2() throws Exception {
+			assertFinder("[Creation date] IS \"2023-01-02\"", null,
+				" from Device d where ((d.createdDate >= :var_1 and d.createdDate <= :var_2))",
+				Map.of(
+					"var_1", Date.from(LocalDate.parse("2023-01-02").atStartOfDay(ZoneId.systemDefault()).toInstant()),
+					"var_2", Date.from(LocalDate.parse("2023-01-02").plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant())
+				));
+		}
+
+		@Test
+		@DisplayName("Query device by creation date range with TODAY keyword")
+		void queryByChangeDateRelative1() throws Exception {
+			assertFinder("[Creation date] IS \"TODAY\"", null,
+				" from Device d where ((d.createdDate >= :var_1 and d.createdDate <= :var_2))",
+				Map.of(
+					"var_1", Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()),
+					"var_2", Date.from(LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant())
+				));
+		}
+
+		@Test
+		@DisplayName("Query device by creation date with NOW -7d keyword")
+		void queryByChangeDateRelative2() throws Exception {
+			assertFinder("[Creation date] BEFORE \"NOW -7d\"", null,
+				" from Device d where (d.createdDate <= :var)",
+				Map.of(
+					"var", Date.from(LocalDateTime.now().minusDays(7).atZone(ZoneId.systemDefault()).toInstant())
+				));
+		}
+
+		@Test
+		@DisplayName("Query device by creation date with NOW -7d keyword")
+		void queryByChangeDateRelative3() throws Exception {
+			assertFinder("[Creation date] IS \"TODAY - 1 D\"", null,
+				" from Device d where ((d.createdDate >= :var_1 and d.createdDate <= :var_2))",
+				Map.of(
+					"var_1", Date.from(LocalDate.now().minusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()),
+					"var_2", Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant())
 				));
 		}
 

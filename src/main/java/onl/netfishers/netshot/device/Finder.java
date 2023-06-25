@@ -19,13 +19,16 @@
 package onl.netfishers.netshot.device;
 
 import java.net.UnknownHostException;
-import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
@@ -2326,16 +2329,186 @@ public class Finder {
 	 */
 	public static class DateAttributeExpression extends AttributeExpression {
 
-		/** The Constant WITHTIME. */
-		final private static DateFormat WITHTIME = new SimpleDateFormat(
-				"yyyy-MM-dd HH:mm");
+		public static abstract class TypedDate {
+			static public TypedDate parse(String text) throws ParseException {
+				try {
+					return new AbsoluteIso8601DateTime(text);
+				}
+				catch (DateTimeParseException e) {
+					// Try next
+				}
+				try {
+					return new AbsoluteDateTime(text);
+				}
+				catch (DateTimeParseException e) {
+					// Try next
+				}
+				try {
+					return new AbsoluteDateNoTime(text);
+				}
+				catch (DateTimeParseException e) {
+					// Try next
+				}
+				try {
+					return new RelativeDateNow(text);
+				}
+				catch (ParseException e) {
+					// Try next
+				}
+				try {
+					return new RelativeDateToday(text);
+				}
+				catch (ParseException e) {
+					// Try next
+				}
+				throw new ParseException("Unable to parse date", 0);
+			}
+			public abstract Instant getStart();
+			public abstract Instant getEnd();
+			public abstract String getText();
+		}
 
-		/** The Constant WITHOUTTIME. */
-		final private static DateFormat WITHOUTTIME = new SimpleDateFormat(
-				"yyyy-MM-dd");
-		static {
-			WITHTIME.setLenient(false);
-			WITHOUTTIME.setLenient(false);
+		public static abstract class AbsoluteDate extends TypedDate {
+		}
+
+		public static class AbsoluteDateNoTime extends AbsoluteDate {
+			private LocalDate date;
+
+			public AbsoluteDateNoTime(String text) {
+				this.date = LocalDate.parse(text);			
+			}
+
+			public String getText() {
+				return this.date.toString();
+			}
+
+			public Instant getStart() {
+				return this.date.atStartOfDay(ZoneId.systemDefault()).toInstant();
+			}
+
+			public Instant getEnd() {
+				return this.date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+			}
+		}
+
+		public static class AbsoluteDateTime extends AbsoluteDate {
+			private LocalDateTime date;
+
+			public AbsoluteDateTime(String text) {
+				this.date = LocalDateTime.parse(text);
+			}
+
+			public String getText() {
+				return this.date.toString();
+			}
+
+			public Instant getStart() {
+				return this.date.atZone(ZoneId.systemDefault()).toInstant();
+			}
+
+			public Instant getEnd() {
+				return this.date.atZone(ZoneId.systemDefault()).toInstant();
+			}
+		}
+
+		public static class AbsoluteIso8601DateTime extends AbsoluteDate {
+			private ZonedDateTime date;
+
+			public AbsoluteIso8601DateTime(String text) throws DateTimeParseException {
+				this.date = ZonedDateTime.parse(text);
+			}
+
+			public String getText() {
+				return this.date.toString();
+			}
+
+			public Instant getStart() {
+				return this.date.toInstant();
+			}
+
+			public Instant getEnd() {
+				return this.date.toInstant();
+			}
+		}
+
+		public static abstract class RelativeDate extends TypedDate {
+
+		}
+
+		public static class RelativeDateNow extends RelativeDate {
+			static private Pattern NOW_PATTERN = Pattern.compile("(?i)^NOW(\\s*((?<days>\\+|\\-\\s*[0-9]+)\\s*D))?(\\s*((?<hours>\\+|\\-\\s*[0-9]+)\\s*H))?$");
+			private long dayShift = 0;
+			private long hourShift = 0;
+
+			public RelativeDateNow(String text) throws ParseException {
+				Matcher matcher = NOW_PATTERN.matcher(text);
+				if (!matcher.matches()) {
+					throw new ParseException("Cannot parse NOW-based relative time", 0);
+				}
+				if (matcher.group("days") != null) {
+					this.dayShift = Long.parseLong(matcher.group("days").replace(" ", ""));
+				}
+				if (matcher.group("hours") != null) {
+					this.hourShift = Long.parseLong(matcher.group("hours").replace(" ", ""));
+				}
+			}
+
+			public String getText() {
+				String text = "NOW";
+				if (this.dayShift != 0) {
+					text += String.format(" %s%dd", this.dayShift > 0 ? "+" : "-", Math.abs(this.dayShift));
+				}
+				if (this.hourShift != 0) {
+					text += String.format(" %s%dh", this.hourShift > 0 ? "+" : "-", Math.abs(this.hourShift));
+				}
+				return text;
+			}
+
+			public Instant getStart() {
+				return LocalDateTime.now().plusDays(this.dayShift).plusHours(this.hourShift).atZone(ZoneId.systemDefault()).toInstant();
+			}
+
+			public Instant getEnd() {
+				return LocalDateTime.now().plusDays(this.dayShift).plusHours(this.hourShift).atZone(ZoneId.systemDefault()).toInstant();
+			}
+		}
+
+		public static class RelativeDateToday extends RelativeDate {
+			static private Pattern TODAY_PATTERN = Pattern.compile("(?i)^TODAY(\\s*((?<days>\\+|\\-\\s*[0-9]+)\\s*D))?(\\s*((?<hours>\\+|\\-\\s*[0-9]+)\\s*H))?$");
+			private long dayShift = 0;
+			private long hourShift = 0;
+
+			public RelativeDateToday(String text) throws ParseException {
+				Matcher matcher = TODAY_PATTERN.matcher(text);
+				if (!matcher.matches()) {
+					throw new ParseException("Cannot parse TODAY-based relative time", 0);
+				}
+				if (matcher.group("days") != null) {
+					this.dayShift = Long.parseLong(matcher.group("days").replace(" ", ""));
+				}
+				if (matcher.group("hours") != null) {
+					this.hourShift = Long.parseLong(matcher.group("hours").replace(" ", ""));
+				}
+			}
+
+			public String getText() {
+				String text = "TODAY";
+				if (this.dayShift != 0) {
+					text += String.format(" %s%dd", this.dayShift > 0 ? "+" : "-", Math.abs(this.dayShift));
+				}
+				if (this.hourShift != 0) {
+					text += String.format(" %s%dh", this.hourShift > 0 ? "+" : "-", Math.abs(this.hourShift));
+				}
+				return text;
+			}
+
+			public Instant getStart() {
+				return LocalDate.now().atStartOfDay(ZoneId.systemDefault()).plusDays(this.dayShift).plusHours(this.hourShift).toInstant();
+			}
+
+			public Instant getEnd() {
+				return LocalDate.now().atStartOfDay(ZoneId.systemDefault()).plusDays(1 + this.dayShift).plusHours(this.hourShift).toInstant();
+			}
 		}
 
 		/**
@@ -2352,16 +2525,13 @@ public class Finder {
 		}
 
 		/** The value. */
-		private Date value;
-
-		/** The format. */
-		private DateFormat format = WITHTIME;
+		private TypedDate value;
 
 		/* (non-Javadoc)
 		 * @see onl.netfishers.netshot.device.Finder.AttributeExpression#getTextValue()
 		 */
 		protected String getTextValue() {
-			return "\"" + this.format.format(this.value) + "\"";
+			return "\"" + this.value.getText() + "\"";
 		}
 
 		/* (non-Javadoc)
@@ -2388,29 +2558,16 @@ public class Finder {
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
-			Calendar beginTime = Calendar.getInstance();
-			beginTime.setTime(value);
-			Calendar endTime = Calendar.getInstance();
-			endTime.setTime(value);
-			if (this.format == WITHOUTTIME) {
-				beginTime.set(Calendar.MILLISECOND, 0);
-				beginTime.set(Calendar.SECOND, 0);
-				beginTime.set(Calendar.MINUTE, 0);
-				beginTime.set(Calendar.HOUR, 0);
-				endTime.setTime(beginTime.getTime());
-				endTime.add(Calendar.DAY_OF_MONTH, 1);
-				endTime.add(Calendar.MILLISECOND, -1);
-			}
 			switch (sign) {
 			case AFTER:
-				query.setParameter(itemPrefix, beginTime.getTime());
+				query.setParameter(itemPrefix, Date.from(this.value.getStart()));
 				break;
 			case BEFORE:
-				query.setParameter(itemPrefix, endTime.getTime());
+				query.setParameter(itemPrefix, Date.from(this.value.getEnd()));
 				break;
 			default:
-				query.setParameter(itemPrefix + "_1", beginTime.getTime());
-				query.setParameter(itemPrefix + "_2", endTime.getTime());
+				query.setParameter(itemPrefix + "_1", Date.from(this.value.getStart()));
+				query.setParameter(itemPrefix + "_2", Date.from(this.value.getEnd()));
 			}
 		}
 		/**
@@ -2478,21 +2635,16 @@ public class Finder {
 					parsingData.getDeviceDriver(), item, property, level);
 			dateExpr.sign = sign.type;
 			try {
-				dateExpr.value = dateExpr.format.parse(value.text);
+				dateExpr.value = TypedDate.parse(value.text);
 			}
-			catch (ParseException e1) {
-				try {
-					dateExpr.format = DateAttributeExpression.WITHOUTTIME;
-					dateExpr.value = dateExpr.format.parse(value.text);
-				}
-				catch (ParseException e2) {
-					throw new FinderParseException(String.format(
-							"Invalid date/time at position %d.", value.position));
-				}
+			catch (ParseException e2) {
+				throw new FinderParseException(String.format(
+						"Invalid date/time at position %d.", value.position));
 			}
 			return dateExpr;
 		}
 	}
+
 
 	/**
 	 * The Class BinaryAttributeExpression.

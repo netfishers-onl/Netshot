@@ -77,7 +77,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 		}
 	)
 })
-public class DeviceCredentialSet {
+abstract public class DeviceCredentialSet {
 	
 	static public String generateSpecificName() {
 		return String.format("DEVICESPECIFIC-%s", UUID.randomUUID());
@@ -140,6 +140,11 @@ public class DeviceCredentialSet {
 	public DeviceCredentialSet(String name) {
 		this.name = name;
 	}
+
+	/**
+	 * Removes sensitive data (password) from this object.
+	 */
+	public abstract void removeSensitive();
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)

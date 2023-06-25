@@ -107,6 +107,11 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 		this.privKey = privKey;
 	}
 
+	public void removeSensitive() {
+		this.authKey = "-";
+		this.privKey = "-";
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 

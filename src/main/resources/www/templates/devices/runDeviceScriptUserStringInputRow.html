@@ -1,0 +1,14 @@
+<tr data-input-name="<%- name %>" class="userinputrow">
+	<th><label for="userinput-<%- name %>"><%- label %>: </label></th>
+	<td>
+		<div>
+			<input type="text" name="userinput-<%- name %>" id="userinput-<%- name %>"
+				class="userstringinput text ui-widget-content ui-corner-all" />
+		</div>
+		<% if (typeof description === "string") { %>
+			<div class="userinputdescription">
+				<%- description %>
+			</div>
+		<% } %>
+	</td>
+</tr>

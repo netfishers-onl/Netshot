@@ -66,7 +66,7 @@ define([
 					that.onCreate();
 					var $dialog = $(this).closest(".ui-dialog");
 					var styledButtons = {
-						"primary": ["Finish", "Save", "Add", "Select", "Confirm", "Scan", "Search"],
+						"primary": ["Finish", "Save", "Add", "Select", "Confirm", "Scan", "Search", "Load"],
 						"danger": ["Delete", "Logout"],
 					};
 					for (var s in styledButtons) {

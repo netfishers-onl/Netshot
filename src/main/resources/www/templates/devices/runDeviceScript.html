@@ -1,4 +1,4 @@
-<div id="nscompliance-runscriptform" class="editscriptform" title="Run script">
+<div id="nsdevice-runscriptform" class="editscriptform" title="Run script">
 
 	<div class="nsdialog-logo">
 		<svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-film" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -7,45 +7,61 @@
 	</div>
 
 	<form>
-		<fieldset>
-			<p>Device: <strong><%- name %></strong> (<%- realDeviceType %>)</p>
-		</fieldset>
-		<fieldset id="editorfield">
-			<div id="script">function run(cli, device) {
-	cli.macro("configure");
-	cli.command("no ip domain-lookup");
-	cli.macro("end");
-	cli.macro("save");
-}</div>
-		</fieldset>
-		<div id="savetools" class="loadsavetools">
-			<input type="checkbox" id="scriptsaving"/><label for="scriptsaving">Export script</label>
-			<input type="text" class="text ui-widget-content ui-corner-all" id="scriptname" placeholder="Enter name" />
-			<button id="scriptsave">Save</button>
+		<div class="nsdialog-page1">
+			<fieldset>
+				<label for="devicetype">Device type: </label> <select
+					name="devicetype" id="devicetype"
+					class="text ui-widget-content ui-corner-all"></select>
+			</fieldset>
+			<fieldset class="savetoolbar">
+				<button id="loadscript" class="neutral">Load...</button>
+				<button id="savescript" class="neutral">Save...</button>
+			</fieldset>
+			<fieldset id="editorfield">
+				<div id="script"></div>
+			</fieldset>
 		</div>
-		<div id="loadtools" class="loadsavetools">
-			<input type="checkbox" id="scriptloading"/><label for="scriptloading">Import script</label>
-			<select class="text ui-widget-content ui-corner-all"></select>
-			<table>
-			<tbody>
-			<tr>
-				<th>Name</th>
-				<td id="name"></td>
-			</tr>
-			<tr>
-				<th>Author</th>
-				<td id="author"></td>
-			</tr>
-			</tbody>
-			</table>
-			
-			<button id="scriptload">Load</button>
-			<button id="scriptdelete">Delete</button>
-		</div>
-		<fieldset id="scripttools">
-			<div id="nstasks-schedulertoolbox"></div>
-		</fieldset>
 
+		<div class="nsdialog-page2" style="display: none">
+			<fieldset>
+				<% if (device) { %>
+					<p>Device: <strong><%- device.name %></strong> (<%- device.realDeviceType %>)</p>
+				<% } else { %>
+					<p>
+						Devices: 
+						<% if (deviceCount === 1) { %>
+							<strong><%- firstDeviceNames[0] %></strong>
+						<% } else if (deviceCount === 2) { %>
+							<strong><%- firstDeviceNames[0] %></strong>, <strong><%- firstDeviceNames[1] %></strong>
+						<% } else if (deviceCount === 3) { %>
+							<strong><%- firstDeviceNames[0] %></strong>, <strong><%- firstDeviceNames[1] %></strong>, 
+							<strong><%- firstDeviceNames[2] %></strong>
+						<% } else if (deviceCount > 3) { %>
+							<strong><%- firstDeviceNames[0] %></strong>, <strong><%- firstDeviceNames[1] %></strong>, 
+							<strong><%- firstDeviceNames[2] %></strong> and <%- (deviceCount - 3) %> more
+						<% } %>
+					</p>
+				<% } %>
+			</fieldset>
+			<fieldset id="scripttools">
+				<div id="nstasks-schedulertoolbox"></div>
+			</fieldset>
+			<fieldset id="userinputs">
+				<div>
+					Script parameters:
+				</div>
+				<table>
+					<tbody></tbody>
+				</table>
+			</fieldset>
+		</div>
+
+		<div id="status" class="nsdialog-progress" style="display: none;">
+			Please wait... Creating tasks...
+			<div id="progress" data-progress="0">
+				<div id="bar"></div>
+			</div>
+		</div>
 		<div class="nserror" id="error">
 			<span class="ui-icon ui-icon-alert"></span>
 			<span id="errormsg"></span>
@@ -56,3 +72,5 @@
 		</div>
 	</form>
 </div>
+
+<div id="nsdialog-child" class="nsdialog nschilddialog"></div>

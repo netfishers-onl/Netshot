@@ -18,7 +18,11 @@
  */
 package onl.netfishers.netshot.device.script.helper;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.graalvm.polyglot.HostAccess.Export;
+import org.graalvm.polyglot.proxy.ProxyObject;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -59,9 +63,25 @@ public class JsCliScriptOptions {
 	@Setter
 	private JsDiagnosticHelper diagnosticHelper;
 
+	@Getter(onMethod=@__({
+		@Export
+	}))
+	private ProxyObject userInputs = null;
+
 	public JsCliScriptOptions(JsCliHelper cliHelper, JsSnmpHelper snmpHelper) {
 		this.cliHelper = cliHelper;
 		this.snmpHelper = snmpHelper;
+	}
+
+	public void setUserInputs(ProxyObject userInputs) {
+		this.userInputs = userInputs;
+	}
+
+	public void setUserInputs(Map<String, String> inputs) {
+		this.userInputs = null;
+		if (inputs != null) {
+			this.userInputs = ProxyObject.fromMap(new HashMap<>(inputs));
+		}
 	}
 
 }

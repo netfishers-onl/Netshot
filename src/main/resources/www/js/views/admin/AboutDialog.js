@@ -13,7 +13,7 @@ define([
 
 		templateData: function() {
 			return {
-				user: user.toJSON()
+				serverInfo: window.serverInfo.toJSON()
 			};
 		},
 

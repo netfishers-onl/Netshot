@@ -18,6 +18,8 @@
  */
 package onl.netfishers.netshot.work.tasks;
 
+import java.util.Map;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -35,6 +37,8 @@ import com.fasterxml.jackson.annotation.JsonView;
 import lombok.Getter;
 import lombok.Setter;
 import onl.netfishers.netshot.device.DeviceDriver;
+import onl.netfishers.netshot.device.script.JsCliScript;
+import onl.netfishers.netshot.device.script.JsCliScript.UserInputDefinition;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 import org.hibernate.annotations.NaturalId;
@@ -76,6 +80,12 @@ public class DeviceJsScript {
 	@Setter
 	private String author;
 
+	@Getter(onMethod=@__({
+		@Transient,
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	private Map<String, UserInputDefinition> userInputDefinitions = null;
+
 	protected DeviceJsScript() {
 
 	}
@@ -90,11 +100,33 @@ public class DeviceJsScript {
 	@Transient
 	@XmlElement @JsonView(DefaultView.class)
 	public String getRealDeviceType() {
-		DeviceDriver driver = DeviceDriver.getDriverByName(deviceDriver);
+		DeviceDriver driver = DeviceDriver.getDriverByName(this.deviceDriver);
 		if (driver == null) {
 			return "Unknwon driver";
 		}
 		return driver.getDescription();
+	}
+
+	/**
+	 * Actually populate user input definitions by evaluating the script and extract Input variable.
+	 * @throws IllegalAccessException
+	 */
+	public void extractUserInputDefinitions() throws IllegalArgumentException {
+		if (this.userInputDefinitions == null) {
+			final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, false);
+			this.userInputDefinitions = jsScript.extractInputDefinitions();
+		}
+	}
+
+	/**
+	 * Validate passed user inputs against input definitions.
+	 * @param userInputs = the data to validate
+	 * @throws IllegalArgumentException
+	 */
+	public void validateUserInputs(Map<String, String> userInputs) throws IllegalArgumentException {
+		final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, false);
+		jsScript.setUserInputValues(userInputs);
+		jsScript.validateUserInputs();
 	}
 
 	@Override

@@ -18,7 +18,8 @@
  */
 package onl.netfishers.netshot.work.tasks;
 
-import javax.persistence.Column;
+import java.util.Map;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
@@ -39,6 +40,7 @@ import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.annotations.Type;
 import org.quartz.JobKey;
 
 /**
@@ -55,15 +57,27 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 	@Setter
 	private Device device;
 	
+	/** The JS script to execute */
 	@Getter(onMethod=@__({
-		@Column(length = 10000000)
+		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String script;
 	
-	@Getter
+	/** Compatible device driver */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
 	@Setter
 	private String deviceDriver;
+
+	/** Variable values for the script */
+	@Getter(onMethod=@__({
+		@Type(type = "io.hypersistence.utils.hibernate.type.json.JsonType"),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private Map<String, String> userInputValues = null;
 
 	/**
 	 * Instantiates a new take snapshot task.
@@ -115,7 +129,8 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 				return;
 			}
 			
-			cliScript = new JsCliScript(script, false);
+			cliScript = new JsCliScript(this.deviceDriver, this.script, false);
+			cliScript.setUserInputValues(this.userInputValues);
 			cliScript.connectRun(session, device);
 			
 			this.info(String.format("Device logs (%d next lines):", cliScript.getJsLog().size()));
@@ -163,6 +178,7 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 	public Object clone() throws CloneNotSupportedException {
 		RunDeviceScriptTask task = (RunDeviceScriptTask) super.clone();
 		task.setDevice(this.device);
+		task.setDeviceDriver(this.deviceDriver);
 		return task;
 	}
 

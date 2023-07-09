@@ -18,6 +18,7 @@
  */
 package onl.netfishers.netshot.work.tasks;
 
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -40,6 +41,7 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
+import org.hibernate.annotations.Type;
 import org.quartz.JobKey;
 
 /**
@@ -66,6 +68,13 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 	@Getter
 	@Setter
 	private String deviceDriver;
+
+	/** Variable values for the script */
+	@Getter(onMethod=@__({
+		@Type(type = "io.hypersistence.utils.hibernate.type.json.JsonType")
+	}))
+	@Setter
+	private Map<String, String> userInputValues = null;
 
 
 	public RunDeviceGroupScriptTask() {
@@ -121,6 +130,7 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 		for (Device device : devices) {
 			this.info(String.format("Starting run script task for device %s.", device.getName()));
 			RunDeviceScriptTask task = new RunDeviceScriptTask(device, script, driver, comment, author);
+			task.setUserInputValues(this.userInputValues);
 			try {
 				TaskManager.addTask(task);
 			}

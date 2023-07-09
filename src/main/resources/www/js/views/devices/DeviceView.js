@@ -147,7 +147,8 @@ define([
 					text: false
 				}).click(function() {
 					var runDeviceScriptDialog = new RunDeviceScriptDialog({
-						model: that.model
+						device: that.model,
+						deviceTypes: that.deviceTypes,
 					});
 				});
 			}

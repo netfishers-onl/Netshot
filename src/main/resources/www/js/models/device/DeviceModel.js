@@ -41,16 +41,20 @@ define([
 		},
 
 		getPrimaryCredentialSet: function() {
-			var primary = null;
+			var that = this;
 			var all = this.get("credentialSets");
-			if (all && all[0]) {
-				primary = all[0];
+			var options = [
+				function() { return that.get("specificCredentialSet"); },
+				function() { return _.findWhere(all, { type: "SSH" }); },
+				function() { return _.findWhere(all, { type: "Telnet" }); },
+			];
+			for (var option of options) {
+				var result = option();
+				if (result) {
+					return result;
+				}
 			}
-			var specific = this.get("specificCredentialSet");
-			if (specific) {
-				primary = specific;
-			}
-			return primary;
+			return null;
 		},
 
 		getConnectUri: function() {

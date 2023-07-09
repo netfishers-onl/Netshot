@@ -368,9 +368,9 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 				$(this).removeClass("hover");
 			}).click(function(e) {
 				var id = $(this).data('device-id');
-				if (e.ctrlKey || e.shiftKey) {
+				if (e.ctrlKey || e.metaKey || e.shiftKey) {
 					var $item = that.getDeviceListItem(id);
-					if (e.ctrlKey) {
+					if (e.ctrlKey || e.metaKey) {
 						$item.toggleClass("active");
 					}
 					else {

@@ -2,6 +2,8 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.10.xsd">
 	<property name="BOOLEAN" value="BOOLEAN" dbms="postgresql"/>
 	<property name="BOOLEAN" value="BIT(1)"/>
+	<property name="JSON" value="JSONB" dbms="postgresql"/>
+	<property name="JSON" value="JSON"/>
 <!-- netshot_0_5_2.xml -->
 	<changeSet author="netshot (generated)" id="0.5.2_1">
 		<validCheckSum>8:1534a0df4e73e7c5877f8f03c0ffde51</validCheckSum>
@@ -1152,5 +1154,22 @@
 		<addForeignKeyConstraint baseColumnNames="network_interface" baseTableName="network_interface_ip4addresses" constraintName="FK_igqlkeru1uy3prmexodxj2d6l" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="network_interface" validate="true"/>
 		<dropForeignKeyConstraint baseTableName="network_interface_ip6addresses" constraintName="FK_afmunli6ag9lxgherj3e8jkrw"/>
 		<addForeignKeyConstraint baseColumnNames="network_interface" baseTableName="network_interface_ip6addresses" constraintName="FK_afmunli6ag9lxgherj3e8jkrw" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="network_interface" validate="true"/>
+	</changeSet>
+<!-- netshot_0_18_3_to_0_19_0.xml -->
+	<changeSet author="netshot (generated)" id="0.19.0_1">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="run_device_script_task" columnName="user_input_values"/></not>
+		</preConditions>
+		<addColumn tableName="run_device_script_task">
+			<column name="user_input_values" type="${JSON}"/>
+		</addColumn>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.19.0_2">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="run_device_group_script_task" columnName="user_input_values"/></not>
+		</preConditions>
+		<addColumn tableName="run_device_group_script_task">
+			<column name="user_input_values" type="${JSON}"/>
+		</addColumn>
 	</changeSet>
 </databaseChangeLog>

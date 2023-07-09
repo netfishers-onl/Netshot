@@ -10,12 +10,12 @@ define([
 	'views/devices/EnableMultiDevicesDialog',
 	'views/devices/TakeMultiDevicesSnapshotDialog',
 	'views/devices/CheckMultiDevicesComplianceDialog',
-	'views/devices/RunMultiDevicesScriptDialog',
+	'views/devices/RunDeviceScriptDialog',
 	'views/devices/RunMultiDevicesDiagnosticsDialog'
 ], function($, _, Backbone, multiDevicesTemplate, EditMultiDevicesDialog,
 		DeleteMultiDevicesDialog, DisableMultiDevicesDialog, EnableMultiDevicesDialog,
 		TakeMultiDevicesSnapshotDialog, CheckMultiDevicesComplianceDialog,
-		RunMultiDevicesScriptDialog, RunMultiDevicesDiagnosticsDialog) {
+		RunDeviceScriptDialog, RunMultiDevicesDiagnosticsDialog) {
 
 	return Backbone.View.extend({
 
@@ -56,12 +56,12 @@ define([
 						primary: "ui-icon-play"
 					}
 				}).click(function() {
-					new RunMultiDevicesScriptDialog({
+					new RunDeviceScriptDialog({
 						devices: that.getDevices(),
 						deviceTypes: that.deviceTypes,
 						onScheduled: function() {
 							that.options.devicesView.fetchDevices();
-						}
+						},
 					});
 					return false;
 				});

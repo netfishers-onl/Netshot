@@ -32,7 +32,8 @@ define([
 		},
 
 		dialogOptions: {
-			title: "Task status"
+			title: "Task status",
+			width: 600,
 		},
 
 		buttons: {

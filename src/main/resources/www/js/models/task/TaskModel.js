@@ -68,7 +68,8 @@ define([
 				'script',
 				'debugEnabled',
 				'dontRunDiagnostics',
-				'dontCheckCompliance'
+				'dontCheckCompliance',
+				'userInputs',
 			]);
 			options.attrs = attrs;
 			return Backbone.Model.prototype.save.call(this, attrs, options);

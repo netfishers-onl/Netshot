@@ -57,11 +57,35 @@
 				</td>
 			</tr>
 			<% if (status == "SUCCESS" && type == ".DiscoverDeviceTypeTask") { %>
-			<tr><td>Discovered Type:</td><td><%- discoveredDeviceTypeDescription %></td></tr>
-			<tr><td>Snapshot Task:</td><td><a href="#" id="gotosnapshot">Monitor</a></td></tr>
+				<tr><td>Discovered Type:</td><td><%- discoveredDeviceTypeDescription %></td></tr>
+				<tr><td>Snapshot Task:</td><td><a href="#" id="gotosnapshot">Monitor</a></td></tr>
 			<% } %>
 			<% if (status == "SUCCESS" && type == ".TakeSnapshotTask") { %>
-			<tr><td>Device:</td><td><a href="#/devices/<%- deviceId %>" id="gotodevice"><%- target %></a></td></tr>
+				<tr><td>Device:</td><td><a href="#/devices/<%- deviceId %>" id="gotodevice"><%- target %></a></td></tr>
+			<% } %>
+			<% if (type == ".RunDeviceScriptTask" || type == ".RunDeviceGroupScriptTask") { %>
+				<tr>
+					<td colspan="2">Script:</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<div id="nstask-script" class="nsdialog-log"><%- script %></div>
+					</td>
+				</tr>
+				<% if (typeof userInputValues == "object") { %>
+				<tr>
+					<td>User Inputs:</td>
+					<td>
+						<table>
+							<tbody>
+							<% for (i in userInputValues) { %>
+								<tr><td><%- i %></td><td><%- userInputValues[i] %></td></tr>
+							<% } %>
+							</tbody>
+						</table>
+					</td>
+				</tr>
+				<% } %>
 			<% } %>
 		</tbody>
 	</table>

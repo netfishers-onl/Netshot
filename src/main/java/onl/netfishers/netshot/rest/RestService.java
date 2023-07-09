@@ -217,7 +217,7 @@ public class RestService extends Thread {
 	 * The HQL select query for "light" devices, to be prepended to the actual
 	 * query.
 	 */
-	private static final String DEVICELIST_BASEQUERY = "select distinct d.id as id, d.name as name, d.family as family, d.mgmtAddress as mgmtAddress, d.status as status ";
+	private static final String DEVICELIST_BASEQUERY = "select distinct d.id as id, d.name as name, d.family as family, d.mgmtAddress as mgmtAddress, d.status as status, d.driver as driver ";
 
 	/** The static instance service. */
 	private static RestService nsRestService;
@@ -1472,6 +1472,13 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private Device.Status status;
+
+		/** The device deviceDriver name. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		protected String driver;
 	}
 
 	/**
@@ -3229,7 +3236,7 @@ public class RestService extends Thread {
 		@Setter
 		private long id;
 
-		/** The cancelled. */
+		/** The cancelled status. */
 		@Schema(description = "Set to cancel the task")
 		@Getter(onMethod=@__({
 			@XmlElement, @JsonView(DefaultView.class)
@@ -3357,6 +3364,13 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private String driver;
+
+		@Schema(description = "The user inputs for the script")
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Map<String, String> userInputs;
 		
 		@Schema(description = "Enable task debugging")
 		@Getter(onMethod=@__({
@@ -3620,7 +3634,17 @@ public class RestService extends Thread {
 			finally {
 				session.close();
 			}
+			try {
+				DeviceJsScript jsScript = new DeviceJsScript("__toValidate", rsTask.getDriver(), rsTask.getScript(), userName);
+				jsScript.validateUserInputs(rsTask.getUserInputs());
+			}
+			catch (IllegalArgumentException e) {
+				log.warn("Invalid script.");
+				throw new NetshotBadRequestException(e.getMessage(),
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_SCRIPT);
+			}
 			task = new RunDeviceScriptTask(device, rsTask.getScript(), driver, rsTask.getComments(), userName);
+			((RunDeviceScriptTask) task).setUserInputValues(rsTask.getUserInputs());
 		}
 		else if (rsTask.getType().equals("RunDeviceGroupScriptTask")) {
 			if (!securityContext.isUserInRole("executereadwrite")) {
@@ -3638,6 +3662,15 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException("The script can't be empty.",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 			}
+			try {
+				DeviceJsScript jsScript = new DeviceJsScript("__toValidate", rsTask.getDriver(), rsTask.getScript(), userName);
+				jsScript.validateUserInputs(rsTask.getUserInputs());
+			}
+			catch (IllegalArgumentException e) {
+				log.warn("Invalid script.");
+				throw new NetshotBadRequestException(e.getMessage(),
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_SCRIPT);
+			}
 			DeviceGroup group;
 			Session session = Database.getSession();
 			try {
@@ -3648,6 +3681,7 @@ public class RestService extends Thread {
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 				}
 				task = new RunDeviceGroupScriptTask(group, rsTask.getScript(), driver, rsTask.getComments(), userName);
+			((RunDeviceGroupScriptTask) task).setUserInputValues(rsTask.getUserInputs());
 			}
 			catch (HibernateException e) {
 				log.error("Error while retrieving the group.", e);
@@ -7944,7 +7978,6 @@ public class RestService extends Thread {
 		throw new WebApplicationException(
 				"The requested file format is invalid or not supported.",
 				javax.ws.rs.core.Response.Status.BAD_REQUEST);
-
 	}
 	
 	@POST
@@ -7954,11 +7987,14 @@ public class RestService extends Thread {
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
-		summary = "Add a command script",
+		summary = "Add/validate a command script",
 		description = "Create a command script (script to be later run over devices)."
 	)
 	@Tag(name = "Scripts", description = "Script management (push changes to devices)")
-	public DeviceJsScript addScript(DeviceJsScript rsScript) throws WebApplicationException {
+	public DeviceJsScript addScript(
+			DeviceJsScript rsScript,
+			@DefaultValue("false") @QueryParam("validateonly") @Parameter(description = "True to validate script without saving") boolean validateOnly)
+			throws WebApplicationException {
 		log.debug("REST request, add device script.");
 		DeviceDriver driver = DeviceDriver.getDriverByName(rsScript.getDeviceDriver());
 		if (driver == null) {
@@ -7984,30 +8020,42 @@ public class RestService extends Thread {
 		}
 		rsScript.setId(0);
 
-		Session session = Database.getSession();
 		try {
-			session.beginTransaction();
-			session.save(rsScript);
-			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been created", rsScript);
-			this.suggestReturnCode(Response.Status.CREATED);
-			return rsScript;
+			rsScript.extractUserInputDefinitions();
 		}
-		catch (HibernateException e) {
-			session.getTransaction().rollback();
-			log.error("Error while saving the new rule.", e);
-			if (this.isDuplicateException(e)) {
-				throw new NetshotBadRequestException(
-						"A script with this name already exists.",
-						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_SCRIPT);
+		catch (IllegalArgumentException e) {
+			log.warn("Invalid script.");
+			throw new NetshotBadRequestException(e.getMessage(),
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_SCRIPT);
+		}
+
+		if (!validateOnly) {
+			Session session = Database.getSession();
+			try {
+				session.beginTransaction();
+				session.save(rsScript);
+				session.getTransaction().commit();
+				Netshot.aaaLogger.info("{} has been created", rsScript);
+				this.suggestReturnCode(Response.Status.CREATED);
 			}
-			throw new NetshotBadRequestException(
-					"Unable to add the script to the database",
-					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+			catch (HibernateException e) {
+				session.getTransaction().rollback();
+				log.error("Error while saving the new rule.", e);
+				if (this.isDuplicateException(e)) {
+					throw new NetshotBadRequestException(
+							"A script with this name already exists.",
+							NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_SCRIPT);
+				}
+				throw new NetshotBadRequestException(
+						"Unable to add the script to the database",
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+			}
+			finally {
+				session.close();
+			}
 		}
-		finally {
-			session.close();
-		}
+		
+		return rsScript;
 	}
 	
 	@DELETE

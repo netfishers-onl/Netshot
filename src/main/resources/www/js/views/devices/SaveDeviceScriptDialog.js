@@ -55,7 +55,7 @@ define([
 				that.model.save({
 					'name': that.scriptName,
 					'script': that.scriptContent,
-					'deviceDriver': that.driver.name,
+					'deviceDriver': that.driver,
 				}).done(function(data) {
 					that.onSaved();
 					that.close();

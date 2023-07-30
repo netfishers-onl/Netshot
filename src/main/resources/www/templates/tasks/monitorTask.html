@@ -72,7 +72,7 @@
 						<div id="nstask-script" class="nsdialog-log"><%- script %></div>
 					</td>
 				</tr>
-				<% if (typeof userInputValues == "object") { %>
+				<% if (typeof userInputValues === "object" && userInputValues !== null) { %>
 				<tr>
 					<td>User Inputs:</td>
 					<td>

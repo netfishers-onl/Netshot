@@ -3,6 +3,7 @@ define([
 	'jquery',
 	'underscore',
 	'backbone',
+	'dayjs',
 	'tablesort',
 	'models/task/TaskCollection',
 	'views/tasks/MonitorTaskDialog',
@@ -11,7 +12,7 @@ define([
 	'text!templates/tasks/tasks.html',
 	'text!templates/tasks/tasksToolBar.html',
 	'text!templates/tasks/taskRow.html'
-], function($, _, Backbone, TableSort, TaskCollection, MonitorTaskDialog,
+], function($, _, Backbone, dayjs, TableSort, TaskCollection, MonitorTaskDialog,
 		CancelTaskDialog, CreateTaskDialog, tasksTemplate, tasksToolBarTemplate,
 		taskRowTemplate) {
 
@@ -67,7 +68,7 @@ define([
 				switch ($('#tabs :radio:checked').attr('id')) {
 				case "all":
 					that.$('#day').show();
-					that.tasks.status = "ANY";
+					that.tasks.status = undefined;
 					break;
 				case "running":
 					that.$('#day').hide();
@@ -126,16 +127,25 @@ define([
 				dateFormat: window.dateFormats.picker,
 				autoSize: true,
 				onSelect: function() {
-					that.tasks.day = $(this).datepicker('getDate');
+					that.selectedDate = $(this).datepicker('getDate');
 					that.refreshTasks();
 				}
 			}).datepicker('setDate', this.selectedDate);
-
+			1690667999
+			1690581600
 			return this;
 		},
 
 		refreshTasks: function() {
 			var that = this;
+			if (that.$('#day').is(":visible")) {
+				this.tasks.after = dayjs(this.selectedDate).startOf("day").valueOf();
+				this.tasks.before = dayjs(this.selectedDate).endOf("day").valueOf();
+			}
+			else {
+				this.tasks.after = undefined;
+				this.tasks.before = undefined;
+			}
 			this.tasks.reset();
 			this.tasks.fetch().done(function() {
 				that.renderTaskList();

@@ -1,9 +1,10 @@
 /** Copyright 2013-2014 NetFishers */
 define([
+	'jquery',
 	'underscore',
 	'backbone',
 	'models/task/TaskModel'
-], function(_, Backbone, TaskModel) {
+], function($, _, Backbone, TaskModel) {
 
 	return Backbone.Collection.extend({
 
@@ -14,27 +15,12 @@ define([
 		},
 		
 		url: "api/tasks",
-		searchUrl: "api/tasks/search",
+
 		deviceUrl: function() {
-			var params = {
-				limit: this.limit,
-				offset: this.offset,
-			};
-			var queryParams = [];
-			for (p in params) {
-				if (params[p]) {
-					queryParams.push(p + "=" + params[p]);
-				}
-			}
-			var u = "api/devices/" + this.device.get('id') + "/tasks";
-			if (queryParams.length) {
-				u += "?" + queryParams.join("&");
-			}
-			return u;
+			return "api/devices/" + this.device.get('id') + "/tasks";
 		},
 		model: TaskModel,
 
-		status: "ANY",
 		day: new Date(),
 		device: null,
 		limit: 20,
@@ -42,19 +28,24 @@ define([
 
 		fetch: function(options) {
 			options || (options = {});
-			var data = (options.data || {});
 			
 			if (this.device) {
-				options.url = this.deviceUrl();
+				options.url = this.deviceUrl() + "?" + $.param({
+					limit: this.limit,
+				})
 			}
 			else {
-				options.url = this.searchUrl;
-				options.type = "POST";
-				options.contentType = "application/json; charset=utf-8";
-				options.data = JSON.stringify({
-					status: this.status,
-					day: this.day.getTime()
-				});
+				var params = {};
+				if (this.status !== undefined) {
+					params.status = this.status;
+				}
+				if (this.before !== undefined) {
+					params.before = this.before;
+				}
+				if (this.after !== undefined) {
+					params.after = this.after;
+				}
+				options.url = this.url + "?" + $.param(params);
 			}
 
 			return Backbone.Collection.prototype.fetch.call(this, options);

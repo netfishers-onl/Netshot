@@ -66,7 +66,7 @@ const validateRunScript = () => {
 
 const validateUserInputs = (inputs) => {
 	const cleanInputs = {};
-	if (Input) {
+	if (typeof Input === "object") {
 		Object.entries(Input).forEach(([inputName, inputDef]) => {
 			const inputVal = inputs && inputs[inputName];
 			if (!inputVal) {

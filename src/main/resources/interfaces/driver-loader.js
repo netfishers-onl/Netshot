@@ -627,7 +627,7 @@ const _connect = (_function, _protocol, _options, _logger) => {
 			}
 			_options.getConfigHelper().set(key, value);
 		},
-		download: function(key, method, fileName, storeFileName) {
+		download: function(key, method, fileName, storeFileName, charset) {
 			if (typeof(key) === "string") {
 				key = String(key);
 			}
@@ -654,6 +654,15 @@ const _connect = (_function, _protocol, _options, _logger) => {
 			}
 			else {
 				throw "The storeFileName should be a string in config.download.";
+			}
+			if (typeof(charset) === "string") {
+				charset = String(charset);
+			}
+			else if (typeof(charset) === "undefined") {
+				charset = "UTF-8";
+			}
+			else {
+				throw "The charset should be a string in device.textDownload";
 			}
 
 			_options.getConfigHelper().download(key, method, fileName, storeFileName, charset);

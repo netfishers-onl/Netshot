@@ -1,6 +1,8 @@
 package onl.netfishers.netshot;
 
 import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
+import org.opentest4j.ValueWrapper;
 
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.device.Device;
@@ -8,11 +10,13 @@ import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.Finder;
 import onl.netfishers.netshot.device.Finder.Expression.FinderParseException;
 
-import java.sql.Date;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Map;
 
 import org.junit.jupiter.api.Assertions;
@@ -44,6 +48,22 @@ public class DeviceTest {
 			finder.setVariables(fakeQuery);
 			String hqlQuery = finder.getHql();
 			Assertions.assertEquals(expectedHql, hqlQuery, "Unexpected HQL");
+			for (Map.Entry<String, Object> actualEntry : fakeQuery.getParameterHash().entrySet()) {
+				if (actualEntry.getValue() instanceof Date) {
+					// For relative dates, as the reference "now" is not passed to finder,
+					// if the expected and actual dates are very close,
+					// we manually override the expected value to let the test pass
+					Date actualDate = (Date) actualEntry.getValue();
+					Object expectedValue = expectedParameters.get(actualEntry.getKey());
+					if (expectedValue instanceof Date) {
+						Date expectedDate = (Date) expectedValue;
+						Duration diff = Duration.between(actualDate.toInstant(), expectedDate.toInstant());
+						if (diff.abs().toMillis() < 500) {
+							actualEntry.setValue(expectedDate);
+						}
+					}
+				}
+			}
 			Assertions.assertEquals(expectedParameters, fakeQuery.getParameterHash(), "Unexpected query parameters");
 		}
 

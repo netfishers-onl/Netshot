@@ -34,7 +34,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
@@ -49,7 +48,6 @@ import org.jasypt.util.password.BasicPasswordEncryptor;
 @Table(indexes = {
 		@Index(name = "usernameIndex", columnList = "username") 
 })
-@Slf4j
 public class UiUser implements User {
 
 	/** The max idle time. */
@@ -59,18 +57,7 @@ public class UiUser implements User {
 	private static BasicPasswordEncryptor passwordEncryptor = new BasicPasswordEncryptor();
 
 	static {
-		int maxIdleTime;
-		try {
-			maxIdleTime = Integer.parseInt(Netshot.getConfig("netshot.aaa.maxidletime", "1800"));
-			if (maxIdleTime < 30) {
-				throw new IllegalArgumentException();
-			}
-		}
-		catch (IllegalArgumentException e) {
-			maxIdleTime = 1800;
-			log.error("Invalid value for AAA max idle timeout (netshot.aaa.maxidletime), using {}s.", maxIdleTime);
-		}
-		MAX_IDLE_TIME = maxIdleTime;
+		UiUser.MAX_IDLE_TIME = Netshot.getConfig("netshot.aaa.maxidletime", 1800, 30, Integer.MAX_VALUE);
 	}
 
 

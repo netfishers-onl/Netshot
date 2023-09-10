@@ -91,27 +91,9 @@ public class Radius {
 			}
 			return;
 		}
-		int authPort = 1812;
-		try {
-			authPort = Integer.parseInt(Netshot.getConfig(path + ".authport", "1812"));
-		}
-		catch (NumberFormatException e) {
-			log.error("Invalid authentication port number for RADIUS server {}. Will use {}.", id, authPort);
-		}
-		int acctPort = 1813;
-		try {
-			acctPort = Integer.parseInt(Netshot.getConfig(path + ".acctport", "1813"));
-		}
-		catch (NumberFormatException e) {
-			log.error("Invalid accounting port number for RADIUS server {}. Will use {}.", id, acctPort);
-		}
-		int timeout = 5;
-		try {
-			timeout = Integer.parseInt(Netshot.getConfig(path + ".timeout", "5"));
-		}
-		catch (NumberFormatException e) {
-			log.error("Invalid timeout value for RADIUS server {}. Will use {}.", id, timeout);
-		}
+		int authPort = Netshot.getConfig(path + ".authport", 1812, 1, 65535);
+		int acctPort = Netshot.getConfig(path + ".acctport", 1813, 1, 65535);
+		int timeout = Netshot.getConfig(path + ".timeout", 5, 1, 300);
 		String key = Netshot.getConfig(path + ".secret");
 		if (key == null) {
 			log.error("No key configured for RADIUS server {}. Will be ignored.", id);

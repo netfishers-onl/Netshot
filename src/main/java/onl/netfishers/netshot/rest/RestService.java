@@ -320,14 +320,7 @@ public class RestService extends Thread {
 			httpBaseUrl = Netshot.getConfig("netshot.http.baseurl", "http://localhost:8080");
 			httpBasePort = 8080;
 		}
-		try {
-			httpBasePort = Integer.parseInt(Netshot.getConfig("netshot.http.baseport",
-					Integer.toString(httpBasePort)));
-		}
-		catch (Exception e) {
-			log.warn("Unable to understand the HTTP base port configuration, using {}.",
-					httpBasePort);
-		}
+		httpBasePort = Netshot.getConfig("netshot.http.baseport", httpBasePort, 1, 65535);
 	}
 
 	/**

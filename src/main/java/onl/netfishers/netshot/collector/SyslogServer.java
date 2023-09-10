@@ -75,10 +75,7 @@ public class SyslogServer extends Collector {
 	public SyslogServer() {
 		this.setName("Syslog Receiver");
 		this.setDaemon(true);
-		String port = Netshot.getConfig("netshot.syslog.port");
-		if (port != null) {
-			udpPort = Integer.parseInt(port);
-		}
+		this.udpPort = Netshot.getConfig("netshot.syslog.port", 514, 1, 65535);
 	}
 
 	/*

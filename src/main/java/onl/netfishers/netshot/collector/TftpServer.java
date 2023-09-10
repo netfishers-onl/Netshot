@@ -96,11 +96,8 @@ public class TftpServer extends Collector {
 	public TftpServer() {
 		this.setName("TFTP Server");
 		this.setDaemon(true);
-		String port = Netshot.getConfig("netshot.tftpserver.port");
-		if (port != null) {
-			udpPort = Integer.parseInt(port);
-		}
-		tftp = new TFTP();
+		this.udpPort = Netshot.getConfig("netshot.tftpserver.port", this.udpPort, 1, 65535);
+		this.tftp = new TFTP();
 	}
 
 	/*

@@ -102,23 +102,13 @@ public class TaskManager {
 	private static RunnerSet runnerSet;
 
 	/** Max thread count for task execution */
-	public static int THREAD_COUNT = 10;
+	public static int THREAD_COUNT;
 
 	/**
 	 * Initializes the task manager.
 	 */
 	public static void init() {
-		String count = Netshot.getConfig("netshot.tasks.threadcount");
-		if (count != null) {
-			try {
-				TaskManager.THREAD_COUNT = Integer.parseInt(count);
-			}
-			catch (NumberFormatException e) {
-				log.warn(
-					"Unable to parse thread count configuration line: ignoring, using {} default value",
-					TaskManager.THREAD_COUNT);
-			}
-		}
+		TaskManager.THREAD_COUNT = Netshot.getConfig("netshot.tasks.threadcount", 10, 1, 128);
 		try {
 			Properties params = new Properties();
 			params.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");

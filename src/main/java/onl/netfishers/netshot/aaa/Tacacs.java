@@ -81,13 +81,7 @@ public class Tacacs {
 			}
 			return;
 		}
-		int port = 49;
-		try {
-			port = Integer.parseInt(Netshot.getConfig(path + ".port", "49"));
-		}
-		catch (NumberFormatException e) {
-			log.error("Invalid authentication port number for TACACS+ server {}. Will use {}.", id, port);
-		}
+		int port = Netshot.getConfig(path + ".port", 49, 1, 65535);
 		String key = Netshot.getConfig(path + ".secret");
 		if (key == null) {
 			log.error("No key configured for TACACS+ server {}. Will be ignored.", id);
@@ -107,13 +101,7 @@ public class Tacacs {
 		for (int i = 1; i < 4; i++) {
 			loadServerConfig(i, hosts, keys);
 		}
-		int timeout = 5;
-		try {
-			timeout = Integer.parseInt(Netshot.getConfig("netshot.aaa.tacacs.timeout", "5"));
-		}
-		catch (NumberFormatException e) {
-			log.error("Invalid timeout value for TACACS+. Will use {}.", timeout);
-		}
+		int timeout = Netshot.getConfig("netshot.aaa.tacacs.timeout", 5, 1, 300);
 		if (hosts.size() > 0) {
 			Tacacs.client = new TacacsClient(String.join(", ", hosts), String.join(", ", keys), timeout * 1000, false);
 		}

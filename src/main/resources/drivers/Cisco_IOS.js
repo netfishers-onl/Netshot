@@ -557,6 +557,15 @@ function analyzeSyslog(message) {
 	return false;
 }
 
+/**
+ * SNMPv2 trap configuration example:
+ *   snmp-server enable traps config
+ *   snmp-server host x.y.z.t version 2c Netsh01 udp-port 11621  config
+ * SNMPv3 trap configuration example:
+ *   snmp-server group trapper v3 priv
+ *   snmp-server user trapper trapper v3 auth sha authpass priv aes 128 privpass
+ *   snmp-server host x.y.z.t version 3 priv trapper udp-port 1162  config
+ */
 function analyzeTrap(trap, debug) {
 	for (var t in trap) {
 		if (trap[t] === "3" && t.startsWith("1.3.6.1.4.1.9.9.43.1.1.6.1.5")) {

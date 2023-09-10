@@ -146,10 +146,29 @@ public class Netshot extends Thread {
 				return Integer.parseInt(textValue);
 			}
 			catch (Exception e) {
-				log.error("Unable to parse the integer value of configuration item '{}'.", key);
+				log.error("Unable to parse the integer value of configuration item '{}', using default value {}.",
+					key, defaultValue);
 			}
 		}
 		return defaultValue;
+	}
+
+	/**
+	 * Gets a config item as an Integer
+	 * @param key the config key
+	 * @param defaultValue the default value
+	 * @param min the minimum acceptable value
+	 * @param max the maximum acceptable value
+	 * @return the config
+	 */
+	public static int getConfig(String key, int defaultValue, int min, int max) {
+		int value = Netshot.getConfig(key, defaultValue);
+		if (value < min || value > max) {
+			log.error("Unacceptable integer value for configuration item '{}' (not in the range {} to {}), using default value {}",
+					key, min, max, defaultValue);
+			return defaultValue;
+		}
+		return value;
 	}
 
 	/**
@@ -226,27 +245,9 @@ public class Netshot extends Thread {
 
 		String logFile = Netshot.getConfig("netshot.log.file", "netshot.log");
 		String logLevelCfg = Netshot.getConfig("netshot.log.level");
-		String logCountCfg = Netshot.getConfig("netshot.log.count", "5");
-		String logMaxSizeCfg = Netshot.getConfig("netshot.log.maxsize", "2");
 
-		int logCount = 5;
-		try {
-			logCount = Integer.parseInt(logCountCfg);
-		}
-		catch (NumberFormatException e) {
-			log.error("Invalid number of log files (netshot.log.count config line). Using {}.", logCount);
-		}
-		
-		int logMaxSize = 5;
-		try {
-			logMaxSize = Integer.parseInt(logMaxSizeCfg);
-			if (logMaxSize < 1) {
-				throw new NumberFormatException();
-			}
-		}
-		catch (NumberFormatException e1) {
-			log.error("Invalid max size of log files (netshot.log.maxsize config line). Using {}.", logMaxSize);
-		}
+		int logCount = Netshot.getConfig("netshot.log.count", 5, 1, 65535);
+		int logMaxSize = Netshot.getConfig("netshot.log.maxsize", 2, 1, Integer.MAX_VALUE);
 
 		Level logLevel = Level.toLevel(logLevelCfg, Level.WARN);
 		if (logLevelCfg != null && !logLevel.toString().equals(logLevelCfg)) {
@@ -338,26 +339,9 @@ public class Netshot extends Thread {
 	protected static boolean initAuditLogging() {
 		String auditFile = Netshot.getConfig("netshot.log.audit.file");
 		String auditLevelCfg = Netshot.getConfig("netshot.log.audit.level");
-		String auditCountCfg = Netshot.getConfig("netshot.log.audit.count", "5");
-		String auditMaxSizeCfg = Netshot.getConfig("netshot.log.audit.maxsize", "2");
-		int auditCount = 5;
-		try {
-			auditCount = Integer.parseInt(auditCountCfg);
-		}
-		catch (NumberFormatException e) {
-			log.error("Invalid number of log files (netshot.log.audit.count config line). Using {}.", auditCount);
-		}
-		
-		int auditMaxSize = 5;
-		try {
-			auditMaxSize = Integer.parseInt(auditMaxSizeCfg);
-			if (auditMaxSize < 1) {
-				throw new NumberFormatException();
-			}
-		}
-		catch (NumberFormatException e1) {
-			log.error("Invalid max size of log files (netshot.log.audit.maxsize config line). Using {}.", auditMaxSize);
-		}
+		int auditCount = Netshot.getConfig("netshot.log.audit.count", 5, 1, 65535);
+		int auditMaxSize = Netshot.getConfig("netshot.log.audit.maxsize", 2, 1, Integer.MAX_VALUE);
+
 		((ch.qos.logback.classic.Logger) aaaLogger).setAdditive(false);
 		Level logLevel = Level.toLevel(auditLevelCfg, Level.OFF);
 		if (auditLevelCfg != null && !logLevel.toString().equals(auditLevelCfg)) {
@@ -441,15 +425,8 @@ public class Netshot extends Thread {
 			appender.setSyslogHost(host);
 			appender.setContext(loggerContext);
 			appender.setSuffixPattern("[Netshot] %logger{0}: %msg");
-			String port = Netshot.getConfig(String.format("netshot.log.syslog%d.port", syslogIndex));
-			if (port != null) {
-				try {
-					appender.setPort(Integer.parseInt(port));
-				}
-				catch (NumberFormatException e) {
-					log.error("Invalid syslog port number ({}).", String.format("netshot.log.syslog%d.port", syslogIndex));
-				}
-			}
+			int port = Netshot.getConfig(String.format("netshot.log.syslog%d.port", syslogIndex), 514, 1, 65535);
+			appender.setPort(port);
 			String facility = Netshot.getConfig(String.format("netshot.log.syslog%d.facility", syslogIndex));
 			appender.setFacility(facility == null ? "LOCAL7" : facility);
 			rootLogger.addAppender(appender);
@@ -574,7 +551,7 @@ public class Netshot extends Thread {
 					Netshot.initSyslogLogging();
 					Radius.loadAllServersConfig();
 					Tacacs.loadAllServersConfig();
-					SnmpTrapReceiver.loadConfig();
+					SnmpTrapReceiver.reload();
 					TakeSnapshotTask.loadConfig();
 					JavaScriptRule.loadConfig();
 					PythonRule.loadConfig();

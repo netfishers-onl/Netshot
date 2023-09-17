@@ -223,7 +223,7 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 						}
 						else {
 							throw new InvalidParameterException(
-								String.format("Invalid SNMPv3 protocol '%s'... ignoring SNMPv3 user config"));
+								String.format("Invalid SNMPv3 protocol '%s'... ignoring SNMPv3 user config", protocol));
 						}
 					}
 				}

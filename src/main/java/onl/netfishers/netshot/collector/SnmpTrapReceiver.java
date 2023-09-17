@@ -294,7 +294,9 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 			this.stop();
 		}
 		this.start();
-		this.snmp.getUSM().setUsers(this.usmUsers.toArray(UsmUser[]::new));
+		if (this.snmp.getUSM() != null) {
+			this.snmp.getUSM().setUsers(this.usmUsers.toArray(UsmUser[]::new));
+		}
 	}
 
 	/**
@@ -329,7 +331,9 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 			dispatcher = new MultiThreadedMessageDispatcher(threadPool, effDispatcher);
 			dispatcher.addMessageProcessingModel(new MPv1());
 			dispatcher.addMessageProcessingModel(new MPv2c());
-			dispatcher.addMessageProcessingModel(new MPv3(this.engineId.getValue()));
+			if (this.engineId != null) {
+				dispatcher.addMessageProcessingModel(new MPv3(this.engineId.getValue()));
+			}
 
 			SecurityProtocols securityProtocols = SecurityProtocols.getInstance();
 			securityProtocols.addPrivacyProtocol(new PrivDES());

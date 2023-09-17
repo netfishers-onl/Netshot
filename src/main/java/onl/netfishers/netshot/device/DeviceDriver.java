@@ -814,9 +814,12 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	@Transient
 	public final Context getContext() throws IOException {
 		log.debug("Getting context");
-		Context context = Context.newBuilder()
-			.allowIO(true).fileSystem(new PythonFileSystem())
-			.engine(engine).build();
+		Context.Builder builder = Context
+			.newBuilder("js");
+		Context context;
+		synchronized (engine) {
+			context = builder.engine(engine).build();
+		}
 		context.eval(this.source);
 		context.eval(JSLOADER_SOURCE);
 		log.debug("Context is ready");

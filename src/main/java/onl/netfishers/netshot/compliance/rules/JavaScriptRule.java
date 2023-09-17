@@ -19,6 +19,7 @@
 package onl.netfishers.netshot.compliance.rules;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.Callable;
@@ -167,17 +168,30 @@ public class JavaScriptRule extends Rule {
 		super(name, policy);
 	}
 
+	/**
+	 * Prepare the polyglot source.
+	 * @return the source
+	 */
 	@Transient
-	public Context getContext() {
+	protected Source getSource() {
+		return Source
+			.newBuilder("js", this.script, "JsRule" + this.getId())
+			.cached(false).buildLiteral();
+	}
+
+	@Transient
+	public Context getContext() throws IOException {
 		Context.Builder builder = Context
-			.newBuilder("js")
-			.allowExperimentalOptions(true)
-			.option("js.experimental-foreign-object-prototype", "true");
+			.newBuilder("js");
+		builder.allowExperimentalOptions(true)
+			.option("js.console", "false")
+			.option("js.load", "false")
+			.option("js.polyglot-builtin", "false");
 		Context context;
 		synchronized (engine) {
 			context = builder.engine(engine).build();
 		}
-		context.eval("js", this.script);
+		context.eval(this.getSource());
 		context.eval(JSLOADER_SOURCE);
 		return context;
 	}

@@ -22,12 +22,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -61,6 +55,7 @@ import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.io.IOAccess;
 import org.hibernate.Session;
 import org.slf4j.MarkerFactory;
 
@@ -82,21 +77,6 @@ public class PythonRule extends Rule {
 
 	/** Max time (ms) to wait for script to execute */
 	private static long MAX_EXECUTION_TIME;
-
-	public static class CachedContext {
-		private Context context;
-		private long scriptHash;
-		public CachedContext(Context context, long scriptHash) {
-			this.context = context;
-			this.scriptHash = scriptHash;
-		}
-	}
-
-	/** Cached contexts, indexed by rule ID. */
-	private static Map<Long, CachedContext> cachedContexts = new HashMap<>();
-
-	/** Old cached contexts, to be closed. */
-	private static List<CachedContext> oldCachedContexts = new ArrayList<>();
 
 	/** The Python execution engine (for eval caching) */
 	private static Engine engine = Engine.create();
@@ -169,9 +149,6 @@ public class PythonRule extends Rule {
 		+ "  # return {'result': result_option.NONCONFORMING, 'comment': 'Why it is not fine'}\n"
 		+ "  # return result_option.NOTAPPLICABLE\n";
 
-	/** Script as Graal source */
-	private Source source = null;
-
 	/**
 	 * Instantiates a new Python rule.
 	 */
@@ -197,10 +174,9 @@ public class PythonRule extends Rule {
 	 */
 	@Transient
 	protected Source getSource() {
-		if (this.source == null) {
-			this.source = Source.newBuilder("python", this.script.toString(), "PythonRule" + this.getId()).buildLiteral();
-		}
-		return this.source;
+		return Source
+			.newBuilder("python", this.script, "PythonRule" + this.getId())
+			.cached(false).buildLiteral();
 	}
 
 	/**
@@ -210,66 +186,58 @@ public class PythonRule extends Rule {
 	 */
 	@Transient
 	protected Context getContext() throws IOException {
-		int scriptHash = this.script.hashCode();
-		CachedContext cachedContext = null;
-		synchronized (PythonRule.cachedContexts) {
-			cachedContext = PythonRule.cachedContexts.get(this.getId());
-		}
-		if (cachedContext != null && cachedContext.scriptHash == scriptHash) {
-			return cachedContext.context;
-		}
-
-		Context.Builder builder = Context.newBuilder("python").allowIO(true);
+		IOAccess.Builder accessBuilder = IOAccess.newBuilder();
 		if ("false".equals(Netshot.getConfig("netshot.python.filesystemfilter"))) {
 			log.info("Python VM, file system filter is disabled (this is not secure)");
 		}
 		else {
-			builder.fileSystem(new PythonFileSystem());
+			accessBuilder.fileSystem(new PythonFileSystem());
 		}
+
+		Context.Builder builder = Context.newBuilder("python");
+
 		if ("true".equals(Netshot.getConfig("netshot.python.allowallaccess"))) {
 			log.info("Python VM, allowing all access (this is not secure)");
 			builder.allowAllAccess(true);
+			accessBuilder.allowHostFileAccess(true);
+			accessBuilder.allowHostSocketAccess(true);
 		}
+		else {
+			if ("true".equals(Netshot.getConfig("netshot.python.allowcreatethread"))) {
+				log.info("Python VM, allowing thread creation (this is not secure)");
+				builder.allowCreateThread(true);
+			}
+			if ("true".equals(Netshot.getConfig("netshot.python.allowcreateprocess"))) {
+				log.info("Python VM, allowing process creation (this is not secure)");
+				builder.allowCreateProcess(true);
+			}
+			if ("true".equals(Netshot.getConfig("netshot.python.allownativeaccess"))) {
+				log.info("Python VM, allowing native access (this is not secure)");
+				builder.allowNativeAccess(true);
+			}
+			if ("true".equals(Netshot.getConfig("netshot.python.allowhostfileaccess"))) {
+				log.info("Python VM, allowing host file access (this is not secure)");
+				accessBuilder.allowHostFileAccess(true);
+			}
+			if ("true".equals(Netshot.getConfig("netshot.python.allowhostsocketaccess"))) {
+				log.info("Python VM, allowing host socket access (this is not secure)");
+				accessBuilder.allowHostSocketAccess(true);
+			}
+		}
+
+		builder.allowIO(accessBuilder.build());
+
+
 		if (PythonFileSystem.VENV_FOLDER != null) {
 			builder.allowExperimentalOptions(true)
-				.option("python.Executable", PythonFileSystem.VENV_FOLDER + "/bin/graalpython");
+				.option("python.Executable", PythonFileSystem.VENV_FOLDER + "/bin/graalpy");
 		}
-		int beforeCacheSize = engine.getCachedSources().size();
-		Date beforeTime = new Date();
 		Context context;
 		synchronized (engine) {
 			context = builder.engine(engine).build();
 		}
 		context.eval(this.getSource());
-		context.enter();
 		context.eval(PYLOADER_SOURCE);
-		Date afterTime = new Date();
-		int afterCacheSize = engine.getCachedSources().size();
-		log.debug("Python rule {} evalution time {}ms, using {} ({} {}) cached sources",
-			this.getId(), afterTime.getTime() - beforeTime.getTime(), afterCacheSize,
-			Math.abs(afterCacheSize - beforeCacheSize), afterCacheSize >= beforeCacheSize ? "more" : "less");
-
-		// Add to cached contexts
-		synchronized (PythonRule.cachedContexts) {
-			PythonRule.cachedContexts.put(this.getId(), new CachedContext(context, scriptHash));
-		}
-
-		// Clean up old cached contexts
-		synchronized (PythonRule.oldCachedContexts) {
-			if (cachedContext != null) {
-				oldCachedContexts.add(cachedContext);
-			}
-			Iterator<CachedContext> oldContextIt = PythonRule.oldCachedContexts.iterator();
-			while (oldContextIt.hasNext()) {
-				try {
-					oldContextIt.next().context.close();
-					oldContextIt.remove();
-				}
-				catch (IllegalStateException e) {
-					// continue without removing
-				}
-			}
-		}
 		return context;
 	}
 

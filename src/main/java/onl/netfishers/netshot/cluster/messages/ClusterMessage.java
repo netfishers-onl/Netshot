@@ -53,6 +53,9 @@ public abstract class ClusterMessage {
 	/** Message ID counter */
 	static protected Long lastLocalMessageId = 0L;
 
+	/** Sync base */
+	static final private Object lock = new Object();
+
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(ClusteringView.class)
 	}))
@@ -87,7 +90,7 @@ public abstract class ClusterMessage {
 		this.instanceId = instanceId;
 		this.currentTime = System.currentTimeMillis();
 		this.upTime = ManagementFactory.getRuntimeMXBean().getUptime();
-		synchronized (ClusterMessage.lastLocalMessageId) {
+		synchronized (ClusterMessage.lock) {
 			ClusterMessage.lastLocalMessageId += 1;
 			this.messageId = ClusterMessage.lastLocalMessageId;
 		}

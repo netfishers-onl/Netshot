@@ -20,11 +20,11 @@
 /**
  * 'Info' object = Meta data of the driver.
  */
- var Info = {
+var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "5.5" /* Version will appear in the Admin tab. */
+	version: "5.6" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -244,7 +244,7 @@ function snapshot(cli, device, config) {
 			device.set("location", location[1]);
 		}
 	}
-	var peerPattern = /^(Master|Slave) *: (.+?) *, +([A-Z0-9]+)(, HA cluster index = [0-9]|, cluster index = [0-9])*$/gm;
+	var peerPattern = /^(Master|Slave|Primary|Secondary) *: (.+?) *, +([A-Z0-9]+)(, HA cluster index = [0-9]|, cluster index = [0-9])*$/gm;
 	var match;
 	while (match = peerPattern.exec(getHa)) {
 		if (match[2] != hostname) {

@@ -70,7 +70,6 @@ import onl.netfishers.netshot.device.access.Ssh.SshConfig;
 import onl.netfishers.netshot.device.access.Telnet.TelnetConfig;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
-import onl.netfishers.netshot.device.script.helper.PythonFileSystem;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.TaskLogger;
 import onl.netfishers.netshot.work.Task;

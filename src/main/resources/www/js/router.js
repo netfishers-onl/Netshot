@@ -151,7 +151,7 @@ define([
 		window.user = new CurrentUserModel();
 		window.serverInfo = new ServerInfoModel();
 		window.user.fetch().then(function() {
-			serverInfo.fetch().done(function() {
+			window.serverInfo.fetch().done(function() {
 				start();
 			});
 		})

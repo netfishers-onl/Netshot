@@ -44,6 +44,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
+import onl.netfishers.netshot.work.logger.TaskLogTaskLogger;
 import onl.netfishers.netshot.work.tasks.CheckComplianceTask;
 import onl.netfishers.netshot.work.tasks.CheckGroupComplianceTask;
 import onl.netfishers.netshot.work.tasks.CheckGroupSoftwareTask;
@@ -469,34 +470,7 @@ public abstract class Task implements Cloneable {
 	 */
 	@Transient
 	protected TaskLogger getJsLogger() {
-		Task task = this;
-		return new TaskLogger() {
-			
-			@Override
-			public void warn(String message) {
-				task.warn(message);
-			}
-			
-			@Override
-			public void trace(String message) {
-				task.trace(message);
-			}
-			
-			@Override
-			public void info(String message) {
-				task.info(message);
-			}
-			
-			@Override
-			public void error(String message) {
-				task.error(message);
-			}
-			
-			@Override
-			public void debug(String message) {
-				task.debug(message);
-			}
-		};
+		return new TaskLogTaskLogger(this);
 	}
 
 	/**

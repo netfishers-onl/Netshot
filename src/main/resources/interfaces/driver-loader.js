@@ -102,11 +102,20 @@ const _validate = (_target, _options) => {
 	}
 }
 
-const _connect = (_function, _protocol, _options, _logger) => {
+const _connect = (_function, _protocol, _options) => {
 	
 	const _cli = _options.getCliHelper();
 	const _snmp = _options.getSnmpHelper();
-	
+	const _deviceHelper = _options.getDeviceHelper();
+	const _logger = _options.getTaskLogger();
+
+	const debug = (message) => {
+		if (typeof message  === "string") {
+			message = String(message);
+			_logger.debug(message);
+		}
+	};
+
 	const _toNative = function(o) {
 		if (o == null || typeof(o) == "undefined") {
 			return null;
@@ -366,7 +375,7 @@ const _connect = (_function, _protocol, _options, _logger) => {
 			}
 			result = _cli.removeEcho(result, command);
 			if (mode.error instanceof RegExp) {
-				var errorMatch = mode.error.exec(result);
+				const errorMatch = mode.error.exec(result);
 				if (errorMatch) {
 					const messageParts = [];
 					messageParts.push("CLI error returned by the device");
@@ -392,9 +401,9 @@ const _connect = (_function, _protocol, _options, _logger) => {
 			let section;
 			let indent = -1;
 			const lines = text.split(/[\r\n]+/g);
-			for (var l in lines) {
-				var line = lines[l];
-				var i = line.search(/[^\t\s]/);
+			for (let l in lines) {
+				const line = lines[l];
+				const i = line.search(/[^\t\s]/);
 				if (i > indent) {
 					if (indent > -1) {
 						section.lines.push(line);
@@ -405,7 +414,7 @@ const _connect = (_function, _protocol, _options, _logger) => {
 				}
 				if (indent == -1) {
 					regex.lastIndex = 0;
-					var match = regex.exec(line);
+					const match = regex.exec(line);
 					if (match) {
 						indent = i;
 						section = {
@@ -436,15 +445,13 @@ const _connect = (_function, _protocol, _options, _logger) => {
 		},
 
 		debug: function(message) {
-			if (typeof(message) === "string") {
-				_logger.debug(String(message));
-			}
+			debug(message);
 		},
 		
 	};
 
 
-	var poller = {
+	const poller = {
 		get: function(oid) {
 			if (typeof(oid) == "string") {
 				oid = String(oid);
@@ -526,12 +533,6 @@ const _connect = (_function, _protocol, _options, _logger) => {
 		return prompt;
 	};
 	
-	const debug = (message) => {
-		if (typeof(message) === "string") {
-			_logger.debug(String(message));
-		}
-	};
-	
 	const deviceHelper = {
 		set: function(key, value) {
 			if (typeof(key) === "string") {
@@ -546,7 +547,7 @@ const _connect = (_function, _protocol, _options, _logger) => {
 			else if (typeof(value) === "string") {
 				value = String(value);
 			}
-			_options.getDeviceHelper().set(key, value);
+			_deviceHelper.set(key, value);
 		},
 		add: function(collection, value) {
 			if (typeof(collection) === "string") {
@@ -564,20 +565,20 @@ const _connect = (_function, _protocol, _options, _logger) => {
 			else if (typeof(value) === "string") {
 				value = String(value);
 			}
-			_options.getDeviceHelper().add(collection, value);
+			_deviceHelper.add(collection, value);
 		},
 		get: function(key, id) {
 			if (typeof(key) === "string") {
 				key = String(key);
 				if (typeof(id) === "undefined") {
-					return _toNative(_options.getDeviceHelper().get(key));
+					return _toNative(_deviceHelper.get(key));
 				}
 				else if (typeof(id) === "number" && !isNaN(id)) {
-					return _toNative(_options.getDeviceHelper().get(key, id));
+					return _toNative(_deviceHelper.get(key, id));
 				}
 				else if (typeof(id) === "string") {
 					const name = String(id);
-					return _toNative(_options.getDeviceHelper().get(key, name));
+					return _toNative(_deviceHelper.get(key, name));
 				}
 				else {
 					throw "Invalid device id to retrieve data from.";
@@ -607,7 +608,7 @@ const _connect = (_function, _protocol, _options, _logger) => {
 			else {
 				throw "The charset should be a string in device.textDownload";
 			}
-			return _options.getDeviceHelper().textDownload(method, fileName, charset);
+			return _deviceHelper.textDownload(method, fileName, charset);
 		},
 	};
 	
@@ -697,7 +698,7 @@ const _connect = (_function, _protocol, _options, _logger) => {
 	}
 	
 	if (_function === "snapshot") {
-		_options.getDeviceHelper().reset();
+		_deviceHelper.reset();
 		snapshot(commandHelper, deviceHelper, configHelper);
 	}
 	else if (_function === "run") {
@@ -767,7 +768,7 @@ const _snmpAutoDiscover = (_sysObjectID, _sysDesc, _logger) => {
 const _analyzeTrap = (_data, _logger) => {
 	if (typeof(analyzeTrap) === "function") {
 		const data = { ..._data };
-		var debug = (message) => {
+		const debug = (message) => {
 			if (typeof(message) === "string") {
 				_logger.debug(message);
 			}

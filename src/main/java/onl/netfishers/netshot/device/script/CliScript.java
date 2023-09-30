@@ -28,7 +28,6 @@ import java.util.Set;
 import javax.persistence.Transient;
 import javax.script.ScriptException;
 
-import org.graalvm.polyglot.HostAccess.Export;
 import org.hibernate.Session;
 
 import lombok.Getter;
@@ -50,6 +49,7 @@ import onl.netfishers.netshot.device.credentials.DeviceSshAccount;
 import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
 import onl.netfishers.netshot.device.credentials.DeviceTelnetAccount;
 import onl.netfishers.netshot.work.TaskLogger;
+import onl.netfishers.netshot.work.logger.StringListTaskLogger;
 
 /**
  * Something to execute on a device.
@@ -111,39 +111,8 @@ public abstract class CliScript {
 	 * Get the JS logger
 	 * @return the JS logger
 	 */
-	protected TaskLogger getJsLogger() {
-		return new TaskLogger() {
-			
-			@Export
-			@Override
-			public void warn(String message) {
-				jsLog.add(String.format("[WARN] %s", message));
-			}
-			
-			@Export
-			@Override
-			public void trace(String message) {
-				jsLog.add(String.format("[TRACE] %s", message));
-			}
-			
-			@Export
-			@Override
-			public void info(String message) {
-				jsLog.add(String.format("[INFO] %s", message));
-			}
-			
-			@Export
-			@Override
-			public void error(String message) {
-				jsLog.add(String.format("[ERROR] %s", message));
-			}
-			
-			@Export
-			@Override
-			public void debug(String message) {
-				jsLog.add(String.format("[DEBUG] %s", message));
-			}
-		};
+	public TaskLogger getJsLogger() {
+		return new StringListTaskLogger(this.jsLog);
 	}
 	
 	/**
@@ -154,38 +123,7 @@ public abstract class CliScript {
 		if (cliLog == null) {
 			return null;
 		}
-		return new TaskLogger() {
-			
-			@Export
-			@Override
-			public void warn(String message) {
-				cliLog.add(message);
-			}
-			
-			@Export
-			@Override
-			public void trace(String message) {
-				cliLog.add(message);
-			}
-			
-			@Export
-			@Override
-			public void info(String message) {
-				cliLog.add(message);
-			}
-			
-			@Export
-			@Override
-			public void error(String message) {
-				cliLog.add(message);
-			}
-			
-			@Export
-			@Override
-			public void debug(String message) {
-				cliLog.add(message);
-			}
-		};
+		return new StringListTaskLogger(cliLog);
 	}
 	
 	protected abstract void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)

@@ -150,13 +150,13 @@ public class JsCliScript extends CliScript {
 		DeviceDriver driver = device.getDeviceDriver();
 		try (Context context = driver.getContext()) {
 			context.eval("js", code);
-			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper);
+			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, taskLogger);
 			options.setDeviceHelper(new JsDeviceHelper(device, cli, null, taskLogger, false));
 			options.setUserInputs(this.userInputValues);
 			context
 				.getBindings("js")
 				.getMember("_connect")
-				.execute("run", protocol.value(), options, taskLogger);
+				.execute("run", protocol.value(), options);
 		}
 		catch (PolyglotException e) {
 			log.error("Error while running script using driver {}.", driver.getName(), e);
@@ -181,7 +181,7 @@ public class JsCliScript extends CliScript {
 		final DeviceDriver driver = DeviceDriver.getDriverByName(this.driverName);
 		try (Context context = driver.getContext()) {
 			context.eval("js", this.code);
-			JsCliScriptOptions options = new JsCliScriptOptions(null, null);
+			JsCliScriptOptions options = new JsCliScriptOptions(null, null, null);
 			options.setUserInputs(this.userInputValues);
 			context
 				.getBindings("js")
@@ -207,7 +207,7 @@ public class JsCliScript extends CliScript {
 		}
 		try (Context context = driver.getContext()) {
 			context.eval("js", this.code);
-			JsCliScriptOptions options = new JsCliScriptOptions(null, null);
+			JsCliScriptOptions options = new JsCliScriptOptions(null, null, null);
 			options.setUserInputs(this.userInputValues);
 			context
 				.getBindings("js")

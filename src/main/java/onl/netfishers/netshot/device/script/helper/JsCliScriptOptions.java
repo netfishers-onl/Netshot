@@ -26,6 +26,7 @@ import org.graalvm.polyglot.proxy.ProxyObject;
 
 import lombok.Getter;
 import lombok.Setter;
+import onl.netfishers.netshot.work.TaskLogger;
 
 /**
  * The options object to pass data to JavaScript entry function in a generic way.
@@ -68,9 +69,15 @@ public class JsCliScriptOptions {
 	}))
 	private ProxyObject userInputs = null;
 
-	public JsCliScriptOptions(JsCliHelper cliHelper, JsSnmpHelper snmpHelper) {
+	@Getter(onMethod=@__({
+		@Export
+	}))
+	private TaskLogger taskLogger;
+
+	public JsCliScriptOptions(JsCliHelper cliHelper, JsSnmpHelper snmpHelper, TaskLogger taskLogger) {
 		this.cliHelper = cliHelper;
 		this.snmpHelper = snmpHelper;
+		this.taskLogger = taskLogger;
 	}
 
 	public void setUserInputs(ProxyObject userInputs) {

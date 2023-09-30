@@ -55,12 +55,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
+import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
 
 import onl.netfishers.netshot.Netshot;
@@ -72,6 +71,7 @@ import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.TaskLogger;
+import onl.netfishers.netshot.work.logger.LoggerTaskLogger;
 import onl.netfishers.netshot.work.Task;
 
 /**
@@ -134,64 +134,10 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	}
 
 	/** JS logger for SNMP-related messages */
-	private static TaskLogger JS_SNMP_LOGGER = new TaskLogger() {
-		Logger snmpLogger = LoggerFactory.getLogger(SnmpTrapReceiver.class);
-
-		@Override
-		public void warn(String message) {
-			snmpLogger.warn("[JSWARN] {}", message);
-		}
-
-		@Override
-		public void trace(String message) {
-			snmpLogger.warn("[JSTRACE] {}", message);
-		}
-
-		@Override
-		public void info(String message) {
-			snmpLogger.warn("[JSINFO] {}", message);
-		}
-
-		@Override
-		public void error(String message) {
-			snmpLogger.warn("[JSERROR] {}", message);
-		}
-
-		@Override
-		public void debug(String message) {
-			snmpLogger.warn("[JSDEBUG] {}", message);
-		}
-	};
+	private static TaskLogger JS_SNMP_LOGGER = new LoggerTaskLogger(SnmpTrapReceiver.class);
 
 	/** JS logger for Syslog-related messages */
-	private static TaskLogger JS_SYSLOG_LOGGER = new TaskLogger() {
-		Logger syslogServer = LoggerFactory.getLogger(SyslogServer.class);
-
-		@Override
-		public void warn(String message) {
-			syslogServer.warn("[JSWARN] {}", message);
-		}
-
-		@Override
-		public void trace(String message) {
-			syslogServer.warn("[JSTRACE] {}", message);
-		}
-
-		@Override
-		public void info(String message) {
-			syslogServer.warn("[JSINFO] {}", message);
-		}
-
-		@Override
-		public void error(String message) {
-			syslogServer.warn("[JSERROR] {}", message);
-		}
-
-		@Override
-		public void debug(String message) {
-			syslogServer.warn("[JSDEBUG] {}", message);
-		}
-	};
+	private static TaskLogger JS_SYSLOG_LOGGER = new LoggerTaskLogger(SyslogServer.class);
 
 	/** The Javascript loader code. */
 	private static Source JSLOADER_SOURCE;
@@ -769,7 +715,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			return false;
 		}
 		try (Context context = this.getContext()) {
-			Value result = context.getBindings("js").getMember("_analyzeSyslog").execute(message, JS_SYSLOG_LOGGER);
+			Value result = context.getBindings("js")
+				.getMember("_analyzeSyslog")
+				.execute(message, JS_SYSLOG_LOGGER);
 			if (result != null && result.isBoolean()) {
 				return result.asBoolean();
 			}
@@ -792,7 +740,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			return false;
 		}
 		try (Context context = this.getContext()) {
-			Value result = context.getBindings("js").getMember("_analyzeTrap").execute(ProxyObject.fromMap(data), JS_SNMP_LOGGER);
+			Value result = context.getBindings("js")
+				.getMember("_analyzeTrap")
+				.execute(ProxyObject.fromMap(data), JS_SNMP_LOGGER);
 			if (result != null && result.isBoolean()) {
 				return result.asBoolean();
 			}
@@ -813,8 +763,16 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	@Transient
 	public final Context getContext() throws IOException {
 		log.debug("Getting context");
+		HostAccess hostAccess = HostAccess
+			.newBuilder()
+			.allowAccessAnnotatedBy(HostAccess.Export.class)
+			.allowImplementationsAnnotatedBy(HostAccess.Implementable.class)
+			.allowImplementationsAnnotatedBy(FunctionalInterface.class)
+			.allowAccessInheritance(true)
+			.build();
 		Context.Builder builder = Context
-			.newBuilder("js");
+			.newBuilder("js")
+			.allowHostAccess(hostAccess);
 		Context context;
 		synchronized (engine) {
 			context = builder.engine(engine).build();

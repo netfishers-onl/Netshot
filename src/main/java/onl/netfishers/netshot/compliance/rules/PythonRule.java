@@ -277,8 +277,7 @@ public class PythonRule extends Rule {
 			return new CheckResult(this, device, ResultOption.DISABLED);
 		}
 
-		try {
-			Context context = this.getContext();
+		try (Context context = this.getContext()) {
 			prepare(context, taskLogger);
 			if (!this.pyValid) {
 				return new CheckResult(this, device, ResultOption.INVALIDRULE);

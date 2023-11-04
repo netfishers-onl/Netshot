@@ -21,7 +21,7 @@
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "NetFishers",
-	version: "1.8.1"
+	version: "1.8.2"
 };
 
 var Config = {
@@ -265,6 +265,7 @@ function snapshot(cli, device, config) {
 		if (existing) {
 			continue;
 		}
+		knownModules.push(module);
 		device.add("module", module);
 		if (module.slot.match(/[Cc]hassis|Rack 0/)) {
 			device.set("serialNumber", module.serialNumber);

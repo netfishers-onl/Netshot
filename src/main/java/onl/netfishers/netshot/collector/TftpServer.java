@@ -73,7 +73,7 @@ public class TftpServer extends Collector {
 	 * Initializes the TFTP server.
 	 */
 	public static void init() {
-		if (Netshot.getConfig("netshot.tftpserver.disabled", "true").equals("true")) {
+		if (Netshot.getConfig("netshot.tftpserver.disabled", true)) {
 			log.warn("The TFTP server is disabled.");
 			return;
 		}

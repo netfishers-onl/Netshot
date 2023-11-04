@@ -112,7 +112,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	 * Load TakeSnapshotTask specific configuration from Netshot config file.
 	 */
 	public static void loadConfig() {
-		if (Netshot.getConfig("netshot.snapshots.auto.anyip", "false").equals("true")) {
+		if (Netshot.getConfig("netshot.snapshots.auto.anyip", false)) {
 			AUTOSNAPSHOT_ANYIP = true;
 		}
 		AUTOSNAPSHOT_INTERVAL = Netshot.getConfig("netshot.snapshots.auto.interval", 10, 1, 60 * 24 * 7);

@@ -105,7 +105,7 @@ public class Tacacs {
 		if (hosts.size() > 0) {
 			Tacacs.client = new TacacsClient(String.join(", ", hosts), String.join(", ", keys), timeout * 1000, false);
 		}
-		enableAccounting = Netshot.getConfig("netshot.aaa.tacacs.accounting", "false").equals("true");
+		enableAccounting = Netshot.getConfig("netshot.aaa.tacacs.accounting", false);
 		if (enableAccounting) {
 			log.info("TACACS+ accounting is enabled");
 		}

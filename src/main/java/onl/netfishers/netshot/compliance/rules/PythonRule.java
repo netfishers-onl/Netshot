@@ -187,7 +187,7 @@ public class PythonRule extends Rule {
 	@Transient
 	protected Context getContext() throws IOException {
 		IOAccess.Builder accessBuilder = IOAccess.newBuilder();
-		if ("false".equals(Netshot.getConfig("netshot.python.filesystemfilter"))) {
+		if (Netshot.getConfig("netshot.python.filesystemfilter", true)) {
 			log.info("Python VM, file system filter is disabled (this is not secure)");
 		}
 		else {
@@ -196,30 +196,30 @@ public class PythonRule extends Rule {
 
 		Context.Builder builder = Context.newBuilder("python");
 
-		if ("true".equals(Netshot.getConfig("netshot.python.allowallaccess"))) {
+		if (Netshot.getConfig("netshot.python.allowallaccess", false)) {
 			log.info("Python VM, allowing all access (this is not secure)");
 			builder.allowAllAccess(true);
 			accessBuilder.allowHostFileAccess(true);
 			accessBuilder.allowHostSocketAccess(true);
 		}
 		else {
-			if ("true".equals(Netshot.getConfig("netshot.python.allowcreatethread"))) {
+			if (Netshot.getConfig("netshot.python.allowcreatethread", false)) {
 				log.info("Python VM, allowing thread creation (this is not secure)");
 				builder.allowCreateThread(true);
 			}
-			if ("true".equals(Netshot.getConfig("netshot.python.allowcreateprocess"))) {
+			if (Netshot.getConfig("netshot.python.allowcreateprocess", false)) {
 				log.info("Python VM, allowing process creation (this is not secure)");
 				builder.allowCreateProcess(true);
 			}
-			if ("true".equals(Netshot.getConfig("netshot.python.allownativeaccess"))) {
+			if (Netshot.getConfig("netshot.python.allownativeaccess", false)) {
 				log.info("Python VM, allowing native access (this is not secure)");
 				builder.allowNativeAccess(true);
 			}
-			if ("true".equals(Netshot.getConfig("netshot.python.allowhostfileaccess"))) {
+			if (Netshot.getConfig("netshot.python.allowhostfileaccess", false)) {
 				log.info("Python VM, allowing host file access (this is not secure)");
 				accessBuilder.allowHostFileAccess(true);
 			}
-			if ("true".equals(Netshot.getConfig("netshot.python.allowhostsocketaccess"))) {
+			if (Netshot.getConfig("netshot.python.allowhostsocketaccess", false)) {
 				log.info("Python VM, allowing host socket access (this is not secure)");
 				accessBuilder.allowHostSocketAccess(true);
 			}

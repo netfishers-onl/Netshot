@@ -282,7 +282,7 @@ public class RestService extends Thread {
 	 * Initializes the service.
 	 */
 	public static void init() {
-		if (!Netshot.getConfig("netshot.http.enabled", "true").equals("true")) {
+		if (!Netshot.getConfig("netshot.http.enabled", true)) {
 			log.info("HTTP server is not enabled.");
 			return;
 		}
@@ -306,7 +306,7 @@ public class RestService extends Thread {
 	public RestService() {
 		this.setName("REST Service");
 		httpUseSsl = true;
-		if (Netshot.getConfig("netshot.http.ssl.enabled", "true").equals("false")) {
+		if (!Netshot.getConfig("netshot.http.ssl.enabled", true)) {
 			httpUseSsl = false;
 		}
 		

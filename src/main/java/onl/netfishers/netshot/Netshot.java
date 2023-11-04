@@ -76,7 +76,7 @@ import sun.misc.SignalHandler;
 public class Netshot extends Thread {
 
 	/** Netshot version. */
-	public static final String VERSION = "0.19.0";
+	public static final String VERSION = "0.0.0";
 
 	/** The list of configuration files to look at, in sequence. */
 	private static final String[] CONFIG_FILENAMES = new String[] {
@@ -119,6 +119,28 @@ public class Netshot extends Thread {
 	 */
 	public static Properties getConfig() {
 		return config;
+	}
+
+	/**
+	 * Gets the config item as boolean value.
+	 *
+	 * @param key the key
+	 * @param defaultValue the default value
+	 * @return the config
+	 */
+	public static boolean getConfig(String key, boolean defaultValue) {
+		String value = getConfig(key);
+		if ("false".equals(value)) {
+			return false;
+		}
+		if ("true".equals(value)) {
+			return true;
+		}
+		if (value != null) {
+			log.error("Unable to parse the boolean value of configuration item '{}', using default value {}.",
+				key, defaultValue);
+		}
+		return defaultValue;
 	}
 
 	/**

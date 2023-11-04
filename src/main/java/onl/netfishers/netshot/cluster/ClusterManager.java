@@ -97,7 +97,7 @@ public class ClusterManager extends Thread {
 	 * Initializes the cluster manager.
 	 */
 	public static void init() {
-		if (!Netshot.getConfig("netshot.cluster.enabled", "false").equals("true")) {
+		if (!Netshot.getConfig("netshot.cluster.enabled", false)) {
 			log.info("High Availability is not enabled.");
 			return;
 		}

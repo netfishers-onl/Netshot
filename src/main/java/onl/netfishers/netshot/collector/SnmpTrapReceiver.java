@@ -139,7 +139,7 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 	}
 
 	private void loadConfig() {
-		if (Netshot.getConfig("netshot.snmptrap.disabled", "false").equals("true")) {
+		if (Netshot.getConfig("netshot.snmptrap.disabled", false)) {
 			log.warn("The SNMP trap receiver is disabled by configuration.");
 			this.stop();
 			return;

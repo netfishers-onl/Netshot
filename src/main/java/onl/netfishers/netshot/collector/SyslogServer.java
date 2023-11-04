@@ -60,8 +60,7 @@ public class SyslogServer extends Collector {
 	 * Initializes the Syslog server.
 	 */
 	public static void init() {
-		if (Netshot.getConfig("netshot.syslog.disabled", "false")
-				.equals("true")) {
+		if (Netshot.getConfig("netshot.syslog.disabled", false)) {
 			log.warn("The Syslog server is disabled by configuration.");
 			return;
 		}

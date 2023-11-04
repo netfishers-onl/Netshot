@@ -2,19 +2,23 @@ version: "3.8"
 
 services:
   netshot:
-    image: netshot
-    restart: always
+    build: .
     environment:
       NETSHOT_DB_URL: "jdbc:postgresql://database/netshot01"
       NETSHOT_DB_USERNAME: "netshot"
       NETSHOT_DB_PASSWORD: "change_this_pass"
       NETSHOT_DB_ENCRYPTIONPASSWORD: "change_this_pass_too"
       NETSHOT_HTTP_TRUSTXFORWARDEDFOR: "true"
-      VIRTUAL_HOST: "netshot"
-      VIRTUAL_PORT: 8080
-      SELF_SIGNED_HOST: "netshot"
+    labels:
+      traefik.docker.network: ${COMPOSE_PROJECT_NAME}_front
+      traefik.http.routers.netshot-https.rule: "PathPrefix(`/`)"
+      traefik.http.routers.netshot-https.tls: true
+      traefik.http.routers.netshot-https.entrypoints: "web-secure"
+      traefik.http.services.netshot.loadbalancer.server.port: "8080"
     expose:
       - 8080
+    depends_on:
+      - database
     ports:
       - "162:1162/udp"
       - "514:1514/udp"
@@ -23,7 +27,7 @@ services:
       - database
 
   database:
-    image: postgres:12
+    image: postgres:15
     restart: always
     environment:
       POSTGRES_PASSWORD: "change_this_pass"
@@ -37,31 +41,25 @@ services:
       - database
 
   rproxy:
-    image: jwilder/nginx-proxy:alpine
-    restart: always
-    environment:
-      DEFAULT_HOST: netshot
+    image: traefik:v2.10
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --entrypoints.web.address=:80
+      - --entrypoints.web-secure.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=web-secure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
     volumes:
-      - ./certs:/etc/nginx/certs
-      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "80:80"
       - "443:443"
+      - "127.0.0.1:8080:8080"
     networks:
       - front
 
-  rproxy-cert:
-    image: sebastienheyd/self-signed-proxy-companion
-    restart: always
-    environment:
-      NGINX_PROXY_CONTAINER: "netshot_rproxy_1"
-    volumes:
-      - ./certs:/etc/nginx/certs
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-
 volumes:
   dbdata:
-  sslcerts:
 
 networks:
   front:

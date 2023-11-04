@@ -188,10 +188,10 @@ public class PythonRule extends Rule {
 	protected Context getContext() throws IOException {
 		IOAccess.Builder accessBuilder = IOAccess.newBuilder();
 		if (Netshot.getConfig("netshot.python.filesystemfilter", true)) {
-			log.info("Python VM, file system filter is disabled (this is not secure)");
+			accessBuilder.fileSystem(new PythonFileSystem());
 		}
 		else {
-			accessBuilder.fileSystem(new PythonFileSystem());
+			log.info("Python VM, file system filter is disabled (this is not secure)");
 		}
 
 		Context.Builder builder = Context.newBuilder("python");

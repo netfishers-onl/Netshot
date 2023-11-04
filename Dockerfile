@@ -7,7 +7,7 @@ RUN gu install js python
 COPY . /build
 WORKDIR /build
 RUN echo $NE
-RUN sed -i -r "s/VERSION = \".*\";/VERSION = \"${cat .version}\";/g" \
+RUN sed -i -r "s/VERSION = \".*\";/VERSION = \"$NETSHOT_VERSION\";/g" \
        src/main/java/onl/netfishers/netshot/Netshot.java
 RUN ./mvnw versions:set -DnewVersion=$NETSHOT_VERSION -f pom.xml
 RUN ./mvnw package

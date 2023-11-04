@@ -1,8 +1,8 @@
-name: Create and publish a Docker image
+name: Create and publish Docker image
 
 on:
   push:
-    branches: ['release']
+    branches: ['master']
 
 env:
   REGISTRY: ghcr.io
@@ -50,6 +50,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            NETSHOT_VERSION=${{ steps.meta.ouputs.version }}
+            NETSHOT_VERSION=${{ steps.meta.outputs.version }}
           
 

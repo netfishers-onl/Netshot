@@ -32,16 +32,16 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           labels: |
-            org.opencontainers.image.title=MyCustomTitle
-            org.opencontainers.image.description=Another description
-            org.opencontainers.image.vendor=MyCompany
-            tags: |
-              type=semver,pattern={{version}}
-              type=semver,pattern={{major}}.{{minor}}
-              type=semver,pattern={{major}}
-              type=ref,event=branch
-              type=ref,event=pr
-              type=sha
+            org.opencontainers.image.title=Netshot
+            org.opencontainers.image.description=Network Configuration and Compliance Management Software
+            org.opencontainers.image.vendor=Netshot
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
       - name: Build and push Docker image
         uses: docker/build-push-action@v5.0.0
         with:

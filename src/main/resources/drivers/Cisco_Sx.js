@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoSx",
 	description: "Cisco Small Business 2/3/500 series",
 	author: "NetFishers",
-	version: "1.0"
+	version: "1.1"
 };
 
 var Config = {
@@ -306,8 +306,8 @@ function analyzeTrap(trap, debug) {
 
 function snmpAutoDiscover(sysObjectID, sysDesc) {
 	// https://www.cisco.com/c/en/us/support/docs/smb/switches/cisco-small-business-200-series-smart-switches/smb5512-cisco-small-business-switches-model-object-identifiers-oids.html
-	if (sysObjectID.match(/^1\.3\.6\.1\.4\.1\.9\.6\.1\.(83|84|87|88|97|98)\..*$/)
-		&& sysDesc.match(/^S[GF](200|220|250|300|302|250|500).*/)) {
+	if (sysObjectID.match(/^1\.3\.6\.1\.4\.1\.9\.6\.1\.[89][09]\..*$/)
+		&& sysDesc.match(/^S[GF](200|220|250|300|302|350|500).*/)) {
 		return true;
 	}
 	return false;

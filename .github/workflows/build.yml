@@ -70,6 +70,7 @@ jobs:
           cp ../dist/* .
           cp ../src/main/resources/www/LICENSE.txt .
           cp ../${{ steps.extract.outputs.destination }}/netshot.jar .
+          echo ${{ steps.meta.outputs.version }} > VERSION.txt
           zip netshot_${{ steps.meta.outputs.version }}.zip *
 
       - uses: actions/upload-artifact@v3

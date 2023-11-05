@@ -71,7 +71,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: netshot-zip
-          path: netshot_${{ steps.meta.outputs.version }}.zip
+          path: zip/netshot_${{ steps.meta.outputs.version }}.zip
 
   attach-to-release:
     name: Attach archive to GitHub release

@@ -9,7 +9,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push-image:
+  build-and-publish:
+    name: Build and push Docker image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -42,7 +43,8 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=sha
-      - name: Build and push Docker image
+
+      - name: Build and push the image
         uses: docker/build-push-action@v5.0.0
         with:
           context: .
@@ -51,5 +53,39 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             NETSHOT_VERSION=${{ steps.meta.outputs.version }}
-          
 
+      - name: Extract Netshot JAR
+        uses: shrink/actions-docker-extract@v3
+        id: extract
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          path: /usr/local/netshot/netshot.jar
+
+      - name: Prepare archive
+        run: |
+          mkdir zip
+          cd zip
+          cp dist/* .
+          cp src/main/resources/www/LICENSE.txt .
+          cp ${{ steps.extract.outputs.destination }}/* .
+          zip netshot_${{ steps.meta.outputs.version }}.zip *
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: netshot-zip
+          path: netshot_${{ steps.meta.outputs.version }}.zip
+
+  attach-to-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    needs: build-and-publish
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: netshot-zip
+      - name: Upload to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file: "*.zip"
+          file_glob: true

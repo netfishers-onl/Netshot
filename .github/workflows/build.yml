@@ -40,8 +40,6 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=ref,event=branch
-            type=ref,event=pr
             type=sha
 
       - name: Build and push the image
@@ -58,7 +56,7 @@ jobs:
         uses: shrink/actions-docker-extract@v3
         id: extract
         with:
-          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          image: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           path: /usr/local/netshot/netshot.jar
 
       - name: Prepare ZIP archive

@@ -771,7 +771,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			.allowAccessInheritance(true)
 			.build();
 		Context.Builder builder = Context
-			.newBuilder("js")
+			.newBuilder("js", "python")
 			.allowHostAccess(hostAccess);
 		Context context;
 		synchronized (engine) {

@@ -149,6 +149,7 @@ public class JsCliScript extends CliScript {
 		TaskLogger taskLogger = this.getJsLogger();
 		DeviceDriver driver = device.getDeviceDriver();
 		try (Context context = driver.getContext()) {
+			driver.loadCode(context);
 			context.eval("js", code);
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, taskLogger);
 			options.setDeviceHelper(new JsDeviceHelper(device, cli, null, taskLogger, false));
@@ -180,6 +181,7 @@ public class JsCliScript extends CliScript {
 	public void validateUserInputs() throws IllegalArgumentException {
 		final DeviceDriver driver = DeviceDriver.getDriverByName(this.driverName);
 		try (Context context = driver.getContext()) {
+			driver.loadCode(context);
 			context.eval("js", this.code);
 			JsCliScriptOptions options = new JsCliScriptOptions(null, null, null);
 			options.setUserInputs(this.userInputValues);
@@ -206,6 +208,7 @@ public class JsCliScript extends CliScript {
 			return definitions;
 		}
 		try (Context context = driver.getContext()) {
+			driver.loadCode(context);
 			context.eval("js", this.code);
 			JsCliScriptOptions options = new JsCliScriptOptions(null, null, null);
 			options.setUserInputs(this.userInputValues);

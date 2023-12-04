@@ -236,8 +236,6 @@ public class PythonRule extends Rule {
 		synchronized (engine) {
 			context = builder.engine(engine).build();
 		}
-		context.eval(this.getSource());
-		context.eval(PYLOADER_SOURCE);
 		return context;
 	}
 
@@ -278,6 +276,8 @@ public class PythonRule extends Rule {
 		}
 
 		try (Context context = this.getContext()) {
+			context.eval(this.getSource());
+			context.eval(PYLOADER_SOURCE);
 			prepare(context, taskLogger);
 			if (!this.pyValid) {
 				return new CheckResult(this, device, ResultOption.INVALIDRULE);

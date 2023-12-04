@@ -501,6 +501,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		this.telnetConfig = new TelnetConfig();
 
 		try (Context context = this.getContext()) {
+			this.loadCode(context);
 			try {
 				Value info = context.getBindings("js").getMember("Info");
 				this.name = info.getMember("name").asString();
@@ -715,6 +716,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			return false;
 		}
 		try (Context context = this.getContext()) {
+			this.loadCode(context);
 			Value result = context.getBindings("js")
 				.getMember("_analyzeSyslog")
 				.execute(message, JS_SYSLOG_LOGGER);
@@ -740,6 +742,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			return false;
 		}
 		try (Context context = this.getContext()) {
+			this.loadCode(context);
 			Value result = context.getBindings("js")
 				.getMember("_analyzeTrap")
 				.execute(ProxyObject.fromMap(data), JS_SNMP_LOGGER);
@@ -777,10 +780,17 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		synchronized (engine) {
 			context = builder.engine(engine).build();
 		}
-		context.eval(this.source);
-		context.eval(JSLOADER_SOURCE);
 		log.debug("Context is ready");
 		return context;
+	}
+
+	/**
+	 * Load driver JS code.
+	 * @param context the context to load code into
+	 */
+	public final void loadCode(Context context) {
+		context.eval(this.source);
+		context.eval(JSLOADER_SOURCE);
 	}
 	
 	/**
@@ -796,7 +806,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			return false;
 		}
 		try (Context context = this.getContext()) {
-			Value result = context.getBindings("js").getMember("_snmpAutoDiscover").execute(sysObjectId, sysDesc, taskLogger);
+			this.loadCode(context);
+			Value result = context
+				.getBindings("js")
+				.getMember("_snmpAutoDiscover")
+				.execute(sysObjectId, sysDesc, taskLogger);
 			if (result != null && result.isBoolean()) {
 				return result.asBoolean();
 			}

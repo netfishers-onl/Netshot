@@ -72,7 +72,7 @@ public class Snmp extends Poller {
 	private org.snmp4j.Snmp snmp;
 
 	/** The target. */
-	private Target target;
+	private Target<UdpAddress> target;
 
 	/** The port. */
 	private static int PORT = 161;
@@ -91,12 +91,12 @@ public class Snmp extends Poller {
 	 */
 	public Snmp(NetworkAddress address, DeviceSnmpCommunity community) throws IOException {
 		if (community instanceof DeviceSnmpv1Community) {
-			this.target = new CommunityTarget(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community.getCommunity()));
+			this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community.getCommunity()));
 			this.target.setVersion(SnmpConstants.version1);
 			start();
 		}
 		else if (community instanceof DeviceSnmpv2cCommunity) {
-			this.target = new CommunityTarget(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community.getCommunity()));
+			this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community.getCommunity()));
 			this.target.setVersion(SnmpConstants.version2c);
 			start();
 		}
@@ -104,7 +104,7 @@ public class Snmp extends Poller {
 			DeviceSnmpv3Community v3Credentials = (DeviceSnmpv3Community)community;
 			// Prepare target
 			log.debug("Prepare SNMPv3 context");
-			this.target = new UserTarget();
+			this.target = new UserTarget<>();
 			this.target.setTimeout(5000);
 			this.target.setVersion(SnmpConstants.version3);
 			this.target.setAddress(new UdpAddress(address.getInetAddress(), PORT));
@@ -164,7 +164,7 @@ public class Snmp extends Poller {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public Snmp(NetworkAddress address, String community, boolean v1) throws IOException {
-		this.target = new CommunityTarget(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community));
+		this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community));
 		this.target.setVersion(v1 ? SnmpConstants.version1 : SnmpConstants.version2c);
 		start();
 	}
@@ -197,7 +197,7 @@ public class Snmp extends Poller {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public String getAsString(OID oid) throws IOException {
-		ResponseEvent event = get(new OID[]{oid});
+		ResponseEvent<UdpAddress> event = this.get(new OID[]{oid});
 		PDU response = event.getResponse();
 		if (response == null || response.size() == 0) {
 			throw new IOException("No SNMP response.");
@@ -264,8 +264,8 @@ public class Snmp extends Poller {
 	 * @return the response event
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public ResponseEvent get(OID oids[]) throws IOException {
-		ResponseEvent event;
+	public ResponseEvent<UdpAddress> get(OID oids[]) throws IOException {
+		ResponseEvent<UdpAddress> event;
 		if (this.target.getVersion() == SnmpConstants.version3) {
 			event = snmp.send(getScopedPDU(oids), target, null);
 		}

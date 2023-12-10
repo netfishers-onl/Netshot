@@ -23,10 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import ch.qos.logback.classic.Level;
 import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.Device;
@@ -49,11 +47,11 @@ public class DeviceListExtractor extends Netshot {
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
 		
-		ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger)
-				LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+		//ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger)
+		//		LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
 		
 		System.setProperty("org.jboss.logging.provider", "slf4j");
-		rootLogger.setLevel(Level.WARN);
+		//rootLogger.setLevel(Level.WARN);
 
 		return true;
 	}

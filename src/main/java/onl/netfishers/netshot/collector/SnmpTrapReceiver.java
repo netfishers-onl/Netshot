@@ -374,7 +374,7 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 	/**
 	 * Process a trap that is already validated (community or user based).
 	 */
-	private void processAuthenticatedTrap(CommandResponderEvent event) {
+	private <A extends Address> void processAuthenticatedTrap(CommandResponderEvent<A> event) {
 		Address address = event.getPeerAddress();
 		if (address instanceof IpAddress) {
 			InetAddress inetAddress = ((IpAddress) address).getInetAddress();
@@ -422,8 +422,7 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 	 * @see
 	 * org.snmp4j.CommandResponder#processPdu(org.snmp4j.CommandResponderEvent)
 	 */
-	@Override
-	public void processPdu(CommandResponderEvent event) {
+	public <A extends Address> void processPdu(CommandResponderEvent<A> event) {
 		log.trace("Incoming SNMP message from {}.", event.getPeerAddress());
 		if (event.getSecurityLevel() == SecurityLevel.NOAUTH_NOPRIV
 				&& (event.getSecurityModel() == SecurityModel.SECURITY_MODEL_SNMPv1 || event
@@ -451,7 +450,7 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 	}
 
 	@Override
-	public void authenticationFailure(AuthenticationFailureEvent event) {
+	public <A extends Address> void authenticationFailure(AuthenticationFailureEvent<A> event) {
 		log.warn("Authentication failure on SNMP trap received from {}. {}.",
 			event.getAddress(), SnmpConstants.mpErrorMessage(event.getError()));
 	}

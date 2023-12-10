@@ -8,10 +8,10 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<hibernate.version>5.6.15.Final</hibernate.version>
-		<jackson.version>2.14.2</jackson.version>
-		<jersey.version>2.39</jersey.version>
-		<swagger.version>2.2.8</swagger.version>
-		<slf4j.version>1.7.36</slf4j.version>
+		<jackson.version>2.16.0</jackson.version>
+		<jersey.version>2.41</jersey.version>
+		<swagger.version>2.2.19</swagger.version>
+		<slf4j.version>2.0.9</slf4j.version>
 		<jasypt.version>1.9.3</jasypt.version>
 	</properties>
 	<build>
@@ -94,32 +94,32 @@
 		<dependency>
 			<groupId>io.hypersistence</groupId>
 			<artifactId>hypersistence-utils-hibernate-55</artifactId>
-			<version>3.5.0</version>
+			<version>3.6.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.mwiede</groupId>
 			<artifactId>jsch</artifactId>
-			<version>0.2.11</version>
+			<version>0.2.13</version>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
-			<version>8.0.28</version>
+			<version>8.0.33</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-net</groupId>
 			<artifactId>commons-net</artifactId>
-			<version>3.9.0</version>
+			<version>3.10.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.snmp4j</groupId>
 			<artifactId>snmp4j</artifactId>
-			<version>2.8.16</version>
+			<version>3.7.7</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.java-diff-utils</groupId>
 			<artifactId>java-diff-utils</artifactId>
-			<version>4.9</version>
+			<version>4.12</version>
 		</dependency>
 		<dependency>
 			<groupId>org.quartz-scheduler</groupId>
@@ -183,7 +183,7 @@
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml</artifactId>
-			<version>5.2.0</version>
+			<version>5.2.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish.grizzly</groupId>
@@ -243,7 +243,7 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.2.8</version>
+			<version>1.4.14</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.jtds</groupId>
@@ -253,22 +253,22 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>42.5.1</version>
+			<version>42.7.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bctls-jdk15on</artifactId>
-			<version>1.68</version>
+			<artifactId>bctls-jdk18on</artifactId>
+			<version>1.77</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.8.1</version>
+			<version>3.14.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.liquibase</groupId>
 			<artifactId>liquibase-core</artifactId>
-			<version>4.10.0</version>
+			<version>4.25.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
@@ -278,13 +278,13 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
-			<version>5.7.0</version>
+			<version>5.10.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.platform</groupId>
 			<artifactId>junit-platform-runner</artifactId>
-			<version>1.7.0</version>
+			<version>1.10.1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -295,12 +295,12 @@
 		<dependency>
 			<groupId>commons-cli</groupId>
 			<artifactId>commons-cli</artifactId>
-			<version>1.4</version>
+			<version>1.6.0</version>
 		</dependency>
 	<dependency>
 		<groupId>org.projectlombok</groupId>
 		<artifactId>lombok</artifactId>
-		<version>1.18.24</version>
+		<version>1.18.30</version>
 		<scope>provided</scope>
 	</dependency>
 	</dependencies>

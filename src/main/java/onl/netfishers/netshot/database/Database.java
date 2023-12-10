@@ -107,12 +107,11 @@ import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.jasypt.hibernate5.encryptor.HibernatePBEEncryptorRegistry;
 import org.slf4j.MarkerFactory;
 
-import liquibase.Contexts;
-import liquibase.LabelExpression;
-import liquibase.Liquibase;
+import liquibase.command.CommandScope;
+import liquibase.command.core.UpdateCommandStep;
+import liquibase.command.core.helpers.DbUrlConnectionCommandStep;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
-import liquibase.resource.ClassLoaderResourceAccessor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -219,9 +218,10 @@ public class Database {
 			try (Connection connection = Database.getConnection(false)) {
 				liquibase.database.Database database = DatabaseFactory.getInstance()
 						.findCorrectDatabaseImplementation(new JdbcConnection(connection));
-				try (Liquibase liquibase = new Liquibase("migration/netshot0.xml", new ClassLoaderResourceAccessor(), database)) {
-					liquibase.update(new Contexts(), new LabelExpression());
-				}
+				new CommandScope(UpdateCommandStep.COMMAND_NAME)
+						.addArgumentValue(DbUrlConnectionCommandStep.DATABASE_ARG, database)
+						.addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, "migration/netshot0.xml")
+						.execute();
 			}
 		}
 		catch (Exception e) {

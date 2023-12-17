@@ -104,7 +104,7 @@ public class Ssh extends Cli {
 		};
 	
 		static private String[] DEFAULT_SSH_HOST_KEY_ALGORITHMS = {
-			"rsa-sha2-256", "rsa-sha2-512", "ssh-rsa", "ssh-dss",
+			"rsa-sha2-256", "rsa-sha2-512", "ssh-rsa", "ssh-dss", "ssh-ed25519",
 		};
 
 		static {

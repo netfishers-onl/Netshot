@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -108,7 +109,7 @@ public class TftpServer extends Collector {
 	@Override
 	public void run() {
 		try {
-			tftp.setDefaultTimeout(0);
+			tftp.setDefaultTimeout(Duration.ZERO);
 			tftp.open(udpPort);
 			log.debug("Now listening for TFTP packets on UDP port {}.",
 					udpPort);
@@ -360,7 +361,7 @@ public class TftpServer extends Collector {
 			status = Status.RUNNING;
 			tftp = new TFTP();
 			tftp.beginBufferedOps();
-			tftp.setDefaultTimeout(receiveTimeout * 1000);
+			tftp.setDefaultTimeout(Duration.ofMillis(receiveTimeout));
 			try {
 				tftp.open();
 			}

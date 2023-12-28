@@ -4135,14 +4135,14 @@ public class RestService extends Thread {
 	}
 
 	/**
-	 * Gets the policy rules.
+	 * Gets the rules of a policy
 	 *
 	 * @param id the id
 	 * @return the policy rules
 	 * @throws WebApplicationException the web application exception
 	 */
 	@GET
-	@Path("/rules/policy/{id}")
+	@Path("/policies/{id}/rules")
 	@RolesAllowed("readonly")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)

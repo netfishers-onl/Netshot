@@ -14,7 +14,7 @@ define([
 		},
 
 		url: function() {
-			return "api/rules/policy/" + this.policy.get('id');
+			return "api/policies/" + this.policy.get('id') + "/rules";
 		},
 
 		comparator: function(config) {

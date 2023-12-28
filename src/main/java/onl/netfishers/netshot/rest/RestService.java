@@ -2902,24 +2902,60 @@ public class RestService extends Thread {
 		description = "Creates a device group. A group can be either static (fixed list) or dynamic (query-based list)."
 	)
 	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
-	public DeviceGroup addGroup(DeviceGroup deviceGroup)
+	public DeviceGroup addGroup(RsDeviceGroup rsGroup)
 			throws WebApplicationException {
 		log.debug("REST request, add group.");
-		String name = deviceGroup.getName().trim();
+		String name = rsGroup.getName().trim();
 		if (name.isEmpty()) {
 			log.warn("User posted an empty group name.");
 			throw new NetshotBadRequestException("Invalid group name.",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP_NAME);
 		}
-		deviceGroup.setName(name);
-		deviceGroup.setId(0);
+
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
+			DeviceGroup deviceGroup;
+			if ("StaticDeviceGroup".equals(rsGroup.getType())) {
+				StaticDeviceGroup staticGroup = new StaticDeviceGroup(name);
+				Set<Device> devices = new HashSet<>();
+				for (Long deviceId : rsGroup.getStaticDevices()) {
+					Device device = (Device) session.load(Device.class, deviceId);
+					devices.add(device);
+				}
+				staticGroup.updateCachedDevices(devices);
+				deviceGroup = staticGroup;
+			}
+			else if ("DynamicDeviceGroup".equals(rsGroup.getType())) {
+				DynamicDeviceGroup dynamicGroup = new DynamicDeviceGroup(name);
+				if (rsGroup.getDriver() != null) {
+					dynamicGroup.setDriver(rsGroup.getDriver());
+				}
+				if (rsGroup.getQuery() != null) {
+					dynamicGroup.setQuery(rsGroup.getQuery());
+				}
+				try {
+					dynamicGroup.refreshCache(session);
+				}
+				catch (FinderParseException e) {
+					throw new NetshotBadRequestException(
+							"Invalid query for the group definition.",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DYNAMICGROUP_QUERY);
+				}
+				deviceGroup = dynamicGroup;
+			}
+			else {
+				throw new NetshotBadRequestException(
+					"Invalid group type.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+			}
+			deviceGroup.setFolder(rsGroup.getFolder());
+			deviceGroup.setHiddenFromReports(rsGroup.isHiddenFromReports());
 			session.save(deviceGroup);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", deviceGroup);
 			this.suggestReturnCode(Response.Status.CREATED);
+			return deviceGroup;
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -2933,10 +2969,13 @@ public class RestService extends Thread {
 					"Unable to add the group to the database",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
+		catch (WebApplicationException e) {
+			session.getTransaction().rollback();
+			throw e;
+		}
 		finally {
 			session.close();
 		}
-		return deviceGroup;
 	}
 
 	/**

@@ -66,6 +66,9 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	protected DynamicDeviceGroup() {
 	}
 
+	public DynamicDeviceGroup(String name) {
+		super(name);
+	}
 
 	public DynamicDeviceGroup(String name, String driver, String query) {
 		super(name);

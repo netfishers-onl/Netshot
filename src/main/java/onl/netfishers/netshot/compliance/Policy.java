@@ -28,6 +28,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -109,6 +110,12 @@ public class Policy {
 	public void addRule(Rule rule) {
 		rules.add(rule);
 		rule.setPolicy(this);
+	}
+
+	@XmlElement
+	@Transient
+	public int getRuleCount() {
+		return this.rules.size();
 	}
 
 	/**

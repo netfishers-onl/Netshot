@@ -4158,8 +4158,9 @@ public class RestService extends Thread {
 		log.debug("REST request, get policies.");
 		Session session = Database.getSession(true);
 		try {
+			// Join p.rules to get rule count... not optimal
 			Query<Policy> query = session
-				.createQuery("from Policy p left join fetch p.targetGroups", Policy.class);
+				.createQuery("select distinct p from Policy p left join fetch p.targetGroups left join fetch p.rules", Policy.class);
 			paginationParams.apply(query);
 			return query.list();
 		}

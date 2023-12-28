@@ -76,7 +76,7 @@ define([
 				this.$("#nstask-tasklog").show();
 				this.$("#nstask-showlog").show();
 				if (this.model.get('status') == "SUCCESS"
-						&& this.model.get('type') == ".DiscoverDeviceTypeTask") {
+						&& this.model.get('type') == "DiscoverDeviceTypeTask") {
 					this.$("#gotosnapshot").click(function() {
 						that.close();
 						var monitorTaskDialog = new MonitorTaskDialog({
@@ -86,7 +86,7 @@ define([
 					});
 				}
 				if (this.model.get('status') == "SUCCESS"
-						&& this.model.get('type') == ".TakeSnapshotTask") {
+						&& this.model.get('type') == "TakeSnapshotTask") {
 					this.$("#gotodevice").click(function() {
 						that.close();
 						return true;

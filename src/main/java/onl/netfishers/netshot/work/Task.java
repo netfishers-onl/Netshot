@@ -81,7 +81,7 @@ import lombok.extern.slf4j.Slf4j;
 		@Index(name = "executionDateIndex", columnList = "executionDate")
 })
 @XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonTypeInfo(use = JsonTypeInfo.Id.SIMPLE_NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
 	@Type(value = CheckComplianceTask.class),
 	@Type(value = CheckGroupComplianceTask.class),

@@ -58,7 +58,7 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
  */
 @Entity @Inheritance(strategy = InheritanceType.JOINED)
 @XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonTypeInfo(use = JsonTypeInfo.Id.SIMPLE_NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 public abstract class Diagnostic {
 	
 	/** The set of real rule types. */

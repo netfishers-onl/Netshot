@@ -41,10 +41,10 @@ define([
 				},
 			}).click(function() {
 				var EditDiagnosticDialog = EditSimpleDiagnosticDialog;
-				if (that.model.get('type') === ".JavaScriptDiagnostic") {
+				if (that.model.get('type') === "JavaScriptDiagnostic") {
 					EditDiagnosticDialog = EditScriptDiagnosticDialog;
 				}
-				else if (that.model.get('type') === ".PythonDiagnostic") {
+				else if (that.model.get('type') === "PythonDiagnostic") {
 					EditDiagnosticDialog = EditScriptDiagnosticDialog;
 				}
 				var editDialog = new EditDiagnosticDialog({
@@ -55,7 +55,7 @@ define([
 				});
 			});
 
-			if (this.model.get('type') === ".JavaScriptDiagnostic") {
+			if (this.model.get('type') === "JavaScriptDiagnostic") {
 				this.scriptEditor = ace.edit('nsdiagnostics-diagnostic-script');
 				this.scriptEditor.getSession().setMode("ace/mode/javascript");
 				this.scriptEditor.setReadOnly(true);
@@ -64,7 +64,7 @@ define([
 				this.scriptEditor.renderer.setShowGutter(false);
 				this.scriptEditor.gotoLine(1);
 			}
-			else if (this.model.get('type') === ".PythonDiagnostic") {
+			else if (this.model.get('type') === "PythonDiagnostic") {
 				this.scriptEditor = ace.edit('nsdiagnostics-diagnostic-script');
 				this.scriptEditor.getSession().setMode("ace/mode/python");
 				this.scriptEditor.setReadOnly(true);

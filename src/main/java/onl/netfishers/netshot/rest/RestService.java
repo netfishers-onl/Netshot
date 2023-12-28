@@ -4190,23 +4190,81 @@ public class RestService extends Thread {
 		description = "Returns the rules owned by a given compliance policy."
 	)
 	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
-	public List<Rule> getPolicyRules(@PathParam("id") @Parameter(description = "Policy ID") Long id) throws WebApplicationException {
+	public List<Rule> getPolicyRules(
+			@BeanParam PaginationParams paginationParams,
+			@PathParam("id") @Parameter(description = "Policy ID") Long id) throws WebApplicationException {
 		log.debug("REST request, get rules for policy {}.", id);
 		Session session = Database.getSession(true);
 		try {
-			Policy policy = (Policy) session.load(Policy.class, id);
+			Policy policy = (Policy) session.get(Policy.class, id);
 			if (policy == null) {
 				log.error("Invalid policy.");
 				throw new NetshotBadRequestException("Invalid policy",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY);
 			}
-			List<Rule> rules = new ArrayList<>();
-			rules.addAll(policy.getRules());
-			return rules;
+			Query<Rule> query = session
+				.createQuery("from Rule r where r.policy.id = :pid", Rule.class)
+				.setParameter("pid", id);
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (HibernateException e) {
 			log.error("Unable to fetch the rules.", e);
 			throw new NetshotBadRequestException("Unable to fetch the rules",
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	/**
+	 * Gets a specific rule of a specific policy
+	 *
+	 * @param pid the policy id
+	 * @param id the rule id
+	 * @return the rule
+	 * @throws WebApplicationException the web application exception
+	 */
+	@GET
+	@Path("/policies/{pid}/rules/{id}")
+	@RolesAllowed("readonly")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Get a specific compliance rule of a specific policy",
+		description = "Returns the specific rule owned by a given compliance policy."
+	)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public Rule getPolicyRule(
+			@PathParam("pid") @Parameter(description = "Policy ID") Long pid,
+			@PathParam("id") @Parameter(description = "Rule ID") Long id)
+			throws WebApplicationException {
+		log.debug("REST request, get rule {}, policy {}.", id, pid);
+		Session session = Database.getSession(true);
+		try {
+			Policy policy = (Policy) session.get(Policy.class, pid);
+			if (policy == null) {
+				log.error("Invalid policy.");
+				throw new NetshotBadRequestException("Invalid policy",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY);
+			}
+			Rule rule = session
+				.createQuery("from Rule r where r.policy.id = :pid and r.id = :rid", Rule.class)
+				.setParameter("pid", pid)
+				.setParameter("rid", id)
+				.uniqueResult();
+			if (rule == null) {
+				log.warn("Unable to find the rule object.");
+				throw new WebApplicationException(
+						"Unable to find the rule",
+						javax.ws.rs.core.Response.Status.NOT_FOUND);
+			}
+			return rule;
+		}
+		catch (HibernateException e) {
+			log.error("Unable to fetch the rule.", e);
+			throw new NetshotBadRequestException("Unable to fetch the rule",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
@@ -8420,6 +8478,53 @@ public class RestService extends Thread {
 		}
 	}
 
+
+
+	/**
+	 * Gets a specific diagnotic.
+	 *
+	 * @return the diagnotic
+	 * @throws WebApplicationException the web application exception
+	 */
+	@GET
+	@Path("/diagnostics/{id}")
+	@RolesAllowed("readonly")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Get a diagnostic",
+		description = "Returns a specific diagnostic, by ID."
+	)
+	@Tag(
+		name = "Diagnostics",
+		description = "Diagnostic management (execute commands and retrieve custom data from devices)"
+	)
+	public Diagnostic getDiagnostic(@PathParam("id") @Parameter(description = "Diagnostic ID") Long id) throws WebApplicationException {
+		log.debug("REST request, get diagnotics.");
+		Session session = Database.getSession(true);
+		try {
+			Query<Diagnostic> query = session
+				.createQuery("select d from Diagnostic d left join fetch d.targetGroup where d.id = :id", Diagnostic.class)
+				.setParameter("id", id);
+			Diagnostic diagnostic = query.uniqueResult();
+			if (diagnostic == null) {
+				log.warn("Unable to find the diagnostic object.");
+				throw new WebApplicationException(
+						"Unable to find the diagnostic",
+						javax.ws.rs.core.Response.Status.NOT_FOUND);
+			}
+			return diagnostic;
+		}
+		catch (HibernateException e) {
+			log.error("Unable to fetch the diagnostics.", e);
+			throw new NetshotBadRequestException("Unable to fetch the diagnostics",
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
 	
 	@POST
 	@Path("/diagnostics")
@@ -8466,7 +8571,7 @@ public class RestService extends Thread {
 				group = (DeviceGroup) session.get(DeviceGroup.class, rsDiagnostic.getTargetGroup());
 			}
 
-			if (".JavaScriptDiagnostic".equals(rsDiagnostic.getType())) {
+			if ("JavaScriptDiagnostic".equals(rsDiagnostic.getType())) {
 				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim().equals("")) {
 					throw new NetshotBadRequestException(
 						"Invalid diagnostic script",
@@ -8475,7 +8580,7 @@ public class RestService extends Thread {
 				diagnostic = new JavaScriptDiagnostic(name, rsDiagnostic.isEnabled(), group, 
 						resultType, rsDiagnostic.getScript());
 			}
-			else if (".PythonDiagnostic".equals(rsDiagnostic.getType())) {
+			else if ("PythonDiagnostic".equals(rsDiagnostic.getType())) {
 				if (rsDiagnostic.getScript() == null || rsDiagnostic.getScript().trim().equals("")) {
 					throw new NetshotBadRequestException(
 						"Invalid diagnostic script",
@@ -8484,7 +8589,7 @@ public class RestService extends Thread {
 				diagnostic = new PythonDiagnostic(name, rsDiagnostic.isEnabled(), group, 
 						resultType, rsDiagnostic.getScript());
 			}
-			else if (".SimpleDiagnostic".equals(rsDiagnostic.getType())) {
+			else if ("SimpleDiagnostic".equals(rsDiagnostic.getType())) {
 				if (rsDiagnostic.getCliMode() == null || rsDiagnostic.getCliMode().trim().equals("")) {
 					throw new NetshotBadRequestException("The CLI mode must be provided.",
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
@@ -8603,7 +8708,7 @@ public class RestService extends Thread {
 			diagnostic.setResultType(resultType);
 			diagnostic.setEnabled(rsDiagnostic.isEnabled());
 			if (diagnostic instanceof JavaScriptDiagnostic) {
-				if (!".JavaScriptDiagnostic".equals(rsDiagnostic.getType())) {
+				if (!"JavaScriptDiagnostic".equals(rsDiagnostic.getType())) {
 					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
 							NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
 				}
@@ -8615,7 +8720,7 @@ public class RestService extends Thread {
 				((JavaScriptDiagnostic) diagnostic).setScript(rsDiagnostic.getScript());
 			}
 			else if (diagnostic instanceof PythonDiagnostic) {
-				if (!".PythonDiagnostic".equals(rsDiagnostic.getType())) {
+				if (!"PythonDiagnostic".equals(rsDiagnostic.getType())) {
 					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
 							NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
 				}
@@ -8627,7 +8732,7 @@ public class RestService extends Thread {
 				((PythonDiagnostic) diagnostic).setScript(rsDiagnostic.getScript());
 			}
 			else if (diagnostic instanceof SimpleDiagnostic) {
-				if (!".SimpleDiagnostic".equals(rsDiagnostic.getType())) {
+				if (!"SimpleDiagnostic".equals(rsDiagnostic.getType())) {
 					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
 							NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
 				}

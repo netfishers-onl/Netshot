@@ -51,11 +51,11 @@ define([
 				var data = {
 					'name': that.$('#diagnosticname').val(),
 					'targetGroup': that.$('#group').val(),
-					'type': "." + that.$('input[name="diagnostictype"]:checked').data('type'),
+					'type': that.$('input[name="diagnostictype"]:checked').data('type'),
 					'enabled': that.$('#diagnosticenabled').is(':checked'),
 					'resultType': that.$('#resulttype').val(),
 				};
-				if (data.type === ".SimpleDiagnostic") {
+				if (data.type === "SimpleDiagnostic") {
 					_.extend(data, {
 						'deviceDriver': that.$('#devicetype').val(),
 						'cliMode': that.$('#climode').val(),
@@ -64,12 +64,12 @@ define([
 						'modifierReplacement': that.$('#modifierreplacement').val(),
 					});
 				}
-				else if (data.type === ".JavaScriptDiagnostic") {
+				else if (data.type === "JavaScriptDiagnostic") {
 					_.extend(data, {
 						'script': that.jsScriptEditor.getValue(),
 					});
 				}
-				else if (data.type === ".PythonDiagnostic") {
+				else if (data.type === "PythonDiagnostic") {
 					_.extend(data, {
 						'script': that.pyScriptEditor.getValue(),
 					});

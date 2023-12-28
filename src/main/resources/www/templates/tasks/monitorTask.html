@@ -19,7 +19,7 @@
 			<% if (significantDate !== 0) { %><%- (isNaN((new Date(significantDate)).getDate()) ? significantDate : formatDateTime(significantDate, "full")) %><% } %>
 			(<%
 				if (repeating) {
-					var factor = scheduleFactor || 1;
+					var factor = scheduleFactor || 1;
 					var unit = {
 						HOURLY: "hour",
 						DAILY: "day",
@@ -56,14 +56,14 @@
 					<%- status %><% if (status == "RUNNING") { %> <img alt="Running" src="img/ajax-loader.gif" /><% } %>
 				</td>
 			</tr>
-			<% if (status == "SUCCESS" && type == ".DiscoverDeviceTypeTask") { %>
+			<% if (status == "SUCCESS" && type == "DiscoverDeviceTypeTask") { %>
 				<tr><td>Discovered Type:</td><td><%- discoveredDeviceTypeDescription %></td></tr>
 				<tr><td>Snapshot Task:</td><td><a href="#" id="gotosnapshot">Monitor</a></td></tr>
 			<% } %>
-			<% if (status == "SUCCESS" && type == ".TakeSnapshotTask") { %>
+			<% if (status == "SUCCESS" && type == "TakeSnapshotTask") { %>
 				<tr><td>Device:</td><td><a href="#/devices/<%- deviceId %>" id="gotodevice"><%- target %></a></td></tr>
 			<% } %>
-			<% if (type == ".RunDeviceScriptTask" || type == ".RunDeviceGroupScriptTask") { %>
+			<% if (type == "RunDeviceScriptTask" || type == "RunDeviceGroupScriptTask") { %>
 				<tr>
 					<td colspan="2">Script:</td>
 				</tr>

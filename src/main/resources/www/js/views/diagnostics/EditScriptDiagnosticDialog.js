@@ -77,10 +77,10 @@ define([
 			this.$('#resulttype').val(this.model.get('resultType'));
 			this.scriptEditor = ace.edit('nsdiagnostic-editdiagnostic-script');
 			this.scriptEditor.setValue(this.model.get('script'));
-			if (this.model.get("type") === ".JavaScriptDiagnostic") {
+			if (this.model.get("type") === "JavaScriptDiagnostic") {
 				this.scriptEditor.getSession().setMode("ace/mode/javascript");
 			}
-			else if (this.model.get("type") === ".PythonDiagnostic") {
+			else if (this.model.get("type") === "PythonDiagnostic") {
 				this.scriptEditor.getSession().setMode("ace/mode/python");
 			}
 			this.scriptEditor.gotoLine(1);

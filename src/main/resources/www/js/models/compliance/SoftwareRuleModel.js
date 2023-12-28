@@ -29,7 +29,6 @@ define([
 				'versionRegExp',
 				'partNumber',
 				'partNumberRegExp',
-				'priority',
 				'driver',
 				'level'
 			]);

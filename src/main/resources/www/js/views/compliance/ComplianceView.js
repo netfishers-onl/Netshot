@@ -254,13 +254,7 @@ define([
 				},
 				text: false
 			}).click(function() {
-				var priority = 16;
-				if (that.softwareRules.length > 0) {
-					priority = that.softwareRules
-					.at(that.softwareRules.length - 1).get('priority') + 16;
-				}
 				var view = new AddSoftwareRuleDialog({
-					defaultPriority: priority,
 					onAdded: function(rule) {
 						that.refreshSoftwareRules();
 					}
@@ -348,22 +342,10 @@ define([
 					update: function(event, ui) {
 						var rule = that.softwareRules.get($(ui.item)
 								.data('rule-id'));
-						var prev = $(ui.item).prev().data('rule-id');
 						var next = $(ui.item).next().data('rule-id');
-						var priority = 1;
-						if (prev == null) {
-							priority = that.softwareRules.get(next).get('priority') / 2;
-						}
-						else if (next == null) {
-							priority = that.softwareRules.get(prev).get('priority') + 16;
-						}
-						else {
-							priority = (that.softwareRules.get(next).get('priority') + that.softwareRules
-									.get(prev).get('priority')) / 2;
-						}
-						var view = new SortSoftwareRuleDialog({
+						new SortSoftwareRuleDialog({
 							model: rule,
-							priority: priority,
+							nextRuleId: next,
 							onCancel: function() {
 								that.refreshSoftwareRules();
 							},

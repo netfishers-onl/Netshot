@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -6068,7 +6069,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession(true);
 		try {
 			Query<SoftwareRule> query = session
-				.createQuery("from SoftwareRule r left join fetch r.targetGroup g", SoftwareRule.class);
+				.createQuery("from SoftwareRule r left join fetch r.targetGroup g order by r.priority asc", SoftwareRule.class);
 			paginationParams.apply(query);
 			return query.list();
 		}
@@ -6154,17 +6155,10 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private SoftwareRule.ConformanceLevel level = ConformanceLevel.GOLD;
-
-		/** The priority. */
-		@Getter(onMethod=@__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private double priority = -1;
 	}
 
 	/**
-	 * Adds the software rule.
+	 * Creates a software rule.
 	 *
 	 * @param rsRule the rs rule
 	 * @return the software rule
@@ -6199,7 +6193,7 @@ public class RestService extends Thread {
 				driver = null;
 			}
 
-			rule = new SoftwareRule(rsRule.getPriority(), group, driver,
+			rule = new SoftwareRule(Double.MAX_VALUE, group, driver,
 					rsRule.getFamily(), rsRule.isFamilyRegExp(), rsRule.getVersion(),
 					rsRule.isVersionRegExp(), rsRule.getPartNumber(), rsRule.isPartNumberRegExp(),
 					rsRule.getLevel());
@@ -6276,7 +6270,7 @@ public class RestService extends Thread {
 
 
 	/**
-	 * Sets the software rule.
+	 * Updates the software rule.
 	 *
 	 * @param id the id
 	 * @param rsRule the rs rule
@@ -6300,9 +6294,10 @@ public class RestService extends Thread {
 			throws WebApplicationException {
 		log.debug("REST request, edit software rule {}.", id);
 		Session session = Database.getSession();
+		SoftwareRule rule = null;
 		try {
 			session.beginTransaction();
-			SoftwareRule rule = (SoftwareRule) session.get(SoftwareRule.class, id);
+			rule = session.get(SoftwareRule.class, id);
 			if (rule == null) {
 				log.error("Unable to find the rule {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this rule.",
@@ -6327,19 +6322,110 @@ public class RestService extends Thread {
 			rule.setVersionRegExp(rsRule.isVersionRegExp());
 			rule.setPartNumber(rsRule.getPartNumber());
 			rule.setPartNumberRegExp(rsRule.isPartNumberRegExp());
-			rule.setPriority(rsRule.getPriority());
 			rule.setLevel(rsRule.getLevel());
 
 			session.update(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been edited", rule);
-			return rule;
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			log.error("Error while saving the rule.", e);
 			throw new NetshotBadRequestException(
 					"Unable to save the rule.",
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		catch (WebApplicationException e) {
+			session.getTransaction().rollback();
+			throw e;
+		}
+		finally {
+			session.close();
+		}
+		return rule;
+	}
+
+
+
+	/**
+	 * Sort a software rule.
+	 *
+	 * @param rsRule the rs rule
+	 * @return the software rule
+	 * @throws WebApplicationException the web application exception
+	 */
+	@POST
+	@Path("/softwarerules/{id}/sort")
+	@RolesAllowed("readwrite")
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Sort a software compliance rule",
+		description = "Sorts a software compliance rule by moving it before another one."
+	)
+	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
+	public void sortSoftwareRule(
+			@PathParam("id") @Parameter(description = "Software rule ID to move") Long id,
+			@QueryParam("next")
+				@Parameter(description = "ID of the other rule to move this rule before (omit parameter to place the rule at last position)")
+				Long nextId)
+			throws WebApplicationException {
+		log.debug("REST request, sort software rule.");
+
+		Session session = Database.getSession();
+		try {
+			session.beginTransaction();
+			Query<SoftwareRule> query = session
+				.createQuery("from SoftwareRule r order by r.priority asc", SoftwareRule.class);
+			List<SoftwareRule> rules = query.list();
+
+			SoftwareRule targetRule = null;
+			int nextIndex = -1;
+			ListIterator<SoftwareRule> ruleIt = rules.listIterator();
+			while (ruleIt.hasNext()) {
+				SoftwareRule rule = ruleIt.next();
+				if (rule.getId() == id) {
+					targetRule = rule;
+					ruleIt.remove();
+				}
+				else if (nextId != null && nextId.equals(rule.getId())) {
+					nextIndex = ruleIt.previousIndex();
+				}
+			}
+
+			if (targetRule == null) {
+				log.error("Unable to find the rule {} to be moved.", id);
+				throw new NetshotBadRequestException("Unable to find this rule.",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
+			}
+			if (nextIndex == -1 && nextId != null) {
+				log.error("Unable to find the previous rule of ID {}.", nextId);
+				throw new NetshotBadRequestException("Unable to find this rule.",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
+			}
+			if (nextIndex == -1) {
+				rules.add(targetRule);
+			}
+			else {
+				rules.add(nextIndex, targetRule);
+			}
+			double priority = 0;
+			for (SoftwareRule rule : rules) {
+				priority += 10;
+				rule.setPriority(priority);
+				session.save(rule);
+			}
+			session.getTransaction().commit();
+			Netshot.aaaLogger.info("{} has been sorted (moved before at index {})", targetRule, nextIndex);
+
+			this.suggestReturnCode(Response.Status.NO_CONTENT);
+		}
+		catch (HibernateException e) {
+			session.getTransaction().rollback();
+			log.error("Error while saving the new rule.", e);
+			throw new NetshotBadRequestException(
+					"Unable to add the policy to the database",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {

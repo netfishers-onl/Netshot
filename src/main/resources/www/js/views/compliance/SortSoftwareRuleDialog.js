@@ -4,9 +4,9 @@ define([
 	'underscore',
 	'backbone',
 	'views/Dialog',
-	'models/compliance/SoftwareRuleModel',
+	'models/compliance/SortSoftwareRuleModel',
 	'text!templates/compliance/sortSoftwareRule.html'
-], function($, _, Backbone, Dialog, SoftwareRuleModel, sortSoftwareRuleTemplate) {
+], function($, _, Backbone, Dialog, SortSoftwareRuleModel, sortSoftwareRuleTemplate) {
 
 	return Dialog.extend({
 
@@ -25,11 +25,9 @@ define([
 				var that = this;
 				var $button = $(event.target).closest("button");
 				$button.button('disable');
-				var saveModel = that.model.clone();
-				saveModel.set({
-					priority: this.options.priority,
-					group: (typeof (saveModel.get('targetGroup')) == "object" && saveModel.get('targetGroup') ?
-							saveModel.get('targetGroup').id : -1)
+				var saveModel = new SortSoftwareRuleModel({
+					ruleId: that.model.get('id'),
+					nextRuleId: that.options.nextRuleId,
 				});
 				saveModel.save().done(function(data) {
 					that.close();

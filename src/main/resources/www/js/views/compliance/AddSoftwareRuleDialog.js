@@ -45,7 +45,6 @@ define([
 				$button.button('disable');
 				var rule = new SoftwareRuleModel();
 				rule.save({
-					'priority': this.options.defaultPriority,
 					'group': that.$('#group').val(),
 					'driver': that.$('#devicetype').val(),
 					'version': that.$('#version').val(),

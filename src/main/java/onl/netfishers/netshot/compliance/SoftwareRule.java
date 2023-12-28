@@ -76,9 +76,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	protected long id;
 
 	/** The priority, to determine which software rule should apply first. */
-	@Getter(onMethod=@__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
+	@Getter
 	@Setter
 	protected double priority;
 

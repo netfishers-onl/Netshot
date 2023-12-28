@@ -180,7 +180,7 @@ define([
 					matchAll: that.$("#matchall").is(":checked"),
 					anyBlock: that.$("#anyblock").is(":checked"),
 					normalize: that.$("#normalize").is(":checked"),
-					type: ".TextRule"
+					type: "TextRule"
 				});
 				test.save().done(function(data) {
 					$button.button('enable');

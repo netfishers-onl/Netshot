@@ -1,13 +1,13 @@
 <li class="nscompliance-list-rule<% if (!enabled) { %> disabled<% } %>" data-rule-id="<%- id %>">
   <span class="name"><%- name %></span>
   <div class="details">
-	<% if (type == ".rules.JavaScriptRule") { %>
+	<% if (type == "JavaScriptRule") { %>
 	JavaScript rule
 	<% } %>
-	<% if (type == ".rules.PythonRule") { %>
+	<% if (type == "PythonRule") { %>
 	Python rule
 	<% } %>
-	<% if (type == ".rules.TextRule") { %>
+	<% if (type == "TextRule") { %>
 	Text rule
 	<% } %>
   <div class="actions">

@@ -4560,13 +4560,13 @@ public class RestService extends Thread {
 			Policy policy = (Policy) session.load(Policy.class, rsRule.getPolicy());
 			
 			Rule rule;
-			if (".TextRule".equals(rsRule.getType())) {
+			if ("TextRule".equals(rsRule.getType())) {
 				rule = new TextRule(name, policy);
 			}
-			else if (".JavaScriptRule".equals(rsRule.getType())) {
+			else if ("JavaScriptRule".equals(rsRule.getType())) {
 				rule = new JavaScriptRule(name, policy);
 			}
-			else if (".PythonRule".equals(rsRule.getType())) {
+			else if ("PythonRule".equals(rsRule.getType())) {
 				rule = new PythonRule(name, policy);
 			}
 			else {
@@ -4874,7 +4874,7 @@ public class RestService extends Thread {
 			
 			Rule rule;
 			
-			if (".TextRule".equals(rsRule.getType())) {
+			if ("TextRule".equals(rsRule.getType())) {
 				TextRule txRule = new TextRule("TEST", null);
 				txRule.setDeviceDriver(rsRule.getDriver());
 				txRule.setField(rsRule.getField());
@@ -4887,12 +4887,12 @@ public class RestService extends Thread {
 				txRule.setNormalize(rsRule.getNormalize());
 				rule = txRule;
 			}
-			else if (".rules.JavaScriptRule".equals(rsRule.getType())) {
+			else if ("JavaScriptRule".equals(rsRule.getType())) {
 				JavaScriptRule jsRule = new JavaScriptRule("TEST", null);
 				jsRule.setScript(rsRule.getScript());
 				rule = jsRule;
 			}
-			else if (".rules.PythonRule".equals(rsRule.getType())) {
+			else if ("PythonRule".equals(rsRule.getType())) {
 				PythonRule pyRule = new PythonRule("TEST", null);
 				pyRule.setScript(rsRule.getScript());
 				rule = pyRule;

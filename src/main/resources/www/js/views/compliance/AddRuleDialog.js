@@ -30,7 +30,7 @@ define([
 				rule.save({
 					'name': that.$('#rulename').val(),
 					'policy': that.model.get('id'),
-					'type': "." + that.$('input[name="ruletype"]:checked').attr('id')
+					'type': that.$('input[name="ruletype"]:checked').attr('id')
 				}).done(function(data) {
 					that.close();
 					var rule = new RuleModel(data);

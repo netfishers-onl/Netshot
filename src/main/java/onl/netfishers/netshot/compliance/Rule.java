@@ -62,7 +62,7 @@ import onl.netfishers.netshot.work.TaskLogger;
 @Entity @Inheritance(strategy = InheritanceType.JOINED)
 @Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"policy", "name"})})
 @XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
-@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonTypeInfo(use = JsonTypeInfo.Id.SIMPLE_NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @Slf4j
 public abstract class Rule {
 

@@ -596,6 +596,7 @@ public class RestService extends Thread {
 				session.getTransaction().commit();
 				Netshot.aaaLogger.info("{} has been created.", domain);
 				this.suggestReturnCode(Response.Status.CREATED);
+				return new RsDomain(domain);
 			}
 			catch (HibernateException e) {
 				session.getTransaction().rollback();
@@ -612,7 +613,6 @@ public class RestService extends Thread {
 			finally {
 				session.close();
 			}
-			return new RsDomain(domain);
 		}
 		catch (UnknownHostException e) {
 			log.warn("User posted an invalid IP address.");
@@ -2624,7 +2624,7 @@ public class RestService extends Thread {
 		description = "Creates a credential set, which then can be used to authenticate against the devices."
 	)
 	@Tag(name = "Admin", description = "Administrative actions")
-	public void addCredentialSet(DeviceCredentialSet credentialSet)
+	public DeviceCredentialSet addCredentialSet(DeviceCredentialSet credentialSet)
 			throws WebApplicationException {
 		log.debug("REST request, add credentials.");
 		if (credentialSet.getName() == null || credentialSet.getName().trim().equals("")) {
@@ -2643,6 +2643,8 @@ public class RestService extends Thread {
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", credentialSet);
 			this.suggestReturnCode(Response.Status.CREATED);
+			credentialSet.removeSensitive();
+			return credentialSet;
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -4005,6 +4007,7 @@ public class RestService extends Thread {
 			TaskManager.addTask(task);
 			Netshot.aaaLogger.info("The task {} has been created.", task);
 			this.suggestReturnCode(Response.Status.CREATED);
+			return task;
 		}
 		catch (HibernateException e) {
 			log.error("Unable to add the task.", e);
@@ -4017,7 +4020,6 @@ public class RestService extends Thread {
 			throw new NetshotBadRequestException("Unable to schedule the task.",
 					NetshotBadRequestException.Reason.NETSHOT_SCHEDULE_ERROR);
 		}
-		return task;
 	}
 
 	/**
@@ -4352,6 +4354,7 @@ public class RestService extends Thread {
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", policy);
 			this.suggestReturnCode(Response.Status.CREATED);
+			return policy;
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -4375,7 +4378,6 @@ public class RestService extends Thread {
 		finally {
 			session.close();
 		}
-		return policy;
 	}
 
 	/**
@@ -6004,6 +6006,7 @@ public class RestService extends Thread {
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", rule);
 			this.suggestReturnCode(Response.Status.CREATED);
+			return rule;
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -6022,7 +6025,6 @@ public class RestService extends Thread {
 		finally {
 			session.close();
 		}
-		return rule;
 	}
 
 
@@ -6300,6 +6302,7 @@ public class RestService extends Thread {
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", rule);
 			this.suggestReturnCode(Response.Status.CREATED);
+			return rule;
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -6318,7 +6321,6 @@ public class RestService extends Thread {
 		finally {
 			session.close();
 		}
-		return rule;
 	}
 
 	/**
@@ -8613,6 +8615,7 @@ public class RestService extends Thread {
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", diagnostic);
 			this.suggestReturnCode(Response.Status.CREATED);
+			return diagnostic;
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -8636,7 +8639,6 @@ public class RestService extends Thread {
 		finally {
 			session.close();
 		}
-		return diagnostic;
 	}
 
 

@@ -1,6 +1,6 @@
 <tr data-device-id="<%- id %>">
 	<td><a href="#/devices/<%- id %>" class="gotodevice"><%- name %></a></td>
-	<td><%- mgmtAddress.ip %></td>
+	<td><%- mgmtAddress %></td>
 	<td><%- family %></td>
 	<td><% if (typeof lastSuccess === "number") { %><%- formatDateTime(lastSuccess) %><% } else { %>Never<% } %></td>
 	<td><% if (typeof lastFailure === "number") { %><%- formatDateTime(lastFailure) %><% } else { %>Never<% } %></td>

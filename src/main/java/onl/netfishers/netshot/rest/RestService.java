@@ -192,6 +192,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.jaxrs.cfg.EndpointConfigBase;
 import com.fasterxml.jackson.jaxrs.cfg.ObjectWriterInjector;
 import com.fasterxml.jackson.jaxrs.cfg.ObjectWriterModifier;
@@ -1460,7 +1462,9 @@ public class RestService extends Thread {
 
 		/** The mgmt address. */
 		@Getter(onMethod=@__({
-			@XmlElement, @JsonView(DefaultView.class)
+			@XmlElement, @JsonView(DefaultView.class),
+			@JsonSerialize(using = Network4Address.AddressOnlySerializer.class),
+			@JsonDeserialize(using = Network4Address.AddressOnlyDeserializer.class)
 		}))
 		@Setter
 		private Network4Address mgmtAddress;

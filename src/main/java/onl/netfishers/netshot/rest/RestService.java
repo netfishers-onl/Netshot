@@ -218,7 +218,12 @@ public class RestService extends Thread {
 	 * The HQL select query for "light" devices, to be prepended to the actual
 	 * query.
 	 */
-	private static final String DEVICELIST_BASEQUERY = "select distinct d.id as id, d.name as name, d.family as family, d.mgmtAddress as mgmtAddress, d.status as status, d.driver as driver ";
+	private static final String LIGHTDEVICELIST_BASEQUERY =
+		"select distinct d.id as id, d.name as name, d.family as family, d.mgmtAddress as mgmtAddress, " +
+		"d.status as status, d.driver as driver, d.softwareLevel as softwareLevel, " +
+		"case when (d.eosDate < current_date()) then true else false end as eos, " +
+		"case when (d.eolDate < current_date()) then true else false end as eol,  " +
+		"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end as configCompliant ";
 
 	/** The static instance service. */
 	private static RestService nsRestService;
@@ -1473,6 +1478,34 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		protected String driver;
+
+		/** End of Life. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		protected Boolean eol;
+	
+		/** End of Sale. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		protected Boolean eos;
+	
+		/** Configuration compliant. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		protected Boolean configCompliant;
+
+		/** The software level. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		protected SoftwareRule.ConformanceLevel softwareLevel = ConformanceLevel.UNKNOWN;
 	}
 
 	/**
@@ -1499,13 +1532,14 @@ public class RestService extends Thread {
 
 		Session session = Database.getSession(true);
 		try {
-			String hqlQuery = DEVICELIST_BASEQUERY + "from Device d";
+			String hqlQuery = LIGHTDEVICELIST_BASEQUERY + "from Device d";
 			if (groupId != null) {
 				hqlQuery += " join d.ownerGroups g where g.id = :groupId";
 			}
 			@SuppressWarnings({ "unchecked", "deprecation" })
 			Query<RsLightDevice> query = session.createQuery(hqlQuery)
 				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class));
+			query.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
 			if (groupId != null) {
 				query.setParameter("groupId", groupId);
 			}
@@ -2857,9 +2891,10 @@ public class RestService extends Thread {
 			Session session = Database.getSession();
 			try {
 				@SuppressWarnings("unchecked")
-				Query<RsLightDevice> query = session.createQuery(DEVICELIST_BASEQUERY
+				Query<RsLightDevice> query = session.createQuery(LIGHTDEVICELIST_BASEQUERY
 						+ finder.getHql());
 				finder.setVariables(query);
+				query.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
 				@SuppressWarnings("deprecation")
 				List<RsLightDevice> devices = query
 					.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
@@ -3008,6 +3043,48 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			log.error("Unable to fetch the groups.", e);
 			throw new NetshotBadRequestException("Unable to fetch the groups",
+					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	/**
+	 * Gets a specific device group.
+	 *
+	 * @return the group
+	 * @throws WebApplicationException the web application exception
+	 */
+	@GET
+	@Path("/groups/{id}")
+	@RolesAllowed("readonly")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Get a device group",
+		description = "Returns a specific group, by ID."
+	)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	public DeviceGroup getGroup(@PathParam("id") @Parameter(description = "Group ID") Long id) throws WebApplicationException {
+		log.debug("REST request, get group.");
+		Session session = Database.getSession(true);
+		try {
+			Query<DeviceGroup> query = session
+				.createQuery("select g from DeviceGroup g where g.id = :id", DeviceGroup.class)
+				.setParameter("id", id);
+			DeviceGroup group = query.uniqueResult();
+			if (group == null) {
+				log.warn("Unable to find the device group.");
+				throw new WebApplicationException(
+						"Unable to find the device group",
+						javax.ws.rs.core.Response.Status.NOT_FOUND);
+			}
+			return group;
+		}
+		catch (HibernateException e) {
+			log.error("Unable to fetch the group.", e);
+			throw new NetshotBadRequestException("Unable to fetch the group",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {
@@ -5097,7 +5174,8 @@ public class RestService extends Thread {
 		try {
 			@SuppressWarnings({ "deprecation", "unchecked" })
 			Query<RsLightExemptedDevice> query = session
-				.createQuery(DEVICELIST_BASEQUERY + ", e.expirationDate as expirationDate from Exemption e join e.key.device d where e.key.rule.id = :id")
+				.createQuery(LIGHTDEVICELIST_BASEQUERY + ", e.expirationDate as expirationDate from Exemption e join e.key.device d where e.key.rule.id = :id")
+				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
 				.setParameter("id", id)
 				.setResultTransformer(Transformers.aliasToBean(RsLightExemptedDevice.class));
 			paginationParams.apply(query);
@@ -5226,50 +5304,18 @@ public class RestService extends Thread {
 		}
 
 		/** The change count. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
 		private long changeCount;
 
 		/** The change day. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
 		private Date changeDay;
-
-		/**
-		 * Gets the change count.
-		 *
-		 * @return the change count
-		 */
-		@XmlElement @JsonView(DefaultView.class)
-		public long getChangeCount() {
-			return changeCount;
-		}
-
-		/**
-		 * Sets the change count.
-		 *
-		 * @param changes the new change count
-		 */
-		public void setChangeCount(long changes) {
-			this.changeCount = changes;
-		}
-
-		/**
-		 * Gets the change day.
-		 *
-		 * @return the change day
-		 */
-		@XmlElement @JsonView(DefaultView.class)
-		public Date getChangeDay() {
-			return changeDay;
-		}
-
-		/**
-		 * Sets the change day.
-		 *
-		 * @param date the new change day
-		 */
-		public void setChangeDay(Date date) {
-			this.changeDay = date;
-		}
-
-
 	}
 
 	/**
@@ -5633,7 +5679,7 @@ public class RestService extends Thread {
 	 * The Class RsLightPolicyRuleDevice.
 	 */
 	@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
-	public static class RsLightPolicyRuleDevice extends Device {
+	public static class RsLightPolicyRuleDevice extends RsLightDevice {
 
 		/** The rule name. */
 		@Getter(onMethod=@__({
@@ -5697,7 +5743,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession(true);
 		try {
 			String hqlQuery = "";
-			hqlQuery += DEVICELIST_BASEQUERY;
+			hqlQuery += LIGHTDEVICELIST_BASEQUERY;
 			hqlQuery += ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d ";
 			hqlQuery += "left join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p ";
 			hqlQuery += "where d.status = :enabled";
@@ -5715,6 +5761,7 @@ public class RestService extends Thread {
 			}
 			@SuppressWarnings("unchecked")
 			Query<RsLightPolicyRuleDevice> query = session.createQuery(hqlQuery);
+			query.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
 			query.setParameter("enabled", Device.Status.INPRODUCTION);
 			if (domains.size() > 0) {
 				query.setParameterList("domainIds", domains);
@@ -5780,7 +5827,7 @@ public class RestService extends Thread {
 			}
 			@SuppressWarnings("unchecked")
 			Query<RsLightPolicyRuleDevice> query = session
-				.createQuery(DEVICELIST_BASEQUERY + ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d "
+				.createQuery(LIGHTDEVICELIST_BASEQUERY + ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d "
 						+ "join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p "
 						+ "where g.id = :id and ccr.result = :nonConforming and d.status = :enabled" + domainFilter + policyFilter)
 				.setParameter("id", id)
@@ -5834,8 +5881,9 @@ public class RestService extends Thread {
 			if (date == 0) {
 				@SuppressWarnings({ "deprecation", "unchecked" })
 				List<RsLightDevice> devices = session
-					.createQuery(DEVICELIST_BASEQUERY + "from Device d where d." + type + "Date is null and d.status = :enabled")
+					.createQuery(LIGHTDEVICELIST_BASEQUERY + "from Device d where d." + type + "Date is null and d.status = :enabled")
 					.setParameter("enabled", Device.Status.INPRODUCTION)
+					.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
 					.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
 					.list();
 				return devices;
@@ -5843,9 +5891,10 @@ public class RestService extends Thread {
 			else {
 				@SuppressWarnings({ "deprecation", "unchecked" })
 				List<RsLightDevice> devices = session
-					.createQuery(DEVICELIST_BASEQUERY + "from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled")
+					.createQuery(LIGHTDEVICELIST_BASEQUERY + "from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled")
 					.setParameter("eoxDate", eoxDate)
 					.setParameter("enabled", Device.Status.INPRODUCTION)
+					.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
 					.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
 					.list();
 				return devices;
@@ -6608,11 +6657,12 @@ public class RestService extends Thread {
 			}
 			@SuppressWarnings("unchecked")
 			Query<RsLightSoftwareLevelDevice> query =  session
-				.createQuery(DEVICELIST_BASEQUERY + ", d.softwareLevel as softwareLevel "
+				.createQuery(LIGHTDEVICELIST_BASEQUERY + ", d.softwareLevel as softwareLevel "
 						+ "from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled" + domainFilter)
 				.setParameter("id", id)
 				.setParameter("level", filterLevel)
-				.setParameter("enabled", Device.Status.INPRODUCTION);
+				.setParameter("enabled", Device.Status.INPRODUCTION)
+				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
 			if (domains.size() > 0) {
 				query.setParameterList("domainIds", domains);
 			}
@@ -6686,12 +6736,15 @@ public class RestService extends Thread {
 			
 			@SuppressWarnings("unchecked")
 			Query<RsLightAccessFailureDevice> query = session
-				.createQuery(DEVICELIST_BASEQUERY + ", (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, "
-						+ "(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure from Device d where d.status = :enabled"
+				.createQuery(LIGHTDEVICELIST_BASEQUERY
+						+ ", (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, "
+						+ "(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure "
+						+ "from Device d where d.status = :enabled"
 						+ domainFilter)
 				.setParameter("success", Task.Status.SUCCESS)
 				.setParameter("failure", Task.Status.FAILURE)
-				.setParameter("enabled", Device.Status.INPRODUCTION);
+				.setParameter("enabled", Device.Status.INPRODUCTION)
+				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
 			if (domainFilter.length() > 0) {
 				query.setParameterList("domainIds", domains);
 			}
@@ -8503,7 +8556,7 @@ public class RestService extends Thread {
 		description = "Diagnostic management (execute commands and retrieve custom data from devices)"
 	)
 	public Diagnostic getDiagnostic(@PathParam("id") @Parameter(description = "Diagnostic ID") Long id) throws WebApplicationException {
-		log.debug("REST request, get diagnotics.");
+		log.debug("REST request, get diagnotic.");
 		Session session = Database.getSession(true);
 		try {
 			Query<Diagnostic> query = session
@@ -8519,8 +8572,8 @@ public class RestService extends Thread {
 			return diagnostic;
 		}
 		catch (HibernateException e) {
-			log.error("Unable to fetch the diagnostics.", e);
-			throw new NetshotBadRequestException("Unable to fetch the diagnostics",
+			log.error("Unable to fetch the diagnostic.", e);
+			throw new NetshotBadRequestException("Unable to fetch the diagnostic",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {

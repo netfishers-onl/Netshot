@@ -188,8 +188,10 @@ import org.hibernate.transform.Transformers;
 import org.quartz.SchedulerException;
 import org.slf4j.MarkerFactory;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -1105,9 +1107,38 @@ public class RestService extends Thread {
 		@Setter
 		private Date revisedDate;
 
-		/** The deltas. */
+		/** The original config ID. */
 		@Getter(onMethod=@__({
 			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Long originalConfigId;
+
+		/** The revised config ID. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Long revisedConfigId;
+
+		/** The original config. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Config originalConfig;
+
+		/** The revised config. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Config revisedConfig;
+
+		/** The deltas. */
+		@Getter(onMethod=@__({
+			@XmlElement(), @JsonView(DefaultView.class),
+			@JsonInclude(Include.NON_NULL)
 		}))
 		@Setter
 		private Map<String, List<RsConfigDelta>> deltas = new HashMap<>();
@@ -1118,9 +1149,12 @@ public class RestService extends Thread {
 		 * @param originalDate the original date
 		 * @param revisedDate the revised date
 		 */
-		public RsConfigDiff(Date originalDate, Date revisedDate) {
+		public RsConfigDiff(Date originalDate, Date revisedDate,
+				Long originalConfigId, Long revisedConfigId) {
 			this.originalDate = originalDate;
 			this.revisedDate = revisedDate;
+			this.originalConfigId = originalConfigId;
+			this.revisedConfigId = revisedConfigId;
 		}
 
 		/**
@@ -1144,17 +1178,11 @@ public class RestService extends Thread {
 	public static class RsConfigDelta {
 
 		/**
-		 * The Enum Type.
+		 * Type of difference
 		 */
 		public static enum Type {
-
-			/** The change. */
 			CHANGE,
-
-			/** The delete. */
 			DELETE,
-
-			/** The insert. */
 			INSERT;
 		}
 
@@ -1302,10 +1330,13 @@ public class RestService extends Thread {
 		description = "Retrieves the differences between two given device configuration objets, identified by full IDs."
 	)
 	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
-	public RsConfigDiff getDeviceConfigDiff(@PathParam("id1") @Parameter(description = "First config ID") Long id1,
-			@PathParam("id2") @Parameter(description = "Second config ID") Long id2) {
-		log.debug("REST request, get device config diff, id {} and {}.", id1,
-				id2);
+	public RsConfigDiff getDeviceConfigDiff(
+			@PathParam("id1") @Parameter(description = "First config ID") Long id1,
+			@PathParam("id2") @Parameter(description = "Second config ID") Long id2,
+			@DefaultValue("true") @QueryParam("deltas") @Parameter(description = "Include/compute deltas") boolean includeDeltas,
+			@DefaultValue("false") @QueryParam("fullconfigs") @Parameter(description = "Include full configs") boolean includeConfigs) {
+		log.debug("REST request, get device config diff, id {} and {} ({} deltas).",
+				id1, id2, includeDeltas ? "with" : "without");
 		RsConfigDiff configDiffs;
 		Session session = Database.getSession(true);
 		Config config1;
@@ -1348,24 +1379,34 @@ public class RestService extends Thread {
 						NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_CONFIGS);
 			}
 			
-			configDiffs = new RsConfigDiff(config1.getChangeDate(),
-					config2.getChangeDate());
-			Map<String, ConfigAttribute> attributes1 = config1.getAttributeMap();
-			Map<String, ConfigAttribute> attributes2 = config2.getAttributeMap();
-			for (AttributeDefinition definition : driver1.getAttributes()) {
-				if (definition.isComparable()) {
-					ConfigAttribute attribute1 = attributes1.get(definition.getName());
-					ConfigAttribute attribute2 = attributes2.get(definition.getName());
-					String text1 = (attribute1 == null ? "" : attribute1.getAsText());
-					String text2 = (attribute2 == null ? "" : attribute2.getAsText());
-					List<String> lines1 = Arrays.asList(text1.replace("\r", "").split("\n"));
-					int[] lineParents1 = Config.getLineParents(lines1);
-					List<String> lines2 = Arrays.asList(text2.replace("\r", "").split("\n"));
-					Patch<String> patch = DiffUtils.diff(lines1, lines2);
-					for (AbstractDelta<String> delta : patch.getDeltas()) {
-						configDiffs.addDelta(definition.getTitle(), new RsConfigDelta(delta, lines1, lineParents1));
+			configDiffs = new RsConfigDiff(config1.getChangeDate(), config2.getChangeDate(),
+				config1.getId(), config2.getId());
+			if (includeDeltas) {
+				Map<String, ConfigAttribute> attributes1 = config1.getAttributeMap();
+				Map<String, ConfigAttribute> attributes2 = config2.getAttributeMap();
+				for (AttributeDefinition definition : driver1.getAttributes()) {
+					if (definition.isComparable()) {
+						ConfigAttribute attribute1 = attributes1.get(definition.getName());
+						ConfigAttribute attribute2 = attributes2.get(definition.getName());
+						String text1 = (attribute1 == null ? "" : attribute1.getAsText());
+						String text2 = (attribute2 == null ? "" : attribute2.getAsText());
+						List<String> lines1 = Arrays.asList(text1.replace("\r", "").split("\n"));
+						int[] lineParents1 = Config.getLineParents(lines1);
+						List<String> lines2 = Arrays.asList(text2.replace("\r", "").split("\n"));
+						Patch<String> patch = DiffUtils.diff(lines1, lines2);
+						for (AbstractDelta<String> delta : patch.getDeltas()) {
+							configDiffs.addDelta(definition.getTitle(), new RsConfigDelta(delta, lines1, lineParents1));
+						}
 					}
 				}
+			}
+			else {
+				configDiffs.setDeltas(null);
+			}
+
+			if (includeConfigs) {
+				configDiffs.setOriginalConfig(config1);
+				configDiffs.setRevisedConfig(config2);
 			}
 			return configDiffs;
 		}

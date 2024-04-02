@@ -51,7 +51,6 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.work.TaskLogger;
 
 import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
@@ -77,9 +76,6 @@ public class PythonRule extends Rule {
 
 	/** Max time (ms) to wait for script to execute */
 	private static long MAX_EXECUTION_TIME;
-
-	/** The Python execution engine (for eval caching) */
-	private static Engine engine = Engine.create();
 
 	/**
 	 * Initialize some additional static variables from global configuration.
@@ -232,10 +228,7 @@ public class PythonRule extends Rule {
 			builder.allowExperimentalOptions(true)
 				.option("python.Executable", PythonFileSystem.VENV_FOLDER + "/bin/graalpy");
 		}
-		Context context;
-		synchronized (engine) {
-			context = builder.engine(engine).build();
-		}
+		Context context = builder.build();
 		return context;
 	}
 

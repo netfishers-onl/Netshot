@@ -31,7 +31,7 @@ var Info = {
 	name: "CheckpointSPLAT",
 	description: "Checkpoint SPLAT",
 	author: "NetFishers",
-	version: "1.3"
+	version: "1.4"
 };
 
 var Config = {
@@ -259,7 +259,7 @@ function snapshot(cli, device, config) {
 	});
 
 	try {
-		config.download("backupArchive", "scp", "/var/log/CPbackup/backups/netshot.tgz");
+		config.download("backupArchive", "/var/log/CPbackup/backups/netshot.tgz", { method: "scp" });
 	}
 	catch (e) {
 		var text = "" + e;

@@ -586,29 +586,40 @@ const _connect = (_function, _protocol, _options) => {
 			}
 			throw "Invalid key to retrieve.";
 		},
-		textDownload: function(method, fileName, charset) {
-			if (typeof(method) === "string") {
-				method = String(method);
-			}
-			else {
-				throw "The method should be a string in device.textDownload.";
-			}
+		textDownload: function(fileName, options) {
 			if (typeof(fileName) === "string") {
 				fileName = String(fileName);
 			}
 			else {
 				throw "The fileName should be a string in device.textDownload.";
 			}
-			if (typeof(charset) === "string") {
-				charset = String(charset);
-			}
-			else if (typeof(charset) === "undefined") {
-				charset = "UTF-8";
+			let method = "sftp";
+			let charset = "UTF-8";
+			let newSession = false;
+			if (typeof options === "object") {
+				if (typeof options.charset === "string") {
+					charset = String(options.charset);
+				}
+				else if (typeof options.charset !== "undefined") {
+					throw "The charset should be a string in device.textDownload";
+				}
+				if (typeof options.newSession === "boolean") {
+					newSession = options.newSession;
+				}
+				else if (typeof options.newSession !== "undefined") {
+					throw "Invalid option type newSession (should be a boolean) in device.textDowload";
+				}
+				if (options.method === "sftp" || options.method === "scp") {
+					method = options.method;
+				}
+				else {
+					throw "Invalid 'method' option in device.textDownload";
+				}
 			}
 			else {
-				throw "The charset should be a string in device.textDownload";
+				throw "Invalid argument in device.textDownload";
 			}
-			return _deviceHelper.textDownload(method, fileName, charset);
+			return _deviceHelper.textDownload(method, fileName, charset, newSession);
 		},
 	};
 	
@@ -628,18 +639,12 @@ const _connect = (_function, _protocol, _options) => {
 			}
 			_options.getConfigHelper().set(key, value);
 		},
-		download: function(key, method, fileName, storeFileName) {
+		download: function(key, fileName, options) {
 			if (typeof(key) === "string") {
 				key = String(key);
 			}
 			else {
 				throw "The key should be a string in config.download.";
-			}
-			if (typeof(method) === "string") {
-				method = String(method);
-			}
-			else {
-				throw "The method should be a string in config.download.";
 			}
 			if (typeof(fileName) === "string") {
 				fileName = String(fileName);
@@ -647,17 +652,34 @@ const _connect = (_function, _protocol, _options) => {
 			else {
 				throw "The fileName should be a string in config.download.";
 			}
-			if (typeof(storeFileName) === "string") {
-				storeFileName = String(storeFileName);
+			let storeFileName = String("");
+			let method = "sftp";
+			let newSession = false;
+			if (typeof options === "object") {
+				if (typeof options.newSession === "boolean") {
+					newSession = options.newSession;
+				}
+				else if (typeof options.newSession !== "undefined") {
+					throw "Invalid option type newSession (should be a boolean) in config.download";
+				}
+				if (options.method === "sftp" || options.method === "scp") {
+					method = options.method;
+				}
+				else {
+					throw "Invalid 'method' option in config.download";
+				}
+				if (typeof options.storeFileName === "string") {
+					storeFileName = String(options.storeFileName);
+				}
+				else if (typeof options.storeFileName !== "undefined") {
+					throw "Invalid 'storeFileName' option in config.download.";
+				}
 			}
-			else if (typeof(storeFileName) === "undefined") {
-				storeFileName = String("");
-			}
-			else {
-				throw "The storeFileName should be a string in config.download.";
+			else if (typeof options !== "undefined") {
+				throw "Invalid type for options argument in config.download";
 			}
 
-			_options.getConfigHelper().download(key, method, fileName, storeFileName);
+			_options.getConfigHelper().download(key, method, fileName, storeFileName, newSession);
 		}
 	};
 	

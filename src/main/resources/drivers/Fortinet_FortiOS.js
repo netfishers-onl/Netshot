@@ -24,7 +24,7 @@ var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "NetFishers",
-	version: "5.6" /* Version will appear in the Admin tab. */
+	version: "5.7" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -192,7 +192,7 @@ function snapshot(cli, device, config) {
 	var configuration;
 	if (useScp) {
 		try {
-			configuration = device.textDownload("scp", "sys_config");
+			configuration = device.textDownload("sys_config", { method: "scp" });
 		}
 		catch (e) {
 			cli.debug("Error with SCP method, falling back to show command");

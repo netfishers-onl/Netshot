@@ -401,11 +401,35 @@ public class Ssh extends Cli {
 		this.receiveTimeout = DEFAULT_RECEIVE_TIMEOUT;
 	}
 
+	/**
+	 * Create a SSH object by duplicating another one.
+	 * 
+	 * @param other the other SSH object
+	 */
+	public Ssh(Ssh other) {
+		super(other.host, other.taskLogger);
+		this.port = other.port;
+		this.username = other.username;
+		this.password = other.password;
+		this.publicKey = other.publicKey;
+		this.privateKey = other.privateKey;
+		this.sshConfig = other.sshConfig;
+	}
+
 	/* (non-Javadoc)
 	 * @see onl.netfishers.netshot.device.access.Cli#connect()
 	 */
 	@Override
 	public void connect() throws IOException {
+		this.connect(true);
+	}
+
+	/**
+	 * Create the SSH session and open the channel (if openChannel is true).
+	 * @param openChannel Whether to open the 
+	 * @throws IOException
+	 */
+	public void connect(boolean openChannel) throws IOException {
 		jsch = new JSch();
 		try {
 			if (privateKey != null && publicKey != null) {
@@ -472,16 +496,18 @@ public class Ssh extends Cli {
 			session.setConfig("mac.s2c", String.join(",", this.sshConfig.macs));
 			session.setTimeout(this.receiveTimeout);
 			session.connect(this.connectionTimeout);
-			channel = (ChannelShell)session.openChannel("shell");
-			if (this.sshConfig.usePty) {
-				channel.setPty(true);
-				channel.setPtyType(this.sshConfig.terminalType,
-						this.sshConfig.terminalCols, this.sshConfig.terminalRows,
-						this.sshConfig.terminalWidth, this.sshConfig.terminalWidth);
+			if (openChannel) {
+				channel = (ChannelShell)session.openChannel("shell");
+				if (this.sshConfig.usePty) {
+					channel.setPty(true);
+					channel.setPtyType(this.sshConfig.terminalType,
+							this.sshConfig.terminalCols, this.sshConfig.terminalRows,
+							this.sshConfig.terminalWidth, this.sshConfig.terminalWidth);
+				}
+				this.inStream = channel.getInputStream();
+				this.outStream = new PrintStream(channel.getOutputStream());
+				channel.connect(this.connectionTimeout);
 			}
-			this.inStream = channel.getInputStream();
-			this.outStream = new PrintStream(channel.getOutputStream());
-			channel.connect(this.connectionTimeout);
 		}
 		catch (JSchException e) {
 			throw new IOException(e.getMessage(), e);
@@ -527,14 +553,15 @@ public class Ssh extends Cli {
 	 * Download a file using SCP.
 	 * @param remoteFileName The file to download (name with full path) from the device
 	 * @param localFileName  The local file name (name with full path) where to write
+	 * @param newSession True to download through a new SSH session
 	 */
-	public void scpDownload(String remoteFileName, String localFileName) throws IOException {
+	public void scpDownload(String remoteFileName, String localFileName, boolean newSession) throws IOException {
 		if (localFileName == null) {
 			throw new FileNotFoundException("Invalid destination file name for SCP copy operation. "
 				+ "Have you defined 'netshot.snapshots.binary.path'?");
 		}
 		try (FileOutputStream fileStream = new FileOutputStream(localFileName)) {
-			this.scpDownload(remoteFileName, fileStream);
+			this.scpDownload(remoteFileName, fileStream, newSession);
 		}
 	}
 
@@ -542,8 +569,20 @@ public class Ssh extends Cli {
 	 * Download a file using SCP.
 	 * @param remoteFileName The file to download (name with full path) from the device
 	 * @param targetStream  Output stream
+	 * @param newSession True to download through a new SSH session
 	 */
-	public void scpDownload(String remoteFileName, OutputStream targetStream) throws IOException {
+	public void scpDownload(String remoteFileName, OutputStream targetStream, boolean newSession) throws IOException {
+		if (newSession) {
+			Ssh newSsh = new Ssh(this);
+			try {
+				newSsh.connect(false);
+				newSsh.scpDownload(remoteFileName, targetStream, false);
+			}
+			finally {
+				newSsh.disconnect();
+			}
+			return;
+		}
 		if (remoteFileName == null) {
 			throw new FileNotFoundException("Invalid source file name for SCP copy operation");
 		}
@@ -633,8 +672,20 @@ public class Ssh extends Cli {
 	 * Download a file using SFTP.
 	 * @param remoteFileName The file to download (name with full path) from the device
 	 * @param localFileName  The local file name (name with full path) where to write
+	 * @param newSession True to download through a new SSH session
 	 */
-	public void sftpDownload(String remoteFileName, String localFileName) throws IOException {
+	public void sftpDownload(String remoteFileName, String localFileName, boolean newSession) throws IOException {
+		if (newSession) {
+			Ssh newSsh = new Ssh(this);
+			try {
+				newSsh.connect(false);
+				newSsh.sftpDownload(remoteFileName, localFileName, false);
+			}
+			finally {
+				newSsh.disconnect();
+			}
+			return;
+		}
 		if (localFileName == null) {
 			throw new FileNotFoundException("Invalid destination file name for SFTP copy operation. "
 				+ "Have you defined 'netshot.snapshots.binary.path'?");

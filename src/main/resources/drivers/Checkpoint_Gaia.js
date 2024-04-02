@@ -29,7 +29,7 @@ var Info = {
 	name: "CheckpointGaia",
 	description: "Checkpoint Gaia",
 	author: "NetFishers",
-	version: "2.0"
+	version: "2.1"
 };
 
 var Config = {
@@ -331,7 +331,7 @@ function snapshot(cli, device, config) {
 	if (backupNameMatch) {
 		var backupName = backupNameMatch[1];
 		try {
-			config.download("backupArchive", "scp", backupName);
+			config.download("backupArchive", backupName, { method: "scp" });
 		}
 		catch (e) {
 			var text = "" + e;

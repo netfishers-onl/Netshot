@@ -103,9 +103,10 @@ public class JsConfigHelper {
 	 * @param method "scp" or "sftp" for now
 	 * @param remoteFileName the file (including full path) to download from the device
 	 * @param storeFileName the file name to store (null to use remoreFileName)
+	 * @param newSession use a new SSH session to download the file
 	 */
 	@Export
-	public void download(String key, String method, String remoteFileName, String storeFileName) throws Exception {
+	public void download(String key, String method, String remoteFileName, String storeFileName, boolean newSession) throws Exception {
 		if (remoteFileName == null) {
 			return;
 		}
@@ -140,7 +141,7 @@ public class JsConfigHelper {
 						if (cli instanceof Ssh) {
 							if (AttributeType.BINARYFILE.equals(attribute.getType())) {
 								ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, key, storeName);
-								((Ssh) cli).scpDownload(remoteFileName, fileAttribute.getFileName().toString());
+								((Ssh) cli).scpDownload(remoteFileName, fileAttribute.getFileName().toString(), newSession);
 								fileAttribute.setFileSize(fileAttribute.getFileName().length());
 								config.addAttribute(fileAttribute);
 							}
@@ -165,7 +166,7 @@ public class JsConfigHelper {
 						if (AttributeType.BINARYFILE.equals(attribute.getType())) {
 							if (cli instanceof Ssh) {
 								ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, key, storeName);
-								((Ssh) cli).sftpDownload(remoteFileName, fileAttribute.getFileName().toString());
+								((Ssh) cli).sftpDownload(remoteFileName, fileAttribute.getFileName().toString(), newSession);
 								fileAttribute.setFileSize(fileAttribute.getFileName().length());
 								config.addAttribute(fileAttribute);
 							}

@@ -21,7 +21,7 @@ var Info = {
 	name: "CitrixNetscaler",
 	description: "Citrix NetScaler",
 	author: "NetFishers",
-	version: "1.2"
+	version: "2.0"
 };
 
 var Config = {
@@ -54,7 +54,14 @@ var Config = {
 			preLine: "# ",
 			post: "# End of license"
 		}
-	}
+	},
+	"nsConfigBundle": {
+		type: "BinaryFile",
+		title: "Config Bundle",
+		comparable: false,
+		searchable: false,
+		checkable: false,
+	},
 };
 
 var Device = {
@@ -314,6 +321,21 @@ function snapshot(cli, device, config) {
 	}
 	config.set("runningConfig", runningConfig);
 
+	// Create a backup archive
+	const backupOutput = cli.command("create system backup -level full netshot");
+	if (!backupOutput.match(/Done/)) {
+		cli.debug(`Result of backup command: ${backupOutput}`);
+		throw "Couldn't create Netscaler backup";
+	}
+	try {
+		config.download("nsConfigBundle", "/var/ns_sys_backup/netshot.tgz", { method: "sftp", newSession: true });
+	}
+	catch (e) {
+		throw e;
+	}
+	finally {
+		cli.command("rm system backup netshot.tgz")
+	}
 };
 
 function analyzeSyslog(message) {

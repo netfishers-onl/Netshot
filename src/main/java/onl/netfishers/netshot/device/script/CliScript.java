@@ -194,7 +194,7 @@ public abstract class CliScript {
 					catch (ScriptException e) {
 						throw e;
 					}
-					catch (Exception e) {
+					catch (IOException e) {
 						log.warn("Unable to open an SSH connection to {}:{}.", address.getIp(), sshPort, e);
 						if (e.getMessage().contains("Auth fail")) {
 							taskLogger.warn(String.format("Authentication failed %s:%d using SSH credential set %s.",

@@ -573,10 +573,11 @@ public class JsDeviceHelper {
 	 * @param method "scp" for now
 	 * @param remoteFileName the file (including full path) to download from the device
 	 * @param charset the text charset
+	 * @param newSession start the SCP/SFTP download in a new SSH session
 	 * @return the downloaded text
 	 */
 	@Export
-	public String textDownload(String method, String remoteFileName, String charset) throws Exception {
+	public String textDownload(String method, String remoteFileName, String charset, boolean newSession) throws Exception {
 		if (remoteFileName == null) {
 			return null;
 		}
@@ -587,7 +588,7 @@ public class JsDeviceHelper {
 				}
 				else if (cli instanceof Ssh) {
 					ByteArrayOutputStream targetStream = new ByteArrayOutputStream();
-					((Ssh) cli).scpDownload(remoteFileName, targetStream);
+					((Ssh) cli).scpDownload(remoteFileName, targetStream, newSession);
 					return targetStream.toString(charset);
 				}
 				else {

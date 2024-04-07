@@ -73,9 +73,9 @@ jobs:
           echo ${{ steps.meta.outputs.version }} > VERSION.txt
           zip netshot_${{ steps.meta.outputs.version }}.zip *
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: netshot-zip
+          name: netshot_${{ steps.meta.outputs.version }}.zip
           path: zip/netshot_${{ steps.meta.outputs.version }}.zip
 
   attach-to-release:

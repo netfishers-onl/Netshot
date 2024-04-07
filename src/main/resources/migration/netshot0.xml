@@ -1172,4 +1172,8 @@
 			<column name="user_input_values" type="${JSON}"/>
 		</addColumn>
 	</changeSet>
+<!-- netshot_0_19_3_to_0_19_4.xml -->
+	<changeSet author="netshot (generated)" id="0.19.4_1">
+		<modifyDataType columnName="text" newDataType="varchar(524288)" tableName="diagnostic_result"/>
+	</changeSet>
 </databaseChangeLog>

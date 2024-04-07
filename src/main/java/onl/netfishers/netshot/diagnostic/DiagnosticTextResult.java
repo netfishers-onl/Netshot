@@ -35,7 +35,7 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 public class DiagnosticTextResult extends DiagnosticResult {
 
 	@Getter(onMethod=@__({
-		@Column(length = 16384),
+		@Column(length = 524288),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter

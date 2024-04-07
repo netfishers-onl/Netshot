@@ -182,13 +182,14 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 				log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 			}
 			log.error("Task {}. Error while executing the diagnostics.", this.getId(), e);
-			this.error("Error while executing the diagnostics: " + e.getMessage());
-			if (cliScript != null) {
-				this.logs.append(cliScript.getPlainJsLog());
+			String message = e.getMessage();
+			if (e.getCause() != null && e.getCause().getCause() != null) {
+				// Add SQL error if possible
+				message += " / " + e.getCause().getCause().getMessage();
 			}
+			this.error("Error while executing the diagnostics: " + message);
 			this.status = Status.FAILURE;
 			return;
-			
 		}
 		finally {
 			try {

@@ -102,13 +102,15 @@ public class RunDiagnosticCliScript extends CliScript {
 			options.setDiagnosticHelper(new JsDiagnosticHelper(device, diagnostics, jsDiagnostics, taskLogger));
 
 			if (jsDiagnostics.size() > 0) {
-				context.getBindings("js").getMember("_connect").execute("diagnostics", protocol.value(), options, taskLogger);
+				context.getBindings("js")
+					.getMember("_connect")
+					.execute("diagnostics", protocol.value(), options, taskLogger);
 			}
 
 		}
 		catch (PolyglotException e) {
 			log.error("Error while running script using driver {}.", driver.getName(), e);
-			taskLogger.error(String.format("Error while running script  using driver %s: '%s'.",
+			taskLogger.error(String.format("Error while running script using driver %s: '%s'.",
 					driver.getName(), e.getMessage()));
 			if (e.getMessage().contains("Authentication failed")) {
 				throw new InvalidCredentialsException("Authentication failed");

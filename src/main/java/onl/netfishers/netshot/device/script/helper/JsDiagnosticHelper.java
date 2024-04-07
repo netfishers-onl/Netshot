@@ -85,7 +85,7 @@ public class JsDiagnosticHelper {
 			}
 		}
 		catch (Exception e) {
-			log.warn("Error while setting the diagnostic result '{}'.", key);
+			log.warn("Error while setting the diagnostic result '{}'.", key, e);
 			taskLogger.error(String.format("Can't set diagnostic result %s: %s", key,  e.toString()));
 		}
 	}

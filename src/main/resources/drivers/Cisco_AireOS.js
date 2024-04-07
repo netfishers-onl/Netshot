@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2022 Sylvain Cadilhac (NetFishers)
+ * Copyright 2013-2024 Netshot
  * 
  * This file is part of Netshot.
  * 

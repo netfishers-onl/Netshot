@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2021 Sylvain Cadilhac (NetFishers)
+ * Copyright 2013-2024 Netshot
  * 
  * This file is part of Netshot.
  * 
@@ -76,7 +76,7 @@ import sun.misc.SignalHandler;
 public class Netshot extends Thread {
 
 	/** Netshot version. */
-	public static final String VERSION = "0.0.0";
+	public static final String VERSION = "0.0.0-dev";
 
 	/** The list of configuration files to look at, in sequence. */
 	private static final String[] CONFIG_FILENAMES = new String[] {

@@ -1,4 +1,4 @@
-/** Copyright 2013-2014 NetFishers */
+/** Copyright 2013-2024 Netshot */
 define([
 	'underscore',
 	'backbone',

@@ -1,4 +1,4 @@
-/** Copyright 2013-2014 NetFishers */
+/** Copyright 2013-2024 Netshot */
 require.config({
 	paths: {
 		jquery: 'libs/jquery/jquery-min',

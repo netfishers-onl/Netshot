@@ -92,4 +92,4 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           file: "*.zip"
-          file_blob: true
+          file_glob: true

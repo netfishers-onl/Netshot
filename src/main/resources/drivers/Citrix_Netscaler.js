@@ -21,7 +21,7 @@ var Info = {
 	name: "CitrixNetscaler",
 	description: "Citrix NetScaler",
 	author: "NetFishers",
-	version: "2.0"
+	version: "2.1"
 };
 
 var Config = {
@@ -92,7 +92,7 @@ var CLI = {
 	},
 	cli: {
 		prompt: /^([^\s\r\n]*( \((Primary|Secondary)\))?> )$/,
-		error: /^ERROR: /m,
+		error: /^ERROR: (.*)/m,
 		pager: {
 			avoid: "set cli mode -page OFF",
 			match: /^.--More--/,
@@ -321,6 +321,18 @@ function snapshot(cli, device, config) {
 	}
 	config.set("runningConfig", runningConfig);
 
+	// Delete any legacy backup archive
+	try {
+		cli.command("rm system backup netshot.tgz");
+	}
+	catch (e) {
+		if (String(e).match(/Backup file does not exist/)) {
+			// ignore
+		}
+		else {
+			throw e;
+		}
+	}
 	// Create a backup archive
 	const backupOutput = cli.command("create system backup -level full netshot");
 	if (!backupOutput.match(/Done/)) {
@@ -334,7 +346,7 @@ function snapshot(cli, device, config) {
 		throw e;
 	}
 	finally {
-		cli.command("rm system backup netshot.tgz")
+		cli.command("rm system backup netshot.tgz");
 	}
 };
 

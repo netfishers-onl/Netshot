@@ -2715,12 +2715,13 @@ public class RestService extends Thread {
 		try {
 			session.beginTransaction();
 			if (credentialSet.getMgmtDomain() != null) {
-				credentialSet.setMgmtDomain((Domain) session.load(Domain.class, credentialSet.getMgmtDomain().getId()));
+				credentialSet.setMgmtDomain(session.load(Domain.class, credentialSet.getMgmtDomain().getId()));
 			}
 			credentialSet.setDeviceSpecific(false);
 			session.save(credentialSet);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", credentialSet);
+			session.refresh(credentialSet);
 			this.suggestReturnCode(Response.Status.CREATED);
 			credentialSet.removeSensitive();
 			return credentialSet;

@@ -1,0 +1,169 @@
+import api from "@/api";
+import { NetshotError } from "@/api/httpClient";
+import { Icon, Protected } from "@/components";
+import { useToast } from "@/hooks";
+import { Level, Policy } from "@/types";
+import {
+  IconButton,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Spinner,
+  Stack,
+  Text,
+} from "@chakra-ui/react";
+import { useQuery } from "@tanstack/react-query";
+import { motion, useAnimationControls } from "framer-motion";
+import { MouseEvent, useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { QUERIES } from "../constants";
+import AddRuleButton from "./AddRuleButton";
+import EditPolicyButton from "./EditPolicyButton";
+import RemovePolicyButton from "./RemovePolicyButton";
+import RuleItem from "./RuleItem";
+
+export type PolicyItemProps = {
+  policy: Policy;
+};
+
+export default function PolicyItem(props: PolicyItemProps) {
+  const { policy } = props;
+  const toast = useToast();
+  const { t } = useTranslation();
+  const controls = useAnimationControls();
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
+  const hasRules = useMemo(() => policy.ruleCount > 0, [policy]);
+
+  const { data: rules, isLoading } = useQuery(
+    [QUERIES.POLICY_RULE_LIST, policy.id],
+    async () => api.rule.getAll(policy.id),
+    {
+      onError(err: NetshotError) {
+        toast.error(err);
+      },
+      enabled: !isCollapsed,
+    }
+  );
+
+  const toggleCollapse = useCallback(
+    async (evt?: MouseEvent<HTMLDivElement>) => {
+      if (!hasRules) {
+        return;
+      }
+
+      evt?.stopPropagation();
+      setIsCollapsed((prev) => !prev);
+      await controls.start(isCollapsed ? "show" : "hidden");
+    },
+    [controls, isCollapsed, hasRules]
+  );
+
+  return (
+    <Stack spacing="0" mx="-3">
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        borderRadius="lg"
+        bg="white"
+        height="36px"
+        transition="all .2s ease"
+        _hover={{
+          bg: "grey.50",
+        }}
+        onClick={toggleCollapse}
+        userSelect="none"
+        cursor="pointer"
+        px="3"
+      >
+        <Stack direction="row" spacing="3" alignItems="center">
+          {hasRules && (
+            <Icon
+              name="chevronDown"
+              color="grey.500"
+              sx={{
+                transform: isCollapsed ? "rotate(-90deg)" : "",
+              }}
+            />
+          )}
+          <Icon name="folder" color="green.600" />
+          <Text>{policy?.name}</Text>
+        </Stack>
+        <Protected
+          roles={[
+            Level.Admin,
+            Level.Operator,
+            Level.ReadWriteCommandOnDevice,
+            Level.ReadWrite,
+          ]}
+        >
+          <Menu>
+            <MenuButton
+              as={IconButton}
+              variant="ghost"
+              icon={<Icon name="moreHorizontal" />}
+              size="sm"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <MenuList>
+              <AddRuleButton
+                policy={policy}
+                renderItem={(open) => (
+                  <MenuItem onClick={open} icon={<Icon name="plus" />}>
+                    {t("Add rule")}
+                  </MenuItem>
+                )}
+              />
+              <EditPolicyButton
+                policy={policy}
+                renderItem={(open) => (
+                  <MenuItem onClick={open} icon={<Icon name="edit" />}>
+                    {t("Edit")}
+                  </MenuItem>
+                )}
+              />
+              <RemovePolicyButton
+                policy={policy}
+                renderItem={(open) => (
+                  <MenuItem onClick={open} icon={<Icon name="trash" />}>
+                    {t("Remove")}
+                  </MenuItem>
+                )}
+              />
+            </MenuList>
+          </Menu>
+        </Protected>
+      </Stack>
+      <motion.div
+        initial="hidden"
+        animate={controls}
+        variants={{
+          hidden: { opacity: 0, height: 0, pointerEvents: "none" },
+          show: {
+            opacity: 1,
+            height: "auto",
+            pointerEvents: "all",
+          },
+        }}
+        transition={{
+          duration: 0.2,
+        }}
+      >
+        <Stack direction="column" spacing="0">
+          {isLoading ? (
+            <Stack height="36px">
+              <Spinner />
+            </Stack>
+          ) : (
+            <>
+              {rules?.map((rule) => (
+                <RuleItem key={rule?.id} policy={policy} rule={rule} />
+              ))}
+            </>
+          )}
+        </Stack>
+      </motion.div>
+    </Stack>
+  );
+}

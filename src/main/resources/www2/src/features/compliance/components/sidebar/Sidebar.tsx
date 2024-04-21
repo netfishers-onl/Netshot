@@ -1,0 +1,66 @@
+import { Icon, Protected, SidebarLink } from "@/components";
+import { Level } from "@/types";
+import { Button, Divider, Stack } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next";
+import { SidebarProvider } from "../../contexts";
+import { SidebarContext } from "../../contexts/SidebarProvider";
+import AddPolicyButton from "../AddPolicyButton";
+import SidebarList from "./SidebarList";
+import SidebarSearch from "./SidebarSearch";
+import SidebarSearchList from "./SidebarSearchList";
+
+export default function Sidebar() {
+  const { t } = useTranslation();
+
+  return (
+    <SidebarProvider>
+      <Stack w="300px" overflow="auto" spacing="0">
+        <SidebarContext.Consumer>
+          {({ query }) => (
+            <>
+              <SidebarSearch />
+              <Divider />
+              {!query && (
+                <>
+                  <Stack spacing="0" py="4" px="5">
+                    <SidebarLink
+                      to="./software"
+                      label={t("Software")}
+                      description={t("Software version compliance")}
+                    />
+                    <SidebarLink
+                      to="./hardware"
+                      label={t("Hardware")}
+                      description={t("Hardware support status")}
+                    />
+                  </Stack>
+                  <Divider />
+                </>
+              )}
+              {query ? <SidebarSearchList /> : <SidebarList />}
+              <Protected
+                roles={[
+                  Level.Admin,
+                  Level.Operator,
+                  Level.ReadWriteCommandOnDevice,
+                  Level.ReadWrite
+                ]}
+              >
+                <Divider />
+                <Stack p="6">
+                  <AddPolicyButton
+                    renderItem={(open) => (
+                      <Button leftIcon={<Icon name="plus" />} onClick={open}>
+                        {t("Add policy")}
+                      </Button>
+                    )}
+                  />
+                </Stack>
+              </Protected>
+            </>
+          )}
+        </SidebarContext.Consumer>
+      </Stack>
+    </SidebarProvider>
+  );
+}

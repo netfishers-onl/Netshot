@@ -4,6 +4,7 @@ import { QUERIES } from "@/constants";
 import useToast from "@/hooks/useToast";
 import { Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
+import { Path, PathValue } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import Select, { SelectProps } from "./Select";
 
@@ -39,7 +40,7 @@ export default function CredentialSetSelect<T>(props: SelectProps<T>) {
       label={t("Credential")}
       placeholder={t("Select a credential set")}
       name={name}
-      defaultValue={value}
+      defaultValue={value as PathValue<T, Path<T>>}
       control={control}
       required={required}
       isLoading={isLoading}

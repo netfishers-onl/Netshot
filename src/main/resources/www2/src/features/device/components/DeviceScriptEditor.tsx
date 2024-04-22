@@ -114,6 +114,13 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
     );
   }
 
+  const onChange = useCallback(
+    (value: string) => {
+      form.setValue("script", value);
+    },
+    [form]
+  );
+
   return (
     <Stack flex="1" spacing="4">
       <Stack direction="row">
@@ -141,7 +148,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
       <MonacoEditor
         value={script?.script}
         language="typescript"
-        onChange={(value) => form.setValue("script", value)}
+        onModelChange={onChange}
       />
     </Stack>
   );

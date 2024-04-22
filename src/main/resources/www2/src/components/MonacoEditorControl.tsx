@@ -39,7 +39,7 @@ export default function MonacoEditorControl<T>(
   return (
     <MonacoEditor
       value={field.value as string}
-      onChange={handleChange}
+      onModelChange={handleChange}
       onBlur={field.onBlur}
       {...other}
     />

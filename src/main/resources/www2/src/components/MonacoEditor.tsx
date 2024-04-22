@@ -70,7 +70,7 @@ export type MonacoEditorProps = {
   language?: editor.IStandaloneEditorConstructionOptions["language"] | "python";
   readOnly?: boolean;
   value?: string;
-  onChange?(value: string): void;
+  onModelChange?(value: string): void;
   onFocus?(): void;
   onBlur?(): void;
 } & BoxProps;
@@ -83,7 +83,7 @@ function MonacoEditor(
     value,
     readOnly = false,
     language = "typescript",
-    onChange,
+    onModelChange,
     onFocus,
     onBlur,
     ...other
@@ -108,9 +108,9 @@ function MonacoEditor(
       return;
     }
 
-    if (onChange) {
+    if (onModelChange) {
       ide.current.onDidChangeModelContent(() => {
-        onChange(ide.current.getModel().getValue());
+        onModelChange(ide.current.getModel().getValue());
       });
     }
 
@@ -121,7 +121,7 @@ function MonacoEditor(
     if (onBlur) {
       ide.current.onDidBlurEditorText(onBlur);
     }
-  }, [onChange, onFocus, onBlur, ide]);
+  }, [onModelChange, onFocus, onBlur, ide]);
 
   return (
     <Box

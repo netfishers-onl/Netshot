@@ -20,7 +20,7 @@ import Icon from "../Icon";
 import UserSettingButton from "./UserSettingButton";
 
 export default function NavbarUser() {
-  const { user, setUser, level } = useDashboard();
+  const { user, level } = useDashboard();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const toast = useToast();
@@ -40,7 +40,6 @@ export default function NavbarUser() {
 
   const logout = useCallback(() => {
     logoutMutation.mutate(user?.id);
-    setUser(null);
   }, [user]);
 
   if (!user) {

@@ -21,7 +21,7 @@ var Info = {
 	name: "CitrixNetscaler",
 	description: "Citrix NetScaler",
 	author: "NetFishers",
-	version: "2.1"
+	version: "2.2"
 };
 
 var Config = {
@@ -306,9 +306,11 @@ function snapshot(cli, device, config) {
 
 	parseInterfaces("", runningConfig);
 
+	var usePartitions = false;
 	var partitionPattern = /^add ns partition (\S+)/mg;
 	var partition;
 	while (partition = partitionPattern.exec(runningConfig)) {
+		usePartitions = true;
 		var partitionName = partition[1];
 		cli.command("switch ns partition " + partitionName, { clearPrompt: true });
 		var partRunningConfig = cli.command("show ns runningConfig");
@@ -320,6 +322,16 @@ function snapshot(cli, device, config) {
 		parseInterfaces(partitionName, runningConfig);
 	}
 	config.set("runningConfig", runningConfig);
+
+	// Switch back to default partition, if possible
+	try {
+		if (usePartitions) {
+			cli.command("switch ns partition default");
+		}
+	}
+	catch (e) {
+		// Ignore
+	}
 
 	// Delete any legacy backup archive
 	try {

@@ -6760,7 +6760,8 @@ public class RestService extends Thread {
 	@Tag(name = "Reports", description = "Report and statistics")
 	public List<RsLightAccessFailureDevice> getAccessFailureDevices(
 			@QueryParam("days") @Parameter(description = "Look for the given number of last days") Integer days,
-			@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains)
+			@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains,
+			@BeanParam PaginationParams paginationParams)
 			throws WebApplicationException {
 		log.debug("REST request, devices without successful snapshot over the last {} days.", days);
 		
@@ -6777,16 +6778,18 @@ public class RestService extends Thread {
 			
 			String domainFilter = "";
 			if (domains.size() > 0) {
-				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
+				domainFilter = "and d.mgmtDomain.id in (:domainIds) ";
 			}
 			
 			@SuppressWarnings("unchecked")
 			Query<RsLightAccessFailureDevice> query = session
-				.createQuery(LIGHTDEVICELIST_BASEQUERY
-						+ ", (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, "
+				.createQuery(LIGHTDEVICELIST_BASEQUERY + ", "
+						+ "(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, "
 						+ "(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure "
-						+ "from Device d where d.status = :enabled"
-						+ domainFilter)
+						+ "from Device d where d.status = :enabled " + domainFilter
+						+ "and (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) < :when "
+						+ "order by lastSuccess desc")
+				.setParameter("when", when.getTime())
 				.setParameter("success", Task.Status.SUCCESS)
 				.setParameter("failure", Task.Status.FAILURE)
 				.setParameter("enabled", Device.Status.INPRODUCTION)
@@ -6794,17 +6797,11 @@ public class RestService extends Thread {
 			if (domainFilter.length() > 0) {
 				query.setParameterList("domainIds", domains);
 			}
+			paginationParams.apply(query);
 			@SuppressWarnings("deprecation")
 			List<RsLightAccessFailureDevice> devices = query
 				.setResultTransformer(Transformers.aliasToBean(RsLightAccessFailureDevice.class))
 				.list();
-			Iterator<RsLightAccessFailureDevice> d = devices.iterator();
-			while (d.hasNext()) {
-				RsLightAccessFailureDevice device = d.next();
-				if (device.getLastSuccess() != null && device.getLastSuccess().after(when.getTime())) {
-					d.remove();
-				}
-			}
 			return devices;
 		}
 		catch (HibernateException e) {

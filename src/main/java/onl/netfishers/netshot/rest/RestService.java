@@ -995,7 +995,9 @@ public class RestService extends Thread {
 		try {
 			session.enableFilter("lightAttributesOnly");
 			Query<Config> query = session
-				.createQuery("from Config c left join fetch c.attributes ca where c.device.id = :device", Config.class)
+				.createQuery(
+					"select distinct c from Config c left join fetch c.attributes ca where c.device.id = :device order by c.changeDate desc",
+					Config.class)
 				.setParameter("device", id);
 			paginationParams.apply(query);
 			return query.list();

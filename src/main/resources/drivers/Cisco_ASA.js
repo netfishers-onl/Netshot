@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoASA",
 	description: "Cisco ASA",
 	author: "NetFishers",
-	version: "1.6"
+	version: "1.7"
 };
 
 var Config = {
@@ -197,7 +197,7 @@ function snapshot(cli, device, config) {
 		device.set("name", hostname[1]);
 	}
 	
-	var version = showVersion.match(/Cisco Adaptive Security Appliance Software Version (.*)/m);
+	var version = showVersion.match(/Cisco Adaptive Security Appliance Software Version ([0-9a-zA-Z\(\)\.]+)/m);
 	version = (version ? version[1] : "Unknown");
 	device.set("softwareVersion", version);
 	config.set("asaVersion", version);

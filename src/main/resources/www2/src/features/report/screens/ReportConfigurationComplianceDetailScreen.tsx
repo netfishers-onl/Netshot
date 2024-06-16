@@ -1,9 +1,8 @@
 import api from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { Search } from "@/components";
 import { QUERIES } from "@/constants";
-import { usePagination, useToast } from "@/hooks";
-import { Heading, Skeleton, Spacer, Stack } from "@chakra-ui/react";
+import { useToast } from "@/hooks";
+import { Heading, Skeleton, Stack, Text } from "@chakra-ui/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
@@ -11,7 +10,6 @@ import { ConfigurationComplianceDeviceList } from "../components";
 
 export default function ReportConfigurationComplianceDetailScreen() {
   const { t } = useTranslation();
-  const pagination = usePagination();
   const params = useParams<{
     id: string;
   }>();
@@ -71,9 +69,18 @@ export default function ReportConfigurationComplianceDetailScreen() {
   return (
     <Stack p="9" spacing="6">
       <Stack direction="row" spacing="6" alignItems="center">
-        <Skeleton isLoaded={isSuccess}>
-          <Heading fontWeight="medium">{group?.name}</Heading>
-        </Skeleton>
+        <Stack spacing="2">
+          <Skeleton isLoaded={isSuccess}>
+            <Heading fontWeight="medium">{group?.name}</Heading>
+          </Skeleton>
+          <Skeleton isLoaded={isSuccess}>
+            <Text color="grey.500">
+              {t(
+                "Here is a list of non-compliant device. You can check why a device is not compliant by clicking on it."
+              )}
+            </Text>
+          </Skeleton>
+        </Stack>
         {/* <Stack direction="row" spacing="3">
           <Tag bg="green.900" color="green.50">
             {t("Non compliant:")} {stats.nonCompliant}
@@ -83,15 +90,7 @@ export default function ReportConfigurationComplianceDetailScreen() {
           </Tag>
         </Stack> */}
       </Stack>
-      <Stack direction="row">
-        <Search
-          placeholder={t("Search...")}
-          onQuery={pagination.onQuery}
-          onClear={pagination.onQueryClear}
-          w="30%"
-        />
-        <Spacer />
-      </Stack>
+
       {isSuccess && <ConfigurationComplianceDeviceList group={group} />}
     </Stack>
   );

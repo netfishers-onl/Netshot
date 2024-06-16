@@ -6,7 +6,7 @@ import TaskDialog from "@/components/TaskDialog";
 import { QUERIES } from "@/constants";
 import { Dialog } from "@/dialog";
 import { useToast } from "@/hooks";
-import { Device, Script, TaskType } from "@/types";
+import { Device, Script, SimpleDevice, Task, TaskType } from "@/types";
 import {
   Box,
   Center,
@@ -27,11 +27,11 @@ import { useTranslation } from "react-i18next";
 type RunScriptFormProps = {
   script: Script;
   driver: string;
-  device: Device;
+  devices: SimpleDevice[] | Device[];
 };
 
 function RunScriptForm(props: RunScriptFormProps) {
-  const { script, driver, device } = props;
+  const { script, driver, devices } = props;
 
   const { t } = useTranslation();
   const toast = useToast();
@@ -87,9 +87,15 @@ function RunScriptForm(props: RunScriptFormProps) {
       <Stack spacing="3">
         <Flex alignItems="center">
           <Box w="140px">
-            <Text color="grey.400">{t("Device")}</Text>
+            <Text color="grey.400">
+              {t(devices.length > 1 ? "Devices" : "Device")}
+            </Text>
           </Box>
-          <Text>{device?.name}</Text>
+          <Text>
+            {devices.length > 1
+              ? devices.map((device) => device.name).join(", ")
+              : devices?.[0]?.name}
+          </Text>
         </Flex>
         <Flex alignItems="center">
           <Box w="140px">
@@ -126,13 +132,13 @@ type Form = {
 } & ScheduleFormType;
 
 type RunScriptButtonProps = {
-  device: Device;
+  devices: SimpleDevice[] | Device[];
   driver: string;
   script: Script;
 };
 
 export default function RunScriptButton(props: RunScriptButtonProps) {
-  const { device, driver, script } = props;
+  const { devices, driver, script } = props;
   const { t } = useTranslation();
   const toast = useToast();
   const disclosure = useDisclosure();
@@ -153,28 +159,36 @@ export default function RunScriptButton(props: RunScriptButtonProps) {
   const onSubmit = useCallback(
     async (data: Form) => {
       const { schedule, userInputs } = data;
+      const tasks: Task[] = [];
 
-      const task = await mutation.mutateAsync({
-        type: TaskType.RunDeviceScript,
-        device: device?.id,
-        driver,
-        script: script?.script,
-        userInputs,
-        ...schedule,
-      });
+      for (const device of devices) {
+        const task = await mutation.mutateAsync({
+          type: TaskType.RunDeviceScript,
+          device: device?.id,
+          driver,
+          script: script?.script,
+          userInputs,
+          ...schedule,
+        });
+
+        tasks.push(task);
+      }
 
       dialog.close();
-      setTaskId(task.id);
-      disclosure.onOpen();
+
+      if (tasks.length === 1) {
+        setTaskId(tasks[0].id);
+        disclosure.onOpen();
+      }
     },
-    [device, mutation, disclosure]
+    [devices, mutation, disclosure]
   );
 
   // Find solution to pass useMemo prop (like description) to avoid using update method
   const dialog = Dialog.useForm({
     title: t("Run script"),
     description: (
-      <RunScriptForm device={device} script={script} driver={driver} />
+      <RunScriptForm devices={devices} script={script} driver={driver} />
     ),
     form,
     isLoading: mutation.isLoading,
@@ -188,7 +202,7 @@ export default function RunScriptButton(props: RunScriptButtonProps) {
   const open = useCallback(() => {
     dialog.updateProps({
       description: (
-        <RunScriptForm device={device} script={script} driver={driver} />
+        <RunScriptForm devices={devices} script={script} driver={driver} />
       ),
     });
 

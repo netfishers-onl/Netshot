@@ -9,19 +9,45 @@ import useToast from "./useToast";
 
 export type UseDeviceTypeOptionsProps = {
   withAny?: boolean;
+  onSuccess?(options: Option<DeviceType>[]): void;
 };
 
+/**
+ * Utility hook to manage device type/driver option list
+ * 
+ * @example
+ * const { isLoading, getOptionByDriver, getLabelByDriver } = useDeviceTypeOptions({
+    withAny: false,
+    onSuccess(options) {
+      const driver = options.find(
+        (option) => option.value?.name === device.driver
+      );
+
+      if (!driver) {
+        return;
+      }
+
+      setAttributes(
+        driver.value.attributes.filter((attribute) => attribute.checkable)
+      );
+    },
+  });
+ */
 export function useDeviceTypeOptions(props: UseDeviceTypeOptionsProps) {
-  const { withAny = false } = props;
+  const { withAny = false, onSuccess } = props;
   const { t } = useTranslation();
   const toast = useToast();
+
+  /**
+   * Get driver option list and set it to the cache
+   */
   const { isLoading, data: options } = useQuery(
     [QUERIES.DEVICE_TYPE_LIST, withAny],
     api.device.getAllType,
     {
       select(types) {
         const options = types.map((type) => ({
-          label: type?.name,
+          label: type?.description,
           value: type,
         }));
 
@@ -34,12 +60,20 @@ export function useDeviceTypeOptions(props: UseDeviceTypeOptionsProps) {
 
         return options as Option<DeviceType>[];
       },
+      onSuccess(res) {
+        if (onSuccess) {
+          onSuccess(res);
+        }
+      },
       onError(err: NetshotError) {
         toast.error(err);
       },
     }
   );
 
+  /**
+   * Get the label of device type by driver name
+   */
   const getLabelByDriver = useCallback(
     (driver: string) => {
       const option = getOptionByDriver(driver);
@@ -53,6 +87,9 @@ export function useDeviceTypeOptions(props: UseDeviceTypeOptionsProps) {
     [options]
   );
 
+  /**
+   * Get the option item from device type list by driver name
+   */
   const getOptionByDriver = useCallback(
     (driver: string) => {
       return options.find((option) => option.value?.name === driver);

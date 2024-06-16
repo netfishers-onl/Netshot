@@ -74,10 +74,9 @@ export default function ComplianceHardwareRuleScreen() {
             : t("N/A"),
         header: t("End of life"),
       }),
-      columnHelper.accessor("id", {
-        cell: (info) => {
-          const rule = info.row.original;
-
+      columnHelper.accessor((rule) => rule, {
+        cell(info) {
+          const rule = info.getValue();
           return (
             <Protected
               roles={[
@@ -120,6 +119,7 @@ export default function ComplianceHardwareRuleScreen() {
             </Protected>
           );
         },
+        id: "actions",
         header: "",
         enableSorting: false,
         meta: {
@@ -127,7 +127,7 @@ export default function ComplianceHardwareRuleScreen() {
         },
       }),
     ],
-    [t]
+    [t, rules]
   );
 
   return (

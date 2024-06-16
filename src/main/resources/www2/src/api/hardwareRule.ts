@@ -1,17 +1,6 @@
 import { HardwareRule } from "@/types";
 import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
-
-export type CreateOrUpdateHardwareRule = {
-  id?: number;
-  group: number;
-  driver: string;
-  partNumber: string;
-  partNumberRegExp: boolean;
-  family: string;
-  familyRegExp: boolean;
-  endOfSale: string;
-  endOfLife: string;
-};
+import { CreateOrUpdateHardwareRule } from "./types";
 
 async function getAll() {
   return httpClient.get<HardwareRule[]>("/hardwarerules");

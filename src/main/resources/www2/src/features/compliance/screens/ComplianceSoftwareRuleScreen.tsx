@@ -25,7 +25,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { createColumnHelper } from "@tanstack/react-table";
+import { Row, createColumnHelper } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AddSoftwareRuleButton from "../components/AddSoftwareRuleButton";
@@ -219,16 +219,16 @@ export default function ComplianceSoftwareRuleScreen() {
   );
 
   const onDrag = useCallback(
-    (row: SoftwareRule, reorderedData: SoftwareRule[]) => {
+    (row: Row<SoftwareRule>, reorderedData: SoftwareRule[]) => {
       setData(reorderedData);
     },
     []
   );
 
   const onDrop = useCallback(
-    (row: SoftwareRule, reorderedData: SoftwareRule[]) => {
+    (row: Row<SoftwareRule>, reorderedData: SoftwareRule[]) => {
       const currentIndex = reorderedData.findIndex(
-        (item) => item.id === row.id
+        (item) => item.id === +row.id
       );
       const next = reorderedData[currentIndex + 1];
 

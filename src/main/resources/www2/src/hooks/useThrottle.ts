@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
+/**
+ * Utility hook to make throttle function call
+ */
 export function useThrottle<T>(value: T, interval = 500): T {
   const [throttledValue, setThrottledValue] = useState<T>(value);
   const lastExecuted = useRef<number>(Date.now());

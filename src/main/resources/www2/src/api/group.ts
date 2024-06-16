@@ -1,25 +1,10 @@
-import { Group, GroupType } from "@/types";
+import { Group } from "@/types";
 import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
-import { PaginationQueryParams } from "./types";
-
-export type CreateGroupPayload = {
-  name: string;
-  folder: string;
-  type: GroupType;
-  hiddenFromReports: boolean;
-  staticDevices?: number[];
-  driver?: string;
-  query?: string;
-};
-
-export type UpdateGroupPayload = {
-  name: string;
-  folder: string;
-  hiddenFromReports: boolean;
-  staticDevices?: number[];
-  driver?: string;
-  query?: string;
-};
+import {
+  CreateGroupPayload,
+  PaginationQueryParams,
+  UpdateGroupPayload,
+} from "./types";
 
 async function getAll(queryParams: PaginationQueryParams = {}) {
   return httpClient.get<Group[]>("/groups");

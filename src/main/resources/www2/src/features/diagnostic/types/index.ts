@@ -1,9 +1,9 @@
-import { DeviceType, DiagnosticResultType, Option } from "@/types";
+import { DeviceType, DiagnosticResultType, Group, Option } from "@/types";
 
 export type Form = {
   name: string;
   resultType: Option<DiagnosticResultType>;
-  targetGroup: Option<number>;
+  targetGroup: Group;
   deviceDriver: Option<DeviceType>;
   cliMode: Option<string>;
   command: string;

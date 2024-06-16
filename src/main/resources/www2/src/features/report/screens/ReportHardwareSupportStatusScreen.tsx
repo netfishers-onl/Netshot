@@ -176,12 +176,16 @@ export default function ReportHardwareSupportStatusScreen() {
       columnHelper.accessor("date", {
         cell: (info) =>
           info.getValue()
-            ? formatDate(getDateFromUnix(info.getValue()))
+            ? formatDate(getDateFromUnix(info.getValue()), "yyyy-MM-dd")
             : t("Never"),
         header: t("Date"),
       }),
       columnHelper.accessor("eos", {
         cell: (info) => {
+          if (info.getValue() === 0) {
+            return null;
+          }
+
           return (
             <HardwareDeviceListButton
               type="eos"
@@ -192,7 +196,7 @@ export default function ReportHardwareSupportStatusScreen() {
                   onClick={open}
                   textDecoration="underline"
                 >
-                  {getFormattedCount(info)}
+                  +{getFormattedCount(info)}
                 </Button>
               )}
             />
@@ -202,6 +206,10 @@ export default function ReportHardwareSupportStatusScreen() {
       }),
       columnHelper.accessor("eol", {
         cell: (info) => {
+          if (info.getValue() === 0) {
+            return null;
+          }
+
           return (
             <HardwareDeviceListButton
               type="eol"
@@ -212,7 +220,7 @@ export default function ReportHardwareSupportStatusScreen() {
                   onClick={open}
                   textDecoration="underline"
                 >
-                  {getFormattedCount(info)}
+                  +{getFormattedCount(info)}
                 </Button>
               )}
             />

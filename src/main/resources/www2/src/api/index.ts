@@ -13,6 +13,8 @@ import softwareRule from "./softwareRule";
 import task from "./task";
 import user from "./user";
 
+export * from "./types";
+
 export default {
   device,
   group,

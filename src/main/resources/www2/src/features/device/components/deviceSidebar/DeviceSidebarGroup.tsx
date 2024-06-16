@@ -98,7 +98,7 @@ export default function DeviceSidebarGroup() {
         px="6"
         spacing="0"
         overflow="auto"
-        height="240px"
+        height="160px"
         ref={scrollContainer}
       >
         {isLoading ? (

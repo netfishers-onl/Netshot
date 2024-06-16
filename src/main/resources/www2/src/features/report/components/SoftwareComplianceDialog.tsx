@@ -155,6 +155,7 @@ export default function SoftwareComplianceDialog(
         <Stack spacing="2" overflow="auto">
           {triggers.map((trigger) => (
             <Stack
+              key={trigger.label}
               direction="row"
               alignItems="center"
               border="1px solid"

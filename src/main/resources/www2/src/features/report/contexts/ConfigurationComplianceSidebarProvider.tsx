@@ -1,3 +1,4 @@
+import { Group, Option } from "@/types";
 import {
   Dispatch,
   PropsWithChildren,
@@ -9,9 +10,9 @@ import {
 } from "react";
 
 export type ConfigurationComplianceFilters = {
-  groups: number[];
-  domains: number[];
-  policies: number[];
+  groups: Group[];
+  domains: Option<number>[];
+  policies: Option<number>[];
 };
 
 export type ConfigurationComplianceContextType = {

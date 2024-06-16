@@ -65,6 +65,7 @@ export type SimpleDevice = {
 
 export type DeviceAttribute = {
   name: string;
+  text: string;
   type: string;
 };
 
@@ -132,7 +133,7 @@ export type DeviceDiagnosticResult = {
 };
 
 export type DeviceConfig = {
-  attributes: DeviceAttribute;
+  attributes: DeviceAttribute[];
   author: string;
   changeDate: string;
   id: number;

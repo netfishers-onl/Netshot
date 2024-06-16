@@ -4,20 +4,23 @@ import { GroupOrFolderItem } from "@/components";
 import { QUERIES } from "@/constants";
 import { usePagination, useToast } from "@/hooks";
 import { Group } from "@/types";
-import { createFoldersFromGroups, isGroup } from "@/utils";
+import { createFoldersFromGroups, isGroup, search } from "@/utils";
 import { Skeleton, Stack } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { useConfigurationCompliance } from "../contexts";
 
 export default function ConfigurationCompliantSidebarList() {
   const toast = useToast();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const pagination = usePagination();
+  const ctx = useConfigurationCompliance();
+
   const { data: items, isLoading } = useQuery(
-    [QUERIES.DEVICE_GROUPS],
+    [QUERIES.DEVICE_GROUPS, ctx.query],
     async () => {
       return api.group.getAll(pagination);
     },
@@ -26,7 +29,7 @@ export default function ConfigurationCompliantSidebarList() {
         toast.error(err);
       },
       select(groups) {
-        return createFoldersFromGroups(groups);
+        return createFoldersFromGroups(search(groups, "name").with(ctx.query));
       },
     }
   );

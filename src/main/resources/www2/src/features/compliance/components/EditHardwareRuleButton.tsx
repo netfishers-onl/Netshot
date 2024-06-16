@@ -1,5 +1,4 @@
-import api from "@/api";
-import { CreateOrUpdateHardwareRule } from "@/api/hardwareRule";
+import api, { CreateOrUpdateHardwareRule } from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { ANY_OPTION } from "@/constants";
 import { Dialog } from "@/dialog";
@@ -32,13 +31,7 @@ export default function EditHardwareRuleButton(
       driver: rule.driver ? null : ANY_OPTION,
       family: rule?.family,
       familyRegExp: rule?.familyRegExp,
-      group: rule.targetGroup
-        ? {
-            label: rule?.targetGroup?.name,
-            value: rule?.targetGroup?.id,
-          }
-        : ANY_OPTION,
-
+      group: rule.targetGroup,
       partNumber: rule?.partNumber,
       partNumberRegExp: rule?.partNumberRegExp,
       endOfLife: getDateFromUnix(rule?.endOfLife),
@@ -77,7 +70,7 @@ export default function EditHardwareRuleButton(
         driver: values.driver.value?.name,
         family: values.family,
         familyRegExp: values.familyRegExp,
-        group: values.group?.value,
+        group: values.group?.id,
 
         partNumber: values.partNumber,
         partNumberRegExp: values.partNumberRegExp,

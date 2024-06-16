@@ -1,10 +1,9 @@
-import api from "@/api";
+import api, { ReportExportDataQueryParams } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { ReportExportDataQueryParams } from "@/api/report";
-import { DomainSelect, GroupSelect, Select, Switch } from "@/components";
+import { DomainSelect, Select, Switch, TreeGroupSelector } from "@/components";
 import { Dialog } from "@/dialog";
 import { useToast } from "@/hooks";
-import { Option } from "@/types";
+import { Group, Option } from "@/types";
 import { download } from "@/utils";
 import { Divider, Stack, Text } from "@chakra-ui/react";
 import { useMutation } from "@tanstack/react-query";
@@ -17,7 +16,7 @@ import { ExportMimeType } from "../types";
 type Form = {
   format: Option<ExportMimeType>;
   domain: Option<number>;
-  groups: Option<number>[];
+  groups: Group[];
   hasGroups: boolean;
   hasInterfaces: boolean;
   hasInventory: boolean;
@@ -33,6 +32,11 @@ function ExportDataForm() {
   const hasInventory = useWatch({
     control: form.control,
     name: "hasInventory",
+  });
+
+  const groups = useWatch({
+    control: form.control,
+    name: "groups",
   });
 
   useEffect(() => {
@@ -51,7 +55,12 @@ function ExportDataForm() {
         label={t("Output format")}
       />
       <DomainSelect control={form.control} name="domain" />
-      <GroupSelect isMulti control={form.control} name="groups" />
+      <TreeGroupSelector
+        value={groups}
+        onChange={(groups) => form.setValue("groups", groups)}
+        isMulti
+        withAny
+      />
       <Stack direction="row" spacing="6">
         <Stack spacing="0" flex="1">
           <Text fontWeight="medium">{t("Device group details")}</Text>
@@ -175,8 +184,8 @@ export default function ExportDataButton(props: ExportDataButtonProps) {
   const onSubmit = useCallback(
     async (values: Form) => {
       mutation.mutate({
-        domain: values.domain.value,
-        group: values.groups.map((group) => group.value),
+        domain: values.domain?.value,
+        group: values.groups.map((group) => group.id),
         groups: values.hasGroups,
         interfaces: values.hasInterfaces,
         inventory: values.hasInventory,

@@ -1,4 +1,6 @@
+export { default as DeviceBulkEditButton } from "./DeviceBulkEditButton";
 export { default as DeviceComplianceButton } from "./DeviceComplianceButton";
+export { default as DeviceConfigurationAttribute } from "./DeviceConfigurationAttribute";
 export { default as DeviceDiagnosticButton } from "./DeviceDiagnosticButton";
 export { default as DeviceDisableButton } from "./DeviceDisableButton";
 export { default as DeviceEditButton } from "./DeviceEditButton";

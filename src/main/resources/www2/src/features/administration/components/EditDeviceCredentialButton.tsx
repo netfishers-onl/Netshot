@@ -1,5 +1,4 @@
-import api from "@/api";
-import { DeviceCredentialPayload } from "@/api/admin";
+import api, { DeviceCredentialPayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { ANY_OPTION } from "@/constants";
 import { Dialog } from "@/dialog";

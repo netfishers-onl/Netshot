@@ -1,5 +1,6 @@
 import { Dialog } from "@/dialog";
-import { ReactElement, useCallback, useMemo } from "react";
+import { DeviceTypeAttribute } from "@/types";
+import { ReactElement, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import DeviceConfigurationView from "./DeviceConfigurationView";
 
@@ -8,29 +9,19 @@ import DeviceConfigurationView from "./DeviceConfigurationView";
  */
 export type DeviceConfigurationViewButtonProps = {
   id: number;
-  type: "configuration" | "adminConfiguration" | "xrPackages";
+  attribute: DeviceTypeAttribute;
   renderItem(open: () => void): ReactElement;
 };
 
 export default function DeviceConfigurationViewButton(
   props: DeviceConfigurationViewButtonProps
 ) {
-  const { id, type, renderItem } = props;
+  const { id, attribute, renderItem } = props;
   const { t } = useTranslation();
 
-  const title = useMemo(() => {
-    if (type === "configuration") {
-      return t("Configuration changes");
-    } else if (type === "adminConfiguration") {
-      return t("Admin configuration changes");
-    } else if (type === "xrPackages") {
-      return t("XR packages changes");
-    }
-  }, [type]);
-
   const dialog = Dialog.useAlert({
-    title,
-    description: <DeviceConfigurationView id={id} type={type} />,
+    title: t(attribute?.title),
+    description: <DeviceConfigurationView id={id} attribute={attribute} />,
     size: "5xl",
   });
 

@@ -1,7 +1,5 @@
 import api from "@/api";
-import httpClient, { HttpEventType } from "@/api/httpClient";
 import { QUERIES, getUserLevelLabel } from "@/constants";
-import { Dialog } from "@/dialog";
 import useToast from "@/hooks/useToast";
 import { Level, User } from "@/types";
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react";
@@ -73,21 +71,6 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   }, [user]);
 
   const level = useMemo(() => getUserLevelLabel(user?.level), [user]);
-
-  /**
-   * Open session expired modal when catch 403 forbidden response from httpClient
-   */
-  const forbiddenDialog = Dialog.useAlert({
-    title: t("Your session has expired"),
-    description: t(
-      "Oops, your session has expired. Please re-authenticate to continue"
-    ),
-  });
-
-  httpClient.on(HttpEventType.Forbidden, () => {
-    forbiddenDialog.open();
-    navigate("/signin");
-  });
 
   const ctx = useMemo(
     () => ({

@@ -1,5 +1,5 @@
+import api from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import report from "@/api/report";
 import { DataTable, EmptyResult } from "@/components";
 import { useToast } from "@/hooks";
 import { HardwareSupportDevice } from "@/types";
@@ -46,7 +46,7 @@ export default function HardwareDeviceListButton(
   const { data, isLoading } = useQuery({
     queryKey: [QUERIES.DEVICE_HARDWARE_STATUS, type, date],
     queryFn() {
-      return report.getAllHardwareSupportDevice(type, date);
+      return api.report.getAllHardwareSupportDevice(type, date);
     },
     onError(err: NetshotError) {
       toast.error(err);
@@ -60,7 +60,7 @@ export default function HardwareDeviceListButton(
         cell: (info) => info.getValue(),
         header: t("Device"),
       }),
-      columnHelper.accessor("mgmtAddress.ip", {
+      columnHelper.accessor("mgmtAddress", {
         cell: (info) => info.getValue(),
         header: t("Management IP"),
       }),

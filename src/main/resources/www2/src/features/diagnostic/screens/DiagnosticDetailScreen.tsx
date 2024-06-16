@@ -160,13 +160,7 @@ export default function DeviceDetailScreen() {
               <Box w="200px">
                 <Text color="grey.400">{t("CLI mode")}</Text>
               </Box>
-              <Skeleton isLoaded={!isLoading}>
-                {diagnostic?.enabled ? (
-                  <Tag colorScheme="green">{t("Enabled")}</Tag>
-                ) : (
-                  <Tag colorScheme="red">{t("Disabled")}</Tag>
-                )}
-              </Skeleton>
+              <Skeleton isLoaded={!isLoading}>{diagnostic?.cliMode}</Skeleton>
             </Flex>
             <Flex alignItems="center">
               <Box w="200px">
@@ -194,6 +188,18 @@ export default function DeviceDetailScreen() {
                 <Text fontFamily="mono">
                   {diagnostic?.modifierReplacement ?? "N/A"}
                 </Text>
+              </Skeleton>
+            </Flex>
+            <Flex alignItems="center">
+              <Box w="200px">
+                <Text color="grey.400">{t("Enabled")}</Text>
+              </Box>
+              <Skeleton isLoaded={!isLoading}>
+                {diagnostic?.enabled ? (
+                  <Tag colorScheme="green">{t("Enabled")}</Tag>
+                ) : (
+                  <Tag colorScheme="red">{t("Disabled")}</Tag>
+                )}
               </Skeleton>
             </Flex>
           </Stack>

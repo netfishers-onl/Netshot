@@ -1,6 +1,5 @@
-import api from "@/api";
+import api, { TaskQueryParams } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { TaskQueryParams } from "@/api/task";
 import {
   DataTable,
   EmptyResult,
@@ -193,7 +192,7 @@ export default function CancelledTaskScreen() {
             w="30%"
           />
           <Spacer />
-          <Menu>
+          <Menu strategy="fixed">
             <MenuButton
               as={Button}
               variant="primary"

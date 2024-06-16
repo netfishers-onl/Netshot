@@ -7,6 +7,32 @@ export type UsePaginationConfig = {
   query?: string;
 };
 
+/**
+ * Utiity hook to manage pagination for request
+ * 
+ * @example
+ * const pagination = usePagination({
+    limit: 50,
+  });
+
+  const {
+    data,
+    isLoading,
+  } = useQuery(
+    [
+      QUERIES.ALL_TASKS,
+      pagination.query,
+      pagination.offset,
+      pagination.limit,
+    ],
+    async () => api.task.getAll(pagination),
+    {
+      select(res) {
+        return search(res, "description").with(pagination.query);
+      },
+    }
+  );
+ */
 export function usePagination(config?: UsePaginationConfig) {
   const baseConfig = useMemo(
     () => ({

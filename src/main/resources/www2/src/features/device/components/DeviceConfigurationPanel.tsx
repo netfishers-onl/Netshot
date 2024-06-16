@@ -1,27 +1,23 @@
 import Icon from "@/components/Icon";
-import { useToast } from "@/hooks";
-import { DeviceConfig } from "@/types";
-import { downloadFromUrl } from "@/utils";
+import { useDeviceTypeOptions, useToast } from "@/hooks";
+import { DeviceConfig, DeviceTypeAttribute } from "@/types";
+import { formatDate } from "@/utils";
 import {
-  Button,
   Divider,
   IconButton,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
+  Skeleton,
   Spacer,
   Stack,
   Tag,
   Text,
 } from "@chakra-ui/react";
-import { format } from "date-fns";
 import { motion, useAnimationControls } from "framer-motion";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
+import { useDevice } from "../contexts/DeviceProvider";
+import DeviceConfigurationAttribute from "./DeviceConfigurationAttribute";
 import DeviceConfigurationCompareButton from "./DeviceConfigurationCompareButton";
-import DeviceConfigurationViewButton from "./DeviceConfigurationViewButton";
 
 export type DeviceConfigurationPanelProps = {
   config: DeviceConfig;
@@ -34,44 +30,30 @@ export default function DeviceConfigurationPanel(
   const { t } = useTranslation();
   const controls = useAnimationControls();
   const toast = useToast();
+  const { device } = useDevice();
   const params = useParams<{ id: string }>();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
+  const [attributes, setAttributes] = useState<DeviceTypeAttribute[]>([]);
+
+  const { isLoading, getOptionByDriver } = useDeviceTypeOptions({
+    withAny: false,
+    onSuccess(options) {
+      const driver = options.find(
+        (option) => option.value?.name === device.driver
+      );
+
+      if (!driver) {
+        return;
+      }
+
+      setAttributes(
+        driver.value.attributes.filter((attribute) => attribute.checkable)
+      );
+    },
+  });
 
   const changeDate = useMemo(() => {
-    return format(new Date(config?.changeDate), "yyyy-MM-dd");
-  }, [config]);
-
-  const downloadAdminConfiguration = useCallback(async () => {
-    try {
-      await downloadFromUrl(`/api/configs/${config?.id}/adminConfiguration`);
-    } catch (err) {
-      toast.error({
-        title: t("Download error"),
-        description: t("An error occurred during the file download"),
-      });
-    }
-  }, [config]);
-
-  const downloadConfiguration = useCallback(async () => {
-    try {
-      await downloadFromUrl(`/api/configs/${config?.id}/configuration`);
-    } catch (err) {
-      toast.error({
-        title: t("Download error"),
-        description: t("An error occurred during the file download"),
-      });
-    }
-  }, [config]);
-
-  const downloadXRPackage = useCallback(async () => {
-    try {
-      await downloadFromUrl(`/api/configs/${config?.id}/xrPackages`);
-    } catch (err) {
-      toast.error({
-        title: t("Download error"),
-        description: t("An error occurred during the file download"),
-      });
-    }
+    return formatDate(config?.changeDate);
   }, [config]);
 
   const toggleCollapse = useCallback(async () => {
@@ -107,7 +89,8 @@ export default function DeviceConfigurationPanel(
         <Text fontSize="md" fontWeight="semibold">
           {changeDate}
         </Text>
-        <Tag colorScheme="green">{config?.author}</Tag>
+        {config?.author && <Tag colorScheme="grey">{config?.author}</Tag>}
+
         <Spacer />
         <DeviceConfigurationCompareButton config={config} id={+params?.id} />
       </Stack>
@@ -128,69 +111,24 @@ export default function DeviceConfigurationPanel(
         }}
       >
         <Divider />
-        <Stack direction="row" spacing="3" p="6">
-          <Menu>
-            <MenuButton as={Button}>{t("Admin configuration")}</MenuButton>
-            <MenuList>
-              <DeviceConfigurationViewButton
-                id={config?.id}
-                type="adminConfiguration"
-                renderItem={(open) => (
-                  <MenuItem onClick={open} icon={<Icon name="eye" />}>
-                    {t("View")}
-                  </MenuItem>
-                )}
-              />
-
-              <MenuItem
-                icon={<Icon name="download" />}
-                onClick={downloadAdminConfiguration}
-              >
-                {t("Download")}
-              </MenuItem>
-            </MenuList>
-          </Menu>
-          <Menu>
-            <MenuButton as={Button}>{t("Configuration")}</MenuButton>
-            <MenuList>
-              <DeviceConfigurationViewButton
-                id={config?.id}
-                type="configuration"
-                renderItem={(open) => (
-                  <MenuItem onClick={open} icon={<Icon name="eye" />}>
-                    {t("View")}
-                  </MenuItem>
-                )}
-              />
-
-              <MenuItem
-                icon={<Icon name="download" />}
-                onClick={downloadConfiguration}
-              >
-                {t("Download")}
-              </MenuItem>
-            </MenuList>
-          </Menu>
-          <Menu>
-            <MenuButton as={Button}>{t("XR packages")}</MenuButton>
-            <MenuList>
-              <DeviceConfigurationViewButton
-                id={config?.id}
-                type="xrPackages"
-                renderItem={(open) => (
-                  <MenuItem onClick={open} icon={<Icon name="eye" />}>
-                    {t("View")}
-                  </MenuItem>
-                )}
-              />
-              <MenuItem
-                icon={<Icon name="download" />}
-                onClick={downloadXRPackage}
-              >
-                {t("Download")}
-              </MenuItem>
-            </MenuList>
-          </Menu>
+        <Stack direction="column" spacing="3" p="6">
+          {isLoading ? (
+            <>
+              <Skeleton w="80px" h="40px" />
+              <Skeleton w="80px" h="40px" />
+              <Skeleton w="80px" h="40px" />
+            </>
+          ) : (
+            <>
+              {attributes?.map((attribute) => (
+                <DeviceConfigurationAttribute
+                  key={attribute?.name}
+                  config={config}
+                  attribute={attribute}
+                />
+              ))}
+            </>
+          )}
         </Stack>
       </motion.div>
     </Stack>

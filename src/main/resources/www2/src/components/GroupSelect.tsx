@@ -68,6 +68,7 @@ export default function GroupSelect<T>(props: GroupSelectProps<T>) {
       isLoading={isLoading}
       noOptionsMessage={() => <Text>{t("No group found")}</Text>}
       options={options}
+      isClearable
       {...other}
     />
   );

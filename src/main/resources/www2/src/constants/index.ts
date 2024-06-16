@@ -1,5 +1,5 @@
 import i18n from "@/i18n";
-import { Level } from "@/types";
+import { DeviceSoftwareLevel, Level } from "@/types";
 
 export const QUERIES = {
   USER: "user",
@@ -55,4 +55,31 @@ export function getUserLevelOption(key: Level) {
 
 export function getUserLevelLabel(key: Level) {
   return getUserLevelOption(key)?.label;
+}
+
+export const DEVICE_LEVEL_OPTIONS = [
+  {
+    label: i18n.t("Gold"),
+    value: DeviceSoftwareLevel.GOLD,
+  },
+  {
+    label: i18n.t("Silver"),
+    value: DeviceSoftwareLevel.SILVER,
+  },
+  {
+    label: i18n.t("Bronze"),
+    value: DeviceSoftwareLevel.BRONZE,
+  },
+  {
+    label: i18n.t("Non compliant"),
+    value: DeviceSoftwareLevel.NON_COMPLIANT,
+  },
+  {
+    label: i18n.t("Unknown"),
+    value: DeviceSoftwareLevel.UNKNOWN,
+  },
+];
+
+export function getDeviceLevelOption(key: DeviceSoftwareLevel) {
+  return DEVICE_LEVEL_OPTIONS.find((option) => option.value === key);
 }

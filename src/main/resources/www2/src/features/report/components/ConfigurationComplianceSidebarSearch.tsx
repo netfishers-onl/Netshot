@@ -1,9 +1,13 @@
-import { DomainSelect, GroupSelect, Icon, PolicySelect } from "@/components";
+import {
+  DomainSelect,
+  Icon,
+  PolicySelect,
+  TreeGroupSelector,
+} from "@/components";
 import Search from "@/components/Search";
 import { Dialog } from "@/dialog";
 import { useThrottle } from "@/hooks";
-import { Option } from "@/types";
-import { getValuesFromOptions } from "@/utils";
+import { Group, Option } from "@/types";
 import { IconButton, Stack } from "@chakra-ui/react";
 import {
   MouseEvent,
@@ -12,15 +16,44 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useConfigurationCompliance } from "../contexts";
 
 type FilterForm = {
   domains: Option<number>[];
-  groups: Option<number>[];
+  groups: Group[];
   policies: Option<number>[];
 };
+
+function ConfigurationComplianceSidebarSearchFilterForm() {
+  const form = useFormContext();
+
+  const groups = useWatch({
+    control: form.control,
+    name: "groups",
+  });
+
+  const onGroupSelect = useCallback(
+    (selectedGroups: Group[]) => {
+      form.setValue("groups", selectedGroups);
+    },
+    [form]
+  );
+
+  return (
+    <Stack>
+      <DomainSelect isMulti control={form.control} name="domains" />
+      <TreeGroupSelector
+        value={groups}
+        onChange={onGroupSelect}
+        withAny
+        isMulti
+      />
+      <PolicySelect isMulti control={form.control} name="policies" />
+    </Stack>
+  );
+}
 
 type ConfigurationComplianceSidebarSearchFilterProps = {
   renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
@@ -35,18 +68,18 @@ function ConfigurationComplianceSidebarSearchFilter(
   const ctx = useConfigurationCompliance();
   const form = useForm<FilterForm>({
     defaultValues: {
-      domains: [],
-      groups: [],
-      policies: [],
+      domains: ctx.filters.domains,
+      groups: ctx.filters.groups,
+      policies: ctx.filters.policies,
     },
   });
 
   const onSubmit = useCallback(
     (values: FilterForm) => {
       ctx.setFilters({
-        domains: getValuesFromOptions(values.domains),
-        groups: getValuesFromOptions(values.groups),
-        policies: getValuesFromOptions(values.policies),
+        domains: values.domains,
+        groups: values.groups,
+        policies: values.policies,
       });
 
       dialog.close();
@@ -56,13 +89,7 @@ function ConfigurationComplianceSidebarSearchFilter(
 
   const dialog = Dialog.useForm({
     title: t("Advanced filters"),
-    description: (
-      <Stack>
-        <DomainSelect isMulti control={form.control} name="domains" />
-        <GroupSelect isMulti control={form.control} name="groups" />
-        <PolicySelect isMulti control={form.control} name="policies" />
-      </Stack>
-    ),
+    description: <ConfigurationComplianceSidebarSearchFilterForm />,
     form,
     onSubmit,
     onCancel() {

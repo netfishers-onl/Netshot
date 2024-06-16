@@ -100,6 +100,9 @@ function MonacoEditor(
       language,
       automaticLayout: true,
       readOnly,
+      padding: {
+        top: 20,
+      },
     });
   }, [container, value, readOnly, language]);
 
@@ -143,7 +146,6 @@ function MonacoEditor(
         right="0"
         width="100%"
         height="100%"
-        my="5"
         ref={container}
       />
     </Box>

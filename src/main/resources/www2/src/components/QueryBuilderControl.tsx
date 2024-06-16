@@ -183,6 +183,8 @@ export default function QueryBuilderControl<T>(
     },
   });
 
+  console.log(form);
+
   const { isLoading: isDomainLoading, data: domains } = useQuery(
     [QUERIES.DOMAIN_LIST],
     async () => {

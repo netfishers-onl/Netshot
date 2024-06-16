@@ -1,4 +1,4 @@
-import { DeviceSoftwareLevel, DeviceType, Option } from "@/types";
+import { DeviceSoftwareLevel, DeviceType, Group, Option } from "@/types";
 
 export type RuleForm = {
   name: string;
@@ -18,7 +18,7 @@ export type SoftwareRuleFormValues = {
   driver: Option<DeviceType>;
   family: string;
   familyRegExp: boolean;
-  group: Option<number>;
+  group: Group;
   level: Option<DeviceSoftwareLevel>;
   partNumber: string;
   partNumberRegExp: boolean;
@@ -34,5 +34,5 @@ export type HardwareRuleFormValues = {
   familyRegExp: boolean;
   partNumber: string;
   partNumberRegExp: boolean;
-  group: Option<number>;
+  group: Group;
 };

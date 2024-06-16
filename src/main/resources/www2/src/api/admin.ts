@@ -3,33 +3,13 @@ import {
   ClusterMasterStatus,
   ClusterMember,
   CredentialSet,
-  CredentialSetType,
   DeviceType,
   Domain,
-  HashingAlgorithm,
   Hook,
   User,
 } from "@/types";
 import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
-import { PaginationQueryParams } from "./types";
-
-export type DeviceCredentialPayload = {
-  name: string;
-  mgmtDomain: {
-    id: number;
-  };
-  community: string;
-  type: CredentialSetType;
-  authKey?: string;
-  authType?: HashingAlgorithm;
-  privKey?: string;
-  privType?: HashingAlgorithm;
-  username?: string;
-  password?: string;
-  superPassword?: string;
-  publicKey?: string;
-  privateKey?: string;
-};
+import { DeviceCredentialPayload, PaginationQueryParams } from "./types";
 
 async function getAllApiToken(queryParams: PaginationQueryParams) {
   return httpClient.get<ApiToken[]>("/apitokens", {

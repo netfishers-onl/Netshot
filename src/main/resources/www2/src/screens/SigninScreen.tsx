@@ -91,13 +91,40 @@ function SigninScreen() {
         </Stack>
       </Stack>
       <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="center"
-        bg="green.1000"
-        flex="1"
+        direction="column"
+        p="60px"
+        bg="green.1100"
+        flex="0 0 50%"
+        spacing="5"
       >
         <SigninIllustration />
+        <Stack>
+          <Heading
+            fontSize="9xl"
+            color="white"
+            fontWeight="medium"
+            lineHeight="90%"
+          >
+            {t("Network")}
+          </Heading>
+          <Heading
+            fontSize="9xl"
+            color="white"
+            fontWeight="medium"
+            lineHeight="90%"
+          >
+            {t("orchestration")}
+          </Heading>
+
+          <Heading
+            fontSize="9xl"
+            color="green.500"
+            fontWeight="medium"
+            lineHeight="90%"
+          >
+            {t("made easy.")}
+          </Heading>
+        </Stack>
       </Stack>
     </Stack>
   );

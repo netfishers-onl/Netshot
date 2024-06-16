@@ -28,13 +28,8 @@ export default function AdministrationClusteringScreen() {
     isLoading,
     refetch,
   } = useQuery(
-    [
-      QUERIES.ADMIN_CLUSTERS,
-      pagination.query,
-      pagination.offset,
-      pagination.limit,
-    ],
-    async () => api.admin.getAllClusterMember(pagination),
+    [QUERIES.ADMIN_CLUSTERS],
+    async () => api.admin.getAllClusterMember(),
     {
       select(res) {
         return search(res, "hostname").with(pagination.query);

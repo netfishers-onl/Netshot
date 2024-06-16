@@ -1,17 +1,17 @@
 import {
   DeviceTypeSelect,
   FormControl,
-  GroupSelect,
   Icon,
   Select,
+  TreeGroupSelector,
 } from "@/components";
+import { DEVICE_LEVEL_OPTIONS } from "@/constants";
 import { useDeviceTypeOptions } from "@/hooks";
 import { SoftwareRule } from "@/types";
 import { IconButton, Stack } from "@chakra-ui/react";
 import { useCallback, useEffect } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { LEVEL_OPTIONS } from "../constants";
 import { SoftwareRuleFormValues } from "../types";
 
 export type SoftwareRuleFormProps = {
@@ -43,6 +43,11 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
     form.setValue("driver", getOptionByDriver(rule.driver));
   }, [isLoading, rule]);
 
+  const group = useWatch({
+    control: form.control,
+    name: "group",
+  });
+
   const familyRegExp = useWatch({
     control: form.control,
     name: "familyRegExp",
@@ -71,7 +76,11 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
   }, [form, versionRegExp]);
   return (
     <Stack spacing="5">
-      <GroupSelect withAny control={form.control} name="group" />
+      <TreeGroupSelector
+        value={group ? [group] : []}
+        onChange={(groups) => form.setValue("group", groups?.[0])}
+        withAny
+      />
       <DeviceTypeSelect withAny control={form.control} name="driver" />
       <FormControl
         control={form.control}
@@ -131,7 +140,7 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         label={t("Result")}
         control={form.control}
         name="level"
-        options={LEVEL_OPTIONS}
+        options={DEVICE_LEVEL_OPTIONS}
       />
     </Stack>
   );

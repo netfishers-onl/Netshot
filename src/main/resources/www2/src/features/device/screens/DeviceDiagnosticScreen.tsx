@@ -6,7 +6,7 @@ import Search from "@/components/Search";
 import { usePagination, useToast } from "@/hooks";
 import { DeviceDiagnosticResult, Level } from "@/types";
 import { formatDate } from "@/utils";
-import { Button, Stack } from "@chakra-ui/react";
+import { Button, Spacer, Stack } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useMemo } from "react";
@@ -70,15 +70,39 @@ export default function DeviceDiagnosticScreen() {
   );
 
   return (
-    <Stack spacing="6" flex="1">
+    <Stack spacing="6" flex="1" overflow="auto">
       {data?.length > 0 ? (
         <>
-          <Search
-            placeholder={t("Search...")}
-            onQuery={pagination.onQuery}
-            onClear={pagination.onQueryClear}
-            w="25%"
-          />
+          <Stack direction="row">
+            <Search
+              placeholder={t("Search...")}
+              onQuery={pagination.onQuery}
+              onClear={pagination.onQueryClear}
+              w="25%"
+            />
+            <Spacer />
+            <Protected
+              roles={[
+                Level.Admin,
+                Level.Operator,
+                Level.ReadWriteCommandOnDevice,
+              ]}
+            >
+              <DeviceDiagnosticButton
+                devices={[device]}
+                renderItem={(open) => (
+                  <Button
+                    alignSelf="center"
+                    leftIcon={<Icon name="play" />}
+                    onClick={open}
+                  >
+                    {t("Run diagnostics")}
+                  </Button>
+                )}
+              />
+            </Protected>
+          </Stack>
+
           <DataTable columns={columns} data={data} loading={isLoading} />
         </>
       ) : (
@@ -97,7 +121,7 @@ export default function DeviceDiagnosticScreen() {
               ]}
             >
               <DeviceDiagnosticButton
-                device={device}
+                devices={[device]}
                 renderItem={(open) => (
                   <Button
                     alignSelf="center"

@@ -1,10 +1,10 @@
-import { DeviceTypeSelect, GroupSelect, Select } from "@/components";
+import { DeviceTypeSelect, Select, TreeGroupSelector } from "@/components";
 import FormControl from "@/components/FormControl";
 import { useDeviceTypeOptions } from "@/hooks";
 import { DiagnosticType } from "@/types";
 import { Stack, StackProps } from "@chakra-ui/react";
 import { useEffect, useMemo } from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { CLI_MODE_OPTIONS, RESULT_TYPE_OPTIONS } from "../constants";
 import { Form } from "../types";
@@ -28,6 +28,11 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
     () => type === DiagnosticType.Javascript || type === DiagnosticType.Python,
     [type]
   );
+
+  const targetGroup = useWatch({
+    control: form.control,
+    name: "targetGroup",
+  });
 
   // Set device driver from diagnostic
   useEffect(() => {
@@ -54,7 +59,10 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
         name="resultType"
         label={t("Result type")}
       />
-      <GroupSelect control={form.control} name="targetGroup" />
+      <TreeGroupSelector
+        value={targetGroup ? [targetGroup] : []}
+        onChange={(groups) => form.setValue("targetGroup", groups?.[0])}
+      />
 
       {!hasScript && (
         <>

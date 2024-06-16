@@ -1,4 +1,4 @@
-import { TestRuleTextOnDevicePayload } from "@/api/rule";
+import { TestRuleTextOnDevicePayload } from "@/api";
 import { Checkbox, DeviceTypeSelect, Select } from "@/components";
 import FormControl, { FormControlType } from "@/components/FormControl";
 import { useDeviceTypeOptions } from "@/hooks";

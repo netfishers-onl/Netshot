@@ -1,7 +1,12 @@
-import { DeviceTypeSelect, FormControl, GroupSelect, Icon } from "@/components";
+import {
+  DeviceTypeSelect,
+  FormControl,
+  Icon,
+  TreeGroupSelector,
+} from "@/components";
 import { FormControlType } from "@/components/FormControl";
 import { useDeviceTypeOptions } from "@/hooks";
-import { HardwareRule } from "@/types";
+import { Group, HardwareRule } from "@/types";
 import { IconButton, Stack } from "@chakra-ui/react";
 import { useCallback, useEffect } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
@@ -35,7 +40,7 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
     }
 
     form.setValue("driver", getOptionByDriver(rule.driver));
-  }, [isLoading, rule]);
+  }, [isLoading, rule, form, getOptionByDriver]);
 
   const familyRegExp = useWatch({
     control: form.control,
@@ -47,6 +52,11 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
     name: "partNumberRegExp",
   });
 
+  const group = useWatch({
+    control: form.control,
+    name: "group",
+  });
+
   const toggleFamilyRegExp = useCallback(() => {
     form.setValue("familyRegExp", !familyRegExp);
   }, [form, familyRegExp]);
@@ -55,9 +65,20 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
     form.setValue("partNumberRegExp", !partNumberRegExp);
   }, [form, partNumberRegExp]);
 
+  const onGroupSelect = useCallback(
+    (groups: Group[]) => {
+      form.setValue("group", groups[0]);
+    },
+    [form]
+  );
+
   return (
     <Stack spacing="5">
-      <GroupSelect withAny control={form.control} name="group" />
+      <TreeGroupSelector
+        value={group ? [group] : []}
+        onChange={onGroupSelect}
+        withAny
+      />
       <DeviceTypeSelect withAny control={form.control} name="driver" />
       <FormControl
         control={form.control}

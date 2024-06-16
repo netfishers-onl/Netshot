@@ -1,18 +1,17 @@
-import api from "@/api";
-import { CreateOrUpdateTaskPayload } from "@/api/task";
+import api, { CreateOrUpdateTaskPayload } from "@/api";
 import {
   Checkbox,
   DomainSelect,
   FormControl,
-  GroupSelect,
   Icon,
   Switch,
+  TreeGroupSelector,
 } from "@/components";
 import { FormControlType } from "@/components/FormControl";
 import ScheduleForm, { ScheduleFormType } from "@/components/ScheduleForm";
 import TaskDialog from "@/components/TaskDialog";
 import { useToast } from "@/hooks";
-import { Option, TaskType } from "@/types";
+import { Group, Option, TaskType } from "@/types";
 import {
   Button,
   Divider,
@@ -55,7 +54,7 @@ enum FormStep {
 type Form = {
   checkCompliance: boolean;
   runDiagnostic: boolean;
-  group: Option<number>;
+  group: Group;
   limitToOutofdateDevice: boolean;
   limitToOutofdateDeviceHours?: number;
   domain?: Option<number>;
@@ -119,6 +118,7 @@ export default function AddTaskButton(props: AddTaskButtonProps) {
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
+    // @ts-ignore
     name: "subnets",
   });
 
@@ -178,7 +178,7 @@ export default function AddTaskButton(props: AddTaskButtonProps) {
       }
 
       if (hasGroup) {
-        payload.group = values.group.value;
+        payload.group = values.group.id;
       }
 
       if (taskType === TaskType.ScanSubnets) {
@@ -292,6 +292,11 @@ export default function AddTaskButton(props: AddTaskButtonProps) {
     name: "limitToOutofdateDevice",
   });
 
+  const group = useWatch({
+    control: form.control,
+    name: "group",
+  });
+
   useEffect(() => {
     form.reset();
   }, [taskType, form]);
@@ -347,7 +352,11 @@ export default function AddTaskButton(props: AddTaskButtonProps) {
                 {taskInfoBox}
 
                 {hasGroup && (
-                  <GroupSelect isRequired control={form.control} name="group" />
+                  <TreeGroupSelector
+                    label={t("Group to process")}
+                    value={group ? [group] : []}
+                    onChange={(groups) => form.setValue("group", groups?.[0])}
+                  />
                 )}
 
                 {taskType === TaskType.TakeGroupSnapshot && (

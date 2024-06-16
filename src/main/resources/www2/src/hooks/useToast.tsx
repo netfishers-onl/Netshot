@@ -137,7 +137,7 @@ export default function useToast() {
 
   const error = useCallback(
     (options: Omit<UseToastOptions, "status">) => {
-      // Permet de ne pas afficher un toast vide
+      // Avoid displaying empty toast
       if (!options.title && !options.description) return;
 
       return toast({

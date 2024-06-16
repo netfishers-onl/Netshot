@@ -1,18 +1,6 @@
-import { DeviceSoftwareLevel, SoftwareRule } from "@/types";
+import { SoftwareRule } from "@/types";
 import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
-
-export type CreateOrUpdateSoftwareRule = {
-  id?: number;
-  group: number;
-  driver: string;
-  version: string;
-  versionRegExp: boolean;
-  family: string;
-  familyRegExp: boolean;
-  partNumber: string;
-  partNumberRegExp: boolean;
-  level: DeviceSoftwareLevel;
-};
+import { CreateOrUpdateSoftwareRule } from "./types";
 
 async function getAll() {
   return httpClient.get<SoftwareRule[]>("/softwarerules");

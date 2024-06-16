@@ -14,8 +14,15 @@ export type DeviceAutocompleteProps = {
 >;
 
 export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
-  const { filterBy, defaultValue, isRequired, isReadOnly, onChange, ...other } =
-    props;
+  const {
+    filterBy,
+    defaultValue,
+    isRequired,
+    isReadOnly,
+    placeholder,
+    onChange,
+    ...other
+  } = props;
 
   const { t } = useTranslation();
   const toast = useToast();
@@ -48,7 +55,7 @@ export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
         onChange(data);
         setValue(null);
       }}
-      placeholder={t("Search...")}
+      placeholder={placeholder || t("Search device...")}
       loadOptions={loadOptions}
       noOptionsMessage={() => <Text>{t("No device found")}</Text>}
       value={value}

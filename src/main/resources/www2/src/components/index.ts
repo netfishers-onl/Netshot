@@ -31,6 +31,7 @@ export { default as ScheduleForm } from "./ScheduleForm";
 export { default as Sidebar } from "./Sidebar";
 export { default as SidebarLink } from "./SidebarLink";
 export { default as Switch } from "./Switch";
+export { default as TreeGroupSelector } from "./TreeGroupSelector";
 export * from "./group";
 export * from "./icons";
 export * from "./navbar";

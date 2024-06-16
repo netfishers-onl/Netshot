@@ -12,68 +12,15 @@ import {
 import { Task } from "@/types/task";
 import { sortByDate } from "@/utils";
 import httpClient, { HttpMethod, HttpStatus, NetshotError } from "./httpClient";
-import { PaginationQueryParams } from "./types";
-
-export type DeviceSearchPayload = {
-  driver: string;
-  query: string;
-};
-
-export type DeviceQueryParams = {
-  group?: number;
-  details?: boolean;
-} & PaginationQueryParams;
-
-export type DeviceModuleQueryParams = {
-  history?: boolean;
-} & PaginationQueryParams;
-
-export type CreateDevicePayload = {
-  autoDiscover: boolean;
-  autoDiscoveryTask: number;
-  ipAddress: string;
-  domainId: number;
-  name: string;
-  deviceType: string;
-  connectIpAddress?: string;
-  sshPort?: string;
-  telnetPort?: string;
-  specificCredentialSet?: {
-    password: string;
-    privateKey?: string;
-    publicKey?: string;
-    superPassword: string;
-    type: string;
-    username: string;
-  };
-};
-
-export type UpdateDevicePayload = {
-  id: number;
-  enabled: boolean;
-  comments: string;
-  ipAddress: string;
-  mgmtDomain: number;
-  connectIpAddress: string;
-  sshPort: string;
-  telnetPort: string;
-  autoTryCredentials: boolean;
-  credentialSetIds: number[];
-  clearCredentialSetIds: number[];
-  specificCredentialSet: {
-    password: string;
-    privateKey?: string;
-    publicKey?: string;
-    superPassword: string;
-    type: string;
-    username: string;
-  };
-};
-
-export type DeviceSearchResult = {
-  query: string;
-  devices: SimpleDevice[];
-};
+import {
+  CreateDevicePayload,
+  DeviceModuleQueryParams,
+  DeviceQueryParams,
+  DeviceSearchPayload,
+  DeviceSearchResult,
+  PaginationQueryParams,
+  UpdateDevicePayload,
+} from "./types";
 
 async function search(payload: DeviceSearchPayload) {
   return httpClient.post<DeviceSearchResult, DeviceSearchPayload>(

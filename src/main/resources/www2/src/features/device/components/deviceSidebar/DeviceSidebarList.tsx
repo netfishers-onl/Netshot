@@ -1,4 +1,4 @@
-import device, { DeviceQueryParams } from "@/api/device";
+import api, { DeviceQueryParams } from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { QUERIES } from "@/constants";
 import useToast from "@/hooks/useToast";
@@ -42,9 +42,15 @@ export default function DeviceSidebarList() {
         params.group = parseInt(queryParams.get("group"));
       }
 
-      return device.getAll(params);
+      return api.device.getAll(params);
     },
     {
+      onSuccess(res) {
+        const pages = res.pages.flat();
+
+        ctx.setData(pages);
+        ctx.setTotal(pages.length);
+      },
       onError(err: NetshotError) {
         toast.error(err);
       },
@@ -81,7 +87,7 @@ export default function DeviceSidebarList() {
   }
 
   return (
-    <Stack p="6" spacing="3" overflow="auto" flex="1">
+    <Stack p="6" spacing="1" overflow="auto" flex="1">
       {isSuccess &&
         data?.pages?.map((page) =>
           page.map((device, i) => {

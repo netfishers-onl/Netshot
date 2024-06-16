@@ -10,7 +10,7 @@ import Select, { SelectProps } from "./Select";
 
 export type PolicySelectProps<T> = {} & SelectProps<T>;
 
-export default function GroupSelect<T>(props: PolicySelectProps<T>) {
+export default function PolicySelect<T>(props: PolicySelectProps<T>) {
   const {
     control,
     name,

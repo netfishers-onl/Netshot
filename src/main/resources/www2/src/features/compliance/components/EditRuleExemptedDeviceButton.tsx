@@ -1,6 +1,5 @@
-import api from "@/api";
+import api, { RuleStateChangePayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { RuleStateChangePayload } from "@/api/rule";
 import { DeviceAutocomplete, FormControl, Icon, Search } from "@/components";
 import { FormControlType } from "@/components/FormControl";
 import { Dialog } from "@/dialog";

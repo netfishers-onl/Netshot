@@ -1,50 +1,12 @@
-import { ExemptedDevice, Rule, RuleType, TestRuleResult } from "@/types";
+import { ExemptedDevice, Rule, TestRuleResult } from "@/types";
 import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
-import { PaginationQueryParams } from "./types";
-
-export type CreateOrUpdateRule = {
-  id: number;
-  name: string;
-  type: string;
-  script: string;
-  policy: number;
-  enabled: boolean;
-  text: string;
-  regExp: boolean;
-  context: string;
-  driver: string;
-  field: string;
-  anyBlock: boolean;
-  matchAll: boolean;
-  invert: boolean;
-  normalize: boolean;
-};
-
-export type TestRuleScriptOnDevicePayload = {
-  device: number;
-  script: string;
-  type: RuleType;
-};
-
-export type TestRuleTextOnDevicePayload = {
-  anyBlock: boolean;
-  context: string;
-  device: number;
-  driver: string;
-  field: string;
-  invert: boolean;
-  matchAll: boolean;
-  normalize: boolean;
-  regExp: boolean;
-  text: string;
-  type: RuleType;
-};
-
-export type RuleStateChangePayload = {
-  enabled: boolean;
-  exemptions: Record<number, number>;
-  name: string;
-};
+import {
+  CreateOrUpdateRule,
+  PaginationQueryParams,
+  RuleStateChangePayload,
+  TestRuleScriptOnDevicePayload,
+  TestRuleTextOnDevicePayload,
+} from "./types";
 
 async function getById(policyId: number, id: number) {
   return httpClient.get<Rule>(`/policies/${policyId}/rules/${id}`);

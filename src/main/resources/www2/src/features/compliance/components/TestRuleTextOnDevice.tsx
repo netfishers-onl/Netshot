@@ -1,6 +1,5 @@
-import api from "@/api";
+import api, { TestRuleTextOnDevicePayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { TestRuleTextOnDevicePayload } from "@/api/rule";
 import { DeviceAutocomplete, Icon } from "@/components";
 import { useToast } from "@/hooks";
 import { SimpleDevice } from "@/types";

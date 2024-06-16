@@ -49,6 +49,13 @@ export function arrayTypeFilter<T, R extends T>(
 }
 
 /**
+ * Merge two array on prop
+ */
+export function merge<A>(a: A[], b: A[], p: keyof A) {
+  return a.filter((itemA) => !b.find((itemB) => itemA[p] === itemB[p])).concat(b);
+}
+
+/**
  * Search item with multiple keys in array of object (not recursive)
  *
  * @example search(users, 'username').with('netshot');

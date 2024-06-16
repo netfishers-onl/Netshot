@@ -1,28 +1,10 @@
 import { Diagnostic } from "@/types";
 import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
-import { PaginationQueryParams } from "./types";
-
-type DiagnosticResult = {
-  creationDate: string;
-  lastCheckDate: string;
-  diagnosticName: string;
-  type: string;
-};
-
-export type CreateOrUpdateDiagnosticPayload = {
-  id: number;
-  name: string;
-  targetGroup: string;
-  enabled: boolean;
-  resultType: string;
-  type: string;
-  script: string;
-  deviceDriver: string;
-  cliMode: string;
-  command: string;
-  modifierPattern: string;
-  modifierReplacement: string;
-};
+import {
+  CreateOrUpdateDiagnosticPayload,
+  DiagnosticResult,
+  PaginationQueryParams,
+} from "./types";
 
 async function getAll(queryParams: PaginationQueryParams = {}) {
   return httpClient.get<Diagnostic[]>("/diagnostics", {
@@ -62,15 +44,33 @@ async function update(
 
 async function enable(payload: Diagnostic) {
   return httpClient.put<Diagnostic, Diagnostic>(`/diagnostics/${payload.id}`, {
-    ...payload,
+    cliMode: payload.cliMode,
+    command: payload.command,
+    deviceDriver: payload.deviceDriver,
     enabled: true,
+    modifierPattern: payload.modifierPattern,
+    modifierReplacement: payload.modifierReplacement,
+    name: payload.name,
+    resultType: payload.resultType,
+    // @ts-ignore
+    targetGroup: payload.targetGroup.id.toString(),
+    type: payload.type,
   });
 }
 
 async function disable(payload: Diagnostic) {
   return httpClient.put<Diagnostic, Diagnostic>(`/diagnostics/${payload.id}`, {
-    ...payload,
+    cliMode: payload.cliMode,
+    command: payload.command,
+    deviceDriver: payload.deviceDriver,
     enabled: false,
+    modifierPattern: payload.modifierPattern,
+    modifierReplacement: payload.modifierReplacement,
+    name: payload.name,
+    resultType: payload.resultType,
+    // @ts-ignore
+    targetGroup: payload.targetGroup.id.toString(),
+    type: payload.type,
   });
 }
 

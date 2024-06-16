@@ -107,6 +107,10 @@ function Select<T>(props: SelectProps<T>) {
           color: state.isSelected ? "green.800" : "black",
         },
       }),
+      clearIndicator: (base) => ({
+        ...base,
+        border: 0,
+      }),
     } as ChakraStylesConfig;
   }, []);
 
@@ -127,6 +131,7 @@ function Select<T>(props: SelectProps<T>) {
           }),
         }}
         menuPortalTarget={document.body}
+        menuPosition="fixed"
         chakraStyles={styles}
         value={field.value}
         placeholder={placeholder}

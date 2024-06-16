@@ -68,6 +68,7 @@ export default function DomainSelect<T>(props: DomainSelectProps<T>) {
       isLoading={isLoading}
       noOptionsMessage={() => <Text>{t("No domain found")}</Text>}
       options={options}
+      isClearable
       {...other}
     />
   );

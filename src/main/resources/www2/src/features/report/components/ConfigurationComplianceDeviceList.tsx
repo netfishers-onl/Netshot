@@ -1,11 +1,11 @@
 import api from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { DataTable, EmptyResult } from "@/components";
+import { DataTable, EmptyResult, Search } from "@/components";
 import { QUERIES } from "@/constants";
-import { useToast } from "@/hooks";
+import { usePagination, useToast } from "@/hooks";
 import { ConfigComplianceDeviceStatus, Group } from "@/types";
-import { formatDate } from "@/utils";
-import { Skeleton, Stack, Tag, Text } from "@chakra-ui/react";
+import { formatDate, search } from "@/utils";
+import { Skeleton, Spacer, Stack, Tag, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useMemo } from "react";
@@ -25,11 +25,21 @@ export default function ConfigurationComplianceDeviceList(
 
   const { t } = useTranslation();
   const toast = useToast();
+  const pagination = usePagination();
 
   const { data, isLoading } = useQuery(
-    [QUERIES.DEVICE_REPORT_GROUP_LIST, group.id, group.folder, group.name],
+    [
+      QUERIES.DEVICE_REPORT_GROUP_LIST,
+      group.id,
+      group.folder,
+      group.name,
+      pagination.query,
+    ],
     async () => api.report.getAllGroupConfigNonCompliantDevice(group.id),
     {
+      select(res) {
+        return search(res, "name").with(pagination.query);
+      },
       onError(err: NetshotError) {
         toast.error(err);
       },
@@ -62,7 +72,7 @@ export default function ConfigurationComplianceDeviceList(
         cell: (info) => (
           <Text
             as={Link}
-            to={`/app/device/${info.row.original.id}`}
+            to={`/app/device/${info.row.original.id}/general`}
             textDecoration="underline"
           >
             {info.getValue()}
@@ -87,22 +97,35 @@ export default function ConfigurationComplianceDeviceList(
     [t]
   );
 
-  return isLoading ? (
-    <Stack spacing="3">
-      <Skeleton h="60px"></Skeleton>
-      <Skeleton h="60px"></Skeleton>
-      <Skeleton h="60px"></Skeleton>
-      <Skeleton h="60px"></Skeleton>
-    </Stack>
-  ) : (
+  return (
     <>
-      {data?.length > 0 ? (
-        <DataTable columns={columns} data={data} loading={isLoading} />
-      ) : (
-        <EmptyResult
-          title={t("There is no device")}
-          description={t("The device will appear when the group owns it.")}
+      <Stack direction="row">
+        <Search
+          placeholder={t("Search...")}
+          onQuery={pagination.onQuery}
+          onClear={pagination.onQueryClear}
+          w="30%"
         />
+        <Spacer />
+      </Stack>
+      {isLoading ? (
+        <Stack spacing="3">
+          <Skeleton h="60px"></Skeleton>
+          <Skeleton h="60px"></Skeleton>
+          <Skeleton h="60px"></Skeleton>
+          <Skeleton h="60px"></Skeleton>
+        </Stack>
+      ) : (
+        <>
+          {data?.length > 0 ? (
+            <DataTable columns={columns} data={data} loading={isLoading} />
+          ) : (
+            <EmptyResult
+              title={t("There is no device")}
+              description={t("The device will appear when the group owns it.")}
+            />
+          )}
+        </>
       )}
     </>
   );

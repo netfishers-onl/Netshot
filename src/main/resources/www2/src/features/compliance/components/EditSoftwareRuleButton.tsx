@@ -1,7 +1,6 @@
-import api from "@/api";
+import api, { CreateOrUpdateSoftwareRule } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { CreateOrUpdateSoftwareRule } from "@/api/softwareRule";
-import { ANY_OPTION } from "@/constants";
+import { ANY_OPTION, DEVICE_LEVEL_OPTIONS } from "@/constants";
 import { Dialog } from "@/dialog";
 import { useToast } from "@/hooks";
 import { SoftwareRule } from "@/types";
@@ -9,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MouseEvent, ReactElement, useCallback, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { LEVEL_OPTIONS, QUERIES } from "../constants";
+import { QUERIES } from "../constants";
 import { SoftwareRuleFormValues } from "../types";
 import SoftwareRuleForm from "./SoftwareRuleForm";
 
@@ -27,18 +26,15 @@ export default function EditSoftwareRuleButton(
   const queryClient = useQueryClient();
 
   const defaultValues = useMemo(() => {
-    const level = LEVEL_OPTIONS.find((option) => option.value === rule?.level);
+    const level = DEVICE_LEVEL_OPTIONS.find(
+      (option) => option.value === rule?.level
+    );
 
     return {
       driver: rule.driver ? null : ANY_OPTION,
       family: rule?.family,
       familyRegExp: rule?.familyRegExp,
-      group: rule.targetGroup
-        ? {
-            label: rule?.targetGroup?.name,
-            value: rule?.targetGroup?.id,
-          }
-        : ANY_OPTION,
+      group: rule.targetGroup,
       level,
       partNumber: rule?.partNumber,
       partNumberRegExp: rule?.partNumberRegExp,
@@ -78,7 +74,7 @@ export default function EditSoftwareRuleButton(
         driver: values.driver.value?.name,
         family: values.family,
         familyRegExp: values.familyRegExp,
-        group: values.group?.value,
+        group: values.group?.id,
         level: values.level?.value,
         partNumber: values.partNumber,
         partNumberRegExp: values.partNumberRegExp,

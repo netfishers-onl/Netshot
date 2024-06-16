@@ -20,6 +20,7 @@ import {
   ModalHeader,
   ModalOverlay,
   Stack,
+  Tag,
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
@@ -232,6 +233,11 @@ export default function AddGroupButton(props: AddGroupButtonProps) {
                             )}
                           </Text>
                         </Stack>
+                        {driver && (
+                          <Tag colorScheme="grey" alignSelf="start">
+                            {t("Device type: ")} {driver.label}
+                          </Tag>
+                        )}
                         {query?.length > 0 && (
                           <Box
                             p="3"

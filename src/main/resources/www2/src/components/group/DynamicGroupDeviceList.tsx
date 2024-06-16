@@ -44,7 +44,6 @@ export default function DynamicGroupDeviceList(
       onError(err: NetshotError) {
         toast.error(err);
       },
-      enabled: query?.length > 0,
     }
   );
 

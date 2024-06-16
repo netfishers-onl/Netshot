@@ -93,6 +93,8 @@ function FormDialog<F = any>(props: FormDialogProps<F>) {
         motionPreset="slideInBottom"
         size={size}
         variant={variant}
+        scrollBehavior="inside"
+        blockScrollOnMount={false}
       >
         <ModalOverlay />
         <ModalContent

@@ -15,22 +15,25 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react";
-import { MouseEvent, useCallback, useMemo } from "react";
+import { MouseEvent, ReactElement, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import EditGroupButton from "./EditGroupButton";
 import RemoveGroupButton from "./RemoveGroupButton";
 
 export type GroupItemProps = {
   group: Group;
-  onGroupSelect(group: Group);
+  onGroupSelect?(group: Group): void;
+  isSelected?(group: Group): boolean;
+  renderGroupChildren?(group: Group): ReactElement;
 } & BoxProps;
 
 export default function GroupItem(props: GroupItemProps) {
-  const { group, onGroupSelect, ...other } = props;
+  const { group, onGroupSelect, isSelected, renderGroupChildren, ...other } =
+    props;
 
   const { t } = useTranslation();
   const queryParams = useQueryParams();
-  const isSelected = useMemo(() => {
+  const isRouteParamsSelected = useMemo(() => {
     if (queryParams.has("group")) {
       return group.id === queryParams.get("group", Number);
     }
@@ -38,8 +41,14 @@ export default function GroupItem(props: GroupItemProps) {
     return false;
   }, [queryParams, group]);
 
+  const selected = isSelected ? isSelected(group) : false;
+
   const select = useCallback(
     (evt: MouseEvent<HTMLDivElement>) => {
+      if (!onGroupSelect) {
+        return;
+      }
+
       evt.stopPropagation();
       onGroupSelect(group);
     },
@@ -58,7 +67,7 @@ export default function GroupItem(props: GroupItemProps) {
         _hover={{
           bg: "green.50",
         }}
-        bg={isSelected ? "green.50" : "white"}
+        bg={isRouteParamsSelected || selected ? "green.50" : "white"}
         onClick={select}
       >
         <Stack direction="row" spacing="3" alignItems="center">
@@ -67,6 +76,9 @@ export default function GroupItem(props: GroupItemProps) {
             <Text>{group?.name}</Text>
           </Stack>
         </Stack>
+
+        {renderGroupChildren?.(group)}
+
         <Spacer />
         <Protected
           roles={[

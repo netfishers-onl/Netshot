@@ -3,7 +3,7 @@ import { NetshotError } from "@/api/httpClient";
 import { DeviceTypeSelect, Icon, MonacoEditor } from "@/components";
 import { QUERIES } from "@/constants";
 import { useDeviceTypeOptions, useToast } from "@/hooks";
-import { Device, DeviceType, Option } from "@/types";
+import { Device, DeviceType, Option, SimpleDevice } from "@/types";
 import { Button, Center, Spinner, Stack, Text } from "@chakra-ui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
@@ -17,12 +17,12 @@ type ScriptEditorForm = {
 };
 
 export type DeviceScriptEditorProps = {
-  device: Device;
+  devices: SimpleDevice[] | Device[];
   scriptId: number;
 };
 
 export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
-  const { device, scriptId } = props;
+  const { devices, scriptId } = props;
   const { t } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -103,6 +103,13 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
     form.setValue("driver", getOptionByDriver(script?.deviceDriver));
   }, [isDeviceTypeOptionsLoading, isLoading, script]);
 
+  const onChange = useCallback(
+    (value: string) => {
+      form.setValue("script", value);
+    },
+    [form]
+  );
+
   if (isLoading) {
     return (
       <Center flex="1">
@@ -114,13 +121,6 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
     );
   }
 
-  const onChange = useCallback(
-    (value: string) => {
-      form.setValue("script", value);
-    },
-    [form]
-  );
-
   return (
     <Stack flex="1" spacing="4">
       <Stack direction="row">
@@ -128,7 +128,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
           showLabel={false}
           control={form.control}
           name="driver"
-          defaultValue={device?.driver}
+          defaultValue={devices?.[0]?.driver}
           sx={{
             flex: 1,
           }}
@@ -137,7 +137,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
           {t("Save")}
         </Button>
         <RunDeviceScriptButton
-          device={device}
+          devices={devices}
           driver={driver?.name}
           script={{
             ...script,

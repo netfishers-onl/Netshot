@@ -96,7 +96,6 @@ function createHttpClient(opts: HttpClientOptions = {}) {
     payload: HttpPayload = {}
   ) {
     const params = prepareRequestParams<B>(method, url, payload);
-
     const req = await fetch(params.url, params.options);
 
     if (req.status === HttpStatus.InternalServerError) {

@@ -4,6 +4,7 @@ import { DataTable, EmptyResult } from "@/components";
 import Search from "@/components/Search";
 import { usePagination, useToast } from "@/hooks";
 import { DeviceInterface } from "@/types";
+import { merge, search } from "@/utils";
 import { Skeleton, Stack } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -33,6 +34,29 @@ export default function DeviceInterfaceScreen() {
     ],
     async () => api.device.getAllInterfaceById(+params.id, pagination),
     {
+      select(res) {
+        // Search on IP addresses
+        const passA = res.filter((item) => {
+          return item.ip4Addresses.some((address) => {
+            return (
+              address.ip.toLocaleLowerCase().startsWith(pagination.query) ||
+              address.ip.toLocaleLowerCase().includes(pagination.query)
+            );
+          });
+        });
+
+        // Search on other props
+        const passB = search(
+          res,
+          "description",
+          "interfaceName",
+          "macAddress",
+          "vrfInstance"
+        ).with(pagination.query);
+
+        // Merge two results in one
+        return merge(passA, passB, "id");
+      },
       onError(err: NetshotError) {
         toast.error(err);
       },
@@ -78,12 +102,14 @@ export default function DeviceInterfaceScreen() {
   );
 
   return (
-    <Stack spacing="6">
+    <Stack spacing="6" overflow="auto">
       <Stack direction="row" spacing="3">
         <Search
-          placeholder={t("Search...")}
+          placeholder={t(
+            "Search by virtual device, name, description, mac address, ip..."
+          )}
           onQuery={pagination.onQuery}
-          w="25%"
+          w="30%"
         />
       </Stack>
 

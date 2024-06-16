@@ -222,7 +222,7 @@ export default function TaskDialog(props: TaskDialogProps) {
         <ModalFooter>
           <Stack direction="row" spacing="3">
             <Button onClick={toggleLog} isDisabled={task?.log === ""}>
-              {t("Show logs")}
+              {t(showLog ? "Hide logs" : "Show logs")}
             </Button>
             <Button variant="primary" onClick={onClose}>
               {t("OK")}

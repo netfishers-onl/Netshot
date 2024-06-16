@@ -1,4 +1,4 @@
-import device from "@/api/device";
+import api from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import useToast from "@/hooks/useToast";
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react";
@@ -15,7 +15,7 @@ export default function DeviceSidebarSearchList() {
   const { data, isLoading } = useQuery(
     [QUERIES.DEVICE_SEARCH_LIST, ctx.query, ctx.driver?.value?.name],
     async () => {
-      return device.search({
+      return api.device.search({
         driver: ctx.driver?.value?.name,
         query: ctx.query,
       });
@@ -33,7 +33,7 @@ export default function DeviceSidebarSearchList() {
 
   if (isLoading) {
     return (
-      <Stack alignItems="center" justifyContent="center" py="6">
+      <Stack alignItems="center" justifyContent="center" py="6" flex="1">
         <Spinner />
       </Stack>
     );
@@ -48,7 +48,7 @@ export default function DeviceSidebarSearchList() {
   }
 
   return (
-    <Stack p="6" spacing="3" overflow="auto">
+    <Stack p="6" spacing="3" overflow="auto" flex="1">
       {data?.devices?.map((device) => (
         <DeviceBox device={device} key={device?.id} />
       ))}

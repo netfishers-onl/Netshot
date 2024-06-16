@@ -102,7 +102,13 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
       }}
       {...other}
     >
-      <Td px="4" borderBottomWidth={last ? "0" : "1px"} borderColor="grey.100">
+      <Td
+        px="4"
+        borderBottomWidth={last ? "0" : "1px"}
+        borderColor="grey.100"
+        overflow="hidden"
+        textOverflow="ellipsis"
+      >
         <IconButton
           aria-label={t("Drag the row")}
           icon={<Icon name="menu" />}
@@ -114,6 +120,10 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
       </Td>
       {cells.map((cell) => {
         const meta: any = cell.column.columnDef.meta;
+        const render = flexRender(
+          cell.column.columnDef.cell,
+          cell.getContext()
+        );
 
         return (
           <Td
@@ -123,8 +133,11 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
             borderBottomWidth={last ? "0" : "1px"}
             borderColor="grey.100"
             textAlign={meta?.align}
+            position="relative"
+            overflow="hidden"
+            textOverflow="ellipsis"
           >
-            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            {render}
           </Td>
         );
       })}
@@ -148,6 +161,10 @@ function SimpleRow<T>(props: RowProps<T>) {
     >
       {cells.map((cell) => {
         const meta: any = cell.column.columnDef.meta;
+        const render = flexRender(
+          cell.column.columnDef.cell,
+          cell.getContext()
+        );
 
         return (
           <Td
@@ -160,8 +177,11 @@ function SimpleRow<T>(props: RowProps<T>) {
             maxWidth="100px"
             wordBreak="break-word"
             whiteSpace="pre-wrap"
+            position="relative"
+            overflow="hidden"
+            textOverflow="ellipsis"
           >
-            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            {render}
           </Td>
         );
       })}
@@ -174,8 +194,8 @@ export type DataTableProps<Data extends object> = {
   columns: ColumnDef<Data, any>[];
   loading?: boolean;
   draggable?: boolean;
-  onDropRow?(row: Data, data: Data[]): void;
-  onDragRow?(row: Data, data: Data[]): void;
+  onDropRow?(row: Row<Data>, data: Data[]): void;
+  onDragRow?(row: Row<Data>, data: Data[]): void;
   onClickRow?(row: Data, data?: Data[]): void;
   primaryKey?: keyof Data;
 } & TableContainerProps;
@@ -241,7 +261,7 @@ export default function DataTable<Data extends object>(
         targetRowIndex
       );
 
-      if (onDropRow) onDropRow(row.original, reorderedData);
+      if (onDropRow) onDropRow(row, reorderedData);
     },
     [getReorderedData, onDropRow]
   );
@@ -253,7 +273,7 @@ export default function DataTable<Data extends object>(
         targetRowIndex
       );
 
-      if (onDragRow) onDragRow(row.original, reorderedData);
+      if (onDragRow) onDragRow(row, reorderedData);
     },
     [getReorderedData, onDragRow]
   );
@@ -264,6 +284,7 @@ export default function DataTable<Data extends object>(
   return (
     <DndProvider backend={HTML5Backend}>
       <TableContainer
+        position="relative"
         overflowY="scroll"
         width="100%"
         borderRadius="xl"
@@ -273,8 +294,15 @@ export default function DataTable<Data extends object>(
         borderWidth="1px"
         {...other}
       >
-        <Table flex="1">
-          <Thead position="sticky" top={0} zIndex="0" bg="white">
+        <Table flex="1" layout="fixed">
+          <Thead
+            position="sticky"
+            top="0"
+            zIndex="1"
+            bg="white"
+            borderBottom="0"
+            boxShadow="inset 0 -1px 0 #EAEEF2"
+          >
             {headerGroups?.map((headerGroup) => (
               <Tr key={headerGroup.id}>
                 {draggable && <Th borderColor="grey.100"></Th>}
@@ -296,6 +324,8 @@ export default function DataTable<Data extends object>(
                       fontWeight="400"
                       color="grey.500"
                       letterSpacing="0"
+                      overflow="hidden"
+                      textOverflow="ellipsis"
                       h="40px"
                       px="4"
                       py="0"
@@ -340,12 +370,11 @@ export default function DataTable<Data extends object>(
               </Tr>
             ))}
           </Thead>
-          <Tbody zIndex="1">
+          <Tbody>
             {rowModel.rows.map((row) => (
               <Fragment key={row.id}>
                 {draggable ? (
                   <DraggableRow
-                    key={row.id}
                     rowModel={rowModel}
                     row={row}
                     dropped={handleDrop}
@@ -353,7 +382,6 @@ export default function DataTable<Data extends object>(
                   />
                 ) : (
                   <SimpleRow
-                    key={row.id}
                     rowModel={rowModel}
                     row={row}
                     onClick={() => onClickRow?.(row.original, data)}

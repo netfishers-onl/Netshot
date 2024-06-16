@@ -1,16 +1,5 @@
 import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
-
-type SigninPayload = {
-  username: string;
-  password: string;
-};
-
-type SigninResponse = {
-  id: number;
-  level: number;
-  local: boolean;
-  username: string;
-};
+import { SigninPayload, SigninResponse } from "./types";
 
 /**
  * Sign in user

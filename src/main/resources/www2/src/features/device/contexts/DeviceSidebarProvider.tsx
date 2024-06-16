@@ -1,4 +1,6 @@
+import { QUERIES } from "@/constants";
 import { DeviceType, Group, Option, SimpleDevice } from "@/types";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Dispatch,
   PropsWithChildren,
@@ -8,6 +10,7 @@ import {
   useContext,
   useState,
 } from "react";
+import { QUERIES as DEVICE_QUERIES } from "../constants";
 
 export type DeviceSidebarContextType = {
   query: string;
@@ -30,6 +33,7 @@ export type DeviceSidebarContextType = {
     query: string;
     driver: Option<DeviceType>;
   }): void;
+  refreshDeviceList(): Promise<void>;
 };
 
 export const DeviceSidebarContext =
@@ -44,6 +48,7 @@ export default function DeviceSidebarProvider(props: PropsWithChildren<{}>) {
   const [selected, setSelected] = useState<SimpleDevice[]>([]);
   const [data, setData] = useState<SimpleDevice[]>([]);
   const [group, setGroup] = useState<Group>(null);
+  const queryClient = useQueryClient();
 
   const selectAll = useCallback(() => {
     setSelected(data);
@@ -70,6 +75,11 @@ export default function DeviceSidebarProvider(props: PropsWithChildren<{}>) {
     []
   );
 
+  const refreshDeviceList = useCallback(async () => {
+    await queryClient.invalidateQueries([QUERIES.DEVICE_LIST]);
+    await queryClient.invalidateQueries([DEVICE_QUERIES.DEVICE_SEARCH_LIST]);
+  }, [queryClient]);
+
   return (
     <DeviceSidebarContext.Provider
       value={{
@@ -90,6 +100,7 @@ export default function DeviceSidebarProvider(props: PropsWithChildren<{}>) {
         group,
         setGroup,
         updateQueryAndDriver,
+        refreshDeviceList,
       }}
     >
       {children}

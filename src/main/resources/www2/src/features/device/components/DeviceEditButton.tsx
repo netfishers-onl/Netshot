@@ -1,5 +1,4 @@
-import api from "@/api";
-import { UpdateDevicePayload } from "@/api/device";
+import api, { UpdateDevicePayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { Checkbox, DomainSelect, Select } from "@/components";
 import FormControl, { FormControlType } from "@/components/FormControl";

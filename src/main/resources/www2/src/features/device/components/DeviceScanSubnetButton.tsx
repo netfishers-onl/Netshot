@@ -1,6 +1,5 @@
-import api from "@/api";
+import api, { CreateOrUpdateTaskPayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { CreateOrUpdateTaskPayload } from "@/api/task";
 import { DomainSelect } from "@/components";
 import FormControl from "@/components/FormControl";
 import Icon from "@/components/Icon";

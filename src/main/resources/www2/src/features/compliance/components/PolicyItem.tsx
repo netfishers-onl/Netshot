@@ -4,6 +4,7 @@ import { Icon, Protected } from "@/components";
 import { useToast } from "@/hooks";
 import { Level, Policy } from "@/types";
 import {
+  Box,
   IconButton,
   Menu,
   MenuButton,
@@ -77,18 +78,27 @@ export default function PolicyItem(props: PolicyItemProps) {
         cursor="pointer"
         px="3"
       >
-        <Stack direction="row" spacing="3" alignItems="center">
-          {hasRules && (
+        <Stack
+          direction="row"
+          spacing="3"
+          alignItems="center"
+          title={policy?.name}
+        >
+          <Box flex="0 0 16px">
             <Icon
               name="chevronDown"
               color="grey.500"
               sx={{
                 transform: isCollapsed ? "rotate(-90deg)" : "",
               }}
+              opacity={hasRules ? 1 : 0}
             />
-          )}
-          <Icon name="folder" color="green.600" />
-          <Text>{policy?.name}</Text>
+          </Box>
+
+          <Box flex="0 0 16px">
+            <Icon name="folder" color="green.600" />
+          </Box>
+          <Text noOfLines={1}>{policy?.name}</Text>
         </Stack>
         <Protected
           roles={[

@@ -5,10 +5,10 @@ import Search from "@/components/Search";
 import { usePagination, useToast } from "@/hooks";
 import { DeviceModule } from "@/types";
 import { formatDate } from "@/utils";
-import { Skeleton, Stack } from "@chakra-ui/react";
+import { Skeleton, Spacer, Stack, Switch, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { QUERIES } from "../constants";
@@ -23,6 +23,7 @@ export default function DeviceModuleScreen() {
   const { t } = useTranslation();
   const toast = useToast();
   const pagination = usePagination();
+  const [history, setHistory] = useState(true);
 
   const { data = [], isLoading } = useQuery(
     [
@@ -31,8 +32,13 @@ export default function DeviceModuleScreen() {
       pagination.query,
       pagination.offset,
       pagination.limit,
+      history,
     ],
-    async () => api.device.getAllModuleById(+params.id, pagination),
+    async () =>
+      api.device.getAllModuleById(+params.id, {
+        ...pagination,
+        history,
+      }),
     {
       onError(err: NetshotError) {
         toast.error(err);
@@ -40,8 +46,8 @@ export default function DeviceModuleScreen() {
     }
   );
 
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const columns = [
       columnHelper.accessor("slot", {
         cell: (info) => info.getValue(),
         header: t("Slot"),
@@ -54,28 +60,49 @@ export default function DeviceModuleScreen() {
         cell: (info) => info.getValue(),
         header: t("Serial number"),
       }),
-      columnHelper.accessor("firstSeenDate", {
-        cell: (info) =>
-          info.getValue() ? formatDate(info.getValue() as string) : t("N/A"),
-        header: t("First seen"),
-      }),
-      columnHelper.accessor("lastSeenDate", {
-        cell: (info) =>
-          info.getValue() ? formatDate(info.getValue() as string) : t("N/A"),
-        header: t("Last seen"),
-      }),
-    ],
-    [t]
-  );
+    ];
+
+    if (history) {
+      columns.push(
+        ...[
+          columnHelper.accessor("firstSeenDate", {
+            cell: (info) =>
+              info.getValue()
+                ? formatDate(info.getValue() as string)
+                : t("N/A"),
+            header: t("First seen"),
+          }),
+          columnHelper.accessor("lastSeenDate", {
+            cell: (info) =>
+              info.getValue()
+                ? formatDate(info.getValue() as string)
+                : t("N/A"),
+            header: t("Last seen"),
+          }),
+        ]
+      );
+    }
+
+    return columns;
+  }, [t, history]);
 
   return (
-    <Stack spacing="6" flex="1">
-      <Search
-        placeholder={t("Search...")}
-        onQuery={pagination.onQuery}
-        onClear={pagination.onQueryClear}
-        w="25%"
-      />
+    <Stack spacing="6" flex="1" overflow="auto">
+      <Stack direction="row" alignItems="center">
+        <Search
+          placeholder={t("Search...")}
+          onQuery={pagination.onQuery}
+          onClear={pagination.onQueryClear}
+          w="25%"
+        />
+        <Spacer />
+        <Text>{t("Show history")}</Text>
+        <Switch
+          isChecked={history}
+          size="md"
+          onChange={() => setHistory((prev) => !prev)}
+        />
+      </Stack>
       {isLoading ? (
         <Stack spacing="3">
           <Skeleton h="60px"></Skeleton>

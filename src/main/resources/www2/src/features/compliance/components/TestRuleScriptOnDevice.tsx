@@ -1,6 +1,5 @@
-import api from "@/api";
+import api, { TestRuleScriptOnDevicePayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { TestRuleScriptOnDevicePayload } from "@/api/rule";
 import { DeviceAutocomplete, Icon } from "@/components";
 import { useToast } from "@/hooks";
 import { RuleType, SimpleDevice } from "@/types";
@@ -50,6 +49,7 @@ export default function TestRuleScriptOnDevice(props: TestRuleOnDevice) {
     <Stack direction="row">
       <DeviceAutocomplete
         value={device}
+        placeholder={t("Search device and test rule...")}
         onFocus={() => setDevice(null)}
         onChange={(device) => {
           setDevice(device);

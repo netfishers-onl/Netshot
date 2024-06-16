@@ -1,6 +1,5 @@
-import api from "@/api";
+import api, { CreateOrUpdateRule } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { CreateOrUpdateRule } from "@/api/rule";
 import { BoxWithIconButton } from "@/components";
 import { QUERIES as GLOBAL_QUERIES } from "@/constants";
 import { useToast } from "@/hooks";
@@ -36,9 +35,6 @@ import { RuleForm } from "../types";
 import { RuleEditForm } from "./RuleEditForm";
 import RuleEditScript from "./RuleEditScript";
 
-/**
- * @todo: Revoir la recherche
- */
 enum FormStep {
   Type,
   Details,

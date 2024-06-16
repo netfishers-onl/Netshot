@@ -1,6 +1,5 @@
-import api from "@/api";
+import api, { ReportDeviceAccessFailureQueryParams } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { ReportDeviceAccessFailureQueryParams } from "@/api/report";
 import {
   DataTable,
   DomainSelect,
@@ -42,7 +41,9 @@ const columnHelper = createColumnHelper<DeviceAccessFailure>();
 
 export default function ReportDeviceAccessFailure() {
   const { t } = useTranslation();
-  const pagination = usePagination();
+  const pagination = usePagination({
+    limit: 50,
+  });
   const toast = useToast();
   const navigate = useNavigate();
   const form = useForm<FilterForm>({
@@ -103,7 +104,7 @@ export default function ReportDeviceAccessFailure() {
         cell: (info) => info.getValue(),
         header: t("Device"),
       }),
-      columnHelper.accessor("mgmtAddress.ip", {
+      columnHelper.accessor("mgmtAddress", {
         cell: (info) => info.getValue(),
         header: t("Management IP"),
       }),
@@ -128,7 +129,7 @@ export default function ReportDeviceAccessFailure() {
               variant="ghost"
               colorScheme="green"
               as={Link}
-              to={`/app/device/${info.getValue()}`}
+              to={`/app/device/${info.getValue()}/general`}
               aria-label={t("Go to device")}
               icon={<Icon name="arrowRight" />}
             />
@@ -150,7 +151,7 @@ export default function ReportDeviceAccessFailure() {
 
   const navigateToDevice = useCallback(
     (row: DeviceAccessFailure) => {
-      navigate(`/app/device/${row.id}`);
+      navigate(`/app/device/${row.id}/general`);
     },
     [navigate]
   );

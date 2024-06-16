@@ -3,19 +3,19 @@ import { FormControl, Icon } from "@/components";
 import { QUERIES } from "@/constants";
 import { Dialog } from "@/dialog";
 import { useToast } from "@/hooks";
-import { Device, Script } from "@/types";
+import { Device, Script, SimpleDevice } from "@/types";
 import { Button, Stack } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 export type CreateDeviceScriptButtonProps = {
-  device: Device;
+  devices: SimpleDevice[] | Device[];
   onCreated(script: Script): void;
 };
 
 export function CreateDeviceScriptButton(props: CreateDeviceScriptButtonProps) {
-  const { device, onCreated } = props;
+  const { devices, onCreated } = props;
   const { t } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -26,7 +26,7 @@ export function CreateDeviceScriptButton(props: CreateDeviceScriptButtonProps) {
   }>({
     defaultValues: {
       name: "",
-      driver: device?.driver,
+      driver: devices[0]?.driver,
     },
   });
 

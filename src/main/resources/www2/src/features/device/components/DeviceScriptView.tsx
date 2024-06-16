@@ -3,7 +3,7 @@ import { NetshotError } from "@/api/httpClient";
 import Search from "@/components/Search";
 import { QUERIES } from "@/constants";
 import { useToast } from "@/hooks";
-import { Device, Script } from "@/types";
+import { Device, Script, SimpleDevice } from "@/types";
 import { sortAlphabetical } from "@/utils";
 import { Center, Spinner, Stack } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
@@ -14,11 +14,11 @@ import DeviceScriptEditor from "./DeviceScriptEditor";
 import DeviceScriptItem from "./DeviceScriptItem";
 
 export type DeviceScriptViewProps = {
-  device: Device;
+  devices: SimpleDevice[] | Device[];
 };
 
 export default function DeviceScriptView(props: DeviceScriptViewProps) {
-  const { device } = props;
+  const { devices } = props;
   const { t } = useTranslation();
   const toast = useToast();
   const [query, setQuery] = useState<string>("");
@@ -67,7 +67,7 @@ export default function DeviceScriptView(props: DeviceScriptViewProps) {
             placeholder={t("Search...")}
           />
           <CreateDeviceScriptButton
-            device={device}
+            devices={devices}
             onCreated={(script) => setSelected(script)}
           />
         </Stack>
@@ -94,7 +94,7 @@ export default function DeviceScriptView(props: DeviceScriptViewProps) {
       {selected && (
         <DeviceScriptEditor
           key={selected?.id}
-          device={device}
+          devices={devices}
           scriptId={selected?.id}
         />
       )}

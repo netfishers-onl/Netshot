@@ -20,6 +20,7 @@ import {
   ModalHeader,
   ModalOverlay,
   Stack,
+  Tag,
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
@@ -161,13 +162,21 @@ export default function EditGroupButton(props: EditGroupButtonProps) {
     [form]
   );
 
+  const open = useCallback(
+    (evt: MouseEvent<HTMLDivElement>) => {
+      evt.stopPropagation();
+      onOpen();
+    },
+    [onOpen]
+  );
+
   if (isStaticDeviceListLoading || isDriverLoading) {
     return null;
   }
 
   return (
     <FormProvider {...form}>
-      {renderItem(onOpen)}
+      {renderItem(open)}
       <Modal
         blockScrollOnMount={false}
         isCentered
@@ -231,6 +240,11 @@ export default function EditGroupButton(props: EditGroupButtonProps) {
                           )}
                         </Text>
                       </Stack>
+                      {driver && (
+                        <Tag colorScheme="grey" alignSelf="start">
+                          {t("Device type: ")} {driver.label}
+                        </Tag>
+                      )}
                       {query?.length > 0 && (
                         <Box
                           p="3"

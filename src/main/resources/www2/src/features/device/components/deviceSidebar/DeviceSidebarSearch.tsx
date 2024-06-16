@@ -3,14 +3,13 @@ import Search from "@/components/Search";
 import { useThrottle } from "@/hooks";
 import {
   Button,
-  Flex,
   IconButton,
   Spacer,
   Stack,
   Text,
   Tooltip,
 } from "@chakra-ui/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDeviceSidebar } from "../../contexts/DeviceSidebarProvider";
 
@@ -18,10 +17,10 @@ export default function DeviceSidebarSearch() {
   const { t } = useTranslation();
   const ctx = useDeviceSidebar();
   const [query, setQuery] = useState<string>("");
-  const isSelectedAll = useMemo(() => ctx.isSelectedAll(), [ctx]);
   const throttledValue = useThrottle(query);
 
   const onQuery = useCallback((query: string) => {
+    ctx.deselectAll();
     setQuery(`[Name] CONTAINSNOCASE \"${query}\"`);
   }, []);
 
@@ -38,7 +37,7 @@ export default function DeviceSidebarSearch() {
   }, [throttledValue]);
 
   return (
-    <Stack p="6" spacing="5" bg={isSelectedAll ? "green.500" : "white"}>
+    <Stack p="6" spacing="5">
       <Search
         clear={Boolean(ctx.query)}
         placeholder={t("Search...")}
@@ -47,7 +46,7 @@ export default function DeviceSidebarSearch() {
       >
         <QueryBuilderButton
           value={{
-            query: ctx.query,
+            query,
             driver: ctx.driver,
           }}
           renderItem={(open) => (
@@ -65,24 +64,23 @@ export default function DeviceSidebarSearch() {
           }}
         />
       </Search>
-      {ctx.query && (
-        <Flex>
-          <Text color={isSelectedAll ? "white" : "black"}>
-            {isSelectedAll
-              ? t("{{x}} selected", { x: ctx.total })
-              : t("{{x}} devices", { x: ctx.total })}
-          </Text>
-          <Spacer />
-          <Button
-            variant="plain"
-            colorScheme={isSelectedAll ? "white" : "green"}
-            onClick={isSelectedAll ? ctx.deselectAll : ctx.selectAll}
-            isDisabled={ctx.data?.length === 0}
-          >
-            {isSelectedAll ? t("Deselect") : t("Select all")}
+      <Stack direction="row" alignItems="center">
+        <Text>{t("{{length}} devices", { length: ctx.total })}</Text>
+        <Spacer />
+        <Stack direction="row" spacing="2">
+          <Button alignSelf="start" size="sm" onClick={ctx.selectAll}>
+            {t("Select all")}
           </Button>
-        </Flex>
-      )}
+          <Tooltip label={t("Refresh device list")}>
+            <IconButton
+              aria-label={t("Refresh device list")}
+              size="sm"
+              icon={<Icon name="refreshCcw" />}
+              onClick={ctx.refreshDeviceList}
+            />
+          </Tooltip>
+        </Stack>
+      </Stack>
     </Stack>
   );
 }

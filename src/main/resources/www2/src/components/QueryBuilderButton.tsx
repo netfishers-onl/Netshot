@@ -41,9 +41,13 @@ export default function QueryBuilderButton(props: QueryBuilderButtonProps) {
   const open = useCallback(
     (evt: MouseEvent<HTMLButtonElement>) => {
       evt.preventDefault();
+      form.setValue("queryBuilder.query", value?.query);
+      dialog.updateProps({
+        form,
+      });
       dialog.open();
     },
-    [dialog]
+    [dialog, value, form]
   );
 
   return renderItem(open);

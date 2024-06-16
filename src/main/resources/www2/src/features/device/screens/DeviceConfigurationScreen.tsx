@@ -1,35 +1,47 @@
-import api from "@/api";
+import api, { PaginationQueryParams } from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { EmptyResult } from "@/components";
 import Search from "@/components/Search";
 import { useToast } from "@/hooks";
-import { sortByDate } from "@/utils";
-import { Skeleton, Stack } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
+import { Button, Skeleton, Stack } from "@chakra-ui/react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import DeviceConfigurationPanel from "../components/DeviceConfigurationPanel";
 import { QUERIES } from "../constants";
 
+const LIMIT = 25;
+
 export default function DeviceConfigurationScreen() {
   const params = useParams<{ id: string }>();
   const { t } = useTranslation();
   const toast = useToast();
   const [query, setQuery] = useState<string>("");
-  const [pagination, setPagination] = useState({
-    limit: 99999,
-    offset: 1,
-  });
-  const { data: configs, isLoading } = useQuery(
-    [QUERIES.DEVICE_CONFIGS, params.id, query, pagination.offset],
-    async () => api.device.getAllConfigById(+params.id, pagination),
+
+  const {
+    data,
+    isLoading,
+    isSuccess,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery(
+    [QUERIES.DEVICE_CONFIGS, params.id, query],
+    async ({ pageParam = 0 }) => {
+      const pagination = {
+        limit: LIMIT,
+        offset: pageParam,
+      } as PaginationQueryParams;
+
+      return api.device.getAllConfigById(+params.id, pagination);
+    },
     {
-      select(res) {
-        return sortByDate(res, "changeDate");
-      },
       onError(err: NetshotError) {
         toast.error(err);
+      },
+      getNextPageParam(lastPage, allPages) {
+        return lastPage.length === LIMIT ? allPages.length * LIMIT : undefined;
       },
     }
   );
@@ -41,6 +53,17 @@ export default function DeviceConfigurationScreen() {
   const onQueryClear = useCallback(() => {
     setQuery("");
   }, []);
+
+  if (data?.pages?.[0]?.length === 0) {
+    return (
+      <EmptyResult
+        title={t("There is no interface for this device")}
+        description={t(
+          "This device does not have any interface, please check his configuration"
+        )}
+      />
+    );
+  }
 
   return (
     <Stack spacing="6">
@@ -62,23 +85,20 @@ export default function DeviceConfigurationScreen() {
           </>
         ) : (
           <>
-            {configs?.length > 0 ? (
-              <>
-                {configs?.map((config) => (
+            {isSuccess &&
+              data?.pages?.map((page) =>
+                page.map((config) => (
                   <DeviceConfigurationPanel config={config} key={config?.id} />
-                ))}
-              </>
-            ) : (
-              <EmptyResult
-                title={t("There is no interface for this device")}
-                description={t(
-                  "This device does not have any interface, please check his configuration"
-                )}
-              />
-            )}
+                ))
+              )}
           </>
         )}
       </Stack>
+      {hasNextPage && (
+        <Button onClick={() => fetchNextPage()} isLoading={isFetchingNextPage}>
+          {t("Load more")}
+        </Button>
+      )}
     </Stack>
   );
 }

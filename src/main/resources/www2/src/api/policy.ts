@@ -1,11 +1,6 @@
 import { Policy } from "@/types";
 import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
-
-export type CreateOrUpdatePolicy = {
-  id?: number;
-  name: string;
-  targetGroups: number[];
-};
+import { CreateOrUpdatePolicy } from "./types";
 
 async function getAll() {
   return httpClient.get<Policy[]>("/policies");

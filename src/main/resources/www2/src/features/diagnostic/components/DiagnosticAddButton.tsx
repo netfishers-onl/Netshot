@@ -1,5 +1,4 @@
-import api from "@/api";
-import { CreateOrUpdateDiagnosticPayload } from "@/api/diagnostic";
+import api, { CreateOrUpdateDiagnosticPayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { BoxWithIconButton } from "@/components";
 import { useToast } from "@/hooks";
@@ -7,6 +6,7 @@ import {
   DeviceType,
   DiagnosticResultType,
   DiagnosticType,
+  Group,
   Option,
 } from "@/types";
 import {
@@ -65,7 +65,7 @@ enum FormStep {
 type Form = {
   name: string;
   resultType: Option<DiagnosticResultType>;
-  targetGroup: Option<number>;
+  targetGroup: Group;
   deviceDriver: Option<DeviceType>;
   cliMode: Option<string>;
   command: string;
@@ -153,7 +153,7 @@ export default function AddTaskButton(props: AddDiagnosticButtonProps) {
         type,
         name: values.name,
         resultType: values.resultType.value,
-        targetGroup: values.targetGroup?.value?.toString(),
+        targetGroup: values.targetGroup?.id?.toString(),
         deviceDriver: values.deviceDriver?.value?.name,
         cliMode: values.cliMode?.value,
         command: values.command,

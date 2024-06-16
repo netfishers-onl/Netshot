@@ -1,11 +1,6 @@
 import { User } from "@/types";
 import httpClient from "./httpClient";
-
-export type UpdateUserPayload = {
-  username: string;
-  password: string;
-  newPassword: string;
-};
+import { UpdateUserPayload } from "./types";
 
 async function me() {
   return httpClient.get<User>("/user");

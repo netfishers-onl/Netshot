@@ -1,7 +1,6 @@
-import api from "@/api";
+import api, { CreateOrUpdateSoftwareRule } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { CreateOrUpdateSoftwareRule } from "@/api/softwareRule";
-import { ANY_OPTION } from "@/constants";
+import { ANY_OPTION, DEVICE_LEVEL_OPTIONS } from "@/constants";
 import { Dialog } from "@/dialog";
 import { useToast } from "@/hooks";
 import { SoftwareRule } from "@/types";
@@ -9,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MouseEvent, ReactElement, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { LEVEL_OPTIONS, QUERIES } from "../constants";
+import { QUERIES } from "../constants";
 import { SoftwareRuleFormValues } from "../types";
 import SoftwareRuleForm from "./SoftwareRuleForm";
 
@@ -31,8 +30,8 @@ export default function AddSoftwareRuleButton(
       driver: ANY_OPTION,
       family: "",
       familyRegExp: false,
-      group: ANY_OPTION,
-      level: LEVEL_OPTIONS[0],
+      group: null,
+      level: DEVICE_LEVEL_OPTIONS[0],
       partNumber: "",
       partNumberRegExp: false,
       version: "",
@@ -69,7 +68,7 @@ export default function AddSoftwareRuleButton(
         driver: values.driver.value?.name,
         family: values.family,
         familyRegExp: values.familyRegExp,
-        group: values.group?.value,
+        group: values.group?.id,
         level: values.level?.value,
         partNumber: values.partNumber,
         partNumberRegExp: values.partNumberRegExp,

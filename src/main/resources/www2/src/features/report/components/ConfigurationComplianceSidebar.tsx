@@ -1,7 +1,7 @@
-import api from "@/api";
-import { ReportQueryParams } from "@/api/report";
+import api, { ReportQueryParams } from "@/api";
 import { Chart, Sidebar } from "@/components";
 import { useColor } from "@/theme";
+import { getValuesFromOptions } from "@/utils";
 import {
   Box,
   Divider,
@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChartConfiguration } from "chart.js";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
 import { QUERIES } from "../constants";
 import { useConfigurationCompliance } from "../contexts";
 import ConfigurationCompliantSidebarList from "./ConfigurationComplianceSidebarList";
@@ -25,6 +26,9 @@ function ConfigurationComplianceGlobalChart() {
   const compliantColor = useColor("green.400");
   const nonCompliantColor = useColor("green.900");
   const ctx = useConfigurationCompliance();
+  const params = useParams<{
+    id: string;
+  }>();
 
   const { data: stats, isLoading } = useQuery(
     [
@@ -32,21 +36,31 @@ function ConfigurationComplianceGlobalChart() {
       ctx.filters.domains,
       ctx.filters.groups,
       ctx.filters.policies,
+      params?.id,
     ],
     async () => {
-      const queryParams = {} as ReportQueryParams;
+      const queryParams = {
+        domain: [],
+        group: [],
+        policy: [],
+      } as ReportQueryParams;
+
       const { domains, groups, policies } = ctx.filters;
 
       if (domains.length) {
-        queryParams.domain = domains;
+        queryParams.domain = getValuesFromOptions(domains);
       }
 
       if (groups.length) {
-        queryParams.group = groups;
+        queryParams.group = groups.map((group) => group.id);
       }
 
       if (policies.length) {
-        queryParams.policy = policies;
+        queryParams.policy = getValuesFromOptions(policies);
+      }
+
+      if (params.id) {
+        queryParams.group = [...queryParams.group, +params.id];
       }
 
       return api.report.getAllGroupConfigComplianceStat(queryParams);

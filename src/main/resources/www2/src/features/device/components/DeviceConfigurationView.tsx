@@ -1,6 +1,7 @@
 import api from "@/api";
 import { MonacoEditor } from "@/components";
 import Icon from "@/components/Icon";
+import { DeviceTypeAttribute } from "@/types";
 import { Center, Flex, Spinner, Stack, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -8,20 +9,20 @@ import { QUERIES } from "../constants";
 
 export type DeviceConfigurationViewProps = {
   id: number;
-  type: "configuration" | "adminConfiguration" | "xrPackages";
+  attribute: DeviceTypeAttribute;
 };
 
 export default function DeviceConfigurationView(
   props: DeviceConfigurationViewProps
 ) {
-  const { id, type } = props;
+  const { id, attribute } = props;
   const { t } = useTranslation();
   const {
     data: config,
     isLoading,
     isError,
-  } = useQuery([QUERIES.DEVICE_CONFIG, type, id], async () =>
-    api.config.getItem(id, type)
+  } = useQuery([QUERIES.DEVICE_CONFIG, attribute?.name, id], async () =>
+    api.config.getItem(id, attribute?.name)
   );
 
   if (isLoading) {
@@ -55,5 +56,11 @@ export default function DeviceConfigurationView(
     );
   }
 
-  return <MonacoEditor readOnly value={config} language="cfg" />;
+  return (
+    <Stack direction="row" overflow="auto" flex="1">
+      <Stack flex="1" h="500px">
+        <MonacoEditor readOnly value={config} language="cfg" />
+      </Stack>
+    </Stack>
+  );
 }

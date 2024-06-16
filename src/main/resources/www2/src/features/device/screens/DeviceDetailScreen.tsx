@@ -89,7 +89,7 @@ export default function DeviceDetailScreen() {
               >
                 <Skeleton isLoaded={!isLoading}>
                   <DeviceSnapshotButton
-                    device={device}
+                    devices={[device]}
                     renderItem={(open) => (
                       <Button variant="primary" onClick={open}>
                         {t("Take snapshot")}
@@ -120,7 +120,7 @@ export default function DeviceDetailScreen() {
                         ]}
                       >
                         <DeviceRunScriptButton
-                          device={device}
+                          devices={[device]}
                           renderItem={(open) => (
                             <MenuItem
                               icon={<Icon name="play" />}
@@ -152,7 +152,7 @@ export default function DeviceDetailScreen() {
                         />
                         {isDisabled ? (
                           <DeviceEnableButton
-                            device={device}
+                            devices={[device]}
                             renderItem={(open) => (
                               <MenuItem
                                 icon={<Icon name="power" />}
@@ -164,7 +164,7 @@ export default function DeviceDetailScreen() {
                           />
                         ) : (
                           <DeviceDisableButton
-                            device={device}
+                            devices={[device]}
                             renderItem={(open) => (
                               <MenuItem
                                 icon={<Icon name="power" />}
@@ -193,7 +193,7 @@ export default function DeviceDetailScreen() {
                         ]}
                       >
                         <DeviceRemoveButton
-                          device={device}
+                          devices={[device]}
                           renderItem={(open) => (
                             <MenuItem
                               icon={<Icon name="trash" />}

@@ -30,7 +30,10 @@ export default function DiagnosticDisableButton(
           QUERIES.DIAGNOSTIC_DETAIL,
           diagnostic?.id,
         ]);
+        queryClient.invalidateQueries([QUERIES.DIAGNOSTIC_LIST]);
+
         dialog.close();
+
         toast.success({
           title: t("Success"),
           description: t(

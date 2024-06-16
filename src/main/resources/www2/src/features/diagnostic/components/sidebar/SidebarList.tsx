@@ -1,6 +1,5 @@
-import diagnostic from "@/api/diagnostic";
+import api, { PaginationQueryParams } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { PaginationQueryParams } from "@/api/types";
 import useToast from "@/hooks/useToast";
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -35,7 +34,7 @@ export default function SidebarList() {
         offset: pageParam,
       } as PaginationQueryParams;
 
-      return diagnostic.getAll(params);
+      return api.diagnostic.getAll(params);
     },
     {
       onError(err: NetshotError) {

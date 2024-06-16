@@ -235,7 +235,7 @@ export default function DeviceComplianceScreen() {
           roles={[Level.Admin, Level.Operator, Level.ReadWriteCommandOnDevice]}
         >
           <DeviceComplianceButton
-            device={device}
+            devices={[device]}
             renderItem={(open) => (
               <Button
                 alignSelf="start"

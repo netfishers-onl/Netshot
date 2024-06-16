@@ -48,7 +48,6 @@ export default function Search(props: SearchProps) {
     ref.current.focus();
 
     setTimeout(() => {
-      if (onQuery) onQuery("");
       if (onClear) onClear();
     });
   }, [onQuery, ref]);

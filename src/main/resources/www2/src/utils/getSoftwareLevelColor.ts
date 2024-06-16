@@ -9,8 +9,10 @@ export function getSoftwareLevelColor(softwareLevel: DeviceSoftwareLevel) {
   } else if (softwareLevel === DeviceSoftwareLevel.SILVER) {
     return "grey";
   } else if (softwareLevel === DeviceSoftwareLevel.BRONZE) {
+    return "bronze";
+  } else if (softwareLevel === DeviceSoftwareLevel.NON_COMPLIANT) {
     return "red";
+  } else {
+    return "purple";
   }
-
-  return null;
 }

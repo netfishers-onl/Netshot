@@ -1,6 +1,5 @@
-import api from "@/api";
+import api, { CreateOrUpdatePolicy } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { CreateOrUpdatePolicy } from "@/api/policy";
 import { QUERIES } from "@/constants";
 import { Dialog } from "@/dialog";
 import { useToast } from "@/hooks";

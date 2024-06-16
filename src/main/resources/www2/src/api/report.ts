@@ -1,7 +1,6 @@
 import {
   ConfigComplianceDeviceStatus,
   DeviceAccessFailure,
-  DeviceComplianceResultType,
   DeviceSoftwareLevel,
   GroupConfigComplianceStat,
   GroupDeviceBySoftwareLevel,
@@ -11,31 +10,11 @@ import {
 } from "@/types";
 import { getFilenameFromContentDispositionHeader } from "@/utils";
 import httpClient, { HttpMethod } from "./httpClient";
-import { PaginationQueryParams } from "./types";
-
-export type ReportQueryParams = Partial<{
-  domain: number[];
-  group: number[];
-  policy: number[];
-  result?: DeviceComplianceResultType[];
-}>;
-
-export type ReportExportDataQueryParams = {
-  domain: number;
-  group: number[];
-  groups: boolean;
-  interfaces: boolean;
-  inventory: boolean;
-  inventoryhistory: boolean;
-  locations: boolean;
-  compliance: boolean;
-  devicedriverattributes: boolean;
-};
-
-export type ReportDeviceAccessFailureQueryParams = {
-  days: number;
-  domain?: number;
-} & PaginationQueryParams;
+import {
+  ReportDeviceAccessFailureQueryParams,
+  ReportExportDataQueryParams,
+  ReportQueryParams,
+} from "./types";
 
 async function getAllConfigComplianceDeviceStatus(
   queryParams: ReportQueryParams

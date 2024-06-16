@@ -3,16 +3,19 @@ import { Group } from "@/types";
 import { Folder, isGroup } from "@/utils";
 import { Box, BoxProps, Flex, Stack, Text } from "@chakra-ui/react";
 import { motion, useAnimationControls } from "framer-motion";
-import { MouseEvent, useCallback, useState } from "react";
+import { MouseEvent, ReactElement, useCallback, useState } from "react";
 import GroupOrFolderItem from "./GroupOrFolderItem";
 
 export type FolderItemProps = {
   folder: Folder;
-  onGroupSelect(group: Group);
+  onGroupSelect(group: Group): void;
+  isSelected?(group: Group): boolean;
+  renderGroupChildren?(group: Group): ReactElement;
 } & BoxProps;
 
 export default function FolderItem(props: FolderItemProps) {
-  const { folder, onGroupSelect, ...other } = props;
+  const { folder, onGroupSelect, isSelected, renderGroupChildren, ...other } =
+    props;
   const controls = useAnimationControls();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
 
@@ -75,6 +78,8 @@ export default function FolderItem(props: FolderItemProps) {
                 item={child}
                 key={isGroup(child) ? child?.id : child?.name}
                 onGroupSelect={onGroupSelect}
+                renderGroupChildren={renderGroupChildren}
+                isSelected={isSelected}
               />
             ))}
           </Stack>

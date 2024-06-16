@@ -1,6 +1,5 @@
-import api from "@/api";
+import api, { TaskQueryParams } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { TaskQueryParams } from "@/api/task";
 import {
   DataTable,
   EmptyResult,

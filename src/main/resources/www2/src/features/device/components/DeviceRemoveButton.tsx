@@ -3,27 +3,27 @@ import { NetshotError } from "@/api/httpClient";
 import { QUERIES } from "@/constants";
 import { Dialog } from "@/dialog";
 import { useToast } from "@/hooks";
-import { Device } from "@/types";
+import { Device, SimpleDevice } from "@/types";
 import { Text } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent, ReactElement } from "react";
+import { MouseEvent, ReactElement, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { QUERIES as DEVICE_QUERIES } from "../constants";
 
 export type DeviceRemoveButtonProps = {
-  device: Device;
+  devices: SimpleDevice[] | Device[];
   renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
 };
 
 export default function DeviceRemoveButton(props: DeviceRemoveButtonProps) {
-  const { device, renderItem } = props;
+  const { devices, renderItem } = props;
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const toast = useToast();
   const navigate = useNavigate();
 
-  const mutation = useMutation(async () => api.device.remove(device?.id), {
+  const mutation = useMutation(async (id: number) => api.device.remove(id), {
     onSuccess() {
       navigate("/app/device");
 
@@ -37,26 +37,42 @@ export default function DeviceRemoveButton(props: DeviceRemoveButtonProps) {
     },
   });
 
+  const isMultiple = useMemo(() => devices.length > 1, [devices]);
+
   const dialog = Dialog.useConfirm({
-    title: t("Remove device"),
+    title: t(isMultiple ? "Remove selected devices" : "Remove device"),
     description: (
-      <Text>
-        {t("You are about to remove the device {{deviceName}}", {
-          deviceName: device?.name,
-        })}{" "}
-        <Text as="span">
-          {t("({{deviceIp}})", {
-            deviceIp: device?.mgmtAddress || t("N/A"),
-          })}
-        </Text>
-      </Text>
+      <>
+        {isMultiple ? (
+          <>
+            {t("You are about to remove the devices {{names}}", {
+              names: devices.map((device) => device.name).join(", "),
+            })}
+          </>
+        ) : (
+          <>
+            <Text>
+              {t("You are about to remove the device {{deviceName}}", {
+                deviceName: devices?.[0]?.name,
+              })}{" "}
+              <Text as="span">
+                {t("({{deviceIp}})", {
+                  deviceIp: devices?.[0]?.mgmtAddress || t("N/A"),
+                })}
+              </Text>
+            </Text>
+          </>
+        )}
+      </>
     ),
     isLoading: mutation.isLoading,
     onConfirm() {
-      mutation.mutate();
+      for (const device of devices) {
+        mutation.mutate(device.id);
+      }
     },
     confirmButton: {
-      label: t("remove"),
+      label: t(isMultiple ? "Remove all" : "remove"),
       props: {
         colorScheme: "red",
       },

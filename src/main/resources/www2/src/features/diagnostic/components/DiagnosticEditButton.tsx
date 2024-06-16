@@ -1,5 +1,4 @@
-import api from "@/api";
-import { CreateOrUpdateDiagnosticPayload } from "@/api/diagnostic";
+import api, { CreateOrUpdateDiagnosticPayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { Dialog } from "@/dialog";
 import { useToast } from "@/hooks";
@@ -53,10 +52,7 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
     }
 
     if (diagnostic?.targetGroup) {
-      values.targetGroup = {
-        label: diagnostic?.targetGroup?.name,
-        value: diagnostic?.targetGroup?.id,
-      };
+      values.targetGroup = diagnostic?.targetGroup;
     }
 
     if (diagnostic?.cliMode) {
@@ -94,6 +90,8 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
           QUERIES.DIAGNOSTIC_DETAIL,
           diagnostic.id,
         ]);
+
+        queryClient.invalidateQueries([QUERIES.DIAGNOSTIC_LIST]);
       },
       onError(err: NetshotError) {
         toast.error(err);
@@ -109,7 +107,7 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
         type: diagnostic.type,
         name: values.name,
         resultType: values.resultType?.value,
-        targetGroup: values.targetGroup?.value?.toString(),
+        targetGroup: values.targetGroup?.id?.toString(),
         deviceDriver: values.deviceDriver?.value?.name,
         cliMode: values.cliMode?.value,
         command: values.command,

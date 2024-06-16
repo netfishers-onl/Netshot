@@ -1,6 +1,6 @@
 import { Icon, Protected, SidebarLink } from "@/components";
 import { Level } from "@/types";
-import { Button, Divider, Stack } from "@chakra-ui/react";
+import { Button, Divider, Stack, Text } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import { SidebarProvider } from "../../contexts";
 import { SidebarContext } from "../../contexts/SidebarProvider";
@@ -37,13 +37,17 @@ export default function Sidebar() {
                   <Divider />
                 </>
               )}
+
+              <Stack px="6" pt="6">
+                <Text fontWeight="medium">{t("Configuration compliance")}</Text>
+              </Stack>
               {query ? <SidebarSearchList /> : <SidebarList />}
               <Protected
                 roles={[
                   Level.Admin,
                   Level.Operator,
                   Level.ReadWriteCommandOnDevice,
-                  Level.ReadWrite
+                  Level.ReadWrite,
                 ]}
               >
                 <Divider />

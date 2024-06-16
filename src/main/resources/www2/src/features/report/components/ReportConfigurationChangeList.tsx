@@ -10,12 +10,14 @@ import {
   Input,
   Skeleton,
   Stack,
+  Text,
   Tooltip,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
 import { ChangeEvent, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { PERIODS, QUERIES } from "../constants";
 import { Period, PeriodType } from "../types";
 import ReportConfigurationCompareModal from "./ReportConfigurationCompareModal";
@@ -71,7 +73,15 @@ export default function ReportConfigurationChangeList() {
         header: t("Date/time"),
       }),
       columnHelper.accessor("deviceName", {
-        cell: (info) => info.getValue(),
+        cell: (info) => (
+          <Text
+            as={Link}
+            to={`/app/device/${info.row.original.deviceId}/general`}
+            textDecoration="underline"
+          >
+            {info.getValue()}
+          </Text>
+        ),
         header: t("Device"),
       }),
       columnHelper.accessor("author", {
@@ -87,7 +97,7 @@ export default function ReportConfigurationChangeList() {
                 <IconButton
                   variant="ghost"
                   colorScheme="green"
-                  aria-label={t("Go to device")}
+                  aria-label={t("Show difference")}
                   icon={<Icon name="gitBranch" />}
                   onClick={open}
                 />

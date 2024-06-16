@@ -1,5 +1,4 @@
-import api from "@/api";
-import { CreateDevicePayload } from "@/api/device";
+import api, { CreateDevicePayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { DeviceTypeSelect, DomainSelect, Select, Switch } from "@/components";
 import FormControl, { FormControlType } from "@/components/FormControl";
@@ -138,16 +137,14 @@ function DeviceCreateForm() {
               />
               <Stack direction="row" spacing="4">
                 <FormControl
-                  isRequired
                   label={t("SSH port")}
                   placeholder={t("e.g. 22")}
                   control={form.control}
                   name="sshPort"
                 />
                 <FormControl
-                  isRequired
                   label={t("Telnet port")}
-                  placeholder={t("e.g. 6753")}
+                  placeholder={t("e.g. 23")}
                   control={form.control}
                   name="telnetPort"
                 />
@@ -159,7 +156,7 @@ function DeviceCreateForm() {
             control={form.control}
             name="credentialType"
             options={CREDENTIAL_OPTIONS}
-            label={t("Credential")}
+            label={t("Credentials")}
             placeholder={t("Select a credential")}
             isRequired
           />

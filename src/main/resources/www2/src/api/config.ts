@@ -1,13 +1,6 @@
 import { Config, ConfigDiff } from "@/types";
 import httpClient, { HttpMethod } from "./httpClient";
-import { PaginationQueryParams } from "./types";
-
-export type ConfigQueryParams = {
-  after?: number;
-  before?: number;
-  domain?: number[];
-  group?: number[];
-} & PaginationQueryParams;
+import { ConfigQueryParams } from "./types";
 
 async function getAll(queryParams: ConfigQueryParams = {}) {
   return httpClient.get<Config[]>("/configs", {

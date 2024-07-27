@@ -8,10 +8,10 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<hibernate.version>5.6.15.Final</hibernate.version>
-		<jackson.version>2.16.0</jackson.version>
-		<jersey.version>2.41</jersey.version>
-		<swagger.version>2.2.19</swagger.version>
-		<slf4j.version>2.0.9</slf4j.version>
+		<jackson.version>2.17.2</jackson.version>
+		<jersey.version>2.43</jersey.version>
+		<swagger.version>2.2.22</swagger.version>
+		<slf4j.version>2.0.13</slf4j.version>
 		<jasypt.version>1.9.3</jasypt.version>
 		<polyglot.version>23.1.4</polyglot.version>
 	</properties>

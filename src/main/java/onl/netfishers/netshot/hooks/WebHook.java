@@ -19,6 +19,8 @@
 package onl.netfishers.netshot.hooks;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -114,11 +116,16 @@ public class WebHook extends Hook {
 		if (this.url == null || this.url.trim().equals("")) {
 			throw new MalformedURLException("Empty URL");
 		}
-		URL pUrl = new URL(this.url.trim());
-		if (!pUrl.getProtocol().equals("http") && !pUrl.getProtocol().equals("https")) {
-			throw new MalformedURLException("Invalid protocol");
+		try {
+			URL pUrl = new URI(this.url.trim()).toURL();
+			if (!pUrl.getProtocol().equals("http") && !pUrl.getProtocol().equals("https")) {
+				throw new MalformedURLException("Invalid protocol");
+			}
+			return pUrl;
 		}
-		return pUrl;
+		catch (URISyntaxException e) {
+			throw new MalformedURLException("Invalid URL");
+		}
 	}
 
 	@XmlElement

@@ -13,6 +13,7 @@
 		<swagger.version>2.2.19</swagger.version>
 		<slf4j.version>2.0.9</slf4j.version>
 		<jasypt.version>1.9.3</jasypt.version>
+		<polyglot.version>23.1.4</polyglot.version>
 	</properties>
 	<build>
 		<finalName>netshot</finalName>
@@ -22,8 +23,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.1</version>
 				<configuration>
-					<source>17</source>
-					<target>17</target>
+					<source>21</source>
+					<target>21</target>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -71,6 +72,23 @@
 		</plugins>
 	</build>
 	<dependencies>
+		<dependency>
+			<groupId>org.graalvm.polyglot</groupId>
+			<artifactId>polyglot</artifactId>
+			<version>${polyglot.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.graalvm.polyglot</groupId>
+			<artifactId>js</artifactId>
+			<version>${polyglot.version}</version>
+			<type>pom</type>
+		</dependency>
+		<dependency>
+			<groupId>org.graalvm.polyglot</groupId>
+			<artifactId>python</artifactId>
+			<version>${polyglot.version}</version>
+			<type>pom</type>
+		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
@@ -124,7 +142,7 @@
 		<dependency>
 			<groupId>org.quartz-scheduler</groupId>
 			<artifactId>quartz</artifactId>
-			<version>2.3.2</version>
+			<version>2.3.2.redhat-00007</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>slf4j-api</artifactId>
@@ -327,6 +345,10 @@
 		<repository>
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
+		</repository>
+		<repository>
+			<id>redhat</id>
+			<url>https://maven.repository.redhat.com/ga/</url>
 		</repository>
 	</repositories>
 	<url>http://www.netfishers.onl/netshot</url>

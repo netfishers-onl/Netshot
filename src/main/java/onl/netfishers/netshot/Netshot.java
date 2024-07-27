@@ -98,7 +98,7 @@ public class Netshot extends Thread {
 	public static String getHostname() {
 		if (Netshot.hostname == null) {
 			try {
-				Process process = Runtime.getRuntime().exec("hostname");
+				Process process = Runtime.getRuntime().exec(new String[] { "hostname" });
 				BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
 				Netshot.hostname = stdInput.readLine();
 			}
@@ -476,8 +476,8 @@ public class Netshot extends Thread {
 		if (!vendorVersion.matches(".*GraalVM.*")) {
 			log.error("The current JVM vendor version '{}' by '{}' doesn't look like GraalVM, Netshot might not work properly.", vendorVersion, vendor);
 		}
-		if (!version.matches("^17\\..*")) {
-			log.error("The JVM version '{}' doesn't look like version 11, Netshot might not work properly.", version);
+		if (!version.matches("^21\\..*")) {
+			log.error("The JVM version '{}' doesn't look like version 21, Netshot might not work properly.", version);
 		}
 	}
 

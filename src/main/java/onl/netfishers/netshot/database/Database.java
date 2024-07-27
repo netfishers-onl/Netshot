@@ -20,7 +20,8 @@ package onl.netfishers.netshot.database;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.sql.Connection;
@@ -166,31 +167,31 @@ public class Database {
 	/**
 	 * Find classes with a path.
 	 *
-	 * @param path
-	 *                      the path
-	 * @param packageName
-	 *                      the package name
+	 * @param path the path
+	 * @param packageName the package name
 	 * @return the tree set
-	 * @throws MalformedURLException
-	 *                                 the malformed url exception
-	 * @throws IOException
-	 *                                 Signals that an I/O exception has occurred.
 	 */
 	private static TreeSet<String> findClasses(String path, String packageName)
-			throws MalformedURLException, IOException {
+			throws IOException {
 		TreeSet<String> classes = new TreeSet<>();
 		if (path.startsWith("file:") && path.contains("!")) {
 			String[] split = path.split("!");
-			URL jar = new URL(split[0]);
-			ZipInputStream zip = new ZipInputStream(jar.openStream());
-			ZipEntry entry;
-			while ((entry = zip.getNextEntry()) != null) {
-				if (entry.getName().endsWith(".class")) {
-					String className = entry.getName().replaceAll("[$].*", "").replaceAll("[.]class", "").replace('/', '.');
-					if (className.startsWith(packageName)) {
-						classes.add(className);
+			try {
+				URL jar = new URI(split[0]).toURL();
+				
+				ZipInputStream zip = new ZipInputStream(jar.openStream());
+				ZipEntry entry;
+				while ((entry = zip.getNextEntry()) != null) {
+					if (entry.getName().endsWith(".class")) {
+						String className = entry.getName().replaceAll("[$].*", "").replaceAll("[.]class", "").replace('/', '.');
+						if (className.startsWith(packageName)) {
+							classes.add(className);
+						}
 					}
 				}
+			}
+			catch (URISyntaxException e) {
+				log.error("Unable to parse path as URI", e);
 			}
 		}
 		File dir = new File(path);

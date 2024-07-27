@@ -1,5 +1,5 @@
 ARG NETSHOT_VERSION=0.0.1-dev
-ARG GRAALVM_VERSION=17.0.8
+ARG GRAALVM_VERSION=21.0.4
 
 FROM debian:12 AS debian-graalvm
 ARG GRAALVM_VERSION
@@ -17,7 +17,6 @@ FROM debian-graalvm AS builder
 ARG NETSHOT_VERSION
 COPY . /build
 WORKDIR /build
-RUN echo $NE
 RUN sed -i -r "s/VERSION = \".*\";/VERSION = \"$NETSHOT_VERSION\";/g" \
        src/main/java/onl/netfishers/netshot/Netshot.java
 RUN ./mvnw package

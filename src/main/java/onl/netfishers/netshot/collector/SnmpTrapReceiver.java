@@ -21,6 +21,7 @@ package onl.netfishers.netshot.collector;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -114,8 +115,11 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 	/** The UDP port (e.g. 162)  */
 	private int udpPort;
 
-	/** The listen address. */
-	private UdpAddress listenAddress;
+	/** The listen address (e.g. 0.0.0.0 or 127.0.0.1) */
+	private InetAddress listenHost;
+
+	/** The UDP address. */
+	private UdpAddress udpAddress;
 
 	/** Number of threads */
 	private int threadCount;
@@ -150,6 +154,21 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 		int port = Netshot.getConfig("netshot.snmptrap.port", 162, 1, 65535);
 		if (port != this.udpPort) {
 			this.udpPort = port;
+			restartNeeded = true;
+		}
+
+		String address = Netshot.getConfig("netshot.snmptrap.listenaddress", "0.0.0.0");
+		InetAddress listenHost;
+		try {
+			listenHost = InetAddress.getByName(address);
+		}
+		catch (UnknownHostException e) {
+			log.warn("Unable to parse IP address '{}' for SNMP listen address, using loopback instead",
+				address, e);
+			listenHost = InetAddress.getLoopbackAddress();
+		}
+		if (!listenHost.equals(this.listenHost)) {
+			this.listenHost = listenHost;
 			restartNeeded = true;
 		}
 
@@ -355,9 +374,9 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 
 			securityModels.addSecurityModel(usm);
 			
-			listenAddress = new UdpAddress(this.udpPort);
+			udpAddress = new UdpAddress(this.listenHost, this.udpPort);
 			TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping(
-					listenAddress);
+					udpAddress);
 
 
 			snmp = new Snmp(dispatcher, transport);

@@ -20,7 +20,7 @@
  var Info = {
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.8.2"
 };
 

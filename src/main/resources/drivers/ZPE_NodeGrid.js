@@ -23,7 +23,7 @@
 const Info = {
 	name: "ZPENodeGrid", /* Unique identifier of the driver within Netshot. */
 	description: "ZPE NodeGrid", /* Description to be used in the UI. */
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "0.2.0" /* Version will appear in the Admin tab. */
 };
 

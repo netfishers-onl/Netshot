@@ -20,7 +20,7 @@
 var Info = {
 	name: "CiscoSx",
 	description: "Cisco Small Business 2/3/500 series",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.1"
 };
 

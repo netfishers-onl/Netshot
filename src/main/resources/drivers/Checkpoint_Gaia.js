@@ -28,7 +28,7 @@
 var Info = {
 	name: "CheckpointGaia",
 	description: "Checkpoint Gaia",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "2.1"
 };
 

@@ -20,7 +20,7 @@
 var Info = {
 	name: "ArborArbOS",
 	description: "Arbor ArbOS 7.2+",
-	author: "Mathieu Poussin",
+	author: "M. Poussin",
 	version: "1.0"
 };
 

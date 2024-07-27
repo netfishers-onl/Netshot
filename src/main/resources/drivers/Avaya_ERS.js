@@ -20,7 +20,7 @@
 var Info = {
 	name: "AvayaERS",
 	description: "Avaya ERS",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "0.4.4"
 };
 

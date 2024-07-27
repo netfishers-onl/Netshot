@@ -20,7 +20,7 @@
 var Info = {
 	name: "CitrixNetscaler",
 	description: "Citrix NetScaler",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "2.2"
 };
 

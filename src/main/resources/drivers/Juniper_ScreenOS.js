@@ -23,7 +23,7 @@
 var Info = {
 	name: "JuniperScreenOS", /* Unique identifier of the driver within Netshot. */
 	description: "Juniper ScreenOS", /* Description to be used in the UI. */
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.1" /* Version will appear in the Admin tab. */
 };
 

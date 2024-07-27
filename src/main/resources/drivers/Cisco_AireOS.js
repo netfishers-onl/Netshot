@@ -20,7 +20,7 @@
 var Info = {
 	name: "CiscoAireOS",
 	description: "Cisco AireOS",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.0"
 };
 

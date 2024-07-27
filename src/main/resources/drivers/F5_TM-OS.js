@@ -20,7 +20,7 @@
 var Info = {
 	name: "F5TMOS",
 	description: "F5 TM-OS, 11.x and newer",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.0"
 };
 

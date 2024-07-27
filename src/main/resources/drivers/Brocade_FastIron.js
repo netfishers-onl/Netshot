@@ -20,7 +20,7 @@
 var Info = {
 	name: "BrocadeFastIron",
 	description: "Brocade FastIron",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.4"
 };
 

@@ -20,7 +20,7 @@
 var Info = {
 	name: "AristaEOS",
 	description: "Arista EOS",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.1"
 };
 

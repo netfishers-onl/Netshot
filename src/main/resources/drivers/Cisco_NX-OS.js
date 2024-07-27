@@ -20,7 +20,7 @@
 var Info = {
 	name: "CiscoNXOS",
 	description: "Cisco NX-OS 5+",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.9.1"
 };
 

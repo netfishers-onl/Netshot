@@ -20,7 +20,7 @@
 var Info = {
 	name: "HuaweiNE",
 	description: "Huawei NE Router",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.2"
 };
 

@@ -23,7 +23,7 @@
 var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "5.7" /* Version will appear in the Admin tab. */
 };
 

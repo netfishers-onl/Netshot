@@ -20,7 +20,7 @@
 var Info = {
 	name: "GigamonGigaVUE",
 	description: "Gigamon GigaVUE",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.3"
 };
 

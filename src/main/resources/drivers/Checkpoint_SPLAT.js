@@ -30,7 +30,7 @@
 var Info = {
 	name: "CheckpointSPLAT",
 	description: "Checkpoint SPLAT",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.4"
 };
 

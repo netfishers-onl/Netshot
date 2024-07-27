@@ -20,7 +20,7 @@
 var Info = {
 	name: "CiscoStarOS",
 	description: "Cisco StarOS",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.3"
 };
 

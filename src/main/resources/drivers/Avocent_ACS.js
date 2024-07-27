@@ -23,7 +23,7 @@
  const Info = {
 	name: "AvocentACS", /* Unique identifier of the driver within Netshot. */
 	description: "Avocent ACS", /* Description to be used in the UI. */
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.3" /* Version will appear in the Admin tab. */
 };
 

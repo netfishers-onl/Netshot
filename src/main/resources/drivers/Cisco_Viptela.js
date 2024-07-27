@@ -20,7 +20,7 @@
 var Info = {
 	name: "CiscoViptela",
 	description: "Viptela Operating System",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.1"
 };
 

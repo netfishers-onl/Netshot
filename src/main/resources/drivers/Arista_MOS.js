@@ -20,7 +20,7 @@
 const Info = {
 	name: "AristaMOS",
 	description: "Arista Metamako OS",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.0"
 };
 

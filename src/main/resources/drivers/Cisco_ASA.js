@@ -20,7 +20,7 @@
 var Info = {
 	name: "CiscoASA",
 	description: "Cisco ASA",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.7"
 };
 

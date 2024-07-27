@@ -20,7 +20,7 @@
 var Info = {
 	name: "SmartEdgeOS",
 	description: "Redback Networks SmartEdge OS",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.2"
 };
 

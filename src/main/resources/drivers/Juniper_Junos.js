@@ -20,7 +20,7 @@
 var Info = {
 	name: "JuniperJunos",
 	description: "Juniper Junos",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "2.14"
 };
 

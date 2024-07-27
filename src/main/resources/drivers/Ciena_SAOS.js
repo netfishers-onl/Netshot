@@ -20,7 +20,7 @@
 var Info = {
 	name: "CienaSAOS",
 	description: "Ciena SAOS",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.0.1"
 };
 

@@ -21,7 +21,7 @@
 var Info = {
 	name: "A10ACOS",
 	description: "A10 ACOS",
-	author: "Remi Locherer",
+	author: "R. Locherer",
 	version: "0.1"
 };
 

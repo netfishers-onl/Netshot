@@ -20,7 +20,7 @@
 var Info = {
 	name: "AlcatelLucentTiMOS",
 	description: "Alcatel-Lucent TiMOS",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.3"
 };
 

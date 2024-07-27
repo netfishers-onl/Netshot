@@ -21,7 +21,7 @@
 var Info = {
 	name: "GenericSNMP",
 	description: "Generic SNMP device",
-	author: "NetFishers",
+	author: "Netshot Team",
 	version: "1.1",
 	priority: 1024, /* Less than default */
 };

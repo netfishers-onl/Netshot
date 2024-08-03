@@ -64,7 +64,7 @@ public class MasterJob implements Job {
 				log.error("The retrieved task {} is null.", id);
 			}
 			TaskManager.assignTaskRunner(task);
-			session.update(task);
+			session.merge(task);
 			session.getTransaction().commit();
 		}
 		catch (Exception e) {

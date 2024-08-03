@@ -20,11 +20,11 @@ package onl.netfishers.netshot.work.tasks;
 
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -45,6 +45,8 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 /**
@@ -52,12 +54,14 @@ import org.quartz.JobKey;
  * of devices.
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
 public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 
 	/** The device group. */
 	@Getter(onMethod=@__({
-		@ManyToOne(fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY),
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private DeviceGroup deviceGroup;
@@ -130,13 +134,13 @@ public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 					.list();
 
 			session.beginTransaction();
-			ScrollableResults devices = session
-					.createQuery("select d from DeviceGroup g join g.cachedDevices d where g.id = :id")
+			ScrollableResults<Device> devices = session
+					.createQuery("select d from DeviceGroup g join g.cachedDevices d where g.id = :id", Device.class)
 					.setParameter("id", deviceGroup.getId())
 					.setCacheMode(CacheMode.IGNORE)
 					.scroll(ScrollMode.FORWARD_ONLY);
 			while (devices.next()) {
-				Device device = (Device) devices.get(0);
+				Device device = devices.get();
 				device.setSoftwareLevel(ConformanceLevel.UNKNOWN);
 				for (SoftwareRule rule : softwareRules) {
 					rule.check(device);
@@ -148,7 +152,7 @@ public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 				for (HardwareRule rule : hardwareRules) {
 					rule.check(device);
 				}
-				session.save(device);
+				session.persist(device);
 				session.flush();
 				session.evict(device);
 			}

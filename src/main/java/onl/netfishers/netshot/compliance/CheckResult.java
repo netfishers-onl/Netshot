@@ -21,16 +21,16 @@ package onl.netfishers.netshot.compliance;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.Embeddable;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -38,6 +38,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
@@ -60,14 +62,16 @@ public class CheckResult {
 		private static final long serialVersionUID = 8277228096576043644L;
 
 		@Getter(onMethod=@__({
-			@ManyToOne
+			@ManyToOne,
+			@OnDelete(action = OnDeleteAction.CASCADE)
 		}))
 		@Setter
 		private Rule rule = null;
 
 		/** The device. */
 		@Getter(onMethod=@__({
-			@ManyToOne
+			@ManyToOne,
+			@OnDelete(action = OnDeleteAction.CASCADE)
 		}))
 		@Setter
 		private Device device = null;

@@ -4,10 +4,10 @@ import java.io.Serializable;
 import java.util.Date;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.hibernate.EmptyInterceptor;
+import org.hibernate.Interceptor;
 import org.hibernate.type.Type;
 
-class DatabaseInterceptor extends EmptyInterceptor {
+class DatabaseInterceptor implements Interceptor {
 
 	@Override
 	public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState,
@@ -29,7 +29,5 @@ class DatabaseInterceptor extends EmptyInterceptor {
 		}
 		return false;
 	}
-
-	private static final long serialVersionUID = 5897665908529047371L;
 
 }

@@ -21,15 +21,18 @@ package onl.netfishers.netshot.compliance;
 import java.io.Serializable;
 import java.util.Date;
 
-import javax.persistence.Embeddable;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -58,14 +61,16 @@ public class Exemption {
 
 		/** The rule. */
 		@Getter(onMethod=@__({
-			@ManyToOne
+			@ManyToOne,
+			@OnDelete(action = OnDeleteAction.CASCADE)
 		}))
 		@Setter
 		private Rule rule = null;
 
 		/** The device. */
 		@Getter(onMethod=@__({
-			@ManyToOne
+			@ManyToOne,
+			@OnDelete(action = OnDeleteAction.CASCADE)
 		}))
 		@Setter
 		private Device device = null;

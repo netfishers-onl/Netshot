@@ -22,23 +22,24 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Version;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Version;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -93,7 +94,7 @@ public class Domain {
 
 	/** The domain credential sets. */
 	@Getter(onMethod=@__({
-		@OneToMany(mappedBy = "mgmtDomain", cascade = CascadeType.ALL)
+		@OneToMany(mappedBy = "mgmtDomain")
 	}))
 	@Setter
 	private Set<DeviceCredentialSet> credentialSets = new HashSet<>();
@@ -101,6 +102,8 @@ public class Domain {
 	/** The server4 address. */
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class),
+		@JsonSerialize(using = Network4Address.AddressOnlySerializer.class),
+		@JsonDeserialize(using = Network4Address.AddressOnlyDeserializer.class),
 		@AttributeOverrides({
 			@AttributeOverride(name = "address", column = @Column(name = "ipv4_address")),
 			@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
@@ -112,6 +115,8 @@ public class Domain {
 	/** The server6 address. */
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class),
+		@JsonSerialize(using = Network6Address.AddressOnlySerializer.class),
+		@JsonDeserialize(using = Network6Address.AddressOnlyDeserializer.class),
 		@AttributeOverrides({
 			@AttributeOverride(name = "address1", column = @Column(name = "ipv6_address1")),
 			@AttributeOverride(name = "address2", column = @Column(name = "ipv6_address2")),

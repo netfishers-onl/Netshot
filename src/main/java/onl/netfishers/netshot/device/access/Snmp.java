@@ -144,7 +144,6 @@ public class Snmp extends Poller {
 
 			USM usm = new USM(SecurityProtocols.getInstance(), new OctetString(MPv3.createLocalEngineID()), 0);
 			usm.addUser(
-				new OctetString(v3Credentials.getUsername()),
 				new UsmUser(
 					new OctetString(v3Credentials.getUsername()), this.authProtocol,
 					new OctetString(v3Credentials.getAuthKey()), this.privProtocol,

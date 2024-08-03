@@ -21,28 +21,24 @@ package onl.netfishers.netshot.device.credentials;
 import java.util.Date;
 import java.util.UUID;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.ManyToOne;
-import javax.persistence.Version;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlID;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Version;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlID;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import onl.netfishers.netshot.device.Domain;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
-import org.jasypt.hibernate5.type.EncryptedStringType;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -67,15 +63,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 	@Type(value = DeviceSshAccount.class, name = "SSH"),
 	@Type(value = DeviceSshKeyAccount.class, name = "SSH Key"),
 	@Type(value = DeviceTelnetAccount.class, name = "Telnet")
-})
-@TypeDefs({
-	@TypeDef(
-		name = "credentialString",
-		typeClass = EncryptedStringType.class,
-		parameters = {
-			@Parameter(name = "encryptorRegisteredName", value = "credentialEncryptor")
-		}
-	)
 })
 abstract public class DeviceCredentialSet {
 	
@@ -140,11 +127,6 @@ abstract public class DeviceCredentialSet {
 	public DeviceCredentialSet(String name) {
 		this.name = name;
 	}
-
-	/**
-	 * Removes sensitive data (password) from this object.
-	 */
-	public abstract void removeSensitive();
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)

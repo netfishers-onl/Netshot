@@ -18,8 +18,8 @@
  */
 package onl.netfishers.netshot.device.credentials;
 
-import javax.persistence.Entity;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.Entity;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 
 /**
@@ -44,10 +44,6 @@ public class DeviceSnmpv1Community extends DeviceSnmpCommunity {
 	 */
 	public DeviceSnmpv1Community(String community, String name) {
 		super(community, name);
-	}
-
-	public void removeSensitive() {
-		//
 	}
 
 	/* (non-Javadoc)

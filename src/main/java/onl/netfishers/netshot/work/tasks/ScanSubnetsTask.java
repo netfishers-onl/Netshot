@@ -22,15 +22,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -49,12 +49,15 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 /**
  * This task scans a subnet to discover devices.
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
 public class ScanSubnetsTask extends Task implements DomainBasedTask {
 	
@@ -62,6 +65,8 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 	@Getter(onMethod=@__({
 		@Fetch(FetchMode.SELECT),
 		@ElementCollection(fetch = FetchType.EAGER),
+		// Can't make it accepted by Hibernate 6.5... nevermind
+		// @OnDelete(action = OnDeleteAction.CASCADE),
 		@AttributeOverrides({
 			@AttributeOverride(name = "address", column = @Column(name = "ipv4address")),
 			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4usage")),
@@ -73,7 +78,8 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 	
 	/** The domain. */
 	@Getter(onMethod=@__({
-		@ManyToOne(fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY),
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private Domain domain;
@@ -111,7 +117,6 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 	/* (non-Javadoc)
 	 * @see onl.netfishers.netshot.work.Task#run()
 	 */
-	@SuppressWarnings("unchecked")
   @Override
 	public void run() {
 		log.debug("Task {}. Starting scan subnet process.", this.getId());
@@ -134,7 +139,9 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 					this.info(String.format("Will scan %s (from %d to %d)", subnet.getPrefix(),
 							min, max));
 					List<Integer> existing = session
-							.createQuery("select d.mgmtAddress.address from Device d where d.mgmtAddress.address >= :min and d.mgmtAddress.address <= :max")
+							.createQuery(
+								"select d.mgmtAddress.address from Device d where d.mgmtAddress.address >= :min and d.mgmtAddress.address <= :max",
+								Integer.class)
 							.setParameter("min", min)
 							.setParameter("max", max)
 							.list();
@@ -155,9 +162,10 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 			
 			try {
 				knownCommunities = session
-						.createQuery("from DeviceSnmpCommunity c where c.mgmtDomain is null or c.mgmtDomain = :domain")
-						.setParameter("domain", domain)
-						.list();
+					.createQuery("from DeviceSnmpCommunity c where c.mgmtDomain is null or c.mgmtDomain = :domain",
+						DeviceCredentialSet.class)
+					.setParameter("domain", domain)
+					.list();
 			}
 			catch (Exception e) {
 				log.error("Task {}. Error while retrieving the communities.", this.getId(), e);

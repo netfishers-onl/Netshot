@@ -108,7 +108,7 @@ public class DeviceTest {
 		@DisplayName("Query device by name matching text")
 		void queryByNameMatching() throws Exception {
 			assertFinder("[NAME] MATCHES \"^Na.*$\"", null,
-				" from Device d where (regexp_like(d.name, :var) = 1)",
+				" from Device d where (regexp_like(d.name, :var))",
 				Map.of("var", "^Na.*$"));
 		}
 

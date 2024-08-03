@@ -364,13 +364,13 @@ public class DeviceDriverTest {
 					IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 			DeviceCliAccount credentials = new DeviceSshAccount("admin", "admin", "admin", "admin/admin");
 			Cli fakeCli = new CiscoIOS12FakeCli(null, credentials, taskLogger);
-			Session fakeSession = new FakeSession();
+			Session nullSession = null;
 			Device device = FakeDeviceFactory.getFakeCiscoIosDevice();
 			SnapshotCliScript script = new SnapshotCliScript(true);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
 			runMethod.setAccessible(true);
-			runMethod.invoke(script, fakeSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
+			runMethod.invoke(script, nullSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
 			Assertions.assertEquals("router1", device.getName(), "The device name is incorrect");
 			Assertions.assertEquals("15.5(3)S7b", device.getSoftwareVersion(), "The software version is incorrect");
 			Assertions.assertEquals("Cisco CSR1000V", device.getFamily(), "The device family is incorrect");
@@ -640,14 +640,14 @@ public class DeviceDriverTest {
 					IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 			DeviceCliAccount credentials = new DeviceSshAccount("admin", "admin", "admin", "admin/admin");
 			Cli fakeCli = new ZPENodeGridFakeCli(null, credentials, taskLogger);
-			Session fakeSession = new FakeSession();
+			Session nullSession = null;
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("ZPENodeGrid", null, domain, "test");
 			SnapshotCliScript script = new SnapshotCliScript(true);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
 			runMethod.setAccessible(true);
-			runMethod.invoke(script, fakeSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
+			runMethod.invoke(script, nullSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
 			Assertions.assertEquals("NODEGRID-1", device.getName(), "The device name is incorrect");
 			Assertions.assertEquals("3.1.16", device.getSoftwareVersion(), "The software version is incorrect");
 			Assertions.assertEquals("NSC-T16S", device.getFamily(), "The device family is incorrect");
@@ -1118,14 +1118,14 @@ public class DeviceDriverTest {
 					IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 			DeviceCliAccount credentials = new DeviceSshAccount("admin", "admin", "admin", "admin/admin");
 			Cli fakeCli = new AristaMOSFakeCli(null, credentials, taskLogger);
-			Session fakeSession = new FakeSession();
+			Session nullSession = null;
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("AristaMOS", null, domain, "test");
 			SnapshotCliScript script = new SnapshotCliScript(true);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
 			runMethod.setAccessible(true);
-			runMethod.invoke(script, fakeSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
+			runMethod.invoke(script, nullSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
 			Assertions.assertEquals("switch1", device.getName(), "The device name is incorrect");
 			Assertions.assertEquals("0.31.0", device.getSoftwareVersion(), "The software version is incorrect");
 			Assertions.assertEquals("MetaConnect 48", device.getFamily(), "The device family is incorrect");

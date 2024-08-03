@@ -20,11 +20,11 @@ package onl.netfishers.netshot.work.tasks;
 
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -43,18 +43,22 @@ import onl.netfishers.netshot.work.TaskLogger;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 /**
  * This task checks the configuration compliance of a device.
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
 public class CheckComplianceTask extends Task implements DeviceBasedTask {
 
 	/** The device. */
 	@Getter(onMethod=@__({
-		@ManyToOne(fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY),
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private Device device;
@@ -97,7 +101,7 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 		try {
 			session.beginTransaction();
 			session
-				.createQuery("delete from CheckResult c where c.key.device.id = :id")
+				.createMutationQuery("delete from CheckResult c where c.key.device.id = :id")
 				.setParameter("id", this.device.getId())
 				.executeUpdate();
 			session.refresh(this.device);
@@ -117,7 +121,7 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 			for (Policy policy : policies) {
 				policy.check(device, session, taskLogger);
 			}
-			session.save(this.device);
+			session.persist(this.device);
 			session.flush();
 			List<SoftwareRule> softwareRules = session
 				.createQuery("select sr from SoftwareRule sr where (sr.targetGroup is null) or sr.targetGroup in (select g from DeviceGroup g join g.cachedDevices d with d.id = :id) order by sr.priority asc", SoftwareRule.class)
@@ -130,7 +134,7 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 					break;
 				}
 			}
-			session.save(this.device);
+			session.persist(this.device);
 			List<HardwareRule> hardwareRules = session
 				.createQuery("select hr from HardwareRule hr", HardwareRule.class)
 				.list();
@@ -138,7 +142,7 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 			for (HardwareRule rule : hardwareRules) {
 				rule.check(device);
 			}
-			session.save(device);
+			session.persist(device);
 			session.getTransaction().commit();
 			this.status = Status.SUCCESS;
 		}

@@ -1,14 +1,22 @@
 package onl.netfishers.netshot.database;
 
-import org.hibernate.dialect.MySQL57Dialect;
-import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
-public class CustomMySQLDialect extends MySQL57Dialect {
+public class CustomMySQLDialect extends MySQLDialect {
+
 	
-	public CustomMySQLDialect() {
-		super();
-		registerFunction("regexp_like",
-			new SQLFunctionTemplate(StandardBasicTypes.BOOLEAN, "(CASE WHEN (?1 REGEXP ?2) THEN 1 ELSE 0 END)"));
+	@Override
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry(functionContributions);
+
+		BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
+
+		functionContributions.getFunctionRegistry().registerPattern(
+			"regexp_like",
+			"?1 REGEXP ?2",
+			basicTypeRegistry.resolve(StandardBasicTypes.BOOLEAN));
 	}
 }

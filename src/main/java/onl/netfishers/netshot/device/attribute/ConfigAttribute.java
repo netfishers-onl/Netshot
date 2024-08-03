@@ -18,21 +18,21 @@
  */
 package onl.netfishers.netshot.device.attribute;
 
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.annotations.FilterDef;
 
@@ -60,7 +60,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 		@Type(value = ConfigBinaryAttribute.class, name = "BINARY"),
 		@Type(value = ConfigBinaryFileAttribute.class, name = "BINARYFILE")
 })
-@FilterDef(name = "lightAttributesOnly", defaultCondition = "type <> 'T'")
+@FilterDef(name = "lightConfigAttributesOnly", defaultCondition = "type <> 'T'")
 public abstract class ConfigAttribute {
 
 	@Getter(onMethod=@__({

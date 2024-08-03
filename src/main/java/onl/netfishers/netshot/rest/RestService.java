@@ -43,36 +43,36 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.security.DenyAll;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-import javax.persistence.PersistenceException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriBuilder;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import jakarta.persistence.PersistenceException;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
 
+import jakarta.annotation.security.DenyAll;
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import jakarta.ws.rs.BeanParam;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
+import jakarta.ws.rs.core.UriBuilder;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.TaskManager;
@@ -123,6 +123,8 @@ import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpCommunity;
 import onl.netfishers.netshot.device.credentials.DeviceSnmpv3Community;
 import onl.netfishers.netshot.device.credentials.DeviceSshKeyAccount;
+import onl.netfishers.netshot.device.credentials.HideSecretSerializer;
+import onl.netfishers.netshot.device.credentials.HideSecretDeserializer;
 import onl.netfishers.netshot.diagnostic.Diagnostic;
 import onl.netfishers.netshot.diagnostic.DiagnosticResult;
 import onl.netfishers.netshot.diagnostic.JavaScriptDiagnostic;
@@ -143,7 +145,6 @@ import onl.netfishers.netshot.work.tasks.CheckGroupSoftwareTask;
 import onl.netfishers.netshot.work.tasks.DeviceBasedTask;
 import onl.netfishers.netshot.work.tasks.DeviceJsScript;
 import onl.netfishers.netshot.work.tasks.DiscoverDeviceTypeTask;
-import onl.netfishers.netshot.work.tasks.DomainBasedTask;
 import onl.netfishers.netshot.work.tasks.GroupBasedTask;
 import onl.netfishers.netshot.work.tasks.PurgeDatabaseTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceGroupScriptTask;
@@ -179,12 +180,12 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.glassfish.jersey.servlet.ServletProperties;
 import org.graalvm.polyglot.HostAccess.Export;
-import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.query.Query;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.Session;
-import org.hibernate.transform.Transformers;
+import org.hibernate.exception.ConstraintViolationException;
 import org.quartz.SchedulerException;
 import org.slf4j.MarkerFactory;
 
@@ -196,9 +197,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.jaxrs.cfg.EndpointConfigBase;
-import com.fasterxml.jackson.jaxrs.cfg.ObjectWriterInjector;
-import com.fasterxml.jackson.jaxrs.cfg.ObjectWriterModifier;
+import com.fasterxml.jackson.jakarta.rs.cfg.EndpointConfigBase;
+import com.fasterxml.jackson.jakarta.rs.cfg.ObjectWriterInjector;
+import com.fasterxml.jackson.jakarta.rs.cfg.ObjectWriterModifier;
 import com.github.difflib.DiffUtils;
 import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Patch;
@@ -207,7 +208,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -217,17 +220,6 @@ import lombok.Setter;
 @DenyAll
 public class RestService extends Thread {
 	public static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RestService.class);
-
-	/**
-	 * The HQL select query for "light" devices, to be prepended to the actual
-	 * query.
-	 */
-	private static final String LIGHTDEVICELIST_BASEQUERY =
-		"select distinct d.id as id, d.name as name, d.family as family, d.mgmtAddress as mgmtAddress, " +
-		"d.status as status, d.driver as driver, d.softwareLevel as softwareLevel, " +
-		"case when (d.eosDate < current_date()) then true else false end as eos, " +
-		"case when (d.eolDate < current_date()) then true else false end as eol,  " +
-		"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end as configCompliant ";
 
 	/** The static instance service. */
 	private static RestService nsRestService;
@@ -393,7 +385,9 @@ public class RestService extends Thread {
 				// Create the context and raise any error if anything is wrong with the SSL configuration.
 				sslContext.createSSLContext(true);
 				sslConfig = new SSLEngineConfigurator(sslContext)
-						.setClientMode(false).setNeedClientAuth(false).setWantClientAuth(false);
+						.setClientMode(false)
+						.setNeedClientAuth(false)
+						.setWantClientAuth(false);
 			}
 			URI url = UriBuilder.fromUri(httpBaseUrl).port(httpBasePort).build();
 			HttpServer server = GrizzlyHttpServerFactory.createHttpServer(
@@ -401,6 +395,14 @@ public class RestService extends Thread {
 			server.getServerConfiguration().setSessionTimeoutSeconds(UiUser.MAX_IDLE_TIME);
 
 			WebappContext context = new WebappContext("GrizzlyContext", HTTP_API_PATH);
+			context.getSessionCookieConfig().setName("NetshotSessionID");
+			// Not reflected into the actual cookie (missing code in Grizzly)
+			context.getSessionCookieConfig().setAttribute(
+				org.glassfish.grizzly.http.server.Constants.COOKIE_SAME_SITE_ATTR, "strict");
+			context.getSessionCookieConfig().setHttpOnly(true);
+			if (httpUseSsl) {
+				context.getSessionCookieConfig().setSecure(true);
+			}
 			ServletRegistration registration = context.addServlet("Jersey", ServletContainer.class);
 			registration.setInitParameter(ServletProperties.JAXRS_APPLICATION_CLASS,
 					NetshotWebApplication.class.getName());
@@ -431,6 +433,7 @@ public class RestService extends Thread {
 	 */
 	@XmlRootElement(name = "error")
 	@XmlAccessorType(XmlAccessType.NONE)
+	@AllArgsConstructor
 	public static class RsErrorBean {
 
 		/** The error message. */
@@ -446,24 +449,6 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private int errorCode;
-
-		/**
-		 * Instantiates a new error bean.
-		 */
-		public RsErrorBean() {
-		}
-
-		/**
-		 * Instantiates a new error bean.
-		 *
-		 * @param errorMsg the error msg
-		 * @param errorCode the error code
-		 */
-		public RsErrorBean(String errorMsg, int errorCode) {
-			super();
-			this.errorMsg = errorMsg;
-			this.errorCode = errorCode;
-		}
 	}
 	
 	/**
@@ -486,14 +471,11 @@ public class RestService extends Thread {
 		log.debug("REST request, domains.");
 		Session session = Database.getSession(true);
 		try {
-			Query<Domain> query = session.createQuery("select d from Domain d", Domain.class);
+			Query<RsDomain> query = session.createQuery(
+				"select new RsDomain(d.id, d.name, d.description, d.server4Address) from Domain d",
+				RsDomain.class);
 			paginationParams.apply(query);
-			List<Domain> domains = query.list();
-			List<RsDomain> rsDomains = new ArrayList<>();
-			for (Domain domain : domains) {
-				rsDomains.add(new RsDomain(domain));
-			}
-			return rsDomains;
+			return query.list();
 		}
 		catch (HibernateException e) {
 			log.error("Unable to fetch the domains.", e);
@@ -508,8 +490,10 @@ public class RestService extends Thread {
 	/**
 	 * The Class RsDomain.
 	 */
-	@XmlRootElement(name = "domain")
+	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.NONE)
+	@AllArgsConstructor
+	@NoArgsConstructor
 	public static class RsDomain {
 
 		/** The id. */
@@ -536,20 +520,15 @@ public class RestService extends Thread {
 
 		/** The ip address. */
 		@Getter(onMethod=@__({
-			@XmlElement, @JsonView(DefaultView.class)
+			@XmlElement, @JsonView(DefaultView.class),
+			@JsonSerialize(using = Network4Address.AddressOnlySerializer.class),
+			@JsonDeserialize(using = Network4Address.AddressOnlyDeserializer.class),
 		}))
 		@Setter
-		private String ipAddress = "";
+		private Network4Address ipAddress;
 
 		/**
-		 * Instantiates a new rs domain.
-		 */
-		public RsDomain() {
-
-		}
-
-		/**
-		 * Instantiates a new rs domain.
+		 * Instantiates a new RS domain from normal domain
 		 *
 		 * @param domain the domain
 		 */
@@ -557,7 +536,7 @@ public class RestService extends Thread {
 			this.id = domain.getId();
 			this.name = domain.getName();
 			this.description = domain.getDescription();
-			this.ipAddress = domain.getServer4Address().getIp();
+			this.ipAddress = domain.getServer4Address();
 		}
 
 	}
@@ -590,7 +569,7 @@ public class RestService extends Thread {
 		}
 		String description = newDomain.getDescription().trim();
 		try {
-			Network4Address v4Address = new Network4Address(newDomain.getIpAddress());
+			Network4Address v4Address = newDomain.getIpAddress();
 			Network6Address v6Address = new Network6Address("::");
 			if (!v4Address.isNormalUnicast()) {
 				log.warn("User posted an invalid IP address.");
@@ -601,7 +580,7 @@ public class RestService extends Thread {
 			Session session = Database.getSession();
 			try {
 				session.beginTransaction();
-				session.save(domain);
+				session.persist(domain);
 				session.getTransaction().commit();
 				Netshot.aaaLogger.info("{} has been created.", domain);
 				this.suggestReturnCode(Response.Status.CREATED);
@@ -659,31 +638,23 @@ public class RestService extends Thread {
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN_NAME);
 		}
 		String description = rsDomain.getDescription().trim();
-		Network4Address v4Address;
-		try {
-			v4Address = new Network4Address(rsDomain.getIpAddress());
-			if (!v4Address.isNormalUnicast()) {
-				log.warn("User posted an invalid IP address");
-				throw new NetshotBadRequestException("Invalid IP address",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
-			}
-		}
-		catch (UnknownHostException e) {
-			log.warn("Invalid IP address.", e);
-			throw new NetshotBadRequestException("Malformed IP address",
-					NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
+		Network4Address v4Address = rsDomain.getIpAddress();
+		if (!v4Address.isNormalUnicast()) {
+			log.warn("User posted an invalid IP address");
+			throw new NetshotBadRequestException("Invalid IP address",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
 		}
 		Session session = Database.getSession();
-		Domain domain;
 		try {
 			session.beginTransaction();
-			domain = (Domain) session.load(Domain.class, id);
+			Domain domain = session.getReference(Domain.class, id);
 			domain.setName(name);
 			domain.setDescription(description);
 			domain.setServer4Address(v4Address);
-			session.update(domain);
+			session.merge(domain);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been edited.", domain);
+			return new RsDomain(domain);
 		}
 		catch (ObjectNotFoundException e) {
 			session.getTransaction().rollback();
@@ -706,7 +677,6 @@ public class RestService extends Thread {
 		finally {
 			session.close();
 		}
-		return new RsDomain(domain);
 	}
 
 	/**
@@ -731,37 +701,25 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			Domain domain = (Domain) session.load(Domain.class, id);
-			// Remove the tasks
-			for (Class<? extends Task> taskClass : Task.getTaskClasses()) {
-				if (DomainBasedTask.class.isAssignableFrom(taskClass)) {
-					session.createQuery(
-							String.format("delete from %s t where t.domain = :domain", taskClass.getSimpleName()))
-						.setParameter("domain", domain)
-						.executeUpdate();
-				}
+			Domain domain = session.get(Domain.class, id);
+			if (domain == null) {
+				log.info("No such domain of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
 			}
-			session.createQuery("delete from Domain d where d = :domain")
-				.setParameter("domain", domain)
-				.executeUpdate();
+			session.remove(domain);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been deleted.", domain);
+			Netshot.aaaLogger.info("Domain of ID {} has been deleted.", domain.getId());
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
-		}
-		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
-			log.error("The domain doesn't exist.");
-			throw new NetshotBadRequestException("The domain doesn't exist.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("foreign key constraint fails")) {
+			if (e instanceof ConstraintViolationException) {
 				throw new NetshotBadRequestException(
-						"Unable to delete the domain, there must be devices or tasks using it.",
+						"Unable to delete the domain, there must be devices or credential sets using it.",
 						NetshotBadRequestException.Reason.NETSHOT_USED_DOMAIN);
 			}
+			log.error("Unable to delete the domain {}", id, e);
 			throw new NetshotBadRequestException("Unable to delete the domain",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
@@ -777,7 +735,6 @@ public class RestService extends Thread {
 	 * @return the device interfaces
 	 * @throws WebApplicationException the web application exception
 	 */
-	@SuppressWarnings("deprecation")
 	@GET
 	@Path("/devices/{id}/interfaces")
 	@RolesAllowed("readonly")
@@ -797,12 +754,11 @@ public class RestService extends Thread {
 			List<NetworkInterface> deviceInterfaces;
 			Query<NetworkInterface> query = session
 				.createQuery(
-						"from NetworkInterface AS networkInterface "
-								+ "left join fetch networkInterface.ip4Addresses "
-								+ "left join fetch networkInterface.ip6Addresses "
-								+ "where device = :device", NetworkInterface.class)
-				.setParameter("device", id)
-				.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+						"select ni from NetworkInterface ni "
+								+ "left join fetch ni.ip4Addresses "
+								+ "left join fetch ni.ip6Addresses "
+								+ "where device.id = :deviceId", NetworkInterface.class)
+				.setParameter("deviceId", id);
 			paginationParams.apply(query);
 			deviceInterfaces = query.list();
 			return deviceInterfaces;
@@ -841,15 +797,15 @@ public class RestService extends Thread {
 		log.debug("REST request, get device {} modules.", id);
 		Session session = Database.getSession(true);
 		try {
-			String hqlQuery = "from Module m where m.device.id = :device";
+			String hqlQuery = "select m from Module m where m.device.id = :device";
 			if (!includeHistory) {
-				hqlQuery += " and m.removed = :false";
+				hqlQuery += " and m.removed = :falsy";
 			}
 			Query<Module> query = session
 				.createQuery(hqlQuery, Module.class)
 				.setParameter("device", id);
 			if (!includeHistory) {
-				query.setParameter("false", false);
+				query.setParameter("falsy", false);
 			}
 			paginationParams.apply(query);
 			List<Module> deviceModules = query.list();
@@ -936,20 +892,10 @@ public class RestService extends Thread {
 						Date d1 = this.getSignificantDate(o1);
 						Date d2 = this.getSignificantDate(o2);
 						if (d1 == null) {
-							if (d2 == null) {
-								return 0;
-							}
-							else {
-								return -1;
-							}
+							return (d2 == null) ? 0 : -1;
 						}
 						else {
-							if (d2 == null) {
-								return 1;
-							}
-							else {
-								return d2.compareTo(d1);
-							}
+							return (d2 == null) ? 1 : d2.compareTo(d1);
 						}
 					}
 					return statusDiff;
@@ -993,7 +939,7 @@ public class RestService extends Thread {
 		log.debug("REST request, get device {} configs.", id);
 		Session session = Database.getSession(true);
 		try {
-			session.enableFilter("lightAttributesOnly");
+			session.enableFilter("lightConfigAttributesOnly");
 			Query<Config> query = session
 				.createQuery(
 					"select distinct c from Config c left join fetch c.attributes ca where c.device.id = :device order by c.changeDate desc",
@@ -1035,12 +981,12 @@ public class RestService extends Thread {
 		log.debug("REST request, get device {} config {}.", id, item);
 		Session session = Database.getSession(true);
 		try {
-			Config config = (Config) session.get(Config.class, id);
+			Config config = session.get(Config.class, id);
 			if (config == null) {
 				log.warn("Unable to find the config object.");
 				throw new WebApplicationException(
 						"Unable to find the configuration set",
-						javax.ws.rs.core.Response.Status.NOT_FOUND);
+						jakarta.ws.rs.core.Response.Status.NOT_FOUND);
 			}
 			for (ConfigAttribute attribute : config.getAttributes()) {
 				if (attribute.getName().equals(item)) {
@@ -1048,7 +994,7 @@ public class RestService extends Thread {
 						String text = ((ConfigLongTextAttribute) attribute).getLongText().getText();
 						if (text == null) {
 							throw new WebApplicationException("Configuration item not available",
-									javax.ws.rs.core.Response.Status.BAD_REQUEST);
+									jakarta.ws.rs.core.Response.Status.BAD_REQUEST);
 						}
 						String fileName = "config.cfg";
 						try {
@@ -1078,11 +1024,11 @@ public class RestService extends Thread {
 				}
 			}
 			throw new WebApplicationException("Invalid configuration item",
-				javax.ws.rs.core.Response.Status.BAD_REQUEST);
+				jakarta.ws.rs.core.Response.Status.BAD_REQUEST);
 		}
 		catch (HibernateException e) {
 			throw new WebApplicationException("Unable to get the configuration",
-					javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR);
+					jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR);
 		}
 		finally {
 			session.close();
@@ -1344,10 +1290,12 @@ public class RestService extends Thread {
 		Config config1;
 		Config config2;
 		try {
-			config2 = (Config) session.get(Config.class, id2);
+			config2 = session.get(Config.class, id2);
 			if (config2 != null && id1 == 0) {
-				config1 = (Config) session
-					.createQuery("from Config c where c.device = :device and c.changeDate < :date2 order by c.changeDate desc")
+				config1 = session
+					.createQuery(
+						"from Config c where c.device = :device and c.changeDate < :date2 order by c.changeDate desc", 
+						Config.class)
 					.setParameter("device", config2.getDevice())
 					.setParameter("date2", config2.getChangeDate())
 					.setMaxResults(1)
@@ -1357,7 +1305,7 @@ public class RestService extends Thread {
 				}
 			}
 			else {
-				config1 = (Config) session.get(Config.class, id1);
+				config1 = session.get(Config.class, id1);
 			}
 			if (config1 == null || config2 == null) {
 				log.error("Non existing config, {} or {}.", id1, id2);
@@ -1423,7 +1371,7 @@ public class RestService extends Thread {
 	}
 
 	/**
-	 * Gets the device.
+	 * Gets a specific device.
 	 *
 	 * @param id the id
 	 * @return the device
@@ -1445,24 +1393,23 @@ public class RestService extends Thread {
 		Session session = Database.getSession(true);
 		Device device;
 		try {
-			device = (Device) session
-				.createQuery("from Device d left join fetch d.credentialSets cs left join fetch d.ownerGroups g left join fetch d.complianceCheckResults left join fetch d.attributes where d.id = :id")
+			device = session.createQuery(
+					"from Device d " +
+					"left join fetch d.mgmtDomain " +
+					"left join fetch d.eolModule " +
+					"left join fetch d.eosModule " +
+					"left join fetch d.specificCredentialSet " +
+					"left join fetch d.credentialSets cs " +
+					"left join fetch d.ownerGroups g " +
+					"left join fetch d.complianceCheckResults " +
+					"left join fetch d.attributes " +
+					"where d.id = :id",
+					Device.class)
 				.setParameter("id", id)
 				.uniqueResult();
 			if (device == null) {
 				throw new NetshotBadRequestException("Can't find this device",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
-			}
-			device.setMgmtDomain(Database.unproxy(device.getMgmtDomain()));
-			device.setEolModule(Database.unproxy(device.getEolModule()));
-			device.setEosModule(Database.unproxy(device.getEosModule()));
-			if (device.getSpecificCredentialSet() != null) {
-				DeviceCredentialSet credentialSet = Database.unproxy(device.getSpecificCredentialSet());
-				credentialSet.removeSensitive();
-				device.setSpecificCredentialSet(credentialSet);
-			}
-			for (DeviceCredentialSet cs : device.getCredentialSets()) {
-				cs.removeSensitive();
 			}
 		}
 		catch (HibernateException e) {
@@ -1480,6 +1427,8 @@ public class RestService extends Thread {
 	 * The Class RsLightDevice.
 	 */
 	@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+	@AllArgsConstructor
+	@NoArgsConstructor
 	public static class RsLightDevice {
 
 		/** The id. */
@@ -1579,13 +1528,22 @@ public class RestService extends Thread {
 
 		Session session = Database.getSession(true);
 		try {
-			String hqlQuery = LIGHTDEVICELIST_BASEQUERY + "from Device d";
+			String hqlQuery = "select new RsLightDevice(" +
+				"d.id, " +
+				"d.name, " +
+				"d.family, " + 
+				"d.mgmtAddress, " +
+				"d.status, " + 
+				"d.driver, " +
+				"case when (d.eolDate < current_date()) then true else false end,  " +
+				"case when (d.eosDate < current_date()) then true else false end, " +
+				"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
+				"d.softwareLevel) " +
+				"from Device d";
 			if (groupId != null) {
 				hqlQuery += " join d.ownerGroups g where g.id = :groupId";
 			}
-			@SuppressWarnings({ "unchecked", "deprecation" })
-			Query<RsLightDevice> query = session.createQuery(hqlQuery)
-				.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class));
+			Query<RsLightDevice> query = session.createQuery(hqlQuery, RsLightDevice.class);
 			query.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
 			if (groupId != null) {
 				query.setParameter("groupId", groupId);
@@ -1642,6 +1600,7 @@ public class RestService extends Thread {
 	 */
 	@XmlRootElement(name = "deviceType")
 	@XmlAccessorType(XmlAccessType.NONE)
+	@AllArgsConstructor
 	public static class RsDeviceFamily {
 
 		/** The device type. */
@@ -1679,10 +1638,10 @@ public class RestService extends Thread {
 		log.debug("REST request, device families.");
 		Session session = Database.getSession(true);
 		try {
-			@SuppressWarnings({ "deprecation", "unchecked" })
 			Query<RsDeviceFamily> query = session
-				.createQuery("select distinct d.driver as driver, d.family as deviceFamily from Device d")
-				.setResultTransformer(Transformers.aliasToBean(RsDeviceFamily.class));
+				.createQuery(
+					"select new RsDeviceFamily(d.driver as driver, d.family as deviceFamily) from Device d",
+					RsDeviceFamily.class);
 			paginationParams.apply(query);
 			return query.list();
 		}
@@ -1698,6 +1657,7 @@ public class RestService extends Thread {
 
 	@XmlRootElement(name = "partNumber")
 	@XmlAccessorType(XmlAccessType.NONE)
+	@AllArgsConstructor
 	public static class RsPartNumber {
 		@Getter(onMethod=@__({
 			@XmlElement, @JsonView(DefaultView.class)
@@ -1727,10 +1687,10 @@ public class RestService extends Thread {
 		log.debug("REST request, part numbers.");
 		Session session = Database.getSession(true);
 		try {
-			@SuppressWarnings({ "deprecation", "unchecked" })
 			Query<RsPartNumber> query = session
-				.createQuery("select distinct m.partNumber as partNumber from Module m")
-				.setResultTransformer(Transformers.aliasToBean(RsPartNumber.class));
+				.createQuery(
+					"select new RsPartNumber(m.partNumber as partNumber) from Module m",
+					RsPartNumber.class);
 			paginationParams.apply(query);
 			return query.list();
 		}
@@ -1906,8 +1866,8 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			log.debug("Looking for an existing device with this IP address.");
-			Device duplicate = (Device) session
-					.createQuery("from Device d where d.mgmtAddress.address = :ip")
+			Device duplicate = session
+					.createQuery("from Device d where d.mgmtAddress.address = :ip", Device.class)
 					.setParameter("ip", deviceAddress.getIntAddress()).uniqueResult();
 			if (duplicate != null) {
 				log.error("Device {} is already present with this IP address.",
@@ -1917,12 +1877,11 @@ public class RestService extends Thread {
 						duplicate.getName()),
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DEVICE);
 			}
-			domain = (Domain) session.load(Domain.class, device.getDomainId());
+			domain = session.getReference(Domain.class, device.getDomainId());
 			knownCommunities = session
-				.createQuery("from DeviceSnmpCommunity c where (mgmtDomain = :domain or mgmtDomain is null) and (not (c.deviceSpecific = :true))",
+				.createQuery("from DeviceSnmpCommunity c where (mgmtDomain = :domain or mgmtDomain is null) and (not (c.deviceSpecific))",
 						DeviceCredentialSet.class)
 				.setParameter("domain", domain)
-				.setParameter("true", true)
 				.list();
 			if (knownCommunities.isEmpty() && device.isAutoDiscover()) {
 				log.error("No available SNMP community");
@@ -1995,13 +1954,13 @@ public class RestService extends Thread {
 				if (device.getSpecificCredentialSet() != null && device.getSpecificCredentialSet() instanceof DeviceCliAccount) {
 					device.getSpecificCredentialSet().setName(DeviceCredentialSet.generateSpecificName());
 					device.getSpecificCredentialSet().setDeviceSpecific(true);
-					session.save(device.getSpecificCredentialSet());
+					session.persist(device.getSpecificCredentialSet());
 					newDevice.setSpecificCredentialSet(device.getSpecificCredentialSet());
 					newDevice.setAutoTryCredentials(false);
 				}
-				session.save(newDevice);
+				session.persist(newDevice);
 				task = new TakeSnapshotTask(newDevice, "Initial snapshot after device creation", user.getUsername(), true, false, false);
-				session.save(task);
+				session.persist(task);
 				session.getTransaction().commit();
 				Netshot.aaaLogger.info("{} has been created.", newDevice);
 			}
@@ -2059,45 +2018,38 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			Device device = session.load(Device.class, id);
+			Device device = session.get(Device.class, id);
+			if (device == null) {
+				log.info("No such device of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
+			}
 			List<File> toDeleteFiles = new ArrayList<>();
 			List<ConfigBinaryFileAttribute> attributes = session
-				.createQuery("from ConfigBinaryFileAttribute cfa where cfa.config.device.id = :id",
+				.createQuery("from ConfigBinaryFileAttribute cfa where cfa.config.device = :device",
 						ConfigBinaryFileAttribute.class)
-				.setParameter("id", id)
+				.setParameter("device", device)
 				.list();
 			for (ConfigBinaryFileAttribute attribute : attributes) {
 				toDeleteFiles.add(attribute.getFileName());
 			}
 			// Remove the long text attributes (due to delete cascade constraint)
 			session
-				.createQuery("delete from LongTextConfiguration ltc where ltc in (select da.longText from DeviceLongTextAttribute da where da.device = :device)")
+				.createMutationQuery("delete from LongTextConfiguration ltc where ltc in (select da.longText from DeviceLongTextAttribute da where da.device = :device)")
 				.setParameter("device", device)
 				.executeUpdate();
 			session
-				.createQuery("delete from LongTextConfiguration ltc where ltc in (select ca.longText from Config c join c.attributes ca where c.device = :device)")
+				.createMutationQuery("delete from LongTextConfiguration ltc where ltc in (select ca.longText from Config c join c.attributes ca where c.device = :device)")
 				.setParameter("device", device)
 				.executeUpdate();
 			session
-				.createQuery("delete from LongTextConfiguration ltc where ltc in (select dr.longText from DiagnosticLongTextResult dr where dr.device = :device)")
+				.createMutationQuery("delete from LongTextConfiguration ltc where ltc in (select dr.longText from DiagnosticLongTextResult dr where dr.device = :device)")
 				.setParameter("device", device)
 				.executeUpdate();
-			// Remove the tasks
-			for (Class<? extends Task> taskClass : Task.getTaskClasses()) {
-				if (DeviceBasedTask.class.isAssignableFrom(taskClass)) {
-					session.createQuery(
-							String.format("delete from %s t where t.device.id = :deviceId", taskClass.getSimpleName()))
-						.setParameter("deviceId", id)
-						.executeUpdate();
-				}
-			}
 			// Remove the device
-			session
-				.createQuery("delete from Device d where d = :device")
-				.setParameter("device", device)
-				.executeUpdate();
+			session.remove(device);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("Device ID {} has been deleted.", id);
+			Netshot.aaaLogger.info("Device of ID {} has been deleted.", device.getId());
 			for (File toDeleteFile : toDeleteFiles) {
 				try {
 					toDeleteFile.delete();
@@ -2111,8 +2063,7 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
 			log.error("Unable to delete the device {}.", id, e);
-			Throwable t = e.getCause();
-			if (t != null && t.getMessage().contains("foreign key constraint fails")) {
+			if (e instanceof ConstraintViolationException) {
 				throw new NetshotBadRequestException(
 						"Unable to delete the device, there must be other objects using it.",
 						NetshotBadRequestException.Reason.NETSHOT_USED_DEVICE);
@@ -2251,14 +2202,12 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			device = (Device) session.load(Device.class, id);
-			if (rsDevice.getEnabled() != null) {
-				if (rsDevice.getEnabled()) {
-					device.setStatus(Status.INPRODUCTION);
-				}
-				else {
-					device.setStatus(Status.DISABLED);
-				}
+			device = session.getReference(Device.class, id);
+			if (Boolean.TRUE.equals(rsDevice.getEnabled())) {
+				device.setStatus(Status.INPRODUCTION);
+			}
+			else {
+				device.setStatus(Status.DISABLED);
 			}
 			if (rsDevice.getIpAddress() != null) {
 				Network4Address v4Address = new Network4Address(rsDevice.getIpAddress());
@@ -2338,8 +2287,8 @@ public class RestService extends Thread {
 				}
 				for (Long credentialSetId : rsDevice.getCredentialSetIds()) {
 					try {
-						DeviceCredentialSet credentialSet = (DeviceCredentialSet) session
-								.load(DeviceCredentialSet.class, credentialSetId);
+						DeviceCredentialSet credentialSet = session
+								.getReference(DeviceCredentialSet.class, credentialSetId);
 						device.addCredentialSet(credentialSet);
 					}
 					catch (ObjectNotFoundException e) {
@@ -2355,20 +2304,20 @@ public class RestService extends Thread {
 			
 			if (rsCredentialSet == null) {
 				if (credentialSet != null) {
-					session.delete(credentialSet);
+					session.remove(credentialSet);
 					device.setSpecificCredentialSet(null);
 				}
 			}
 			else if (DeviceCliAccount.class.isInstance(rsCredentialSet)) {
 				if (credentialSet != null && !credentialSet.getClass().equals(rsCredentialSet.getClass())) {
-					session.delete(credentialSet);
+					session.remove(credentialSet);
 					credentialSet = null;
 				}
 				if (credentialSet == null) {
 					credentialSet = rsCredentialSet;
 					credentialSet.setDeviceSpecific(true);
 					credentialSet.setName(DeviceCredentialSet.generateSpecificName());
-					session.save(credentialSet);
+					session.persist(credentialSet);
 					device.setSpecificCredentialSet(credentialSet);
 				}
 				else {
@@ -2388,10 +2337,10 @@ public class RestService extends Thread {
 				}
 			}
 			if (rsDevice.getMgmtDomain() != null) {
-				Domain domain = (Domain) session.load(Domain.class, rsDevice.getMgmtDomain());
+				Domain domain = session.getReference(Domain.class, rsDevice.getMgmtDomain());
 				device.setMgmtDomain(domain);
 			}
-			session.update(device);
+			session.merge(device);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been edited.", device); 
 		}
@@ -2451,7 +2400,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession(true);
 		Task task;
 		try {
-			task = (Task) session.get(Task.class, id);
+			task = session.get(Task.class, id);
 			return task;
 		}
 		catch (ObjectNotFoundException e) {
@@ -2492,7 +2441,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession(true);
 		Task task;
 		try {
-			task = (Task) session.get(Task.class, id);
+			task = session.get(Task.class, id);
 			DebugLog log = task.getDebugLog();
 			String text = log == null ? "" : log.getText();
 			String fileName = String.format("debug_%d.log", id);
@@ -2504,12 +2453,12 @@ public class RestService extends Thread {
 			log.error("Unable to find the task {}.", id, e);
 			throw new WebApplicationException(
 					"Task not found",
-					javax.ws.rs.core.Response.Status.NOT_FOUND);
+					jakarta.ws.rs.core.Response.Status.NOT_FOUND);
 		}
 		catch (HibernateException e) {
 			log.error("Unable to fetch the task {}.", id, e);
 			throw new WebApplicationException("Unable to get the task",
-					javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR);
+					jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR);
 		}
 		finally {
 			session.close();
@@ -2601,14 +2550,12 @@ public class RestService extends Thread {
 			throws WebApplicationException {
 		log.debug("REST request, get credentials.");
 		Session session = Database.getSession(true);
-		List<DeviceCredentialSet> credentialSets;
 		try {
 			Query<DeviceCredentialSet> query = session
-				.createQuery("select cs from DeviceCredentialSet cs where not (cs.deviceSpecific = :true)",
-						DeviceCredentialSet.class)
-				.setParameter("true", true);
+				.createQuery("select cs from DeviceCredentialSet cs where not (cs.deviceSpecific)",
+						DeviceCredentialSet.class);
 			paginationParams.apply(query);
-			credentialSets = query.list();
+			return query.list();
 		}
 		catch (HibernateException e) {
 			log.error("Unable to fetch the credentials.", e);
@@ -2618,13 +2565,6 @@ public class RestService extends Thread {
 		finally {
 			session.close();
 		}
-		for (DeviceCredentialSet credentialSet : credentialSets) {
-			if (DeviceCliAccount.class.isInstance(credentialSet)) {
-				((DeviceCliAccount) credentialSet).setPassword("=");
-				((DeviceCliAccount) credentialSet).setSuperPassword("=");
-			}
-		}
-		return credentialSets;
 	}
 
 	/**
@@ -2645,35 +2585,34 @@ public class RestService extends Thread {
 	@Tag(name = "Admin", description = "Administrative actions")
 	public void deleteCredentialSet(@PathParam("id") @Parameter(description = "Credential set ID") Long id)
 			throws WebApplicationException {
-		log.debug("REST request, delete credentials {}", id);
+		log.debug("REST request, delete credential set {}", id);
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			DeviceCredentialSet credentialSet = (DeviceCredentialSet) session.load(
+			DeviceCredentialSet credentialSet = session.get(
 					DeviceCredentialSet.class, id);
+			if (credentialSet == null) {
+				log.info("No such credential set of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
+			}
 			if (credentialSet.isDeviceSpecific()) {
 				throw new NetshotBadRequestException(
 						"Can't delete a device-specific credential set.",
 						NetshotBadRequestException.Reason.NETSHOT_USED_CREDENTIALS);
 			}
-			/* HACK! In JPA, this would require updating each task one by one... */
-			session
-					.createNativeQuery("delete from discover_device_type_task_credential_sets where credential_sets = :cs")
-					.setParameter("cs", id)
-					.executeUpdate();
-			session.delete(credentialSet);
+			session.remove(credentialSet);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been deleted.", credentialSet);
+			Netshot.aaaLogger.info("Credential set of ID {} has been deleted.", credentialSet.getId());
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (Exception e) {
 			session.getTransaction().rollback();
 			log.error("Unable to delete the credentials {}", id, e);
-			Throwable t = e.getCause();
 			if (e instanceof NetshotBadRequestException) {
 				throw e;
 			}
-			if (t != null && t.getMessage().contains("foreign key constraint fails")) {
+			if (e instanceof ConstraintViolationException) {
 				throw new NetshotBadRequestException(
 						"Unable to delete the credential set, there must be devices or tasks using it.",
 						NetshotBadRequestException.Reason.NETSHOT_USED_CREDENTIALS);
@@ -2717,15 +2656,14 @@ public class RestService extends Thread {
 		try {
 			session.beginTransaction();
 			if (credentialSet.getMgmtDomain() != null) {
-				credentialSet.setMgmtDomain(session.load(Domain.class, credentialSet.getMgmtDomain().getId()));
+				credentialSet.setMgmtDomain(session.getReference(Domain.class, credentialSet.getMgmtDomain().getId()));
 			}
 			credentialSet.setDeviceSpecific(false);
-			session.save(credentialSet);
+			session.persist(credentialSet);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", credentialSet);
 			session.refresh(credentialSet);
 			this.suggestReturnCode(Response.Status.CREATED);
-			credentialSet.removeSensitive();
 			return credentialSet;
 		}
 		catch (HibernateException e) {
@@ -2776,7 +2714,7 @@ public class RestService extends Thread {
 		DeviceCredentialSet credentialSet;
 		try {
 			session.beginTransaction();
-			credentialSet = (DeviceCredentialSet) session.get(
+			credentialSet = session.get(
 					rsCredentialSet.getClass(), id);
 			if (credentialSet == null) {
 				log.error("Unable to find the credential set {}.", id);
@@ -2794,7 +2732,7 @@ public class RestService extends Thread {
 				credentialSet.setMgmtDomain(null);
 			}
 			else {
-				credentialSet.setMgmtDomain((Domain) session.get(Domain.class, rsCredentialSet.getMgmtDomain().getId()));
+				credentialSet.setMgmtDomain(session.get(Domain.class, rsCredentialSet.getMgmtDomain().getId()));
 			}
 			credentialSet.setName(rsCredentialSet.getName());
 			if (credentialSet.getName() == null || credentialSet.getName().trim().equals("")) {
@@ -2806,10 +2744,10 @@ public class RestService extends Thread {
 				DeviceCliAccount cliAccount = (DeviceCliAccount) credentialSet;
 				DeviceCliAccount rsCliAccount = (DeviceCliAccount) rsCredentialSet;
 				cliAccount.setUsername(rsCliAccount.getUsername());
-				if (!rsCliAccount.getPassword().equals("=")) {
+				if (rsCliAccount.getPassword() != null) {
 					cliAccount.setPassword(rsCliAccount.getPassword());
 				}
-				if (!rsCliAccount.getSuperPassword().equals("=")) {
+				if (rsCliAccount.getSuperPassword() != null) {
 					cliAccount.setSuperPassword(rsCliAccount.getSuperPassword());
 				}
 				if (DeviceSshKeyAccount.class.isInstance(credentialSet)) {
@@ -2821,11 +2759,11 @@ public class RestService extends Thread {
 				DeviceSnmpv3Community rsSnmp3 = (DeviceSnmpv3Community)rsCredentialSet;
 				((DeviceSnmpv3Community) credentialSet).setUsername(rsSnmp3.getUsername());
 				((DeviceSnmpv3Community) credentialSet).setAuthType(rsSnmp3.getAuthType());
-				if (!rsSnmp3.getAuthKey().equals("-")) {
+				if (rsSnmp3.getAuthKey() != null) {
 					((DeviceSnmpv3Community) credentialSet).setAuthKey(rsSnmp3.getAuthKey());
 				}
 				((DeviceSnmpv3Community) credentialSet).setPrivType(rsSnmp3.getPrivType());
-				if (!rsSnmp3.getPrivKey().equals("-")) {
+				if (rsSnmp3.getAuthKey() != null) {
 					((DeviceSnmpv3Community) credentialSet).setPrivKey(rsSnmp3.getPrivKey());
 				}
 				
@@ -2835,7 +2773,7 @@ public class RestService extends Thread {
 				.setCommunity(((DeviceSnmpCommunity) rsCredentialSet)
 						.getCommunity());
 			}
-			session.update(credentialSet);
+			session.merge(credentialSet);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been edited", credentialSet);
 		}
@@ -2938,15 +2876,20 @@ public class RestService extends Thread {
 			Finder finder = new Finder(criteria.getQuery(), driver);
 			Session session = Database.getSession();
 			try {
-				@SuppressWarnings("unchecked")
-				Query<RsLightDevice> query = session.createQuery(LIGHTDEVICELIST_BASEQUERY
-						+ finder.getHql());
+				Query<RsLightDevice> query = session.createQuery("select new RsLightDevice(" +
+					"d.id, " +
+					"d.name, " +
+					"d.family, " + 
+					"d.mgmtAddress, " +
+					"d.status, " + 
+					"d.driver, " +
+					"case when (d.eolDate < current_date()) then true else false end,  " +
+					"case when (d.eosDate < current_date()) then true else false end, " +
+					"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
+					"d.softwareLevel) " + finder.getHql(), RsLightDevice.class);
 				finder.setVariables(query);
 				query.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
-				@SuppressWarnings("deprecation")
-				List<RsLightDevice> devices = query
-					.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
-					.list();
+				List<RsLightDevice> devices = query.list();
 				RsSearchResults results = new RsSearchResults();
 				results.setDevices(devices);
 				results.setQuery(finder.getFormattedQuery());
@@ -3005,7 +2948,7 @@ public class RestService extends Thread {
 				StaticDeviceGroup staticGroup = new StaticDeviceGroup(name);
 				Set<Device> devices = new HashSet<>();
 				for (Long deviceId : rsGroup.getStaticDevices()) {
-					Device device = (Device) session.load(Device.class, deviceId);
+					Device device = session.getReference(Device.class, deviceId);
 					devices.add(device);
 				}
 				staticGroup.updateCachedDevices(devices);
@@ -3036,7 +2979,7 @@ public class RestService extends Thread {
 			}
 			deviceGroup.setFolder(rsGroup.getFolder());
 			deviceGroup.setHiddenFromReports(rsGroup.isHiddenFromReports());
-			session.save(deviceGroup);
+			session.persist(deviceGroup);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", deviceGroup);
 			this.suggestReturnCode(Response.Status.CREATED);
@@ -3126,7 +3069,7 @@ public class RestService extends Thread {
 				log.warn("Unable to find the device group.");
 				throw new WebApplicationException(
 						"Unable to find the device group",
-						javax.ws.rs.core.Response.Status.NOT_FOUND);
+						jakarta.ws.rs.core.Response.Status.NOT_FOUND);
 			}
 			return group;
 		}
@@ -3162,50 +3105,16 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			DeviceGroup deviceGroup = (DeviceGroup) session.load(DeviceGroup.class, id);
-			// Remove the linked tasks
-			for (Class<? extends Task> taskClass : Task.getTaskClasses()) {
-				if (GroupBasedTask.class.isAssignableFrom(taskClass)) {
-					session.createQuery(
-							String.format("delete from %s t where t.deviceGroup = :group", taskClass.getSimpleName()))
-						.setParameter("group", deviceGroup)
-						.executeUpdate();
-				}
+			DeviceGroup deviceGroup = session.get(DeviceGroup.class, id);
+			if (deviceGroup == null) {
+				log.info("No such device group of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
 			}
-			// Remove the software rules
-			session
-				.createQuery("delete from SoftwareRule r where r.targetGroup = :group")
-				.setParameter("group", deviceGroup)
-				.executeUpdate();
-			// Remove the hardware rules
-			session
-				.createQuery("delete from HardwareRule r where r.targetGroup = :group")
-				.setParameter("group", deviceGroup)
-				.executeUpdate();
-			// Unset from diagnostics
-			session
-				.createQuery("update Diagnostic dc set dc.targetGroup = null where dc.targetGroup = :group")
-				.setParameter("group", deviceGroup)
-				.executeUpdate();
-			// Remove from the policies using native SQL
-			session
-				.createNativeQuery("delete from policy_target_groups where target_groups = :id")
-				.setParameter("id", id)
-				.executeUpdate();
-			// Remove the group
-			session
-				.createQuery("delete from DeviceGroup g where g = :group")
-				.setParameter("group", deviceGroup)
-				.executeUpdate();
+			session.remove(deviceGroup);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("Device group ID {} has been deleted.", id);
+			Netshot.aaaLogger.info("Device group of ID {} has been deleted.", deviceGroup.getId());
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
-		}
-		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
-			log.error("The group {} to be deleted doesn't exist.", id, e);
-			throw new NetshotBadRequestException("The group doesn't exist.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -3308,7 +3217,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			DeviceGroup group = (DeviceGroup) session.get(DeviceGroup.class, id);
+			DeviceGroup group = session.get(DeviceGroup.class, id);
 			if (group == null) {
 				log.error("Unable to find the group {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this group.",
@@ -3318,7 +3227,7 @@ public class RestService extends Thread {
 				StaticDeviceGroup staticGroup = (StaticDeviceGroup) group;
 				Set<Device> devices = new HashSet<>();
 				for (Long deviceId : rsGroup.getStaticDevices()) {
-					Device device = (Device) session.load(Device.class, deviceId);
+					Device device = session.getReference(Device.class, deviceId);
 					devices.add(device);
 				}
 				staticGroup.updateCachedDevices(devices);
@@ -3349,7 +3258,7 @@ public class RestService extends Thread {
 			group.setName(name);
 			group.setFolder(rsGroup.getFolder());
 			group.setHiddenFromReports(rsGroup.isHiddenFromReports());
-			session.update(group);
+			session.merge(group);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been edited.", group);
 			return group;
@@ -3581,7 +3490,7 @@ public class RestService extends Thread {
 		Task task = null;
 		Session session = Database.getSession();
 		try {
-			task = (Task) session.get(Task.class, id);
+			task = session.get(Task.class, id);
 		}
 		catch (HibernateException e) {
 			log.error("Unable to fetch the task {}.", id, e);
@@ -3626,6 +3535,7 @@ public class RestService extends Thread {
 	 */
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.NONE)
+	@AllArgsConstructor
 	public static class RsTaskStatusCount {
 
 		@Getter(onMethod=@__({
@@ -3640,13 +3550,6 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private long count;
-
-		public RsTaskStatusCount(Task.Status status, long count) {
-			this.status = status;
-			this.count = count;
-		}
-		public RsTaskStatusCount() {
-		}
 	}
 
 	@XmlRootElement
@@ -3683,10 +3586,10 @@ public class RestService extends Thread {
 		RsTaskSummary summary = new RsTaskSummary();
 		Session session = Database.getSession(true);
 		try {
-			@SuppressWarnings({ "deprecation", "unchecked" })
 			List<RsTaskStatusCount> counts = session
-				.createQuery("select t.status as status, count(t.id) as count from Task t group by t.status")
-				.setResultTransformer(Transformers.aliasToBean(RsTaskStatusCount.class))
+				.createQuery(
+					"select new RsTaskStatusCount(t.status, count(t.id)) from Task t group by t.status",
+					RsTaskStatusCount.class)
 				.list();
 			for (Task.Status status : Task.Status.values()) {
 				summary.getCountByStatus().put(status, 0L);
@@ -3742,7 +3645,7 @@ public class RestService extends Thread {
 			Device device;
 			Session session = Database.getSession();
 			try {
-				device = (Device) session.get(Device.class, rsTask.getDevice());
+				device = session.get(Device.class, rsTask.getDevice());
 				if (device == null) {
 					log.error("Unable to find the device {}.", rsTask.getDevice());
 					throw new NetshotBadRequestException("Unable to find the device.",
@@ -3779,7 +3682,7 @@ public class RestService extends Thread {
 			Device device;
 			Session session = Database.getSession();
 			try {
-				device = (Device) session.get(Device.class, rsTask.getDevice());
+				device = session.get(Device.class, rsTask.getDevice());
 				if (device == null) {
 					log.error("Unable to find the device {}.", rsTask.getDevice());
 					throw new NetshotBadRequestException("Unable to find the device.",
@@ -3834,7 +3737,7 @@ public class RestService extends Thread {
 			DeviceGroup group;
 			Session session = Database.getSession();
 			try {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsTask.getGroup());
+				group = session.get(DeviceGroup.class, rsTask.getGroup());
 				if (group == null) {
 					log.error("Unable to find the group {}.", rsTask.getGroup());
 					throw new NetshotBadRequestException("Unable to find the group.",
@@ -3857,7 +3760,7 @@ public class RestService extends Thread {
 			Device device;
 			Session session = Database.getSession();
 			try {
-				device = (Device) session.get(Device.class, rsTask.getDevice());
+				device = session.get(Device.class, rsTask.getDevice());
 				if (device == null) {
 					log.error("Unable to find the device {}.", rsTask.getDevice());
 					throw new NetshotBadRequestException("Unable to find the device.",
@@ -3879,7 +3782,7 @@ public class RestService extends Thread {
 			DeviceGroup group;
 			Session session = Database.getSession();
 			try {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsTask.getGroup());
+				group = session.get(DeviceGroup.class, rsTask.getGroup());
 				if (group == null) {
 					log.error("Unable to find the group {}.", rsTask.getGroup());
 					throw new NetshotBadRequestException("Unable to find the group.",
@@ -3903,7 +3806,7 @@ public class RestService extends Thread {
 			DeviceGroup group;
 			Session session = Database.getSession();
 			try {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsTask.getGroup());
+				group = session.get(DeviceGroup.class, rsTask.getGroup());
 				if (group == null) {
 					log.error("Unable to find the group {}.", rsTask.getGroup());
 					throw new NetshotBadRequestException("Unable to find the group.",
@@ -3925,7 +3828,7 @@ public class RestService extends Thread {
 			DeviceGroup group;
 			Session session = Database.getSession();
 			try {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsTask.getGroup());
+				group = session.get(DeviceGroup.class, rsTask.getGroup());
 				if (group == null) {
 					log.error("Unable to find the group {}.", rsTask.getGroup());
 					throw new NetshotBadRequestException("Unable to find the group.",
@@ -3947,7 +3850,7 @@ public class RestService extends Thread {
 			DeviceGroup group;
 			Session session = Database.getSession();
 			try {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsTask.getGroup());
+				group = session.get(DeviceGroup.class, rsTask.getGroup());
 				if (group == null) {
 					log.error("Unable to find the group {}.", rsTask.getGroup());
 					throw new NetshotBadRequestException("Unable to find the group.",
@@ -4014,7 +3917,7 @@ public class RestService extends Thread {
 			}
 			Session session = Database.getSession();
 			try {
-				domain = (Domain) session.load(Domain.class, rsTask.getDomain());
+				domain = session.getReference(Domain.class, rsTask.getDomain());
 			}
 			catch (Exception e) {
 				log.error("Unable to load the domain {}.", rsTask.getDomain());
@@ -4082,7 +3985,7 @@ public class RestService extends Thread {
 			Device device;
 			Session session = Database.getSession();
 			try {
-				device = (Device) session.get(Device.class, rsTask.getDevice());
+				device = session.get(Device.class, rsTask.getDevice());
 				if (device == null) {
 					log.error("Unable to find the device {}.", rsTask.getDevice());
 					throw new NetshotBadRequestException("Unable to find the device.",
@@ -4152,7 +4055,15 @@ public class RestService extends Thread {
 	 */
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.NONE)
+	@AllArgsConstructor
 	public static class RsLightConfig {
+	
+		/** The config id. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private long id = 0L;
 
 		/** The device name. */
 		@Getter(onMethod=@__({
@@ -4181,13 +4092,6 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private String author;
-
-		/** The config id. */
-		@Getter(onMethod=@__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private long id = 0L;
 	}
 
 	/**
@@ -4221,12 +4125,16 @@ public class RestService extends Thread {
 			throws WebApplicationException {
 		log.debug("REST request, config changes.");
 		try (Session session = Database.getSession(true)) {
-			String hqlQuery = "select distinct ";
-			hqlQuery += "c.id as id, c.changeDate as changeDate, c.device.id as deviceId, c.author as author, c.device.name as deviceName ";
-			hqlQuery += " from Config c join c.device d ";
+			String hqlQuery = "select new RsLightConfig(" +
+				"c.id, " +
+				"c.device.name, " +
+				"c.device.id, " +
+				"c.changeDate, " +
+				"c.author) " +
+				"from Config c join c.device d";
 			Map<String, Object> hqlParams = new HashMap<>();
 			if (!deviceGroups.isEmpty()) {
-				hqlQuery += "join d.ownerGroups g ";
+				hqlQuery += " join d.ownerGroups g ";
 				hqlParams.put("groupIds", deviceGroups);
 			}
 			hqlQuery += " where ";
@@ -4246,16 +4154,12 @@ public class RestService extends Thread {
 				hqlParams.put("endDate", new Date(endDate));
 			}
 			hqlQuery += "1 = 1";
-			@SuppressWarnings({ "unchecked" })
-			Query<RsLightConfig> query = session.createQuery(hqlQuery);
+			Query<RsLightConfig> query = session.createQuery(hqlQuery, RsLightConfig.class);
 			for (Entry<String, Object> k : hqlParams.entrySet()) {
 				query.setParameter(k.getKey(), k.getValue());
 			}
 			paginationParams.apply(query);
-			@SuppressWarnings({ "deprecation" })
-			List<RsLightConfig> configs = query
-				.setResultTransformer(Transformers.aliasToBean(RsLightConfig.class))
-				.list();
+			List<RsLightConfig> configs = query.list();
 			return configs;
 		}
 		catch (HibernateException e) {
@@ -4324,7 +4228,7 @@ public class RestService extends Thread {
 		log.debug("REST request, get rules for policy {}.", id);
 		Session session = Database.getSession(true);
 		try {
-			Policy policy = (Policy) session.get(Policy.class, id);
+			Policy policy = session.get(Policy.class, id);
 			if (policy == null) {
 				log.error("Invalid policy.");
 				throw new NetshotBadRequestException("Invalid policy",
@@ -4371,7 +4275,7 @@ public class RestService extends Thread {
 		log.debug("REST request, get rule {}, policy {}.", id, pid);
 		Session session = Database.getSession(true);
 		try {
-			Policy policy = (Policy) session.get(Policy.class, pid);
+			Policy policy = session.get(Policy.class, pid);
 			if (policy == null) {
 				log.error("Invalid policy.");
 				throw new NetshotBadRequestException("Invalid policy",
@@ -4386,7 +4290,7 @@ public class RestService extends Thread {
 				log.warn("Unable to find the rule object.");
 				throw new WebApplicationException(
 						"Unable to find the rule",
-						javax.ws.rs.core.Response.Status.NOT_FOUND);
+						jakarta.ws.rs.core.Response.Status.NOT_FOUND);
 			}
 			return rule;
 		}
@@ -4427,13 +4331,6 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private Set<Long> targetGroups = new HashSet<>();
-
-		/**
-		 * Instantiates a new rs policy.
-		 */
-		public RsPolicy() {
-
-		}
 	}
 
 	/**
@@ -4469,13 +4366,13 @@ public class RestService extends Thread {
 
 			Set<DeviceGroup> groups = new HashSet<>();
 			for (Long groupId : rsPolicy.getTargetGroups()) {
-				DeviceGroup group = (DeviceGroup) session.get(DeviceGroup.class, groupId);
+				DeviceGroup group = session.get(DeviceGroup.class, groupId);
 				groups.add(group);
 			}
 
 			policy = new Policy(name, groups);
 
-			session.save(policy);
+			session.persist(policy);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", policy);
 			this.suggestReturnCode(Response.Status.CREATED);
@@ -4527,17 +4424,16 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			Policy policy = (Policy) session.load(Policy.class, id);
-			session.delete(policy);
+			Policy policy = session.get(Policy.class, id);
+			if (policy == null) {
+				log.info("No such policy of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
+			}
+			session.remove(policy);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been deleted.", policy);
+			Netshot.aaaLogger.info("Policy of ID {} has been deleted.", policy.getId());
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
-		}
-		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
-			log.error("The policy {} to be deleted doesn't exist.", id, e);
-			throw new NetshotBadRequestException("The policy doesn't exist.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -4575,7 +4471,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			Policy policy = (Policy) session.get(Policy.class, id);
+			Policy policy = session.get(Policy.class, id);
 			if (policy == null) {
 				log.error("Unable to find the policy {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this policy.",
@@ -4593,7 +4489,7 @@ public class RestService extends Thread {
 			// Remove orphan check results
 			for (DeviceGroup group : policy.getTargetGroups()) {
 				if (!rsPolicy.getTargetGroups().contains(group.getId())) {
-					session.createQuery(
+					session.createMutationQuery(
 						"delete CheckResult cr where cr.key.rule in (select r from Rule r where r.policy.id = :policyId) " +
 							"and cr.key.device in (select d from DeviceGroup g join g.cachedDevices d where g.id = :groupId)")
 						.setParameter("policyId", policy.getId())
@@ -4603,11 +4499,11 @@ public class RestService extends Thread {
 			}
 			policy.getTargetGroups().clear();
 			for (Long groupId : rsPolicy.getTargetGroups()) {
-				DeviceGroup group = (DeviceGroup) session.get(DeviceGroup.class, groupId);
+				DeviceGroup group = session.get(DeviceGroup.class, groupId);
 				policy.getTargetGroups().add(group);
 			}
 
-			session.update(policy);
+			session.merge(policy);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been edited.", policy);
 			return policy;
@@ -4782,7 +4678,7 @@ public class RestService extends Thread {
 		try {
 			session.beginTransaction();
 
-			Policy policy = (Policy) session.load(Policy.class, rsRule.getPolicy());
+			Policy policy = session.getReference(Policy.class, rsRule.getPolicy());
 			
 			Rule rule;
 			if ("TextRule".equals(rsRule.getType())) {
@@ -4800,7 +4696,7 @@ public class RestService extends Thread {
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 			}
 
-			session.save(rule);
+			session.persist(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", rule);
 			this.suggestReturnCode(Response.Status.CREATED);
@@ -4860,7 +4756,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			Rule rule = (Rule) session.get(Rule.class, id);
+			Rule rule = session.get(Rule.class, id);
 			if (rule == null) {
 				log.error("Unable to find the rule {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this rule.",
@@ -4893,7 +4789,7 @@ public class RestService extends Thread {
 				}
 			}
 			for (Map.Entry<Long, Date> postedExemption : postedExemptions.entrySet()) {
-				Device device = (Device) session.load(Device.class, postedExemption.getKey());
+				Device device = session.getReference(Device.class, postedExemption.getKey());
 				Exemption exemption = new Exemption(rule, device, postedExemption.getValue());
 				rule.addExemption(exemption);
 			}
@@ -4940,7 +4836,7 @@ public class RestService extends Thread {
 				}
 			}
 
-			session.update(rule);
+			session.merge(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been edited.", rule);
 			return rule;
@@ -4988,22 +4884,16 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			Rule rule = (Rule) session.load(Rule.class, id);
-			/* HACK! In JPA, this would require updating each task one by one... */
-			session
-					.createNativeQuery("delete from check_result where rule = :r")
-					.setParameter("r", id)
-					.executeUpdate();
-			session.delete(rule);
+			Rule rule = session.get(Rule.class, id);
+			if (rule == null) {
+				log.info("No such rule of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
+			}
+			session.remove(rule);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been deleted.", rule);
+			Netshot.aaaLogger.info("Rule of ID {} has been deleted.", rule.getId());
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
-		}
-		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
-			log.error("The rule {} to be deleted doesn't exist.", id, e);
-			throw new NetshotBadRequestException("The rule doesn't exist.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -5086,8 +4976,8 @@ public class RestService extends Thread {
 		Session session = Database.getSession(true);
 		RsRuleTestResult result = new RsRuleTestResult();
 		try {
-			device = (Device) session
-					.createQuery("from Device d join fetch d.lastConfig where d.id = :id")
+			device = session
+					.createQuery("from Device d join fetch d.lastConfig where d.id = :id", Device.class)
 					.setParameter("id", rsRule.getDevice())
 					.uniqueResult();
 			if (device == null) {
@@ -5188,6 +5078,7 @@ public class RestService extends Thread {
 	 * The Class RsLightExemptedDevice.
 	 */
 	@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+	@AllArgsConstructor
 	public static class RsLightExemptedDevice extends RsLightDevice {
 
 		/** The expiration date. */
@@ -5196,6 +5087,14 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private Date expirationDate;
+
+		public RsLightExemptedDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
+				String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
+				Date expirationDate) {
+			super(id, name, family, mgmtAddress, status, driver, eol, eos, configCompliant, softwareLevel);
+			this.expirationDate = expirationDate;
+		}
+		
 	}
 
 	/**
@@ -5220,12 +5119,23 @@ public class RestService extends Thread {
 		log.debug("REST request, get exemptions for rule {}.", id);
 		Session session = Database.getSession(true);
 		try {
-			@SuppressWarnings({ "deprecation", "unchecked" })
-			Query<RsLightExemptedDevice> query = session
-				.createQuery(LIGHTDEVICELIST_BASEQUERY + ", e.expirationDate as expirationDate from Exemption e join e.key.device d where e.key.rule.id = :id")
+			Query<RsLightExemptedDevice> query = session.createQuery(
+				"select new RsLightExemptedDevice(" +
+				"d.id, " +
+				"d.name, " +
+				"d.family, " + 
+				"d.mgmtAddress, " +
+				"d.status, " + 
+				"d.driver, " +
+				"case when (d.eolDate < current_date()) then true else false end,  " +
+				"case when (d.eosDate < current_date()) then true else false end, " +
+				"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
+				"d.softwareLevel, " +
+				"e.expirationDate as expirationDate) " +
+				"from Exemption e join e.key.device d where e.key.rule.id = :id",
+					RsLightExemptedDevice.class)
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
-				.setParameter("id", id)
-				.setResultTransformer(Transformers.aliasToBean(RsLightExemptedDevice.class));
+				.setParameter("id", id);
 			paginationParams.apply(query);
 			return query.list();
 		}
@@ -5244,6 +5154,7 @@ public class RestService extends Thread {
 	 */
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.NONE)
+	@AllArgsConstructor
 	public static class RsDeviceRule {
 
 		/** The id. */
@@ -5319,13 +5230,21 @@ public class RestService extends Thread {
 		log.debug("REST request, get compliance results for device {}.", id);
 		Session session = Database.getSession(true);
 		try {
-			@SuppressWarnings({ "deprecation", "unchecked" })
 			Query<RsDeviceRule> query = session.createQuery(
-					"select r.id as id, r.name as ruleName, p.name as policyName, cr.result as result, cr.checkDate as checkDate, cr.comment as comment, " +
-					"e.expirationDate as expirationDate from Rule r join r.policy p join p.targetGroups g join g.cachedDevices d1 with d1.id = :id " +
-					"left join CheckResult cr with cr.key.rule.id = r.id and cr.key.device.id = :id left join r.exemptions e with e.key.device.id = :id")
-				.setParameter("id", id)
-				.setResultTransformer(Transformers.aliasToBean(RsDeviceRule.class));
+					"select new RsDeviceRule(" +
+					"r.id as id, "  +
+					"r.name as ruleName, " +
+					"p.name as policyName, " +
+					"cr.result as result, " +
+					"cr.comment as comment, " +
+					"cr.checkDate as checkDate, " +
+					"e.expirationDate as expirationDate) " +
+					"from Rule r " +
+					"join r.policy p join p.targetGroups g join g.cachedDevices d1 with d1.id = :id " +
+					"left join CheckResult cr with cr.key.rule.id = r.id and cr.key.device.id = :id " +
+					"left join r.exemptions e with e.key.device.id = :id",
+					RsDeviceRule.class)
+				.setParameter("id", id);
 			paginationParams.apply(query);
 			return query.list();
 		}
@@ -5344,12 +5263,8 @@ public class RestService extends Thread {
 	 */
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.NONE)
+	@AllArgsConstructor
 	public static class RsConfigChangeNumberByDateStat {
-
-		public RsConfigChangeNumberByDateStat(long changeCount, Date changeDay) {
-			this.changeCount = changeCount;
-			this.changeDay = changeDay;
-		}
 
 		/** The change count. */
 		@Getter(onMethod=@__({
@@ -5405,8 +5320,10 @@ public class RestService extends Thread {
 				Calendar dayEnd = (Calendar)today.clone();
 				dayStart.add(Calendar.DATE, -d + 1);
 				dayEnd.add(Calendar.DATE, -d + 2);
-				Long changeCount = (Long)session
-					.createQuery("select count(*) from Config c where c.changeDate >= :dayStart and c.changeDate < :dayEnd")
+				Long changeCount = session
+					.createQuery(
+						"select count(*) from Config c where c.changeDate >= :dayStart and c.changeDate < :dayEnd", 
+						Long.class)
 					.setParameter("dayStart", dayStart.getTime())
 					.setParameter("dayEnd", dayEnd.getTime())
 					.uniqueResult();
@@ -5429,6 +5346,7 @@ public class RestService extends Thread {
 	 */
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.NONE)
+	@AllArgsConstructor
 	public static class RsGroupConfigComplianceStat {
 
 		/** The group id. */
@@ -5465,6 +5383,7 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private long deviceCount;
+		
 	}
 
 	/**
@@ -5504,14 +5423,19 @@ public class RestService extends Thread {
 			if (deviceGroups.size() > 0) {
 				groupFilter = " g.id in (:groupIds) and";
 			}
-			
-			@SuppressWarnings("unchecked")
+
 			Query<RsGroupConfigComplianceStat> query = session
-				.createQuery("select g.id as groupId, g.name as groupName, g.folder as groupFolder, "
-						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled and (select count(ccr.result) from d.complianceCheckResults ccr join ccr.key.rule rule where"
+				.createQuery(
+					"select new RsGroupConfigComplianceStat(" +
+						"g.id as groupId, " +
+						"g.name as groupName, " +
+						"g.folder as groupFolder, "
+						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled and " +
+							"(select count(ccr.result) from d.complianceCheckResults ccr join ccr.key.rule rule where"
 							+ ccrFilter + " ccr.result = :nonConforming) = 0) as compliantDeviceCount, "
-						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled) as deviceCount "
-						+ "from DeviceGroup g where" + groupFilter + " g.hiddenFromReports <> true")
+						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled) as deviceCount) "
+						+ "from DeviceGroup g where" + groupFilter + " g.hiddenFromReports <> true",
+						RsGroupConfigComplianceStat.class)
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
 				.setParameter("enabled", Device.Status.INPRODUCTION);
 			if (domains.size() > 0) {
@@ -5523,10 +5447,7 @@ public class RestService extends Thread {
 			if (deviceGroups.size() > 0) {
 				query.setParameterList("groupIds", deviceGroups);
 			}
-			@SuppressWarnings("deprecation")
-			List<RsGroupConfigComplianceStat> stats = query
-				.setResultTransformer(Transformers.aliasToBean(RsGroupConfigComplianceStat.class))
-				.list();
+			List<RsGroupConfigComplianceStat> stats = query.list();
 			return stats;
 		}
 		catch (HibernateException e) {
@@ -5542,35 +5463,41 @@ public class RestService extends Thread {
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.NONE)
 	@JsonTypeInfo(use = JsonTypeInfo.Id.MINIMAL_CLASS, include = JsonTypeInfo.As.PROPERTY, property = "type")
+	@AllArgsConstructor
+	@NoArgsConstructor
 	public abstract static class RsHardwareSupportStat {
+
+		/** Date */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
 		private Date eoxDate;
+
+		/** Number of devices which changed status that day */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
 		private long deviceCount;
-
-		@XmlElement @JsonView(DefaultView.class)
-		public Date getEoxDate() {
-			return eoxDate;
-		}
-		public void setEoxDate(Date date) {
-			this.eoxDate = date;
-		}
-		@XmlElement @JsonView(DefaultView.class)
-		public long getDeviceCount() {
-			return deviceCount;
-		}
-		public void setDeviceCount(long deviceCount) {
-			this.deviceCount = deviceCount;
-		}
-
 	}
 
 	@XmlType
+	@AllArgsConstructor
 	public static class RsHardwareSupportEoSStat extends RsHardwareSupportStat {
 
+		public RsHardwareSupportEoSStat(Date eoxDate, long deviceCount) {
+			super(eoxDate, deviceCount);
+		}
 	}
 
 	@XmlType
+	@AllArgsConstructor
 	public static class RsHardwareSupportEoLStat extends RsHardwareSupportStat {
 
+		public RsHardwareSupportEoLStat(Date eoxDate, long deviceCount) {
+			super(eoxDate, deviceCount);
+		}
 	}
 
 	@GET
@@ -5588,17 +5515,20 @@ public class RestService extends Thread {
 		log.debug("REST request, hardware support stats.");
 		Session session = Database.getSession(true);
 		try {
-			@SuppressWarnings({ "deprecation", "unchecked" })
-			List<RsHardwareSupportStat> eosStats = session
-				.createQuery("select count(d) as deviceCount, d.eosDate AS eoxDate from Device d where d.status = :enabled group by d.eosDate")
+			
+			List<RsHardwareSupportEoSStat> eosStats = session
+				.createQuery(
+					"select new RsHardwareSupportEoSStat(d.eosDate AS eoxDate, count(d) as deviceCount) " +
+					"from Device d where d.status = :enabled group by d.eosDate",
+					RsHardwareSupportEoSStat.class)
 				.setParameter("enabled", Device.Status.INPRODUCTION)
-				.setResultTransformer(Transformers.aliasToBean(RsHardwareSupportEoSStat.class))
 				.list();
-			@SuppressWarnings({ "deprecation", "unchecked" })
-			List<RsHardwareSupportStat> eolStats = session
-				.createQuery("select count(d) as deviceCount, d.eolDate AS eoxDate from Device d where d.status = :enabled group by d.eolDate")
+			List<RsHardwareSupportEoLStat> eolStats = session
+				.createQuery(
+					"select new RsHardwareSupportEoLStat(d.eolDate AS eoxDate, count(d) as deviceCount) " +
+					"from Device d where d.status = :enabled group by d.eolDate",
+					RsHardwareSupportEoLStat.class)
 				.setParameter("enabled", Device.Status.INPRODUCTION)
-				.setResultTransformer(Transformers.aliasToBean(RsHardwareSupportEoLStat.class))
 				.list();
 			List<RsHardwareSupportStat> stats = new ArrayList<>();
 			stats.addAll(eosStats);
@@ -5620,6 +5550,7 @@ public class RestService extends Thread {
 	 */
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.NONE)
+	@AllArgsConstructor
 	public static class RsGroupSoftwareComplianceStat {
 
 		/** The group id. */
@@ -5663,6 +5594,7 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private long deviceCount;
+
 	}
 
 	/**
@@ -5692,14 +5624,16 @@ public class RestService extends Thread {
 			if (domains.size() > 0) {
 				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
 			}
-			@SuppressWarnings("unchecked")
 			Query<RsGroupSoftwareComplianceStat> query = session
-				.createQuery("select g.id as groupId, g.name as groupName, "
-						+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :gold" + domainFilter + ") as goldDeviceCount, "
-						+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :silver" + domainFilter + ") as silverDeviceCount, "
-						+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :bronze"  + domainFilter + ") as bronzeDeviceCount, "
-						+ "(select count(d) from g.cachedDevices d where d.status = :enabled"  + domainFilter + ") as deviceCount "
-						+ "from DeviceGroup g where g.hiddenFromReports <> true")
+				.createQuery("select new RsGroupSoftwareComplianceStat(" +
+					"g.id as groupId, " +
+					"g.name as groupName, "
+					+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :gold" + domainFilter + ") as goldDeviceCount, "
+					+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :silver" + domainFilter + ") as silverDeviceCount, "
+					+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :bronze"  + domainFilter + ") as bronzeDeviceCount, "
+					+ "(select count(d) from g.cachedDevices d where d.status = :enabled"  + domainFilter + ") as deviceCount) "
+					+ "from DeviceGroup g where g.hiddenFromReports <> true",
+					RsGroupSoftwareComplianceStat.class)
 				.setParameter("gold", ConformanceLevel.GOLD)
 				.setParameter("silver", ConformanceLevel.SILVER)
 				.setParameter("bronze", ConformanceLevel.BRONZE)
@@ -5707,10 +5641,7 @@ public class RestService extends Thread {
 			if (domains.size() > 0) {
 				query.setParameterList("domainIds", domains);
 			}
-			@SuppressWarnings("deprecation")
-			List<RsGroupSoftwareComplianceStat> stats = query
-				.setResultTransformer(Transformers.aliasToBean(RsGroupSoftwareComplianceStat.class))
-				.list();
+			List<RsGroupSoftwareComplianceStat> stats = query.list();
 			return stats;
 		}
 		catch (HibernateException e) {
@@ -5727,6 +5658,7 @@ public class RestService extends Thread {
 	 * The Class RsLightPolicyRuleDevice.
 	 */
 	@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+	@AllArgsConstructor
 	public static class RsLightPolicyRuleDevice extends RsLightDevice {
 
 		/** The rule name. */
@@ -5790,11 +5722,24 @@ public class RestService extends Thread {
 		log.debug("REST request, config compliant device statuses.");
 		Session session = Database.getSession(true);
 		try {
-			String hqlQuery = "";
-			hqlQuery += LIGHTDEVICELIST_BASEQUERY;
-			hqlQuery += ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d ";
-			hqlQuery += "left join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p ";
-			hqlQuery += "where d.status = :enabled";
+			String hqlQuery = "select new RsLightPolicyRuleDevice(" +
+				"d.id, " +
+				"d.name, " +
+				"d.family, " + 
+				"d.mgmtAddress, " +
+				"d.status, " + 
+				"d.driver, " +
+				"case when (d.eolDate < current_date()) then true else false end,  " +
+				"case when (d.eosDate < current_date()) then true else false end, " +
+				"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
+				"d.softwareLevel), " +
+				"p.name as policyName, " +
+				"r.name as ruleName, " +
+				"ccr.checkDate as checkDate, " +
+				"ccr.result as result) " +
+				"from Device d" +
+				"left join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p " +
+				"where d.status = :enabled";
 			if (domains.size() > 0) {
 				hqlQuery += " and d.mgmtDomain.id in (:domainIds)";
 			}
@@ -5807,8 +5752,7 @@ public class RestService extends Thread {
 			if (results.size() > 0) {
 				hqlQuery += " and ccr.result in (:results)";
 			}
-			@SuppressWarnings("unchecked")
-			Query<RsLightPolicyRuleDevice> query = session.createQuery(hqlQuery);
+			Query<RsLightPolicyRuleDevice> query = session.createQuery(hqlQuery, RsLightPolicyRuleDevice.class);
 			query.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
 			query.setParameter("enabled", Device.Status.INPRODUCTION);
 			if (domains.size() > 0) {
@@ -5823,10 +5767,7 @@ public class RestService extends Thread {
 			if (results.size() > 0) {
 				query.setParameterList("results", results);
 			}
-			@SuppressWarnings("deprecation")
-			List<RsLightPolicyRuleDevice> devices = query
-				.setResultTransformer(Transformers.aliasToBean(RsLightPolicyRuleDevice.class))
-				.list();
+			List<RsLightPolicyRuleDevice> devices = query.list();
 			return devices;
 		}
 		catch (HibernateException e) {
@@ -5873,11 +5814,27 @@ public class RestService extends Thread {
 			if (policies.size() > 0) {
 				policyFilter = " and p.id in (:policyIds)";
 			}
-			@SuppressWarnings("unchecked")
 			Query<RsLightPolicyRuleDevice> query = session
-				.createQuery(LIGHTDEVICELIST_BASEQUERY + ", p.name as policyName, r.name as ruleName, ccr.checkDate as checkDate, ccr.result as result from Device d "
-						+ "join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p "
-						+ "where g.id = :id and ccr.result = :nonConforming and d.status = :enabled" + domainFilter + policyFilter)
+				.createQuery(
+					"select new RsLightPolicyRuleDevice(" +
+					"d.id, " +
+					"d.name, " +
+					"d.family, " + 
+					"d.mgmtAddress, " +
+					"d.status, " + 
+					"d.driver, " +
+					"case when (d.eolDate < current_date()) then true else false end,  " +
+					"case when (d.eosDate < current_date()) then true else false end, " +
+					"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
+					"d.softwareLevel) " +
+					"p.name as policyName, " +
+					"r.name as ruleName, " +
+					"ccr.checkDate as checkDate, " +
+					"ccr.result as result" +
+					"from Device d" +
+					"join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p " +
+					"where g.id = :id and ccr.result = :nonConforming and d.status = :enabled" + domainFilter + policyFilter,
+						RsLightPolicyRuleDevice.class)
 				.setParameter("id", id)
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
 				.setParameter("enabled", Device.Status.INPRODUCTION);
@@ -5887,10 +5844,7 @@ public class RestService extends Thread {
 			if (policies.size() > 0) {
 				query.setParameterList("policyIds", policies);
 			}
-			@SuppressWarnings("deprecation")
-			List<RsLightPolicyRuleDevice> devices = query
-				.setResultTransformer(Transformers.aliasToBean(RsLightPolicyRuleDevice.class))
-				.list();
+			List<RsLightPolicyRuleDevice> devices = query.list();
 			return devices;
 		}
 		catch (HibernateException e) {
@@ -5927,23 +5881,45 @@ public class RestService extends Thread {
 		Session session = Database.getSession(true);
 		try {
 			if (date == 0) {
-				@SuppressWarnings({ "deprecation", "unchecked" })
 				List<RsLightDevice> devices = session
-					.createQuery(LIGHTDEVICELIST_BASEQUERY + "from Device d where d." + type + "Date is null and d.status = :enabled")
+					.createQuery(
+						"select new RsLightDevice(" +
+						"d.id, " +
+						"d.name, " +
+						"d.family, " + 
+						"d.mgmtAddress, " +
+						"d.status, " + 
+						"d.driver, " +
+						"case when (d.eolDate < current_date()) then true else false end,  " +
+						"case when (d.eosDate < current_date()) then true else false end, " +
+						"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
+						"d.softwareLevel) " +
+						"from Device d where d." + type + "Date is null and d.status = :enabled",
+						RsLightDevice.class)
 					.setParameter("enabled", Device.Status.INPRODUCTION)
 					.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
-					.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
 					.list();
 				return devices;
 			}
 			else {
-				@SuppressWarnings({ "deprecation", "unchecked" })
 				List<RsLightDevice> devices = session
-					.createQuery(LIGHTDEVICELIST_BASEQUERY + "from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled")
+					.createQuery(
+						"select new RsLightDevice(" +
+						"d.id, " +
+						"d.name, " +
+						"d.family, " + 
+						"d.mgmtAddress, " +
+						"d.status, " + 
+						"d.driver, " +
+						"case when (d.eolDate < current_date()) then true else false end,  " +
+						"case when (d.eosDate < current_date()) then true else false end, " +
+						"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
+						"d.softwareLevel) " +
+						"from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled",
+							RsLightDevice.class)
 					.setParameter("eoxDate", eoxDate)
 					.setParameter("enabled", Device.Status.INPRODUCTION)
 					.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
-					.setResultTransformer(Transformers.aliasToBean(RsLightDevice.class))
 					.list();
 				return devices;
 			}
@@ -6087,7 +6063,7 @@ public class RestService extends Thread {
 
 			DeviceGroup group = null;
 			if (rsRule.getGroup() != -1) {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsRule.getGroup());
+				group = session.get(DeviceGroup.class, rsRule.getGroup());
 			}
 
 			String driver = rsRule.getDriver(); 
@@ -6099,7 +6075,7 @@ public class RestService extends Thread {
 					rsRule.getFamily(), rsRule.isFamilyRegExp(), rsRule.getPartNumber(),
 					rsRule.isPartNumberRegExp(), rsRule.getEndOfSale(), rsRule.getEndOfLife());
 
-			session.save(rule);
+			session.persist(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", rule);
 			this.suggestReturnCode(Response.Status.CREATED);
@@ -6147,17 +6123,16 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			HardwareRule rule = (HardwareRule) session.load(HardwareRule.class, id);
-			session.delete(rule);
+			HardwareRule rule = session.get(HardwareRule.class, id);
+			if (rule == null) {
+				log.info("No such hardware rule of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
+			}
+			session.remove(rule);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been deleted", rule);
+			Netshot.aaaLogger.info("Hardware rule of ID {} has been deleted", rule.getId());
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
-		}
-		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
-			log.error("The rule {} to be deleted doesn't exist.", id, e);
-			throw new NetshotBadRequestException("The rule doesn't exist.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -6198,7 +6173,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			HardwareRule rule = (HardwareRule) session.get(HardwareRule.class, id);
+			HardwareRule rule = session.get(HardwareRule.class, id);
 			if (rule == null) {
 				log.error("Unable to find the rule {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this rule.",
@@ -6213,7 +6188,7 @@ public class RestService extends Thread {
 
 			DeviceGroup group = null;
 			if (rsRule.getGroup() != -1) {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsRule.getGroup());
+				group = session.get(DeviceGroup.class, rsRule.getGroup());
 			}
 			rule.setTargetGroup(group);
 
@@ -6224,7 +6199,7 @@ public class RestService extends Thread {
 			rule.setPartNumber(rsRule.getPartNumber());
 			rule.setPartNumberRegExp(rsRule.isPartNumberRegExp());
 
-			session.update(rule);
+			session.merge(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been edited", rule);
 			return rule;
@@ -6382,7 +6357,7 @@ public class RestService extends Thread {
 
 			DeviceGroup group = null;
 			if (rsRule.getGroup() != -1) {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsRule.getGroup());
+				group = session.get(DeviceGroup.class, rsRule.getGroup());
 			}
 			
 			String driver = rsRule.getDriver(); 
@@ -6395,7 +6370,7 @@ public class RestService extends Thread {
 					rsRule.isVersionRegExp(), rsRule.getPartNumber(), rsRule.isPartNumberRegExp(),
 					rsRule.getLevel());
 
-			session.save(rule);
+			session.persist(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", rule);
 			this.suggestReturnCode(Response.Status.CREATED);
@@ -6442,17 +6417,16 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			SoftwareRule rule = (SoftwareRule) session.load(SoftwareRule.class, id);
-			session.delete(rule);
+			SoftwareRule rule = session.get(SoftwareRule.class, id);
+			if (rule == null) {
+				log.info("No such software rule of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
+			}
+			session.remove(rule);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been deleted", rule);
+			Netshot.aaaLogger.info("Software rule of ID {} has been deleted", rule.getId());
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
-		}
-		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
-			log.error("The rule {} to be deleted doesn't exist.", id, e);
-			throw new NetshotBadRequestException("The rule doesn't exist.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_RULE);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -6509,7 +6483,7 @@ public class RestService extends Thread {
 
 			DeviceGroup group = null;
 			if (rsRule.getGroup() != -1) {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsRule.getGroup());
+				group = session.get(DeviceGroup.class, rsRule.getGroup());
 			}
 			rule.setTargetGroup(group);
 
@@ -6521,7 +6495,7 @@ public class RestService extends Thread {
 			rule.setPartNumberRegExp(rsRule.isPartNumberRegExp());
 			rule.setLevel(rsRule.getLevel());
 
-			session.update(rule);
+			session.merge(rule);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been edited", rule);
 		}
@@ -6611,7 +6585,7 @@ public class RestService extends Thread {
 			for (SoftwareRule rule : rules) {
 				priority += 10;
 				rule.setPriority(priority);
-				session.save(rule);
+				session.persist(rule);
 			}
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been sorted (moved before at index {})", targetRule, nextIndex);
@@ -6635,35 +6609,6 @@ public class RestService extends Thread {
 	}
 
 	/**
-	 * The Class RsLightSoftwareLevelDevice.
-	 */
-	@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
-	public static class RsLightSoftwareLevelDevice extends RsLightDevice {
-
-		/** The software level. */
-		private ConformanceLevel softwareLevel;
-
-		/**
-		 * Gets the software level.
-		 *
-		 * @return the software level
-		 */
-		@XmlElement @JsonView(DefaultView.class)
-		public ConformanceLevel getSoftwareLevel() {
-			return softwareLevel;
-		}
-
-		/**
-		 * Sets the software level.
-		 *
-		 * @param level the new software level
-		 */
-		public void setSoftwareLevel(ConformanceLevel level) {
-			this.softwareLevel = level;
-		}
-	}
-
-	/**
 	 * Gets the group devices by software level.
 	 *
 	 * @param id the id
@@ -6682,7 +6627,7 @@ public class RestService extends Thread {
 	)
 	@Tag(name = "Reports", description = "Report and statistics")
 	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
-	public List<RsLightSoftwareLevelDevice> getGroupDevicesBySoftwareLevel(
+	public List<RsLightDevice> getGroupDevicesBySoftwareLevel(
 			@PathParam("id") @Parameter(description = "Group ID") Long id,
 			@PathParam("level") @Parameter(description = "Software compliance level") String level,
 			@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains)
@@ -6703,10 +6648,21 @@ public class RestService extends Thread {
 			if (domains.size() > 0) {
 				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
 			}
-			@SuppressWarnings("unchecked")
-			Query<RsLightSoftwareLevelDevice> query =  session
-				.createQuery(LIGHTDEVICELIST_BASEQUERY + ", d.softwareLevel as softwareLevel "
-						+ "from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled" + domainFilter)
+			Query<RsLightDevice> query =  session
+				.createQuery(
+					"select new RsLightDevice(" +
+					"d.id, " +
+					"d.name, " +
+					"d.family, " + 
+					"d.mgmtAddress, " +
+					"d.status, " + 
+					"d.driver, " +
+					"case when (d.eolDate < current_date()) then true else false end,  " +
+					"case when (d.eosDate < current_date()) then true else false end, " +
+					"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
+					"d.softwareLevel) " +
+					"from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled" + domainFilter,
+						RsLightDevice.class)
 				.setParameter("id", id)
 				.setParameter("level", filterLevel)
 				.setParameter("enabled", Device.Status.INPRODUCTION)
@@ -6714,10 +6670,7 @@ public class RestService extends Thread {
 			if (domains.size() > 0) {
 				query.setParameterList("domainIds", domains);
 			}
-			@SuppressWarnings("deprecation")
-			List<RsLightSoftwareLevelDevice> devices = query
-				.setResultTransformer(Transformers.aliasToBean(RsLightSoftwareLevelDevice.class))
-				.list();
+			List<RsLightDevice> devices = query.list();
 			return devices;
 		}
 		catch (HibernateException e) {
@@ -6734,6 +6687,7 @@ public class RestService extends Thread {
 	 * The Class RsLightSoftwareLevelDevice.
 	 */
 	@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+	@AllArgsConstructor
 	public static class RsLightAccessFailureDevice extends RsLightDevice {
 
 		@Getter(onMethod=@__({
@@ -6783,14 +6737,24 @@ public class RestService extends Thread {
 				domainFilter = "and d.mgmtDomain.id in (:domainIds) ";
 			}
 			
-			@SuppressWarnings("unchecked")
 			Query<RsLightAccessFailureDevice> query = session
-				.createQuery(LIGHTDEVICELIST_BASEQUERY + ", "
-						+ "(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, "
-						+ "(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure "
-						+ "from Device d where d.status = :enabled " + domainFilter
-						+ "and (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) < :when "
-						+ "order by lastSuccess desc")
+				.createQuery("select new RsLightAccessFailureDevice(" +
+						"d.id, " +
+						"d.name, " +
+						"d.family, " + 
+						"d.mgmtAddress, " +
+						"d.status, " + 
+						"d.driver, " +
+						"case when (d.eolDate < current_date()) then true else false end,  " +
+						"case when (d.eosDate < current_date()) then true else false end, " +
+						"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
+						"d.softwareLevel " +
+						"(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, " +
+						"(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure) " +
+					"from Device d where d.status = :enabled " + domainFilter +
+					"and (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) < :when " +
+					"order by lastSuccess desc",
+					RsLightAccessFailureDevice.class)
 				.setParameter("when", when.getTime())
 				.setParameter("success", Task.Status.SUCCESS)
 				.setParameter("failure", Task.Status.FAILURE)
@@ -6800,10 +6764,7 @@ public class RestService extends Thread {
 				query.setParameterList("domainIds", domains);
 			}
 			paginationParams.apply(query);
-			@SuppressWarnings("deprecation")
-			List<RsLightAccessFailureDevice> devices = query
-				.setResultTransformer(Transformers.aliasToBean(RsLightAccessFailureDevice.class))
-				.list();
+			List<RsLightAccessFailureDevice> devices = query.list();
 			return devices;
 		}
 		catch (HibernateException e) {
@@ -6900,7 +6861,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			user = (UiUser) session.bySimpleNaturalId(UiUser.class).load(rsLogin.getUsername());
+			user = session.bySimpleNaturalId(UiUser.class).load(rsLogin.getUsername());
 			if (user == null || !user.getUsername().equals(currentUser.getUsername()) || !user.isLocal()) {
 				throw new NetshotBadRequestException("Invalid user.",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
@@ -6918,7 +6879,7 @@ public class RestService extends Thread {
 			}
 
 			user.setPassword(newPassword);
-			session.save(user);
+			session.persist(user);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.warn("Password successfully changed by user {} for user {}.", currentUser.getUsername(), rsLogin.getUsername());
 			return user;
@@ -6980,7 +6941,7 @@ public class RestService extends Thread {
 
 		Session session = Database.getSession();
 		try {
-			user = (UiUser) session.bySimpleNaturalId(UiUser.class).load(rsLogin.getUsername());
+			user = session.bySimpleNaturalId(UiUser.class).load(rsLogin.getUsername());
 		}
 		catch (HibernateException e) {
 			log.error("Unable to retrieve the user {}.", rsLogin.getUsername(), e);
@@ -7110,7 +7071,9 @@ public class RestService extends Thread {
 
 		/** The password. */
 		@Getter(onMethod=@__({
-			@XmlElement, @JsonView(DefaultView.class)
+			@XmlElement, @JsonView(DefaultView.class),
+			@JsonSerialize(contentUsing = HideSecretSerializer.class),
+			@JsonDeserialize(contentUsing = HideSecretDeserializer.class),
 		}))
 		@Setter
 		private String password;
@@ -7176,7 +7139,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			session.save(user);
+			session.persist(user);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", user);
 			this.suggestReturnCode(Response.Status.CREATED);
@@ -7225,7 +7188,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			UiUser user = (UiUser) session.get(UiUser.class, id);
+			UiUser user = session.get(UiUser.class, id);
 			if (user == null) {
 				log.error("Unable to find the user {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this user.",
@@ -7243,7 +7206,7 @@ public class RestService extends Thread {
 
 			user.setLevel(rsUser.getLevel());
 			if (rsUser.isLocal()) {
-				if (rsUser.getPassword() != null && !rsUser.getPassword().equals("-")) {
+				if (rsUser.getPassword() != null) {
 					user.setPassword(rsUser.getPassword());
 				}
 				if (user.getHashedPassword().equals("")) {
@@ -7256,7 +7219,7 @@ public class RestService extends Thread {
 				user.setPassword("");
 			}
 			user.setLocal(rsUser.isLocal());
-			session.update(user);
+			session.merge(user);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been edited", user);
 			return user;
@@ -7303,17 +7266,16 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			UiUser user = (UiUser) session.load(UiUser.class, id);
-			session.delete(user);
+			UiUser user = session.get(UiUser.class, id);
+			if (user == null) {
+				log.info("No such user of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
+			}
+			session.remove(user);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been deleted", user);
+			Netshot.aaaLogger.info("User {} of ID {} has been deleted", user.getUsername(), user.getId());
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
-		}
-		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
-			log.error("The user doesn't exist.");
-			throw new NetshotBadRequestException("The user doesn't exist.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -7460,7 +7422,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			session.save(apiToken);
+			session.persist(apiToken);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", apiToken);
 			this.suggestReturnCode(Response.Status.CREATED);
@@ -7533,10 +7495,15 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			ApiToken apiToken = (ApiToken) session.load(ApiToken.class, id);
-			session.delete(apiToken);
+			ApiToken apiToken = session.get(ApiToken.class, id);
+			if (apiToken == null) {
+				log.info("No such API token of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
+			}
+			session.remove(apiToken);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been deleted", apiToken);
+			Netshot.aaaLogger.info("API token of ID {} has been deleted", apiToken);
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
@@ -8232,18 +8199,17 @@ public class RestService extends Thread {
 				log.error("Unable to write the resulting file.", e);
 				throw new WebApplicationException(
 						"Unable to write the resulting file.",
-						javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR);
+						jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR);
 			}
 			catch (Exception e) {
 				log.error("Unable to generate the report.", e);
 				throw new WebApplicationException("Unable to generate the report.",
-						javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR);
+						jakarta.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR);
 			}
 			finally {
 				session.close();
 				try {
 					workBook.close();
-					workBook.dispose();
 				}
 				catch (IOException e) {
 					log.warn("Error while closing work book", e);
@@ -8254,7 +8220,7 @@ public class RestService extends Thread {
 		log.warn("Invalid requested file format.");
 		throw new WebApplicationException(
 				"The requested file format is invalid or not supported.",
-				javax.ws.rs.core.Response.Status.BAD_REQUEST);
+				jakarta.ws.rs.core.Response.Status.BAD_REQUEST);
 	}
 	
 	@POST
@@ -8310,7 +8276,7 @@ public class RestService extends Thread {
 			Session session = Database.getSession();
 			try {
 				session.beginTransaction();
-				session.save(rsScript);
+				session.persist(rsScript);
 				session.getTransaction().commit();
 				Netshot.aaaLogger.info("{} has been created", rsScript);
 				this.suggestReturnCode(Response.Status.CREATED);
@@ -8351,10 +8317,15 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			DeviceJsScript script = (DeviceJsScript) session.load(DeviceJsScript.class, id);
-			session.delete(script);
+			DeviceJsScript script = session.getReference(DeviceJsScript.class, id);
+			if (script == null) {
+				log.info("No such script of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
+			}
+			session.remove(script);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been deleted", script);
+			Netshot.aaaLogger.info("Script of ID {} has been deleted", script.getId());
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
@@ -8388,7 +8359,7 @@ public class RestService extends Thread {
 		log.debug("REST request, get script {}", id);
 		Session session = Database.getSession(true);
 		try {
-			DeviceJsScript script = (DeviceJsScript) session.get(DeviceJsScript.class, id);
+			DeviceJsScript script = session.get(DeviceJsScript.class, id);
 			return script;
 		}
 		catch (ObjectNotFoundException e) {
@@ -8612,7 +8583,7 @@ public class RestService extends Thread {
 				log.warn("Unable to find the diagnostic object.");
 				throw new WebApplicationException(
 						"Unable to find the diagnostic",
-						javax.ws.rs.core.Response.Status.NOT_FOUND);
+						jakarta.ws.rs.core.Response.Status.NOT_FOUND);
 			}
 			return diagnostic;
 		}
@@ -8669,7 +8640,7 @@ public class RestService extends Thread {
 			session.beginTransaction();
 			DeviceGroup group = null;
 			if (rsDiagnostic.getTargetGroup() != -1) {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsDiagnostic.getTargetGroup());
+				group = session.get(DeviceGroup.class, rsDiagnostic.getTargetGroup());
 			}
 
 			if ("JavaScriptDiagnostic".equals(rsDiagnostic.getType())) {
@@ -8709,7 +8680,7 @@ public class RestService extends Thread {
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC_TYPE);
 			}
 			
-			session.save(diagnostic);
+			session.persist(diagnostic);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created", diagnostic);
 			this.suggestReturnCode(Response.Status.CREATED);
@@ -8768,7 +8739,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			Diagnostic diagnostic = (Diagnostic) session.get(Diagnostic.class, id);
+			Diagnostic diagnostic = session.get(Diagnostic.class, id);
 			if (diagnostic == null) {
 				log.error("Unable to find the diagnostic {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this diagnostic.",
@@ -8796,19 +8767,19 @@ public class RestService extends Thread {
 			}
 			diagnostic.setName(name);
 			if (diagnostic.getTargetGroup() != null && diagnostic.getTargetGroup().getId() != rsDiagnostic.getTargetGroup()) {
-				session.createQuery("delete DiagnosticResult dr where dr.diagnostic.id = :id")
+				session.createMutationQuery("delete DiagnosticResult dr where dr.diagnostic.id = :id")
 					.setParameter("id", diagnostic.getId())
 					.executeUpdate();
 			}
 			DeviceGroup group = null;
 			if (rsDiagnostic.getTargetGroup() != -1) {
-				group = (DeviceGroup) session.get(DeviceGroup.class, rsDiagnostic.getTargetGroup());
+				group = session.get(DeviceGroup.class, rsDiagnostic.getTargetGroup());
 			}
 			diagnostic.setTargetGroup(group);
 
 			diagnostic.setResultType(resultType);
 			diagnostic.setEnabled(rsDiagnostic.isEnabled());
-			if (diagnostic instanceof JavaScriptDiagnostic) {
+			if (diagnostic instanceof JavaScriptDiagnostic javaScriptDiagnostic) {
 				if (!"JavaScriptDiagnostic".equals(rsDiagnostic.getType())) {
 					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
 							NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
@@ -8818,9 +8789,9 @@ public class RestService extends Thread {
 						"Invalid diagnostic script",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
-				((JavaScriptDiagnostic) diagnostic).setScript(rsDiagnostic.getScript());
+				javaScriptDiagnostic.setScript(rsDiagnostic.getScript());
 			}
-			else if (diagnostic instanceof PythonDiagnostic) {
+			else if (diagnostic instanceof PythonDiagnostic pythonDiagnostic) {
 				if (!"PythonDiagnostic".equals(rsDiagnostic.getType())) {
 					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
 							NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
@@ -8830,9 +8801,9 @@ public class RestService extends Thread {
 						"Invalid diagnostic script",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
-				((PythonDiagnostic) diagnostic).setScript(rsDiagnostic.getScript());
+				pythonDiagnostic.setScript(rsDiagnostic.getScript());
 			}
-			else if (diagnostic instanceof SimpleDiagnostic) {
+			else if (diagnostic instanceof SimpleDiagnostic simpleDiagnostic) {
 				if (!"SimpleDiagnostic".equals(rsDiagnostic.getType())) {
 					throw new NetshotBadRequestException("Incompatible posted diagnostic.",
 							NetshotBadRequestException.Reason.NETSHOT_INCOMPATIBLE_DIAGNOSTIC);
@@ -8845,7 +8816,6 @@ public class RestService extends Thread {
 					throw new NetshotBadRequestException("The command cannot be empty.",
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 				}
-				SimpleDiagnostic simpleDiagnostic = (SimpleDiagnostic) diagnostic;
 				simpleDiagnostic.setDeviceDriver(rsDiagnostic.getDeviceDriver());
 				simpleDiagnostic.setCliMode(rsDiagnostic.getCliMode());
 				simpleDiagnostic.setCommand(rsDiagnostic.getCommand());
@@ -8853,7 +8823,7 @@ public class RestService extends Thread {
 				simpleDiagnostic.setModifierReplacement(rsDiagnostic.getModifierReplacement());
 			}
 
-			session.update(diagnostic);
+			session.merge(diagnostic);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been edited", diagnostic);
 			return diagnostic;
@@ -8911,17 +8881,19 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			Diagnostic diagnostic = (Diagnostic) session.load(Diagnostic.class, id);
+			Diagnostic diagnostic = session.get(Diagnostic.class, id);
+			if (diagnostic == null) {
+				log.info("No such diagnostic of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
+			}
 			// Remove the related results
 			session
-				.createQuery("delete from DiagnosticResult dr where dr.diagnostic = :diagnostic")
+				.createMutationQuery("delete from DiagnosticResult dr where dr.diagnostic = :diagnostic")
 				.setParameter("diagnostic", diagnostic)
 				.executeUpdate();
 			// Remove the diagnostic
-			session
-				.createQuery("delete from Diagnostic d where d = :diagnostic")
-				.setParameter("diagnostic", diagnostic)
-				.executeUpdate();
+			session.remove(diagnostic);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been deleted", diagnostic);
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
@@ -9067,7 +9039,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			session.save(hook);
+			session.persist(hook);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been created.", hook);
 			this.suggestReturnCode(Response.Status.CREATED);
@@ -9111,17 +9083,16 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			Hook hook = session.load(Hook.class, id);
-			session.delete(hook);
+			Hook hook = session.get(Hook.class, id);
+			if (hook == null) {
+				log.info("No such hook of ID {}", id);
+				this.suggestReturnCode(Response.Status.NOT_FOUND);
+				return;
+			}
+			session.remove(hook);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.info("{} has been deleted.", hook);
+			Netshot.aaaLogger.info("Hook of ID {} has been deleted.", hook.getId());
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
-		}
-		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
-			log.error("The hook {} to be deleted doesn't exist.", id, e);
-			throw new NetshotBadRequestException("The hook doesn't exist.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK);
 		}
 		catch (Exception e) {
 			session.getTransaction().rollback();
@@ -9208,7 +9179,7 @@ public class RestService extends Thread {
 					webHook.setUrl(rsWebHook.getUrl());
 					webHook.setSslValidation(rsWebHook.isSslValidation());
 				}
-				session.update(hook);
+				session.merge(hook);
 				session.getTransaction().commit();
 				Netshot.aaaLogger.info("{} has been edited", rsHook);
 				return rsHook;

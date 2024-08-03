@@ -34,23 +34,31 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
-import javax.persistence.Entity;
-import javax.persistence.Transient;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import org.glassfish.jersey.client.ClientConfig;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-import com.fasterxml.jackson.jaxrs.xml.JacksonJaxbXMLProvider;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
+import com.fasterxml.jackson.jakarta.rs.json.JacksonXmlBindJsonProvider;
+import com.fasterxml.jackson.jakarta.rs.xml.JacksonXmlBindXMLProvider;
+import com.fasterxml.jackson.jakarta.rs.yaml.JacksonXmlBindYAMLProvider;
+import com.fasterxml.jackson.jakarta.rs.yaml.YAMLMediaTypes;
 
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import onl.netfishers.netshot.rest.RestViews.HookView;
+import onl.netfishers.netshot.rest.RestViews.RestApiView;
 
 /**
  * A Web hook, called after specific event.
@@ -63,7 +71,7 @@ public class WebHook extends Hook {
 	 * Types of web hook
 	 */
 	static public enum Action {
-		POST_XML, POST_JSON,
+		POST_XML, POST_JSON, POST_YAML,
 	};
 
 	static {
@@ -81,7 +89,7 @@ public class WebHook extends Hook {
 			if (e instanceof KeyStoreException && e.getCause() != null &&
 					"stream does not represent a PKCS12 key store".equals(e.getCause().getMessage())) {
 				log.info("Changing trustStoreType to JKS");
-				System.setProperty("javax.net.ssl.trustStoreType", "JKS");
+				System.setProperty("jakarta.net.ssl.trustStoreType", "JKS");
 			}
 		}
 	}
@@ -179,15 +187,30 @@ public class WebHook extends Hook {
 		switch (this.action) {
 		case POST_JSON:
 			mediaType = MediaType.APPLICATION_JSON_TYPE;
-			JacksonJaxbJsonProvider jsonProvider = new JacksonJaxbJsonProvider();
+			JacksonXmlBindJsonProvider jsonProvider = new JacksonXmlBindJsonProvider();
 			jsonProvider.setDefaultView(HookView.class);
+			jsonProvider.setMapper(JsonMapper.builder()
+				.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
+				.build());
 			config.register(jsonProvider);
 			break;
 		case POST_XML:
 			mediaType = MediaType.APPLICATION_XML_TYPE;
-			JacksonJaxbXMLProvider xmlProvider = new JacksonJaxbXMLProvider();
+			JacksonXmlBindXMLProvider xmlProvider = new JacksonXmlBindXMLProvider();
 			xmlProvider.setDefaultView(HookView.class);
+			xmlProvider.setMapper(XmlMapper.builder()
+				.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
+				.build());
 			config.register(xmlProvider);
+			break;
+		case POST_YAML:
+			mediaType = YAMLMediaTypes.APPLICATION_JACKSON_YAML_TYPE;
+			JacksonXmlBindYAMLProvider yamlProvider = new JacksonXmlBindYAMLProvider();
+			yamlProvider.setDefaultView(RestApiView.class);
+			yamlProvider.setMapper(YAMLMapper.builder()
+				.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
+				.build());
+			config.register(yamlProvider);
 			break;
 		default:
 			throw new Exception("Invalid action");
@@ -211,7 +234,7 @@ public class WebHook extends Hook {
 		clientBuilder.withConfig(config);
 
 		Client client = clientBuilder.build();
-		Response response = client.target(targetUrl.toURI()).request().post(javax.ws.rs.client.Entity.entity(data, mediaType));
+		Response response = client.target(targetUrl.toURI()).request().post(jakarta.ws.rs.client.Entity.entity(data, mediaType));
 
 		return String.format("HTTP response code %d", response.getStatus());
 	}

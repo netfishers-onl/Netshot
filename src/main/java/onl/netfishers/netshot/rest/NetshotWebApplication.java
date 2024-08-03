@@ -8,8 +8,13 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
-
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.fasterxml.jackson.jakarta.rs.json.JacksonXmlBindJsonProvider;
+import com.fasterxml.jackson.jakarta.rs.xml.JacksonXmlBindXMLProvider;
+import com.fasterxml.jackson.jakarta.rs.yaml.JacksonXmlBindYAMLProvider;
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.jaxrs2.integration.resources.AcceptHeaderOpenApiResource;
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
@@ -40,9 +45,30 @@ class NetshotWebApplication extends ResourceConfig {
 		register(LoggerFilter.class);
 		register(ResponseCodeFilter.class);
 		// property(ServerProperties.TRACING, "ALL");
-		JacksonJaxbJsonProvider jacksonProvider = new JacksonJaxbJsonProvider();
-		jacksonProvider.setDefaultView(RestApiView.class);
-		register(jacksonProvider);
+
+		// JSON
+		JacksonXmlBindJsonProvider jsonProvider = new JacksonXmlBindJsonProvider();
+		jsonProvider.setDefaultView(RestApiView.class);
+		jsonProvider.setMapper(JsonMapper.builder()
+			.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
+			.build());
+		register(jsonProvider);
+
+		// XML
+		JacksonXmlBindXMLProvider xmlProvider = new JacksonXmlBindXMLProvider();
+		xmlProvider.setDefaultView(RestApiView.class);
+		xmlProvider.setMapper(XmlMapper.builder()
+			.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
+			.build());
+		register(xmlProvider);
+
+		// YAML
+		JacksonXmlBindYAMLProvider yamlProvider = new JacksonXmlBindYAMLProvider();
+		yamlProvider.setDefaultView(RestApiView.class);
+		yamlProvider.setMapper(YAMLMapper.builder()
+			.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
+			.build());
+		register(yamlProvider);
 
 		// Swagger
 		registerClasses(OpenApiResource.class, AcceptHeaderOpenApiResource.class);
@@ -51,7 +77,7 @@ class NetshotWebApplication extends ResourceConfig {
 			.title("Netshot API")
 			.version("1")
 			.description("Network Infrastructure Configuration and Compliance Management Software")
-			.contact(new Contact().email("contact@netfishers.onl"))
+			.contact(new Contact().email("contact@netshot.net"))
 			.license(new License().name("GPLv3").url("https://www.gnu.org/licenses/gpl-3.0.txt")));
 		oas.servers(Arrays.asList(new Server().url(RestService.HTTP_API_PATH)));
 		oas.components(new Components()

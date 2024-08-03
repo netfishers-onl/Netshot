@@ -69,7 +69,7 @@ public class TaskJob implements Job {
 			}
 			task.setRunning();
 			log.trace("The task runner ID for {} is {}", task.getId(), task.getRunnerId());
-			session.update(task);
+			session.merge(task);
 			session.getTransaction().commit();
 			log.trace("Got the task.");
 			task.prepare();
@@ -106,7 +106,7 @@ public class TaskJob implements Job {
 		session = Database.getSession();
 		try {
 			session.beginTransaction();
-			session.update(task);
+			session.merge(task);
 			session.getTransaction().commit();
 		}
 		catch (Exception e) {
@@ -122,7 +122,7 @@ public class TaskJob implements Job {
 				session.beginTransaction();
 				Task eTask = (Task) session.get(Task.class, id);
 				eTask.setFailed();
-				session.update(eTask);
+				session.merge(eTask);
 				session.getTransaction().commit();
 			}
 			catch (Exception e1) {
@@ -140,10 +140,9 @@ public class TaskJob implements Job {
 		try {
 			task = (Task) session.get(Task.class, id);
 			List<Hook> hooks = session
-				.createQuery("select h from Hook h join h.triggers t where t.type = :postTask and t.item = :taskName and h.enabled = :true", Hook.class)
+				.createQuery("select h from Hook h join h.triggers t where t.type = :postTask and t.item = :taskName and h.enabled", Hook.class)
 				.setParameter("postTask", HookTrigger.TriggerType.POST_TASK)
 				.setParameter("taskName", task.getClass().getSimpleName())
-				.setParameter("true", true)
 				.list();
 
 			for (Hook hook : hooks) {

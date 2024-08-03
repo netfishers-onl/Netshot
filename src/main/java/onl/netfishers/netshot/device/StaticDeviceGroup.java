@@ -18,15 +18,18 @@
  */
 package onl.netfishers.netshot.device;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * A static group of devices.
  * The devices are manually listed.
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 public class StaticDeviceGroup extends DeviceGroup {
 
 	/**

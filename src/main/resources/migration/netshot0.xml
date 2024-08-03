@@ -1176,4 +1176,125 @@
 	<changeSet author="netshot (generated)" id="0.19.4_1">
 		<modifyDataType columnName="text" newDataType="varchar(524288)" tableName="diagnostic_result"/>
 	</changeSet>
+<!-- netshot_0_19_4_to_0_20_0.xml -->
+	<changeSet author="netshot (generated)" id="0.20.0_1">
+		<dropForeignKeyConstraint baseTableName="hook_trigger" constraintName="fkhq4co2gsk1jnrjt9x9b49kvpo"/>
+		<addForeignKeyConstraint baseColumnNames="hook" baseTableName="hook_trigger" constraintName="fkhq4co2gsk1jnrjt9x9b49kvpo" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="web_hook" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_2">
+		<dropForeignKeyConstraint baseTableName="scan_subnets_task" constraintName="FK_lal8j7qfsr8slibjna4ay0aj4"/>
+		<addForeignKeyConstraint baseColumnNames="domain" baseTableName="scan_subnets_task" constraintName="FK_lal8j7qfsr8slibjna4ay0aj4" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="domain" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="discover_device_type_task" constraintName="FK_p811rnilum8v5kxqgt0r61ymk"/>
+		<addForeignKeyConstraint baseColumnNames="domain" baseTableName="discover_device_type_task" constraintName="FK_p811rnilum8v5kxqgt0r61ymk" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="domain" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_3">
+		<dropForeignKeyConstraint baseTableName="scan_subnets_task_subnets" constraintName="FK_6v7ehqqbb51g0fuf614s38t4g"/>
+		<addForeignKeyConstraint baseColumnNames="scan_subnets_task" baseTableName="scan_subnets_task_subnets" constraintName="FK_6v7ehqqbb51g0fuf614s38t4g" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="scan_subnets_task" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_4">
+		<dropForeignKeyConstraint baseTableName="discover_device_type_task_credential_sets" constraintName="FK_pxcvrxuml1idn4v6tfuggcx26"/>
+		<addForeignKeyConstraint baseColumnNames="discover_device_type_task" baseTableName="discover_device_type_task_credential_sets" constraintName="FK_pxcvrxuml1idn4v6tfuggcx26" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="discover_device_type_task" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_5">
+		<dropForeignKeyConstraint baseTableName="run_device_script_task" constraintName="FK_2cy8ij2so3qb8g86mj2muy1qf"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="run_device_script_task" constraintName="FK_2cy8ij2so3qb8g86mj2muy1qf" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="scan_subnets_task" constraintName="FK_39fi2vln5d01prp78pcrp42b2"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="scan_subnets_task" constraintName="FK_39fi2vln5d01prp78pcrp42b2" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="check_group_software_task" constraintName="FK_4h86pvse37dbru1e5g1oyr0ku"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="check_group_software_task" constraintName="FK_4h86pvse37dbru1e5g1oyr0ku" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="run_diagnostics_task" constraintName="FK_6ory0yhqt2axjq20cl2k2ekk3"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="run_diagnostics_task" constraintName="FK_6ory0yhqt2axjq20cl2k2ekk3" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="check_group_compliance_task" constraintName="FK_d0q8cchd7q05kd5k57sk27v5e"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="check_group_compliance_task" constraintName="FK_d0q8cchd7q05kd5k57sk27v5e" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="take_snapshot_task" constraintName="FK_dt375c74natqhpgfcnxddbt2v"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="take_snapshot_task" constraintName="FK_dt375c74natqhpgfcnxddbt2v" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="run_group_diagnostics_task" constraintName="FK_kosxbt62oj8c1jdvatqjpycdg"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="run_group_diagnostics_task" constraintName="FK_kosxbt62oj8c1jdvatqjpycdg" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="take_group_snapshot_task" constraintName="FK_mjatmcp80bgfmi27u9w3iqfhw"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="take_group_snapshot_task" constraintName="FK_mjatmcp80bgfmi27u9w3iqfhw" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="discover_device_type_task" constraintName="FK_nt7n1st5svy4p3aiu8mlyptwp"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="discover_device_type_task" constraintName="FK_nt7n1st5svy4p3aiu8mlyptwp" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="purge_database_task" constraintName="FK_pd1x44t9mx1ylixv3jlq79te3"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="purge_database_task" constraintName="FK_pd1x44t9mx1ylixv3jlq79te3" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="run_device_group_script_task" constraintName="FK_s5jv4rui34kv94rgk7gcxqeco"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="run_device_group_script_task" constraintName="FK_s5jv4rui34kv94rgk7gcxqeco" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="check_compliance_task" constraintName="FK_sh1li78aw9uu0me0bcli9319h"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="check_compliance_task" constraintName="FK_sh1li78aw9uu0me0bcli9319h" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_6">
+		<dropForeignKeyConstraint baseTableName="task" constraintName="FK_kbqvwwy2olpj1jbwxfqhvl97l"/>
+		<addForeignKeyConstraint baseColumnNames="debug_log" baseTableName="task" constraintName="FK_kbqvwwy2olpj1jbwxfqhvl97l" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="debug_log" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_7">
+		<dropForeignKeyConstraint baseTableName="take_snapshot_task" constraintName="FK_8nwgcvkktkgb0ep9jngl0fhkw"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="take_snapshot_task" constraintName="FK_8nwgcvkktkgb0ep9jngl0fhkw" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="run_device_script_task" constraintName="FK_a9huwp5oxt701ovqo18qcfqu8"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="run_device_script_task" constraintName="FK_a9huwp5oxt701ovqo18qcfqu8" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="check_compliance_task" constraintName="FK_mmce331srfb7u1u997bs68d1r"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="check_compliance_task" constraintName="FK_mmce331srfb7u1u997bs68d1r" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="run_diagnostics_task" constraintName="FK_ok7b5sevyhg72d7gtlaey7gy"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="run_diagnostics_task" constraintName="FK_ok7b5sevyhg72d7gtlaey7gy" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="device_group_cached_devices" constraintName="FK_ht328wnxn56rpf0em847y7dhe"/>
+		<addForeignKeyConstraint baseColumnNames="cached_devices" baseTableName="device_group_cached_devices" constraintName="FK_ht328wnxn56rpf0em847y7dhe" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_8">
+		<dropForeignKeyConstraint baseTableName="discover_device_type_task_credential_sets" constraintName="FK_q35kbbuo3pt2ob0lee6lfaaml"/>
+		<addForeignKeyConstraint baseColumnNames="credential_sets" baseTableName="discover_device_type_task_credential_sets" constraintName="FK_q35kbbuo3pt2ob0lee6lfaaml" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_credential_set" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_9">
+		<dropForeignKeyConstraint baseTableName="device_group_cached_devices" constraintName="FK_18wsap0oik79pkeeo5fovicqe"/>
+		<addForeignKeyConstraint baseColumnNames="owner_groups" baseTableName="device_group_cached_devices" constraintName="FK_18wsap0oik79pkeeo5fovicqe" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="check_group_compliance_task" constraintName="FK_1ritpkb4tkbgfj1ohxvnm72k4"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="check_group_compliance_task" constraintName="FK_1ritpkb4tkbgfj1ohxvnm72k4" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="run_group_diagnostics_task" constraintName="FK_5cyfno9wgsuwo6b8fukyicduq"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="run_group_diagnostics_task" constraintName="FK_5cyfno9wgsuwo6b8fukyicduq" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="take_group_snapshot_task" constraintName="FK_chqgqnpukbtthsxxs7l03c50a"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="take_group_snapshot_task" constraintName="FK_chqgqnpukbtthsxxs7l03c50a" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="run_device_group_script_task" constraintName="FK_h8avh8p102nh9utmk7o9t1ob4"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="run_device_group_script_task" constraintName="FK_h8avh8p102nh9utmk7o9t1ob4" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="check_group_software_task" constraintName="FK_qslc3h936kdd8tyrdtjvp11yu"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="check_group_software_task" constraintName="FK_qslc3h936kdd8tyrdtjvp11yu" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="static_device_group" constraintName="FK_he9hhtkye83t4i1py4nq5m5fj"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="static_device_group" constraintName="FK_he9hhtkye83t4i1py4nq5m5fj" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="dynamic_device_group" constraintName="FK_j788a6fp6l7sdr13brudq5ax9"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="dynamic_device_group" constraintName="FK_j788a6fp6l7sdr13brudq5ax9" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_10">
+		<dropForeignKeyConstraint baseTableName="policy_target_groups" constraintName="FK_a1nv7171xijo5i832bg71tit5"/>
+		<addForeignKeyConstraint baseColumnNames="target_groups" baseTableName="policy_target_groups" constraintName="FK_a1nv7171xijo5i832bg71tit5" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="software_rule" constraintName="FK_gb5du9qiiq23ew5ymufci7cbn"/>
+		<addForeignKeyConstraint baseColumnNames="target_group" baseTableName="software_rule" constraintName="FK_gb5du9qiiq23ew5ymufci7cbn" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="diagnostic" constraintName="FK_i0mefqbc97a2gv82qs0qsppgf"/>
+		<addForeignKeyConstraint baseColumnNames="target_group" baseTableName="diagnostic" constraintName="FK_i0mefqbc97a2gv82qs0qsppgf" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="hardware_rule" constraintName="FK_m5vant7ddy2hlhqu414avmwyt"/>
+		<addForeignKeyConstraint baseColumnNames="target_group" baseTableName="hardware_rule" constraintName="FK_m5vant7ddy2hlhqu414avmwyt" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_11">
+		<dropForeignKeyConstraint baseTableName="rule" constraintName="FK_96khaxcxa7rcxlsbv2iiqrdih"/>
+		<addForeignKeyConstraint baseColumnNames="policy" baseTableName="rule" constraintName="FK_96khaxcxa7rcxlsbv2iiqrdih" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="policy" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="policy_target_groups" constraintName="FK_6w08sem0ms71bpc960qp1qtmi"/>
+		<addForeignKeyConstraint baseColumnNames="policy" baseTableName="policy_target_groups" constraintName="FK_6w08sem0ms71bpc960qp1qtmi" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="policy" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="exemption" constraintName="FK_2ri1o576na33d3xt3a83n6xx1"/>
+		<addForeignKeyConstraint baseColumnNames="rule" baseTableName="exemption" constraintName="FK_2ri1o576na33d3xt3a83n6xx1" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="rule" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="check_result" constraintName="FK_45d40f4630st7b6ecf698ap00"/>
+		<addForeignKeyConstraint baseColumnNames="rule" baseTableName="check_result" constraintName="FK_45d40f4630st7b6ecf698ap00" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="rule" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_12">
+		<dropForeignKeyConstraint baseTableName="text_rule" constraintName="FK_etb8vxi7yva4m8hn7wwxcjhxk"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="text_rule" constraintName="FK_etb8vxi7yva4m8hn7wwxcjhxk" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="rule" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="python_rule" constraintName="FK_amzAPZOsdmlPO233SMl13lmm"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="python_rule" constraintName="FK_amzAPZOsdmlPO233SMl13lmm" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="rule" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="java_script_rule" constraintName="FK_qxf28k9n9g16igqsqb9v5o4s"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="java_script_rule" constraintName="FK_qxf28k9n9g16igqsqb9v5o4s" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="rule" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_13">
+		<dropForeignKeyConstraint baseTableName="diagnostic_result" constraintName="FK_7uk0qd9jqlsfb5a2tvxwwhmul"/>
+		<addForeignKeyConstraint baseColumnNames="diagnostic" baseTableName="diagnostic_result" constraintName="FK_7uk0qd9jqlsfb5a2tvxwwhmul" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="simple_diagnostic" constraintName="FK_em9dymou96xtfq7u16k2ac1io"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="simple_diagnostic" constraintName="FK_em9dymou96xtfq7u16k2ac1io" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="java_script_diagnostic" constraintName="FK_fo2to76xu9vb547ivf01h6kqv"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="java_script_diagnostic" constraintName="FK_fo2to76xu9vb547ivf01h6kqv" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="python_diagnostic" constraintName="FK_lkjsIUekzjds23lkjAZlkj123"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="python_diagnostic" constraintName="FK_lkjsIUekzjds23lkjAZlkj123" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true"/>
+	</changeSet>
 </databaseChangeLog>

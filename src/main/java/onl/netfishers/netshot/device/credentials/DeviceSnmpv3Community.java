@@ -18,17 +18,20 @@
  */
 package onl.netfishers.netshot.device.credentials;
 
-import javax.persistence.Entity;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.xml.bind.annotation.XmlElement;
-import org.hibernate.annotations.Type;
+import jakarta.xml.bind.annotation.XmlElement;
 
+import onl.netfishers.netshot.database.StringEncryptorConverter;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 
@@ -42,15 +45,15 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	/** The username. */
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class),
-		@Type(type = "credentialString")
+		@Convert(converter = StringEncryptorConverter.class)
 	}))
 	@Setter
 	private String username;
-		/** The auth type. */
 
+	/** The auth type. */
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class),
-		@Type(type = "credentialString")
+		@Convert(converter = StringEncryptorConverter.class)
 	}))
 	@Setter
 	private String authType;
@@ -58,7 +61,9 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	/** The auth key. */
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class),
-		@Type(type = "credentialString")
+		@JsonSerialize(using = HideSecretSerializer.class),
+		@JsonDeserialize(using = HideSecretDeserializer.class),
+		@Convert(converter = StringEncryptorConverter.class)
 	}))
 	@Setter
 	private String authKey;
@@ -66,7 +71,7 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	/** The priv type. */
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class),
-		@Type(type = "credentialString")
+		@Convert(converter = StringEncryptorConverter.class)
 	}))
 	@Setter
 	private String privType;
@@ -74,7 +79,9 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	/** The priv key. */
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class),
-		@Type(type = "credentialString")
+		@JsonSerialize(using = HideSecretSerializer.class),
+		@JsonDeserialize(using = HideSecretDeserializer.class),
+		@Convert(converter = StringEncryptorConverter.class)
 	}))
 	@Setter
 	private String privKey;
@@ -105,11 +112,6 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 		this.authKey = authKey;
 		this.privType = privType;
 		this.privKey = privKey;
-	}
-
-	public void removeSensitive() {
-		this.authKey = "-";
-		this.privKey = "-";
 	}
 
 	/*

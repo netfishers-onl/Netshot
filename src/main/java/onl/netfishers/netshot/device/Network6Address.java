@@ -18,20 +18,28 @@
  */
 package onl.netfishers.netshot.device;
 
+import java.io.IOException;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
-import javax.persistence.Embeddable;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
 
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
@@ -70,6 +78,21 @@ public class Network6Address extends NetworkAddress {
 		} catch (UnknownHostException e) {
 			return null;
 		}	
+	}
+
+	public static class AddressOnlySerializer extends JsonSerializer<Network6Address> {
+		@Override
+		public void serialize(Network6Address value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+			gen.writeString(value.getIp());
+		}
+	}
+
+	public static class AddressOnlyDeserializer extends JsonDeserializer<Network6Address> {
+		@Override
+		public Network6Address deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JacksonException {
+			String text = p.getText();
+			return new Network6Address(text);
+		}
 	}
 
 	/** The address1. */

@@ -20,11 +20,11 @@ package onl.netfishers.netshot.work.tasks;
 
 import java.util.Map;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -40,19 +40,24 @@ import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.type.SqlTypes;
 import org.quartz.JobKey;
 
 /**
  * This task runs a JS script on a device.
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
 public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 
 	/** The device. */
 	@Getter(onMethod=@__({
-		@ManyToOne(fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY),
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private Device device;
@@ -73,8 +78,8 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 
 	/** Variable values for the script */
 	@Getter(onMethod=@__({
-		@Type(type = "io.hypersistence.utils.hibernate.type.json.JsonType"),
-		@XmlElement, @JsonView(DefaultView.class)
+		@XmlElement, @JsonView(DefaultView.class),
+		@JdbcTypeCode(SqlTypes.JSON)
 	}))
 	@Setter
 	private Map<String, String> userInputValues = null;
@@ -135,7 +140,7 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 			
 			this.info(String.format("Device logs (%d next lines):", cliScript.getJsLog().size()));
 			this.logs.append(cliScript.getPlainJsLog());
-			session.update(device);
+			session.merge(device);
 			session.getTransaction().commit();
 			this.status = Status.SUCCESS;
 		}

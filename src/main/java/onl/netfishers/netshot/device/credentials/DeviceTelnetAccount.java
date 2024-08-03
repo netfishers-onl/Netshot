@@ -18,8 +18,8 @@
  */
 package onl.netfishers.netshot.device.credentials;
 
-import javax.persistence.Entity;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.Entity;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 
 /**

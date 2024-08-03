@@ -18,13 +18,13 @@
  */
 package onl.netfishers.netshot.diagnostic;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import javax.script.ScriptException;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -33,6 +33,8 @@ import lombok.Setter;
 
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.device.DeviceGroup;
@@ -46,6 +48,7 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
  * @author sylvain.cadilhac
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.NONE)
 public class JavaScriptDiagnostic extends Diagnostic {

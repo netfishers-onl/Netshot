@@ -24,9 +24,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -46,12 +46,15 @@ import org.hibernate.query.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 /**
  * This task makes some clean up on the database.
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
 public class PurgeDatabaseTask extends Task {
 
@@ -125,9 +128,9 @@ public class PurgeDatabaseTask extends Task {
 				this.info(String.format("Cleaning up tasks more than %d days ago...", days));
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * days);
-				ScrollableResults tasks = session.createQuery(
+				ScrollableResults<Task> tasks = session.createQuery(
 						"from Task t where (t.status = :cancelled or t.status = :failure "
-								+ "or t.status = :success) and (t.executionDate < :when)")
+								+ "or t.status = :success) and (t.executionDate < :when)", Task.class)
 					.setParameter("cancelled", Task.Status.CANCELLED)
 					.setParameter("failure", Task.Status.FAILURE)
 					.setParameter("success", Task.Status.SUCCESS)
@@ -136,8 +139,8 @@ public class PurgeDatabaseTask extends Task {
 					.scroll(ScrollMode.FORWARD_ONLY);
 				int count = 0;
 				while (tasks.next()) {
-					Task task = (Task) tasks.get(0);
-					session.delete(task);
+					Task task = (Task) tasks.get();
+					session.remove(task);
 					if (++count % 50 == 0) {
 						session.flush();
 						session.clear();
@@ -197,7 +200,7 @@ public class PurgeDatabaseTask extends Task {
 					query = session
 						.createQuery("from Config c where (c.changeDate < :when) order by c.device asc, c.changeDate desc", Config.class);
 				}
-				ScrollableResults configs = query
+				ScrollableResults<Config> configs = query
 					.setParameter("when", when.getTime())
 					.setCacheMode(CacheMode.IGNORE)
 					.scroll(ScrollMode.FORWARD_ONLY);
@@ -207,7 +210,7 @@ public class PurgeDatabaseTask extends Task {
 				List<File> toDeleteFiles = new ArrayList<File>();
 				while (configs.next()) {
 					try {
-						Config config = (Config) configs.get(0);
+						Config config = configs.get();
 						if ((config.getDevice().getLastConfig() != null && config.getDevice().getLastConfig().getId() == config.getId()) ||
 								(dontDeleteBefore != null && config.getChangeDate().before(dontDeleteBefore)) ||
 								(configKeepDays > 0 && dontDeleteDevice != config.getDevice().getId())) {
@@ -224,7 +227,7 @@ public class PurgeDatabaseTask extends Task {
 									toDeleteFiles.add(((ConfigBinaryFileAttribute) attribute).getFileName());
 								}
 							}
-							session.delete(config);
+							session.remove(config);
 							if (++count % 30 == 0) {
 								session.flush();
 								session.clear();
@@ -289,8 +292,7 @@ public class PurgeDatabaseTask extends Task {
 				when.add(Calendar.DATE, -1 * configDays);
 
 				int count = session
-					.createQuery("delete from Module m where m.removed = :true and m.lastSeenDate <= :when")
-					.setParameter("true", true)
+					.createMutationQuery("delete from Module m where m.removed and m.lastSeenDate <= :when")
 					.setParameter("when", when.getTime())
 					.executeUpdate();
 

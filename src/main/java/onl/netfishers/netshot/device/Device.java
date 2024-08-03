@@ -25,30 +25,30 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.Transient;
-import javax.persistence.Version;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Transient;
+import jakarta.persistence.Version;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -56,7 +56,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.Where;
+import org.hibernate.annotations.SQLRestriction;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -352,7 +352,7 @@ public class Device {
 	/** The modules. */
 	@Getter(onMethod=@__({
 		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL),
-		@Where(clause = "removed is not true"),
+		@SQLRestriction("removed is not true"),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
@@ -383,7 +383,8 @@ public class Device {
 	/** The owner groups. */
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(RestApiView.class),
-		@ManyToMany(mappedBy = "cachedDevices")
+		@ManyToMany(mappedBy = "cachedDevices"),
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	protected Set<DeviceGroup> ownerGroups = new HashSet<>();
@@ -591,13 +592,13 @@ public class Device {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Transient
 	public List<DeviceCredentialSet> getAutoCredentialSetList(Session session) throws HibernateException {
 		return session
-			.createQuery("from DeviceCredentialSet cs where (cs.mgmtDomain = :domain or cs.mgmtDomain is null) and (not (cs.deviceSpecific = :true))")
+			.createQuery(
+				"from DeviceCredentialSet cs where (cs.mgmtDomain = :domain or cs.mgmtDomain is null) and (not (cs.deviceSpecific))",
+				DeviceCredentialSet.class)
 			.setParameter("domain", this.getMgmtDomain())
-			.setParameter("true", true)
 			.list();
 	}
 

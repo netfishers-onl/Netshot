@@ -473,6 +473,7 @@ public class Netshot extends Thread {
 		final String vendorVersion = System.getProperty("java.vendor.version"); // e.g. Oracle GraalVM 17.0.8+9.1
 		final String vendor = System.getProperty("java.vendor"); // e.g. Oracle Corporation
 		final String version = System.getProperty("java.vm.version"); // e.g. 11.0.10+8-jvmci-21.0-b06
+		log.warn("Running on JVM: {}", vendorVersion);
 		if (!vendorVersion.matches(".*GraalVM.*")) {
 			log.error("The current JVM vendor version '{}' by '{}' doesn't look like GraalVM, Netshot might not work properly.", vendorVersion, vendor);
 		}

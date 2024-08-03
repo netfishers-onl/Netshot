@@ -3,16 +3,16 @@ package onl.netfishers.netshot.rest;
 import java.io.IOException;
 import java.security.Principal;
 
-import javax.annotation.Priority;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.Priorities;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.PreMatching;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
+import jakarta.annotation.Priority;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.Priorities;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.container.ContainerRequestFilter;
+import jakarta.ws.rs.container.PreMatching;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.SecurityContext;
+import jakarta.ws.rs.core.UriInfo;
 
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.aaa.User;
@@ -27,7 +27,7 @@ import onl.netfishers.netshot.aaa.User;
 	private HttpServletRequest httpRequest;
 
 	@Inject
-	javax.inject.Provider<UriInfo> uriInfo;
+	jakarta.inject.Provider<UriInfo> uriInfo;
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {

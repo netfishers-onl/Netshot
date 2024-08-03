@@ -18,12 +18,12 @@
  */
 package onl.netfishers.netshot.diagnostic;
 
-import javax.persistence.Entity;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -32,6 +32,8 @@ import lombok.Setter;
 
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.graalvm.polyglot.HostAccess.Export;
 
 import onl.netfishers.netshot.device.Device;
@@ -47,6 +49,7 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
  * @author sylvain.cadilhac
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.NONE)
 public class SimpleDiagnostic extends Diagnostic {

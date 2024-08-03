@@ -22,11 +22,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -49,12 +49,15 @@ import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 /**
  * This task takes a snapshot of a device.
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
 public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 
@@ -125,6 +128,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	/** The device. */
 	@Getter(onMethod=@__({
 		@ManyToOne(fetch = FetchType.LAZY),
+		@OnDelete(action = OnDeleteAction.CASCADE),
 		@XmlElement, @JsonView(HookView.class)
 	}))
 	@Setter
@@ -217,7 +221,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 			
 			cliScript.connectRun(session, device);
 			this.logs.append(cliScript.getPlainJsLog());
-			session.save(device);
+			session.persist(device);
 			session.getTransaction().commit();
 			this.status = Status.SUCCESS;
 		}
@@ -314,15 +318,19 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		Session session = Database.getSession();
 		try {
 			log.trace("Retrieving the device.");
-			device = (Device) session.createQuery("select d from Device d where d.status = :inprod and d.mgmtAddress.address = :ip")
+			device = session.createQuery(
+						"select d from Device d where d.status = :inprod and d.mgmtAddress.address = :ip",
+						Device.class)
 					.setParameter("inprod", Device.Status.INPRODUCTION)
 					.setParameter("ip", address.getAddress())
 					.uniqueResult();
 			if (device == null && AUTOSNAPSHOT_ANYIP) {
 				log.warn("No device with such management IP {} in the database. Looking for this address in the interface table.",
 						address.getIp());
-				device = (Device) session
-						.createQuery("select d from Device d join d.networkInterfaces ni join ni.ip4Addresses a where d.status = :inprod and a.address = :ip")
+				device = session
+						.createQuery(
+							"select d from Device d join d.networkInterfaces ni join ni.ip4Addresses a where d.status = :inprod and a.address = :ip",
+							Device.class)
 						.setParameter("inprod", Device.Status.INPRODUCTION)
 						.setParameter("ip", address.getAddress())
 						.uniqueResult();

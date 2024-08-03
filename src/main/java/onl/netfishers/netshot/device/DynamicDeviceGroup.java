@@ -20,10 +20,10 @@ package onl.netfishers.netshot.device;
 
 import java.util.List;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -37,11 +37,14 @@ import onl.netfishers.netshot.rest.RestViews.DefaultView;
 import org.hibernate.HibernateException;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * A dynamic group of devices is defined by search criteria.
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
 public class DynamicDeviceGroup extends DeviceGroup {
 
@@ -58,7 +61,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private String query = "[Name] IS \"Example\"";
+	private String query = "[Name] IS \"example\"";
 
 	/**
 	 * Instantiates a new dynamic device group.
@@ -172,7 +175,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 			for (DynamicDeviceGroup group : groups) {
 				try {
 					group.refreshCache(session, device);
-					session.update(group);
+					session.merge(group);
 				}
 				catch (FinderParseException e) {
 					log.error("Parse error while updating the group {}.", group.getId(), e);

@@ -18,16 +18,16 @@
  */
 package onl.netfishers.netshot.device.credentials;
 
-import javax.persistence.Entity;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
 import lombok.Getter;
 import lombok.Setter;
 
-import org.hibernate.annotations.Type;
-
+import onl.netfishers.netshot.database.StringEncryptorConverter;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 
@@ -40,7 +40,7 @@ public abstract class DeviceSnmpCommunity extends DeviceCredentialSet {
 	/** The community. */
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class),
-		@Type(type = "credentialString")
+		@Convert(converter = StringEncryptorConverter.class)
 	}))
 	@Setter
 	private String community;

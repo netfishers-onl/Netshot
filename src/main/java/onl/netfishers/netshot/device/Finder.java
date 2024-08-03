@@ -886,7 +886,7 @@ public class Finder {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			if (TokenType.MATCHES.equals(sign)) {
 				criteria.where = String.format(
-						"((regexp_like(m.serialNumber, :%s) = 1 or regexp_like(m.partNumber, :%s) = 1) and m.removed is not true)", itemPrefix,
+						"((regexp_like(m.serialNumber, :%s) or regexp_like(m.partNumber, :%s)) and m.removed is not true)", itemPrefix,
 						itemPrefix);
 			}
 			else if (TokenType.CONTAINSNOCASE.equals(sign)) {
@@ -1009,7 +1009,7 @@ public class Finder {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			if (TokenType.MATCHES.equals(sign)) {
 				criteria.where = String.format(
-						"(regexp_like(ni.interfaceName, :%s) = 1 or regexp_like(ni.description, :%s) = 1)", itemPrefix,
+						"(regexp_like(ni.interfaceName, :%s) or regexp_like(ni.description, :%s))", itemPrefix,
 						itemPrefix);
 			}
 			else if (TokenType.CONTAINSNOCASE.equals(sign)) {
@@ -1744,12 +1744,12 @@ public class Finder {
 			if ("matches".equals(operator)) {
 				if (propertyLevel.nativeProperty) {
 					return "regexp_like(" + preModifier + propertyLevel.prefix + property + postModifier + ", :"
-						+ itemPrefix + ") = 1";
+						+ itemPrefix + ")";
 				}
 				else {
 					return "regexp_like(" + preModifier + itemPrefix + "_"
 						+ propertyLevel.prefix + property + postModifier + ", :"
-						+ itemPrefix + ") = 1";
+						+ itemPrefix + ")";
 				}
 			}
 			if (propertyLevel.nativeProperty) {
@@ -2848,7 +2848,7 @@ public class Finder {
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			if (TokenType.MATCHES.equals(sign)) {
-				criteria.where = String.format("(regexp_like(v, :%s) = 1)", itemPrefix);
+				criteria.where = String.format("(regexp_like(v, :%s))", itemPrefix);
 			}
 			else if (TokenType.CONTAINSNOCASE.equals(sign)) {
 				criteria.where = String.format("(lower(v) like :%s)", itemPrefix);
@@ -2960,7 +2960,7 @@ public class Finder {
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			if (TokenType.MATCHES.equals(sign)) {
-				criteria.where = String.format("(regexp_like(v, :%s) = 1 or regexp_like(d.name, :%s) = 1)", itemPrefix, itemPrefix);
+				criteria.where = String.format("(regexp_like(v, :%s) or regexp_like(d.name, :%s))", itemPrefix, itemPrefix);
 			}
 			else if (TokenType.CONTAINSNOCASE.equals(sign)) {
 				criteria.where = String.format("(lower(v) like :%s) or (lower(d.name) like :%s)", itemPrefix, itemPrefix);

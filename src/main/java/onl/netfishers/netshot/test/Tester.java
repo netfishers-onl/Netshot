@@ -48,12 +48,12 @@ public class Tester {
 		session.beginTransaction();
 		try {
 			Domain domain = new Domain("Fake", "Fake domain", new Network4Address("10.0.16.1"), null);
-			session.save(domain);
+			session.persist(domain);
 			DeviceCredentialSet snmp = new DeviceSnmpv2cCommunity("test", "Fake SNMP");
 			DeviceCredentialSet snmp = new DeviceSnmpv3Community("test", "Fake SNMP", "fakeuser", "MD5", "authkey-test", "DES", "privkey-test");
 			DeviceCredentialSet ssh = new DeviceSshAccount("test", "test", "test", "Fake SSH");
-			session.save(snmp);
-			session.save(ssh);
+			session.persist(snmp);
+			session.persist(ssh);
 
 			for (int d = 1; d < 100; d++) {
 				Network4Address deviceAddress = new Network4Address(
@@ -82,7 +82,7 @@ public class Tester {
 				NetworkInterface loopback = new NetworkInterface(device, String.format("Loopback0"), "", "", true, true, "Management");
 				loopback.addIpAddress(deviceAddress);
 				device.getNetworkInterfaces().add(loopback);
-				session.save(device);
+				session.persist(device);
 			}
 			session.getTransaction().commit();
 		}
@@ -97,13 +97,13 @@ public class Tester {
 		try {
 			Domain domain = new Domain("Default", "Default Domain",
 			    new Network4Address("10.0.16.1"), null);
-			session.save(domain);
+			session.persist(domain);
 			DeviceCredentialSet snmp = new DeviceSnmpv2cCommunity("public",
 			    "Default SNMP");
 			DeviceCredentialSet telnet = new DeviceTelnetAccount("cisco", "cisco",
 			    "cisco", "Default Telnet");
-			session.save(snmp);
-			session.save(telnet);
+			session.persist(snmp);
+			session.persist(telnet);
 
 			for (int i = 2000; i < 8000; i++) {
 				Network4Address deviceAddress = new Network4Address(
@@ -156,7 +156,7 @@ public class Tester {
 				modules.add(module);
 
 				device.setModules(modules);
-				session.save(device);
+				session.persist(device);
 				if (i % 10 == 9) {
 					logger.warn(String.format("Device %05d", i));
 				}
@@ -175,7 +175,7 @@ public class Tester {
 			for (int i = 1000; i < 1050; i++) {
 				Session session = Database.getSession();
 				session.beginTransaction();
-				Domain domain = (Domain) session.load(Domain.class, 1L);
+				Domain domain = session.getReference(Domain.class, 1L);
 				Network4Address deviceAddress = new Network4Address(
 				    Network4Address.intToIP((10 << 24) + (16 << 16) + i), 32);
 				Device device = new Device("CiscoIOS12", deviceAddress, domain, "Tester");
@@ -238,7 +238,7 @@ public class Tester {
 				modules.add(module);
 
 				device.setModules(modules);
-				session.save(device);
+				session.persist(device);
 				session.getTransaction().commit();
 			}
 		}

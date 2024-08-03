@@ -1435,7 +1435,7 @@ input.spinner {
 
 #nscompliance-ruletestlogs {
 	max-height: 400px;
-	width: 100%;
+	overflow-x: auto;
 }
 
 #nscompliance-editruleform #devicesearch {

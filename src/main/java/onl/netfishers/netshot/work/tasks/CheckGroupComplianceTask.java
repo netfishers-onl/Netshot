@@ -20,11 +20,11 @@ package onl.netfishers.netshot.work.tasks;
 
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -44,18 +44,22 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 /**
  * This task checks the configuration compliance status of a group of devices.
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
 public class CheckGroupComplianceTask extends Task implements GroupBasedTask {
 
 	/** The device group. */
 	@Getter(onMethod=@__({
-		@ManyToOne(fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY),
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private DeviceGroup deviceGroup;
@@ -124,22 +128,26 @@ public class CheckGroupComplianceTask extends Task implements GroupBasedTask {
 
 			session.beginTransaction();
 			session
-				.createQuery("delete from CheckResult c where c.key.device.id in (select d.id as id from DeviceGroup g1 join g1.cachedDevices d where g1.id = :id)")
+				.createMutationQuery(
+					"delete from CheckResult c where c.key.device.id in (select d.id as id from DeviceGroup g1 join g1.cachedDevices d where g1.id = :id)")
 				.setParameter("id", deviceGroup.getId())
 				.executeUpdate();
 			for (Policy policy : policies) {
 				// Get devices which are part of the target group and which are in a group which the policy is applied to
-				ScrollableResults devices = session
-						.createQuery("select d from Device d where d in (select d1 from DeviceGroup g join g.cachedDevices d1 where g.id = :groupId) and d in (select d1 from Policy p join p.targetGroups g1 join g1.cachedDevices d1 where p.id = :policyId)")
+				ScrollableResults<Device> devices = session
+						.createQuery(
+							"select d from Device d where d in (select d1 from DeviceGroup g join g.cachedDevices d1 " +
+								"where g.id = :groupId) and d in (select d1 from Policy p join p.targetGroups g1 join g1.cachedDevices d1 where p.id = :policyId)",
+							Device.class)
 						.setParameter("groupId", deviceGroup.getId())
 						.setParameter("policyId", policy.getId())
 						.setCacheMode(CacheMode.IGNORE)
 						.scroll(ScrollMode.FORWARD_ONLY);
 				while (devices.next()) {
-					Device device = (Device) devices.get(0);
+					Device device = devices.get();
 					taskLogger.info(String.format("Checking configuration compliance of device %s (%d)", device.getName(), device.getId()));
 					policy.check(device, session, taskLogger);
-					session.save(device);
+					session.persist(device);
 					session.flush();
 					session.evict(device);
 				}

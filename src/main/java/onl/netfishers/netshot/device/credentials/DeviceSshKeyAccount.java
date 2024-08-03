@@ -18,18 +18,18 @@
  */
 package onl.netfishers.netshot.device.credentials;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
 import lombok.Getter;
 import lombok.Setter;
 
-import org.hibernate.annotations.Type;
-
+import onl.netfishers.netshot.database.StringEncryptorConverter;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 /**
@@ -52,7 +52,7 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@Column(length = 5000),
-		@Type(type = "credentialString")
+		@Convert(converter = StringEncryptorConverter.class)
 	}))
 	@Setter
 	private String privateKey;

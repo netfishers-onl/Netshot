@@ -460,16 +460,16 @@ public class JsDeviceHelper {
 	 * @throws HibernateException the hibernate exception
 	 */
 	private Device loadDevice(long id) throws HibernateException {
-		Device device = (Device) session
-				.createQuery("from Device d join fetch d.lastConfig where d.id = :id")
+		Device device = session
+				.createQuery("from Device d join fetch d.lastConfig where d.id = :id", Device.class)
 				.setParameter("id", id)
 				.uniqueResult();
 		return device;
 	}
 
 	private Device loadDevice(String name) throws HibernateException {
-		Device device = (Device) session
-				.createQuery("from Device d join fetch d.lastConfig where d.name = :name")
+		Device device = session
+				.createQuery("from Device d join fetch d.lastConfig where d.name = :name", Device.class)
 				.setParameter("name", name)
 				.uniqueResult();
 		return device;

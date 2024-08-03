@@ -29,13 +29,15 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 import javax.sql.DataSource;
 
 import com.mchange.v2.c3p0.C3P0Registry;
@@ -94,7 +96,6 @@ import onl.netfishers.netshot.work.tasks.DeviceJsScript;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
@@ -104,8 +105,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.service.ServiceRegistry;
-import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
-import org.jasypt.hibernate5.encryptor.HibernatePBEEncryptorRegistry;
 import org.slf4j.MarkerFactory;
 
 import liquibase.UpdateSummaryOutputEnum;
@@ -128,11 +127,6 @@ public class Database {
 
 	/** The service registry. */
 	private static ServiceRegistry serviceRegistry;
-
-	/** Read-only tenant name */
-	public static final String DATASOURCE_TENANT_READONLY = "Read";
-	/** Read-write tenant name  */
-	public static final String DATASOURCE_TENANT_READWRITE = "Write";
 
 	/**
 	 * List classes in a given package.
@@ -251,29 +245,20 @@ public class Database {
 			final CustomConnectionProvider connectionProvider = new CustomConnectionProvider();
 
 
-			final Properties connectionProviderProperties = new Properties();
-			connectionProviderProperties.setProperty(AvailableSettings.DRIVER, getDriverClass());
-			connectionProviderProperties.setProperty(AvailableSettings.USER, getUsername());
-			connectionProviderProperties.setProperty(AvailableSettings.PASS, getPassword());
-			connectionProviderProperties.setProperty("hibernate.c3p0.min_size", "5");
-			connectionProviderProperties.setProperty("hibernate.c3p0.max_size", "30");
-			connectionProviderProperties.setProperty("hibernate.c3p0.timeout", "1800");
-			connectionProviderProperties.setProperty("hibernate.c3p0.max_statements", "50");
-			connectionProviderProperties.setProperty("hibernate.c3p0.unreturnedConnectionTimeout", "1800");
-			connectionProviderProperties.setProperty("hibernate.c3p0.debugUnreturnedConnectionStackTraces", "true");
+			final Map<String, Object> connectionProviderProperties = new HashMap<>();
+			connectionProviderProperties.put("hibernate.connection.driver_class", getDriverClass());
+			connectionProviderProperties.put("hibernate.connection.username", getUsername());
+			connectionProviderProperties.put("hibernate.connection.password", getPassword());
 
-			connectionProviderProperties.setProperty(AvailableSettings.URL, getUrl());
-			connectionProviderProperties.setProperty("hibernate.c3p0.dataSourceName", DATASOURCE_TENANT_READWRITE);
-			connectionProvider.registerConnectionProvider(DATASOURCE_TENANT_READWRITE, connectionProviderProperties, true);
+			connectionProviderProperties.put(AvailableSettings.JAKARTA_JDBC_URL, getUrl());
+			connectionProvider.registerConnectionProvider(TenantIdentifier.READ_WRITE, connectionProviderProperties, true);
 
 			String readDbUrl = getReadUrl();
 			if (readDbUrl != null) {
-				connectionProviderProperties.setProperty(AvailableSettings.URL, readDbUrl);
-				connectionProviderProperties.setProperty("hibernate.c3p0.dataSourceName", DATASOURCE_TENANT_READONLY);
-				connectionProvider.registerConnectionProvider(DATASOURCE_TENANT_READONLY, connectionProviderProperties, true);
+				connectionProviderProperties.put(AvailableSettings.JAKARTA_JDBC_URL, readDbUrl);
+				connectionProvider.registerConnectionProvider(TenantIdentifier.READ_ONLY, connectionProviderProperties, true);
 			}
 
-			serviceProperties.put(AvailableSettings.MULTI_TENANT, MultiTenancyStrategy.DATABASE.name());
 			serviceProperties.put(AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER, connectionProvider);
 			if ("org.postgresql.Driver".equals(getDriverClass())) {
 				serviceProperties.setProperty(AvailableSettings.DIALECT, "onl.netfishers.netshot.database.CustomPostgreSQLDialect");
@@ -357,16 +342,6 @@ public class Database {
 				.applyPhysicalNamingStrategy(new ImprovedPhysicalNamingStrategy())
 				.build();
 
-
-			StandardPBEStringEncryptor credentialEncryptor = new StandardPBEStringEncryptor();
-			String cryptPassword = Netshot.getConfig("netshot.db.encryptionpassword", null);
-			if (cryptPassword == null) {
-				cryptPassword = Netshot.getConfig("netshot.db.encryptionPassword", "NETSHOT"); // Historical reasons
-			}
-			credentialEncryptor.setPassword(cryptPassword);
-			HibernatePBEEncryptorRegistry encryptorRegistry = HibernatePBEEncryptorRegistry.getInstance();
-			encryptorRegistry.registerPBEStringEncryptor("credentialEncryptor", credentialEncryptor);
-
 			SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
 			sessionFactoryBuilder.applyInterceptor(new DatabaseInterceptor());
 			sessionFactory = sessionFactoryBuilder.build();
@@ -442,7 +417,7 @@ public class Database {
 	 */
 	public static Session getSession(boolean readOnly) throws HibernateException {
 		return sessionFactory.withOptions().tenantIdentifier(
-			readOnly ? Database.DATASOURCE_TENANT_READONLY : Database.DATASOURCE_TENANT_READWRITE).openSession();
+			readOnly ? TenantIdentifier.READ_ONLY : TenantIdentifier.READ_WRITE).openSession();
 	}
 
 	/**
@@ -452,7 +427,7 @@ public class Database {
 	 * @throws SQLException
 	 */
 	public static Connection getConnection() throws SQLException {
-		final DataSource dataSource = C3P0Registry.pooledDataSourceByName(Database.DATASOURCE_TENANT_READWRITE);
+		final DataSource dataSource = C3P0Registry.pooledDataSourceByName(TenantIdentifier.READ_WRITE.getSourceName());
 		return dataSource.getConnection();
 	}
 

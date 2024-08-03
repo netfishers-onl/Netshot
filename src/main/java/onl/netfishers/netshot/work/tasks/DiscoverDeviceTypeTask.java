@@ -23,16 +23,16 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.AttributeOverride;
-import javax.persistence.AttributeOverrides;
-import javax.persistence.Column;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -61,19 +61,23 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 /**
  * This task discovers the type of the given device.
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
 public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, DomainBasedTask {
 
 	/** The credential sets. */
 	@Getter(onMethod=@__({
 		@ManyToMany,
-		@Fetch(FetchMode.SELECT)
+		@Fetch(FetchMode.SELECT),
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private Set<DeviceCredentialSet> credentialSets = new HashSet<DeviceCredentialSet>();
@@ -103,7 +107,8 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 
 	/** The domain. */
 	@Getter(onMethod=@__({
-		@ManyToOne(fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY),
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private Domain domain;
@@ -327,10 +332,10 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 				session.beginTransaction();
 				device = new Device(this.discoveredDeviceType, deviceAddress, domain, this.author);
 				device.addCredentialSet(successCredentialSet);
-				session.save(device);
+				session.persist(device);
 				snapshotTask = new TakeSnapshotTask(device,
 						"Automatic snapshot after discovery", author, true, false, false);
-				session.save(snapshotTask);
+				session.persist(snapshotTask);
 				session.getTransaction().commit();
 				this.snapshotTaskId = snapshotTask.getId();
 			}

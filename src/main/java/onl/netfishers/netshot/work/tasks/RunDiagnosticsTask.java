@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
-import javax.xml.bind.annotation.XmlElement;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 import onl.netfishers.netshot.database.Database;
@@ -35,6 +37,7 @@ import onl.netfishers.netshot.work.Task;
  * This task runs the diagnostics (if any is defined) on the specified device.
  */
 @Entity
+@OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
 public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 
@@ -62,7 +65,8 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 
 	/** The device. */
 	@Getter(onMethod=@__({
-		@ManyToOne(fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY),
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private Device device;
@@ -158,9 +162,9 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 				return;
 			}
 
-			@SuppressWarnings("unchecked")
 			List<Diagnostic> diagnostics = session.createQuery(
-				"select distinct dg from Diagnostic dg where dg.enabled = :enabled and dg.targetGroup in (select g from Device d join d.ownerGroups g where d = :device)")
+				"select distinct dg from Diagnostic dg where dg.enabled = :enabled and dg.targetGroup in (select g from Device d join d.ownerGroups g where d = :device)",
+					Diagnostic.class)
 				.setParameter("device", device)
 				.setParameter("enabled", true)
 				.list();
@@ -168,7 +172,7 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 				cliScript = new RunDiagnosticCliScript(diagnostics, this.debugEnabled);
 				cliScript.connectRun(session, device);
 				this.logs.append(cliScript.getPlainJsLog());
-				session.update(device);
+				session.merge(device);
 				session.getTransaction().commit();
 			}
 			this.status = Status.SUCCESS;

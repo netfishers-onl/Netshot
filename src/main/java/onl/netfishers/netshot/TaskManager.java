@@ -167,7 +167,7 @@ public class TaskManager {
 			for (Task task : tasks) {
 				task.onSchedule();
 				task.setScheduled();
-				session.saveOrUpdate(task);
+				session.persist(task);
 				try {
 					addTaskToScheduler(task, false, true, false);
 				}
@@ -247,7 +247,7 @@ public class TaskManager {
 			task.onCancel();
 			task.setCancelled();
 			task.warn(reason);
-			session.saveOrUpdate(task);
+			session.persist(task);
 			session.getTransaction().commit();
 			log.trace("Task successfully cancelled.");
 		}
@@ -308,7 +308,7 @@ public class TaskManager {
 			session.beginTransaction();
 			task.onSchedule();
 			task.setScheduled();
-			session.saveOrUpdate(task);
+			session.persist(task);
 			session.getTransaction().commit();
 			session.evict(task);
 			log.trace("Task successfully added to the database.");
@@ -336,7 +336,7 @@ public class TaskManager {
 			session.beginTransaction();
 			task.onSchedule();
 			task.setScheduled();
-			session.saveOrUpdate(task);
+			session.persist(task);
 			session.getTransaction().commit();
 			session.evict(task);
 			log.trace("Task successfully added to the database.");
@@ -363,7 +363,7 @@ public class TaskManager {
 		try {
 			session.beginTransaction();
 			task.setStatus(Status.NEW);
-			session.saveOrUpdate(task);
+			session.persist(task);
 			session.getTransaction().commit();
 			session.evict(task);
 			log.trace("Task successfully added to the database.");
@@ -498,7 +498,7 @@ public class TaskManager {
 					log.debug("Task {} will be reassigned as its previously assigned runner {} has disappeared.",
 						task.getId(), task.getRunnerId());
 					assignTaskRunner(task);
-					session.saveOrUpdate(task);
+					session.persist(task);
 					reassignedCount += 1;
 				}
 				session.getTransaction().commit();

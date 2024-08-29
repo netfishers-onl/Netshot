@@ -35,7 +35,7 @@ import onl.netfishers.netshot.rest.RestViews.RestApiView;
 /**
  * Netshot Web application definition.
  */
-class NetshotWebApplication extends ResourceConfig {
+public class NetshotWebApplication extends ResourceConfig {
 	public NetshotWebApplication() {
 		registerClasses(RestService.class, SecurityFilter.class, ApiTokenAuthFilter.class);
 		register(NetshotExceptionMapper.class);

@@ -9,7 +9,7 @@ import onl.netfishers.netshot.rest.RestService.RsErrorBean;
  * The NetshotBadRequestException class, a WebApplication exception
  * embedding an error message, and HTTP status code, to be sent to the REST client.
  */
-class NetshotBadRequestException extends WebApplicationException {
+public class NetshotBadRequestException extends WebApplicationException {
 
 	static public enum Reason {
 		NETSHOT_INVALID_REQUEST_PARAMETER(10, Response.Status.BAD_REQUEST),

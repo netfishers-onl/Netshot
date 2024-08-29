@@ -21,7 +21,8 @@ import onl.netfishers.netshot.aaa.User;
  * Filter to authorize based on user and role.
  */
 @Priority(Priorities.AUTHORIZATION)
-@PreMatching class SecurityFilter implements ContainerRequestFilter {
+@PreMatching
+public class SecurityFilter implements ContainerRequestFilter {
 
 	@Context
 	private HttpServletRequest httpRequest;

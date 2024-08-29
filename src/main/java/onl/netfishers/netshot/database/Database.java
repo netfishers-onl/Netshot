@@ -110,7 +110,7 @@ import org.slf4j.MarkerFactory;
 import liquibase.UpdateSummaryOutputEnum;
 import liquibase.command.CommandScope;
 import liquibase.command.core.UpdateCommandStep;
-import liquibase.command.core.helpers.DbUrlConnectionCommandStep;
+import liquibase.command.core.helpers.DbUrlConnectionArgumentsCommandStep;
 import liquibase.command.core.helpers.ShowSummaryArgument;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
@@ -216,7 +216,7 @@ public class Database {
 				liquibase.database.Database database = DatabaseFactory.getInstance()
 						.findCorrectDatabaseImplementation(new JdbcConnection(connection));
 				new CommandScope(UpdateCommandStep.COMMAND_NAME)
-						.addArgumentValue(DbUrlConnectionCommandStep.DATABASE_ARG, database)
+						.addArgumentValue(DbUrlConnectionArgumentsCommandStep.DATABASE_ARG, database)
 						.addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, "migration/netshot0.xml")
 						.addArgumentValue(ShowSummaryArgument.SHOW_SUMMARY_OUTPUT, UpdateSummaryOutputEnum.LOG)
 						.execute();
@@ -260,11 +260,14 @@ public class Database {
 			}
 
 			serviceProperties.put(AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER, connectionProvider);
-			if ("org.postgresql.Driver".equals(getDriverClass())) {
+			if (getDriverClass().contains("postgresql")) {
 				serviceProperties.setProperty(AvailableSettings.DIALECT, "onl.netfishers.netshot.database.CustomPostgreSQLDialect");
 			}
-			else if ("com.mysql.cj.jdbc.Driver".equals(getDriverClass())) {
+			else if (getDriverClass().contains("mysql")) {
 				serviceProperties.setProperty(AvailableSettings.DIALECT, "onl.netfishers.netshot.database.CustomMySQLDialect");
+			}
+			else if (getDriverClass().contains("h2")) {
+				serviceProperties.setProperty(AvailableSettings.DIALECT, "onl.netfishers.netshot.database.CustomH2Dialect");
 			}
 			serviceRegistry = new StandardServiceRegistryBuilder().applySettings(serviceProperties).build();
 

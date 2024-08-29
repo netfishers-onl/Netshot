@@ -145,7 +145,6 @@ import onl.netfishers.netshot.work.tasks.CheckGroupSoftwareTask;
 import onl.netfishers.netshot.work.tasks.DeviceBasedTask;
 import onl.netfishers.netshot.work.tasks.DeviceJsScript;
 import onl.netfishers.netshot.work.tasks.DiscoverDeviceTypeTask;
-import onl.netfishers.netshot.work.tasks.GroupBasedTask;
 import onl.netfishers.netshot.work.tasks.PurgeDatabaseTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceGroupScriptTask;
 import onl.netfishers.netshot.work.tasks.RunDeviceScriptTask;
@@ -183,7 +182,6 @@ import org.graalvm.polyglot.HostAccess.Export;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.query.Query;
-import org.hibernate.query.TupleTransformer;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
 import org.quartz.SchedulerException;
@@ -277,7 +275,17 @@ public class RestService extends Thread {
 	 * @return the current REST service TCP port
 	 */
 	public static int getRestPort() {
-		return nsRestService == null ? 0 : nsRestService.httpBasePort;
+		if (nsRestService == null) {
+			return 0;
+		}
+		int port = nsRestService.httpBaseUri.getPort();
+		if (port != -1 && port != 0) {
+			return port;
+		}
+		if (nsRestService.httpUseSsl) {
+			return 443;
+		}
+		return 80;
 	}
 
 	/**
@@ -293,8 +301,7 @@ public class RestService extends Thread {
 		nsRestService.start();
 	}
 
-	private String httpBaseUrl;
-	private int httpBasePort;
+	private URI httpBaseUri;
 	private boolean httpUseSsl;
 	private String httpSslKeystoreFile;
 	private String httpSslKeystorePass;
@@ -311,18 +318,23 @@ public class RestService extends Thread {
 		if (!Netshot.getConfig("netshot.http.ssl.enabled", true)) {
 			httpUseSsl = false;
 		}
-		
+
+		UriBuilder uriBuilder = UriBuilder.newInstance();
 		if (httpUseSsl) {
-			httpBaseUrl = Netshot.getConfig("netshot.http.baseurl", "http://localhost:8443");
+			uriBuilder.uri(
+				Netshot.getConfig("netshot.http.baseurl", "http://localhost:8443"));
 			httpSslKeystoreFile = Netshot.getConfig("netshot.http.ssl.keystore.file", "netshot.jks");
 			httpSslKeystorePass = Netshot.getConfig("netshot.http.ssl.keystore.pass", "netshotpass");
-			httpBasePort = 8443;
 		}
 		else {
-			httpBaseUrl = Netshot.getConfig("netshot.http.baseurl", "http://localhost:8080");
-			httpBasePort = 8080;
+			uriBuilder.uri(
+				Netshot.getConfig("netshot.http.baseurl", "http://localhost:8080"));
 		}
-		httpBasePort = Netshot.getConfig("netshot.http.baseport", httpBasePort, 1, 65535);
+		int port = Netshot.getConfig("netshot.http.baseport", 0, 1, 65535);
+		if (port != 0) {
+			uriBuilder.port(port);
+		}
+		this.httpBaseUri = uriBuilder.build();
 	}
 
 	/**
@@ -389,9 +401,8 @@ public class RestService extends Thread {
 						.setNeedClientAuth(false)
 						.setWantClientAuth(false);
 			}
-			URI url = UriBuilder.fromUri(httpBaseUrl).port(httpBasePort).build();
 			HttpServer server = GrizzlyHttpServerFactory.createHttpServer(
-					url, (GrizzlyHttpContainer) null, httpUseSsl, sslConfig, false);
+					httpBaseUri, (GrizzlyHttpContainer) null, httpUseSsl, sslConfig, false);
 			server.getServerConfiguration().setSessionTimeoutSeconds(UiUser.MAX_IDLE_TIME);
 
 			WebappContext context = new WebappContext("GrizzlyContext", HTTP_API_PATH);
@@ -472,7 +483,7 @@ public class RestService extends Thread {
 		Session session = Database.getSession(true);
 		try {
 			Query<RsDomain> query = session.createQuery(
-				"select new RsDomain(d.id, d.name, d.description, d.server4Address) from Domain d",
+				"select new RsDomain(d.id, d.name, d.description, d.server4Address) from Domain d order by d.id asc",
 				RsDomain.class);
 			paginationParams.apply(query);
 			return query.list();

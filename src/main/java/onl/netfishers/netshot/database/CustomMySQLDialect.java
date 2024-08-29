@@ -7,7 +7,6 @@ import org.hibernate.type.StandardBasicTypes;
 
 public class CustomMySQLDialect extends MySQLDialect {
 
-	
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);

@@ -10,7 +10,7 @@ import jakarta.ws.rs.core.Response;
 /**
  * Filter to set the custom status code.
  */
-class ResponseCodeFilter implements ContainerResponseFilter {
+public class ResponseCodeFilter implements ContainerResponseFilter {
 	/** Request property name to embed the suggested HTTP response code */
 	static final String SUGGESTED_RESPONSE_CODE = "onl.netfishers.netshot.rest.SuggestedResponseCode";
 

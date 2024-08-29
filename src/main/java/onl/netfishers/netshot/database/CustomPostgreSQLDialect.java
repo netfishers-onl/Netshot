@@ -7,7 +7,6 @@ import org.hibernate.type.StandardBasicTypes;
 
 public class CustomPostgreSQLDialect extends PostgreSQLDialect {
 
-	
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);

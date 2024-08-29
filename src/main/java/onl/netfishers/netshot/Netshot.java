@@ -228,12 +228,12 @@ public class Netshot extends Thread {
 	 * @return true, if successful
 	 */
 	protected static boolean initConfig(String[] filenames) {
-		config = new Properties();
+		Netshot.config = new Properties();
 		for (String fileName : filenames) {
 			try {
 				log.trace("Trying to load the configuration file {}.", fileName);
 				InputStream fileStream = new FileInputStream(fileName);
-				config.load(fileStream);
+				Netshot.config.load(fileStream);
 				fileStream.close();
 				log.warn("Configuration file {} successfully read.", fileName);
 				break;
@@ -242,10 +242,21 @@ public class Netshot extends Thread {
 				log.warn("Unable to read the configuration file {}.", fileName);
 			}
 		}
-		if (config.isEmpty()) {
+		if (Netshot.config.isEmpty()) {
 			log.error(MarkerFactory.getMarker("FATAL"), "No configuration file was found. Exiting.");
 			return false;
 		}
+		return true;
+	}
+
+	/**
+	 * Initialize the application configuration from Properties object.
+	 * 
+	 * @param config The configuration
+	 * @return true
+	 */
+	protected static boolean initConfig(Properties config) {
+		Netshot.config = config;
 		return true;
 	}
 	

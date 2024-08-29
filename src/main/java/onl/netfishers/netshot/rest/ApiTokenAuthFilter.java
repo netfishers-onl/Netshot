@@ -24,7 +24,7 @@ import onl.netfishers.netshot.aaa.ApiToken;
 @Priority(Priorities.AUTHENTICATION)
 @PreMatching
 @Slf4j
-class ApiTokenAuthFilter implements ContainerRequestFilter {
+public class ApiTokenAuthFilter implements ContainerRequestFilter {
 
 	/** Name of the HTTP header used for API token */
 	static public final String HTTP_API_TOKEN_HEADER = "X-Netshot-API-Token";

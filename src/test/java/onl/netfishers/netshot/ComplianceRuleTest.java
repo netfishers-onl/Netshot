@@ -1,6 +1,7 @@
 package onl.netfishers.netshot;
 
 import java.lang.reflect.Field;
+import java.util.Properties;
 
 import org.hibernate.Session;
 import org.junit.jupiter.api.Assertions;
@@ -22,7 +23,8 @@ public class ComplianceRuleTest {
 
 	@BeforeAll
 	static void initNetshot() throws Exception {
-		Netshot.initConfig();
+		Properties config = new Properties();
+		Netshot.initConfig(config);
 		DeviceDriver.refreshDrivers();
 	}
 	

@@ -32,6 +32,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import onl.netfishers.netshot.Netshot;
@@ -48,6 +49,7 @@ import org.jasypt.util.password.BasicPasswordEncryptor;
 @Table(indexes = {
 		@Index(name = "usernameIndex", columnList = "username") 
 })
+@EqualsAndHashCode
 public class UiUser implements User {
 
 	/** The max idle time. */
@@ -59,7 +61,6 @@ public class UiUser implements User {
 	static {
 		UiUser.MAX_IDLE_TIME = Netshot.getConfig("netshot.aaa.maxidletime", 1800, 30, Integer.MAX_VALUE);
 	}
-
 
 	/** The id. */
 	@Getter(onMethod=@__({

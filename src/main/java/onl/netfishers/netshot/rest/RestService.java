@@ -7227,7 +7227,7 @@ public class RestService extends Thread {
 				}
 			}
 			else {
-				user.setPassword("");
+				user.setHashedPassword("");
 			}
 			user.setLocal(rsUser.isLocal());
 			session.merge(user);

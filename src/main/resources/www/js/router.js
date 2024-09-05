@@ -162,14 +162,27 @@ define([
 						primary: "ui-icon-circle-triangle-e"
 					}
 				});
+				var passwordChangeRequired = false;
 				$("#splash #authentication-box").submit(function() {
 					$("#splash #authentication-box #authenticate").button('disable');
 					$("#splash #connection-error").hide();
 					window.user = new CurrentUserModel();
-					window.user.save({
+					var data = {
 						username: $("#splash #authentication-box #username").val(),
-						password: $("#splash #authentication-box #password").val()
-					}, {
+						password: $("#splash #authentication-box #password").val(),
+					};
+					if (passwordChangeRequired) {
+						data.newPassword = $("#splash #authentication-box #newpassword1").val();
+						if (data.newPassword != $("#splash #authentication-box #newpassword2").val()) {
+							$("#splash #connection-error #errormsg")
+								.text("You didn't accurately repeat password.");
+							$("#splash #connection-error").show();
+							$("#splash #authentication-box #newpassword1").focus();
+							$("#splash #authentication-box #authenticate").button('enable');
+							return false;
+						}
+					}
+					window.user.save(data, {
 						success: function(model, response, options) {
 							model.attributes.password = "";
 						},
@@ -179,10 +192,34 @@ define([
 					}).done(function(response) {
 						start();
 					}).fail(function(response) {
-						$("#splash #errormsg").text("Authentication error.");
-						$("#splash #connection-error").show();
+						if (response.status === 412) {
+							// Password change required
+							passwordChangeRequired = true;
+							$("#splash #passwordchange-warning").show();
+							$("#splash .changepassword").show();
+							$("#splash #authentication-box #newpassword1").focus();
+						}
+						else if (response.status === 401) {
+							passwordChangeRequired = false;
+							$("#splash #passwordchange-warning").hide();
+							$("#splash #connection-error #errormsg")
+								.text("Authentication error.");
+							$("#splash #connection-error").show();
+							$("#splash #authentication-box #password").val("");
+						}
+						else {
+							$("#splash #passwordchange-warning").hide();
+							var message = "Connection error";
+							try {
+								message = response.responseJSON.errorMsg;
+							}
+							catch (e1) {
+								//
+							}
+							$("#splash #connection-error #errormsg").text(message);
+							$("#splash #connection-error").show();
+						}
 						$("#splash #authentication-box #authenticate").button('enable');
-						$("#splash #authentication-box #password").val("");
 					});
 					return false;
 				}).show();

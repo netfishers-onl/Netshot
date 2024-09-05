@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import onl.netfishers.netshot.Netshot;
-import onl.netfishers.netshot.device.NetworkAddress;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,7 +157,7 @@ public class Radius {
 	 * @param password the password
 	 * @return true, if successful
 	 */
-	public static UiUser authenticate(String username, String password, NetworkAddress remoteAddress) {
+	public static UiUser authenticate(String username, String password, String remoteAddress) {
 		if (!isAvailable()) {
 			return null;
 		}
@@ -170,7 +169,7 @@ public class Radius {
 			attributeList.add(new Attr_NASIdentifier(nasIdentifier));
 		}
 		if (remoteAddress != null) {
-			attributeList.add(new Attr_CallingStationId(remoteAddress.getIp()));
+			attributeList.add(new Attr_CallingStationId(remoteAddress));
 		}
 
 		boolean first = true;

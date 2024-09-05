@@ -2,7 +2,7 @@ package onl.netfishers.netshot.rest;
 
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-
+import lombok.Getter;
 import onl.netfishers.netshot.rest.RestService.RsErrorBean;
 
 /**
@@ -56,6 +56,8 @@ public class NetshotBadRequestException extends WebApplicationException {
 		NETSHOT_INVALID_USER_NAME(202, Response.Status.BAD_REQUEST),
 		NETSHOT_INVALID_PASSWORD(203, Response.Status.BAD_REQUEST),
 		NETSHOT_INVALID_API_TOKEN_FORMAT(204, Response.Status.BAD_REQUEST),
+		NETSHOT_EXPIRED_PASSWORD(205, Response.Status.PRECONDITION_FAILED),
+		NETSHOT_FAILED_PASSWORD_POLICY(206, Response.Status.BAD_REQUEST),
 		NETSHOT_INVALID_SCRIPT(220, Response.Status.BAD_REQUEST),
 		NETSHOT_DUPLICATE_SCRIPT(222, Response.Status.BAD_REQUEST),
 		NETSHOT_INVALID_DIAGNOSTIC_NAME(230, Response.Status.BAD_REQUEST),
@@ -70,8 +72,12 @@ public class NetshotBadRequestException extends WebApplicationException {
 		NETSHOT_INVALID_HOOK_WEB(244, Response.Status.BAD_REQUEST),
 		NETSHOT_INVALID_HOOK_WEB_URL(245, Response.Status.BAD_REQUEST);
 
+		@Getter
 		int code;
+
+		@Getter
 		Response.Status status;
+
 		private Reason(int code, Response.Status status) {
 			this.code = code;
 			this.status = status;

@@ -54,6 +54,7 @@ import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.util.FileSize;
 import lombok.extern.slf4j.Slf4j;
+import onl.netfishers.netshot.aaa.PasswordPolicy;
 import onl.netfishers.netshot.aaa.Radius;
 import onl.netfishers.netshot.aaa.Tacacs;
 import onl.netfishers.netshot.cluster.ClusterManager;
@@ -589,6 +590,7 @@ public class Netshot extends Thread {
 					TakeSnapshotTask.loadConfig();
 					JavaScriptRule.loadConfig();
 					PythonRule.loadConfig();
+					PasswordPolicy.loadConfig();
 				}
 			});
 			log.warn("Netshot is started");

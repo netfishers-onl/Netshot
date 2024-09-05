@@ -30,7 +30,20 @@ import lombok.Setter;
  */
 public class NetshotApiClient {
 
-	protected static final String SESSION_COOKIE_NAME = "NetshotSessionID";
+	/**
+	 * Simple exception to catch unexpected response and attach it.
+	 */
+	static public class WrongApiResponseException extends IOException {
+		@Getter
+		private HttpResponse<?> response;
+
+		public WrongApiResponseException(String message, HttpResponse<?> response) {
+			super(message);
+			this.response = response;
+		}
+	}
+
+	static protected final String SESSION_COOKIE_NAME = "NetshotSessionID";
 
 	@Getter @Setter
 	private String apiUrl;
@@ -43,6 +56,10 @@ public class NetshotApiClient {
 
 	@Getter @Setter
 	private String password;
+
+	/** To change the password on login */
+	@Getter @Setter
+	private String newPassword;
 
 	@Getter @Setter
 	private HttpCookie sessionCookie;
@@ -123,12 +140,15 @@ public class NetshotApiClient {
 		ObjectNode payload = JsonNodeFactory.instance.objectNode();
 		payload.put("username", this.username);
 		payload.put("password", this.password);
+		if (this.newPassword != null) {
+			payload.put("newPassword", this.newPassword);
+		}
 		builder.POST(this.jsonNodePublisher(payload));
 		HttpRequest request = builder.build();
 		HttpResponse<JsonNode> response =
 			this.httpClient.send(request, this.jsonNodeHandler());
 		if (response.statusCode() != Response.Status.OK.getStatusCode()) {
-			throw new RuntimeException("Netshot REST API login failed");
+			throw new WrongApiResponseException("Netshot REST API login failed", response);
 		}
 		String setCookie = response.headers().firstValue("Set-Cookie").get();
 		List<HttpCookie> cookies = HttpCookie.parse(setCookie);

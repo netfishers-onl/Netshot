@@ -36,7 +36,14 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import onl.netfishers.netshot.Netshot;
+import onl.netfishers.netshot.aaa.PasswordPolicy.PasswordPolicyException;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import org.hibernate.annotations.NaturalId;
 import org.jasypt.util.password.BasicPasswordEncryptor;
@@ -52,11 +59,30 @@ import org.jasypt.util.password.BasicPasswordEncryptor;
 @EqualsAndHashCode
 public class UiUser implements User {
 
+	/**
+	 * Exception to be thrown in case of password check failure
+	 */
+	static public class WrongPasswordException extends Exception {
+		public WrongPasswordException(String message) {
+			super(message);
+		}
+	}
+
 	/** The max idle time. */
 	public static int MAX_IDLE_TIME;
 
 	/** The password encryptor. */
 	private static BasicPasswordEncryptor passwordEncryptor = new BasicPasswordEncryptor();
+
+	/**
+	 * Hash the password using the password encryptor.
+	 *
+	 * @param password the plaintext password
+	 * @return the hashed password
+	 */
+	static private String hash(String password) {
+		return passwordEncryptor.encryptPassword(password);
+	}
 
 	static {
 		UiUser.MAX_IDLE_TIME = Netshot.getConfig("netshot.aaa.maxidletime", 1800, 30, Integer.MAX_VALUE);
@@ -82,6 +108,16 @@ public class UiUser implements User {
 	@Getter
 	@Setter
 	private String hashedPassword;
+
+	/** The previous password hashes. */
+	@Getter
+	@Setter
+	private List<String> oldHashedPasswords = new ArrayList<>();
+
+	/** Date of last password change */
+	@Getter
+	@Setter
+	private Date lastPasswordChangeDate;
 
 	/** The username. */
 	@Getter(onMethod=@__({
@@ -130,27 +166,69 @@ public class UiUser implements User {
 	 * @param password the new password
 	 */
 	public void setPassword(String password) {
-		this.setHashedPassword(this.hash(password));
+		this.setHashedPassword(UiUser.hash(password));
+		this.setLastPasswordChangeDate(new Date());
 	}
 
 	/**
-	 * Check password.
+	 * Sets the password if it complies with the given policy.
 	 *
-	 * @param password the password
-	 * @return true, if successful
+	 * @param password the new password
+	 * @param policy the policy to check
 	 */
-	public boolean checkPassword(String password) {
-		return passwordEncryptor.checkPassword(password, hashedPassword);
+	public void setPassword(String password, PasswordPolicy policy) throws PasswordPolicyException {
+		for (Map.Entry<PasswordPolicy.CharMatch, Integer> e : policy.getMinCharMatchCounts().entrySet()) {
+			if (e.getKey().countMatches(password) < e.getValue()) {
+				throw new PasswordPolicyException(String.format(
+					"The password doesn't match the defined policy: %s", e.getKey().getDescription()));
+			}
+		}
+		if (this.oldHashedPasswords == null) {
+			this.oldHashedPasswords = new ArrayList<>();
+		}
+		int size = Math.min(policy.getMaxHistory(), this.oldHashedPasswords.size());
+		for (int i = 0; i < size; i++) {
+			if (passwordEncryptor.checkPassword(password, this.oldHashedPasswords.get(i))) {
+				throw new PasswordPolicyException("Password was already used for this account");
+			}
+		}
+		if (this.getHashedPassword() != null) {
+			this.oldHashedPasswords.addFirst(this.getHashedPassword());
+		}
+		while (this.oldHashedPasswords.size() > policy.getMaxHistory()) {
+			this.oldHashedPasswords.removeLast();
+		}
+		this.setPassword(password);
 	}
 
 	/**
-	 * Hash.
+	 * Check password against user hash, and against policy.
 	 *
 	 * @param password the password
-	 * @return the string
+	 * @param policy The policy to check
+	 * @throws WrongPasswordException 
+	 * @throws PasswordPolicyException 
 	 */
-	private String hash(String password) {
-		return passwordEncryptor.encryptPassword(password);
+	public void checkPassword(String password, PasswordPolicy policy)
+			throws WrongPasswordException, PasswordPolicyException {
+		if (!passwordEncryptor.checkPassword(password, hashedPassword)) {
+			throw new WrongPasswordException("Wrong password");
+		}
+		if (policy == null) {
+			return;
+		}
+		if (this.lastPasswordChangeDate == null) {
+			return;
+		}
+		int days = policy.getMaxDuration();
+		if (days == 0) {
+			return;
+		}
+		Calendar lastValidCal = Calendar.getInstance();
+		lastValidCal.add(Calendar.DATE, -1 * policy.getMaxDuration());
+		if (this.lastPasswordChangeDate.before(lastValidCal.getTime())) {
+			throw new PasswordPolicyException("Password has expired, it must be changed");
+		}
 	}
 
 	/* (non-Javadoc)

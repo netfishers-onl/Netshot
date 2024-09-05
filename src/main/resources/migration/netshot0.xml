@@ -4,6 +4,8 @@
 	<property name="BOOLEAN" value="BIT(1)"/>
 	<property name="JSON" value="JSONB" dbms="postgresql"/>
 	<property name="JSON" value="JSON"/>
+	<property name="NOW" value="now()" dbms="mysql,h2"/>
+	<property name="NOW" value="current_timestamp" dbms="postgresql"/>
 <!-- netshot_0_5_2.xml -->
 	<changeSet author="netshot (generated)" id="0.5.2_1">
 		<validCheckSum>8:1534a0df4e73e7c5877f8f03c0ffde51</validCheckSum>
@@ -1296,5 +1298,14 @@
 		<addForeignKeyConstraint baseColumnNames="id" baseTableName="java_script_diagnostic" constraintName="FK_fo2to76xu9vb547ivf01h6kqv" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true"/>
 		<dropForeignKeyConstraint baseTableName="python_diagnostic" constraintName="FK_lkjsIUekzjds23lkjAZlkj123"/>
 		<addForeignKeyConstraint baseColumnNames="id" baseTableName="python_diagnostic" constraintName="FK_lkjsIUekzjds23lkjAZlkj123" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="diagnostic" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_14">
+		<preConditions onFail="MARK_RAN">
+			<not><columnExists tableName="user" columnName="last_password_change_date"/></not>
+		</preConditions>
+		<addColumn tableName="user">
+			<column name="last_password_change_date" type="datetime" valueComputed="${NOW}"/>
+			<column name="old_hashed_passwords" type="VARCHAR(255) ARRAY"/>
+		</addColumn>
 	</changeSet>
 </databaseChangeLog>

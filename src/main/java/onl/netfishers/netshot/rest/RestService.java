@@ -77,9 +77,12 @@ import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.Netshot;
 import onl.netfishers.netshot.TaskManager;
 import onl.netfishers.netshot.aaa.ApiToken;
+import onl.netfishers.netshot.aaa.PasswordPolicy;
+import onl.netfishers.netshot.aaa.PasswordPolicy.PasswordPolicyException;
 import onl.netfishers.netshot.aaa.Radius;
 import onl.netfishers.netshot.aaa.Tacacs;
 import onl.netfishers.netshot.aaa.UiUser;
+import onl.netfishers.netshot.aaa.UiUser.WrongPasswordException;
 import onl.netfishers.netshot.aaa.User;
 import onl.netfishers.netshot.cluster.ClusterManager;
 import onl.netfishers.netshot.cluster.ClusterMember;
@@ -6813,7 +6816,7 @@ public class RestService extends Thread {
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
-		private String newPassword = "";
+		private String newPassword;
 	}
 
 	/**
@@ -6857,12 +6860,12 @@ public class RestService extends Thread {
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
-		summary = "Update a user",
-		description = "Edits a given user, by ID, especially the password for a local user."
+		summary = "Update self user",
+		description = "Edits current user, especially password."
 	)
 	@Tag(name = "Login", description = "Login and password management for standard user")
-	public UiUser setPassword(RsLogin rsLogin,
-			@PathParam("id") @Parameter(description = "User ID") Long id)
+	public UiUser setSelfUser(RsLogin rsLogin,
+			@PathParam("id") @Parameter(description = "User ID (ignored)") Long id)
 			throws WebApplicationException {
 		log.debug("REST password change request, username {}.", rsLogin.getUsername());
 		User currentUser = (User) request.getAttribute("user");
@@ -6872,27 +6875,42 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			user = session.bySimpleNaturalId(UiUser.class).load(rsLogin.getUsername());
-			if (user == null || !user.getUsername().equals(currentUser.getUsername()) || !user.isLocal()) {
+			user = session.bySimpleNaturalId(UiUser.class).load(currentUser.getUsername());
+			if (user == null || !user.getUsername().equals(rsLogin.getUsername()) || !user.isLocal()) {
 				throw new NetshotBadRequestException("Invalid user.",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
 			}
 
-			if (!user.checkPassword(rsLogin.getPassword())) {
+			try {
+				user.checkPassword(rsLogin.getPassword(), PasswordPolicy.getMainPolicy());
+			}
+			catch (WrongPasswordException e) {
 				throw new NetshotBadRequestException("Invalid current password.",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_PASSWORD);
+			}
+			catch (PasswordPolicyException e) {
+				// Ignore to let user update the password
 			}
 
 			String newPassword = rsLogin.getNewPassword();
-			if (newPassword.equals("")) {
+			if (newPassword == null || newPassword.equals("")) {
 				throw new NetshotBadRequestException("The password cannot be empty.",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_PASSWORD);
 			}
 
-			user.setPassword(newPassword);
+			try {
+				user.setPassword(newPassword, PasswordPolicy.getMainPolicy());
+			}
+			catch (PasswordPolicyException e) {
+				log.error("New user password doesn't comply with password policy.", e);
+				throw new NetshotBadRequestException(
+					e.getMessage(),
+					NetshotBadRequestException.Reason.NETSHOT_FAILED_PASSWORD_POLICY);
+			}
 			session.persist(user);
 			session.getTransaction().commit();
-			Netshot.aaaLogger.warn("Password successfully changed by user {} for user {}.", currentUser.getUsername(), rsLogin.getUsername());
+			Netshot.aaaLogger.warn("Password successfully changed by user {} for user {}.",
+					currentUser.getUsername(), rsLogin.getUsername());
 			return user;
 		}
 		catch (HibernateException e) {
@@ -6928,49 +6946,88 @@ public class RestService extends Thread {
 		log.debug("REST authentication request, username {}.", rsLogin.getUsername());
 		Netshot.aaaLogger.info("REST authentication request, username {}.", rsLogin.getUsername());
 
-		NetworkAddress remoteAddress = null;
-		{
-			String address = null;
-			try {
-				address = request.getHeader("X-Forwarded-For");
-				if (address == null) {
-					address = request.getRemoteAddr();
-				}
-				remoteAddress = NetworkAddress.getNetworkAddress(address, 0);
-			}
-			catch (UnknownHostException e) {
-				log.warn("Unable to parse remote address", address);
-				try {
-					remoteAddress = new Network4Address(0, 0);
-				}
-				catch (UnknownHostException e1) {
-				}
-			}
-		}
-
+		String remoteAddress = LoggerFilter.getClientAddress(request);
 		UiUser user = null;
 
-		Session session = Database.getSession();
-		try {
-			user = session.bySimpleNaturalId(UiUser.class).load(rsLogin.getUsername());
-		}
-		catch (HibernateException e) {
-			log.error("Unable to retrieve the user {}.", rsLogin.getUsername(), e);
-			throw new NetshotBadRequestException("Unable to retrieve the user.",
-					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
-		}
-		finally {
-			session.close();
+		{
+			Session session = Database.getSession(true);
+			try {
+				user = session.bySimpleNaturalId(UiUser.class).load(rsLogin.getUsername());
+			}
+			catch (HibernateException e) {
+				log.error("Unable to retrieve the user {}.", rsLogin.getUsername(), e);
+				throw new NetshotBadRequestException("Unable to retrieve the user.",
+						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+			}
+			finally {
+				session.close();
+			}
 		}
 
 		if (user != null && user.isLocal()) {
-			if (user.checkPassword(rsLogin.getPassword())) {
-				Netshot.aaaLogger.info("Local authentication success for user {} from {}.", rsLogin.getUsername(), remoteAddress);
+			try {
+				try {
+					user.checkPassword(rsLogin.getPassword(), PasswordPolicy.getMainPolicy());
+					Netshot.aaaLogger.info(
+						"Local authentication success for user {} from {}.", rsLogin.getUsername(), remoteAddress);
+				}
+				catch (PasswordPolicyException e) {
+					if (rsLogin.getNewPassword() == null) {
+						throw e;
+					}
+					Netshot.aaaLogger.info(
+						"User {} authenticated from {}, password has to be changed.", rsLogin.getUsername(), remoteAddress);
+					// If new password, proceed with password change
+				}
+				if (rsLogin.getNewPassword() != null) {
+					Session session = Database.getSession();
+					try {
+						session.beginTransaction();
+						UiUser user1 = session.get(UiUser.class, user.getId());
+						user1.setPassword(rsLogin.getNewPassword(), PasswordPolicy.getMainPolicy());
+						session.merge(user1);
+						session.getTransaction().commit();
+						Netshot.aaaLogger.info(
+							"User {} changed its password.", rsLogin.getUsername(), remoteAddress);
+					}
+					catch (HibernateException e) {
+						session.getTransaction().rollback();
+						log.error("Error while updating a user.", e);
+						throw new NetshotBadRequestException(
+								"Unable to update the user in the database",
+								NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+					}
+					catch (PasswordPolicyException e) {
+						session.getTransaction().rollback();
+						log.error("New user password doesn't comply with password policy.", e);
+						user = null;
+						throw new NetshotBadRequestException(
+							e.getMessage(),
+							NetshotBadRequestException.Reason.NETSHOT_FAILED_PASSWORD_POLICY);
+					}
+					finally {
+						session.close();
+					}
+				}
+
 			}
-			else {
-				Netshot.aaaLogger.warn("Local authentication failure for user {} from {}.", rsLogin.getUsername(), remoteAddress);
+			catch (WrongPasswordException e) {
+				Netshot.aaaLogger.warn(
+					"Local authentication failure for user {} from {}.",
+					rsLogin.getUsername(), remoteAddress);
 				user = null;
 			}
+			catch (PasswordPolicyException e) {
+				Netshot.aaaLogger.warn(
+					"Password of user {} is expired, it must be changed.", rsLogin.getUsername());
+				user = null;
+				throw new NetshotBadRequestException(
+					"Password has expired, it must be changed.",
+					NetshotBadRequestException.Reason.NETSHOT_EXPIRED_PASSWORD);
+			}
+
+
+
 		}
 		else {
 			UiUser remoteUser = null;
@@ -6981,13 +7038,16 @@ public class RestService extends Thread {
 				remoteUser = Tacacs.authenticate(rsLogin.getUsername(), rsLogin.getPassword(), remoteAddress);
 			}
 			if (remoteUser == null) {
-				Netshot.aaaLogger.warn("Remote authentication failure for user {} from {}.", rsLogin.getUsername(), remoteAddress);
+				Netshot.aaaLogger.warn("Remote authentication failure for user {} from {}.",
+					rsLogin.getUsername(), remoteAddress);
 			}
 			else {
-				Netshot.aaaLogger.info("Remote authentication success for user {} from {}.", rsLogin.getUsername(), remoteAddress);
+				Netshot.aaaLogger.info("Remote authentication success for user {} from {}.",
+					rsLogin.getUsername(), remoteAddress);
 				if (user != null) {
 					remoteUser.setLevel(user.getLevel());
-					Netshot.aaaLogger.info("Level permission for user {} is locally overriden: {}.", rsLogin.getUsername(), user.getLevel());
+					Netshot.aaaLogger.info("Level permission for user {} is locally overriden: {}.",
+						rsLogin.getUsername(), user.getLevel());
 				}
 			}
 			user = remoteUser;
@@ -7218,7 +7278,15 @@ public class RestService extends Thread {
 			user.setLevel(rsUser.getLevel());
 			if (rsUser.isLocal()) {
 				if (rsUser.getPassword() != null) {
-					user.setPassword(rsUser.getPassword());
+					try {
+						user.setPassword(rsUser.getPassword(), PasswordPolicy.getMainPolicy());
+					}
+					catch (PasswordPolicyException e) {
+						log.error("New user password doesn't comply with password policy.", e);
+						throw new NetshotBadRequestException(
+							e.getMessage(),
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_PASSWORD);
+					}
 				}
 				if (user.getHashedPassword().equals("")) {
 					log.error("The password cannot be empty for user {}.", id);

@@ -43,7 +43,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
 
 import onl.netfishers.netshot.Netshot;
-import onl.netfishers.netshot.device.NetworkAddress;
 
 /**
  * The Tacacs class authenticates the users against a TACACS+ server.
@@ -122,13 +121,13 @@ public class Tacacs {
 	 * @param password the password
 	 * @return true, if successful
 	 */
-	public static UiUser authenticate(String username, String password, NetworkAddress remoteAddress) {
+	public static UiUser authenticate(String username, String password, String remoteAddress) {
 		if (!isAvailable()) {
 			return null;
 		}
 
 		try {
-			SessionClient authenSession = client.newSession(SVC.LOGIN, "rest", remoteAddress == null ? "0.0.0.0" : remoteAddress.getIp(), PRIV_LVL.USER.code());
+			SessionClient authenSession = client.newSession(SVC.LOGIN, "rest", remoteAddress, PRIV_LVL.USER.code());
 			AuthenReply authenReply = authenSession.authenticate_ASCII(username, password);
 
 			String roleAttribute = Netshot.getConfig("netshot.aaa.tacacs.role.attributename", "role");
@@ -138,7 +137,7 @@ public class Tacacs {
 			String operatorLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.operatorrole", "operator");
 
 			if (authenReply.isOK()) {
-				SessionClient authoSession = client.newSession(SVC.LOGIN, "rest", remoteAddress == null ? "0.0.0.0" : remoteAddress.getIp(), PRIV_LVL.USER.code());
+				SessionClient authoSession = client.newSession(SVC.LOGIN, "rest", remoteAddress, PRIV_LVL.USER.code());
 				AuthorReply authoReply = authoSession.authorize(
 					username,
 					METH.TACACSPLUS,
@@ -167,7 +166,8 @@ public class Tacacs {
 						level = UiUser.LEVEL_OPERATOR;
 					}
 
-					aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} passed TACACS+ authentication (with permission level {}).",
+					aaaLogger.info(MarkerFactory.getMarker("AAA"),
+							"The user {} passed TACACS+ authentication (with permission level {}).",
 							username, level);
 					UiUser user = new UiUser(username, level);
 					return user;
@@ -175,30 +175,36 @@ public class Tacacs {
 				else {
 					// Authorization failed
 					if (authoReply.getData() != null) {
-						aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} failed TACACS+ authorization. Server data: {}.",
+						aaaLogger.info(MarkerFactory.getMarker("AAA"),
+								"The user {} failed TACACS+ authorization. Server data: {}.",
 								username, authoReply.getData());
 					}
 					else if (authoReply.getServerMsg() != null) {
-						aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} failed TACACS+ authorization. Server message: {}.",
+						aaaLogger.info(MarkerFactory.getMarker("AAA"),
+								"The user {} failed TACACS+ authorization. Server message: {}.",
 								username, authoReply.getServerMsg());
 					}
 					else {
-						aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} failed TACACS+ authorization.", username);
+						aaaLogger.info(MarkerFactory.getMarker("AAA"),
+								"The user {} failed TACACS+ authorization.", username);
 					}
 				}
 			}
 			else {
 				// Authentication failed
 				if (authenReply.getData() != null) {
-					aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} failed TACACS+ authentication. Server data: {}.",
+					aaaLogger.info(MarkerFactory.getMarker("AAA"),
+							"The user {} failed TACACS+ authentication. Server data: {}.",
 							username, authenReply.getData());
 				}
 				else if (authenReply.getServerMsg() != null) {
-					aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} failed TACACS+ authentication. Server message: {}.",
+					aaaLogger.info(MarkerFactory.getMarker("AAA"),
+							"The user {} failed TACACS+ authentication. Server message: {}.",
 							username, authenReply.getServerMsg());
 				}
 				else {
-					aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} failed TACACS+ authentication.", username);
+					aaaLogger.info(MarkerFactory.getMarker("AAA"),
+							"The user {} failed TACACS+ authentication.", username);
 				}
 			}
 		}
@@ -214,11 +220,11 @@ public class Tacacs {
 	/**
 	 * Log a message with TACACS+ accounting.
 	 */
-	public static void account(String method, String path, String username, String response, NetworkAddress remoteAddress) {
+	public static void account(String method, String path, String username, String response, String remoteAddress) {
 		if (!Tacacs.enableAccounting || !Tacacs.isAvailable()) {
 			return;
 		}
-		SessionClient acctSession = client.newSession(SVC.LOGIN, "rest", remoteAddress == null ? "0.0.0.0" : remoteAddress.getIp(), PRIV_LVL.USER.code());
+		SessionClient acctSession = client.newSession(SVC.LOGIN, "rest", remoteAddress, PRIV_LVL.USER.code());
 		try {
 			acctSession.account(ACCT.FLAG.STOP.code(), username, METH.TACACSPLUS, TYPE.ASCII, SVC.LOGIN, new Argument[] {
 				new Argument(String.format("%s %s => %s", method, path, response))

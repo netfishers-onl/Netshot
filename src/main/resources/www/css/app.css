@@ -59,7 +59,6 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	top: 50%;
 	left: 50%;
 	width: 400px;
-	height: 200px;
 	margin-top: -130px;
 	margin-left: -200px;
 	border: 1px solid #e1e4e8;
@@ -108,6 +107,10 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	display: none;
 }
 
+#splash #passwordchange-warning {
+	display: none;
+}
+
 #splash #authentication-box {
 	display: none;
 	margin-top: 30px;
@@ -117,6 +120,11 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	font-family: monospace;
 	padding: 5px;
 }
+
+#splash #authentication-box .changepassword {
+	display: none;
+}
+
 
 .ui-dialog.ui-widget .ui-dialog-titlebar {
 	border-bottom-right-radius: 0px !important;
@@ -847,6 +855,10 @@ h1 {
 	background-color: #ffe3e6;
 	padding: 2px 5px 2px 5px;
 	border-radius: 5px;
+}
+
+.nsdialog .nserror.nswarning {
+	background-color: #f6f8fa;
 }
 
 .nsdialog .nserror .ui-icon {

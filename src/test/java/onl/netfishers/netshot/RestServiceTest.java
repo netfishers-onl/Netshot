@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import org.hibernate.Session;
@@ -24,11 +27,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
+import onl.netfishers.netshot.NetshotApiClient.WrongApiResponseException;
 import onl.netfishers.netshot.aaa.ApiToken;
+import onl.netfishers.netshot.aaa.PasswordPolicy;
+import onl.netfishers.netshot.aaa.PasswordPolicy.PasswordPolicyException;
 import onl.netfishers.netshot.aaa.UiUser;
 import onl.netfishers.netshot.database.Database;
 import onl.netfishers.netshot.device.Domain;
 import onl.netfishers.netshot.device.Network4Address;
+import onl.netfishers.netshot.rest.NetshotBadRequestException;
 import onl.netfishers.netshot.rest.RestService;
 
 public class RestServiceTest {
@@ -59,8 +66,7 @@ public class RestServiceTest {
 		}
 	}
 
-	@BeforeAll
-	protected static void initNetshot() throws Exception {
+	protected static Properties getNetshotConfig() {
 		Properties config = new Properties();
 		config.setProperty("netshot.log.file", "CONSOLE");
 		config.setProperty("netshot.log.level", "INFO");
@@ -71,7 +77,12 @@ public class RestServiceTest {
 		config.setProperty("netshot.http.ssl.enabled", "false");
 		URI uri = UriBuilder.fromUri(apiUrl).replacePath("/").build();
 		config.setProperty("netshot.http.baseurl", uri.toString());
-		Netshot.initConfig(config);
+		return config;
+	}
+
+	@BeforeAll
+	protected static void initNetshot() throws Exception {
+		Netshot.initConfig(RestServiceTest.getNetshotConfig());
 		Database.update();
 		Database.init();
 		RestService.init();
@@ -89,7 +100,7 @@ public class RestServiceTest {
 
 	@Nested
 	@DisplayName("Authentication Tests")
-	class AuthenticationTest {
+	class ApiTokenTest {
 
 		@AfterEach
 		void cleanUpData() {
@@ -150,21 +161,53 @@ public class RestServiceTest {
 			Assertions.assertInstanceOf(MissingNode.class,
 				response.body(), "Response body not empty");
 		}
+	}
+
+	@Nested
+	@DisplayName("Local Authentication Tests")
+	class LocalAuthenticationTest {
+
+		private String testUsername = "testuser";
+		private String testPassword = "testpassword";
+		private String[] testOldPasswords = new String[] {
+			"testpassword02",
+			"testpassword01",
+			"testpassword00",
+		};
+		private int testUserLevel = UiUser.LEVEL_ADMIN;
+		private int passwordAge = 0;
+
+		private void createTestUser() {
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				List<String> oldPasswords = new ArrayList<>(List.of(testOldPasswords));
+				UiUser user = new UiUser(testUsername, true, oldPasswords.removeLast());
+				while (oldPasswords.size() > 0) {
+					try {
+						user.setPassword(oldPasswords.removeLast(), PasswordPolicy.getMainPolicy());
+					}
+					catch (PasswordPolicyException e) {
+						// Ignore
+					}
+				}
+				user.setPassword(testPassword);
+				user.setLevel(testUserLevel);
+				if (passwordAge > 0) {
+					Calendar oneYearAgo = Calendar.getInstance();
+					oneYearAgo.add(Calendar.DATE, -1 * passwordAge);
+					user.setLastPasswordChangeDate(oneYearAgo.getTime());
+				}
+				session.persist(user);
+				session.getTransaction().commit();
+			}
+		}
 
 		@Test
 		@DisplayName("Local user authentication and cookie")
 		@ResourceLock(value = "DB")
 		void localUserAuth() throws IOException, InterruptedException {
-			String username = "testuser";
-			String password = "testpassword";
-			try (Session session = Database.getSession()) {
-				session.beginTransaction();
-				UiUser user = new UiUser(username, true, password);
-				user.setLevel(UiUser.LEVEL_ADMIN);
-				session.persist(user);
-				session.getTransaction().commit();
-			}
-			apiClient.setLogin(username, password);
+			this.createTestUser();
+			apiClient.setLogin(testUsername, testPassword);
 			HttpResponse<JsonNode> response1 = apiClient.get("/domains");
 			Assertions.assertEquals(
 				Response.Status.OK.getStatusCode(), response1.statusCode(),
@@ -191,6 +234,221 @@ public class RestServiceTest {
 				"Not getting 403 response for wrong cookie");
 			Assertions.assertInstanceOf(MissingNode.class,
 				response.body(), "Response body not empty");
+		}
+
+		@Test
+		@DisplayName("Expired password authentication attempt")
+		@ResourceLock(value = "DB")
+		void expiredPasswordFailAuth() throws IOException, InterruptedException {
+			Properties config = RestServiceTest.getNetshotConfig();
+			config.setProperty("netshot.aaa.passwordpolicy.maxduration", "90");
+			Netshot.initConfig(config);
+			PasswordPolicy.loadConfig();
+			this.passwordAge = 365;
+			this.createTestUser();
+			apiClient.setLogin(testUsername, testPassword);
+			WrongApiResponseException thrown = Assertions.assertThrows(WrongApiResponseException.class,
+				() -> apiClient.get("/domains"),
+				"Login not failing as expected");
+			Assertions.assertEquals(
+				Response.Status.PRECONDITION_FAILED.getStatusCode(), thrown.getResponse().statusCode(),
+				"Not getting 412 when logging in with expired password");
+		}
+
+		@Test
+		@DisplayName("Expired password, change and authentication attempt")
+		@ResourceLock(value = "DB")
+		void expiredPasswordChangeAuth() throws IOException, InterruptedException {
+			Properties config = RestServiceTest.getNetshotConfig();
+			config.setProperty("netshot.aaa.passwordpolicy.maxduration", "90");
+			Netshot.initConfig(config);
+			PasswordPolicy.loadConfig();
+			String newPassword = "testpassword1";
+			this.passwordAge = 365;
+			this.createTestUser();
+			apiClient.setLogin(testUsername, testPassword);
+			apiClient.setNewPassword(newPassword);
+			HttpResponse<JsonNode> response = apiClient.get("/domains");
+			Assertions.assertEquals(
+				Response.Status.OK.getStatusCode(), response.statusCode(),
+				"Not getting 200 response");
+			try (Session session = Database.getSession()) {
+				UiUser user = session
+					.bySimpleNaturalId(UiUser.class)
+					.load(testUsername);
+				Assertions.assertDoesNotThrow(() -> user.checkPassword(newPassword, null),
+					"Password not changed as expected");
+			}
+		}
+
+		@Test
+		@DisplayName("The password cannot be changed if auth fails")
+		@ResourceLock(value = "DB")
+		void wrongAuthCantChangePassword() throws IOException, InterruptedException {
+			String newPassword = "testpassword1";
+			this.createTestUser();
+			apiClient.setLogin(testUsername, "wrongpass");
+			apiClient.setNewPassword(newPassword);
+			Assertions.assertThrows(WrongApiResponseException.class,
+				() -> apiClient.get("/domains"),
+				"Login should have failed");
+			try (Session session = Database.getSession()) {
+				UiUser user = session
+					.bySimpleNaturalId(UiUser.class)
+					.load(testUsername);
+				Assertions.assertDoesNotThrow(() -> user.checkPassword(testPassword, null),
+					"Password should not have changed");
+			}
+		}
+
+		@Test
+		@DisplayName("Password policy")
+		@ResourceLock(value = "DB")
+		void passwordChangeWithPolicy() throws IOException, InterruptedException {
+			Properties config = RestServiceTest.getNetshotConfig();
+			config.setProperty("netshot.aaa.passwordpolicy.maxhistory", "5");
+			Netshot.initConfig(config);
+			PasswordPolicy.loadConfig();
+			this.createTestUser();
+			config.setProperty("netshot.aaa.passwordpolicy.mintotalchars", "16");
+			config.setProperty("netshot.aaa.passwordpolicy.minspecialchars", "3");
+			config.setProperty("netshot.aaa.passwordpolicy.minnumericalchars", "3");
+			config.setProperty("netshot.aaa.passwordpolicy.minlowercasechars", "3");
+			config.setProperty("netshot.aaa.passwordpolicy.minuppercasechars", "3");
+			Netshot.initConfig(config);
+			PasswordPolicy.loadConfig();
+			apiClient.setLogin(testUsername, testPassword);
+			{
+				HttpResponse<JsonNode> response = apiClient.get("/user");
+				Assertions.assertEquals(
+					Response.Status.OK.getStatusCode(), response.statusCode(),
+					"Not getting 200 response");
+				JsonNode userNode = response.body();
+				Assertions.assertEquals(testUsername, userNode.get("username").asText());
+				Assertions.assertEquals(testUserLevel, userNode.get("level").asInt());
+			}
+			{
+				ObjectNode data = JsonNodeFactory.instance.objectNode()
+					.put("username", testUsername)
+					// missing password
+					.put("newPassword", "New902C0pml;(EP!$");
+					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				Assertions.assertEquals(
+					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+					"Not getting 400 response");
+				Assertions.assertEquals(
+					response.body().get("errorCode").asInt(),
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_PASSWORD.getCode(),
+					"Unexpected Netshot error code");
+			}
+			{
+				ObjectNode data = JsonNodeFactory.instance.objectNode()
+					.put("username", testUsername)
+					.put("password", "invalidpass")
+					.put("newPassword", "New902C0pml;(EP!$");
+					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				Assertions.assertEquals(
+					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+					"Not getting 400 response");
+				Assertions.assertEquals(
+					response.body().get("errorCode").asInt(),
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_PASSWORD.getCode(),
+					"Unexpected Netshot error code");
+			}
+			{
+				String newPassword = testOldPasswords[2];
+				ObjectNode data = JsonNodeFactory.instance.objectNode()
+					.put("username", testUsername)
+					.put("password", testPassword)
+					.put("newPassword", newPassword);
+					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				Assertions.assertEquals(
+					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+					"Not getting 400 response");
+				Assertions.assertEquals(
+					response.body().get("errorCode").asInt(),
+					NetshotBadRequestException.Reason.NETSHOT_FAILED_PASSWORD_POLICY.getCode(),
+					"Unexpected Netshot error code");
+			}
+			{
+				String newPassword = "pass";
+				ObjectNode data = JsonNodeFactory.instance.objectNode()
+					.put("username", testUsername)
+					.put("password", testPassword)
+					.put("newPassword", newPassword);
+					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				Assertions.assertEquals(
+					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+					"Not getting 400 response");
+				Assertions.assertEquals(
+					response.body().get("errorCode").asInt(),
+					NetshotBadRequestException.Reason.NETSHOT_FAILED_PASSWORD_POLICY.getCode(),
+					"Unexpected Netshot error code");
+			}
+			{
+				String newPassword = "newverylongpassword";
+				ObjectNode data = JsonNodeFactory.instance.objectNode()
+					.put("username", testUsername)
+					.put("password", testPassword)
+					.put("newPassword", newPassword);
+					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				Assertions.assertEquals(
+					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+					"Not getting 400 response");
+				Assertions.assertEquals(
+					response.body().get("errorCode").asInt(),
+					NetshotBadRequestException.Reason.NETSHOT_FAILED_PASSWORD_POLICY.getCode(),
+					"Unexpected Netshot error code");
+			}
+			{
+				String newPassword = "newverylongpassword123";
+				ObjectNode data = JsonNodeFactory.instance.objectNode()
+					.put("username", testUsername)
+					.put("password", testPassword)
+					.put("newPassword", newPassword);
+					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				Assertions.assertEquals(
+					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+					"Not getting 400 response");
+				Assertions.assertEquals(
+					response.body().get("errorCode").asInt(),
+					NetshotBadRequestException.Reason.NETSHOT_FAILED_PASSWORD_POLICY.getCode(),
+					"Unexpected Netshot error code");
+			}
+			{
+				String newPassword = "newverylongPASSWORD123";
+				ObjectNode data = JsonNodeFactory.instance.objectNode()
+					.put("username", testUsername)
+					.put("password", testPassword)
+					.put("newPassword", newPassword);
+					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				Assertions.assertEquals(
+					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+					"Not getting 400 response");
+				Assertions.assertEquals(
+					response.body().get("errorCode").asInt(),
+					NetshotBadRequestException.Reason.NETSHOT_FAILED_PASSWORD_POLICY.getCode(),
+					"Unexpected Netshot error code");
+			}
+			{
+				String newPassword = "newverylongPASS123!!$$";
+				ObjectNode data = JsonNodeFactory.instance.objectNode()
+					.put("username", testUsername)
+					.put("password", testPassword)
+					.put("newPassword", newPassword);
+					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				Assertions.assertEquals(
+					Response.Status.OK.getStatusCode(), response.statusCode(),
+					"Not getting 200 response");
+				try (Session session = Database.getSession()) {
+					UiUser user = session
+						.bySimpleNaturalId(UiUser.class)
+						.load(testUsername);
+					Assertions.assertDoesNotThrow(() -> user.checkPassword(newPassword, null),
+						"Password should have changed");
+				}
+			}
+			
 		}
 	}
 
@@ -550,7 +808,7 @@ public class RestServiceTest {
 			@Test
 			@DisplayName("Update user")
 			@ResourceLock(value = "DB")
-			void updateDomain() throws IOException, InterruptedException {
+			void updateUser() throws IOException, InterruptedException {
 				UiUser user = new UiUser("user1", true, "pass1");
 				user.setLevel(UiUser.LEVEL_EXECUTEREADWRITE);
 				try (Session session = Database.getSession()) {
@@ -559,8 +817,8 @@ public class RestServiceTest {
 					session.getTransaction().commit();
 				}
 				UiUser targetUser = new UiUser("user2", true, "pass1");
-				targetUser.setHashedPassword(user.getHashedPassword());
 				targetUser.setLevel(UiUser.LEVEL_READONLY);
+				targetUser.setHashedPassword(user.getHashedPassword());
 				targetUser.setId(user.getId());
 				ObjectNode data = JsonNodeFactory.instance.objectNode()
 					.put("local", targetUser.isLocal())
@@ -574,8 +832,10 @@ public class RestServiceTest {
 				try (Session session = Database.getSession()) {
 					UiUser dbUser = session.byId(UiUser.class)
 						.load(targetUser.getId());
-					Assertions.assertEquals(
-						targetUser, dbUser, "User not updated as expected");
+					Assertions.assertEquals(targetUser.getName(), dbUser.getName(),
+						"User not updated as expected");
+					Assertions.assertEquals(targetUser.getLevel(), dbUser.getLevel(),
+						"User not updated as expected");
 				}
 			}
 		}

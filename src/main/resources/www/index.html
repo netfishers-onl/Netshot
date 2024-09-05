@@ -28,29 +28,41 @@
 	<div id="progress" data-progress="0">
 		<div id="bar"></div>
 	</div>
-	<div class="nserror" id="connection-error">
-		<span class="ui-icon ui-icon-alert"></span>
-		<span id="errormsg">Unable to connect to the Netshot REST server.</span>
-	</div>
 	<div class="nserror" id="versionmismatch-error">
 		<span class="ui-icon ui-icon-alert"></span>
 		<span id="errormsg">Netshot version mismatch (frontend vs backend).</span>
 	</div>
+	<div class="nserror nswarning" id="passwordchange-warning">
+		<span class="ui-icon ui-icon-info"></span>
+		<span id="errormsg">Your password has expired, you must change it.</span>
+	</div>
+	<div class="nserror" id="connection-error">
+		<span class="ui-icon ui-icon-alert"></span>
+		<span id="errormsg">Unable to connect to the Netshot REST server.</span>
+	</div>
 	<form id="authentication-box">
 		<table>
 		<tbody>
-		<tr>
-		<td><label for="username">Username </label></td>
-		<td><input type="text" id="username" name="username" class="text ui-widget-content ui-corner-all" autofocus="autofocus" autocomplete="username" /></td>
-		</tr>
-		<tr>
-		<td><label for="password">Password </label></td>
-		<td><input type="password" id="password" name="password" class="text ui-widget-content ui-corner-all" autocomplete="current-password" /></td>
-		</tr>
-		<tr>
-		<td></td>
-		<td><button id="authenticate" type="submit">Connect</button></td>
-		</tr>
+			<tr>
+				<td><label for="username">Username </label></td>
+				<td><input type="text" id="username" name="username" class="text ui-widget-content ui-corner-all" autofocus="autofocus" autocomplete="username" /></td>
+			</tr>
+			<tr>
+				<td><label for="password">Password </label></td>
+				<td><input type="password" id="password" name="password" class="text ui-widget-content ui-corner-all" autocomplete="current-password" /></td>
+			</tr>
+			<tr class="changepassword">
+				<td><label for="password">New password </label></td>
+				<td><input type="password" id="newpassword1" name="newpassword1" class="text ui-widget-content ui-corner-all" /></td>
+			</tr>
+			<tr class="changepassword">
+				<td><label for="password">Repeat password </label></td>
+				<td><input type="password" id="newpassword2" name="newpassword2" class="text ui-widget-content ui-corner-all" /></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><button id="authenticate" type="submit">Connect</button></td>
+			</tr>
 		</tbody>
 		</table>
 	</form>

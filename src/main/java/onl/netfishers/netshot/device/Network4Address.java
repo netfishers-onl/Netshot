@@ -181,7 +181,7 @@ public class Network4Address extends NetworkAddress {
 	/**
 	 * Instantiates a new network4 address.
 	 */
-	protected Network4Address() {
+	public Network4Address() {
 	}
 
 	/**

@@ -46,8 +46,20 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
 
+      - name: Prepare the builder
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: builder
+          tags: builder
+          build-args: |
+            NETSHOT_VERSION=${{ steps.meta.outputs.version }}
+
+      - name: Run the tests
+        run: docker run --rm builder ./mvnw test 
+
       - name: Build and push the image
-        uses: docker/build-push-action@v5.0.0
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true

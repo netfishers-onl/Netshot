@@ -1,0 +1,4 @@
+name: netshot
+
+include:
+  - ./dist/compose.yaml

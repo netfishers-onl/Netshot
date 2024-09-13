@@ -1,0 +1,4 @@
+services:
+  netshot:
+    pull_policy: never
+    build: .

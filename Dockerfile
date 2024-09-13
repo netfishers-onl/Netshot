@@ -12,15 +12,13 @@ RUN wget --quiet https://download.oracle.com/graalvm/${GRAALVM_VERSION%%.*}/arch
     mkdir ${JDIR}/languages && \
     update-alternatives --install /usr/bin/java java /usr/lib/jvm/${JDIR}/bin/java 92100
 
-
 FROM debian-graalvm AS builder
 ARG NETSHOT_VERSION
 COPY . /build
 WORKDIR /build
 RUN sed -i -r "s/VERSION = \".*\";/VERSION = \"$NETSHOT_VERSION\";/g" \
        src/main/java/onl/netfishers/netshot/Netshot.java
-RUN ./mvnw package
-
+RUN ./mvnw package -Dmaven.test.skip
 
 FROM debian-graalvm
 RUN mkdir /usr/local/netshot /var/log/netshot

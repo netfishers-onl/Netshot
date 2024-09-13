@@ -14,7 +14,7 @@ env:
 
 jobs:
   build_and_upload:
-    name: Build and upload the files
+    name: Build, test and upload the files
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -85,10 +85,12 @@ jobs:
           echo ${{ steps.meta.outputs.version }} > VERSION.txt
           zip netshot_${{ steps.meta.outputs.version }}.zip *
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload the ZIP archive
+        uses: actions/upload-artifact@v4
         with:
           name: netshot-dist
           path: zip/netshot_${{ steps.meta.outputs.version }}.zip
+
 
   attach_to_release:
     name: Attach archive to GitHub release

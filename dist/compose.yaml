@@ -2,7 +2,7 @@ name: netshot
 
 services:
   netshot:
-    build: .
+    image: ghcr.io/netfishers-onl/netshot:latest
     environment:
       NETSHOT_DB_URL: "jdbc:postgresql://database/netshot01"
       NETSHOT_DB_USERNAME: "netshot"

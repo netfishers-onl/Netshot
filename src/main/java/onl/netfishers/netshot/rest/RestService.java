@@ -953,7 +953,6 @@ public class RestService extends Thread {
 		log.debug("REST request, get device {} configs.", id);
 		Session session = Database.getSession(true);
 		try {
-			session.enableFilter("lightConfigAttributesOnly");
 			Query<Config> query = session
 				.createQuery(
 					"select distinct c from Config c left join fetch c.attributes ca where c.device.id = :device order by c.changeDate desc",

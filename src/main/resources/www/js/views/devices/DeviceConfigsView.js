@@ -37,13 +37,12 @@ define([
 			var data = deviceConfig.toJSON();
 			var fullAttributes = [];
 			if (typeof this.deviceType === "object" && this.deviceType && data.attributes instanceof Array) {
-				var definitions = _.where(this.deviceType.get("attributes"), { level: "CONFIG" });
-				var attributes = _.indexBy(data.attributes, "name");
-				for (var d in definitions) {
-					var name = definitions[d].name;
-					var attribute = attributes[name];
+				for (var d in data.attributes) {
+					var attribute = data.attributes[d];
+					var name = attribute.name;
+					var definition = this.configAttributeDefinitions[name];
 					if (typeof attribute !== "object" || !attribute) { attribute = {}; }
-					var fullAttribute = _.defaults(attribute, definitions[d]);
+					var fullAttribute = _.defaults(attribute, definition);
 					fullAttribute.downloadLink = deviceConfig.getItemUrl(name);
 					fullAttributes.push(fullAttribute);
 				}
@@ -56,6 +55,8 @@ define([
 			var that = this;
 			this.$el.html(this.template());
 			this.htmlBuffer = "";
+			var configAttributes = _.where(this.deviceType.get("attributes"), { level: "CONFIG" });
+			this.configAttributeDefinitions = _.indexBy(configAttributes, "name");
 			this.deviceConfigs.each(this.renderConfigLine, this);
 			var $table = this.$("#configs tbody").html(this.htmlBuffer);
 

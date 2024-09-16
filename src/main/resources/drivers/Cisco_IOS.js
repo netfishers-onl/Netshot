@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "Netshot Team",
-	version: "1.9.2"
+	version: "1.10"
 };
 
 var Config = {
@@ -52,6 +52,17 @@ var Config = {
 		dump: {
 			pre: "!! Running configuration (taken on %when%):",
 			post: "!! End of running configuration"
+		}
+	},
+	"sdwanRunningConfig": {
+		type: "LongText",
+		title: "SDWAN Running configuration",
+		comparable: true,
+		searchable: true,
+		checkable: true,
+		dump: {
+			pre: "!! SDWAN running configuration (taken on %when%):",
+			post: "!! End of SDWAN running configuration"
 		}
 	}
 };
@@ -249,6 +260,14 @@ function snapshot(cli, device, config) {
 	}
 	device.set("configurationSaved", configSaved);
 
+	try {
+		var sdwanRunningConfig = cli.command("show sdwan running-config");
+		config.set("sdwanRunningConfig", sdwanRunningConfig);
+	}
+	catch (e) {
+		// Ignore SDWAN config
+	}
+
 
 	var showVersion = cli.command("show version");
 
@@ -409,6 +428,9 @@ function snapshot(cli, device, config) {
 		}
 		else if (system.match(/[Cc]isco CSR1000V/)) {
 			device.set("family", "Cisco CSR1000V");
+		}
+		else if (system.match(/[Cc]isco C8000V/)) {
+			device.set("family", "Cisco Catalyst 8000V");
 		}
 		else if (system.match(/WS-CBS3/)) {
 			device.set("family", "Cisco CBS");

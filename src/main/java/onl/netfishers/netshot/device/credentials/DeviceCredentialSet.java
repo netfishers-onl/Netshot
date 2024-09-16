@@ -39,6 +39,8 @@ import onl.netfishers.netshot.device.Domain;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -100,6 +102,7 @@ abstract public class DeviceCredentialSet {
 	/** The mgmtDomain. */
 	@Getter(onMethod=@__({
 		@ManyToOne,
+		@OnDelete(action = OnDeleteAction.CASCADE),
 		@XmlElement, @JsonView(DefaultView.class),
 	}))
 	@Setter

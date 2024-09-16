@@ -39,6 +39,8 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -99,7 +101,8 @@ public abstract class Diagnostic {
 	/** The target group. */
 	@Getter(onMethod=@__({
 		@ManyToOne,
-		@XmlElement, @JsonView(DefaultView.class)
+		@XmlElement, @JsonView(DefaultView.class),
+		@OnDelete(action = OnDeleteAction.SET_NULL)
 	}))
 	@Setter
 	private DeviceGroup targetGroup;

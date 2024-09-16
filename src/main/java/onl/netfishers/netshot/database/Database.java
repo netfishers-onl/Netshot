@@ -208,8 +208,9 @@ public class Database {
 
 	/**
 	 * Update the database schema (to be run at startup).
+	 * @throws Exception 
 	 */
-	public static void update() {
+	public static void update() throws Exception {
 		try {
 			Class.forName("org.postgresql.Driver");
 			try (Connection connection = Database.getConnection(false)) {
@@ -224,6 +225,7 @@ public class Database {
 		}
 		catch (Exception e) {
 			log.error("Unable to perform initial schema update", e);
+			throw e;
 		}
 	}
 

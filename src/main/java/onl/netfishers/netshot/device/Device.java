@@ -158,8 +158,7 @@ public class Device {
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(RestApiView.class),
 		@OneToMany(mappedBy = "device", orphanRemoval = true,
-				cascade = CascadeType.ALL),
-		@OnDelete(action = OnDeleteAction.CASCADE)
+				cascade = CascadeType.ALL)
 	}))
 	@Setter
 	private Set<DeviceAttribute> attributes = new HashSet<>();
@@ -193,32 +192,28 @@ public class Device {
 
 	/** The compliance check results. */
 	@Getter(onMethod=@__({
-		@OneToMany(mappedBy = "key.device", orphanRemoval = true, cascade = CascadeType.ALL),
-		@OnDelete(action = OnDeleteAction.CASCADE)
+		@OneToMany(mappedBy = "key.device", orphanRemoval = true, cascade = CascadeType.ALL)
 	}))
 	@Setter
 	protected Set<CheckResult> complianceCheckResults = new HashSet<>();
 
 	/** The compliance exemptions. */
 	@Getter(onMethod=@__({
-		@OneToMany(fetch = FetchType.LAZY, mappedBy = "key.device", cascade = CascadeType.ALL, orphanRemoval = true),
-		@OnDelete(action = OnDeleteAction.CASCADE)
+		@OneToMany(fetch = FetchType.LAZY, mappedBy = "key.device", cascade = CascadeType.ALL, orphanRemoval = true)
 	}))
 	@Setter
 	protected Set<Exemption> complianceExemptions = new HashSet<>();
 
 	/** The configs. */
 	@Getter(onMethod=@__({
-		@OneToMany(mappedBy = "device", cascade = CascadeType.ALL),
-		@OnDelete(action = OnDeleteAction.CASCADE)
+		@OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
 	}))
 	@Setter
 	protected List<Config> configs = new ArrayList<>();
 
 	/** The diagnostic results. */
 	@Getter(onMethod=@__({
-		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL),
-		@OnDelete(action = OnDeleteAction.CASCADE)
+		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL)
 	}))
 	@Setter
 	protected Set<DiagnosticResult> diagnosticResults = new HashSet<>();
@@ -246,7 +241,9 @@ public class Device {
 
 	/** The credential sets. */
 	@Getter(onMethod=@__({
-		@XmlElement, @ManyToMany(), @Fetch(FetchMode.SELECT)
+		@XmlElement, @JsonView(DefaultView.class),
+		@ManyToMany(), @Fetch(FetchMode.SELECT),
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	protected Set<DeviceCredentialSet> credentialSets = new HashSet<>();
@@ -352,8 +349,7 @@ public class Device {
 	/** The modules. */
 	@Getter(onMethod=@__({
 		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL),
-		@SQLRestriction("removed is not true"),
-		@OnDelete(action = OnDeleteAction.CASCADE)
+		@SQLRestriction("removed is not true")
 	}))
 	@Setter
 	protected List<Module> modules = new ArrayList<>();
@@ -374,8 +370,7 @@ public class Device {
 
 	/** The network interfaces. */
 	@Getter(onMethod=@__({
-		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL),
-		@OnDelete(action = OnDeleteAction.CASCADE)
+		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL)
 	}))
 	@Setter
 	protected List<NetworkInterface> networkInterfaces = new ArrayList<>();

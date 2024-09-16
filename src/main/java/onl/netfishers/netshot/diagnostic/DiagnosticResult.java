@@ -98,7 +98,8 @@ public abstract class DiagnosticResult {
 
 	/** The device which created that result **/
 	@Getter(onMethod=@__({
-		@ManyToOne
+		@ManyToOne,
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private Device device;

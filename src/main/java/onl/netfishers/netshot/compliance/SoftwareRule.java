@@ -20,6 +20,9 @@ package onl.netfishers.netshot.compliance;
 
 import java.util.regex.PatternSyntaxException;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -83,7 +86,8 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	/** The target group. */
 	@Getter(onMethod=@__({
 		@ManyToOne,
-		@XmlElement, @JsonView(DefaultView.class)
+		@XmlElement, @JsonView(DefaultView.class),
+		@OnDelete(action = OnDeleteAction.SET_NULL)
 	}))
 	@Setter
 	protected DeviceGroup targetGroup;

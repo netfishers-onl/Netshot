@@ -57,13 +57,17 @@ public class TaskJob implements Job {
 		log.debug("Starting job.");
 		Long id = (Long) context.getJobDetail().getJobDataMap()
 				.get(NETSHOT_TASK);
+		if (id == 0) {
+			log.error("Invalid task, id is 0");
+			return;
+		}
 		log.trace("The task id is {}.", id);
 		Task task = null;
 		Session session = Database.getSession();
 		try {
 			Thread.sleep(1000);
 			session.beginTransaction();
-			task = (Task) session.get(Task.class, id);
+			task = session.get(Task.class, id);
 			if (task == null) {
 				log.error("The retrieved task {} is null.", id);
 			}
@@ -89,7 +93,7 @@ public class TaskJob implements Job {
 			session.close();
 		}
 
-		log.warn("Running the task {} of type {}", id, task.getClass().getName());
+		log.warn("Running the task {} of type {}", id, task.getClass().getSimpleName());
 		try {
 			task.run();
 		}

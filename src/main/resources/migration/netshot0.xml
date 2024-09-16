@@ -1308,4 +1308,14 @@
 			<column name="old_hashed_passwords" type="VARCHAR(255) ARRAY"/>
 		</addColumn>
 	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_15">
+		<sql>DELETE FROM discover_device_type_task WHERE device NOT IN (SELECT id FROM device)</sql>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="discover_device_type_task" constraintName="FK_h5y7pd1muahk6hap4if38dur3" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.0_16">
+		<dropForeignKeyConstraint baseTableName="device" constraintName="FK_j0e7ywojnw9kpht8bgsnmyu8f"/>
+		<addForeignKeyConstraint baseColumnNames="eol_module" baseTableName="device" constraintName="FK_j0e7ywojnw9kpht8bgsnmyu8f" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="module" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="device" constraintName="FK_gpsllhlyii8d5g54pyiw0gmm2"/>
+		<addForeignKeyConstraint baseColumnNames="eos_module" baseTableName="device" constraintName="FK_gpsllhlyii8d5g54pyiw0gmm2" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="module" validate="true"/>
+	</changeSet>
 </databaseChangeLog>

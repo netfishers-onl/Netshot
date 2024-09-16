@@ -51,6 +51,8 @@ import lombok.Setter;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import onl.netfishers.netshot.device.attribute.ConfigAttribute;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
@@ -120,7 +122,8 @@ public class Config {
 
 	/** The device. */
 	@Getter(onMethod=@__({
-		@ManyToOne(fetch = FetchType.LAZY)
+		@ManyToOne(fetch = FetchType.LAZY),
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	protected Device device;

@@ -115,8 +115,9 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 
 	/** The device. */
 	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(HookView.class),
 		@ManyToOne(fetch = FetchType.LAZY),
-		@XmlElement, @JsonView(HookView.class)
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private Device device = null;

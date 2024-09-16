@@ -45,6 +45,8 @@ import lombok.Setter;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import onl.netfishers.netshot.device.NetworkAddress.AddressUsage;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
@@ -67,7 +69,8 @@ public class NetworkInterface {
 	
 	/** The device. */
 	@Getter(onMethod=@__({
-		@ManyToOne
+		@ManyToOne,
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	protected Device device;

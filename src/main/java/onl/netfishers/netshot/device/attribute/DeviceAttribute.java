@@ -37,6 +37,9 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import onl.netfishers.netshot.device.Device;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -71,7 +74,8 @@ public abstract class DeviceAttribute {
 	protected String name;
 
 	@Getter(onMethod=@__({
-		@ManyToOne
+		@ManyToOne,
+		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	protected Device device;

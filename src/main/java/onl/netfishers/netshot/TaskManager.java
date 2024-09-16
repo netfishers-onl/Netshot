@@ -308,7 +308,12 @@ public class TaskManager {
 			session.beginTransaction();
 			task.onSchedule();
 			task.setScheduled();
-			session.persist(task);
+			if (task.getId() == 0) {
+				session.persist(task);
+			}
+			else {
+				session.merge(task);
+			}
 			session.getTransaction().commit();
 			session.evict(task);
 			log.trace("Task successfully added to the database.");

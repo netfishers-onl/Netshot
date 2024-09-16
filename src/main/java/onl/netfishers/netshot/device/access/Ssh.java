@@ -48,6 +48,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Ssh extends Cli {
 
+	/** Default Telnet TCP port */
+	static public int DEFAULT_PORT = 22;
+
 	/**
 	 * Logger bridge for Jsch to SLF4j
 	 */
@@ -292,7 +295,7 @@ public class Ssh extends Cli {
 	}
 
 	/** The port. */
-	private int port = 22;
+	private int port = DEFAULT_PORT;
 
 	/** The jsch. */
 	private JSch jsch;
@@ -329,7 +332,7 @@ public class Ssh extends Cli {
 	 */
 	public Ssh(NetworkAddress host, int port, String username, String password, TaskLogger taskLogger) {
 		super(host, taskLogger);
-		if (port != 0) this.port = port;
+		this.port = port;
 		this.username = username;
 		this.password = password;
 		this.privateKey = null;
@@ -351,7 +354,7 @@ public class Ssh extends Cli {
 	public Ssh(NetworkAddress host, int port, String username, String publicKey, String privateKey,
 			String passphrase, TaskLogger taskLogger) {
 		super(host, taskLogger);
-		if (port != 0) this.port = port;
+		this.port = port;
 		this.username = username;
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;

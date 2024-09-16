@@ -45,6 +45,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Telnet extends Cli {
 
+	/** Default Telnet TCP port */
+	static public int DEFAULT_PORT = 23;
+
 	/** Default value for the Telnet connection timeout */
 	static private int DEFAULT_CONNECTION_TIMEOUT = 5000;
 
@@ -105,7 +108,7 @@ public class Telnet extends Cli {
 	}
 
 	/** The port. */
-	private int port = 23;
+	private int port = DEFAULT_PORT;
 
 	/** The telnet. */
 	private TelnetClient telnet = null;
@@ -132,7 +135,7 @@ public class Telnet extends Cli {
 	 */
 	public Telnet(NetworkAddress host, int port, TaskLogger taskLogger) {
 		this(host, taskLogger);
-		if (port != 0) this.port = port;
+		this.port = port;
 		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
 		this.commandTimeout = DEFAULT_COMMAND_TIMEOUT;
 		this.receiveTimeout = DEFAULT_RECEIVE_TIMEOUT;

@@ -69,6 +69,8 @@ import onl.netfishers.netshot.compliance.Exemption;
 import onl.netfishers.netshot.compliance.Rule;
 import onl.netfishers.netshot.compliance.SoftwareRule;
 import onl.netfishers.netshot.compliance.SoftwareRule.ConformanceLevel;
+import onl.netfishers.netshot.device.access.Ssh;
+import onl.netfishers.netshot.device.access.Telnet;
 import onl.netfishers.netshot.device.attribute.DeviceAttribute;
 import onl.netfishers.netshot.device.credentials.DeviceCredentialSet;
 import onl.netfishers.netshot.diagnostic.DiagnosticResult;
@@ -432,14 +434,14 @@ public class Device {
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	protected int sshPort = 0;
+	protected int sshPort = Ssh.DEFAULT_PORT;
 	
 	/** Telnet TCP port, 23 by default */
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	protected int telnetPort = 0;
+	protected int telnetPort = Telnet.DEFAULT_PORT;
 	
 	/** An optional connection address, in case the management address can't be used to connect to the device. */
 	@Getter(onMethod=@__({

@@ -125,6 +125,18 @@ public abstract class CliScript {
 		}
 		return new StringListTaskLogger(cliLog);
 	}
+
+	/**
+	 * Wait a bit between authentication attempts
+	 */
+	private void waitBetweenAttempts() {
+		try {
+			Thread.sleep(1000);
+		}
+		catch (InterruptedException e) {
+			// Ignore
+		}
+	}
 	
 	protected abstract void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
 			throws InvalidCredentialsException, IOException, ScriptException, MissingDeviceDriverException;
@@ -160,7 +172,13 @@ public abstract class CliScript {
 		}
 		
 		int sshPort = device.getSshPort();
+		if (sshPort == 0) {
+			sshPort = Ssh.DEFAULT_PORT;
+		}
 		int telnetPort = device.getTelnetPort();
+		if (telnetPort == 0) {
+			telnetPort = Telnet.DEFAULT_PORT;
+		}
 		
 		if (sshOpened) {
 			for (DeviceCredentialSet credentialSet : credentialSets) {
@@ -190,15 +208,17 @@ public abstract class CliScript {
 					}
 					catch (InvalidCredentialsException e) {
 						taskLogger.warn(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()));
+						this.waitBetweenAttempts();
 					}
 					catch (ScriptException e) {
 						throw e;
 					}
 					catch (IOException e) {
-						log.warn("Unable to open an SSH connection to {}:{}.", address.getIp(), sshPort, e);
+						log.warn("Error while opening SSH connection to {}:{}.", address.getIp(), sshPort, e);
 						if (e.getMessage().contains("Auth fail")) {
 							taskLogger.warn(String.format("Authentication failed %s:%d using SSH credential set %s.",
 									address, sshPort, credentialSet.getName()));
+							this.waitBetweenAttempts();
 						}
 						else {
 							taskLogger.warn(String.format("Unable to open an SSH socket to %s:%d: %s",
@@ -229,6 +249,7 @@ public abstract class CliScript {
 					}
 					catch (InvalidCredentialsException e) {
 						taskLogger.warn(String.format("Authentication failed using Telnet credential set %s.", credentialSet.getName()));
+						this.waitBetweenAttempts();
 					}
 					catch (ScriptException e) {
 						throw e;
@@ -308,14 +329,16 @@ public abstract class CliScript {
 						}
 						catch (InvalidCredentialsException e) {
 							taskLogger.warn(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()));
+							this.waitBetweenAttempts();
 						}
 						catch (ScriptException e) {
 							throw e;
 						}
 						catch (IOException e) {
-							log.warn("Unable to open an SSH connection to {}:{}.", address.getIp(), sshPort, e);
+							log.warn("Error while opening SSH connection to {}:{}.", address.getIp(), sshPort, e);
 							if (e.getMessage().contains("Auth fail") || e.getMessage().contains("authentication failure")) {
 								taskLogger.warn(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()));
+								this.waitBetweenAttempts();
 							}
 							else {
 								taskLogger.warn(String.format("Unable to open an SSH socket to %s:%d: %s",
@@ -352,6 +375,7 @@ public abstract class CliScript {
 						}
 						catch (InvalidCredentialsException e) {
 							taskLogger.warn(String.format("Authentication failed using Telnet credential set %s.", credentialSet.getName()));
+							this.waitBetweenAttempts();
 						}
 						catch (ScriptException e) {
 							throw e;

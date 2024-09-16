@@ -3,12 +3,14 @@ name: netshot
 services:
   netshot:
     image: ghcr.io/netfishers-onl/netshot:latest
+    restart: unless-stopped
     environment:
       NETSHOT_DB_URL: "jdbc:postgresql://database/netshot01"
       NETSHOT_DB_USERNAME: "netshot"
       NETSHOT_DB_PASSWORD: "change_this_pass"
       NETSHOT_DB_ENCRYPTIONPASSWORD: "change_this_pass_too"
       NETSHOT_HTTP_TRUSTXFORWARDEDFOR: "true"
+      NETSHOT_HTTP_BASEPORT: "8080"
     labels:
       traefik.docker.network: ${COMPOSE_PROJECT_NAME}_front
       traefik.http.routers.netshot-https.rule: "PathPrefix(`/`)"
@@ -18,7 +20,9 @@ services:
     expose:
       - 8080
     depends_on:
-      - database
+      database:
+        condition: service_healthy
+        
     ports:
       - "162:1162/udp"
       - "514:1514/udp"
@@ -28,13 +32,18 @@ services:
 
   database:
     image: postgres:15
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: "change_this_pass"
       POSTGRES_USER: "netshot"
       POSTGRES_DB: "netshot01"
     volumes:
       - "dbdata:/var/lib/postgresql/data"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
     expose:
       - 5432
     networks:
@@ -42,6 +51,7 @@ services:
 
   rproxy:
     image: traefik:v3.1
+    restart: unless-stopped
     command:
       - --api.insecure=true
       - --providers.docker

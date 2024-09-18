@@ -136,7 +136,7 @@ function snapshot(cli, device, config) {
 	var status = cli.command("get system status");
 
 	// Read version and family from the 'status' output.
-	var version = status.match(/Version:[\s]*(FortiMail(|-VM)) v(.*)/);
+	var version = status.match(/Version:[\s]*(FortiMail([a-zA-Z0-9\-]*)) v(.*)/);
 	var family = (version ? version[1] : "FortiMail device");
 	device.set("family", family);
 	version = (version ? version[3] : "Unknown");

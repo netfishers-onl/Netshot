@@ -21,7 +21,7 @@
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "Netshot Team",
-	version: "1.8.2"
+	version: "1.8.3"
 };
 
 var Config = {
@@ -64,7 +64,7 @@ var Config = {
 			pre: "!! Admin configuration (taken on %when%):",
 			post: "!! End of admin configuration"
 		}
-	}
+	},
 };
 
 var Device = {
@@ -274,6 +274,18 @@ function snapshot(cli, device, config) {
 			}
 			else if (module.partNumber.match(/NCS-?5[0-9A-Z][0-9A-Z][0-9A-Z]/)) {
 				device.set("family", "Cisco NCS5000");
+			}
+			else if (module.partNumber.match(/^N540-/)) {
+				device.set("family", "Cisco NCS540");
+			}
+			else if (module.partNumber.match(/Cisco 81[0-9][0-9]/)) {
+				device.set("family", "Cisco 8200");
+			}
+			else if (module.partNumber.match(/Cisco 82[0-9][0-9]/)) {
+				device.set("family", "Cisco 8100");
+			}
+			else if (module.partNumber.match(/Cisco 88[0-9][0-9]/)) {
+				device.set("family", "Cisco 8800");
 			}
 			else if (module.partNumber.match(/NCS-?6[0-9A-Z][0-9A-Z][0-9A-Z]/)) {
 				device.set("family", "Cisco NCS6000");

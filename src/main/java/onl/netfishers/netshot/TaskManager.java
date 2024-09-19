@@ -247,7 +247,7 @@ public class TaskManager {
 			task.onCancel();
 			task.setCancelled();
 			task.warn(reason);
-			session.persist(task);
+			session.merge(task);
 			session.getTransaction().commit();
 			log.trace("Task successfully cancelled.");
 		}
@@ -503,7 +503,7 @@ public class TaskManager {
 					log.debug("Task {} will be reassigned as its previously assigned runner {} has disappeared.",
 						task.getId(), task.getRunnerId());
 					assignTaskRunner(task);
-					session.persist(task);
+					session.merge(task);
 					reassignedCount += 1;
 				}
 				session.getTransaction().commit();

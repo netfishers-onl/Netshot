@@ -1551,8 +1551,8 @@ public class RestService extends Thread {
 				"case when (d.eolDate < current_date()) then true else false end,  " +
 				"case when (d.eosDate < current_date()) then true else false end, " +
 				"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
-				"d.softwareLevel) " +
-				"from Device d";
+				"d.softwareLevel " +
+				") from Device d";
 			if (groupId != null) {
 				hqlQuery += " join d.ownerGroups g where g.id = :groupId";
 			}
@@ -4143,8 +4143,8 @@ public class RestService extends Thread {
 				"c.device.name, " +
 				"c.device.id, " +
 				"c.changeDate, " +
-				"c.author) " +
-				"from Config c join c.device d";
+				"c.author " +
+				") from Config c join c.device d";
 			Map<String, Object> hqlParams = new HashMap<>();
 			if (!deviceGroups.isEmpty()) {
 				hqlQuery += " join d.ownerGroups g ";
@@ -5144,8 +5144,8 @@ public class RestService extends Thread {
 				"case when (d.eosDate < current_date()) then true else false end, " +
 				"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
 				"d.softwareLevel, " +
-				"e.expirationDate as expirationDate) " +
-				"from Exemption e join e.key.device d where e.key.rule.id = :id",
+				"e.expirationDate as expirationDate " +
+				") from Exemption e join e.key.device d where e.key.rule.id = :id",
 					RsLightExemptedDevice.class)
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
 				.setParameter("id", id);
@@ -5251,8 +5251,8 @@ public class RestService extends Thread {
 					"cr.result as result, " +
 					"cr.comment as comment, " +
 					"cr.checkDate as checkDate, " +
-					"e.expirationDate as expirationDate) " +
-					"from Rule r " +
+					"e.expirationDate as expirationDate " +
+					") from Rule r " +
 					"join r.policy p join p.targetGroups g join g.cachedDevices d1 with d1.id = :id " +
 					"left join CheckResult cr with cr.key.rule.id = r.id and cr.key.device.id = :id " +
 					"left join r.exemptions e with e.key.device.id = :id",
@@ -5446,8 +5446,8 @@ public class RestService extends Thread {
 						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled and " +
 							"(select count(ccr.result) from d.complianceCheckResults ccr join ccr.key.rule rule where"
 							+ ccrFilter + " ccr.result = :nonConforming) = 0) as compliantDeviceCount, "
-						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled) as deviceCount) "
-						+ "from DeviceGroup g where" + groupFilter + " g.hiddenFromReports <> true",
+						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled) as deviceCount "
+						+ ") from DeviceGroup g where" + groupFilter + " g.hiddenFromReports <> true",
 						RsGroupConfigComplianceStat.class)
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
 				.setParameter("enabled", Device.Status.INPRODUCTION);
@@ -5644,8 +5644,8 @@ public class RestService extends Thread {
 					+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :gold" + domainFilter + ") as goldDeviceCount, "
 					+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :silver" + domainFilter + ") as silverDeviceCount, "
 					+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :bronze"  + domainFilter + ") as bronzeDeviceCount, "
-					+ "(select count(d) from g.cachedDevices d where d.status = :enabled"  + domainFilter + ") as deviceCount) "
-					+ "from DeviceGroup g where g.hiddenFromReports <> true",
+					+ "(select count(d) from g.cachedDevices d where d.status = :enabled"  + domainFilter + ") as deviceCount "
+					+ ") from DeviceGroup g where g.hiddenFromReports <> true",
 					RsGroupSoftwareComplianceStat.class)
 				.setParameter("gold", ConformanceLevel.GOLD)
 				.setParameter("silver", ConformanceLevel.SILVER)
@@ -5701,6 +5701,17 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private ResultOption result;
+
+		public RsLightPolicyRuleDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
+				String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
+				String ruleName, String policyName, Date checkDate, ResultOption result) {
+			super(id, name, family, mgmtAddress, status, driver, eol, eos, configCompliant, softwareLevel);
+			this.ruleName = ruleName;
+			this.policyName = policyName;
+			this.checkDate = checkDate;
+			this.result = result;
+		}
+
 	}
 	
 
@@ -5745,12 +5756,12 @@ public class RestService extends Thread {
 				"case when (d.eolDate < current_date()) then true else false end,  " +
 				"case when (d.eosDate < current_date()) then true else false end, " +
 				"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
-				"d.softwareLevel), " +
+				"d.softwareLevel, " +
 				"p.name as policyName, " +
 				"r.name as ruleName, " +
 				"ccr.checkDate as checkDate, " +
-				"ccr.result as result) " +
-				"from Device d" +
+				"ccr.result as result " +
+				") from Device d" +
 				"left join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p " +
 				"where d.status = :enabled";
 			if (domains.size() > 0) {
@@ -5839,12 +5850,12 @@ public class RestService extends Thread {
 					"case when (d.eolDate < current_date()) then true else false end,  " +
 					"case when (d.eosDate < current_date()) then true else false end, " +
 					"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
-					"d.softwareLevel) " +
+					"d.softwareLevel, " +
 					"p.name as policyName, " +
 					"r.name as ruleName, " +
 					"ccr.checkDate as checkDate, " +
 					"ccr.result as result" +
-					"from Device d" +
+					") from Device d " +
 					"join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p " +
 					"where g.id = :id and ccr.result = :nonConforming and d.status = :enabled" + domainFilter + policyFilter,
 						RsLightPolicyRuleDevice.class)
@@ -5906,8 +5917,8 @@ public class RestService extends Thread {
 						"case when (d.eolDate < current_date()) then true else false end,  " +
 						"case when (d.eosDate < current_date()) then true else false end, " +
 						"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
-						"d.softwareLevel) " +
-						"from Device d where d." + type + "Date is null and d.status = :enabled",
+						"d.softwareLevel " +
+						") from Device d where d." + type + "Date is null and d.status = :enabled",
 						RsLightDevice.class)
 					.setParameter("enabled", Device.Status.INPRODUCTION)
 					.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
@@ -5927,8 +5938,8 @@ public class RestService extends Thread {
 						"case when (d.eolDate < current_date()) then true else false end,  " +
 						"case when (d.eosDate < current_date()) then true else false end, " +
 						"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
-						"d.softwareLevel) " +
-						"from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled",
+						"d.softwareLevel " +
+						") from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled",
 							RsLightDevice.class)
 					.setParameter("eoxDate", eoxDate)
 					.setParameter("enabled", Device.Status.INPRODUCTION)
@@ -6673,8 +6684,8 @@ public class RestService extends Thread {
 					"case when (d.eolDate < current_date()) then true else false end,  " +
 					"case when (d.eosDate < current_date()) then true else false end, " +
 					"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
-					"d.softwareLevel) " +
-					"from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled" + domainFilter,
+					"d.softwareLevel " +
+					") from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled" + domainFilter,
 						RsLightDevice.class)
 				.setParameter("id", id)
 				.setParameter("level", filterLevel)
@@ -6714,6 +6725,14 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private Date lastFailure;
+
+		public RsLightAccessFailureDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
+				String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
+				Date lastSuccess, Date lastFailure) {
+			super(id, name, family, mgmtAddress, status, driver, eol, eos, configCompliant, softwareLevel);
+			this.lastSuccess = lastSuccess;
+			this.lastFailure = lastFailure;
+		}
 	}
 	
 	@GET
@@ -6761,10 +6780,10 @@ public class RestService extends Thread {
 						"case when (d.eolDate < current_date()) then true else false end,  " +
 						"case when (d.eosDate < current_date()) then true else false end, " +
 						"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
-						"d.softwareLevel " +
+						"d.softwareLevel, " +
 						"(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, " +
-						"(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure) " +
-					"from Device d where d.status = :enabled " + domainFilter +
+						"(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure " +
+					") from Device d where d.status = :enabled " + domainFilter +
 					"and (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) < :when " +
 					"order by lastSuccess desc",
 					RsLightAccessFailureDevice.class)

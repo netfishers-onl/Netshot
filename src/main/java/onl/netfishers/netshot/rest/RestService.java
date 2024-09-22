@@ -955,7 +955,7 @@ public class RestService extends Thread {
 		try {
 			Query<Config> query = session
 				.createQuery(
-					"select distinct c from Config c left join fetch c.attributes ca where c.device.id = :device order by c.changeDate desc",
+					"select c from Config c left join fetch c.attributes ca where c.device.id = :device order by c.changeDate desc",
 					Config.class)
 				.setParameter("device", id);
 			paginationParams.apply(query);
@@ -5761,7 +5761,7 @@ public class RestService extends Thread {
 				"r.name as ruleName, " +
 				"ccr.checkDate as checkDate, " +
 				"ccr.result as result " +
-				") from Device d" +
+				") from Device d " +
 				"left join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p " +
 				"where d.status = :enabled";
 			if (domains.size() > 0) {

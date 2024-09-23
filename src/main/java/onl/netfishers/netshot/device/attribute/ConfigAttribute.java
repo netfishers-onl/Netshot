@@ -95,7 +95,7 @@ public abstract class ConfigAttribute {
 	@Transient
 	public abstract Object getData();
 
-	public abstract boolean deepEquals(ConfigAttribute other);
+	public abstract boolean valueEquals(ConfigAttribute other);
 
 	@Override
 	public int hashCode() {

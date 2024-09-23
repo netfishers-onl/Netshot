@@ -23,6 +23,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonView;
 
 import lombok.Getter;
@@ -73,27 +75,13 @@ public class DiagnosticBinaryResult extends DiagnosticResult {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + ((assumption == null) ? 0 : assumption.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
+	public boolean valueEquals(DiagnosticResult obj) {
 		if (this == obj)
 			return true;
 		if (!(obj instanceof DiagnosticBinaryResult))
 			return false;
 		DiagnosticBinaryResult other = (DiagnosticBinaryResult) obj;
-		if (assumption == null) {
-			if (other.assumption != null)
-				return false;
-		}
-		else if (!assumption.equals(other.assumption))
-			return false;
-		return true;
+		return Objects.equals(this.assumption, other.assumption);
 	}
 
 }

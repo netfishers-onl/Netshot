@@ -105,7 +105,7 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 	}
 
 	@Override
-	public void prepare() {
+	public void prepare(Session session) {
 		Hibernate.initialize(this.getDevice());
 	}
 

@@ -63,7 +63,7 @@ public class ConfigNumericAttribute extends ConfigAttribute {
 	}
 
 	@Override
-	public boolean deepEquals(ConfigAttribute obj) {
+	public boolean valueEquals(ConfigAttribute obj) {
 		if (this == obj)
 			return true;
 		if (!(obj instanceof ConfigNumericAttribute))

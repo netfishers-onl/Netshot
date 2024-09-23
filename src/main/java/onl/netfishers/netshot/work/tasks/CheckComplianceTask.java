@@ -84,7 +84,7 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 	 * @see onl.netfishers.netshot.work.Task#prepare()
 	 */
 	@Override
-	public void prepare() {
+	public void prepare(Session session) {
 		Hibernate.initialize(device);
 	}
 

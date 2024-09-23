@@ -742,7 +742,7 @@ public class Device {
 		while (existingIterator.hasNext()) {
 			DiagnosticResult existingResult = existingIterator.next();
 			if (existingResult.getDiagnostic().equals(result.getDiagnostic())) {
-				if (result.equals(existingResult)) {
+				if (result.equals(existingResult) && result.valueEquals(existingResult)) {
 					existingResult.setLastCheckDate(result.getLastCheckDate());
 					doAdd = false;
 				}

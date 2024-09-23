@@ -23,6 +23,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonView;
 
 import lombok.Getter;
@@ -68,27 +70,13 @@ public class DiagnosticNumericResult extends DiagnosticResult {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + ((number == null) ? 0 : number.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
+	public boolean valueEquals(DiagnosticResult obj) {
 		if (this == obj)
 			return true;
 		if (!(obj instanceof DiagnosticNumericResult))
 			return false;
 		DiagnosticNumericResult other = (DiagnosticNumericResult) obj;
-		if (number == null) {
-			if (other.number != null)
-				return false;
-		}
-		else if (!number.equals(other.number))
-			return false;
-		return true;
+		return Objects.equals(this.number, other.number);
 	}
 	
 }

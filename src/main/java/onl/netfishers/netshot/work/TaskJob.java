@@ -74,20 +74,27 @@ public class TaskJob implements Job {
 			task.setRunning();
 			log.trace("The task runner ID for {} is {}", task.getId(), task.getRunnerId());
 			session.merge(task);
-			session.getTransaction().commit();
 			log.trace("Got the task.");
-			task.prepare();
+			task.prepare(session);
 			log.trace("The task has prepared its fields.");
+			session.getTransaction().commit();
 		}
 		catch (Exception e) {
-			log.error("Error while retrieving and updating the task.", e);
+			log.error("Error while retrieving, updating or preparing the task.", e);
 			try {
 				session.getTransaction().rollback();
+				session.beginTransaction();
+				Task eTask = (Task) session.get(Task.class, id);
+				eTask.setRunning();
+				eTask.setFailed();
+				eTask.setLog(e.getMessage());
+				session.merge(eTask);
+				session.getTransaction().commit();
 			}
 			catch (Exception e1) {
 
 			}
-			throw new JobExecutionException("Unable to access the task.");
+			throw new JobExecutionException("Unable to access or prepare the task.");
 		}
 		finally {
 			session.close();
@@ -103,7 +110,7 @@ public class TaskJob implements Job {
 
 		if (task.getStatus() == Status.RUNNING) {
 			log.error("The task {} exited with a status of RUNNING.", id);
-			task.setStatus(Status.FAILURE);
+			task.setFailed();
 		}
 
 		log.trace("Updating the task with the result.");

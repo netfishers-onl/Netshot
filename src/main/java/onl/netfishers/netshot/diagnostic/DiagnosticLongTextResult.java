@@ -21,9 +21,10 @@ package onl.netfishers.netshot.diagnostic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Transient;
+
+import java.util.Objects;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -37,7 +38,7 @@ import onl.netfishers.netshot.device.attribute.LongTextConfiguration;
 public class DiagnosticLongTextResult extends DiagnosticResult {
 
 	@Getter(onMethod=@__({
-		@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY),
+		@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
@@ -70,27 +71,13 @@ public class DiagnosticLongTextResult extends DiagnosticResult {
  	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + ((longText == null) ? 0 : longText.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
+	public boolean valueEquals(DiagnosticResult obj) {
 		if (this == obj)
 			return true;
 		if (!(obj instanceof DiagnosticLongTextResult))
 			return false;
 		DiagnosticLongTextResult other = (DiagnosticLongTextResult) obj;
-		if (longText == null) {
-			if (other.longText != null)
-				return false;
-		}
-		else if (!longText.equals(other.longText))
-			return false;
-		return true;
+		return Objects.equals(this.longText, other.longText);
 	}
 
 }

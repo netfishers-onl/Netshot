@@ -95,7 +95,7 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 	}
 
 	@Override
-	public boolean deepEquals(ConfigAttribute obj) {
+	public boolean valueEquals(ConfigAttribute obj) {
 		if (this == obj)
 			return true;
 		if (!(obj instanceof ConfigBinaryFileAttribute))

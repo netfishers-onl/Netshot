@@ -96,7 +96,7 @@ public class CheckGroupComplianceTask extends Task implements GroupBasedTask {
 	 * @see onl.netfishers.netshot.work.Task#prepare()
 	 */
 	@Override
-	public void prepare() {
+	public void prepare(Session session) {
 		Hibernate.initialize(this.getDeviceGroup());
 	}
 

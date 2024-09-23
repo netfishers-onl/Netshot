@@ -58,6 +58,7 @@ import onl.netfishers.netshot.work.tasks.ScanSubnetsTask;
 import onl.netfishers.netshot.work.tasks.TakeGroupSnapshotTask;
 import onl.netfishers.netshot.work.tasks.TakeSnapshotTask;
 
+import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
@@ -492,8 +493,8 @@ public abstract class Task implements Cloneable {
 	/**
 	 * Prepare.
 	 */
-	public void prepare() {
-
+	public void prepare(Session session) {
+		// Override to actually do something
 	}
 
 	/**

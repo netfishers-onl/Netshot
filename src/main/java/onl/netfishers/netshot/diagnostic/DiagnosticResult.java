@@ -19,6 +19,7 @@
 package onl.netfishers.netshot.diagnostic;
 
 import java.util.Date;
+import java.util.Objects;
 
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -145,4 +146,20 @@ public abstract class DiagnosticResult {
 		return this.getDiagnostic().getName();
 	}
 	
+	public abstract boolean valueEquals(DiagnosticResult obj);
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(diagnostic, device);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (!(obj instanceof DiagnosticResult)) return false;
+		DiagnosticResult other = (DiagnosticResult) obj;
+		return Objects.equals(diagnostic, other.diagnostic)
+			&& Objects.equals(device, other.device);
+	}
+
 }

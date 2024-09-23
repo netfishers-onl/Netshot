@@ -185,9 +185,8 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	 * @see onl.netfishers.netshot.work.Task#prepare()
 	 */
 	@Override
-	public void prepare() {
+	public void prepare(Session session) {
 		Hibernate.initialize(this.getDevice());
-		Hibernate.initialize(this.getDevice().getLastConfig());
 	}
 
 	/* (non-Javadoc)

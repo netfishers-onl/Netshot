@@ -101,9 +101,8 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 	 * @see onl.netfishers.netshot.work.Task#prepare()
 	 */
 	@Override
-	public void prepare() {
-		Hibernate.initialize(device);
-		Hibernate.initialize(device.getDiagnosticResults());
+	public void prepare(Session session) {
+		Hibernate.initialize(this.device);
 	}
 	
 	@Override
@@ -163,7 +162,8 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 			}
 
 			List<Diagnostic> diagnostics = session.createQuery(
-				"select distinct dg from Diagnostic dg where dg.enabled = :enabled and dg.targetGroup in (select g from Device d join d.ownerGroups g where d = :device)",
+				"select distinct dg from Diagnostic dg where dg.enabled = :enabled and " +
+				"dg.targetGroup in (select g from Device d join d.ownerGroups g where d = :device)",
 					Diagnostic.class)
 				.setParameter("device", device)
 				.setParameter("enabled", true)

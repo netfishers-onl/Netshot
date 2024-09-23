@@ -40,6 +40,7 @@ import onl.netfishers.netshot.rest.RestViews.HookView;
 import onl.netfishers.netshot.work.Task;
 
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
@@ -121,7 +122,7 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 	 * @see onl.netfishers.netshot.work.Task#prepare()
 	 */
 	@Override
-	public void prepare() {
+	public void prepare(Session session) {
 		Hibernate.initialize(this.getDeviceGroup());
 		Hibernate.initialize(this.getDeviceGroup().getCachedDevices());
 	}

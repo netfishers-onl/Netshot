@@ -9039,7 +9039,9 @@ public class RestService extends Thread {
 		Session session = Database.getSession(true);
 		try {
 			Query<DiagnosticResult> query = session
-				.createQuery("from DiagnosticResult dr join fetch dr.diagnostic where dr.device.id = :id", DiagnosticResult.class)
+				.createQuery(
+					"from DiagnosticResult dr join fetch dr.diagnostic where dr.device.id = :id",
+					DiagnosticResult.class)
 				.setParameter("id", id);
 			paginationParams.apply(query);
 			return query.list();

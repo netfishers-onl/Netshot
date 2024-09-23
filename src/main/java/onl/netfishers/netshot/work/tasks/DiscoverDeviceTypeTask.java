@@ -277,7 +277,7 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	 * @see onl.netfishers.netshot.work.Task#prepare()
 	 */
 	@Override
-	public void prepare() {
+	public void prepare(Session session) {
 		Hibernate.initialize(this.getCredentialSets());
 		this.getDomain().getId();
 	}

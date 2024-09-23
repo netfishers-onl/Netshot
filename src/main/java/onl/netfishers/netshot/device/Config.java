@@ -50,7 +50,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -94,8 +93,7 @@ public class Config {
 	/** The attributes. */
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class),
-		@OneToMany(mappedBy = "config", orphanRemoval = true, cascade = CascadeType.ALL),
-		@Filter(name = "lightConfigAttributesOnly")
+		@OneToMany(mappedBy = "config", orphanRemoval = true, cascade = CascadeType.ALL)
 	}))
 	@Setter
 	private Set<ConfigAttribute> attributes = new HashSet<ConfigAttribute>();

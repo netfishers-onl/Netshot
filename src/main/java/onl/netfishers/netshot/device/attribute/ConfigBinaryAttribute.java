@@ -65,19 +65,9 @@ public class ConfigBinaryAttribute extends ConfigAttribute {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + ((assumption == null) ? 0 : assumption.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
+	public boolean deepEquals(ConfigAttribute obj) {
 		if (this == obj)
 			return true;
-		if (!super.equals(obj))
-			return false;
 		if (!(obj instanceof ConfigBinaryAttribute))
 			return false;
 		ConfigBinaryAttribute other = (ConfigBinaryAttribute) obj;

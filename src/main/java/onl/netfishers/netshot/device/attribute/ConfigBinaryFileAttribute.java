@@ -95,20 +95,11 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + (int) (fileSize ^ (fileSize >>> 32));
-		result = prime * result + ((originalName == null) ? 0 : originalName.hashCode());
-		result = prime * result + ((uid == null) ? 0 : uid.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (!super.equals(obj)) return false;
-		if (getClass() != obj.getClass()) return false;
+	public boolean deepEquals(ConfigAttribute obj) {
+		if (this == obj)
+			return true;
+		if (!(obj instanceof ConfigBinaryFileAttribute))
+			return false;
 		ConfigBinaryFileAttribute other = (ConfigBinaryFileAttribute) obj;
 		if (fileSize != other.fileSize) return false;
 		if (originalName == null) {

@@ -34,8 +34,6 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
-import org.hibernate.annotations.FilterDef;
-
 import onl.netfishers.netshot.device.Config;
 import onl.netfishers.netshot.rest.RestViews.DefaultView;
 
@@ -60,7 +58,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 		@Type(value = ConfigBinaryAttribute.class, name = "BINARY"),
 		@Type(value = ConfigBinaryFileAttribute.class, name = "BINARYFILE")
 })
-@FilterDef(name = "lightConfigAttributesOnly", defaultCondition = "type <> 'T'")
 public abstract class ConfigAttribute {
 
 	@Getter(onMethod=@__({
@@ -97,6 +94,8 @@ public abstract class ConfigAttribute {
 
 	@Transient
 	public abstract Object getData();
+
+	public abstract boolean deepEquals(ConfigAttribute other);
 
 	@Override
 	public int hashCode() {

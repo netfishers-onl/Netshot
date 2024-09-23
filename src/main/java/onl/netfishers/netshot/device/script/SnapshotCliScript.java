@@ -105,7 +105,7 @@ public class SnapshotCliScript extends CliScript {
 						ConfigAttribute oldAttribute = oldAttributes.get(definition.getName());
 						ConfigAttribute newAttribute = newAttributes.get(definition.getName());
 						if (oldAttribute != null) {
-							if (!oldAttribute.equals(newAttribute)) {
+							if (!oldAttribute.deepEquals(newAttribute)) {
 								different = true;
 								break;
 							}

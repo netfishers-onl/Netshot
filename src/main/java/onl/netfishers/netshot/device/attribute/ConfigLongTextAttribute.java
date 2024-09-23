@@ -69,19 +69,9 @@ public class ConfigLongTextAttribute extends ConfigAttribute {
  	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = super.hashCode();
-		result = prime * result + ((longText == null) ? 0 : longText.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
+	public boolean deepEquals(ConfigAttribute obj) {
 		if (this == obj)
 			return true;
-		if (!super.equals(obj))
-			return false;
 		if (!(obj instanceof ConfigLongTextAttribute))
 			return false;
 		ConfigLongTextAttribute other = (ConfigLongTextAttribute) obj;

@@ -199,6 +199,9 @@ public class ClusterManager extends Thread {
 	 * Default constructor
 	 */
 	public ClusterManager() {
+		// Set thread name
+		this.setName("NetshotClusterManager");
+
 		ObjectMapper jsonMapper = new ObjectMapper();
 		this.jsonReader = jsonMapper.readerWithView(ClusteringView.class);
 		this.jsonWriter = jsonMapper.writerWithView(ClusteringView.class);

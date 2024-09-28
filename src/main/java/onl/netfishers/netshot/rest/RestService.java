@@ -7098,8 +7098,8 @@ public class RestService extends Thread {
 		description = "Returns the current logged in user."
 	)
 	@Tag(name = "Login", description = "Login and password management for standard user")
-	public UiUser getUser(@Context HttpServletRequest request) throws WebApplicationException {
-		UiUser user = (UiUser) request.getAttribute("user");
+	public User getUser(@Context HttpServletRequest request) throws WebApplicationException {
+		User user = (User) request.getAttribute("user");
 		return user;
 	}
 

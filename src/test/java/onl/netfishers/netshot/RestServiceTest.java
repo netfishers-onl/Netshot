@@ -161,6 +161,33 @@ public class RestServiceTest {
 			Assertions.assertInstanceOf(MissingNode.class,
 				response.body(), "Response body not empty");
 		}
+
+		@Test
+		@DisplayName("Current user retrieval for API token")
+		void currentUser() throws IOException, InterruptedException {
+			String secret = "jmE5C9JHDpLtbGswYfWBdUayKFn7Th6R";
+			ApiToken token1 = new ApiToken("Token get test", secret, UiUser.LEVEL_READONLY);
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				session.persist(token1);
+				session.getTransaction().commit();
+			}
+			apiClient.setApiToken(secret);
+			HttpResponse<JsonNode> response = apiClient.get("/user");
+			Assertions.assertEquals(
+				Response.Status.OK.getStatusCode(), response.statusCode(),
+				"Not getting 200 response for /user");
+			
+			Assertions.assertEquals(
+				JsonNodeFactory.instance.objectNode()
+					.put("id", token1.getId())
+					.put("description", token1.getDescription())
+					.put("level", Long.valueOf(token1.getLevel())),
+				response.body(),
+				"Retrieved user/token doesn't match expected object");
+		}
+
+
 	}
 
 	@Nested
@@ -176,6 +203,7 @@ public class RestServiceTest {
 		};
 		private int testUserLevel = UiUser.LEVEL_ADMIN;
 		private int passwordAge = 0;
+		private UiUser testUser = null;
 
 		private void createTestUser() {
 			try (Session session = Database.getSession()) {
@@ -199,6 +227,7 @@ public class RestServiceTest {
 				}
 				session.persist(user);
 				session.getTransaction().commit();
+				this.testUser = user;
 			}
 		}
 
@@ -219,6 +248,26 @@ public class RestServiceTest {
 			Assertions.assertEquals(
 				Response.Status.FORBIDDEN.getStatusCode(), response2.statusCode(),
 				"Not getting 403 response for post-logout request");
+		}
+
+		@Test
+		@DisplayName("Current user retrieval for local user")
+		void currentUser() throws IOException, InterruptedException {
+			this.createTestUser();
+			apiClient.setLogin(testUsername, testPassword);
+			HttpResponse<JsonNode> response = apiClient.get("/user");
+			Assertions.assertEquals(
+				Response.Status.OK.getStatusCode(), response.statusCode(),
+				"Not getting 200 response for /user");
+			
+			Assertions.assertEquals(
+				JsonNodeFactory.instance.objectNode()
+					.put("id", this.testUser.getId())
+					.put("username", this.testUser.getUsername())
+					.put("local", true)
+					.put("level", Long.valueOf(this.testUser.getLevel())),
+				response.body(),
+				"Retrieved user doesn't match expected object");
 		}
 
 		@Test
@@ -391,7 +440,7 @@ public class RestServiceTest {
 					.put("username", testUsername)
 					.put("password", testPassword)
 					.put("newPassword", newPassword);
-					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
 				Assertions.assertEquals(
 					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
 					"Not getting 400 response");

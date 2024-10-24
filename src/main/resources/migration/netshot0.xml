@@ -1318,4 +1318,10 @@
 		<dropForeignKeyConstraint baseTableName="device" constraintName="FK_gpsllhlyii8d5g54pyiw0gmm2"/>
 		<addForeignKeyConstraint baseColumnNames="eos_module" baseTableName="device" constraintName="FK_gpsllhlyii8d5g54pyiw0gmm2" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="module" validate="true"/>
 	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.2_1">
+		<dropForeignKeyConstraint baseTableName="python_rule" constraintName="FK_amzAPZOsdmlPO233SMl13lmm"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="python_rule" constraintName="FK_amzAPZOsdmlPO233SMl13lmm" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="rule" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="java_script_rule" constraintName="FK_qxf28k9n9g16igqsqb9v5o4s"/>
+		<addForeignKeyConstraint baseColumnNames="id" baseTableName="java_script_rule" constraintName="FK_qxf28k9n9g16igqsqb9v5o4s" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="rule" validate="true"/>
+	</changeSet>
 </databaseChangeLog>

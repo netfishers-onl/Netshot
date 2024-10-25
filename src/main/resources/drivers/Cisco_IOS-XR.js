@@ -17,11 +17,11 @@
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
- var Info = {
+var Info = {
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "Netshot Team",
-	version: "1.8.3"
+	version: "1.8.4"
 };
 
 var Config = {
@@ -425,7 +425,9 @@ function analyzeSyslog(message) {
 
 function analyzeTrap(trap, debug) {
 	for (var t in trap) {
-		if (trap[t] == "3" && t.substring(0, 28) == "1.3.6.1.4.1.9.9.43.1.1.6.1.5") {
+        // IOS-XR 7.9.x (at least) tends to set commandSource(2)
+        // as EventConfigDestination instead of running(3)
+		if (t.startsWith("1.3.6.1.4.1.9.9.43.1.1.6.1.5") && ["2", "3"].includes(trap[t])) {
 			return true;
 		}
 	}

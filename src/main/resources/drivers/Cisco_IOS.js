@@ -456,6 +456,10 @@ function snapshot(cli, device, config) {
 			device.set("family", "Cisco Catalyst 9500");
 			device.set("networkClass", "SWITCHROUTER");
 		}
+		else if (system.match(/cisco C98\d\d/)) {
+			device.set("family", "Cisco Catalyst 9800");
+			device.set("networkClass", "WIRELESSCONTROLLER");
+		}
 	}
 	var configRegister = showVersion.match(/^Configuration register is (.*)/m);
 	if (configRegister != null) {

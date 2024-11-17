@@ -118,7 +118,12 @@ public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 	@Override
 	public void run() {
 		log.debug("Task {}. Starting check software compliance and hardware support status task for group {}.",
-				this.getId(), deviceGroup.getId());
+				this.getId(), deviceGroup == null ? "null" : deviceGroup.getId());
+		if (deviceGroup == null) {
+			this.info("The device group doesn't exist, the task will be cancelled.");
+			this.status = Status.CANCELLED;
+			return;
+		}
 		this.trace(String.format("Check software compliance task for group %s.",
 				deviceGroup.getName()));
 

@@ -33,8 +33,12 @@ import onl.netfishers.netshot.aaa.PasswordPolicy;
 import onl.netfishers.netshot.aaa.PasswordPolicy.PasswordPolicyException;
 import onl.netfishers.netshot.aaa.UiUser;
 import onl.netfishers.netshot.database.Database;
+import onl.netfishers.netshot.device.Device;
+import onl.netfishers.netshot.device.DeviceDriver;
 import onl.netfishers.netshot.device.Domain;
 import onl.netfishers.netshot.device.Network4Address;
+import onl.netfishers.netshot.device.DeviceDriver.DriverProtocol;
+import onl.netfishers.netshot.device.attribute.AttributeDefinition;
 import onl.netfishers.netshot.rest.NetshotBadRequestException;
 import onl.netfishers.netshot.rest.RestService;
 
@@ -85,6 +89,7 @@ public class RestServiceTest {
 		Netshot.initConfig(RestServiceTest.getNetshotConfig());
 		Database.update();
 		Database.init();
+		TaskManager.init();
 		RestService.init();
 		Thread.sleep(1000);
 	}
@@ -92,12 +97,24 @@ public class RestServiceTest {
 	private NetshotApiClient apiClient;
 
 	@BeforeEach
-	void createData() {
+	void createToken() {
 		RestServiceTest.createApiTokens();
 		this.apiClient = new NetshotApiClient(RestServiceTest.apiUrl,
 			RestServiceTest.API_TOKENS.get(UiUser.LEVEL_ADMIN));
 	}
 
+	@AfterEach
+	void flushTokens() {
+		try (Session session = Database.getSession()) {
+			session.beginTransaction();
+			session
+				.createMutationQuery("delete from ApiToken")
+				.executeUpdate();
+			session.getTransaction().commit();
+		}
+	}
+
+	
 	@Nested
 	@DisplayName("Authentication Tests")
 	class ApiTokenTest {
@@ -108,9 +125,6 @@ public class RestServiceTest {
 				session.beginTransaction();
 				session
 					.createMutationQuery("delete from onl.netfishers.netshot.aaa.UiUser")
-					.executeUpdate();
-				session
-					.createMutationQuery("delete from ApiToken")
 					.executeUpdate();
 				session.getTransaction().commit();
 			}
@@ -516,9 +530,6 @@ public class RestServiceTest {
 					session
 						.createMutationQuery("delete from Domain")
 						.executeUpdate();
-					session
-						.createMutationQuery("delete from ApiToken")
-						.executeUpdate();
 					session.getTransaction().commit();
 				}
 			}
@@ -731,9 +742,6 @@ public class RestServiceTest {
 					session
 						.createMutationQuery("delete from onl.netfishers.netshot.aaa.UiUser")
 						.executeUpdate();
-					session
-						.createMutationQuery("delete from ApiToken")
-						.executeUpdate();
 					session.getTransaction().commit();
 				}
 			}
@@ -893,17 +901,6 @@ public class RestServiceTest {
 		@DisplayName("API token management API Tests")
 		class ApiTokenTest {
 
-			@AfterEach
-			void cleanUpData() {
-				try (Session session = Database.getSession()) {
-					session.beginTransaction();
-					session
-						.createMutationQuery("delete from ApiToken")
-						.executeUpdate();
-					session.getTransaction().commit();
-				}
-			}
-
 			@Test
 			@DisplayName("List tokens")
 			@ResourceLock(value = "DB")
@@ -970,6 +967,238 @@ public class RestServiceTest {
 				Assertions.assertEquals(API_TOKENS.size(), listResponse.body().size(),
 					"User list doesn't have the right number of elements");
 			}
+		}
+
+	}
+
+	@Nested
+	@DisplayName("Device tests")
+	@ResourceLock(value = "DB")
+	class DeviceTest {
+
+		private String testDomainName = "Domain 1";
+		private Domain testDomain = null;
+
+		private void createTestDomain() throws IOException {
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				this.testDomain = new Domain(
+					this.testDomainName, "Test Domain for devices",
+					new Network4Address("10.1.1.1"),
+					null
+				);
+				session.persist(this.testDomain);
+				session.getTransaction().commit();
+			}
+		}
+
+		private DeviceDriver getTestDriver() {
+			return DeviceDriver.getDriverByName("CiscoIOS12");
+		}
+
+		@BeforeAll
+		static void loadDrivers() throws Exception {
+			DeviceDriver.refreshDrivers();
+		}
+
+		@AfterEach
+		void cleanUpData() {
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				session
+					.createMutationQuery("delete from Device")
+					.executeUpdate();
+				session
+					.createMutationQuery("delete from Domain")
+					.executeUpdate();
+				session.getTransaction().commit();
+			}
+		}
+
+		@Test
+		@DisplayName("List device types")
+		void listDeviceTypes() throws Exception {
+			List<DeviceDriver> drivers = DeviceDriver.getAllDrivers();
+			HttpResponse<JsonNode> response = apiClient.get("/devicetypes");
+			Assertions.assertEquals(
+				Response.Status.OK.getStatusCode(), response.statusCode(),
+				"Not getting 200 response for device type list");
+			Assertions.assertEquals(
+				drivers.size(), response.body().size(),
+				"Not getting the right number of device drivers");
+			DeviceDriver testDriver = this.getTestDriver();
+			JsonNode testDriverNode = null;
+			Iterator<JsonNode> driverIt = response.body().iterator();
+			while (driverIt.hasNext()) {
+				JsonNode driverNode = driverIt.next();
+				if (driverNode.get("name").asText().equals(testDriver.getName())) {
+					testDriverNode = driverNode;
+				}
+			}
+			Assertions.assertNotNull(testDriverNode, "API didn't return test driver");
+
+			ObjectNode targetData = JsonNodeFactory.instance.objectNode()
+				.put("name", testDriver.getName())
+				.put("author", testDriver.getAuthor())
+				.put("description", testDriver.getDescription())
+				.put("version", testDriver.getVersion())
+				.put("priority", Long.valueOf(testDriver.getPriority()));
+			for (AttributeDefinition attribute : testDriver.getAttributes()) {
+				targetData.withArray("attributes").add(
+					JsonNodeFactory.instance.objectNode()
+						.put("type", attribute.getType().toString())
+						.put("level", attribute.getLevel().toString())
+						.put("name", attribute.getName())
+						.put("title", attribute.getTitle())
+						.put("comparable", attribute.isComparable())
+						.put("searchable", attribute.isSearchable())
+						.put("checkable", attribute.isCheckable())
+				);
+			}
+			for (DriverProtocol protocol : testDriver.getProtocols()) {
+				targetData.withArray("protocols")
+					.add(protocol.toString());
+			}
+			for (String mode : testDriver.getCliMainModes()) {
+				targetData.withArray("cliMainModes").add(mode);
+			}
+			targetData.put("sourceHash", testDriver.getSourceHash())
+				.set("location", JsonNodeFactory.instance.objectNode()
+					.put("type", testDriver.getLocation().getType().toString())
+					.put("fileName", testDriver.getLocation().getFileName()));
+			if (testDriver.getSshConfig() != null) {
+				targetData.set("sshConfig", JsonNodeFactory.instance.objectNode());
+			}
+			if (testDriver.getTelnetConfig() != null) {
+				targetData.set("telnetConfig",
+					JsonNodeFactory.instance.objectNode()
+						.put("terminalType", testDriver.getTelnetConfig().getTerminalType()));
+			}
+			Assertions.assertEquals(targetData, testDriverNode,
+				"Retrieved device type doesn't match expected object");
+		}
+
+		@Test
+		@DisplayName("List devices")
+		@ResourceLock(value = "DB")
+		void listDevices() throws IOException, InterruptedException {
+			{
+				HttpResponse<JsonNode> response = apiClient.get("/devices");
+				Assertions.assertEquals(
+					Response.Status.OK.getStatusCode(), response.statusCode(),
+					"Not getting 200 response for initial list");
+				Assertions.assertEquals(0, response.body().size(),
+					"Device list is not empty");
+			}
+			this.createTestDomain();
+			Device device1 = new Device(this.getTestDriver().getName(),
+				new Network4Address("10.1.1.1"), this.testDomain, "test");
+			device1.setName("device1");
+			Device device2 = new Device(this.getTestDriver().getName(),
+				new Network4Address("10.1.1.2"), this.testDomain, "test");
+			device2.setName("device2");
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				session.persist(device1);
+				session.persist(device2);
+				session.getTransaction().commit();
+			}
+			{
+				HttpResponse<JsonNode> response = apiClient.get("/devices");
+				Assertions.assertEquals(
+					Response.Status.OK.getStatusCode(), response.statusCode(),
+					"Not getting 200 response for device list");
+				Assertions.assertEquals(2, response.body().size(),
+					"Device list doesn't have 2 elements");
+				Iterator<JsonNode> deviceNodeIt = response.body().iterator();
+				JsonNode deviceNode1 = deviceNodeIt.next();
+				Assertions.assertEquals(
+					JsonNodeFactory.instance.objectNode()
+						.put("id", device1.getId())
+						.put("name", device1.getName())
+						.put("family", device1.getFamily())
+						.put("mgmtAddress", device1.getMgmtAddress().getIp())
+						.put("status", device1.getStatus().toString())
+						.put("driver", device1.getDriver())
+						.put("eol", device1.isEndOfLife())
+						.put("eos", device1.isEndOfSale())
+						.put("configCompliant", device1.isCompliant())
+						.put("softwareLevel", device1.getSoftwareLevel().toString()),
+						deviceNode1,
+					"Retrieved device doesn't match expected object");
+			}
+		}
+
+		@Test
+		@DisplayName("Create device")
+		@ResourceLock(value = "DB")
+		void createDevice() throws IOException, InterruptedException {
+			this.createTestDomain();
+			Device device1 = new Device(this.getTestDriver().getName(),
+				new Network4Address("10.1.1.1"), this.testDomain, "test");
+			ObjectNode data = JsonNodeFactory.instance.objectNode()
+				.put("autoDiscover", false)
+				.put("ipAddress", device1.getMgmtAddress().getIp())
+				.put("domainId", this.testDomain.getId())
+				.put("name", device1.getName())
+				.put("deviceType", device1.getDriver());
+			HttpResponse<JsonNode> response = apiClient.post("/devices", data);
+			Assertions.assertEquals(
+				Response.Status.CREATED.getStatusCode(), response.statusCode(),
+				"Not getting 201 response for created device");
+
+			try (Session session = Database.getSession()) {
+				Device newDevice = session
+					.createQuery("from Device d", Device.class)
+					.uniqueResult();
+				device1.setId(newDevice.getId());
+				Assertions.assertEquals(device1, newDevice, "Device not created as expected");
+			}
+		}
+
+		@Test
+		@DisplayName("Delete device")
+		@ResourceLock(value = "DB")
+		void deleteDevice() throws IOException, InterruptedException {
+			this.createTestDomain();
+			Device device1 = new Device(this.getTestDriver().getName(),
+				new Network4Address("10.1.1.1"), this.testDomain, "test");
+			device1.setName("device1");
+			Device device2 = new Device(this.getTestDriver().getName(),
+				new Network4Address("10.1.1.2"), this.testDomain, "test");
+			device2.setName("device2");
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				session.persist(device1);
+				session.persist(device2);
+				session.getTransaction().commit();
+			}
+			HttpResponse<JsonNode> response = apiClient.delete(
+				String.format("/devices/%d", device1.getId()));
+			Assertions.assertEquals(
+				Response.Status.NO_CONTENT.getStatusCode(), response.statusCode(),
+				"Not getting 204 response for device deletion");
+			HttpResponse<JsonNode> listResponse = apiClient.get("/devices");
+			Assertions.assertEquals(
+				Response.Status.OK.getStatusCode(), listResponse.statusCode(),
+				"Not getting 200 response for device listing");
+			Assertions.assertEquals(1, listResponse.body().size(),
+				"Device list doesn't have 1 element");
+			JsonNode deviceNode = listResponse.body().iterator().next();
+			Assertions.assertEquals(
+				JsonNodeFactory.instance.objectNode()
+					.put("id", device2.getId())
+					.put("name", device2.getName())
+					.put("family", device2.getFamily())
+					.put("mgmtAddress", device2.getMgmtAddress().getIp())
+					.put("status", device2.getStatus().toString())
+					.put("driver", device2.getDriver())
+					.put("eol", device2.isEndOfLife())
+					.put("eos", device2.isEndOfSale())
+					.put("configCompliant", device2.isCompliant())
+					.put("softwareLevel", device2.getSoftwareLevel().toString()),
+					deviceNode,
+				"Retrieved device doesn't match expected object");
 		}
 
 	}

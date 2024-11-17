@@ -120,7 +120,10 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	public long getDeviceId() {
-		return device.getId();
+		if (this.device == null) {
+			return 0;
+		}
+		return this.device.getId();
 	}
 
 	/* (non-Javadoc)
@@ -135,8 +138,13 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 
 	@Override
 	public void run() {
-		log.debug("Task {}. Starting diagnostic task for device {}.",
-				this.getId(), device.getId());
+		log.debug("Task {}. Starting diagnostic task for device {}.", this.getId(),
+				device == null ? "null" : device.getId());
+		if (device == null) {
+			this.info("The device doesn't exist, the task will be cancelled.");
+			this.status = Status.CANCELLED;
+			return;
+		}
 		this.trace(String.format("Run diagnostic task for device %s (%s).",
 				device.getName(), device.getMgmtAddress().getIp()));
 		boolean locked = false;

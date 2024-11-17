@@ -93,10 +93,15 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 	 */
 	@Override
 	public void run() {
-		log.debug("Task {}. Starting check compliance task for device {}.", this.getId(), device.getId());
-		this.trace(String.format("Check compliance task for device %s (%s).",
+		log.debug("Task {}. Starting check compliance task for device {}.", this.getId(),
+				device == null ? "null" : device.getId());
+		if (device == null) {
+			this.info("The device doesn't exist, the task will be cancelled.");
+			this.status = Status.CANCELLED;
+			return;
+		}
+		this.info(String.format("Check compliance task for device %s (%s).",
 				device.getName(), device.getMgmtAddress().getIp()));
-
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();

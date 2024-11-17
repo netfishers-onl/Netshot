@@ -1324,4 +1324,49 @@
 		<dropForeignKeyConstraint baseTableName="java_script_rule" constraintName="FK_qxf28k9n9g16igqsqb9v5o4s"/>
 		<addForeignKeyConstraint baseColumnNames="id" baseTableName="java_script_rule" constraintName="FK_qxf28k9n9g16igqsqb9v5o4s" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="rule" validate="true"/>
 	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.2_2">
+		<dropForeignKeyConstraint baseTableName="take_snapshot_task" constraintName="FK_8nwgcvkktkgb0ep9jngl0fhkw"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="take_snapshot_task" constraintName="FK_8nwgcvkktkgb0ep9jngl0fhkw" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="run_device_script_task" constraintName="FK_a9huwp5oxt701ovqo18qcfqu8"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="run_device_script_task" constraintName="FK_a9huwp5oxt701ovqo18qcfqu8" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="check_compliance_task" constraintName="FK_mmce331srfb7u1u997bs68d1r"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="check_compliance_task" constraintName="FK_mmce331srfb7u1u997bs68d1r" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="run_diagnostics_task" constraintName="FK_ok7b5sevyhg72d7gtlaey7gy"/>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="run_diagnostics_task" constraintName="FK_ok7b5sevyhg72d7gtlaey7gy" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="check_group_compliance_task" constraintName="FK_1ritpkb4tkbgfj1ohxvnm72k4"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="check_group_compliance_task" constraintName="FK_1ritpkb4tkbgfj1ohxvnm72k4" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="run_group_diagnostics_task" constraintName="FK_5cyfno9wgsuwo6b8fukyicduq"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="run_group_diagnostics_task" constraintName="FK_5cyfno9wgsuwo6b8fukyicduq" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="take_group_snapshot_task" constraintName="FK_chqgqnpukbtthsxxs7l03c50a"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="take_group_snapshot_task" constraintName="FK_chqgqnpukbtthsxxs7l03c50a" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="run_device_group_script_task" constraintName="FK_h8avh8p102nh9utmk7o9t1ob4"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="run_device_group_script_task" constraintName="FK_h8avh8p102nh9utmk7o9t1ob4" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="check_group_software_task" constraintName="FK_qslc3h936kdd8tyrdtjvp11yu"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="check_group_software_task" constraintName="FK_qslc3h936kdd8tyrdtjvp11yu" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot (generated)" id="0.20.2_3">
+		<sql>
+			DELETE FROM task WHERE id IN (
+        SELECT t1_0.id from task t1_0 
+            LEFT JOIN check_compliance_task t1_1 on t1_0.id = t1_1.id 
+            LEFT JOIN check_group_compliance_task t1_2  on t1_0.id = t1_2.id 
+            LEFT JOIN check_group_software_task t1_3  on t1_0.id = t1_3.id 
+            LEFT JOIN discover_device_type_task t1_4  on t1_0.id = t1_4.id 
+            LEFT JOIN purge_database_task t1_5  on t1_0.id = t1_5.id 
+            LEFT JOIN run_device_group_script_task t1_6  on t1_0.id = t1_6.id 
+            LEFT JOIN run_device_script_task t1_7  on t1_0.id = t1_7.id 
+            LEFT JOIN run_diagnostics_task t1_8  on t1_0.id = t1_8.id 
+            LEFT JOIN run_group_diagnostics_task t1_9  on t1_0.id = t1_9.id 
+            LEFT JOIN scan_subnets_task t1_10 on t1_0.id = t1_10.id 
+            LEFT JOIN take_group_snapshot_task t1_11 on t1_0.id = t1_11.id 
+            LEFT JOIN take_snapshot_task t1_12 on t1_0.id = t1_12.id 
+        WHERE
+            t1_1.id is null and t1_2.id is null and t1_3.id is null and
+            t1_4.id is null and t1_5.id is null and t1_6.id is null and
+            t1_7.id is null and t1_8.id is null and t1_9.id is null and
+            t1_10.id is null and t1_11.id is null and t1_12.id is null
+    	)
+		</sql>
+	</changeSet>
+	
 </databaseChangeLog>

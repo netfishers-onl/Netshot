@@ -194,7 +194,13 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	 */
 	@Override
 	public void run() {
-		log.debug("Task {}. Starting snapshot task for device {}.", this.getId(), device.getId());
+		log.debug("Task {}. Starting snapshot task for device {}.", this.getId(),
+				device == null ? "null" : device.getId());
+		if (device == null) {
+			this.info("The device doesn't exist, the task will be cancelled.");
+			this.status = Status.CANCELLED;
+			return;
+		}
 		this.info(String.format("Snapshot task for device %s (%s).",
 				device.getName(), device.getMgmtAddress().getIp()));
 		boolean locked = false;
@@ -297,6 +303,9 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	protected long getDeviceId() {
+		if (this.device == null) {
+			return 0;
+		}
 		return device.getId();
 	}
 

@@ -484,10 +484,10 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	@XmlElement @JsonView(DefaultView.class)
 	@Transient
 	protected long getDeviceId() {
-		if (device == null) {
+		if (this.device == null) {
 			return 0;
 		}
-		return device.getId();
+		return this.device.getId();
 	}
 
 }

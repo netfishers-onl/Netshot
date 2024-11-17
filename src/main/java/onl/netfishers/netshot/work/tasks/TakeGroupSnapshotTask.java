@@ -124,7 +124,9 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 	@Override
 	public void prepare(Session session) {
 		Hibernate.initialize(this.getDeviceGroup());
-		Hibernate.initialize(this.getDeviceGroup().getCachedDevices());
+		if (this.getDeviceGroup() != null) {
+			Hibernate.initialize(this.getDeviceGroup().getCachedDevices());
+		}
 	}
 
 	/* (non-Javadoc)
@@ -133,7 +135,12 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 	@Override
 	public void run() {
 		log.debug("Task {}. Starting snapshot task for group {}.",
-				this.getId(), this.getDeviceGroup().getId());
+				this.getId(), deviceGroup == null ? "null" : deviceGroup.getId());
+		if (deviceGroup == null) {
+			this.info("The device group doesn't exist, the task will be cancelled.");
+			this.status = Status.CANCELLED;
+			return;
+		}
 		Set<Device> devices = this.getDeviceGroup().getCachedDevices();
 		log.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
 		String comment = String.format("Started due to group %s snapshot", this.getDeviceGroup().getName());

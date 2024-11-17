@@ -2315,7 +2315,7 @@ public class RestService extends Thread {
 			DeviceCredentialSet rsCredentialSet = rsDevice.getSpecificCredentialSet();
 			DeviceCredentialSet credentialSet = device.getSpecificCredentialSet();
 			
-			if (rsCredentialSet == null) {
+			if (rsCredentialSet == null && rsDevice.getCredentialSetIds() != null) {
 				if (credentialSet != null) {
 					session.remove(credentialSet);
 					device.setSpecificCredentialSet(null);

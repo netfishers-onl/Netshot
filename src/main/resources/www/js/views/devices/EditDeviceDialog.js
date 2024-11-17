@@ -74,6 +74,7 @@ define([
 				if (credentialSet.type !== "Global") {
 					var credentialModel = new CredentialSetModel();
 					device.specificCredentialSet = credentialModel.cleanUp(credentialSet);
+					device.credentialSetIds = null;
 				}
 				saveModel.save(device).done(function(data) {
 					that.close();

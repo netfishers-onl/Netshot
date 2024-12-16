@@ -151,12 +151,12 @@
 		<dependency>
 			<groupId>commons-net</groupId>
 			<artifactId>commons-net</artifactId>
-			<version>3.11.1.redhat-00001</version>
+			<version>3.11.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.snmp4j</groupId>
 			<artifactId>snmp4j</artifactId>
-			<version>3.8.2.redhat-00001</version>
+			<version>3.8.2</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.java-diff-utils</groupId>
@@ -324,7 +324,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>42.7.4.redhat-00001</version>
+			<version>42.7.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>

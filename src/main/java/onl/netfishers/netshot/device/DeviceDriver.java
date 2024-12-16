@@ -253,8 +253,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 							new Location(LocationType.FILE, file.getAbsolutePath()));
 						if (newDrivers.containsKey(driver.getName())) {
 							log.warn(
-									"Skipping user device driver file {}, because a similar driver is already loaded.",
-									file);
+									"Skipping user device driver file {}, because a similar driver {} is already loaded.",
+									file, driver.getName());
 						}
 						else {
 							newDrivers.put(driver.getName(), driver);
@@ -298,8 +298,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 							new Location(LocationType.EMBEDDED, file.getAbsolutePath()));
 						if (newDrivers.containsKey(driver.getName())) {
 							log.warn(
-									"Skipping Netshot device driver file {}, because a similar driver is already loaded.",
-									file);
+									"Skipping user device driver file {}, because a similar driver {} is already loaded.",
+									file, driver.getName());
 						}
 						else {
 							newDrivers.put(driver.getName(), driver);
@@ -336,8 +336,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 									new Location(LocationType.EMBEDDED, jar.getName()));
 							if (newDrivers.containsKey(driver.getName())) {
 								log.warn(
-										"Skipping Netshot device driver file {}, because a similar driver is already loaded.",
-										file);
+									"Skipping user device driver file {}, because a similar driver {} is already loaded.",
+									file, driver.getName());
 							}
 							else {
 								newDrivers.put(driver.getName(), driver);

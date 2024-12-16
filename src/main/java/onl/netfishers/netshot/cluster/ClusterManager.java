@@ -393,7 +393,9 @@ public class ClusterManager extends Thread {
 					try (
 						Statement fakeStatement = dbConnection.createStatement();
 						ResultSet fakeResultSet = fakeStatement.executeQuery("SELECT 1");
-					) {}
+					) {
+						fakeResultSet.getInt(0);
+					}
 					List<ClusterMessage> messages = this.receiveMessages(pgConnection);
 					synchronized (this) {
 						final long currentTime = System.currentTimeMillis();

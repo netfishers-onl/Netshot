@@ -7,7 +7,7 @@
 	<name>Netshot</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<polyglot.version>23.1.5</polyglot.version>
+		<polyglot.version>24.1.1</polyglot.version>
 		<hibernate.version>6.6.3.Final</hibernate.version>
 		<c3p0.version>0.9.5.5</c3p0.version>
 		<grizzly.version>4.0.2</grizzly.version>
@@ -26,8 +26,8 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.8.1</version>
 				<configuration>
-					<source>21</source>
-					<target>21</target>
+					<source>23</source>
+					<target>23</target>
 				</configuration>
 			</plugin>
 			<plugin>

@@ -394,7 +394,7 @@ public class ClusterManager extends Thread {
 						Statement fakeStatement = dbConnection.createStatement();
 						ResultSet fakeResultSet = fakeStatement.executeQuery("SELECT 1");
 					) {
-						fakeResultSet.getInt(0);
+						fakeResultSet.next();
 					}
 					List<ClusterMessage> messages = this.receiveMessages(pgConnection);
 					synchronized (this) {

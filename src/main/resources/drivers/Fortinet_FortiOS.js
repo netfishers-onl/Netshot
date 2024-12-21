@@ -24,7 +24,7 @@ var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "Netshot Team",
-	version: "5.7" /* Version will appear in the Admin tab. */
+	version: "5.8" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -74,7 +74,7 @@ var CLI = {
 	telnet: { /* Entry point for Telnet access. */
 		macros: { /* List of available macros in the CLI mode. */
 			basic: { /* 'basic' macro (will be called in the snapshot procedure. */
-				options: [ "login", "password", "basic" ], /* Possible next modes, Netshot will test the associated prompt regexp's. */
+				options: [ "login", "password", "basic", "postLoginBanner" ], /* Possible next modes, Netshot will test the associated prompt regexp's. */
 				target: "basic" /* Netshot will target this mode. */
 			}
 		}
@@ -82,7 +82,7 @@ var CLI = {
 	ssh: { /* Entry point for SSH access. */
 		macros: {
 			basic: {
-				options: [ "basic" ],
+				options: [ "basic", "postLoginBanner" ],
 				target: "basic"
 			}
 		}
@@ -109,6 +109,16 @@ var CLI = {
 		prompt: / login: $/,
 		fail: "Authentication failed - Telnet authentication failure."
 	},
+	postLoginBanner: { /* Post login banner. */
+		prompt: /^\(Press 'a' to accept\):/,
+		macros: {
+			auto: {
+				cmd: "a",
+				noCr: true,
+				options: [ "basic" ]
+			}
+		}
+	},
 	basic: { /* The basic FortiOS prompt. */
 		prompt: /^[A-Za-z0-9_\-\~]+?\s(\([A-Za-z0-9_\-\~]+?\)\s)?[#$]\s?$/,
 		error: /^(Unknown action|Command fail)/m,
@@ -118,7 +128,6 @@ var CLI = {
 		},
 		macros: {
 		}
-
 	}
 };
 

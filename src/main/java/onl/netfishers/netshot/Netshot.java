@@ -489,8 +489,8 @@ public class Netshot extends Thread {
 		if (!vendorVersion.matches(".*GraalVM.*")) {
 			log.error("The current JVM vendor version '{}' by '{}' doesn't look like GraalVM, Netshot might not work properly.", vendorVersion, vendor);
 		}
-		if (!version.matches("^23\\..*")) {
-			log.error("The JVM version '{}' doesn't look like version 23, Netshot might not work properly.", version);
+		if (!version.matches("^21\\..*")) {
+			log.error("The JVM version '{}' doesn't look like version 21, Netshot might not work properly.", version);
 		}
 	}
 

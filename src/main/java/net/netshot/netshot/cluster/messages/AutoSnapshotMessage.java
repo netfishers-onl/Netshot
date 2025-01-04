@@ -1,0 +1,63 @@
+/**
+ * Copyright 2013-2025 Netshot
+ * 
+ * This file is part of Netshot project.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package net.netshot.netshot.cluster.messages;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+
+import lombok.Getter;
+import lombok.Setter;
+import net.netshot.netshot.cluster.ClusterMember;
+
+/**
+ * Cluster message requesting to take a snapshot of specific devices.
+ * Let the master deduplicate the requests when multiple cluster members
+ * receive the trap triggering the snapshot.
+ */
+@XmlRootElement
+public class AutoSnapshotMessage extends ClusterMessage {
+
+	/** Device IDs */
+	@Getter(onMethod=@__({
+		@XmlElement
+	}))
+	@Setter
+	Set<Long> deviceIds = new HashSet<>();
+
+	/**
+	 * Constructor.
+	 */
+	public AutoSnapshotMessage(ClusterMember memberInfo) {
+		super(memberInfo.getInstanceId());
+	}
+
+	/**
+	 * Hidden constructor
+	 */
+	protected AutoSnapshotMessage() {
+	}
+
+	public void addDeviceIds(Collection<Long> deviceIds) {
+		this.deviceIds.addAll(deviceIds);
+	}
+}

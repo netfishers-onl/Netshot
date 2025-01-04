@@ -1,4 +1,4 @@
-/** Copyright 2013-2024 Netshot */
+/** Copyright 2013-2025 Netshot */
 define([
 	'jquery',
 	'underscore',
@@ -76,7 +76,7 @@ define([
 				$('<option />').attr('value', group.get('id')).text(group.get('name'))
 						.appendTo(that.$('#group'));
 			});
-			$('<option />').attr('value', "onl.netfishers.netshot.device.Device").text("[Any]")
+			$('<option />').attr('value', "net.netshot.netshot.device.Device").text("[Any]")
 					.appendTo(this.$('#devicetype'));
 			_.each(this.deviceTypes.models, function(deviceType) {
 				$('<option />').attr('value', deviceType.get('name')).text(deviceType
@@ -87,7 +87,7 @@ define([
 				this.$('#group').val(targetGroup.id);
 			}
 			this.$('#devicetype').val(this.model.get('driver') ? this.model.get('driver') :
-				"onl.netfishers.netshot.device.Device");
+				"net.netshot.netshot.device.Device");
 			var families = [];
 			this.deviceFamilies.each(function(family) {
 				families.push(family.get('deviceFamily'));

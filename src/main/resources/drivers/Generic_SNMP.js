@@ -1,8 +1,7 @@
-
 /**
- * Copyright 2013-2024 Netshot
+ * Copyright 2013-2025 Netshot
  * 
- * This file is part of Netshot.
+ * This file is part of Netshot project.
  * 
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

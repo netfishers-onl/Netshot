@@ -35,10 +35,14 @@ import com.fasterxml.jackson.annotation.JsonView;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.aaa.PasswordPolicy.PasswordPolicyException;
+import net.netshot.netshot.crypto.Argon2idHash;
+import net.netshot.netshot.crypto.Hash;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
+import java.io.InvalidClassException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -46,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.annotations.NaturalId;
-import org.jasypt.util.password.BasicPasswordEncryptor;
 
 /**
  * The User class represents a Netshot user.
@@ -57,6 +60,7 @@ import org.jasypt.util.password.BasicPasswordEncryptor;
 		@Index(name = "usernameIndex", columnList = "username") 
 })
 @EqualsAndHashCode
+@Slf4j
 public class UiUser implements User {
 
 	/**
@@ -71,17 +75,15 @@ public class UiUser implements User {
 	/** The max idle time. */
 	public static int MAX_IDLE_TIME;
 
-	/** The password encryptor. */
-	private static BasicPasswordEncryptor passwordEncryptor = new BasicPasswordEncryptor();
-
 	/**
-	 * Hash the password using the password encryptor.
+	 * Hash the password for future storage.
 	 *
 	 * @param password the plaintext password
 	 * @return the hashed password
 	 */
 	static private String hash(String password) {
-		return passwordEncryptor.encryptPassword(password);
+		Hash hash = new Argon2idHash(password);
+		return hash.toHashString();
 	}
 
 	static {
@@ -188,8 +190,17 @@ public class UiUser implements User {
 		}
 		int size = Math.min(policy.getMaxHistory(), this.oldHashedPasswords.size());
 		for (int i = 0; i < size; i++) {
-			if (passwordEncryptor.checkPassword(password, this.oldHashedPasswords.get(i))) {
-				throw new PasswordPolicyException("Password was already used for this account");
+			try {
+				Hash oldHash = Hash.fromHashString(this.oldHashedPasswords.get(i));
+				if (oldHash.check(password)) {
+					throw new PasswordPolicyException("Password was already used for this account");
+				}
+			}
+			catch (PasswordPolicyException e) {
+				throw e;
+			}
+			catch (Exception e) {
+				log.error("Error while computing/checking user password hash vs old hash", e);
 			}
 		}
 		if (this.getHashedPassword() != null) {
@@ -211,8 +222,15 @@ public class UiUser implements User {
 	 */
 	public void checkPassword(String password, PasswordPolicy policy)
 			throws WrongPasswordException, PasswordPolicyException {
-		if (!passwordEncryptor.checkPassword(password, hashedPassword)) {
-			throw new WrongPasswordException("Wrong password");
+		try {
+			Hash hash = Hash.fromHashString(this.hashedPassword);
+			if (!hash.check(password)) {
+				throw new WrongPasswordException("Wrong password");
+			}
+		}
+		catch (InvalidClassException e) {
+			log.error("Error while reading/checking password hash", e);
+			throw new WrongPasswordException("Unable to check password");
 		}
 		if (policy == null) {
 			return;

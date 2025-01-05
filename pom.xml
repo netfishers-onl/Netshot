@@ -8,14 +8,13 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<polyglot.version>23.1.5</polyglot.version>
-		<hibernate.version>6.6.3.Final</hibernate.version>
+		<hibernate.version>6.6.4.Final</hibernate.version>
 		<c3p0.version>0.9.5.5</c3p0.version>
 		<grizzly.version>4.0.2</grizzly.version>
 		<jackson.version>2.18.2</jackson.version>
 		<jersey.version>3.1.9</jersey.version>
 		<swagger.version>2.2.27</swagger.version>
 		<slf4j.version>2.0.16</slf4j.version>
-		<jasypt.version>1.9.3</jasypt.version>
 		<lombok.version>1.18.36</lombok.version>
 	</properties>
 	<build>
@@ -126,11 +125,6 @@
 			<groupId>com.mchange</groupId>
 			<artifactId>c3p0</artifactId>
 			<version>${c3p0.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jasypt</groupId>
-			<artifactId>jasypt</artifactId>
-			<version>${jasypt.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.mwiede</groupId>
@@ -307,7 +301,7 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.5.12</version>
+			<version>1.5.15</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>slf4j-api</artifactId>
@@ -328,7 +322,7 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bctls-jdk18on</artifactId>
-			<version>1.78.1</version>
+			<version>1.79</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -392,13 +386,13 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
-			<version>5.11.3</version>
+			<version>5.11.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.platform</groupId>
 			<artifactId>junit-platform-runner</artifactId>
-			<version>1.11.3</version>
+			<version>1.11.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

@@ -18,34 +18,34 @@
  */
 package net.netshot.netshot.database;
 
-import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
-
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import net.netshot.netshot.Netshot;
+import net.netshot.netshot.crypto.Sha2AesPasswordBasedEncryptor;
 
 @Converter
 public class StringEncryptorConverter implements AttributeConverter<String, String> {
 
-	private StandardPBEStringEncryptor encryptor;
+	private static String cryptPassword;
 
-	public StringEncryptorConverter() {
-		this.encryptor = new StandardPBEStringEncryptor();
-		String cryptPassword = Netshot.getConfig("netshot.db.encryptionpassword", null);
+	static {
+		cryptPassword = Netshot.getConfig("netshot.db.encryptionpassword", null);
 		if (cryptPassword == null) {
-			cryptPassword = Netshot.getConfig("netshot.db.encryptionPassword", "NETSHOT"); // Historical reasons
+			// With capital P, for historical reasons
+			cryptPassword = Netshot.getConfig("netshot.db.encryptionPassword", "NETSHOT");
 		}
-		this.encryptor.setPassword(cryptPassword);
 	}
 
 	@Override
 	public String convertToDatabaseColumn(String attribute) {
-		return this.encryptor.encrypt(attribute);
+		Sha2AesPasswordBasedEncryptor encryptor = new Sha2AesPasswordBasedEncryptor(cryptPassword);
+		return encryptor.encrypt(attribute);
 	}
 
 	@Override
 	public String convertToEntityAttribute(String dbData) {
-		return this.encryptor.decrypt(dbData);
+		Sha2AesPasswordBasedEncryptor encryptor = new Sha2AesPasswordBasedEncryptor(cryptPassword);
+		return encryptor.decrypt(dbData);
 	}
 	
 }

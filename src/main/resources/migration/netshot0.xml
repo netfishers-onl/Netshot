@@ -1368,5 +1368,13 @@
     	)
 		</sql>
 	</changeSet>
+	<changeSet author="netshot" id="0.21.0_1">
+		<customChange class="net.netshot.netshot.database.migrator.DeviceCredentialsReencryptChange"/>
+		<sql>
+			UPDATE api_token
+			SET hashed_token = CONCAT('$5$t=1000$', REPLACE(hashed_token, '=', ''))
+			WHERE hashed_token NOT LIKE('$%')
+		</sql>
+	</changeSet>
 	
 </databaseChangeLog>

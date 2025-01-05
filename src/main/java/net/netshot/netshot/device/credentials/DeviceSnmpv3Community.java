@@ -44,16 +44,14 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 
 	/** The username. */
 	@Getter(onMethod=@__({
-		@XmlElement, @JsonView(DefaultView.class),
-		@Convert(converter = StringEncryptorConverter.class)
+		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String username;
 
 	/** The auth type. */
 	@Getter(onMethod=@__({
-		@XmlElement, @JsonView(DefaultView.class),
-		@Convert(converter = StringEncryptorConverter.class)
+		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String authType;
@@ -70,8 +68,7 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	
 	/** The priv type. */
 	@Getter(onMethod=@__({
-		@XmlElement, @JsonView(DefaultView.class),
-		@Convert(converter = StringEncryptorConverter.class)
+		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String privType;

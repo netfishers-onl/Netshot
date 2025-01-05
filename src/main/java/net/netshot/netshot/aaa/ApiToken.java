@@ -36,9 +36,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 
 import lombok.Getter;
 import lombok.Setter;
-
-import org.jasypt.digest.StandardStringDigester;
-
+import net.netshot.netshot.crypto.Sha2BasedHash;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
 @Entity
@@ -48,16 +46,12 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 })
 public class ApiToken implements User {
 
-	final private static StandardStringDigester digester;
-
-	static {
-		digester = new StandardStringDigester();
-		digester.setAlgorithm("SHA-256");
-		digester.setSaltSizeBytes(0);
-	}
-
 	public static String hashToken(String token) {
-		return digester.digest(token);
+		Sha2BasedHash hash = new Sha2BasedHash();
+		hash.setSalt(null); // No salt
+		hash.setIterations(1000);
+		hash.digest(token);
+		return hash.toHashString();
 	}
 
 	protected static Pattern TOKEN_PATTERN = Pattern.compile("^[A-Za-z0-9]{32}$");

@@ -17,7 +17,7 @@ ARG NETSHOT_VERSION
 COPY . /build
 WORKDIR /build
 RUN sed -i -r "s/VERSION = \".*\";/VERSION = \"$NETSHOT_VERSION\";/g" \
-       src/main/java/onl/netfishers/netshot/Netshot.java
+       src/main/java/net/netshot/netshot/Netshot.java
 RUN ./mvnw package -Dmaven.test.skip
 
 FROM debian-graalvm

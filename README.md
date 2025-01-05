@@ -1,7 +1,7 @@
 # Netshot
 Configuration and Compliance Management Software
 
-http://www.netfishers.onl/netshot
+https://www.netshot.net
 
 ## Features
 
@@ -30,7 +30,7 @@ Go to the Wiki page https://github.com/netfishers-onl/Netshot/wiki for installat
 
 ## Contact
 
-contact@netfishers.onl
+contact@netshot.net
 
 ## Related Projects
 

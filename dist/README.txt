@@ -1,8 +1,8 @@
 
-Netshot, a free network management and compliance tool, provided by NetFishers.
+Netshot, a free network management and compliance tool.
 
-For more information, visit http://www.netfishers.onl/netshot
-or contact us at netshot@netfishers.onl.
+For more information, visit https://www.netshot.net
+or contact us at contact@netshot.net.
 
 
 INSTALLATION AND UPGRADE INSTRUCTIONS:

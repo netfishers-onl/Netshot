@@ -457,5 +457,5 @@
 			<url>https://maven.repository.redhat.com/ga/</url>
 		</repository>
 	</repositories>
-	<url>http://www.netfishers.onl/netshot</url>
+	<url>https://www.netshot.net</url>
 </project>

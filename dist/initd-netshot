@@ -9,7 +9,7 @@
 # Description:       Backups and checks compliance of network equipments.
 ### END INIT INFO
 
-# Author: NetFishers <netshot@netfishers.onl>
+# Author: Netshot Team <contact@netshot.net>
 
 # Do NOT "set -e"
 

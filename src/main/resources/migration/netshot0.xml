@@ -1376,5 +1376,10 @@
 			WHERE hashed_token NOT LIKE('$%')
 		</sql>
 	</changeSet>
+	<changeSet author="netshot" id="0.21.0_2">
+		<addColumn tableName="config">
+			<column name="custom_hash" type="VARCHAR(255)"/>
+		</addColumn>
+	</changeSet>
 	
 </databaseChangeLog>

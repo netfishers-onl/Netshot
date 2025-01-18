@@ -1,6 +1,7 @@
 package net.netshot.netshot.crypto;
 
 import java.io.InvalidClassException;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -132,8 +133,8 @@ public class Argon2idHash extends Hash {
 	}
 
 	@Override
-	public void digest(String input) {
-		if (input == null) {
+	public void digest(String[] inputs) {
+		if (inputs == null || inputs.length == 0) {
 			this.hash = null;
 			return;
 		}
@@ -151,9 +152,15 @@ public class Argon2idHash extends Hash {
 		
 		Argon2BytesGenerator generator = new Argon2BytesGenerator();
 		generator.init(parameters);
+		StringBuffer sb = new StringBuffer();
+		for (String input : inputs) {
+			if (input != null) {
+				sb.append(input);
+			}
+		}
+		byte[] inputBytes = sb.toString().getBytes(MESSAGE_CHARSET);
 		this.hash = new byte[this.hashSize];
-		generator.generateBytes(input.getBytes(MESSAGE_CHARSET),
-			this.hash, 0, this.hash.length);
+		generator.generateBytes(inputBytes, this.hash);
 	}
 
 	@Override

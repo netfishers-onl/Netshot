@@ -24,6 +24,7 @@ import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
 
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.crypto.Sha2BasedHash;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
@@ -49,12 +50,15 @@ public class JsConfigHelper {
 	
 	private final Device device;
 	private Config config;
+	private Config lastConfig;
 	private TaskLogger taskLogger;
 	private Cli cli;
 	
-	public JsConfigHelper(Device device, Config config, Cli cli, TaskLogger taskLogger) {
+	public JsConfigHelper(Device device, Config config, Config lastConfig,
+			Cli cli, TaskLogger taskLogger) {
 		this.device = device;
 		this.config = config;
+		this.lastConfig = lastConfig;
 		this.cli = cli;
 		this.taskLogger = taskLogger;
 	}
@@ -95,6 +99,32 @@ public class JsConfigHelper {
 		catch (Exception e) {
 			log.warn("Error during snapshot while setting config attribute key '{}'.", key);
 		}
+	}
+
+	/**
+	 * 
+	 * @param input
+	 */
+	@Export
+	public void computeCustomHash(String[] inputs) {
+		Sha2BasedHash digester = new Sha2BasedHash();
+		digester.setSalt(null);
+		digester.setIterations(1);
+		digester.setAlgorithm("SHA-256");
+		digester.digest(inputs);
+		String hash = digester.toHashString();
+		log.debug("Computed custom hash is {}", hash);
+		config.setCustomHash(hash);
+	}
+
+	@Export
+	public String getCustomHash() {
+		return config.getCustomHash();
+	}
+
+	@Export
+	public String getLastCustomHash() {
+		return lastConfig.getCustomHash();
 	}
 
 	/**

@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "Netshot Team",
-	version: "1.10"
+	version: "2.0"
 };
 
 var Config = {
@@ -260,14 +260,15 @@ function snapshot(cli, device, config) {
 	}
 	device.set("configurationSaved", configSaved);
 
+	var sdwanRunningConfig = null;
 	try {
-		var sdwanRunningConfig = cli.command("show sdwan running-config");
+		sdwanRunningConfig = cli.command("show sdwan running-config");
 		config.set("sdwanRunningConfig", sdwanRunningConfig);
 	}
 	catch (e) {
+		sdwanRunningConfig = null;
 		// Ignore SDWAN config
 	}
-
 
 	var showVersion = cli.command("show version");
 
@@ -281,13 +282,21 @@ function snapshot(cli, device, config) {
 		version = showVersion.match(/(?:Cisco )?IOS.*Software.*Version ([0-9\.A-Za-z\(\):]+)/m);
 	}
 	if (version) {
-		device.set("softwareVersion", version[1]);
-		config.set("iosVersion", version[1]);
+		version = version[1];
+		device.set("softwareVersion", version);
+		config.set("iosVersion", version);
 	}
 	var image = showVersion.match(/^System image file is "(.*)"/m);
 	if (image != null) {
-		config.set("iosImageFile", image[1]);
+		image = image[1];
+		config.set("iosImageFile", image);
 	}
+
+	if (typeof config.computeHash === "function") {
+		// Netshot 0.21+
+		config.computeHash(runningConfig, sdwanRunningConfig, version, image);
+	}
+
 	var versionDetails = showVersion.match(/^(.*) with (\d+)K(\/(\d+)K)? bytes of /m);
 	device.set("networkClass", "ROUTER");
 	device.set("family", "Unknown IOS device");

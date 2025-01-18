@@ -125,32 +125,18 @@ var CLI = {
 
 function snapshot(cli, device, config) {
 	
-	var configCleanup = function(runningConfig, savedConfig) {
-		var config = runningConfig
+	const configCleanup = function(cfg) {
+		return cfg
 			.replace(/[\r\n]+\s+Done[\r\n\s]+$/, "")
 			.replace(/^# Last modified .*/m, "");
-		
-		// The ENCMTH-encrypted passwords are generated each type the configuration is retrieved
-		// To avoid the differences between configurations, we take the encrypted passwords
-		// from the saved configuration.
-		// This means that if a change on the running config affects such a password only
-		// it won't be detected until the configuration is saved.
-		var savedPasswords = {};
-		var passPattern = /^(.* )([0-9a-f]+)( \-encrypted \-encryptmethod ENCMTHD.*)$/mg;
-		var passMatch;
-		while (passMatch = passPattern.exec(savedConfig)) {
-			savedPasswords[passMatch[1] + passMatch[3]] = passMatch[2];
-		}
-	
-		config = config.replace(passPattern, function(match, prefix, pass, suffix) {
-			return prefix + (savedPasswords[prefix + suffix] ? savedPasswords[prefix + suffix] : pass) + suffix;
-		});
-	
-		return config;
 	};
 
+	const removeEncryptedParts = function(cfg) {
+		return cfg
+			.replace(/^(.* )([0-9a-f]+)( \-encrypted \-encryptmethod ENCMTHD.*)$/mg, "");
+	}
 
-	var parseInterfaces = function(partition, configuration) {
+	const parseInterfaces = function(partition, configuration) {
 		var vlanInterfaces = {};
 		var ipVlans = {};
 		var arpTable = {};
@@ -215,17 +201,11 @@ function snapshot(cli, device, config) {
 			addIp(ip, mask, "NetScaler IP", td);
 		}
 	}
-	
+
 	cli.macro("cli");
 
-	var runningConfig = cli.command("show ns runningConfig");
-	try {
-		var savedConfig = cli.command("show ns savedConfig");
-		runningConfig = configCleanup(runningConfig, savedConfig);
-	}
-	catch (error) {
-		// May happen if config was not saved: ignore.
-	}
+	let runningConfig = cli.command("show ns runningConfig");
+	runningConfig = configCleanup(runningConfig);
 
 	var showNsHostname = cli.command("show ns hostname");
 	var hostname = showNsHostname.match(/Hostname:\s+(.+)/);
@@ -250,8 +230,9 @@ function snapshot(cli, device, config) {
 	var showNsVersion = cli.command("show ns version");
 	var version = showNsVersion.match(/NetScaler (NS.+?),/i);
 	if (version) {
-		device.set("softwareVersion", version[1]);
-		config.set("nsVersion", version[1]);
+		version = version[1];
+		device.set("softwareVersion", version);
+		config.set("nsVersion", version);
 	}
 
 	device.set("networkClass", "LOADBALANCER");
@@ -312,16 +293,19 @@ function snapshot(cli, device, config) {
 	while (partition = partitionPattern.exec(runningConfig)) {
 		usePartitions = true;
 		var partitionName = partition[1];
-		cli.command("switch ns partition " + partitionName, { clearPrompt: true });
-		var partRunningConfig = cli.command("show ns runningConfig");
-		var partSavedConfig = cli.command("show ns savedConfig");
-		partRunningConfig = configCleanup(partRunningConfig, partSavedConfig);
-		runningConfig += "\r\n\r\n### Partition " + partitionName + "\r\n";
-		runningConfig += "switch ns partition " + partitionName + "\r\n\r\n";
+		cli.command(`switch ns partition ${partitionName}`, { clearPrompt: true });
+		let partRunningConfig = cli.command("show ns runningConfig");
+		partRunningConfig = configCleanup(partRunningConfig);
+		runningConfig += "\r\n\r\n" + `### Partition ${partitionName}\r\n`;
+		runningConfig += `switch ns partition ${partitionName}\r\n\r\n`;
 		runningConfig += partRunningConfig;
-		parseInterfaces(partitionName, runningConfig);
+		parseInterfaces(partitionName, partRunningConfig);
 	}
 	config.set("runningConfig", runningConfig);
+
+	// Netshot 0.21+
+	const runningConfigNoPass = removeEncryptedParts(runningConfig);
+	config.computeHash(runningConfigNoPass, showNsLicense, version);
 
 	// Switch back to default partition, if possible
 	try {
@@ -345,20 +329,23 @@ function snapshot(cli, device, config) {
 			throw e;
 		}
 	}
-	// Create a backup archive
-	const backupOutput = cli.command("create system backup -level full netshot");
-	if (!backupOutput.match(/Done/)) {
-		cli.debug(`Result of backup command: ${backupOutput}`);
-		throw "Couldn't create Netscaler backup";
-	}
-	try {
-		config.download("nsConfigBundle", "/var/ns_sys_backup/netshot.tgz", { method: "sftp", newSession: true });
-	}
-	catch (e) {
-		throw e;
-	}
-	finally {
-		cli.command("rm system backup netshot.tgz");
+
+	if (config.isChangedHash()) {
+		// Create a backup archive
+		const backupOutput = cli.command("create system backup -level full netshot");
+		if (!backupOutput.match(/Done/)) {
+			cli.debug(`Result of backup command: ${backupOutput}`);
+			throw "Couldn't create Netscaler backup";
+		}
+		try {
+			config.download("nsConfigBundle", "/var/ns_sys_backup/netshot.tgz", { method: "sftp", newSession: true });
+		}
+		catch (e) {
+			throw e;
+		}
+		finally {
+			cli.command("rm system backup netshot.tgz");
+		}
 	}
 };
 

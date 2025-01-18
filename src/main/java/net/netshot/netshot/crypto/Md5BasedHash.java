@@ -117,8 +117,8 @@ public class Md5BasedHash extends Hash {
 	}
 
 	@Override
-	public void digest(String input) {
-		if (input == null) {
+	public void digest(String[] inputs) {
+		if (inputs == null || inputs.length == 0) {
 			this.hash = null;
 			return;
 		}
@@ -126,7 +126,6 @@ public class Md5BasedHash extends Hash {
 			this.generateSalt();
 		}
 
-		byte[] inputBytes = input.getBytes(MESSAGE_CHARSET);
 		MessageDigest md;
 		try {
 			md = MessageDigest.getInstance("MD5");
@@ -138,7 +137,13 @@ public class Md5BasedHash extends Hash {
 		if (this.salt != null) {
 			md.update(this.salt);
 		}
-		md.update(inputBytes);
+		for (String input : inputs) {
+			if (input == null) {
+				continue;
+			}
+			byte[] inputBytes = input.getBytes(MESSAGE_CHARSET);
+			md.update(inputBytes);
+		}
 		byte[] digest = md.digest();
 		for (int i = 1; i < this.iterations; i++) {
 			md.reset();

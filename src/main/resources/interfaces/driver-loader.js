@@ -679,6 +679,28 @@ const _connect = (_function, _protocol, _options) => {
 			}
 
 			_options.getConfigHelper().download(key, method, fileName, storeFileName, newSession);
+		},
+		computeHash: function(...params) {
+			const inputs = params.map((i, idx) => {
+				if (i === null || typeof(i) === "undefined") {
+					return null;
+				}
+				else if (typeof(i) === "string") {
+					return String(i);
+				}
+				throw `Invalid element type in passed array, index ${idx}, in config.computeHash.`;
+			});
+			_options.getConfigHelper().computeCustomHash(inputs);
+		},
+		getHash: function() {
+			return _options.getConfigHelper().getCustomHash();
+		},
+		getLastHash: function() {
+			return _options.getConfigHelper().getLastCustomHash();
+		},
+		isChangedHash: function() {
+			return _options.getConfigHelper().getCustomHash() !== 
+			       _options.getConfigHelper().getLastCustomHash();
 		}
 	};
 	

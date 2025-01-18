@@ -46,7 +46,18 @@ public abstract class Hash {
 	 * Compute the hash of the passed string.
 	 * @param input the data to hash
 	 */
-	public abstract void digest(String input);
+	 public void digest(String input) {
+		 if (input == null) {
+			this.digest(new String[] {});
+		 }
+		 this.digest(new String[] { input });
+	 }
+
+	/**
+	 * Compute the hash of the passed strings.
+	 * @param inputs the data to hash
+	 */
+	public abstract void digest(String[] inputs);
 
 	/**
 	 * Produce the string representation of the hash in Modular Crypt Format.

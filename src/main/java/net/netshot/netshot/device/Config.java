@@ -90,27 +90,13 @@ public class Config {
 		return lineParents;
 	}
 
-	/** The attributes. */
+	/** The id. */
 	@Getter(onMethod=@__({
-		@XmlElement, @JsonView(DefaultView.class),
-		@OneToMany(mappedBy = "config", orphanRemoval = true, cascade = CascadeType.ALL)
+		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
+		@XmlAttribute, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private Set<ConfigAttribute> attributes = new HashSet<ConfigAttribute>();
-
-	/** The author. */
-	@Getter(onMethod=@__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	private String author = "";
-
-	/** The change date. */
-	@Getter(onMethod=@__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	protected Date changeDate;
+	protected long id;
 	
 	@Getter(onMethod=@__({
 		@Version
@@ -126,13 +112,34 @@ public class Config {
 	@Setter
 	protected Device device;
 
-	/** The id. */
+	/** The change date. */
 	@Getter(onMethod=@__({
-		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
-		@XmlAttribute, @JsonView(DefaultView.class)
+		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	protected long id;
+	protected Date changeDate;
+
+	/** The author. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private String author = "";
+
+	/** The attributes. */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class),
+		@OneToMany(mappedBy = "config", orphanRemoval = true, cascade = CascadeType.ALL)
+	}))
+	@Setter
+	private Set<ConfigAttribute> attributes = new HashSet<ConfigAttribute>();
+
+	/** Hash value, optionally set by the driver, to forcely consider the config changed or not */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private String customHash = null;
 
 	/**
 	 * Instantiates a new config.

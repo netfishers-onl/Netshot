@@ -24,7 +24,7 @@ var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "Netshot Team",
-	version: "5.8" /* Version will appear in the Admin tab. */
+	version: "6.0" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -326,16 +326,25 @@ function snapshot(cli, device, config) {
 		return cleaned;
 	}
 
-	// If only the passwords are changing (they are hashed with a new salt at each 'show') then
-	// just keep the previous configuration.
-	// That means we could miss a password change in the history of configurations, but no choice...
-	var previousConfiguration = device.get("configuration");
-	if (typeof previousConfiguration === "string" &&
-			removeChangingParts(previousConfiguration) === removeChangingParts(configuration)) {
-		config.set("configuration", previousConfiguration);
+	if (typeof config.computeHash === "function") {
+		// Possible starting with Netshot 0.21
+		// Sets the config hash based on configuration without salted/encrypted parts.
+		config.computeHash(removeChangingParts(configuration));
+		config.set("configuration", configuration);
 	}
 	else {
-		config.set("configuration", configuration);
+		// Legacy mode
+		// If only the passwords are changing (they are hashed with a new salt at each 'show') then
+		// just keep the previous configuration.
+		// That means we could miss a password change in the history of configurations, but no choice...
+		var previousConfiguration = device.get("configuration");
+		if (typeof previousConfiguration === "string" &&
+				removeChangingParts(previousConfiguration) === removeChangingParts(configuration)) {
+			config.set("configuration", previousConfiguration);
+		}
+		else {
+			config.set("configuration", configuration);
+		}
 	}
 
 };

@@ -24,11 +24,13 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 
 import org.apache.poi.openxml4j.exceptions.InvalidOperationException;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 
 import lombok.extern.slf4j.Slf4j;
@@ -85,40 +87,38 @@ public class SnapshotCliScript extends CliScript {
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, taskLogger);
 			options.setDeviceHelper(new JsDeviceHelper(device, cli, session, taskLogger, false));
 			Config config = new Config(device);
-			options.setConfigHelper(new JsConfigHelper(device, config, cli, taskLogger));
+			Config lastConfig = Database.unproxy(device.getLastConfig());
+			options.setConfigHelper(new JsConfigHelper(device, config, lastConfig, cli, taskLogger));
 			context.getBindings("js").getMember("_connect").execute("snapshot", protocol.value(), options, taskLogger);
 
 			// Check whether the config has actually changed
 			boolean different = false;
-			try {
-				Config lastConfig = Database.unproxy(device.getLastConfig());
-				if (lastConfig == null) {
-					different = true;
-				}
-				else {
-					Map<String, ConfigAttribute> oldAttributes = lastConfig.getAttributeMap();
-					Map<String, ConfigAttribute> newAttributes = config.getAttributeMap();
-					for (AttributeDefinition definition : driver.getAttributes()) {
-						if (definition.getLevel() != AttributeLevel.CONFIG) {
-							continue;
-						}
-						ConfigAttribute oldAttribute = oldAttributes.get(definition.getName());
-						ConfigAttribute newAttribute = newAttributes.get(definition.getName());
-						if (oldAttribute != null) {
-							if (!oldAttribute.valueEquals(newAttribute)) {
-								different = true;
-								break;
-							}
-						}
-						else if (newAttribute != null) {
+			if (lastConfig == null) {
+				different = true;
+			}
+			else if (lastConfig.getCustomHash() == null && config.getCustomHash() == null) {
+				Map<String, ConfigAttribute> oldAttributes = lastConfig.getAttributeMap();
+				Map<String, ConfigAttribute> newAttributes = config.getAttributeMap();
+				for (AttributeDefinition definition : driver.getAttributes()) {
+					if (definition.getLevel() != AttributeLevel.CONFIG) {
+						continue;
+					}
+					ConfigAttribute oldAttribute = oldAttributes.get(definition.getName());
+					ConfigAttribute newAttribute = newAttributes.get(definition.getName());
+					if (oldAttribute != null) {
+						if (!oldAttribute.valueEquals(newAttribute)) {
 							different = true;
 							break;
 						}
 					}
+					else if (newAttribute != null) {
+						different = true;
+						break;
+					}
 				}
 			}
-			catch (Exception e) {
-				log.error("Error while comparing old and new configuration. Will save the new configuration.", e);
+			else {
+				different = !Objects.equals(lastConfig.getCustomHash(), config.getCustomHash());
 			}
 			if (different) {
 				device.setLastConfig(config);

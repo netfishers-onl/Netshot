@@ -7730,7 +7730,9 @@ public class RestService extends Thread {
 
 				{
 					StringBuilder deviceHqlQuery = new StringBuilder(
-							"select d from Device d left join d.ownerGroups g left join fetch d.mgmtDomain " +
+							"select d from Device d left join d.ownerGroups g " +
+							"left join fetch d.specificCredentialSet cs " +
+							"left join fetch d.mgmtDomain " +
 							"where 1 = 1");
 					if (domains.size() > 0) {
 						deviceHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");

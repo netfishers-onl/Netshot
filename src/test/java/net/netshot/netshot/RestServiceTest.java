@@ -19,6 +19,7 @@
 package net.netshot.netshot;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.http.HttpResponse;
@@ -28,6 +29,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.hibernate.Session;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -43,6 +47,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import net.netshot.netshot.NetshotApiClient.WrongApiResponseException;
@@ -1221,4 +1226,101 @@ public class RestServiceTest {
 
 	}
 	
+
+	@Nested
+	@DisplayName("Report tests")
+	@ResourceLock(value = "DB")
+	class ReportTests {
+
+		private String testDomainName = "Domain 1";
+		private Domain testDomain = null;
+		private List<Device> testDevices = null;
+
+		private void createTestDomain() throws IOException {
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				this.testDomain = new Domain(
+					this.testDomainName, "Test Domain for devices",
+					new Network4Address("10.1.1.1"),
+					null
+				);
+				session.persist(this.testDomain);
+				session.getTransaction().commit();
+			}
+		}
+
+		private void createTestDevices() {
+			this.testDevices = new ArrayList<>();
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				for (int i = 0; i < 1000; i++) {
+					Device device = FakeDeviceFactory.getFakeCiscoIosDevice(this.testDomain, null, i);
+					this.testDevices.add(device);
+					session.persist(device);
+				}
+				session.getTransaction().commit();
+			}
+		}
+
+		@BeforeAll
+		static void loadDrivers() throws Exception {
+			DeviceDriver.refreshDrivers();
+		}
+
+		@AfterEach
+		void cleanUpData() {
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				session
+					.createMutationQuery("delete from Device")
+					.executeUpdate();
+				session
+					.createMutationQuery("delete from DeviceCredentialSet cs where cs.deviceSpecific is true")
+					.executeUpdate();
+				session
+					.createMutationQuery("delete from Domain")
+					.executeUpdate();
+				session.getTransaction().commit();
+			}
+		}
+
+		@Test
+		@DisplayName("Export data test")
+		@ResourceLock(value = "DB")
+		void exportDataTest() throws IOException, InterruptedException {
+			this.createTestDomain();
+			this.createTestDevices();
+			apiClient.setMediaType(MediaType.WILDCARD_TYPE);
+			{
+				InputStream xlsStream = apiClient.download("/reports/export?format=xlsx").body();
+				try (XSSFWorkbook wb = new XSSFWorkbook(xlsStream)) {
+					Assertions.assertEquals(wb.getNumberOfSheets(), 2);
+					XSSFSheet deviceSheet = wb.getSheet("Devices");
+					Assertions.assertEquals(this.testDevices.size(), deviceSheet.getLastRowNum());
+				}
+			}
+			{
+				InputStream xlsStream = apiClient.download("/reports/export?interfaces=true").body();
+				try (XSSFWorkbook wb = new XSSFWorkbook(xlsStream)) {
+					Assertions.assertEquals(wb.getNumberOfSheets(), 3);
+					XSSFSheet deviceSheet = wb.getSheet("Devices");
+					Assertions.assertEquals(deviceSheet.getLastRowNum(), this.testDevices.size());
+					XSSFSheet intfSheet = wb.getSheet("Interfaces");
+					Assertions.assertEquals(this.testDevices.size() * 4, intfSheet.getLastRowNum());
+				}
+			}
+			{
+				InputStream xlsStream = apiClient.download("/reports/export?inventory=true").body();
+				try (XSSFWorkbook wb = new XSSFWorkbook(xlsStream)) {
+					Assertions.assertEquals(wb.getNumberOfSheets(), 3);
+					XSSFSheet deviceSheet = wb.getSheet("Devices");
+					Assertions.assertEquals(deviceSheet.getLastRowNum(), this.testDevices.size());
+					XSSFSheet intfSheet = wb.getSheet("Inventory");
+					Assertions.assertEquals(this.testDevices.size() * 2, intfSheet.getLastRowNum());
+				}
+			}
+		}
+
+	}
+
 }

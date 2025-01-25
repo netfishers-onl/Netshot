@@ -40,6 +40,8 @@ import net.netshot.netshot.device.attribute.DeviceBinaryAttribute;
 import net.netshot.netshot.device.attribute.DeviceNumericAttribute;
 import net.netshot.netshot.device.attribute.DeviceTextAttribute;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
+import net.netshot.netshot.device.credentials.DeviceCredentialSet;
+import net.netshot.netshot.device.credentials.DeviceSshAccount;
 import net.netshot.netshot.diagnostic.Diagnostic;
 import net.netshot.netshot.diagnostic.DiagnosticResult;
 import net.netshot.netshot.diagnostic.DiagnosticTextResult;
@@ -47,22 +49,33 @@ import net.netshot.netshot.diagnostic.SimpleDiagnostic;
 
 public class FakeDeviceFactory {
 
-	static Device getFakeCiscoIosDevice() {
+	static public Device getFakeCiscoIosDevice() {
 		Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
+		Diagnostic diagnostic = getReloadReasonIosSimpleDiagnostic();
+		return FakeDeviceFactory.getFakeCiscoIosDevice(domain, diagnostic, 100);
+	}
+
+	static public Device getFakeCiscoIosDevice(Domain domain, Diagnostic diagnostic, int shift) {
 		Network4Address mgmtIp = null;
 		try {
-			mgmtIp = new Network4Address("172.16.1.16");
+			mgmtIp = new Network4Address("172.12.0.0");
+			mgmtIp.setAddress(mgmtIp.getAddress() + shift);
 		}
 		catch (UnknownHostException e) {
+			// Ignore
 		}
 		Device device = new Device("CiscoIOS12", mgmtIp, domain, "test");
-		device.setName("router1");
+		device.setName(String.format("router%05d", shift));
 		device.setFamily("Unknown IOS device");
 		device.setNetworkClass(NetworkClass.ROUTER);
 		device.setLocation("Test Location");
 		device.setContact("Test Contact");
 		device.setSoftwareVersion("16.1.6");
 		device.setCreator("tester");
+		DeviceCredentialSet cs = new DeviceSshAccount("user", "pass", "pass",
+			DeviceCredentialSet.generateSpecificName());
+		cs.setDeviceSpecific(true);
+		device.setSpecificCredentialSet(cs);
 		device.setSerialNumber("16161616TEST16");
 		device.setComments("Comments for testing");
 		device.setVrfInstances(new HashSet<String>(Set.of("VRF1", "VRF2")));
@@ -71,8 +84,12 @@ public class FakeDeviceFactory {
 		{
 			NetworkInterface ni = new NetworkInterface(device, "GigabitEthernet0/0", "", "VRF1", true, true, "Desc for interface 0/0");
 			try {
-				ni.addIpAddress(new Network4Address("10.0.0.1", 24));
-				ni.addIpAddress(new Network6Address("2016:1:2:0::1", 64));
+				Network4Address na1 = new Network4Address("10.0.0.1", 25);
+				na1.setAddress(na1.getAddress() + (shift << 8));
+				ni.addIpAddress(na1);
+				Network6Address na2 = new Network6Address(
+					String.format("2016:1:%x:1::1", shift), 64);
+				ni.addIpAddress(na2);
 			}
 			catch (UnknownHostException e) {
 			}
@@ -81,8 +98,12 @@ public class FakeDeviceFactory {
 		{
 			NetworkInterface ni = new NetworkInterface(device, "GigabitEthernet0/1", "", "VRF2", false, true, "Desc for interface 0/1");
 			try {
-				ni.addIpAddress(new Network4Address("10.0.1.1", 24));
-				ni.addIpAddress(new Network6Address("2016:1:2:1::1", 64));
+				Network4Address na1 = new Network4Address("10.0.0.129", 25);
+				na1.setAddress(na1.getAddress() + (shift << 8));
+				ni.addIpAddress(na1);
+				Network6Address na2 = new Network6Address(
+					String.format("2016:1:%x:2::1", shift), 64);
+				ni.addIpAddress(na2);
 			}
 			catch (UnknownHostException e) {
 			}
@@ -95,7 +116,7 @@ public class FakeDeviceFactory {
 			"service timestamps debug datetime msec\n" +
 			"no service password-encryption\n" +
 			"!\n" +
-			"hostname router1\n" +
+			"hostname " + device.getName() + "\n" +
 			"!\n"+
 			"boot-start-marker\n" +
 			"boot-end-marker\n" +
@@ -139,18 +160,20 @@ public class FakeDeviceFactory {
 		DeviceAttribute configurationSaved = new DeviceBinaryAttribute(device, "configurationSaved", false);
 		device.addAttribute(configurationSaved);
 
-		DiagnosticResult reloadReasonDiagResult = new DiagnosticTextResult(device, getReloadReasonIosSimpleDiagnostic(), "Reload Command");
-		device.addDiagnosticResult(reloadReasonDiagResult);
+		if (diagnostic != null) {
+			DiagnosticResult reloadReasonDiagResult = new DiagnosticTextResult(device, diagnostic, "Reload Command");
+			device.addDiagnosticResult(reloadReasonDiagResult);
+		}
 
 		return device;
 	}
 
-	static DeviceGroup getAllDevicesGroup() {
+	static public DeviceGroup getAllDevicesGroup() {
 		DeviceGroup group = new DynamicDeviceGroup("All", null, "");
 		return group;
 	}
 
-	static Diagnostic getReloadReasonIosSimpleDiagnostic() {
+	static public Diagnostic getReloadReasonIosSimpleDiagnostic() {
 		Diagnostic diagnostic = new SimpleDiagnostic("Reload reason", true,
 			getAllDevicesGroup(), AttributeType.TEXT, "CiscoIOS12",
 			"enable",

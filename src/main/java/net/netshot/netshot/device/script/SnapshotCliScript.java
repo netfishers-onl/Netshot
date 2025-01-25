@@ -30,7 +30,6 @@ import java.util.regex.Matcher;
 import org.apache.poi.openxml4j.exceptions.InvalidOperationException;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 
 import lombok.extern.slf4j.Slf4j;

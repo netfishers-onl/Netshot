@@ -1,7 +1,6 @@
 package net.netshot.netshot.crypto;
 
 import java.io.InvalidClassException;
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;

@@ -19,15 +19,18 @@
 package net.netshot.netshot;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.net.http.HttpResponse.BodySubscriber;
 import java.net.http.HttpResponse.ResponseInfo;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -218,6 +221,16 @@ public class NetshotApiClient {
 		HttpResponse<JsonNode> response =
 			this.httpClient.send(request, this.jsonNodeHandler());
 		return response;
+	}
+
+	public HttpResponse<Path> download(String path, Path localPath) throws IOException, InterruptedException {
+		HttpRequest request = initRequest(path).GET().build();
+		return this.httpClient.send(request, BodyHandlers.ofFile(localPath));
+	}
+
+	public HttpResponse<InputStream> download(String path) throws IOException, InterruptedException {
+		HttpRequest request = initRequest(path).GET().build();
+		return this.httpClient.send(request, BodyHandlers.ofInputStream());
 	}
 
 	public HttpResponse<JsonNode> post(String path, JsonNode data) throws IOException, InterruptedException {

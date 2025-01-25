@@ -2216,11 +2216,8 @@ public class RestService extends Thread {
 		try {
 			session.beginTransaction();
 			device = session.getReference(Device.class, id);
-			if (Boolean.TRUE.equals(rsDevice.getEnabled())) {
-				device.setStatus(Status.INPRODUCTION);
-			}
-			else {
-				device.setStatus(Status.DISABLED);
+			if (rsDevice.getEnabled() != null) {
+				device.setStatus(rsDevice.getEnabled() ? Status.INPRODUCTION : Status.DISABLED);
 			}
 			if (rsDevice.getIpAddress() != null) {
 				Network4Address v4Address = new Network4Address(rsDevice.getIpAddress());

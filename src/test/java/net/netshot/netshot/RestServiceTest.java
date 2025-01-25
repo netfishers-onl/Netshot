@@ -24,11 +24,14 @@ import java.net.HttpCookie;
 import java.net.URI;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -1019,6 +1022,115 @@ public class RestServiceTest {
 			return DeviceDriver.getDriverByName("CiscoIOS12");
 		}
 
+		private void assertDevicesEqual(Device d1, Device d2, String... ignoredFields) {
+			List<String> iFields = Arrays.asList(ignoredFields);
+			if (!iFields.contains("autoTryCredentials")) {
+				if (!Objects.equals(d1.isAutoTryCredentials(), d2.isAutoTryCredentials())) {
+					Assertions.fail("Passed devices are not equal, check field autoTryCredentials");
+				}
+			}
+			if (!iFields.contains("contact")) {
+				if (!Objects.equals(d1.getContact(), d2.getContact())) {
+					Assertions.fail("Passed devices are not equal, check field contact");
+				}
+			}
+			if (!iFields.contains("createdDate")) {
+				if (!Objects.equals(d1.getCreatedDate(), d2.getCreatedDate())) {
+					Assertions.fail("Passed devices are not equal, check field createdDate");
+				}
+			}
+			if (!iFields.contains("creator")) {
+				if (!Objects.equals(d1.getCreator(), d2.getCreator())) {
+					Assertions.fail("Passed devices are not equal, check field creator");
+				}
+			}
+			if (!iFields.contains("specificCredentialSet")) {
+				if (!Objects.equals(d1.getSpecificCredentialSet(), d2.getSpecificCredentialSet())) {
+					Assertions.fail("Passed devices are not equal, check field specificCredentialSet");
+				}
+			}
+			if (!iFields.contains("driver")) {
+				if (!Objects.equals(d1.getDriver(), d2.getDriver())) {
+					Assertions.fail("Passed devices are not equal, check field driver");
+				}
+			}
+			if (!iFields.contains("eolDate")) {
+				if (!Objects.equals(d1.getEolDate(), d2.getEolDate())) {
+					Assertions.fail("Passed devices are not equal, check field eolDate");
+				}
+			}
+			if (!iFields.contains("eosDate")) {
+				if (!Objects.equals(d1.getEosDate(), d2.getEosDate())) {
+					Assertions.fail("Passed devices are not equal, check field eosDate");
+				}
+			}
+			if (!iFields.contains("family")) {
+				if (!Objects.equals(d1.getFamily(), d2.getFamily())) {
+					Assertions.fail("Passed devices are not equal, check field family");
+				}
+			}
+			if (!iFields.contains("location")) {
+				if (!Objects.equals(d1.getLocation(), d2.getLocation())) {
+					Assertions.fail("Passed devices are not equal, check field location");
+				}
+			}
+			if (!iFields.contains("mgmtAddress")) {
+				if (!Objects.equals(d1.getMgmtAddress(), d2.getMgmtAddress())) {
+					Assertions.fail("Passed devices are not equal, check field mgmtAddress");
+				}
+			}
+			if (!iFields.contains("name")) {
+				if (!Objects.equals(d1.getName(), d2.getName())) {
+					Assertions.fail("Passed devices are not equal, check field name");
+				}
+			}
+			if (!iFields.contains("networkClass")) {
+				if (!Objects.equals(d1.getNetworkClass(), d2.getNetworkClass())) {
+					Assertions.fail("Passed devices are not equal, check field name");
+				}
+			}
+			if (!iFields.contains("serialNumber")) {
+				if (!Objects.equals(d1.getSerialNumber(), d2.getSerialNumber())) {
+					Assertions.fail("Passed devices are not equal, check field serialNumber");
+				}
+			}
+			if (!iFields.contains("softwareLevel")) {
+				if (!Objects.equals(d1.getSoftwareLevel(), d2.getSoftwareLevel())) {
+					Assertions.fail("Passed devices are not equal, check field softwareLevel");
+				}
+			}
+			if (!iFields.contains("softwareVersion")) {
+				if (!Objects.equals(d1.getSoftwareVersion(), d2.getSoftwareVersion())) {
+					Assertions.fail("Passed devices are not equal, check field softwareVersion");
+				}
+			}
+			if (!iFields.contains("status")) {
+				if (!Objects.equals(d1.getStatus(), d2.getStatus())) {
+					Assertions.fail("Passed devices are not equal, check field status");
+				}
+			}
+			if (!iFields.contains("sshPort")) {
+				if (!Objects.equals(d1.getSshPort(), d2.getSshPort())) {
+					Assertions.fail("Passed devices are not equal, check field sshPort");
+				}
+			}
+			if (!iFields.contains("telnetPort")) {
+				if (!Objects.equals(d1.getTelnetPort(), d2.getTelnetPort())) {
+					Assertions.fail("Passed devices are not equal, check field telnetPort");
+				}
+			}
+			if (!iFields.contains("connectAddress")) {
+				if (!Objects.equals(d1.getConnectAddress(), d2.getConnectAddress())) {
+					Assertions.fail("Passed devices are not equal, check field connectAddress");
+				}
+			}
+			if (!iFields.contains("comments")) {
+				if (!Objects.equals(d1.getComments(), d2.getComments())) {
+					Assertions.fail("Passed devices are not equal, check field comments");
+				}
+			}
+		}
+
 		@BeforeAll
 		static void loadDrivers() throws Exception {
 			DeviceDriver.refreshDrivers();
@@ -1224,6 +1336,79 @@ public class RestServiceTest {
 				"Retrieved device doesn't match expected object");
 		}
 
+		@Test
+		@DisplayName("Edit device")
+		@ResourceLock(value = "DB")
+		void editDevice() throws IOException, InterruptedException {
+			this.createTestDomain();
+			Device device1 = FakeDeviceFactory.getFakeCiscoIosDevice(this.testDomain, null, 1);
+			Device device2 = FakeDeviceFactory.getFakeCiscoIosDevice(this.testDomain, null, 2);
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				session.persist(device1);
+				session.persist(device2);
+				session.getTransaction().commit();
+			}
+			{
+				ObjectNode editData = JsonNodeFactory.instance.objectNode()
+					.put("enabled", false);
+				HttpResponse<JsonNode> response = apiClient.put(
+					String.format("/devices/%d", device1.getId()), editData);
+				Assertions.assertEquals(
+					Response.Status.OK.getStatusCode(), response.statusCode(),
+					"Not getting 200 response for edited device");
+
+				try (Session session = Database.getSession()) {
+					Device editedDevice = session
+						.createQuery("from Device d where d.id = :id", Device.class)
+						.setParameter("id", device1.getId())
+						.uniqueResult();
+					Assertions.assertEquals(Device.Status.DISABLED, editedDevice.getStatus(),
+						"The edited device is not disabled");
+					this.assertDevicesEqual(device1, editedDevice, "status");
+				}
+			}
+			{
+				ObjectNode editData = JsonNodeFactory.instance.objectNode()
+					.put("enabled", true);
+				HttpResponse<JsonNode> response = apiClient.put(
+					String.format("/devices/%d", device1.getId()), editData);
+				Assertions.assertEquals(
+					Response.Status.OK.getStatusCode(), response.statusCode(),
+					"Not getting 200 response for edited device");
+
+				try (Session session = Database.getSession()) {
+					Device editedDevice = session
+						.createQuery("from Device d where d.id = :id", Device.class)
+						.setParameter("id", device1.getId())
+						.uniqueResult();
+					Assertions.assertEquals(Device.Status.INPRODUCTION, editedDevice.getStatus(),
+						"The edited device is not enabled");
+					this.assertDevicesEqual(device1, editedDevice);
+				}
+			}
+			{
+				final String comments = "TEST EDIT COMMENT";
+				ObjectNode editData = JsonNodeFactory.instance.objectNode()
+					.put("comments", comments);
+				HttpResponse<JsonNode> response = apiClient.put(
+					String.format("/devices/%d", device1.getId()), editData);
+				Assertions.assertEquals(
+					Response.Status.OK.getStatusCode(), response.statusCode(),
+					"Not getting 200 response for edited device");
+
+				try (Session session = Database.getSession()) {
+					Device editedDevice = session
+						.createQuery("from Device d where d.id = :id", Device.class)
+						.setParameter("id", device1.getId())
+						.uniqueResult();
+					Assertions.assertEquals(comments, editedDevice.getComments(),
+						"The edited device comments are not correct");
+					this.assertDevicesEqual(device1, editedDevice, "comments");
+				}
+			}
+		}
+
 	}
 	
 
@@ -1296,7 +1481,8 @@ public class RestServiceTest {
 				try (XSSFWorkbook wb = new XSSFWorkbook(xlsStream)) {
 					Assertions.assertEquals(wb.getNumberOfSheets(), 2);
 					XSSFSheet deviceSheet = wb.getSheet("Devices");
-					Assertions.assertEquals(this.testDevices.size(), deviceSheet.getLastRowNum());
+					Assertions.assertEquals(this.testDevices.size(), deviceSheet.getLastRowNum(),
+						"Excel report doesn't have the expected number of lines in Devices sheet");
 				}
 			}
 			{
@@ -1304,9 +1490,11 @@ public class RestServiceTest {
 				try (XSSFWorkbook wb = new XSSFWorkbook(xlsStream)) {
 					Assertions.assertEquals(wb.getNumberOfSheets(), 3);
 					XSSFSheet deviceSheet = wb.getSheet("Devices");
-					Assertions.assertEquals(deviceSheet.getLastRowNum(), this.testDevices.size());
+					Assertions.assertEquals(deviceSheet.getLastRowNum(), this.testDevices.size(),
+						"Excel report doesn't have the expected number of lines in Devices sheet");
 					XSSFSheet intfSheet = wb.getSheet("Interfaces");
-					Assertions.assertEquals(this.testDevices.size() * 4, intfSheet.getLastRowNum());
+					Assertions.assertEquals(this.testDevices.size() * 4, intfSheet.getLastRowNum(),
+						"Excel report doesn't have the expected number of lines in Interfaces sheet");
 				}
 			}
 			{
@@ -1314,9 +1502,11 @@ public class RestServiceTest {
 				try (XSSFWorkbook wb = new XSSFWorkbook(xlsStream)) {
 					Assertions.assertEquals(wb.getNumberOfSheets(), 3);
 					XSSFSheet deviceSheet = wb.getSheet("Devices");
-					Assertions.assertEquals(deviceSheet.getLastRowNum(), this.testDevices.size());
+					Assertions.assertEquals(deviceSheet.getLastRowNum(), this.testDevices.size(),
+						"Excel report doesn't have the expected number of lines in Devices sheet");
 					XSSFSheet intfSheet = wb.getSheet("Inventory");
-					Assertions.assertEquals(this.testDevices.size() * 2, intfSheet.getLastRowNum());
+					Assertions.assertEquals(this.testDevices.size() * 2, intfSheet.getLastRowNum(),
+						"Excel report doesn't have the expected number of lines in Inventory sheet");
 				}
 			}
 		}

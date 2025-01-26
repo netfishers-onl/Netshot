@@ -58,7 +58,7 @@ public class FakeDeviceFactory {
 	static public Device getFakeCiscoIosDevice(Domain domain, Diagnostic diagnostic, int shift) {
 		Network4Address mgmtIp = null;
 		try {
-			mgmtIp = new Network4Address("172.12.0.0");
+			mgmtIp = new Network4Address("172.16.0.0");
 			mgmtIp.setAddress(mgmtIp.getAddress() + shift);
 		}
 		catch (UnknownHostException e) {

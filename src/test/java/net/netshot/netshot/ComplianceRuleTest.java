@@ -233,7 +233,7 @@ public class ComplianceRuleTest {
 				"     };" +
 				"  }" +
 				"  const name = device.get('name');" +
-				"  if (name.match(/router1/)) {" +
+				"  if (name.match(/router00100/)) {" +
 				"    return CONFORMING;" +
 				"  }" +
 				"  return NONCONFORMING;" +
@@ -272,7 +272,7 @@ public class ComplianceRuleTest {
 		void nameRule() {
 			rule.setScript(
 				"function check(device) {" +
-				"  if (device.get('name') === 'router1') {" +
+				"  if (device.get('name') === 'router00100') {" +
 				"    return CONFORMING;" +
 				"  }" +
 				"  return NONCONFORMING;" +
@@ -467,7 +467,7 @@ public class ComplianceRuleTest {
 			rule.setScript(
 				"function check(device) {" +
 				"  const interfaces = device.get('interfaces');" +
-				"  if (interfaces[1].name === 'GigabitEthernet0/1' && interfaces[1].ip[0].ip === '10.0.1.1') {" +
+				"  if (interfaces[1].name === 'GigabitEthernet0/1' && interfaces[1].ip[0].ip === '10.0.100.129') {" +
 				"    return CONFORMING;" +
 				"  }" +
 				"  return NONCONFORMING;" +
@@ -601,7 +601,7 @@ public class ComplianceRuleTest {
 				"      'comment': 'Type is {}'.format(type)"+ "\n" +
 				"    }" + "\n" +
 				"  name = device.get('name')" + "\n" +
-				"  if re.search(r'router1', name):" + "\n" +
+				"  if re.search(r'router00100', name):" + "\n" +
 				"    return result_option.CONFORMING" + "\n" +
 				"  return result_option.NONCONFORMING" + "\n" +
 				"\n"
@@ -639,7 +639,7 @@ public class ComplianceRuleTest {
 		void nameRule() {
 			rule.setScript(
 				"def check(device):" + "\n" +
-				"  if device.get('name') == 'router1':" + "\n" +
+				"  if device.get('name') == 'router00100':" + "\n" +
 				"    return result_option.CONFORMING" + "\n" +
 				"  return result_option.NONCONFORMING" + "\n" +
 				"" + "\n"
@@ -822,7 +822,7 @@ public class ComplianceRuleTest {
 			rule.setScript(
 				"def check(device):" + "\n" +
 				"  interfaces = device.get('interfaces')" + "\n" +
-				"  if interfaces[1]['name'] == 'GigabitEthernet0/1' and interfaces[1]['ip'][0]['ip'] == '10.0.1.1':" + "\n" +
+				"  if interfaces[1]['name'] == 'GigabitEthernet0/1' and interfaces[1]['ip'][0]['ip'] == '10.0.100.129':" + "\n" +
 				"    return result_option.CONFORMING" + "\n" +
 				"  return result_option.NONCONFORMING" + "\n" +
 				"" + "\n"

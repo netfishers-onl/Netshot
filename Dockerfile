@@ -3,7 +3,7 @@ ARG GRAALVM_VERSION=21.0.5
 
 FROM debian:12 AS debian-graalvm
 ARG GRAALVM_VERSION
-RUN apt-get -y update && apt-get -y install wget
+RUN apt-get -y update && apt-get -y install wget fontconfig
 WORKDIR /usr/lib/jvm
 RUN wget --quiet https://download.oracle.com/graalvm/${GRAALVM_VERSION%%.*}/archive/graalvm-jdk-${GRAALVM_VERSION}_linux-x64_bin.tar.gz && \ 
     tar xvzf graalvm-jdk-${GRAALVM_VERSION}_linux-x64_bin.tar.gz && \

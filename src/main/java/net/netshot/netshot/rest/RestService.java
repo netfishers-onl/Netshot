@@ -1878,16 +1878,18 @@ public class RestService extends Thread {
 		List<DeviceCredentialSet> knownCommunities;
 		Session session = Database.getSession();
 		try {
-			log.debug("Looking for an existing device with this IP address.");
+			log.debug("Looking for an active device with this IP address.");
 			Device duplicate = session
-					.createQuery("from Device d where d.mgmtAddress.address = :ip", Device.class)
-					.setParameter("ip", deviceAddress.getIntAddress()).uniqueResult();
+				.createQuery("from Device d where d.mgmtAddress.address = :ip and d.status <> :disabled", Device.class)
+				.setParameter("ip", deviceAddress.getIntAddress())
+				.setParameter("disabled", Device.Status.DISABLED)
+				.uniqueResult();
 			if (duplicate != null) {
 				log.error("Device {} is already present with this IP address.",
 						duplicate.getId());
 				throw new NetshotBadRequestException(String.format(
-						"The device '%s' already exists with this IP address.",
-						duplicate.getName()),
+						"The device '%s' (%d) already exists with this IP address.",
+						duplicate.getName(), duplicate.getId()),
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DEVICE);
 			}
 			domain = session.getReference(Domain.class, device.getDomainId());
@@ -2350,6 +2352,27 @@ public class RestService extends Thread {
 				Domain domain = session.getReference(Domain.class, rsDevice.getMgmtDomain());
 				device.setMgmtDomain(domain);
 			}
+
+			if (!Device.Status.DISABLED.equals(device.getStatus())) {
+				// This is backed up by UK_88j8woberkhc2jxjx2hfddv4a constraint
+				// on PostgreSQL schema.
+				log.debug("Looking for an active device with this IP address.");
+				Device duplicate = session
+					.createQuery("from Device d where d.id <> :id and d.mgmtAddress.address = :ip and d.status <> :disabled", Device.class)
+					.setParameter("id", device.getId())
+					.setParameter("ip", device.getMgmtAddress().getIntAddress())
+					.setParameter("disabled", Device.Status.DISABLED)
+					.setMaxResults(1)
+					.uniqueResult();
+				if (duplicate != null) {
+					log.error("Device {} is already present with this IP address.",
+							duplicate.getId());
+					throw new NetshotBadRequestException(String.format(
+							"The device '%s' (%d) already exists with this IP address.",
+							duplicate.getName(), duplicate.getId()),
+							NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DEVICE);
+				}
+			}
 			session.merge(device);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("{} has been edited.", device); 
@@ -2374,6 +2397,12 @@ public class RestService extends Thread {
 						"A device with this IP address already exists.",
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DEVICE);
 			}
+			else if (e instanceof ConstraintViolationException &&
+					e.getMessage().contains("UK_88j8woberkhc2jxjx2hfddv4a")) {
+				throw new NetshotBadRequestException(
+						"A device with this management IP address is already active.",
+						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DEVICE);
+			}
 			Throwable t = e.getCause();
 			if (t != null && t.getMessage().contains("domain")) {
 				throw new NetshotBadRequestException("Unable to find the domain",
@@ -2381,6 +2410,11 @@ public class RestService extends Thread {
 			}
 			throw new NetshotBadRequestException("Unable to save the device.",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		catch (NetshotBadRequestException e) {
+			session.getTransaction().rollback();
+			log.error("Cannot edit the device.", e);
+			throw e;
 		}
 		finally {
 			session.close();

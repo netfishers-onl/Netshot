@@ -1,5 +1,12 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.10.xsd">
+<databaseChangeLog
+		xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+		xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+			http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.31.xsd
+			http://www.liquibase.org/xml/ns/dbchangelog-ext
+			http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
 	<property name="BOOLEAN" value="BOOLEAN" dbms="postgresql"/>
 	<property name="BOOLEAN" value="BIT(1)"/>
 	<property name="JSON" value="JSONB" dbms="postgresql"/>
@@ -1381,5 +1388,21 @@
 			<column name="custom_hash" type="VARCHAR(255)"/>
 		</addColumn>
 	</changeSet>
-	
+	<changeSet author="netshot" dbms="postgresql" id="0.21.0_3a">
+		<dropUniqueConstraint constraintName="device_ipv4_address_key" tableName="device"/>
+	</changeSet>
+	<changeSet author="netshot" dbms="h2" id="0.21.0_3b">
+		<dropUniqueConstraint constraintName="CONSTRAINT_7" tableName="device"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.21.0_4">
+		<dropUniqueConstraint constraintName="UK_d884xdfb8fkx9hgptyjds2ebs" tableName="device"/>
+	</changeSet>
+	<changeSet author="netshot" dbms="postgresql" id="0.21.0_5">
+		<createIndex indexName="UK_88j8woberkhc2jxjx2hfddv4a" tableName="device" unique="true">
+			<column name="ipv4_address"/>
+		</createIndex>
+		<modifySql>
+			<append value="WHERE NOT (status = 0)"/>
+		</modifySql>
+	</changeSet>
 </databaseChangeLog>

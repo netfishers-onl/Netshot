@@ -329,7 +329,7 @@ public class Device {
 	@Getter(onMethod=@__({
 		@Embedded,
 		@AttributeOverrides({
-			@AttributeOverride(name = "address", column = @Column(name = "ipv4_address", unique = true)),
+			@AttributeOverride(name = "address", column = @Column(name = "ipv4_address")),
 			@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
 			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4_usage")),
 		}),

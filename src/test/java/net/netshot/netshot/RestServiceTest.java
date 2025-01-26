@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.http.HttpResponse;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -31,10 +32,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.Set;
 
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.h2.tools.Server;
 import org.hibernate.Session;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -1287,7 +1288,68 @@ public class RestServiceTest {
 					.createQuery("from Device d", Device.class)
 					.uniqueResult();
 				device1.setId(newDevice.getId());
-				Assertions.assertEquals(device1, newDevice, "Device not created as expected");
+				this.assertDevicesEqual(device1, newDevice, "Device not created as expected",
+					"createdDate", "creator");
+			}
+		}
+
+		@Test
+		@DisplayName("Create devices with same management address")
+		@ResourceLock(value = "DB")
+		void createDevicesWithSameMgmtAddress() throws IOException, InterruptedException {
+			this.createTestDomain();
+			Device device1 = FakeDeviceFactory.getFakeCiscoIosDevice(this.testDomain, null, 0);
+			ObjectNode data = JsonNodeFactory.instance.objectNode()
+				.put("autoDiscover", false)
+				.put("ipAddress", device1.getMgmtAddress().getIp())
+				.put("domainId", this.testDomain.getId())
+				.put("name", device1.getName())
+				.put("deviceType", device1.getDriver());
+			{
+				HttpResponse<JsonNode> response = apiClient.post("/devices", data);
+				Assertions.assertEquals(
+					Response.Status.CREATED.getStatusCode(), response.statusCode(),
+					"Not getting 201 response for created device");
+			}
+			try (Session session = Database.getSession()) {
+				Device newDevice = session
+					.createQuery("from Device d where d.mgmtAddress = :ip", Device.class)
+					.setParameter("ip", device1.getMgmtAddress())
+					.uniqueResult();
+				device1.setId(newDevice.getId());
+			}
+			{
+				HttpResponse<JsonNode> response = apiClient.post("/devices", data);
+				Assertions.assertEquals(
+					Response.Status.CONFLICT.getStatusCode(), response.statusCode(),
+					"Not getting 409 response for duplicated device");
+			}
+			{
+				// Disable first device
+				ObjectNode editData = JsonNodeFactory.instance.objectNode()
+					.put("enabled", false);
+				HttpResponse<JsonNode> response = apiClient.put(
+					String.format("/devices/%d", device1.getId()), editData);
+				Assertions.assertEquals(
+					Response.Status.OK.getStatusCode(), response.statusCode(),
+					"Not getting 200 response for edited device");
+			}
+			{
+				// New creation attempt
+				HttpResponse<JsonNode> response = apiClient.post("/devices", data);
+				Assertions.assertEquals(
+					Response.Status.CREATED.getStatusCode(), response.statusCode(),
+					"Not getting 201 response for second created device");
+			}
+			{
+				// Try to re-enable first device
+				ObjectNode editData = JsonNodeFactory.instance.objectNode()
+					.put("enabled", true);
+				HttpResponse<JsonNode> response = apiClient.put(
+					String.format("/devices/%d", device1.getId()), editData);
+				Assertions.assertEquals(
+					Response.Status.CONFLICT.getStatusCode(), response.statusCode(),
+					"Not getting 409 response for edited device");
 			}
 		}
 

@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "Netshot Team",
-	version: "1.8.4"
+	version: "1.8.5"
 };
 
 var Config = {
@@ -424,12 +424,39 @@ function analyzeSyslog(message) {
 }
 
 function analyzeTrap(trap, debug) {
-	for (var t in trap) {
-        // IOS-XR 7.9.x (at least) tends to set commandSource(2)
-        // as EventConfigDestination instead of running(3)
-		if (t.startsWith("1.3.6.1.4.1.9.9.43.1.1.6.1.5") && ["2", "3"].includes(trap[t])) {
-			return true;
-		}
+		/*
+				                      ccmHistoryEventCommandSource      ccmHistoryEventConfigSource       ccmHistoryEventConfigDestination
+				XR 6.9.x  show run   .1.3.6.1.4.1.9.9.43.1.1.6.1.3.x=1 .1.3.6.1.4.1.9.9.43.1.1.6.1.4.x=3 .1.3.6.1.4.1.9.9.43.1.1.6.1.5.x=2
+				          conf t     .1.3.6.1.4.1.9.9.43.1.1.6.1.3.x=1 .1.3.6.1.4.1.9.9.43.1.1.6.1.4.x=2 .1.3.6.1.4.1.9.9.43.1.1.6.1.5.x=3
+				XR 7.9.x  show run   .1.3.6.1.4.1.9.9.43.1.1.6.1.3.x=1 .1.3.6.1.4.1.9.9.43.1.1.6.1.4.x=2 .1.3.6.1.4.1.9.9.43.1.1.6.1.5.x=1
+				          conf t     .1.3.6.1.4.1.9.9.43.1.1.6.1.3.x=1 .1.3.6.1.4.1.9.9.43.1.1.6.1.4.x=1 .1.3.6.1.4.1.9.9.43.1.1.6.1.5.x=2
+			HistoryEventMedium = erase(1) commandSource(2) running(3) startup(4) local(5)
+			                     networkTftp(6) networkRcp(7) networkFtp(8) networkScp(9)
+			=> XR 7.9.x at least is buggy, it shifts the values by one
+		*/
+	const ccmHistoryEventConfigSource = "1.3.6.1.4.1.9.9.43.1.1.6.1.4";
+	const ccmHistoryEventConfigDestination = "1.3.6.1.4.1.9.9.43.1.1.6.1.5";
+	const event = {
+		[ccmHistoryEventConfigSource]: null,
+		[ccmHistoryEventConfigDestination]: null,
+	};
+	Object.entries(trap).forEach(([k, v]) => {
+		Object.keys(event).forEach((type) => {
+			if (k.startsWith(type + ".")) {
+				event[type] = parseInt(v);
+			}
+		});
+	});
+
+	if (event[ccmHistoryEventConfigSource] === 2 &&
+		  event[ccmHistoryEventConfigDestination] === 3) {
+		// Normal
+		return true;
+	}
+	if (event[ccmHistoryEventConfigSource] === 1 &&
+		  event[ccmHistoryEventConfigDestination] === 2) {
+		// Buggy XR 7.9.x
+		return true;
 	}
 	return false;
 }

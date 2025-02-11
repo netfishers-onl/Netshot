@@ -223,13 +223,12 @@ public class PythonRule extends Rule {
 				accessBuilder.allowHostSocketAccess(true);
 			}
 		}
-
 		builder.allowIO(accessBuilder.build());
 
-
 		if (PythonFileSystem.VENV_FOLDER != null) {
-			builder.allowExperimentalOptions(true)
-				.option("python.Executable", PythonFileSystem.VENV_FOLDER + "/bin/graalpy");
+			builder
+				.option("python.Executable", PythonFileSystem.VENV_FOLDER + "/bin/graalpy")
+				.option("python.ForceImportSite", "true");
 		}
 		Context context = builder.build();
 		return context;

@@ -7,7 +7,7 @@
 	<name>Netshot</name>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<polyglot.version>23.1.5</polyglot.version>
+		<polyglot.version>24.1.2</polyglot.version>
 		<hibernate.version>6.6.4.Final</hibernate.version>
 		<c3p0.version>0.9.5.5</c3p0.version>
 		<grizzly.version>4.0.2</grizzly.version>
@@ -97,6 +97,12 @@
 		<dependency>
 			<groupId>org.graalvm.polyglot</groupId>
 			<artifactId>python</artifactId>
+			<version>${polyglot.version}</version>
+			<type>pom</type>
+		</dependency>
+		<dependency>
+			<groupId>org.graalvm.polyglot</groupId>
+			<artifactId>llvm</artifactId>
 			<version>${polyglot.version}</version>
 			<type>pom</type>
 		</dependency>
@@ -317,7 +323,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>42.7.4</version>
+			<version>42.7.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>

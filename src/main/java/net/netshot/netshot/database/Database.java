@@ -365,7 +365,8 @@ public class Database {
 	 * @return the configured driver class
 	 */
 	private static String getDriverClass() {
-		return Netshot.getConfig("netshot.db.driver_class", "org.postgresql.Driver");
+		return Netshot.getConfig("netshot.db.driverclass", 
+			Netshot.getConfig("netshot.db.driver_class", "org.postgresql.Driver"));
 	}
 
 	/**

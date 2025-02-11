@@ -28,6 +28,8 @@ import org.hibernate.cfg.C3p0Settings;
 import org.hibernate.engine.jdbc.connections.spi.AbstractMultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
+import net.netshot.netshot.Netshot;
+
 /**
  * Custom connection provider, to handle read-write and read-only connections to the database.
  */
@@ -43,13 +45,29 @@ public class CustomConnectionProvider extends AbstractMultiTenantConnectionProvi
 		provider.injectServices((StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().build());
 		Map<String, Object> configProps = new HashMap<>(props);
 		configProps.put("hibernate.c3p0.dataSourceName", identifier.getSourceName());
-		configProps.put(C3p0Settings.C3P0_MIN_SIZE, "5");
-		configProps.put(C3p0Settings.C3P0_MAX_SIZE, "30");
-		configProps.put(C3p0Settings.C3P0_TIMEOUT, "1800");
-		configProps.put(C3p0Settings.C3P0_MAX_STATEMENTS, "50");
-		configProps.put("hibernate.c3p0.unreturnedConnectionTimeout", "1800");
+
+		configProps.put(C3p0Settings.C3P0_MIN_SIZE,
+			Netshot.getConfig("netshot.db.pooler.minpoolsize", 5, 0, Integer.MAX_VALUE));
+		configProps.put(C3p0Settings.C3P0_MAX_SIZE,
+			Netshot.getConfig("netshot.db.pooler.minpoolsize", 30, 0, Integer.MAX_VALUE));
+		configProps.put(C3p0Settings.C3P0_TIMEOUT,
+			Netshot.getConfig("netshot.db.pooler.maxidletimeout", 1800, 0, Integer.MAX_VALUE));
+		configProps.put("hibernate.c3p0.maxConnectionAge",
+			Netshot.getConfig("netshot.db.pooler.maxconnectionage", 0, 0, Integer.MAX_VALUE));
+		configProps.put("hibernate.c3p0.testConnectionOnCheckout",
+			Netshot.getConfig("netshot.db.pooler.testconnectiononcheckout", true));
+		configProps.put("hibernate.c3p0.testConnectionOnCheckin",
+			Netshot.getConfig("netshot.db.pooler.testconnectiononcheckin", false));
+		configProps.put("hibernate.c3p0.idleConnectionTestPeriod",
+			Netshot.getConfig("netshot.db.pooler.idleconnectiontestperiod", 0, 0, Integer.MAX_VALUE));
+		configProps.put("hibernate.c3p0.connectionIsValidTimeout",
+			Netshot.getConfig("netshot.db.pooler.connectionisvalidtimeout", 0, 0, Integer.MAX_VALUE));
+		configProps.put(C3p0Settings.C3P0_MAX_STATEMENTS,
+			Netshot.getConfig("netshot.db.pooler.maxstatements", 50, 0, Integer.MAX_VALUE));
+		configProps.put("hibernate.c3p0.unreturnedConnectionTimeout",
+			Netshot.getConfig("netshot.db.pooler.unreturnedconnectiontimeout", 1800, 0, Integer.MAX_VALUE));
 		configProps.put("hibernate.c3p0.debugUnreturnedConnectionStackTraces", "true");
-		provider.configure(props);
+		provider.configure(configProps);
 		this.providerMap.put(identifier, provider);
 		if (defaultProvider) {
 			this.defaultProvider = provider;

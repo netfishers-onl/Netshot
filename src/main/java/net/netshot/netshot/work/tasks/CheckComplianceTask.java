@@ -180,6 +180,20 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 		return "Device compliance check";
 	}
 
+	/**
+	 * Get the ID of the device
+	 * 
+	 * @return the ID of the device
+	 */
+	@XmlElement @JsonView(DefaultView.class)
+	@Transient
+	public long getDeviceId() {
+		if (this.device == null) {
+			return 0;
+		}
+		return this.device.getId();
+	}
+
 	/* (non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#clone()
 	 */
@@ -198,7 +212,7 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 	@Transient
 	public JobKey getIdentity() {
 		return new JobKey(String.format("Task_%d", this.getId()),
-				String.format("CheckCompliance_%d", this.getDevice().getId()));
+				String.format("CheckCompliance_%d", this.getDeviceId()));
 	}
 
 	/*

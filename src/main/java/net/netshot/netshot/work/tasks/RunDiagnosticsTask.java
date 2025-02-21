@@ -259,7 +259,7 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 	@Transient
 	public JobKey getIdentity() {
 		return new JobKey(String.format("Task_%d", this.getId()), 
-				String.format("RunDevice_%d", this.getDevice().getId()));
+				String.format("RunDevice_%d", this.getDeviceId()));
 	}
 
 	/*

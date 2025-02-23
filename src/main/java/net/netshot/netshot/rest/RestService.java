@@ -661,7 +661,12 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			Domain domain = session.getReference(Domain.class, id);
+			Domain domain = session.get(Domain.class, id);
+			if (domain == null) {
+				log.error("The domain of ID {} doesn't exist.", id);
+				throw new NetshotBadRequestException("The domain doesn't exist.",
+						NetshotBadRequestException.Reason.NETSHOT_DOMAIN_NOT_FOUND);
+			}
 			domain.setName(name);
 			domain.setDescription(description);
 			domain.setServer4Address(v4Address);
@@ -670,11 +675,10 @@ public class RestService extends Thread {
 			Netshot.aaaLogger.info("{} has been edited.", domain);
 			return new RsDomain(domain);
 		}
-		catch (ObjectNotFoundException e) {
+		catch (NetshotBadRequestException e) {
 			session.getTransaction().rollback();
-			log.error("The domain doesn't exist.", e);
-			throw new NetshotBadRequestException("The domain doesn't exist.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
+			log.error("Cannot edit the domain.", e);
+			throw e;
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -717,9 +721,9 @@ public class RestService extends Thread {
 			session.beginTransaction();
 			Domain domain = session.get(Domain.class, id);
 			if (domain == null) {
-				log.info("No such domain of ID {}", id);
-				this.suggestReturnCode(Response.Status.NOT_FOUND);
-				return;
+				log.error("The domain of ID {} doesn't exist.", id);
+				throw new NetshotBadRequestException("The domain doesn't exist.",
+						NetshotBadRequestException.Reason.NETSHOT_DOMAIN_NOT_FOUND);
 			}
 			session.remove(domain);
 			session.getTransaction().commit();
@@ -731,7 +735,7 @@ public class RestService extends Thread {
 			if (e instanceof ConstraintViolationException) {
 				throw new NetshotBadRequestException(
 						"Unable to delete the domain, there must be devices or credential sets using it.",
-						NetshotBadRequestException.Reason.NETSHOT_USED_DOMAIN);
+						NetshotBadRequestException.Reason.NETSHOT_DOMAIN_IN_USE);
 			}
 			log.error("Unable to delete the domain {}", id, e);
 			throw new NetshotBadRequestException("Unable to delete the domain",
@@ -1322,8 +1326,8 @@ public class RestService extends Thread {
 			}
 			if (config1 == null || config2 == null) {
 				log.error("Non existing config, {} or {}.", id1, id2);
-				throw new NetshotBadRequestException("Unable to fetch the configs",
-						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+				throw new NetshotBadRequestException("Config not found",
+						NetshotBadRequestException.Reason.NETSHOT_CONFIG_NOT_FOUND);
 			}
 			DeviceDriver driver1;
 			DeviceDriver driver2;
@@ -1422,7 +1426,7 @@ public class RestService extends Thread {
 				.uniqueResult();
 			if (device == null) {
 				throw new NetshotBadRequestException("Can't find this device",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
+						NetshotBadRequestException.Reason.NETSHOT_DEVICE_NOT_FOUND);
 			}
 		}
 		catch (HibernateException e) {
@@ -1892,7 +1896,12 @@ public class RestService extends Thread {
 						duplicate.getName(), duplicate.getId()),
 						NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DEVICE);
 			}
-			domain = session.getReference(Domain.class, device.getDomainId());
+			domain = session.get(Domain.class, device.getDomainId());
+			if (domain == null) {
+				log.error("No such domain of ID {}.", device.getDomainId());
+				throw new NetshotBadRequestException("No such domain",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
+			}
 			knownCommunities = session
 				.createQuery("from DeviceSnmpCommunity c where (mgmtDomain = :domain or mgmtDomain is null) and (not (c.deviceSpecific))",
 						DeviceCredentialSet.class)
@@ -1904,11 +1913,6 @@ public class RestService extends Thread {
 						"There is no known SNMP community in the database to poll the device.",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS);
 			}
-		}
-		catch (ObjectNotFoundException e) {
-			log.error("Non existing domain.", e);
-			throw new NetshotBadRequestException("Invalid domain",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
 		}
 		catch (HibernateException e) {
 			log.error("Error while loading domain or communities.", e);
@@ -1949,7 +1953,7 @@ public class RestService extends Thread {
 			if (driver == null) {
 				log.warn("Invalid posted device driver.");
 				throw new NetshotBadRequestException("Invalid device type.",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE_CLASSNAME);
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE_DRIVER);
 			}
 			session = Database.getSession();
 			TakeSnapshotTask task;
@@ -2081,7 +2085,7 @@ public class RestService extends Thread {
 			if (e instanceof ConstraintViolationException) {
 				throw new NetshotBadRequestException(
 						"Unable to delete the device, there must be other objects using it.",
-						NetshotBadRequestException.Reason.NETSHOT_USED_DEVICE);
+						NetshotBadRequestException.Reason.NETSHOT_DEVICE_IN_USE);
 			}
 			throw new NetshotBadRequestException("Unable to delete the device",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
@@ -2217,7 +2221,12 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			device = session.getReference(Device.class, id);
+			device = session.get(Device.class, id);
+			if (device == null) {
+				log.error("The device of ID {} doesn't exist.", id);
+				throw new NetshotBadRequestException("The device doesn't exist.",
+						NetshotBadRequestException.Reason.NETSHOT_DEVICE_NOT_FOUND);
+			}
 			if (rsDevice.getEnabled() != null) {
 				device.setStatus(rsDevice.getEnabled() ? Status.INPRODUCTION : Status.DISABLED);
 			}
@@ -2298,14 +2307,13 @@ public class RestService extends Thread {
 					}
 				}
 				for (Long credentialSetId : rsDevice.getCredentialSetIds()) {
-					try {
-						DeviceCredentialSet credentialSet = session
-								.getReference(DeviceCredentialSet.class, credentialSetId);
-						device.addCredentialSet(credentialSet);
-					}
-					catch (ObjectNotFoundException e) {
+					DeviceCredentialSet credentialSet = session
+							.get(DeviceCredentialSet.class, credentialSetId);
+					if (credentialSet == null) {
 						log.error("Non existing credential set {}.", credentialSetId);
+						continue;
 					}
+					device.addCredentialSet(credentialSet);
 				}
 			}
 			if (rsDevice.getAutoTryCredentials() != null) {
@@ -2349,7 +2357,11 @@ public class RestService extends Thread {
 				}
 			}
 			if (rsDevice.getMgmtDomain() != null) {
-				Domain domain = session.getReference(Domain.class, rsDevice.getMgmtDomain());
+				Domain domain = session.get(Domain.class, rsDevice.getMgmtDomain());
+				if (domain == null) {
+					throw new NetshotBadRequestException("Invalid domain",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
+				}
 				device.setMgmtDomain(domain);
 			}
 
@@ -2382,12 +2394,6 @@ public class RestService extends Thread {
 			log.warn("User posted an invalid IP address.", e);
 			throw new NetshotBadRequestException("Malformed IP address",
 					NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
-		}
-		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
-			log.error("The device doesn't exist.", e);
-			throw new NetshotBadRequestException("The device doesn't exist anymore.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -2450,7 +2456,7 @@ public class RestService extends Thread {
 		catch (ObjectNotFoundException e) {
 			log.error("Unable to find the task {}.", id, e);
 			throw new NetshotBadRequestException("Task not found",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
+					NetshotBadRequestException.Reason.NETSHOT_TASK_NOT_FOUND);
 		}
 		catch (HibernateException e) {
 			log.error("Unable to fetch the task {}.", id, e);
@@ -2495,9 +2501,8 @@ public class RestService extends Thread {
 		}
 		catch (ObjectNotFoundException e) {
 			log.error("Unable to find the task {}.", id, e);
-			throw new WebApplicationException(
-					"Task not found",
-					jakarta.ws.rs.core.Response.Status.NOT_FOUND);
+			throw new NetshotBadRequestException("Task not found",
+					NetshotBadRequestException.Reason.NETSHOT_TASK_NOT_FOUND);
 		}
 		catch (HibernateException e) {
 			log.error("Unable to fetch the task {}.", id, e);
@@ -2643,7 +2648,7 @@ public class RestService extends Thread {
 			if (credentialSet.isDeviceSpecific()) {
 				throw new NetshotBadRequestException(
 						"Can't delete a device-specific credential set.",
-						NetshotBadRequestException.Reason.NETSHOT_USED_CREDENTIALS);
+						NetshotBadRequestException.Reason.NETSHOT_CREDENTIALS_IN_USE);
 			}
 			session.remove(credentialSet);
 			session.getTransaction().commit();
@@ -2659,7 +2664,7 @@ public class RestService extends Thread {
 			if (e instanceof ConstraintViolationException) {
 				throw new NetshotBadRequestException(
 						"Unable to delete the credential set, there must be devices or tasks using it.",
-						NetshotBadRequestException.Reason.NETSHOT_USED_CREDENTIALS);
+						NetshotBadRequestException.Reason.NETSHOT_CREDENTIALS_IN_USE);
 			}
 			throw new NetshotBadRequestException(
 					"Unable to delete the credential set",
@@ -2700,7 +2705,12 @@ public class RestService extends Thread {
 		try {
 			session.beginTransaction();
 			if (credentialSet.getMgmtDomain() != null) {
-				credentialSet.setMgmtDomain(session.getReference(Domain.class, credentialSet.getMgmtDomain().getId()));
+				Domain domain = session.get(Domain.class, credentialSet.getMgmtDomain().getId());
+				if (domain == null) {
+					throw new NetshotBadRequestException("Invalid domain",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
+				}
+				credentialSet.setMgmtDomain(domain);
 			}
 			credentialSet.setDeviceSpecific(false);
 			session.persist(credentialSet);
@@ -2992,7 +3002,13 @@ public class RestService extends Thread {
 				StaticDeviceGroup staticGroup = new StaticDeviceGroup(name);
 				Set<Device> devices = new HashSet<>();
 				for (Long deviceId : rsGroup.getStaticDevices()) {
-					Device device = session.getReference(Device.class, deviceId);
+					Device device = session.get(Device.class, deviceId);
+					if (device == null) {
+						log.warn("Device of ID {} doesn't exist.", deviceId);
+						throw new NetshotBadRequestException(
+								"Device of ID %d doesn't exist.".formatted(deviceId),
+								NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
+					}
 					devices.add(device);
 				}
 				staticGroup.updateCachedDevices(devices);
@@ -3111,9 +3127,8 @@ public class RestService extends Thread {
 			DeviceGroup group = query.uniqueResult();
 			if (group == null) {
 				log.warn("Unable to find the device group.");
-				throw new WebApplicationException(
-						"Unable to find the device group",
-						jakarta.ws.rs.core.Response.Status.NOT_FOUND);
+				throw new NetshotBadRequestException("Unable to find the device group",
+						NetshotBadRequestException.Reason.NETSHOT_GROUP_NOT_FOUND);
 			}
 			return group;
 		}
@@ -3265,13 +3280,19 @@ public class RestService extends Thread {
 			if (group == null) {
 				log.error("Unable to find the group {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this group.",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+						NetshotBadRequestException.Reason.NETSHOT_GROUP_NOT_FOUND);
 			}
 			if (group instanceof StaticDeviceGroup) {
 				StaticDeviceGroup staticGroup = (StaticDeviceGroup) group;
 				Set<Device> devices = new HashSet<>();
 				for (Long deviceId : rsGroup.getStaticDevices()) {
-					Device device = session.getReference(Device.class, deviceId);
+					Device device = session.get(Device.class, deviceId);
+					if (device == null) {
+						log.warn("Device of ID {} doesn't exist.", deviceId);
+						throw new NetshotBadRequestException(
+								"Device of ID %d doesn't exist.".formatted(deviceId),
+								NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
+					}
 					devices.add(device);
 				}
 				staticGroup.updateCachedDevices(devices);
@@ -3953,15 +3974,20 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException(String.format("Invalid subnet list '%s'.", rsTask.getSubnets()),
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_SUBNET);
 			}
-			Domain domain;
 			if (rsTask.getDomain() == 0) {
 				log.error("Domain {} is invalid (0).", rsTask.getDomain());
 				throw new NetshotBadRequestException("Invalid domain",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
 			}
 			Session session = Database.getSession();
+			Domain domain;
 			try {
-				domain = session.getReference(Domain.class, rsTask.getDomain());
+				domain = session.get(Domain.class, rsTask.getDomain());
+				if (domain == null) {
+					log.error("No such domain of ID {}.", rsTask.getDomain());
+					throw new NetshotBadRequestException("Invalid domain",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DOMAIN);
+				}
 			}
 			catch (Exception e) {
 				log.error("Unable to load the domain {}.", rsTask.getDomain());
@@ -4322,8 +4348,8 @@ public class RestService extends Thread {
 			Policy policy = session.get(Policy.class, pid);
 			if (policy == null) {
 				log.error("Invalid policy.");
-				throw new NetshotBadRequestException("Invalid policy",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY);
+				throw new NetshotBadRequestException("Unknown policy",
+						NetshotBadRequestException.Reason.NETSHOT_POLICY_NOT_FOUND);
 			}
 			Rule rule = session
 				.createQuery("from Rule r where r.policy.id = :pid and r.id = :rid", Rule.class)
@@ -4332,9 +4358,8 @@ public class RestService extends Thread {
 				.uniqueResult();
 			if (rule == null) {
 				log.warn("Unable to find the rule object.");
-				throw new WebApplicationException(
-						"Unable to find the rule",
-						jakarta.ws.rs.core.Response.Status.NOT_FOUND);
+				throw new NetshotBadRequestException("Unknown rule",
+						NetshotBadRequestException.Reason.NETSHOT_RULE_NOT_FOUND);
 			}
 			return rule;
 		}
@@ -4722,7 +4747,13 @@ public class RestService extends Thread {
 		try {
 			session.beginTransaction();
 
-			Policy policy = session.getReference(Policy.class, rsRule.getPolicy());
+			Policy policy = session.get(Policy.class, rsRule.getPolicy());
+			if (policy == null) {
+				log.error("The policy of ID {} doesn't exist.", rsRule.getPolicy());
+				throw new NetshotBadRequestException(
+						"Invalid policy.",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY);
+			}
 			
 			Rule rule;
 			if ("TextRule".equals(rsRule.getType())) {
@@ -4745,13 +4776,6 @@ public class RestService extends Thread {
 			Netshot.aaaLogger.info("{} has been created.", rule);
 			this.suggestReturnCode(Response.Status.CREATED);
 			return rule;
-		}
-		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
-			log.error("The posted policy doesn't exist.", e);
-			throw new NetshotBadRequestException(
-					"Invalid policy.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_POLICY);
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -4833,7 +4857,13 @@ public class RestService extends Thread {
 				}
 			}
 			for (Map.Entry<Long, Date> postedExemption : postedExemptions.entrySet()) {
-				Device device = session.getReference(Device.class, postedExemption.getKey());
+				Device device = session.get(Device.class, postedExemption.getKey());
+				if (device == null) {
+					log.warn("Unknown device of ID {}", postedExemption.getKey());
+					throw new NetshotBadRequestException(
+							"Unknown device of ID %d.".formatted(postedExemption.getKey()),
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
+				}
 				Exemption exemption = new Exemption(rule, device, postedExemption.getValue());
 				rule.addExemption(exemption);
 			}
@@ -5165,17 +5195,17 @@ public class RestService extends Thread {
 		try {
 			Query<RsLightExemptedDevice> query = session.createQuery(
 				"select new RsLightExemptedDevice(" +
-				"d.id, " +
-				"d.name, " +
-				"d.family, " + 
-				"d.mgmtAddress, " +
-				"d.status, " + 
-				"d.driver, " +
-				"case when (d.eolDate < current_date()) then true else false end,  " +
-				"case when (d.eosDate < current_date()) then true else false end, " +
-				"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
-				"d.softwareLevel, " +
-				"e.expirationDate as expirationDate " +
+					"d.id, " +
+					"d.name, " +
+					"d.family, " + 
+					"d.mgmtAddress, " +
+					"d.status, " + 
+					"d.driver, " +
+					"case when (d.eolDate < current_date()) then true else false end,  " +
+					"case when (d.eosDate < current_date()) then true else false end, " +
+					"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
+					"d.softwareLevel, " +
+					"e.expirationDate as expirationDate " +
 				") from Exemption e join e.key.device d where e.key.rule.id = :id",
 					RsLightExemptedDevice.class)
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
@@ -5276,13 +5306,13 @@ public class RestService extends Thread {
 		try {
 			Query<RsDeviceRule> query = session.createQuery(
 					"select new RsDeviceRule(" +
-					"r.id as id, "  +
-					"r.name as ruleName, " +
-					"p.name as policyName, " +
-					"cr.result as result, " +
-					"cr.comment as comment, " +
-					"cr.checkDate as checkDate, " +
-					"e.expirationDate as expirationDate " +
+						"r.id as id, "  +
+						"r.name as ruleName, " +
+						"p.name as policyName, " +
+						"cr.result as result, " +
+						"cr.comment as comment, " +
+						"cr.checkDate as checkDate, " +
+						"e.expirationDate as expirationDate " +
 					") from Rule r " +
 					"join r.policy p join p.targetGroups g join g.cachedDevices d1 with d1.id = :id " +
 					"left join CheckResult cr with cr.key.rule.id = r.id and cr.key.device.id = :id " +
@@ -5872,20 +5902,20 @@ public class RestService extends Thread {
 			Query<RsLightPolicyRuleDevice> query = session
 				.createQuery(
 					"select new RsLightPolicyRuleDevice(" +
-					"d.id, " +
-					"d.name, " +
-					"d.family, " + 
-					"d.mgmtAddress, " +
-					"d.status, " + 
-					"d.driver, " +
-					"case when (d.eolDate < current_date()) then true else false end,  " +
-					"case when (d.eosDate < current_date()) then true else false end, " +
-					"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
-					"d.softwareLevel, " +
-					"p.name as policyName, " +
-					"r.name as ruleName, " +
-					"ccr.checkDate as checkDate, " +
-					"ccr.result as result" +
+						"d.id, " +
+						"d.name, " +
+						"d.family, " + 
+						"d.mgmtAddress, " +
+						"d.status, " + 
+						"d.driver, " +
+						"case when (d.eolDate < current_date()) then true else false end,  " +
+						"case when (d.eosDate < current_date()) then true else false end, " +
+						"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
+						"d.softwareLevel, " +
+						"p.name as policyName, " +
+						"r.name as ruleName, " +
+						"ccr.checkDate as checkDate, " +
+						"ccr.result as result" +
 					") from Device d " +
 					"join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p " +
 					"where g.id = :id and ccr.result = :nonConforming and d.status = :enabled" + domainFilter + policyFilter,
@@ -6706,16 +6736,16 @@ public class RestService extends Thread {
 			Query<RsLightDevice> query =  session
 				.createQuery(
 					"select new RsLightDevice(" +
-					"d.id, " +
-					"d.name, " +
-					"d.family, " + 
-					"d.mgmtAddress, " +
-					"d.status, " + 
-					"d.driver, " +
-					"case when (d.eolDate < current_date()) then true else false end,  " +
-					"case when (d.eosDate < current_date()) then true else false end, " +
-					"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
-					"d.softwareLevel " +
+						"d.id, " +
+						"d.name, " +
+						"d.family, " + 
+						"d.mgmtAddress, " +
+						"d.status, " + 
+						"d.driver, " +
+						"case when (d.eolDate < current_date()) then true else false end,  " +
+						"case when (d.eosDate < current_date()) then true else false end, " +
+						"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
+						"d.softwareLevel " +
 					") from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled" + domainFilter,
 						RsLightDevice.class)
 				.setParameter("id", id)
@@ -8447,22 +8477,21 @@ public class RestService extends Thread {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			DeviceJsScript script = session.getReference(DeviceJsScript.class, id);
+			DeviceJsScript script = session.get(DeviceJsScript.class, id);
 			if (script == null) {
-				log.info("No such script of ID {}", id);
-				this.suggestReturnCode(Response.Status.NOT_FOUND);
-				return;
+				log.warn("No such script of ID {}", id);
+				throw new NetshotBadRequestException("The script doesn't exist.",
+						NetshotBadRequestException.Reason.NETSHOT_SCRIPT_NOT_FOUND);
 			}
 			session.remove(script);
 			session.getTransaction().commit();
 			Netshot.aaaLogger.info("Script of ID {} has been deleted", script.getId());
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
-		catch (ObjectNotFoundException e) {
+		catch (NetshotBadRequestException e) {
 			session.getTransaction().rollback();
-			log.error("The script {} to be deleted doesn't exist.", id, e);
-			throw new NetshotBadRequestException("The script doesn't exist.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_SCRIPT);
+			log.error("Cannot delete the script.", e);
+			throw e;
 		}
 		catch (HibernateException e) {
 			session.getTransaction().rollback();
@@ -8495,7 +8524,7 @@ public class RestService extends Thread {
 		catch (ObjectNotFoundException e) {
 			log.error("Unable to find the script {}.", id, e);
 			throw new NetshotBadRequestException("Script not found.",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_SCRIPT);
+					NetshotBadRequestException.Reason.NETSHOT_SCRIPT_NOT_FOUND);
 		}
 		catch (HibernateException e) {
 			log.error("Unable to fetch the script {}.", id, e);
@@ -8711,9 +8740,8 @@ public class RestService extends Thread {
 			Diagnostic diagnostic = query.uniqueResult();
 			if (diagnostic == null) {
 				log.warn("Unable to find the diagnostic object.");
-				throw new WebApplicationException(
-						"Unable to find the diagnostic",
-						jakarta.ws.rs.core.Response.Status.NOT_FOUND);
+				throw new NetshotBadRequestException("Unable to find the diagnostic",
+						NetshotBadRequestException.Reason.NETSHOT_DIAGNOSTIC_NOT_FOUND);
 			}
 			return diagnostic;
 		}

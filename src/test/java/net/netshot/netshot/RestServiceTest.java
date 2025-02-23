@@ -29,8 +29,8 @@ import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
+import java.util.function.Function;
 
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -59,6 +59,7 @@ import net.netshot.netshot.aaa.PasswordPolicy.PasswordPolicyException;
 import net.netshot.netshot.aaa.UiUser;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
+import net.netshot.netshot.device.Device.MissingDeviceDriverException;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.Network4Address;
@@ -70,6 +71,7 @@ import net.netshot.netshot.rest.RestService;
 public class RestServiceTest {
 
 	private static final String apiUrl = "http://localhost:8888/api";
+	private static final long UNKNOWN_ID = 99999999;
 
 	protected static final Map<Integer, String> API_TOKENS = Map.of(
 		UiUser.LEVEL_READONLY, "mwAPEe0mQlBvKuUYYS5MiFsmnVRWZpca",
@@ -87,7 +89,7 @@ public class RestServiceTest {
 				.createMutationQuery("delete from net.netshot.netshot.aaa.UiUser")
 				.executeUpdate();
 			for (Map.Entry<Integer, String> entry : API_TOKENS.entrySet()) {
-				String description = String.format("Test Token - level %d", entry.getKey());
+				String description = "Test Token - level %d".formatted(entry.getKey());
 				ApiToken token = new ApiToken(description, entry.getValue(), entry.getKey());
 				session.persist(token);
 			}
@@ -615,9 +617,9 @@ public class RestServiceTest {
 					session.beginTransaction();
 					for (int i = 1; i <= 15; i++) {
 						Domain domain = new Domain(
-							String.format("Test%d", i),
-							String.format("Test Domain%d for pagination", i),
-							new Network4Address(String.format("10.1.%d.1", i)),
+							"Test%d".formatted(i),
+							"Test Domain%d for pagination".formatted(i),
+							new Network4Address("10.1.%d.1".formatted(i)),
 							null
 						);
 						session.persist(domain);
@@ -695,11 +697,20 @@ public class RestServiceTest {
 					session.persist(domain2);
 					session.getTransaction().commit();
 				}
-				HttpResponse<JsonNode> response = apiClient.delete(
-					String.format("/domains/%d", domain1.getId()));
-				Assertions.assertEquals(
-					Response.Status.NO_CONTENT.getStatusCode(), response.statusCode(),
-					"Not getting 204 response for domain deletion");
+				{
+					HttpResponse<JsonNode> response = apiClient.delete(
+						"/domains/%d".formatted(UNKNOWN_ID));
+					Assertions.assertEquals(
+						Response.Status.NOT_FOUND.getStatusCode(), response.statusCode(),
+						"Not getting 404 response for unknown domain deletion");
+				}
+				{
+					HttpResponse<JsonNode> response = apiClient.delete(
+						"/domains/%d".formatted(domain1.getId()));
+					Assertions.assertEquals(
+						Response.Status.NO_CONTENT.getStatusCode(), response.statusCode(),
+						"Not getting 204 response for domain deletion");
+				}
 				HttpResponse<JsonNode> listResponse = apiClient.get("/domains");
 				Assertions.assertEquals(
 					Response.Status.OK.getStatusCode(), listResponse.statusCode(),
@@ -742,11 +753,20 @@ public class RestServiceTest {
 					.put("name", targetDomain.getName())
 					.put("description", targetDomain.getDescription())
 					.put("ipAddress", targetDomain.getServer4Address().getIp());
-				HttpResponse<JsonNode> response = apiClient.put(
-					String.format("/domains/%d", domain.getId()), data);
-				Assertions.assertEquals(
-					Response.Status.OK.getStatusCode(), response.statusCode(),
-					"Not getting 200 response for domain update");
+				{
+					HttpResponse<JsonNode> response = apiClient.put(
+						"/domains/%d".formatted(UNKNOWN_ID), data);
+					Assertions.assertEquals(
+						Response.Status.NOT_FOUND.getStatusCode(), response.statusCode(),
+						"Not getting 404 response for unknown domain update");
+				}
+				{
+					HttpResponse<JsonNode> response = apiClient.put(
+						"/domains/%d".formatted(domain.getId()), data);
+					Assertions.assertEquals(
+						Response.Status.OK.getStatusCode(), response.statusCode(),
+						"Not getting 200 response for domain update");
+				}
 				try (Session session = Database.getSession()) {
 					Domain dbDomain = session.byId(Domain.class)
 						.load(targetDomain.getId());
@@ -866,7 +886,7 @@ public class RestServiceTest {
 					session.getTransaction().commit();
 				}
 				HttpResponse<JsonNode> response = apiClient.delete(
-					String.format("/users/%d", user1.getId()));
+					"/users/%d".formatted(user1.getId()));
 				Assertions.assertEquals(
 					Response.Status.NO_CONTENT.getStatusCode(), response.statusCode(),
 					"Not getting 204 response for user deletion");
@@ -907,7 +927,7 @@ public class RestServiceTest {
 					.put("username", targetUser.getUsername())
 					.put("level", Long.valueOf(targetUser.getLevel()));
 				HttpResponse<JsonNode> response = apiClient.put(
-					String.format("/users/%d", user.getId()), data);
+					"/users/%d".formatted(user.getId()), data);
 				Assertions.assertEquals(
 					Response.Status.OK.getStatusCode(), response.statusCode(),
 					"Not getting 200 response for user update");
@@ -981,7 +1001,7 @@ public class RestServiceTest {
 					session.getTransaction().commit();
 				}
 				HttpResponse<JsonNode> response = apiClient.delete(
-					String.format("/apitokens/%d", token1.getId()));
+					"/apitokens/%d".formatted(token1.getId()));
 				Assertions.assertEquals(
 					Response.Status.NO_CONTENT.getStatusCode(), response.statusCode(),
 					"Not getting 204 response for token deletion");
@@ -1004,6 +1024,35 @@ public class RestServiceTest {
 		private String testDomainName = "Domain 1";
 		private Domain testDomain = null;
 
+		private static enum DeviceField {
+			AUTO_TRY_CREDENTIALS(Device::isAutoTryCredentials),
+			CONTACT(Device::getContact),
+			CREATED_DATE(Device::getCreatedDate),
+			CREATOR(Device::getCreator),
+			SPECIFIC_CREDENTIAL_SET(Device::getSpecificCredentialSet),
+			DRIVER(Device::getDriver),
+			EOL_DATE(Device::getEolDate),
+			EOS_DATE(Device::getEosDate),
+			FAMILY(Device::getFamily),
+			LOCATION(Device::getLocation),
+			MGMT_ADDRESS(Device::getMgmtAddress),
+			NAME(Device::getName),
+			NETWORK_CLASS(Device::getNetworkClass),
+			SERIAL_NUMBER(Device::getSerialNumber),
+			SOFTWARE_LEVEL(Device::getSoftwareLevel),
+			SOFTWARE_VERSION(Device::getSoftwareVersion),
+			STATUS(Device::getStatus),
+			SSH_PORT(Device::getSshPort),
+			TELNET_PORT(Device::getTelnetPort),
+			CONNECT_ADDRESS(Device::getConnectAddress),
+			COMMENTS(Device::getComments);
+
+			private Function<Device, ?> getter;
+			private DeviceField(Function<Device, ?> getter) {
+				this.getter = getter;
+			}
+		}
+
 		private void createTestDomain() throws IOException {
 			try (Session session = Database.getSession()) {
 				session.beginTransaction();
@@ -1021,111 +1070,15 @@ public class RestServiceTest {
 			return DeviceDriver.getDriverByName("CiscoIOS12");
 		}
 
-		private void assertDevicesEqual(Device d1, Device d2, String... ignoredFields) {
-			List<String> iFields = Arrays.asList(ignoredFields);
-			if (!iFields.contains("autoTryCredentials")) {
-				if (!Objects.equals(d1.isAutoTryCredentials(), d2.isAutoTryCredentials())) {
-					Assertions.fail("Passed devices are not equal, check field autoTryCredentials");
-				}
-			}
-			if (!iFields.contains("contact")) {
-				if (!Objects.equals(d1.getContact(), d2.getContact())) {
-					Assertions.fail("Passed devices are not equal, check field contact");
-				}
-			}
-			if (!iFields.contains("createdDate")) {
-				if (!Objects.equals(d1.getCreatedDate(), d2.getCreatedDate())) {
-					Assertions.fail("Passed devices are not equal, check field createdDate");
-				}
-			}
-			if (!iFields.contains("creator")) {
-				if (!Objects.equals(d1.getCreator(), d2.getCreator())) {
-					Assertions.fail("Passed devices are not equal, check field creator");
-				}
-			}
-			if (!iFields.contains("specificCredentialSet")) {
-				if (!Objects.equals(d1.getSpecificCredentialSet(), d2.getSpecificCredentialSet())) {
-					Assertions.fail("Passed devices are not equal, check field specificCredentialSet");
-				}
-			}
-			if (!iFields.contains("driver")) {
-				if (!Objects.equals(d1.getDriver(), d2.getDriver())) {
-					Assertions.fail("Passed devices are not equal, check field driver");
-				}
-			}
-			if (!iFields.contains("eolDate")) {
-				if (!Objects.equals(d1.getEolDate(), d2.getEolDate())) {
-					Assertions.fail("Passed devices are not equal, check field eolDate");
-				}
-			}
-			if (!iFields.contains("eosDate")) {
-				if (!Objects.equals(d1.getEosDate(), d2.getEosDate())) {
-					Assertions.fail("Passed devices are not equal, check field eosDate");
-				}
-			}
-			if (!iFields.contains("family")) {
-				if (!Objects.equals(d1.getFamily(), d2.getFamily())) {
-					Assertions.fail("Passed devices are not equal, check field family");
-				}
-			}
-			if (!iFields.contains("location")) {
-				if (!Objects.equals(d1.getLocation(), d2.getLocation())) {
-					Assertions.fail("Passed devices are not equal, check field location");
-				}
-			}
-			if (!iFields.contains("mgmtAddress")) {
-				if (!Objects.equals(d1.getMgmtAddress(), d2.getMgmtAddress())) {
-					Assertions.fail("Passed devices are not equal, check field mgmtAddress");
-				}
-			}
-			if (!iFields.contains("name")) {
-				if (!Objects.equals(d1.getName(), d2.getName())) {
-					Assertions.fail("Passed devices are not equal, check field name");
-				}
-			}
-			if (!iFields.contains("networkClass")) {
-				if (!Objects.equals(d1.getNetworkClass(), d2.getNetworkClass())) {
-					Assertions.fail("Passed devices are not equal, check field name");
-				}
-			}
-			if (!iFields.contains("serialNumber")) {
-				if (!Objects.equals(d1.getSerialNumber(), d2.getSerialNumber())) {
-					Assertions.fail("Passed devices are not equal, check field serialNumber");
-				}
-			}
-			if (!iFields.contains("softwareLevel")) {
-				if (!Objects.equals(d1.getSoftwareLevel(), d2.getSoftwareLevel())) {
-					Assertions.fail("Passed devices are not equal, check field softwareLevel");
-				}
-			}
-			if (!iFields.contains("softwareVersion")) {
-				if (!Objects.equals(d1.getSoftwareVersion(), d2.getSoftwareVersion())) {
-					Assertions.fail("Passed devices are not equal, check field softwareVersion");
-				}
-			}
-			if (!iFields.contains("status")) {
-				if (!Objects.equals(d1.getStatus(), d2.getStatus())) {
-					Assertions.fail("Passed devices are not equal, check field status");
-				}
-			}
-			if (!iFields.contains("sshPort")) {
-				if (!Objects.equals(d1.getSshPort(), d2.getSshPort())) {
-					Assertions.fail("Passed devices are not equal, check field sshPort");
-				}
-			}
-			if (!iFields.contains("telnetPort")) {
-				if (!Objects.equals(d1.getTelnetPort(), d2.getTelnetPort())) {
-					Assertions.fail("Passed devices are not equal, check field telnetPort");
-				}
-			}
-			if (!iFields.contains("connectAddress")) {
-				if (!Objects.equals(d1.getConnectAddress(), d2.getConnectAddress())) {
-					Assertions.fail("Passed devices are not equal, check field connectAddress");
-				}
-			}
-			if (!iFields.contains("comments")) {
-				if (!Objects.equals(d1.getComments(), d2.getComments())) {
-					Assertions.fail("Passed devices are not equal, check field comments");
+		private void assertDevicesEqual(Device d1, Device d2, DeviceField... ignoredFields) {
+			List<DeviceField> iFields = Arrays.asList(ignoredFields);
+			for (DeviceField field : DeviceField.values()) {
+				if (!iFields.contains(field)) {
+					Object v1 = field.getter.apply(d1);
+					Object v2 = field.getter.apply(d2);
+					if ((v1 == null && v2 != null) || (v1 != null && !v1.equals(v2))) {
+						Assertions.fail("Passed devices are not equal, check field %s".formatted(field.name()));
+					}
 				}
 			}
 		}
@@ -1264,6 +1217,78 @@ public class RestServiceTest {
 		}
 
 		@Test
+		@DisplayName("Get device")
+		@ResourceLock(value = "DB")
+		void getDevice() throws IOException, InterruptedException, MissingDeviceDriverException {
+			this.createTestDomain();
+			Device device1 = new Device(this.getTestDriver().getName(),
+				new Network4Address("10.1.1.1"), this.testDomain, "test");
+			device1.setName("device1");
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				session.persist(device1);
+				session.getTransaction().commit();
+			}
+			{
+				HttpResponse<JsonNode> response = apiClient.get("/devices/%d".formatted(UNKNOWN_ID));
+				Assertions.assertEquals(
+					Response.Status.NOT_FOUND.getStatusCode(), response.statusCode(),
+					"Not getting 404 response for nonexistent device");
+			}
+			{
+				HttpResponse<JsonNode> response = apiClient.get("/devices/%d".formatted(device1.getId()));
+				Assertions.assertEquals(
+					Response.Status.OK.getStatusCode(), response.statusCode(),
+					"Not getting 200 response for device");
+				JsonNode deviceNode1 = response.body();
+				ObjectNode expectedNode1 = JsonNodeFactory.instance.objectNode()
+					.put("id", device1.getId())
+					.put("name", device1.getName())
+					.put("networkClass", device1.getNetworkClass().toString())
+					.put("family", device1.getFamily())
+					.put("mgmtAddress", device1.getMgmtAddress().getIp())
+					.putNull("connectAddress")
+					.put("status", device1.getStatus().toString())
+					.put("driver", device1.getDriver())
+					.put("realDeviceType", device1.getDeviceDriver().getDescription())
+					.put("serialNumber", device1.getSerialNumber())
+					.put("softwareVersion", device1.getSoftwareVersion())
+					.put("softwareLevel", device1.getSoftwareLevel().toString())
+					.put("contact", device1.getContact())
+					.put("location", device1.getLocation())
+					.put("creator", device1.getCreator())
+					.put("changeDate", device1.getChangeDate().getTime())
+					.put("createdDate", device1.getCreatedDate().getTime())
+					.putNull("specificCredentialSet")
+					.putNull("eolDate")
+					.putNull("eolModule")
+					.putNull("eosDate")
+					.putNull("eosModule")
+					.put("endOfLife", device1.isEndOfLife())
+					.put("endOfSale", device1.isEndOfSale())
+					.put("compliant", device1.isCompliant())
+					.put("autoTryCredentials", device1.isAutoTryCredentials())
+					.put("comments", device1.getComments())
+					.put("sshPort", Integer.toUnsignedLong(device1.getSshPort()))
+					.put("telnetPort", Integer.toUnsignedLong(device1.getTelnetPort()));
+				expectedNode1.putArray("ownerGroups");
+				expectedNode1.putArray("attributes");
+				expectedNode1.putArray("credentialSetIds");
+				expectedNode1.putArray("credentialSets");
+				expectedNode1.set("mgmtDomain",
+					JsonNodeFactory.instance.objectNode()
+						.put("id", device1.getMgmtDomain().getId())
+						.put("name", device1.getMgmtDomain().getName())
+						.put("changeDate", device1.getMgmtDomain().getChangeDate().getTime())
+						.put("description", device1.getMgmtDomain().getDescription())
+						.put("server4Address", device1.getMgmtDomain().getServer4Address().getIp())
+						.putNull("server6Address"));
+				Assertions.assertEquals(expectedNode1, deviceNode1,
+					"Retrieved device doesn't match expected object");
+			}
+		}
+
+		@Test
 		@DisplayName("Create device")
 		@ResourceLock(value = "DB")
 		void createDevice() throws IOException, InterruptedException {
@@ -1276,18 +1301,34 @@ public class RestServiceTest {
 				.put("domainId", this.testDomain.getId())
 				.put("name", device1.getName())
 				.put("deviceType", device1.getDriver());
-			HttpResponse<JsonNode> response = apiClient.post("/devices", data);
-			Assertions.assertEquals(
-				Response.Status.CREATED.getStatusCode(), response.statusCode(),
-				"Not getting 201 response for created device");
+			{
+				HttpResponse<JsonNode> response = apiClient.post("/devices",
+					data.deepCopy().put("domainId", UNKNOWN_ID));
+				Assertions.assertEquals(
+					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+					"Not getting 400 response for invalid domain");
+			}
+			{
+				HttpResponse<JsonNode> response = apiClient.post("/devices",
+					data.deepCopy().put("deviceType", "NonExistingDriver"));
+				Assertions.assertEquals(
+					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+					"Not getting 400 response for invalid domain");
+			}
+			{
+				HttpResponse<JsonNode> response = apiClient.post("/devices", data);
+				Assertions.assertEquals(
+					Response.Status.CREATED.getStatusCode(), response.statusCode(),
+					"Not getting 201 response for created device");
+			}
 
 			try (Session session = Database.getSession()) {
 				Device newDevice = session
 					.createQuery("from Device d", Device.class)
 					.uniqueResult();
 				device1.setId(newDevice.getId());
-				this.assertDevicesEqual(device1, newDevice, "Device not created as expected",
-					"createdDate", "creator");
+				this.assertDevicesEqual(device1, newDevice, 
+					DeviceField.CREATED_DATE, DeviceField.CREATOR);
 			}
 		}
 
@@ -1327,7 +1368,7 @@ public class RestServiceTest {
 				ObjectNode editData = JsonNodeFactory.instance.objectNode()
 					.put("enabled", false);
 				HttpResponse<JsonNode> response = apiClient.put(
-					String.format("/devices/%d", device1.getId()), editData);
+					"/devices/%d".formatted(device1.getId()), editData);
 				Assertions.assertEquals(
 					Response.Status.OK.getStatusCode(), response.statusCode(),
 					"Not getting 200 response for edited device");
@@ -1344,7 +1385,7 @@ public class RestServiceTest {
 				ObjectNode editData = JsonNodeFactory.instance.objectNode()
 					.put("enabled", true);
 				HttpResponse<JsonNode> response = apiClient.put(
-					String.format("/devices/%d", device1.getId()), editData);
+					"/devices/%d".formatted(device1.getId()), editData);
 				Assertions.assertEquals(
 					Response.Status.CONFLICT.getStatusCode(), response.statusCode(),
 					"Not getting 409 response for edited device");
@@ -1368,11 +1409,20 @@ public class RestServiceTest {
 				session.persist(device2);
 				session.getTransaction().commit();
 			}
-			HttpResponse<JsonNode> response = apiClient.delete(
-				String.format("/devices/%d", device1.getId()));
-			Assertions.assertEquals(
-				Response.Status.NO_CONTENT.getStatusCode(), response.statusCode(),
-				"Not getting 204 response for device deletion");
+			{
+				HttpResponse<JsonNode> response = apiClient.delete(
+					"/devices/%d".formatted(UNKNOWN_ID));
+				Assertions.assertEquals(
+					Response.Status.NOT_FOUND.getStatusCode(), response.statusCode(),
+					"Not getting 404 response for unknown device deletion");
+			}
+			{
+				HttpResponse<JsonNode> response = apiClient.delete(
+					"/devices/%d".formatted(device1.getId()));
+				Assertions.assertEquals(
+					Response.Status.NO_CONTENT.getStatusCode(), response.statusCode(),
+					"Not getting 204 response for device deletion");
+			}
 			HttpResponse<JsonNode> listResponse = apiClient.get("/devices");
 			Assertions.assertEquals(
 				Response.Status.OK.getStatusCode(), listResponse.statusCode(),
@@ -1413,7 +1463,16 @@ public class RestServiceTest {
 				ObjectNode editData = JsonNodeFactory.instance.objectNode()
 					.put("enabled", false);
 				HttpResponse<JsonNode> response = apiClient.put(
-					String.format("/devices/%d", device1.getId()), editData);
+					"/devices/%d".formatted(UNKNOWN_ID), editData);
+				Assertions.assertEquals(
+					Response.Status.NOT_FOUND.getStatusCode(), response.statusCode(),
+					"Not getting 404 response for unknown edited device");
+			}
+			{
+				ObjectNode editData = JsonNodeFactory.instance.objectNode()
+					.put("enabled", false);
+				HttpResponse<JsonNode> response = apiClient.put(
+					"/devices/%d".formatted(device1.getId()), editData);
 				Assertions.assertEquals(
 					Response.Status.OK.getStatusCode(), response.statusCode(),
 					"Not getting 200 response for edited device");
@@ -1425,14 +1484,14 @@ public class RestServiceTest {
 						.uniqueResult();
 					Assertions.assertEquals(Device.Status.DISABLED, editedDevice.getStatus(),
 						"The edited device is not disabled");
-					this.assertDevicesEqual(device1, editedDevice, "status");
+					this.assertDevicesEqual(device1, editedDevice, DeviceField.STATUS);
 				}
 			}
 			{
 				ObjectNode editData = JsonNodeFactory.instance.objectNode()
 					.put("enabled", true);
 				HttpResponse<JsonNode> response = apiClient.put(
-					String.format("/devices/%d", device1.getId()), editData);
+					"/devices/%d".formatted(device1.getId()), editData);
 				Assertions.assertEquals(
 					Response.Status.OK.getStatusCode(), response.statusCode(),
 					"Not getting 200 response for edited device");
@@ -1452,7 +1511,7 @@ public class RestServiceTest {
 				ObjectNode editData = JsonNodeFactory.instance.objectNode()
 					.put("comments", comments);
 				HttpResponse<JsonNode> response = apiClient.put(
-					String.format("/devices/%d", device1.getId()), editData);
+					"/devices/%d".formatted(device1.getId()), editData);
 				Assertions.assertEquals(
 					Response.Status.OK.getStatusCode(), response.statusCode(),
 					"Not getting 200 response for edited device");
@@ -1464,7 +1523,7 @@ public class RestServiceTest {
 						.uniqueResult();
 					Assertions.assertEquals(comments, editedDevice.getComments(),
 						"The edited device comments are not correct");
-					this.assertDevicesEqual(device1, editedDevice, "comments");
+					this.assertDevicesEqual(device1, editedDevice, DeviceField.COMMENTS);
 				}
 			}
 		}

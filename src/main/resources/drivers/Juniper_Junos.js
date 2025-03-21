@@ -21,7 +21,7 @@ var Info = {
 	name: "JuniperJunos",
 	description: "Juniper Junos",
 	author: "Netshot Team",
-	version: "2.14"
+	version: "3.0"
 };
 
 var Config = {
@@ -230,10 +230,10 @@ function snapshot(cli, device, config) {
 			var descriptionIndent = header[0].indexOf("Description");
 			var path = [];
 			var modulePattern = /^( *).+$/mg;
-			var match;
-			while (match = modulePattern.exec(showChassis)) {
-				var preSpaces = match[1];
-				var line = match[0];
+			var ipv6Match;
+			while (ipv6Match = modulePattern.exec(showChassis)) {
+				var preSpaces = ipv6Match[1];
+				var line = ipv6Match[0];
 				if (line.length < descriptionIndent) {
 					continue;
 				}
@@ -267,69 +267,79 @@ function snapshot(cli, device, config) {
 	catch(e) {
 		cli.debug("Error while reading the inventory");
 	}
+
+	var interfaceVrfs = {};
+	var vrfIntfPattern = /^set routing-instances (\S+) interface (\S+)/mg;
+	while (true) {
+		var vrfIntfMatch = vrfIntfPattern.exec(configurationAsSet);
+		if (!vrfIntfMatch) {
+			break;
+		}
+		interfaceVrfs[vrfIntfMatch[2]] = vrfIntfMatch[1];
+	}
 	
 	var showInterfaces = cli.command("show interfaces");
 	var interfaces = cli.findSections(showInterfaces, /^Physical interface: (.+?), (Enabled|Administratively down),.*/m);
 	for (var i in interfaces) {
-		var networkInterface = {
+		var ni = {
 			name: interfaces[i].match[1],
 			ip: []
 		};
-		if (networkInterface.name.match(/^(vcp|bme|jsrv|pime|vme|lsi).*/)) {
+		if (ni.name.match(/^(vcp|bme|jsrv|pime|vme|lsi).*/)) {
 			continue;
 		}
 		if (!interfaces[i].match[2].match(/Enabled/)) {
-			networkInterface.enabled = false;
+			ni.enabled = false;
 		}
 		var description = interfaces[i].config.match(/^  Description: (.*)$/m);
 		if (description) {
-			networkInterface.description = description[1];
+			ni.description = description[1];
 		}
 		var macAddress = interfaces[i].config.match(/Hardware address: ([0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2})/);
 		if (macAddress) {
-			networkInterface.mac = macAddress[1];
+			ni.mac = macAddress[1];
 		}
+		device.add("networkInterface", ni);
 		
-		var logicalInterfaces = cli.findSections(interfaces[i].config, /^  Logical interface (.*) \(/m);
+		var logicalInterfaces = cli.findSections(interfaces[i].config, /^  Logical interface (\S+)/m);
 		for (var j in logicalInterfaces) {
-			var ipPattern = /Destination: [0-9\.]+\/([0-9]+), Local: ([0-9\.]+),/g;
-			var match;
-			while (match = ipPattern.exec(logicalInterfaces[j].config)) {
-				networkInterface.ip.push({
-					ip: match[2],
-					mask: parseInt(match[1]),
+			var lni = {
+				name: logicalInterfaces[j].match[1],
+				ip: [],
+			};
+			description = logicalInterfaces[j].config.match(/^ +Description: (.*)$/m);
+			if (description) {
+				lni.description = description[1];
+			}
+			var ipPattern = /^ +(Destination: [0-9\.]+\/([0-9]+), )?Local: ([0-9\.]+)/mg;
+			var ipMatch;
+			while (ipMatch = ipPattern.exec(logicalInterfaces[j].config)) {
+				lni.ip.push({
+					ip: ipMatch[3],
+					mask: (ipMatch[2] === undefined) ? 32 : parseInt(ipMatch[2]),
 					usage: "PRIMARY"
 				});
 			}
-			var ipPattern = /^ *Local: ([0-9\.]+)$/mg;
-			var match;
-			while (match = ipPattern.exec(logicalInterfaces[j].config)) {
-				networkInterface.ip.push({
-					ip: match[1],
-					mask: 32,
+			var ipv6Pattern = /^ +(Destination: [0-9a-f\\:]+\/([0-9]+), )?Local: ([0-9a-f\\:]+),/mg;
+			var ipv6Match;
+			while (ipv6Match = ipv6Pattern.exec(logicalInterfaces[j].config)) {
+				lni.ip.push({
+					ipv6: ipv6Match[3],
+					mask: (ipv6Match[2] === undefined) ? 128 : parseInt(ipv6Match[2]),
 					usage: "PRIMARY"
 				});
 			}
-			var ipv6Pattern = /Destination: [0-9a-f\\:]+\/([0-9]+), Local: ([0-9a-f\\:]+),/g;
-			var match;
-			while (match = ipv6Pattern.exec(logicalInterfaces[j].config)) {
-				networkInterface.ip.push({
-					ipv6: match[2],
-					mask: parseInt(match[1]),
-					usage: "PRIMARY"
-				});
+			if (ni.mac) {
+				lni.mac = ni.mac;
 			}
-			var ipv6Pattern = /^ *Local: ([0-9a-f\\:]+)$/mg;
-			var match;
-			while (match = ipv6Pattern.exec(logicalInterfaces[j].config)) {
-				networkInterface.ip.push({
-					ipv6: match[1],
-					mask: 128,
-					usage: "PRIMARY"
-				});
+			if (logicalInterfaces[j].config.match(/^ +Protocol (eth-switch|ethernet|vlan)/)) {
+				lni.level3 = false;
 			}
+			if (interfaceVrfs[lni.name]) {
+				lni.vrf = interfaceVrfs[lni.name];
+			}
+			device.add("networkInterface", lni);
 		}
-		device.add("networkInterface", networkInterface);
 	}
 
 };

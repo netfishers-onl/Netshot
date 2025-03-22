@@ -7335,6 +7335,7 @@ public class RestService extends Thread {
 	public UiUser setUser(@PathParam("id") @Parameter(description = "User ID") Long id, RsUser rsUser)
 			throws WebApplicationException {
 		log.debug("REST request, edit user {}.", id);
+		User currentUser = (User) request.getAttribute("user");
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
@@ -7343,6 +7344,11 @@ public class RestService extends Thread {
 				log.error("Unable to find the user {} to be edited.", id);
 				throw new NetshotBadRequestException("Unable to find this user.",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
+			}
+			if (user.getUsername().equals(currentUser.getUsername())) {
+				throw new NetshotBadRequestException(
+						"Cannot edit the user who is making the request.",
+						NetshotBadRequestException.Reason.NETSHOT_LOCKED_USER);
 			}
 
 			String username = rsUser.getUsername();
@@ -7356,7 +7362,14 @@ public class RestService extends Thread {
 
 			user.setLevel(rsUser.getLevel());
 			if (rsUser.isLocal()) {
-				if (rsUser.getPassword() != null) {
+				if (rsUser.getPassword() == null) {
+					if (!user.isLocal()) {
+						log.error("The password cannot be empty for user {}.", id);
+						throw new NetshotBadRequestException("You must set a password.",
+								NetshotBadRequestException.Reason.NETSHOT_INVALID_PASSWORD);
+					}
+				}
+				else {
 					try {
 						user.setPassword(rsUser.getPassword(), PasswordPolicy.getMainPolicy());
 					}
@@ -7366,11 +7379,6 @@ public class RestService extends Thread {
 							e.getMessage(),
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_PASSWORD);
 					}
-				}
-				if (user.getHashedPassword().equals("")) {
-					log.error("The password cannot be empty for user {}.", id);
-					throw new NetshotBadRequestException("You must set a password.",
-							NetshotBadRequestException.Reason.NETSHOT_INVALID_PASSWORD);
 				}
 			}
 			else {
@@ -7421,6 +7429,7 @@ public class RestService extends Thread {
 	public void deleteUser(@PathParam("id") @Parameter(description = "User ID") Long id)
 			throws WebApplicationException {
 		log.debug("REST request, delete user {}.", id);
+		User currentUser = (User) request.getAttribute("user");
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
@@ -7429,6 +7438,11 @@ public class RestService extends Thread {
 				log.info("No such user of ID {}", id);
 				this.suggestReturnCode(Response.Status.NOT_FOUND);
 				return;
+			}
+			if (user.getUsername().equals(currentUser.getUsername())) {
+				throw new NetshotBadRequestException(
+						"Cannot delete the user who is making the request.",
+						NetshotBadRequestException.Reason.NETSHOT_LOCKED_USER);
 			}
 			session.remove(user);
 			session.getTransaction().commit();

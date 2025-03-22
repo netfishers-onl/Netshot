@@ -940,6 +940,52 @@ public class RestServiceTest {
 						"User not updated as expected");
 				}
 			}
+
+			@Test
+			@DisplayName("Update remote user")
+			@ResourceLock(value = "DB")
+			void updateRemoteUser() throws IOException, InterruptedException {
+				UiUser user = new UiUser("user1", false, "pass1");
+				user.setLevel(UiUser.LEVEL_OPERATOR);
+				try (Session session = Database.getSession()) {
+					session.beginTransaction();
+					session.persist(user);
+					session.getTransaction().commit();
+				}
+				UiUser targetUser = new UiUser("user2", true, "pass1");
+				targetUser.setLevel(UiUser.LEVEL_OPERATOR);
+				targetUser.setHashedPassword(user.getHashedPassword());
+				targetUser.setId(user.getId());
+				ObjectNode data = JsonNodeFactory.instance.objectNode()
+					.put("local", true)
+					.put("username", targetUser.getUsername())
+					.put("level", Long.valueOf(targetUser.getLevel()));
+				{
+					HttpResponse<JsonNode> response = apiClient.put(
+						"/users/%d".formatted(user.getId()), data);
+					Assertions.assertEquals(
+						Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+						"Not getting 400 response for erroneous user update");
+				}
+				data.put("password", "pass2");
+				{
+					HttpResponse<JsonNode> response = apiClient.put(
+						"/users/%d".formatted(user.getId()), data);
+					Assertions.assertEquals(
+						Response.Status.OK.getStatusCode(), response.statusCode(),
+						"Not getting 200 response for user update");
+				}
+				try (Session session = Database.getSession()) {
+					UiUser dbUser = session.byId(UiUser.class)
+						.load(targetUser.getId());
+					Assertions.assertEquals(targetUser.getName(), dbUser.getName(),
+						"User not updated as expected");
+					Assertions.assertEquals(targetUser.getLevel(), dbUser.getLevel(),
+						"User not updated as expected");
+					Assertions.assertEquals(targetUser.isLocal(), dbUser.isLocal(),
+						"User not updated as expected");
+				}
+			}
 		}
 
 		@Nested

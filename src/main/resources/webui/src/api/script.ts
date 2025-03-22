@@ -25,8 +25,7 @@ async function validate(payload: Partial<Script>) {
 }
 
 async function remove(id: number) {
-  const req = await httpClient.rawRequest(HttpMethod.Delete, `/scripts/${id}`);
-  return req.status === HttpStatus.NoContent;
+  return httpClient.delete(`/scripts/${id}`);
 }
 
 export default {

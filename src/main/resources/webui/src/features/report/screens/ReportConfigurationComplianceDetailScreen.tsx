@@ -5,7 +5,7 @@ import { useToast } from "@/hooks";
 import { Heading, Skeleton, Stack, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { ConfigurationComplianceDeviceList } from "../components";
 
 export default function ReportConfigurationComplianceDetailScreen() {
@@ -17,22 +17,17 @@ export default function ReportConfigurationComplianceDetailScreen() {
 
   const {
     data: group,
-    isLoading,
+    isPending,
     isSuccess,
-  } = useQuery(
-    [QUERIES.DEVICE_GROUPS, +params?.id],
-    async () => {
+  } = useQuery({
+    queryKey: [QUERIES.DEVICE_GROUPS, +params?.id],
+    queryFn: async () => {
       /**
        * @todo: Add devices count and non compliant count
        */
       return api.group.getById(+params.id);
     },
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  });
 
   return (
     <Stack p="9" spacing="6" flex="1" overflowY="auto">

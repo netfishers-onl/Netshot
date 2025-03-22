@@ -51,8 +51,7 @@ async function update(id: number, payload: Partial<UpdateDevicePayload>) {
 }
 
 async function remove(id: number) {
-  const req = await httpClient.rawRequest(HttpMethod.Delete, `/devices/${id}`);
-  return req.status === HttpStatus.NoContent;
+  return httpClient.delete(`/devices/${id}`);
 }
 
 async function getComplianceResultById(
@@ -79,7 +78,7 @@ async function getDiagnosticResultById(
   );
 }
 
-async function getAllConfigById(
+async function getAllConfigsById(
   id: number,
   queryParams: PaginationQueryParams = {}
 ) {
@@ -95,7 +94,7 @@ async function getConfigById(deviceId: number, id: number) {
   let configs = [];
 
   try {
-    configs = await getAllConfigById(deviceId, {
+    configs = await getAllConfigsById(deviceId, {
       limit: 999999,
     });
   } catch (err) {
@@ -110,7 +109,7 @@ async function getConfigById(deviceId: number, id: number) {
  */
 async function getCurrentConfig(deviceId: number) {
   try {
-    const [config] = await getAllConfigById(deviceId, {
+    const [config] = await getAllConfigsById(deviceId, {
       limit: 1,
     });
 
@@ -125,7 +124,7 @@ async function getCurrentConfig(deviceId: number) {
  */
 async function getPreviousConfig(deviceId: number, id: number) {
   try {
-    const configs = await getAllConfigById(deviceId);
+    const configs = await getAllConfigsById(deviceId);
     const configIndex = sortByDate(configs, "changeDate").findIndex(
       (config) => config.id === id
     );
@@ -140,7 +139,7 @@ async function getPreviousConfig(deviceId: number, id: number) {
   }
 }
 
-async function getAllInterfaceById(
+async function getAllInterfacesById(
   id: number,
   queryParams: PaginationQueryParams = {}
 ) {
@@ -149,7 +148,7 @@ async function getAllInterfaceById(
   });
 }
 
-async function getAllModuleById(
+async function getAllModulesById(
   id: number,
   queryParams: DeviceModuleQueryParams = {}
 ) {
@@ -158,22 +157,22 @@ async function getAllModuleById(
   });
 }
 
-async function getAllTaskById(
+async function getAllTasksById(
   id: number,
   queryParams: PaginationQueryParams = {}
 ) {
-  return httpClient.get<DeviceModule[]>(`/devices/${id}/tasks`, {
+  return httpClient.get<Task[]>(`/devices/${id}/tasks`, {
     queryParams,
   });
 }
 
-async function getAllFamily(queryParams: PaginationQueryParams = {}) {
+async function getAllFamilies(queryParams: PaginationQueryParams = {}) {
   return httpClient.get<DeviceFamily[]>("/devicefamilies", {
     queryParams,
   });
 }
 
-async function getAllPartNumber(queryParams: PaginationQueryParams = {}) {
+async function getAllPartNumbers(queryParams: PaginationQueryParams = {}) {
   return httpClient.get<
     Array<{
       partNumber: string;
@@ -183,7 +182,7 @@ async function getAllPartNumber(queryParams: PaginationQueryParams = {}) {
   });
 }
 
-async function getAllType() {
+async function getAllTypes() {
   return httpClient.get<DeviceType[]>(`/devicetypes`);
 }
 
@@ -196,14 +195,14 @@ export default {
   remove,
   getComplianceResultById,
   getDiagnosticResultById,
-  getAllConfigById,
+  getAllConfigsById,
   getConfigById,
   getCurrentConfig,
   getPreviousConfig,
-  getAllInterfaceById,
-  getAllModuleById,
-  getAllTaskById,
-  getAllFamily,
-  getAllPartNumber,
-  getAllType,
+  getAllInterfacesById,
+  getAllModulesById,
+  getAllTasksById,
+  getAllFamilies,
+  getAllPartNumbers,
+  getAllTypes,
 };

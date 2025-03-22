@@ -1,10 +1,9 @@
 import { Divider, Stack } from "@chakra-ui/react";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 import { DeviceSidebar } from "../components";
-import DeviceSidebarProvider, {
-  DeviceSidebarContext,
-} from "../contexts/DeviceSidebarProvider";
+import DeviceSidebarProvider from "../contexts/DeviceSidebarProvider";
 import DeviceBulkActionScreen from "./DeviceBulkActionScreen";
+import { DeviceSidebarContext } from "../contexts/device-sidebar";
 
 export default function DeviceScreen() {
   return (

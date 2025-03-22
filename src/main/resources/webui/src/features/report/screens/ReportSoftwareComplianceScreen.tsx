@@ -61,13 +61,17 @@ function LevelTag(props: LevelTagProps) {
   const label = useMemo(() => {
     if (level === DeviceSoftwareLevel.GOLD) {
       return t("Gold");
-    } else if (level === DeviceSoftwareLevel.SILVER) {
+    }
+    else if (level === DeviceSoftwareLevel.SILVER) {
       return t("Silver");
-    } else if (level === DeviceSoftwareLevel.BRONZE) {
+    }
+    else if (level === DeviceSoftwareLevel.BRONZE) {
       return t("Bronze");
-    } else if (level === DeviceSoftwareLevel.NON_COMPLIANT) {
+    }
+    else if (level === DeviceSoftwareLevel.NON_COMPLIANT) {
       return t("Non compliant");
-    } else {
+    }
+    else {
       return t("Unknown");
     }
   }, [level]);
@@ -187,43 +191,31 @@ export default function ReportSoftwareComplianceScreen() {
     name: "domain.value",
   });
 
-  const { data, isLoading, refetch } = useQuery(
-    [QUERIES.SOFTWARE_COMPLIANCE, pagination.query, domain],
-    async () =>
-      api.report.getAllGroupSoftwareComplianceStat(
+  const { data, isPending, refetch } = useQuery({
+    queryKey: [QUERIES.SOFTWARE_COMPLIANCE, pagination.query, domain],
+    queryFn: async () =>
+      api.report.getAllGroupSoftwareComplianceStats(
         domain
           ? {
               domain,
             }
           : {}
       ),
-    {
-      select(res) {
-        return search(
-          res.filter((item) => item.deviceCount > 0),
-          "groupName"
-        ).with(pagination.query);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    select: useCallback((res: GroupSoftwareComplianceStat[]): GroupSoftwareComplianceStat[] => {
+      return search(
+        res.filter((item) => item.deviceCount > 0),
+        "groupName"
+      ).with(pagination.query);
+    }, [pagination.query]),
+  });
 
-  const { data: groups, isLoading: isGroupLoading } = useQuery(
-    [GLOBAL_QUERIES.DEVICE_GROUPS, pagination.query],
-    async () => {
+  const { data: groups, isPending: isGroupPending } = useQuery({
+    queryKey: [GLOBAL_QUERIES.DEVICE_GROUPS, pagination.query],
+    queryFn: async () => {
       return api.group.getAll(pagination);
     },
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      select(res) {
-        return createFoldersFromGroups(res);
-      },
-    }
-  );
+    select: useCallback(createFoldersFromGroups, []),
+  });
 
   const clearFilter = useCallback(() => {
     form.setValue("domain", null);
@@ -284,7 +276,7 @@ export default function ReportSoftwareComplianceScreen() {
         </Button>
       </Stack>
       <Stack flex="1" overflow="auto">
-        {isGroupLoading && isLoading ? (
+        {isGroupPending && isPending ? (
           <Stack spacing="3" pb="6">
             <Skeleton height="36px" />
             <Skeleton height="36px" />

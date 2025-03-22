@@ -23,14 +23,7 @@ export default function Sidebar() {
               <Divider />
 
               {query ? <DeviceSidebarSearchList /> : <SidebarList />}
-              <Protected
-                roles={[
-                  Level.Admin,
-                  Level.Operator,
-                  Level.ReadWriteCommandOnDevice,
-                  Level.ReadWrite,
-                ]}
-              >
+              <Protected minLevel={Level.ReadWrite}>
                 <Divider />
                 <Stack p="6">
                   <DiagnosticAddButton

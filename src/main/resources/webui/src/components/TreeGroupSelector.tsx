@@ -46,18 +46,11 @@ function SelectGroupDialog() {
     name: "isMulti",
   });
 
-  const { data: items, isLoading } = useQuery(
-    [QUERIES.DEVICE_GROUPS],
-    async () => api.group.getAll(pagination),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      select(groups) {
-        return createFoldersFromGroups(groups);
-      },
-    }
-  );
+  const { data: items, isPending } = useQuery({
+    queryKey: [QUERIES.DEVICE_GROUPS],
+    queryFn: async () => api.group.getAll(pagination),
+    select: useCallback(createFoldersFromGroups, []),
+  });
 
   const isSelected = useCallback(
     (group: Group) => {
@@ -90,7 +83,7 @@ function SelectGroupDialog() {
     [append, remove, fields, isSelected, isMulti]
   );
 
-  return isLoading ? (
+  return isPending ? (
     <Stack spacing="3" pb="6">
       <Skeleton height="36px" />
       <Skeleton height="36px" />

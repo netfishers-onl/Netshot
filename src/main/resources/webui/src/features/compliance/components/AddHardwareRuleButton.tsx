@@ -37,24 +37,22 @@ export default function AddHardwareRuleButton(
     },
   });
 
-  const mutation = useMutation(
-    async (payload: CreateOrUpdateHardwareRule) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: CreateOrUpdateHardwareRule) =>
       api.hardwareRule.create(payload),
-    {
-      onSuccess() {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t("Hardware rule has been successfully created"),
-        });
+    onSuccess() {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t("Hardware rule has been successfully created"),
+      });
 
-        queryClient.invalidateQueries([QUERIES.HARDWARE_RULE_LIST]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.HARDWARE_RULE_LIST] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: HardwareRuleFormValues) => {
@@ -76,7 +74,7 @@ export default function AddHardwareRuleButton(
     title: t("Add hardware rule"),
     description: <HardwareRuleForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

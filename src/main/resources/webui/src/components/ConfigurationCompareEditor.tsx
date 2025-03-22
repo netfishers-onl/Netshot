@@ -19,21 +19,21 @@ export default function ConfigurationCompareEditor(props: CompareEditorProps) {
   const { t } = useTranslation();
   const {
     data: original,
-    isLoading: isOriginalLoading,
+    isPending: isOriginalPending,
     isError: isOriginalError,
-  } = useQuery(
-    [QUERIES.DEVICE_CONFIG_COMPARE, "configuration", current.id],
-    async () => api.config.getItem(current.id, "configuration")
-  );
+  } = useQuery({
+    queryKey: [QUERIES.DEVICE_CONFIG_COMPARE, "configuration", current.id],
+    queryFn: async () => api.config.getItem(current.id, "configuration")
+  });
 
   const {
     data: modified,
-    isLoading: isModifiedLoading,
+    isPending: isModifiedPending,
     isError: isModifiedError,
-  } = useQuery(
-    [QUERIES.DEVICE_CONFIG_COMPARE, "configuration", compare.id],
-    async () => api.config.getItem(compare.id, "configuration")
-  );
+  } = useQuery({
+    queryKey: [QUERIES.DEVICE_CONFIG_COMPARE, "configuration", compare.id],
+    queryFn: async () => api.config.getItem(compare.id, "configuration")
+  });
 
   const currentDate = useMemo(() => {
     return formatDate(current?.changeDate);
@@ -43,7 +43,7 @@ export default function ConfigurationCompareEditor(props: CompareEditorProps) {
     return formatDate(compare?.changeDate);
   }, [compare]);
 
-  if (isOriginalLoading || isModifiedLoading) {
+  if (isOriginalPending || isModifiedPending) {
     return (
       <Center flex="1">
         <Stack spacing="3" alignItems="center">

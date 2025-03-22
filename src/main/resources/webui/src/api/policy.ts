@@ -44,8 +44,7 @@ async function update(id: number, payload: Partial<CreateOrUpdatePolicy>) {
 }
 
 async function remove(id: number) {
-  const req = await httpClient.rawRequest(HttpMethod.Delete, `/policies/${id}`);
-  return req.status === HttpStatus.NoContent;
+  return httpClient.delete(`/policies/${id}`);
 }
 
 export default {

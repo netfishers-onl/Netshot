@@ -34,7 +34,7 @@ import {
 } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { QUERIES } from "../constants";
 import { DiagnosticEditForm } from "./DiagnosticEditForm";
 import DiagnosticEditScript from "./DiagnosticEditScript";
@@ -43,7 +43,7 @@ const TEMPLATES = {
   [DiagnosticType.Javascript]: `
     function diagnose(cli, device, diagnostic) {
       cli.macro("enable");
-      var output = cli.command("show something");
+      const output = cli.command("show something");
       // Process output somewhat
       diagnostic.set(output);
     }
@@ -110,17 +110,17 @@ export default function AddTaskButton(props: AddDiagnosticButtonProps) {
   const form = useForm<Form>({
     defaultValues,
   });
-
-  const createMutation = useMutation(api.diagnostic.create, {
+  const createMutation = useMutation({
+    mutationFn: api.diagnostic.create,
     async onSuccess(diagnostic) {
       close();
       disclosure.onOpen();
 
-      await queryClient.invalidateQueries([QUERIES.DIAGNOSTIC_LIST]);
+      await queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_LIST] });
 
       form.reset();
 
-      navigate(`/app/diagnostic/${diagnostic.id}`);
+      navigate(`/app/diagnostics/${diagnostic.id}`);
 
       toast.success({
         title: t("Success"),
@@ -305,7 +305,7 @@ export default function AddTaskButton(props: AddDiagnosticButtonProps) {
                 <Button
                   type="submit"
                   isDisabled={!form.formState.isValid}
-                  isLoading={createMutation.isLoading}
+                  isLoading={createMutation.isPending}
                   variant="primary"
                 >
                   {t("Create")}

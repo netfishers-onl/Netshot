@@ -19,23 +19,21 @@ export default function TestRuleScriptOnDevice(props: TestRuleOnDevice) {
   const toast = useToast();
   const [device, setDevice] = useState<SimpleDevice>(null);
 
-  const mutation = useMutation(
-    async (payload: TestRuleScriptOnDevicePayload) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: TestRuleScriptOnDevicePayload) =>
       api.rule.testScript(payload),
-    {
-      onSuccess(res) {
-        toast.script({
-          title: t("Result: {{result}}", {
-            result: res.result,
-          }),
-          description: res.scriptError,
-        });
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    onSuccess(res) {
+      toast.script({
+        title: t("Result: {{result}}", {
+          result: res.result,
+        }),
+        description: res.scriptError,
+      });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const runTest = useCallback(() => {
     mutation.mutate({
@@ -61,7 +59,7 @@ export default function TestRuleScriptOnDevice(props: TestRuleOnDevice) {
         icon={<Icon name="play" />}
         isDisabled={!device}
         onClick={runTest}
-        isLoading={mutation.isLoading}
+        isLoading={mutation.isPending}
       />
     </Stack>
   );

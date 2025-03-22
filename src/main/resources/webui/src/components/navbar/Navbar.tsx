@@ -1,14 +1,14 @@
-import { useDashboard } from "@/contexts";
 import { Flex, Spacer, Stack } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import Brand from "../Brand";
 import NavbarLink from "./NavbarLink";
 import NavbarUser from "./NavbarUser";
+import Protected from "../Protected";
+import { Level } from "@/types";
 
 export default function Navbar() {
   const { t } = useTranslation();
-  const { isAdmin } = useDashboard();
 
   return (
     <Flex as="header" alignItems="center" px="5" h="72px" bg="green.1100">
@@ -23,14 +23,14 @@ export default function Navbar() {
         </Link>
 
         <Stack direction="row" alignItems="center">
-          <NavbarLink to="report">{t("Reports")}</NavbarLink>
-          <NavbarLink to="device">{t("Devices")}</NavbarLink>
-          <NavbarLink to="diagnostic">{t("Diagnostics")}</NavbarLink>
+          <NavbarLink to="reports">{t("Reports")}</NavbarLink>
+          <NavbarLink to="devices">{t("Devices")}</NavbarLink>
+          <NavbarLink to="diagnostics">{t("Diagnostics")}</NavbarLink>
           <NavbarLink to="compliance">{t("Compliance")}</NavbarLink>
-          <NavbarLink to="task">{t("Tasks")}</NavbarLink>
-          {isAdmin && (
+          <NavbarLink to="tasks">{t("Tasks")}</NavbarLink>
+          <Protected minLevel={Level.Admin}>
             <NavbarLink to="administration">{t("Administration")}</NavbarLink>
-          )}
+          </Protected>
         </Stack>
       </Stack>
       <Spacer />

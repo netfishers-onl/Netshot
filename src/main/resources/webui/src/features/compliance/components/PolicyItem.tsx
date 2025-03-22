@@ -27,7 +27,7 @@ export default function PolicyItem(props: PolicyItemProps) {
   const { t } = useTranslation();
   const controls = useAnimationControls();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
-  const hasRules = useMemo(() => policy.ruleCount > 0, [policy]);
+  const hasRules = useMemo(() => policy.rules?.length > 0, [policy]);
 
   const toggleCollapse = useCallback(
     async (evt?: MouseEvent<HTMLDivElement>) => {
@@ -82,14 +82,7 @@ export default function PolicyItem(props: PolicyItemProps) {
           </Box>
           <Text noOfLines={1}>{policy?.name}</Text>
         </Stack>
-        <Protected
-          roles={[
-            Level.Admin,
-            Level.Operator,
-            Level.ReadWriteCommandOnDevice,
-            Level.ReadWrite,
-          ]}
-        >
+        <Protected minLevel={Level.Operator}>
           <Menu>
             <MenuButton
               as={IconButton}

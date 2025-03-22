@@ -90,29 +90,27 @@ export default function EditDeviceCredentialButton(
     defaultValues,
   });
 
-  const mutation = useMutation(
-    async (payload: Partial<DeviceCredentialPayload>) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<DeviceCredentialPayload>) =>
       api.admin.updateCredentialSet(credential?.id, payload),
-    {
-      onSuccess(res) {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t(
-            "Device credential {{name}} has been successfully updated",
-            {
-              name: res?.name,
-            }
-          ),
-        });
+    onSuccess(res) {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t(
+          "Device credential {{name}} has been successfully updated",
+          {
+            name: res?.name,
+          }
+        ),
+      });
 
-        queryClient.invalidateQueries([QUERIES.ADMIN_DEVICE_CREDENTIALS]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_DEVICE_CREDENTIALS] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: DeviceCredentialForm) => {
@@ -176,7 +174,7 @@ export default function EditDeviceCredentialButton(
     title: t("Edit credential"),
     description: <AdministrationDeviceCredentialForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

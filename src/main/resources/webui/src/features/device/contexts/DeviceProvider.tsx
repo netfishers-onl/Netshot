@@ -1,14 +1,8 @@
-import { Device, DeviceStatus } from "@/types";
-import { PropsWithChildren, createContext, useContext, useMemo } from "react";
+import { PropsWithChildren, useMemo } from "react";
 
-export type DeviceContextType = {
-  device: Device;
-  isLoading: boolean;
-  isDisabled?: boolean;
-};
+import { DeviceStatus } from "@/types";
 
-export const DeviceContext = createContext<DeviceContextType>(null);
-export const useDevice = () => useContext(DeviceContext);
+import { DeviceContext, DeviceContextType } from "./device";
 
 export default function DeviceProvider(
   props: PropsWithChildren<DeviceContextType>

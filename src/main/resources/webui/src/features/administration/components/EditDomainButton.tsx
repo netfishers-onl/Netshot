@@ -37,26 +37,24 @@ export default function EditDomainButton(props: EditDomainButtonProps) {
     defaultValues,
   });
 
-  const mutation = useMutation(
-    async (payload: Partial<Domain>) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<Domain>) =>
       api.admin.updateDomain(domain?.id, payload),
-    {
-      onSuccess(res) {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t("Domain {{name}} has been successfully updated", {
-            name: res?.name,
-          }),
-        });
+    onSuccess(res) {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t("Domain {{name}} has been successfully updated", {
+          name: res?.name,
+        }),
+      });
 
-        queryClient.invalidateQueries([QUERIES.ADMIN_DEVICE_DOMAINS]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_DEVICE_DOMAINS] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: DomainForm) => {
@@ -73,7 +71,7 @@ export default function EditDomainButton(props: EditDomainButtonProps) {
     title: t("Edit domain"),
     description: <AdministrationDomainForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

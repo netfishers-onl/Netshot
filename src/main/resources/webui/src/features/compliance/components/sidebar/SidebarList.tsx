@@ -8,30 +8,28 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useSidebar } from "../../contexts/SidebarProvider";
 import PolicyItem from "../PolicyItem";
+import { useCallback } from "react";
+import { Policy } from "@/types";
+import { Icon } from "@/components";
 
 export default function SidebarList() {
   const toast = useToast();
   const { t } = useTranslation();
   const ctx = useSidebar();
 
-  const { data: policies, isLoading } = useQuery(
-    [QUERIES.POLICY_LIST, ctx.query],
-    async () => api.policy.getAllWithRules(),
-    {
-      select(res) {
-        /**
-         * @note: Bug on policies, double creation when update...
-         */
-        const formatted = getUniqueBy(res, "name");
-        return sortAlphabetical(formatted, "name");
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  const { data: policies, isPending } = useQuery({
+    queryKey: [QUERIES.POLICY_LIST, ctx.query],
+    queryFn: async () => api.policy.getAllWithRules(),
+    select: useCallback((res: Policy[]): Policy[] => {
+      /**
+       * @note: Bug on policies, double creation when update...
+       */
+      const formatted = getUniqueBy(res, "name");
+      return sortAlphabetical(formatted, "name");
+    }, []),
+  });
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <Stack alignItems="center" justifyContent="center" py="6" flex="1">
         <Spinner />
@@ -39,7 +37,7 @@ export default function SidebarList() {
     );
   }
 
-  if (policies.length === 0) {
+  if (policies?.length === 0) {
     return (
       <Center flex="1">
         <Text>{t("No diagnostic found")}</Text>

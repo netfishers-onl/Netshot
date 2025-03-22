@@ -22,9 +22,10 @@ export default function RemoveHardwareRuleButton(
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const mutation = useMutation(async () => api.hardwareRule.remove(rule?.id), {
+  const mutation = useMutation({
+    mutationFn: async () => api.hardwareRule.remove(rule?.id),
     onSuccess() {
-      queryClient.invalidateQueries([QUERIES.HARDWARE_RULE_LIST]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.HARDWARE_RULE_LIST] });
       dialog.close();
     },
     onError(err: NetshotError) {
@@ -35,12 +36,12 @@ export default function RemoveHardwareRuleButton(
   const dialog = Dialog.useConfirm({
     title: t("Remove hardware rule"),
     description: <Text>{t("You are about to remove this hardware rule")}</Text>,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate();
     },
     confirmButton: {
-      label: t("remove"),
+      label: t("Remove"),
       props: {
         colorScheme: "red",
       },

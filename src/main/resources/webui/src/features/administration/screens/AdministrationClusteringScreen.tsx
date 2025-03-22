@@ -17,6 +17,8 @@ import { useQuery } from "@tanstack/react-query";
 import { formatDistanceStrict } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { QUERIES } from "../constants";
+import { useCallback } from "react";
+import { ClusterMember } from "@/types";
 
 export default function AdministrationClusteringScreen() {
   const { t } = useTranslation();
@@ -25,20 +27,15 @@ export default function AdministrationClusteringScreen() {
 
   const {
     data = [],
-    isLoading,
+    isPending,
     refetch,
-  } = useQuery(
-    [QUERIES.ADMIN_CLUSTERS],
-    async () => api.admin.getAllClusterMember(),
-    {
-      select(res) {
-        return search(res, "hostname").with(pagination.query);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  } = useQuery({
+    queryKey: [QUERIES.ADMIN_CLUSTERS],
+    queryFn: async () => api.admin.getAllClusterMembers(),
+    select: useCallback((res: ClusterMember[]): ClusterMember[] => {
+      return search(res, "hostname").with(pagination.query);
+    }, [pagination.query]),
+  });
 
   return (
     <>
@@ -61,7 +58,7 @@ export default function AdministrationClusteringScreen() {
             {t("Refresh")}
           </Button>
         </Stack>
-        {isLoading ? (
+        {isPending ? (
           <Stack spacing="3">
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -154,7 +151,7 @@ export default function AdministrationClusteringScreen() {
               <EmptyResult
                 title={t("There is no member")}
                 description={t(
-                  "You can activate cluster mode by modifying the netshot configuration"
+                  "You may activate clustering in the main configuration file, please check documentation"
                 )}
               />
             )}

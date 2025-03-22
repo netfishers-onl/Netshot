@@ -32,25 +32,24 @@ export default function AddApiTokenButton(props: AddApiTokenButtonProps) {
     },
   });
 
-  const mutation = useMutation(
-    async (payload: Partial<ApiToken>) => api.admin.createApiToken(payload),
-    {
-      onSuccess() {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t("Api token has been successfully created"),
-        });
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<ApiToken>) =>
+        api.admin.createApiToken(payload),
+    onSuccess() {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t("Api token has been successfully created"),
+      });
 
-        queryClient.invalidateQueries([QUERIES.ADMIN_API_TOKENS]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_API_TOKENS] });
 
-        form.reset();
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      form.reset();
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: ApiTokenForm) => {
@@ -71,7 +70,7 @@ export default function AddApiTokenButton(props: AddApiTokenButtonProps) {
     title: t("Create API token"),
     description: <AdministrationApiTokenForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

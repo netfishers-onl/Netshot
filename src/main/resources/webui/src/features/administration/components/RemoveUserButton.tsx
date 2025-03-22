@@ -20,9 +20,10 @@ export default function RemoveUserButton(props: RemoveUserButtonProps) {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const mutation = useMutation(async () => api.admin.removeUser(user?.id), {
+  const mutation = useMutation({
+    mutationFn: async () => api.admin.removeUser(user?.id),
     onSuccess() {
-      queryClient.invalidateQueries([QUERIES.ADMIN_USERS]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_USERS] });
       dialog.close();
     },
     onError(err: NetshotError) {
@@ -39,12 +40,12 @@ export default function RemoveUserButton(props: RemoveUserButtonProps) {
         })}
       </Text>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate();
     },
     confirmButton: {
-      label: t("remove"),
+      label: t("Remove"),
       props: {
         colorScheme: "red",
       },

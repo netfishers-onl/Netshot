@@ -1,7 +1,7 @@
 import api from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { DataTable, EmptyResult, Icon, Protected, Search } from "@/components";
-import { useDashboard } from "@/contexts";
+import { useAuth } from "@/contexts";
 import { usePagination, useToast } from "@/hooks";
 import { Level, SoftwareRule } from "@/types";
 import { getSoftwareLevelColor, search } from "@/utils";
@@ -26,7 +26,7 @@ import {
 } from "@chakra-ui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Row, createColumnHelper } from "@tanstack/react-table";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AddSoftwareRuleButton from "../components/AddSoftwareRuleButton";
 import EditSoftwareRuleButton from "../components/EditSoftwareRuleButton";
@@ -45,19 +45,17 @@ function ConfirmReorderDialog(props: ConfirmReorderDialogProps) {
   const { t } = useTranslation();
   const toast = useToast();
 
-  const mutation = useMutation(
-    () => {
+  const mutation = useMutation({
+    mutationFn: () => {
       return api.softwareRule.reorder(reorderState.id, reorderState.nextId);
     },
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      onSuccess() {
-        onClose();
-      },
-    }
-  );
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+    onSuccess() {
+      onClose();
+    },
+  });
 
   const confirm = useCallback(() => {
     mutation.mutate();
@@ -98,7 +96,7 @@ export default function ComplianceSoftwareRuleScreen() {
   const { t } = useTranslation();
   const pagination = usePagination();
   const toast = useToast();
-  const dashboard = useDashboard();
+  const { user } = useAuth();
   const disclosure = useDisclosure();
   const [reorderState, setReorderState] = useState({
     id: null,
@@ -106,52 +104,50 @@ export default function ComplianceSoftwareRuleScreen() {
   });
   const [data, setData] = useState<SoftwareRule[]>([]);
 
-  const { isLoading, refetch } = useQuery(
-    [QUERIES.SOFTWARE_RULE_LIST, pagination.query],
-    api.softwareRule.getAll,
-    {
-      onSuccess(res) {
-        setData(res);
-      },
-      select(res) {
-        return search(res, "deviceType", "family").with(pagination.query);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
+  const { data: rules, isPending, isSuccess, refetch } = useQuery({
+    queryKey: [QUERIES.SOFTWARE_RULE_LIST, pagination.query],
+    queryFn: api.softwareRule.getAll,
+    select: useCallback((res: SoftwareRule[]): SoftwareRule[] => {
+      return search(res, "deviceType", "family").with(pagination.query);
+    }, [pagination.query]),
+  });
+
+  useEffect(() => {
+    if (isSuccess) {
+      setData(rules);
     }
-  );
+  }, [isSuccess, rules]);
 
   const isDraggable = useMemo(() => {
-    return (
-      dashboard.isAdmin ||
-      dashboard.isExecuteReadWrite ||
-      dashboard.isOperator ||
-      dashboard.isReadWrite
-    );
-  }, [dashboard]);
+    return (user?.level || 0) >= Level.ReadWrite;
+  }, [user]);
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("targetGroup", {
         cell: (info) => info.getValue()?.name || t("[Any]"),
         header: t("Group"),
+        size: 10000,
       }),
       columnHelper.accessor("deviceType", {
         cell: (info) => info.getValue() || t("[Any]"),
         header: t("Device"),
+        size: 10000,
       }),
       columnHelper.accessor("family", {
         cell: (info) => info.getValue(),
         header: t("Device family"),
+        size: 10000,
       }),
       columnHelper.accessor("partNumber", {
         cell: (info) => info.getValue(),
         header: t("Part number"),
+        size: 10000,
       }),
       columnHelper.accessor("version", {
         cell: (info) => info.getValue(),
         header: t("Version"),
+        size: 10000,
       }),
       columnHelper.accessor("level", {
         cell: (info) => {
@@ -160,20 +156,14 @@ export default function ComplianceSoftwareRuleScreen() {
           return <Tag colorScheme={getSoftwareLevelColor(level)}>{level}</Tag>;
         },
         header: t("Level"),
+        size: 10000,
       }),
       columnHelper.accessor("id", {
         cell: (info) => {
           const rule = info.row.original;
 
           return (
-            <Protected
-              roles={[
-                Level.Admin,
-                Level.Operator,
-                Level.ReadWriteCommandOnDevice,
-                Level.ReadWrite,
-              ]}
-            >
+            <Protected minLevel={Level.ReadWrite}>
               <Stack direction="row" spacing="2">
                 <EditSoftwareRuleButton
                   rule={rule}
@@ -213,6 +203,8 @@ export default function ComplianceSoftwareRuleScreen() {
         meta: {
           align: "right",
         },
+        minSize: 80,
+        size: 200,
       }),
     ],
     [t]
@@ -263,15 +255,8 @@ export default function ComplianceSoftwareRuleScreen() {
             w="30%"
           />
           <Spacer />
-          <Protected
-            roles={[
-              Level.Admin,
-              Level.Operator,
-              Level.ReadWriteCommandOnDevice,
-              Level.ReadWrite,
-            ]}
-          >
-            <Skeleton isLoaded={!isLoading}>
+          <Protected minLevel={Level.ReadWrite}>
+            <Skeleton isLoaded={!isPending}>
               <AddSoftwareRuleButton
                 renderItem={(open) => (
                   <Button
@@ -286,7 +271,7 @@ export default function ComplianceSoftwareRuleScreen() {
             </Skeleton>
           </Protected>
         </Stack>
-        {isLoading ? (
+        {isPending ? (
           <Stack spacing="3">
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -299,7 +284,7 @@ export default function ComplianceSoftwareRuleScreen() {
               <DataTable
                 columns={columns}
                 data={data}
-                loading={isLoading}
+                loading={isPending}
                 draggable={isDraggable}
                 primaryKey="id"
                 onDragRow={onDrag}
@@ -328,12 +313,6 @@ export default function ComplianceSoftwareRuleScreen() {
           </>
         )}
       </Stack>
-
-      <ConfirmReorderDialog
-        reorderState={reorderState}
-        {...disclosure}
-        onClose={handleClose}
-      />
     </>
   );
 }

@@ -7,6 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Path, PathValue } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import Select, { SelectProps } from "./Select";
+import { useCallback } from "react";
+import { CredentialSet, Option } from "@/types";
 
 export default function CredentialSetSelect<T>(props: SelectProps<T>) {
   const { control, name, value, required, ...other } = props;
@@ -14,26 +16,21 @@ export default function CredentialSetSelect<T>(props: SelectProps<T>) {
   const { t } = useTranslation();
   const toast = useToast();
 
-  const { isLoading, data: options } = useQuery(
-    [QUERIES.CREDENTIAL_SET_LIST],
-    async () => {
-      return api.admin.getAllCredentialSet({
+  const { isPending, data: options } = useQuery({
+    queryKey: [QUERIES.CREDENTIAL_SET_LIST],
+    queryFn: async () => {
+      return api.admin.getAllCredentialSets({
         limit: 999,
         offset: 1,
       });
     },
-    {
-      select(sets) {
-        return sets.map((set) => ({
-          label: set?.name,
-          value: set?.id,
-        }));
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    select: useCallback((sets: CredentialSet[]): Option<number>[] => {
+      return sets.map((set) => ({
+        label: set?.name,
+        value: set?.id,
+      }));
+    }, []),
+  });
 
   return (
     <Select
@@ -43,7 +40,7 @@ export default function CredentialSetSelect<T>(props: SelectProps<T>) {
       defaultValue={value as PathValue<T, Path<T>>}
       control={control}
       required={required}
-      isLoading={isLoading}
+      isPending={isPending}
       noOptionsMessage={() => <Text>{t("No credential set found")}</Text>}
       options={options}
       {...other}

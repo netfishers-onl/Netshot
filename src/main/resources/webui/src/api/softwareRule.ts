@@ -24,21 +24,13 @@ async function update(
 }
 
 async function reorder(id: number, nextId: number) {
-  const req = await httpClient.rawRequest(
-    HttpMethod.Post,
-    nextId
-      ? `/softwarerules/${id}/sort?next=${nextId}`
-      : `/softwarerules/${id}/sort`
-  );
-  return req.status === HttpStatus.NoContent;
+  const url = nextId ? `/softwarerules/${id}/sort?next=${nextId}`
+      : `/softwarerules/${id}/sort`;
+  return httpClient.post(url, {});
 }
 
 async function remove(id: number) {
-  const req = await httpClient.rawRequest(
-    HttpMethod.Delete,
-    `/softwarerules/${id}`
-  );
-  return req.status === HttpStatus.NoContent;
+  return httpClient.delete(`/softwarerules/${id}`);
 }
 
 export default {

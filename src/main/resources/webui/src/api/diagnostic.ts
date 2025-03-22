@@ -12,7 +12,7 @@ async function getAll(queryParams: PaginationQueryParams = {}) {
   });
 }
 
-async function getAllResult(id: number, queryParams: PaginationQueryParams) {
+async function getAllResults(id: number, queryParams: PaginationQueryParams) {
   return httpClient.get<DiagnosticResult[]>(
     `/diagnostics/${id}/diagnosticresults`,
     {
@@ -75,16 +75,12 @@ async function disable(payload: Diagnostic) {
 }
 
 async function remove(id: number) {
-  const req = await httpClient.rawRequest(
-    HttpMethod.Delete,
-    `/diagnostics/${id}`
-  );
-  return req.status === HttpStatus.NoContent;
+  return httpClient.delete(`/diagnostics/${id}`);
 }
 
 export default {
   getAll,
-  getAllResult,
+  getAllResults,
   getById,
   create,
   update,

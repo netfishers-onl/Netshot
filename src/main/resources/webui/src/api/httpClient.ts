@@ -1,16 +1,17 @@
-import i18n from "@/i18n";
 import withQuery, { WithQueryOptions } from "with-query";
 
+import i18n from "@/i18n";
+
 export enum HttpMethod {
-  Get = "GET",
-  Post = "POST",
-  Put = "PUT",
-  Delete = "DELETE",
-  Patch = "PATCH",
+  GET = "GET",
+  POST = "POST",
+  PUT = "PUT",
+  DELETE = "DELETE",
+  PATCH = "PATCH",
 }
 
-type HttpPayload = {
-  body?: Record<string, unknown>;
+type HttpPayload<B> = {
+  body?: B;
   queryParams?: Record<string, unknown>;
   queryParamsOptions?: WithQueryOptions;
   headers?: Record<string, string>;
@@ -24,10 +25,11 @@ export type NetshotError = {
   title: string;
   description: string;
   code: NetshotErrorCode;
-  status: HttpStatus;
-};
+  response?: Response;
+}
 
 export enum NetshotErrorCode {
+  GenericServer = -1,
   DeviceNotFound = 142,
 }
 
@@ -36,8 +38,10 @@ export enum HttpStatus {
   Created = 201,
   NoContent = 204,
   BadRequest = 400,
-  NotFound = 404,
+  Unauthorized = 401,
   Forbidden = 403,
+  NotFound = 404,
+  PreconditionFailed = 412,
   InternalServerError = 500,
 }
 
@@ -45,100 +49,14 @@ export enum HttpEventType {
   Forbidden = "forbidden",
 }
 
-type HttpEventCallback = () => void;
-
-export const listeners = new Map<HttpEventType, HttpEventCallback>();
+export type HttpEventCallback = (url: string, params: RequestInit, response: Response) => void;
 
 function createHttpClient(opts: HttpClientOptions = {}) {
   const { baseUrl = "" } = opts;
+  const listeners = new Map<HttpEventType, HttpEventCallback>();
 
-  function prepareRequestParams<B extends HttpPayload["body"] = {}>(
-    method: HttpMethod,
-    url: string,
-    payload: HttpPayload = {}
-  ) {
-    const { body, queryParams, queryParamsOptions = {}, headers } = payload;
-
-    let requestHeaders = {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    };
-
-    if (queryParams) {
-      url = withQuery(url, queryParams, queryParamsOptions);
-    }
-
-    if (headers) {
-      requestHeaders = {
-        ...requestHeaders,
-        ...headers,
-      };
-    }
-
-    const requestOptions: RequestInit = {
-      method,
-      headers: requestHeaders,
-    };
-
-    if (body) {
-      requestOptions.body = JSON.stringify(body as B);
-    }
-
-    return {
-      options: requestOptions,
-      url: `${baseUrl}${url}`,
-    };
-  }
-
-  async function request<R, B extends HttpPayload["body"] = {}>(
-    method: HttpMethod,
-    url: string,
-    payload: HttpPayload = {}
-  ) {
-    const params = prepareRequestParams<B>(method, url, payload);
-    const req = await fetch(params.url, params.options);
-
-    if (req.status === HttpStatus.InternalServerError) {
-      throw {
-        title: i18n.t("Error"),
-        description: i18n.t("An error occurred"),
-      };
-    } else if (req.status === HttpStatus.NotFound) {
-      throw {
-        title: i18n.t("Error"),
-        description: i18n.t("Entity not found"),
-      };
-    }
-
-    if (req.status === HttpStatus.Forbidden) {
-      for (const [type, callback] of listeners) {
-        if (type === HttpEventType.Forbidden) {
-          callback();
-        }
-      }
-
-      return null;
-    }
-
-    const res = await req.json();
-
-    if (res?.errorMsg) {
-      throw {
-        title: i18n.t("Error"),
-        description: res?.errorMsg,
-        code: res?.errorCode,
-        status: req.status,
-      } as NetshotError;
-    }
-
-    return res as R;
-  }
-
-  async function rawRequest<B extends HttpPayload["body"] = {}>(
-    method: HttpMethod,
-    url: string,
-    payload: HttpPayload = {}
-  ) {
+  async function request<B = object>(
+      method: HttpMethod, url: string, payload: HttpPayload<B> = {}): Promise<Response> {
     const {
       body,
       queryParams,
@@ -146,8 +64,11 @@ function createHttpClient(opts: HttpClientOptions = {}) {
       headers = {},
     } = payload;
 
-    if (queryParams) {
-      url = withQuery(url, queryParams, queryParamsOptions);
+    const requestUrl = baseUrl +
+      (queryParams ? withQuery(url, queryParams, queryParamsOptions) : url);
+
+    if (!headers["Accept"]) {
+      headers["Accept"] = "application/json";
     }
 
     const requestOptions: RequestInit = {
@@ -155,75 +76,114 @@ function createHttpClient(opts: HttpClientOptions = {}) {
       headers,
     };
 
-    if (body) {
+    if (typeof body === "object") {
       requestOptions.body = JSON.stringify(body as B);
+      headers["Content-Type"] = "application/json";
+    }
+    else if (body && headers["Content-Type"]) {
+      requestOptions.body = body as string;
     }
 
-    const req = await fetch(`${baseUrl}${url}`, requestOptions);
+    const response = await fetch(requestUrl, requestOptions);
 
-    if (req.status === HttpStatus.InternalServerError) {
-      throw {
-        title: i18n.t("Error"),
-        description: i18n.t("An error occurred"),
-      };
-    }
-
-    if (req.status === HttpStatus.Forbidden) {
-      for (const [type, callback] of listeners) {
-        if (type === HttpEventType.Forbidden) {
-          callback();
+    if (!response.ok) {
+      if (response.status === HttpStatus.Forbidden) {
+        for (const [type, callback] of listeners) {
+          if (type === HttpEventType.Forbidden) {
+            callback(requestUrl, requestOptions, response);
+          }
         }
       }
-
-      return null;
+      try {
+        const result = await response.json();
+        if (result.errorMsg) {
+          throw {
+            title: i18n.t("Error"),
+            description: i18n.t(result.errorMsg),
+            code: result.errorCode,
+            response,
+          } as NetshotError;
+        }
+      }
+      catch (jsonErr) {
+        throw {
+          title: i18n.t("Error"),
+          description: i18n.t("Netshot server error"),
+          code: NetshotErrorCode.GenericServer,
+          response,
+        } as NetshotError;
+      }
     }
 
-    return req;
+    return response;
   }
 
   return {
     request,
-    rawRequest,
 
-    async get<R>(url: string, payload: HttpPayload = {}) {
-      return await request<R>(HttpMethod.Get, url, payload);
+    async get<R>(url: string, payload: HttpPayload<null> = {}) {
+      const response = await request<null>(HttpMethod.GET, url, payload);
+      try {
+        return await response.json() as R;
+      }
+      catch (e) {
+        return null;
+      }
     },
 
-    async post<R, B extends HttpPayload["body"]>(
+    async post<R, B>(
       url: string,
       body: B,
-      payload: Omit<HttpPayload, "body"> = {}
+      meta: Omit<HttpPayload<B>, "body"> = {}
     ) {
-      return await request<R, B>(HttpMethod.Post, url, {
-        ...payload,
+      const response = await request<B>(HttpMethod.POST, url, {
+        ...meta,
         body,
       });
+      try {
+        return await response.json() as R;
+      }
+      catch (e) {
+        return null;
+      }
     },
 
-    async put<R, B extends HttpPayload["body"]>(
+    async put<R, B>(
       url: string,
       body: B,
-      payload: Omit<HttpPayload, "body"> = {}
+      meta: Omit<HttpPayload<B>, "body"> = {}
     ) {
-      return await request<R, B>(HttpMethod.Put, url, {
-        ...payload,
+      const response = await request<B>(HttpMethod.PUT, url, {
+        ...meta,
         body,
       });
+      try {
+        return await response.json() as R;
+      }
+      catch (e) {
+        return null;
+      }
     },
 
-    async patch<R, B extends HttpPayload["body"]>(
+    async patch<R, B>(
       url: string,
       body: B,
-      payload: HttpPayload = {}
+      meta: HttpPayload<B> = {}
     ) {
-      return await request<R, B>(HttpMethod.Patch, url, {
-        ...payload,
+      const response = await request<B>(HttpMethod.PATCH, url, {
+        ...meta,
         body,
       });
+      try {
+        return await response.json() as R;
+      }
+      catch (e) {
+        return null;
+      }
     },
 
-    async delete<R>(url: string, payload: HttpPayload = {}) {
-      return await request<R>(HttpMethod.Delete, url, payload);
+    async delete(url: string, payload: HttpPayload<null> = {}) {
+      await request<null>(HttpMethod.DELETE, url, payload);
     },
 
     on(type: HttpEventType, callback: HttpEventCallback) {

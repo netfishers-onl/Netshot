@@ -25,12 +25,11 @@ export default function ReportHardwareSupportStatusScreen() {
   const toast = useToast();
   const {
     data: stats,
-    isLoading,
+    isPending,
     refetch,
-  } = useQuery([QUERIES.CONFIG_CHANGE], api.report.getAllHardwareSupportStat, {
-    onError(err: NetshotError) {
-      toast.error(err);
-    },
+  } = useQuery({
+    queryKey: [QUERIES.CONFIG_CHANGE],
+    queryFn: api.report.getAllHardwareSupportStats,
   });
 
   const config = useMemo(() => {
@@ -152,7 +151,7 @@ export default function ReportHardwareSupportStatusScreen() {
         },
       },
     } as ChartConfiguration;
-  }, [isLoading, stats, t, green500, bronze500, grey500]);
+  }, [isPending, stats, t, green500, bronze500, grey500]);
 
   const getFormattedCount = useCallback(
     (info: CellContext<GroupedHardwareSupportStat, number>) => {
@@ -251,7 +250,7 @@ export default function ReportHardwareSupportStatusScreen() {
           {t("Overview")}
         </Heading>
 
-        {isLoading ? (
+        {isPending ? (
           <Skeleton height="400px" />
         ) : (
           <Stack h="400px">
@@ -263,7 +262,7 @@ export default function ReportHardwareSupportStatusScreen() {
         <Heading as="h4" fontSize="2xl">
           {t("Milestone")}
         </Heading>
-        {isLoading ? (
+        {isPending ? (
           <Stack spacing="3">
             <Skeleton h="60px" />
             <Skeleton h="60px" />

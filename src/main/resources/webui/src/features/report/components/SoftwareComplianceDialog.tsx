@@ -5,8 +5,8 @@ import { useModalConfig } from "@/dialog";
 import { useToast } from "@/hooks";
 import {
   DeviceSoftwareLevel,
+  GroupDeviceBySoftwareLevel,
   GroupSoftwareComplianceStat,
-  SimpleDevice,
 } from "@/types";
 import { getSoftwareLevelColor } from "@/utils";
 import {
@@ -22,10 +22,10 @@ import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
 import { PropsWithChildren, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { QUERIES } from "../constants";
 
-const columnHelper = createColumnHelper<SimpleDevice>();
+const columnHelper = createColumnHelper<GroupDeviceBySoftwareLevel>();
 
 export type SoftwareComplianceDeviceListProps = {
   level: DeviceSoftwareLevel;
@@ -40,15 +40,11 @@ function SoftwareComplianceDeviceList(
   const toast = useToast();
   const modalConfig = useModalConfig();
 
-  const { data, isLoading } = useQuery(
-    [QUERIES.SOFTWARE_COMPLIANCE_DEVICES, level],
-    async () => api.report.getAllGroupDeviceBySoftwareLevel(groupId, level),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  const { data, isPending } = useQuery({
+    queryKey: [QUERIES.SOFTWARE_COMPLIANCE_DEVICES, level],
+    queryFn: async () =>
+        api.report.getAllGroupDevicesBySoftwareLevel(groupId, level),
+  });
 
   const columns = useMemo(
     () => [
@@ -56,7 +52,7 @@ function SoftwareComplianceDeviceList(
         cell: (info) => (
           <Text
             as={Link}
-            to={`/app/device/${info.row.original.id}/compliance`}
+            to={`/app/devices/${info.row.original.id}/compliance`}
             onClick={() => modalConfig.close()}
             textDecoration="underline"
           >
@@ -81,7 +77,7 @@ function SoftwareComplianceDeviceList(
     [t]
   );
 
-  return isLoading ? (
+  return isPending ? (
     <Stack spacing="3">
       <Skeleton h="60px"></Skeleton>
       <Skeleton h="60px"></Skeleton>
@@ -91,7 +87,7 @@ function SoftwareComplianceDeviceList(
   ) : (
     <Stack flex="1">
       {data?.length > 0 ? (
-        <DataTable columns={columns} data={data} loading={isLoading} />
+        <DataTable columns={columns} data={data} loading={isPending} />
       ) : (
         <EmptyResult
           title={t("There is no device")}
@@ -145,7 +141,8 @@ function SoftwareComplianteDeviceBox(props: SoftwareComplianteDeviceBoxProps) {
       {children}
       <Spacer />
       <Text>
-        {count} {t(count > 1 ? "devices" : "device")}
+        {/* TODO: pluralize */}
+        {t("{{count}} device(s)", { count })}
       </Text>
     </Stack>
   );

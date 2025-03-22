@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Plus } from "react-feather";
 import { useTranslation } from "react-i18next";
 import AddDomainButton from "../components/AddDomainButton";
@@ -30,46 +30,45 @@ export default function AdministrationDomainScreen() {
   const pagination = usePagination();
   const toast = useToast();
 
-  const { data = [], isLoading } = useQuery(
-    [
+  const { data = [], isPending } = useQuery({
+    queryKey: [
       QUERIES.ADMIN_DEVICE_DOMAINS,
       pagination.query,
       pagination.offset,
       pagination.limit,
     ],
-    async () => api.admin.getAllDomain(pagination),
-    {
-      select(res) {
-        return search(res, "name", "description", "ipAddress").with(
-          pagination.query
-        );
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    queryFn: async () => api.admin.getAllDomains(pagination),
+    select: useCallback((res: Domain[]): Domain[] => {
+      return search(res, "name", "description", "ipAddress").with(pagination.query);
+    }, [pagination.query]),
+  });
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("name", {
         cell: (info) => info.getValue(),
         header: t("Name"),
+        enableSorting: true,
+        size: 10000,
       }),
       columnHelper.accessor("description", {
         cell: (info) => info.getValue(),
         header: t("Description"),
+        enableSorting: true,
+        size: 20000,
       }),
       columnHelper.accessor("ipAddress", {
         cell: (info) => info.getValue(),
         header: t("Server address"),
+        enableSorting: true,
+        size: 10000,
       }),
       columnHelper.accessor("id", {
         cell: (info) => {
           const domain = info.row.original;
 
           return (
-            <Stack direction="row" spacing="2" justifyContent="end">
+            <Stack direction="row" spacing="0" justifyContent="end">
               <EditDomainButton
                 domain={domain}
                 renderItem={(open) => (
@@ -106,6 +105,8 @@ export default function AdministrationDomainScreen() {
         meta: {
           align: "right",
         },
+        minSize: 80,
+        size: 200,
       }),
     ],
     [t]
@@ -133,7 +134,7 @@ export default function AdministrationDomainScreen() {
             )}
           />
         </Stack>
-        {isLoading ? (
+        {isPending ? (
           <Stack spacing="3">
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -143,7 +144,7 @@ export default function AdministrationDomainScreen() {
         ) : (
           <>
             {data?.length > 0 ? (
-              <DataTable columns={columns} data={data} loading={isLoading} />
+              <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
                 title={t("There is no domain")}

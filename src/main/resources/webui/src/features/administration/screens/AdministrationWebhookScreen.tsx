@@ -6,6 +6,7 @@ import { Hook } from "@/types";
 import { search } from "@/utils";
 import {
   Button,
+  Checkbox,
   Heading,
   IconButton,
   Skeleton,
@@ -16,7 +17,7 @@ import {
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Plus } from "react-feather";
 import { useTranslation } from "react-i18next";
 import AddWebhookButton from "../components/AddWebhookButton";
@@ -31,52 +32,54 @@ export default function AdministrationApiTokenScreen() {
   const pagination = usePagination();
   const toast = useToast();
 
-  const { data = [], isLoading } = useQuery(
-    [
+  const { data = [], isPending } = useQuery({
+    queryKey: [
       QUERIES.ADMIN_WEBHOOKS,
       pagination.query,
       pagination.offset,
       pagination.limit,
     ],
-    async () => api.admin.getAllHook(pagination),
-    {
-      select(res) {
-        return search(res, "name").with(pagination.query);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    queryFn: async () => api.admin.getAllHooks(pagination),
+    select: useCallback((res: Hook[]): Hook[] => {
+      return search(res, "name").with(pagination.query);
+    }, [pagination.query]),
+  });
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("name", {
         cell: (info) => info.getValue(),
         header: t("Name"),
+        enableSorting: true,
+        size: 10000,
       }),
       columnHelper.accessor("enabled", {
         cell: (info) => {
           const enabled = info.getValue();
-
           return (
-            <Tag colorScheme={enabled ? "green" : "red"}>
-              {t(enabled ? "Enabled" : "Disabled")}
-            </Tag>
+            <Checkbox readOnly isChecked={enabled} />
           );
         },
         header: t("Enabled"),
+        enableSorting: true,
+        size: 100,
+        minSize: 100,
+        meta: {
+          align: "center",
+        },
       }),
       columnHelper.accessor("url", {
         cell: (info) => info.getValue(),
         header: t("URL"),
+        enableSorting: true,
+        size: 20000,
       }),
       columnHelper.accessor("id", {
         cell: (info) => {
           const webhook = info.row.original;
 
           return (
-            <Stack direction="row" spacing="2" justifyContent="end">
+            <Stack direction="row" spacing="0" justifyContent="end">
               <EditWebhookButton
                 webhook={webhook}
                 renderItem={(open) => (
@@ -109,10 +112,11 @@ export default function AdministrationApiTokenScreen() {
           );
         },
         header: "",
-        enableSorting: false,
         meta: {
           align: "right",
         },
+        minSize: 80,
+        size: 200,
       }),
     ],
     [t]
@@ -140,7 +144,7 @@ export default function AdministrationApiTokenScreen() {
             )}
           />
         </Stack>
-        {isLoading ? (
+        {isPending ? (
           <Stack spacing="3">
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -150,7 +154,7 @@ export default function AdministrationApiTokenScreen() {
         ) : (
           <>
             {data?.length > 0 ? (
-              <DataTable columns={columns} data={data} loading={isLoading} />
+              <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
                 title={t("There is no webhook")}

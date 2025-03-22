@@ -31,27 +31,26 @@ export default function AddDomainButton(props: AddDomainButtonProps) {
     },
   });
 
-  const mutation = useMutation(
-    async (payload: Partial<Domain>) => api.admin.createDomain(payload),
-    {
-      onSuccess(res) {
-        dialog.close();
-        form.reset();
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<Domain>) =>
+        api.admin.createDomain(payload),
+    onSuccess(res) {
+      dialog.close();
+      form.reset();
 
-        toast.success({
-          title: t("Success"),
-          description: t("Domain {{name}} has been successfully created", {
-            name: res?.name,
-          }),
-        });
+      toast.success({
+        title: t("Success"),
+        description: t("Domain {{name}} has been successfully created", {
+          name: res?.name,
+        }),
+      });
 
-        queryClient.invalidateQueries([QUERIES.ADMIN_DEVICE_DOMAINS]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_DEVICE_DOMAINS] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: DomainForm) => {
@@ -68,7 +67,7 @@ export default function AddDomainButton(props: AddDomainButtonProps) {
     title: t("Create domain"),
     description: <AdministrationDomainForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

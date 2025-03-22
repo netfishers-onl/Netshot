@@ -30,7 +30,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { useCallback, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { QUERIES } from "../constants";
 
 type FilterForm = {
@@ -63,13 +63,12 @@ export default function ReportDeviceAccessFailure() {
     control: form.control,
     name: "days",
   });
-
   const {
     data = [],
-    isLoading,
+    isPending,
     refetch,
-  } = useQuery(
-    [
+  } = useQuery({
+    queryKey: [
       QUERIES.DEVICE_ACCESS_FAILURE,
       pagination.query,
       pagination.offset,
@@ -77,7 +76,7 @@ export default function ReportDeviceAccessFailure() {
       domain,
       days,
     ],
-    async () => {
+    queryFn: async () => {
       const queryParams: ReportDeviceAccessFailureQueryParams = {
         ...pagination,
         days,
@@ -87,17 +86,12 @@ export default function ReportDeviceAccessFailure() {
         queryParams.domain = domain;
       }
 
-      return api.report.getAllDeviceAccessFailure(queryParams);
+      return api.report.getAllDeviceAccessFailures(queryParams);
     },
-    {
-      select(res) {
-        return search(res, "name").with(pagination.query);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    select: useCallback((res: DeviceAccessFailure[]): DeviceAccessFailure[] => {
+      return search(res, "name").with(pagination.query);
+    }, [pagination.query]),
+  });
 
   const columns = useMemo(
     () => [
@@ -130,7 +124,7 @@ export default function ReportDeviceAccessFailure() {
               variant="ghost"
               colorScheme="green"
               as={Link}
-              to={`/app/device/${info.getValue()}/general`}
+              to={`/app/devices/${info.getValue()}/general`}
               aria-label={t("Go to device")}
               icon={<Icon name="arrowRight" />}
             />
@@ -152,7 +146,7 @@ export default function ReportDeviceAccessFailure() {
 
   const navigateToDevice = useCallback(
     (row: DeviceAccessFailure) => {
-      navigate(`/app/device/${row.id}/general`);
+      navigate(`/app/devices/${row.id}/general`);
     },
     [navigate]
   );
@@ -206,7 +200,7 @@ export default function ReportDeviceAccessFailure() {
             {t("Refresh")}
           </Button>
         </Stack>
-        {isLoading ? (
+        {isPending ? (
           <Stack spacing="3">
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -220,7 +214,7 @@ export default function ReportDeviceAccessFailure() {
                 zIndex={0}
                 columns={columns}
                 data={data}
-                loading={isLoading}
+                loading={isPending}
                 onClickRow={navigateToDevice}
               />
             ) : (

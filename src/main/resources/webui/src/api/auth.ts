@@ -1,5 +1,13 @@
 import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
-import { SigninPayload, SigninResponse } from "./types";
+import { ServerInfoResponse, SigninPayload, SigninResponse } from "./types";
+
+
+/**
+ * Netshot server info (version, etc.)
+ */
+async function serverInfo() {
+  return await httpClient.get<ServerInfoResponse>("/serverinfo");
+}
 
 /**
  * Sign in user
@@ -12,11 +20,11 @@ async function signin(payload: SigninPayload) {
  * Sign out current user
  */
 async function signout(id: number) {
-  const req = await httpClient.rawRequest(HttpMethod.Delete, `/user/${id}`);
-  return req.status === HttpStatus.NoContent;
+  return httpClient.delete(`/user/${id}`);
 }
 
 export default {
+  serverInfo,
   signin,
   signout,
 };

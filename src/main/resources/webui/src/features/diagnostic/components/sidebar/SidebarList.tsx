@@ -19,16 +19,17 @@ export default function SidebarList() {
   const toast = useToast();
   const { t } = useTranslation();
   const ctx = useDiagnosticSidebar();
+
   const {
     data,
-    isLoading,
+    isPending,
     isSuccess,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery(
-    [QUERIES.DIAGNOSTIC_LIST],
-    async ({ pageParam = 0 }) => {
+  } = useInfiniteQuery({
+    queryKey: [QUERIES.DIAGNOSTIC_LIST],
+    queryFn: async ({ pageParam }) => {
       const params = {
         limit: LIMIT,
         offset: pageParam,
@@ -36,15 +37,11 @@ export default function SidebarList() {
 
       return api.diagnostic.getAll(params);
     },
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      getNextPageParam(lastPage, allPages) {
-        return lastPage.length === LIMIT ? allPages.length + 1 : undefined;
-      },
-    }
-  );
+    initialPageParam: 0,
+    getNextPageParam(lastPage, allPages) {
+      return lastPage?.length === LIMIT ? allPages.length + 1 : undefined;
+    },
+  });
 
   useEffect(() => {
     if (inView && hasNextPage) {
@@ -52,7 +49,7 @@ export default function SidebarList() {
     }
   }, [inView, fetchNextPage, hasNextPage]);
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <Stack alignItems="center" justifyContent="center" py="6" flex="1">
         <Spinner />
@@ -60,7 +57,7 @@ export default function SidebarList() {
     );
   }
 
-  if (data.pages?.[0]?.length === 0) {
+  if (data?.pages?.[0]?.length === 0) {
     return (
       <Center flex="1">
         <Text>{t("No diagnostic found")}</Text>

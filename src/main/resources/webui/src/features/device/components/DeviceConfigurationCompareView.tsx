@@ -4,10 +4,10 @@ import { EmptyResult } from "@/components";
 import ConfigurationCompareEditor from "@/components/ConfigurationCompareEditor";
 import Search from "@/components/Search";
 import { useToast } from "@/hooks";
-import { DeviceConfig } from "@/types";
+import { Config, DeviceConfig } from "@/types";
 import { Skeleton, Stack } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { QUERIES } from "../constants";
 import DeviceConfigurationCompareItem from "./DeviceConfigurationCompareItem";
@@ -29,21 +29,20 @@ export default function DeviceConfigurationCompareView(
     limit: 40,
     offset: 1,
   });
-  const { data: configs, isLoading } = useQuery(
-    [QUERIES.DEVICE_CONFIGS, query, pagination.offset, +id],
-    async () => api.device.getAllConfigById(+id, pagination),
-    {
-      select(data) {
-        return data.filter((item) => item?.id !== config?.id);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      onSuccess(data) {
-        setSelected(data?.[0]);
-      },
+
+  const { data: configs, isPending, isSuccess } = useQuery({
+    queryKey: [QUERIES.DEVICE_CONFIGS, query, pagination.offset, +id],
+    queryFn: async () => api.device.getAllConfigsById(+id, pagination),
+    select: useCallback((data: DeviceConfig[]): DeviceConfig[] => {
+      return data.filter((item) => item?.id !== config?.id);
+    }, []),
+  });
+
+  useEffect(() => {
+    if (isSuccess) {
+      setSelected(configs?.[0]);
     }
-  );
+  }, [isSuccess, configs]);
 
   const onQuery = useCallback((value: string) => {
     setQuery(value);
@@ -62,7 +61,7 @@ export default function DeviceConfigurationCompareView(
           placeholder={t("Search...")}
         />
         <Stack spacing="2" overflow="auto" flex="1">
-          {isLoading ? (
+          {isPending ? (
             <Stack spacing="3">
               <Skeleton h="60px"></Skeleton>
               <Skeleton h="60px"></Skeleton>

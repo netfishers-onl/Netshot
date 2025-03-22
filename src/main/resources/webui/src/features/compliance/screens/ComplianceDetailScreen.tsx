@@ -22,7 +22,7 @@ import {
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import DisableRuleButton from "../components/DisableRuleButton";
 import EditRuleButton from "../components/EditRuleButton";
 import EditRuleExemptedDeviceButton from "../components/EditRuleExemptedDeviceButton";
@@ -36,24 +36,19 @@ export default function ComplianceDetailScreen() {
   const { t } = useTranslation();
   const toast = useToast();
   const navigate = useNavigate();
-  const { data: rule, isLoading } = useQuery(
-    [QUERIES.RULE_DETAIL, +policyId, +ruleId],
-    async () => api.rule.getById(+policyId, +ruleId),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-        navigate("/app/compliance");
-      },
-    }
-  );
+
+  const { data: rule, isPending } = useQuery({
+    queryKey: [QUERIES.RULE_DETAIL, +policyId, +ruleId],
+    queryFn: async () => api.rule.getById(+policyId, +ruleId),
+  });
 
   const tagBorderColor = useColor("grey.200");
 
   return (
-    <RuleProvider rule={rule} isLoading={isLoading}>
+    <RuleProvider rule={rule} isLoading={isPending}>
       <Stack p="9" spacing="9" flex="1">
         <Flex alignItems="center">
-          <Skeleton isLoaded={!isLoading}>
+          <Skeleton isLoaded={!isPending}>
             <Stack direction="row" spacing="3" alignItems="center">
               <Heading as="h1" fontSize="4xl">
                 {rule?.name ?? "Rule title"}
@@ -73,7 +68,7 @@ export default function ComplianceDetailScreen() {
 
           <Spacer />
           <Stack direction="row" spacing="3">
-            <Skeleton isLoaded={!isLoading}>
+            <Skeleton isLoaded={!isPending}>
               {rule && (
                 <EditRuleButton
                   key={rule?.id}
@@ -89,7 +84,7 @@ export default function ComplianceDetailScreen() {
             </Skeleton>
 
             <Menu>
-              <Skeleton isLoaded={!isLoading}>
+              <Skeleton isLoaded={!isPending}>
                 <MenuButton
                   as={Button}
                   rightIcon={<Icon name="moreHorizontal" />}
@@ -169,7 +164,7 @@ export default function ComplianceDetailScreen() {
               <Box flex="0 0 auto" w="200px">
                 <Text color="grey.400">{t("Device type")}</Text>
               </Box>
-              <Skeleton isLoaded={!isLoading}>
+              <Skeleton isLoaded={!isPending}>
                 <Text>{rule?.deviceDriverDescription ?? "N/A"}</Text>
               </Skeleton>
             </Flex>
@@ -177,7 +172,7 @@ export default function ComplianceDetailScreen() {
               <Box flex="0 0 auto" w="200px">
                 <Text color="grey.400">{t("Field to check")}</Text>
               </Box>
-              <Skeleton isLoaded={!isLoading}>
+              <Skeleton isLoaded={!isPending}>
                 <Text>{rule?.field ?? "N/A"}</Text>
               </Skeleton>
             </Flex>
@@ -185,7 +180,7 @@ export default function ComplianceDetailScreen() {
               <Box flex="0 0 auto" w="200px">
                 <Text color="grey.400">{t("Context")}</Text>
               </Box>
-              <Skeleton isLoaded={!isLoading}>
+              <Skeleton isLoaded={!isPending}>
                 <Text fontFamily="mono">{rule?.context ?? "N/A"}</Text>
               </Skeleton>
             </Flex>
@@ -193,7 +188,7 @@ export default function ComplianceDetailScreen() {
               <Box flex="0 0 auto" w="200px">
                 <Text color="grey.400">{t("Must not contain")}</Text>
               </Box>
-              <Skeleton isLoaded={!isLoading}>
+              <Skeleton isLoaded={!isPending}>
                 <Text fontFamily="mono">{rule?.text ?? "N/A"}</Text>
               </Skeleton>
             </Flex>

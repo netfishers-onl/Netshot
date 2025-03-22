@@ -8,9 +8,9 @@ import { formatDate, search } from "@/utils";
 import { Skeleton, Spacer, Stack, Switch, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { QUERIES } from "../constants";
 
 const columnHelper = createColumnHelper<DeviceModule>();
@@ -25,8 +25,8 @@ export default function DeviceModuleScreen() {
   const pagination = usePagination();
   const [history, setHistory] = useState(false);
 
-  const { data = [], isLoading } = useQuery(
-    [
+  const { data = [], isPending } = useQuery({
+    queryKey: [
       QUERIES.DEVICE_MODULES,
       params.id,
       pagination.query,
@@ -34,22 +34,15 @@ export default function DeviceModuleScreen() {
       pagination.limit,
       history,
     ],
-    async () =>
-      api.device.getAllModuleById(+params.id, {
+    queryFn: async () =>
+      api.device.getAllModulesById(+params.id, {
         ...pagination,
         history,
       }),
-    {
-      select(res) {
-        return search(res, "serialNumber", "partNumber", "slot").with(
-          pagination.query
-        );
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    select: useCallback((res: DeviceModule[]): DeviceModule[] => {
+      return search(res, "serialNumber", "partNumber", "slot").with(pagination.query);
+    }, [pagination.query]),
+  });
 
   const columns = useMemo(() => {
     const columns = [
@@ -108,7 +101,7 @@ export default function DeviceModuleScreen() {
           onChange={() => setHistory((prev) => !prev)}
         />
       </Stack>
-      {isLoading ? (
+      {isPending ? (
         <Stack spacing="3">
           <Skeleton h="60px"></Skeleton>
           <Skeleton h="60px"></Skeleton>
@@ -118,7 +111,7 @@ export default function DeviceModuleScreen() {
       ) : (
         <>
           {data?.length > 0 ? (
-            <DataTable columns={columns} data={data} loading={isLoading} />
+            <DataTable columns={columns} data={data} loading={isPending} />
           ) : (
             <EmptyResult
               title={t("There is no module")}

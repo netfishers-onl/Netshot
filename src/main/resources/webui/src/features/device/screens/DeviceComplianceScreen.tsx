@@ -1,3 +1,10 @@
+import { Button, Heading, Stack, Tag, Text } from "@chakra-ui/react";
+import { useQuery } from "@tanstack/react-query";
+import { createColumnHelper } from "@tanstack/react-table";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router";
+
 import api from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { AlertBox, DataTable, Protected } from "@/components";
@@ -10,15 +17,10 @@ import {
   Level,
 } from "@/types";
 import { formatDate, getSoftwareLevelColor } from "@/utils";
-import { Button, Heading, Stack, Tag, Text } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+
 import DeviceComplianceButton from "../components/DeviceComplianceButton";
 import { QUERIES } from "../constants";
-import { useDevice } from "../contexts/DeviceProvider";
+import { useDevice } from "../contexts/device";
 
 const columnHelper = createColumnHelper<DeviceComplianceResult>();
 
@@ -27,15 +29,11 @@ export default function DeviceComplianceScreen() {
   const { device } = useDevice();
   const toast = useToast();
   const params = useParams<{ id: string }>();
-  const { data = [], isLoading } = useQuery(
-    [QUERIES.DEVICE_COMPLIANCE, params?.id],
-    async () => api.device.getComplianceResultById(+params?.id),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+
+  const { data = [], isPending } = useQuery({
+    queryKey: [QUERIES.DEVICE_COMPLIANCE, params?.id],
+    queryFn: async () => api.device.getComplianceResultById(+params?.id),
+  });
 
   const columns = useMemo(
     () => [
@@ -118,25 +116,6 @@ export default function DeviceComplianceScreen() {
           </AlertBox>
         </Stack>
         <Stack spacing="4">
-          <Heading size="md">{t("Configuration")}</Heading>
-          {data?.length > 0 ? (
-            <>
-              <AlertBox type={device?.compliant ? "success" : "error"}>
-                {device?.compliant ? (
-                  <Text>{t("The device is compliant with all policies")}</Text>
-                ) : (
-                  <Text>
-                    {t("The device is not in compliance with some policies")}
-                  </Text>
-                )}
-              </AlertBox>
-              <DataTable columns={columns} data={data} loading={isLoading} />
-            </>
-          ) : (
-            <Text>{t("There is no compliance result for this device")}</Text>
-          )}
-        </Stack>
-        <Stack spacing="4">
           <Heading size="md">{t("Hardware")}</Heading>
           <Stack spacing="3">
             <AlertBox type={device?.endOfSale ? "warning" : "success"}>
@@ -179,9 +158,26 @@ export default function DeviceComplianceScreen() {
             </AlertBox>
           </Stack>
         </Stack>
-        <Protected
-          roles={[Level.Admin, Level.Operator, Level.ReadWriteCommandOnDevice]}
-        >
+        <Stack spacing="4">
+          <Heading size="md">{t("Configuration")}</Heading>
+          {data?.length > 0 ? (
+            <>
+              <AlertBox type={device?.compliant ? "success" : "error"}>
+                {device?.compliant ? (
+                  <Text>{t("The device is compliant with all policies")}</Text>
+                ) : (
+                  <Text>
+                    {t("The device is not in compliance with some policies")}
+                  </Text>
+                )}
+              </AlertBox>
+              <DataTable columns={columns} data={data} loading={isPending} />
+            </>
+          ) : (
+            <Text>{t("There is no compliance result for this device")}</Text>
+          )}
+        </Stack>
+        <Protected minLevel={Level.Operator}>
           <DeviceComplianceButton
             devices={[device]}
             renderItem={(open) => (

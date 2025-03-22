@@ -20,7 +20,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, useNavigate, useParams } from "react-router-dom";
+import { Outlet, useNavigate, useParams } from "react-router";
 import {
   DeviceDisableButton,
   DeviceEditButton,
@@ -37,20 +37,15 @@ export default function DeviceDetailScreen() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const toast = useToast();
+
   const {
     data: device,
-    isLoading,
+    isPending,
     refetch,
-  } = useQuery(
-    [QUERIES.DEVICE_DETAIL, +id],
-    async () => api.device.getById(+id),
-    {
-      onError(err: NetshotError) {
-        navigate("/app/device");
-        toast.error(err);
-      },
-    }
-  );
+  } = useQuery({
+    queryKey: [QUERIES.DEVICE_DETAIL, +id],
+    queryFn: async () => api.device.getById(+id),
+  });
 
   const refresh = useCallback(async () => {
     const toastId = toast.loading({
@@ -67,11 +62,11 @@ export default function DeviceDetailScreen() {
   );
 
   return (
-    <DeviceProvider device={device} isLoading={isLoading}>
+    <DeviceProvider device={device} isLoading={isPending}>
       <Stack spacing="0" flex="1" overflow="auto">
         <Stack spacing="5" px="9" pt="9">
           <Flex alignItems="center">
-            <Skeleton isLoaded={!isLoading}>
+            <Skeleton isLoaded={!isPending}>
               <Heading as="h1" fontSize="4xl">
                 {device?.name ?? "Network device title"}
               </Heading>
@@ -79,19 +74,16 @@ export default function DeviceDetailScreen() {
 
             <Spacer />
             <Stack direction="row" spacing="3">
-              <Protected
-                roles={[
-                  Level.Admin,
-                  Level.Operator,
-                  Level.ReadWriteCommandOnDevice,
-                  Level.ReadWrite,
-                ]}
-              >
-                <Skeleton isLoaded={!isLoading}>
+             <Protected minLevel={Level.Operator}>
+                <Skeleton isLoaded={!isPending}>
                   <DeviceSnapshotButton
                     devices={[device]}
                     renderItem={(open) => (
-                      <Button variant="primary" onClick={open}>
+                      <Button
+                        variant="primary"
+                        onClick={open}
+                        leftIcon={<Icon name="camera" />}
+                      >
                         {t("Take snapshot")}
                       </Button>
                     )}
@@ -100,7 +92,7 @@ export default function DeviceDetailScreen() {
               </Protected>
 
               <Menu>
-                <Skeleton isLoaded={!isLoading}>
+                <Skeleton isLoaded={!isPending}>
                   <MenuButton
                     as={Button}
                     rightIcon={<Icon name="moreHorizontal" />}
@@ -112,13 +104,7 @@ export default function DeviceDetailScreen() {
                 <MenuList>
                   {device && (
                     <>
-                      <Protected
-                        roles={[
-                          Level.Admin,
-                          Level.Operator,
-                          Level.ReadWriteCommandOnDevice,
-                        ]}
-                      >
+                      <Protected minLevel={Level.ExecureReadWrite}>
                         <DeviceRunScriptButton
                           devices={[device]}
                           renderItem={(open) => (
@@ -131,14 +117,7 @@ export default function DeviceDetailScreen() {
                           )}
                         />
                       </Protected>
-                      <Protected
-                        roles={[
-                          Level.Admin,
-                          Level.Operator,
-                          Level.ReadWriteCommandOnDevice,
-                          Level.ReadWrite,
-                        ]}
-                      >
+                      <Protected minLevel={Level.ReadWrite}>
                         <DeviceEditButton
                           device={device}
                           renderItem={(open) => (
@@ -155,7 +134,7 @@ export default function DeviceDetailScreen() {
                             devices={[device]}
                             renderItem={(open) => (
                               <MenuItem
-                                icon={<Icon name="power" />}
+                                icon={<Icon name="zap" />}
                                 onClick={open}
                               >
                                 {t("Enable")}
@@ -167,7 +146,7 @@ export default function DeviceDetailScreen() {
                             devices={[device]}
                             renderItem={(open) => (
                               <MenuItem
-                                icon={<Icon name="power" />}
+                                icon={<Icon name="zapOff" />}
                                 onClick={open}
                               >
                                 {t("Disable")}
@@ -184,14 +163,7 @@ export default function DeviceDetailScreen() {
                         {t("Refresh")}
                       </MenuItem>
 
-                      <Protected
-                        roles={[
-                          Level.Admin,
-                          Level.Operator,
-                          Level.ReadWriteCommandOnDevice,
-                          Level.ReadWrite,
-                        ]}
-                      >
+                      <Protected minLevel={Level.ReadWrite}>
                         <DeviceRemoveButton
                           devices={[device]}
                           renderItem={(open) => (
@@ -213,12 +185,12 @@ export default function DeviceDetailScreen() {
 
           <RouterTabs>
             <RouterTab to="general">{t("General")}</RouterTab>
-            <RouterTab to="configuration">{t("Configuration")}</RouterTab>
-            <RouterTab to="interface">{t("Interfaces")}</RouterTab>
-            <RouterTab to="module">{t("Modules")}</RouterTab>
-            <RouterTab to="diagnostic">{t("Diagnostics")}</RouterTab>
+            <RouterTab to="configurations">{t("Configuration")}</RouterTab>
+            <RouterTab to="interfaces">{t("Interfaces")}</RouterTab>
+            <RouterTab to="modules">{t("Modules")}</RouterTab>
+            <RouterTab to="diagnostics">{t("Diagnostics")}</RouterTab>
             <RouterTab to="compliance">{t("Compliance")}</RouterTab>
-            <RouterTab to="task">{t("Tasks")}</RouterTab>
+            <RouterTab to="tasks">{t("Tasks")}</RouterTab>
           </RouterTabs>
         </Stack>
         <Stack flex="1" overflow="auto" p="9">

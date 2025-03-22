@@ -100,33 +100,31 @@ function AddRuleExemptedDeviceButton(props: AddRuleExemptedDeviceButtonProps) {
     },
   });
 
-  const mutation = useMutation(
-    async (payload: RuleStateChangePayload) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: RuleStateChangePayload) =>
       api.rule.updateExemptedDevice(rule.id, payload),
-    {
-      onSuccess(res) {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t(
-            "Rule {{name}} exempted devices has been successfully updated",
-            {
-              name: res?.name,
-            }
-          ),
-        });
+    onSuccess(res) {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t(
+          "Rule {{name}} exempted devices has been successfully updated",
+          {
+            name: res?.name,
+          }
+        ),
+      });
 
-        queryClient.invalidateQueries([QUERIES.POLICY_RULE_LIST, policyId]);
-        queryClient.invalidateQueries([QUERIES.RULE_DETAIL, policyId, res.id]);
-        queryClient.invalidateQueries([QUERIES.RULE_EXEMPTED_DEVICES]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_RULE_LIST, policyId] });
+      queryClient.invalidateQueries({ queryKey: [QUERIES.RULE_DETAIL, policyId, res.id] });
+      queryClient.invalidateQueries({ queryKey: [QUERIES.RULE_EXEMPTED_DEVICES] });
 
-        form.reset();
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      form.reset();
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: Form) => {
@@ -152,7 +150,7 @@ function AddRuleExemptedDeviceButton(props: AddRuleExemptedDeviceButtonProps) {
       <AddRuleExemptedDeviceForm exemptedDevices={exemptedDevices} />
     ),
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {
@@ -190,31 +188,24 @@ export default function EditRuleExemptedDeviceButton(
   const queryClient = useQueryClient();
   const [query, setQuery] = useState<string>("");
 
-  const { data: exemptedDevices, isLoading } = useQuery(
-    [QUERIES.RULE_EXEMPTED_DEVICES, rule?.id, query],
-    () => api.rule.getAllExemptedDevice(rule?.id),
-    {
-      select(res) {
-        return search(res, "name").with(query);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  const { data: exemptedDevices, isPending } = useQuery({
+    queryKey: [QUERIES.RULE_EXEMPTED_DEVICES, rule?.id, query],
+    queryFn: () => api.rule.getAllExemptedDevices(rule?.id),
+    select: useCallback((res: ExemptedDevice[]): ExemptedDevice[] => {
+      return search(res, "name").with(query);
+    }, [query]),
+  });
 
-  const updateMutation = useMutation(
-    async (payload: RuleStateChangePayload) =>
+  const updateMutation = useMutation({
+    mutationFn: async (payload: RuleStateChangePayload) =>
       api.rule.updateExemptedDevice(rule.id, payload),
-    {
-      onSuccess() {
-        queryClient.invalidateQueries([QUERIES.RULE_EXEMPTED_DEVICES]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: [QUERIES.RULE_EXEMPTED_DEVICES] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const open = useCallback(
     (evt: MouseEvent) => {
@@ -283,7 +274,7 @@ export default function EditRuleExemptedDeviceButton(
                   exemptedDevices={exemptedDevices}
                 />
               </Stack>
-              {isLoading ? (
+              {isPending ? (
                 <Flex py="4" justifyContent="center" alignContent="center">
                   <Spinner />
                 </Flex>

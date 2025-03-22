@@ -7,7 +7,7 @@ import { Text } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MouseEvent, ReactElement } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { QUERIES } from "../constants";
 
 export type DiagnosticRemoveButtonProps = {
@@ -24,22 +24,20 @@ export default function DiagnosticRemoveButton(
   const toast = useToast();
   const navigate = useNavigate();
 
-  const mutation = useMutation(
-    async () => api.diagnostic.remove(diagnostic?.id),
-    {
-      onSuccess() {
-        navigate("/app/diagnostic");
+  const mutation = useMutation({
+    mutationFn: async () => api.diagnostic.remove(diagnostic?.id),
+    onSuccess() {
+      navigate("/app/diagnostics");
 
-        queryClient.invalidateQueries([QUERIES.DIAGNOSTIC_LIST]);
-        queryClient.invalidateQueries([QUERIES.DIAGNOSTIC_SEARCH_LIST]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_LIST] });
+      queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_SEARCH_LIST] });
 
-        dialog.close();
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      dialog.close();
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const dialog = Dialog.useConfirm({
     title: t("Remove diagnostic"),
@@ -50,12 +48,12 @@ export default function DiagnosticRemoveButton(
         })}
       </Text>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate();
     },
     confirmButton: {
-      label: t("remove"),
+      label: t("Remove"),
       props: {
         colorScheme: "red",
       },

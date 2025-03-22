@@ -21,7 +21,7 @@ export default function GroupDeviceBox(props: GroupDeviceBoxProps) {
     >
       <Stack spacing="0">
         <Text fontSize="xs" color="grey.400">
-          {device?.mgmtAddress?.ip}
+          {device?.mgmtAddress}
         </Text>
         <Text fontWeight="medium">{device?.name}</Text>
       </Stack>

@@ -6,7 +6,7 @@ import { AddGroupButton, GroupOrFolderItem } from "@/components/group";
 import { QUERIES } from "@/constants";
 import { usePagination, useToast } from "@/hooks";
 import { Group, Level } from "@/types";
-import { createFoldersFromGroups, isGroup } from "@/utils";
+import { createFoldersFromGroups, Folder, isGroup } from "@/utils";
 import {
   Divider,
   Flex,
@@ -19,8 +19,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useDeviceSidebar } from "../../contexts/DeviceSidebarProvider";
+import { useLocation, useNavigate } from "react-router";
+import { useDeviceSidebar } from "../../contexts/device-sidebar";
 
 export default function DeviceSidebarGroup() {
   const scrollContainer = useRef<HTMLDivElement>(null);
@@ -32,18 +32,13 @@ export default function DeviceSidebarGroup() {
   const { t } = useTranslation();
   const pagination = usePagination();
 
-  const { data: items, isLoading } = useQuery(
-    [QUERIES.DEVICE_GROUPS],
-    async () => api.group.getAll(pagination),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      select(groups) {
-        return createFoldersFromGroups(groups);
-      },
-    }
-  );
+  const { data: items, isPending } = useQuery({
+    queryKey: [QUERIES.DEVICE_GROUPS],
+    queryFn: async () => api.group.getAll(pagination),
+    select: useCallback((groups: Group[]): (Group | Folder)[] => {
+      return createFoldersFromGroups(groups);
+    }, []),
+  });
 
   useLayoutEffect(() => {
     if (!scrollContainer?.current) return;
@@ -97,9 +92,7 @@ export default function DeviceSidebarGroup() {
         <Heading fontSize="md" fontWeight="medium">
           {t("Groups")}
         </Heading>
-        <Protected
-          roles={[Level.Admin, Level.Operator, Level.ReadWriteCommandOnDevice]}
-        >
+        <Protected minLevel={Level.ReadWrite}>
           <AddGroupButton
             renderItem={(open) => (
               <Tooltip label={t("Add group")}>
@@ -122,7 +115,7 @@ export default function DeviceSidebarGroup() {
         height="200px"
         ref={scrollContainer}
       >
-        {isLoading ? (
+        {isPending ? (
           <Stack spacing="3" pb="6">
             <Skeleton height="36px" />
             <Skeleton height="36px" />
@@ -134,6 +127,7 @@ export default function DeviceSidebarGroup() {
             {items?.map((item) => (
               <GroupOrFolderItem
                 item={item}
+                showMenu
                 key={isGroup(item) ? item?.id : item?.name}
                 onGroupSelect={onGroupSelect}
               />

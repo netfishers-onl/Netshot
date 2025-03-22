@@ -1,4 +1,3 @@
-import { useColor } from "@/theme";
 import { Box, BoxProps } from "@chakra-ui/react";
 import NativeChart, {
   ChartConfiguration,
@@ -6,6 +5,8 @@ import NativeChart, {
 } from "chart.js/auto";
 import mergeWith from "lodash.mergewith";
 import { useLayoutEffect, useMemo, useRef } from "react";
+
+import { useColor } from "@/theme";
 
 export type ChartProps<T extends keyof ChartTypeRegistry = "line"> = {
   config: ChartConfiguration<T>;

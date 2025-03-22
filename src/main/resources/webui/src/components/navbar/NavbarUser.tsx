@@ -1,10 +1,9 @@
-import api from "@/api";
-import { useDashboard } from "@/contexts";
-import { Dialog } from "@/dialog";
-import useToast from "@/hooks/useToast";
 import {
+  Alert,
   Avatar,
   Button,
+  ButtonGroup,
+  ListItem,
   Menu,
   MenuButton,
   MenuItem,
@@ -12,13 +11,126 @@ import {
   Spacer,
   Stack,
   Text,
+  UnorderedList,
 } from "@chakra-ui/react";
-import { useMutation } from "@tanstack/react-query";
-import { MouseEvent, ReactElement, useCallback } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { MouseEvent, ReactElement, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+
+import api from "@/api";
+import { getUserLevelLabel, QUERIES } from "@/constants";
+import { useAuth } from "@/contexts";
+import { Dialog } from "@/dialog";
+import useToast from "@/hooks/useToast";
+import { User } from "@/types";
+
 import Icon from "../Icon";
 import UserSettingButton from "./UserSettingButton";
+
+const LIBRARIES = [
+  "Hibernate",
+  "Quartz",
+  "Jsch",
+  "Apache Commons",
+  "Grizzly",
+  "Jersey",
+  "Jackson",
+  "Java DiffUtils",
+  "SLF4j",
+  "React",
+  "ChakraUI",
+  "framer-motion",
+  "@tanstack/react-query",
+  "Chart.js",
+  "JRadius",
+  "Apache PO",
+  "Swagger",
+];
+
+function AboutContent() {
+  const { t } = useTranslation();
+
+
+  const { data: serverInfo } = useQuery({
+    queryKey: [QUERIES.SERVER_INFO],
+    queryFn: api.auth.serverInfo,
+  });
+
+  const serverVersion = useMemo(() => serverInfo?.serverVersion,
+    [serverInfo]);
+
+  return (
+    <Stack spacing="4">
+      <Alert status="info" bg="blue.50">
+        {t(
+          "Connected to Netshot version {{ version }}", {
+            version: serverVersion,
+          })}
+      </Alert>
+      <Stack>
+        <Text as="b">
+          {t("Thank you for using Netshot. Netshot is free open-source software.")}
+        </Text>
+        <Text>
+          {t(
+            "Copyright 2014-{{ year }}, Netshot SASU, All Rights Reserved",
+            { year: new Date().getFullYear() }
+          )}
+        </Text>
+      </Stack>
+      <Stack>
+        <ButtonGroup justifyContent="center" variant="outline" isAttached>
+          <Button
+            as="a"
+            target="_blank"
+            leftIcon={<Icon name="home" />}
+            href="https://www.netshot.net"
+          >
+            {t("Home page")}
+          </Button>
+          <Button
+            as="a"
+            target="_blank"
+            leftIcon={<Icon name="atSign" />}
+            href="mailto:contact@netshot.net"
+          >
+            {t("Contact")}
+          </Button>
+          <Button
+            as="a"
+            target="_blank"
+            leftIcon={<Icon name="gitHub" />}
+            href="https://github.com/netfishers-onl/Netshot"
+          >
+            {t("Source code")}
+          </Button>
+        </ButtonGroup>
+      </Stack>
+      <Stack>
+        <Text fontWeight="medium">
+          {t("Feel free to contact us, we offer services including support and specific development for Netshot.")}
+        </Text>
+      </Stack>
+      <Stack>
+        <Text>
+          {t(
+            "Netshot is distributed \"as is\", without warranty. Netshot SASU can't be held responsible for any damage caused to your devices or you network by the usage of Netshot. Netshot has no relationship with the network device vendors."
+          )}
+        </Text>
+      </Stack>
+      <Stack>
+        <Text>{t("Netshot makes use of the following libraries:")}</Text>
+        <UnorderedList>
+          {LIBRARIES.map((lib) => (
+            <ListItem display="inline-list-item" marginRight="2">
+              {lib}
+            </ListItem>
+          ))}
+        </UnorderedList>
+      </Stack>
+    </Stack>
+  );
+}
 
 type AboutModalProps = {
   renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
@@ -26,79 +138,12 @@ type AboutModalProps = {
 
 function AboutModal(props: AboutModalProps) {
   const { renderItem } = props;
-
   const { t } = useTranslation();
 
   const dialog = Dialog.useAlert({
     title: t("About Netshot"),
-    description: (
-      <Stack spacing="8">
-        <Stack>
-          <Text>
-            {t(
-              "Thank you for using Netshot. Netshot is a free product, provided by NetFishers."
-            )}
-          </Text>
-        </Stack>
-        <Stack>
-          <Text>{t("Connected to Netshot version 0.0.0")}</Text>
-          <Text>
-            Website:{" "}
-            <Text
-              as="a"
-              href="http://www.netfishers.onl/netshot"
-              target="_blank"
-            >
-              http://www.netfishers.onl/netshot
-            </Text>
-          </Text>
-          <Text>
-            Contact:{" "}
-            <Text as="a" href="netshot@netfishers.onl" target="_blank">
-              netshot@netfishers.onl
-            </Text>
-          </Text>
-        </Stack>
-        <Stack>
-          <Text fontWeight="medium">
-            {t(
-              "Should you need any help or new features, feel free to contact us!"
-            )}
-          </Text>
-        </Stack>
-        <Stack>
-          <Text>
-            {t(
-              'Netshot is distributed "as is", without warranty. NetFishers people can\'t be held responsible for any damage caused to your devices or you network by the usage of Netshot. Netshot has no relationship with the network device vendors.'
-            )}
-          </Text>
-          <Button
-            alignSelf="start"
-            variant="link"
-            as="a"
-            href="/api/LICENSE.txt"
-            target="_blank"
-          >
-            {t("See Netshot licensing details")}
-          </Button>
-        </Stack>
-        <Stack>
-          <Text>{t("Netshot makes use of the following libraries:")}</Text>
-          <Text>
-            {t(
-              "Hibernate Quartz Jsch Apache Commons Grizzly Jersey Jackson Java DiffUtils SLF4j React ChakraUI framer-motion @tanstack/react-query Chart.js Jasypt JRadius Apache PO Tablesort Swagger ..."
-            )}
-          </Text>
-        </Stack>
-        <Text>
-          {t(
-            "Netshot, Copyright 2014-{{ year }}, NetFishers, All Rights Reserved",
-            { year: new Date().getFullYear() }
-          )}
-        </Text>
-      </Stack>
-    ),
-    size: "lg",
+    description: <AboutContent />,
+    size: "xl",
   });
 
   const open = useCallback(
@@ -113,34 +158,41 @@ function AboutModal(props: AboutModalProps) {
 }
 
 export default function NavbarUser() {
-  const { user, level } = useDashboard();
+  const { user } = useAuth();
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const toast = useToast();
 
-  const logoutMutation = useMutation(api.auth.signout, {
+  const levelLabel = useMemo(() => getUserLevelLabel(user?.level), [user]);
+
+  const logoutMutation = useMutation({
+    mutationFn: api.auth.signout,
     onError() {
-      // @note: La requête ne renvoie pas de JSON
+      // @note: The request doesn't return JSON
       toast.error({
         title: t("Error"),
         description: t("An error occured"),
       });
     },
-    onMutate() {
-      navigate("/signin");
-    },
+    onSuccess() {
+      toast.success({
+        title: t("Logout"),
+        description: t("You have successfully logged out from Netshot."),
+      });
+      queryClient.setQueryData<User>([QUERIES.USER], null);
+    }
   });
 
   const logout = useCallback(() => {
     logoutMutation.mutate(user?.id);
-  }, [user]);
+  }, [logoutMutation, user?.id]);
 
   if (!user) {
     return null;
   }
 
   return (
-    <Menu matchWidth>
+    <Menu placement="bottom-end">
       <MenuButton
         variant="ghost"
         py="2"
@@ -169,7 +221,7 @@ export default function NavbarUser() {
               {user?.username}
             </Text>
             <Text fontWeight="400" color="grey.400">
-              {level}
+              {levelLabel}
             </Text>
           </Stack>
           <Spacer />
@@ -180,8 +232,8 @@ export default function NavbarUser() {
       <MenuList>
         <UserSettingButton
           renderItem={(open) => (
-            <MenuItem icon={<Icon name="settings" />} onClick={open}>
-              {t("Settings")}
+            <MenuItem icon={<Icon name="user" />} onClick={open}>
+              {t("User Settings")}
             </MenuItem>
           )}
         />

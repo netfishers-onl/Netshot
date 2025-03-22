@@ -11,7 +11,7 @@ import {
   Stack,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { DeviceSidebarContext } from "../../contexts/DeviceSidebarProvider";
+import { DeviceSidebarContext } from "../../contexts/device-sidebar";
 import DeviceCreateButton from "../DeviceCreateButton";
 import DeviceScanSubnetButton from "../DeviceScanSubnetButton";
 import DeviceSidebarGroup from "./DeviceSidebarGroup";
@@ -41,14 +41,7 @@ export default function DeviceSidebar() {
             <Divider />
             {query ? <DeviceSidebarSearchList /> : <DeviceSidebarList />}
 
-            <Protected
-              roles={[
-                Level.Admin,
-                Level.Operator,
-                Level.ReadWriteCommandOnDevice,
-                Level.ReadWrite,
-              ]}
-            >
+            <Protected minLevel={Level.Operator}>
               <Divider />
               <Stack p="6">
                 <Menu matchWidth>

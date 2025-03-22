@@ -10,18 +10,29 @@ import { useTranslation } from "react-i18next";
 export type UserForm = {
   username: string;
   level: Option<Level>;
-  hasRemote: boolean;
+  isRemote: boolean;
   password?: string;
   confirmPassword?: string;
+  changePassword: boolean;
 };
 
-export default function AdministrationUserForm() {
+export type AdministrationUserFormProps = {
+  showChangePassword?: boolean;
+}
+
+export default function AdministrationUserForm(props: AdministrationUserFormProps) {
+  const { showChangePassword = false } = props;
   const form = useFormContext<UserForm>();
   const { t } = useTranslation();
 
-  const hasRemote = useWatch({
+  const isRemote = useWatch({
     control: form.control,
-    name: "hasRemote",
+    name: "isRemote",
+  });
+
+  const changePassword = useWatch({
+    control: form.control,
+    name: "changePassword",
   });
 
   const password = useWatch({
@@ -30,11 +41,11 @@ export default function AdministrationUserForm() {
   });
 
   useEffect(() => {
-    if (!hasRemote) return;
+    if (!isRemote) return;
 
     form.setValue("password", "");
     form.setValue("confirmPassword", "");
-  }, [hasRemote]);
+  }, [isRemote]);
 
   return (
     <Stack spacing="6">
@@ -56,20 +67,28 @@ export default function AdministrationUserForm() {
         <Stack spacing="0" flex="1">
           <Text fontWeight="medium">{t("Remote user")}</Text>
           <Text color="grey.400">
-            {t("User from local server authentication")}
+            {t("User will be authenticated by a remote server (e.g. RADIUS)")}
           </Text>
         </Stack>
-        <Switch w="initial" control={form.control} name="hasRemote" />
+        <Switch w="initial" control={form.control} name="isRemote" />
       </Stack>
+  
+      {!isRemote && showChangePassword &&
+        <Stack direction="row" spacing="6">
+          <Stack spacing="0" flex="1">
+            <Text fontWeight="medium">{t("Change password")}</Text>
+          </Stack>
+          <Switch w="initial" control={form.control} name="changePassword" />
+        </Stack>}
 
-      {!hasRemote && (
+      {!isRemote && changePassword && (
         <>
           <FormControl
             isRequired
             type={FormControlType.Password}
             control={form.control}
             name="password"
-            label="Password"
+            label={t("Password")}
             placeholder={t("Enter password")}
           />
           <FormControl
@@ -77,7 +96,7 @@ export default function AdministrationUserForm() {
             type={FormControlType.Password}
             control={form.control}
             name="confirmPassword"
-            label="Confirm password"
+            label={t("Confirm password")}
             placeholder={t("Confirm password")}
             rules={{
               validate(value) {

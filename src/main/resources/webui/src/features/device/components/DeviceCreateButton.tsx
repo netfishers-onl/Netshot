@@ -269,14 +269,13 @@ export default function DeviceCreateButton(props: DeviceCreateButtonProps) {
     },
   });
 
-  const mutation = useMutation(
-    async (payload: CreateDevicePayload) => api.device.create(payload),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  const mutation = useMutation({
+    mutationFn: async (payload: CreateDevicePayload) =>
+        api.device.create(payload),
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (data: Form) => {
@@ -334,7 +333,7 @@ export default function DeviceCreateButton(props: DeviceCreateButtonProps) {
     title: t("Add device"),
     description: <DeviceCreateForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onSubmit,
     size: "xl",
     submitButton: {

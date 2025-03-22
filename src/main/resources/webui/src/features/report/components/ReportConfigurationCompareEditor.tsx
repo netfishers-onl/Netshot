@@ -19,27 +19,17 @@ export default function ReportConfigurationCompareEditor(
   const toast = useToast();
   const { t } = useTranslation();
 
-  const { data: currentConfig, isLoading: isCurrentConfigLoading } = useQuery(
-    [QUERIES.DEVICE_CURRENT_CONFIG, config.deviceId],
-    () => api.device.getPreviousConfig(config.deviceId, config.id),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  const { data: currentConfig, isPending: isCurrentConfigPending } = useQuery({
+    queryKey: [QUERIES.DEVICE_CURRENT_CONFIG, config.deviceId],
+    queryFn: () => api.device.getPreviousConfig(config.deviceId, config.id),
+  });
 
-  const { data: compareConfig, isLoading: isCompareConfigLoading } = useQuery(
-    [QUERIES.DEVICE_CONFIG, config.deviceId, config.id],
-    () => api.device.getConfigById(config.deviceId, config.id),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  const { data: compareConfig, isPending: isCompareConfigPending } = useQuery({
+    queryKey: [QUERIES.DEVICE_CONFIG, config.deviceId, config.id],
+    queryFn: () => api.device.getConfigById(config.deviceId, config.id),
+  });
 
-  if (isCurrentConfigLoading || isCompareConfigLoading) {
+  if (isCurrentConfigPending || isCompareConfigPending) {
     return (
       <Center flex="1">
         <Stack spacing="3" alignItems="center">

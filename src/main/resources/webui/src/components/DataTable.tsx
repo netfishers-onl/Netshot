@@ -14,6 +14,7 @@ import {
 } from "@chakra-ui/react";
 import {
   ColumnDef,
+  Header,
   Row,
   RowModel,
   SortingState,
@@ -25,7 +26,6 @@ import {
 import { Fragment, useCallback, useRef, useState } from "react";
 import { DndProvider, XYCoord, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { ArrowDown, ArrowUp } from "react-feather";
 import { useTranslation } from "react-i18next";
 import Icon from "./Icon";
 
@@ -85,7 +85,6 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
   });
 
   const cells = row.getVisibleCells();
-  const last = row.index === rowModel.rows.length - 1;
 
   drag(drop(ref));
 
@@ -100,17 +99,19 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
       sx={{
         opacity: isDragging ? 0.5 : 1,
       }}
+      h="48px"
+      borderColor="grey.100"
+      _notLast={{
+        borderBottomWidth: "1px",
+      }}
       {...other}
     >
       <Td
         px="4"
-        borderBottomWidth={last ? "0" : "1px"}
-        borderColor="grey.100"
         overflow="hidden"
         textOverflow="ellipsis"
         lineHeight="0"
         py="0"
-        h="48px"
       >
         <IconButton
           aria-label={t("Drag the row")}
@@ -133,15 +134,12 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
             key={cell.id}
             px="4"
             isNumeric={meta?.isNumeric}
-            borderBottomWidth={last ? "0" : "1px"}
-            borderColor="grey.100"
             textAlign={meta?.align}
             position="relative"
             overflow="hidden"
             textOverflow="ellipsis"
             lineHeight="0"
             py="0"
-            h="48px"
           >
             {render}
           </Td>
@@ -154,7 +152,6 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
 function SimpleRow<T>(props: RowProps<T>) {
   const { rowModel, row, ...other } = props;
   const cells = row.getVisibleCells();
-  const last = row.index === rowModel.rows.length - 1;
 
   return (
     <Tr
@@ -164,6 +161,10 @@ function SimpleRow<T>(props: RowProps<T>) {
         bg: "green.50",
       }}
       lineHeight="3"
+      borderColor="grey.100"
+      _notLast={{
+        borderBottomWidth: "1px",
+      }}
       {...other}
     >
       {cells.map((cell) => {
@@ -178,15 +179,13 @@ function SimpleRow<T>(props: RowProps<T>) {
             key={cell.id}
             px="4"
             isNumeric={meta?.isNumeric}
-            borderBottomWidth={last ? "0" : "1px"}
-            borderColor="grey.100"
             textAlign={meta?.align}
-            maxWidth="100px"
             wordBreak="break-word"
             position="relative"
             overflow="hidden"
             textOverflow="ellipsis"
             lineHeight="0"
+            borderBottomWidth={0}
             py="0"
             h="48px"
           >
@@ -227,6 +226,7 @@ export default function DataTable<Data extends object>(
   } = props;
   const containerRef = useRef<HTMLDivElement>();
   const [sorting, setSorting] = useState<SortingState>([]);
+  const { t } = useTranslation();
   const table = useReactTable({
     columns,
     data,
@@ -245,7 +245,6 @@ export default function DataTable<Data extends object>(
     },
     defaultColumn: {
       minSize: 50,
-      size: 100,
     },
   });
 
@@ -324,7 +323,7 @@ export default function DataTable<Data extends object>(
         ref={containerRef}
         {...other}
       >
-        <Table flex="1" layout="fixed">
+        <Table flex="1">
           <Thead
             position="sticky"
             top="0"
@@ -336,15 +335,16 @@ export default function DataTable<Data extends object>(
             {headerGroups?.map((headerGroup) => (
               <Tr key={headerGroup.id}>
                 {draggable && <Th borderColor="grey.100"></Th>}
-                {headerGroup?.headers.map((header) => {
-                  const meta: any = header?.column?.columnDef?.meta;
-                  const isSortable = header?.column?.columnDef?.enableSorting;
+                {headerGroup?.headers.map((header: Header<Data, unknown>) => {
+                  const columnDef = header?.column?.columnDef;
+                  const meta: any = columnDef?.meta;
+                  const isSortable = columnDef?.enableSorting;
                   const isSorted = header?.column?.getIsSorted();
 
                   return (
                     <Th
                       key={header.id}
-                      onClick={header?.column?.getToggleSortingHandler()}
+                      onClick={isSortable ? header?.column?.getToggleSortingHandler() : null}
                       isNumeric={meta?.isNumeric}
                       borderColor="grey.100"
                       position="relative"
@@ -359,14 +359,14 @@ export default function DataTable<Data extends object>(
                       h="40px"
                       px="4"
                       py="0"
-                      sx={{
-                        "&:hover": {
-                          button: {
-                            opacity: 1,
-                          },
-                        },
+                      width={columnDef?.size && `${columnDef?.size}px`}
+                      maxWidth={columnDef?.maxSize && `${columnDef?.maxSize}px`}
+                      minWidth={columnDef?.minSize && `${columnDef?.minSize}px`}
+                      _hover={{
+                        button: {
+                          opacity: 0.5,
+                        }
                       }}
-                      maxWidth="100px"
                     >
                       {flexRender(
                         header?.column?.columnDef?.header,
@@ -382,16 +382,14 @@ export default function DataTable<Data extends object>(
                           display="flex"
                           alignItems="center"
                           transition="all .2s ease"
-                          opacity={isSorted ? 1 : 0}
+                          opacity={isSorted ? "1 !important" : 0}
                           aria-label={
                             isSorted === "desc"
-                              ? "sorted descending"
-                              : "sorted ascending"
+                              ? t("sorted descending")
+                              : t("sorted ascending")
                           }
                           variant="link"
-                          icon={
-                            isSorted === "desc" ? <ArrowDown /> : <ArrowUp />
-                          }
+                          icon={<Icon name={isSorted === "desc" ? "arrowDown" : "arrowUp"} />}
                         />
                       )}
                     </Th>

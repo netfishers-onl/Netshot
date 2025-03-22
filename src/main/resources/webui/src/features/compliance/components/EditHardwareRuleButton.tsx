@@ -44,24 +44,22 @@ export default function EditHardwareRuleButton(
     defaultValues,
   });
 
-  const mutation = useMutation(
-    async (payload: CreateOrUpdateHardwareRule) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: CreateOrUpdateHardwareRule) =>
       api.hardwareRule.update(rule.id, payload),
-    {
-      onSuccess() {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t("Hardware rule has been successfully modified"),
-        });
+    onSuccess() {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t("Hardware rule has been successfully modified"),
+      });
 
-        queryClient.invalidateQueries([QUERIES.HARDWARE_RULE_LIST]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.HARDWARE_RULE_LIST] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: HardwareRuleFormValues) => {
@@ -85,7 +83,7 @@ export default function EditHardwareRuleButton(
     title: t("Edit hardware rule"),
     description: <HardwareRuleForm rule={rule} />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

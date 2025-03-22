@@ -22,33 +22,35 @@ export default function DiagnosticEnableButton(
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const mutation = useMutation(
-    async (payload: Diagnostic) => api.diagnostic.enable(payload),
-    {
-      onSuccess() {
-        queryClient.invalidateQueries([
+  const mutation = useMutation({
+    mutationFn: async (payload: Diagnostic) => api.diagnostic.enable(payload),
+    onSuccess() {
+      queryClient.invalidateQueries({
+        queryKey: [
           QUERIES.DIAGNOSTIC_DETAIL,
           diagnostic?.id,
-        ]);
-        queryClient.invalidateQueries([QUERIES.DIAGNOSTIC_LIST]);
+        ],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERIES.DIAGNOSTIC_LIST],
+      });
 
-        dialog.close();
+      dialog.close();
 
-        toast.success({
-          title: t("Success"),
-          description: t(
-            "Diagnostic {{diagnosticName}} has been successfully enabled",
-            {
-              diagnosticName: diagnostic?.name,
-            }
-          ),
-        });
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      toast.success({
+        title: t("Success"),
+        description: t(
+          "Diagnostic {{diagnosticName}} has been successfully enabled",
+          {
+            diagnosticName: diagnostic?.name,
+          }
+        ),
+      });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const dialog = Dialog.useConfirm({
     title: t("Enable diagnostic"),
@@ -59,7 +61,7 @@ export default function DiagnosticEnableButton(
         })}
       </Text>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate(diagnostic);
     },

@@ -34,27 +34,26 @@ export default function AddWebhookButton(props: AddWebhookButtonProps) {
     },
   });
 
-  const mutation = useMutation(
-    async (payload: Partial<Hook>) => api.admin.createHook(payload),
-    {
-      onSuccess(res) {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t("Webhook {{name}} has been successfully created", {
-            name: res?.name,
-          }),
-        });
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<Hook>) =>
+        api.admin.createHook(payload),
+    onSuccess(res) {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t("Webhook {{name}} has been successfully created", {
+          name: res?.name,
+        }),
+      });
 
-        queryClient.invalidateQueries([QUERIES.ADMIN_WEBHOOKS]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_WEBHOOKS] });
 
-        form.reset();
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      form.reset();
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: WebhookForm) => {
@@ -79,7 +78,7 @@ export default function AddWebhookButton(props: AddWebhookButtonProps) {
     title: t("Create webhook"),
     description: <AdministrationWebhookForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

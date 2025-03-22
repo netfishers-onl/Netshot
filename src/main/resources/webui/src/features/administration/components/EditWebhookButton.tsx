@@ -43,26 +43,24 @@ export default function EditWebhookButton(props: EditWebhookButtonProps) {
     defaultValues,
   });
 
-  const mutation = useMutation(
-    async (payload: Partial<Hook>) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<Hook>) =>
       api.admin.updateHook(webhook?.id, payload),
-    {
-      onSuccess(res) {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t("Webhook {{name}} has been successfully updated", {
-            name: res?.name,
-          }),
-        });
+    onSuccess(res) {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t("Webhook {{name}} has been successfully updated", {
+          name: res?.name,
+        }),
+      });
 
-        queryClient.invalidateQueries([QUERIES.ADMIN_WEBHOOKS]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_WEBHOOKS] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: WebhookForm) => {
@@ -83,7 +81,7 @@ export default function EditWebhookButton(props: EditWebhookButtonProps) {
     title: t("Update webhook"),
     description: <AdministrationWebhookForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

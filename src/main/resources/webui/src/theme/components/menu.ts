@@ -11,7 +11,7 @@ const baseStyle = definePartsStyle({
     p: 2,
     border: "none",
     boxShadow: "0 2px 10px 0 rgba(140, 149, 159, .16)",
-    zIndex: "2",
+    zIndex: "10",
   },
   item: {
     fontSize: "md",

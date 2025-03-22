@@ -23,8 +23,7 @@ async function update(id: number, payload: UpdateGroupPayload) {
 }
 
 async function remove(id: number) {
-  const req = await httpClient.rawRequest(HttpMethod.Delete, `/groups/${id}`);
-  return req.status === HttpStatus.NoContent;
+  return httpClient.delete(`/groups/${id}`);
 }
 
 export default {

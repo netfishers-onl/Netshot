@@ -48,24 +48,22 @@ export default function EditSoftwareRuleButton(
     defaultValues,
   });
 
-  const mutation = useMutation(
-    async (payload: CreateOrUpdateSoftwareRule) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: CreateOrUpdateSoftwareRule) =>
       api.softwareRule.update(rule.id, payload),
-    {
-      onSuccess() {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t("Software rule has been successfully modified"),
-        });
+    onSuccess() {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t("Software rule has been successfully modified"),
+      });
 
-        queryClient.invalidateQueries([QUERIES.SOFTWARE_RULE_LIST]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.SOFTWARE_RULE_LIST] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: SoftwareRuleFormValues) => {
@@ -89,7 +87,7 @@ export default function EditSoftwareRuleButton(
     title: t("Edit software rule"),
     description: <SoftwareRuleForm rule={rule} />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

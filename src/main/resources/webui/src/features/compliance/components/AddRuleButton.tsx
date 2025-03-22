@@ -29,7 +29,7 @@ import {
 } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { QUERIES } from "../constants";
 import { RuleForm } from "../types";
 import { RuleEditForm } from "./RuleEditForm";
@@ -75,13 +75,14 @@ export default function AddRuleButton(props: AddRuleButtonProps) {
     },
   });
 
-  const createMutation = useMutation(api.rule.create, {
+  const createMutation = useMutation({
+    mutationFn: api.rule.create,
     onSuccess(rule) {
       close();
       disclosure.onOpen();
 
-      queryClient.invalidateQueries([GLOBAL_QUERIES.POLICY_LIST]);
-      queryClient.invalidateQueries([QUERIES.POLICY_RULE_LIST, policy.id]);
+      queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.POLICY_LIST] });
+      queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_RULE_LIST, policy.id] });
 
       form.reset();
 
@@ -92,7 +93,7 @@ export default function AddRuleButton(props: AddRuleButtonProps) {
         }),
       });
 
-      navigate(`/app/compliance/${policy.id}/${rule.id}`);
+      navigate(`/app/compliance/config/${policy.id}/${rule.id}`);
     },
     onError(err: NetshotError) {
       toast.error(err);
@@ -308,7 +309,7 @@ def check(device):
                 <Button
                   type="submit"
                   isDisabled={!form.formState.isValid}
-                  isLoading={createMutation.isLoading}
+                  isLoading={createMutation.isPending}
                   variant="primary"
                 >
                   {t("Create")}

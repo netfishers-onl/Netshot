@@ -24,11 +24,7 @@ async function update(
 }
 
 async function remove(id: number) {
-  const req = await httpClient.rawRequest(
-    HttpMethod.Delete,
-    `/hardwarerules/${id}`
-  );
-  return req.status === HttpStatus.NoContent;
+  await httpClient.delete(`/hardwarerules/${id}`);
 }
 
 export default {

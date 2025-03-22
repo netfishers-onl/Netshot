@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Plus } from "react-feather";
 import { useTranslation } from "react-i18next";
 import AddApiTokenButton from "../components/AddApiTokenButton";
@@ -29,46 +29,46 @@ export default function AdministrationApiTokenScreen() {
   const pagination = usePagination();
   const toast = useToast();
 
-  const { data = [], isLoading } = useQuery(
-    [
+  const { data = [], isPending } = useQuery({
+    queryKey: [
       QUERIES.ADMIN_API_TOKENS,
       pagination.query,
       pagination.offset,
       pagination.limit,
     ],
-    async () => api.admin.getAllApiToken(pagination),
-    {
-      select(res) {
-        return search(res, "description").with(pagination.query);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    queryFn: async () => api.admin.getAllApiTokens(pagination),
+    select: useCallback((res: ApiToken[]): ApiToken[] => {
+      return search(res, "description").with(pagination.query);
+    }, [pagination.query]),
+  });
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("description", {
         cell: (info) => info.getValue(),
         header: t("Description"),
+        enableSorting: true,
+        size: 20000,
       }),
       columnHelper.accessor("level", {
         cell: (info) => getApiTokenLevelLabel(info.getValue()),
         header: t("Permission level"),
+        enableSorting: true,
+        size: 10000,
+        minSize: 200,
       }),
       columnHelper.accessor("id", {
         cell: (info) => {
           const apiToken = info.row.original;
 
           return (
-            <Stack direction="row" spacing="2" justifyContent="end">
+            <Stack direction="row" spacing="0" justifyContent="end">
               <RemoveApiTokenButton
                 apiToken={apiToken}
                 renderItem={(open) => (
                   <Tooltip label={t("Remove")}>
                     <IconButton
-                      aria-label={t("Remove domain")}
+                      aria-label={t("Remove token")}
                       icon={<Icon name="trash" />}
                       variant="ghost"
                       colorScheme="green"
@@ -81,10 +81,11 @@ export default function AdministrationApiTokenScreen() {
           );
         },
         header: "",
-        enableSorting: false,
         meta: {
           align: "right",
         },
+        size: 100,
+        minSize: 50,
       }),
     ],
     [t]
@@ -112,7 +113,7 @@ export default function AdministrationApiTokenScreen() {
             )}
           />
         </Stack>
-        {isLoading ? (
+        {isPending ? (
           <Stack spacing="3">
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -122,12 +123,12 @@ export default function AdministrationApiTokenScreen() {
         ) : (
           <>
             {data?.length > 0 ? (
-              <DataTable columns={columns} data={data} loading={isLoading} />
+              <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
-                title={t("There is no api token")}
+                title={t("There is no API token")}
                 description={t(
-                  "You can create API token to communicate with Netshot"
+                  "You can create tokens to use Netshot embedded REST API"
                 )}
               >
                 <AddApiTokenButton

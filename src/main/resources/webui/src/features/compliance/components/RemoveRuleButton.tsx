@@ -8,7 +8,7 @@ import { Text } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MouseEvent, ReactElement, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { QUERIES } from "../constants";
 
 export type RemoveRuleButtonProps = {
@@ -24,10 +24,11 @@ export default function RemoveRuleButton(props: RemoveRuleButtonProps) {
   const toast = useToast();
   const navigate = useNavigate();
 
-  const mutation = useMutation(async () => api.rule.remove(rule?.id), {
+  const mutation = useMutation({
+    mutationFn: async () => api.rule.remove(rule?.id),
     onSuccess() {
-      queryClient.invalidateQueries([GLOBAL_QUERIES.POLICY_LIST]);
-      queryClient.invalidateQueries([QUERIES.POLICY_RULE_LIST, policyId]);
+      queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.POLICY_LIST] });
+      queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_RULE_LIST, policyId] });
       navigate("/app/compliance");
       dialog.close();
     },
@@ -45,12 +46,12 @@ export default function RemoveRuleButton(props: RemoveRuleButtonProps) {
         })}
       </Text>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate();
     },
     confirmButton: {
-      label: t("remove"),
+      label: t("Remove"),
       props: {
         colorScheme: "red",
       },

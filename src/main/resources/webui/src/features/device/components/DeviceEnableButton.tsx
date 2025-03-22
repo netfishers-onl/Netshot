@@ -21,25 +21,23 @@ export default function DeviceEnableButton(props: DeviceEnableButtonProps) {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const mutation = useMutation(
-    async (payload: Partial<UpdateDevicePayload>) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<UpdateDevicePayload>) =>
       api.device.update(payload.id, payload),
-    {
-      onSuccess(res) {
-        queryClient.invalidateQueries({
-          queryKey: [GLOBAL_QUERIES.DEVICE_LIST],
-          refetchType: "all",
-        });
+    onSuccess(res) {
+      queryClient.invalidateQueries({
+        queryKey: [GLOBAL_QUERIES.DEVICE_LIST],
+        refetchType: "all",
+      });
 
-        queryClient.invalidateQueries([QUERIES.DEVICE_DETAIL, res?.id]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_DETAIL, res?.id] });
 
-        dialog.close();
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      dialog.close();
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const isMultiple = useMemo(() => devices.length > 1, [devices]);
 
@@ -71,7 +69,7 @@ export default function DeviceEnableButton(props: DeviceEnableButtonProps) {
         )}
       </>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       for (const device of devices) {
         mutation.mutate({

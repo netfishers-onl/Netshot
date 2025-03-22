@@ -17,7 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
 import { ChangeEvent, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { PERIODS, QUERIES } from "../constants";
 import { Period, PeriodType } from "../types";
 import ReportConfigurationCompareModal from "./ReportConfigurationCompareModal";
@@ -41,25 +41,20 @@ export default function ReportConfigurationChangeList() {
     return currentPeriod.value();
   }, [currentPeriod, day]);
 
-  const { data, isLoading } = useQuery(
-    [QUERIES.REPORT_CONFIG_CHANGE_LIST, range.from, range.to],
-    async () =>
+  const { data, isPending } = useQuery({
+    queryKey: [QUERIES.REPORT_CONFIG_CHANGE_LIST, range.from, range.to],
+    queryFn: async () =>
       api.config.getAll({
         after: range.from.getTime(),
         before: range.to.getTime(),
       }),
-    {
-      select(res) {
-        return res.sort(
-          (a, b) =>
-            new Date(a.changeDate).getTime() - new Date(b.changeDate).getTime()
-        );
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    select: useCallback((res: Config[]): Config[] => {
+      return res.sort(
+        (a, b) =>
+          new Date(a.changeDate).getTime() - new Date(b.changeDate).getTime()
+      );
+    }, []),
+  });
 
   const onChangeDay = useCallback((evt: ChangeEvent<HTMLInputElement>) => {
     setDay(formatDate(new Date(evt.target.value).toISOString(), "yyyy-MM-dd"));
@@ -76,7 +71,7 @@ export default function ReportConfigurationChangeList() {
         cell: (info) => (
           <Text
             as={Link}
-            to={`/app/device/${info.row.original.deviceId}/configuration`}
+            to={`/app/devices/${info.row.original.deviceId}/configuration`}
             textDecoration="underline"
           >
             {info.getValue()}
@@ -154,7 +149,7 @@ export default function ReportConfigurationChangeList() {
         )}
       </Stack>
 
-      {isLoading ? (
+      {isPending ? (
         <Stack spacing="3">
           <Skeleton h="60px"></Skeleton>
           <Skeleton h="60px"></Skeleton>
@@ -168,7 +163,7 @@ export default function ReportConfigurationChangeList() {
               zIndex={0}
               columns={columns}
               data={data}
-              loading={isLoading}
+              loading={isPending}
             />
           ) : (
             <EmptyResult

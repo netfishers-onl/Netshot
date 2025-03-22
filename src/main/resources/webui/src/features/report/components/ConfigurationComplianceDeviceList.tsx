@@ -3,12 +3,13 @@ import { NetshotError } from "@/api/httpClient";
 import { EmptyResult, Search } from "@/components";
 import { QUERIES } from "@/constants";
 import { usePagination, useToast } from "@/hooks";
-import { Group } from "@/types";
+import { ConfigComplianceDeviceStatus, Group } from "@/types";
 import { groupItemsByProperty, search } from "@/utils";
 import { Skeleton, Spacer, Stack } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import DeviceConfigurationCompliancePanel from "./DeviceConfigurationCompliancePanel";
+import { useCallback } from "react";
 
 export type ConfigurationComplianceDeviceListProps = {
   group: Group;
@@ -23,27 +24,23 @@ export default function ConfigurationComplianceDeviceList(
   const toast = useToast();
   const pagination = usePagination();
 
-  const { data, isLoading } = useQuery(
-    [
+  const { data, isPending } = useQuery({
+    queryKey: [
       QUERIES.DEVICE_REPORT_GROUP_LIST,
       group.id,
       group.folder,
       group.name,
       pagination.query,
     ],
-    async () => api.report.getAllGroupConfigNonCompliantDevice(group.id),
-    {
-      select(res) {
-        return groupItemsByProperty(
-          search(res, "name").with(pagination.query),
-          "name"
-        );
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    queryFn: async () =>
+        api.report.getAllGroupConfigNonCompliantDevices(group.id),
+    select: useCallback((res: ConfigComplianceDeviceStatus[]): Map<"name", ConfigComplianceDeviceStatus[]> => {
+      return groupItemsByProperty(
+        search(res, "name").with(pagination.query),
+        "name"
+      );
+    }, [pagination.query]),
+  });
 
   return (
     <>
@@ -56,7 +53,7 @@ export default function ConfigurationComplianceDeviceList(
         />
         <Spacer />
       </Stack>
-      {isLoading ? (
+      {isPending ? (
         <Stack spacing="3">
           <Skeleton h="60px"></Skeleton>
           <Skeleton h="60px"></Skeleton>
@@ -77,8 +74,8 @@ export default function ConfigurationComplianceDeviceList(
             </>
           ) : (
             <EmptyResult
-              title={t("There is no device")}
-              description={t("The device will appear when the group owns it.")}
+              title={t("No device")}
+              description={t("There is no device in this group")}
             />
           )}
         </>

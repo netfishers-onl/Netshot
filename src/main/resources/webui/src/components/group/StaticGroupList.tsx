@@ -8,7 +8,7 @@ import {
   Text,
   Tooltip,
 } from "@chakra-ui/react";
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import GroupDeviceBox from "./GroupDeviceBox";
@@ -19,22 +19,42 @@ export type StaticGroupListProps = {};
 export default function StaticGroupList() {
   const { t } = useTranslation();
   const form = useFormContext<AddGroupForm>();
+  // Increase the version to reset the search cache
+  const [cacheVersion, setCacheVersion] = useState<number>(1);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "staticDevices",
+    keyName: "uid",
   });
 
   const addDevice = useCallback(
     (device: SimpleDevice) => {
+      setCacheVersion(v => v + 1);
       append(device);
     },
     [append]
   );
 
+  const removeDevice = useCallback((index: number) => {
+    setCacheVersion(v => v + 1);
+    remove(index);
+  }, [remove]);
+
+  const excludeSelected = useCallback(
+    (options: SimpleDevice[]): SimpleDevice[] => {
+      const selectedIds: number[] = fields.map((f, i) => f.id);
+      return options.filter((o) => !selectedIds.includes(o.id));
+    },
+  [fields]);
+
   return (
     <>
-      <DeviceAutocomplete onChange={addDevice} />
+      <DeviceAutocomplete
+        onChange={addDevice}
+        filterBy={excludeSelected}
+        cacheOptions={cacheVersion}
+      />
       <Stack flex="1">
         {fields.length > 0 ? (
           <>
@@ -49,7 +69,7 @@ export default function StaticGroupList() {
                     right="2"
                     variant="ghost"
                     colorScheme="green"
-                    onClick={() => remove(index)}
+                    onClick={() => removeDevice(index)}
                   />
                 </Tooltip>
               </GroupDeviceBox>

@@ -28,8 +28,7 @@ async function update(id: number, payload: Partial<CreateOrUpdateRule>) {
 }
 
 async function remove(id: number) {
-  const req = await httpClient.rawRequest(HttpMethod.Delete, `/rules/${id}`);
-  return req.status === HttpStatus.NoContent;
+  return httpClient.delete(`/rules/${id}`);
 }
 
 async function testScript(payload: TestRuleScriptOnDevicePayload) {
@@ -73,7 +72,7 @@ async function updateExemptedDevice(
   });
 }
 
-async function getAllExemptedDevice(
+async function getAllExemptedDevices(
   id: number,
   queryParams: PaginationQueryParams = {}
 ) {
@@ -93,5 +92,5 @@ export default {
   enable,
   disable,
   updateExemptedDevice,
-  getAllExemptedDevice,
+  getAllExemptedDevices,
 };

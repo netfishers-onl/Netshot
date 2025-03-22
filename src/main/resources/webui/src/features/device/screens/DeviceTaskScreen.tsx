@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { QUERIES } from "../constants";
 
 const columnHelper = createColumnHelper<Task>();
@@ -29,18 +29,13 @@ export default function DeviceTaskScreen() {
   const disclosure = useDisclosure();
   const [taskId, setTaskId] = useState<number>(null);
 
-  const { data = [], isLoading } = useQuery(
-    [QUERIES.DEVICE_MODULES, params.id, pagination.limit],
-    async () =>
-      api.device.getAllTaskById(+params.id, {
+  const { data = [], isPending } = useQuery({
+    queryKey: [QUERIES.DEVICE_TASKS, params.id, pagination.limit],
+    queryFn: async () =>
+      api.device.getAllTasksById(+params.id, {
         limit: pagination.limit,
       }),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  });
 
   const openTask = useCallback((id: number) => {
     setTaskId(id);
@@ -100,7 +95,7 @@ export default function DeviceTaskScreen() {
           onClear={pagination.onQueryClear}
           w="25%"
         /> */}
-        {isLoading ? (
+        {isPending ? (
           <Stack spacing="3">
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -110,7 +105,7 @@ export default function DeviceTaskScreen() {
         ) : (
           <>
             {data?.length > 0 ? (
-              <DataTable columns={columns} data={data} loading={isLoading} />
+              <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
                 title={t("There is no task")}

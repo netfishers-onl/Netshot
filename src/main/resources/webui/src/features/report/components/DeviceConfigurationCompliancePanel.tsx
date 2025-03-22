@@ -15,7 +15,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { motion, useAnimationControls } from "framer-motion";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export type DeviceConfigurationPanelProps = {
   name: string;
@@ -110,7 +110,7 @@ export default function DeviceConfigurationCompliancePanel(
           colorScheme="green"
           variant="ghost"
           as={Link}
-          to={`/app/device/${configs?.[0]?.id}/compliance`}
+          to={`/app/devices/${configs?.[0]?.id}/compliance`}
         >
           {t("See details")}
         </Button>

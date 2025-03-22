@@ -1,14 +1,15 @@
-import { Diagnostic, DiagnosticType } from "@/types";
 import { Stack, Tag, Text } from "@chakra-ui/react";
-import { LegacyRef, forwardRef, useMemo } from "react";
+import { forwardRef, LegacyRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { NavLink } from "react-router-dom";
+import { NavLink } from "react-router";
+
+import { Diagnostic, DiagnosticType } from "@/types";
 
 type DiagnosticBoxProps = {
   diagnostic: Diagnostic;
 };
 
-export default forwardRef(
+const SidebarBox = forwardRef(
   (props: DiagnosticBoxProps, ref: LegacyRef<HTMLDivElement>) => {
     const { diagnostic } = props;
     const { t } = useTranslation();
@@ -32,8 +33,11 @@ export default forwardRef(
             px="2"
             py="2"
             spacing="1"
-            borderColor={isActive ? "transparent" : "grey.100"}
             bg={isActive ? "green.50" : "white"}
+            transition="all .2s ease"
+            _hover={{
+              bg: isActive ? "green.50" : "grey.50",
+            }}
             borderRadius="xl"
             ref={ref}
             opacity={diagnostic?.enabled ? 1 : 0.5}
@@ -60,3 +64,5 @@ export default forwardRef(
     );
   }
 );
+
+export default SidebarBox;

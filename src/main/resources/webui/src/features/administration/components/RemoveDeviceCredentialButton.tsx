@@ -22,28 +22,27 @@ export default function RemoveDeviceCredentialButton(
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const mutation = useMutation(
-    async () => api.admin.removeCredentialSet(credential?.id),
-    {
-      onSuccess() {
-        queryClient.invalidateQueries([QUERIES.ADMIN_DEVICE_CREDENTIALS]);
-        dialog.close();
+  const mutation = useMutation({
+    mutationFn: async () =>
+        api.admin.removeCredentialSet(credential?.id),
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_DEVICE_CREDENTIALS] });
+      dialog.close();
 
-        toast.success({
-          title: t("Success"),
-          description: t(
-            "Device creddential {{name}} has been successfully removed",
-            {
-              name: credential?.name,
-            }
-          ),
-        });
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      toast.success({
+        title: t("Success"),
+        description: t(
+          "Device creddential {{name}} has been successfully removed",
+          {
+            name: credential?.name,
+          }
+        ),
+      });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const dialog = Dialog.useConfirm({
     title: t("Remove credential"),
@@ -60,12 +59,12 @@ export default function RemoveDeviceCredentialButton(
         {t(", are you sure?")}
       </Text>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate();
     },
     confirmButton: {
-      label: t("remove"),
+      label: t("Remove"),
       props: {
         colorScheme: "red",
       },

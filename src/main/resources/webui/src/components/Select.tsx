@@ -96,17 +96,21 @@ function Select<T>(props: SelectProps<T>) {
         boxShadow: "0 2px 10px 0 rgba(140, 149, 159, .16)",
         bg: "white",
       }),
-      option: (provided, state) => ({
-        ...provided,
-        borderRadius: "lg",
-        color: state.isSelected ? "green.800" : "text",
-        bg: state.isSelected ? "green.50" : null,
-        transition: "all .2s ease",
-        "&:hover": {
-          bg: state.isSelected ? "green.50" : "grey.100",
-          color: state.isSelected ? "green.800" : "black",
-        },
-      }),
+      option: (provided, state) => {
+        const bg = state.isSelected ? "green.50" : state.isFocused ? "grey.100" : null;
+        const color = state.isSelected ? "green.800" : state.isFocused ? "black" : "text";
+        return {
+          ...provided,
+          borderRadius: "lg",
+          transition: "all .2s ease",
+          bg,
+          color,
+          "&[data-focus]": {
+            bg,
+            color,
+          }
+        };
+      },
       clearIndicator: (base) => ({
         ...base,
         border: 0,
@@ -119,7 +123,6 @@ function Select<T>(props: SelectProps<T>) {
       {label && <FormLabel mb={2}>{label}</FormLabel>}
 
       <NativeSelect
-        useBasicStyles
         styles={{
           menuPortal: (base) => ({
             ...base,

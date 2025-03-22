@@ -45,7 +45,9 @@ export function useDeviceTypeOptions(props: UseDeviceTypeOptionsProps) {
     isSuccess,
     isLoading,
     data: options,
-  } = useQuery([QUERIES.DEVICE_TYPE_LIST, withAny], api.device.getAllType, {
+  } = useQuery({
+    queryKey: [QUERIES.DEVICE_TYPE_LIST, withAny],
+    queryFn: api.device.getAllTypes,
     select(types) {
       const options = types.map((type) => ({
         label: type?.description,
@@ -60,14 +62,6 @@ export function useDeviceTypeOptions(props: UseDeviceTypeOptionsProps) {
       }
 
       return options as Option<DeviceType>[];
-    },
-    onSuccess(res) {
-      if (onSuccess) {
-        onSuccess(res);
-      }
-    },
-    onError(err: NetshotError) {
-      toast.error(err);
     },
   });
 

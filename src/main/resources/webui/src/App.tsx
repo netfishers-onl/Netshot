@@ -1,5 +1,5 @@
 import { ProtectedRoute } from "@/components";
-import { ApplicationProvider, DashboardProvider } from "@/contexts";
+import { AuthProvider } from "@/contexts";
 import { DialogProvider } from "@/dialog";
 import {
   AdministrationApiTokenScreen,
@@ -58,7 +58,7 @@ import { Level } from "@/types";
 import { ChakraProvider } from "@chakra-ui/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { I18nextProvider } from "react-i18next";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,163 +77,161 @@ function App() {
       <I18nextProvider i18n={i18n}>
         <ChakraProvider theme={theme}>
           <BrowserRouter>
-            <ApplicationProvider>
-              <DashboardProvider>
-                <DialogProvider>
-                  <Routes>
-                    <Route path="signin" element={<SigninScreen />} />
-                    <Route path="*" element={<Navigate to="app" />} />
-                    <Route path="app" element={<MainScreen />}>
-                      <Route index element={<Navigate to="report" />} />
-                      <Route path="report" element={<ReportScreen />}>
+            <AuthProvider>
+              <DialogProvider>
+                <Routes>
+                  <Route path="signin" element={<SigninScreen />} />
+                  <Route path="app" element={<MainScreen />}>
+                    <Route index element={<Navigate to="reports" />} />
+                    <Route path="reports" element={<ReportScreen />}>
+                      <Route
+                        index
+                        element={<Navigate to="configuration-change" />}
+                      />
+                      <Route
+                        path="configuration-change"
+                        element={<ReportConfigurationChangeScreen />}
+                      />
+                      <Route
+                        path="device-access-failure"
+                        element={<ReportDeviceAccessFailureScreen />}
+                      />
+                      <Route
+                        path="configuration-compliance"
+                        element={<ReportConfigurationComplianceScreen />}
+                      >
                         <Route
                           index
-                          element={<Navigate to="configuration-change" />}
+                          element={
+                            <ReportConfigurationComplianceEmptyScreen />
+                          }
                         />
-                        <Route
-                          path="configuration-change"
-                          element={<ReportConfigurationChangeScreen />}
-                        />
-                        <Route
-                          path="device-access-failure"
-                          element={<ReportDeviceAccessFailureScreen />}
-                        />
-                        <Route
-                          path="configuration-compliance"
-                          element={<ReportConfigurationComplianceScreen />}
-                        >
-                          <Route
-                            index
-                            element={
-                              <ReportConfigurationComplianceEmptyScreen />
-                            }
-                          />
-                          <Route
-                            path=":id"
-                            element={
-                              <ReportConfigurationComplianceDetailScreen />
-                            }
-                          />
-                        </Route>
-                        <Route
-                          path="software-compliance"
-                          element={<ReportSoftwareComplianceScreen />}
-                        />
-                        <Route
-                          path="hardware-support-status"
-                          element={<ReportHardwareSupportStatusScreen />}
-                        />
-                      </Route>
-                      <Route path="device" element={<DeviceScreen />}>
-                        <Route path=":id" element={<DeviceDetailScreen />}>
-                          {/* <Route index element={<Navigate to="general" />} /> */}
-                          <Route
-                            path="general"
-                            element={<DeviceGeneralScreen />}
-                          />
-                          <Route
-                            path="configuration"
-                            element={<DeviceConfigurationScreen />}
-                          />
-                          <Route
-                            path="interface"
-                            element={<DeviceInterfaceScreen />}
-                          />
-                          <Route
-                            path="module"
-                            element={<DeviceModuleScreen />}
-                          />
-                          <Route
-                            path="diagnostic"
-                            element={<DeviceDiagnosticScreen />}
-                          />
-                          <Route
-                            path="compliance"
-                            element={<DeviceComplianceScreen />}
-                          />
-                          <Route path="task" element={<DeviceTaskScreen />} />
-                        </Route>
-                      </Route>
-                      <Route path="diagnostic" element={<DiagnosticScreen />}>
                         <Route
                           path=":id"
-                          element={<DiagnosticDetailScreen />}
+                          element={
+                            <ReportConfigurationComplianceDetailScreen />
+                          }
                         />
                       </Route>
-                      <Route path="compliance" element={<ComplianceScreen />}>
-                        <Route index element={<Navigate to="software" />} />
+                      <Route
+                        path="software-compliance"
+                        element={<ReportSoftwareComplianceScreen />}
+                      />
+                      <Route
+                        path="hardware-support-status"
+                        element={<ReportHardwareSupportStatusScreen />}
+                      />
+                    </Route>
+                    <Route path="devices" element={<DeviceScreen />}>
+                      <Route path=":id" element={<DeviceDetailScreen />}>
+                        <Route index element={<Navigate to="general" />} />
                         <Route
-                          path="software"
-                          element={<ComplianceSoftwareRuleScreen />}
+                          path="general"
+                          element={<DeviceGeneralScreen />}
                         />
                         <Route
-                          path="hardware"
-                          element={<ComplianceHardwareRuleScreen />}
+                          path="configurations"
+                          element={<DeviceConfigurationScreen />}
                         />
                         <Route
-                          path=":policyId/:ruleId"
-                          element={<ComplianceDetailScreen />}
-                        />
-                      </Route>
-                      <Route path="task" element={<TaskScreen />}>
-                        <Route index element={<Navigate to="all" />} />
-                        <Route path="all" element={<AllTaskScreen />} />
-                        <Route path="running" element={<RunningTaskScreen />} />
-                        <Route
-                          path="scheduled"
-                          element={<ScheduledTaskScreen />}
+                          path="interfaces"
+                          element={<DeviceInterfaceScreen />}
                         />
                         <Route
-                          path="succeeded"
-                          element={<SucceededTaskScreen />}
+                          path="modules"
+                          element={<DeviceModuleScreen />}
                         />
-                        <Route path="failed" element={<FailedTaskScreen />} />
                         <Route
-                          path="cancelled"
-                          element={<CancelledTaskScreen />}
+                          path="diagnostics"
+                          element={<DeviceDiagnosticScreen />}
                         />
-                      </Route>
-                      <Route element={<ProtectedRoute roles={[Level.Admin]} />}>
                         <Route
-                          path="administration"
-                          element={<AdministrationScreen />}
-                        >
-                          <Route index element={<Navigate to="user" />} />
-                          <Route
-                            path="user"
-                            element={<AdministrationUserScreen />}
-                          />
-                          <Route
-                            path="device-domain"
-                            element={<AdministrationDomainScreen />}
-                          />
-                          <Route
-                            path="device-credential"
-                            element={<AdministrationDeviceCredentialScreen />}
-                          />
-                          <Route
-                            path="driver"
-                            element={<AdministrationDriverScreen />}
-                          />
-                          <Route
-                            path="api-token"
-                            element={<AdministrationApiTokenScreen />}
-                          />
-                          <Route
-                            path="webhook"
-                            element={<AdministrationWebhookScreen />}
-                          />
-                          <Route
-                            path="clustering"
-                            element={<AdministrationClusteringScreen />}
-                          />
-                        </Route>
+                          path="compliance"
+                          element={<DeviceComplianceScreen />}
+                        />
+                        <Route path="tasks" element={<DeviceTaskScreen />} />
                       </Route>
                     </Route>
-                  </Routes>
-                </DialogProvider>
-              </DashboardProvider>
-            </ApplicationProvider>
+                    <Route path="diagnostics" element={<DiagnosticScreen />}>
+                      <Route
+                        path=":id"
+                        element={<DiagnosticDetailScreen />}
+                      />
+                    </Route>
+                    <Route path="compliance" element={<ComplianceScreen />}>
+                      <Route
+                        path="hardware"
+                        element={<ComplianceHardwareRuleScreen />}
+                      />
+                      <Route
+                        path="software"
+                        element={<ComplianceSoftwareRuleScreen />}
+                      />
+                      <Route
+                        path="config/:policyId/:ruleId"
+                        element={<ComplianceDetailScreen />}
+                      />
+                      <Route index element={<Navigate to="software" />} />
+                    </Route>
+                    <Route path="tasks" element={<TaskScreen />}>
+                      <Route index element={<Navigate to="all" />} />
+                      <Route path="all" element={<AllTaskScreen />} />
+                      <Route path="running" element={<RunningTaskScreen />} />
+                      <Route
+                        path="scheduled"
+                        element={<ScheduledTaskScreen />}
+                      />
+                      <Route
+                        path="succeeded"
+                        element={<SucceededTaskScreen />}
+                      />
+                      <Route path="failed" element={<FailedTaskScreen />} />
+                      <Route
+                        path="cancelled"
+                        element={<CancelledTaskScreen />}
+                      />
+                    </Route>
+                      <Route element={<ProtectedRoute minLevel={Level.Admin} />}>
+                      <Route
+                        path="administration"
+                        element={<AdministrationScreen />}
+                      >
+                        <Route index element={<Navigate to="user" />} />
+                        <Route
+                          path="user"
+                          element={<AdministrationUserScreen />}
+                        />
+                        <Route
+                          path="device-domain"
+                          element={<AdministrationDomainScreen />}
+                        />
+                        <Route
+                          path="device-credential"
+                          element={<AdministrationDeviceCredentialScreen />}
+                        />
+                        <Route
+                          path="driver"
+                          element={<AdministrationDriverScreen />}
+                        />
+                        <Route
+                          path="api-token"
+                          element={<AdministrationApiTokenScreen />}
+                        />
+                        <Route
+                          path="webhook"
+                          element={<AdministrationWebhookScreen />}
+                        />
+                        <Route
+                          path="clustering"
+                          element={<AdministrationClusteringScreen />}
+                        />
+                      </Route>
+                    </Route>
+                  </Route>
+                  <Route path="/" element={<Navigate to="app" />} />
+                </Routes>
+              </DialogProvider>
+            </AuthProvider>
           </BrowserRouter>
         </ChakraProvider>
       </I18nextProvider>

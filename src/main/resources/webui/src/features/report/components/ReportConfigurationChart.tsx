@@ -14,15 +14,10 @@ export default function ReportConfigurationChart() {
   const toast = useToast();
   const { t } = useTranslation();
 
-  const { data: changes = [], isLoading } = useQuery(
-    [QUERIES.REPORT_CONFIG_CHANGE_OVER_LAST_DAY],
-    api.report.getConfigChangeOverLastDay,
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  const { data: changes = [], isPending } = useQuery({
+    queryKey: [QUERIES.REPORT_CONFIG_CHANGE_OVER_LAST_DAY],
+    queryFn: api.report.getConfigChangeOverLastDay,  
+  });
 
   const config = useMemo(() => {
     if (!Array.isArray(changes)) {
@@ -65,10 +60,10 @@ export default function ReportConfigurationChart() {
         {t("Changes over the last days")}
       </Heading>
 
-      {isLoading ? (
-        <Skeleton height="400px" />
+      {isPending ? (
+        <Skeleton height="250px" />
       ) : (
-        <Stack h="400px">
+        <Stack h="250px">
           <Chart config={config} />
         </Stack>
       )}

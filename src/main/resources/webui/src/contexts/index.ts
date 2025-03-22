@@ -1,3 +1,3 @@
-export * from "./ApplicationProvider";
-export * from "./DashboardProvider";
+export * from "./AuthProvider";
+export * from "./auth";
 export * from "./SidebarProvider";

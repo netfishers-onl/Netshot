@@ -7,7 +7,7 @@ import { Button, Skeleton, Stack } from "@chakra-ui/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import DeviceConfigurationPanel from "../components/DeviceConfigurationPanel";
 import { QUERIES } from "../constants";
 
@@ -26,25 +26,21 @@ export default function DeviceConfigurationScreen() {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery(
-    [QUERIES.DEVICE_CONFIGS, params.id, query],
-    async ({ pageParam = 0 }) => {
+  } = useInfiniteQuery({
+    queryKey: [QUERIES.DEVICE_CONFIGS, params.id, query],
+    queryFn: async ({ pageParam }) => {
       const pagination = {
         limit: LIMIT,
         offset: pageParam,
       } as PaginationQueryParams;
 
-      return api.device.getAllConfigById(+params.id, pagination);
+      return api.device.getAllConfigsById(+params.id, pagination);
     },
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      getNextPageParam(lastPage, allPages) {
-        return lastPage.length === LIMIT ? allPages.length * LIMIT : undefined;
-      },
-    }
-  );
+    initialPageParam: 0,
+    getNextPageParam(lastPage, allPages) {
+      return lastPage?.length === LIMIT ? allPages.length * LIMIT : undefined;
+    },
+  });
 
   const onQuery = useCallback((value: string) => {
     setQuery(value);

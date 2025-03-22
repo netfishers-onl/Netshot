@@ -1,14 +1,15 @@
-import api, { DeviceQueryParams } from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { QUERIES } from "@/constants";
-import useToast from "@/hooks/useToast";
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useInView } from "react-intersection-observer";
-import { useLocation } from "react-router-dom";
-import { useDeviceSidebar } from "../../contexts/DeviceSidebarProvider";
+import { useLocation } from "react-router";
+
+import api, { DeviceQueryParams } from "@/api";
+import { QUERIES } from "@/constants";
+import useToast from "@/hooks/useToast";
+
+import { useDeviceSidebar } from "../../contexts/device-sidebar";
 import DeviceBox from "./DeviceBox";
 
 /**
@@ -20,17 +21,18 @@ export default function DeviceSidebarList() {
   const LIMIT = 40;
   const toast = useToast();
   const { t } = useTranslation();
-  const ctx = useDeviceSidebar();
+  const { group, setData: setDevices, setTotal: setDeviceTotal } = useDeviceSidebar();
+
   const {
     data,
-    isLoading,
+    isPending,
     isSuccess,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useInfiniteQuery(
-    [QUERIES.DEVICE_LIST, ctx.group?.id],
-    async ({ pageParam = 0 }) => {
+  } = useInfiniteQuery({
+    queryKey: [QUERIES.DEVICE_LIST, group?.id],
+    queryFn: async ({ pageParam }) => {
       const params = {
         limit: LIMIT,
         offset: pageParam,
@@ -44,21 +46,20 @@ export default function DeviceSidebarList() {
 
       return api.device.getAll(params);
     },
-    {
-      onSuccess(res) {
-        const pages = res.pages.flat();
+    initialPageParam: 0,
+    getNextPageParam(lastPage, allPages) {
+      // Note: lastPage may be null if first query returned 403
+      return lastPage?.length === LIMIT ? allPages.length * LIMIT : undefined;
+    },
+  });
 
-        ctx.setData(pages);
-        ctx.setTotal(pages.length);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      getNextPageParam(lastPage, allPages) {
-        return lastPage.length === LIMIT ? allPages.length * LIMIT : undefined;
-      },
+  useEffect(() => {
+    if (isSuccess) {
+      const devices = data.pages.flat();
+      setDeviceTotal(devices.length);
+      setDevices(devices);
     }
-  );
+  }, [isSuccess, data?.pages, setDevices, setDeviceTotal]);
 
   useEffect(() => {
     if (inView && hasNextPage) {
@@ -66,7 +67,7 @@ export default function DeviceSidebarList() {
     }
   }, [inView, fetchNextPage, hasNextPage]);
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <Stack alignItems="center" justifyContent="center" py="6" flex="1">
         <Spinner />
@@ -74,12 +75,12 @@ export default function DeviceSidebarList() {
     );
   }
 
-  if (data.pages?.[0]?.length === 0) {
+  if (data?.pages?.[0]?.length === 0) {
     return (
       <Center flex="1">
         <Text>
-          {ctx.group
-            ? t("No device in group {{group}}", { group: ctx.group.name })
+          {group
+            ? t("No device in group {{group}}", { group: group.name })
             : t("No device found")}
         </Text>
       </Center>

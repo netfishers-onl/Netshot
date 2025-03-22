@@ -11,7 +11,7 @@ import {
 import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
 import { DeviceCredentialPayload, PaginationQueryParams } from "./types";
 
-async function getAllApiToken(queryParams: PaginationQueryParams) {
+async function getAllApiTokens(queryParams: PaginationQueryParams)  {
   return httpClient.get<ApiToken[]>("/apitokens", {
     queryParams,
   });
@@ -29,29 +29,17 @@ async function updateApiToken(id: number, payload: Partial<ApiToken>) {
 }
 
 async function removeApiToken(id: number) {
-  const req = await httpClient.rawRequest(
-    HttpMethod.Delete,
-    `/apitokens/${id}`
-  );
-  return req.status === HttpStatus.NoContent;
+  return httpClient.delete(`/apitokens/${id}`);
 }
 
-async function getAllCredentialSet(queryParams: PaginationQueryParams) {
+async function getAllCredentialSets(queryParams: PaginationQueryParams) {
   return httpClient.get<CredentialSet[]>("/credentialsets", {
     queryParams,
   });
 }
 
 async function createCredentialSet(payload: Partial<DeviceCredentialPayload>) {
-  const req = await httpClient.rawRequest(HttpMethod.Post, "/credentialsets", {
-    body: payload,
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-  });
-
-  return req.status === HttpStatus.NoContent;
+  await httpClient.post("/credentialsets", payload);
 }
 
 async function updateCredentialSet(
@@ -65,14 +53,10 @@ async function updateCredentialSet(
 }
 
 async function removeCredentialSet(id: number) {
-  const req = await httpClient.rawRequest(
-    HttpMethod.Delete,
-    `/credentialsets/${id}`
-  );
-  return req.status === HttpStatus.NoContent;
+  return httpClient.delete(`/credentialsets/${id}`);
 }
 
-async function getAllDomain(queryParams: PaginationQueryParams) {
+async function getAllDomains(queryParams: PaginationQueryParams) {
   return httpClient.get<Domain[]>("/domains", {
     queryParams,
   });
@@ -87,11 +71,10 @@ async function updateDomain(id: number, payload: Partial<Domain>) {
 }
 
 async function removeDomain(id: number) {
-  const req = await httpClient.rawRequest(HttpMethod.Delete, `/domains/${id}`);
-  return req.status === HttpStatus.NoContent;
+  return httpClient.delete(`/domains/${id}`);
 }
 
-async function getAllHook(queryParams: PaginationQueryParams) {
+async function getAllHooks(queryParams: PaginationQueryParams) {
   return httpClient.get<Hook[]>("/hooks", {
     queryParams,
   });
@@ -106,11 +89,10 @@ async function updateHook(id: number, payload: Partial<Hook>) {
 }
 
 async function removeHook(id: number) {
-  const req = await httpClient.rawRequest(HttpMethod.Delete, `/hooks/${id}`);
-  return req.status === HttpStatus.NoContent;
+  return httpClient.delete(`/hooks/${id}`);
 }
 
-async function getAllUser(queryParams: PaginationQueryParams) {
+async function getAllUsers(queryParams: PaginationQueryParams) {
   return httpClient.get<User[]>("/users", {
     queryParams,
   });
@@ -125,17 +107,19 @@ async function updateUser(id: number, payload: Partial<User>) {
 }
 
 async function removeUser(id: number) {
-  const req = await httpClient.rawRequest(HttpMethod.Delete, `/users/${id}`);
-  return req.status === HttpStatus.NoContent;
+  await httpClient.delete(`/users/${id}`);
 }
 
-async function getAllDriver(queryParams: PaginationQueryParams) {
+async function getAllDrivers(queryParams: PaginationQueryParams, refresh: boolean = false) {
   return httpClient.get<DeviceType[]>(`/devicetypes`, {
-    queryParams,
+    queryParams: {
+      ...queryParams,
+      refresh,
+    },
   });
 }
 
-async function getAllClusterMember() {
+async function getAllClusterMembers() {
   return httpClient.get<ClusterMember[]>("/cluster/members");
 }
 
@@ -144,27 +128,27 @@ async function getClusterMasterStatus() {
 }
 
 export default {
-  getAllApiToken,
+  getAllApiTokens,
   createApiToken,
   updateApiToken,
   removeApiToken,
-  getAllCredentialSet,
+  getAllCredentialSets,
   createCredentialSet,
   updateCredentialSet,
   removeCredentialSet,
-  getAllDomain,
+  getAllDomains,
   createDomain,
   updateDomain,
   removeDomain,
-  getAllHook,
+  getAllHooks,
   createHook,
   updateHook,
   removeHook,
-  getAllUser,
+  getAllUsers,
   createUser,
   updateUser,
   removeUser,
-  getAllDriver,
-  getAllClusterMember,
+  getAllDrivers,
+  getAllClusterMembers,
   getClusterMasterStatus,
 };

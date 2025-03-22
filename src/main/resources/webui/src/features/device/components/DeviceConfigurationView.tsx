@@ -17,15 +17,17 @@ export default function DeviceConfigurationView(
 ) {
   const { id, attribute } = props;
   const { t } = useTranslation();
+
   const {
     data: config,
-    isLoading,
+    isPending,
     isError,
-  } = useQuery([QUERIES.DEVICE_CONFIG, attribute?.name, id], async () =>
-    api.config.getItem(id, attribute?.name)
-  );
+  } = useQuery({
+    queryKey: [QUERIES.DEVICE_CONFIG, attribute?.name, id],
+    queryFn: async () => api.config.getItem(id, attribute?.name),
+  });
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <Center h="500px">
         <Stack alignItems="center" spacing="3">

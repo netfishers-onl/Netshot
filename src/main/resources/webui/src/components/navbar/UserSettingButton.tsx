@@ -1,8 +1,7 @@
-import api from "@/api";
+import api, { UpdateUserPayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
-import { UpdateUserPayload } from "@/api/user";
 import { QUERIES, USER_LEVEL_OPTIONS, getUserLevelOption } from "@/constants";
-import { useDashboard } from "@/contexts";
+import { useAuth } from "@/contexts";
 import { Dialog } from "@/dialog";
 import { useToast } from "@/hooks";
 import { Level, Option } from "@/types";
@@ -31,7 +30,7 @@ export default function UserSettingButton(props: UserSettingButtonProps) {
   const { t } = useTranslation();
   const toast = useToast();
   const queryClient = useQueryClient();
-  const { user } = useDashboard();
+  const { user } = useAuth();
 
   const defaultValues = useMemo(
     () =>
@@ -45,31 +44,30 @@ export default function UserSettingButton(props: UserSettingButtonProps) {
     [user]
   );
 
-  const hasRemoteUser = useMemo(() => !user?.local, [user]);
+  const isRemoteUser = useMemo(() => !user?.local, [user]);
 
   const form = useForm<UserForm>({
     mode: "onChange",
     defaultValues,
   });
 
-  const mutation = useMutation(
-    async (payload: UpdateUserPayload) => api.user.update(user?.id, payload),
-    {
-      onSuccess() {
-        dialog.close();
+  const mutation = useMutation({
+    mutationFn: async (payload: UpdateUserPayload) =>
+      api.user.update(user?.id, payload),
+    onSuccess() {
+      dialog.close();
 
-        toast.success({
-          title: t("Success"),
-          description: t("Your setting has been successfully updated"),
-        });
+      toast.success({
+        title: t("Success"),
+        description: t("Your settings have been successfully updated"),
+      });
 
-        queryClient.invalidateQueries([QUERIES.USER]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.USER] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: UserForm) => {
@@ -100,7 +98,7 @@ export default function UserSettingButton(props: UserSettingButtonProps) {
           options={USER_LEVEL_OPTIONS}
           label={t("Role")}
         />
-        {hasRemoteUser ? (
+        {isRemoteUser ? (
           <Alert variant="success">
             <AlertDescription>
               {t("You are remotely authenticated")}
@@ -135,7 +133,7 @@ export default function UserSettingButton(props: UserSettingButtonProps) {
                 validate(value, values) {
                   return (
                     value === values.confirmNewPassword ||
-                    t("Password doesn't match")
+                    t("Passwords don't match")
                   );
                 },
               }}
@@ -145,7 +143,7 @@ export default function UserSettingButton(props: UserSettingButtonProps) {
       </Stack>
     ),
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

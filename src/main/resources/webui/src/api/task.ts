@@ -28,14 +28,14 @@ async function update(id: number, payload: CreateOrUpdateTaskPayload) {
 }
 
 async function getDebugById(id: number) {
-  const req = await httpClient.rawRequest(
-    HttpMethod.Get,
+  const req = await httpClient.request(
+    HttpMethod.GET,
     `/tasks/${id}/debuglog`
   );
   return req;
 }
 
-async function getAllSummary() {
+async function getSummary() {
   return httpClient.get<TaskSummaryResponse>(`/tasks/summary`);
 }
 
@@ -45,5 +45,5 @@ export default {
   create,
   update,
   getDebugById,
-  getAllSummary,
+  getSummary,
 };

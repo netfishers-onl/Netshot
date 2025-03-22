@@ -39,7 +39,8 @@ export default function DeviceSnapshotButton(props: DeviceSnapshotButtonProps) {
     },
   });
 
-  const mutation = useMutation(api.task.create, {
+  const mutation = useMutation({
+    mutationFn: api.task.create,
     onError(err: NetshotError) {
       toast.error(err);
     },
@@ -121,7 +122,7 @@ export default function DeviceSnapshotButton(props: DeviceSnapshotButtonProps) {
       </Stack>
     ),
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     submitButton: {

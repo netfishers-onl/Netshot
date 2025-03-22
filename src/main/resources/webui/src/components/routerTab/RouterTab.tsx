@@ -1,6 +1,6 @@
 import { Box, Flex, Text } from "@chakra-ui/react";
 import { PropsWithChildren } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink } from "react-router";
 
 type RouterTabProps = {
   to: string;

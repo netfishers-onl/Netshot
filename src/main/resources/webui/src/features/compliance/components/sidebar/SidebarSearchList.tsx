@@ -7,28 +7,28 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useSidebar } from "../../contexts/SidebarProvider";
 import PolicyItem from "../PolicyItem";
+import { useEffect } from "react";
 
 export default function SidebarSearchList() {
   const ctx = useSidebar();
   const toast = useToast();
   const { t } = useTranslation();
-  const { data: policies, isLoading } = useQuery(
-    [QUERIES.POLICY_LIST, ctx.query],
-    async () => {
+
+  const { data: policies, isPending, isSuccess } = useQuery({
+    queryKey: [QUERIES.POLICY_LIST, ctx.query],
+    queryFn: async () => {
       return api.policy.getAllWithRules(ctx.query);
     },
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      onSuccess(res) {
-        ctx.setTotal(res?.length);
-        ctx.setData(res);
-      },
-    }
-  );
+  });
 
-  if (isLoading) {
+  useEffect(() => {
+    if (isSuccess) {
+      ctx.setTotal(policies?.length);
+      ctx.setData(policies);
+    }
+  }, [policies, isSuccess]);
+
+  if (isPending) {
     return (
       <Stack alignItems="center" justifyContent="center" py="6">
         <Spinner />

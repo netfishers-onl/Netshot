@@ -35,33 +35,31 @@ export default function AddDeviceCredentialButton(
     },
   });
 
-  const mutation = useMutation(
-    async (payload: Partial<DeviceCredentialPayload>) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<DeviceCredentialPayload>) =>
       api.admin.createCredentialSet(payload),
-    {
-      onSuccess(res) {
-        const { name } = form.getValues();
+    onSuccess(res) {
+      const { name } = form.getValues();
 
-        dialog.close();
-        form.reset();
+      dialog.close();
+      form.reset();
 
-        toast.success({
-          title: t("Success"),
-          description: t(
-            "Device credential {{name}} has been successfully created",
-            {
-              name,
-            }
-          ),
-        });
+      toast.success({
+        title: t("Success"),
+        description: t(
+          "Device credential {{name}} has been successfully created",
+          {
+            name,
+          }
+        ),
+      });
 
-        queryClient.invalidateQueries([QUERIES.ADMIN_DEVICE_CREDENTIALS]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_DEVICE_CREDENTIALS] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: DeviceCredentialForm) => {
@@ -128,7 +126,7 @@ export default function AddDeviceCredentialButton(
     title: t("Create credential"),
     description: <AdministrationDeviceCredentialForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

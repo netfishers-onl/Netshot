@@ -1,4 +1,3 @@
-import { transparentize } from "@/theme";
 import {
   FormControl,
   FormHelperText,
@@ -7,11 +6,14 @@ import {
 } from "@chakra-ui/react";
 import {
   AsyncSelect,
+  chakraComponents,
   ChakraStylesConfig,
   Props,
-  chakraComponents,
 } from "chakra-react-select";
 import { FocusEventHandler, ReactNode, useMemo } from "react";
+
+import { transparentize } from "@/theme";
+
 import Icon from "./Icon";
 
 export type AutocompleteProps<T> = {
@@ -23,6 +25,7 @@ export type AutocompleteProps<T> = {
   onBlur?: FocusEventHandler<HTMLElement>;
   loadOptions(value: string): Promise<T[]>;
   defaultOptions?: boolean;
+  cacheOptions?: string | number;
   sx?: SystemStyleObject;
 } & Props;
 
@@ -118,7 +121,6 @@ function Select<T>(props: AutocompleteProps<T>) {
           if (onChange) onChange(data);
         }}
         onFocus={onFocus}
-        cacheOptions
         loadOptions={loadOptions}
         defaultOptions={defaultOptions}
         {...other}

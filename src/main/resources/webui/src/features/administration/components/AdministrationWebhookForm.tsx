@@ -75,6 +75,7 @@ export default function AdministrationWebhookForm() {
         />
         <Select
           isRequired
+
           options={WEBHOOK_DATA_TYPE_OPTIONS}
           control={form.control}
           name="action"
@@ -82,7 +83,7 @@ export default function AdministrationWebhookForm() {
         />
         <FormControl
           label={t("URL")}
-          placeholder={"https://example.com/callback"}
+          placeholder={"https://api.example.com/callback"}
           type={FormControlType.Url}
           isRequired
           control={form.control}
@@ -107,7 +108,7 @@ export default function AdministrationWebhookForm() {
           <Stack spacing="0" flex="1">
             <Text fontWeight="medium">{t("SSL validation")}</Text>
             <Text color="grey.400">
-              {t("Communication between the two servers will not be secure")}
+              {t("Disabling SSL validation is not secure")}
             </Text>
           </Stack>
           <Switch w="initial" control={form.control} name="sslValidation" />

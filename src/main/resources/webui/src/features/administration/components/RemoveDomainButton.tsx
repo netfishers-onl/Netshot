@@ -20,9 +20,10 @@ export default function RemoveDomainButton(props: RemoveDomainButtonProps) {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const mutation = useMutation(async () => api.admin.removeDomain(domain?.id), {
+  const mutation = useMutation({
+    mutationFn: async () => api.admin.removeDomain(domain?.id),
     onSuccess() {
-      queryClient.invalidateQueries([QUERIES.ADMIN_DEVICE_DOMAINS]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_DEVICE_DOMAINS] });
       dialog.close();
     },
     onError(err: NetshotError) {
@@ -39,12 +40,12 @@ export default function RemoveDomainButton(props: RemoveDomainButtonProps) {
         })}
       </Text>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate();
     },
     confirmButton: {
-      label: t("remove"),
+      label: t("Remove"),
       props: {
         colorScheme: "red",
       },

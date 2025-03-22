@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import AddHardwareRuleButton from "../components/AddHardwareRuleButton";
 import EditHardwareRuleButton from "../components/EditHardwareRuleButton";
@@ -29,36 +29,35 @@ export default function ComplianceHardwareRuleScreen() {
   const pagination = usePagination();
   const toast = useToast();
 
-  const { data: rules, isLoading } = useQuery(
-    [QUERIES.HARDWARE_RULE_LIST, pagination.query],
-    api.hardwareRule.getAll,
-    {
-      select(res) {
-        return search(res, "deviceType", "family").with(pagination.query);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  const { data: rules, isPending } = useQuery({
+    queryKey: [QUERIES.HARDWARE_RULE_LIST, pagination.query],
+    queryFn: api.hardwareRule.getAll,
+    select: useCallback((res: HardwareRule[]): HardwareRule[] => {
+      return search(res, "deviceType", "family").with(pagination.query);
+    }, [pagination.query]),
+  });
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("targetGroup", {
         cell: (info) => info.getValue()?.name || t("[Any]"),
         header: t("Group"),
+        size: 20000,
       }),
       columnHelper.accessor("deviceType", {
         cell: (info) => info.getValue() || t("[Any]"),
-        header: t("Device"),
+        header: t("Device type"),
+        size: 20000,
       }),
       columnHelper.accessor("family", {
         cell: (info) => info.getValue(),
         header: t("Device family"),
+        size: 20000,
       }),
       columnHelper.accessor("partNumber", {
         cell: (info) => info.getValue(),
         header: t("Part number"),
+        size: 20000,
       }),
       columnHelper.accessor("endOfSale", {
         cell: (info) =>
@@ -66,6 +65,7 @@ export default function ComplianceHardwareRuleScreen() {
             ? formatDate(info.getValue(), "yyyy-MM-dd")
             : t("N/A"),
         header: t("End of sale"),
+        size: 10000,
       }),
       columnHelper.accessor("endOfLife", {
         cell: (info) =>
@@ -73,19 +73,13 @@ export default function ComplianceHardwareRuleScreen() {
             ? formatDate(info.getValue(), "yyyy-MM-dd")
             : t("N/A"),
         header: t("End of life"),
+        size: 10000,
       }),
       columnHelper.accessor((rule) => rule, {
         cell(info) {
           const rule = info.getValue();
           return (
-            <Protected
-              roles={[
-                Level.Admin,
-                Level.Operator,
-                Level.ReadWriteCommandOnDevice,
-                Level.ReadWrite,
-              ]}
-            >
+            <Protected minLevel={Level.ReadWrite}>
               <Stack direction="row" spacing="2">
                 <EditHardwareRuleButton
                   rule={rule}
@@ -125,6 +119,8 @@ export default function ComplianceHardwareRuleScreen() {
         meta: {
           align: "right",
         },
+        minSize: 80,
+        size: 200,
       }),
     ],
     [t, rules]
@@ -143,15 +139,8 @@ export default function ComplianceHardwareRuleScreen() {
           w="30%"
         />
         <Spacer />
-        <Protected
-          roles={[
-            Level.Admin,
-            Level.Operator,
-            Level.ReadWriteCommandOnDevice,
-            Level.ReadWrite,
-          ]}
-        >
-          <Skeleton isLoaded={!isLoading}>
+        <Protected minLevel={Level.ReadWrite}>
+          <Skeleton isLoaded={!isPending}>
             <AddHardwareRuleButton
               renderItem={(open) => (
                 <Button
@@ -166,7 +155,7 @@ export default function ComplianceHardwareRuleScreen() {
           </Skeleton>
         </Protected>
       </Stack>
-      {isLoading ? (
+      {isPending ? (
         <Stack spacing="3">
           <Skeleton h="60px"></Skeleton>
           <Skeleton h="60px"></Skeleton>
@@ -176,7 +165,7 @@ export default function ComplianceHardwareRuleScreen() {
       ) : (
         <>
           {rules?.length > 0 ? (
-            <DataTable columns={columns} data={rules} loading={isLoading} />
+            <DataTable columns={columns} data={rules} loading={isPending} />
           ) : (
             <EmptyResult
               title={t("There is no hardware rule")}

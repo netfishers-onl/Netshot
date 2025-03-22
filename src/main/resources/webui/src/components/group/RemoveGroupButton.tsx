@@ -20,9 +20,10 @@ export default function RemoveGroupButton(props: RemoveGroupButtonProps) {
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  const mutation = useMutation(api.group.remove, {
+  const mutation = useMutation({
+    mutationFn: api.group.remove,
     onSuccess() {
-      queryClient.invalidateQueries([QUERIES.DEVICE_GROUPS]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_GROUPS] });
       dialog.close();
     },
     onError(err: NetshotError) {
@@ -42,12 +43,12 @@ export default function RemoveGroupButton(props: RemoveGroupButtonProps) {
         </Text>
         <Alert color="yellow.900" status="warning">
           {t(
-            "The related software and hardware compliance rules, and the group specific tasks will be removed along with the group itself"
+            "The related software and hardware compliance rules, and the group specific tasks will be removed along with the group itself."
           )}
         </Alert>
       </Stack>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate(group.id);
     },

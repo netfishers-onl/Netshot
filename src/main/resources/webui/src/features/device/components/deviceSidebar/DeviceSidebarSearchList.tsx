@@ -1,37 +1,32 @@
 import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import useToast from "@/hooks/useToast";
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { QUERIES } from "../../constants";
-import { useDeviceSidebar } from "../../contexts/DeviceSidebarProvider";
+import { useDeviceSidebar } from "../../contexts/device-sidebar";
 import DeviceBox from "./DeviceBox";
+import { useEffect } from "react";
 
 export default function DeviceSidebarSearchList() {
   const ctx = useDeviceSidebar();
-  const toast = useToast();
   const { t } = useTranslation();
-  const { data, isLoading } = useQuery(
-    [QUERIES.DEVICE_SEARCH_LIST, ctx.query, ctx.driver?.value?.name],
-    async () => {
+
+  const { data, isPending, isSuccess } = useQuery({
+    queryKey: [QUERIES.DEVICE_SEARCH_LIST, ctx.query, ctx.driver?.value?.name],
+    queryFn: async () => {
       return api.device.search({
         driver: ctx.driver?.value?.name,
         query: ctx.query,
       });
     },
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      onSuccess(res) {
-        ctx.setTotal(res?.devices?.length);
-        ctx.setData(res?.devices);
-      },
-    }
-  );
+  });
 
-  if (isLoading) {
+  useEffect(() => {
+    ctx.setTotal(data?.devices?.length);
+    ctx.setData(data?.devices);
+  }, [isSuccess, data?.devices, ctx.setData, ctx.setTotal, ctx]);
+
+  if (isPending) {
     return (
       <Stack alignItems="center" justifyContent="center" py="6" flex="1">
         <Spinner />

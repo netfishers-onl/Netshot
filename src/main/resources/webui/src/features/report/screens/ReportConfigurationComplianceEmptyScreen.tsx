@@ -7,11 +7,10 @@ export default function ReportConfigurationComplianceEmptyScreen() {
 
   return (
     <Stack flex="1" alignItems="center" justifyContent="center">
-      <EmptyResult title={t('Select group to begin')} description={t('Here, you can visualize compliant status for devices into groups')}>
-        <AddGroupButton renderItem={open => (
-          <Button onClick={open} leftIcon={<Icon name="plus" />}>{t('Create group')}</Button>
-        )} />
-      </EmptyResult>
+      <EmptyResult
+        title={t('Select group to begin')}
+        description={t('Here, you can visualize device compliance status per group')}
+      />
     </Stack>
   )
 }

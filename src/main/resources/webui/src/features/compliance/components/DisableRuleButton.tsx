@@ -21,10 +21,11 @@ export default function DisableRuleButton(props: DisableRuleButtonProps) {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const mutation = useMutation(async () => api.rule.disable(rule.id, rule), {
+  const mutation = useMutation({
+    mutationFn: async () => api.rule.disable(rule.id, rule),
     onSuccess() {
-      queryClient.invalidateQueries([QUERIES.POLICY_RULE_LIST, policyId]);
-      queryClient.invalidateQueries([QUERIES.RULE_DETAIL, +policyId, rule.id]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_RULE_LIST, policyId] });
+      queryClient.invalidateQueries({ queryKey: [QUERIES.RULE_DETAIL, +policyId, rule.id] });
 
       dialog.close();
 
@@ -49,7 +50,7 @@ export default function DisableRuleButton(props: DisableRuleButtonProps) {
         })}
       </Text>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate();
     },

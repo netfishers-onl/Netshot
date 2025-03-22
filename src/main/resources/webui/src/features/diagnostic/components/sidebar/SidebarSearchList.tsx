@@ -7,33 +7,33 @@ import { useTranslation } from "react-i18next";
 import { QUERIES } from "../../constants";
 import { useDiagnosticSidebar } from "../../contexts/DiagnosticSidebarProvider";
 import SidebarBox from "./SidebarBox";
+import { useCallback, useEffect } from "react";
+import { Diagnostic } from "@/types";
+import { search } from "@/utils";
 
 export default function DeviceSidebarSearchList() {
   const ctx = useDiagnosticSidebar();
   const toast = useToast();
   const { t } = useTranslation();
-  const { data, isLoading } = useQuery(
-    [QUERIES.DIAGNOSTIC_SEARCH_LIST, ctx.query],
-    async () => {
+
+  const { data, isPending, isSuccess } = useQuery({
+    queryKey: [QUERIES.DIAGNOSTIC_SEARCH_LIST, ctx.query],
+    queryFn: async () => {
       return api.diagnostic.getAll();
     },
-    {
-      select(res) {
-        return res.filter((diagnostic) =>
-          diagnostic.name.startsWith(ctx.query)
-        );
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      onSuccess(res) {
-        ctx.setTotal(res?.length);
-        ctx.setData(res);
-      },
-    }
-  );
+    select: useCallback((res: Diagnostic[]): Diagnostic[] => {
+      return search(res, "name").with(ctx.query);
+    }, [ctx.query]),
+  });
 
-  if (isLoading) {
+  useEffect(() => {
+    if (isSuccess) {
+      ctx.setTotal(data.length);
+      ctx.setData(data);
+    }
+  }, [isSuccess, data, ctx]);
+
+  if (isPending) {
     return (
       <Stack alignItems="center" justifyContent="center" py="6">
         <Spinner />

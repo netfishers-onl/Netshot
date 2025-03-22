@@ -122,18 +122,19 @@ export default function AddTaskButton(props: AddTaskButtonProps) {
     name: "subnets",
   });
 
-  const createMutation = useMutation(api.task.create, {
+  const createMutation = useMutation({
+    mutationFn: api.task.create,
     onSuccess(newTask) {
       close();
       setTaskId(newTask.id);
       disclosure.onOpen();
 
-      queryClient.invalidateQueries([QUERIES.TASK_ALL]);
-      queryClient.invalidateQueries([QUERIES.TASK_CANCELLED]);
-      queryClient.invalidateQueries([QUERIES.TASK_FAILED]);
-      queryClient.invalidateQueries([QUERIES.TASK_RUNNING]);
-      queryClient.invalidateQueries([QUERIES.TASK_SCHEDULED]);
-      queryClient.invalidateQueries([QUERIES.TASK_SUCCEEDED]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK_ALL] });
+      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK_CANCELLED] });
+      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK_FAILED] });
+      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK_RUNNING] });
+      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK_SCHEDULED] });
+      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK_SUCCEEDED] });
     },
     onError() {
       toast.error({
@@ -575,7 +576,7 @@ export default function AddTaskButton(props: AddTaskButtonProps) {
                 <Button
                   type="submit"
                   isDisabled={!form.formState.isValid}
-                  isLoading={createMutation.isLoading}
+                  isLoading={createMutation.isPending}
                   variant="primary"
                 >
                   {t("Create")}

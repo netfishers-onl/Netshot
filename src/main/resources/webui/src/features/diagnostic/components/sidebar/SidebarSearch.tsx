@@ -33,7 +33,7 @@ export default function SidebarSearch() {
       />
       {ctx.query && (
         <Flex>
-          <Text>{t("{{x}} devices", { x: ctx.total })}</Text>
+          <Text>{t("{{x}} diagnostic(s)", { x: ctx.total })}</Text>
         </Flex>
       )}
     </Stack>

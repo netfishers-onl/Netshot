@@ -10,6 +10,6 @@ export enum Level {
   Visitor = 10,
   Operator = 50,
   ReadWrite = 100,
-  ReadWriteCommandOnDevice = 500,
+  ExecureReadWrite = 500,
   Admin = 1000,
-}
+};

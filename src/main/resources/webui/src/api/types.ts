@@ -27,6 +27,11 @@ export type SigninResponse = {
   username: string;
 };
 
+export type ServerInfoResponse = {
+  serverVersion: string;
+  maxIdleTimeout: number;
+}
+
 export type DeviceCredentialPayload = {
   name: string;
   mgmtDomain: {

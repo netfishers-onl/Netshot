@@ -46,14 +46,14 @@ function DeviceEditForm() {
   const form = useFormContext();
   const { t } = useTranslation();
 
-  const { data: credentialSets, isLoading } = useQuery(
-    [QUERIES.CREDENTIAL_SET_LIST],
-    async () =>
-      api.admin.getAllCredentialSet({
+  const { data: credentialSets, isPending } = useQuery({
+    queryKey: [QUERIES.CREDENTIAL_SET_LIST],
+    queryFn: async () =>
+      api.admin.getAllCredentialSets({
         offset: 0,
         limit: 999,
       })
-  );
+  });
 
   const overrideConnectionSetting = useWatch({
     control: form.control,
@@ -183,7 +183,7 @@ function DeviceEditForm() {
         placeholder={t("Select a credential")}
         onChange={onCredentialTypeChange}
       />
-      {credentialType === null && !isLoading && (
+      {credentialType === null && !isPending && (
         <>
           <Stack spacing="2">
             {credentialSets.map((credentialSet) => (
@@ -334,24 +334,22 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
     defaultValues,
   });
 
-  const mutation = useMutation(
-    async (payload: Partial<UpdateDevicePayload>) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<UpdateDevicePayload>) =>
       api.device.update(device?.id, payload),
-    {
-      onSuccess() {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t("Device {{device}} has been successfully modified", {
-            device: device?.name,
-          }),
-        });
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    onSuccess() {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t("Device {{device}} has been successfully modified", {
+          device: device?.name,
+        }),
+      });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (data: Form) => {
@@ -403,7 +401,7 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
     title: t("Edit device"),
     description: <DeviceEditForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     variant: "floating",
     onSubmit,

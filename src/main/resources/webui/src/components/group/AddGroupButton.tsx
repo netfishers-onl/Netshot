@@ -1,5 +1,4 @@
-import api from "@/api";
-import { CreateGroupPayload } from "@/api/group";
+import api, { CreateGroupPayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { BoxWithIconButton, FormControl, Switch } from "@/components";
 import QueryBuilderButton from "@/components/QueryBuilderButton";
@@ -84,8 +83,8 @@ export default function AddGroupButton(props: AddGroupButtonProps) {
     name: "driver",
   });
 
-  const createMutation = useMutation(
-    async (values: AddGroupForm) => {
+  const createMutation = useMutation({
+    mutationFn: async (values: AddGroupForm) => {
       let payload: CreateGroupPayload = {
         folder: values.folder,
         name: values.name,
@@ -95,7 +94,8 @@ export default function AddGroupButton(props: AddGroupButtonProps) {
 
       if (groupType === GroupType.Static) {
         payload.staticDevices = values.staticDevices.map((device) => device.id);
-      } else if (groupType === GroupType.Dynamic) {
+      }
+      else if (groupType === GroupType.Dynamic) {
         payload = {
           ...payload,
           driver: values.driver?.value?.name,
@@ -105,16 +105,14 @@ export default function AddGroupButton(props: AddGroupButtonProps) {
 
       await api.group.create(payload);
     },
-    {
-      onSuccess() {
-        queryClient.invalidateQueries([QUERIES.DEVICE_GROUPS]);
-        close();
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_GROUPS] });
+      close();
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const close = useCallback(() => {
     onClose();
@@ -209,7 +207,7 @@ export default function AddGroupButton(props: AddGroupButtonProps) {
                       name="folder"
                       label={t("Folder")}
                       placeholder={t("e.g. folder A / Subfolder A / ...")}
-                      helperText={t("Seperate folder names with slash")}
+                      helperText={t("Use slashes to give a folder path")}
                     />
                     <Divider />
                     <Switch
@@ -269,12 +267,13 @@ export default function AddGroupButton(props: AddGroupButtonProps) {
                     {t(
                       groupType === GroupType.Static
                         ? "Selected devices"
-                        : "Devices preview"
+                        : "Device list preview"
                     )}
                   </Heading>
-                  {groupType === GroupType.Static ? (
+                  {groupType === GroupType.Static && (
                     <StaticGroupDeviceList />
-                  ) : (
+                  )}
+                  {groupType === GroupType.Dynamic && (
                     <DynamicGroupDeviceList
                       driver={driver}
                       query={query}
@@ -296,7 +295,7 @@ export default function AddGroupButton(props: AddGroupButtonProps) {
                 <Button
                   type="submit"
                   isDisabled={!form.formState.isValid}
-                  isLoading={createMutation.isLoading}
+                  isLoading={createMutation.isPending}
                   variant="primary"
                 >
                   {t("Create")}

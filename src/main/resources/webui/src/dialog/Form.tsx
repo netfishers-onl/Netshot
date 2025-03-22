@@ -56,7 +56,6 @@ function FormDialog<F = any>(props: FormDialogProps<F>) {
       label: submitButton?.label || "submit",
       props: {
         type: "submit",
-        key: "submit",
         variant: "primary",
         isDisabled: !formState?.isValid,
         isLoading,

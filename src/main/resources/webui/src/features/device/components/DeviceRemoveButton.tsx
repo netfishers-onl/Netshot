@@ -8,7 +8,7 @@ import { Text } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MouseEvent, ReactElement, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { QUERIES as DEVICE_QUERIES } from "../constants";
 
 export type DeviceRemoveButtonProps = {
@@ -23,12 +23,13 @@ export default function DeviceRemoveButton(props: DeviceRemoveButtonProps) {
   const toast = useToast();
   const navigate = useNavigate();
 
-  const mutation = useMutation(async (id: number) => api.device.remove(id), {
+  const mutation = useMutation({
+    mutationFn: async (id: number) => api.device.remove(id),
     onSuccess() {
-      navigate("/app/device");
+      navigate("/app/devices");
 
-      queryClient.invalidateQueries([QUERIES.DEVICE_LIST]);
-      queryClient.invalidateQueries([DEVICE_QUERIES.DEVICE_SEARCH_LIST]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_LIST] });
+      queryClient.invalidateQueries({ queryKey: [DEVICE_QUERIES.DEVICE_SEARCH_LIST] });
 
       dialog.close();
     },
@@ -65,7 +66,7 @@ export default function DeviceRemoveButton(props: DeviceRemoveButtonProps) {
         )}
       </>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       for (const device of devices) {
         mutation.mutate(device.id);

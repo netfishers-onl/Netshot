@@ -16,7 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import AddDeviceCredentialButton from "../components/AddDeviceCredentialButton";
 import EditDeviceCredentialButton from "../components/EditDeviceCredentialButton";
@@ -30,48 +30,48 @@ export default function AdministrationDeviceCredentialScreen() {
   const pagination = usePagination();
   const toast = useToast();
 
-  const { data = [], isLoading } = useQuery(
-    [
+  const { data = [], isPending } = useQuery({
+    queryKey: [
       QUERIES.ADMIN_DEVICE_CREDENTIALS,
       pagination.query,
       pagination.offset,
       pagination.limit,
     ],
-    async () => api.admin.getAllCredentialSet(pagination),
-    {
-      select(res) {
-        return search(res, "name").with(pagination.query);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    queryFn: async () => api.admin.getAllCredentialSets(pagination),
+    select: useCallback((res: CredentialSet[]): CredentialSet[] => {
+      return search(res, "name").with(pagination.query);
+    }, [pagination.query]),
+  });
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("name", {
         cell: (info) => info.getValue(),
         header: t("Name"),
+        enableSorting: true,
+        size: 20000,
       }),
       columnHelper.accessor("type", {
         cell: (info) => info.getValue(),
         header: t("Protocol"),
+        enableSorting: true,
+        size: 10000,
       }),
-      columnHelper.accessor("mgmtDomain.name", {
+      columnHelper.accessor("mgmtDomain", {
         cell: (info) => {
           const value = info.getValue();
-
-          return value ? value : ANY_OPTION.label;
+          return value ? value.name : ANY_OPTION.label;
         },
         header: t("Domain"),
+        enableSorting: true,
+        size: 10000,
       }),
       columnHelper.accessor("id", {
         cell: (info) => {
           const credential = info.row.original;
 
           return (
-            <Stack direction="row" spacing="2" justifyContent="end">
+            <Stack direction="row" spacing="0" justifyContent="end">
               <EditDeviceCredentialButton
                 credential={credential}
                 renderItem={(open) => (
@@ -108,6 +108,8 @@ export default function AdministrationDeviceCredentialScreen() {
         meta: {
           align: "right",
         },
+        minSize: 80,
+        size: 200,
       }),
     ],
     [t]
@@ -139,7 +141,7 @@ export default function AdministrationDeviceCredentialScreen() {
             )}
           />
         </Stack>
-        {isLoading ? (
+        {isPending ? (
           <Stack spacing="3">
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -149,7 +151,7 @@ export default function AdministrationDeviceCredentialScreen() {
         ) : (
           <>
             {data?.length > 0 ? (
-              <DataTable columns={columns} data={data} loading={isLoading} />
+              <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
                 title={t("There is no device credential")}

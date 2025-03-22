@@ -1,7 +1,3 @@
-import { Icon } from "@/components";
-import { getDeviceLevelOption } from "@/constants";
-import { DeviceSoftwareLevel, DeviceStatus, SimpleDevice } from "@/types";
-import { getSoftwareLevelColor } from "@/utils";
 import {
   Popover,
   PopoverBody,
@@ -12,16 +8,22 @@ import {
   Tag,
   Text,
 } from "@chakra-ui/react";
-import { LegacyRef, MouseEvent, forwardRef, useCallback, useMemo } from "react";
+import { forwardRef, LegacyRef, MouseEvent, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
-import { useDeviceSidebar } from "../../contexts/DeviceSidebarProvider";
+import { useNavigate } from "react-router";
+
+import { Icon } from "@/components";
+import { getDeviceLevelOption } from "@/constants";
+import { DeviceSoftwareLevel, DeviceStatus, SimpleDevice } from "@/types";
+import { getSoftwareLevelColor } from "@/utils";
+
+import { useDeviceSidebar } from "../../contexts/device-sidebar";
 
 type DeviceBoxProps = {
   device: SimpleDevice;
 };
 
-export default forwardRef(
+const DeviceBox = forwardRef(
   (props: DeviceBoxProps, ref: LegacyRef<HTMLDivElement>) => {
     const { device } = props;
 
@@ -68,12 +70,14 @@ export default forwardRef(
 
           if (firstIndex < lastIndex) {
             range = dataClone.slice(firstIndex, lastIndex + 1);
-          } else {
+          }
+          else {
             range = dataClone.slice(lastIndex, firstIndex);
           }
 
           ctx.setSelected(range);
-        } else {
+        }
+        else {
           navigate(`./${device?.id}/general`);
           ctx.setSelected([device]);
         }
@@ -222,3 +226,5 @@ export default forwardRef(
     );
   }
 );
+
+export default DeviceBox;

@@ -7,22 +7,25 @@ import { User } from "@/types";
 import { search } from "@/utils";
 import {
   Button,
+  Checkbox,
   Heading,
   IconButton,
   Skeleton,
   Spacer,
   Stack,
+  Tag,
   Tooltip,
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { Plus } from "react-feather";
 import { useTranslation } from "react-i18next";
 import AddUserButton from "../components/AddUserButton";
 import EditUserButton from "../components/EditUserButton";
 import RemoveUserButton from "../components/RemoveUserButton";
 import { QUERIES } from "../constants";
+import { useAuth } from "@/contexts";
 
 const columnHelper = createColumnHelper<User>();
 
@@ -30,30 +33,40 @@ export default function AdministrationUserScreen() {
   const { t } = useTranslation();
   const pagination = usePagination();
   const toast = useToast();
+  const { user: currentUser } = useAuth();
 
-  const { data = [], isLoading } = useQuery(
-    [
+  const { data = [], isPending } = useQuery({
+    queryKey: [
       QUERIES.ADMIN_USERS,
       pagination.query,
       pagination.offset,
       pagination.limit,
     ],
-    async () => api.admin.getAllUser(pagination),
-    {
-      select(res) {
-        return search(res, "username").with(pagination.query);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    queryFn: async () => api.admin.getAllUsers(pagination),
+    select: useCallback((res: User[]): User[] => {
+      return search(res, "username").with(pagination.query);
+    }, [pagination.query]),
+  });
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("username", {
         cell: (info) => info.getValue(),
         header: t("Username"),
+        enableSorting: true,
+        size: 30000,
+      }),
+      columnHelper.accessor("local", {
+        cell: (info) => {
+          return (
+            <Tag colorScheme={info.getValue() ? "green" : "red"}>
+              {t(info.getValue() ? "Local" : "Remote")}
+            </Tag>
+          )
+        },
+        header: t("Type"),
+        size: 100,
+        minSize: 90,
       }),
       columnHelper.accessor("level", {
         cell: (info) => {
@@ -63,17 +76,16 @@ export default function AdministrationUserScreen() {
           return label ? label : t("Unknown");
         },
         header: t("Permission level"),
-      }),
-      columnHelper.accessor("local", {
-        cell: (info) => (info.getValue() ? t("Yes") : t("No")),
-        header: t("Local authentication"),
+        enableSorting: true,
+        size: 10000,
       }),
       columnHelper.accessor("id", {
         cell: (info) => {
           const user = info.row.original;
+          const isSelf = user.username === currentUser.username;
 
           return (
-            <Stack direction="row" spacing="2" justifyContent="end">
+            <Stack direction="row" spacing="0" justifyContent="end">
               <EditUserButton
                 user={user}
                 renderItem={(open) => (
@@ -84,6 +96,7 @@ export default function AdministrationUserScreen() {
                       variant="ghost"
                       colorScheme="green"
                       onClick={open}
+                      disabled={isSelf}
                     />
                   </Tooltip>
                 )}
@@ -98,6 +111,7 @@ export default function AdministrationUserScreen() {
                       variant="ghost"
                       colorScheme="green"
                       onClick={open}
+                      disabled={isSelf}
                     />
                   </Tooltip>
                 )}
@@ -110,6 +124,8 @@ export default function AdministrationUserScreen() {
         meta: {
           align: "right",
         },
+        minSize: 80,
+        size: 200,
       }),
     ],
     [t]
@@ -137,7 +153,7 @@ export default function AdministrationUserScreen() {
             )}
           />
         </Stack>
-        {isLoading ? (
+        {isPending ? (
           <Stack spacing="3">
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -147,7 +163,7 @@ export default function AdministrationUserScreen() {
         ) : (
           <>
             {data?.length > 0 ? (
-              <DataTable columns={columns} data={data} loading={isLoading} />
+              <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
                 title={t("There is no user")}

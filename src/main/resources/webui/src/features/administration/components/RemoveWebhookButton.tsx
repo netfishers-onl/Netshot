@@ -20,9 +20,10 @@ export default function RemoveWebhookButton(props: RemoveWebhookButtonProps) {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const mutation = useMutation(async () => api.admin.removeHook(webhook.id), {
+  const mutation = useMutation({
+    mutationFn: async () => api.admin.removeHook(webhook.id),
     onSuccess() {
-      queryClient.invalidateQueries([QUERIES.ADMIN_WEBHOOKS]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_WEBHOOKS] });
       dialog.close();
 
       toast.success({
@@ -52,12 +53,12 @@ export default function RemoveWebhookButton(props: RemoveWebhookButtonProps) {
         {t(", are you sure?")}
       </Text>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate();
     },
     confirmButton: {
-      label: t("remove"),
+      label: t("Remove"),
       props: {
         colorScheme: "red",
       },

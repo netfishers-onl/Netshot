@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
       output: {
         sourcemap: false,
         manualChunks: {
-          router: ["react-router-dom"],
+          router: ["react-router"],
           "framer-motion": ["framer-motion"],
           chakra: ["@chakra-ui/react"],
           "chart.js": ["chart.js"],

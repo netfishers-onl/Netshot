@@ -24,14 +24,14 @@ export default function Sidebar() {
                 <>
                   <Stack spacing="0" py="4" px="5">
                     <SidebarLink
-                      to="./software"
-                      label={t("Software")}
-                      description={t("Software version compliance")}
-                    />
-                    <SidebarLink
                       to="./hardware"
                       label={t("Hardware")}
                       description={t("Hardware support status")}
+                    />
+                    <SidebarLink
+                      to="./software"
+                      label={t("Software")}
+                      description={t("Software version compliance")}
                     />
                   </Stack>
                   <Divider />
@@ -42,14 +42,7 @@ export default function Sidebar() {
                 <Text fontWeight="medium">{t("Configuration compliance")}</Text>
               </Stack>
               {query ? <SidebarSearchList /> : <SidebarList />}
-              <Protected
-                roles={[
-                  Level.Admin,
-                  Level.Operator,
-                  Level.ReadWriteCommandOnDevice,
-                  Level.ReadWrite,
-                ]}
-              >
+              <Protected minLevel={Level.Operator}>
                 <Divider />
                 <Stack p="6">
                   <AddPolicyButton

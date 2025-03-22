@@ -1,5 +1,5 @@
 import { Divider, Stack } from "@chakra-ui/react";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 import { ConfigurationComplianceSidebar } from "../components";
 import ConfigurationComplianceProvider from "../contexts/ConfigurationComplianceSidebarProvider";
 

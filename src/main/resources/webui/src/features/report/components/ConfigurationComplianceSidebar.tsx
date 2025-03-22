@@ -1,7 +1,3 @@
-import api, { ReportQueryParams } from "@/api";
-import { Chart, Sidebar } from "@/components";
-import { useColor } from "@/theme";
-import { getValuesFromOptions } from "@/utils";
 import {
   Box,
   Divider,
@@ -15,7 +11,13 @@ import { useQuery } from "@tanstack/react-query";
 import { ChartConfiguration } from "chart.js";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
+
+import api, { ReportQueryParams } from "@/api";
+import { Chart, Sidebar } from "@/components";
+import { useColor } from "@/theme";
+import { getValuesFromOptions } from "@/utils";
+
 import { QUERIES } from "../constants";
 import { useConfigurationCompliance } from "../contexts";
 import ConfigurationCompliantSidebarList from "./ConfigurationComplianceSidebarList";
@@ -30,15 +32,15 @@ function ConfigurationComplianceGlobalChart() {
     id: string;
   }>();
 
-  const { data: stats, isLoading } = useQuery(
-    [
+  const { data: stats, isPending } = useQuery({
+    queryKey: [
       QUERIES.CONFIGURATION_COMPLIANCE_STAT,
       ctx.filters.domains,
       ctx.filters.groups,
       ctx.filters.policies,
       params?.id,
     ],
-    async () => {
+   queryFn: async () => {
       const queryParams = {
         domain: [],
         group: [],
@@ -63,12 +65,10 @@ function ConfigurationComplianceGlobalChart() {
         queryParams.group = [...queryParams.group, +params.id];
       }
 
-      return api.report.getAllGroupConfigComplianceStat(queryParams);
+      return api.report.getAllGroupConfigComplianceStats(queryParams);
     },
-    {
-      cacheTime: 0,
-    }
-  );
+    gcTime: 0,
+  });
 
   const count = useMemo(() => {
     const output = {
@@ -131,21 +131,21 @@ function ConfigurationComplianceGlobalChart() {
   return (
     <Stack spacing="5" p="5">
       <Stack w="100%" alignItems="center" h="140px">
-        <Skeleton isLoaded={!isLoading} h="140px" borderRadius="full">
+        <Skeleton isLoaded={!isPending} h="140px" borderRadius="full">
           <Chart w="100%" config={config} />
         </Skeleton>
       </Stack>
       <Stack spacing="2" cursor="pointer">
         <Stack direction="row" alignItems="center" spacing="3">
-          <Skeleton isLoaded={!isLoading}>
+          <Skeleton isLoaded={!isPending}>
             <Box w="14px" h="14px" borderRadius="4px" bg={nonCompliantColor} />
           </Skeleton>
-          <Skeleton isLoaded={!isLoading}>
+          <Skeleton isLoaded={!isPending}>
             <Text>{t("Non compliant")}</Text>
           </Skeleton>
 
           <Spacer />
-          <Skeleton isLoaded={!isLoading}>
+          <Skeleton isLoaded={!isPending}>
             <Tag bg="green.900" color="green.50">
               {count.nonCompliant}
             </Tag>
@@ -153,15 +153,15 @@ function ConfigurationComplianceGlobalChart() {
         </Stack>
         <Divider />
         <Stack direction="row" alignItems="center" spacing="3">
-          <Skeleton isLoaded={!isLoading}>
+          <Skeleton isLoaded={!isPending}>
             <Box w="14px" h="14px" borderRadius="4px" bg={compliantColor} />
           </Skeleton>
-          <Skeleton isLoaded={!isLoading}>
+          <Skeleton isLoaded={!isPending}>
             <Text>{t("Compliant")}</Text>
           </Skeleton>
 
           <Spacer />
-          <Skeleton isLoaded={!isLoading}>
+          <Skeleton isLoaded={!isPending}>
             <Tag bg="green.50" color="green.900">
               {count.compliant}
             </Tag>

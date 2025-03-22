@@ -22,9 +22,10 @@ export default function RemoveSoftwareRuleButton(
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const mutation = useMutation(async () => api.softwareRule.remove(rule?.id), {
+  const mutation = useMutation({
+    mutationFn: async () => api.softwareRule.remove(rule?.id),
     onSuccess() {
-      queryClient.invalidateQueries([QUERIES.SOFTWARE_RULE_LIST]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.SOFTWARE_RULE_LIST] });
       dialog.close();
     },
     onError(err: NetshotError) {
@@ -35,12 +36,12 @@ export default function RemoveSoftwareRuleButton(
   const dialog = Dialog.useConfirm({
     title: t("Remove software rule"),
     description: <Text>{t("You are about to remove this software rule")}</Text>,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate();
     },
     confirmButton: {
-      label: t("remove"),
+      label: t("Remove"),
       props: {
         colorScheme: "red",
       },

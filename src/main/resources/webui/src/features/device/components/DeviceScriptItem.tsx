@@ -39,7 +39,8 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
     } as SystemStyleObject;
   }, [isSelected]);
 
-  const { mutate, isLoading } = useMutation(api.script.remove, {
+  const { mutate, isPending: isLoading } = useMutation({
+    mutationFn: api.script.remove,
     onSuccess() {
       toast.success({
         title: t("Success"),
@@ -48,7 +49,7 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
 
       removeDialog.close();
 
-      queryClient.invalidateQueries([QUERIES.SCRIPT_LIST]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.SCRIPT_LIST] });
     },
     onError() {
       toast.error({

@@ -1,7 +1,3 @@
-import Icon from "@/components/Icon";
-import { useDeviceTypeOptions, useToast } from "@/hooks";
-import { DeviceConfig, DeviceTypeAttribute } from "@/types";
-import { formatDate } from "@/utils";
 import {
   Divider,
   IconButton,
@@ -14,8 +10,14 @@ import {
 import { motion, useAnimationControls } from "framer-motion";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
-import { useDevice } from "../contexts/DeviceProvider";
+import { useParams } from "react-router";
+
+import Icon from "@/components/Icon";
+import { useDeviceTypeOptions, useToast } from "@/hooks";
+import { DeviceConfig, DeviceTypeAttribute } from "@/types";
+import { formatDate } from "@/utils";
+
+import { useDevice } from "../contexts/device";
 import DeviceConfigurationAttribute from "./DeviceConfigurationAttribute";
 import DeviceConfigurationCompareButton from "./DeviceConfigurationCompareButton";
 

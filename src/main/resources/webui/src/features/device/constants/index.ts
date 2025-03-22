@@ -8,6 +8,7 @@ export const QUERIES = {
   DEVICE_CONFIG: "device-config",
   DEVICE_INTERFACES: "device-interfaces",
   DEVICE_MODULES: "device-modules",
+  DEVICE_TASKS: "device-tasks",
   DEVICE_DIAGNOSTIC: "device-diagnostic",
   DEVICE_COMPLIANCE: "device-compliance",
   DEVICE_REMOVE: "device-remove",

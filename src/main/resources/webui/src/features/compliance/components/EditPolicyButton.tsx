@@ -29,29 +29,27 @@ export default function EditPolicyButton(props: EditPolicyButtonProps) {
     },
   });
 
-  const mutation = useMutation(
-    async (payload: CreateOrUpdatePolicy) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: CreateOrUpdatePolicy) =>
       api.policy.update(policy.id, payload),
-    {
-      onSuccess(res) {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t(
-            "Policy {{policyName}} has been successfully updated",
-            {
-              policyName: res?.name,
-            }
-          ),
-        });
+    onSuccess(res) {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t(
+          "Policy {{policyName}} has been successfully updated",
+          {
+            policyName: res?.name,
+          }
+        ),
+      });
 
-        queryClient.invalidateQueries([QUERIES.POLICY_LIST]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_LIST] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: Form) => {
@@ -67,7 +65,7 @@ export default function EditPolicyButton(props: EditPolicyButtonProps) {
     title: t("Edit policy"),
     description: <PolicyForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

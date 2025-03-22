@@ -55,26 +55,25 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
     defaultValues,
   });
 
-  const mutation = useMutation(
-    async (payload: CreateOrUpdateRule) => api.rule.update(rule.id, payload),
-    {
-      onSuccess(res) {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t("Rule {{name}} has been successfully updated", {
-            name: res?.name,
-          }),
-        });
+  const mutation = useMutation({
+    mutationFn: async (payload: CreateOrUpdateRule) =>
+      api.rule.update(rule.id, payload),
+    onSuccess(res) {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t("Rule {{name}} has been successfully updated", {
+          name: res?.name,
+        }),
+      });
 
-        queryClient.invalidateQueries([QUERIES.POLICY_RULE_LIST, policyId]);
-        queryClient.invalidateQueries([QUERIES.RULE_DETAIL, +policyId, res.id]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_RULE_LIST, policyId] });
+      queryClient.invalidateQueries({ queryKey: [QUERIES.RULE_DETAIL, +policyId, res.id] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: RuleForm) => {
@@ -112,7 +111,7 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
       <RuleEditForm type={rule?.type} deviceDriver={rule.deviceDriver} />
     ),
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     variant: hasScript ? "full-floating" : "floating",
     onSubmit,

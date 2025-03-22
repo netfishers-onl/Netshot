@@ -11,10 +11,10 @@ import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import DeviceDiagnosticButton from "../components/DeviceDiagnosticButton";
 import { QUERIES } from "../constants";
-import { useDevice } from "../contexts/DeviceProvider";
+import { useDevice } from "../contexts/device";
 
 const columnHelper = createColumnHelper<DeviceDiagnosticResult>();
 
@@ -29,21 +29,17 @@ export default function DeviceDiagnosticScreen() {
   const pagination = usePagination();
   const { device } = useDevice();
 
-  const { data, isLoading } = useQuery(
-    [
+  const { data, isPending } = useQuery({
+    queryKey: [
       QUERIES.DEVICE_DIAGNOSTIC,
       params.id,
       pagination.query,
       pagination.offset,
       pagination.limit,
     ],
-    async () => api.device.getDiagnosticResultById(+params.id, pagination),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    queryFn: async () =>
+      api.device.getDiagnosticResultById(+params.id, pagination),
+  });
 
   const columns = useMemo(
     () => [
@@ -81,13 +77,7 @@ export default function DeviceDiagnosticScreen() {
               w="25%"
             />
             <Spacer />
-            <Protected
-              roles={[
-                Level.Admin,
-                Level.Operator,
-                Level.ReadWriteCommandOnDevice,
-              ]}
-            >
+            <Protected minLevel={Level.Operator}>
               <DeviceDiagnosticButton
                 devices={[device]}
                 renderItem={(open) => (
@@ -103,7 +93,7 @@ export default function DeviceDiagnosticScreen() {
             </Protected>
           </Stack>
 
-          <DataTable columns={columns} data={data} loading={isLoading} />
+          <DataTable columns={columns} data={data} loading={isPending} />
         </>
       ) : (
         <EmptyResult
@@ -113,13 +103,7 @@ export default function DeviceDiagnosticScreen() {
           )}
         >
           <Stack direction="row" spacing="3">
-            <Protected
-              roles={[
-                Level.Admin,
-                Level.Operator,
-                Level.ReadWriteCommandOnDevice,
-              ]}
-            >
+           <Protected minLevel={Level.Operator}>
               <DeviceDiagnosticButton
                 devices={[device]}
                 renderItem={(open) => (
@@ -134,7 +118,7 @@ export default function DeviceDiagnosticScreen() {
                 )}
               />
             </Protected>
-            <Button as={Link} to="/app/diagnostic">
+            <Button as={Link} to="/app/diagnostics">
               {t("Go to diagnostics")}
             </Button>
           </Stack>

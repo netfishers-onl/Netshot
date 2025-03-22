@@ -20,29 +20,27 @@ export default function RemoveApiTokenButton(props: RemoveApiTokenButtonProps) {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const mutation = useMutation(
-    async () => api.admin.removeApiToken(apiToken.id),
-    {
-      onSuccess() {
-        queryClient.invalidateQueries([QUERIES.ADMIN_API_TOKENS]);
-        dialog.close();
+  const mutation = useMutation({
+    mutationFn: async () => api.admin.removeApiToken(apiToken.id),
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_API_TOKENS] });
+      dialog.close();
 
-        toast.success({
-          title: t("Success"),
-          description: t("Api token has been successfully removed"),
-        });
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      toast.success({
+        title: t("Success"),
+        description: t("Api token has been successfully removed"),
+      });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const dialog = Dialog.useConfirm({
     title: t("Remove API token"),
     description: (
       <Text>
-        {t("You are about to remove the api token ")}
+        {t("You are about to remove the API token ")}
 
         <Text as="span" fontWeight="semibold">
           {t("{{description}}", {
@@ -53,12 +51,12 @@ export default function RemoveApiTokenButton(props: RemoveApiTokenButtonProps) {
         {t(", are you sure?")}
       </Text>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate();
     },
     confirmButton: {
-      label: t("remove"),
+      label: t("Remove"),
       props: {
         colorScheme: "red",
       },

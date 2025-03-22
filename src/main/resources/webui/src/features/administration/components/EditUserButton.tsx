@@ -26,7 +26,7 @@ export default function EditUserButton(props: EditUserButtonProps) {
     () => ({
       username: user?.username,
       level: getUserLevelOption(user?.level),
-      hasRemote: !user.local,
+      isRemote: !user.local,
     }),
     [user]
   );
@@ -35,48 +35,51 @@ export default function EditUserButton(props: EditUserButtonProps) {
     mode: "onChange",
     defaultValues: {
       ...defaultValues,
-      password: HIDDEN_PASSWORD,
-      confirmPassword: HIDDEN_PASSWORD,
+      password: "",
+      confirmPassword: "",
+      changePassword: false,
     },
   });
 
-  const mutation = useMutation(
-    async (payload: Partial<User>) => api.admin.updateUser(user?.id, payload),
-    {
-      onSuccess(res) {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t("User {{username}} has been successfully updated", {
-            username: res?.username,
-          }),
-        });
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<User>) =>
+        api.admin.updateUser(user?.id, payload),
+    onSuccess(res) {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t("User {{username}} has been successfully updated", {
+          username: res?.username,
+        }),
+      });
 
-        queryClient.invalidateQueries([QUERIES.ADMIN_USERS]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_USERS] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: UserForm) => {
-      mutation.mutate({
+      const change: Partial<User> = {
         username: values.username,
         level: values.level.value,
-        local: !values.hasRemote,
-        password: values.password === HIDDEN_PASSWORD ? "-" : values.password,
-      });
+        local: !values.isRemote,
+      };
+      if (values.changePassword) {
+        change.password = values.password;
+      }
+      mutation.mutate(change);
     },
     [mutation]
   );
 
   const dialog = Dialog.useForm({
     title: t("Edit User"),
-    description: <AdministrationUserForm />,
+    description: <AdministrationUserForm showChangePassword />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

@@ -30,11 +30,12 @@ export function CreateDeviceScriptButton(props: CreateDeviceScriptButtonProps) {
     },
   });
 
-  const { mutate, isLoading } = useMutation(api.script.create, {
+  const { mutate, isPending } = useMutation({
+    mutationFn: api.script.create,
     async onSuccess(data) {
       dialog.close();
       form.reset();
-      await queryClient.invalidateQueries([QUERIES.SCRIPT_LIST]);
+      await queryClient.invalidateQueries({ queryKey: [QUERIES.SCRIPT_LIST] });
       onCreated(data);
     },
     onError() {
@@ -78,7 +79,7 @@ export function CreateDeviceScriptButton(props: CreateDeviceScriptButtonProps) {
         ].join("\n"),
       });
     },
-    isLoading,
+    isLoading: isPending,
     submitButton: {
       label: t("Create"),
     },

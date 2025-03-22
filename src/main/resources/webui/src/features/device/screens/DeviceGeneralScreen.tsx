@@ -9,7 +9,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { useDevice } from "../contexts/DeviceProvider";
+import { useDevice } from "../contexts/device";
 
 export default function DeviceGeneralScreen() {
   const { t } = useTranslation();

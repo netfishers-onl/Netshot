@@ -1,5 +1,4 @@
-import api from "@/api";
-import { UpdateGroupPayload } from "@/api/group";
+import api, { UpdateGroupPayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { FormControl, Switch } from "@/components";
 import QueryBuilderButton from "@/components/QueryBuilderButton";
@@ -25,7 +24,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent, ReactElement, useCallback, useMemo } from "react";
+import { MouseEvent, ReactElement, useCallback, useEffect, useMemo } from "react";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import DynamicGroupDeviceList from "./DynamicGroupDeviceList";
@@ -71,43 +70,39 @@ export default function EditGroupButton(props: EditGroupButtonProps) {
   });
 
   // Get driver option from group
-  const { isLoading: isDriverLoading } = useQuery(
-    [QUERIES.DEVICE_TYPE_LIST],
-    api.device.getAllType,
-    {
-      onSuccess(types) {
-        const driverOption = types.find((type) => type.name === group.driver);
+  const { data: deviceTypes } = useQuery({
+    queryKey: [QUERIES.DEVICE_TYPE_LIST],
+    queryFn: api.device.getAllTypes,
+    enabled: group.driver?.length > 0,
+  });
 
-        if (driverOption) {
-          form.setValue("driver", {
-            label: driverOption.name,
-            value: driverOption,
-          });
-        }
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      enabled: group.driver?.length > 0,
+  useEffect(() => {
+    if (deviceTypes) {
+      const driverOption = deviceTypes.find((type) => type.name === group.driver);
+
+      if (driverOption) {
+        form.setValue("driver", {
+          label: driverOption.name,
+          value: driverOption,
+        });
+      }
     }
-  );
+  }, [deviceTypes]);
 
   // Get static devices from group
-  const { isLoading: isStaticDeviceListLoading } = useQuery(
-    [QUERIES.DEVICE_LIST, group.id, group.folder, group.name],
-    async () =>
+  const { data: staticDevices } = useQuery({
+    queryKey: [QUERIES.DEVICE_LIST, group.id, group.folder, group.name],
+    queryFn: async () =>
       api.device.getAll({
         group: group.id,
       }),
-    {
-      onSuccess(devices) {
-        form.setValue("staticDevices", devices);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
+  });
+
+  useEffect(() => {
+    if (staticDevices) {
+      form.setValue("staticDevices", staticDevices);
     }
-  );
+  }, [staticDevices]);
 
   const query = useWatch({
     control: form.control,
@@ -119,8 +114,8 @@ export default function EditGroupButton(props: EditGroupButtonProps) {
     name: "driver",
   });
 
-  const mutation = useMutation(
-    async (values: EditGroupForm) => {
+  const mutation = useMutation({
+    mutationFn: async (values: EditGroupForm) => {
       let payload: UpdateGroupPayload = {
         name: group.name,
         folder: group.folder,
@@ -129,7 +124,8 @@ export default function EditGroupButton(props: EditGroupButtonProps) {
 
       if (group.type === GroupType.Static) {
         payload.staticDevices = values.staticDevices.map((device) => device.id);
-      } else if (group.type === GroupType.Dynamic) {
+      }
+      else if (group.type === GroupType.Dynamic) {
         payload = {
           ...payload,
           driver: values.driver?.value?.name,
@@ -139,16 +135,14 @@ export default function EditGroupButton(props: EditGroupButtonProps) {
 
       await api.group.update(group.id, payload);
     },
-    {
-      onSuccess() {
-        onClose();
-        queryClient.invalidateQueries([QUERIES.DEVICE_GROUPS]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    onSuccess() {
+      onClose();
+      queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_GROUPS] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const submit = useCallback((values: EditGroupForm) => {
     mutation.mutate(values);
@@ -163,16 +157,12 @@ export default function EditGroupButton(props: EditGroupButtonProps) {
   );
 
   const open = useCallback(
-    (evt: MouseEvent<HTMLDivElement>) => {
+    (evt: MouseEvent<HTMLButtonElement>) => {
       evt.stopPropagation();
       onOpen();
     },
     [onOpen]
   );
-
-  if (isStaticDeviceListLoading || isDriverLoading) {
-    return null;
-  }
 
   return (
     <FormProvider {...form}>
@@ -215,8 +205,8 @@ export default function EditGroupButton(props: EditGroupButtonProps) {
                     control={form.control}
                     name="folder"
                     label={t("Folder")}
-                    placeholder={t("e.g. folder A / Subfolder A / ...")}
-                    helperText={t("Seperate folder names with slash")}
+                    placeholder={t("e.g. Folder A/Subfolder B/ ...")}
+                    helperText={t("Use slashes to give a folder path")}
                   />
                   <Divider />
                   <Switch
@@ -276,12 +266,13 @@ export default function EditGroupButton(props: EditGroupButtonProps) {
                   {t(
                     group.type === GroupType.Static
                       ? "Selected devices"
-                      : "Devices preview"
+                      : "Device list preview"
                   )}
                 </Heading>
-                {group.type === GroupType.Static ? (
+                {group.type === GroupType.Static && (
                   <StaticGroupDeviceList />
-                ) : (
+                )}
+                {group.type === GroupType.Dynamic && (
                   <DynamicGroupDeviceList
                     driver={driver}
                     query={query}
@@ -297,7 +288,7 @@ export default function EditGroupButton(props: EditGroupButtonProps) {
               <Button
                 type="submit"
                 isDisabled={!form.formState.isValid}
-                isLoading={mutation.isLoading}
+                isLoading={mutation.isPending}
                 variant="primary"
               >
                 {t("Apply changes")}

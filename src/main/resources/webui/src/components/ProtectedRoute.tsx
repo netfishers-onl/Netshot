@@ -1,32 +1,24 @@
-import { useDashboard } from "@/contexts";
+import { useAuth } from "@/contexts";
 import { Dialog } from "@/dialog";
 import { Level } from "@/types";
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router";
 
 export type ProtectedRouteProps = {
-  roles: Level[];
+  minLevel: Level;
 };
 
 export default function ProtectedRoute(props: ProtectedRouteProps) {
-  const { roles } = props;
-  const { t } = useTranslation();
-  const { user } = useDashboard();
-  const isAllowed = useMemo(() => roles.includes(user?.level), [roles, user]);
+  const { minLevel } = props;
+  const { user } = useAuth();
+  const isAllowed = useMemo(() => (user?.level || 0) >= minLevel, [minLevel, user]);
 
-  const dialog = Dialog.useAlert({
-    title: t("Access denied"),
-    description: t(
-      "Access to this page is denied because you do not have sufficient rights."
-    ),
-  });
+  if (!isAllowed) {
+    return null;
+  }
 
-  useEffect(() => {
-    if (!isAllowed) {
-      dialog.open();
-    }
-  }, [isAllowed, dialog]);
-
-  return isAllowed ? <Outlet /> : <Navigate to="/" />;
+  return (
+    <Outlet />
+  );
 }

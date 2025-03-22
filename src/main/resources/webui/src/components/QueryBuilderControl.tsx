@@ -8,6 +8,8 @@ import {
   DeviceSoftwareLevel,
   DeviceStatus,
   DeviceType,
+  Diagnostic,
+  Domain,
   Option,
 } from "@/types";
 import { sortAlphabetical, union } from "@/utils";
@@ -183,55 +185,43 @@ export default function QueryBuilderControl<T>(
     },
   });
 
-  console.log(form);
-
-  const { isLoading: isDomainLoading, data: domains } = useQuery(
-    [QUERIES.DOMAIN_LIST],
-    async () => {
-      return api.admin.getAllDomain({
+  const { isPending: isDomainPending, data: domains } = useQuery({
+    queryKey: [QUERIES.DOMAIN_LIST],
+    queryFn: async () => {
+      return api.admin.getAllDomains({
         limit: 999,
         offset: 0,
       });
     },
-    {
-      select(domains) {
-        return domains.map((domain) => ({
-          label: domain?.name,
-          value: domain?.id,
-        }));
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    select: useCallback((domains: Domain[]): Option<number>[] => {
+      return domains.map((domain) => ({
+        label: domain?.name,
+        value: domain?.id,
+      }));
+    }, []),
+  });
 
-  const { isLoading: isDiagnosticLoading, data: diagnostics } = useQuery(
-    [QUERIES.DIAGNOSTIC_LIST],
-    async () => {
+  const { isPending: isDiagnosticPending, data: diagnostics } = useQuery({
+    queryKey: [QUERIES.DIAGNOSTIC_LIST],
+    queryFn: async () => {
       return api.diagnostic.getAll({
         limit: 999,
         offset: 0,
       });
     },
-    {
-      select(diagnostics) {
-        return diagnostics.map(
-          (diagnostic) =>
-            ({
-              label: `Diagnostic "${diagnostic?.name}"`,
-              value: {
-                name: `Diagnostic "${diagnostic?.name}"`,
-                type: diagnostic?.resultType,
-              },
-            } as AttributeOption)
-        );
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    select: useCallback((diagnostics: Diagnostic[]): AttributeOption[] => {
+      return diagnostics.map(
+        (diagnostic) =>
+          ({
+            label: `Diagnostic "${diagnostic?.name}"`,
+            value: {
+              name: `Diagnostic "${diagnostic?.name}"`,
+              type: diagnostic?.resultType,
+            },
+          })
+      );
+    }, []),
+  });
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -630,7 +620,7 @@ export default function QueryBuilderControl<T>(
     [selectedAttribute, form, updateSelection]
   );
 
-  if (isDomainLoading || isDiagnosticLoading) {
+  if (isDomainPending || isDiagnosticPending) {
     return (
       <Center>
         <Stack alignItems="center" spacing="4">

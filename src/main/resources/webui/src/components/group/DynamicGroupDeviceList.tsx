@@ -32,20 +32,16 @@ export default function DynamicGroupDeviceList(
   const { t } = useTranslation();
   const toast = useToast();
 
-  const { data, isLoading } = useQuery(
-    [QUERIES.DEVICE_GROUP_AGGREGATED_SEARCH, query, driver?.value?.name],
-    async () => {
+  const { data, isPending } = useQuery({
+    queryKey: [QUERIES.DEVICE_GROUP_AGGREGATED_SEARCH,
+        query, driver?.value?.name],
+    queryFn: async () => {
       return api.device.search({
         driver: driver?.value?.name,
         query,
       });
     },
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  });
 
   const isEmptyOrUndefined = useMemo(
     () => data === undefined || data?.devices?.length === 0,
@@ -72,7 +68,7 @@ export default function DynamicGroupDeviceList(
     );
   }
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <Center flex="1">
         <Stack alignItems="center" spacing="4">

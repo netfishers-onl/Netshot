@@ -1,7 +1,9 @@
+import { Button, ButtonGroup, Heading, Stack, Text } from "@chakra-ui/react";
+import { useTranslation } from "react-i18next";
+
 import { Icon, Protected } from "@/components";
 import { Level } from "@/types";
-import { Button, Heading, Stack, Text } from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
+
 import {
   DeviceBulkEditButton,
   DeviceComplianceButton,
@@ -12,7 +14,7 @@ import {
   DeviceSnapshotButton,
 } from "../components";
 import DeviceRunScriptButton from "../components/DeviceRunScriptButton";
-import { useDeviceSidebar } from "../contexts/DeviceSidebarProvider";
+import { useDeviceSidebar } from "../contexts/device-sidebar";
 
 export default function DeviceBulkActionScreen() {
   const ctx = useDeviceSidebar();
@@ -36,13 +38,7 @@ export default function DeviceBulkActionScreen() {
         </Stack>
 
         <Stack spacing="2">
-          <Protected
-            roles={[
-              Level.Admin,
-              Level.Operator,
-              Level.ReadWriteCommandOnDevice,
-            ]}
-          >
+          <Protected minLevel={Level.ExecureReadWrite}>
             <DeviceRunScriptButton
               devices={ctx.selected}
               renderItem={(open) => (
@@ -56,14 +52,7 @@ export default function DeviceBulkActionScreen() {
               )}
             />
           </Protected>
-          <Protected
-            roles={[
-              Level.Admin,
-              Level.Operator,
-              Level.ReadWriteCommandOnDevice,
-              Level.ReadWrite,
-            ]}
-          >
+          <Protected minLevel={Level.Operator}>
             <DeviceSnapshotButton
               devices={ctx.selected}
               renderItem={(open) => (
@@ -77,13 +66,7 @@ export default function DeviceBulkActionScreen() {
               )}
             />
           </Protected>
-          <Protected
-            roles={[
-              Level.Admin,
-              Level.Operator,
-              Level.ReadWriteCommandOnDevice,
-            ]}
-          >
+          <Protected minLevel={Level.Operator}>
             <DeviceComplianceButton
               devices={ctx.selected}
               renderItem={(open) => (
@@ -97,13 +80,7 @@ export default function DeviceBulkActionScreen() {
               )}
             />
           </Protected>
-          <Protected
-            roles={[
-              Level.Admin,
-              Level.Operator,
-              Level.ReadWriteCommandOnDevice,
-            ]}
-          >
+          <Protected minLevel={Level.Operator}>
             <DeviceDiagnosticButton
               devices={ctx.selected}
               renderItem={(open) => (
@@ -117,14 +94,7 @@ export default function DeviceBulkActionScreen() {
               )}
             />
           </Protected>
-          <Protected
-            roles={[
-              Level.Admin,
-              Level.Operator,
-              Level.ReadWriteCommandOnDevice,
-              Level.ReadWrite,
-            ]}
-          >
+          <Protected minLevel={Level.Operator}>
             <DeviceBulkEditButton
               devices={ctx.selected}
               renderItem={(open) => (
@@ -138,40 +108,38 @@ export default function DeviceBulkActionScreen() {
               )}
             />
 
-            <DeviceEnableButton
-              devices={ctx.selected}
-              renderItem={(open) => (
-                <Button
-                  justifyContent="start"
-                  leftIcon={<Icon name="power" />}
-                  onClick={open}
-                >
-                  {t("Enable")}
-                </Button>
-              )}
-            />
+            <ButtonGroup isAttached>
+              <DeviceEnableButton
+                devices={ctx.selected}
+                renderItem={(open) => (
+                  <Button
+                    justifyContent="start"
+                    leftIcon={<Icon name="zap" />}
+                    onClick={open}
+                    flex="1"
+                  >
+                    {t("Enable")}
+                  </Button>
+                )}
+              />
 
-            <DeviceDisableButton
-              devices={ctx.selected}
-              renderItem={(open) => (
-                <Button
-                  justifyContent="start"
-                  leftIcon={<Icon name="power" />}
-                  onClick={open}
-                >
-                  {t("Disable")}
-                </Button>
-              )}
-            />
+              <DeviceDisableButton
+                devices={ctx.selected}
+                renderItem={(open) => (
+                  <Button
+                    justifyContent="start"
+                    leftIcon={<Icon name="zapOff" />}
+                    onClick={open}
+                    flex="1"
+                  >
+                    {t("Disable")}
+                  </Button>
+                )}
+              />
+            </ButtonGroup>
+
           </Protected>
-          <Protected
-            roles={[
-              Level.Admin,
-              Level.Operator,
-              Level.ReadWriteCommandOnDevice,
-              Level.ReadWrite,
-            ]}
-          >
+          <Protected minLevel={Level.Operator}>
             <DeviceRemoveButton
               devices={ctx.selected}
               renderItem={(open) => (

@@ -41,12 +41,24 @@ export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
         }
 
         return filterBy ? filterBy(result.devices) : result.devices;
-      } catch (err) {
+      }
+      catch (err) {
         toast.error(err);
       }
     },
     [toast, filterBy]
   );
+
+  const noOptionsMessage = useCallback(({ inputValue }: { inputValue: string }) => {
+    if (inputValue) {
+      return (
+        <Text>{t("No device found")}</Text>
+      );
+    }
+    return (
+      <Text>{t("Start typing to find device by name")}</Text>
+    );
+  }, [t]);
 
   return (
     <Autocomplete
@@ -57,7 +69,7 @@ export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
       }}
       placeholder={placeholder || t("Search device...")}
       loadOptions={loadOptions}
-      noOptionsMessage={() => <Text>{t("No device found")}</Text>}
+      noOptionsMessage={noOptionsMessage}
       value={value}
       {...other}
     />

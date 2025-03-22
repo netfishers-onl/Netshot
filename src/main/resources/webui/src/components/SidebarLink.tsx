@@ -1,5 +1,5 @@
 import { Stack, Text } from "@chakra-ui/react";
-import { NavLink } from "react-router-dom";
+import { NavLink } from "react-router";
 
 export type SidebarLinkProps = {
   to: string;
@@ -15,7 +15,11 @@ export default function SidebarLink(props: SidebarLinkProps) {
       {({ isActive }) => (
         <Stack
           borderRadius="xl"
-          bg={isActive ? "grey.50" : "white"}
+          bg={isActive ? "green.50" : "white"}
+          transition="all .2s ease"
+          _hover={{
+            bg: isActive ? "green.50" : "grey.50",
+          }}
           px="4"
           py="3"
           spacing="0"

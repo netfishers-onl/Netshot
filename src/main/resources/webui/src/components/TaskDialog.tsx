@@ -36,32 +36,29 @@ export default function TaskDialog(props: TaskDialogProps) {
   const { t } = useTranslation();
   const toast = useToast();
   const [showLog, setShowLog] = useState<boolean>(false);
-  const { data: task, isLoading } = useQuery(
-    [QUERIES.TASK, id],
-    async () => api.task.getById(id),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      enabled: Boolean(id),
-      refetchIntervalInBackground: true,
-      refetchInterval: (res) => {
-        if (isOpen) {
-          if (
-            res?.status === TaskStatus.Cancelled ||
-            res?.status === TaskStatus.Failure ||
-            res?.status === TaskStatus.Success
-          ) {
-            return false;
-          }
-
-          return 5000;
+  
+  const { data: task, isPending } = useQuery({
+    queryKey: [QUERIES.TASK, id],
+    queryFn: async () => api.task.getById(id),
+    enabled: Boolean(id),
+    refetchIntervalInBackground: true,
+    refetchInterval: (q) => {
+      if (open) {
+        const taskStatus = q.state.data?.status;
+        if (
+          taskStatus === TaskStatus.Cancelled ||
+          taskStatus === TaskStatus.Failure ||
+          taskStatus === TaskStatus.Success
+        ) {
+          return false;
         }
 
-        return false;
-      },
-    }
-  );
+        return 5000;
+      }
+
+      return false;
+    },
+  });
 
   const toggleLog = useCallback(() => {
     setShowLog((prev) => !prev);
@@ -101,7 +98,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                 <Box w="140px">
                   <Text color="grey.400">{t("ID")}</Text>
                 </Box>
-                <Skeleton isLoaded={!isLoading}>
+                <Skeleton isLoaded={!isPending}>
                   <Text>{task?.id ?? "N/A"}</Text>
                 </Skeleton>
               </Flex>
@@ -109,7 +106,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                 <Box w="140px">
                   <Text color="grey.400">{t("Description")}</Text>
                 </Box>
-                <Skeleton isLoaded={!isLoading}>
+                <Skeleton isLoaded={!isPending}>
                   <Text>{task?.taskDescription ?? "N/A"}</Text>
                 </Skeleton>
               </Flex>
@@ -117,7 +114,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                 <Box w="140px">
                   <Text color="grey.400">{t("Comments")}</Text>
                 </Box>
-                <Skeleton isLoaded={!isLoading}>
+                <Skeleton isLoaded={!isPending}>
                   <Text>{task?.comments ?? "N/A"}</Text>
                 </Skeleton>
               </Flex>
@@ -125,7 +122,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                 <Box w="140px">
                   <Text color="grey.400">{t("Creation")}</Text>
                 </Box>
-                <Skeleton isLoaded={!isLoading}>
+                <Skeleton isLoaded={!isPending}>
                   <Text>{creationDate ?? "N/A"}</Text>
                 </Skeleton>
               </Flex>
@@ -133,7 +130,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                 <Box w="140px">
                   <Text color="grey.400">{t("Execution")}</Text>
                 </Box>
-                <Skeleton isLoaded={!isLoading}>
+                <Skeleton isLoaded={!isPending}>
                   <Text>{executionDate ?? "N/A"}</Text>
                 </Skeleton>
               </Flex>
@@ -141,7 +138,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                 <Box w="140px">
                   <Text color="grey.400">{t("Status")}</Text>
                 </Box>
-                <Skeleton isLoaded={!isLoading}>
+                <Skeleton isLoaded={!isPending}>
                   {task?.status === TaskStatus.Scheduled && (
                     <Tag colorScheme="yellow">{t("Scheduled")}</Tag>
                   )}

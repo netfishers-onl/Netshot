@@ -21,7 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import DiagnosticDisableButton from "../components/DiagnosticDisableButton";
 import DiagnosticEditButton from "../components/DiagnosticEditButton";
 import DiagnosticEnableButton from "../components/DiagnosticEnableButton";
@@ -32,27 +32,19 @@ import { DiagnosticProvider } from "../contexts";
 export default function DeviceDetailScreen() {
   const { id } = useParams();
   const { t } = useTranslation();
-  const toast = useToast();
-  const { data: diagnostic, isLoading } = useQuery(
-    [QUERIES.DIAGNOSTIC_DETAIL, +id],
-    async () => api.diagnostic.getById(+id),
-    {
-      onError() {
-        toast.error({
-          title: t("Error"),
-          description: t("An error occured"),
-        });
-      },
-    }
-  );
+
+  const { data: diagnostic, isPending } = useQuery({
+    queryKey: [QUERIES.DIAGNOSTIC_DETAIL, +id],
+    queryFn: async () => api.diagnostic.getById(+id),
+  });
 
   const tagBorderColor = useColor("grey.200");
 
   return (
-    <DiagnosticProvider diagnostic={diagnostic} isLoading={isLoading}>
+    <DiagnosticProvider diagnostic={diagnostic} isLoading={isPending}>
       <Stack p="9" spacing="9" flex="1">
         <Flex alignItems="center">
-          <Skeleton isLoaded={!isLoading}>
+          <Skeleton isLoaded={!isPending}>
             <Stack direction="row" spacing="3" alignItems="center">
               <Heading as="h1" fontSize="4xl">
                 {diagnostic?.name ?? "Network device title"}
@@ -72,15 +64,9 @@ export default function DeviceDetailScreen() {
 
           <Spacer />
 
-          <Protected
-            roles={[
-              Level.Admin,
-              Level.Operator,
-              Level.ReadWriteCommandOnDevice,
-            ]}
-          >
+          <Protected minLevel={Level.ReadWrite}>
             <Stack direction="row" spacing="3">
-              <Skeleton isLoaded={!isLoading}>
+              <Skeleton isLoaded={!isPending}>
                 <DiagnosticEditButton
                   key={diagnostic?.id}
                   diagnostic={diagnostic}
@@ -93,7 +79,7 @@ export default function DeviceDetailScreen() {
               </Skeleton>
 
               <Menu>
-                <Skeleton isLoaded={!isLoading}>
+                <Skeleton isLoaded={!isPending}>
                   <MenuButton
                     as={Button}
                     rightIcon={<Icon name="moreHorizontal" />}
@@ -152,7 +138,7 @@ export default function DeviceDetailScreen() {
               <Box flex="0 0 auto" w="200px">
                 <Text color="grey.400">{t("Device type")}</Text>
               </Box>
-              <Skeleton isLoaded={!isLoading}>
+              <Skeleton isLoaded={!isPending}>
                 <Text>{diagnostic?.deviceDriverDescription ?? "N/A"}</Text>
               </Skeleton>
             </Flex>
@@ -160,13 +146,13 @@ export default function DeviceDetailScreen() {
               <Box flex="0 0 auto" w="200px">
                 <Text color="grey.400">{t("CLI mode")}</Text>
               </Box>
-              <Skeleton isLoaded={!isLoading}>{diagnostic?.cliMode}</Skeleton>
+              <Skeleton isLoaded={!isPending}>{diagnostic?.cliMode}</Skeleton>
             </Flex>
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
                 <Text color="grey.400">{t("CLI command")}</Text>
               </Box>
-              <Skeleton isLoaded={!isLoading}>
+              <Skeleton isLoaded={!isPending}>
                 <Text fontFamily="mono">{diagnostic?.command ?? "N/A"}</Text>
               </Skeleton>
             </Flex>
@@ -174,7 +160,7 @@ export default function DeviceDetailScreen() {
               <Box flex="0 0 auto" w="200px">
                 <Text color="grey.400">{t("RegEx pattern")}</Text>
               </Box>
-              <Skeleton isLoaded={!isLoading}>
+              <Skeleton isLoaded={!isPending}>
                 <Text fontFamily="mono">
                   {diagnostic?.modifierPattern ?? "N/A"}
                 </Text>
@@ -184,7 +170,7 @@ export default function DeviceDetailScreen() {
               <Box flex="0 0 auto" w="200px">
                 <Text color="grey.400">{t("Replace with")}</Text>
               </Box>
-              <Skeleton isLoaded={!isLoading}>
+              <Skeleton isLoaded={!isPending}>
                 <Text fontFamily="mono">
                   {diagnostic?.modifierReplacement ?? "N/A"}
                 </Text>
@@ -194,7 +180,7 @@ export default function DeviceDetailScreen() {
               <Box flex="0 0 auto" w="200px">
                 <Text color="grey.400">{t("Enabled")}</Text>
               </Box>
-              <Skeleton isLoaded={!isLoading}>
+              <Skeleton isLoaded={!isPending}>
                 {diagnostic?.enabled ? (
                   <Tag colorScheme="green">{t("Enabled")}</Tag>
                 ) : (

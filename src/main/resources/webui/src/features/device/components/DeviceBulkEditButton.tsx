@@ -32,14 +32,14 @@ function DeviceBulkEditForm() {
   const form = useFormContext();
   const { t } = useTranslation();
 
-  const { data: credentialSets, isLoading } = useQuery(
-    [QUERIES.CREDENTIAL_SET_LIST],
-    async () =>
-      api.admin.getAllCredentialSet({
+  const { data: credentialSets, isPending } = useQuery({
+    queryKey: [QUERIES.CREDENTIAL_SET_LIST],
+    queryFn: async () =>
+      api.admin.getAllCredentialSets({
         offset: 0,
         limit: 999,
       })
-  );
+  });
 
   const credentialSetIds = useWatch({
     control: form.control,
@@ -67,7 +67,7 @@ function DeviceBulkEditForm() {
       <DomainSelect control={form.control} name="mgmtDomain" />
       <Stack spacing="3">
         <FormLabel>{t("Use the following credential set")}</FormLabel>
-        {isLoading ? (
+        {isPending ? (
           <Stack spacing="2">
             <Skeleton w="100%" h="36px" />
             <Skeleton w="100%" h="36px" />
@@ -108,15 +108,13 @@ export default function DeviceBulkEditButton(props: DeviceBulkEditButtonProps) {
     },
   });
 
-  const edit = useMutation(
-    async (payload: Partial<UpdateDevicePayload>) =>
+  const edit = useMutation({
+    mutationFn: async (payload: Partial<UpdateDevicePayload>) =>
       api.device.update(payload?.id, payload),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (data: Form) => {
@@ -159,7 +157,7 @@ export default function DeviceBulkEditButton(props: DeviceBulkEditButtonProps) {
       </>
     ),
     form,
-    isLoading: edit.isLoading,
+    isLoading: edit.isPending,
     size: "2xl",
     variant: "floating",
     onSubmit,

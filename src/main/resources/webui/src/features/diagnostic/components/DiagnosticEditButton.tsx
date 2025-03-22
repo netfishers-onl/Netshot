@@ -70,34 +70,34 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
     defaultValues,
   });
 
-  const mutation = useMutation(
-    async (payload: Partial<CreateOrUpdateDiagnosticPayload>) =>
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<CreateOrUpdateDiagnosticPayload>) =>
       api.diagnostic.update(diagnostic?.id, payload),
-    {
-      onSuccess() {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t(
-            "Diagnostic {{diagnosticName}} has been successfully modified",
-            {
-              diagnosticName: diagnostic?.name,
-            }
-          ),
-        });
+    onSuccess() {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t(
+          "Diagnostic {{diagnosticName}} has been successfully modified",
+          {
+            diagnosticName: diagnostic?.name,
+          }
+        ),
+      });
 
-        queryClient.invalidateQueries([
+      queryClient.invalidateQueries({
+        queryKey: [
           QUERIES.DIAGNOSTIC_DETAIL,
           diagnostic.id,
-        ]);
+        ],
+      });
 
-        queryClient.invalidateQueries([QUERIES.DIAGNOSTIC_LIST]);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_LIST] });
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: Form) => {
@@ -146,7 +146,7 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
       />
     ),
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     variant: hasScript ? "full-floating" : "floating",
     onSubmit,

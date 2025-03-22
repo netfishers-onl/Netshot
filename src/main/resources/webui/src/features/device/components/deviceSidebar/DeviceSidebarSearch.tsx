@@ -4,7 +4,7 @@ import { useThrottle } from "@/hooks";
 import { IconButton, Stack, Tooltip } from "@chakra-ui/react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useDeviceSidebar } from "../../contexts/DeviceSidebarProvider";
+import { useDeviceSidebar } from "../../contexts/device-sidebar";
 
 export default function DeviceSidebarSearch() {
   const { t } = useTranslation();

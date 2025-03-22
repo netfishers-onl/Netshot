@@ -12,7 +12,7 @@ import { endOfDay, startOfDay } from "date-fns";
 import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 export type FilterForm = {
   executionDate: string;
@@ -45,20 +45,20 @@ export function useTask(status?: TaskStatus) {
 
   const {
     data,
-    isLoading,
+    isPending,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
     refetch,
-  } = useInfiniteQuery(
-    [
+  } = useInfiniteQuery({
+    queryKey: [
       QUERIES.TASK,
       status ? status : "all",
       pagination.query,
       filters.before,
       filters.after,
     ],
-    async ({ pageParam = 0 }) => {
+    queryFn: async ({ pageParam }) => {
       let params = {
         offset: pageParam,
         limit: pagination.limit,
@@ -78,17 +78,13 @@ export function useTask(status?: TaskStatus) {
 
       return api.task.getAll(params);
     },
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      getNextPageParam(lastPage, allPages) {
-        return lastPage.length === pagination.limit
-          ? allPages.length * pagination.limit
-          : undefined;
-      },
-    }
-  );
+    initialPageParam: 0,
+    getNextPageParam(lastPage, allPages) {
+      return lastPage?.length === pagination.limit
+        ? allPages.length * pagination.limit
+        : undefined;
+    },
+  });
 
   const applyFilter = useCallback((values: FilterForm) => {
     setFilters({
@@ -143,7 +139,7 @@ export function useTask(status?: TaskStatus) {
           return (
             <Text
               as={Link}
-              to={`/app/device/${info.row.original.deviceId}/task`}
+              to={`/app/devices/${info.row.original.deviceId}/tasks`}
               textDecoration="underline"
             >
               {info.getValue()}
@@ -196,7 +192,7 @@ export function useTask(status?: TaskStatus) {
 
   return {
     data: flatData,
-    isLoading,
+    isLoading: isPending,
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,

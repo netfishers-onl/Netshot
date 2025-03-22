@@ -167,19 +167,17 @@ export default function ExportDataButton(props: ExportDataButtonProps) {
     },
   });
 
-  const mutation = useMutation(
-    async (queryParams: ReportExportDataQueryParams) =>
+  const mutation = useMutation({
+    mutationFn: async (queryParams: ReportExportDataQueryParams) =>
       api.report.exportData(queryParams),
-    {
-      onSuccess(res) {
-        dialog.close();
-        download(res.blob, res.filename);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+    onSuccess(res) {
+      dialog.close();
+      download(res.blob, res.filename);
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: Form) => {
@@ -202,7 +200,7 @@ export default function ExportDataButton(props: ExportDataButtonProps) {
     title: t("Export data"),
     description: <ExportDataForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

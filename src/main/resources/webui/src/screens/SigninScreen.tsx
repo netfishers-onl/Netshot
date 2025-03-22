@@ -1,13 +1,17 @@
-import api from "@/api";
-import { Brand, SigninIllustration } from "@/components";
-import FormControl, { FormControlType } from "@/components/FormControl";
-import useToast from "@/hooks/useToast";
-import { Button, Heading, Stack } from "@chakra-ui/react";
-import { useMutation } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { Box, Button, Heading, Spacer, Stack } from "@chakra-ui/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router";
+
+import api from "@/api";
+import { HttpStatus, type NetshotError } from "@/api/httpClient";
+import { Brand } from "@/components";
+import FormControl, { FormControlType } from "@/components/FormControl";
+import { QUERIES, REDIRECT_SEARCH_PARAM } from "@/constants";
+import useToast from "@/hooks/useToast";
+import { User } from "@/types";
 
 type SigninForm = {
   username: string;
@@ -25,18 +29,32 @@ function SigninScreen() {
       password: "",
     },
   });
-  const toast = useToast();
-  const navigate = useNavigate();
   const { t } = useTranslation();
-  const mutation = useMutation(api.auth.signin, {
-    onSuccess() {
-      navigate("/app");
+  const toast = useToast();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const mutation = useMutation({
+    mutationFn: api.auth.signin,
+    onSuccess(data) {
+      queryClient.setQueryData<User>([QUERIES.USER], data);
+      navigate(
+        searchParams.get(REDIRECT_SEARCH_PARAM) || "/app",
+        { replace: true });
     },
-    onError() {
-      toast.error({
-        title: t("Authentication failed"),
-        description: t("Username or password is incorrect"),
-      });
+    onError(err: NetshotError) {
+      if (err.response.status == HttpStatus.Unauthorized) {
+        toast.error({
+          title: t("Authentication failed"),
+          description: t("Username or password is incorrect"),
+        });
+      }
+      else {
+        toast.error({
+          title: t("Server error"),
+          description: t("The Netshot server didn't reply properly"),
+        });
+      }
     },
   });
 
@@ -48,15 +66,14 @@ function SigninScreen() {
   );
 
   return (
-    <Stack direction="row" spacing="0" h="100vh">
+    <Stack direction="row" gap="0" h="100vh">
       <Stack justifyContent="center" alignItems="center" flex="1">
-        <Stack mx="auto" width="40%" spacing="12">
-          <Brand />
-          <Stack spacing="6">
+        <Stack mx="auto" width="40%" gap="12">
+          <Stack gap="6">
             <Heading as="h4" fontSize="2xl">
-              {t("Welcome back")}
+              {t("Please sign in")}
             </Heading>
-            <Stack as="form" spacing="5" onSubmit={handleSubmit(submit)}>
+            <Stack as="form" gap="5" onSubmit={handleSubmit(submit)}>
               <FormControl
                 isRequired
                 control={control}
@@ -80,9 +97,9 @@ function SigninScreen() {
               />
               <Button
                 type="submit"
-                isLoading={mutation.isLoading}
-                isDisabled={!isValid}
-                variant="primary"
+                isLoading={mutation.isPending}
+                disabled={!isValid}
+                variant="solid"
               >
                 {t("Sign in")}
               </Button>
@@ -95,36 +112,31 @@ function SigninScreen() {
         p="60px"
         bg="green.1100"
         flex="0 0 50%"
-        spacing="5"
+        gap="5"
+        justifyContent="center"
       >
-        <SigninIllustration />
-        <Stack>
-          <Heading
-            fontSize="9xl"
-            color="white"
-            fontWeight="medium"
-            lineHeight="90%"
-          >
-            {t("Network")}
-          </Heading>
-          <Heading
-            fontSize="9xl"
-            color="white"
-            fontWeight="medium"
-            lineHeight="90%"
-          >
-            {t("orchestration")}
-          </Heading>
-
-          <Heading
-            fontSize="9xl"
-            color="green.500"
-            fontWeight="medium"
-            lineHeight="90%"
-          >
-            {t("made easy.")}
-          </Heading>
-        </Stack>
+        <Box>
+          <Brand mode="dark" sx={{ w: 400 }} />
+          <Spacer />
+          <Stack ml="100px">
+            <Heading
+              fontSize="5xl"
+              color="white"
+              fontWeight="light"
+              lineHeight="90%"
+            >
+              {t("Network orchestration")}
+            </Heading>
+            <Heading
+              fontSize="5xl"
+              color="green.500"
+              fontWeight="light"
+              lineHeight="90%"
+            >
+              {t("made easy")}
+            </Heading>
+          </Stack>
+        </Box>
       </Stack>
     </Stack>
   );

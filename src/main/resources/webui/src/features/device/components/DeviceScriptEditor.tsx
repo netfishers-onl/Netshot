@@ -33,18 +33,16 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
     },
   });
 
-  const { data: script, isLoading } = useQuery(
-    [QUERIES.SCRIPT_DETAIL, scriptId],
-    async () => api.script.getById(scriptId),
-    {
-      onSuccess(data) {
-        form.setValue("script", data.script);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
+  const { data: script, isPending, isSuccess } = useQuery({
+    queryKey: [QUERIES.SCRIPT_DETAIL, scriptId],
+    queryFn: async () => api.script.getById(scriptId),
+  });
+
+  useEffect(() => {
+    if (isSuccess) {
+      form.setValue("script", script.script);
     }
-  );
+  }, [isSuccess, script]);
 
   // Get device type options
   const { isLoading: isDeviceTypeOptionsLoading, getOptionByDriver } =
@@ -62,8 +60,8 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
     name: "script",
   });
 
-  const saveMutation = useMutation(
-    async () => {
+  const saveMutation = useMutation({
+    mutationFn: async () => {
       const values = form.getValues();
 
       await api.script.remove(scriptId);
@@ -73,22 +71,20 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
         script: values.script,
       });
     },
-    {
-      onSuccess() {
-        queryClient.invalidateQueries([QUERIES.SCRIPT_LIST]);
-        toast.success({
-          title: t("Success"),
-          description: t("Script successfully saved for later usage"),
-        });
-      },
-      onError() {
-        toast.error({
-          title: t("Error"),
-          description: "An error occurred during the save",
-        });
-      },
-    }
-  );
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: [QUERIES.SCRIPT_LIST] });
+      toast.success({
+        title: t("Success"),
+        description: t("Script successfully saved for later usage"),
+      });
+    },
+    onError() {
+      toast.error({
+        title: t("Error"),
+        description: "An error occurred during the save",
+      });
+    },
+  });
 
   const save = useCallback(() => {
     saveMutation.mutate();
@@ -96,12 +92,12 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
 
   // Set default driver from device
   useEffect(() => {
-    if (isDeviceTypeOptionsLoading || isLoading) {
+    if (isDeviceTypeOptionsLoading || isPending) {
       return;
     }
 
     form.setValue("driver", getOptionByDriver(script?.deviceDriver));
-  }, [isDeviceTypeOptionsLoading, isLoading, script]);
+  }, [isDeviceTypeOptionsLoading, isPending, script]);
 
   const onChange = useCallback(
     (value: string) => {
@@ -110,7 +106,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
     [form]
   );
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <Center flex="1">
         <Stack alignItems="center" spacing="3">

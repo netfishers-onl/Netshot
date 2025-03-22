@@ -26,39 +26,38 @@ export default function AddUserButton(props: AddUserButtonProps) {
     defaultValues: {
       username: "",
       level: USER_LEVEL_OPTIONS[0],
-      hasRemote: false,
+      isRemote: false,
       password: "",
       confirmPassword: "",
+      changePassword: true,
     },
   });
 
-  const mutation = useMutation(
-    async (payload: Partial<User>) => api.admin.createUser(payload),
-    {
-      onSuccess(res) {
-        dialog.close();
-        toast.success({
-          title: t("Success"),
-          description: t("User {{username}} has been successfully created", {
-            username: res?.username,
-          }),
-        });
+  const mutation = useMutation({
+    mutationFn: async (payload: Partial<User>) => api.admin.createUser(payload),
+    onSuccess(res) {
+      dialog.close();
+      toast.success({
+        title: t("Success"),
+        description: t("User {{username}} has been successfully created", {
+          username: res?.username,
+        }),
+      });
 
-        queryClient.invalidateQueries([QUERIES.ADMIN_USERS]);
-        form.reset();
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_USERS] });
+      form.reset();
+    },
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: UserForm) => {
       mutation.mutate({
         username: values.username,
         level: values.level.value,
-        local: !values.hasRemote,
+        local: !values.isRemote,
         password: values.password,
       });
     },
@@ -69,7 +68,7 @@ export default function AddUserButton(props: AddUserButtonProps) {
     title: t("Create User"),
     description: <AdministrationUserForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     size: "2xl",
     onSubmit,
     onCancel() {

@@ -41,14 +41,7 @@ export default function TaskSidebar() {
           description={t("Tasks cancelled by user or software")}
         />
       </Stack>
-      <Protected
-        roles={[
-          Level.Admin,
-          Level.Operator,
-          Level.ReadWriteCommandOnDevice,
-          Level.ReadWrite,
-        ]}
-      >
+      <Protected minLevel={Level.Operator}>
         <Divider />
         <Stack py="4" px="5">
           <AddTaskButton

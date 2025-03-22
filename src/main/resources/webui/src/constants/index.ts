@@ -2,6 +2,7 @@ import i18n from "@/i18n";
 import { DeviceSoftwareLevel, Level } from "@/types";
 
 export const QUERIES = {
+  SERVER_INFO: "server-info",
   USER: "user",
   TASK: "task",
   CREDENTIAL_SET_LIST: "credential-set-list",
@@ -19,7 +20,9 @@ export const QUERIES = {
   POLICY_LIST: "policy-list",
 };
 
-export const HIDDEN_PASSWORD = "******";
+export const REDIRECT_SEARCH_PARAM = "target";
+
+export const HIDDEN_PASWORD = "******";
 
 export const ANY_OPTION = {
   label: i18n.t("[Any]"),
@@ -32,8 +35,8 @@ export const USER_LEVEL_OPTIONS = [
     value: Level.Admin,
   },
   {
-    label: i18n.t("Read-write & commands on devices"),
-    value: Level.ReadWriteCommandOnDevice,
+    label: i18n.t("Read-write, plus execute scripts"),
+    value: Level.ExecureReadWrite,
   },
   {
     label: i18n.t("Read-write"),

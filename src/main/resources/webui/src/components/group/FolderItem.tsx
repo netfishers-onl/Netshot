@@ -8,13 +8,14 @@ import GroupOrFolderItem from "./GroupOrFolderItem";
 
 export type FolderItemProps = {
   folder: Folder;
+  showMenu: boolean;
   onGroupSelect(group: Group): void;
   isSelected?(group: Group): boolean;
   renderGroupChildren?(group: Group): ReactElement;
 } & BoxProps;
 
 export default function FolderItem(props: FolderItemProps) {
-  const { folder, onGroupSelect, isSelected, renderGroupChildren, ...other } =
+  const { folder, showMenu, onGroupSelect, isSelected, renderGroupChildren, ...other } =
     props;
   const controls = useAnimationControls();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
@@ -39,7 +40,7 @@ export default function FolderItem(props: FolderItemProps) {
           cursor="pointer"
           h="40px"
           _hover={{
-            bg: "green.50",
+            bg: "grey.50",
           }}
         >
           <Stack direction="row" spacing="3" alignItems="center">
@@ -47,7 +48,7 @@ export default function FolderItem(props: FolderItemProps) {
               name="chevronDown"
               color="grey.500"
               sx={{
-                transform: isCollapsed ? "rotate(-90deg)" : "",
+                transform: "rotate(-90deg)",
               }}
             />
             <Stack direction="row" spacing="3" alignItems="center">
@@ -76,6 +77,7 @@ export default function FolderItem(props: FolderItemProps) {
               <GroupOrFolderItem
                 pl="6"
                 item={child}
+                showMenu={showMenu}
                 key={isGroup(child) ? child?.id : child?.name}
                 onGroupSelect={onGroupSelect}
                 renderGroupChildren={renderGroupChildren}

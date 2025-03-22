@@ -16,7 +16,7 @@ import {
   ReportQueryParams,
 } from "./types";
 
-async function getAllConfigComplianceDeviceStatus(
+async function getAllConfigComplianceDeviceStatuses(
   queryParams: ReportQueryParams
 ) {
   return httpClient.get<ConfigComplianceDeviceStatus[]>(
@@ -27,7 +27,7 @@ async function getAllConfigComplianceDeviceStatus(
   );
 }
 
-async function getAllGroupConfigComplianceStat(queryParams: ReportQueryParams) {
+async function getAllGroupConfigComplianceStats(queryParams: ReportQueryParams) {
   return httpClient.get<GroupConfigComplianceStat[]>(
     "/reports/groupconfigcompliancestats",
     {
@@ -41,7 +41,7 @@ async function getAllGroupConfigComplianceStat(queryParams: ReportQueryParams) {
   );
 }
 
-async function getAllDeviceAccessFailure(
+async function getAllDeviceAccessFailures(
   queryParams: ReportDeviceAccessFailureQueryParams
 ) {
   return httpClient.get<DeviceAccessFailure[]>(
@@ -52,7 +52,7 @@ async function getAllDeviceAccessFailure(
   );
 }
 
-async function getAllGroupConfigNonCompliantDevice(
+async function getAllGroupConfigNonCompliantDevices(
   id: number,
   queryParams: ReportQueryParams = {}
 ) {
@@ -64,7 +64,7 @@ async function getAllGroupConfigNonCompliantDevice(
   );
 }
 
-async function getAllGroupDeviceBySoftwareLevel(
+async function getAllGroupDevicesBySoftwareLevel(
   id: number,
   level: DeviceSoftwareLevel,
   queryParams: ReportQueryParams = {}
@@ -77,7 +77,7 @@ async function getAllGroupDeviceBySoftwareLevel(
   );
 }
 
-async function getAllGroupSoftwareComplianceStat(
+async function getAllGroupSoftwareComplianceStats(
   queryParams: {
     domain?: number;
   } = {}
@@ -90,13 +90,13 @@ async function getAllGroupSoftwareComplianceStat(
   );
 }
 
-async function getAllHardwareSupportDevice(type: "eos" | "eol", date: number) {
+async function getAllHardwareSupportDevices(type: "eos" | "eol", date: number) {
   return httpClient.get<HardwareSupportDevice[]>(
     `/reports/hardwaresupportdevices/${type}/${date}`
   );
 }
 
-async function getAllHardwareSupportStat() {
+async function getAllHardwareSupportStats() {
   return httpClient.get<HardwareSupportStat[]>(`/reports/hardwaresupportstats`);
 }
 
@@ -112,7 +112,7 @@ async function getConfigChangeOverLastDay() {
 }
 
 async function exportData(queryParams: ReportExportDataQueryParams) {
-  const req = await httpClient.rawRequest(HttpMethod.Get, "/reports/export", {
+  const req = await httpClient.request(HttpMethod.GET, "/reports/export", {
     queryParams,
     queryParamsOptions: {
       stringifyOpt: {
@@ -128,14 +128,14 @@ async function exportData(queryParams: ReportExportDataQueryParams) {
 }
 
 export default {
-  getAllConfigComplianceDeviceStatus,
-  getAllGroupConfigComplianceStat,
-  getAllGroupConfigNonCompliantDevice,
-  getAllGroupDeviceBySoftwareLevel,
-  getAllGroupSoftwareComplianceStat,
-  getAllHardwareSupportDevice,
-  getAllHardwareSupportStat,
-  getAllDeviceAccessFailure,
+  getAllConfigComplianceDeviceStatuses,
+  getAllGroupConfigComplianceStats,
+  getAllGroupConfigNonCompliantDevices,
+  getAllGroupDevicesBySoftwareLevel,
+  getAllGroupSoftwareComplianceStats,
+  getAllHardwareSupportDevices,
+  getAllHardwareSupportStats,
+  getAllDeviceAccessFailures,
   getConfigChangeOverLastDay,
   exportData,
 };

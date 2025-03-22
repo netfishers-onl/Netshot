@@ -1,6 +1,5 @@
 import { Protected } from "@/components";
 import Icon from "@/components/Icon";
-import { useQueryParams } from "@/hooks";
 import { Group, Level } from "@/types";
 import {
   Box,
@@ -19,29 +18,27 @@ import { MouseEvent, ReactElement, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import EditGroupButton from "./EditGroupButton";
 import RemoveGroupButton from "./RemoveGroupButton";
+import { useSearchParams } from "react-router";
 
 export type GroupItemProps = {
   group: Group;
+  showMenu: boolean;
   onGroupSelect?(group: Group): void;
   isSelected?(group: Group): boolean;
   renderGroupChildren?(group: Group): ReactElement;
 } & BoxProps;
 
 export default function GroupItem(props: GroupItemProps) {
-  const { group, onGroupSelect, isSelected, renderGroupChildren, ...other } =
+  const { group, showMenu, onGroupSelect, isSelected, renderGroupChildren, ...other } =
     props;
 
   const { t } = useTranslation();
-  const queryParams = useQueryParams();
+  const [searchParams] = useSearchParams();
   const isRouteParamsSelected = useMemo(() => {
-    if (queryParams.has("group")) {
-      return group.id === queryParams.get("group", Number);
-    }
+    return (group.id === parseInt(searchParams.get("group")));
+  }, [searchParams, group]);
 
-    return false;
-  }, [queryParams, group]);
-
-  const selected = isSelected ? isSelected(group) : false;
+  const selected = isRouteParamsSelected || (isSelected ? isSelected(group) : false);
 
   const select = useCallback(
     (evt: MouseEvent<HTMLDivElement>) => {
@@ -65,9 +62,9 @@ export default function GroupItem(props: GroupItemProps) {
         ml="-2"
         minHeight="40px"
         _hover={{
-          bg: "green.50",
+          bg: selected ? "green.50" : "grey.50",
         }}
-        bg={isRouteParamsSelected || selected ? "green.50" : "white"}
+        bg={selected ? "green.50" : "white"}
         onClick={select}
       >
         <Stack direction="row" spacing="3" alignItems="center">
@@ -78,43 +75,37 @@ export default function GroupItem(props: GroupItemProps) {
         </Stack>
         <Spacer />
         {renderGroupChildren?.(group)}
-        <Protected
-          roles={[
-            Level.Admin,
-            Level.Operator,
-            Level.ReadWriteCommandOnDevice,
-            Level.ReadWrite,
-          ]}
-        >
-          <Menu>
-            <MenuButton
-              as={IconButton}
-              variant="ghost"
-              icon={<Icon name="moreHorizontal" />}
-              aria-label="Open group options"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <MenuList>
-              <EditGroupButton
-                group={group}
-                renderItem={(open) => (
-                  <MenuItem icon={<Icon name="edit" />} onClick={open}>
-                    {t("Edit")}
-                  </MenuItem>
-                )}
+        {showMenu &&
+          <Protected minLevel={Level.ReadWrite}>
+            <Menu>
+              <MenuButton
+                as={IconButton}
+                variant="ghost"
+                icon={<Icon name="moreHorizontal" />}
+                aria-label="Open group options"
+                onClick={(e) => e.stopPropagation()}
               />
+              <MenuList>
+                <EditGroupButton
+                  group={group}
+                  renderItem={(open) => (
+                    <MenuItem icon={<Icon name="edit" />} onClick={open}>
+                      {t("Edit")}
+                    </MenuItem>
+                  )}
+                />
 
-              <RemoveGroupButton
-                group={group}
-                renderItem={(open) => (
-                  <MenuItem icon={<Icon name="trash" />} onClick={open}>
-                    {t("Remove")}
-                  </MenuItem>
-                )}
-              />
-            </MenuList>
-          </Menu>
-        </Protected>
+                <RemoveGroupButton
+                  group={group}
+                  renderItem={(open) => (
+                    <MenuItem icon={<Icon name="trash" />} onClick={open}>
+                      {t("Remove")}
+                    </MenuItem>
+                  )}
+                />
+              </MenuList>
+            </Menu>
+          </Protected>}
       </Flex>
     </Box>
   );

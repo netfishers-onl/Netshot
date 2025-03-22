@@ -20,9 +20,10 @@ export default function RemovePolicyButton(props: RemovePolicyButtonProps) {
   const queryClient = useQueryClient();
   const toast = useToast();
 
-  const mutation = useMutation(async () => api.policy.remove(policy?.id), {
+  const mutation = useMutation({
+    mutationFn: async () => api.policy.remove(policy?.id),
     onSuccess() {
-      queryClient.invalidateQueries([QUERIES.POLICY_LIST]);
+      queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_LIST] });
       dialog.close();
     },
     onError(err: NetshotError) {
@@ -39,12 +40,12 @@ export default function RemovePolicyButton(props: RemovePolicyButtonProps) {
         })}
       </Text>
     ),
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onConfirm() {
       mutation.mutate();
     },
     confirmButton: {
-      label: t("remove"),
+      label: t("Remove"),
       props: {
         colorScheme: "red",
       },

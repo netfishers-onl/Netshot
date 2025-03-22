@@ -7,6 +7,7 @@ import GroupItem from "./GroupItem";
 
 export type GroupOrFolderItemProps = {
   item: Group | Folder;
+  showMenu?: boolean;
   onGroupSelect?(group: Group): void;
   isSelected?(group: Group): boolean;
   renderGroupChildren?(group: Group): ReactElement;
@@ -15,12 +16,19 @@ export type GroupOrFolderItemProps = {
 export default function GroupOrFolderItem(
   props: PropsWithChildren<GroupOrFolderItemProps>
 ) {
-  const { item, onGroupSelect, isSelected, renderGroupChildren, ...other } =
-    props;
+  const {
+    item,
+    showMenu = false,
+    onGroupSelect,
+    isSelected,
+    renderGroupChildren,
+    ...other
+  } = props;
 
   return isGroup(item) ? (
     <GroupItem
       group={item}
+      showMenu={showMenu}
       onGroupSelect={onGroupSelect}
       isSelected={isSelected}
       renderGroupChildren={renderGroupChildren}
@@ -29,6 +37,7 @@ export default function GroupOrFolderItem(
   ) : (
     <FolderItem
       folder={item}
+      showMenu={showMenu}
       onGroupSelect={onGroupSelect}
       isSelected={isSelected}
       renderGroupChildren={renderGroupChildren}

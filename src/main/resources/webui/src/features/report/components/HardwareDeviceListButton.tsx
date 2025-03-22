@@ -22,7 +22,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
 import { MouseEvent, ReactElement, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { QUERIES } from "../constants";
 
 export type HardwareDeviceListButtonProps = {
@@ -45,13 +45,10 @@ export default function HardwareDeviceListButton(
     [date]
   );
 
-  const { data, isLoading } = useQuery({
+  const { data, isPending } = useQuery({
     queryKey: [QUERIES.DEVICE_HARDWARE_STATUS, type, date],
     queryFn() {
-      return api.report.getAllHardwareSupportDevice(type, date);
-    },
-    onError(err: NetshotError) {
-      toast.error(err);
+      return api.report.getAllHardwareSupportDevices(type, date);
     },
     enabled: disclosure.isOpen,
   });
@@ -62,7 +59,7 @@ export default function HardwareDeviceListButton(
         cell: (info) => (
           <Text
             as={Link}
-            to={`/app/device/${info.row.original.id}/general`}
+            to={`/app/devices/${info.row.original.id}/general`}
             textDecoration="underline"
           >
             {info.getValue()}
@@ -112,7 +109,7 @@ export default function HardwareDeviceListButton(
             flex="1"
             pb="7"
           >
-            {isLoading ? (
+            {isPending ? (
               <Stack spacing="3">
                 <Skeleton h="60px" />
                 <Skeleton h="60px" />

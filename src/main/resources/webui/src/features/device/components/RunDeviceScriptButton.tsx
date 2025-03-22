@@ -20,7 +20,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -38,30 +38,26 @@ function RunScriptForm(props: RunScriptFormProps) {
   const form = useFormContext();
 
   // Validate script before submitting and retrieve user inputs if exist
-  const { data: validatedScript, isLoading } = useQuery(
-    [QUERIES.SCRIPT_VALIDATE, script?.script, driver],
-    async () =>
+  const { data: validatedScript, isPending, isSuccess } = useQuery({
+    queryKey: [QUERIES.SCRIPT_VALIDATE, script?.script, driver],
+    queryFn: async () =>
       api.script.validate({
         deviceDriver: driver,
         name: "#",
         script: script?.script,
       }),
-    {
-      onSuccess(data) {
-        // Prepare dynamic form with script user inputs
-        const userInputs = {};
+  });
 
-        for (const item in data.userInputDefinitions) {
-          userInputs[data.userInputDefinitions[item].name] = "";
-        }
-
-        form.setValue("userInputs", userInputs);
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
+  useEffect(() => {
+    if (isSuccess) {
+      // Prepare dynamic form with script user inputs
+      const userInputs = {};
+      for (const item in validatedScript.userInputDefinitions) {
+        userInputs[validatedScript.userInputDefinitions[item].name] = "";
+      }
+      form.setValue("userInputs", userInputs);
     }
-  );
+  }, [isSuccess, validatedScript, form]);
 
   // Transform object to array to render the controls
   const inputs = useMemo(() => {
@@ -74,7 +70,7 @@ function RunScriptForm(props: RunScriptFormProps) {
     });
   }, [validatedScript]);
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <Center>
         <Spinner />
@@ -145,7 +141,8 @@ export default function RunScriptButton(props: RunScriptButtonProps) {
   const [taskId, setTaskId] = useState<number>(null);
   const form = useForm<Form>();
 
-  const mutation = useMutation(api.task.create, {
+  const mutation = useMutation({
+    mutationFn: api.task.create,
     onSuccess() {},
     onError(err: NetshotError) {
       toast.error({
@@ -191,7 +188,7 @@ export default function RunScriptButton(props: RunScriptButtonProps) {
       <RunScriptForm devices={devices} script={script} driver={driver} />
     ),
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onSubmit,
     size: "xl",
     submitButton: {

@@ -27,27 +27,16 @@ export default function DeviceScriptView(props: DeviceScriptViewProps) {
     limit: 40,
     offset: 0,
   });
-  const { data: scripts, isLoading } = useQuery(
-    [QUERIES.SCRIPT_LIST, query, pagination.offset],
-    async () => api.script.getAll(pagination),
-    {
-      select(data) {
-        return sortAlphabetical(data, "name").filter((item) =>
-          item.name?.startsWith(query)
-        );
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-      onSuccess(data) {
-        if (selected) {
-          return;
-        }
-
-        setSelected(data?.[0]);
-      },
-    }
-  );
+  
+  const { data: scripts, isPending, isSuccess } = useQuery({
+    queryKey: [QUERIES.SCRIPT_LIST, query, pagination.offset],
+    queryFn: async () => api.script.getAll(pagination),
+    select: useCallback((data: Script[]): Script[] => {
+      return sortAlphabetical(data, "name").filter((item) =>
+        item.name?.startsWith(query)
+      );
+    }, [query]),
+  });
 
   const onQuery = useCallback((value: string) => {
     setQuery(value);
@@ -72,7 +61,7 @@ export default function DeviceScriptView(props: DeviceScriptViewProps) {
           />
         </Stack>
         <Stack spacing="2" overflow="auto" flex="1">
-          {isLoading ? (
+          {isPending ? (
             <Center flex="1">
               <Spinner />
             </Center>

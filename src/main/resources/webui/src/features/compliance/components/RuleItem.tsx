@@ -1,5 +1,3 @@
-import { Icon, Protected } from "@/components";
-import { Level, Policy, Rule, RuleType } from "@/types";
 import {
   IconButton,
   Menu,
@@ -11,7 +9,11 @@ import {
 } from "@chakra-ui/react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
+
+import { Icon, Protected } from "@/components";
+import { Level, Policy, Rule, RuleType } from "@/types";
+
 import DisableRuleButton from "./DisableRuleButton";
 import EditRuleButton from "./EditRuleButton";
 import EnableRuleButton from "./EnableRuleButton";
@@ -31,9 +33,11 @@ export default function RuleItem(props: RuleItemProps) {
   const iconName = useMemo(() => {
     if (rule.type === RuleType.Javascript) {
       return "javascript";
-    } else if (rule.type === RuleType.Python) {
+    }
+    else if (rule.type === RuleType.Python) {
       return "python";
-    } else {
+    }
+    else {
       return "alignLeft";
     }
   }, [rule]);
@@ -49,30 +53,23 @@ export default function RuleItem(props: RuleItemProps) {
       justifyContent="space-between"
       alignItems="center"
       borderRadius="md"
-      bg={isActive ? "green.50" : "white"}
       height="36px"
+      bg={isActive ? "green.50" : "white"}
       transition="all .2s ease"
       _hover={{
-        bg: "grey.50",
+        bg: isActive ? "green.50" : "grey.50",
       }}
       userSelect="none"
       cursor="pointer"
       pr="3"
       pl="10"
-      onClick={() => navigate(`${policy?.id}/${rule?.id}`)}
+      onClick={() => navigate(`./config/${policy?.id}/${rule?.id}`)}
     >
       <Stack direction="row" spacing="3" alignItems="center">
         <Icon name={iconName} color="green.600" />
         <Text noOfLines={1}>{rule?.name}</Text>
       </Stack>
-      <Protected
-        roles={[
-          Level.Admin,
-          Level.Operator,
-          Level.ReadWriteCommandOnDevice,
-          Level.ReadWrite,
-        ]}
-      >
+      <Protected minLevel={Level.Operator}>
         <Menu>
           <MenuButton
             as={IconButton}

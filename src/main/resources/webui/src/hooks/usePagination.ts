@@ -18,20 +18,18 @@ export type UsePaginationConfig = {
   const {
     data,
     isLoading,
-  } = useQuery(
-    [
+  } = useQuery({
+    queryKey: [
       QUERIES.ALL_TASKS,
       pagination.query,
       pagination.offset,
       pagination.limit,
     ],
-    async () => api.task.getAll(pagination),
-    {
-      select(res) {
-        return search(res, "description").with(pagination.query);
-      },
-    }
-  );
+    queryFn: async () => api.task.getAll(pagination),
+    select(res) {
+      return search(res, "description").with(pagination.query);
+    },
+  });
  */
 export function usePagination(config?: UsePaginationConfig) {
   const baseConfig = useMemo(

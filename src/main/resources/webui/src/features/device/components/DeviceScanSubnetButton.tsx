@@ -111,14 +111,13 @@ export default function DeviceScanSubnetButton(
     },
   });
 
-  const mutation = useMutation(
-    async (payload: CreateOrUpdateTaskPayload) => api.task.create(payload),
-    {
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+  const mutation = useMutation({
+    mutationFn: async (payload: CreateOrUpdateTaskPayload) =>
+      api.task.create(payload),
+    onError(err: NetshotError) {
+      toast.error(err);
+    },
+  });
 
   const onSubmit = useCallback(
     async (values: Form) => {
@@ -139,7 +138,7 @@ export default function DeviceScanSubnetButton(
     title: t("Scan subnets for devices"),
     description: <DeviceCreateForm />,
     form,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     onSubmit,
     size: "xl",
     submitButton: {

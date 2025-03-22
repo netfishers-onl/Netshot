@@ -8,9 +8,9 @@ import { merge, search } from "@/utils";
 import { Skeleton, Stack } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { QUERIES } from "../constants";
 
 const columnHelper = createColumnHelper<DeviceInterface>();
@@ -24,44 +24,40 @@ export default function DeviceInterfaceScreen() {
   const toast = useToast();
   const pagination = usePagination();
 
-  const { data = [], isLoading } = useQuery(
-    [
+  const { data = [], isPending } = useQuery({
+    queryKey: [
       QUERIES.DEVICE_INTERFACES,
       params.id,
       pagination.query,
       pagination.offset,
       pagination.limit,
     ],
-    async () => api.device.getAllInterfaceById(+params.id, pagination),
-    {
-      select(res) {
-        // Search on IP addresses
-        const passA = res.filter((item) => {
-          return item.ip4Addresses.some((address) => {
-            return (
-              address.ip.toLocaleLowerCase().startsWith(pagination.query) ||
-              address.ip.toLocaleLowerCase().includes(pagination.query)
-            );
-          });
+    queryFn: async () =>
+        api.device.getAllInterfacesById(+params.id, pagination),
+    select: useCallback((res: DeviceInterface[]): DeviceInterface[] => {
+      // Search on IP addresses
+      const passA = res.filter((item) => {
+        return item.ip4Addresses.some((address) => {
+          return (
+            address.ip.toLocaleLowerCase().startsWith(pagination.query) ||
+            address.ip.toLocaleLowerCase().includes(pagination.query)
+          );
         });
+      });
 
-        // Search on other props
-        const passB = search(
-          res,
-          "description",
-          "interfaceName",
-          "macAddress",
-          "vrfInstance"
-        ).with(pagination.query);
+      // Search on other props
+      const passB = search(
+        res,
+        "description",
+        "interfaceName",
+        "macAddress",
+        "vrfInstance"
+      ).with(pagination.query);
 
-        // Merge two results in one
-        return merge(passA, passB, "id");
-      },
-      onError(err: NetshotError) {
-        toast.error(err);
-      },
-    }
-  );
+      // Merge two results in one
+      return merge(passA, passB, "id");
+    }, [pagination.query]),
+  });
 
   const columns = useMemo(
     () => [
@@ -113,7 +109,7 @@ export default function DeviceInterfaceScreen() {
         />
       </Stack>
 
-      {isLoading ? (
+      {isPending ? (
         <Stack spacing="3">
           <Skeleton h="60px"></Skeleton>
           <Skeleton h="60px"></Skeleton>
@@ -123,7 +119,7 @@ export default function DeviceInterfaceScreen() {
       ) : (
         <>
           {data?.length > 0 ? (
-            <DataTable columns={columns} data={data} loading={isLoading} />
+            <DataTable columns={columns} data={data} loading={isPending} />
           ) : (
             <EmptyResult
               title={t("There is no interface")}

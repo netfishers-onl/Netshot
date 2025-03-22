@@ -1,12 +1,12 @@
 import { Box, Button, Heading, Spacer, Stack } from "@chakra-ui/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router";
 
 import api from "@/api";
-import { HttpStatus, type NetshotError } from "@/api/httpClient";
+import { HttpStatus, NetshotErrorCode, type NetshotError } from "@/api/httpClient";
 import { Brand } from "@/components";
 import FormControl, { FormControlType } from "@/components/FormControl";
 import { QUERIES, REDIRECT_SEARCH_PARAM } from "@/constants";
@@ -16,6 +16,7 @@ import { User } from "@/types";
 type SigninForm = {
   username: string;
   password: string;
+  newPassword?: string;
 };
 
 function SigninScreen() {
@@ -34,6 +35,7 @@ function SigninScreen() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [changePass, setChangePass] = useState<boolean>(false);
   const mutation = useMutation({
     mutationFn: api.auth.signin,
     onSuccess(data) {
@@ -43,11 +45,27 @@ function SigninScreen() {
         { replace: true });
     },
     onError(err: NetshotError) {
-      if (err.response.status == HttpStatus.Unauthorized) {
+      if (err.response.status === HttpStatus.Unauthorized) {
         toast.error({
           title: t("Authentication failed"),
-          description: t("Username or password is incorrect"),
+          description: t("Username or password is incorrect."),
         });
+      }
+      else if (err.response.status === HttpStatus.PreconditionFailed &&
+                err.code === NetshotErrorCode.ExpiredPassword) {
+        toast.error({
+          title: t("Password expired"),
+          description: t("You need to change your password."),
+        });
+        setChangePass(true);
+      }
+      else if (err.response.status === HttpStatus.BadRequest &&
+                err.code === NetshotErrorCode.FailedPasswordPolicy) {
+        toast.error({
+          title: t("Password policy failed"),
+          description: err.description,
+        });
+        setChangePass(true);
       }
       else {
         toast.error({
@@ -83,6 +101,7 @@ function SigninScreen() {
                 rules={{
                   required: true,
                 }}
+                isReadOnly={changePass}
               />
               <FormControl
                 isRequired
@@ -94,14 +113,30 @@ function SigninScreen() {
                 rules={{
                   required: true,
                 }}
+                isReadOnly={changePass}
               />
+              {changePass &&
+                <FormControl
+                  isRequired
+                  type={FormControlType.Password}
+                  control={control}
+                  name="newPassword"
+                  label="New password"
+                  placeholder={t("Enter new password")}
+                  rules={{
+                    required: true,
+                  }}
+                  autoFocus
+                />}
               <Button
                 type="submit"
                 isLoading={mutation.isPending}
                 disabled={!isValid}
                 variant="solid"
               >
-                {t("Sign in")}
+                {changePass ?
+                  t("Change password and Sign in") :
+                  t("Sign in")}
               </Button>
             </Stack>
           </Stack>

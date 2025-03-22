@@ -31,6 +31,8 @@ export type NetshotError = {
 export enum NetshotErrorCode {
   GenericServer = -1,
   DeviceNotFound = 142,
+  ExpiredPassword = 205,
+  FailedPasswordPolicy = 206,
 }
 
 export enum HttpStatus {
@@ -106,6 +108,9 @@ function createHttpClient(opts: HttpClientOptions = {}) {
         }
       }
       catch (jsonErr) {
+        if (typeof jsonErr.code !== "undefined") {
+          throw jsonErr;
+        }
         throw {
           title: i18n.t("Error"),
           description: i18n.t("Netshot server error"),

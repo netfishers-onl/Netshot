@@ -2344,10 +2344,10 @@ public class RestService extends Thread {
 					DeviceCliAccount cliAccount = (DeviceCliAccount) credentialSet;
 					DeviceCliAccount rsCliAccount = (DeviceCliAccount) rsCredentialSet;
 					cliAccount.setUsername(rsCliAccount.getUsername());
-					if (!rsCliAccount.getPassword().equals("=")) {
+					if (rsCliAccount.getPassword() != null && !rsCliAccount.getPassword().equals("=")) {
 						cliAccount.setPassword(rsCliAccount.getPassword());
 					}
-					if (!rsCliAccount.getSuperPassword().equals("=")) {
+					if (rsCliAccount.getSuperPassword() != null && !rsCliAccount.getSuperPassword().equals("=")) {
 						cliAccount.setSuperPassword(rsCliAccount.getSuperPassword());
 					}
 					if (DeviceSshKeyAccount.class.isInstance(credentialSet)) {

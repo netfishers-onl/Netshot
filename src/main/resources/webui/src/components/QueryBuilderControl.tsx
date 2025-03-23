@@ -33,6 +33,7 @@ import { useTranslation } from "react-i18next";
 import DeviceTypeSelect from "./DeviceTypeSelect";
 import FormControl, { FormControlType } from "./FormControl";
 import Select from "./Select";
+import Icon from "./Icon";
 
 type AttributeOption = Option<{
   name: string;
@@ -83,63 +84,63 @@ export type QueryBuilderValue = {
 
 const operatorOptionMapping = {
   [OperatorType.Is]: {
-    label: i18n.t("Is"),
+    label: i18n.t("is"),
     value: OperatorType.Is,
   },
   [OperatorType.In]: {
-    label: i18n.t("In"),
+    label: i18n.t("in"),
     value: OperatorType.In,
   },
   [OperatorType.Contains]: {
-    label: i18n.t("Contains"),
+    label: i18n.t("contains"),
     value: OperatorType.Contains,
   },
   [OperatorType.ContainsNoCase]: {
-    label: i18n.t("Contains no case"),
+    label: i18n.t("contains (no case)"),
     value: OperatorType.ContainsNoCase,
   },
   [OperatorType.StartsWith]: {
-    label: i18n.t("Starts with"),
+    label: i18n.t("starts with"),
     value: OperatorType.StartsWith,
   },
   [OperatorType.EndsWith]: {
-    label: i18n.t("Ends with"),
+    label: i18n.t("ends with"),
     value: OperatorType.EndsWith,
   },
   [OperatorType.Matches]: {
-    label: i18n.t("Matches"),
+    label: i18n.t("matches"),
     value: OperatorType.Matches,
   },
   [OperatorType.LessThan]: {
-    label: i18n.t("Less than"),
+    label: i18n.t("less than"),
     value: OperatorType.LessThan,
   },
   [OperatorType.GreaterThan]: {
-    label: i18n.t("Greater than"),
+    label: i18n.t("greater than"),
     value: OperatorType.GreaterThan,
   },
   [OperatorType.Before]: {
-    label: i18n.t("Before"),
+    label: i18n.t("before"),
     value: OperatorType.Before,
   },
   [OperatorType.After]: {
-    label: i18n.t("After"),
+    label: i18n.t("after"),
     value: OperatorType.After,
   },
   [OperatorType.BeforeRelative]: {
-    label: i18n.t("Before (relative)"),
+    label: i18n.t("before (relative)"),
     value: OperatorType.BeforeRelative,
   },
   [OperatorType.True]: {
-    label: i18n.t("True"),
+    label: i18n.t("true"),
     value: OperatorType.True,
   },
   [OperatorType.False]: {
-    label: i18n.t("False"),
+    label: i18n.t("false"),
     value: OperatorType.False,
   },
   [OperatorType.Enum]: {
-    label: i18n.t("Enum"),
+    label: i18n.t("enum"),
     value: OperatorType.Enum,
   },
 };
@@ -647,15 +648,20 @@ export default function QueryBuilderControl<T>(
         ref={inputRef}
       />
       <Stack direction="row" spacing="3">
-        <Button onClick={() => setCondition()}>{t("Clear")}</Button>
+        <Button
+          onClick={() => setCondition()}
+          leftIcon={<Icon name="x" />}
+        >
+          {t("Clear")}
+        </Button>
         <Button onClick={() => setCondition(ConditionType.Not)}>
-          {t("NOT")}
+          {t("not")}
         </Button>
         <Button onClick={() => setCondition(ConditionType.And)}>
-          {t("AND")}
+          {t("and")}
         </Button>
         <Button onClick={() => setCondition(ConditionType.Or)}>
-          {t("OR")}
+          {t("or")}
         </Button>
       </Stack>
       <Select

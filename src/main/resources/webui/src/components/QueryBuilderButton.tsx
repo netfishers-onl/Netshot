@@ -27,6 +27,9 @@ export default function QueryBuilderButton(props: QueryBuilderButtonProps) {
       <QueryBuilderControl control={form.control} name="queryBuilder" />
     ),
     form,
+    submitButton: {
+      label: t("Search"),
+    },
     onSubmit(values) {
       dialog.close();
 

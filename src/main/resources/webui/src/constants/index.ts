@@ -17,6 +17,7 @@ export const QUERIES = {
   DEVICE_GROUPS: "device-groups",
   DEVICE_GROUP_AGGREGATED_SEARCH: "device-group-aggregated-search",
   DEVICE_CONFIG_COMPARE: "device-config-compare",
+  DEVICE_DETAIL: "device-detail",
   POLICY_LIST: "policy-list",
 };
 

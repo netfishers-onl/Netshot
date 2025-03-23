@@ -65,11 +65,28 @@ export type SimpleDevice = {
   eol: boolean;
 };
 
-export type DeviceAttribute = {
+export type DeviceNumericAttribute = {
+  type: string;
+  name: string;
+  number: number;
+};
+
+export type DeviceTextAttribute = {
+  type: string;
   name: string;
   text: string;
-  type: string;
 };
+
+export type DeviceBinaryAttribute = {
+  type: string;
+  name: string;
+  assumption: boolean;
+};
+
+export type DeviceAttribute =
+  DeviceNumericAttribute |
+  DeviceTextAttribute |
+  DeviceBinaryAttribute;
 
 export type Device = {
   attributes: DeviceAttribute[];
@@ -159,19 +176,33 @@ export type DeviceFamily = {
   deviceFamily: string;
 };
 
+export enum DeviceAttributeType {
+  Numeric = "NUMERIC",
+  Text = "TEXT",
+  LongText = "LONGTEXT",
+  Date = "DATE",
+  Binary = "BINARY",
+  BinaryFile = "BINARYFILE",
+};
+
+export enum DeviceAttributeLevel {
+  Device = "DEVICE",
+  Config = "CONFIG",
+};
+
 export type DeviceTypeAttribute = {
+  name: string;
   checkable: boolean;
   comparable: boolean;
   dump: boolean;
-  level: string;
-  name: string;
+  level: DeviceAttributeLevel;
   postDump: string;
   postLineDump: string;
   preDump: string;
   preLineDump: string;
   searchable: boolean;
   title: string;
-  type: string;
+  type: DeviceAttributeType;
 };
 
 export enum DeviceTypeProtocol {

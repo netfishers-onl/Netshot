@@ -1,4 +1,4 @@
-import { DeviceStatus } from "@/types";
+import { Device, DeviceAttribute, DeviceAttributeLevel, DeviceAttributeType, DeviceBinaryAttribute, DeviceNumericAttribute, DeviceStatus, DeviceTextAttribute, DeviceTypeAttribute, DeviceTypeAttributeType } from "@/types";
 import {
   Box,
   Flex,
@@ -10,10 +10,62 @@ import {
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import { useDevice } from "../contexts/device";
+import { formatDate } from "@/utils";
+import { useMemo } from "react";
+import { T } from "node_modules/react-router/dist/development/fog-of-war-BALYJxf_.mjs";
+
+type DeviceNumericAttributeValueType = {
+  attribute: DeviceNumericAttribute;
+};
+
+function DeviceNumericAttributeValue(props: DeviceNumericAttributeValueType) {
+  const { attribute } = props;
+  const { t } = useTranslation();
+
+  return (
+    <Text>{attribute?.number ?? t("N/A")}</Text>
+  )
+}
+
+type DeviceTextAttributeValueType = {
+  attribute: DeviceTextAttribute;
+};
+
+function DeviceTextAttributeValue(props: DeviceTextAttributeValueType) {
+  const { attribute } = props;
+  const { t } = useTranslation();
+
+  return (
+    <Text>{attribute?.text ?? t("N/A")}</Text>
+  )
+}
+
+type DeviceBinaryAttributeValueType = {
+  attribute: DeviceBinaryAttribute;
+};
+
+function DeviceBinaryAttributeValue(props: DeviceBinaryAttributeValueType) {
+  const { attribute } = props;
+  const { t } = useTranslation();
+
+  if (attribute?.assumption === true) {
+    return (
+      <Text>{t("True")}</Text>
+    )
+  }
+  else if (attribute?.assumption === false) {
+    return (
+      <Text>{t("False")}</Text>
+    )
+  }
+  return (
+    <Text>{t("N/A")}</Text>
+  )
+}
 
 export default function DeviceGeneralScreen() {
   const { t } = useTranslation();
-  const { device, isLoading } = useDevice();
+  const { device, type, isLoading } = useDevice();
 
   return (
     <Stack spacing="12">
@@ -25,7 +77,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Name")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.name ?? "N/A"}</Text>
+              <Text>{device?.name ?? t("N/A")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -33,7 +85,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Management IP")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.mgmtAddress ?? "N/A"}</Text>
+              <Text>{device?.mgmtAddress ?? t("N/A")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -41,7 +93,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Management domain")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.mgmtDomain?.name ?? "N/A"}</Text>
+              <Text>{device?.mgmtDomain?.name ?? t("N/A")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -62,7 +114,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Location")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.location ?? "N/A"}</Text>
+              <Text>{device?.location ?? t("N/A")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -70,7 +122,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Contact")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.contact ?? "N/A"}</Text>
+              <Text>{device?.contact ?? t("N/A")}</Text>
             </Skeleton>
           </Flex>
         </Stack>
@@ -83,7 +135,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Network class")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.networkClass ?? "N/A"}</Text>
+              <Text>{device?.networkClass ?? t("N/A")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -91,7 +143,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Device type")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.realDeviceType ?? "N/A"}</Text>
+              <Text>{device?.realDeviceType ?? t("N/A")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -99,7 +151,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Family")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.family ?? "N/A"}</Text>
+              <Text>{device?.family ?? t("N/A")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -107,7 +159,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Software version")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.softwareVersion ?? "N/A"}</Text>
+              <Text>{device?.softwareVersion ?? t("N/A")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -115,7 +167,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Serial number")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.serialNumber ?? "N/A"}</Text>
+              <Text>{device?.serialNumber ?? t("N/A")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -123,7 +175,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Creation date")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.createdDate ?? "N/A"}</Text>
+              <Text>{device?.createdDate ? formatDate(device?.createdDate) : "N/A"}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -131,7 +183,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Last change")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.changeDate ?? "N/A"}</Text>
+              <Text>{device?.changeDate ? formatDate(device?.changeDate) : "N/A"}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -139,7 +191,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("Comments")}</Text>
             </Box>
             <Skeleton isLoaded={!isLoading}>
-              <Text>{device?.comments ?? "N/A"}</Text>
+              <Text>{device?.comments ?? t("N/A")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -158,6 +210,32 @@ export default function DeviceGeneralScreen() {
           </Flex>
         </Stack>
       </Stack>
+      {type?.attributes?.length > 0 &&
+        <Stack spacing="5">
+          <Heading fontSize="lg">{t("Specific attributes")}</Heading>
+          {type.attributes.filter(a => a.level === DeviceAttributeLevel.Device).map((attrDef) => {
+            const attr = device?.attributes?.find(a => a.name === attrDef.name);
+            return (
+              <Stack spacing="3" key={attrDef.name}>
+                <Flex alignItems="center">
+                  <Box flex="0 0 auto" w="200px">
+                    <Text color="grey.400">{t(attrDef.title)}</Text>
+                  </Box>
+                  <Skeleton isLoaded={!isLoading}>
+                    {attrDef.type === DeviceAttributeType.Numeric &&
+                      <DeviceNumericAttributeValue attribute={attr as DeviceNumericAttribute} />}
+                    {attrDef.type === DeviceAttributeType.Text &&
+                      <DeviceTextAttributeValue attribute={attr as DeviceTextAttribute} />}
+                    {attrDef.type === DeviceAttributeType.Binary &&
+                      <DeviceBinaryAttributeValue attribute={attr as DeviceBinaryAttribute} />}
+                  </Skeleton>
+                </Flex>
+              </Stack>
+            );
+          })}
+
+        </Stack>
+      }
     </Stack>
   );
 }

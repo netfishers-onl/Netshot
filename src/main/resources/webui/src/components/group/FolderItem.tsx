@@ -48,7 +48,7 @@ export default function FolderItem(props: FolderItemProps) {
               name="chevronDown"
               color="grey.500"
               sx={{
-                transform: "rotate(-90deg)",
+                transform: isCollapsed ? "rotate(-90deg)" : "",
               }}
             />
             <Stack direction="row" spacing="3" alignItems="center">

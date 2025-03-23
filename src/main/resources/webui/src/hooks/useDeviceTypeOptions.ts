@@ -3,7 +3,7 @@ import { NetshotError } from "@/api/httpClient";
 import { QUERIES } from "@/constants";
 import { DeviceType, Option } from "@/types";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import useToast from "./useToast";
 
@@ -44,26 +44,30 @@ export function useDeviceTypeOptions(props: UseDeviceTypeOptionsProps) {
   const {
     isSuccess,
     isLoading,
-    data: options,
+    data,
   } = useQuery({
-    queryKey: [QUERIES.DEVICE_TYPE_LIST, withAny],
+    queryKey: [QUERIES.DEVICE_TYPE_LIST],
     queryFn: api.device.getAllTypes,
     select(types) {
-      const options = types.map((type) => ({
+      return types.map((type) => ({
         label: type?.description,
         value: type,
-      }));
-
-      if (withAny) {
-        options.unshift({
-          label: t("[Any]"),
-          value: null,
-        });
-      }
-
-      return options as Option<DeviceType>[];
+      })) as Option<DeviceType>[];;
     },
   });
+
+  const options = useMemo<Option<DeviceType>[]>(() => {
+    if (withAny) {
+      return [
+        {
+          label: t("[Any]"),
+          value: null,
+        },
+        ...data,
+      ];
+    }
+    return data;
+  }, [data, withAny, t]);
 
   /**
    * Get the option item from device type list by driver name
@@ -88,7 +92,7 @@ export function useDeviceTypeOptions(props: UseDeviceTypeOptionsProps) {
 
       return option.value.description;
     },
-    [options, getOptionByDriver]
+    [getOptionByDriver, t]
   );
 
   return {

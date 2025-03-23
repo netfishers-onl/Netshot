@@ -22,7 +22,7 @@ export default function DeviceSidebarListToolbar() {
       <Text>{t("{{length}} devices", { length: ctx.total })}</Text>
       <Spacer />
       <Stack direction="row" spacing="2">
-        {!isSelectedAll &&
+        {(!isSelectedAll && ctx.total > 0) &&
           <Button
             alignSelf="start"
             size="sm"

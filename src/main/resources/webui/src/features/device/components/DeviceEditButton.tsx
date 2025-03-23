@@ -2,12 +2,11 @@ import api, { UpdateDevicePayload } from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { Checkbox, DomainSelect, Select } from "@/components";
 import FormControl, { FormControlType } from "@/components/FormControl";
-import { QUERIES } from "@/constants";
 import { Dialog } from "@/dialog";
 import { useToast } from "@/hooks";
 import { CredentialSetType, Device, Option } from "@/types";
 import { Checkbox as NativeCheckbox, Stack } from "@chakra-ui/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   MouseEvent,
   ReactElement,
@@ -18,6 +17,7 @@ import {
 import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { CREDENTIAL_OPTIONS } from "../constants";
+import { QUERIES } from "@/constants";
 
 export type DeviceEditButtonProps = {
   device: Device;
@@ -288,6 +288,7 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
   const { device, renderItem } = props;
   const { t } = useTranslation();
   const toast = useToast();
+  const queryClient = useQueryClient();
 
   const defaultValues = useMemo(() => {
     const credentialType = CREDENTIAL_OPTIONS.find((option) => {
@@ -344,6 +345,9 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
         description: t("Device {{device}} has been successfully modified", {
           device: device?.name,
         }),
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERIES.DEVICE_DETAIL, +device?.id],
       });
     },
     onError(err: NetshotError) {

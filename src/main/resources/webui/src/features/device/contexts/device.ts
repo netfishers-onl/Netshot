@@ -1,9 +1,10 @@
 import { createContext, useContext } from "react";
 
-import { Device } from "@/types";
+import { Device, DeviceType } from "@/types";
 
 export type DeviceContextType = {
 	device: Device;
+	type: DeviceType;
 	isLoading: boolean;
 	isDisabled?: boolean;
 };

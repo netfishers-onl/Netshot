@@ -4,7 +4,7 @@ import { Protected } from "@/components";
 import Icon from "@/components/Icon";
 import { RouterTab, RouterTabs } from "@/components/routerTab";
 import { useToast } from "@/hooks";
-import { DeviceStatus, Level } from "@/types";
+import { DeviceStatus, DeviceType, Level } from "@/types";
 import {
   Button,
   Flex,
@@ -47,6 +47,14 @@ export default function DeviceDetailScreen() {
     queryFn: async () => api.device.getById(+id),
   });
 
+  const {
+    data: deviceTypes,
+    isPending: isTypePending,
+  } = useQuery({
+    queryKey: [QUERIES.DEVICE_TYPE_LIST],
+    queryFn: api.device.getAllTypes,
+  });
+
   const refresh = useCallback(async () => {
     const toastId = toast.loading({
       title: t("Loading"),
@@ -61,8 +69,16 @@ export default function DeviceDetailScreen() {
     [device?.status]
   );
 
+  const deviceType = useMemo<DeviceType>(() => {
+    return deviceTypes?.find(t => t.name === device?.driver);
+  }, [device?.driver, deviceTypes]);
+
   return (
-    <DeviceProvider device={device} isLoading={isPending}>
+    <DeviceProvider
+      device={device}
+      type={deviceType}
+      isLoading={isPending || isTypePending}
+    >
       <Stack spacing="0" flex="1" overflow="auto">
         <Stack spacing="5" px="9" pt="9">
           <Flex alignItems="center">

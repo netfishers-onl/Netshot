@@ -43,11 +43,11 @@ export default function DeviceSidebarSearch() {
             driver: ctx.driver,
           }}
           renderItem={(open) => (
-            <Tooltip label={t("Advanced search")}>
+            <Tooltip label={t("Query builder")}>
               <IconButton
                 variant="ghost"
-                aria-label={t("Open advanced search")}
-                icon={<Icon name="filter" />}
+                aria-label={t("Open query builder")}
+                icon={<Icon name="maximize" />}
                 onClick={open}
               />
             </Tooltip>

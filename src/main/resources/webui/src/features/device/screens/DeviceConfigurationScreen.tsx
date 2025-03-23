@@ -53,9 +53,9 @@ export default function DeviceConfigurationScreen() {
   if (data?.pages?.[0]?.length === 0) {
     return (
       <EmptyResult
-        title={t("There is no interface for this device")}
+        title={t("There is no configuration for this device")}
         description={t(
-          "This device does not have any interface, please check his configuration"
+          "This device does not have any configuration, please run a snapshot"
         )}
       />
     );

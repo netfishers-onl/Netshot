@@ -3,6 +3,7 @@ import { CredentialSetType, Option } from "@/types";
 
 export const QUERIES = {
   DEVICE_SEARCH_LIST: "device-search-list",
+  DEVICE_TYPE_LIST: "device-type-list",
   DEVICE_DETAIL: "device-detail",
   DEVICE_CONFIGS: "device-configs",
   DEVICE_CONFIG: "device-config",

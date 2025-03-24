@@ -177,7 +177,7 @@ function snapshot(cli, device, config) {
 		device.set("name", hostname[1]);
 	}
 	
-	var version = showVersion.match(/^JUNOS .* \[(.*)\]/m);
+	var version = showVersion.match(/^?<=Junos[:\s]+)(\d+\.\d+([A-Za-z]?\d+)(?:[-\.]?[A-Za-z0-9]+)*/mi);
 	if (version != null) {
 		device.set("softwareVersion", version[1]);
 		config.set("junosVersion", version[1]);

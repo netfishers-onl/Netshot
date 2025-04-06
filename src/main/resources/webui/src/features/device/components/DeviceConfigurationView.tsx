@@ -1,15 +1,17 @@
-import api from "@/api";
-import { MonacoEditor } from "@/components";
-import Icon from "@/components/Icon";
-import { DeviceTypeAttribute } from "@/types";
 import { Center, Flex, Spinner, Stack, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+
+import api from "@/api";
+import { MonacoEditor } from "@/components";
+import Icon from "@/components/Icon";
+import { ConfigLongTextAttribute } from "@/types";
+
 import { QUERIES } from "../constants";
 
 export type DeviceConfigurationViewProps = {
   id: number;
-  attribute: DeviceTypeAttribute;
+  attribute: ConfigLongTextAttribute;
 };
 
 export default function DeviceConfigurationView(

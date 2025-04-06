@@ -20,7 +20,7 @@ export default function DeviceConfigurationCompareItem(
   const { isSelected, config, ...other } = props;
 
   const changeDate = useMemo(() => {
-    return formatDate(config?.changeDate, "yyyy-MM-dd");
+    return formatDate(config?.changeDate);
   }, [config]);
 
   const selectedStyle = useMemo(() => {

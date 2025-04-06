@@ -66,7 +66,8 @@ export default function AdministrationDeviceCredentialScreen() {
         enableSorting: true,
         size: 10000,
       }),
-      columnHelper.accessor("id", {
+      columnHelper.display({
+        id: "actions",
         cell: (info) => {
           const credential = info.row.original;
 

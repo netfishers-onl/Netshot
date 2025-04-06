@@ -165,7 +165,7 @@ export default function AddGroupButton(props: AddGroupButtonProps) {
             {title}
             <ModalCloseButton />
           </ModalHeader>
-          <ModalBody overflow="scroll" flex="1" display="flex">
+          <ModalBody flex="1" display="flex">
             {formStep === FormStep.Type && (
               <Stack direction="row" spacing="5">
                 <BoxWithIconButton
@@ -189,7 +189,7 @@ export default function AddGroupButton(props: AddGroupButtonProps) {
 
             {formStep === FormStep.Details && (
               <Stack direction="row" spacing="9" flex="1">
-                <Stack spacing="9" w="340px" overflow="scroll">
+                <Stack spacing="9" w="340px" overflowY="auto">
                   <Stack spacing="5">
                     <Heading as="h4" size="md">
                       {t("Informations")}
@@ -262,7 +262,7 @@ export default function AddGroupButton(props: AddGroupButtonProps) {
                     </>
                   )}
                 </Stack>
-                <Stack flex="1" spacing="5" overflow="scroll">
+                <Stack flex="1" spacing="5" overflowY="auto">
                   <Heading as="h4" size="md">
                     {t(
                       groupType === GroupType.Static

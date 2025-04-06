@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { forwardRef, LegacyRef, MouseEvent, useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router";
+import { useMatch, useNavigate } from "react-router";
 
 import { Icon } from "@/components";
 import { getDeviceLevelOption } from "@/constants";
@@ -30,6 +30,8 @@ const DeviceBox = forwardRef(
     const { t } = useTranslation();
     const ctx = useDeviceSidebar();
     const navigate = useNavigate();
+    const sectionMatch = useMatch("/app/devices/:id/:section");
+    const currentSection = useMemo(() => sectionMatch?.params.section ?? "general", [sectionMatch]);
     const isSelected = useMemo(() => ctx.isSelected(device?.id), [device, ctx]);
     const isDisabled = useMemo(
       () => device?.status === DeviceStatus.Disabled,
@@ -78,11 +80,11 @@ const DeviceBox = forwardRef(
           ctx.setSelected(range);
         }
         else {
-          navigate(`./${device?.id}/general`);
+          navigate(`./${device?.id}/${currentSection}`);
           ctx.setSelected([device]);
         }
       },
-      [device, ctx, navigate]
+      [device, ctx, navigate, currentSection]
     );
 
     const level = useMemo(
@@ -90,31 +92,29 @@ const DeviceBox = forwardRef(
       [device]
     );
 
-    const errors = useMemo(() => {
-      let count = 0;
-
+    const compliant = useMemo<boolean>(() => {
       if (
         [
           DeviceSoftwareLevel.NON_COMPLIANT,
           DeviceSoftwareLevel.UNKNOWN,
         ].includes(device.softwareLevel)
       ) {
-        count++;
+        return false;
       }
 
       if (!device.configCompliant) {
-        count++;
+        return false;
       }
 
       if (device.eol) {
-        count++;
+        return false;
       }
 
       if (device.eos) {
-        count++;
+        return false;
       }
-
-      return count;
+      
+      return true;
     }, [device]);
 
     return (
@@ -157,15 +157,13 @@ const DeviceBox = forwardRef(
 
           <Popover trigger="hover">
             <PopoverTrigger>
-              {errors > 0 ? (
-                <Tag gap="1" colorScheme="red">
-                  <Icon size={14} name="alertTriangle" />
-                  {errors}
-                </Tag>
-              ) : (
+              {compliant ? (
                 <Tag gap="1" colorScheme="green">
                   <Icon size={14} name="checkCircle" />
-                  {t("OK")}
+                </Tag>
+              ) : (
+                <Tag gap="1" colorScheme="red">
+                  <Icon size={14} name="alertTriangle" />
                 </Tag>
               )}
             </PopoverTrigger>
@@ -202,19 +200,13 @@ const DeviceBox = forwardRef(
                     alignItems="center"
                     justifyContent="space-between"
                   >
-                    <Text>{t("End of sale")}</Text>
-                    <Tag colorScheme={device.eos ? "red" : "green"}>
-                      {t(device.eos ? "Expired" : "Up to date")}
-                    </Tag>
-                  </Stack>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
-                    <Text>{t("End of life")}</Text>
-                    <Tag colorScheme={device.eol ? "red" : "green"}>
-                      {t(device.eol ? "Expired" : "Up to date")}
+                    <Text>{t("Hardware compliance")}</Text>
+                    <Tag colorScheme={(device.eos || device.eol) ? "red" : "green"}>
+                      {device.eol ?
+                        t("End of life") :
+                        (device.eos ?
+                          t("End of sale") :
+                          t("Up to date"))}
                     </Tag>
                   </Stack>
                 </Stack>

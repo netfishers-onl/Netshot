@@ -34,7 +34,6 @@ function RunScriptForm(props: RunScriptFormProps) {
   const { script, driver, devices } = props;
 
   const { t } = useTranslation();
-  const toast = useToast();
   const form = useFormContext();
 
   // Validate script before submitting and retrieve user inputs if exist
@@ -147,8 +146,7 @@ export default function RunScriptButton(props: RunScriptButtonProps) {
     onError(err: NetshotError) {
       toast.error({
         title: t("Error"),
-        // @ts-ignore
-        description: err?.errorMsg,
+        description: err?.description,
       });
     },
   });
@@ -194,17 +192,7 @@ export default function RunScriptButton(props: RunScriptButtonProps) {
     submitButton: {
       label: t("Run"),
     },
-  });
-
-  const open = useCallback(() => {
-    dialog.updateProps({
-      description: (
-        <RunScriptForm devices={devices} script={script} driver={driver} />
-      ),
-    });
-
-    dialog.open();
-  }, [dialog, script, driver]);
+  }, [devices, script, driver]);
 
   return (
     <>
@@ -212,7 +200,7 @@ export default function RunScriptButton(props: RunScriptButtonProps) {
         aria-label={t("Run script")}
         variant="primary"
         icon={<Icon name="play" />}
-        onClick={open}
+        onClick={() => dialog.open()}
       />
       {taskId && <TaskDialog id={taskId} {...disclosure} />}
     </>

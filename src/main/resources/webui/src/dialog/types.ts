@@ -3,7 +3,7 @@ import { FunctionComponent, ReactElement } from "react";
 
 export type PromiseOrVoid = Promise<void> | void;
 
-export type BaseDialogProps<T extends string = any> = {
+export type BaseDialogProps<T extends string = string> = {
   title?: string | ReactElement;
   description?: string | ReactElement | (() => ReactElement);
   isLoading?: boolean;
@@ -38,11 +38,9 @@ export type DialogConfig<P extends BaseDialogProps> = {
 export type DialogContextProps = {
   add<P extends BaseDialogProps>(
     key: string,
-    component: FunctionComponent<P>,
-    props: P
+    component: FunctionComponent<P>
   ): void;
+  remove(key: string): void;
   update(key: string, config: Partial<DialogConfig<BaseDialogProps>>): void;
   updateProps<P extends BaseDialogProps>(key: string, props: P): void;
-  get(key: string): DialogConfig<BaseDialogProps>;
-  configs: Record<string, DialogConfig<BaseDialogProps>>;
 };

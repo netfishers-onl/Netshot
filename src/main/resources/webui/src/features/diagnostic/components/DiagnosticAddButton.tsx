@@ -78,7 +78,7 @@ export type AddDiagnosticButtonProps = {
   renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
 };
 
-export default function AddTaskButton(props: AddDiagnosticButtonProps) {
+export default function AddDiagnosticButton(props: AddDiagnosticButtonProps) {
   const { renderItem } = props;
   const { t } = useTranslation();
   const toast = useToast();
@@ -261,7 +261,7 @@ export default function AddTaskButton(props: AddDiagnosticButtonProps) {
               {t(formStep === FormStep.Type ? "Step 1/2" : "Step 2/2")}
             </Text>
           </ModalHeader>
-          <ModalBody overflow="scroll" flex="1" display="flex">
+          <ModalBody flex="1" display="flex">
             {formStep === FormStep.Type ? (
               <Stack direction="row" spacing="5">
                 {typeOptions.map((option) => (

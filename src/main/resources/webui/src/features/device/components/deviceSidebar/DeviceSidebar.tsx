@@ -58,7 +58,7 @@ export default function DeviceSidebar() {
                     />
                     <DeviceScanSubnetButton
                       renderItem={(open) => (
-                        <MenuItem icon={<Icon name="wifi" />} onClick={open}>
+                        <MenuItem icon={<Icon name="crosshair" />} onClick={open}>
                           {t("Scan subnets for devices")}
                         </MenuItem>
                       )}

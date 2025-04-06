@@ -146,17 +146,19 @@ export default function DeviceDetailScreen() {
                           )}
                         />
                         {isDisabled ? (
-                          <DeviceEnableButton
-                            devices={[device]}
-                            renderItem={(open) => (
-                              <MenuItem
-                                icon={<Icon name="zap" />}
-                                onClick={open}
-                              >
-                                {t("Enable")}
-                              </MenuItem>
-                            )}
-                          />
+                          <Protected minLevel={Level.ReadWrite}>
+                            <DeviceEnableButton
+                              devices={[device]}
+                              renderItem={(open) => (
+                                <MenuItem
+                                  icon={<Icon name="zap" />}
+                                  onClick={open}
+                                >
+                                  {t("Enable")}
+                                </MenuItem>
+                              )}
+                            />
+                          </Protected>
                         ) : (
                           <DeviceDisableButton
                             devices={[device]}

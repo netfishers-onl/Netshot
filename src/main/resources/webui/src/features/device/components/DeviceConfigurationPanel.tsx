@@ -14,15 +14,20 @@ import { useParams } from "react-router";
 
 import Icon from "@/components/Icon";
 import { useDeviceTypeOptions, useToast } from "@/hooks";
-import { DeviceConfig, DeviceTypeAttribute } from "@/types";
+import { DeviceConfig, DeviceAttributeDefinition, Config, ConfigNumericAttribute, ConfigTextAttribute, ConfigBinaryAttribute, ConfigAttribute, DeviceAttributeType, DeviceAttributeLevel } from "@/types";
 import { formatDate } from "@/utils";
 
 import { useDevice } from "../contexts/device";
 import DeviceConfigurationAttribute from "./DeviceConfigurationAttribute";
 import DeviceConfigurationCompareButton from "./DeviceConfigurationCompareButton";
 
+
+
+
+
+
 export type DeviceConfigurationPanelProps = {
-  config: DeviceConfig;
+  config: Config;
 };
 
 export default function DeviceConfigurationPanel(
@@ -31,28 +36,13 @@ export default function DeviceConfigurationPanel(
   const { config } = props;
   const { t } = useTranslation();
   const controls = useAnimationControls();
-  const toast = useToast();
-  const { device } = useDevice();
+  const { type, isLoading } = useDevice();
   const params = useParams<{ id: string }>();
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
-  const [attributes, setAttributes] = useState<DeviceTypeAttribute[]>([]);
 
-  const { isLoading, getOptionByDriver } = useDeviceTypeOptions({
-    withAny: false,
-    onSuccess(options) {
-      const driver = options.find(
-        (option) => option.value?.name === device.driver
-      );
-
-      if (!driver) {
-        return;
-      }
-
-      setAttributes(
-        driver.value.attributes.filter((attribute) => attribute.checkable)
-      );
-    },
-  });
+  const attributeDefinitions = useMemo<DeviceAttributeDefinition[]>(() => {
+    return type?.attributes.filter(a => a.level === DeviceAttributeLevel.Config);
+  }, [type]);
 
   const changeDate = useMemo(() => {
     return formatDate(config?.changeDate);
@@ -122,11 +112,11 @@ export default function DeviceConfigurationPanel(
             </>
           ) : (
             <>
-              {attributes?.map((attribute) => (
+              {attributeDefinitions?.map((attrDef) => (
                 <DeviceConfigurationAttribute
-                  key={attribute?.name}
+                  key={attrDef?.name}
                   config={config}
-                  attribute={attribute}
+                  definition={attrDef}
                 />
               ))}
             </>

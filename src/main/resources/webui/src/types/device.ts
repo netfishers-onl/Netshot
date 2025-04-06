@@ -38,13 +38,13 @@ export type DeviceModule = {
   slot: string;
   partNumber: string;
   serialNumber: string;
-  firstSeenDate: string;
-  lastSeenDate: string;
+  firstSeenDate: number;
+  lastSeenDate: number;
   removed: boolean;
 };
 
 export type DeviceOwnerGroup = {
-  changeDate: string;
+  changeDate: number;
   id: number;
   name: string;
   folder: string;
@@ -91,17 +91,17 @@ export type DeviceAttribute =
 export type Device = {
   attributes: DeviceAttribute[];
   autoTryCredentials: boolean;
-  changeDate: string;
+  changeDate: number;
   comments: string;
   contact: string;
-  createdDate: string;
+  createdDate: number;
   creator: string;
   credentialSets: CredentialSet[];
   specificCredentialSet: CredentialSet;
   driver: string;
-  eolDate: string;
+  eolDate: number;
   eolModule: DeviceModule;
-  eosDate: string;
+  eosDate: number;
   eosModule: DeviceModule;
   family: string;
   id: number;
@@ -140,22 +140,15 @@ export type DeviceComplianceResult = {
   policyName: string;
   result: DeviceComplianceResultType;
   comment: string;
-  checkDate: string;
-  expirationDate: string;
+  checkDate: number;
+  expirationDate: number;
 };
 
 export type DeviceDiagnosticResult = {
-  creationDate: string;
-  lastCheckDate: string;
+  creationDate: number;
+  lastCheckDate: number;
   diagnosticName: string;
   type: string;
-};
-
-export type DeviceConfig = {
-  attributes: DeviceAttribute[];
-  author: string;
-  changeDate: string;
-  id: number;
 };
 
 export type DeviceInterface = {
@@ -190,7 +183,7 @@ export enum DeviceAttributeLevel {
   Config = "CONFIG",
 };
 
-export type DeviceTypeAttribute = {
+export type DeviceAttributeDefinition = {
   name: string;
   checkable: boolean;
   comparable: boolean;
@@ -212,7 +205,7 @@ export enum DeviceTypeProtocol {
 }
 
 export type DeviceType = {
-  attributes: DeviceTypeAttribute[];
+  attributes: DeviceAttributeDefinition[];
   author: string;
   cliMainModes: string[];
   description: string;

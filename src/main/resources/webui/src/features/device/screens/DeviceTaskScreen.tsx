@@ -1,3 +1,10 @@
+import { Button, Heading, Skeleton, Stack, useDisclosure } from "@chakra-ui/react";
+import { useQuery } from "@tanstack/react-query";
+import { createColumnHelper } from "@tanstack/react-table";
+import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useParams } from "react-router";
+
 import api from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { DataTable, EmptyResult } from "@/components";
@@ -6,12 +13,7 @@ import TaskStatusTag from "@/components/TaskStatusTag";
 import { usePagination, useToast } from "@/hooks";
 import { Task } from "@/types";
 import { formatDate } from "@/utils";
-import { Button, Skeleton, Stack, useDisclosure } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { createColumnHelper } from "@tanstack/react-table";
-import { useCallback, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
+
 import { QUERIES } from "../constants";
 
 const columnHelper = createColumnHelper<Task>();
@@ -61,12 +63,13 @@ export default function DeviceTaskScreen() {
         cell: (info) => info.getValue(),
         header: t("Comments"),
       }),
-      columnHelper.accessor("id", {
+      columnHelper.display({
+        id: "actions",
         cell: (info) => (
           <Button
             variant="ghost"
             colorScheme="green"
-            onClick={() => openTask(info.getValue())}
+            onClick={() => openTask(info.row.original.id)}
           >
             {t("See details")}
           </Button>
@@ -89,12 +92,6 @@ export default function DeviceTaskScreen() {
   return (
     <>
       <Stack spacing="6" flex="1" overflow="auto">
-        {/* <Search
-          placeholder={t("Search...")}
-          onQuery={pagination.onQuery}
-          onClear={pagination.onQueryClear}
-          w="25%"
-        /> */}
         {isPending ? (
           <Stack spacing="3">
             <Skeleton h="60px"></Skeleton>
@@ -104,6 +101,7 @@ export default function DeviceTaskScreen() {
           </Stack>
         ) : (
           <>
+            <Heading size="md">{t("Last 20 tasks on this device")}</Heading>
             {data?.length > 0 ? (
               <DataTable columns={columns} data={data} loading={isPending} />
             ) : (

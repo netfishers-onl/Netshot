@@ -1,20 +1,22 @@
 import {
   ComponentProps,
+  DependencyList,
   FunctionComponent,
   useCallback,
   useContext,
   useEffect,
+  useId,
   useMemo,
-  useRef,
+  useState,
 } from "react";
+import { FieldValues } from "react-hook-form";
+
 import Alert, { AlertDialogProps } from "./Alert";
 import Confirm, { ConfirmDialogProps } from "./Confirm";
+import DialogContext from "./dialogContext";
 import Form, { FormDialogProps } from "./Form";
 import Loading, { LoadingDialogProps } from "./Loading";
-import DialogContext from "./dialogContext";
 import { BaseDialogProps } from "./types";
-
-let dialogKey = 0;
 
 type UseDialogReturns<
   P extends BaseDialogProps,
@@ -30,99 +32,96 @@ type UseDialogReturns<
   };
 };
 
-export namespace Dialog {
-  export function useConfirm(props: ConfirmDialogProps) {
-    return useDialog(Confirm, props);
-  }
+export const Dialog = {
+  useConfirm(props: ConfirmDialogProps, deps: DependencyList = []) {
+    return useDialog(Confirm, props, deps);
+  },
 
-  export function useForm<F = any>(props: FormDialogProps<F>) {
-    return useDialog(Form<F>, props);
-  }
+  useForm<F extends FieldValues = FieldValues>(props: FormDialogProps<F>, deps: DependencyList = []) {
+    return useDialog(Form<F>, props, deps);
+  },
 
-  export function useLoading(props: LoadingDialogProps) {
-    return useDialog(Loading, props);
-  }
+  useLoading(props: LoadingDialogProps, deps: DependencyList = []) {
+    return useDialog(Loading, props, deps);
+  },
 
-  export function useAlert(props: AlertDialogProps) {
-    return useDialog(Alert, props);
-  }
-}
+  useAlert(props: AlertDialogProps, deps: DependencyList = []) {
+    return useDialog(Alert, props, deps);
+  },
+};
 
 export function useDialog<
   C extends FunctionComponent<P>,
   P extends BaseDialogProps
->(component: C, props: ComponentProps<C>): UseDialogReturns<P, C> {
-  // Création de la clé unique
-  const key = useRef(`@chakra-dialog-${dialogKey++}`);
+>(component: C, props: ComponentProps<C>, deps: DependencyList): UseDialogReturns<P, C> {
+  // Unique key for the dialog
+  const key = useId();
   const dialogContext = useContext(DialogContext);
+  const [isLoading, setLoading] = useState<boolean>(props.isLoading);
 
-  // Surchage des props avec la méthode "close" pour que la dialog se ferme et invoque la méthode "onCancel" fournie
+  // Dialog opening
+  const open = useCallback(() => {
+    dialogContext.update(key, { isOpen: true });
+  }, [dialogContext, key]);
+
+  // Dialog closure
+  const close = useCallback(() => {
+    setLoading(false);
+    dialogContext.update(key, { isOpen: false });
+  }, [dialogContext, key]);
+
   const dialogProps = useMemo(
     () => ({
       ...props,
+      isLoading,
       onCancel() {
         close();
-
         if (props.onCancel) {
           props.onCancel();
         }
       },
     }),
-    [props]
+    [close, isLoading, props]
   );
-
-  // Ouverture de la dialog
-  const open = useCallback(() => {
-    dialogContext.update(key.current, { isOpen: true });
-  }, [dialogContext, key]);
-
-  // Fermeture de la dialog
-  function close() {
-    // Si un chargement est en cours on l'arrête
-    if (props.isLoading) {
-      props.isLoading = false;
-    }
-
-    dialogContext.update(key.current, { isOpen: false });
-  }
 
   // Démarrage du chargement et rendu de la dialog
   function start() {
-    props.isLoading = true;
-    dialogContext.update(key.current, { props: dialogProps });
+    setLoading(true);
+    dialogContext.update(key, { props: dialogProps });
   }
 
   // Arrêt du chargement et rendu de la dialog
   function stop() {
-    props.isLoading = false;
-    dialogContext.update(key.current, { props: dialogProps });
+    setLoading(false);
+    dialogContext.update(key, { props: dialogProps });
   }
 
   function update(config: Partial<ComponentProps<C>>) {
-    dialogContext.update(key.current, config);
+    dialogContext.update(key, config);
   }
 
   function updateProps(props: Partial<ComponentProps<C>>) {
-    dialogContext.updateProps(key.current, { ...dialogProps, ...props });
+    dialogContext.updateProps(key, { ...dialogProps, ...props });
   }
 
   // Ajoute la dialog dans la liste du context
   useEffect(() => {
-    dialogContext.add(key.current, component, dialogProps);
-  }, []);
+    const dialogKey = key;
+    dialogContext.add(key, component);
+    return () => {
+      dialogContext.remove(dialogKey);
+    };
+  }, [component, dialogContext, key]);
 
-  // Lance un nouveau rendu de la dialog pour afficher l'état de chargement
   useEffect(() => {
-    dialogContext.update(key.current, { props: dialogProps });
-  }, [props.isLoading]);
+    dialogContext.update(key, { props: dialogProps });
+  }, [dialogContext, key, ...deps]);
 
   return {
     open,
     close,
     update,
     updateProps,
-
-    // Contrôleurs pour l'état de chargement
     loading: {
       start,
       stop,

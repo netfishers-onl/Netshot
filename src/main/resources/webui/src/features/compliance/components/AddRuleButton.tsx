@@ -265,7 +265,7 @@ def check(device):
               {t(formStep === FormStep.Type ? "Step 1/2" : "Step 2/2")}
             </Text>
           </ModalHeader>
-          <ModalBody overflow="scroll" flex="1" display="flex">
+          <ModalBody flex="1" display="flex">
             {formStep === FormStep.Type ? (
               <Stack direction="row" spacing="5">
                 {typeOptions.map((option) => (

@@ -1,4 +1,3 @@
-import { genericMemo } from "@/utils";
 import {
   Button,
   ButtonProps,
@@ -12,12 +11,15 @@ import {
   Stack,
 } from "@chakra-ui/react";
 import { useMemo } from "react";
-import { FormProvider, UseFormReturn, useFormState } from "react-hook-form";
+import { FieldValues, FormProvider, UseFormReturn, useFormState } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+
+import { genericMemo } from "@/utils";
+
 import { ModalConfigContext } from "./ModalConfigContext";
 import { BaseDialogProps, PromiseOrVoid } from "./types";
 
-export type FormDialogProps<F = any> = {
+export type FormDialogProps<F extends FieldValues = FieldValues> = {
   onSubmit(data: F): PromiseOrVoid;
   form: UseFormReturn<F>;
   submitButton?: {
@@ -30,7 +32,7 @@ export type FormDialogProps<F = any> = {
   };
 } & BaseDialogProps;
 
-function FormDialog<F = any>(props: FormDialogProps<F>) {
+function FormDialog<F extends FieldValues = FieldValues>(props: FormDialogProps<F>) {
   const {
     isOpen,
     title,

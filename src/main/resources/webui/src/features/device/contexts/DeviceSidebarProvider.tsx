@@ -2,6 +2,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   PropsWithChildren,
   useCallback,
+  useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -10,11 +12,14 @@ import { DeviceType, Group, Option, SimpleDevice } from "@/types";
 
 import { QUERIES as DEVICE_QUERIES } from "../constants";
 import { DeviceSidebarContext, DeviceSidebarContextType } from "./device-sidebar";
+import { useMatch } from "react-router";
 
 
 export default function DeviceSidebarProvider(
     props: PropsWithChildren<DeviceSidebarContextType>) {
   const { children } = props;
+  const isInitial = useRef<boolean>(true);
+  const deviceMatch = useMatch("/app/devices/:id");
   const [query, setQuery] = useState<string>("");
   const [driver, setDriver] = useState<Option<DeviceType>>(null);
   const [total, setTotal] = useState<number>(0);
@@ -52,6 +57,15 @@ export default function DeviceSidebarProvider(
     await queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_LIST] });
     await queryClient.invalidateQueries({ queryKey: [DEVICE_QUERIES.DEVICE_SEARCH_LIST] });
   }, [queryClient]);
+
+  useEffect(() => {
+    if (isInitial.current) {
+      if (deviceMatch) {
+        
+      }
+      isInitial.current = false;
+    }
+  }, [deviceMatch]);
 
   return (
     <DeviceSidebarContext.Provider

@@ -57,7 +57,8 @@ export default function AdministrationApiTokenScreen() {
         size: 10000,
         minSize: 200,
       }),
-      columnHelper.accessor("id", {
+      columnHelper.display({
+        id: "actions",
         cell: (info) => {
           const apiToken = info.row.original;
 

@@ -165,12 +165,13 @@ export function useTask(status?: TaskStatus) {
         cell: (info) => info.getValue(),
         header: t("Comments"),
       }),
-      columnHelper.accessor("id", {
+      columnHelper.display({
+        id: "actions",
         cell: (info) => (
           <Button
             variant="ghost"
             colorScheme="green"
-            onClick={() => openTask(info.getValue())}
+            onClick={() => openTask(info.row.original.id)}
           >
             {t("See details")}
           </Button>

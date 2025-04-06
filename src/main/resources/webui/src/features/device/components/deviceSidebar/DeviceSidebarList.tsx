@@ -3,7 +3,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useInView } from "react-intersection-observer";
-import { useLocation } from "react-router";
+import { useLocation, useMatch } from "react-router";
 
 import api, { DeviceQueryParams } from "@/api";
 import { QUERIES } from "@/constants";
@@ -17,7 +17,6 @@ import DeviceBox from "./DeviceBox";
  */
 export default function DeviceSidebarList() {
   const { ref, inView } = useInView();
-  const location = useLocation();
   const LIMIT = 40;
   const toast = useToast();
   const { t } = useTranslation();

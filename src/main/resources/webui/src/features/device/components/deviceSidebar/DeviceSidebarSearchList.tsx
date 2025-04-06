@@ -23,7 +23,7 @@ export default function DeviceSidebarSearchList() {
 
   useEffect(() => {
     ctx.setTotal(data?.devices?.length);
-    ctx.setData(data?.devices);
+    ctx.setData(data?.devices || []);
   }, [isSuccess, data?.devices, ctx.setData, ctx.setTotal, ctx]);
 
   if (isPending) {

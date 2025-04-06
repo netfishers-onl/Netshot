@@ -40,15 +40,16 @@ export default function DeviceComplianceScreen() {
       columnHelper.accessor("policyName", {
         cell: (info) => info.getValue(),
         header: t("Policy"),
+        enableSorting: true,
       }),
       columnHelper.accessor("ruleName", {
         cell: (info) => info.getValue(),
         header: t("Rule"),
+        enableSorting: true,
       }),
       columnHelper.accessor("result", {
         cell: (info) => {
           const value = info.getValue();
-
           return (
             <>
               {value === DeviceComplianceResultType.Conforming && (
@@ -64,15 +65,18 @@ export default function DeviceComplianceScreen() {
           );
         },
         header: t("Result"),
+        enableSorting: true,
       }),
       columnHelper.accessor("comment", {
         cell: (info) => info.getValue(),
         header: t("Details"),
+        enableSorting: true,
       }),
       columnHelper.accessor("checkDate", {
         cell: (info) =>
-          info.getValue() ? formatDate(info.getValue() as string) : t("N/A"),
+          info.getValue() ? formatDate(info.getValue()) : t("N/A"),
         header: t("Last check"),
+        enableSorting: true,
       }),
     ],
     [t]
@@ -117,7 +121,7 @@ export default function DeviceComplianceScreen() {
         </Stack>
         <Stack spacing="4">
           <Heading size="md">{t("Hardware")}</Heading>
-          <Stack spacing="3">
+          <Stack spacing="3" direction="row">
             <AlertBox type={device?.endOfSale ? "warning" : "success"}>
               {device?.endOfSale ? (
                 <Text>
@@ -183,7 +187,7 @@ export default function DeviceComplianceScreen() {
             renderItem={(open) => (
               <Button
                 alignSelf="start"
-                leftIcon={<Icon name="play" />}
+                leftIcon={<Icon name="checkCircle" />}
                 variant="primary"
                 onClick={open}
               >

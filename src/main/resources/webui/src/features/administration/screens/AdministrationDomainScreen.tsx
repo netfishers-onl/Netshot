@@ -63,7 +63,8 @@ export default function AdministrationDomainScreen() {
         enableSorting: true,
         size: 10000,
       }),
-      columnHelper.accessor("id", {
+      columnHelper.display({
+        id: "actions",
         cell: (info) => {
           const domain = info.row.original;
 

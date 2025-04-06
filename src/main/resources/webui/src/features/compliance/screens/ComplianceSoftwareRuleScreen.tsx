@@ -158,7 +158,8 @@ export default function ComplianceSoftwareRuleScreen() {
         header: t("Level"),
         size: 10000,
       }),
-      columnHelper.accessor("id", {
+      columnHelper.display({
+        id: "actions",
         cell: (info) => {
           const rule = info.row.original;
 

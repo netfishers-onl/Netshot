@@ -5,11 +5,12 @@ import {
   useMemo,
   useState,
 } from "react";
+
 import DialogContext from "./dialogContext";
 import { BaseDialogProps, DialogConfig } from "./types";
 
 /**
- * Provider d'injection de dialog
+ * Dialog Injection Provider
  * @description Permet d'injecter des dialogs à partir du hook useDialog, cela évite de déclarer les dialogs directement dans le JSX des composants et donc réduire le code
  */
 export function DialogProvider(props: PropsWithChildren) {
@@ -22,20 +23,27 @@ export function DialogProvider(props: PropsWithChildren) {
   const add = useCallback(
     <P extends BaseDialogProps>(
       key: string,
-      component: FunctionComponent<P>,
-      props: P
+      component: FunctionComponent<P>
     ) => {
       setConfigs((prev) => ({
         ...prev,
         [key]: {
           component,
-          props,
+          props: null,
           isOpen: false,
         },
       }));
     },
     []
   );
+
+  const remove = useCallback((key: string) => {
+    setConfigs((prev) => {
+      const configs = Object.assign({}, prev);
+      delete configs[key];
+      return configs;
+    });
+  }, []);
 
   // Mise à jour d'une configuration de dialog dans la liste
   const update = useCallback(
@@ -70,24 +78,15 @@ export function DialogProvider(props: PropsWithChildren) {
     []
   );
 
-  // Récupèration d'une config de dialog dans la liste
-  const get = useCallback(
-    (key: string) => {
-      return configs[key];
-    },
-    [configs]
-  );
-
   // Contexte utilisé par le provider
   const ctx = useMemo(
     () => ({
       add,
+      remove,
       update,
       updateProps,
-      get,
-      configs,
     }),
-    [configs]
+    [add, remove, update, updateProps]
   );
 
   return (
@@ -98,7 +97,13 @@ export function DialogProvider(props: PropsWithChildren) {
         // Récupération de la configuration et génération du composant de la dialog
         const { component: Component, props, isOpen } = configs[key];
 
-        return <Component key={key} isOpen={isOpen} {...props} />;
+        return (
+          <Component
+            key={key}
+            isOpen={isOpen}
+            {...props}
+          />
+        );
       })}
     </DialogContext.Provider>
   );

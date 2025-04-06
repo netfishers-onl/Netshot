@@ -1,4 +1,3 @@
-import { Device, DeviceAttribute, DeviceAttributeLevel, DeviceAttributeType, DeviceBinaryAttribute, DeviceNumericAttribute, DeviceStatus, DeviceTextAttribute, DeviceTypeAttribute, DeviceTypeAttributeType } from "@/types";
 import {
   Box,
   Flex,
@@ -9,10 +8,12 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import { useDevice } from "../contexts/device";
+
+import { DeviceAttribute, DeviceAttributeDefinition, DeviceAttributeLevel, DeviceAttributeType, DeviceBinaryAttribute, DeviceNumericAttribute, DeviceStatus, DeviceTextAttribute, DeviceTypeAttributeType } from "@/types";
 import { formatDate } from "@/utils";
+
+import { useDevice } from "../contexts/device";
 import { useMemo } from "react";
-import { T } from "node_modules/react-router/dist/development/fog-of-war-BALYJxf_.mjs";
 
 type DeviceNumericAttributeValueType = {
   attribute: DeviceNumericAttribute;
@@ -63,9 +64,41 @@ function DeviceBinaryAttributeValue(props: DeviceBinaryAttributeValueType) {
   )
 }
 
+type DeviceAttributeValueType = {
+  attribute: DeviceAttribute;
+  definition: DeviceAttributeDefinition;
+};
+
+function DeviceAttributeValue(props: DeviceAttributeValueType) {
+  const { attribute, definition } = props;
+  const { t } = useTranslation();
+
+  switch (definition.type) {
+  case DeviceAttributeType.Numeric:
+    return (
+      <DeviceNumericAttributeValue attribute={attribute as DeviceNumericAttribute} />
+    );
+  case DeviceAttributeType.Text:
+    return (
+      <DeviceTextAttributeValue attribute={attribute as DeviceTextAttribute} />
+    );
+  case DeviceAttributeType.Binary:
+    return (
+      <DeviceBinaryAttributeValue attribute={attribute as DeviceBinaryAttribute} />
+    );
+  default:
+    return (
+      <Text>{t("Unsupported attribute")}</Text>
+    );
+  }
+}
+
 export default function DeviceGeneralScreen() {
   const { t } = useTranslation();
   const { device, type, isLoading } = useDevice();
+  const attributeDefinitions = useMemo<DeviceAttributeDefinition[]>(() => {
+    return type?.attributes.filter(a => a.level === DeviceAttributeLevel.Device);
+  }, [type]);
 
   return (
     <Stack spacing="12">
@@ -128,7 +161,7 @@ export default function DeviceGeneralScreen() {
         </Stack>
       </Stack>
       <Stack spacing="5">
-        <Heading fontSize="lg">{t("Device detail")}</Heading>
+        <Heading fontSize="lg">{t("Device details")}</Heading>
         <Stack spacing="3">
           <Flex alignItems="center">
             <Box flex="0 0 auto" w="200px">
@@ -213,7 +246,7 @@ export default function DeviceGeneralScreen() {
       {type?.attributes?.length > 0 &&
         <Stack spacing="5">
           <Heading fontSize="lg">{t("Specific attributes")}</Heading>
-          {type.attributes.filter(a => a.level === DeviceAttributeLevel.Device).map((attrDef) => {
+          {attributeDefinitions.map((attrDef) => {
             const attr = device?.attributes?.find(a => a.name === attrDef.name);
             return (
               <Stack spacing="3" key={attrDef.name}>
@@ -222,18 +255,15 @@ export default function DeviceGeneralScreen() {
                     <Text color="grey.400">{t(attrDef.title)}</Text>
                   </Box>
                   <Skeleton isLoaded={!isLoading}>
-                    {attrDef.type === DeviceAttributeType.Numeric &&
-                      <DeviceNumericAttributeValue attribute={attr as DeviceNumericAttribute} />}
-                    {attrDef.type === DeviceAttributeType.Text &&
-                      <DeviceTextAttributeValue attribute={attr as DeviceTextAttribute} />}
-                    {attrDef.type === DeviceAttributeType.Binary &&
-                      <DeviceBinaryAttributeValue attribute={attr as DeviceBinaryAttribute} />}
+                    <DeviceAttributeValue
+                      definition={attrDef}
+                      attribute={attr}
+                    />
                   </Skeleton>
                 </Flex>
               </Stack>
             );
           })}
-
         </Stack>
       }
     </Stack>

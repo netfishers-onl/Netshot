@@ -83,7 +83,8 @@ export default function ReportConfigurationChangeList() {
         cell: (info) => info.getValue(),
         header: t("Author"),
       }),
-      columnHelper.accessor("id", {
+      columnHelper.display({
+        id: "actions",
         cell: (info) => (
           <ReportConfigurationCompareModal
             config={info.row.original}

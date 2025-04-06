@@ -31,7 +31,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     <Center h="100vh">
       <Stack spacing="3" alignItems="center">
         <Spinner size="lg" />
-        <Text>{t("Loading...")}</Text>
+        <Text>{t("Netshot is loading...")}</Text>
       </Stack>
     </Center>
   ) : (

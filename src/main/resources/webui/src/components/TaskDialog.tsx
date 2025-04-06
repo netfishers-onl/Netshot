@@ -52,10 +52,8 @@ export default function TaskDialog(props: TaskDialogProps) {
         ) {
           return false;
         }
-
         return 5000;
       }
-
       return false;
     },
   });

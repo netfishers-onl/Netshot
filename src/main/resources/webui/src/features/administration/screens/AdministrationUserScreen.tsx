@@ -79,7 +79,8 @@ export default function AdministrationUserScreen() {
         enableSorting: true,
         size: 10000,
       }),
-      columnHelper.accessor("id", {
+      columnHelper.display({
+        id: "actions",
         cell: (info) => {
           const user = info.row.original;
           const isSelf = user.username === currentUser.username;

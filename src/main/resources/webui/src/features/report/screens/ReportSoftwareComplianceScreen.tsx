@@ -127,7 +127,7 @@ function ReportSoftwareComplianceGroupItem({
     description: <SoftwareComplianceDialog item={item} />,
     variant: "full-floating",
     hideFooter: true,
-  });
+  }, [item]);
 
   const nonCompliantDeviceCount = useMemo(
     () =>
@@ -141,10 +141,6 @@ function ReportSoftwareComplianceGroupItem({
   const openDetail = useCallback(
     (evt: MouseEvent<HTMLDivElement>) => {
       evt.stopPropagation();
-      dialog.updateProps({
-        description: <SoftwareComplianceDialog item={item} />,
-      });
-
       dialog.open();
     },
     [dialog]

@@ -4,13 +4,14 @@ import { EmptyResult } from "@/components";
 import ConfigurationCompareEditor from "@/components/ConfigurationCompareEditor";
 import Search from "@/components/Search";
 import { useToast } from "@/hooks";
-import { Config, DeviceConfig } from "@/types";
+import { Config, DeviceAttributeDefinition, DeviceAttributeLevel, DeviceConfig } from "@/types";
 import { Skeleton, Stack } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { QUERIES } from "../constants";
 import DeviceConfigurationCompareItem from "./DeviceConfigurationCompareItem";
+import { useDevice } from "../contexts/device";
 
 export type DeviceConfigurationCompareViewProps = {
   id: number;
@@ -23,6 +24,7 @@ export default function DeviceConfigurationCompareView(
   const { config, id } = props;
   const { t } = useTranslation();
   const toast = useToast();
+  const { type } = useDevice();
   const [query, setQuery] = useState<string>("");
   const [selected, setSelected] = useState<DeviceConfig>(null);
   const [pagination, setPagination] = useState({
@@ -37,6 +39,10 @@ export default function DeviceConfigurationCompareView(
       return data.filter((item) => item?.id !== config?.id);
     }, []),
   });
+
+  const attributeDefinitions = useMemo<DeviceAttributeDefinition[]>(() => {
+    return type?.attributes.filter(a => a.level === DeviceAttributeLevel.Config);
+  }, [type]);
 
   useEffect(() => {
     if (isSuccess) {

@@ -1,16 +1,17 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { DataTable, EmptyResult } from "@/components";
-import Search from "@/components/Search";
-import { usePagination, useToast } from "@/hooks";
-import { DeviceModule } from "@/types";
-import { formatDate, search } from "@/utils";
 import { Skeleton, Spacer, Stack, Switch, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
+
+import api from "@/api";
+import { DataTable, EmptyResult } from "@/components";
+import Search from "@/components/Search";
+import { usePagination } from "@/hooks";
+import { DeviceModule } from "@/types";
+import { formatDate, search } from "@/utils";
+
 import { QUERIES } from "../constants";
 
 const columnHelper = createColumnHelper<DeviceModule>();
@@ -21,7 +22,6 @@ const columnHelper = createColumnHelper<DeviceModule>();
 export default function DeviceModuleScreen() {
   const params = useParams<{ id: string }>();
   const { t } = useTranslation();
-  const toast = useToast();
   const pagination = usePagination();
   const [history, setHistory] = useState(false);
 
@@ -49,36 +49,32 @@ export default function DeviceModuleScreen() {
       columnHelper.accessor("slot", {
         cell: (info) => info.getValue(),
         header: t("Slot"),
+        enableSorting: true,
       }),
       columnHelper.accessor("partNumber", {
         cell: (info) => info.getValue(),
         header: t("Part number"),
+        enableSorting: true,
       }),
       columnHelper.accessor("serialNumber", {
         cell: (info) => info.getValue(),
         header: t("Serial number"),
+        enableSorting: true,
       }),
     ];
 
     if (history) {
-      columns.push(
-        ...[
-          columnHelper.accessor("firstSeenDate", {
-            cell: (info) =>
-              info.getValue()
-                ? formatDate(info.getValue() as string)
-                : t("N/A"),
-            header: t("First seen"),
-          }),
-          columnHelper.accessor("lastSeenDate", {
-            cell: (info) =>
-              info.getValue()
-                ? formatDate(info.getValue() as string)
-                : t("N/A"),
-            header: t("Last seen"),
-          }),
-        ]
-      );
+      columns.push({
+        accessorKey: "firstSeenDate",
+        cell: (info) => info.getValue() ? formatDate(info.getValue()) : t("N/A"),
+        header: t("First seen"),
+        enableSorting: true,
+      }, {
+        accessorKey: "lastSeenDate",
+        cell: (info) => info.getValue() ? formatDate(info.getValue()) : t("N/A"),
+        header: t("Last seen"),
+        enableSorting: true,
+      });
     }
 
     return columns;

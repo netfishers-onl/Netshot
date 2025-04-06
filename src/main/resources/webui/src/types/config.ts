@@ -1,9 +1,39 @@
+
+
+export type ConfigNumericAttribute = {
+  type: string;
+  name: string;
+  number: number;
+};
+
+export type ConfigTextAttribute = {
+  type: string;
+  name: string;
+  text: string;
+};
+
+export type ConfigLongTextAttribute = {
+  type: string;
+  name: string;
+};
+
+export type ConfigBinaryAttribute = {
+  type: string;
+  name: string;
+  assumption: boolean;
+};
+
+export type ConfigAttribute =
+  ConfigNumericAttribute |
+  ConfigTextAttribute |
+  ConfigBinaryAttribute;
+
 export type Config = {
-  deviceName: string;
-  deviceId: number;
-  changeDate: string;
-  author: string;
   id: number;
+  changeDate: number;
+  author: string;
+  attributes: ConfigAttribute[];
+  customHash: string;
 };
 
 export enum ConfigDiffType {

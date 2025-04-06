@@ -105,7 +105,7 @@ export default function DeviceComplianceButton(
     submitButton: {
       label: t("Run"),
     },
-  });
+  }, [devices]);
 
   return (
     <>

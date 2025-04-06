@@ -47,7 +47,7 @@ export default function DeviceSidebarSearch() {
               <IconButton
                 variant="ghost"
                 aria-label={t("Open query builder")}
-                icon={<Icon name="maximize" />}
+                icon={<Icon name="compass" />}
                 onClick={open}
               />
             </Tooltip>

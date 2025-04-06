@@ -1,26 +1,26 @@
-import { Dialog } from "@/dialog";
-import { DeviceTypeAttribute } from "@/types";
 import { ReactElement, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+
+import { Dialog } from "@/dialog";
+import { ConfigLongTextAttribute, DeviceAttributeDefinition } from "@/types";
+
 import DeviceConfigurationView from "./DeviceConfigurationView";
 
-/**
- * @todo: Impossible de voir ou télécharger adminConfiguration et xrPackages
- */
 export type DeviceConfigurationViewButtonProps = {
   id: number;
-  attribute: DeviceTypeAttribute;
+  attribute: ConfigLongTextAttribute;
+  definition: DeviceAttributeDefinition;
   renderItem(open: () => void): ReactElement;
 };
 
 export default function DeviceConfigurationViewButton(
   props: DeviceConfigurationViewButtonProps
 ) {
-  const { id, attribute, renderItem } = props;
+  const { id, attribute, definition, renderItem } = props;
   const { t } = useTranslation();
 
   const dialog = Dialog.useAlert({
-    title: t(attribute?.title),
+    title: t(definition?.title),
     description: <DeviceConfigurationView id={id} attribute={attribute} />,
     size: "5xl",
   });

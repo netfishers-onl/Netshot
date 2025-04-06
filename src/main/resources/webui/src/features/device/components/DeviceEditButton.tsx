@@ -146,7 +146,7 @@ function DeviceEditForm() {
           <FormControl
             isRequired
             label={t("Connect IP")}
-            placeholder={t("e.g. 10.204.5.3.0")}
+            placeholder={t("e.g. 10.216.5.3")}
             control={form.control}
             name="connectIpAddress"
             rules={{

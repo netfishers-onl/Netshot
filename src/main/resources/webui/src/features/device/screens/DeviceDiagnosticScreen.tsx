@@ -83,7 +83,7 @@ export default function DeviceDiagnosticScreen() {
                 renderItem={(open) => (
                   <Button
                     alignSelf="center"
-                    leftIcon={<Icon name="play" />}
+                    leftIcon={<Icon name="activity" />}
                     onClick={open}
                   >
                     {t("Run diagnostics")}
@@ -109,7 +109,7 @@ export default function DeviceDiagnosticScreen() {
                 renderItem={(open) => (
                   <Button
                     alignSelf="center"
-                    leftIcon={<Icon name="play" />}
+                    leftIcon={<Icon name="activity" />}
                     variant="primary"
                     onClick={open}
                   >

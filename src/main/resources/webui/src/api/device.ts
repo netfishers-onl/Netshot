@@ -1,4 +1,5 @@
 import {
+  Config,
   Device,
   DeviceComplianceResult,
   DeviceConfig,
@@ -78,11 +79,11 @@ async function getDiagnosticResultById(
   );
 }
 
-async function getAllConfigsById(
+async function getAllDeviceConfigsById(
   id: number,
   queryParams: PaginationQueryParams = {}
 ) {
-  return httpClient.get<DeviceConfig[]>(`/devices/${id}/configs`, {
+  return httpClient.get<Config[]>(`/devices/${id}/configs`, {
     queryParams,
   });
 }
@@ -94,7 +95,7 @@ async function getConfigById(deviceId: number, id: number) {
   let configs = [];
 
   try {
-    configs = await getAllConfigsById(deviceId, {
+    configs = await getAllDeviceConfigsById(deviceId, {
       limit: 999999,
     });
   } catch (err) {
@@ -109,7 +110,7 @@ async function getConfigById(deviceId: number, id: number) {
  */
 async function getCurrentConfig(deviceId: number) {
   try {
-    const [config] = await getAllConfigsById(deviceId, {
+    const [config] = await getAllDeviceConfigsById(deviceId, {
       limit: 1,
     });
 
@@ -124,7 +125,7 @@ async function getCurrentConfig(deviceId: number) {
  */
 async function getPreviousConfig(deviceId: number, id: number) {
   try {
-    const configs = await getAllConfigsById(deviceId);
+    const configs = await getAllDeviceConfigsById(deviceId);
     const configIndex = sortByDate(configs, "changeDate").findIndex(
       (config) => config.id === id
     );
@@ -195,7 +196,7 @@ export default {
   remove,
   getComplianceResultById,
   getDiagnosticResultById,
-  getAllConfigsById,
+  getAllConfigsById: getAllDeviceConfigsById,
   getConfigById,
   getCurrentConfig,
   getPreviousConfig,

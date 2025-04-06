@@ -117,7 +117,8 @@ export default function ReportDeviceAccessFailure() {
           info.getValue() ? formatDate(info.getValue()) : t("N/A"),
         header: t("Last failed snapshot"),
       }),
-      columnHelper.accessor("id", {
+      columnHelper.display({
+        id: "actions",
         cell: (info) => (
           <Tooltip label={t("Go to device")}>
             <IconButton

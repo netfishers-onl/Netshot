@@ -86,7 +86,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button
                   justifyContent="start"
-                  leftIcon={<Icon name="tool" />}
+                  leftIcon={<Icon name="activity" />}
                   onClick={open}
                 >
                   {t("Run diagnostics")}

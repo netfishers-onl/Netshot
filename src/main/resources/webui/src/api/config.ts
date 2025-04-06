@@ -1,4 +1,5 @@
 import { Config, ConfigDiff } from "@/types";
+
 import httpClient, { HttpMethod } from "./httpClient";
 import { ConfigQueryParams } from "./types";
 
@@ -15,7 +16,8 @@ async function getDiff(sourceId: number, targetId: number) {
 async function getItem(id: number, item: string) {
   const req = await httpClient.request(
     HttpMethod.GET,
-    `/configs/${id}/${item}`
+    `/configs/${id}/${item}`,
+    { headers: { "Accept": "*/*" } }
   );
   const res = await req.text();
   return res;

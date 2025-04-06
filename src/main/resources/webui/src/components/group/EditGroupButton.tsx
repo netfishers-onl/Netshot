@@ -186,9 +186,9 @@ export default function EditGroupButton(props: EditGroupButtonProps) {
             {title}
             <ModalCloseButton />
           </ModalHeader>
-          <ModalBody overflow="scroll" flex="1" display="flex">
+          <ModalBody flex="1" display="flex">
             <Stack direction="row" spacing="9" flex="1">
-              <Stack spacing="9" w="340px" overflow="scroll">
+              <Stack spacing="9" w="340px" overflowY="auto">
                 <Stack spacing="5">
                   <Heading as="h4" size="md">
                     {t("Informations")}
@@ -261,7 +261,7 @@ export default function EditGroupButton(props: EditGroupButtonProps) {
                   </>
                 )}
               </Stack>
-              <Stack flex="1" spacing="5" overflow="scroll">
+              <Stack flex="1" spacing="5" overflowY="auto">
                 <Heading as="h4" size="md">
                   {t(
                     group.type === GroupType.Static

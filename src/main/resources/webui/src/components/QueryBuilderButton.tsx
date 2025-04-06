@@ -39,15 +39,12 @@ export default function QueryBuilderButton(props: QueryBuilderButtonProps) {
       });
     },
     size: "6xl",
-  });
+  }, [form]);
 
   const open = useCallback(
     (evt: MouseEvent<HTMLButtonElement>) => {
       evt.preventDefault();
       form.setValue("queryBuilder.query", value?.query);
-      dialog.updateProps({
-        form,
-      });
       dialog.open();
     },
     [dialog, value, form]

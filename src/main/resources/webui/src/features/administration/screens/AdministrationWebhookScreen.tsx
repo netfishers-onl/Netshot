@@ -74,7 +74,8 @@ export default function AdministrationApiTokenScreen() {
         enableSorting: true,
         size: 20000,
       }),
-      columnHelper.accessor("id", {
+      columnHelper.display({
+        id: "actions",
         cell: (info) => {
           const webhook = info.row.original;
 

@@ -54,6 +54,7 @@ export function useDeviceTypeOptions(props: UseDeviceTypeOptionsProps) {
         value: type,
       })) as Option<DeviceType>[];;
     },
+    initialData: [],
   });
 
   const options = useMemo<Option<DeviceType>[]>(() => {

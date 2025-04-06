@@ -1,3 +1,9 @@
+import { Box, Flex, Stack, Text, useDisclosure } from "@chakra-ui/react";
+import { useMutation } from "@tanstack/react-query";
+import { MouseEvent, ReactElement, useCallback, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+
 import api from "@/api";
 import { NetshotError } from "@/api/httpClient";
 import { Checkbox } from "@/components";
@@ -6,11 +12,6 @@ import TaskDialog from "@/components/TaskDialog";
 import { Dialog } from "@/dialog";
 import { useToast } from "@/hooks";
 import { Device, SimpleDevice, Task, TaskType } from "@/types";
-import { Box, Flex, Stack, Text, useDisclosure } from "@chakra-ui/react";
-import { useMutation } from "@tanstack/react-query";
-import { MouseEvent, ReactElement, useCallback, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
 
 export type DeviceSnapshotButtonProps = {
   devices: SimpleDevice[] | Device[];
@@ -113,9 +114,7 @@ export default function DeviceSnapshotButton(props: DeviceSnapshotButtonProps) {
             {t("Check device compliance after the snapshot")}
           </Checkbox>
           <Checkbox control={form.control} name="debugEnabled">
-            {t(
-              "Enable full debug of the CLI session (only for the troubleshooting"
-            )}
+            {t("Enable full trace of the CLI session (only for troubleshooting)")}
           </Checkbox>
         </Stack>
         <ScheduleForm />
@@ -128,7 +127,7 @@ export default function DeviceSnapshotButton(props: DeviceSnapshotButtonProps) {
     submitButton: {
       label: t("Take snapshot"),
     },
-  });
+  }, [devices]);
 
   return (
     <>

@@ -99,7 +99,6 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
       sx={{
         opacity: isDragging ? 0.5 : 1,
       }}
-      h="48px"
       borderColor="grey.100"
       _notLast={{
         borderBottomWidth: "1px",
@@ -110,8 +109,7 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
         px="4"
         overflow="hidden"
         textOverflow="ellipsis"
-        lineHeight="0"
-        py="0"
+        py="3"
       >
         <IconButton
           aria-label={t("Drag the row")}
@@ -138,8 +136,7 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
             position="relative"
             overflow="hidden"
             textOverflow="ellipsis"
-            lineHeight="0"
-            py="0"
+            py="3"
           >
             {render}
           </Td>
@@ -184,10 +181,8 @@ function SimpleRow<T>(props: RowProps<T>) {
             position="relative"
             overflow="hidden"
             textOverflow="ellipsis"
-            lineHeight="0"
             borderBottomWidth={0}
-            py="0"
-            h="48px"
+            py="3"
           >
             {render}
           </Td>

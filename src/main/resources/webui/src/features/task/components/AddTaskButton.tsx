@@ -334,7 +334,7 @@ export default function AddTaskButton(props: AddTaskButtonProps) {
               {t(formStep === FormStep.Type ? "Step 1/2" : "Step 2/2")}
             </Text>
           </ModalHeader>
-          <ModalBody overflow="scroll" flex="1" display="flex">
+          <ModalBody flex="1" display="flex">
             {formStep === FormStep.Type ? (
               <Stack spacing="3">
                 {taskTypeOptions.map((option) => (

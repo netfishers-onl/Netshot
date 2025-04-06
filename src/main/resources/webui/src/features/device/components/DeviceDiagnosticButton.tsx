@@ -120,7 +120,7 @@ export default function DeviceDiagnosticButton(
     submitButton: {
       label: t("Run"),
     },
-  });
+  }, [devices]);
 
   return (
     <>

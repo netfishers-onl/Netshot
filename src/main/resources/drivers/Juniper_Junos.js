@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2025 Netshot
- * 
+ *
  * This file is part of Netshot project.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,7 +21,7 @@ var Info = {
 	name: "JuniperJunos",
 	description: "Juniper Junos",
 	author: "Netshot Team",
-	version: "3.0"
+	version: "3.1"
 };
 
 var Config = {
@@ -148,7 +148,7 @@ var CLI = {
 
 
 function snapshot(cli, device, config) {
-	
+
 	var configCleanup = function(config) {
 		var p = config.search(/^[a-z]/m);
 		if (p > 0) {
@@ -156,11 +156,11 @@ function snapshot(cli, device, config) {
 		}
 		return config;
 	};
-	
+
 	cli.macro("operate");
 	var configuration = cli.command("show configuration");
 	var configurationAsSet = cli.command("show configuration | display set");
-	
+
 	var author = configuration.match(/^## Last commit: .* by (.*)$/m);
 	if (author != null) {
 		config.set("author", author[1]);
@@ -169,24 +169,20 @@ function snapshot(cli, device, config) {
 	config.set("configuration", configuration);
 	configurationAsSet = configCleanup(configurationAsSet);
 	config.set("configurationAsSet", configurationAsSet);
-	
+
 	var showVersion = cli.command("show version");
-	
+
 	var hostname = showVersion.match(/^Hostname: (.*)/m);
 	if (hostname != null) {
 		device.set("name", hostname[1]);
 	}
-	
-	var version = showVersion.match(/^JUNOS .* \[(.*)\]/m);
-	if (version != null) {
-		device.set("softwareVersion", version[1]);
-		config.set("junosVersion", version[1]);
-	}
-	else {
-		device.set("softwareVersion", "Unknown");
-		config.set("junosVersion", "Unknown");
-	}
-	
+
+	var version = showVersion.match(/^(JUNOS .* \[(\S+)\]|Junos: (\S+))/m);
+	var softVersion = version[2] || version[3] || "Unknown";
+	device.set("softwareVersion", softVersion);
+	config.set("junosVersion", softVersion);
+
+
 	device.set("networkClass", "ROUTER");
 	var family = showVersion.match(/^Model: (.*)/m);
 	if (family) {
@@ -204,7 +200,7 @@ function snapshot(cli, device, config) {
 	else {
 		device.set("family", "Junos device");
 	}
-	
+
 	device.set("location", "");
 	device.set("contact", "");
 	var snmpConfig = cli.findSections(configuration, /^snmp /m);
@@ -218,7 +214,7 @@ function snapshot(cli, device, config) {
 			device.set("contact", contact[2] || contact[3]);
 		}
 	}
-	
+
 	try {
 		var showChassis = cli.command("show chassis hardware");
 		var header = showChassis.match(/^Item .*Version .*Part number .*Serial number .*Description/m);
@@ -277,7 +273,7 @@ function snapshot(cli, device, config) {
 		}
 		interfaceVrfs[vrfIntfMatch[2]] = vrfIntfMatch[1];
 	}
-	
+
 	var showInterfaces = cli.command("show interfaces");
 	var interfaces = cli.findSections(showInterfaces, /^Physical interface: (.+?), (Enabled|Administratively down),.*/m);
 	for (var i in interfaces) {
@@ -300,7 +296,7 @@ function snapshot(cli, device, config) {
 			ni.mac = macAddress[1];
 		}
 		device.add("networkInterface", ni);
-		
+
 		var logicalInterfaces = cli.findSections(interfaces[i].config, /^  Logical interface (\S+)/m);
 		for (var j in logicalInterfaces) {
 			var lni = {
@@ -311,7 +307,7 @@ function snapshot(cli, device, config) {
 			if (description) {
 				lni.description = description[1];
 			}
-			var ipPattern = /^ +(Destination: [0-9\.]+\/([0-9]+), )?Local: ([0-9\.]+)/mg;
+			var ipPattern = /^ +(Destination: [0-9\.]+(?:\/([0-9]+))?, )?Local: ([0-9\.]+)/mg;
 			var ipMatch;
 			while (ipMatch = ipPattern.exec(logicalInterfaces[j].config)) {
 				lni.ip.push({
@@ -329,6 +325,19 @@ function snapshot(cli, device, config) {
 					usage: "PRIMARY"
 				});
 			}
+			if (lni.name.match(/^(pp).*/)) {
+				// Additional command for PPP interfaces
+				var pppIpPattern = /^ +Local address: ([0-9\.]+),/mg;
+				var showPppInterface = cli.command("show ppp interface " + lni.name + " extensive");
+				var ipMatch;
+				while (ipMatch = pppIpPattern.exec(showPppInterface)) {
+					lni.ip.push({
+						ip: ipMatch[1],
+						mask: 32,
+						usage: "PRIMARY"
+					});
+				}
+			}
 			if (ni.mac) {
 				lni.mac = ni.mac;
 			}
@@ -341,7 +350,6 @@ function snapshot(cli, device, config) {
 			device.add("networkInterface", lni);
 		}
 	}
-
 };
 
 function analyzeSyslog(message) {

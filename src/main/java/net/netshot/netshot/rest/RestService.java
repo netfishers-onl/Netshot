@@ -5735,19 +5735,19 @@ public class RestService extends Thread {
 	@AllArgsConstructor
 	public static class RsLightPolicyRuleDevice extends RsLightDevice {
 
-		/** The rule name. */
-		@Getter(onMethod=@__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private String ruleName;
-
 		/** The policy name. */
 		@Getter(onMethod=@__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
 		private String policyName;
+
+		/** The rule name. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private String ruleName;
 
 		/** The check date. */
 		@Getter(onMethod=@__({
@@ -5765,7 +5765,7 @@ public class RestService extends Thread {
 
 		public RsLightPolicyRuleDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
 				String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
-				String ruleName, String policyName, Date checkDate, ResultOption result) {
+				String policyName, String ruleName, Date checkDate, ResultOption result) {
 			super(id, name, family, mgmtAddress, status, driver, eol, eos, configCompliant, softwareLevel);
 			this.ruleName = ruleName;
 			this.policyName = policyName;

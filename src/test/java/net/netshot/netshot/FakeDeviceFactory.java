@@ -55,6 +55,51 @@ public class FakeDeviceFactory {
 		return FakeDeviceFactory.getFakeCiscoIosDevice(domain, diagnostic, 100);
 	}
 
+	static public Config getFakeCiscoIosConfig(Device device) {
+		Config config = new Config(device);
+		ConfigAttribute runningConfig = new ConfigLongTextAttribute(config, "runningConfig", "" +
+			"version 16.1\n" +
+			"no service pad\n" +
+			"service timestamps debug datetime msec\n" +
+			"no service password-encryption\n" +
+			"!\n" +
+			"hostname " + device.getName() + "\n" +
+			"!\n"+
+			"boot-start-marker\n" +
+			"boot-end-marker\n" +
+			"!\n" +
+			"enable secret $6$aaa\n" +
+			"!\n" +
+			"ip cef\n" +
+			"ipv6 unicast-routing\f\n" + // \f to test normalization
+			"!\n" +
+			"interface GigabitEthernet0/0\n" +
+			" description Description of Gi0/0\n" +
+			" ip address 10.0.0.1 255.255.255.0\n" +
+			" no shutdown\n" +
+			"!\n" +
+			"interface GigabitEthernet0/1\n" +
+			" description Description of Gi0/1\n" +
+			" ip address 10.0.1.1 255.255.255.0\n" +
+			" no shutdown\n" +
+			"!\n" +
+			"interface GigabitEthernet0/2\n" +
+			" description Description of Gi0/2\n" +
+			" ip address 10.0.2.1 255.255.255.0\n" +
+			"!\n" +
+			"line con 0\n" +
+			" password something\n" +
+			"line vty 0 4\n" +
+			" password something\n" +
+			" transport input all\n" +
+			" transport output all\n" +
+			"!\n");
+		config.addAttribute(runningConfig);
+		ConfigAttribute iosVersion = new ConfigTextAttribute(config, "iosVersion", "16.1.6");
+		config.addAttribute(iosVersion);
+		return config;
+	}
+
 	static public Device getFakeCiscoIosDevice(Domain domain, Diagnostic diagnostic, int shift) {
 		Network4Address mgmtIp = null;
 		try {
@@ -109,47 +154,7 @@ public class FakeDeviceFactory {
 			}
 			device.getNetworkInterfaces().add(ni);
 		}
-		Config config = new Config(device);
-		ConfigAttribute runningConfig = new ConfigLongTextAttribute(config, "runningConfig", "" +
-			"version 16.1\n" +
-			"no service pad\n" +
-			"service timestamps debug datetime msec\n" +
-			"no service password-encryption\n" +
-			"!\n" +
-			"hostname " + device.getName() + "\n" +
-			"!\n"+
-			"boot-start-marker\n" +
-			"boot-end-marker\n" +
-			"!\n" +
-			"enable secret $6$aaa\n" +
-			"!\n" +
-			"ip cef\n" +
-			"ipv6 unicast-routing\f\n" + // \f to test normalization
-			"!\n" +
-			"interface GigabitEthernet0/0\n" +
-			" description Description of Gi0/0\n" +
-			" ip address 10.0.0.1 255.255.255.0\n" +
-			" no shutdown\n" +
-			"!\n" +
-			"interface GigabitEthernet0/1\n" +
-			" description Description of Gi0/1\n" +
-			" ip address 10.0.1.1 255.255.255.0\n" +
-			" no shutdown\n" +
-			"!\n" +
-			"interface GigabitEthernet0/2\n" +
-			" description Description of Gi0/2\n" +
-			" ip address 10.0.2.1 255.255.255.0\n" +
-			"!\n" +
-			"line con 0\n" +
-			" password something\n" +
-			"line vty 0 4\n" +
-			" password something\n" +
-			" transport input all\n" +
-			" transport output all\n" +
-			"!\n");
-		config.addAttribute(runningConfig);
-		ConfigAttribute iosVersion = new ConfigTextAttribute(config, "iosVersion", "16.1.6");
-		config.addAttribute(iosVersion);
+		Config config = getFakeCiscoIosConfig(device);
 		device.getConfigs().add(config);
 		device.setLastConfig(config);
 		

@@ -56,7 +56,7 @@ jobs:
             NETSHOT_VERSION=${{ steps.meta.outputs.version }}
 
       - name: Run the tests
-        run: docker run --rm builder ./mvnw test 
+        run: docker run --rm builder ./mvnw test
 
       - name: Build and push the image
         uses: docker/build-push-action@v6

@@ -14,3 +14,14 @@
 	<div>&nbsp;&nbsp;<input type="checkbox" id="configskeep" /> <label for="configskeep">Keep for each device one config every 
 	<input type="text" id="configskeepeverydays" class="text spinner" value="7" /> days</label></div></div>
 </fieldset>
+<fieldset>
+	<div><input type="checkbox" id="modulesdelete" /> <label for="modulesdelete">Delete modules removed more than 
+	<input type="text" id="modulesolderthandays" class="text spinner" value="600" /> days ago</label>
+</fieldset>
+<fieldset>
+	<label for="groups">Limit to:</label>
+	<div id="groups" class="nsdevices-groupselector ui-widget-content ui-corner-all">
+		<div class="placeholder">All groups</div>
+		<ul></ul>
+	</div>
+</fieldset>

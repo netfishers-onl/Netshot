@@ -25,6 +25,8 @@ import java.util.Date;
 import java.util.List;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
 
@@ -35,6 +37,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Config;
+import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
 import net.netshot.netshot.rest.RestViews.DefaultView;
@@ -42,6 +45,7 @@ import net.netshot.netshot.work.Task;
 
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
+import org.hibernate.query.MutationQuery;
 import org.hibernate.query.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -56,7 +60,7 @@ import org.quartz.JobKey;
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
-public class PurgeDatabaseTask extends Task {
+public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class)
@@ -82,6 +86,20 @@ public class PurgeDatabaseTask extends Task {
 	@Setter
 	private int configKeepDays = 0;
 
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private int moduleDays = -1;
+
+	/** The device group. */
+	@Getter(onMethod=@__({
+		@ManyToOne(fetch = FetchType.LAZY),
+		@OnDelete(action = OnDeleteAction.CASCADE)
+	}))
+	@Setter
+	private DeviceGroup deviceGroup;
+
 
 	/**
 	 * Instantiates a new task.
@@ -95,12 +113,14 @@ public class PurgeDatabaseTask extends Task {
 	 * @param comments the comments
 	 */
 	public PurgeDatabaseTask(String comments, String author, int days, int configDays,
-			int configSize, int configKeepDays) {
+			int configSize, int configKeepDays, int moduleDays, DeviceGroup group) {
 		super(comments, "Global", author);
 		this.days = days;
 		this.configDays = configDays;
 		this.configSize = configSize;
 		this.configKeepDays = configKeepDays;
+		this.moduleDays = moduleDays;
+		this.deviceGroup = group;
 	}
 
 	/* (non-Javadoc)
@@ -118,9 +138,10 @@ public class PurgeDatabaseTask extends Task {
 	 */
 	@Override
 	public void run() {
-		log.debug("Task {}. Starting cleanup process.", this.getId());
+		log.debug("Task {}. Starting cleanup process (group {}).", this.getId(),
+			this.deviceGroup == null ? "all" : this.deviceGroup.getId());
 
-		{
+		if (days > 0) {
 			Session session = Database.getSession();
 			try {
 				session.beginTransaction();
@@ -128,22 +149,34 @@ public class PurgeDatabaseTask extends Task {
 				this.info(String.format("Cleaning up tasks more than %d days ago...", days));
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * days);
-				ScrollableResults<Task> tasks = session.createQuery(
-						"from Task t where (t.status = :cancelled or t.status = :failure "
-								+ "or t.status = :success) and (t.executionDate < :when)", Task.class)
-					.setParameter("cancelled", Task.Status.CANCELLED)
-					.setParameter("failure", Task.Status.FAILURE)
-					.setParameter("success", Task.Status.SUCCESS)
-					.setParameter("when", when.getTime())
-					.setCacheMode(CacheMode.IGNORE)
-					.scroll(ScrollMode.FORWARD_ONLY);
+
 				int count = 0;
-				while (tasks.next()) {
-					Task task = (Task) tasks.get();
-					session.remove(task);
-					if (++count % 50 == 0) {
-						session.flush();
-						session.clear();
+				if (this.deviceGroup == null) {
+					count += session.createMutationQuery(
+						"delete Task t where (t.status = :cancelled or t.status = :failure "
+								+ "or t.status = :success) and (t.executionDate < :when)")
+						.setParameter("cancelled", Task.Status.CANCELLED)
+						.setParameter("failure", Task.Status.FAILURE)
+						.setParameter("success", Task.Status.SUCCESS)
+						.setParameter("when", when.getTime())
+						.executeUpdate();
+				}
+				else {
+					for (Class<? extends Task> taskClass : Task.getTaskClasses()) {
+						if (DeviceBasedTask.class.isAssignableFrom(taskClass)) {
+							count += session.createMutationQuery(
+								String.format(
+									"delete %1$s t where t in " +
+									"(select t from %1$s join t.device d join d.ownerGroups g " +
+									"where g = :group and (t.status = :cancelled or t.status = :failure or t.status = :success) " +
+									"and (t.executionDate < :when))", taskClass.getSimpleName()))
+								.setParameter("group", this.deviceGroup)
+								.setParameter("cancelled", Task.Status.CANCELLED)
+								.setParameter("failure", Task.Status.FAILURE)
+								.setParameter("success", Task.Status.SUCCESS)
+								.setParameter("when", when.getTime())
+								.executeUpdate();
+						}
 					}
 				}
 				session.getTransaction().commit();
@@ -189,16 +222,35 @@ public class PurgeDatabaseTask extends Task {
 				when.add(Calendar.DATE, -1 * configDays);
 				Query<Config> query;
 				if (configSize > 0) {
-					query = session
-						.createQuery(
-							"select c from Config c join c.attributes a where (a.class = ConfigLongTextAttribute or a.class = ConfigBinaryFileAttribute) " +
-							"group by c.id having ((max(length(a.longText.text)) > :size) or (max(a.fileSize) > :size)) and (c.changeDate < :when) " +
-							"order by c.device asc, c.changeDate desc", Config.class)
-						.setParameter("size", configSize * 1024);
+					if (deviceGroup == null) {
+						query = session
+							.createQuery(
+								"select c from Config c join c.attributes a where (a.class = ConfigLongTextAttribute or a.class = ConfigBinaryFileAttribute) " +
+								"group by c.id having ((max(length(a.longText.text)) > :size) or (max(a.fileSize) > :size)) and (c.changeDate < :when) " +
+								"order by c.device asc, c.changeDate desc", Config.class)
+							.setParameter("size", configSize * 1024);
+					}
+					else {
+						query = session
+							.createQuery(
+								"select c from Config c join c.device d join d.ownerGroups g join c.attributes a " +
+								"where g = :group and (a.class = ConfigLongTextAttribute or a.class = ConfigBinaryFileAttribute) " +
+								"group by c.id having ((max(length(a.longText.text)) > :size) or (max(a.fileSize) > :size)) and (c.changeDate < :when) " +
+								"order by c.device asc, c.changeDate desc", Config.class)
+							.setParameter("group", this.deviceGroup)
+							.setParameter("size", configSize * 1024);
+					}
+				}
+				else if (deviceGroup == null) {
+					query = session.createQuery(
+						"select c from Config c where (c.changeDate < :when) order by c.device asc, c.changeDate desc", Config.class);
 				}
 				else {
-					query = session
-						.createQuery("from Config c where (c.changeDate < :when) order by c.device asc, c.changeDate desc", Config.class);
+					query = session.createQuery(
+							"select c from Config c join c.device d join d.ownerGroups g " +
+							"where g = :group and (c.changeDate < :when) " +
+							"order by c.device asc, c.changeDate desc", Config.class)
+						.setParameter("group", this.deviceGroup);
 				}
 				ScrollableResults<Config> configs = query
 					.setParameter("when", when.getTime())
@@ -282,20 +334,32 @@ public class PurgeDatabaseTask extends Task {
 		}
 
 
-		if (configDays > 0) {
+		if (moduleDays > 0) {
 			Session session = Database.getSession();
 			try {
 				session.beginTransaction();
-				log.trace("Task {}. Cleaning up hardware modules removed more than {} days ago...", this.getId(), configDays);
-				this.info(String.format("Cleaning up hardware modules removed more than %d days...", configDays));
+				log.trace("Task {}. Cleaning up hardware modules removed more than {} days ago...", this.getId(), moduleDays);
+				this.info(String.format("Cleaning up hardware modules removed more than %d days...", moduleDays));
 				Calendar when = Calendar.getInstance();
-				when.add(Calendar.DATE, -1 * configDays);
+				when.add(Calendar.DATE, -1 * moduleDays);
 
-				int count = session
-					.createMutationQuery("delete from Module m where m.removed and m.lastSeenDate <= :when")
-					.setParameter("when", when.getTime())
-					.executeUpdate();
+				final MutationQuery query;
 
+				if (this.deviceGroup == null) {
+					query = session
+						.createMutationQuery("delete from Module m where m.removed and m.lastSeenDate <= :when")
+						.setParameter("when", when.getTime());
+				}
+				else {
+					query = session
+						.createMutationQuery("delete from Module m where m in " +
+							"(select m from Module m join m.device d join d.ownerGroups g " +
+							"where g = :group and m.removed and m.lastSeenDate <= :when)")
+						.setParameter("group", this.deviceGroup)
+						.setParameter("when", when.getTime());
+				}
+
+				int count = query.executeUpdate();
 				session.getTransaction().commit();
 				log.trace("Task {}. Cleaning up done on modules, {} entries affected.", this.getId(), count);
 				this.info(String.format("Cleaning up done on modules, %d entries affected.", count));

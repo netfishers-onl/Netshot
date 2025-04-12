@@ -38,6 +38,11 @@ define([
 		},
 
 		buttons: {
+			"Unselect": function() {
+				var that = this;
+				that.$("#grouptree .group.active").removeClass("active");
+				that.updateSelectState();
+			},
 			"Cancel": function() {
 				this.close();
 			},
@@ -51,7 +56,8 @@ define([
 		updateSelectState: function() {
 			var count = this.getSelectedGroupIds().length;
 			var valid = (count >= this.constraints.min) && (count <= this.constraints.max);
-			this.dialogButtons().eq(1).button(valid ? 'enable' : 'disable');
+			this.dialogButtons().eq(2).button(valid ? 'enable' : 'disable');
+			this.dialogButtons().eq(0).toggle(count > 0 && this.constraints.min === 0);
 		},
 
 		renderFolder: function($list, name, branch) {

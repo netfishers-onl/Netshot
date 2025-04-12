@@ -64,6 +64,7 @@ define([
 				'configDaysToPurge',
 				'configSizeToPurge',
 				'configKeepDays',
+				'moduleDaysToPurge',
 				'driver',
 				'script',
 				'debugEnabled',

@@ -10,25 +10,31 @@ define([
 	'models/domain/DomainCollection',
 	'views/tasks/MonitorTaskDialog',
 	'views/tasks/TaskSchedulerToolbox',
+	'views/devices/SelectGroupDialog',
 	'text!templates/tasks/createTask.html',
 	'text!templates/tasks/createScanSubnetsTask.html',
 	'text!templates/tasks/createTakeGroupSnapshotTask.html',
 	'text!templates/tasks/createRunGroupDiagnosticsTask.html',
 	'text!templates/tasks/createCheckGroupComplianceTask.html',
 	'text!templates/tasks/createCheckGroupSoftwareTask.html',
-	'text!templates/tasks/createPurgeDatabaseTask.html'
+	'text!templates/tasks/createPurgeDatabaseTask.html',
+	'text!templates/devices/groupStaticItem.html',
 ], function($, _, Backbone, Dialog, TaskModel, DeviceCollection,
 		DeviceGroupCollection, DomainCollection, MonitorTaskDialog,
-		TaskSchedulerToolbox, createTaskTemplate, createScanSubnetsTaskTemplate,
+		TaskSchedulerToolbox, SelectGroupDialog,
+		createTaskTemplate, createScanSubnetsTaskTemplate,
 		createTakeGroupSnapshotTaskTemplate,
 		createRunGroupDiagnosticsTaskTemplate,
 		createCheckGroupComplianceTaskTemplate,
 		createCheckGroupSoftwareTaskTemplate,
-		createPurgeDatabaseTaskTemplate) {
+		createPurgeDatabaseTaskTemplate,
+		groupStaticItemTemplate) {
 
 	return Dialog.extend({
 
 		template: _.template(createTaskTemplate),
+		staticGroupTemplate: _.template(groupStaticItemTemplate),
+		selectedGroupIds: [],
 
 		dialogOptions: {
 			title: "Schedule a task"
@@ -79,6 +85,15 @@ define([
 			},
 		},
 
+		toggleFinish: function(enable) {
+			if (enable) {
+				this.dialogButtons().eq(3).button('enable');
+			}
+			else {
+				this.dialogButtons().eq(3).button('disable');
+			}
+		},
+
 		onCreate: function() {
 			this.dialogButtons().eq(1).button('disable');
 			this.dialogButtons().eq(3).hide();
@@ -86,6 +101,20 @@ define([
 				var requiredLevel = $(this).data("level") || 0;
 				if (user.get('level') < requiredLevel) {
 					$(this).next().andSelf().remove();
+				}
+			});
+		},
+
+		renderGroupField: function() {
+			var that = this;
+			this.$('#groups>.placeholder').toggle(this.selectedGroupIds.length === 0);
+			this.$('#groups>ul').toggle(this.selectedGroupIds.length > 0);
+			var $groupField = this.$('#groups>ul');
+			$groupField.empty();
+			_.each(this.selectedGroupIds, function(groupId) {
+				var group = that.groups.get(groupId);
+				if (group) {
+					$groupField.append($(that.staticGroupTemplate(group.toJSON())));
 				}
 			});
 		},
@@ -100,6 +129,7 @@ define([
 					$('<option />').attr('value', domain.get('id')).text(domain
 							.get('name')).appendTo(that.$('#domain'));
 				});
+				that.toggleFinish(true);
 
 				that.getTaskData = function() {
 					return {
@@ -117,10 +147,24 @@ define([
 			this.groups.fetch().done(function() {
 				var template = _.template(createTakeGroupSnapshotTaskTemplate);
 				that.$('#nstasks-specifictask').html(template);
-				that.groups.each(function(group) {
-					$('<option />').attr('value', group.get('id'))
-							.text(group.get('name')).appendTo(that.$('#group'));
+				that.toggleFinish(that.selectedGroupIds.length === 1);
+				that.$('#groups').click(function(event) {
+					new SelectGroupDialog({
+						groups: that.groups,
+						preselectedGroupIds: that.selectedGroupIds,
+						constraints: {
+							min: 1,
+							max: 1,
+						},
+						onSelected: function(groupIds) {
+							that.selectedGroupIds = groupIds;
+							that.renderGroupField();
+							that.toggleFinish(that.selectedGroupIds.length === 1);
+						},
+					});
+					return false;
 				});
+				that.renderGroupField();
 				that.$('#olderthanhours').spinner({
 					step: 24,
 					page: 24,
@@ -141,7 +185,7 @@ define([
 
 				that.getTaskData = function() {
 					var data = {
-						group: that.$('#group').val(),
+						group: that.selectedGroupIds[0],
 						dontRunDiagnostics: !that.$('#dorundiagnostics').is(':checked'),
 						dontCheckCompliance: !that.$('#docheckcompliance').is(':checked')
 					};
@@ -160,14 +204,28 @@ define([
 			this.groups.fetch().done(function() {
 				var template = _.template(createRunGroupDiagnosticsTaskTemplate);
 				that.$('#nstasks-specifictask').html(template);
-				that.groups.each(function(group) {
-					$('<option />').attr('value', group.get('id'))
-							.text(group.get('name')).appendTo(that.$('#group'));
+				that.toggleFinish(that.selectedGroupIds.length === 1);
+				that.$('#groups').click(function(event) {
+					new SelectGroupDialog({
+						groups: that.groups,
+						preselectedGroupIds: that.selectedGroupIds,
+						constraints: {
+							min: 1,
+							max: 1,
+						},
+						onSelected: function(groupIds) {
+							that.selectedGroupIds = groupIds;
+							that.renderGroupField();
+							that.toggleFinish(that.selectedGroupIds.length === 1);
+						},
+					});
+					return false;
 				});
+				that.renderGroupField();
 
 				that.getTaskData = function() {
 					return {
-						group: that.$('#group').val(),
+						group: that.selectedGroupIds[0],
 						dontCheckCompliance: !that.$('#checkcompliance').is(':checked')
 					};
 				};
@@ -181,14 +239,28 @@ define([
 			this.groups.fetch().done(function() {
 				var template = _.template(createCheckGroupComplianceTaskTemplate);
 				that.$('#nstasks-specifictask').html(template);
-				that.groups.each(function(group) {
-					$('<option />').attr('value', group.get('id'))
-							.text(group.get('name')).appendTo(that.$('#group'));
+				that.toggleFinish(that.selectedGroupIds.length === 1);
+				that.$('#groups').click(function(event) {
+					new SelectGroupDialog({
+						groups: that.groups,
+						preselectedGroupIds: that.selectedGroupIds,
+						constraints: {
+							min: 1,
+							max: 1,
+						},
+						onSelected: function(groupIds) {
+							that.selectedGroupIds = groupIds;
+							that.renderGroupField();
+							that.toggleFinish(that.selectedGroupIds.length === 1);
+						},
+					});
+					return false;
 				});
+				that.renderGroupField();
 
 				that.getTaskData = function() {
 					return {
-						group: that.$('#group').val(),
+						group: that.selectedGroupIds[0],
 					}
 				};
 			});
@@ -201,14 +273,28 @@ define([
 			this.groups.fetch().done(function() {
 				var template = _.template(createCheckGroupSoftwareTaskTemplate);
 				that.$('#nstasks-specifictask').html(template);
-				that.groups.each(function(group) {
-					$('<option />').attr('value', group.get('id'))
-							.text(group.get('name')).appendTo(that.$('#group'));
+				that.toggleFinish(that.selectedGroupIds.length === 1);
+				that.$('#groups').click(function(event) {
+					new SelectGroupDialog({
+						groups: that.groups,
+						preselectedGroupIds: that.selectedGroupIds,
+						constraints: {
+							min: 1,
+							max: 1,
+						},
+						onSelected: function(groupIds) {
+							that.selectedGroupIds = groupIds;
+							that.renderGroupField();
+							that.toggleFinish(that.selectedGroupIds.length === 1);
+						},
+					});
+					return false;
 				});
+				that.renderGroupField();
 
 				that.getTaskData = function() {
 					return {
-						group: that.$('#group').val(),
+						group: that.selectedGroupIds[0],
 					}
 				};
 			});
@@ -217,96 +303,145 @@ define([
 		
 		renderCreatePurgeDatabaseTask: function() {
 			var that = this;
-			var template = _.template(createPurgeDatabaseTaskTemplate);
-			this.$('#nstasks-specifictask').html(template);
-			this.$('#tasksolderthandays').spinner({
-				step: 15,
-				page: 15,
-				numberFormat: "n",
-				min: 0,
-				value: this.$('#tasksolderthandays').prop('value'),
-				change: function() {
-					var value = $(this).spinner('value');
-					if (typeof value !== "number") {
-						$(this).spinner('value', 90);
-					}
-				}
-			});
-			this.$('#configsbiggerthan').spinner({
-				step: 100,
-				page: 100,
-				numberFormat: "n",
-				min: 0,
-				value: this.$('#configsbiggerthan').prop('value'),
-				change: function() {
-					var value = $(this).spinner('value');
-					if (typeof value !== "number") {
-						$(this).spinner('value', 500);
-					}
-				}
-			});
-			this.$('#configsolderthandays').spinner({
-				step: 10,
-				page: 50,
-				numberFormat: "n",
-				min: 0,
-				value: this.$('#configsolderthandays').prop('value'),
-				change: function() {
-					var value = $(this).spinner('value');
-					if (typeof value !== "number") {
-						$(this).spinner('value', 200);
-					}
-				}
-			});
-			this.$('#configskeepeverydays').spinner({
-				step: 1,
-				page: 5,
-				numberFormat: "n",
-				min: 1,
-				value: this.$('#configskeepeverydays').prop('value'),
-				change: function() {
-					var value = $(this).spinner('value');
-					if (typeof value !== "number") {
-						$(this).spinner('value', 7);
-					}
-				}
-			});
-			this.$('#configsdelete').closest('fieldset').find('.ui-spinner').on('click', function() {
-				return false;
-			});
-			this.$('#configsfiltersize,#configskeep').on('click', function() {
-				if ($(this).closest('div').is('.ui-state-disabled')) {
+			this.groups = new DeviceGroupCollection([]);
+			this.groups.fetch().done(function() {
+				var template = _.template(createPurgeDatabaseTaskTemplate);
+				that.$('#nstasks-specifictask').html(template);
+				that.toggleFinish(that.selectedGroupIds.length < 1);
+				that.$('#groups').click(function(event) {
+					new SelectGroupDialog({
+						groups: that.groups,
+						preselectedGroupIds: that.selectedGroupIds,
+						constraints: {
+							min: 0,
+							max: 1,
+						},
+						onSelected: function(groupIds) {
+							that.selectedGroupIds = groupIds;
+							that.renderGroupField();
+						},
+					});
 					return false;
-				}
-				$(this).closest('div').find('input.spinner').spinner($(this).prop('checked') ? 'enable' : 'disable');
-			});
-			this.$('#configsdelete').on('click', function() {
-				var fs = $(this).closest('fieldset');
-				if ($(this).prop('checked')) {
-					fs.find('#configsolderthandays').spinner('enable');
-					fs.find('#configsfiltersize,#configskeep').closest('div').removeClass("ui-state-disabled");
-				}
-				else {
-					fs.find('#configsfiltersize,#configskeep').prop('checked', false).trigger('click');
-					fs.find('#configsolderthandays').spinner('disable');
-					fs.find('#configsfiltersize,#configskeep').closest('div').addClass("ui-state-disabled");
-				}
-			}).prop('checked', true).trigger('click');
-			this.getTaskData = function() {
-				var data = {
-					daysToPurge: that.$('#tasksolderthandays').spinner('value')
+				});
+				that.renderGroupField();
+				that.$('#tasksolderthandays').spinner({
+					step: 15,
+					page: 15,
+					numberFormat: "n",
+					min: 0,
+					value: that.$('#tasksolderthandays').prop('value'),
+					change: function() {
+						var value = $(this).spinner('value');
+						if (typeof value !== "number") {
+							$(this).spinner('value', 90);
+						}
+					}
+				});
+				that.$('#configsbiggerthan').spinner({
+					step: 100,
+					page: 100,
+					numberFormat: "n",
+					min: 0,
+					value: that.$('#configsbiggerthan').prop('value'),
+					change: function() {
+						var value = $(this).spinner('value');
+						if (typeof value !== "number") {
+							$(this).spinner('value', 500);
+						}
+					}
+				});
+				that.$('#configsolderthandays').spinner({
+					step: 10,
+					page: 50,
+					numberFormat: "n",
+					min: 0,
+					value: that.$('#configsolderthandays').prop('value'),
+					change: function() {
+						var value = $(this).spinner('value');
+						if (typeof value !== "number") {
+							$(this).spinner('value', 200);
+						}
+					}
+				});
+				that.$('#modulesolderthandays').spinner({
+					step: 10,
+					page: 50,
+					numberFormat: "n",
+					min: 0,
+					value: that.$('#modulesolderthandays').prop('value'),
+					change: function() {
+						var value = $(this).spinner('value');
+						if (typeof value !== "number") {
+							$(this).spinner('value', 500);
+						}
+					}
+				});
+				that.$('#configskeepeverydays').spinner({
+					step: 1,
+					page: 5,
+					numberFormat: "n",
+					min: 1,
+					value: that.$('#configskeepeverydays').prop('value'),
+					change: function() {
+						var value = $(this).spinner('value');
+						if (typeof value !== "number") {
+							$(this).spinner('value', 7);
+						}
+					}
+				});
+				that.$('#configsdelete,#modulesdelete').closest('fieldset').find('.ui-spinner').on('click', function() {
+					return false;
+				});
+				that.$('#configsfiltersize,#configskeep').on('click', function() {
+					if ($(this).closest('div').is('.ui-state-disabled')) {
+						return false;
+					}
+					$(this).closest('div').find('input.spinner').spinner($(this).prop('checked') ? 'enable' : 'disable');
+				});
+				that.$('#configsdelete').on('click', function() {
+					var fs = $(this).closest('fieldset');
+					if ($(this).prop('checked')) {
+						fs.find('#configsolderthandays').spinner('enable');
+						fs.find('#configsfiltersize,#configskeep').closest('div').removeClass("ui-state-disabled");
+					}
+					else {
+						fs.find('#configsfiltersize,#configskeep').prop('checked', false).trigger('click');
+						fs.find('#configsolderthandays').spinner('disable');
+						fs.find('#configsfiltersize,#configskeep').closest('div').addClass("ui-state-disabled");
+					}
+				}).prop('checked', true).trigger('click');
+				that.$('#modulesdelete').on('click', function() {
+					var fs = $(this).closest('fieldset');
+					if ($(this).prop('checked')) {
+						fs.find('#modulesolderthandays').spinner('enable');
+					}
+					else {
+						fs.find('#modulesolderthandays').spinner('disable');
+					}
+				}).prop('checked', true).trigger('click');
+
+				that.getTaskData = function() {
+					var data = {
+						daysToPurge: that.$('#tasksolderthandays').spinner('value')
+					};
+					if (that.$('#configsdelete').prop('checked')) {
+						data.configDaysToPurge = that.$('#configsolderthandays').spinner('value');
+						if (that.$('#configsfiltersize').prop('checked')) {
+							data.configSizeToPurge = that.$('#configsbiggerthan').spinner('value');
+						}
+						if (that.$('#configskeep').prop('checked')) {
+							data.configKeepDays = that.$('#configskeepeverydays').spinner('value');
+						}
+					}
+					if (that.$('#modulesdelete').prop('checked')) {
+						data.moduleDaysToPurge = that.$('#modulesolderthandays').spinner('value');
+					}
+					if (that.selectedGroupIds.length > 0) {
+						data.group = that.selectedGroupIds[0];
+					}
+					return data;
 				};
-				if (that.$('#configsdelete').prop('checked')) {
-					data.configDaysToPurge = that.$('#configsolderthandays').spinner('value');
-					if (that.$('#configsfiltersize').prop('checked')) {
-						data.configSizeToPurge = that.$('#configsbiggerthan').spinner('value');
-					}
-					if (that.$('#configskeep').prop('checked')) {
-						data.configKeepDays = that.$('#configskeepeverydays').spinner('value');
-					}
-				}
-				return data;
-			};
+			});
 			this.renderScheduler();
 		},
 

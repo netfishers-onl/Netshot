@@ -3485,6 +3485,13 @@ public class RestService extends Thread {
 		@Setter
 		private int configKeepDays = 0;
 		
+		@Schema(description = "Purge removed hardware modules older than this number of days")
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private int moduleDaysToPurge = -1;
+		
 		@Schema(description = "The script to execute")
 		@Getter(onMethod=@__({
 			@XmlElement, @JsonView(DefaultView.class)
@@ -4047,8 +4054,36 @@ public class RestService extends Thread {
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 				}
 			}
+			int moduleDays = rsTask.getModuleDaysToPurge();
+			if (moduleDays != -1 && moduleDays < 3) {
+				log.error("The number of days of removed modules to purge must be greater than 3.");
+				throw new NetshotBadRequestException("The number of days of removed modules to purge must be greater than 3.",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
+			}
+			DeviceGroup group = null;
+			if (rsTask.getGroup() != 0L) {
+				Session session = Database.getSession();
+				try {
+					group = session.get(DeviceGroup.class, rsTask.getGroup());
+					if (group == null) {
+						log.error("Unable to find the group {}.", rsTask.getGroup());
+						throw new NetshotBadRequestException("Unable to find the group.",
+								NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+					}
+					task = new RunGroupDiagnosticsTask(group, rsTask.getComments(), userName,
+						rsTask.isDontCheckCompliance());
+				}
+				catch (HibernateException e) {
+					log.error("Error while retrieving the group.", e);
+					throw new NetshotBadRequestException("Database error.",
+							NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+				}
+				finally {
+					session.close();
+				}
+			}
 			task = new PurgeDatabaseTask(rsTask.getComments(), userName, rsTask.getDaysToPurge(),
-					configDays, configSize, configKeepDays);
+					configDays, configSize, configKeepDays, moduleDays, group);
 		}
 		else if (rsTask.getType().equals("RunDiagnosticsTask")) {
 			log.trace("Adding a RunDiagnosticsTask");

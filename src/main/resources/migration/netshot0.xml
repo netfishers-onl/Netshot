@@ -1405,4 +1405,13 @@
 			<append value="WHERE NOT (status = 0)"/>
 		</modifySql>
 	</changeSet>
+	<changeSet author="netshot" id="0.21.0_6">
+		<addColumn tableName="purge_database_task">
+			<column name="device_group" type="BIGINT"/>
+			<column name="module_days" type="INT" value="0">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="purge_database_task" constraintName="FK_dgr5yw4bfzs8qhjt3pvcua2km" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+	</changeSet>
 </databaseChangeLog>

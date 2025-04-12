@@ -1082,6 +1082,10 @@ h1 {
 	width: 250px;
 }
 
+#nstasks-createtaskform .nsdevices-groupselector {
+	display: inline-block;
+}
+
 #nstasks-taskstabs {
 	margin-bottom: 10px;
 }

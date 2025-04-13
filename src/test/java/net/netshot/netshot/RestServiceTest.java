@@ -103,7 +103,7 @@ public class RestServiceTest {
 		config.setProperty("netshot.log.level", "INFO");
 		config.setProperty("netshot.db.driver_class", "org.h2.Driver");
 		config.setProperty("netshot.db.url", 
-			"jdbc:h2:mem:nstest;TRACE_LEVEL_SYSTEM_OUT=2;" +
+			"jdbc:h2:mem:restservicetest;TRACE_LEVEL_SYSTEM_OUT=2;" +
 			"CASE_INSENSITIVE_IDENTIFIERS=true;DB_CLOSE_DELAY=-1");
 		config.setProperty("netshot.http.ssl.enabled", "false");
 		URI uri = UriBuilder.fromUri(apiUrl).replacePath("/").build();

@@ -37,7 +37,7 @@ public class PurgeTest {
 		config.setProperty("netshot.log.level", "INFO");
 		config.setProperty("netshot.db.driver_class", "org.h2.Driver");
 		config.setProperty("netshot.db.url", 
-			"jdbc:h2:mem:nstest;TRACE_LEVEL_SYSTEM_OUT=2;" +
+			"jdbc:h2:mem:purgetest;TRACE_LEVEL_SYSTEM_OUT=2;" +
 			"CASE_INSENSITIVE_IDENTIFIERS=true;DB_CLOSE_DELAY=-1");
 		return config;
 	}

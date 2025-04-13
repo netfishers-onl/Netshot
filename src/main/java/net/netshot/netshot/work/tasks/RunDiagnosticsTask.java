@@ -242,6 +242,7 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 		if (!this.dontCheckCompliance) {
 			try {
 				Task checkTask = new CheckComplianceTask(device, "Check compliance after device diagnostics", "Auto");
+				checkTask.setPriority(this.getPriority());
 				TaskManager.addTask(checkTask);
 			}
 			catch (Exception e) {

@@ -336,6 +336,7 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 				session.persist(device);
 				snapshotTask = new TakeSnapshotTask(device,
 						"Automatic snapshot after discovery", author, true, false, false);
+				snapshotTask.setPriority(this.getPriority());
 				session.persist(snapshotTask);
 				session.getTransaction().commit();
 				this.snapshotTaskId = snapshotTask.getId();

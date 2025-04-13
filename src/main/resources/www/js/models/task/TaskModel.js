@@ -58,6 +58,7 @@ define([
 				'scheduleReference',
 				'scheduleType',
 				'scheduleFactor',
+				'schedulePriority',
 				'comments',
 				'limitToOutofdateDeviceHours',
 				'daysToPurge',

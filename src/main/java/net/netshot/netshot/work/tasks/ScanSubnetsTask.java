@@ -201,6 +201,7 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 				for (DeviceCredentialSet credentialSet : knownCommunities) {
 					discoverTask.addCredentialSet(credentialSet);
 				}
+				discoverTask.setPriority(this.getPriority());
 				TaskManager.addTask(discoverTask);
 			}
 			catch (Exception e) {

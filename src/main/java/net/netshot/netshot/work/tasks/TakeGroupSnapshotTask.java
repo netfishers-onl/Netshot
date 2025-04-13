@@ -155,6 +155,7 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 			this.info(String.format("Starting snapshot task for device %s.", device.getName()));
 			TakeSnapshotTask task = new TakeSnapshotTask(device, comment, author, false,
 					this.dontRunDiagnostics, this.dontCheckCompliance);
+			task.setPriority(this.getPriority());
 			try {
 				TaskManager.addTask(task);
 			}

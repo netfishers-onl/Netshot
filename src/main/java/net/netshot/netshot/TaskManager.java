@@ -285,12 +285,14 @@ public class TaskManager {
 			.build();
 		job.getJobDataMap().put(TaskJob.NETSHOT_TASK, task.getId());
 		Trigger trigger;
+		TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger()
+			.withPriority(task.getPriority());
 		Date when = task.getNextExecutionDate();
 		if (when == null || forceNow) {
-			trigger = TriggerBuilder.newTrigger().startNow().build();
+			trigger = triggerBuilder.startNow().build();
 		}
 		else {
-			trigger = TriggerBuilder.newTrigger().startAt(when).build();
+			trigger = triggerBuilder.startAt(when).build();
 		}
 		scheduler.scheduleJob(job, trigger);
 		log.trace("Task successfully added to the scheduler.");

@@ -37,6 +37,17 @@
 			<% if (typeof runnerId === "string") { %>
 			<tr><td>Runner:</td><td><%- runnerId %></td></tr>
 			<% } %>
+			<tr><td>Priority:</td><td>
+				<% if (priority === 3) { %>
+					Low
+				<% } else if (priority === 5) { %>
+					Normal
+				<% } else if (priority === 8) { %>
+					High
+				<% } else { %>
+					<%- priority %>
+				<% } %>
+			</td></tr>
 			<tr>
 				<td>Status:</td>
 				<td>

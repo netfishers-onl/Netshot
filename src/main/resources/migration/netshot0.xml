@@ -1414,4 +1414,11 @@
 		</addColumn>
 		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="purge_database_task" constraintName="FK_dgr5yw4bfzs8qhjt3pvcua2km" deferrable="false" initiallyDeferred="false" onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
 	</changeSet>
+	<changeSet author="netshot" id="0.21.0_7">
+		<addColumn tableName="task">
+			<column name="priority" type="INT" value="5">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

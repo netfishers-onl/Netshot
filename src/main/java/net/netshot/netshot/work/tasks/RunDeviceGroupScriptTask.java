@@ -143,6 +143,7 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 		for (Device device : devices) {
 			this.info(String.format("Starting run script task for device %s.", device.getName()));
 			RunDeviceScriptTask task = new RunDeviceScriptTask(device, script, driver, comment, author);
+			task.setPriority(this.getPriority());
 			task.setUserInputValues(this.userInputValues);
 			try {
 				TaskManager.addTask(task);

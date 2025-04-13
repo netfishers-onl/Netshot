@@ -267,6 +267,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		if (!this.dontRunDiagnostics) {
 			try {
 				Task diagTask = new RunDiagnosticsTask(device, "Run diagnostics after device snapshot", "Auto", this.dontCheckCompliance);
+				diagTask.setPriority(this.getPriority());
 				TaskManager.addTask(diagTask);
 			}
 			catch (Exception e) {
@@ -277,6 +278,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		else if (!this.dontCheckCompliance) {
 			try {
 				Task checkTask = new CheckComplianceTask(device, "Check compliance after device snapshot", "Auto");
+				checkTask.setPriority(this.getPriority());
 				TaskManager.addTask(checkTask);
 			}
 			catch (Exception e) {

@@ -127,6 +127,7 @@ public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 		for (Device device : devices) {
 			this.info(String.format("Scheduling diagnostics task for device %s.", device.getName()));
 			RunDiagnosticsTask task = new RunDiagnosticsTask(device, comment, author, this.dontCheckCompliance);
+			task.setPriority(this.getPriority());
 			try {
 				TaskManager.addTask(task);
 			}

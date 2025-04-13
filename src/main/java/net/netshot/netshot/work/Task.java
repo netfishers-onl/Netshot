@@ -62,6 +62,7 @@ import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
+import org.quartz.Trigger;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -280,6 +281,13 @@ public abstract class Task implements Cloneable {
 	@Setter
 	private String runnerId;
 
+	/** Task priority */
+	@Getter(onMethod=@__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private int priority = Trigger.DEFAULT_PRIORITY;
+
 	/**
 	 * Instantiates a new task.
 	 */
@@ -329,6 +337,7 @@ public abstract class Task implements Cloneable {
 		task.setScheduleReference(this.scheduleReference);
 		task.setScheduleType(this.scheduleType);
 		task.setScheduleFactor(this.scheduleFactor);
+		task.setPriority(this.priority);
 		task.setId(0);
 		return task;
 	}
@@ -617,7 +626,9 @@ public abstract class Task implements Cloneable {
 		return "Task " + id + " (type " + this.getClass().getSimpleName() + ", target '" + target
 				+ "', author '" + author + "', created on " + creationDate
 				+ ", executed on " + executionDate + ", description '" + getTaskDescription()
-				+ "', schedule type " + scheduleType + "', schedule factor " + scheduleFactor + ")";
+				+ "', schedule type " + scheduleType + "', schedule factor " + scheduleFactor
+				+ ", priority " + priority
+				+ ")";
 	}
 
 }

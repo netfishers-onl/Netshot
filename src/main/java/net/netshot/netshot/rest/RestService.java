@@ -3442,6 +3442,14 @@ public class RestService extends Thread {
 		@Setter
 		private int scheduleFactor = 1;
 
+		/** The task priority */
+		@Schema(description = "Priority for this task, from 1 to 9 (5 is default, more is better)")
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private int schedulePriority = 5;
+
 		/** The comments. */
 		@Schema(description = "Task comment")
 		@Getter(onMethod=@__({
@@ -3816,7 +3824,7 @@ public class RestService extends Thread {
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 				}
 				task = new RunDeviceGroupScriptTask(group, rsTask.getScript(), driver, rsTask.getComments(), userName);
-			((RunDeviceGroupScriptTask) task).setUserInputValues(rsTask.getUserInputs());
+				((RunDeviceGroupScriptTask) task).setUserInputValues(rsTask.getUserInputs());
 			}
 			catch (HibernateException e) {
 				log.error("Error while retrieving the group.", e);
@@ -4136,6 +4144,12 @@ public class RestService extends Thread {
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 			}
 		}
+		if (rsTask.getSchedulePriority() < 1 || rsTask.getSchedulePriority() > 9) {
+			log.error("Invalid priority {} for the task", rsTask.getSchedulePriority());
+			throw new NetshotBadRequestException("Invalid priority value.",
+				NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
+		}
+		task.setPriority(rsTask.getSchedulePriority());
 		try {
 			TaskManager.addTask(task);
 			Netshot.aaaLogger.info("The task {} has been created.", task);

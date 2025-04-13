@@ -121,10 +121,12 @@ define([
 				ref.setTime(ref.getTime() + (hours * 60 + minutes) * 60 * 1000);
 				factor = this.$('#schedulerepeatfactor').spinner("value");
 			}
+			var priority = parseInt(this.$('#schedulepriority').val());
 			var schedule = {
 				scheduleType: type,
 				scheduleFactor: factor,
 				scheduleReference: ref,
+				schedulePriority: priority,
 			};
 			return schedule;
 		},

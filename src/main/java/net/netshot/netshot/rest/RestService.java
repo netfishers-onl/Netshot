@@ -118,8 +118,6 @@ import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
 import net.netshot.netshot.device.attribute.ConfigLongTextAttribute;
-import net.netshot.netshot.device.attribute.DeviceAttribute;
-import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
@@ -167,7 +165,6 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
@@ -184,6 +181,7 @@ import org.glassfish.jersey.servlet.ServletProperties;
 import org.graalvm.polyglot.HostAccess.Export;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
+import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.exception.ConstraintViolationException;
@@ -224,9 +222,6 @@ public class RestService extends Thread {
 
 	/** The static instance service. */
 	private static RestService nsRestService;
-
-	/** Pagination size for dump queries */
-	private static final int PAGINATION_SIZE = 1000;
 
 	private static final String HTTP_STATIC_PATH = Netshot.getConfig("netshot.http.staticpath", "/");
 	static final String HTTP_API_PATH = Netshot.getConfig("netshot.http.apipath", "/api");
@@ -5886,6 +5881,7 @@ public class RestService extends Thread {
 			if (results.size() > 0) {
 				hqlQuery += " and ccr.result in (:results)";
 			}
+			hqlQuery += " order by d.name asc";
 			Query<RsLightPolicyRuleDevice> query = session.createQuery(hqlQuery, RsLightPolicyRuleDevice.class);
 			query.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
 			query.setParameter("enabled", Device.Status.INPRODUCTION);
@@ -7743,7 +7739,20 @@ public class RestService extends Thread {
 		}
 	}
 
-
+	@AllArgsConstructor
+	public static class DeviceGroupMembershipWrapper {
+		@Getter @Setter
+		private Long groupId;
+	
+		@Getter @Setter
+		private String groupName;
+	
+		@Getter @Setter
+		private Long deviceId;
+	
+		@Getter @Setter
+		private String deviceName;
+	}
 
 	@GET
 	@Path("/reports/export")
@@ -7872,7 +7881,6 @@ public class RestService extends Thread {
 					if (groups.size() > 0) {
 						deviceQuery.setParameterList("groupIds", groups);
 					}
-					deviceQuery.setMaxResults(PAGINATION_SIZE);
 
 					Sheet deviceSheet = workBook.createSheet("Devices");
 					((SXSSFSheet) deviceSheet).setRandomAccessWindowSize(100);
@@ -7931,9 +7939,9 @@ public class RestService extends Thread {
 						deviceSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
 
-					for (int n = 0; true; n += PAGINATION_SIZE) {
-						List<Device> devices = deviceQuery.setFirstResult(n).list();
-						for (Device device : devices) {
+					try (ScrollableResults<Device> scrollableDevices = deviceQuery.scroll()) {
+						while (scrollableDevices.next()) {
+							Device device = scrollableDevices.get();
 							int x = -1;
 							row = deviceSheet.createRow(++y);
 							row.createCell(++x).setCellValue(device.getId());
@@ -7967,9 +7975,6 @@ public class RestService extends Thread {
 								row.createCell(++x).setCellValue(device.getLocation());
 								row.createCell(++x).setCellValue(device.getContact());
 							}
-						}
-						if (devices.size() < PAGINATION_SIZE) {
-							break;
 						}
 					}
 				}
@@ -8043,43 +8048,44 @@ public class RestService extends Thread {
 						interfaceSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
 
-					List<NetworkInterface> networkInterfaces = interfaceQuery.list();
-					for (NetworkInterface networkInterface : networkInterfaces) {
-						Device device = networkInterface.getDevice();
-						if (networkInterface.getIpAddresses().isEmpty()) {
-							row = interfaceSheet.createRow(++y);
-							int x = -1;
-							row.createCell(++x).setCellValue(device.getId());
-							row.createCell(++x).setCellValue(device.getName());
-							row.createCell(++x).setCellValue(networkInterface.getVirtualDevice());
-							row.createCell(++x).setCellValue(networkInterface.getInterfaceName());
-							row.createCell(++x).setCellValue(networkInterface.getDescription());
-							row.createCell(++x).setCellValue(networkInterface.getVrfInstance());
-							row.createCell(++x).setCellValue(networkInterface.getMacAddress());
-							row.createCell(++x).setCellValue(networkInterface.isEnabled());
-							row.createCell(++x).setCellValue(networkInterface.isLevel3());
-							row.createCell(++x).setCellValue("");
-							row.createCell(++x).setCellValue("");
-							row.createCell(++x).setCellValue("");
-						}
-						for (NetworkAddress address : networkInterface.getIpAddresses()) {
-							row = interfaceSheet.createRow(++y);
-							int x = -1;
-							row.createCell(++x).setCellValue(device.getId());
-							row.createCell(++x).setCellValue(device.getName());
-							row.createCell(++x).setCellValue(networkInterface.getVirtualDevice());
-							row.createCell(++x).setCellValue(networkInterface.getInterfaceName());
-							row.createCell(++x).setCellValue(networkInterface.getDescription());
-							row.createCell(++x).setCellValue(networkInterface.getVrfInstance());
-							row.createCell(++x).setCellValue(networkInterface.getMacAddress());
-							row.createCell(++x).setCellValue(networkInterface.isEnabled());
-							row.createCell(++x).setCellValue(networkInterface.isLevel3());
-							row.createCell(++x).setCellValue(address.getIp());
-							row.createCell(++x).setCellValue(address.getPrefixLength());
-							row.createCell(++x).setCellValue(address.getAddressUsage() == null ? "" : address.getAddressUsage().toString());
+					try (ScrollableResults<NetworkInterface> scrollableNetworkInterfaces = interfaceQuery.scroll()) {
+						while (scrollableNetworkInterfaces.next()) {
+							NetworkInterface networkInterface = scrollableNetworkInterfaces.get();
+							Device device = networkInterface.getDevice();
+							if (networkInterface.getIpAddresses().isEmpty()) {
+								row = interfaceSheet.createRow(++y);
+								int x = -1;
+								row.createCell(++x).setCellValue(device.getId());
+								row.createCell(++x).setCellValue(device.getName());
+								row.createCell(++x).setCellValue(networkInterface.getVirtualDevice());
+								row.createCell(++x).setCellValue(networkInterface.getInterfaceName());
+								row.createCell(++x).setCellValue(networkInterface.getDescription());
+								row.createCell(++x).setCellValue(networkInterface.getVrfInstance());
+								row.createCell(++x).setCellValue(networkInterface.getMacAddress());
+								row.createCell(++x).setCellValue(networkInterface.isEnabled());
+								row.createCell(++x).setCellValue(networkInterface.isLevel3());
+								row.createCell(++x).setCellValue("");
+								row.createCell(++x).setCellValue("");
+								row.createCell(++x).setCellValue("");
+							}
+							for (NetworkAddress address : networkInterface.getIpAddresses()) {
+								row = interfaceSheet.createRow(++y);
+								int x = -1;
+								row.createCell(++x).setCellValue(device.getId());
+								row.createCell(++x).setCellValue(device.getName());
+								row.createCell(++x).setCellValue(networkInterface.getVirtualDevice());
+								row.createCell(++x).setCellValue(networkInterface.getInterfaceName());
+								row.createCell(++x).setCellValue(networkInterface.getDescription());
+								row.createCell(++x).setCellValue(networkInterface.getVrfInstance());
+								row.createCell(++x).setCellValue(networkInterface.getMacAddress());
+								row.createCell(++x).setCellValue(networkInterface.isEnabled());
+								row.createCell(++x).setCellValue(networkInterface.isLevel3());
+								row.createCell(++x).setCellValue(address.getIp());
+								row.createCell(++x).setCellValue(address.getPrefixLength());
+								row.createCell(++x).setCellValue(address.getAddressUsage() == null ? "" : address.getAddressUsage().toString());
+							}
 						}
 					}
-					session.clear();
 				}
 	
 				if (exportInventory) {
@@ -8103,7 +8109,6 @@ public class RestService extends Thread {
 					if (groups.size() > 0) {
 						moduleQuery.setParameterList("groupIds", groups);
 					}
-					moduleQuery.setMaxResults(PAGINATION_SIZE);
 
 					Sheet inventorySheet = workBook.createSheet("Inventory");
 					((SXSSFSheet) inventorySheet).setRandomAccessWindowSize(100);
@@ -8141,9 +8146,9 @@ public class RestService extends Thread {
 						inventorySheet.createFreezePane(0, y + 1);
 						inventorySheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
-					for (int n = 0; true; n += PAGINATION_SIZE) {
-						List<Module> modules = moduleQuery.setFirstResult(n).list();
-						for (Module module : modules) {
+					try (ScrollableResults<Module> scrollableModules = moduleQuery.scroll()) {
+						while (scrollableModules.next()) {
+							Module module = scrollableModules.get();
 							Device device = module.getDevice();
 							int x = -1;
 							row = inventorySheet.createRow(++y);
@@ -8163,10 +8168,6 @@ public class RestService extends Thread {
 								cell.setCellValue(module.isRemoved());
 							}
 						}
-						session.clear();
-						if (modules.size() < PAGINATION_SIZE) {
-							break;
-						}
 					}
 				}
 					
@@ -8174,8 +8175,10 @@ public class RestService extends Thread {
 					log.debug("Exporting compliance data");
 					List<RsLightPolicyRuleDevice> checkResults = getConfigComplianceDeviceStatuses(domains, groups,
 							new HashSet<Long>(), new HashSet<>(
-									Arrays.asList(new CheckResult.ResultOption[] { CheckResult.ResultOption.CONFORMING,
-											CheckResult.ResultOption.NONCONFORMING, CheckResult.ResultOption.EXEMPTED })));
+									Arrays.asList(new CheckResult.ResultOption[] {
+										CheckResult.ResultOption.CONFORMING,
+										CheckResult.ResultOption.NONCONFORMING,
+										CheckResult.ResultOption.EXEMPTED })));
 
 					Sheet complianceSheet = workBook.createSheet("Configuration Compliance");
 					((SXSSFSheet) complianceSheet).setRandomAccessWindowSize(100);
@@ -8220,80 +8223,27 @@ public class RestService extends Thread {
 					}
 					session.clear();
 				}
-				
+
 				if (exportGroups) {
 					{
-						log.debug("Exporting group data");
-						List<RsGroupConfigComplianceStat> groupConfigComplianceStats =
-								this.getGroupConfigComplianceStats(domains, groups, new HashSet<>());
-						
-						Sheet groupSheet = workBook.createSheet("Device Groups");
-						((SXSSFSheet) groupSheet).setRandomAccessWindowSize(100);
-						int y = -1;
-						{
-							row = groupSheet.createRow(++y);
-							int x = -1;
-							row.createCell(++x).setCellValue("Group ID");
-							row.getCell(x).setCellStyle(titleCellStyle);
-							groupSheet.setColumnWidth(x, 2200);
-							row.createCell(++x).setCellValue("Group Name");
-							row.getCell(x).setCellStyle(titleCellStyle);
-							groupSheet.setColumnWidth(x, 5000);
-							row.createCell(++x).setCellValue("Folder");
-							row.getCell(x).setCellStyle(titleCellStyle);
-							groupSheet.setColumnWidth(x, 8000);
-							row.createCell(++x).setCellValue("Device Count");
-							row.getCell(x).setCellStyle(titleCellStyle);
-							groupSheet.setColumnWidth(x, 4000);
-							if (exportCompliance) {
-								row.createCell(++x).setCellValue("Config Compliant Count");
-								row.getCell(x).setCellStyle(titleCellStyle);
-								groupSheet.setColumnWidth(x, 6000);
-								row.createCell(++x).setCellValue("Config Compliance");
-								row.getCell(x).setCellStyle(titleCellStyle);
-								groupSheet.setColumnWidth(x, 5000);
-							}
-							groupSheet.createFreezePane(0, y + 1);
-							groupSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));	
-						}
-						
-						for (RsGroupConfigComplianceStat stat : groupConfigComplianceStats) {
-							row = groupSheet.createRow(++y);
-							int x = -1;
-							row.createCell(++x).setCellValue(stat.getGroupId());
-							row.createCell(++x).setCellValue(stat.getGroupName());
-							row.createCell(++x).setCellValue(stat.getGroupFolder());
-							row.createCell(++x).setCellValue(stat.getDeviceCount());
-							if (exportCompliance) {
-								row.createCell(++x).setCellValue(stat.getCompliantDeviceCount());
-								row.createCell(++x).setCellFormula(String.format("%s%d / %s%d",
-										CellReference.convertNumToColString(x - 1), y + 1,
-										CellReference.convertNumToColString(x - 2), y + 1));
-								row.getCell(x).setCellStyle(percentCellStyle);
-							}
-						}
-						session.clear();
-					}
-					{
 						log.debug("Exporting group memberships");
-						StringBuilder deviceHqlQuery = new StringBuilder(
-								"select d from Device d left join d.ownerGroups g left join d.mgmtDomain " +
-								"where 1 = 1");
+						StringBuilder groupHqlQuery = new StringBuilder(
+								"select new DeviceGroupMembershipWrapper(g.id, g.name, d.id, d.name) from DeviceGroup g join g.cachedDevices d ");
+						groupHqlQuery.append("where g.hiddenFromReports is not true ");
 						if (domains.size() > 0) {
-							deviceHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
+							groupHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
 						}
 						if (groups.size() > 0) {
-							deviceHqlQuery.append(" and g.id in (:groupIds)");
+							groupHqlQuery.append("and g.id in (:groupIds) ");
 						}
-						deviceHqlQuery.append(" order by d.name asc");
-						Query<Device> deviceQuery = session.createQuery(deviceHqlQuery.toString(), Device.class);
+						groupHqlQuery.append("order by d.name asc, g.name asc");
+						Query<DeviceGroupMembershipWrapper> groupQuery = session.createQuery(groupHqlQuery.toString(), DeviceGroupMembershipWrapper.class);
 						if (domains.size() > 0) {
-							deviceQuery.setParameterList("domainIds", domains);
+							groupQuery.setParameterList("domainIds", domains);
 						}
 						if (groups.size() > 0) {
-							deviceQuery.setParameterList("groupIds", groups);
+							groupQuery.setParameterList("groupIds", groups);
 						}
-						deviceQuery.setMaxResults(PAGINATION_SIZE);
 						
 						Sheet groupSheet = workBook.createSheet("Group Memberships");
 						((SXSSFSheet) groupSheet).setRandomAccessWindowSize(100);
@@ -8316,101 +8266,18 @@ public class RestService extends Thread {
 							groupSheet.createFreezePane(0, y + 1);
 							groupSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));	
 						}
-						
-						for (int n = 0; true; n += PAGINATION_SIZE) {
-							List<Device> devices = deviceQuery.setFirstResult(n).list();
-							for (Device device : devices) {
-								for (DeviceGroup group : device.getOwnerGroups()) {
-									if (group.isHiddenFromReports()) {
-										continue;
-									}
-									row = groupSheet.createRow(++y);
-									int x = -1;
-									row.createCell(++x).setCellValue(device.getId());
-									row.createCell(++x).setCellValue(device.getName());
-									row.createCell(++x).setCellValue(group.getId());
-									row.createCell(++x).setCellValue(group.getName());
-								}
-							}
-							session.clear();
-							if (devices.size() < PAGINATION_SIZE) {
-								break;
-							}
-						}
-					}
-					
-				}
 
-				if (exportDeviceDriverAttributes) {
-					log.debug("Exporting driver-specific device attributes");
-					StringBuilder attributeHqlQuery = new StringBuilder(
-							"select da from DeviceAttribute da " +
-							"join fetch da.device where 1 = 1");
-					if (domains.size() > 0) {
-						attributeHqlQuery.append(" and da.device.mgmtDomain.id in (:domainIds)");
-					}
-					if (groups.size() > 0) {
-						attributeHqlQuery.append(" and da.device.id in (select d.id from Device d left join d.ownerGroups g where g.id in (:groupIds))");
-					}
-					attributeHqlQuery.append(" order by da.device.name asc, da.id asc");
-					Query<DeviceAttribute> attributeQuery = session.createQuery(attributeHqlQuery.toString(),
-							DeviceAttribute.class);
-					if (domains.size() > 0) {
-						attributeQuery.setParameterList("domainIds", domains);
-					}
-					if (groups.size() > 0) {
-						attributeQuery.setParameterList("groupIds", groups);
-					}
-
-					Sheet attributeSheet = workBook.createSheet("Device Attributes");
-					((SXSSFSheet) attributeSheet).setRandomAccessWindowSize(100);
-					int y = -1;
-					{
-						row = attributeSheet.createRow(++y);
-						int x = -1;
-						row.createCell(++x).setCellValue("Device ID");
-						row.getCell(x).setCellStyle(titleCellStyle);
-						attributeSheet.setColumnWidth(x, 2200);
-						row.createCell(++x).setCellValue("Device Name");
-						row.getCell(x).setCellStyle(titleCellStyle);
-						attributeSheet.setColumnWidth(x, 5000);
-						row.createCell(++x).setCellValue("Attribute Name");
-						row.getCell(x).setCellStyle(titleCellStyle);
-						attributeSheet.setColumnWidth(x, 5000);
-						row.createCell(++x).setCellValue("Attribute Value");
-						row.getCell(x).setCellStyle(titleCellStyle);
-						attributeSheet.setColumnWidth(x, 7000);
-						row.setRowStyle(titleCellStyle);
-						attributeSheet.createFreezePane(0, y + 1);
-						attributeSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
-					}
-
-					for (int n = 0; true; n += PAGINATION_SIZE) {
-						List<DeviceAttribute> attributes = attributeQuery.setFirstResult(n).list();
-						for (DeviceAttribute attribute : attributes) {
-							try {
-								String value = attribute.getData().toString();
-								Device device = attribute.getDevice();
-								DeviceDriver driver = device.getDeviceDriver();
-								AttributeDefinition definition = driver.getAttributeDefinition(AttributeLevel.DEVICE, attribute.getName());
+						try (ScrollableResults<DeviceGroupMembershipWrapper> scrollableGroups = groupQuery.scroll()) {
+							while (scrollableGroups.next()) {
+								DeviceGroupMembershipWrapper group = scrollableGroups.get();
+								row = groupSheet.createRow(++y);
 								int x = -1;
-								row = attributeSheet.createRow(++y);
-								row.createCell(++x).setCellValue(device.getId());
-								row.createCell(++x).setCellValue(device.getName());
-								row.createCell(++x).setCellValue(definition.getTitle());
-								row.createCell(++x).setCellValue(value);
-								attribute.getData();
-							}
-							catch (Exception e) {
-								log.warn("Error while exporting attribute (ID {}, name {})... skipping",
-									attribute.getId(), attribute.getName(), e);
+								row.createCell(++x).setCellValue(group.deviceId);
+								row.createCell(++x).setCellValue(group.deviceName);
+								row.createCell(++x).setCellValue(group.groupId);
+								row.createCell(++x).setCellValue(group.groupName);
 							}
 						}
-						session.clear();
-						if (attributes.size() < PAGINATION_SIZE) {
-							break;
-						}
-						session.clear();
 					}
 				}
 

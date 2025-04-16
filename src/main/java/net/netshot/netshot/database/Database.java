@@ -98,6 +98,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.StatelessSession;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -416,14 +417,31 @@ public class Database {
 	}
 
 	/**
-	 * Gets the session.
+	 * Gets a database session.
 	 *
+	 * @param readOnly = true when requesting a read-only session
 	 * @return the session
 	 * @throws HibernateException the hibernate exception
 	 */
 	public static Session getSession(boolean readOnly) throws HibernateException {
-		return sessionFactory.withOptions().tenantIdentifier(
-			readOnly ? TenantIdentifier.READ_ONLY : TenantIdentifier.READ_WRITE).openSession();
+		return sessionFactory
+			.withOptions()
+			.tenantIdentifier(
+				readOnly ? TenantIdentifier.READ_ONLY : TenantIdentifier.READ_WRITE)
+			.openSession();
+	}
+
+	/**
+	 * Gets a stateless database session.
+	 *
+	 * @return the session
+	 * @throws HibernateException the hibernate exception
+	 */
+	public static StatelessSession getStalessSession() throws HibernateException {
+		return sessionFactory
+			.withStatelessOptions()
+			.tenantIdentifier(TenantIdentifier.READ_ONLY)
+			.openStatelessSession();
 	}
 
 	/**

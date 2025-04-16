@@ -181,9 +181,11 @@ import org.glassfish.jersey.servlet.ServletProperties;
 import org.graalvm.polyglot.HostAccess.Export;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
+import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
+import org.hibernate.StatelessSession;
 import org.hibernate.exception.ConstraintViolationException;
 import org.quartz.SchedulerException;
 import org.slf4j.MarkerFactory;
@@ -7939,9 +7941,14 @@ public class RestService extends Thread {
 						deviceSheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
 
-					try (ScrollableResults<Device> scrollableDevices = deviceQuery.scroll()) {
+					try (ScrollableResults<Device> scrollableDevices = deviceQuery.scroll(ScrollMode.FORWARD_ONLY)) {
+						long previousDeviceId = -1;
 						while (scrollableDevices.next()) {
 							Device device = scrollableDevices.get();
+							if (device.getId() == previousDeviceId) {
+								continue;
+							}
+							previousDeviceId = device.getId();
 							int x = -1;
 							row = deviceSheet.createRow(++y);
 							row.createCell(++x).setCellValue(device.getId());
@@ -8049,8 +8056,13 @@ public class RestService extends Thread {
 					}
 
 					try (ScrollableResults<NetworkInterface> scrollableNetworkInterfaces = interfaceQuery.scroll()) {
+						long previousNetworkInterfaceId = -1;
 						while (scrollableNetworkInterfaces.next()) {
 							NetworkInterface networkInterface = scrollableNetworkInterfaces.get();
+							if (networkInterface.getId() == previousNetworkInterfaceId) {
+								continue;
+							}
+							previousNetworkInterfaceId = networkInterface.getId();
 							Device device = networkInterface.getDevice();
 							if (networkInterface.getIpAddresses().isEmpty()) {
 								row = interfaceSheet.createRow(++y);
@@ -8147,8 +8159,13 @@ public class RestService extends Thread {
 						inventorySheet.setAutoFilter(new CellRangeAddress(0, y, 0, x));
 					}
 					try (ScrollableResults<Module> scrollableModules = moduleQuery.scroll()) {
+						long previousModuleId = -1;
 						while (scrollableModules.next()) {
 							Module module = scrollableModules.get();
+							if (module.getId() == previousModuleId) {
+								continue;
+							}
+							previousModuleId = module.getId();
 							Device device = module.getDevice();
 							int x = -1;
 							row = inventorySheet.createRow(++y);
@@ -8221,7 +8238,6 @@ public class RestService extends Thread {
 						row.getCell(x).setCellStyle(datetimeCellStyle);
 						row.createCell(++x).setCellValue(checkResult.getResult().toString());
 					}
-					session.clear();
 				}
 
 				if (exportGroups) {

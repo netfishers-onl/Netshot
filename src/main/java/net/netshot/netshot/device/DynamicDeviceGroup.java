@@ -126,37 +126,25 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	}
 
 	/**
-	 * Refresh cache.
-	 *
-	 * @param session the session
-	 * @param device the device
-	 * @throws FinderParseException the finder parse exception
-	 * @throws HibernateException the hibernate exception
+	 * Check whether a device is member of this dynamic group.
+	 * @param session the ORM session
+	 * @param device the device to check
+	 * @return true if the device should be part of the current group
+	 * @throws FinderParseException
+	 * @throws HibernateException
 	 */
-	public void refreshCache(Session session, Device device) throws FinderParseException, HibernateException {
-		log.debug("Refreshing cache of group {} for device {}.", this.getId(), device.getId());
+	private boolean checkDeviceMembership(Session session, Device device) throws FinderParseException, HibernateException {
+		log.debug("Checking membership of device {} in group {}.", device.getId(), this.getId());
 		long deviceId = device.getId();
 		if (this.query.isEmpty()) {
-			if (this.getDeviceDriver() == null || this.getDeviceDriver().getName().equals(device.getDriver())) {
-				this.cachedDevices.add(device);
-			}
-			else {
-				this.cachedDevices.remove(device);
-			}
+			return this.getDeviceDriver() == null || this.getDeviceDriver().getName().equals(device.getDriver());
 		}
-		else {
-			String deviceQuery = String.format("[DEVICE] IS %d AND (%s)", deviceId, this.query);
-			log.trace("Finder query: '{}'.", deviceQuery);
-			Finder finder = new Finder(deviceQuery, this.getDeviceDriver());
-			Query<Long> cacheQuery = session.createQuery("select d.id" + finder.getHql(), Long.class);
-			finder.setVariables(cacheQuery);
-			if (cacheQuery.uniqueResult() == null) {
-				this.cachedDevices.remove(device);
-			}
-			else {
-				this.cachedDevices.add(device);
-			}
-		}
+		String deviceQuery = String.format("[DEVICE] IS %d AND (%s)", deviceId, this.query);
+		log.trace("Finder query: '{}'.", deviceQuery);
+		Finder finder = new Finder(deviceQuery, this.getDeviceDriver());
+		Query<Long> cacheQuery = session.createQuery("select d.id" + finder.getHql(), Long.class);
+		finder.setVariables(cacheQuery);
+		return cacheQuery.uniqueResult() != null;
 	}
 
 	/**
@@ -169,13 +157,27 @@ public class DynamicDeviceGroup extends DeviceGroup {
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			List<DynamicDeviceGroup> groups = session
+			List<Long> oldDeviceGroupIds = session
+				.createQuery("select g.id from Device d left join d.ownerGroups g where d = :device", Long.class)
+				.setParameter("device", device)
+				.list();
+			List<DynamicDeviceGroup> allGroups = session
 				.createQuery("select ddg from DynamicDeviceGroup ddg", DynamicDeviceGroup.class)
 				.list();
-			for (DynamicDeviceGroup group : groups) {
+			for (DynamicDeviceGroup group : allGroups) {
 				try {
-					group.refreshCache(session, device);
-					session.merge(group);
+					boolean wasMember = oldDeviceGroupIds.contains(group.getId());
+					boolean isMember = group.checkDeviceMembership(session, device);
+					if (wasMember && !isMember) {
+						log.debug("Removing device {} from group {} cached list", device.getId(), group.getId());
+						group.cachedDevices.remove(device);
+						session.merge(group);
+					}
+					else if (!wasMember && isMember) {
+						log.debug("Adding device {} to group {} cached list", device.getId(), group.getId());
+						group.cachedDevices.add(device);
+						session.merge(group);
+					}
 				}
 				catch (FinderParseException e) {
 					log.error("Parse error while updating the group {}.", group.getId(), e);

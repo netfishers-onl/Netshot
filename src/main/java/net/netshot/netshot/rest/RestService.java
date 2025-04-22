@@ -229,7 +229,10 @@ public class RestService extends Thread {
 	private static final int PAGINATION_SIZE = 1000;
 
 	private static final String HTTP_STATIC_PATH = Netshot.getConfig("netshot.http.staticpath", "/");
-	static final String HTTP_API_PATH = Netshot.getConfig("netshot.http.apipath", "/api");
+	public static final String HTTP_API_PATH = Netshot.getConfig("netshot.http.apipath", "/api");
+
+	/** Name of the session cookie */
+	public static final String SESSION_COOKIE_NAME = Netshot.getConfig("netshot.http.sessioncookiename", "NetshotSessionID");
 
 	/** Pagination default query params */
 	public static class PaginationParams {
@@ -409,7 +412,7 @@ public class RestService extends Thread {
 			server.getServerConfiguration().setSessionTimeoutSeconds(UiUser.MAX_IDLE_TIME);
 
 			WebappContext context = new WebappContext("GrizzlyContext", HTTP_API_PATH);
-			context.getSessionCookieConfig().setName("NetshotSessionID");
+			context.getSessionCookieConfig().setName(RestService.SESSION_COOKIE_NAME);
 			// Not reflected into the actual cookie (missing code in Grizzly)
 			context.getSessionCookieConfig().setAttribute(
 				org.glassfish.grizzly.http.server.Constants.COOKIE_SAME_SITE_ATTR, "strict");
@@ -1013,11 +1016,11 @@ public class RestService extends Thread {
 							throw new WebApplicationException("Configuration item not available",
 									jakarta.ws.rs.core.Response.Status.BAD_REQUEST);
 						}
-						String fileName = "config.cfg";
+						String fileName = "%s.cfg".formatted(attribute.getName());
 						try {
 							SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd_HH-mm");
-							fileName = String.format("%s_%s_%s.cfg", config.getDevice().getName(), attribute.getName(),
-								formatter.format(config.getChangeDate()));
+							fileName = String.format("%s_%s_%s", config.getDevice().getName(),
+								formatter.format(config.getChangeDate()), fileName);
 						}
 						catch (Exception e) {
 						}
@@ -1030,9 +1033,17 @@ public class RestService extends Thread {
 						File file = fileAttribute.getFileName();
 						String fileName = fileAttribute.getOriginalName();
 						if (fileName == null) {
+							fileName = "%s.dat".formatted(attribute.getName());
+						}
+						else {
+							fileName = "%s_%s".formatted(attribute.getName(), fileName);
+						}
+						try {
 							SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd_HH-mm");
-							fileName = String.format("%s_%s_%s.dat", config.getDevice().getName(), attribute.getName(),
-								formatter.format(config.getChangeDate()));
+							fileName = String.format("%s_%s_%s", config.getDevice().getName(),
+								formatter.format(config.getChangeDate()), fileName);
+						}
+						catch (Exception e) {
 						}
 						return Response.ok(file, MediaType.APPLICATION_OCTET_STREAM)
 							.header("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))

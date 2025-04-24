@@ -147,36 +147,53 @@ public class DynamicDeviceGroup extends DeviceGroup {
 		return cacheQuery.uniqueResult() != null;
 	}
 
+
+	/**
+	 * Refresh all groups for specific device.
+	 *
+	 * @param device the device
+	 */
+	static public void refreshAllGroups(Device device) {
+		refreshAllGroups(device.getId());
+	}
+
 	/**
 	 * Refresh all groups.
 	 *
 	 * @param device the device
 	 */
-	static synchronized public void refreshAllGroups(Device device) {
-		log.debug("Refreshing all groups for device {}.", device.getId());
+	static synchronized public void refreshAllGroups(Long deviceId) {
+		log.debug("Refreshing all groups for device {}.", deviceId);
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			List<Long> oldDeviceGroupIds = session
-				.createQuery("select g.id from Device d left join d.ownerGroups g where d = :device", Long.class)
-				.setParameter("device", device)
+			Device device = session.getReference(Device.class, deviceId);
+			List<DeviceGroupMembership> memberships = session
+				.createQuery("select m from DeviceGroupMembership m join fetch m.key.group where m.key.device.id = :deviceId", DeviceGroupMembership.class)
+				.setParameter("deviceId", deviceId)
 				.list();
 			List<DynamicDeviceGroup> allGroups = session
 				.createQuery("select ddg from DynamicDeviceGroup ddg", DynamicDeviceGroup.class)
 				.list();
 			for (DynamicDeviceGroup group : allGroups) {
 				try {
-					boolean wasMember = oldDeviceGroupIds.contains(group.getId());
-					boolean isMember = group.checkDeviceMembership(session, device);
-					if (wasMember && !isMember) {
-						log.debug("Removing device {} from group {} cached list", device.getId(), group.getId());
-						group.cachedDevices.remove(device);
-						session.merge(group);
+					log.trace("Checking device {} vs group {}", device.getId(), group.getId());
+					DeviceGroupMembership membership = null;
+					for (DeviceGroupMembership m : memberships) {
+						if (m.getGroup().getId() == group.getId()) {
+							membership = m;
+							break;
+						}
 					}
-					else if (!wasMember && isMember) {
+					boolean isMember = group.checkDeviceMembership(session, device);
+					if (membership != null && !isMember) {
+						log.debug("Removing device {} from group {} cached list", device.getId(), group.getId());
+						session.remove(membership);
+					}
+					else if (membership == null && isMember) {
 						log.debug("Adding device {} to group {} cached list", device.getId(), group.getId());
-						group.cachedDevices.add(device);
-						session.merge(group);
+						membership = new DeviceGroupMembership(device, group);
+						session.persist(membership);
 					}
 				}
 				catch (FinderParseException e) {

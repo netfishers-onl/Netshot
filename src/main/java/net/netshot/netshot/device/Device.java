@@ -377,14 +377,12 @@ public class Device {
 	@Setter
 	protected List<NetworkInterface> networkInterfaces = new ArrayList<>();
 
-	/** The owner groups. */
 	@Getter(onMethod=@__({
-		@XmlElement, @JsonView(RestApiView.class),
-		@ManyToMany(mappedBy = "cachedDevices"),
+		@OneToMany(mappedBy = "key.device"),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
-	protected Set<DeviceGroup> ownerGroups = new HashSet<>();
+	protected Set<DeviceGroupMembership> groupMemberships = new HashSet<>();
 
 	/** The serial number. */
 	@Getter(onMethod=@__({
@@ -599,6 +597,18 @@ public class Device {
 			.list();
 	}
 
+	/**
+	 * Return groups this device is member of.
+	 */
+	@Transient
+	@XmlElement @JsonView(DefaultView.class)
+	public Set<DeviceGroup> getOwnerGroups() {
+		HashSet<DeviceGroup> groups = new HashSet<>();
+		for (DeviceGroupMembership membership : this.groupMemberships) {
+			groups.add(membership.getGroup());
+		}
+		return groups;
+	}
 
 	/**
 	 * Gets the credential set ids.

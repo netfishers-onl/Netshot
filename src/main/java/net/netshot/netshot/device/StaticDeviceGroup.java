@@ -20,6 +20,8 @@ package net.netshot.netshot.device;
 
 import jakarta.persistence.Entity;
 
+import java.util.Iterator;
+
 import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -54,7 +56,8 @@ public class StaticDeviceGroup extends DeviceGroup {
 	 * @param device the device
 	 */
 	public void addDevice(Device device) {
-		this.cachedDevices.add(device);
+		DeviceGroupMembership membership = new DeviceGroupMembership(device, this);
+		this.cachedMemberships.add(membership);
 	}
 
 	/**
@@ -63,14 +66,20 @@ public class StaticDeviceGroup extends DeviceGroup {
 	 * @param device the device
 	 */
 	public void removeDevice(Device device) {
-		this.cachedDevices.remove(device);
+		Iterator<DeviceGroupMembership> membershipIt = this.cachedMemberships.iterator();
+		while (membershipIt.hasNext()) {
+			DeviceGroupMembership membership = membershipIt.next();
+			if (membership.getDevice().equals(device)) {
+				membershipIt.remove();;
+			}
+		}
 	}
 
 	/**
 	 * Clear devices.
 	 */
 	public void clearDevices() {
-		this.cachedDevices.clear();
+		this.cachedMemberships.clear();
 	}
 
 	/* (non-Javadoc)

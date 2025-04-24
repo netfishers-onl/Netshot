@@ -188,8 +188,8 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 			}
 
 			List<Diagnostic> diagnostics = session.createQuery(
-				"select distinct dg from Diagnostic dg where dg.enabled = :enabled and " +
-				"dg.targetGroup in (select g from Device d join d.ownerGroups g where d = :device)",
+				"select dg from Diagnostic dg where dg.enabled = :enabled and " +
+				"dg.targetGroup in (select gm.key.group from DeviceGroupMembership gm where gm.key.device = :device)",
 					Diagnostic.class)
 				.setParameter("device", device)
 				.setParameter("enabled", true)

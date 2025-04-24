@@ -54,6 +54,7 @@ import net.netshot.netshot.compliance.SoftwareRule;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceGroup;
+import net.netshot.netshot.device.DeviceGroupMembership;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.device.Module;
@@ -277,6 +278,7 @@ public class Database {
 			MetadataSources sources = new MetadataSources(serviceRegistry)
 				.addAnnotatedClass(Device.class)
 				.addAnnotatedClass(DeviceGroup.class)
+				.addAnnotatedClass(DeviceGroupMembership.class)
 				.addAnnotatedClass(Config.class)
 				.addAnnotatedClass(DeviceAttribute.class)
 				.addAnnotatedClass(DeviceNumericAttribute.class)

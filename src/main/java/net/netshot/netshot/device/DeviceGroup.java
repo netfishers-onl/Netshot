@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,7 +31,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Transient;
 import jakarta.persistence.Version;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
@@ -39,6 +41,7 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.Session;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -69,17 +72,17 @@ abstract public class DeviceGroup {
 	
 	/** The cached devices. */
 	@Getter(onMethod=@__({
-		@ManyToMany,
+		@OneToMany(mappedBy = "key.group", cascade = CascadeType.ALL, orphanRemoval = true),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
-	protected Set<Device> cachedDevices = new HashSet<>();
+	protected Set<DeviceGroupMembership> cachedMemberships = new HashSet<>();
 	
+	/** The change date. */
 	@Getter(onMethod=@__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	/** The change date. */
 	protected Date changeDate;
 	
 	/** Version internal field */
@@ -135,14 +138,17 @@ abstract public class DeviceGroup {
 	public DeviceGroup(String name) {
 		this.name = name;
 	}
-	
+
 	/**
-	 * Delete cached device.
-	 *
-	 * @param device the device
+	 * Return cached members of this group.
 	 */
-	public void deleteCachedDevice(Device device) {
-		this.cachedDevices.remove(device);
+	@Transient
+	public Set<Device> getCachedDevices() {
+		HashSet<Device> devices = new HashSet<>();
+		for (DeviceGroupMembership membership : this.cachedMemberships) {
+			devices.add(membership.getDevice());
+		}
+		return devices;
 	}
 	
 	/**
@@ -159,8 +165,12 @@ abstract public class DeviceGroup {
 	 * @param devices the devices
 	 */
 	public void updateCachedDevices(Collection<Device> devices) {
-		this.cachedDevices.addAll(devices);
-		this.cachedDevices.retainAll(devices);
+		Set<DeviceGroupMembership> memberships = new HashSet<>();
+		for (Device device : devices) {
+			memberships.add(new DeviceGroupMembership(device, this));
+		}
+		this.cachedMemberships.addAll(memberships);
+		this.cachedMemberships.retainAll(memberships);
 	}
 
 	@Override

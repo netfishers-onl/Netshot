@@ -116,7 +116,7 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 				throw new Exception("No last config for this device. Has it been captured at least once?");
 			}
 			List<Policy> policies = session
-				.createQuery("select distinct p from Policy p join p.targetGroups g join g.cachedDevices d with d.id = :id", Policy.class)
+				.createQuery("select distinct p from Policy p join p.targetGroups g join g.cachedMemberships dm with dm.key.device.id = :id", Policy.class)
 				.setParameter("id", this.device.getId())
 				.list();
 
@@ -129,7 +129,7 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 			session.persist(this.device);
 			session.flush();
 			List<SoftwareRule> softwareRules = session
-				.createQuery("select sr from SoftwareRule sr where (sr.targetGroup is null) or sr.targetGroup in (select g from DeviceGroup g join g.cachedDevices d with d.id = :id) order by sr.priority asc", SoftwareRule.class)
+				.createQuery("select sr from SoftwareRule sr where (sr.targetGroup is null) or sr.targetGroup in (select g from DeviceGroup g join g.cachedMemberships dm with dm.key.device.id = :id) order by sr.priority asc", SoftwareRule.class)
 				.setParameter("id", this.device.getId())
 				.list();
 			device.setSoftwareLevel(ConformanceLevel.UNKNOWN);

@@ -18,7 +18,7 @@
  */
 package net.netshot.netshot.work.tasks;
 
-import java.util.Set;
+import java.util.Collection;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -121,7 +121,7 @@ public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 			this.status = Status.CANCELLED;
 			return;
 		}
-		Set<Device> devices = this.getDeviceGroup().getCachedDevices();
+		Collection<Device> devices = this.getDeviceGroup().getCachedDevices();
 		log.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
 		String comment = String.format("Started due to group %s diagnotics", this.getDeviceGroup().getName());
 		for (Device device : devices) {

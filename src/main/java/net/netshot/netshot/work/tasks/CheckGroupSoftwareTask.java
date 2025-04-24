@@ -140,7 +140,7 @@ public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 
 			session.beginTransaction();
 			ScrollableResults<Device> devices = session
-					.createQuery("select d from DeviceGroup g join g.cachedDevices d where g.id = :id", Device.class)
+					.createQuery("select d from Device d join d.groupMemberships gm where gm.key.group.id = :id", Device.class)
 					.setParameter("id", deviceGroup.getId())
 					.setCacheMode(CacheMode.IGNORE)
 					.scroll(ScrollMode.FORWARD_ONLY);

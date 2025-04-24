@@ -18,8 +18,8 @@
  */
 package net.netshot.netshot.work.tasks;
 
+import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -128,7 +128,7 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 			this.status = Status.CANCELLED;
 			return;
 		}
-		Set<Device> devices = this.getDeviceGroup().getCachedDevices();
+		Collection<Device> devices = this.getDeviceGroup().getCachedDevices();
 		log.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
 		String comment = String.format("Started due to group %s script task", this.getDeviceGroup().getName());
 

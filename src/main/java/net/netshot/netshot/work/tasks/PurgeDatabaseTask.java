@@ -167,8 +167,8 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 							count += session.createMutationQuery(
 								String.format(
 									"delete %1$s t where t in " +
-									"(select t from %1$s join t.device d join d.ownerGroups g " +
-									"where g = :group and (t.status = :cancelled or t.status = :failure or t.status = :success) " +
+									"(select t from %1$s join t.device d join d.groupMemberships gm " +
+									"where gm.key.group = :group and (t.status = :cancelled or t.status = :failure or t.status = :success) " +
 									"and (t.executionDate < :when))", taskClass.getSimpleName()))
 								.setParameter("group", this.deviceGroup)
 								.setParameter("cancelled", Task.Status.CANCELLED)
@@ -233,8 +233,8 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 					else {
 						query = session
 							.createQuery(
-								"select c from Config c join c.device d join d.ownerGroups g join c.attributes a " +
-								"where g = :group and (a.class = ConfigLongTextAttribute or a.class = ConfigBinaryFileAttribute) " +
+								"select c from Config c join c.device d join d.groupMemberships gm join c.attributes a " +
+								"where gm.key.group = :group and (a.class = ConfigLongTextAttribute or a.class = ConfigBinaryFileAttribute) " +
 								"group by c.id having ((max(length(a.longText.text)) > :size) or (max(a.fileSize) > :size)) and (c.changeDate < :when) " +
 								"order by c.device asc, c.changeDate desc", Config.class)
 							.setParameter("group", this.deviceGroup)
@@ -247,8 +247,8 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				}
 				else {
 					query = session.createQuery(
-							"select c from Config c join c.device d join d.ownerGroups g " +
-							"where g = :group and (c.changeDate < :when) " +
+							"select c from Config c join c.device d join d.groupMemberships gm " +
+							"where gm.key.group = :group and (c.changeDate < :when) " +
 							"order by c.device asc, c.changeDate desc", Config.class)
 						.setParameter("group", this.deviceGroup);
 				}
@@ -353,8 +353,8 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				else {
 					query = session
 						.createMutationQuery("delete from Module m where m in " +
-							"(select m from Module m join m.device d join d.ownerGroups g " +
-							"where g = :group and m.removed and m.lastSeenDate <= :when)")
+							"(select m from Module m join m.device d join d.groupMemberships gm " +
+							"where gm.key.group = :group and m.removed and m.lastSeenDate <= :when)")
 						.setParameter("group", this.deviceGroup)
 						.setParameter("when", when.getTime());
 				}

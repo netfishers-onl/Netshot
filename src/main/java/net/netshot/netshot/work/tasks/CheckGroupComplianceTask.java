@@ -135,15 +135,14 @@ public class CheckGroupComplianceTask extends Task implements GroupBasedTask {
 			session.beginTransaction();
 			session
 				.createMutationQuery(
-					"delete from CheckResult c where c.key.device.id in (select d.id as id from DeviceGroup g1 join g1.cachedDevices d where g1.id = :id)")
+					"delete from CheckResult c where c.key.device.id in (select dm1.key.device.id as id from DeviceGroup g1 join g1.cachedMemberships dm1 where dm1.key.group.id = :id)")
 				.setParameter("id", deviceGroup.getId())
 				.executeUpdate();
 			for (Policy policy : policies) {
 				// Get devices which are part of the target group and which are in a group which the policy is applied to
 				ScrollableResults<Device> devices = session
 						.createQuery(
-							"select d from Device d where d in (select d1 from DeviceGroup g join g.cachedDevices d1 " +
-								"where g.id = :groupId) and d in (select d1 from Policy p join p.targetGroups g1 join g1.cachedDevices d1 where p.id = :policyId)",
+							"select d from Device d join d.groupMemberships gm where gm.key.group.id = :groupId and d in (select dm1.key.device from Policy p join p.targetGroups g1 join g1.cachedMemberships dm1 where p.id = :policyId)",
 							Device.class)
 						.setParameter("groupId", deviceGroup.getId())
 						.setParameter("policyId", policy.getId())

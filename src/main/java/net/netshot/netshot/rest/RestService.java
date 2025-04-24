@@ -1427,9 +1427,6 @@ public class RestService extends Thread {
 					"left join fetch d.eolModule " +
 					"left join fetch d.eosModule " +
 					"left join fetch d.specificCredentialSet " +
-					"left join fetch d.credentialSets cs " +
-					"left join fetch d.ownerGroups g " +
-					"left join fetch d.complianceCheckResults " +
 					"left join fetch d.attributes " +
 					"where d.id = :id",
 					Device.class)
@@ -1439,6 +1436,10 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException("Can't find this device",
 						NetshotBadRequestException.Reason.NETSHOT_DEVICE_NOT_FOUND);
 			}
+			device.getGroupMemberships().size();
+			device.getOwnerGroups().size();
+			device.getCredentialSets().size();
+			device.getComplianceCheckResults().size();
 		}
 		catch (HibernateException e) {
 			log.error("Unable to fetch the device", e);
@@ -1569,7 +1570,7 @@ public class RestService extends Thread {
 				"d.softwareLevel " +
 				") from Device d";
 			if (groupId != null) {
-				hqlQuery += " join d.ownerGroups g where g.id = :groupId";
+				hqlQuery += " join d.groupMemberships gm where gm.key.group.id = :groupId";
 			}
 			Query<RsLightDevice> query = session.createQuery(hqlQuery, RsLightDevice.class);
 			query.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
@@ -3293,8 +3294,7 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException("Unable to find this group.",
 						NetshotBadRequestException.Reason.NETSHOT_GROUP_NOT_FOUND);
 			}
-			if (group instanceof StaticDeviceGroup) {
-				StaticDeviceGroup staticGroup = (StaticDeviceGroup) group;
+			if (group instanceof StaticDeviceGroup staticGroup) {
 				Set<Device> devices = new HashSet<>();
 				for (Long deviceId : rsGroup.getStaticDevices()) {
 					Device device = session.get(Device.class, deviceId);
@@ -3308,8 +3308,7 @@ public class RestService extends Thread {
 				}
 				staticGroup.updateCachedDevices(devices);
 			}
-			else if (group instanceof DynamicDeviceGroup) {
-				DynamicDeviceGroup dynamicGroup = (DynamicDeviceGroup) group;
+			else if (group instanceof DynamicDeviceGroup dynamicGroup) {
 				dynamicGroup.setDriver(rsGroup.getDriver());
 				dynamicGroup.setQuery(rsGroup.getQuery());
 				try {
@@ -4260,30 +4259,29 @@ public class RestService extends Thread {
 				"c.device.name, " +
 				"c.device.id, " +
 				"c.changeDate, " +
-				"c.author " +
+				"c.author" +
 				") from Config c join c.device d";
 			Map<String, Object> hqlParams = new HashMap<>();
 			if (!deviceGroups.isEmpty()) {
-				hqlQuery += " join d.ownerGroups g ";
+				hqlQuery += " join d.groupMemberships gm";
 				hqlParams.put("groupIds", deviceGroups);
 			}
-			hqlQuery += " where ";
+			hqlQuery += " where 1 = 1";
 			if (!domains.isEmpty()) {
-				hqlQuery += "d.mgmtDomain.id in (:domainIds) and ";
+				hqlQuery += " and d.mgmtDomain.id in (:domainIds)";
 				hqlParams.put("domainIds", domains);
 			}
 			if (!deviceGroups.isEmpty()) {
-				hqlQuery += "g.id in (:groupIds) and ";
+				hqlQuery += " and gm.key.group.id in (:groupIds)";
 			}
 			if (startDate != null) {
-				hqlQuery += "c.changeDate >= :startDate and ";
+				hqlQuery += " and c.changeDate >= :startDate";
 				hqlParams.put("startDate", new Date(startDate));
 			}
 			if (endDate != null) {
-				hqlQuery += "c.changeDate < :endDate and ";
+				hqlQuery += " and c.changeDate < :endDate";
 				hqlParams.put("endDate", new Date(endDate));
 			}
-			hqlQuery += "1 = 1";
 			Query<RsLightConfig> query = session.createQuery(hqlQuery, RsLightConfig.class);
 			for (Entry<String, Object> k : hqlParams.entrySet()) {
 				query.setParameter(k.getKey(), k.getValue());
@@ -4620,7 +4618,7 @@ public class RestService extends Thread {
 				if (!rsPolicy.getTargetGroups().contains(group.getId())) {
 					session.createMutationQuery(
 						"delete CheckResult cr where cr.key.rule in (select r from Rule r where r.policy.id = :policyId) " +
-							"and cr.key.device in (select d from DeviceGroup g join g.cachedDevices d where g.id = :groupId)")
+							"and cr.key.device in (select dm.key.device from DeviceGroup g join g.cachedMemberships dm where g.id = :groupId)")
 						.setParameter("policyId", policy.getId())
 						.setParameter("groupId", group.getId())
 						.executeUpdate();
@@ -5374,7 +5372,7 @@ public class RestService extends Thread {
 						"cr.checkDate as checkDate, " +
 						"e.expirationDate as expirationDate " +
 					") from Rule r " +
-					"join r.policy p join p.targetGroups g join g.cachedDevices d1 with d1.id = :id " +
+					"join r.policy p join p.targetGroups g join g.cachedMemberships dm with dm.key.device.id = :id " +
 					"left join CheckResult cr with cr.key.rule.id = r.id and cr.key.device.id = :id " +
 					"left join r.exemptions e with e.key.device.id = :id",
 					RsDeviceRule.class)
@@ -5564,10 +5562,10 @@ public class RestService extends Thread {
 						"g.id as groupId, " +
 						"g.name as groupName, " +
 						"g.folder as groupFolder, "
-						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled and " +
+						+ "(select count(d) from g.cachedMemberships dm join dm.key.device d where" + domainFilter + " d.status = :enabled and " +
 							"(select count(ccr.result) from d.complianceCheckResults ccr join ccr.key.rule rule where"
 							+ ccrFilter + " ccr.result = :nonConforming) = 0) as compliantDeviceCount, "
-						+ "(select count(d) from g.cachedDevices d where" + domainFilter + " d.status = :enabled) as deviceCount "
+						+ "(select count(d) from g.cachedMemberships dm join dm.key.device d where" + domainFilter + " d.status = :enabled) as deviceCount "
 						+ ") from DeviceGroup g where" + groupFilter + " g.hiddenFromReports <> true",
 						RsGroupConfigComplianceStat.class)
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
@@ -5762,10 +5760,10 @@ public class RestService extends Thread {
 				.createQuery("select new RsGroupSoftwareComplianceStat(" +
 					"g.id as groupId, " +
 					"g.name as groupName, "
-					+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :gold" + domainFilter + ") as goldDeviceCount, "
-					+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :silver" + domainFilter + ") as silverDeviceCount, "
-					+ "(select count(d) from g.cachedDevices d where d.status = :enabled and d.softwareLevel = :bronze"  + domainFilter + ") as bronzeDeviceCount, "
-					+ "(select count(d) from g.cachedDevices d where d.status = :enabled"  + domainFilter + ") as deviceCount "
+					+ "(select count(d) from g.cachedMemberships dm join dm.key.device d where d.status = :enabled and d.softwareLevel = :gold" + domainFilter + ") as goldDeviceCount, "
+					+ "(select count(d) from g.cachedMemberships dm join dm.key.device d where d.status = :enabled and d.softwareLevel = :silver" + domainFilter + ") as silverDeviceCount, "
+					+ "(select count(d) from g.cachedMemberships dm join dm.key.device d where d.status = :enabled and d.softwareLevel = :bronze"  + domainFilter + ") as bronzeDeviceCount, "
+					+ "(select count(d) from g.cachedMemberships dm join dm.key.device d where d.status = :enabled"  + domainFilter + ") as deviceCount "
 					+ ") from DeviceGroup g where g.hiddenFromReports <> true",
 					RsGroupSoftwareComplianceStat.class)
 				.setParameter("gold", ConformanceLevel.GOLD)
@@ -5883,13 +5881,13 @@ public class RestService extends Thread {
 				"ccr.checkDate as checkDate, " +
 				"ccr.result as result " +
 				") from Device d " +
-				"left join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p " +
+				"left join d.groupMemberships gm join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p " +
 				"where d.status = :enabled";
 			if (domains.size() > 0) {
 				hqlQuery += " and d.mgmtDomain.id in (:domainIds)";
 			}
 			if (groups.size() > 0) {
-				hqlQuery += " and g.id in (:groupIds)";
+				hqlQuery += " and gm.key.group.id in (:groupIds)";
 			}
 			if (policies.size() > 0) {
 				hqlQuery += " and p.id in (:policyIds)";
@@ -5977,8 +5975,8 @@ public class RestService extends Thread {
 						"ccr.checkDate as checkDate, " +
 						"ccr.result as result" +
 					") from Device d " +
-					"join d.ownerGroups g join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p " +
-					"where g.id = :id and ccr.result = :nonConforming and d.status = :enabled" + domainFilter + policyFilter,
+					"join d.groupMemberships gm join d.complianceCheckResults ccr join ccr.key.rule r join r.policy p " +
+					"where gm.key.group.id = :id and ccr.result = :nonConforming and d.status = :enabled" + domainFilter + policyFilter,
 						RsLightPolicyRuleDevice.class)
 				.setParameter("id", id)
 				.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
@@ -6806,7 +6804,7 @@ public class RestService extends Thread {
 						"case when (d.eosDate < current_date()) then true else false end, " +
 						"case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, " +
 						"d.softwareLevel " +
-					") from Device d join d.ownerGroups g where g.id = :id and d.softwareLevel = :level and d.status = :enabled" + domainFilter,
+					") from Device d join d.groupMemberships gm where gm.key.group.id = :id and d.softwareLevel = :level and d.status = :enabled" + domainFilter,
 						RsLightDevice.class)
 				.setParameter("id", id)
 				.setParameter("level", filterLevel)
@@ -7865,7 +7863,7 @@ public class RestService extends Thread {
 
 				{
 					StringBuilder deviceHqlQuery = new StringBuilder(
-							"select d from Device d left join d.ownerGroups g " +
+							"select d from Device d left join d.groupMemberships gm " +
 							"left join fetch d.specificCredentialSet cs " +
 							"left join fetch d.mgmtDomain " +
 							"where 1 = 1");
@@ -7873,7 +7871,7 @@ public class RestService extends Thread {
 						deviceHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
 					}
 					if (groups.size() > 0) {
-						deviceHqlQuery.append(" and g.id in (:groupIds)");
+						deviceHqlQuery.append(" and gm.key.group.id in (:groupIds)");
 					}
 					deviceHqlQuery.append(" order by d.name asc");
 					Query<Device> deviceQuery = session.createQuery(deviceHqlQuery.toString(), Device.class);
@@ -7990,14 +7988,14 @@ public class RestService extends Thread {
 					StringBuilder interfaceHqlQuery = new StringBuilder(
 							"select ni from NetworkInterface ni " +
 							"left join fetch ni.ip4Addresses left join fetch ni.ip6Addresses " +
-							"join fetch ni.device left join ni.device.ownerGroups g where 1 = 1");
+							"join ni.device d left join d.groupMemberships gm where 1 = 1");
 					if (domains.size() > 0) {
-						interfaceHqlQuery.append(" and ni.device.mgmtDomain.id in (:domainIds)");
+						interfaceHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
 					}
 					if (groups.size() > 0) {
-						interfaceHqlQuery.append(" and g.id in (:groupIds)");
+						interfaceHqlQuery.append(" and gm.key.group.id in (:groupIds)");
 					}
-					interfaceHqlQuery.append(" order by ni.device.name asc, ni.id asc");
+					interfaceHqlQuery.append(" order by d.name asc, ni.id asc");
 					Query<NetworkInterface> interfaceQuery = session.createQuery(interfaceHqlQuery.toString(),
 							NetworkInterface.class);
 					if (domains.size() > 0) {
@@ -8096,17 +8094,18 @@ public class RestService extends Thread {
 				if (exportInventory) {
 					log.debug("Exporting device inventory");
 					StringBuilder moduleHqlQuery = new StringBuilder(
-							"select distinct m from Module m join fetch m.device left join m.device.ownerGroups g where 1 = 1");
+							"select m from Module m " +
+							"join m.device d left join d.groupMemberships gm where 1 = 1");
 					if (!exportInventoryHistory) {
 						moduleHqlQuery.append(" and m.removed is not true");
 					}
 					if (domains.size() > 0) {
-						moduleHqlQuery.append(" and m.device.mgmtDomain.id in (:domainIds)");
+						moduleHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
 					}
 					if (groups.size() > 0) {
-						moduleHqlQuery.append(" and g.id in (:groupIds)");
+						moduleHqlQuery.append(" and gm.key.group.id in (:groupIds)");
 					}
-					moduleHqlQuery.append(" order by m.device.id asc, m.id asc");
+					moduleHqlQuery.append(" order by d.name asc, m.id asc");
 					Query<Module> moduleQuery = session.createQuery(moduleHqlQuery.toString(), Module.class);
 					if (domains.size() > 0) {
 						moduleQuery.setParameterList("domainIds", domains);
@@ -8288,13 +8287,14 @@ public class RestService extends Thread {
 					{
 						log.debug("Exporting group memberships");
 						StringBuilder deviceHqlQuery = new StringBuilder(
-								"select d from Device d left join d.ownerGroups g left join d.mgmtDomain " +
+								"select d from Device d left join d.groupMemberships gm join gm.key.group g" +
+								"left join d.mgmtDomain " +
 								"where 1 = 1");
 						if (domains.size() > 0) {
 							deviceHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
 						}
 						if (groups.size() > 0) {
-							deviceHqlQuery.append(" and g.id in (:groupIds)");
+							deviceHqlQuery.append(" and gm.key.group.id in (:groupIds)");
 						}
 						deviceHqlQuery.append(" order by d.name asc");
 						Query<Device> deviceQuery = session.createQuery(deviceHqlQuery.toString(), Device.class);
@@ -8356,14 +8356,14 @@ public class RestService extends Thread {
 					log.debug("Exporting driver-specific device attributes");
 					StringBuilder attributeHqlQuery = new StringBuilder(
 							"select da from DeviceAttribute da " +
-							"join fetch da.device where 1 = 1");
+							"join fetch da.device d where 1 = 1");
 					if (domains.size() > 0) {
-						attributeHqlQuery.append(" and da.device.mgmtDomain.id in (:domainIds)");
+						attributeHqlQuery.append(" and d.mgmtDomain.id in (:domainIds)");
 					}
 					if (groups.size() > 0) {
-						attributeHqlQuery.append(" and da.device.id in (select d.id from Device d left join d.ownerGroups g where g.id in (:groupIds))");
+						attributeHqlQuery.append(" and d.id in (select d.id from Device d left join d.groupMemberships gm where gm.key.group.id in (:groupIds))");
 					}
-					attributeHqlQuery.append(" order by da.device.name asc, da.id asc");
+					attributeHqlQuery.append(" order by d.name asc, da.id asc");
 					Query<DeviceAttribute> attributeQuery = session.createQuery(attributeHqlQuery.toString(),
 							DeviceAttribute.class);
 					if (domains.size() > 0) {

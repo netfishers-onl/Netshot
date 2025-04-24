@@ -124,7 +124,6 @@ public class PurgeTest {
 					group1.addDevice(device);
 				}
 			}
-			group1.refreshCache(session);
 			session.persist(group1);
 			session.getTransaction().commit();
 		}
@@ -218,7 +217,7 @@ public class PurgeTest {
 			this.assertTaskCount(session, DEVICES * CONFIGS_PER_DAY * DAYS);
 			this.assertModuleCount(session, DEVICES * 4);
 			Assertions.assertEquals(DEVICES_IN_GROUP1, session
-				.createSelectionQuery("select d from Device d join d.ownerGroups g where g = :group", Device.class)
+				.createSelectionQuery("select d from Device d join d.groupMemberships gm where gm.key.group = :group", Device.class)
 				.setParameter("group", group1)
 				.getResultCount(),
 				"The number of devices in group1 is not correct");

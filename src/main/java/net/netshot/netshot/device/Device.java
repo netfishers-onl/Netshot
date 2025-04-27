@@ -132,8 +132,11 @@ public class Device {
 		/** The consoleserver. */
 		CONSOLESERVER,
 
-		/** The unknown. */
-		UNKNOWN
+		/** Unknown network class. */
+		UNKNOWN,
+
+		/** Voice Gateway. */
+		VOICEGATEWAY,
 	}
 
 
@@ -194,14 +197,14 @@ public class Device {
 
 	/** The compliance check results. */
 	@Getter(onMethod=@__({
-		@OneToMany(mappedBy = "key.device", orphanRemoval = true, cascade = CascadeType.ALL)
+		@OneToMany(mappedBy = "key.device", orphanRemoval = true, cascade = { CascadeType.PERSIST, CascadeType.MERGE })
 	}))
 	@Setter
 	protected Set<CheckResult> complianceCheckResults = new HashSet<>();
 
 	/** The compliance exemptions. */
 	@Getter(onMethod=@__({
-		@OneToMany(fetch = FetchType.LAZY, mappedBy = "key.device", cascade = CascadeType.ALL, orphanRemoval = true)
+		@OneToMany(mappedBy = "key.device", orphanRemoval = true, cascade = CascadeType.ALL)
 	}))
 	@Setter
 	protected Set<Exemption> complianceExemptions = new HashSet<>();

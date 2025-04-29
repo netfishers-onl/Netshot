@@ -313,8 +313,7 @@ function snapshot(cli, device, config) {
 	if (hostname) {
 		device.set("name", hostname[1]);
 	} else {
-		### you can also use switchname in NX-OS, to do the same thing as hostname
-		### https://www.cisco.com/c/en/us/td/docs/switches/datacenter/nexus9000/sw/93x/fundamentals/configuration/guide/b-cisco-nexus-9000-nx-os-fundamentals-configuration-guide-93x/b-cisco-nexus-9000-nx-os-fundamentals-configuration-guide-93x_chapter_01000.html#con_1229065
+		//You can also use switchname in NX-OS, to do the same thing as hostname, so lets check for it.
 		hostname = runningConfig.match(/^switchname (.+)$/m);
 		if (hostname) {
 			device.set("name", hostname[1]);

@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoNXOS",
 	description: "Cisco NX-OS 5+",
 	author: "Netshot Team",
-	version: "1.9.1"
+	version: "1.9.2"
 };
 
 var Config = {
@@ -312,6 +312,13 @@ function snapshot(cli, device, config) {
 	var hostname = runningConfig.match(/^hostname (.+)$/m);
 	if (hostname) {
 		device.set("name", hostname[1]);
+	} else {
+		### you can also use switchname in NX-OS, to do the same thing as hostname
+		### https://www.cisco.com/c/en/us/td/docs/switches/datacenter/nexus9000/sw/93x/fundamentals/configuration/guide/b-cisco-nexus-9000-nx-os-fundamentals-configuration-guide-93x/b-cisco-nexus-9000-nx-os-fundamentals-configuration-guide-93x_chapter_01000.html#con_1229065
+		hostname = runningConfig.match(/^switchname (.+)$/m);
+		if (hostname) {
+			device.set("name", hostname[1]);
+		}
 	}
 	
 	var vdcConfigs = runningConfig.split(/[\r\n]+\!Running config for vdc: .*[\r\n]+/);

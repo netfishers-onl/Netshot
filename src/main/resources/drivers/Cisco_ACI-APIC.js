@@ -52,19 +52,19 @@ var Config = {
 			post: "!! End of running configuration"
 		}
 	},
-	"ACILicense": {
+	"cACILicense": {
 		type: "LongText",
 		title: "License",
 		comparable: true,
-		searchable: false,
+		searchable: true,
 		checkable: true,
 		dump: {
 			pre: "!! License information:",
-			post: "!! End of license information",
-			preLine: "!! "
+			preLine: "!! ",
+			post: "!! End of license information"
 		}
 	},
-	"ACIVersions": {
+	"cACIVersions": {
 		type: "LongText",
 		title: "ACI Fabric software version",
 		comparable: true,
@@ -74,6 +74,18 @@ var Config = {
 			pre: "!! ACI Fabric software version:",
 			preLine: "!!  ",
 			post: "!! End of ACI Fabric software version"
+		}
+	},
+	"cACISwitchFabric": {
+		type: "LongText",
+		title: "Switch fabric",
+		comparable: true,
+		searchable: true,
+		checkable: true,
+		dump: {
+			pre: "!! Switch fabric:",
+			preLine: "!!  ",
+			post: "!! End of switch fabric"
 		}
 	},
 };
@@ -93,43 +105,43 @@ var Device = {
 		type: "Binary",
 		title: "Configuration saved",
 		searchable: true
-	}
-	"FabricName": {
+	},
+	"fabricName": {
 		type: "Text",
 		title: "Fabric name",
 		searchable: true
 	},
-	"FabricSize": {
+	"fabricSize": {
 		type: "Text",
 		title: "Fabric size",
 		searchable: true
 	},
-	"InbandIPv4": {
+	"inbandIPv4": {
 		type: "Text",
 		title: "Inband IPv4 address",
 		searchable: true
 	},
-	"InbandIPv6": {
+	"inbandIPv6": {
 		type: "Text",
 		title: "Inband IPv6 address",
 		searchable: true
 	},
-	"OutbandIPv4": {
+	"outbandIPv4": {
 		type: "Text",
 		title: "Outband IPv4 address",
 		searchable: true
 	},
-	"OutbandIPv6": {
+	"outbandIPv6": {
 		type: "Text",
 		title: "Outband IPv6 address",
 		searchable: true
 	},
-	"CertificateStatus": {
+	"certificateStatus": {
 		type: "Text",
 		title: "Certificate status",
 		searchable: true
 	},
-	"CertificateEndDate": {
+	"certificateEndDate": {
 		type: "Text",
 		title: "Certificate end date",
 		searchable: true
@@ -264,32 +276,32 @@ function snapshot(cli, device, config) {
 	var outbandIPv6 = controllerStatus.match(/^\s*OOB IPv6 Address *: (.*)$/m);
 	var serialNumber = controllerStatus.match(/^\s*Serial Number *: (.*)$/m);
 	var version = controllerStatus.match(/^\s*Version *: (.*)$/m);
-	var CertificateStatus = controllerStatus.match(/^\s*Valid Certificate *: (.*)$/m);
-	var CertificateEndDate = controllerStatus.match(/^\s*Validity End *: (.*)$/m);
+	var certificateStatus = controllerStatus.match(/^\s*Valid Certificate *: (.*)$/m);
+	var certificateEndDate = controllerStatus.match(/^\s*Validity End *: (.*)$/m);
 
 	if (name) {
 		device.set("name", name[1]);
 	}
 	if (inbandIPv4) {
-		device.set("InbandIPv4", inbandIPv4[1]);
+		device.set("inbandIPv4", inbandIPv4[1]);
 	}
 	if (inbandIPv6) {
-		device.set("InbandIPv6", inbandIPv6[1]);
+		device.set("inbandIPv6", inbandIPv6[1]);
 	}
 	if (outbandIPv4) {
-		device.set("OutbandIPv4", outbandIPv4[1]);
+		device.set("outbandIPv4", outbandIPv4[1]);
 	}
 	if (outbandIPv6) {
-		device.set("OutbandIPv6", outbandIPv6[1]);
+		device.set("outbandIPv6", outbandIPv6[1]);
 	}
 	if (serialNumber) {
 		device.set("serialNumber", serialNumber[1]);
 	}
-	if (CertificateStatus) {
-		device.set("CertificateStatus", CertificateStatus[1]);
+	if (certificateStatus) {
+		device.set("certificateStatus", certificateStatus[1]);
 	}
-	if (CertificateEndDate) {
-		device.set("CertificateEndDate", CertificateEndDate[1]);
+	if (certificateEndDate) {
+		device.set("certificateEndDate", certificateEndDate[1]);
 	}
 	if (serialNumber) {
 		device.set("serialNumber", serialNumber[1]);
@@ -298,20 +310,16 @@ function snapshot(cli, device, config) {
 		device.set("softwareVersion", version[1]);
 	}
 
-
-
-
 	device.set("networkClass", "SWITCH");
-	device.set("family", "Unknown NX-OS device");
-	var chassis = showVersion.match(/cisco (.*?)( \(.*\))? [cC]hassis/m);
-	if (chassis) {
-		var chassis = chassis[1];
-		chassis = chassis.replace(/(Nexus)([0-9].*)/, "$1 $2");
-		device.set("family", chassis);
-	}
+	device.set("family", "ACI Fabric");
+
+	// Create banner for switch fabric data. 
+	var switchFabricString = "!! Switch fabric: " + fabricName + " Fabric size: " + fabricSize;
+	switchFabricString.concat(cli.command("show switch"));
+	config.set("cACISwitchFabric", switchFabricString);
 			
 	var licensestatus = cli.command("show license all");
-	config.set("ACILicense", licensestatus);
+	config.set("cACILicense", licensestatus);
 	
 	var configCleanup = function(config) {
 		var p = config.search(/^[a-z]/m);
@@ -321,7 +329,6 @@ function snapshot(cli, device, config) {
 		config = config.replace(/^\!Time.*$/mg, "");
 		return config;
 	};
-	
 	
 	var runningConfig;
 	try {
@@ -350,23 +357,15 @@ function runCommands(command) {
 }
 
 function analyzeSyslog(message) {
-	if (message.match(/%VSHD-5-VSHD_SYSLOG_CONFIG_I: Configured from (.*) by (.*) on .*/)) {
-		return true;
-	}
 	return false;
 }
 
 function analyzeTrap(trap, debug) {
-	for (var t in trap) {
-		if (trap[t].substring(0, 24) == "1.3.6.1.4.1.9.9.43.2.0.2" || t.substring(0, 24) == "1.3.6.1.4.1.9.9.43.1.1.1") {
-			return true;
-		}
-	}
 	return false;
 }
 
 function snmpAutoDiscover(sysObjectID, sysDesc) {
-	if (sysObjectID.substring(0, 17) == "1.3.6.1.4.1.9.12." && sysDesc.match(/^Cisco NX-OS.*/)) {
+	if (sysObjectID.substring(0, 20) == "1.3.6.1.4.1.9.1.2238" && sysDesc.match(/^APIC.*/)) {
 		return true;
 	}
 	return false;

@@ -37,6 +37,8 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
@@ -99,29 +101,15 @@ public abstract class ConfigAttribute {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
+		return Objects.hash(name, config);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (!(obj instanceof ConfigAttribute))
-			return false;
+		if (this == obj) return true;
+		if (!(obj instanceof ConfigAttribute)) return false;
 		ConfigAttribute other = (ConfigAttribute) obj;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		}
-		else if (!name.equals(other.name))
-			return false;
-		return true;
+		return Objects.equals(name, other.name) && Objects.equals(config, other.config);
 	}
-	
 	
 }

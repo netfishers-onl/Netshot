@@ -81,14 +81,6 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 	}
 
 	/* (non-Javadoc)
-	 * @see net.netshot.netshot.work.Task#prepare()
-	 */
-	@Override
-	public void prepare(Session session) {
-		Hibernate.initialize(device);
-	}
-
-	/* (non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#run()
 	 */
 	@Override
@@ -100,23 +92,27 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 			this.status = Status.CANCELLED;
 			return;
 		}
-		this.info(String.format("Check compliance task for device %s (%s).",
-				device.getName(), device.getMgmtAddress().getIp()));
+
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
+			// Delete previous results
 			session
 				.createMutationQuery("delete from CheckResult c where c.key.device.id = :id")
 				.setParameter("id", this.device.getId())
 				.executeUpdate();
-			session.refresh(this.device);
+			// Start over from a fresh device from DB
+			device = session.get(Device.class, device.getId());
+			this.info(String.format("Check compliance task for device %s (%s).",
+					device.getName(), device.getMgmtAddress().getIp()));
 			if (this.device.getLastConfig() == null) {
 				log.info("Task {}. Unable to fetch the device with its last config... has it been captured at least once?",
 						this.getId());
 				throw new Exception("No last config for this device. Has it been captured at least once?");
 			}
 			List<Policy> policies = session
-				.createQuery("select distinct p from Policy p join p.targetGroups g join g.cachedMemberships dm with dm.key.device.id = :id", Policy.class)
+				.createQuery("select distinct p from Policy p join p.targetGroups g " +
+					"join g.cachedMemberships dm with dm.key.device.id = :id", Policy.class)
 				.setParameter("id", this.device.getId())
 				.list();
 
@@ -129,7 +125,9 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 			session.persist(this.device);
 			session.flush();
 			List<SoftwareRule> softwareRules = session
-				.createQuery("select sr from SoftwareRule sr where (sr.targetGroup is null) or sr.targetGroup in (select g from DeviceGroup g join g.cachedMemberships dm with dm.key.device.id = :id) order by sr.priority asc", SoftwareRule.class)
+				.createQuery("select sr from SoftwareRule sr where (sr.targetGroup is null) or " +
+					"sr.targetGroup in (select g from DeviceGroup g join g.cachedMemberships dm " +
+					"with dm.key.device.id = :id) order by sr.priority asc", SoftwareRule.class)
 				.setParameter("id", this.device.getId())
 				.list();
 			device.setSoftwareLevel(ConformanceLevel.UNKNOWN);

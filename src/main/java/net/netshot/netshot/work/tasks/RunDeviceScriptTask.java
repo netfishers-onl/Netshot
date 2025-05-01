@@ -38,7 +38,6 @@ import net.netshot.netshot.device.script.JsCliScript;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
 
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OnDelete;
@@ -85,13 +84,13 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 	private Map<String, String> userInputValues = null;
 
 	/**
-	 * Instantiates a new take snapshot task.
+	 * Instantiates a new RunDeviceScriptTask task.
 	 */
 	protected RunDeviceScriptTask() {
 	}
 
 	/**
-	 * Instantiates a new take snapshot task.
+	 * Instantiates a new RunDeviceScriptTask task.
 	 *
 	 * @param device the device
 	 * @param comments the comments
@@ -105,12 +104,6 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 	}
 
 	@Override
-	public void prepare(Session session) {
-		Hibernate.initialize(this.getDevice());
-	}
-
-
-	@Override
 	public void run() {
 		log.debug("Task {}. Starting script task for device {}.", this.getId(),
 				device == null ? "null" : device.getId());
@@ -119,14 +112,15 @@ public class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 			this.status = Status.CANCELLED;
 			return;
 		}
-		this.info(String.format("Run script task for device %s (%s).",
-				device.getName(), device.getMgmtAddress().getIp()));
 
 		JsCliScript cliScript = null;
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			session.refresh(device);
+			// Start over from a fresh device from DB
+			device = session.get(Device.class, device.getId());
+			this.info(String.format("Run script task for device %s (%s).",
+					device.getName(), device.getMgmtAddress().getIp()));
 			if (deviceDriver == null || !deviceDriver.equals(device.getDriver())) {
 				log.trace("Task {}. The script doesn't apply to the driver of the device.", this.getId());
 				this.error("The script doesn't apply to the driver of the device.");

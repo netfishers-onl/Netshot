@@ -21,7 +21,7 @@ var Info = {
 	name: "F5TMOS",
 	description: "F5 TM-OS, 11.x and newer",
 	author: "Netshot Team",
-	version: "1.0"
+	version: "2.0"
 };
 
 var Config = {
@@ -57,7 +57,11 @@ var Config = {
 			pre: "# Licensing information:",
 			preLine: "#  "
 		}
-	}
+	},
+	"ucsArchive": {
+		type: "BinaryFile",
+		title: "UCS Archive",
+	},
 };
 
 var Device = {
@@ -116,6 +120,11 @@ function snapshot(cli, device, config) {
 	var runningConfig = cli.command("tmsh -q -c 'cd /; show running-config recursive'");
 	runningConfig = runningConfig.replace(/^[^\{]*\r?\n/, ""); // Remove first line if doesn't contain {
 	config.set("runningConfig", runningConfig);
+
+	if (typeof config.computeHash === "function") {
+		// Possible starting with Netshot 0.21
+		config.computeHash(runningConfig);
+	}
 	
 	var lastTransaction = cli.command("grep transaction /var/log/audit | tail -n1");
 	if (lastTransaction) {
@@ -262,6 +271,19 @@ function snapshot(cli, device, config) {
 	catch (error) {
 		// Go on
 	}
+
+	var mgmtIps = [];
+	var sysMgmtIps = cli.findSections(runningConfig, /^sys management-ip ([0-9a-fA-F:\.]+)\/([0-9]+) \{/mg);
+	for (var i in sysMgmtIps) {
+		var ip = {
+			mask: parseInt(sysMgmtIps[i].match[2]),
+			usage: "PRIMARY"
+		};
+		var a = sysMgmtIps[i].match[1];
+		ip[a.match(/:/) ? "ipv6" : "ip"] = a;
+		mgmtIps.push(ip);
+	}
+
 	
 	var interfaces = cli.findSections(runningConfig, /^net interface (.+) \{/mg);
 	for (var i in interfaces) {
@@ -277,6 +299,13 @@ function snapshot(cli, device, config) {
 		if (macMatch) {
 			networkInterface.mac = macMatch[1];
 		}
+
+		if (networkInterface.name === "mgmt") {
+			for (var p in mgmtIps) {
+				networkInterface.ip.push(mgmtIps[p]);
+			}
+		}
+
 		device.add("networkInterface", networkInterface);
 	}
 	var trunks = cli.findSections(runningConfig, /^net trunk (.+) \{/mg);
@@ -319,6 +348,21 @@ function snapshot(cli, device, config) {
 		
 		device.add("networkInterface", networkInterface);
 	}
+
+	// Remove any forgotten archive
+	var ucsPath = "/var/tmp/netshot.ucs";
+	cli.command("rm -f " + ucsPath);
+	var saveUcs = cli.command("tmsh -q save /sys ucs " + ucsPath);
+	if (!saveUcs.match(/is saved/)) {
+		throw "Unable to save UCS archive:\n" + saveUcs;
+	}
+	var checksum = cli.command("sha256sum " + ucsPath);
+	const hashMatch = checksum.match(/^([0-9a-f]{64})\s+.*netshot\.ucs/m);
+	if (!hashMatch) {
+		throw "Unable to compute hash of UCS file:\n" + checksum;
+	}
+	config.download("ucsArchive", ucsPath, { method: "sftp", checksum: hashMatch[1] });
+	cli.command("rm -f " + ucsPath);
 };
 
 

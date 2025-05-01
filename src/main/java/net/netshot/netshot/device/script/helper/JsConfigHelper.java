@@ -19,7 +19,13 @@
 package net.netshot.netshot.device.script.helper;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
 
@@ -127,6 +133,57 @@ public class JsConfigHelper {
 		return lastConfig.getCustomHash();
 	}
 
+	private void checkFileSha256(Path filePath, String expected) throws IOException {
+		try (InputStream is = Files.newInputStream(filePath)) {
+			String computed = DigestUtils.sha256Hex(is).toLowerCase();
+			if (!expected.toLowerCase().equals(computed)) {
+				log.warn("Invalid computed SHA256 hash for received file: {} vs {}", computed, expected);
+				throw new IllegalArgumentException(
+					"Invalid computed SHA256 hash for received file: %s vs %s".formatted(computed, expected));
+			}
+			taskLogger.debug("Checksum of downloaded file was successfully verified (%s).".formatted(computed));
+		}
+	}
+
+	private void checkFileMd5(Path filePath, String expected) throws IOException {
+		try (InputStream is = Files.newInputStream(filePath)) {
+			String computed = DigestUtils.md5Hex(is).toLowerCase();
+			if (!expected.toLowerCase().equals(computed)) {
+				log.warn("Invalid computed MD5 hash for received file: {} vs {}", computed, expected);
+				throw new IllegalArgumentException(
+					"Invalid computed MD5 hash for received file: %s vs %s".formatted(computed, expected));
+			}
+			taskLogger.debug("Checksum of downloaded file was successfully verified (%s).".formatted(computed));
+		}
+	}
+
+	/**
+	 * Compute hash (digest) of given downloaded file and compare to passed checkum.
+	 * @param filePath = the file path to digest
+	 * @param expected = the expected checkum (hex-based), either MD5 or SHA256
+	 * @throws IOException
+	 */
+	private void checkFileSum(Path filePath, String expected) throws IOException {
+		if (expected == null) {
+			log.info("Skipping verification of downloaded file (no checksum was provided).");
+			taskLogger.debug("Skipping verification of downloaded file (no checksum provided).");
+			return;
+		}
+		if (expected.length() == 32) {
+			checkFileMd5(filePath, expected);
+		}
+		else if (expected.length() == 64) {
+			checkFileSha256(filePath, expected);
+		}
+		else {
+			log.warn(
+				"Invalid or unsupported passed file checksum length ({} characters)",
+				expected.length());
+			throw new IllegalArgumentException(
+				"Invalid or unsupported passed file checksum length (%d characters).".formatted(expected.length()));
+		}
+	}
+
 	/**
 	 * Download a binary file from the device, using SCP.
 	 * @param key the name of the config attribute
@@ -134,9 +191,11 @@ public class JsConfigHelper {
 	 * @param remoteFileName the file (including full path) to download from the device
 	 * @param storeFileName the file name to store (null to use remoreFileName)
 	 * @param newSession use a new SSH session to download the file
+	 * @param expectedHash if not null verify the hash of the received file (SHA256 or MD5)
 	 */
 	@Export
-	public void download(String key, String method, String remoteFileName, String storeFileName, boolean newSession) throws Exception {
+	public void download(String key, String method, String remoteFileName, String storeFileName,
+			boolean newSession, String expectedHash) throws Exception {
 		if (remoteFileName == null) {
 			return;
 		}
@@ -172,6 +231,7 @@ public class JsConfigHelper {
 							if (AttributeType.BINARYFILE.equals(attribute.getType())) {
 								ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, key, storeName);
 								((Ssh) cli).scpDownload(remoteFileName, fileAttribute.getFileName().toString(), newSession);
+								this.checkFileSum(fileAttribute.getFileName().toPath(), expectedHash);
 								fileAttribute.setFileSize(fileAttribute.getFileName().length());
 								config.addAttribute(fileAttribute);
 							}
@@ -197,6 +257,7 @@ public class JsConfigHelper {
 							if (cli instanceof Ssh) {
 								ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, key, storeName);
 								((Ssh) cli).sftpDownload(remoteFileName, fileAttribute.getFileName().toString(), newSession);
+								this.checkFileSum(fileAttribute.getFileName().toPath(), expectedHash);
 								fileAttribute.setFileSize(fileAttribute.getFileName().length());
 								config.addAttribute(fileAttribute);
 							}

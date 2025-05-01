@@ -654,6 +654,7 @@ const _connect = (_function, _protocol, _options) => {
 			let storeFileName = String("");
 			let method = "sftp";
 			let newSession = false;
+			let checksum = null;
 			if (typeof options === "object") {
 				if (typeof options.newSession === "boolean") {
 					newSession = options.newSession;
@@ -673,12 +674,18 @@ const _connect = (_function, _protocol, _options) => {
 				else if (typeof options.storeFileName !== "undefined") {
 					throw "Invalid 'storeFileName' option in config.download.";
 				}
+				if (typeof options.checksum === "string") {
+					checksum = String(options.checksum);
+				}
+				else if (typeof options.checksum !== "undefined") {
+					throw "Invalid 'checksum' option in config.download.";
+				}
 			}
 			else if (typeof options !== "undefined") {
 				throw "Invalid type for options argument in config.download";
 			}
 
-			_options.getConfigHelper().download(key, method, fileName, storeFileName, newSession);
+			_options.getConfigHelper().download(key, method, fileName, storeFileName, newSession, checksum);
 		},
 		computeHash: function(...params) {
 			const inputs = params.map((i, idx) => {

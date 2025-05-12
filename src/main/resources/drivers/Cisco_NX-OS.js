@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoNXOS",
 	description: "Cisco NX-OS 5+",
 	author: "Netshot Team",
-	version: "1.9.1"
+	version: "1.9.2"
 };
 
 var Config = {
@@ -309,9 +309,9 @@ function snapshot(cli, device, config) {
 	}
 	
 	
-	var hostname = runningConfig.match(/^hostname (.+)$/m);
+	var hostname = runningConfig.match(/^(hostname|switchname) (.+)$/m);
 	if (hostname) {
-		device.set("name", hostname[1]);
+		device.set("name", hostname[2]);
 	}
 	
 	var vdcConfigs = runningConfig.split(/[\r\n]+\!Running config for vdc: .*[\r\n]+/);

@@ -243,7 +243,7 @@ public class Database {
 			// serviceProperties.setProperty(AvailableSettings.SHOW_SQL, "true");
 			serviceProperties.setProperty(AvailableSettings.FORMAT_SQL, "true");
 			// Dates/times stored in UTC in the DB, without timezone, up to Java to convert to server local time
-			serviceProperties.setProperty("hibernate.jdbc.time_zone", "UTC");
+			serviceProperties.setProperty(AvailableSettings.JDBC_TIME_ZONE, "UTC");
 
 			// Use the custom Multi Tenant connection provider (to handle read vs read-write connections)
 			final CustomConnectionProvider connectionProvider = new CustomConnectionProvider();

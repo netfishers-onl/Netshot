@@ -26,7 +26,6 @@ import java.util.Set;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -84,7 +83,7 @@ public class NetworkInterface {
 	
 	/** The ip4 addresses. */
 	@Getter(onMethod=@__({
-		@ElementCollection(fetch = FetchType.EAGER), @Fetch(FetchMode.SELECT),
+		@ElementCollection, @Fetch(FetchMode.SUBSELECT),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -92,7 +91,7 @@ public class NetworkInterface {
 	
 	/** The ip6 addresses. */
 	@Getter(onMethod=@__({
-		@ElementCollection(fetch = FetchType.EAGER), @Fetch(FetchMode.SELECT),
+		@ElementCollection, @Fetch(FetchMode.SUBSELECT),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter

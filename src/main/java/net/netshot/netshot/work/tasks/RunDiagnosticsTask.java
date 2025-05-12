@@ -34,7 +34,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -114,14 +113,6 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 		this.device = device;
 		this.dontCheckCompliance = dontCheckCompliance;
 	}
-
-	/* (non-Javadoc)
-	 * @see net.netshot.netshot.work.Task#prepare()
-	 */
-	@Override
-	public void prepare(Session session) {
-		Hibernate.initialize(this.device);
-	}
 	
 	@Override
 	@XmlElement @JsonView(DefaultView.class)
@@ -163,16 +154,16 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 			this.status = Status.CANCELLED;
 			return;
 		}
-		this.trace(String.format("Run diagnostic task for device %s (%s).",
-				device.getName(), device.getMgmtAddress().getIp()));
 		boolean locked = false;
-		
-		RunDiagnosticCliScript cliScript = null;
 
 		Session session = Database.getSession();
+		RunDiagnosticCliScript cliScript = null;
 		try {
 			session.beginTransaction();
-			session.refresh(device);
+			// Start over from a fresh device from DB
+			device = session.get(Device.class, device.getId());
+			this.trace(String.format("Run diagnostic task for device %s (%s).",
+					device.getName(), device.getMgmtAddress().getIp()));
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				log.trace("Task {}. Device not INPRODUCTION, stopping the diagnostic task.", this.getId());
 				this.warn("The device is not enabled (not in production).");
@@ -188,8 +179,8 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 			}
 
 			List<Diagnostic> diagnostics = session.createQuery(
-				"select dg from Diagnostic dg where dg.enabled = :enabled and " +
-				"dg.targetGroup in (select gm.key.group from DeviceGroupMembership gm where gm.key.device = :device)",
+				"select dg from Diagnostic dg join fetch dg.targetGroup tg where dg.enabled = :enabled and " +
+				"tg in (select gm.key.group from DeviceGroupMembership gm where gm.key.device = :device)",
 					Diagnostic.class)
 				.setParameter("device", device)
 				.setParameter("enabled", true)
@@ -200,6 +191,9 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 				this.logs.append(cliScript.getPlainJsLog());
 				session.merge(device);
 				session.getTransaction().commit();
+			}
+			else {
+				this.info("No diagnostic was found that apply to this device.");
 			}
 			this.status = Status.SUCCESS;
 			
@@ -223,7 +217,7 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 		}
 		finally {
 			try {
-				if (this.debugEnabled) {
+				if (this.debugEnabled && cliScript != null) {
 					this.debugLog = new DebugLog(cliScript.getPlainCliLog());
 				}
 			}

@@ -161,14 +161,15 @@ public abstract class CliScript {
 		if (address == null) {
 			address = device.getMgmtAddress();
 		}
-		Set<DeviceCredentialSet> credentialSets = oneTimeCredentialSets;
-		if (credentialSets == null) {
-			credentialSets = device.getCredentialSets();
+		Set<DeviceCredentialSet> credentialSets = new HashSet<>();
+		if (oneTimeCredentialSets != null) {
+			credentialSets.addAll(oneTimeCredentialSets);
 		}
-		
-		if (device.getSpecificCredentialSet() != null) {
-			credentialSets = new HashSet<DeviceCredentialSet>();
+		if (credentialSets.size() == 0 && device.getSpecificCredentialSet() != null) {
 			credentialSets.add(device.getSpecificCredentialSet());
+		}
+		if (credentialSets.size() == 0) {
+			credentialSets.addAll(device.getCredentialSets());
 		}
 		
 		int sshPort = device.getSshPort();

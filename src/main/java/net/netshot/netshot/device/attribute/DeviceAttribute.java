@@ -37,6 +37,8 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
+import java.util.Objects;
+
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -93,28 +95,15 @@ public abstract class DeviceAttribute {
 	public abstract Object getData();
 
 	@Override
-	public final int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
+	public int hashCode() {
+		return Objects.hash(name, device);
 	}
 
 	@Override
-	public final boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (!(obj instanceof DeviceAttribute))
-			return false;
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (!(obj instanceof DeviceAttribute)) return false;
 		DeviceAttribute other = (DeviceAttribute) obj;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		}
-		else if (!name.equals(other.name))
-			return false;
-		return true;
+		return Objects.equals(name, other.name) && Objects.equals(device, other.device);
 	}
 }

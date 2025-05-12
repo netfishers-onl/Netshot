@@ -47,7 +47,6 @@ import net.netshot.netshot.rest.RestViews.HookView;
 import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
 
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -182,14 +181,6 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	}
 
 	/* (non-Javadoc)
-	 * @see net.netshot.netshot.work.Task#prepare()
-	 */
-	@Override
-	public void prepare(Session session) {
-		Hibernate.initialize(this.getDevice());
-	}
-
-	/* (non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#run()
 	 */
 	@Override
@@ -201,15 +192,16 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 			this.status = Status.CANCELLED;
 			return;
 		}
-		this.info(String.format("Snapshot task for device %s (%s).",
-				device.getName(), device.getMgmtAddress().getIp()));
 		boolean locked = false;
 
 		Session session = Database.getSession();
 		CliScript cliScript = new SnapshotCliScript(this.debugEnabled);
 		try {
 			session.beginTransaction();
-			session.refresh(device);
+			// Start over from a fresh device from DB
+			device = session.get(Device.class, device.getId());
+			this.info(String.format("Snapshot task for device %s (%s).",
+					device.getName(), device.getMgmtAddress().getIp()));
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				log.trace("Task {}. Device not INPRODUCTION, stopping the snapshot task.", this.getId());
 				this.warn("The device is not enabled (not in production).");

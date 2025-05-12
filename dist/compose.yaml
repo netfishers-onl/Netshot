@@ -50,7 +50,7 @@ services:
       - database
 
   rproxy:
-    image: traefik:v3.1
+    image: traefik:v3.4
     restart: unless-stopped
     command:
       - --api.insecure=true

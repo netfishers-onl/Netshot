@@ -31,7 +31,7 @@ services:
       - database
 
   database:
-    image: postgres:15
+    image: postgres:17
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: "change_this_pass"

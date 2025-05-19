@@ -284,11 +284,11 @@ function snapshot(cli, device, config) {
 	for (var s in haInfos) {
 		var haGroup = haInfos[s].config.match(/set group-name "(.*)"/);
 		if (haGroup) {
-			device.set("contact", contact[1]);
+			device.set("haName", haGroup[1]);
 		}
 		var haId = haInfos[s].config.match(/set group-id (.*)/);
 		if (haId) {
-			device.set("location", location[1]);
+			device.set("haId", haId[1]);
 		}
 	}
 

@@ -64,11 +64,13 @@ var Device = {
 		title: "HA peer name",
 		searchable: true,
 		checkable: true,
+	},
 	"haName": { /* This stores the name of an optional HA Group Name. */
 		type: "Text",
 		title: "HA group name",
 		searchable: true,
 		checkable: true,
+	},
 	"haId": { /* This stores the name of an optional HA Group ID. */
 		type: "Text",
 		title: "HA group ID",

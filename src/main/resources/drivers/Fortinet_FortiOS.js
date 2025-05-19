@@ -278,17 +278,19 @@ function snapshot(cli, device, config) {
 	}
 
 	// Read the HA Group Name and HA Group ID fields from the configuration directly.
-	device.set("haName", "NOT-SET");
-	device.set("haId", "NOT-SET");
 	var haInfos = cli.findSections(showHa, /config system ha/);
 	for (var s in haInfos) {
 		var haGroup = haInfos[s].config.match(/set group-name "(.*)"/);
 		if (haGroup) {
 			device.set("haName", haGroup[1]);
+		} else {
+			device.set("haName", "NOT-SET");
 		}
 		var haId = haInfos[s].config.match(/set group-id (.*)/);
 		if (haId) {
 			device.set("haId", haId[1]);
+		} else {
+			device.set("haId", "NOT-SET");
 		}
 	}
 

@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.graalvm.polyglot.Value;

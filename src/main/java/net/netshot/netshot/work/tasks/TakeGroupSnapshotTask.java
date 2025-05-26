@@ -81,8 +81,6 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 	@Setter
 	private boolean dontCheckCompliance = false;
 
-
-
 	/**
 	 * Instantiates a new take group snapshot task.
 	 */
@@ -118,6 +116,18 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 		return "Group snapshot";
 	}
 
+	/**
+	 * Get the ID of the associate group.
+	 */
+	@XmlElement @JsonView(DefaultView.class)
+	@Transient
+	public long getDeviceGroupId() {
+		if (this.deviceGroup == null) {
+			return 0;
+		}
+		return this.deviceGroup.getId();
+	}
+
 	/* (non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#prepare()
 	 */
@@ -135,8 +145,8 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 	@Override
 	public void run() {
 		log.debug("Task {}. Starting snapshot task for group {}.",
-				this.getId(), deviceGroup == null ? "null" : deviceGroup.getId());
-		if (deviceGroup == null) {
+				this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
+		if (this.deviceGroup == null) {
 			this.info("The device group doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
@@ -186,6 +196,6 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 	@Transient
 	public JobKey getIdentity() {
 		return new JobKey(String.format("Task_%d", this.getId()), 
-				String.format("TakeGroupSnapshot_%d", this.getDeviceGroup().getId()));
+				String.format("TakeGroupSnapshot_%d", this.getDeviceGroupId()));
 	}
 }

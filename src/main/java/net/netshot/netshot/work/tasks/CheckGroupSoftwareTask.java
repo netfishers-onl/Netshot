@@ -94,6 +94,18 @@ public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 		return "Group software compliance and hardware support check";
 	}
 
+	/**
+	 * Get the ID of the associate group.
+	 */
+	@XmlElement @JsonView(DefaultView.class)
+	@Transient
+	public long getDeviceGroupId() {
+		if (this.deviceGroup == null) {
+			return 0;
+		}
+		return this.deviceGroup.getId();
+	}
+
 	/* (non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#prepare()
 	 */
@@ -118,14 +130,14 @@ public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 	@Override
 	public void run() {
 		log.debug("Task {}. Starting check software compliance and hardware support status task for group {}.",
-				this.getId(), deviceGroup == null ? "null" : deviceGroup.getId());
-		if (deviceGroup == null) {
+				this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
+		if (this.deviceGroup == null) {
 			this.info("The device group doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
 		this.trace(String.format("Check software compliance task for group %s.",
-				deviceGroup.getName()));
+				this.deviceGroup.getName()));
 
 		Session session = Database.getSession();
 		try {
@@ -189,7 +201,7 @@ public class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
 	@Transient
 	public JobKey getIdentity() {
 		return new JobKey(String.format("Task_%d", this.getId()),
-				String.format("CheckGroupSoftware_%d", this.getDeviceGroup().getId()));
+				String.format("CheckGroupSoftware_%d", this.getDeviceGroupId()));
 	}
 
 }

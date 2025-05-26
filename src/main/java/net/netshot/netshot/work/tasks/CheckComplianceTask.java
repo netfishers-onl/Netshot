@@ -41,7 +41,6 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
 import net.netshot.netshot.work.TaskLogger;
 
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;

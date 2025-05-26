@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2025 Netshot
- * 
+ *
  * This file is part of Netshot project.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "Netshot Team",
-	version: "2.1"
+	version: "2.2"
 };
 
 var Config = {
@@ -394,8 +394,8 @@ function snapshot(cli, device, config) {
 		else if (system.match(/.*CISCO39\d\d.*/)) {
 			device.set("family", "Cisco ISR-G2 3900");
 		}
-		else if (system.match(/cisco ISR44\d\d/)) {
-			device.set("family", "Cisco ISR 4400");
+		else if (system.match(/cisco ISR4\d\d\d/)) {
+			device.set("family", "Cisco ISR 4000");
 		}
 		else if (system.match(/.*WS-C4[59].*/)) {
 			device.set("family", "Cisco Catalyst 4500");
@@ -575,6 +575,7 @@ function snapshot(cli, device, config) {
 			};
 			networkInterface.ip.push(ip);
 		}
+
 		try {
 			var showInterface = cli.command("show interface " + networkInterface.name + " | inc address|line protocol");
 			var macAddress = showInterface.match(/address is ([0-9a-fA-F]{4}\.[0-9a-fA-F]{4}\.[0-9a-fA-F]{4})/);
@@ -583,6 +584,17 @@ function snapshot(cli, device, config) {
 			}
 			if (showInterface.match(/ is administratively down/)) {
 				networkInterface.enabled = false;
+			}
+			if (interfaces[i].config.match(/^ *ip address (negotiated|dhcp)/m)) {
+				// Dynamic address
+				var ipPattern = /^ *Internet address is (\d+\.\d+\.\d+\.\d+)\/(\d+)/mg;
+				while (match = ipPattern.exec(showInterface)) {
+					networkInterface.ip.push({
+						ip: match[1],
+						mask: parseInt(match[2]),
+						usage: "PRIMARY"
+					});
+				}
 			}
 		}
 		catch (e) {

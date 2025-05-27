@@ -30,7 +30,7 @@ var Info = {
 	name: "CheckpointSPLAT",
 	description: "Checkpoint SPLAT",
 	author: "Netshot Team",
-	version: "1.4"
+	version: "1.5"
 };
 
 var Config = {
@@ -281,5 +281,6 @@ function analyzeTrap(trap, debug) {
 }
 
 function snmpAutoDiscover(sysObjectID, sysDesc) {
-	return sysObjectID == "1.3.6.1.4.1.8072.3.2.10";
+	return (sysObjectID === "1.3.6.1.4.1.8072.3.2.10" && sysDesc.match(/[0-9]+cp #1/)) ||
+	       (sysObjectID === "1.3.6.1.4.1.2620.1.1");
 }

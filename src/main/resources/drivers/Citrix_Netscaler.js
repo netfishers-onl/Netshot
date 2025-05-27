@@ -17,14 +17,14 @@
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var Info = {
+const Info = {
 	name: "CitrixNetscaler",
 	description: "Citrix NetScaler",
 	author: "Netshot Team",
-	version: "2.2"
+	version: "3.0"
 };
 
-var Config = {
+const Config = {
 	"nsVersion": {
 		type: "Text",
 		title: "NetScaler version",
@@ -137,67 +137,66 @@ function snapshot(cli, device, config) {
 	}
 
 	const parseInterfaces = function(partition, configuration) {
-		var vlanInterfaces = {};
-		var ipVlans = {};
-		var arpTable = {};
+		const vlanInterfaces = {};
+		const ipVlans = {};
+		const arpTable = {};
 
-		var match;
+		let match;
 
-		var showArp = cli.command("show arp");
-		var arpPattern = /([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\s+([0-9a-f:]+)\s.*([0-9]+)\s*$/mg;
+		const showArp = cli.command("show arp");
+		const arpPattern = /([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)\s+([0-9a-f:]+)\s.*([0-9]+)\s*$/mg;
 		while (match = arpPattern.exec(showArp)) {
 			arpTable[match[1] + "_" + match[3]] = match[2];
 		}
 
-		var bindVlanPattern = /^bind vlan ([0-9]+).*\-ifnum (\S+)/mg;
+		const bindVlanPattern = /^bind vlan ([0-9]+).*\-ifnum (\S+)/mg;
 		while (match = bindVlanPattern.exec(configuration)) {
 			vlanInterfaces[match[1]] = match[2];
 		}
 
-		var bindVlanIpPattern = /bind vlan ([0-9]+) .*\-IPAddress ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*(\-td ([0-9]+))?/mg;
+		const bindVlanIpPattern = /bind vlan ([0-9]+) .*\-IPAddress ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*(\-td ([0-9]+))?/mg;
 		while (match = bindVlanIpPattern.exec(configuration)) {
-			var td = match[5] ? match[5] : "0";
+			const td = match[5] ? match[5] : "0";
 			ipVlans[match[2] + "_" + match[3] + "_" + td] = match[1];
 		}
-		var addIp = function(ip, mask, description, td) {
+		const addIp = function(ip, mask, description, td) {
 			if (!td) td = "0";
-			var networkInterface = {
+			const networkInterface = {
 				name: "",
 				ip: [{ ip: ip, mask: mask, usage: "PRIMARY" }],
 				virtualDevice: partition,
 				vrf: "TD " + td,
 				description: description
 			};
-			var vlan = ipVlans[ip + "_" + mask + "_" + td];
+			const vlan = ipVlans[ip + "_" + mask + "_" + td];
 			if (vlan) {
-				networkInterface.name = "Vlan" + vlan;
+				networkInterface.name = `Vlan${vlan}`;
 				if (vlanInterfaces[vlan]) {
-					networkInterface.name = networkInterface.name + " (" + vlanInterfaces[vlan] + ")";
+					networkInterface.name = `${networkInterface.name} (${vlanInterfaces[vlan]})`;
 				}
 			}
-			var mac = arpTable[ip + "_" + td];
+			const mac = arpTable[ip + "_" + td];
 			if (mac) {
 				networkInterface.mac = mac;
 			}
 			device.add("networkInterface", networkInterface);
-
 		}
 
 
-		var addIpPattern = /add ns ip ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*(\-type ([A-Z]+))?.*(\-td ([0-9]+))?/mg;
+		const addIpPattern = /add ns ip ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+).*(\-type ([A-Z]+))?.*(\-td ([0-9]+))?/mg;
 		while (match = addIpPattern.exec(configuration)) {
-			var td = match[6] ? match[6] : "0";
-			var type = match[4] ? match[4] : "NSIP";
-			var ip = match[1];
-			var mask = match[2];
+			const td = match[6] ? match[6] : "0";
+			const type = match[4] ? match[4] : "NSIP";
+			const ip = match[1];
+			const mask = match[2];
 			addIp(ip, mask, type, td);
 			
 		}
-		var nsIp = configuration.match(/^set ns config \-IPAddress ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) \-netmask ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/m);
+		const nsIp = configuration.match(/^set ns config \-IPAddress ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+) \-netmask ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/m);
 		if (nsIp) {
-			var td = 0;
-			var ip = nsIp[1];
-			var mask = nsIp[2];
+			const td = 0;
+			const ip = nsIp[1];
+			const mask = nsIp[2];
 			addIp(ip, mask, "NetScaler IP", td);
 		}
 	}
@@ -207,47 +206,45 @@ function snapshot(cli, device, config) {
 	let runningConfig = cli.command("show ns runningConfig");
 	runningConfig = configCleanup(runningConfig);
 
-	var showNsHostname = cli.command("show ns hostname");
-	var hostname = showNsHostname.match(/Hostname:\s+(.+)/);
+	const showNsHostname = cli.command("show ns hostname");
+	const hostname = showNsHostname.match(/Hostname:\s+(.+)/);
 	if (hostname) {
 		device.set("name", hostname[1]);
 	}
 
-	var showNsLicense = cli.command("show ns license");
+	const showNsLicense = cli.command("show ns license");
 	config.set("nsLicense", showNsLicense);
 
-	var showNsConfig = cli.command("show ns config");
-	var saved = false;
-	var lastChange = showNsConfig.match(/Last Config Changed Time: (.* [0-9][0-9][0-9][0-9])/);
-	var lastSaved  = showNsConfig.match(/Last Config Saved Time: (.* [0-9][0-9][0-9][0-9])/);
+	const showNsConfig = cli.command("show ns config");
+	let saved = false;
+	const lastChange = showNsConfig.match(/Last Config Changed Time: (.* [0-9][0-9][0-9][0-9])/);
+	const lastSaved  = showNsConfig.match(/Last Config Saved Time: (.* [0-9][0-9][0-9][0-9])/);
 	if (lastChange && lastSaved) {
-		lastChange = new Date(lastChange[1]);
-		lastSaved = new Date(lastSaved[1]);
-		saved = lastSaved >= lastChange;
+		const lastChangeDate = new Date(lastChange[1]);
+		const lastSavedDate = new Date(lastSaved[1]);
+		saved = lastSavedDate >= lastChangeDate;
 	}
 	device.set("configurationSaved", saved);
 
-	var showNsVersion = cli.command("show ns version");
-	var version = showNsVersion.match(/NetScaler (NS.+?),/i);
+	const showNsVersion = cli.command("show ns version");
+	const version = showNsVersion.match(/NetScaler (NS.+?),/i);
 	if (version) {
-		version = version[1];
-		device.set("softwareVersion", version);
-		config.set("nsVersion", version);
+		device.set("softwareVersion", version[1]);
+		config.set("nsVersion", version[1]);
 	}
 
 	device.set("networkClass", "LOADBALANCER");
 
-	var showNsHardware = cli.command("show ns hardware");
-	var serialNumber = showNsHardware.match(/Serial no: +(.+)/);
+	const showNsHardware = cli.command("show ns hardware");
+	const serialNumber = showNsHardware.match(/Serial no: +(.+)/);
 	if (serialNumber) {
-		serialNumber = serialNumber[1];
-		device.set("serialNumber", serialNumber);
+		device.set("serialNumber", serialNumber[1]);
 	}
 
-	var family = "NetScaler";
-	var platform = showNsHardware.match(/Platform: +(.+)/);
+	let family = "NetScaler";
+	let platform = showNsHardware.match(/Platform: +(.+)/);
 	if (platform) {
-		platform = platform[1];
+		platform = platformMatch[1];
 		if (platform.match(/Virtual Appliance/)) {
 			family = "NetScaler VPX";
 		}
@@ -262,14 +259,14 @@ function snapshot(cli, device, config) {
 		device.add("module", { slot: "NetScaler", partNumber: platform, serialNumber: serialNumber });
 	}
 
-	var location = runningConfig.match(/^set snmp mib .*\-contact "(.+?)"/m);
+	const location = runningConfig.match(/^set snmp mib .*\-contact "(.+?)"/m);
 	if (location) {
 		device.set("location", location[1]);
 	}
 	else {
 		device.set("location", "");
 	}
-	var contact = runningConfig.match(/^set snmp mib .*\-location "(.+?)"/m);
+	const contact = runningConfig.match(/^set snmp mib .*\-location "(.+?)"/m);
 	if (contact) {
 		device.set("contact", contact[1]);
 	}
@@ -277,9 +274,9 @@ function snapshot(cli, device, config) {
 		device.set("contact", "");
 	}
 
-	var haNodePattern = /^add HA node ([0-9]+) ([0-9\.]+)/mg;
-	var haNodes = [];
-	var haNode;
+	const haNodePattern = /^add HA node ([0-9]+) ([0-9\.]+)/mg;
+	const haNodes = [];
+	let haNode;
 	while (haNode = haNodePattern.exec(runningConfig)) {
 		haNodes.push(haNode[2]);
 	}
@@ -287,12 +284,12 @@ function snapshot(cli, device, config) {
 
 	parseInterfaces("", runningConfig);
 
-	var usePartitions = false;
-	var partitionPattern = /^add ns partition (\S+)/mg;
-	var partition;
+	let usePartitions = false;
+	const partitionPattern = /^add ns partition (\S+)/mg;
+	let partition;
 	while (partition = partitionPattern.exec(runningConfig)) {
 		usePartitions = true;
-		var partitionName = partition[1];
+		const partitionName = partition[1];
 		cli.command(`switch ns partition ${partitionName}`, { clearPrompt: true });
 		let partRunningConfig = cli.command("show ns runningConfig");
 		partRunningConfig = configCleanup(partRunningConfig);
@@ -367,7 +364,7 @@ function analyzeTrap(trap, debug) {
 }
 
 function snmpAutoDiscover(sysObjectID, sysDesc) {
-	if (sysObjectID.substring(0, 17) == "1.3.6.1.4.1.5951." && sysDesc.match(/NetScaler/)) {
+	if (sysObjectID.startsWith("1.3.6.1.4.1.5951.") && sysDesc.match(/NetScaler/i)) {
 		return true;
 	}
 	return false;

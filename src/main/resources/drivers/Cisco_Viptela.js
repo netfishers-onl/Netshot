@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoViptela",
 	description: "Viptela Operating System",
 	author: "Netshot Team",
-	version: "1.1"
+	version: "2.0"
 };
 
 var Config = {
@@ -42,6 +42,10 @@ var Config = {
 			pre: "!! Running configuration (taken on %when%):",
 			post: "!! End of running configuration"
 		}
+	},
+	"backupArchive": {
+		type: "BinaryFile",
+		title: "Backup Archive",
 	},
 };
 
@@ -101,8 +105,12 @@ var CLI = {
 				options: [ "exec", "config" ],
 				target: "config"
 			},
+			bash: {
+				cmd: "vshell",
+				options: [ "bash" ],
+				target: "bash",
+			}
 		}
-
 	},
 	config: {
 		prompt: /^([A-Za-z\-_0-9\.]+\(conf[0-9\-a-zA-Z]+\)#) $/,
@@ -120,7 +128,18 @@ var CLI = {
 				target: "config"
 			}
 		}
-	}
+	},
+	bash: {
+		prompt: /^([A-Za-z\-_0-9\.]+:[\/A–Za–z0–9._-~]+\$ )$/,
+		clearPrompt: true,
+		macros: {
+			execBack: {
+				cmd: "exit",
+				options: [ "exec" ],
+				target: "exec"
+			}
+		},
+	},
 };
 
 function snapshot(cli, device, config) {
@@ -139,6 +158,7 @@ function snapshot(cli, device, config) {
 		device.set("softwareVersion", version[1]);
 	}
 	
+	var doBackup = false;
 	var personality = showSystemStatus.match(/<personality>(.+)<\/personality>/);
 	if (personality) {
 		personality = personality[1];
@@ -148,12 +168,16 @@ function snapshot(cli, device, config) {
 		}
 		else if (personality.match(/manage/)) {
 			device.set("family", "Cisco SD-WAN vManage");
+			device.set("networkClass", "SERVER");
+			doBackup = true;
 		}
 		else if (personality.match(/bond/)) {
 			device.set("family", "Cisco SD-WAN vBond");
+			device.set("networkClass", "SERVER");
 		}
 		else if (personality.match(/smart/)) {
 			device.set("family", "Cisco SD-WAN vSmart");
+			device.set("networkClass", "SERVER");
 		}
 	}
 	
@@ -228,20 +252,20 @@ function snapshot(cli, device, config) {
 	for (var i in interfaceDetails) {
 		var ifName = interfaceDetails[i].match[2];
 		var vpn = interfaceDetails[i].match[1];
-		var config = interfaceDetails[i].config;
+		var ifConfig = interfaceDetails[i].config;
 		var networkInterface = {
 			name: ifName,
 			vrf: vpn,
 			ip: []
 		};
-		if (config.match(/^ +if-admin-status +Down/)) {
+		if (ifConfig.match(/^ +if-admin-status +Down/)) {
 			networkInterface.enabled = false;
 		}
-		var mac = config.match(/^ +hwaddr +([0-9a-fA-F:]+)/m);
+		var mac = ifConfig.match(/^ +hwaddr +([0-9a-fA-F:]+)/m);
 		if (mac) {
 			networkInterface.mac = mac[1];
 		}
-		var ip = config.match(/^ +ip-address +([0-9\.]+)\/([0-9]+)/m);
+		var ip = ifConfig.match(/^ +ip-address +([0-9\.]+)\/([0-9]+)/m);
 		if (ip) {
 			networkInterface.ip.push({
 				ip: ip[1],
@@ -255,8 +279,8 @@ function snapshot(cli, device, config) {
 	var ipv6InterfaceDetails = cli.findSections(showIpv6Interface, /^interface vpn ([0-9]+) interface (.+) af-type ipv6/m);
 	for (var i in ipv6InterfaceDetails) {
 		var ifName = ipv6InterfaceDetails[i].match[2];
-		var config = ipv6InterfaceDetails[i].config;
-		var ip = config.match(/^ +ipv6-address +([0-9a-fA-F:]+)\/([0-9]+)/m);
+		var ifConfig = ipv6InterfaceDetails[i].config;
+		var ip = ifConfig.match(/^ +ipv6-address +([0-9a-fA-F:]+)\/([0-9]+)/m);
 		if (networkInterfaces[ifName] && ip) {
 			networkInterfaces[ifName].ip.push({
 				ipv6: ip[1],
@@ -269,8 +293,8 @@ function snapshot(cli, device, config) {
 	var interfaceDescriptions = cli.findSections(showInterfaceDesc, /^interface vpn ([0-9]+) interface (.+) af-type .*/m);
 	for (var i in interfaceDescriptions) {
 		var ifName = interfaceDescriptions[i].match[2];
-		var config = interfaceDescriptions[i].config;
-		var descMatch = config.match(/^ +desc +(.+)/m);
+		var ifConfig = interfaceDescriptions[i].config;
+		var descMatch = ifConfig.match(/^ +desc +(.+)/m);
 		if (networkInterfaces[ifName] && descMatch) {
 			var description = descMatch[1];
 			descMatch = description.match(/^"(.+)"$/);
@@ -282,6 +306,43 @@ function snapshot(cli, device, config) {
 	}
 	for (var i in networkInterfaces) {
 		device.add("networkInterface", networkInterfaces[i]);
+	}
+
+	if (doBackup) {
+		try {
+			cli.macro("bash");
+			// Remove any previous backup
+			cli.command("rm -f /opt/data/backup/nsbackup.tar.gz");
+			cli.macro("execBack");
+		}
+		catch (err) {
+			// ignore
+		}
+		var requestBackup = cli.command(
+			"request nms configuration-db backup path /opt/data/backup/nsbackup",
+			{ timeout: 300000 });
+		var pathMatch = requestBackup.match(/^Successfully saved backup to (.+\.tar\.gz)/m);
+		var sumMatch = requestBackup.match(/^sha256sum: ([0-9a-f]+)/m);
+		if (!pathMatch || !sumMatch) {
+			throw "Couldn't perform system backup: " + requestBackup;
+		}
+		var backupPath = pathMatch[1];
+		var checksum = sumMatch[1];
+		try {
+			config.download("backupArchive", backupPath, { method: "sftp", checksum });
+		}
+		catch (e) {
+			var text = "" + e;
+			throw e;
+		}
+		try {
+			cli.macro("bash");
+			cli.command("rm -f /opt/data/backup/nsbackup.tar.gz");
+			cli.macro("execBack");
+		}
+		catch (err) {
+			// ignore
+		}
 	}
 };
 

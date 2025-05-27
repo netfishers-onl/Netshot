@@ -89,7 +89,7 @@ var CLI = {
 		}
 	},
 	bash: {
-		prompt: /^(\[.*@.*] .* # )$/,
+		prompt: /^(\[.*@.*\] .* # )$/,
 		macros: {
 			tmsh: {
 				cmd: "tmsh",

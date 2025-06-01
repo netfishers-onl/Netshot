@@ -28,7 +28,7 @@ var Info = {
 	name: "CheckpointGaia",
 	description: "Checkpoint Gaia",
 	author: "Netshot Team",
-	version: "2.1"
+	version: "2.2"
 };
 
 var Config = {
@@ -360,6 +360,10 @@ function analyzeTrap(trap, debug) {
 	return trap["1.3.6.1.6.3.1.1.4.1.0"] == "1.3.6.1.4.1.2620.1.3000.10.1.1";
 }
 
+/**
+ * .1.3.6.1.2.1.1.1.0 = STRING: "Linux gw-040000 3.10.0-1160.15.2cpx86_64 #1 SMP Fri Nov 11 13:49:46 IST 2022 x86_64"
+ * .1.3.6.1.2.1.1.2.0 = OID: .1.3.6.1.4.1.2620.1.6.123.1.49
+ */
 function snmpAutoDiscover(sysObjectID, sysDesc) {
-	return sysObjectID.substring(0, 17) == "1.3.6.1.4.1.2620.";
+	return sysObjectID.startsWith("1.3.6.1.4.1.2620.");
 }

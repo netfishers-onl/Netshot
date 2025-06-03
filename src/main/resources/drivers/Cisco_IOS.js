@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "Netshot Team",
-	version: "2.3"
+	version: "2.4"
 };
 
 var Config = {
@@ -322,8 +322,11 @@ function snapshot(cli, device, config) {
 		else if (system.match(/.*26[12][01].*/)) {
 			device.set("family", "Cisco 2600");
 		}
-		else if (system.match(/.*Cisco 8\d\d[^\d]/)) {
+		else if (system.match(/.*Cisco C?8\d\d[^\d]/)) {
 			device.set("family", "Cisco ISR 800");
+		}
+		else if (system.match(/^Cisco IR?8\d\d[^\d]/)) {
+			device.set("family", "Cisco IR 800");
 		}
 		else if (system.match(/.*Cisco C9\d\d[^\d]/)) {
 			device.set("family", "Cisco ISR 900");
@@ -453,6 +456,9 @@ function snapshot(cli, device, config) {
 		else if (system.match(/Cisco VG2\d\d/)) {
 			device.set("family", "Cisco VG200");
 			device.set("networkClass", "UNKNOWN");
+		}
+		else if (system.match(/cisco C8200/)) {
+			device.set("family", "Cisco Catalyst 8200");
 		}
 		else if (system.match(/cisco C9200/)) {
 			device.set("family", "Cisco Catalyst 9200");

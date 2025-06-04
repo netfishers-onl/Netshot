@@ -21,7 +21,7 @@ const Info = {
 	name: "AudioCodesMediant",
 	description: "AudioCodes Mediant MG/SBC",
 	author: "Netshot Team",
-	version: "1.0"
+	version: "1.1"
 };
 
 const Config = {
@@ -167,7 +167,7 @@ const CLI = {
 	},
 
 	enable: {
-		prompt: /^([A-Za-z\-_0-9\.\/]+# )$/,
+		prompt: /^([A-Za-z\-_0-9\.\/ ]+# )$/,
 		macros: {
 			disable: {
 				cmd: "disable",
@@ -203,7 +203,7 @@ const CLI = {
 	},
 
 	configure: {
-		prompt: /^([A-Za-z\-_0-9\.\/]+\(conf[0-9\-a-zA-Z]+\)# )$/,
+		prompt: /^([A-Za-z\-_0-9\.\/ ]+\(conf[0-9\-a-zA-Z]+\)# )$/,
 		clearPrompt: true,
 		macros: {
 			exit: {
@@ -266,6 +266,9 @@ function snapshot(cli, device, config) {
 		if (familyMatch) {
 			device.set("family", `Mediant ${familyMatch[1]}`);
 		}
+	}
+	else if (showVersion.match(/^;Virtual Env/m)) {
+		device.set("family", "Mediant VE SBC")
 	}
 	const slotMatch = showVersion.match(/^;Slot Number: ([0-9]+)/m);
 	const boardSlot = slotMatch ? slotMatch[1] : undefined;

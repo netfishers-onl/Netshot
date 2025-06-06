@@ -21,7 +21,7 @@ const Info = {
 	name: "HPEArubaOSCX",
 	description: "HPE ArubaOS CX",
 	author: "Netshot Team",
-	version: "1.0"
+	version: "1.1"
 };
 
 const Config = {
@@ -237,7 +237,7 @@ function snapshot(cli, device, config) {
 	const productMatch = showSystem.match(/^Product Name\s+: ([A-Z0-9]+) ([0-9]{4,5}[A-Za-z]?)/m);
 	if (productMatch) {
 		const platform = productMatch[2];
-		device.set("family", `ACOS-CX ${platform}`)
+		device.set("family", `Aruba ${platform}`)
 	}
 
 	try {

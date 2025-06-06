@@ -21,7 +21,7 @@ const Info = {
 	name: "AudioCodesMediant",
 	description: "AudioCodes Mediant MG/SBC",
 	author: "Netshot Team",
-	version: "1.1"
+	version: "1.2"
 };
 
 const Config = {
@@ -328,7 +328,7 @@ function snapshot(cli, device, config) {
 			name: intfMatch[1],
 			ip: [],
 		};
-		const macMatch = intfMatch[2].match(/^\s*Hardware address is: ([0-9a-f-]+)/m);
+		const macMatch = intfMatch[2].match(/^\s*Hardware (A|a)ddress is: ([0-9a-f-]+)/m);
 		if (macMatch) {
 			ni.mac = macMatch[1];
 		}
@@ -346,7 +346,7 @@ function snapshot(cli, device, config) {
 			if (macMatch) {
 				sni.mac = macMatch[1];
 			}
-			const ipMatch = sintfMatch[2].match(/\s*IP address: (\d+\.\d+\.\d+\.\d+)\/(\d+)/m);
+			const ipMatch = sintfMatch[2].match(/\s*IP (A|a)ddress: (\d+\.\d+\.\d+\.\d+)\/(\d+)/m);
 			if (ipMatch) {
 				sni.ip.push({
 					ip: ipMatch[1],

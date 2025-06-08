@@ -647,7 +647,7 @@ public class Ssh extends Cli {
 			out.flush();
 
 			while (true) {
-				int len = in.read(buf, 0, Math.min(buf.length, (int)fileSize));
+				int len = in.read(buf, 0, (fileSize < buf.length) ? (int)fileSize : buf.length);
 				if (len < 0) {
 					throw new IOException("SCP read error");
 				}

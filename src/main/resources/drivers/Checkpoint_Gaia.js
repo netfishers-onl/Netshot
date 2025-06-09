@@ -24,14 +24,14 @@
  * In order for SCP to work, the SSH user must have /bin/bash as login shell.
  */
 
-var Info = {
+const Info = {
 	name: "CheckpointGaia",
 	description: "Checkpoint Gaia",
 	author: "Netshot Team",
-	version: "2.2"
+	version: "3.0"
 };
 
-var Config = {
+const Config = {
 	"productVersion": {
 		type: "Text",
 		title: "Gaia Product Version",
@@ -78,7 +78,7 @@ var Config = {
 	},
 };
 
-var Device = {
+const Device = {
 	"configurationSaved": {
 		type: "Binary",
 		title: "Configuration saved",
@@ -91,7 +91,7 @@ var Device = {
 	}
 };
 
-var CLI = {
+const CLI = {
 	telnet: {
 		macros: {
 			clish: {
@@ -156,11 +156,16 @@ var CLI = {
 				cmd: "save config",
 				options: [ "clish" ],
 				target: "clish"
+			},
+			expertBack: {
+				cmd: "exit",
+				options: [ "expert" ],
+				target: "expert"
 			}
 		}
 	},
 	expert: {
-		prompt: /^(\[Expert@[A-Za-z\-_0-9\.]+:[0-9]+\]# )$/,
+		prompt: /^(\[Expert@[A-Za-z\-_0-9\.:]+\]# )$/,
 		macros: {
 			clish: {
 				cmd: "clish",
@@ -194,9 +199,9 @@ var CLI = {
 };
 
 function snapshot(cli, device, config) {
-	var addMatchSet = function(e) {
+	const addMatchSet = function(e) {
 		e.matchSet = function(data, re, field, defaultValue) {
-			var r = data.match(re);
+			const r = data.match(re);
 			if (r) {
 				e.set(field, r[1]);
 			}
@@ -210,62 +215,64 @@ function snapshot(cli, device, config) {
 	
 	
 	cli.macro("clish");
-	var showConfig = cli.command("show configuration");
+	let showConfig = cli.command("show configuration");
 	showConfig = showConfig.replace(/^(# Exported by .*) on .*/mg, "$1");
 	config.set("configuration", showConfig);
 	
-	var configState = cli.command("show config-state");
+	const configState = cli.command("show config-state");
 	device.set("configurationSaved", !!configState.match(/^saved/));
 	
 	device.matchSet(showConfig, /^set hostname (.+)/m, "name");
 	device.matchSet(showConfig, /^set snmp contact "(.+)"/m, "contact");
 	device.matchSet(showConfig, /^set snmp location "(.+)"/m, "location");
 	
-	var showVersion = cli.command("show version all");
+	const showVersion = cli.command("show version all");
 	config.matchSet(showVersion, /^Product version (.+)/m, "productVersion");
 	config.matchSet(showVersion, /^OS kernel version (.+)/m, "kernelVersion");
 	device.matchSet(showVersion, /^OS edition (.+)/m, "osEdition");
 	
-	var version = showVersion.match(/^Product version Check Point Gaia (.+)/m);
+	const version = showVersion.match(/^Product version Check Point Gaia (.+)/m);
 	if (version) {
 		device.set("softwareVersion", version[1]);
 	}
 	
-	var license = cli.command("cplic print");
+	const license = cli.command("cplic print");
 	config.set("cpLicense", license);
 
 	device.set("networkClass", "FIREWALL");
 	
-	var showInterfaces = cli.command("show interfaces all");
-	var interfaces = cli.findSections(showInterfaces, /^Interface (.+)/m);
-	for (var i in interfaces) {
-		var networkInterface = {
-			name: interfaces[i].match[1],
+	const showInterfaces = cli.command("show interfaces all");
+	const interfaces = cli.findSections(showInterfaces, /^Interface (.+)/m);
+	for (const intf of interfaces) {
+		const networkInterface = {
+			name: intf.match[1],
 			ip: []
 		};
-		var description = interfaces[i].config.match(/^ *comments (\{(.+)\}|(.+))$/m);
+		const description = intf.config.match(/^ *comments (\{(.+)\}|(.+))$/m);
 		if (description) {
 			networkInterface.description = description[2] || description[3];
 		}
-		var ipv4 = interfaces[i].config.match(/^ *ipv4-address (\d+\.\d+\.\d+\.\d+)\/(\d+)/m);
+		const ipv4 = intf.config.match(/^ *ipv4-address (\d+\.\d+\.\d+\.\d+)\/(\d+)/m);
 		if (ipv4) {
 			networkInterface.ip.push({
 				ip: ipv4[1],
 				mask: parseInt(ipv4[2]),
 				usage: "PRIMARY"
 			});
-			var vrrpPattern = /^set vrrp interface (.+) monitored-circuit vrid (\d+) backup-address (\d+\.\d+\.\d+\.\d+)/mg;
-			while (match = vrrpPattern.exec(config)) {
-				if (match[1] == networkInterface.name) {
+			const vrrpPattern = /^set vrrp interface (.+) monitored-circuit vrid (\d+) backup-address (\d+\.\d+\.\d+\.\d+)/mg;
+			while (true) {
+				const vrrpMatch = vrrpPattern.exec(config);
+				if (!vrrpMatch) break;
+				if (vrrpMatch[1] == networkInterface.name) {
 					networkInterface.ip.push({
-						ip: match[3],
+						ip: vrrpMatch[3],
 						mask: parseInt(ipv4[2]),
 						usage: "VRRP"
 					});
 				}
 			}
 		}
-		var ipv6 = interfaces[i].config.match(/^ *ipv6-address ([A-Fa-f0-9:]+)\/(\d+)/m);
+		const ipv6 = intf.config.match(/^ *ipv6-address ([A-Fa-f0-9:]+)\/(\d+)/m);
 		if (ipv6) {
 			networkInterface.ip.push({
 				ip: match[1],
@@ -273,24 +280,22 @@ function snapshot(cli, device, config) {
 				usage: "PRIMARY"
 			});
 		}
-		var macAddress = interfaces[i].config.match(/^ *mac-addr (([0-9A-fa-f][0-9A-fa-f]:){5}[0-9A-fa-f][0-9A-fa-f])/m);
+		const macAddress = intf.config.match(/^ *mac-addr (([0-9A-fa-f][0-9A-fa-f]:){5}[0-9A-fa-f][0-9A-fa-f])/m);
 		if (macAddress) {
 			networkInterface.mac = macAddress[1];
 		}
-		if (interfaces[i].config.match(/^ *state off/m)) {
+		if (intf.config.match(/^ *state off/m)) {
 			networkInterface.enabled = false;
 		}
 		device.add("networkInterface", networkInterface);
 	}
 	
-	var showAsset = cli.command("show asset all");
+	const showAsset = cli.command("show asset all");
 	device.matchSet(showAsset, /^Model (.+)/m, "family", "Check Point");
-	
-	var parts = ["Motherboard", "Chassis"];
-	for (var p in parts) {
-		var part = parts[p];
-		var partNumber = showAsset.match(new RegExp("^" + part + " Assembly Part Number: (.+)", "m"));
-		var serialNumber = showAsset.match(new RegExp("^" + part + " Serial Number: (.+)", "m"));
+
+	for (const part of ["Motherboard", "Chassis"]) {
+		const partNumber = showAsset.match(new RegExp(`^${part} Assembly Part Number: (.+)`, "m"));
+		const serialNumber = showAsset.match(new RegExp(`^${part} Serial Number: (.+)`, "m"));
 		if (partNumber && serialNumber) {
 			device.add("module", {
 				slot: part,
@@ -303,13 +308,14 @@ function snapshot(cli, device, config) {
 		}
 	}
 
-	var addBackup = cli.command("add backup local");
+	const addBackup = cli.command("add backup local");
 	if (!addBackup.match(/Creating backup package/)) {
-		throw "Can't start backup: " + addBackup;
+		throw `Can't start backup: ${addBackup}`;
 	}
 
-	var maxLoops = 12 * 20;
+	let maxLoops = 12 * 20;
 	while (true) {
+		cli.sleep(5000);
 		backupStatus = cli.command("show backup status");
 		if (backupStatus.match(/backup succeeded/)) {
 			break;
@@ -319,29 +325,47 @@ function snapshot(cli, device, config) {
 			if (maxLoops <= 0) {
 				throw "The local backup took too long";
 			}
-			cli.sleep(5000);
 		}
 		else {
 			throw "Invalid Checkpoint backup status";
 		}
 	}
 
-	var backupNameMatch = backupStatus.match(/Backup file location: (.+)/);
+	const backupNameMatch = backupStatus.match(/Backup file location: (.+)/);
 	if (backupNameMatch) {
-		var backupName = backupNameMatch[1];
+		const backupName = backupNameMatch[1];
+		let checksum = undefined;
+		if (cli._modeHistory.includes("expert")) {
+			try {
+				// Try to compute backup file's checkum in expert mode
+				cli.macro("expertBack");
+				const sha256sum = cli.command(`sha256sum ${backupName}`);
+				const hashMatch = sha256sum.match(/^([0-9a-f]{64})\s+.*\.tgz/m);
+				if (!hashMatch) {
+					throw "No match";
+				}
+				checksum = hashMatch[1];
+			}
+			catch (err) {
+				cli.debug(`Unable to compute hash of backup file on the device: ${err}`);
+			}
+			finally {
+				cli.macro("clish");
+			}
+		}
 		try {
-			config.download("backupArchive", backupName, { method: "scp" });
+			config.download("backupArchive", backupName, { method: "scp", checksum });
 		}
 		catch (e) {
-			var text = "" + e;
+			const text = "" + e;
 			if (text.match(/SCP error/)) {
 				throw "SCP error: is /bin/bash the user's login shell?";
 			}
 			throw e;
 		}
 		finally {
-			backupName = backupName.replace(/^.*\//, "");
-			cli.command("delete backup " + backupName);
+			const toDelete = backupName.replace(/^.*\//, "");
+			cli.command(`delete backup ${toDelete}`);
 		}
 	}
 	else {
@@ -350,7 +374,7 @@ function snapshot(cli, device, config) {
 };
 
 function analyzeSyslog(message) {
-	if (message.match(/%SYS\-5\-CONFIG_I: Configured from (.*) by (.*)/)) {
+	if (message.match(/Configuration changed from (.*) by user (.*) by/)) {
 		return true;
 	}
 	return false;

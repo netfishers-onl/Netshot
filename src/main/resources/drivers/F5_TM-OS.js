@@ -17,14 +17,14 @@
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var Info = {
+const Info = {
 	name: "F5TMOS",
 	description: "F5 TM-OS, 11.x and newer",
 	author: "Netshot Team",
-	version: "2.0"
+	version: "3.0"
 };
 
-var Config = {
+const Config = {
 	"tmosVersion": {
 		type: "Text",
 		title: "TM-OS version",
@@ -62,9 +62,13 @@ var Config = {
 		type: "BinaryFile",
 		title: "UCS Archive",
 	},
+	"scfArchive": {
+		type: "BinaryFile",
+		title: "SCF Archive",
+	},
 };
 
-var Device = {
+const Device = {
 	"product": {
 		type: "Text",
 		title: "Product",
@@ -72,7 +76,7 @@ var Device = {
 	}
 };
 
-var CLI = {
+const CLI = {
 	telnet: {
 		fail: "Telnet access is not supported."
 	},
@@ -117,7 +121,7 @@ var CLI = {
 
 function snapshot(cli, device, config) {
 	cli.macro("bash");
-	var runningConfig = cli.command("tmsh -q -c 'cd /; show running-config recursive'");
+	let runningConfig = cli.command("tmsh -q -c 'cd /; show running-config recursive'");
 	runningConfig = runningConfig.replace(/^[^\{]*\r?\n/, ""); // Remove first line if doesn't contain {
 	config.set("runningConfig", runningConfig);
 
@@ -126,61 +130,59 @@ function snapshot(cli, device, config) {
 		config.computeHash(runningConfig);
 	}
 	
-	var lastTransaction = cli.command("grep transaction /var/log/audit | tail -n1");
+	const lastTransaction = cli.command("grep transaction /var/log/audit | tail -n1");
 	if (lastTransaction) {
-		var user = lastTransaction.match(/user (.+) - transaction/);
+		const user = lastTransaction.match(/user (.+) - transaction/);
 		if (user) {
 			config.set("author", user[1]);
 		}
 	}
 	
-	var showCmDevice = cli.command("tmsh -q show /cm device");
-	var hostname = showCmDevice.match(/^Hostname +(.+)/m);
+	const showCmDevice = cli.command("tmsh -q show /cm device");
+	const hostname = showCmDevice.match(/^Hostname +(.+)/m);
 	if (hostname) {
 		device.set("name", hostname[1]);
 	}
 	
-	var showSysVersion = cli.command("tmsh -q show /sys version");
-	var version = showSysVersion.match(/^ *Version +(.*)$/m);
+	const showSysVersion = cli.command("tmsh -q show /sys version");
+	const version = showSysVersion.match(/^ *Version +(.*)$/m);
 	if (version) {
 		device.set("softwareVersion", version[1]);
 		config.set("tmosVersion", version[1]);
 	}
-	var product = showSysVersion.match(/^ *Product +(.*)$/m);
+	const product = showSysVersion.match(/^ *Product +(.*)$/m);
 	if (product) {
 		device.set("product", product[1]);
 	}
 	
-	var showSysHardware = cli.command("tmsh -q show /sys hardware");
-	var platformSections = cli.findSections(showSysHardware, /^Platform/m);
-	for (var p in platformSections) {
-		var details = platformSections[p].config;
-		var family = details.match(/^ *Name +(.*)/m);
+	const showSysHardware = cli.command("tmsh -q show /sys hardware");
+	const platformSections = cli.findSections(showSysHardware, /^Platform/m);
+	for (const platformSection of platformSections) {
+		const family = platformSection.config.match(/^ *Name +(.*)/m);
 		if (family) {
 			device.set("family", family[1]);
 		}
 	}
-	var systemSections = cli.findSections(showSysHardware, /^System Information/m);
-	for (var s in systemSections) {
-		var details = systemSections[p].config;
-		var applianceSerial = details.match(/^ *Appliance Serial +(.*)/m);
-		var partNumber = details.match(/^ *Part Number +(.*)/m);
-		var chassisSerial = details.match(/^ *Chassis Serial +(.*)/m);
-		var type = details.match(/^ *Type +(.*)/m);
-		if (partNumber) {
-			partNumber = partNumber[1];
+	const systemSections = cli.findSections(showSysHardware, /^System Information/m);
+	for (const systemSection of systemSections) {
+		const details = systemSection.config;
+		const applianceSerial = details.match(/^ *Appliance Serial +(.*)/m);
+		const partNumberMatch = details.match(/^ *Part Number +(.*)/m);
+		const chassisSerial = details.match(/^ *Chassis Serial +(.*)/m);
+		const type = details.match(/^ *Type +(.*)/m);
+		
+		let partNumber = "";
+		if (partNumberMatch) {
+			partNumber = partNumberMatch[1];
 		}
 		else if (type) {
 			partNumber = type[1];
-		}
-		else {
-			partNumber = "";
 		}
 
 		if (applianceSerial) {
 			device.add("module", {
 				slot: "Appliance",
-				partNumber: partNumber,
+				partNumber,
 				serialNumber: applianceSerial[1]
 			});
 			device.set("serialNumber", applianceSerial[1]);
@@ -188,17 +190,17 @@ function snapshot(cli, device, config) {
 		if (chassisSerial) {
 			device.add("module", {
 				slot: "Chassis",
-				partNumber: partNumber,
+				partNumber,
 				serialNumber: chassisSerial[1]
 			});
 			device.set("serialNumber", chassisSerial[1]);
 		}
 	}
-	var hardwarePattern = /^  Name +(.*)\r?\n  Type +(.*)\r?\n  Model +(.*)\r?\n  Parameters.*\r?\n((^              .*\r?\n)*)/mg;
-	var hardwareMatch;
-	while (hardwareMatch = hardwarePattern.exec(showSysHardware)) {
-		var parameters = hardwareMatch[4];
-		var serialNumber = parameters.match(/^ *Serial number +(.*)/m);
+	const hardwarePattern = /^  Name +(.*)\r?\n  Type +(.*)\r?\n  Model +(.*)\r?\n  Parameters.*\r?\n((^              .*\r?\n)*)/mg;
+	let hardwareMatch;
+	while ((hardwareMatch = hardwarePattern.exec(showSysHardware))) {
+		const parameters = hardwareMatch[4];
+		const serialNumber = parameters.match(/^ *Serial number +(.*)/m);
 		device.add("module", {
 			slot: hardwareMatch[1],
 			partNumber: hardwareMatch[3],
@@ -206,52 +208,51 @@ function snapshot(cli, device, config) {
 		});
 	}
 	
-	var platform = showSysHardware.match(/^Platform\r?\n +Name +(.*)/m);
+	const platform = showSysHardware.match(/^Platform\r?\n +Name +(.*)/m);
 	if (platform) {
 		device.set("family", platform[1]);
 	}
 	device.set("networkClass", "LOADBALANCER");
 	
 
-	var license = cli.command("tmsh -q -c 'cd /; show /sys license'");
+	const license = cli.command("tmsh -q -c 'cd /; show /sys license'");
 	config.set("license", license);
 	
 	
-	var snmpSections = cli.findSections(runningConfig, /^sys snmp \{$/mg);
-	for (var s in snmpSections) {
-		var snmpConfig = snmpSections[s].config;
-		var sysContact = snmpConfig.match(/^ *sys-contact (.+)/m);
-		var sysLocation = snmpConfig.match(/^ *sys-location (.+)/m);
+	const snmpSections = cli.findSections(runningConfig, /^sys snmp \{$/mg);
+	for (const snmpSection of snmpSections) {
+		const snmpConfig = snmpSection.config;
+		const sysContact = snmpConfig.match(/^ *sys-contact (.+)/m);
+		const sysLocation = snmpConfig.match(/^ *sys-location (.+)/m);
 		device.set("contact", sysContact ? sysContact[1].replace(/^"(.*)"$/, "$1") : "");
 		device.set("location", sysLocation ? sysLocation[1].replace(/^"(.*)"$/, "$1") : "");
 	}
 	
-	var ifRouteDomains = {};
-	var routeDomains = cli.findSections(runningConfig, /^net route-domain (.+) \{/mg);
-	for (var r in routeDomains) {
-		var idMatch = routeDomains[r].config.match(/^ *id +([0-9]+)/);
-		var id = idMatch ? idMatch[1] : "";
-		var routeDomain = routeDomains[r].match[1] + " (" + id + ")";
-		var vlanMatch = routeDomains[r].config.match(/^( +)vlans \{((\r|\n|.)*)^\1\}/m);
+	const ifRouteDomains = {};
+	const routeDomains = cli.findSections(runningConfig, /^net route-domain (.+) \{/mg);
+	for (const routeDomain of routeDomains) {
+		const idMatch = routeDomain.config.match(/^ *id +([0-9]+)/);
+		const id = idMatch ? idMatch[1] : "";
+		const vlanMatch = routeDomain.config.match(/^( +)vlans \{((\r|\n|.)*)^\1\}/m);
 		if (vlanMatch) {
-			var vlans = vlanMatch[2].trim().split(/[\r\n ]+/);
-			for (var v in vlans) {
-				ifRouteDomains[vlans[v]] = routeDomain;
+			const vlans = vlanMatch[2].trim().split(/[\r\n ]+/);
+			for (const vlan of vlans) {
+				ifRouteDomains[vlan] = `${routeDomain.match[1]} (${id})`;
 			}
 		}
 	}
 	
-	var vlanIps = {};
-	var selfIps = cli.findSections(runningConfig, /^net self (.+) \{/mg);
-	for (var i in selfIps) {
-		var ipMatch = selfIps[i].config.match(/^ *address ([0-9a-fA-F:\.]+)(%[0-9]+)?\/([0-9]+)/m);
-		var vlanMatch = selfIps[i].config.match(/^ *vlan (.+)/m);
+	const vlanIps = {};
+	const selfIps = cli.findSections(runningConfig, /^net self (.+) \{/mg);
+	for (const selfIp of selfIps) {
+		const ipMatch = selfIp.config.match(/^ *address ([0-9a-fA-F:\.]+)(%[0-9]+)?\/([0-9]+)/m);
+		const vlanMatch = selfIp.config.match(/^ *vlan (.+)/m);
 		if (ipMatch && vlanMatch) {
-			var vlan = vlanMatch[1];
+			const vlan = vlanMatch[1];
 			if (!vlanIps[vlan]) {
 				vlanIps[vlan] = [];
 			}
-			var ip = {
+			const ip = {
 				mask: parseInt(ipMatch[3]),
 				usage: "PRIMARY"
 			};
@@ -260,11 +261,12 @@ function snapshot(cli, device, config) {
 		}
 	}
 	
-	var vlanMac = {};
+	const vlanMac = {};
 	try {
-		var showVlan = cli.command("tmsh -q -c 'cd /; show /net vlan'");
-		var macPattern = /^Interface Name +(.+)\r?\nMac Address.* +([0-9A-Za-z:]+)$/mg;
-		while (match = macPattern.exec(showVlan)) {
+		const showVlan = cli.command("tmsh -q -c 'cd /; show /net vlan'");
+		const macPattern = /^Interface Name +(.+)\r?\nMac Address.* +([0-9A-Za-z:]+)$/mg;
+		let match;
+		while ((match = macPattern.exec(showVlan))) {
 			vlanMac[match[1]] = match[2];
 		}
 	}
@@ -272,61 +274,61 @@ function snapshot(cli, device, config) {
 		// Go on
 	}
 
-	var mgmtIps = [];
-	var sysMgmtIps = cli.findSections(runningConfig, /^sys management-ip ([0-9a-fA-F:\.]+)\/([0-9]+) \{/mg);
-	for (var i in sysMgmtIps) {
-		var ip = {
-			mask: parseInt(sysMgmtIps[i].match[2]),
+	const mgmtIps = [];
+	const sysMgmtIps = cli.findSections(runningConfig, /^sys management-ip ([0-9a-fA-F:\.]+)\/([0-9]+) \{/mg);
+	for (const sysMgmtIp of sysMgmtIps) {
+		const ip = {
+			mask: parseInt(sysMgmtIp.match[2]),
 			usage: "PRIMARY"
 		};
-		var a = sysMgmtIps[i].match[1];
+		const a = sysMgmtIp.match[1];
 		ip[a.match(/:/) ? "ipv6" : "ip"] = a;
 		mgmtIps.push(ip);
 	}
 
 	
-	var interfaces = cli.findSections(runningConfig, /^net interface (.+) \{/mg);
-	for (var i in interfaces) {
-		var networkInterface = {
-			name: interfaces[i].match[1],
+	const interfaces = cli.findSections(runningConfig, /^net interface (.+) \{/mg);
+	for (const intf of interfaces) {
+		const networkInterface = {
+			name: intf.match[1],
 			ip: [],
 			level3: false
 		};
-		if (interfaces[i].config.match(/^ *disabled$/m)) {
+		if (intf.config.match(/^ *disabled$/m)) {
 			networkInterface.enabled = false;
 		}
-		var macMatch = interfaces[i].config.match(/^ *mac-address ([0-9A-Za-z:]+)/m);
+		const macMatch = intf.config.match(/^ *mac-address ([0-9A-Za-z:]+)/m);
 		if (macMatch) {
 			networkInterface.mac = macMatch[1];
 		}
 
 		if (networkInterface.name === "mgmt") {
-			for (var p in mgmtIps) {
+			for (const p in mgmtIps) {
 				networkInterface.ip.push(mgmtIps[p]);
 			}
 		}
 
 		device.add("networkInterface", networkInterface);
 	}
-	var trunks = cli.findSections(runningConfig, /^net trunk (.+) \{/mg);
-	for (var t in trunks) {
-		var networkInterface = {
-			name: trunks[t].match[1],
+	const trunks = cli.findSections(runningConfig, /^net trunk (.+) \{/mg);
+	for (const trunk of trunks) {
+		const networkInterface = {
+			name: trunk.match[1],
 			ip: [],
 			level3: false
 		};
-		var interfacesMatch = trunks[t].config.match(/^( +)interfaces \{((\r|\n|.)*)^\1\}/m);
+		const interfacesMatch = trunk.config.match(/^( +)interfaces \{((\r|\n|.)*)^\1\}/m);
 		if (interfacesMatch) {
-			var interfaceNames = interfacesMatch[2].trim().split(/[\r\n ]+/);
-			networkInterface.description = "Trunk (" + interfaceNames.join(", ") + ")";
+			const interfaceNames = interfacesMatch[2].trim().split(/[\r\n ]+/);
+			networkInterface.description = `Trunk (${interfaceNames.join(", ")})`;
 		}
 		device.add("networkInterface", networkInterface);
 	}
 	
-	var vlans = cli.findSections(runningConfig, /^net vlan (.+) \{/mg);
-	for (var v in vlans) {
-		var vlanName = vlans[v].match[1];
-		var networkInterface = {
+	const vlans = cli.findSections(runningConfig, /^net vlan (.+) \{/mg);
+	for (const vlan of vlans) {
+		const vlanName = vlan.match[1];
+		const networkInterface = {
 			name: vlanName.replace(/^.*\//, ""),
 			virtualDevice: vlanName.replace(/^(.*)\/.*/, "$1"),
 			ip: vlanIps[vlanName] || []
@@ -337,33 +339,50 @@ function snapshot(cli, device, config) {
 		if (vlanMac[vlanName]) {
 			networkInterface.mac = vlanMac[vlanName];
 		}
-		var tagMatch = vlans[v].config.match(/ *tag +([0-9]+)/m);
+		const tagMatch = vlan.config.match(/ *tag +([0-9]+)/m);
 		if (tagMatch) {
-			networkInterface.name = networkInterface.name + " (Vlan" + tagMatch[1] + ")";
+			networkInterface.name = `${networkInterface.name} (Vlan${tagMatch[1]})`;
 		}
-		var descriptionMatch = vlans[v].config.match(/ *description +(.*)/);
+		const descriptionMatch = vlan.config.match(/ *description +(.*)/);
 		if (descriptionMatch) {
-			networkInterface.description = descriptionMatch[1].replace(/^"(.*)"$/, "$1");;
+			networkInterface.description = descriptionMatch[1].replace(/^"(.*)"$/, "$1");
 		}
 		
 		device.add("networkInterface", networkInterface);
 	}
 
-	// Remove any forgotten archive
-	var ucsPath = "/var/tmp/netshot.ucs";
-	cli.command("rm -f " + ucsPath);
-	var saveUcs = cli.command("tmsh -q save /sys ucs " + ucsPath);
+	const computeHash = (path) => {
+		const output = cli.command(`sha256sum ${path}`);
+		const match = output.match(/^([0-9a-f]{64})\s+(.+?)\s*$/m);
+		if (match && match[2] === path) {
+			return match[1];
+		}
+		throw `Unable to compute hash of file ${path}:\n${output}`;
+	};
+
+	// Save and download UCS
+	const ucsPath = "/var/local/ucs/netshot.ucs";
+	cli.command(`rm -f ${ucsPath}`);
+	const saveUcs = cli.command(`tmsh -q save /sys ucs ${ucsPath}`, { timeout: 5 * 60 * 1000 });
 	if (!saveUcs.match(/is saved/)) {
-		throw "Unable to save UCS archive:\n" + saveUcs;
+		throw `Unable to save UCS archive:\n${saveUcs}`;
 	}
-	var checksum = cli.command("sha256sum " + ucsPath);
-	const hashMatch = checksum.match(/^([0-9a-f]{64})\s+.*netshot\.ucs/m);
-	if (!hashMatch) {
-		throw "Unable to compute hash of UCS file:\n" + checksum;
+	const ucsCheckum = computeHash(ucsPath);
+	config.download("ucsArchive", ucsPath, { method: "scp", checksum: ucsCheckum });
+	cli.command(`rm -f ${ucsPath}`);
+
+	// Save and download SCF
+	const scfPath = "/var/local/scf/netshot";
+	const saveScf = cli.command(
+		`tmsh -q save /sys config file ${scfPath} no-passphrase`, { timeout: 5 * 60 * 1000 });
+	if (!saveScf.match(/\.tar/)) {
+		throw `Unable to save SCF archive:\n${saveScf}`;
 	}
-	config.download("ucsArchive", ucsPath, { method: "sftp", checksum: hashMatch[1] });
-	cli.command("rm -f " + ucsPath);
-};
+	const scfTarPath = `${scfPath}.tar`;
+	const scfChecksum = computeHash(scfTarPath);
+	config.download("scfArchive", scfTarPath, { method: "scp", checksum: scfChecksum });
+	cli.command(`rm -f ${scfPath}*`);
+}
 
 
 // To forward the audit logs to the Netshot server, use the following command line in tmsh:
@@ -391,7 +410,7 @@ function analyzeTrap(trap) {
 	if (trap["1.3.6.1.6.3.1.1.4.1.0"] === "1.3.6.1.4.1.3375.2.4.0.899") {
 		return true;
 	}
-	var message = trap["1.3.6.1.4.1.3375.2.4.1.1"];
+	const message = trap["1.3.6.1.4.1.3375.2.4.1.1"];
 	if (typeof message === "string" && message.match(/AUDIT - client (.+?), user (.+?) - transaction #/)) {
 		return true;
 	}

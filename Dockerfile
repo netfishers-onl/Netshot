@@ -16,12 +16,18 @@ FROM debian-graalvm AS builder
 ARG NETSHOT_VERSION
 COPY . /build
 WORKDIR /build
+RUN GRAALPY_VERSION=$(JAVA_HOME=/ ./mvnw help:evaluate -Dexpression=polyglot.version -q -DforceStdout) && \
+    echo GRAALPY_VERSION && \
+    wget --quiet https://github.com/oracle/graalpython/releases/download/graal-${GRAALPY_VERSION}/graalpy-jvm-${GRAALPY_VERSION}-linux-amd64.tar.gz && \
+    tar xvzf graalpy-jvm-${GRAALPY_VERSION}-linux-amd64.tar.gz && \
+    mv graalpy-${GRAALPY_VERSION}-linux-amd64 graalpy
 RUN sed -i -r "s/VERSION = \".*\";/VERSION = \"$NETSHOT_VERSION\";/g" \
        src/main/java/net/netshot/netshot/Netshot.java
 RUN ./mvnw package -Dmaven.test.skip
 
 FROM debian-graalvm
 RUN mkdir /usr/local/netshot /var/log/netshot
+COPY --from=builder /build/graalpy /usr/lib/graalpy
 COPY --from=builder /build/target/netshot.jar /usr/local/netshot/netshot.jar
 COPY dist/netshot.conf.docker /etc/netshot.conf
 EXPOSE 8080

@@ -35,34 +35,38 @@ public class StringListTaskLogger implements TaskLogger {
 		this.logs = logs;
 	}
 
+	private String sanitize(String message) {
+		return message.replace("\0", "");
+	}
+
 	@Export
 	@Override
 	public void warn(String message) {
-		this.logs.add(String.format("[WARN] %s", message));
+		this.logs.add("[WARN] " + sanitize(message));
 	}
 	
 	@Export
 	@Override
 	public void trace(String message) {
-		this.logs.add(String.format("[TRACE] %s", message));
+		this.logs.add("[TRACE] " + sanitize(message));
 	}
 	
 	@Export
 	@Override
 	public void info(String message) {
-		this.logs.add(String.format("[INFO] %s", message));
+		this.logs.add("[INFO] " + sanitize(message));
 	}
 	
 	@Export
 	@Override
 	public void error(String message) {
-		this.logs.add(String.format("[ERROR] %s", message));
+		this.logs.add("[ERROR] " + sanitize(message));
 	}
 	
 	@Export
 	@Override
 	public void debug(String message) {
-		this.logs.add(String.format("[DEBUG] %s", message));
+		this.logs.add("[DEBUG] " + sanitize(message));
 	}
 	
 }

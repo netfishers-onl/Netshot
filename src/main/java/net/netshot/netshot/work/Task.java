@@ -457,23 +457,33 @@ public abstract class Task implements Cloneable {
 	}
 	
 	public void debug(String message) {
-		this.logs.append(String.format("[DEBUG] %s\n", message));
+		this.logs.append("[DEBUG] ");
+		this.logs.append(message);
+		this.logs.append("\n");
 	}
 	
 	public void trace(String message) {
-		this.logs.append(String.format("[TRACE] %s\n", message));
+		this.logs.append("[TRACE] ");
+		this.logs.append(message);
+		this.logs.append("\n");
 	}
 	
 	public void info(String message) {
-		this.logs.append(String.format("[INFO] %s\n", message));
+		this.logs.append("[INFO] ");
+		this.logs.append(message);
+		this.logs.append("\n");
 	}
 	
 	public void warn(String message) {
-		this.logs.append(String.format("[WARN] %s\n", message));
+		this.logs.append("[WARN] ");
+		this.logs.append(message);
+		this.logs.append("\n");
 	}
 	
 	public void error(String message) {
-		this.logs.append(String.format("[ERROR] %s\n", message));
+		this.logs.append("[ERROR] ");
+		this.logs.append(message);
+		this.logs.append("\n");
 	}
 	
 

@@ -5158,31 +5158,41 @@ public class RestService extends Thread {
 				@Override
 				@Export
 				public void warn(String message) {
-					log.append(String.format("[WARN] %s\n", message));
+					log.append("[WARN] ");
+					log.append(message);
+					log.append("\n");
 				}
 			
 				@Override
 				@Export
 				public void trace(String message) {
-					log.append(String.format("[TRACE] %s\n", message));
+					log.append("[TRACE] ");
+					log.append(message);
+					log.append("\n");
 				}
 			
 				@Override
 				@Export
 				public void info(String message) {
-					log.append(String.format("[INFO] %s\n", message));
+					log.append("[INFO] ");
+					log.append(message);
+					log.append("\n");
 				}
 			
 				@Override
 				@Export
 				public void error(String message) {
-					log.append(String.format("[ERROR] %s\n", message));
+					log.append("[ERROR] ");
+					log.append(message);
+					log.append("\n");
 				}
 			
 				@Override
 				@Export
 				public void debug(String message) {
-					log.append(String.format("[DEBUG] %s\n", message));
+					log.append("[DEBUG] ");
+					log.append(message);
+					log.append("\n");
 				}
 			};
 

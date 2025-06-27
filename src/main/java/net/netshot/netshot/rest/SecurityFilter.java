@@ -24,6 +24,7 @@ import java.security.Principal;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
@@ -42,6 +43,8 @@ import net.netshot.netshot.aaa.User;
 @PreMatching
 public class SecurityFilter implements ContainerRequestFilter {
 
+	public static final String USER_ATTRIBUTE = "user";
+
 	@Context
 	private HttpServletRequest httpRequest;
 
@@ -50,14 +53,21 @@ public class SecurityFilter implements ContainerRequestFilter {
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		User user = (User) httpRequest.getAttribute("apiToken");
+		// Try API token
+		User user = (User) httpRequest.getAttribute(ApiTokenAuthFilter.ATTRIBUTE);
 		if (user == null) {
-			user = (User) httpRequest.getSession().getAttribute("user");
+			// Try to retrieve User from existing session
+			HttpSession session = httpRequest.getSession(false);
+			if (session != null) {
+				user = (User) session.getAttribute(SecurityFilter.USER_ATTRIBUTE);
+			}
 		}
-		httpRequest.setAttribute("user", user);
 		requestContext.setSecurityContext(new Authorizer(user));
 	}
 
+	/**
+	 * Custom authorizer class based on known Netshot roles.
+	 */
 	private class Authorizer implements SecurityContext {
 
 		final private User user;
@@ -68,12 +78,15 @@ public class SecurityFilter implements ContainerRequestFilter {
 
 		@Override
 		public boolean isUserInRole(String role) {
-			boolean result = (user != null && (
-					("admin".equals(role) && user.getLevel() >= User.LEVEL_ADMIN) ||
-					("executereadwrite".equals(role) && user.getLevel() >= User.LEVEL_EXECUTEREADWRITE) ||
-					("readwrite".equals(role) && user.getLevel() >= User.LEVEL_READWRITE) ||
-					("operator".equals(role) && user.getLevel() >= User.LEVEL_OPERATOR) ||
-					("readonly".equals(role) && user.getLevel() >= User.LEVEL_READONLY)));
+			boolean result = false;
+			if (user != null) {
+				for (User.Role knownRole : User.Role.values()) {
+					if (knownRole.getName().equals(role)) {
+						result = user.getLevel() >= knownRole.getLevel();
+						break;
+					}
+				}
+			}
 			Netshot.aaaLogger.debug("Role {} requested for user {}: result {}.", role,
 					user == null ? "<null>" : user.getUsername(), result);
 			return result;

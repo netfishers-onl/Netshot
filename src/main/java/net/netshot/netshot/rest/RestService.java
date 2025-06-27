@@ -77,6 +77,7 @@ import net.netshot.netshot.database.Database;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.TaskManager;
 import net.netshot.netshot.aaa.ApiToken;
+import net.netshot.netshot.aaa.Oidc;
 import net.netshot.netshot.aaa.PasswordPolicy;
 import net.netshot.netshot.aaa.PasswordPolicy.PasswordPolicyException;
 import net.netshot.netshot.aaa.Radius;
@@ -476,7 +477,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/domains")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -567,7 +568,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/domains")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -636,7 +637,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/domains/{id}")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -708,7 +709,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/domains/{id}")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -758,7 +759,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/devices/{id}/interfaces")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -803,7 +804,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/devices/{id}/modules")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -851,7 +852,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/devices/{id}/tasks")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -947,7 +948,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/devices/{id}/configs")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -988,7 +989,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/configs/{id}/{item}")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -1298,7 +1299,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/configs/{id1}/vs/{id2}")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -1407,7 +1408,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/devices/{id}")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -1541,7 +1542,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/devices")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -1598,7 +1599,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/devicetypes")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -1655,7 +1656,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/devicefamilies")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -1704,7 +1705,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/partnumbers")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -1820,7 +1821,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/devices")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -1830,7 +1831,7 @@ public class RestService extends Thread {
 		" Otherwise, the device will be immediately created in the database, and a 'snapshot' task will be created."
 	)
 	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
-	public Task addDevice(RsNewDevice device) throws WebApplicationException {
+	public Task addDevice(@Context SecurityContext securityContext, RsNewDevice device) throws WebApplicationException {
 		log.debug("REST request, new device.");
 		Network4Address deviceAddress;
 		try {
@@ -1934,7 +1935,7 @@ public class RestService extends Thread {
 		finally {
 			session.close();
 		}
-		User user = (User) request.getAttribute("user");
+		User user = (User) securityContext.getUserPrincipal();
 		if (device.isAutoDiscover()) {
 			try {
 				DiscoverDeviceTypeTask task = new DiscoverDeviceTypeTask(deviceAddress, domain,
@@ -2035,7 +2036,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/devices/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -2217,7 +2218,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/devices/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -2449,7 +2450,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/tasks/{id}")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -2490,7 +2491,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/tasks/{id}/debuglog")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Produces({ MediaType.APPLICATION_OCTET_STREAM })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -2533,7 +2534,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/tasks")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -2599,7 +2600,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/credentialsets")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -2636,7 +2637,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/credentialsets/{id}")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -2696,7 +2697,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/credentialsets")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -2764,7 +2765,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/credentialsets/{id}")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -2923,7 +2924,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/devices/search")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -2987,7 +2988,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/groups")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -3086,7 +3087,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/groups")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -3121,7 +3122,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/groups/{id}")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -3162,7 +3163,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/groups/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -3273,7 +3274,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/groups/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -3565,7 +3566,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/tasks/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -3661,7 +3662,7 @@ public class RestService extends Thread {
 
 	@GET
 	@Path("/tasks/summary")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -3708,7 +3709,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/tasks")
-	@RolesAllowed("operator")
+	@RolesAllowed(User.ROLE_OPERATOR)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -3721,8 +3722,8 @@ public class RestService extends Thread {
 			@Context SecurityContext securityContext,
 			RsTask rsTask) throws WebApplicationException {
 		log.debug("REST request, add task.");
-		User user = (User) request.getAttribute("user");
-		String userName = "";
+		User user = (User) securityContext.getUserPrincipal();
+		String userName = "<Unknown>";
 		try {
 			userName = user.getUsername();
 		}
@@ -3754,7 +3755,7 @@ public class RestService extends Thread {
 					rsTask.isDontRunDiagnostics(), rsTask.isDontCheckCompliance());
 		}
 		else if (rsTask.getType().equals("RunDeviceScriptTask")) {
-			if (!securityContext.isUserInRole("executereadwrite")) {
+			if (!securityContext.isUserInRole(User.ROLE_EXECUTEREADWRITE)) {
 				throw new NetshotNotAuthorizedException("Insufficient permissions to run scripts on devices.", 0);
 			}
 			log.trace("Adding a RunDeviceScriptTask");
@@ -3800,7 +3801,7 @@ public class RestService extends Thread {
 			((RunDeviceScriptTask) task).setUserInputValues(rsTask.getUserInputs());
 		}
 		else if (rsTask.getType().equals("RunDeviceGroupScriptTask")) {
-			if (!securityContext.isUserInRole("executereadwrite")) {
+			if (!securityContext.isUserInRole(User.ROLE_EXECUTEREADWRITE)) {
 				throw new NetshotNotAuthorizedException("Insufficient permissions to run scripts on devices.", 0);
 			}
 			log.trace("Adding a RunDeviceGroupScriptTask");
@@ -3959,7 +3960,7 @@ public class RestService extends Thread {
 			}
 		}
 		else if (rsTask.getType().equals("ScanSubnetsTask")) {
-			if (!securityContext.isUserInRole("readwrite")) {
+			if (!securityContext.isUserInRole(User.ROLE_READWRITE)) {
 				throw new NetshotNotAuthorizedException("Insufficient permissions to scan for devices.", 0);
 			}
 			log.trace("Adding a ScanSubnetsTask");
@@ -4034,7 +4035,7 @@ public class RestService extends Thread {
 			task = new ScanSubnetsTask(subnets, domain, rsTask.getComments(), target.toString(), userName);
 		}
 		else if (rsTask.getType().equals("PurgeDatabaseTask")) {
-			if (!securityContext.isUserInRole("admin")) {
+			if (!securityContext.isUserInRole(User.ROLE_ADMIN)) {
 				throw new NetshotNotAuthorizedException("Insufficient permissions to purge database.", 0);
 			}
 			log.trace("Adding a PurgeDatabaseTask");
@@ -4236,7 +4237,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/configs")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -4305,7 +4306,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/policies")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -4342,7 +4343,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/policies/{id}/rules")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -4388,7 +4389,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/policies/{pid}/rules/{id}")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -4469,7 +4470,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/policies")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -4537,7 +4538,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/policies/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -4583,7 +4584,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/policies/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -4783,7 +4784,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/rules")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -4867,7 +4868,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/rules/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -5002,7 +5003,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/rules/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -5093,7 +5094,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/rules/test")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -5238,7 +5239,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/rule/{id}/exempteddevices")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -5348,7 +5349,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/devices/{id}/complianceresults")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -5421,7 +5422,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/reports/last7dayschangesbyday")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -5526,7 +5527,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/reports/groupconfigcompliancestats")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -5634,7 +5635,7 @@ public class RestService extends Thread {
 
 	@GET
 	@Path("/reports/hardwaresupportstats")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -5737,7 +5738,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/reports/groupsoftwarecompliancestats")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -5846,7 +5847,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/reports/configcompliancedevicestatuses")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -5932,7 +5933,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/reports/groupconfignoncompliantdevices/{id}")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -6002,7 +6003,7 @@ public class RestService extends Thread {
 
 	@GET
 	@Path("/reports/hardwaresupportdevices/{type}/{date}")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -6085,7 +6086,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/hardwarerules")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -6187,7 +6188,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/hardwarerules")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -6252,7 +6253,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/hardwarerules/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -6299,7 +6300,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/hardwarerules/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -6371,7 +6372,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/softwarerules")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -6481,7 +6482,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/softwarerules")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -6546,7 +6547,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/softwarerules/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -6593,7 +6594,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/softwarerules/{id}")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -6670,7 +6671,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/softwarerules/{id}/sort")
-	@RolesAllowed("readwrite")
+	@RolesAllowed(User.ROLE_READWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -6761,7 +6762,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/reports/groupdevicesbysoftwarelevel/{id}/{level}")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -6856,7 +6857,7 @@ public class RestService extends Thread {
 	
 	@GET
 	@Path("/reports/accessfailuredevices")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -6954,6 +6955,20 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private String newPassword;
+
+		/** The OIDC authorization code. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private String authorizationCode;
+
+		/** The redirect URI. */
+		@Getter(onMethod=@__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private String redirectUri;
 	}
 
 	/**
@@ -6964,7 +6979,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/user/{id}")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -6972,15 +6987,24 @@ public class RestService extends Thread {
 		description = "Terminates the current user session (useless when using API tokens)."
 	)
 	@Tag(name = "Login", description = "Login and password management for standard user")
-	public void logout(@Context HttpServletRequest request,
+	public Response logout(@Context HttpServletRequest request,
+			@Context SecurityContext securityContext,
 			@PathParam("id") @Parameter(description = "User ID - not used") Long id)
 			throws WebApplicationException {
 		log.debug("REST logout request.");
-		User sessionUser = (User) request.getSession().getAttribute("user");
-		HttpSession httpSession = request.getSession();
-		httpSession.invalidate();
-		Netshot.aaaLogger.warn("User {} has logged out.", sessionUser.getUsername());
-		this.suggestReturnCode(Response.Status.NO_CONTENT);
+		HttpSession httpSession = request.getSession(false);
+		User user = (User) securityContext.getUserPrincipal();
+		String username = (user == null) ? "<none>" : user.getUsername();
+		if (httpSession != null) {
+			httpSession.invalidate();
+		}
+		Netshot.aaaLogger.warn("User {} has logged out.", username);
+		Response.ResponseBuilder builder = Response.noContent();
+		builder.status(Response.Status.NO_CONTENT);
+		if (Oidc.isAvailable()) {
+			builder.header("X-OIDC-EndSessionEndpoint", Oidc.getEndSessionEndpointURI());
+		}
+		return builder.build();
 	}
 
 	/**
@@ -6992,7 +7016,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/user/{id}")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -7001,11 +7025,13 @@ public class RestService extends Thread {
 		description = "Edits current user, especially password."
 	)
 	@Tag(name = "Login", description = "Login and password management for standard user")
-	public UiUser setSelfUser(RsLogin rsLogin,
+	public UiUser setSelfUser(
+			@Context SecurityContext securityContext,
+			RsLogin rsLogin,
 			@PathParam("id") @Parameter(description = "User ID (ignored)") Long id)
 			throws WebApplicationException {
 		log.debug("REST password change request, username {}.", rsLogin.getUsername());
-		User currentUser = (User) request.getAttribute("user");
+		User currentUser = (User) securityContext.getUserPrincipal();
 		Netshot.aaaLogger.warn("Password change request via REST by user {} for user {}.", currentUser.getUsername(), rsLogin.getUsername());
 
 		UiUser user;
@@ -7076,7 +7102,7 @@ public class RestService extends Thread {
 	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Log in",
-		description = "Logs in (create session) by username and password (useless when using API tokens)."
+		description = "Logs in (create session) by username and password or OIDC authorization code (useless when using API tokens)."
 	)
 	@Tag(name = "Login", description = "Login and password management for standard user")
 	public UiUser login(RsLogin rsLogin) throws WebApplicationException {
@@ -7085,14 +7111,30 @@ public class RestService extends Thread {
 
 		String remoteAddress = LoggerFilter.getClientAddress(request);
 		UiUser user = null;
+		UiUser remoteUser = null;
+		String username = rsLogin.getUsername();
 
-		{
+		if (username == null && rsLogin.getAuthorizationCode() != null && rsLogin.getRedirectUri() != null) {
+			try {
+				remoteUser = Oidc.authenticateWithCode(
+					rsLogin.getAuthorizationCode(),
+					URI.create(rsLogin.getRedirectUri()).toURL());
+				if (remoteUser != null) {
+					username = remoteUser.getUsername();
+				}
+			}
+			catch (MalformedURLException e) {
+				log.error("Error while extracting client request URL", e);
+			}
+		}
+
+		if (username != null) {
 			Session session = Database.getSession(true);
 			try {
-				user = session.bySimpleNaturalId(UiUser.class).load(rsLogin.getUsername());
+				user = session.bySimpleNaturalId(UiUser.class).load(username);
 			}
 			catch (HibernateException e) {
-				log.error("Unable to retrieve the user {}.", rsLogin.getUsername(), e);
+				log.error("Unable to retrieve the user {}.", username, e);
 				throw new NetshotBadRequestException("Unable to retrieve the user.",
 						NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
@@ -7103,17 +7145,21 @@ public class RestService extends Thread {
 
 		if (user != null && user.isLocal()) {
 			try {
+				if (remoteUser != null) {
+					// Remote login (via OIDC) while a corresponding user configured as local exists
+					throw new WrongPasswordException("Remote login attempt with username which is configured as Netshot local");
+				}
 				try {
 					user.checkPassword(rsLogin.getPassword(), PasswordPolicy.getMainPolicy());
 					Netshot.aaaLogger.info(
-						"Local authentication success for user {} from {}.", rsLogin.getUsername(), remoteAddress);
+						"Local authentication success for user {} from {}.", username, remoteAddress);
 				}
 				catch (PasswordPolicyException e) {
 					if (rsLogin.getNewPassword() == null) {
 						throw e;
 					}
 					Netshot.aaaLogger.info(
-						"User {} authenticated from {}, password has to be changed.", rsLogin.getUsername(), remoteAddress);
+						"User {} authenticated from {}, password has to be changed.", username, remoteAddress);
 					// If new password, proceed with password change
 				}
 				if (rsLogin.getNewPassword() != null) {
@@ -7125,7 +7171,7 @@ public class RestService extends Thread {
 						session.merge(user1);
 						session.getTransaction().commit();
 						Netshot.aaaLogger.info(
-							"User {} changed its password.", rsLogin.getUsername(), remoteAddress);
+							"User {} changed its password.", username, remoteAddress);
 					}
 					catch (HibernateException e) {
 						session.getTransaction().rollback();
@@ -7146,56 +7192,59 @@ public class RestService extends Thread {
 						session.close();
 					}
 				}
-
 			}
 			catch (WrongPasswordException e) {
 				Netshot.aaaLogger.warn(
 					"Local authentication failure for user {} from {}.",
-					rsLogin.getUsername(), remoteAddress);
+					username, remoteAddress);
 				user = null;
 			}
 			catch (PasswordPolicyException e) {
 				Netshot.aaaLogger.warn(
-					"Password of user {} is expired, it must be changed.", rsLogin.getUsername());
+					"Password of user {} is expired, it must be changed.", username);
 				user = null;
 				throw new NetshotBadRequestException(
 					"Password has expired, it must be changed.",
 					NetshotBadRequestException.Reason.NETSHOT_EXPIRED_PASSWORD);
 			}
-
-
-
 		}
-		else {
-			UiUser remoteUser = null;
-			if (Radius.isAvailable()) {
-				remoteUser = Radius.authenticate(rsLogin.getUsername(), rsLogin.getPassword(), remoteAddress);
+		else if (username != null) {
+			if (remoteUser == null && Radius.isAvailable()) {
+				remoteUser = Radius.authenticate(username, rsLogin.getPassword(), remoteAddress);
 			}
 			if (remoteUser == null && Tacacs.isAvailable()) {
-				remoteUser = Tacacs.authenticate(rsLogin.getUsername(), rsLogin.getPassword(), remoteAddress);
+				remoteUser = Tacacs.authenticate(username, rsLogin.getPassword(), remoteAddress);
 			}
 			if (remoteUser == null) {
 				Netshot.aaaLogger.warn("Remote authentication failure for user {} from {}.",
-					rsLogin.getUsername(), remoteAddress);
+					username, remoteAddress);
 			}
 			else {
 				Netshot.aaaLogger.info("Remote authentication success for user {} from {}.",
-					rsLogin.getUsername(), remoteAddress);
+					username, remoteAddress);
 				if (user != null) {
 					remoteUser.setLevel(user.getLevel());
 					Netshot.aaaLogger.info("Level permission for user {} is locally overriden: {}.",
-						rsLogin.getUsername(), user.getLevel());
+						username, user.getLevel());
 				}
 			}
 			user = remoteUser;
 		}
+
 		if (user == null) {
+			HttpSession httpSession = request.getSession();
+			httpSession.invalidate();
+		}
+		else if (user.getLevel() <= 0) {
+			Netshot.aaaLogger.info(
+				"User {} was successfully authenticated but has unsufficient permission (level {})",
+				user.getUsername(), user.getLevel());
 			HttpSession httpSession = request.getSession();
 			httpSession.invalidate();
 		}
 		else {
 			HttpSession httpSession = request.getSession();
-			httpSession.setAttribute("user", user);
+			httpSession.setAttribute(SecurityFilter.USER_ATTRIBUTE, user);
 			return user;
 		}
 		throw new NetshotAuthenticationRequiredException();
@@ -7208,7 +7257,7 @@ public class RestService extends Thread {
 	 * @throws WebApplicationException the web application exception
 	 */
 	@GET
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Path("/user")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -7217,8 +7266,8 @@ public class RestService extends Thread {
 		description = "Returns the current logged in user."
 	)
 	@Tag(name = "Login", description = "Login and password management for standard user")
-	public User getUser(@Context HttpServletRequest request) throws WebApplicationException {
-		User user = (User) request.getAttribute("user");
+	public User getUser(@Context SecurityContext securityContext) throws WebApplicationException {
+		User user = (User) securityContext.getUserPrincipal();
 		return user;
 	}
 
@@ -7230,7 +7279,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/users")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -7309,7 +7358,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/users")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -7381,7 +7430,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/users/{id}")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -7390,10 +7439,12 @@ public class RestService extends Thread {
 		description = "Edits a Netshot user, by ID."
 	)
 	@Tag(name = "Admin", description = "Administrative actions")
-	public UiUser setUser(@PathParam("id") @Parameter(description = "User ID") Long id, RsUser rsUser)
-			throws WebApplicationException {
+	public UiUser setUser(
+			@Context SecurityContext securityContext,
+			@PathParam("id") @Parameter(description = "User ID") Long id,
+			RsUser rsUser) throws WebApplicationException {
 		log.debug("REST request, edit user {}.", id);
-		User currentUser = (User) request.getAttribute("user");
+		User currentUser = (User) securityContext.getUserPrincipal();
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
@@ -7476,7 +7527,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/users/{id}")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -7484,10 +7535,12 @@ public class RestService extends Thread {
 		description = "Removes a user from the Netshot database."
 	)
 	@Tag(name = "Admin", description = "Administrative actions")
-	public void deleteUser(@PathParam("id") @Parameter(description = "User ID") Long id)
+	public void deleteUser(
+			@Context SecurityContext securityContext,
+			@PathParam("id") @Parameter(description = "User ID") Long id)
 			throws WebApplicationException {
 		log.debug("REST request, delete user {}.", id);
-		User currentUser = (User) request.getAttribute("user");
+		User currentUser = (User) securityContext.getUserPrincipal();
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
@@ -7622,7 +7675,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/apitokens")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -7678,7 +7731,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/apitokens")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -7712,7 +7765,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/apitokens/{id}")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -7756,7 +7809,7 @@ public class RestService extends Thread {
 
 	@GET
 	@Path("/reports/export")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -7766,7 +7819,9 @@ public class RestService extends Thread {
 			"The only supported and default output format is xlsx (Excel file)."
 	)
 	@Tag(name = "Reports", description = "Report and statistics")
-	public Response getDataXLSX(@Context HttpServletRequest request,
+	public Response getDataXLSX(
+			@Context HttpServletRequest request,
+			@Context SecurityContext securityContext,
 			@QueryParam("group") @Parameter(description = "Filter on given group ID(s)") Set<Long> groups,
 			@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains,
 			@DefaultValue("false") @QueryParam("interfaces") @Parameter(description = "Whether to export interface data") boolean exportInterfaces,
@@ -7778,7 +7833,7 @@ public class RestService extends Thread {
 			@DefaultValue("false") @QueryParam("devicedriverattributes") @Parameter(description = "Whether to export driver-specific attributes for devices") boolean exportDeviceDriverAttributes,
 			@DefaultValue("xlsx") @QueryParam("format") @Parameter(description = "Export format (xlsx is supported)") String fileFormat) throws WebApplicationException {
 		log.debug("REST request, export data.");
-		User user = (User) request.getAttribute("user");
+		User user = (User) securityContext.getUserPrincipal();
 
 		if (fileFormat.compareToIgnoreCase("xlsx") == 0) {
 			String fileName = String.format("netshot-export_%s.xlsx", (new SimpleDateFormat("yyyyMMdd-HHmmss")).format(new Date()));
@@ -8459,7 +8514,7 @@ public class RestService extends Thread {
 	
 	@POST
 	@Path("/scripts")
-	@RolesAllowed("executereadwrite")
+	@RolesAllowed(User.ROLE_EXECUTEREADWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -8469,6 +8524,7 @@ public class RestService extends Thread {
 	)
 	@Tag(name = "Scripts", description = "Script management (push changes to devices)")
 	public DeviceJsScript addScript(
+			@Context SecurityContext securityContext,
 			DeviceJsScript rsScript,
 			@DefaultValue("false") @QueryParam("validateonly") @Parameter(description = "True to validate script without saving") boolean validateOnly)
 			throws WebApplicationException {
@@ -8490,7 +8546,7 @@ public class RestService extends Thread {
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_SCRIPT);
 		}
 		try {
-			User user = (User) request.getAttribute("user");
+			User user = (User) securityContext.getUserPrincipal();
 			rsScript.setAuthor(user.getUsername());
 		}
 		catch (Exception e) {
@@ -8537,7 +8593,7 @@ public class RestService extends Thread {
 	
 	@DELETE
 	@Path("/scripts/{id}")
-	@RolesAllowed("executereadwrite")
+	@RolesAllowed(User.ROLE_EXECUTEREADWRITE)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -8580,7 +8636,7 @@ public class RestService extends Thread {
 	
 	@GET
 	@Path("/scripts/{id}")
-	@RolesAllowed("executereadwrite")
+	@RolesAllowed(User.ROLE_EXECUTEREADWRITE)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -8612,7 +8668,7 @@ public class RestService extends Thread {
 	
 	@GET
 	@Path("/scripts")
-	@RolesAllowed("executereadwrite")
+	@RolesAllowed(User.ROLE_EXECUTEREADWRITE)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -8753,7 +8809,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/diagnostics")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -8793,7 +8849,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/diagnostics/{id}")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -8832,7 +8888,7 @@ public class RestService extends Thread {
 	
 	@POST
 	@Path("/diagnostics")
-	@RolesAllowed("executereadwrite")
+	@RolesAllowed(User.ROLE_EXECUTEREADWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -8953,7 +9009,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/diagnostics/{id}")
-	@RolesAllowed("executereadwrite")
+	@RolesAllowed(User.ROLE_EXECUTEREADWRITE)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -9096,7 +9152,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/diagnostics/{id}")
-	@RolesAllowed("executereadwrite")
+	@RolesAllowed(User.ROLE_EXECUTEREADWRITE)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -9156,7 +9212,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/devices/{id}/diagnosticresults")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -9199,7 +9255,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/hooks")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -9235,7 +9291,7 @@ public class RestService extends Thread {
 	 */
 	@POST
 	@Path("/hooks")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -9304,7 +9360,7 @@ public class RestService extends Thread {
 	 */
 	@DELETE
 	@Path("/hooks/{id}")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -9350,7 +9406,7 @@ public class RestService extends Thread {
 	 */
 	@PUT
 	@Path("/hooks/{id}")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
@@ -9448,7 +9504,7 @@ public class RestService extends Thread {
 	 */
 	@GET
 	@Path("/cluster/members")
-	@RolesAllowed("admin")
+	@RolesAllowed(User.ROLE_ADMIN)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(
@@ -9555,7 +9611,7 @@ public class RestService extends Thread {
 
 	@GET
 	@Path("/serverinfo")
-	@RolesAllowed("readonly")
+	@RolesAllowed(User.ROLE_READONLY)
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	@JsonView(RestApiView.class)
 	@Operation(

@@ -55,7 +55,7 @@ public class DeviceTest {
 		private void assertFinder(String nsQuery, String driverName,
 					String expectedHql, Map<String, Object> expectedParameters) throws Exception {
 			if (driverName != null) {
-				Netshot.initConfig();
+				Netshot.readConfig();
 				DeviceDriver.refreshDrivers();
 			}
 			FakeQuery<Device> fakeQuery = new FakeQuery<>();

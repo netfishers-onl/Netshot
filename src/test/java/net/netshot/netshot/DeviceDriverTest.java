@@ -63,7 +63,7 @@ public class DeviceDriverTest {
 
 	@BeforeAll
 	static void initNetshot() throws Exception {
-		Netshot.initConfig();
+		Netshot.readConfig();
 		DeviceDriver.refreshDrivers();
 	}
 

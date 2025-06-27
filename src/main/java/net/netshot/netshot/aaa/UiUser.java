@@ -86,8 +86,11 @@ public class UiUser implements User {
 		return hash.toHashString();
 	}
 
-	static {
-		UiUser.MAX_IDLE_TIME = Netshot.getConfig("netshot.aaa.maxidletime", 1800, 30, Integer.MAX_VALUE);
+	/**
+	 * Load the main policy from configuration.
+	 */
+	public static void loadConfig() {
+		UiUser.MAX_IDLE_TIME = Netshot.getConfig("netshot.aaa.maxidletime", 1800, 5, Integer.MAX_VALUE);
 	}
 
 	/** The id. */
@@ -147,7 +150,7 @@ public class UiUser implements User {
 	 * Instantiates a new user.
 	 *
 	 * @param username the username
-	 * @param local the local
+	 * @param local true for a local user
 	 * @param password the password
 	 */
 	public UiUser(String username, boolean local, String password) {

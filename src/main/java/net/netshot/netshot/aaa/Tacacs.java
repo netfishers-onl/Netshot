@@ -21,7 +21,9 @@ package net.netshot.netshot.aaa;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 import com.augur.tacacs.Argument;
@@ -50,8 +52,14 @@ import net.netshot.netshot.Netshot;
 @Slf4j
 public class Tacacs {
 
-	/** The log. */
+	/** The AAA logger. */
 	final private static Logger aaaLogger = LoggerFactory.getLogger("AAA");
+
+	/** TACACS+ attribute name that will carry the role */
+	private static String roleAttribute;
+
+	/** Configured roles */
+	private static Map<String, Integer> roles = new HashMap<>();
 
 	/** The client. */
 	private static TacacsClient client = null;
@@ -94,7 +102,7 @@ public class Tacacs {
 	/**
 	 * Load the config of all servers (up to 4) from the config file.
 	 */
-	public static void loadAllServersConfig() {
+	private static void loadAllServersConfig() {
 		List<String> hosts = new ArrayList<>();
 		List<String> keys = new ArrayList<>();
 		for (int i = 1; i < 4; i++) {
@@ -108,6 +116,20 @@ public class Tacacs {
 		if (enableAccounting) {
 			log.info("TACACS+ accounting is enabled");
 		}
+	}
+
+	/**
+	 * Load the configuration from Netshot config file.
+	 */
+	public static void loadConfig() {
+		roleAttribute = Netshot.getConfig("netshot.aaa.tacacs.role.attributename", "role");
+		roles.clear();
+		for (User.Role role : User.Role.values()) {
+			String roleKey = role.getName().replaceAll("-", "");
+			String attrValue = Netshot.getConfig("netshot.aaa.tacacs.role.%srole".formatted(roleKey), role.getName());
+			roles.put(attrValue, role.getLevel());
+		}
+		Tacacs.loadAllServersConfig();
 	}
 	
 	public static boolean isAvailable() {
@@ -130,12 +152,6 @@ public class Tacacs {
 			SessionClient authenSession = client.newSession(SVC.LOGIN, "rest", remoteAddress, PRIV_LVL.USER.code());
 			AuthenReply authenReply = authenSession.authenticate_ASCII(username, password);
 
-			String roleAttribute = Netshot.getConfig("netshot.aaa.tacacs.role.attributename", "role");
-			String adminLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.adminlevelrole", "admin");
-			String executeReadWriteLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.executereadwritelevelrole", "execute-read-write");
-			String readWriteLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.readwritelevelrole", "read-write");
-			String operatorLevelRole = Netshot.getConfig("netshot.aaa.tacacs.role.operatorrole", "operator");
-
 			if (authenReply.isOK()) {
 				SessionClient authoSession = client.newSession(SVC.LOGIN, "rest", remoteAddress, PRIV_LVL.USER.code());
 				AuthorReply authoReply = authoSession.authorize(
@@ -147,23 +163,16 @@ public class Tacacs {
 				);
 				if (authoReply.isOK()) {
 					int level = UiUser.LEVEL_READONLY;
-					String role = authoReply.getValue(roleAttribute);
-					aaaLogger.debug(MarkerFactory.getMarker("AAA"), "The TACACS+ server returned role: {}", role);
+					String passedRole = authoReply.getValue(roleAttribute);
+					aaaLogger.debug(MarkerFactory.getMarker("AAA"), "The TACACS+ server returned role: {}", passedRole);
 
-					if (role == null) {
+					if (passedRole == null) {
 						aaaLogger.warn("No role returned from the TACACS+ server for user {} using the {} attribute, user will be read only", username, roleAttribute);
 					}
-					else if(role.equals(adminLevelRole)) {
-						level = UiUser.LEVEL_ADMIN;
-					}
-					else if (role.equals(executeReadWriteLevelRole)) {
-						level = UiUser.LEVEL_EXECUTEREADWRITE;
-					}
-					else if (role.equals(readWriteLevelRole)) {
-						level = UiUser.LEVEL_READWRITE;
-					}
-					else if (role.equals(operatorLevelRole)) {
-						level = UiUser.LEVEL_OPERATOR;
+					for (Map.Entry<String, Integer> role : roles.entrySet()) {
+						if (role.getKey().equals(passedRole)) {
+							level = role.getValue();
+						}
 					}
 
 					aaaLogger.info(MarkerFactory.getMarker("AAA"),

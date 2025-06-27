@@ -18,15 +18,16 @@
  */
 package net.netshot.netshot.rest;
 
-import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.core.Response;
 
 import net.netshot.netshot.rest.RestService.RsErrorBean;
 
 /**
- * Exception to be thrown when the users is not authorized to perform an action.
+ * Exception to be thrown when the user is authenticated but not
+ * not allowed to perform an action.
  */
-public class NetshotNotAuthorizedException extends WebApplicationException {
+public class NetshotNotAuthorizedException extends ForbiddenException {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -453816975689585686L;

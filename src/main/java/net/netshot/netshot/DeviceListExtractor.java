@@ -61,7 +61,7 @@ public class DeviceListExtractor extends Netshot {
 		System.out.println(String.format("Based on Netshot version %s.", Netshot.VERSION));
 		log.info("Starting now.");
 		
-		if (!Netshot.initConfig()) {
+		if (!Netshot.readConfig()) {
 			System.exit(1);
 		}
 		if (!DeviceListExtractor.initLogging()) {

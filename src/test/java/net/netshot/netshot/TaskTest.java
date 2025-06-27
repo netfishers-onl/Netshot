@@ -35,7 +35,7 @@ public class TaskTest {
 
 	@BeforeAll
 	static void initNetshot() {
-		Netshot.initConfig();
+		Netshot.readConfig();
 	}
 
 	@Nested

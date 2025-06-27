@@ -21,13 +21,10 @@ package net.netshot.netshot.rest;
 import java.io.IOException;
 
 import jakarta.annotation.Priority;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.PreMatching;
-import jakarta.ws.rs.core.Context;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 
@@ -47,33 +44,36 @@ public class ApiTokenAuthFilter implements ContainerRequestFilter {
 	/** Name of the HTTP header used for API token */
 	static public final String HTTP_API_TOKEN_HEADER = "X-Netshot-API-Token";
 
-	@Context
-	private HttpServletRequest httpRequest;
+	/** Name of the attribute attached to the the request to carry the token */
+	static public final String ATTRIBUTE = "apiToken";
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		String token = httpRequest.getHeader(ApiTokenAuthFilter.HTTP_API_TOKEN_HEADER);
-		if (token != null) {
-			Netshot.aaaLogger.debug("Received request with API token.");
-			String hash = ApiToken.hashToken(token);
-			Session session = Database.getSession();
-			try {
-				ApiToken apiToken = session.createQuery("from ApiToken t where t.hashedToken = :hash", ApiToken.class)
-						.setParameter("hash", hash).uniqueResult();
-				if (apiToken == null) {
-					Netshot.aaaLogger.warn("Invalid API token received.");
-				}
-				else {
-					Netshot.aaaLogger.info("Successful API token usage {}.", apiToken);
-					httpRequest.setAttribute("apiToken", apiToken);
-				}
+		String token = requestContext.getHeaderString(ApiTokenAuthFilter.HTTP_API_TOKEN_HEADER);
+		if (token == null) {
+			return;
+		}
+		Netshot.aaaLogger.debug("Received request with API token.");
+		token = token.trim();
+		String hash = ApiToken.hashToken(token);
+		Session session = Database.getSession();
+		try {
+			ApiToken apiToken = session
+				.createQuery("from ApiToken t where t.hashedToken = :hash", ApiToken.class)
+				.setParameter("hash", hash).uniqueResult();
+			if (apiToken == null) {
+				Netshot.aaaLogger.warn("Invalid API token received.");
 			}
-			catch (HibernateException e) {
-				log.error("Database error while looking for API token", e);
+			else {
+				Netshot.aaaLogger.info("Successful API token usage {}.", apiToken);
+				requestContext.setProperty(ApiTokenAuthFilter.ATTRIBUTE, apiToken);
 			}
-			finally {
-				session.close();
-			}
+		}
+		catch (HibernateException e) {
+			log.error("Database error while looking for API token", e);
+		}
+		finally {
+			session.close();
 		}
 	}
 

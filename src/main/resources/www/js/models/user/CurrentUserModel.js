@@ -30,7 +30,9 @@ define([
 			attrs = _.pick(attrs, [
 				'username',
 				'password',
-				'newPassword'
+				'newPassword',
+				'authorizationCode',
+				'redirectUri',
 			]);
 			options.attrs = attrs;
 			return Backbone.Model.prototype.save.call(this, attrs, options);

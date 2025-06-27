@@ -262,5 +262,4 @@ define([
 		}
 
 	});
-	return ConfigComplianceReportView;
 });

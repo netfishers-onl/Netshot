@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -108,12 +109,15 @@ public class RestServiceTest {
 		config.setProperty("netshot.http.ssl.enabled", "false");
 		URI uri = UriBuilder.fromUri(apiUrl).replacePath("/").build();
 		config.setProperty("netshot.http.baseurl", uri.toString());
+		// Very low value for session expiration testing
+		config.setProperty("netshot.aaa.maxidletime", "10");
 		return config;
 	}
 
 	@BeforeAll
 	protected static void initNetshot() throws Exception {
 		Netshot.initConfig(RestServiceTest.getNetshotConfig());
+		Netshot.loadModuleConfigs();
 		Database.update();
 		Database.init();
 		TaskManager.init();
@@ -162,8 +166,8 @@ public class RestServiceTest {
 		void missingApiToken() throws IOException, InterruptedException {
 			apiClient.setApiToken(null);
 			HttpResponse<JsonNode> response = apiClient.get("/devices");
-			Assertions.assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.statusCode(),
-				"Not getting 403 response for missing API token");
+			Assertions.assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), response.statusCode(),
+				"Not getting 401 response for missing API token");
 			Assertions.assertInstanceOf(MissingNode.class,
 				response.body(), "Response body not empty");
 		}
@@ -174,8 +178,8 @@ public class RestServiceTest {
 			apiClient.setApiToken("");
 			HttpResponse<JsonNode> response = apiClient.get("/devices");
 			Assertions.assertEquals(
-				Response.Status.FORBIDDEN.getStatusCode(), response.statusCode(),
-				"Not getting 403 response for empty API token");
+				Response.Status.UNAUTHORIZED.getStatusCode(), response.statusCode(),
+				"Not getting 401 response for empty API token");
 			Assertions.assertInstanceOf(MissingNode.class,
 				response.body(), "Response body not empty");
 		}
@@ -186,8 +190,8 @@ public class RestServiceTest {
 			apiClient.setApiToken("WRONGTOKEN");
 			HttpResponse<JsonNode> response = apiClient.get("/devices");
 			Assertions.assertEquals(
-				Response.Status.FORBIDDEN.getStatusCode(), response.statusCode(),
-				"Not getting 403 response for wrong API token");
+				Response.Status.UNAUTHORIZED.getStatusCode(), response.statusCode(),
+				"Not getting 401 response for wrong API token");
 			Assertions.assertInstanceOf(MissingNode.class,
 				response.body(), "Response body not empty");
 		}
@@ -287,8 +291,25 @@ public class RestServiceTest {
 			apiClient.setSessionCookie(sessionCookie);
 			HttpResponse<JsonNode> response2 = apiClient.get("/domains");
 			Assertions.assertEquals(
-				Response.Status.FORBIDDEN.getStatusCode(), response2.statusCode(),
-				"Not getting 403 response for post-logout request");
+				Response.Status.UNAUTHORIZED.getStatusCode(), response2.statusCode(),
+				"Not getting 401 response for post-logout request");
+		}
+
+		@Test
+		@DisplayName("Local user authentication and idle session timeout")
+		@ResourceLock(value = "DB")
+		void sessionTimeout() throws IOException, InterruptedException {
+			this.createTestUser();
+			apiClient.setLogin(testUsername, testPassword);
+			HttpResponse<JsonNode> response1 = apiClient.get("/domains");
+			Assertions.assertEquals(
+				Response.Status.OK.getStatusCode(), response1.statusCode(),
+				"Unable to get data using username/password and cookie API access");
+			Thread.sleep(Duration.ofSeconds(15));
+			HttpResponse<JsonNode> response2 = apiClient.get("/domains");
+			Assertions.assertEquals(
+				Response.Status.UNAUTHORIZED.getStatusCode(), response2.statusCode(),
+				"Not getting 401 response while session have expired");
 		}
 
 		@Test
@@ -320,8 +341,8 @@ public class RestServiceTest {
 				"9212336284027029412"));
 			HttpResponse<JsonNode> response = apiClient.get("/devices");
 			Assertions.assertEquals(
-				Response.Status.FORBIDDEN.getStatusCode(), response.statusCode(),
-				"Not getting 403 response for wrong cookie");
+				Response.Status.UNAUTHORIZED.getStatusCode(), response.statusCode(),
+				"Not getting 401 response for wrong cookie");
 			Assertions.assertInstanceOf(MissingNode.class,
 				response.body(), "Response body not empty");
 		}

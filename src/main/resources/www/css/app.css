@@ -111,6 +111,22 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	display: none;
 }
 
+#splash #sso-box {
+	display: none;
+	margin-top: 30px;
+	text-align: center;
+}
+
+#splash #sso-box #redirect {
+	font-size: 1.1em;
+}
+
+#splash #sso-box #showpassform {
+	cursor: pointer;
+	margin-top: 20px;
+	font-size: 0.7em;
+}
+
 #splash #authentication-box {
 	display: none;
 	margin-top: 30px;
@@ -123,6 +139,38 @@ th[role=columnheader]:not(.no-sort):hover:after {
 
 #splash #authentication-box .changepassword {
 	display: none;
+}
+
+#logout {
+	display: none;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 400px;
+	margin-top: -130px;
+	margin-left: -200px;
+	border: 1px solid #e1e4e8;
+	border-radius: 6px;
+	z-index: 1000;
+	padding: 20px;
+}
+
+#logout .title {
+	font-size: 24px;
+	font-weight: bold;
+	margin-bottom: 20px;
+}
+
+#logout>div {
+	text-align: center;
+}
+
+#logout #ssologout-box {
+	margin-top: 20px;
+}
+
+#logout #ssologout {
+	cursor: pointer;
 }
 
 

@@ -57,7 +57,7 @@ import net.jradius.packet.attribute.AttributeList;
 @Slf4j
 public class Radius {
 
-	/** The log. */
+	/** The AAA logger. */
 	final private static Logger aaaLogger = LoggerFactory.getLogger("AAA");
 
 	/** The clients. */
@@ -133,13 +133,20 @@ public class Radius {
 	/**
 	 * Load configuration of all servers (up to 4).
 	 */
-	public static void loadAllServersConfig() {
+	private static void loadAllServersConfig() {
 		synchronized (Radius.clients) {
 			Radius.clients = new ArrayList<>();
 		}
 		for (int i = 1; i < 4; i++) {
 			loadServerConfig(i);
 		}
+	}
+
+	/**
+	 * Load the configuration from Netshot config file.
+	 */
+	public static void loadConfig() {
+		Radius.loadAllServersConfig();
 	}
 
 	static {

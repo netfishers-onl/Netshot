@@ -100,10 +100,6 @@ public class PasswordPolicy {
 		PasswordPolicy.mainPolicy = policy;
 	}
 
-	static {
-		PasswordPolicy.loadConfig();
-	}
-
 	/**
 	 * Get the main password policy (as configured in Netshot config file)
 	 * @return the main password policy

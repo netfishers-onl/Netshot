@@ -54,9 +54,11 @@ import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.util.FileSize;
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.aaa.Oidc;
 import net.netshot.netshot.aaa.PasswordPolicy;
 import net.netshot.netshot.aaa.Radius;
 import net.netshot.netshot.aaa.Tacacs;
+import net.netshot.netshot.aaa.UiUser;
 import net.netshot.netshot.cluster.ClusterManager;
 import net.netshot.netshot.collector.SnmpTrapReceiver;
 import net.netshot.netshot.collector.SyslogServer;
@@ -219,8 +221,8 @@ public class Netshot extends Thread {
 	 *
 	 * @return true, if successful
 	 */
-	protected static boolean initConfig() {
-		return initConfig(Netshot.CONFIG_FILENAMES);
+	protected static boolean readConfig() {
+		return readConfig(Netshot.CONFIG_FILENAMES);
 	}
 
 	/**
@@ -228,7 +230,7 @@ public class Netshot extends Thread {
 	 *
 	 * @return true, if successful
 	 */
-	protected static boolean initConfig(String[] filenames) {
+	protected static boolean readConfig(String[] filenames) {
 		Netshot.config = new Properties();
 		for (String fileName : filenames) {
 			try {
@@ -495,6 +497,31 @@ public class Netshot extends Thread {
 	}
 
 	/**
+	 * Set up a custom truststore (CA certificates to trust).
+	 */
+	protected static void setTruststore() {
+		String path = Netshot.getConfig("netshot.ssl.truststore.file");
+		if (path != null) {
+			System.setProperty("javax.net.ssl.trustStore", path);
+		}
+	}
+
+	/**
+	 * Load (or reload) the configuration of various modules.
+	 */
+	public static void loadModuleConfigs() {
+		log.info("Loading module configurations.");
+		PasswordPolicy.loadConfig();
+		UiUser.loadConfig();
+		Radius.loadConfig();
+		Tacacs.loadConfig();
+		Oidc.loadConfig();
+		TakeSnapshotTask.loadConfig();
+		JavaScriptRule.loadConfig();
+		PythonRule.loadConfig();
+	}
+
+	/**
 	 * The main method.
 	 *
 	 * @param args the arguments
@@ -535,7 +562,7 @@ public class Netshot extends Thread {
 			configFileNames = new String[] { configFilename };
 		}
 
-		if (!Netshot.initConfig(configFileNames)) {
+		if (!Netshot.readConfig(configFileNames)) {
 			System.exit(1);
 		}
 		if (!Netshot.initMainLogging() || !Netshot.initAuditLogging() || !Netshot.initSyslogLogging()) {
@@ -545,6 +572,8 @@ public class Netshot extends Thread {
 		try {
 			log.info("Checking current JVM.");
 			Netshot.checkJvm();
+			log.info("Selecting truststore.");
+			Netshot.setTruststore();
 			log.info("Enabling BouncyCastle security.");
 			Security.addProvider(new BouncyCastleProvider());
 			for (Provider p : Security.getProviders()) {
@@ -560,7 +589,7 @@ public class Netshot extends Thread {
 			//TftpServer.init();
 			log.info("Starting the Syslog server.");
 			SyslogServer.init();
-			log.info("Starting the SNMP v1/v2c trap receiver.");
+			log.info("Starting the SNMP v1/v2c/v3 trap receiver.");
 			SnmpTrapReceiver.init();
 
 			log.info("Starting the clustering manager.");
@@ -572,25 +601,18 @@ public class Netshot extends Thread {
 			RestService.init();
 			log.info("Scheduling the existing tasks.");
 			TaskManager.rescheduleAll();
-			log.info("Loading authentication backend config.");
-			Radius.loadAllServersConfig();
-			Tacacs.loadAllServersConfig();
+			Netshot.loadModuleConfigs();
 
 			log.info("Starting signal listener.");
 			Signal.handle(new Signal("HUP"), new SignalHandler() {
 				@Override
 				public void handle(Signal sig) {
-					Netshot.initConfig();
+					Netshot.readConfig();
 					Netshot.initMainLogging();
 					Netshot.initAuditLogging();
 					Netshot.initSyslogLogging();
-					Radius.loadAllServersConfig();
-					Tacacs.loadAllServersConfig();
+					Netshot.loadModuleConfigs();
 					SnmpTrapReceiver.reload();
-					TakeSnapshotTask.loadConfig();
-					JavaScriptRule.loadConfig();
-					PythonRule.loadConfig();
-					PasswordPolicy.loadConfig();
 				}
 			});
 			log.warn("Netshot is started");

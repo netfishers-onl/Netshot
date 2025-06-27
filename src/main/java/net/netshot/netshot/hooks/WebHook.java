@@ -25,15 +25,11 @@ import java.net.URL;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -58,6 +54,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.rest.RestViews.HookView;
 import net.netshot.netshot.rest.RestViews.RestApiView;
+import net.netshot.netshot.utils.InsecureHostnameVerifier;
+import net.netshot.netshot.utils.InsecureTrustManager;
 
 /**
  * A Web hook, called after specific event.
@@ -153,28 +151,6 @@ public class WebHook extends Hook {
 
 	public void setAction(Action action) {
 		this.action = action;
-	}
-
-	static public class InsecureHostnameVerifier implements HostnameVerifier {
-		@Override
-		public boolean verify(String arg0, SSLSession arg1) {
-			return true;
-		}
-	}
-
-	static public class InsecureTrustManager implements X509TrustManager {
-		@Override
-		public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-		}
-
-		@Override
-		public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-		}
-
-		@Override
-		public X509Certificate[] getAcceptedIssuers() {
-			return new X509Certificate[0];
-		}
 	}
 
 	@Override

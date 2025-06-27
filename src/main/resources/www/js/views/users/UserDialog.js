@@ -17,8 +17,16 @@ define([
 
 		buttons: {
 			"Logout": function() {
-				user.destroy().done(function() {
-					location.reload();
+				var that = this;
+				user.destroy().done(function(data, status, response) {
+					that.close();
+					$("#container").remove();
+					$("#logout.nsdialog").show();
+					var oidcEndSessionEndpoint = response.getResponseHeader("X-OIDC-EndSessionEndpoint");
+					if (oidcEndSessionEndpoint) {
+						$("#logout #ssologout").attr('href', oidcEndSessionEndpoint);
+						$("#logout #ssologout-box").show();
+					}
 				});
 			},
 			"Change password": function(event) {

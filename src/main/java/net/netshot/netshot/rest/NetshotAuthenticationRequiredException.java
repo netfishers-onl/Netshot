@@ -18,13 +18,13 @@
  */
 package net.netshot.netshot.rest;
 
-import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.core.Response;
 
 /**
  * The NetshotAuthenticationRequiredException class, which indicates that user authentication is required (401 error).
  */
-public class NetshotAuthenticationRequiredException extends WebApplicationException {
+public class NetshotAuthenticationRequiredException extends ForbiddenException {
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -2463854660543944995L;
 	
@@ -32,6 +32,6 @@ public class NetshotAuthenticationRequiredException extends WebApplicationExcept
 	 * Default constructor.
 	 */
 	public NetshotAuthenticationRequiredException() {
-		super(Response.status(Response.Status.UNAUTHORIZED).build());
+		super(Response.status(Response.Status.FORBIDDEN).build());
 	}
 }

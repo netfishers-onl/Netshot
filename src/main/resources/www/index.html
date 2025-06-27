@@ -40,6 +40,12 @@
 		<span class="ui-icon ui-icon-alert"></span>
 		<span id="errormsg">Unable to connect to the Netshot REST server.</span>
 	</div>
+	<form id="sso-box">
+		<button id="redirect" type="submit">Login via SSO</button>
+		<div>
+			<a id="showpassform">Or login with username/password</a>
+		</div>
+	</form>
 	<form id="authentication-box">
 		<table>
 		<tbody>
@@ -53,11 +59,11 @@
 			</tr>
 			<tr class="changepassword">
 				<td><label for="password">New password </label></td>
-				<td><input type="password" id="newpassword1" name="newpassword1" class="text ui-widget-content ui-corner-all" /></td>
+				<td><input type="password" id="newpassword1" name="newpassword1" class="text ui-widget-content ui-corner-all" autocomplete="new-password" /></td>
 			</tr>
 			<tr class="changepassword">
 				<td><label for="password">Repeat password </label></td>
-				<td><input type="password" id="newpassword2" name="newpassword2" class="text ui-widget-content ui-corner-all" /></td>
+				<td><input type="password" id="newpassword2" name="newpassword2" class="text ui-widget-content ui-corner-all" autocomplete="new-password" /></td>
 			</tr>
 			<tr>
 				<td></td>
@@ -73,7 +79,16 @@
 
   <div id="page">
   </div>
-</div> 
+</div>
+
+<div id="logout" class="nsdialog">
+	<div class="title">Netshot</div>
+	<div>Your session has been terminated.</div>
+	<div>You can close this window.</div>
+	<div id="ssologout-box">
+		<a id="ssologout">Click here to log out from SSO.</a>
+	</div>
+</div>
 
 </body>
 </html>

@@ -19,6 +19,10 @@
 package net.netshot.netshot.rest;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -66,6 +70,27 @@ public class LoggerFilter implements ContainerResponseFilter {
 			address = request.getRemoteAddr();
 		}
 		return address;
+	}
+
+	static public URL getClientRequestUrl(HttpServletRequest request) throws MalformedURLException, URISyntaxException {
+		String scheme = request.getScheme();
+		if (trustXForwardedFor) {
+			String forwardedProto = request.getHeader("X-Forwarded-Proto");
+			if (forwardedProto != null) {
+				scheme = forwardedProto;
+			}
+		}
+		int port = request.getServerPort();
+		String serverName = request.getServerName();
+		if (trustXForwardedFor) {
+			String forwardedHost = request.getHeader("X-Forwarded-Host");
+			if (forwardedHost != null) {
+				serverName = forwardedHost;
+				port = -1;
+			}
+		}
+		String path = request.getRequestURI();
+		return new URI(scheme, null, serverName, port, path, null, null).toURL();
 	}
 
 	@Override

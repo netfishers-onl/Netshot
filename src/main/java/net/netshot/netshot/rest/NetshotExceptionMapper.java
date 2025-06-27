@@ -20,25 +20,46 @@ package net.netshot.netshot.rest;
 
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.ext.ExceptionMapper;
+import net.netshot.netshot.aaa.Oidc;
 
 /**
  * Mapper to convert exception raised in the Web method to http error.
  */
 public class NetshotExceptionMapper implements ExceptionMapper<Throwable> {
 
+	@Context
+	private SecurityContext securityContext;
+
 	public Response toResponse(Throwable t) {
-		if (!(t instanceof ForbiddenException)) {
-			if (t instanceof NetshotAuthenticationRequiredException) {
+		if (t instanceof ForbiddenException fe) {
+			// RolesAllowedDynamicFeature raises ForbiddenException (which leads to 403 Forbidden)
+			// for both missing authentication and permission error
+			if (securityContext.getUserPrincipal() == null) {
 				RestService.log.info("Authentication required.", t);
+				// If no user at all was recognized, force a 401
+				// with OIDC info header if applicable
+				Response.ResponseBuilder builder = Response.fromResponse(fe.getResponse());
+				builder.status(Response.Status.UNAUTHORIZED);
+				if (Oidc.isAvailable()) {
+					builder.header("X-OIDC-AuthorizationEndpoint", Oidc.getAuthorizationEndpointURI().toString());
+					builder.header("X-OIDC-ClientID", Oidc.getClientId());
+				}
+				return builder.build();
 			}
 			else {
-				RestService.log.error("Uncaught exception thrown by REST service", t);
+				RestService.log.info("Missing required permission.", t);
 			}
 		}
-		if (t instanceof WebApplicationException) {
-			return ((WebApplicationException) t).getResponse();
+		else {
+			RestService.log.error("Uncaught exception thrown by REST service", t);
+		}
+
+		if (t instanceof WebApplicationException wae) {
+			return wae.getResponse();
 		}
 		else {
 			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();

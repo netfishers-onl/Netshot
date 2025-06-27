@@ -264,7 +264,7 @@ const _connect = (_function, _protocol, _options) => {
 					if (errorMatch[1]) {
 						messageParts.push(`: '${errorMatch[1]}'`);
 					}
-					messageParts.push(` after command '${command}'.`);
+					messageParts.push(` after command '${cmd.trim()}'.`);
 					const message = messageParts.join("");
 					throw message;
 				}

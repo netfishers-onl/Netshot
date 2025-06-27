@@ -21,7 +21,7 @@ var Info = {
 	name: "HPEArubaOSSwitch",
 	description: "HPE ArubaOS-Switch",
 	author: "Netshot Team",
-	version: "1.1"
+	version: "1.2"
 };
 
 var Config = {
@@ -185,14 +185,11 @@ function snapshot(cli, device, config) {
 	cli.macro("enable");
 
 	const showRunning = cli.command("show running-config");
-	config.set("runningConfig", showRunning);
+	const runningConfig = showRunning.replace(/^Running configuration:\s*\n*/m, "");
+	config.set("runningConfig", runningConfig);
 
 	if (typeof config.computeHash === "function") {
-		// Use "Ver ..." comment from the configuration
-		const verMatch = showRunning.match(/^; Ver #([0-9a-f:.]+)/m);
-		if (verMatch) {
-			config.computeHash(verMatch[1]);
-		}
+		config.computeHash(runningConfig);
 	}
 
 	const showVersion = cli.command("show version");

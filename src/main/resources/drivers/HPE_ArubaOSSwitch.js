@@ -21,7 +21,7 @@ var Info = {
 	name: "HPEArubaOSSwitch",
 	description: "HPE ArubaOS-Switch",
 	author: "Netshot Team",
-	version: "1.0"
+	version: "1.1"
 };
 
 var Config = {
@@ -125,7 +125,7 @@ var CLI = {
 		fail: "Authentication failed - Telnet authentication failure."
 	},
 	disable: {
-		prompt: /(?:^|no pag)([A-Za-z\-_0-9\.]+ ?>) $/,
+		prompt: /([A-Za-z\-_0-9\.]+ ?>) $/,
 		error: /^Invalid input: .*/m,
 		pager: {
 			avoid: [ "no pag" ],
@@ -146,7 +146,7 @@ var CLI = {
 		}
 	},
 	enable: {
-		prompt: /(?:^|no pag)([A-Za-z\-_0-9\.]+ ?#) $/,
+		prompt: /([A-Za-z\-_0-9\.]+ ?#) $/,
 		error: /^Invalid input: .*/m,
 		pager: {
 			avoid: [ "no pag" ], // page or paging
@@ -167,7 +167,7 @@ var CLI = {
 		}
 	},
 	configure: {
-		prompt: /^([A-Za-z\-_0-9\.]+\(.+\) ?#) $/,
+		prompt: /([A-Za-z\-_0-9\.]+\(.+\) ?#) $/,
 		error: /^Invalid input: .*/m,
 		clearPrompt: true,
 		macros: {

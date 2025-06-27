@@ -110,7 +110,7 @@ public class PythonRule extends Rule {
 				buffer.append(line);
 				buffer.append("\n");
 			}
-			PYLOADER_SOURCE = Source.newBuilder("python", buffer.toString(), "PythonRuleLoader").buildLiteral();
+			PYLOADER_SOURCE = Source.newBuilder("python", buffer.toString(), "rule-loader.py").buildLiteral();
 			reader.close();
 			in.close();
 			log.debug("The Python rule loader code has been read from the resource Python file.");
@@ -174,7 +174,7 @@ public class PythonRule extends Rule {
 	@Transient
 	protected Source getSource() {
 		return Source
-			.newBuilder("python", this.script, "PythonRule" + this.getId())
+			.newBuilder("python", this.script, "_rule%d.py".formatted(this.getId()))
 			.cached(false).buildLiteral();
 	}
 

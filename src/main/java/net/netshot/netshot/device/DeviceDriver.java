@@ -90,7 +90,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 * Possible protocols for a device driver.
 	 */
 	public static enum DriverProtocol {
-		TELNET("telnet"), SSH("ssh"), SNMP("snmp");
+		TELNET("telnet"),
+		SSH("ssh"),
+		SNMP("snmp");
 
 		final private String protocol;
 
@@ -161,7 +163,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			}
 			reader.close();
 			in.close();
-			JSLOADER_SOURCE = Source.create("js", buffer.toString());
+			JSLOADER_SOURCE = Source.newBuilder("js", buffer.toString(), "driver-loader.js").buildLiteral();
 			log.debug("The JavaScript driver loader code has been read from the resource JS file.");
 		}
 		catch (Exception e) {

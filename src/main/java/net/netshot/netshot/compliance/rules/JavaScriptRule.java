@@ -178,7 +178,7 @@ public class JavaScriptRule extends Rule {
 	@Transient
 	protected Source getSource() {
 		return Source
-			.newBuilder("js", this.script, "JsRule" + this.getId())
+			.newBuilder("js", this.script, "_rule%d.js".formatted(this.getId()))
 			.cached(false).buildLiteral();
 	}
 

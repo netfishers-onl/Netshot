@@ -32,6 +32,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -91,7 +92,9 @@ public class JavaScriptDiagnostic extends Diagnostic {
 
 	@Override
 	public Value getJsObject(Device device, Context context) throws ScriptException {
-		context.eval("js", this.getScript());
+		Source diagSource = Source.newBuilder("js", this.getScript(),
+			"_diag%d.js".formatted(this.getId())).buildLiteral();
+		context.eval(diagSource);
 		Value diagnose = context.getBindings("js").getMember("diagnose");
 		if (!diagnose.canExecute()) {
 			throw new ScriptException(String.format("Unable to find 'diagnose' function in '%s' JS diagnostic", this.getName()));

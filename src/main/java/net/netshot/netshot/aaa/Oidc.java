@@ -167,8 +167,6 @@ public class Oidc {
 
 		OIDCClientMetadata clientMetadata = new OIDCClientMetadata();
 		clientMetadata.applyDefaults();
-		Oidc.clientInfo = new OIDCClientInformation(
-			new ClientID(clientId), null, clientMetadata, new Secret(clientSecret));
 		if (endpoint == null) {
 			Oidc.idpMetadata = null;
 		}
@@ -181,6 +179,8 @@ public class Oidc {
 			Oidc.idpMetadata = null;
 		}
 		else {
+			Oidc.clientInfo = new OIDCClientInformation(
+				new ClientID(clientId), null, clientMetadata, new Secret(clientSecret));
 			if (Oidc.idpDiscoveryThread != null) {
 				if (!Oidc.idpDiscoveryThread.endpoint.equals(endpoint)) {
 					log.info("OIDC IdP endpoint configuration has changed, stopping the discovery thread");

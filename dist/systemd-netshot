@@ -1,6 +1,6 @@
 [Unit]
 Description=Netshot
-After=mysql.service
+After=postgresql.service
 
 [Service]
 Type=simple

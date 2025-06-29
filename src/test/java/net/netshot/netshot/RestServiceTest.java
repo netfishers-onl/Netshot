@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.http.HttpResponse;
+import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +37,7 @@ import java.util.function.Function;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.hibernate.Session;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -43,6 +45,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.parallel.ResourceLock;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -55,6 +59,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import net.netshot.netshot.NetshotApiClient.WrongApiResponseException;
 import net.netshot.netshot.aaa.ApiToken;
+import net.netshot.netshot.aaa.Oidc;
 import net.netshot.netshot.aaa.PasswordPolicy;
 import net.netshot.netshot.aaa.PasswordPolicy.PasswordPolicyException;
 import net.netshot.netshot.aaa.UiUser;
@@ -560,6 +565,85 @@ public class RestServiceTest {
 				}
 			}
 			
+		}
+	}
+
+	@Nested
+	@DisplayName("OIDC Authentication Tests")
+	@TestInstance(Lifecycle.PER_CLASS)
+	class OidcAuthenticationTest {
+
+		final private URI redirectUri = URI.create("http://localhost:8080/");
+		final private String clientId = "netshot";
+		final private String clientSecret = "iR56DPj4ZX0TrB1NSCHsPNk6LAbrN3HE";
+		private FakeOidcIdpServer idpServer = null;
+
+		@BeforeAll
+		void prepareOidc() throws IOException, InterruptedException, GeneralSecurityException {
+			this.idpServer = new FakeOidcIdpServer();
+			this.idpServer.registerClient(clientId, clientSecret, redirectUri);
+			this.idpServer.start();
+			Properties config = RestServiceTest.getNetshotConfig();
+			config.setProperty("netshot.aaa.oidc.idp.url", this.idpServer.getBaseUri().toString());
+			config.setProperty("netshot.aaa.oidc.clientid", clientId);
+			config.setProperty("netshot.aaa.oidc.clientsecret", clientSecret);
+			Netshot.initConfig(config);
+			Oidc.loadConfig();
+			Thread.sleep(3000);
+		}
+
+		@AfterAll
+		void stopOidc() {
+			this.idpServer.shutdown();
+		}
+
+		@Test
+		@DisplayName("OIDC code based authentication")
+		void oidcCodeAuth() throws IOException, InterruptedException {
+			final String username = "oidcreadwrite";
+			final UiUser.Role role = UiUser.Role.READWRITE;
+			final String authorizationCode = "apzoeilpqoisdmlkaze120398O2374lmakzhe123";
+			this.idpServer.addAuthorizatioCode(authorizationCode, username, role.getName());
+
+			// Authentication attempt with wrong authorization code
+			apiClient.setOidcCodeLogin("wrongcode", redirectUri.toString());
+			WrongApiResponseException thrown = Assertions.assertThrows(WrongApiResponseException.class,
+				() -> apiClient.get("/user"),
+				"Login not failing as expected");
+			Assertions.assertEquals(
+				Response.Status.UNAUTHORIZED.getStatusCode(), thrown.getResponse().statusCode(),
+				"Not getting 401 when logging in with wrong authorization code");
+
+			// Authentication attempt with proper authorization code
+			apiClient.setOidcCodeLogin(authorizationCode, redirectUri.toString());
+			HttpResponse<JsonNode> response2 = apiClient.get("/user");
+			Assertions.assertEquals(
+				Response.Status.OK.getStatusCode(), response2.statusCode(),
+				"Unable to get user profile after OIDC code and cookie API access");
+			Assertions.assertEquals(
+				JsonNodeFactory.instance.objectNode()
+					.put("id", Long.valueOf(0))
+					.put("local", false)
+					.put("username", username)
+					.put("level", Long.valueOf(role.getLevel())),
+				response2.body(),
+				"Retrieved user doesn't match expected object");
+
+			// Permission test
+			HttpResponse<JsonNode> response = apiClient.get("/apitokens");
+			Assertions.assertEquals(Response.Status.FORBIDDEN.getStatusCode(), response.statusCode(),
+				"Not getting 403 response while missing privileges");
+			Assertions.assertInstanceOf(MissingNode.class,
+				response.body(), "Response body not empty");
+			
+			// Forced logout and try again with cookie
+			HttpCookie sessionCookie = apiClient.getSessionCookie();
+			apiClient.logout();
+			apiClient.setSessionCookie(sessionCookie);
+			HttpResponse<JsonNode> response3 = apiClient.get("/domains");
+			Assertions.assertEquals(
+				Response.Status.UNAUTHORIZED.getStatusCode(), response3.statusCode(),
+				"Not getting 401 response for post-logout request");
 		}
 	}
 

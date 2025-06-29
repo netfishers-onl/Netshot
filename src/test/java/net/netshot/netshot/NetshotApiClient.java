@@ -83,6 +83,12 @@ public class NetshotApiClient {
 	private String newPassword;
 
 	@Getter @Setter
+	private String authorizationCode;
+
+	@Getter @Setter
+	private String redirectUri;
+
+	@Getter @Setter
 	private HttpCookie sessionCookie;
 
 	private ObjectMapper objectMapper = null;
@@ -108,6 +114,12 @@ public class NetshotApiClient {
 	public void setLogin(String username, String password) {
 		this.username = username;
 		this.password = password;
+		this.apiToken = null;
+	}
+
+	public void setOidcCodeLogin(String authorizationCode, String redirectUri) {
+		this.authorizationCode = authorizationCode;
+		this.redirectUri = redirectUri;
 		this.apiToken = null;
 	}
 
@@ -159,10 +171,16 @@ public class NetshotApiClient {
 		builder.header("Accept", this.mediaType.toString());
 		builder.header("Content-Type", this.mediaType.toString());
 		ObjectNode payload = JsonNodeFactory.instance.objectNode();
-		payload.put("username", this.username);
-		payload.put("password", this.password);
-		if (this.newPassword != null) {
-			payload.put("newPassword", this.newPassword);
+		if (this.username != null) {
+			payload.put("username", this.username);
+			payload.put("password", this.password);
+			if (this.newPassword != null) {
+				payload.put("newPassword", this.newPassword);
+			}
+		}
+		else if (this.authorizationCode != null) {
+			payload.put("authorizationCode", this.authorizationCode);
+			payload.put("redirectUri", this.redirectUri);
 		}
 		builder.POST(this.jsonNodePublisher(payload));
 		HttpRequest request = builder.build();
@@ -205,7 +223,8 @@ public class NetshotApiClient {
 		if (this.apiToken != null) {
 			builder.header("X-Netshot-API-Token", this.apiToken);
 		}
-		else if (this.username != null && this.password != null) {
+		else if ((this.username != null && this.password != null) ||
+				this.authorizationCode != null) {
 			if (this.sessionCookie == null) {
 				this.login();
 			}

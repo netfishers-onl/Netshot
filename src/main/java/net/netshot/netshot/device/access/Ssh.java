@@ -266,31 +266,13 @@ public class Ssh extends Cli {
 	static private int DEFAULT_COMMAND_TIMEOUT = 120000;
 
 	static {
-		int configuredConnectionTimeout = Netshot.getConfig("netshot.cli.ssh.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT);
-		if (configuredConnectionTimeout < 1) {
-			log.error("Invalid value {} for {}", configuredConnectionTimeout, "netshot.cli.ssh.connectiontimeout");
-		}
-		else {
-			DEFAULT_CONNECTION_TIMEOUT = configuredConnectionTimeout;
-		}
+		DEFAULT_CONNECTION_TIMEOUT = Netshot.getConfig("netshot.cli.ssh.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT, 1, Integer.MAX_VALUE);
 		log.info("The default connection timeout value for SSH sessions is {}s", DEFAULT_CONNECTION_TIMEOUT);
 
-    int configuredReceiveTimeout = Netshot.getConfig("netshot.cli.ssh.receivetimeout", DEFAULT_RECEIVE_TIMEOUT);
-		if (configuredReceiveTimeout < 1) {
-			log.error("Invalid value {} for {}", configuredReceiveTimeout, "netshot.cli.ssh.receivetimeout");
-		}
-		else {
-			DEFAULT_RECEIVE_TIMEOUT = configuredReceiveTimeout;
-		}
+    DEFAULT_RECEIVE_TIMEOUT = Netshot.getConfig("netshot.cli.ssh.receivetimeout", DEFAULT_RECEIVE_TIMEOUT, 1, Integer.MAX_VALUE);
 		log.info("The default receive timeout value for SSH sessions is {}s", DEFAULT_RECEIVE_TIMEOUT);
 
-		int configuredCommandTimeout = Netshot.getConfig("netshot.cli.ssh.commandtimeout", DEFAULT_COMMAND_TIMEOUT);
-		if (configuredCommandTimeout < 1) {
-			log.error("Invalid value {} for {}", configuredCommandTimeout, "netshot.cli.ssh.commandtimeout");
-		}
-		else {
-			DEFAULT_COMMAND_TIMEOUT = configuredCommandTimeout;
-		}
+		DEFAULT_COMMAND_TIMEOUT = Netshot.getConfig("netshot.cli.ssh.commandtimeout", DEFAULT_COMMAND_TIMEOUT, 1, Integer.MAX_VALUE);
 		log.info("The default command timeout value for SSH sessions is {}s", DEFAULT_COMMAND_TIMEOUT);
 	}
 

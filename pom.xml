@@ -411,22 +411,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>uk.org.webcompere</groupId>
-			<artifactId>model-assert</artifactId>
-			<version>1.1.0</version>
-			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>com.fasterxml.jackson.core</groupId>
-					<artifactId>jackson-databind</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.fasterxml.jackson.dataformat</groupId>
-					<artifactId>jackson-dataformat-yaml</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
 			<groupId>com.github.markusju</groupId>
 			<artifactId>TACACS</artifactId>
 			<version>31ad30d66bf84522fd03affd96f39af8b98be172</version>

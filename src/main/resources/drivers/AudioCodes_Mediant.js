@@ -21,7 +21,7 @@ const Info = {
 	name: "AudioCodesMediant",
 	description: "AudioCodes Mediant MG/SBC",
 	author: "Netshot Team",
-	version: "1.2"
+	version: "1.3"
 };
 
 const Config = {
@@ -245,15 +245,15 @@ function snapshot(cli, device, config) {
 		config.set("productKey", keyMatch[1]);
 	}
 
-	const ramMatch = showVersion.match(/Ram size: ([0-9]+)M/m);
+	const ramMatch = showVersion.match(/(?:Ram size|Memory): ([0-9]+) ?MB?/m);
 	if (ramMatch) {
 		device.set("ramSize", parseInt(ramMatch[1]));
 	}
-	const flashMatch = showVersion.match(/Flash size: ([0-9]+)M/m);
+	const flashMatch = showVersion.match(/Flash size: ([0-9]+) ?MB?/m);
 	if (flashMatch) {
 		device.set("flashSize", parseInt(flashMatch[1]));
 	}
-	const coreMatch = showVersion.match(/Core speed: ([0-9]+)Mhz/m);
+	const coreMatch = showVersion.match(/(?:Core speed:|CPU.*@) ([0-9]+)Mhz/m);
 	if (coreMatch) {
 		device.set("coreSpeed", parseInt(coreMatch[1]));
 	}
@@ -274,24 +274,20 @@ function snapshot(cli, device, config) {
 	const boardSlot = slotMatch ? slotMatch[1] : undefined;
 
 	const showAssembly = cli.command("show system assembly");
-	const tableMatch = showAssembly.match(/^Board Assembly Info:[\s\r\n]*((\|.*\r?\n)*)/m);
-	if (tableMatch) {
-		const tableContent = tableMatch[1];
-		const rowPattern = /^\| *([0-9]+) +\| (.*?) *\| (.+?) *\|/mg;
-		while (true) {
-			const rowMatch = rowPattern.exec(tableContent);
-			if (!rowMatch) {
-				break;
-			}
-			const module = {
-				slot: rowMatch[1],
-				partNumber: rowMatch[3],
-			};
-			if (module.slot === boardSlot && serialNumber) {
-				module.serialNumber = serialNumber;
-			}
-			device.add("module", module);
+	const rowPattern = /^\| *([0-9]+) +\| (.*?) *\| (.+?) *\|/mg;
+	while (true) {
+		const rowMatch = rowPattern.exec(showAssembly);
+		if (!rowMatch) {
+			break;
 		}
+		const module = {
+			slot: rowMatch[1],
+			partNumber: rowMatch[3],
+		};
+		if (module.slot === boardSlot && serialNumber) {
+			module.serialNumber = serialNumber;
+		}
+		device.add("module", module);
 	}
 
 	// Running-config
@@ -328,7 +324,7 @@ function snapshot(cli, device, config) {
 			name: intfMatch[1],
 			ip: [],
 		};
-		const macMatch = intfMatch[2].match(/^\s*Hardware (A|a)ddress is: ([0-9a-f-]+)/m);
+		const macMatch = intfMatch[2].match(/^\s*Hardware (?:A|a)ddress is: ([0-9a-f-]+)/m);
 		if (macMatch) {
 			ni.mac = macMatch[1];
 		}
@@ -346,7 +342,7 @@ function snapshot(cli, device, config) {
 			if (macMatch) {
 				sni.mac = macMatch[1];
 			}
-			const ipMatch = sintfMatch[2].match(/\s*IP (A|a)ddress: (\d+\.\d+\.\d+\.\d+)\/(\d+)/m);
+			const ipMatch = sintfMatch[2].match(/\s*IP (?:A|a)ddress: (\d+\.\d+\.\d+\.\d+)\/(\d+)/m);
 			if (ipMatch) {
 				sni.ip.push({
 					ip: ipMatch[1],

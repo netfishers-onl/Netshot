@@ -20,10 +20,13 @@ package net.netshot.netshot.rest;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.security.KeyStore;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,16 +46,67 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jakarta.persistence.PersistenceException;
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-import jakarta.xml.bind.annotation.XmlType;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 
+import org.apache.poi.ss.usermodel.BuiltinFormats;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.glassfish.jersey.servlet.ServletContainer;
+import org.glassfish.jersey.servlet.ServletProperties;
+import org.graalvm.polyglot.HostAccess.Export;
+import org.hibernate.HibernateException;
+import org.hibernate.ObjectNotFoundException;
+import org.hibernate.Session;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.query.Query;
+import org.quartz.SchedulerException;
+import org.slf4j.MarkerFactory;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.jakarta.rs.cfg.EndpointConfigBase;
+import com.fasterxml.jackson.jakarta.rs.cfg.ObjectWriterInjector;
+import com.fasterxml.jackson.jakarta.rs.cfg.ObjectWriterModifier;
+import com.github.difflib.DiffUtils;
+import com.github.difflib.patch.AbstractDelta;
+import com.github.difflib.patch.Patch;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.undertow.Handlers;
+import io.undertow.Undertow;
+import io.undertow.UndertowOptions;
+import io.undertow.server.HttpHandler;
+import io.undertow.server.handlers.PathHandler;
+import io.undertow.server.handlers.SameSiteCookieHandler;
+import io.undertow.server.handlers.resource.ClassPathResourceManager;
+import io.undertow.server.handlers.resource.ResourceHandler;
+import io.undertow.servlet.Servlets;
+import io.undertow.servlet.api.DeploymentInfo;
+import io.undertow.servlet.api.DeploymentManager;
+import io.undertow.servlet.api.ServletSessionConfig;
 import jakarta.annotation.security.DenyAll;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.persistence.PersistenceException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.ws.rs.BeanParam;
@@ -73,7 +127,15 @@ import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriBuilder;
-import net.netshot.netshot.database.Database;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlType;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.TaskManager;
 import net.netshot.netshot.aaa.ApiToken;
@@ -89,46 +151,47 @@ import net.netshot.netshot.cluster.ClusterManager;
 import net.netshot.netshot.cluster.ClusterMember;
 import net.netshot.netshot.cluster.ClusterMember.MastershipStatus;
 import net.netshot.netshot.compliance.CheckResult;
+import net.netshot.netshot.compliance.CheckResult.ResultOption;
 import net.netshot.netshot.compliance.Exemption;
 import net.netshot.netshot.compliance.HardwareRule;
 import net.netshot.netshot.compliance.Policy;
 import net.netshot.netshot.compliance.Rule;
 import net.netshot.netshot.compliance.SoftwareRule;
-import net.netshot.netshot.compliance.CheckResult.ResultOption;
 import net.netshot.netshot.compliance.SoftwareRule.ConformanceLevel;
 import net.netshot.netshot.compliance.rules.JavaScriptRule;
 import net.netshot.netshot.compliance.rules.PythonRule;
 import net.netshot.netshot.compliance.rules.TextRule;
+import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
+import net.netshot.netshot.device.Device.MissingDeviceDriverException;
+import net.netshot.netshot.device.Device.Status;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.device.Finder;
+import net.netshot.netshot.device.Finder.Expression.FinderParseException;
 import net.netshot.netshot.device.Module;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.Network6Address;
 import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.NetworkInterface;
 import net.netshot.netshot.device.StaticDeviceGroup;
-import net.netshot.netshot.device.Device.MissingDeviceDriverException;
-import net.netshot.netshot.device.Device.Status;
-import net.netshot.netshot.device.Finder.Expression.FinderParseException;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
+import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
 import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
 import net.netshot.netshot.device.attribute.ConfigLongTextAttribute;
 import net.netshot.netshot.device.attribute.DeviceAttribute;
-import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
-import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
 import net.netshot.netshot.device.credentials.DeviceSnmpv3Community;
 import net.netshot.netshot.device.credentials.DeviceSshKeyAccount;
-import net.netshot.netshot.device.credentials.HideSecretSerializer;
 import net.netshot.netshot.device.credentials.HideSecretDeserializer;
+import net.netshot.netshot.device.credentials.HideSecretSerializer;
 import net.netshot.netshot.diagnostic.Diagnostic;
 import net.netshot.netshot.diagnostic.DiagnosticResult;
 import net.netshot.netshot.diagnostic.JavaScriptDiagnostic;
@@ -141,8 +204,8 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.rest.RestViews.RestApiView;
 import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
-import net.netshot.netshot.work.TaskLogger;
 import net.netshot.netshot.work.Task.ScheduleType;
+import net.netshot.netshot.work.TaskLogger;
 import net.netshot.netshot.work.tasks.CheckComplianceTask;
 import net.netshot.netshot.work.tasks.CheckGroupComplianceTask;
 import net.netshot.netshot.work.tasks.CheckGroupSoftwareTask;
@@ -157,63 +220,6 @@ import net.netshot.netshot.work.tasks.RunGroupDiagnosticsTask;
 import net.netshot.netshot.work.tasks.ScanSubnetsTask;
 import net.netshot.netshot.work.tasks.TakeGroupSnapshotTask;
 import net.netshot.netshot.work.tasks.TakeSnapshotTask;
-
-import org.apache.poi.ss.usermodel.BuiltinFormats;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.CreationHelper;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.ss.util.CellReference;
-import org.apache.poi.xssf.streaming.SXSSFSheet;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
-import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
-import org.glassfish.grizzly.http.server.HttpHandler;
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.servlet.ServletRegistration;
-import org.glassfish.grizzly.servlet.WebappContext;
-import org.glassfish.grizzly.ssl.SSLContextConfigurator;
-import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpContainer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.servlet.ServletContainer;
-import org.glassfish.jersey.servlet.ServletProperties;
-import org.graalvm.polyglot.HostAccess.Export;
-import org.hibernate.HibernateException;
-import org.hibernate.ObjectNotFoundException;
-import org.hibernate.query.Query;
-import org.hibernate.Session;
-import org.hibernate.exception.ConstraintViolationException;
-import org.quartz.SchedulerException;
-import org.slf4j.MarkerFactory;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.jakarta.rs.cfg.EndpointConfigBase;
-import com.fasterxml.jackson.jakarta.rs.cfg.ObjectWriterInjector;
-import com.fasterxml.jackson.jakarta.rs.cfg.ObjectWriterModifier;
-import com.github.difflib.DiffUtils;
-import com.github.difflib.patch.AbstractDelta;
-import com.github.difflib.patch.Patch;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
  * The RestService class exposes the Netshot methods as a REST service.
@@ -387,63 +393,90 @@ public class RestService extends Thread {
 	/* (non-Javadoc)
 	 * @see java.lang.Thread#run()
 	 */
-	@Override
-	public void run() {
-		log.info("Starting the Web/REST service thread.");
-		try {
+@Override
+public void run() {
+	log.info("Starting the Web/REST service thread.");
+	try {
+		Undertow.Builder builder = Undertow.builder()
+			.setServerOption(UndertowOptions.ENABLE_HTTP2, true);
 
-			SSLEngineConfigurator sslConfig = null;
-			if (httpUseSsl) {
-				SSLContextConfigurator sslContext = new SSLContextConfigurator();
-				sslContext.setKeyStoreFile(httpSslKeystoreFile);
-				sslContext.setKeyStorePass(httpSslKeystorePass);
-				if (!httpSslKeystoreFile.endsWith(".jks")) {
-					sslContext.setKeyStoreType("pkcs12");
-				}
-	
-				// Create the context and raise any error if anything is wrong with the SSL configuration.
-				sslContext.createSSLContext(true);
-				sslConfig = new SSLEngineConfigurator(sslContext)
-						.setClientMode(false)
-						.setNeedClientAuth(false)
-						.setWantClientAuth(false);
+		// === SSL Setup ===
+		if (httpUseSsl) {
+			KeyStore keyStore = KeyStore.getInstance(
+				httpSslKeystoreFile.endsWith(".jks") ? "JKS" : "PKCS12"
+			);
+			try (InputStream is = new FileInputStream(httpSslKeystoreFile)) {
+				keyStore.load(is, httpSslKeystorePass.toCharArray());
 			}
-			HttpServer server = GrizzlyHttpServerFactory.createHttpServer(
-					httpBaseUri, (GrizzlyHttpContainer) null, httpUseSsl, sslConfig, false);
-			server.getServerConfiguration().setSessionTimeoutSeconds(UiUser.MAX_IDLE_TIME);
+			KeyManagerFactory kmf = KeyManagerFactory.getInstance(
+				KeyManagerFactory.getDefaultAlgorithm()
+			);
+			kmf.init(keyStore, httpSslKeystorePass.toCharArray());
 
-			WebappContext context = new WebappContext("GrizzlyContext", HTTP_API_PATH);
-			context.getSessionCookieConfig().setName(RestService.SESSION_COOKIE_NAME);
-			// Not reflected into the actual cookie (missing code in Grizzly)
-			context.getSessionCookieConfig().setAttribute(
-				org.glassfish.grizzly.http.server.Constants.COOKIE_SAME_SITE_ATTR, "strict");
-			context.getSessionCookieConfig().setHttpOnly(true);
-			if (httpUseSsl) {
-				context.getSessionCookieConfig().setSecure(true);
-			}
-			ServletRegistration registration = context.addServlet("Jersey", ServletContainer.class);
-			registration.setInitParameter(ServletProperties.JAXRS_APPLICATION_CLASS,
-					NetshotWebApplication.class.getName());
-			registration.addMapping(HTTP_API_PATH);
-			context.deploy(server);
-			HttpHandler staticHandler = new CLStaticHttpHandler(Netshot.class.getClassLoader(), "/www/");
-			server.getServerConfiguration().addHttpHandler(staticHandler, HTTP_STATIC_PATH);
+			SSLContext sslContext = SSLContext.getInstance("TLS");
+			sslContext.init(kmf.getKeyManagers(), null, null);
 
-			server.start();
-
-			synchronized (this) {
-				while (true) {
-					this.wait();
-				}
-			}
+			builder.addHttpsListener(httpBaseUri.getPort(), httpBaseUri.getHost(), sslContext);
 		}
-		catch (Exception e) {
-			log.error(MarkerFactory.getMarker("FATAL"),
-					"Fatal error with the REST service.", e);
-			throw new RuntimeException(
-					"Error with the REST service, see logs for more details.");
+		else {
+			builder.addHttpListener(httpBaseUri.getPort(), httpBaseUri.getHost());
+		}
+
+		// === Servlet (Jersey REST API) Deployment ===
+		DeploymentInfo servletBuilder = Servlets.deployment()
+			.setClassLoader(Netshot.class.getClassLoader())
+			.setContextPath(HTTP_API_PATH) // same as Grizzly context path
+			.setDeploymentName("NetshotREST")
+			.addServlets(
+				Servlets.servlet("Jersey", ServletContainer.class)
+					.setLoadOnStartup(1)
+					.addInitParam(ServletProperties.JAXRS_APPLICATION_CLASS,
+								  NetshotWebApplication.class.getName())
+					.addMapping("/*")
+			)
+			.setServletSessionConfig(new ServletSessionConfig()
+				.setName(RestService.SESSION_COOKIE_NAME)
+				.setHttpOnly(true)
+				.setSecure(httpUseSsl)
+			)
+			.setDefaultSessionTimeout(UiUser.MAX_IDLE_TIME);
+
+		DeploymentManager manager = Servlets
+			.defaultContainer()
+			.addDeployment(servletBuilder);
+		manager.deploy();
+		HttpHandler servletHandler = manager.start();
+		HttpHandler strictServletHandler = new SameSiteCookieHandler(servletHandler, "Strict");
+
+		// === Static files from /www/ (classpath) ===
+		ResourceHandler staticHandler = Handlers.resource(
+			new ClassPathResourceManager(Netshot.class.getClassLoader(), "www")
+		).addWelcomeFiles("index.html");
+
+		// === Routing ===
+		PathHandler pathHandler = Handlers.path()
+			.addPrefixPath(HTTP_STATIC_PATH, staticHandler)
+			.addPrefixPath(HTTP_API_PATH, strictServletHandler);
+
+		builder.setHandler(pathHandler);
+
+		// === Start Undertow ===
+		Undertow server = builder.build();
+		server.start();
+
+		synchronized (this) {
+			while (true) {
+				this.wait();
+			}
 		}
 	}
+	catch (Exception e) {
+		log.error(MarkerFactory.getMarker("FATAL"),
+			"Fatal error with the REST service.", e);
+		throw new RuntimeException(
+			"Error with the REST service, see logs for more details.");
+	}
+}
 
 
 	/**
@@ -1115,7 +1148,7 @@ public class RestService extends Thread {
 		/** The deltas. */
 		@Getter(onMethod=@__({
 			@XmlElement(), @JsonView(DefaultView.class),
-			@JsonInclude(Include.NON_NULL)
+			@JsonInclude(JsonInclude.Include.NON_NULL)
 		}))
 		@Setter
 		private Map<String, List<RsConfigDelta>> deltas = new HashMap<>();

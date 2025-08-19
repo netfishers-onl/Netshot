@@ -645,6 +645,52 @@ public class RestServiceTest {
 				Response.Status.UNAUTHORIZED.getStatusCode(), response3.statusCode(),
 				"Not getting 401 response for post-logout request");
 		}
+
+		@Test
+		@DisplayName("OIDC idle timeout")
+		void oidcIdleTimeout() throws IOException, InterruptedException {
+			final String username = "oidcreadonly";
+			final UiUser.Role role = UiUser.Role.READONLY;
+			final String authorizationCode = "pAmljUL1h23JKDSo1kjoi23KJSDnhkj028Jkj";
+			this.idpServer.addAuthorizatioCode(authorizationCode, username, role.getName());
+
+			apiClient.setOidcCodeLogin(authorizationCode, redirectUri.toString());
+			{
+				HttpResponse<JsonNode> response = apiClient.get("/user");
+				Assertions.assertEquals(
+					Response.Status.OK.getStatusCode(), response.statusCode(),
+					"Unable to get user profile after OIDC code and cookie API access");
+				Assertions.assertEquals(
+					JsonNodeFactory.instance.objectNode()
+						.put("id", Long.valueOf(0))
+						.put("local", false)
+						.put("username", username)
+						.put("level", Long.valueOf(role.getLevel())),
+					response.body(),
+					"Retrieved user doesn't match expected object");
+			}
+			Thread.sleep(Duration.ofSeconds(5));
+			{
+				HttpResponse<JsonNode> response = apiClient.get("/user");
+				Assertions.assertEquals(
+					Response.Status.OK.getStatusCode(), response.statusCode(),
+					"Unable to get user profile before reaching idle timeout");
+			}
+			Thread.sleep(Duration.ofSeconds(8));
+			{
+				HttpResponse<JsonNode> response = apiClient.get("/user");
+				Assertions.assertEquals(
+					Response.Status.OK.getStatusCode(), response.statusCode(),
+					"Unable to get user profile before reaching idle timeout");
+			}
+			Thread.sleep(Duration.ofSeconds(15));
+			{
+				HttpResponse<JsonNode> response = apiClient.get("/user");
+				Assertions.assertEquals(
+					Response.Status.UNAUTHORIZED.getStatusCode(), response.statusCode(),
+					"The session didn't expire after idle timeout as planned");
+			}
+		}
 	}
 
 	@Nested

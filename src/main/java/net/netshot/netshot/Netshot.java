@@ -233,11 +233,9 @@ public class Netshot extends Thread {
 	protected static boolean readConfig(String[] filenames) {
 		Netshot.config = new Properties();
 		for (String fileName : filenames) {
-			try {
+			try (InputStream fileStream = new FileInputStream(fileName)) {
 				log.trace("Trying to load the configuration file {}.", fileName);
-				InputStream fileStream = new FileInputStream(fileName);
 				Netshot.config.load(fileStream);
-				fileStream.close();
 				log.warn("Configuration file {} successfully read.", fileName);
 				break;
 			}
@@ -595,13 +593,14 @@ public class Netshot extends Thread {
 			log.info("Starting the clustering manager.");
 			ClusterManager.init();
 
+			Netshot.loadModuleConfigs();
+
 			log.info("Initializing the task manager.");
 			TaskManager.init();
 			log.info("Starting the REST service.");
 			RestService.init();
 			log.info("Scheduling the existing tasks.");
 			TaskManager.rescheduleAll();
-			Netshot.loadModuleConfigs();
 
 			log.info("Starting signal listener.");
 			Signal.handle(new Signal("HUP"), new SignalHandler() {

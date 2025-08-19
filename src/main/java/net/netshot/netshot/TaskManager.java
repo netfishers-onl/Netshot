@@ -108,15 +108,16 @@ public class TaskManager {
 	 * Initializes the task manager.
 	 */
 	public static void init() {
-		TaskManager.THREAD_COUNT = Netshot.getConfig("netshot.tasks.threadcount", 10, 1, 128);
+		TaskManager.THREAD_COUNT = Netshot.getConfig("netshot.tasks.threadcount", 10, 1, 65535);
 		try {
 			Properties params = new Properties();
 			params.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
 			params.put("org.quartz.threadPool.threadCount", Integer.toString(TaskManager.THREAD_COUNT));
 			params.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "NetshotMasterScheduler");
+			params.put("org.quartz.scheduler.skipUpdateCheck", "true");
 			StdSchedulerFactory factory = new StdSchedulerFactory(params);
-			masterScheduler = factory.getScheduler();
-			masterScheduler.start();
+			TaskManager.masterScheduler = factory.getScheduler();
+			TaskManager.masterScheduler.start();
 		}
 		catch (Exception e) {
 			log.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate the Master Task Manager", e);
@@ -125,11 +126,12 @@ public class TaskManager {
 		try {
 			Properties params = new Properties();
 			params.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
-			params.put("org.quartz.threadPool.threadCount", Netshot.getConfig("netshot.tasks.threadcount", "10"));
+			params.put("org.quartz.threadPool.threadCount", Integer.toString(TaskManager.THREAD_COUNT));
 			params.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "NetshotRunnerScheduler");
+			params.put("org.quartz.scheduler.skipUpdateCheck", "true");
 			StdSchedulerFactory factory = new StdSchedulerFactory(params);
-			runnerScheduler = factory.getScheduler();
-			runnerScheduler.start();
+			TaskManager.runnerScheduler = factory.getScheduler();
+			TaskManager.runnerScheduler.start();
 		}
 		catch (Exception e) {
 			log.error(MarkerFactory.getMarker("FATAL"), "Unable to instantiate the Runner Task Manager", e);
@@ -239,7 +241,7 @@ public class TaskManager {
 	 */
 	public static void cancelTask(Task task, String reason) throws SchedulerException, HibernateException {
 		log.debug("Cancelling task {}.", task);
-		runnerScheduler.deleteJob(task.getIdentity());
+		TaskManager.runnerScheduler.deleteJob(task.getIdentity());
 		log.trace("The task has been deleted from the scheduler.");
 		Session session = Database.getSession();
 		try {
@@ -284,17 +286,17 @@ public class TaskManager {
 			.withIdentity(task.getIdentity())
 			.build();
 		job.getJobDataMap().put(TaskJob.NETSHOT_TASK, task.getId());
-		Trigger trigger;
-		TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder.newTrigger()
+		TriggerBuilder<Trigger> triggerBuilder = TriggerBuilder
+			.newTrigger()
 			.withPriority(task.getPriority());
 		Date when = task.getNextExecutionDate();
 		if (when == null || forceNow) {
-			trigger = triggerBuilder.startNow().build();
+			triggerBuilder.startNow();
 		}
 		else {
-			trigger = triggerBuilder.startAt(when).build();
+			triggerBuilder.startAt(when);
 		}
-		scheduler.scheduleJob(job, trigger);
+		scheduler.scheduleJob(job, triggerBuilder.build());
 		log.trace("Task successfully added to the scheduler.");
 	}
 

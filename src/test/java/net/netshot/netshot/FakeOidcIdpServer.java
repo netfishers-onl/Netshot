@@ -29,11 +29,9 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.undertow.Undertow;
-import io.undertow.attribute.QueryParameterAttribute;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.RoutingHandler;
-import io.undertow.server.handlers.RequestDumpingHandler;
 import io.undertow.server.handlers.form.FormData;
 import io.undertow.server.handlers.form.FormDataParser;
 import io.undertow.server.handlers.form.FormParserFactory;
@@ -66,7 +64,8 @@ public class FakeOidcIdpServer {
 	final static private String SAMPLE_KID = "ukbTXswbjExjfqPBKPREf8VULCASfzi05E97YKsj6g0";
 
 	// Sample RSA key (PCKS8, PEM-encoded)
-	final static private String SAMPLE_PRIVATE_KEY = "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDLFrHaHNdJAyV3"
+	final static private String SAMPLE_PRIVATE_KEY =
+			  "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDLFrHaHNdJAyV3"
 			+ "Tctaam0MX978CKEDKGlxeuRmSnjMVDfTljI7zThWowbJ4sqg6ICvDtTlfAAhIPxp"
 			+ "spPYHITyA79PV57/Y/k3Cz55DMpm19YwJUbEcHSn2Z6fIcOmXanPiNUB3A1Zx/Jx"
 			+ "ZHYPzgIaWGEwRTBECjSIlZwYM1iOVtZaMrOSqc5z2cfRVNfBYQ5/mDn3ZEGv+ny+"
@@ -90,10 +89,12 @@ public class FakeOidcIdpServer {
 			+ "jV2vFAEn5Ek5GhPqnbM8aWHyd6QFP6946pp4SeUZNqxcu3F83y2js6HXHaD9bEf3"
 			+ "j/Bb1jrGr70Le9KgDaE9e1Q7xz1TY7byzUdbThvrAoGBAIsjuzdd376LUb6ClFVL"
 			+ "KMMCNFq9z2c8YHYITmKTRUVGtrKcS1daHByBiLA24jI43xzNVcjwaaI+OUmjH5XY"
-			+ "qhWo2p2F+diSkZSK7wBq9wFQaURXDv36QzdVbspMQluruMmUa5FCnApNoX4hPIUS" + "oby0A0cpHjPY+bR+KlAPivKg";
+			+ "qhWo2p2F+diSkZSK7wBq9wFQaURXDv36QzdVbspMQluruMmUa5FCnApNoX4hPIUS"
+			+ "oby0A0cpHjPY+bR+KlAPivKg";
 
 	// Sample IdP certificate for tests (private key above)
-	final static private String SAMPLE_CERTIFICATE = "MIIClzCCAX8CBgGXq4B+JzANBgkqhkiG9w0BAQsFADAPMQ0wCwYDVQQDDAR0ZXN0MB4XDTI1MDYyNjA5"
+	final static private String SAMPLE_CERTIFICATE =
+			"MIIClzCCAX8CBgGXq4B+JzANBgkqhkiG9w0BAQsFADAPMQ0wCwYDVQQDDAR0ZXN0MB4XDTI1MDYyNjA5"
 			+ "MDgzNFoXDTM1MDYyNjA5MTAxNFowDzENMAsGA1UEAwwEdGVzdDCCASIwDQYJKoZIhvcNAQEBBQADggEP"
 			+ "ADCCAQoCggEBAMsWsdoc10kDJXdNy1pqbQxf3vwIoQMoaXF65GZKeMxUN9OWMjvNOFajBsniyqDogK8O"
 			+ "1OV8ACEg/Gmyk9gchPIDv09Xnv9j+TcLPnkMymbX1jAlRsRwdKfZnp8hw6Zdqc+I1QHcDVnH8nFkdg/O"
@@ -103,7 +104,8 @@ public class FakeOidcIdpServer {
 			+ "mt1h0wZSlpyPm54hV2MNlxE7bd1I2fRtxmBTTUuOLEi6ca5iStKoHO6N7kCGlSWLs49/dqeNKjHweCV7"
 			+ "daK7t8tp8sKNPEcDoz0jFiVXVeUTLm0VjrdbdCSpamm9/Z/4EMaxE5SQKTHEHu83uqr1biNjr6n82WSj"
 			+ "xWMdh/hDQbtS08rItYSrkxJ3PLIdhxqJ/uUTZ3EqE3Ulcc+coiIzeyVdO/r4sZJvG2XLyidGsxQBcCef"
-			+ "5AlNWd7EQUc1lioS1HNSqTiXwxKvfAd06bGCN3mz8z6XgpFNTRDtHsmK3L7h5EYNa3DBKg/mgxfE3DJt" + "XXCXJHBCzQ==";
+			+ "5AlNWd7EQUc1lioS1HNSqTiXwxKvfAd06bGCN3mz8z6XgpFNTRDtHsmK3L7h5EYNa3DBKg/mgxfE3DJt"
+			+ "XXCXJHBCzQ==";
 
 	@Getter
 	@Setter

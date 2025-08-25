@@ -393,90 +393,90 @@ public class RestService extends Thread {
 	/* (non-Javadoc)
 	 * @see java.lang.Thread#run()
 	 */
-@Override
-public void run() {
-	log.info("Starting the Web/REST service thread.");
-	try {
-		Undertow.Builder builder = Undertow.builder()
-			.setServerOption(UndertowOptions.ENABLE_HTTP2, true);
+	@Override
+	public void run() {
+		log.info("Starting the Web/REST service thread.");
+		try {
+			Undertow.Builder builder = Undertow.builder()
+				.setServerOption(UndertowOptions.ENABLE_HTTP2, true);
 
-		// === SSL Setup ===
-		if (httpUseSsl) {
-			KeyStore keyStore = KeyStore.getInstance(
-				httpSslKeystoreFile.endsWith(".jks") ? "JKS" : "PKCS12"
-			);
-			try (InputStream is = new FileInputStream(httpSslKeystoreFile)) {
-				keyStore.load(is, httpSslKeystorePass.toCharArray());
+			// === SSL Setup ===
+			if (httpUseSsl) {
+				KeyStore keyStore = KeyStore.getInstance(
+					httpSslKeystoreFile.endsWith(".jks") ? "JKS" : "PKCS12"
+				);
+				try (InputStream is = new FileInputStream(httpSslKeystoreFile)) {
+					keyStore.load(is, httpSslKeystorePass.toCharArray());
+				}
+				KeyManagerFactory kmf = KeyManagerFactory.getInstance(
+					KeyManagerFactory.getDefaultAlgorithm()
+				);
+				kmf.init(keyStore, httpSslKeystorePass.toCharArray());
+
+				SSLContext sslContext = SSLContext.getInstance("TLS");
+				sslContext.init(kmf.getKeyManagers(), null, null);
+
+				builder.addHttpsListener(httpBaseUri.getPort(), httpBaseUri.getHost(), sslContext);
 			}
-			KeyManagerFactory kmf = KeyManagerFactory.getInstance(
-				KeyManagerFactory.getDefaultAlgorithm()
-			);
-			kmf.init(keyStore, httpSslKeystorePass.toCharArray());
-
-			SSLContext sslContext = SSLContext.getInstance("TLS");
-			sslContext.init(kmf.getKeyManagers(), null, null);
-
-			builder.addHttpsListener(httpBaseUri.getPort(), httpBaseUri.getHost(), sslContext);
-		}
-		else {
-			builder.addHttpListener(httpBaseUri.getPort(), httpBaseUri.getHost());
-		}
-
-		// === Servlet (Jersey REST API) Deployment ===
-		DeploymentInfo servletBuilder = Servlets.deployment()
-			.setClassLoader(Netshot.class.getClassLoader())
-			.setContextPath(HTTP_API_PATH) // same as Grizzly context path
-			.setDeploymentName("NetshotREST")
-			.addServlets(
-				Servlets.servlet("Jersey", ServletContainer.class)
-					.setLoadOnStartup(1)
-					.addInitParam(ServletProperties.JAXRS_APPLICATION_CLASS,
-								  NetshotWebApplication.class.getName())
-					.addMapping("/*")
-			)
-			.setServletSessionConfig(new ServletSessionConfig()
-				.setName(RestService.SESSION_COOKIE_NAME)
-				.setHttpOnly(true)
-				.setSecure(httpUseSsl)
-			)
-			.setDefaultSessionTimeout(UiUser.MAX_IDLE_TIME);
-
-		DeploymentManager manager = Servlets
-			.defaultContainer()
-			.addDeployment(servletBuilder);
-		manager.deploy();
-		HttpHandler servletHandler = manager.start();
-		HttpHandler strictServletHandler = new SameSiteCookieHandler(servletHandler, "Strict");
-
-		// === Static files from /www/ (classpath) ===
-		ResourceHandler staticHandler = Handlers.resource(
-			new ClassPathResourceManager(Netshot.class.getClassLoader(), "www")
-		).addWelcomeFiles("index.html");
-
-		// === Routing ===
-		PathHandler pathHandler = Handlers.path()
-			.addPrefixPath(HTTP_STATIC_PATH, staticHandler)
-			.addPrefixPath(HTTP_API_PATH, strictServletHandler);
-
-		builder.setHandler(pathHandler);
-
-		// === Start Undertow ===
-		Undertow server = builder.build();
-		server.start();
-
-		synchronized (this) {
-			while (true) {
-				this.wait();
+			else {
+				builder.addHttpListener(httpBaseUri.getPort(), httpBaseUri.getHost());
 			}
+
+			// === Servlet (Jersey REST API) Deployment ===
+			DeploymentInfo servletBuilder = Servlets.deployment()
+				.setClassLoader(Netshot.class.getClassLoader())
+				.setContextPath(HTTP_API_PATH) // same as Grizzly context path
+				.setDeploymentName("NetshotREST")
+				.addServlets(
+					Servlets.servlet("Jersey", ServletContainer.class)
+						.setLoadOnStartup(1)
+						.addInitParam(ServletProperties.JAXRS_APPLICATION_CLASS,
+										NetshotWebApplication.class.getName())
+						.addMapping("/*")
+				)
+				.setServletSessionConfig(new ServletSessionConfig()
+					.setName(RestService.SESSION_COOKIE_NAME)
+					.setHttpOnly(true)
+					.setSecure(httpUseSsl)
+				)
+				.setDefaultSessionTimeout(UiUser.MAX_IDLE_TIME);
+
+			DeploymentManager manager = Servlets
+				.defaultContainer()
+				.addDeployment(servletBuilder);
+			manager.deploy();
+			HttpHandler servletHandler = manager.start();
+			HttpHandler strictServletHandler = new SameSiteCookieHandler(servletHandler, "Strict");
+
+			// === Static files from /www/ (classpath) ===
+			ResourceHandler staticHandler = Handlers.resource(
+				new ClassPathResourceManager(Netshot.class.getClassLoader(), "www")
+			).addWelcomeFiles("index.html");
+
+			// === Routing ===
+			PathHandler pathHandler = Handlers.path()
+				.addPrefixPath(HTTP_STATIC_PATH, staticHandler)
+				.addPrefixPath(HTTP_API_PATH, strictServletHandler);
+
+			builder.setHandler(pathHandler);
+
+			// === Start Undertow ===
+			Undertow server = builder.build();
+			server.start();
+
+			synchronized (this) {
+				while (true) {
+					this.wait();
+				}
+			}
+		}
+		catch (Exception e) {
+			log.error(MarkerFactory.getMarker("FATAL"),
+				"Fatal error with the REST service.", e);
+			throw new RuntimeException(
+				"Error with the REST service, see logs for more details.");
 		}
 	}
-	catch (Exception e) {
-		log.error(MarkerFactory.getMarker("FATAL"),
-			"Fatal error with the REST service.", e);
-		throw new RuntimeException(
-			"Error with the REST service, see logs for more details.");
-	}
-}
 
 
 	/**

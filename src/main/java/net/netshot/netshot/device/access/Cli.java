@@ -169,7 +169,7 @@ public abstract class Cli {
 			while (this.inStream != null && this.inStream.available() > 0) {
 				int length = this.inStream.read(miniBuffer);
 				String s = new String(miniBuffer, 0, length);
-				log.debug("Received data '{}'.", s);
+				log.trace("Received data '{}'.", s);
 				buffer.append(s);
 				lastActivityTime = System.currentTimeMillis();
 			}

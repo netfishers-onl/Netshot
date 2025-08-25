@@ -16,6 +16,7 @@
 		<swagger.version>2.2.27</swagger.version>
 		<slf4j.version>2.0.16</slf4j.version>
 		<lombok.version>1.18.36</lombok.version>
+		<sshd.version>2.15.0</sshd.version>
 	</properties>
 	<build>
 		<finalName>netshot</finalName>
@@ -140,11 +141,6 @@
 			<groupId>com.mchange</groupId>
 			<artifactId>c3p0</artifactId>
 			<version>${c3p0.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.github.mwiede</groupId>
-			<artifactId>jsch</artifactId>
-			<version>0.2.21</version>
 		</dependency>
 		<dependency>
 			<groupId>com.mysql</groupId>
@@ -431,6 +427,21 @@
 			<artifactId>oauth2-oidc-sdk</artifactId>
 			<classifier>jdk11</classifier>
 			<version>11.26</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sshd</groupId>
+			<artifactId>sshd-mina</artifactId>
+			<version>${sshd.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sshd</groupId>
+			<artifactId>sshd-sftp</artifactId>
+			<version>${sshd.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sshd</groupId>
+			<artifactId>sshd-scp</artifactId>
+			<version>${sshd.version}</version>
 		</dependency>
 	</dependencies>
 	<repositories>

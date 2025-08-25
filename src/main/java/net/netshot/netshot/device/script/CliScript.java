@@ -19,6 +19,7 @@
 package net.netshot.netshot.device.script;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -216,13 +217,14 @@ public abstract class CliScript {
 					}
 					catch (IOException e) {
 						log.warn("Error while opening SSH connection to {}:{}.", address.getIp(), sshPort, e);
-						if (e.getMessage().contains("Auth fail")) {
+						if (e.getMessage().equals("No more authentication methods available") ||
+							  e.getMessage().equals("Protocol error: expected packet type 61, got 50")) {
 							taskLogger.warn(String.format("Authentication failed %s:%d using SSH credential set %s.",
 									address, sshPort, credentialSet.getName()));
 							this.waitBetweenAttempts();
 						}
 						else {
-							taskLogger.warn(String.format("Unable to open an SSH socket to %s:%d: %s",
+							taskLogger.warn(String.format("Unable to connect using SSH to %s:%d: %s",
 									address.getIp(), sshPort, e.getMessage()));
 							sshOpened = false;
 							break;
@@ -337,12 +339,14 @@ public abstract class CliScript {
 						}
 						catch (IOException e) {
 							log.warn("Error while opening SSH connection to {}:{}.", address.getIp(), sshPort, e);
-							if (e.getMessage().contains("Auth fail") || e.getMessage().contains("authentication failure")) {
-								taskLogger.warn(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()));
+							if (e.getMessage().equals("No more authentication methods available") ||
+									e.getMessage().equals("Protocol error: expected packet type 61, got 50")) {
+								taskLogger.warn(String.format("Authentication failed %s:%d using SSH credential set %s.",
+										address, sshPort, credentialSet.getName()));
 								this.waitBetweenAttempts();
 							}
 							else {
-								taskLogger.warn(String.format("Unable to open an SSH socket to %s:%d: %s",
+								taskLogger.warn(String.format("Unable to connect using SSH to %s:%d: %s",
 										address.getIp(), sshPort, e.getMessage()));
 								break;
 							}

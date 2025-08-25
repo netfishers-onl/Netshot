@@ -66,6 +66,7 @@ import net.netshot.netshot.compliance.rules.JavaScriptRule;
 import net.netshot.netshot.compliance.rules.PythonRule;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.DeviceDriver;
+import net.netshot.netshot.device.access.Ssh;
 import net.netshot.netshot.rest.LoggerFilter;
 import net.netshot.netshot.rest.RestService;
 import net.netshot.netshot.work.tasks.TakeSnapshotTask;
@@ -517,6 +518,7 @@ public class Netshot extends Thread {
 		TakeSnapshotTask.loadConfig();
 		JavaScriptRule.loadConfig();
 		PythonRule.loadConfig();
+		Ssh.loadConfig();
 	}
 
 	/**

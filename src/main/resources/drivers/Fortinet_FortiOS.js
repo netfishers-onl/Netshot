@@ -24,7 +24,7 @@ var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "Netshot Team",
-	version: "6.0" /* Version will appear in the Admin tab. */
+	version: "6.2" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -120,7 +120,7 @@ var CLI = {
 		}
 	},
 	basic: { /* The basic FortiOS prompt. */
-		prompt: /^[A-Za-z0-9_\-\~]+?\s(\([A-Za-z0-9_\-\~]+?\)\s)?[#$]\s?$/,
+		prompt: /^[A-Za-z0-9_\-\~]+?\s(\([A-Za-z0-9_\-\~\.]+?\)\s)?[#$]\s?$/,
 		error: /^(Unknown action|Command fail)/m,
 		pager: { /* 'pager': define how to handle the pager for long outputs. */
 			match: /^--More-- /,

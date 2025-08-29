@@ -21,6 +21,13 @@ package net.netshot.netshot.compliance;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -37,14 +44,6 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -61,9 +60,11 @@ import net.netshot.netshot.work.TaskLogger;
  * A rule defines a number of constraints that a device should comply with.
  * A concrete implementation is the Javascript-based script rule.
  */
-@Entity @Inheritance(strategy = InheritanceType.JOINED)
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
 @Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"policy", "name"})})
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.SIMPLE_NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @Slf4j
 public abstract class Rule {
@@ -88,14 +89,14 @@ public abstract class Rule {
 	}
 
 	/** The enabled. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	protected boolean enabled = false;
+	protected boolean enabled;
 
 	/** The id. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
 		@XmlAttribute, @JsonView(DefaultView.class)
 	}))
@@ -103,22 +104,22 @@ public abstract class Rule {
 	protected long id;
 
 	/** The policy. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne,
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
-	protected Policy policy = null;
+	protected Policy policy;
 
 	/** The name. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	protected String name = "";
 
 	/** The exemptions. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@OneToMany(mappedBy = "key.rule", orphanRemoval = true, cascade = CascadeType.ALL)
 	}))
 	@Setter
@@ -143,11 +144,12 @@ public abstract class Rule {
 	}
 
 	/**
-	 * Check.
+	 * Check the device against the rule.
 	 *
 	 * @param device the device
 	 * @param session the session
 	 * @param taskLogger the task logger
+	 * @return the result of the check
 	 */
 	public CheckResult check(Device device, Session session, TaskLogger taskLogger) {
 		log.warn("Called generic rule check.");
@@ -160,22 +162,25 @@ public abstract class Rule {
 		return new CheckResult(this, device, ResultOption.NOTAPPLICABLE);
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		Rule other = (Rule) obj;
 		return id == other.id;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override

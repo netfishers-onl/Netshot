@@ -29,7 +29,7 @@ class DatabaseInterceptor implements Interceptor {
 
 	@Override
 	public boolean onFlushDirty(Object entity, Serializable id, Object[] currentState, Object[] previousState,
-			String[] propertyNames, Type[] types) {
+		String[] propertyNames, Type[] types) {
 		int indexOf = ArrayUtils.indexOf(propertyNames, "changeDate");
 		if (indexOf != ArrayUtils.INDEX_NOT_FOUND) {
 			currentState[indexOf] = new Date(1000 * (System.currentTimeMillis() / 1000));
@@ -42,7 +42,9 @@ class DatabaseInterceptor implements Interceptor {
 	public boolean onSave(Object entity, Serializable id, Object[] state, String[] propertyNames, Type[] types) {
 		int indexOf = ArrayUtils.indexOf(propertyNames, "changeDate");
 		if (indexOf != ArrayUtils.INDEX_NOT_FOUND) {
-			if (state[indexOf] == null) state[indexOf] = new Date(1000 * (System.currentTimeMillis() / 1000));
+			if (state[indexOf] == null) {
+				state[indexOf] = new Date(1000 * (System.currentTimeMillis() / 1000));
+			}
 			return true;
 		}
 		return false;

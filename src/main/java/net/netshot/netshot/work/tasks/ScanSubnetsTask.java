@@ -22,6 +22,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.quartz.JobKey;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
@@ -31,27 +41,16 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.database.Database;
 import net.netshot.netshot.TaskManager;
+import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
-
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.quartz.JobKey;
 
 /**
  * This task scans a subnet to discover devices.
@@ -59,10 +58,10 @@ import org.quartz.JobKey;
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
-public class ScanSubnetsTask extends Task implements DomainBasedTask {
-	
+public final class ScanSubnetsTask extends Task implements DomainBasedTask {
+
 	/** The subnets. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Fetch(FetchMode.SELECT),
 		@ElementCollection(fetch = FetchType.EAGER),
 		// Can't make it accepted by Hibernate 6.5... nevermind
@@ -75,52 +74,55 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 	}))
 	@Setter
 	private Set<Network4Address> subnets;
-	
+
 	/** The domain. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private Domain domain;
-	
+
 	/**
 	 * Instantiates a new scan subnet task.
 	 */
 	protected ScanSubnetsTask() {
 	}
-	
+
 	/**
 	 * Instantiates a new scan subnets task.
 	 *
 	 * @param subnets the subnets
 	 * @param domain the domain
 	 * @param comments the comments
+	 * @param target the target
+	 * @param author the author
 	 */
 	public ScanSubnetsTask(Set<Network4Address> subnets, Domain domain, String comments,
-			String target, String author) {
+		String target, String author) {
 		super(comments, target, author);
 		this.domain = domain;
 		this.subnets = subnets;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Subnet scan";
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#run()
 	 */
-  @Override
+	@Override
 	public void run() {
 		log.debug("Task {}. Starting scan subnet process.", this.getId());
-		
+
 		Session session = Database.getSession();
 		Set<Integer> toScan = new HashSet<Integer>();
 		List<DeviceCredentialSet> knownCommunities;
@@ -129,22 +131,22 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 				for (Network4Address subnet : subnets) {
 					int address1 = subnet.getSubnetMin();
 					int address2 = subnet.getSubnetMax();
-					int min = (address1 > address2 ? address2 : address1);
-					int max = (address1 > address2 ? address1 : address2);
+					int min = address1 > address2 ? address2 : address1;
+					int max = address1 > address2 ? address1 : address2;
 					if (min < max - 1) {
 						min++; // Avoid subnet network address
 						max--;
 					}
 					log.trace("Task {}. Will scan from {} to {}.", this.getId(), min, max);
 					this.info(String.format("Will scan %s (from %d to %d)", subnet.getPrefix(),
-							min, max));
+						min, max));
 					List<Integer> existing = session
-							.createQuery(
-								"select d.mgmtAddress.address from Device d where d.mgmtAddress.address >= :min and d.mgmtAddress.address <= :max",
-								Integer.class)
-							.setParameter("min", min)
-							.setParameter("max", max)
-							.list();
+						.createQuery(
+							"select d.mgmtAddress.address from Device d where d.mgmtAddress.address >= :min and d.mgmtAddress.address <= :max",
+							Integer.class)
+						.setParameter("min", min)
+						.setParameter("max", max)
+						.list();
 					for (int a = min; a <= max; a++) {
 						if (!existing.contains(a)) {
 							toScan.add(a);
@@ -154,12 +156,12 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 			}
 			catch (HibernateException e) {
 				log.error("Task {}. Error while retrieving the existing devices in the scope.",
-						this.getId(), e);
+					this.getId(), e);
 				this.error("Error while checking the existing devices.");
 				this.status = Status.FAILURE;
 				return;
 			}
-			
+
 			try {
 				knownCommunities = session
 					.createQuery("from DeviceSnmpCommunity c where c.mgmtDomain is null or c.mgmtDomain = :domain",
@@ -184,7 +186,7 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 			return;
 		}
 		log.trace("Task {}. Will try {} SNMP communities.", this.getId(), knownCommunities.size());
-		
+
 
 		for (int a : toScan) {
 			try {
@@ -196,7 +198,7 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 				}
 				this.info("Adding a task to scan " + address.getIp());
 				log.trace("Task {}. Will add a discovery task for device with IP {} ({}).",
-						this.getId(), a, address.getIp());
+					this.getId(), a, address.getIp());
 				DiscoverDeviceTypeTask discoverTask = new DiscoverDeviceTypeTask(address, this.getDomain(), comments, author);
 				for (DeviceCredentialSet credentialSet : knownCommunities) {
 					discoverTask.addCredentialSet(credentialSet);
@@ -209,19 +211,19 @@ public class ScanSubnetsTask extends Task implements DomainBasedTask {
 				this.error("Error while adding discover device type: " + e.getMessage());
 			}
 		}
-		
+
 		this.status = Status.SUCCESS;
 	}
-	
-	/* (non-Javadoc)
+
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#clone()
 	 */
 	@Override
-  public Object clone() throws CloneNotSupportedException {
-	  ScanSubnetsTask task = (ScanSubnetsTask) super.clone();
-	  task.setSubnets(this.subnets);
-	  return task;
-  }
+	public Object clone() throws CloneNotSupportedException {
+		ScanSubnetsTask task = (ScanSubnetsTask) super.clone();
+		task.setSubnets(this.subnets);
+		return task;
+	}
 
 	/*
 	 * (non-Javadoc)

@@ -21,23 +21,21 @@ package net.netshot.netshot.device.access;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-
-import net.netshot.netshot.Netshot;
-import net.netshot.netshot.device.NetworkAddress;
-import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.TaskLogger;
-
 import org.apache.commons.net.telnet.TelnetClient;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.Netshot;
+import net.netshot.netshot.device.NetworkAddress;
+import net.netshot.netshot.rest.RestViews.DefaultView;
+import net.netshot.netshot.work.TaskLogger;
 
 /**
  * A Telnet CLI access.
@@ -45,26 +43,60 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Telnet extends Cli {
 
-	/** Default Telnet TCP port */
-	static public int DEFAULT_PORT = 23;
+	/** Default Telnet TCP port. */
+	public static final int DEFAULT_PORT = 23;
 
-	/** Default value for the Telnet connection timeout */
-	static private int DEFAULT_CONNECTION_TIMEOUT = 5000;
+	/**
+	 * Settings/config for the current class.
+	 */
+	public static final class Settings {
 
-	/** Default value for the Telnet receive timeout */
-	static private int DEFAULT_RECEIVE_TIMEOUT = 60000;
+		/** Telnet connection timeout. */
+		@Getter
+		private int connectionTimeout;
 
-	/** Default value for the Telnet command timeout */
-	static private int DEFAULT_COMMAND_TIMEOUT = 120000;
+		/** Telnet receive timeout. */
+		@Getter
+		private int receiveTimeout;
+
+		/** Telnet command timeout. */
+		@Getter
+		private int commandTimeout;
+
+		/**
+		 * Load settings from config.
+		 */
+		private void load() {
+			this.connectionTimeout = Netshot.getConfig("netshot.cli.telnet.connectiontimeout", 5000, 1, Integer.MAX_VALUE);
+			log.debug("The default connection timeout value for Telnet sessions is {}s", this.connectionTimeout);
+
+			this.receiveTimeout = Netshot.getConfig("netshot.cli.telnet.receivetimeout", 60000, 1, Integer.MAX_VALUE);
+			log.debug("The default receive timeout value for Telnet sessions is {}s", this.receiveTimeout);
+
+			this.commandTimeout = Netshot.getConfig("netshot.cli.telnet.commandtimeout", 120000, 1, Integer.MAX_VALUE);
+			log.debug("The default command timeout value for Telnet sessions is {}s", this.commandTimeout);
+		}
+	}
+
+	/** Settings for this class. */
+	public static final Settings SETTINGS = new Settings();
+
+	/**
+	 * Initialize some additional static variables from global configuration.
+	 */
+	public static void loadConfig() {
+		Telnet.SETTINGS.load();
+	}
 
 	/**
 	 * Embedded class to represent Telnet-specific configuration.
 	 */
-	@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.NONE)
 	public static class TelnetConfig {
 
-		/** Type of terminal */
-		@Getter(onMethod=@__({
+		/** Type of terminal. */
+		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
@@ -74,46 +106,17 @@ public class Telnet extends Cli {
 		 * Default constructor.
 		 */
 		public TelnetConfig() {
-			
-		}
-	}
 
-	static {
-		int configuredConnectionTimeout = Netshot.getConfig("netshot.cli.telnet.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT);
-		if (configuredConnectionTimeout < 1) {
-			log.error("Invalid value {} for {}", configuredConnectionTimeout, "netshot.cli.telnet.connectiontimeout");
 		}
-		else {
-			DEFAULT_CONNECTION_TIMEOUT = configuredConnectionTimeout;
-		}
-		log.info("The default connection timeout value for Telnet sessions is {}s", DEFAULT_CONNECTION_TIMEOUT);
-
-		int configuredReceiveTimeout = Netshot.getConfig("netshot.cli.telnet.receivetimeout", DEFAULT_RECEIVE_TIMEOUT);
-		if (configuredReceiveTimeout < 1) {
-			log.error("Invalid value {} for {}", configuredReceiveTimeout, "netshot.cli.telnet.receivetimeout");
-		}
-		else {
-			DEFAULT_RECEIVE_TIMEOUT = configuredReceiveTimeout;
-		}
-		log.info("The default receive timeout value for Telnet sessions is {}s", DEFAULT_RECEIVE_TIMEOUT);
-
-		int configuredCommandTimeout = Netshot.getConfig("netshot.cli.telnet.commandtimeout", DEFAULT_COMMAND_TIMEOUT);
-		if (configuredCommandTimeout < 1) {
-			log.error("Invalid value {} for {}", configuredCommandTimeout, "netshot.cli.telnet.commandtimeout");
-		}
-		else {
-			DEFAULT_COMMAND_TIMEOUT = configuredCommandTimeout;
-		}
-		log.info("The default command timeout value for Telnet sessions is {}s", DEFAULT_COMMAND_TIMEOUT);
 	}
 
 	/** The port. */
 	private int port = DEFAULT_PORT;
 
 	/** The telnet. */
-	private TelnetClient telnet = null;
+	private TelnetClient telnet;
 
-	/** The Telnet connection config */
+	/** The Telnet connection config. */
 	private TelnetConfig telnetConfig = new TelnetConfig();
 
 	/**
@@ -136,12 +139,12 @@ public class Telnet extends Cli {
 	public Telnet(NetworkAddress host, int port, TaskLogger taskLogger) {
 		this(host, taskLogger);
 		this.port = port;
-		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
-		this.commandTimeout = DEFAULT_COMMAND_TIMEOUT;
-		this.receiveTimeout = DEFAULT_RECEIVE_TIMEOUT;
+		this.connectionTimeout = Telnet.SETTINGS.getConnectionTimeout();
+		this.commandTimeout = Telnet.SETTINGS.getCommandTimeout();
+		this.receiveTimeout = Telnet.SETTINGS.getReceiveTimeout();
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.access.Cli#connect()
 	 */
 	@Override
@@ -154,7 +157,7 @@ public class Telnet extends Cli {
 		this.outStream = new PrintStream(telnet.getOutputStream());
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.access.Cli#disconnect()
 	 */
 	@Override

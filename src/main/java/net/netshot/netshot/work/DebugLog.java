@@ -23,32 +23,31 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
 public class DebugLog {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY)
 	}))
 	@Setter
 	private long id;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Column(length = 10000000)
 	}))
 	@Setter
 	private String text = "";
-	
+
 	protected DebugLog() {
 	}
-	
+
 	public DebugLog(String text) {
 		this.text = text;
 	}
-	
+
 	public String toString() {
 		return getText();
 	}
@@ -57,26 +56,31 @@ public class DebugLog {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((text == null) ? 0 : text.hashCode());
+		result = prime * result + (text == null ? 0 : text.hashCode());
 		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (!(obj instanceof DebugLog))
+		}
+		if (!(obj instanceof DebugLog)) {
 			return false;
+		}
 		DebugLog other = (DebugLog) obj;
 		if (getText() == null) {
-			if (other.getText() != null)
+			if (other.getText() != null) {
 				return false;
+			}
 		}
-		else if (!getText().equals(other.getText()))
+		else if (!getText().equals(other.getText())) {
 			return false;
+		}
 		return true;
 	}
-	
+
 }

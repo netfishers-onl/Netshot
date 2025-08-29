@@ -17,6 +17,7 @@
 		<slf4j.version>2.0.16</slf4j.version>
 		<lombok.version>1.18.36</lombok.version>
 		<sshd.version>2.15.0</sshd.version>
+		<checkstyle.version>11.0.0</checkstyle.version>
 	</properties>
 	<build>
 		<finalName>netshot</finalName>
@@ -89,6 +90,22 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>3.6.0</version>
+				<dependencies>
+					<dependency>
+						<groupId>com.puppycrawl.tools</groupId>
+						<artifactId>checkstyle</artifactId>
+						<version>${checkstyle.version}</version>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<consoleOutput>true</consoleOutput>
+					<configLocation>${project.basedir}/checkstyle.xml</configLocation>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

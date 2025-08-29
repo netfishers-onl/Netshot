@@ -27,12 +27,11 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.work.tasks.TakeSnapshotTask;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * A Syslog server receives the syslog messages from devices and triggers
@@ -50,7 +49,7 @@ public class SyslogServer extends Collector {
 	/** The static Syslog server. */
 	private static SyslogServer nsSyslogServer;
 
-	private static boolean running = false;
+	private static boolean running;
 
 	public static boolean isRunning() {
 		return running;
@@ -88,7 +87,7 @@ public class SyslogServer extends Collector {
 		try {
 			socket = new DatagramSocket(udpPort);
 			log.debug("Now listening for Syslog messages on UDP port {}.",
-					udpPort);
+				udpPort);
 			running = true;
 			while (true) {
 				DatagramPacket dato = new DatagramPacket(new byte[4096], 4096);
@@ -99,7 +98,7 @@ public class SyslogServer extends Collector {
 					Network4Address source = new Network4Address((Inet4Address) address, 32);
 					String message = new String(dato.getData(), 0, dato.getLength());
 					log.trace("Received Syslog message: '{}'.", message);
-					
+
 					for (DeviceDriver driver : DeviceDriver.getAllDrivers()) {
 						if (driver.analyzeSyslog(message, source)) {
 							matchingDrivers.add(driver.getName());

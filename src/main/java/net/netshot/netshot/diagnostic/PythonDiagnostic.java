@@ -18,18 +18,7 @@
  */
 package net.netshot.netshot.diagnostic;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
 import javax.script.ScriptException;
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
-import lombok.Getter;
-import lombok.Setter;
 
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Source;
@@ -37,6 +26,16 @@ import org.graalvm.polyglot.Value;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import lombok.Getter;
+import lombok.Setter;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
@@ -51,13 +50,13 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 @XmlRootElement
-@XmlAccessorType(value = XmlAccessType.NONE)
+@XmlAccessorType(XmlAccessType.NONE)
 public class PythonDiagnostic extends Diagnostic {
 
 	/**
 	 * The JS script to execute on the device.
 	 */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Column(length = 10000000),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
@@ -73,19 +72,14 @@ public class PythonDiagnostic extends Diagnostic {
 	/**
 	 * Instantiates a new diagnostic.
 	 * 
-	 * @param name
-	 *                        The name
-	 * @param enabled
-	 *                        True to enable the diagnostic
-	 * @param targetGroup
-	 *                        The group of devices the diagnostic applies to
-	 * @param resultType
-	 *                        The type of result expected by this diagnostic
-	 * @param script
-	 *                        The Javascript script
+	 * @param name = The name
+	 * @param enabled = True to enable the diagnostic
+	 * @param targetGroup = The group of devices the diagnostic applies to
+	 * @param resultType = The type of result expected by this diagnostic
+	 * @param script = The Javascript script
 	 */
 	public PythonDiagnostic(String name, boolean enabled, DeviceGroup targetGroup, AttributeType resultType,
-			String script) {
+		String script) {
 		super(name, enabled, targetGroup, resultType);
 		this.script = script;
 	}

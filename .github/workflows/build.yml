@@ -55,6 +55,9 @@ jobs:
           build-args: |
             NETSHOT_VERSION=${{ steps.meta.outputs.version }}
 
+      - name: Check the style
+        run: docker run --rm builder ./mvnw checkstyle:checkstyle | egrep -v "errors? reported by Checkstyle"
+
       - name: Run the tests
         run: docker run --rm builder ./mvnw test
 

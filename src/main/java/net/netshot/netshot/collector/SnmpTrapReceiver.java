@@ -33,11 +33,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.work.tasks.TakeSnapshotTask;
-
 import org.snmp4j.CommandResponder;
 import org.snmp4j.CommandResponderEvent;
 import org.snmp4j.MessageDispatcherImpl;
@@ -76,8 +76,6 @@ import org.snmp4j.transport.DefaultUdpTransportMapping;
 import org.snmp4j.util.MultiThreadedMessageDispatcher;
 import org.snmp4j.util.ThreadPool;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * A SNMP trap receiver listens for SNMP traps and triggers snapshots if needed.
  */
@@ -85,7 +83,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailureListener {
 
 	/** The static SNMP trap receiver instance. */
-	private static SnmpTrapReceiver nsSnmpTrapReceiver = null;
+	private static SnmpTrapReceiver nsSnmpTrapReceiver;
 
 	public static boolean isRunning() {
 		return nsSnmpTrapReceiver != null && nsSnmpTrapReceiver.snmp != null;
@@ -103,14 +101,14 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 	 * Reload the configuration, restart the receiver if needed.
 	 */
 	public static void reload() {
-		nsSnmpTrapReceiver.loadConfig(); 
+		nsSnmpTrapReceiver.loadConfig();
 	}
 
 	/** The dispatcher. */
 	private MultiThreadedMessageDispatcher dispatcher;
 
 	/** The SNMP object. */
-	private Snmp snmp = null;
+	private Snmp snmp;
 
 	/** The UDP port (e.g. 162)  */
 	private int udpPort;
@@ -121,7 +119,7 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 	/** The UDP address. */
 	private UdpAddress udpAddress;
 
-	/** Number of threads */
+	/** Number of threads. */
 	private int threadCount;
 
 	/** The thread pool. */
@@ -130,11 +128,11 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 	/** The communities. */
 	private Set<String> communities = ConcurrentHashMap.newKeySet();
 
-	/** The SNMPv3 engine ID */
-	private OctetString engineId = null;
+	/** The SNMPv3 engine ID. */
+	private OctetString engineId;
 
-	/** The USM users */
-	private List<UsmUser> usmUsers = null;
+	/** The USM users. */
+	private List<UsmUser> usmUsers;
 
 	/**
 	 * Instantiates a new snmp trap receiver.
@@ -157,18 +155,18 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 			restartNeeded = true;
 		}
 
-		String address = Netshot.getConfig("netshot.snmptrap.listenaddress", "0.0.0.0");
-		InetAddress listenHost;
+		String listenAddress = Netshot.getConfig("netshot.snmptrap.listenaddress", "0.0.0.0");
+		InetAddress address;
 		try {
-			listenHost = InetAddress.getByName(address);
+			address = InetAddress.getByName(listenAddress);
 		}
 		catch (UnknownHostException e) {
 			log.warn("Unable to parse IP address '{}' for SNMP listen address, using loopback instead",
-				address, e);
-			listenHost = InetAddress.getLoopbackAddress();
+				listenAddress, e);
+			address = InetAddress.getLoopbackAddress();
 		}
-		if (!listenHost.equals(this.listenHost)) {
-			this.listenHost = listenHost;
+		if (!address.equals(this.listenHost)) {
+			this.listenHost = address;
 			restartNeeded = true;
 		}
 
@@ -190,7 +188,7 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 			this.threadCount = count;
 			restartNeeded = true;
 		}
-		
+
 		this.usmUsers = new ArrayList<>();
 		String userConfig = Netshot.getConfig("netshot.snmptrap.user", "");
 		// Example:   user1 AES128|SHA authpass1 privpass1 user2 AES192|AES256|HMAC128SHA224 authpass2 privpass2
@@ -251,8 +249,8 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 						authKey = part.next();
 					}
 					else {
-						throw new InvalidParameterException("No authentication key provided for user " + userName +
-							"... ignoring SNMPv3 user config");
+						throw new InvalidParameterException("No authentication key provided for user " + userName
+							+ "... ignoring SNMPv3 user config");
 					}
 				}
 				else {
@@ -263,8 +261,8 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 						privKey = part.next();
 					}
 					else {
-						throw new InvalidParameterException("No privacy key provided for user " + userName +
-							"... ignoring SNMPv3 user config");
+						throw new InvalidParameterException("No privacy key provided for user " + userName
+							+ "... ignoring SNMPv3 user config");
 					}
 				}
 				else {
@@ -273,8 +271,8 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 				for (OID authProtocol : authProtocols) {
 					for (OID privProtocol : privProtocols) {
 						UsmUser usmUser = new UsmUser(new OctetString(userName),
-								authProtocol, authKey == null ? null : new OctetString(authKey),
-								privProtocol, privKey == null ? null : new OctetString(privKey));
+							authProtocol, authKey == null ? null : new OctetString(authKey),
+							privProtocol, privKey == null ? null : new OctetString(privKey));
 						this.usmUsers.add(usmUser);
 					}
 				}
@@ -290,8 +288,7 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 				newEngineId = OctetString.fromByteArray(this.engineId.toByteArray());
 			}
 			try {
-				String engineId = Netshot.getConfig("netshot.snmptrap.engineid");
-				newEngineId = OctetString.fromHexString(engineId);
+				newEngineId = OctetString.fromHexString(Netshot.getConfig("netshot.snmptrap.engineid"));
 			}
 			catch (Exception e) {
 				// Ignore
@@ -373,10 +370,10 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 			SecurityModels securityModels = SecurityModels.getInstance();
 
 			securityModels.addSecurityModel(usm);
-			
+
 			udpAddress = new UdpAddress(this.listenHost, this.udpPort);
 			TransportMapping<UdpAddress> transport = new DefaultUdpTransportMapping(
-					udpAddress);
+				udpAddress);
 
 
 			snmp = new Snmp(dispatcher, transport);
@@ -392,6 +389,8 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 
 	/**
 	 * Process a trap that is already validated (community or user based).
+	 * @param <A> = type of transport address
+	 * @param event = the received event
 	 */
 	private <A extends Address> void processAuthenticatedTrap(CommandResponderEvent<A> event) {
 		Address address = event.getPeerAddress();
@@ -400,23 +399,23 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 			if (inetAddress instanceof Inet4Address) {
 				try {
 					Network4Address source = new Network4Address(
-							(Inet4Address) inetAddress, 32);
+						(Inet4Address) inetAddress, 32);
 					Map<String, Object> data = new HashMap<>();
 					for (VariableBinding var : event.getPDU().getVariableBindings()) {
 						data.put(var.getOid().toDottedString(), var.getVariable().toString());
 					}
 					switch (event.getSecurityModel()) {
-					case SecurityModel.SECURITY_MODEL_SNMPv1:
-						data.put("version", "1");
-						break;
-					case SecurityModel.SECURITY_MODEL_SNMPv2c:
-						data.put("version", "2c");
-						break;
-					case SecurityModel.SECURITY_MODEL_USM:
-						data.put("version", "3");
-						break;
-					default:
-						data.put("version", "Unknown");
+						case SecurityModel.SECURITY_MODEL_SNMPv1:
+							data.put("version", "1");
+							break;
+						case SecurityModel.SECURITY_MODEL_SNMPv2c:
+							data.put("version", "2c");
+							break;
+						case SecurityModel.SECURITY_MODEL_USM:
+							data.put("version", "3");
+							break;
+						default:
+							data.put("version", "Unknown");
 					}
 					List<String> matchingDrivers = new ArrayList<>();
 					for (DeviceDriver driver : DeviceDriver.getAllDrivers()) {
@@ -444,8 +443,8 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 	public <A extends Address> void processPdu(CommandResponderEvent<A> event) {
 		log.trace("Incoming SNMP message from {}.", event.getPeerAddress());
 		if (event.getSecurityLevel() == SecurityLevel.NOAUTH_NOPRIV
-				&& (event.getSecurityModel() == SecurityModel.SECURITY_MODEL_SNMPv1 || event
-						.getSecurityModel() == SecurityModel.SECURITY_MODEL_SNMPv2c)) {
+			&& (event.getSecurityModel() == SecurityModel.SECURITY_MODEL_SNMPv1 || event
+			.getSecurityModel() == SecurityModel.SECURITY_MODEL_SNMPv2c)) {
 
 			String receivedCommunity = new String(event.getSecurityName());
 
@@ -455,7 +454,7 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 			}
 			else {
 				log.warn("Invalid community {} (vs {}) received from {}.", receivedCommunity,
-						String.join(" ", communities), event.getPeerAddress());
+					String.join(" ", communities), event.getPeerAddress());
 			}
 		}
 		else if (event.getSecurityModel() == SecurityModel.SECURITY_MODEL_USM) {

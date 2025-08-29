@@ -18,22 +18,22 @@
  */
 package net.netshot.netshot.device.attribute;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-@Entity @DiscriminatorValue("B")
-public class ConfigBinaryAttribute extends ConfigAttribute {
+@Entity
+@DiscriminatorValue("B")
+public final class ConfigBinaryAttribute extends ConfigAttribute {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -41,7 +41,7 @@ public class ConfigBinaryAttribute extends ConfigAttribute {
 
 	protected ConfigBinaryAttribute() {
 	}
-	
+
 	public ConfigBinaryAttribute(Config config, String name, boolean value) {
 		super(config, name);
 		this.assumption = value;
@@ -50,14 +50,14 @@ public class ConfigBinaryAttribute extends ConfigAttribute {
 	@Override
 	@Transient
 	public String getAsText() {
-		if (Boolean.TRUE.equals(assumption)) {
+		if (Boolean.TRUE.equals(this.assumption)) {
 			return "true";
 		}
 		else {
 			return "false";
 		}
 	}
-	
+
 	@Override
 	@Transient
 	public Object getData() {
@@ -66,17 +66,21 @@ public class ConfigBinaryAttribute extends ConfigAttribute {
 
 	@Override
 	public boolean valueEquals(ConfigAttribute obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!(obj instanceof ConfigBinaryAttribute))
-			return false;
-		ConfigBinaryAttribute other = (ConfigBinaryAttribute) obj;
-		if (assumption == null) {
-			if (other.assumption != null)
-				return false;
 		}
-		else if (!assumption.equals(other.assumption))
+		if (!(obj instanceof ConfigBinaryAttribute)) {
 			return false;
+		}
+		ConfigBinaryAttribute other = (ConfigBinaryAttribute) obj;
+		if (this.assumption == null) {
+			if (other.assumption != null) {
+				return false;
+			}
+		}
+		else if (!this.assumption.equals(other.assumption)) {
+			return false;
+		}
 		return true;
 	}
 

@@ -20,10 +20,6 @@ package net.netshot.netshot;
 
 import java.io.InvalidClassException;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import net.netshot.netshot.crypto.Argon2idHash;
 import net.netshot.netshot.crypto.Hash;
 import net.netshot.netshot.crypto.Md5BasedHash;
@@ -31,6 +27,9 @@ import net.netshot.netshot.crypto.Md5DesPasswordBasedEncryptor;
 import net.netshot.netshot.crypto.PasswordBasedEncryptor;
 import net.netshot.netshot.crypto.Sha2AesPasswordBasedEncryptor;
 import net.netshot.netshot.crypto.Sha2BasedHash;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Encryption and hashing basic tests")
 public class CryptoTest {
@@ -50,7 +49,7 @@ public class CryptoTest {
 	public void md5DesEncryptTest() {
 		String plain = "admin";
 		String expected = "ACdTtNiLgWBoGs3qq+mbNA==";
-		byte[] salt = new byte[] { 0x00, 0x27, 0x53, (byte)0xb4, (byte)0xd8, (byte)0x8b, (byte)0x81, 0x60 };
+		byte[] salt = new byte[] { 0x00, 0x27, 0x53, (byte) 0xb4, (byte) 0xd8, (byte) 0x8b, (byte) 0x81, 0x60 };
 		Md5DesPasswordBasedEncryptor encryptor = new Md5DesPasswordBasedEncryptor("netshot");
 		String encrypted = encryptor.encrypt(plain, salt);
 		Assertions.assertEquals(expected, encrypted, "The encrypted message is not correct");
@@ -81,7 +80,7 @@ public class CryptoTest {
 	public void sha2AesEncryptTest() {
 		String plain = "admin";
 		String expected = "AAkFZdFiJCIIVngREmchB39WJQgeZnh7FvpkmYjpeVEWusV3R9V2iA==";
-		byte[] salt = new byte[] { 0x00, 0x09, 0x05, 0x65, (byte)0xd1, 0x62, 0x24, 0x22 };
+		byte[] salt = new byte[] { 0x00, 0x09, 0x05, 0x65, (byte) 0xd1, 0x62, 0x24, 0x22 };
 		byte[] iv = new byte[] {
 			0x08, 0x56, 0x78, 0x11, 0x12, 0x67, 0x21, 0x07,
 			0x7f, 0x56, 0x25, 0x08, 0x1e, 0x66, 0x78, 0x7b
@@ -116,7 +115,7 @@ public class CryptoTest {
 		String sensitive = "netshot";
 		Md5BasedHash hash = new Md5BasedHash();
 		hash.setSalt(new byte[] {
-			(byte)0xee, 0x1b, 0x6b, (byte)0xa2, (byte)0xdd, (byte)0x81, 0x36, 0x35
+			(byte) 0xee, 0x1b, 0x6b, (byte) 0xa2, (byte) 0xdd, (byte) 0x81, 0x36, 0x35
 		});
 		hash.digest(sensitive);
 		Assertions.assertEquals(

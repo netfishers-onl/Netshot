@@ -18,24 +18,24 @@
  */
 package net.netshot.netshot.diagnostic;
 
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Transient;
-import jakarta.xml.bind.annotation.XmlElement;
-
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-@Entity @DiscriminatorValue("B")
+@Entity
+@DiscriminatorValue("B")
 public class DiagnosticBinaryResult extends DiagnosticResult {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -43,12 +43,12 @@ public class DiagnosticBinaryResult extends DiagnosticResult {
 
 	protected DiagnosticBinaryResult() {
 	}
-	
+
 	public DiagnosticBinaryResult(Device device, Diagnostic diagnostic, boolean value) {
 		super(device, diagnostic);
 		this.assumption = value;
 	}
-	
+
 	public DiagnosticBinaryResult(Device device, Diagnostic diagnostic, String value) {
 		super(device, diagnostic);
 		this.assumption = true;
@@ -67,7 +67,7 @@ public class DiagnosticBinaryResult extends DiagnosticResult {
 			return "false";
 		}
 	}
-	
+
 	@Override
 	@Transient
 	public Object getData() {
@@ -76,10 +76,12 @@ public class DiagnosticBinaryResult extends DiagnosticResult {
 
 	@Override
 	public boolean valueEquals(DiagnosticResult obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!(obj instanceof DiagnosticBinaryResult))
+		}
+		if (!(obj instanceof DiagnosticBinaryResult)) {
 			return false;
+		}
 		DiagnosticBinaryResult other = (DiagnosticBinaryResult) obj;
 		return Objects.equals(this.assumption, other.assumption);
 	}

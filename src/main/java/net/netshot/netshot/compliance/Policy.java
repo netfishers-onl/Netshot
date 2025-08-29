@@ -21,6 +21,13 @@ package net.netshot.netshot.compliance;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.Session;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,9 +41,6 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Device;
@@ -44,20 +48,16 @@ import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.TaskLogger;
 
-import org.hibernate.Session;
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 /**
  * A policy is a set of rules, applied to a group of devices.
  */
 @Entity
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 public class Policy {
 
 	/** The id. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
 		@XmlAttribute, @JsonView(DefaultView.class)
 	}))
@@ -65,7 +65,7 @@ public class Policy {
 	private long id;
 
 	/** The name. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@NaturalId(mutable = true),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
@@ -73,14 +73,14 @@ public class Policy {
 	private String name;
 
 	/** The rules. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@OneToMany(mappedBy = "policy", cascade = CascadeType.ALL)
 	}))
 	@Setter
 	private Set<Rule> rules = new HashSet<>();
 
 	/** The target group. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToMany(),
 		@XmlElement, @JsonView(DefaultView.class),
 		@OnDelete(action = OnDeleteAction.CASCADE)
@@ -98,7 +98,7 @@ public class Policy {
 	 * Instantiates a new policy.
 	 *
 	 * @param name the name
-	 * @param deviceGroup the device group
+	 * @param deviceGroups the device groups
 	 */
 	public Policy(String name, Set<DeviceGroup> deviceGroups) {
 		this.name = name;
@@ -125,6 +125,7 @@ public class Policy {
 	 * Check all devices of the target groups against the policy.
 	 *
 	 * @param session the session
+	 * @param taskLogger the task logger
 	 */
 	public void check(Session session, TaskLogger taskLogger) {
 		if (targetGroups == null) {
@@ -144,6 +145,7 @@ public class Policy {
 	 *
 	 * @param device the device
 	 * @param session the session
+	 * @param taskLogger the task logger
 	 */
 	public void check(Device device, Session session, TaskLogger taskLogger) {
 		for (Rule rule : rules) {
@@ -152,7 +154,7 @@ public class Policy {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
@@ -163,17 +165,20 @@ public class Policy {
 		return result;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		Policy other = (Policy) obj;
 		return id == other.id;
 	}

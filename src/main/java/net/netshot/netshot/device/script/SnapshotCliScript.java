@@ -33,8 +33,8 @@ import org.graalvm.polyglot.PolyglotException;
 import org.hibernate.Session;
 
 import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.database.Database;
 import net.netshot.netshot.Netshot;
+import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.InvalidCredentialsException;
@@ -44,8 +44,8 @@ import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
 import net.netshot.netshot.device.access.Cli;
 import net.netshot.netshot.device.access.Snmp;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
-import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
@@ -57,7 +57,7 @@ import net.netshot.netshot.device.script.helper.JsSnmpHelper;
 import net.netshot.netshot.work.TaskLogger;
 
 @Slf4j
-public class SnapshotCliScript extends CliScript {
+public final class SnapshotCliScript extends CliScript {
 
 	public SnapshotCliScript(boolean cliLogging) {
 		super(cliLogging);
@@ -65,19 +65,20 @@ public class SnapshotCliScript extends CliScript {
 
 	@Override
 	protected void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
-			throws InvalidCredentialsException, IOException, InvalidOperationException, MissingDeviceDriverException {
+		throws InvalidCredentialsException, IOException, InvalidOperationException, MissingDeviceDriverException {
 
 		TaskLogger taskLogger = this.getJsLogger();
 		JsCliHelper jsCliHelper = null;
 		JsSnmpHelper jsSnmpHelper = null;
 		switch (protocol) {
-		case SNMP:
-			jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity)account, taskLogger);
-			break;
-		case TELNET:
-		case SSH:
-			jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount)account, taskLogger, this.getCliLogger());
-			break;
+			case SNMP:
+				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, taskLogger);
+				break;
+			case TELNET:
+			case SSH:
+			default:
+				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, taskLogger, this.getCliLogger());
+				break;
 		}
 
 		DeviceDriver driver = device.getDeviceDriver();
@@ -131,7 +132,7 @@ public class SnapshotCliScript extends CliScript {
 			if (path != null) {
 				try {
 					BufferedWriter output = new BufferedWriter(
-							new FileWriter(Paths.get(path, device.getName()).normalize().toFile()));
+						new FileWriter(Paths.get(path, device.getName()).normalize().toFile()));
 					Map<String, ConfigAttribute> newAttributes = config.getAttributeMap();
 					for (AttributeDefinition definition : driver.getAttributes()) {
 						if (!definition.isDump()) {
@@ -140,7 +141,7 @@ public class SnapshotCliScript extends CliScript {
 						String preText = definition.getPreDump();
 						if (preText != null) {
 							preText = preText.replaceAll("%when%",
-									Matcher.quoteReplacement(new Date().toString()));
+								Matcher.quoteReplacement(new Date().toString()));
 							output.write(preText);
 							output.write("\r\n");
 						}
@@ -169,7 +170,7 @@ public class SnapshotCliScript extends CliScript {
 						String postText = definition.getPostDump();
 						if (postText != null) {
 							postText = postText.replaceAll("%when%",
-									Matcher.quoteReplacement(new Date().toString()));
+								Matcher.quoteReplacement(new Date().toString()));
 							output.write(postText);
 							output.write("\r\n");
 						}
@@ -186,7 +187,7 @@ public class SnapshotCliScript extends CliScript {
 		catch (PolyglotException e) {
 			log.error("Error while running snapshot using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("Error while running snapshot using driver %s: '%s'.",
-					driver.getName(), e.getMessage()));
+				driver.getName(), e.getMessage()));
 			if (e.getMessage() != null && e.getMessage().contains("Authentication failed")) {
 				throw new InvalidCredentialsException("Authentication failed");
 			}
@@ -197,7 +198,7 @@ public class SnapshotCliScript extends CliScript {
 		catch (InvalidOperationException e) {
 			log.error("No such method 'snapshot' while using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("No such method 'snapshot' while using driver %s to take snapshot: '%s'.",
-					driver.getName(), e.getMessage()));
+				driver.getName(), e.getMessage()));
 			throw e;
 		}
 	}

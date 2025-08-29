@@ -23,6 +23,8 @@ import java.util.regex.PatternSyntaxException;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -34,9 +36,6 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Device;
@@ -49,13 +48,14 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
  * A software rule defines constraints that apply to the software versions.
  */
 @Entity
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 public class SoftwareRule implements Comparable<SoftwareRule> {
 
 	/**
 	 * The Enum ConformanceLevel.
 	 */
-	public static enum ConformanceLevel {
+	public enum ConformanceLevel {
 
 		/** The gold. */
 		GOLD,
@@ -71,7 +71,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	}
 
 	/** The id. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
 		@XmlAttribute, @JsonView(DefaultView.class)
 	}))
@@ -84,7 +84,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	protected double priority;
 
 	/** The target group. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne,
 		@XmlElement, @JsonView(DefaultView.class),
 		@OnDelete(action = OnDeleteAction.SET_NULL)
@@ -92,56 +92,56 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	@Setter
 	protected DeviceGroup targetGroup;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private String driver = null;
+	private String driver;
 
 	/** The family. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String family = "";
 
 	/** The family is a regular expression. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean familyRegExp = false;
+	private boolean familyRegExp;
 
 	/** The version. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String version = "";
 
 	/** The version is a regular expression. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean versionRegExp = false;
+	private boolean versionRegExp;
 
 	/** The part number. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String partNumber;
 
 	/** The part number reg exp. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean partNumberRegExp = false;
+	private boolean partNumberRegExp;
 
 	/** The level. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -156,9 +156,9 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	}
 
 	public SoftwareRule(double priority, DeviceGroup targetGroup,
-			String driver, String family, boolean familyRegExp,
-			String version, boolean versionRegExp, String partNumber,
-			boolean partNumberRegExp, ConformanceLevel level) {
+		String driver, String family, boolean familyRegExp,
+		String version, boolean versionRegExp, String partNumber,
+		boolean partNumberRegExp, ConformanceLevel level) {
 		this.priority = priority;
 		this.targetGroup = targetGroup;
 		this.driver = driver;
@@ -171,7 +171,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 		this.level = level;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Comparable#compareTo(java.lang.Object)
 	 */
 	@Override
@@ -179,7 +179,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 		return Double.compare(this.priority, o.priority);
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
@@ -190,17 +190,20 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 		return result;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		SoftwareRule other = (SoftwareRule) obj;
 		return id == other.id;
 	}
@@ -211,7 +214,8 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	 * @return the device type
 	 */
 	@Transient
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDeviceType() {
 		DeviceDriver deviceDriver = DeviceDriver.getDriverByName(driver);
 		if (deviceDriver == null) {
@@ -244,7 +248,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 			}
 		}
 		else {
-			if (!family.equals("") && !device.getFamily().equals(family)) {
+			if (!"".equals(family) && !device.getFamily().equals(family)) {
 				return;
 			}
 		}
@@ -259,11 +263,11 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 			}
 		}
 		else {
-			if (!version.equals("") && !device.getSoftwareVersion().equals(version)) {
+			if (!"".equals(version) && !device.getSoftwareVersion().equals(version)) {
 				return;
 			}
 		}
-		if (partNumber != null && !partNumber.equals("")) {
+		if (partNumber != null && !"".equals(partNumber)) {
 			boolean moduleMatches = false;
 			for (Module module : device.getModules()) {
 				if (partNumberRegExp) {
@@ -277,7 +281,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 					}
 				}
 				else {
-					if (!partNumber.equals("") && !module.getPartNumber().equals(partNumber)) {
+					if (!"".equals(partNumber) && !module.getPartNumber().equals(partNumber)) {
 						continue;
 					}
 				}

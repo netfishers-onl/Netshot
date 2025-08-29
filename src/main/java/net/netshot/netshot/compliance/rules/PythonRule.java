@@ -28,28 +28,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Transient;
-import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.Netshot;
-import net.netshot.netshot.compliance.CheckResult;
-import net.netshot.netshot.compliance.Policy;
-import net.netshot.netshot.compliance.Rule;
-import net.netshot.netshot.compliance.CheckResult.ResultOption;
-import net.netshot.netshot.device.Device;
-import net.netshot.netshot.device.DeviceDriver;
-import net.netshot.netshot.device.script.helper.PyDeviceHelper;
-import net.netshot.netshot.device.script.helper.PythonFileSystem;
-import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.TaskLogger;
-
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
@@ -59,6 +37,27 @@ import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.slf4j.MarkerFactory;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.Netshot;
+import net.netshot.netshot.compliance.CheckResult;
+import net.netshot.netshot.compliance.CheckResult.ResultOption;
+import net.netshot.netshot.compliance.Policy;
+import net.netshot.netshot.compliance.Rule;
+import net.netshot.netshot.device.Device;
+import net.netshot.netshot.device.DeviceDriver;
+import net.netshot.netshot.device.script.helper.PyDeviceHelper;
+import net.netshot.netshot.device.script.helper.PythonFileSystem;
+import net.netshot.netshot.rest.RestViews.DefaultView;
+import net.netshot.netshot.work.TaskLogger;
 
 /**
  * A PythonRule is a Python-coded script that will check the device attributes,
@@ -70,34 +69,41 @@ import org.slf4j.MarkerFactory;
 public class PythonRule extends Rule {
 
 	/** The allowed results. */
-	private static CheckResult.ResultOption[] ALLOWED_RESULTS = new CheckResult.ResultOption[] {
-			CheckResult.ResultOption.CONFORMING, CheckResult.ResultOption.NONCONFORMING,
-			CheckResult.ResultOption.NOTAPPLICABLE, };
-
-	/** Rule loader Python source. */
-	private static Source PYLOADER_SOURCE;
-
-	/** Max time (ms) to wait for script to execute */
-	private static long MAX_EXECUTION_TIME;
+	private static final CheckResult.ResultOption[] ALLOWED_RESULTS = new CheckResult.ResultOption[] {
+		CheckResult.ResultOption.CONFORMING,
+		CheckResult.ResultOption.NONCONFORMING,
+		CheckResult.ResultOption.NOTAPPLICABLE,
+	};
 
 	/**
-	 * Initialize some additional static variables from global configuration.
+	 * Settings/config for the current class.
 	 */
-	public static void loadConfig() {
-		long maxExecutionTime = 60000;
-		try {
-			maxExecutionTime = Long.parseLong(Netshot.getConfig("netshot.python.maxexecutiontime",
-					Long.toString(maxExecutionTime)));
+	public static final class Settings {
+		/** Max time (ms) to wait for script to execute. */
+		@Getter
+		private int maxExecutionTime;
+
+		/**
+		 * Load settings from config.
+		 */
+		private void load() {
+			this.maxExecutionTime = Netshot.getConfig("netshot.python.maxexecutiontime", 
+				60000, 1, 60 * 60 * 1000);
 		}
-		catch (IllegalArgumentException e) {
-			log.error(
-				"Invalid value for Python max execution time (netshot.python.maxexecutiontime), using {}ms.",
-				maxExecutionTime);
-		}
-		PythonRule.MAX_EXECUTION_TIME = maxExecutionTime;
 	}
 
-	static {
+	/** Settings for this class. */
+	public static final Settings SETTINGS = new Settings();
+
+	/** Rule loader Python source. */
+	private static final Source PYLOADER_SOURCE = readLoaderSource();
+
+	/**
+	 * Read the loader source code from resource file.
+	 * @return the loader source
+	 */
+	private static Source readLoaderSource() {
+		Source source = null;
 		try {
 			log.info("Reading the Python rule loader code from the resource Python file.");
 			// Read the JavaScript loader code from the resource file.
@@ -110,7 +116,7 @@ public class PythonRule extends Rule {
 				buffer.append(line);
 				buffer.append("\n");
 			}
-			PYLOADER_SOURCE = Source.newBuilder("python", buffer.toString(), "rule-loader.py").buildLiteral();
+			source = Source.newBuilder("python", buffer.toString(), "rule-loader.py").buildLiteral();
 			reader.close();
 			in.close();
 			log.debug("The Python rule loader code has been read from the resource Python file.");
@@ -121,17 +127,24 @@ public class PythonRule extends Rule {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		PythonRule.loadConfig();
+		return source;
+	}
+
+	/**
+	 * Initialize some additional static variables from global configuration.
+	 */
+	public static void loadConfig() {
+		PythonRule.SETTINGS.load();
 	}
 
 	/** Was the execution prepared? */
-	private boolean prepared = false;
+	private boolean prepared;
 
 	/** Is it a Python-valid rule? */
-	private boolean pyValid = false;
+	private boolean pyValid;
 
 	/** The default example script. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@Column(length = 10000000)
 	}))
@@ -225,9 +238,9 @@ public class PythonRule extends Rule {
 		}
 		builder.allowIO(accessBuilder.build());
 
-		if (PythonFileSystem.VENV_FOLDER != null) {
+		if (PythonFileSystem.SETTINGS.getVenvFolder() != null) {
 			builder
-				.option("python.Executable", PythonFileSystem.VENV_FOLDER + "/bin/graalpy")
+				.option("python.Executable", PythonFileSystem.SETTINGS.getVenvFolder() + "/bin/graalpy")
 				.option("python.ForceImportSite", "true");
 		}
 		Context context = builder.build();
@@ -236,6 +249,8 @@ public class PythonRule extends Rule {
 
 	/**
 	 * Prepare the rule (try to evaluate the script).
+	 * @param context = the context
+	 * @param taskLogger = the task logger
 	 */
 	private void prepare(Context context, TaskLogger taskLogger) {
 		if (prepared) {
@@ -243,7 +258,7 @@ public class PythonRule extends Rule {
 		}
 		prepared = true;
 		pyValid = false;
-		
+
 		try {
 			Value checkFunction = context.getBindings("python").getMember("check");
 			if (checkFunction == null || !checkFunction.canExecute()) {
@@ -261,7 +276,7 @@ public class PythonRule extends Rule {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.compliance.Rule#check(net.netshot.netshot.device.Device, org.hibernate.Session)
 	 */
 	@Override
@@ -289,7 +304,7 @@ public class PythonRule extends Rule {
 			});
 			Value result;
 			try {
-				result = futureResult.get(PythonRule.MAX_EXECUTION_TIME, TimeUnit.MILLISECONDS);
+				result = futureResult.get(PythonRule.SETTINGS.getMaxExecutionTime(), TimeUnit.MILLISECONDS);
 			}
 			catch (TimeoutException e1) {
 				try {
@@ -319,7 +334,7 @@ public class PythonRule extends Rule {
 			for (CheckResult.ResultOption allowedResult : ALLOWED_RESULTS) {
 				if (allowedResult.toString().equals(txtResult)) {
 					taskLogger.info(String.format("The script returned %s (%d), comment '%s'.",
-							allowedResult.toString(), allowedResult.getValue(), comment));
+						allowedResult.toString(), allowedResult.getValue(), comment));
 					return new CheckResult(this, device, allowedResult, comment);
 				}
 			}

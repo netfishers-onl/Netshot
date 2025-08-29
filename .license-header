@@ -16,19 +16,3 @@
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.netshot.netshot.database;
-
-public enum TenantIdentifier {
-	READ_ONLY("ReadOnly"),
-	READ_WRITE("ReadWrite");
-
-	private final String sourceName;
-
-	TenantIdentifier(String sourceName) {
-		this.sourceName = sourceName;
-	}
-
-	public String getSourceName() {
-		return this.sourceName;
-	}
-}

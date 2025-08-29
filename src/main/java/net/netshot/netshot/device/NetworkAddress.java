@@ -23,15 +23,14 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
 /**
@@ -39,7 +38,7 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
  */
 @Embeddable
 @XmlRootElement
-@XmlAccessorType(value = XmlAccessType.NONE)
+@XmlAccessorType(XmlAccessType.NONE)
 public abstract class NetworkAddress {
 
 	/**
@@ -48,8 +47,8 @@ public abstract class NetworkAddress {
 	 * @return the inet address
 	 */
 	@Transient
-	abstract public InetAddress getInetAddress();
-	
+	public abstract InetAddress getInetAddress();
+
 	/**
 	 * Gets the network address.
 	 *
@@ -59,13 +58,13 @@ public abstract class NetworkAddress {
 	 */
 	public static NetworkAddress getNetworkAddress(InetAddress inetAddress, int prefixLength) throws UnknownHostException {
 		if (inetAddress instanceof Inet4Address) {
-			return new Network4Address((Inet4Address)inetAddress, prefixLength);
+			return new Network4Address((Inet4Address) inetAddress, prefixLength);
 		}
 		else {
-			return new Network6Address((Inet6Address)inetAddress, prefixLength);
+			return new Network6Address((Inet6Address) inetAddress, prefixLength);
 		}
 	}
-	
+
 	/**
 	 * Gets the network address.
 	 *
@@ -77,13 +76,13 @@ public abstract class NetworkAddress {
 	public static NetworkAddress getNetworkAddress(String address, int prefixLength) throws UnknownHostException {
 		InetAddress inetAddress = InetAddress.getByName(address);
 		if (inetAddress instanceof Inet4Address) {
-			return new Network4Address((Inet4Address)inetAddress, prefixLength);
+			return new Network4Address((Inet4Address) inetAddress, prefixLength);
 		}
 		else {
-			return new Network6Address((Inet6Address)inetAddress, prefixLength);
+			return new Network6Address((Inet6Address) inetAddress, prefixLength);
 		}
 	}
-	
+
 	/**
 	 * Gets the network address.
 	 *
@@ -94,23 +93,25 @@ public abstract class NetworkAddress {
 	public static NetworkAddress getNetworkAddress(String address) throws UnknownHostException {
 		return getNetworkAddress(address, 0);
 	}
-	
+
 	/**
 	 * Gets the ip.
 	 *
 	 * @return the ip
 	 */
 	@Transient
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public abstract String getIp();
-	
+
 	@Transient
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public abstract int getPrefixLength();
-	
+
 	@Transient
 	public abstract String getPrefix();
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -120,9 +121,9 @@ public abstract class NetworkAddress {
 	public String toString() {
 		return getPrefix();
 	}
-	
-	
-	public static enum AddressUsage {
+
+
+	public enum AddressUsage {
 		PRIMARY,
 		SECONDARY,
 		VRRP,
@@ -130,10 +131,10 @@ public abstract class NetworkAddress {
 		SECONDARYVRRP,
 		SECONDARYHSRP
 	}
-	
+
 	public abstract AddressUsage getAddressUsage();
-	
+
 	public abstract void setAddressUsage(AddressUsage usage);
-	
-	
+
+
 }

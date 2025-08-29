@@ -20,14 +20,19 @@ package net.netshot.netshot.work.tasks;
 
 import java.util.Collection;
 
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.quartz.JobKey;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -38,12 +43,6 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.rest.RestViews.HookView;
 import net.netshot.netshot.work.Task;
 
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.quartz.JobKey;
-
 /**
  * This task schedules new tasks to run diagnostics on each device of the
  * given group.
@@ -51,22 +50,22 @@ import org.quartz.JobKey;
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
-public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
+public final class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 
 	/** The device group. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private DeviceGroup deviceGroup;
 
-	/** Do not automatically start a check compliance task */
-	@Getter(onMethod=@__({
+	/** Do not automatically start a check compliance task. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(HookView.class)
 	}))
 	@Setter
-	private boolean dontCheckCompliance = false;
+	private boolean dontCheckCompliance;
 
 
 	/**
@@ -81,6 +80,8 @@ public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 	 *
 	 * @param group the group
 	 * @param comments the comments
+	 * @param author the author
+	 * @param dontCheckCompliance don't check compliance after this task
 	 */
 	public RunGroupDiagnosticsTask(DeviceGroup group, String comments, String author, boolean dontCheckCompliance) {
 		super(comments, group.getName(), author);
@@ -88,20 +89,23 @@ public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 		this.dontCheckCompliance = dontCheckCompliance;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Group diagnostics";
 	}
 
 	/**
-	 * Get the ID of the associate group.
+	 * Get the ID of the associated group.
+	 * @return the ID of the group
 	 */
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public long getDeviceGroupId() {
 		if (this.deviceGroup == null) {
@@ -110,7 +114,7 @@ public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 		return this.deviceGroup.getId();
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#prepare()
 	 */
 	@Override
@@ -121,13 +125,13 @@ public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#run()
 	 */
 	@Override
 	public void run() {
 		log.debug("Task {}. Starting diagnostics task for group {}.",
-				this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
+			this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
 		if (this.deviceGroup == null) {
 			this.info("The device group doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
@@ -145,7 +149,7 @@ public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 			}
 			catch (Exception e) {
 				log.error("Task {}. Error while scheduling the individual diagnostics task.",
-						this.getId(), e);
+					this.getId(), e);
 				this.error("Error while scheduling the task.");
 			}
 		}
@@ -153,7 +157,7 @@ public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 		this.status = Status.SUCCESS;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#clone()
 	 */
 	@Override
@@ -170,7 +174,7 @@ public class RunGroupDiagnosticsTask extends Task implements GroupBasedTask {
 	@Override
 	@Transient
 	public JobKey getIdentity() {
-		return new JobKey(String.format("Task_%d", this.getId()), 
-				String.format("RunGroupDiagnostics_%d", this.getDeviceGroupId()));
+		return new JobKey(String.format("Task_%d", this.getId()),
+			String.format("RunGroupDiagnostics_%d", this.getDeviceGroupId()));
 	}
 }

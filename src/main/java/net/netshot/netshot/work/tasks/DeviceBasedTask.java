@@ -25,7 +25,7 @@ import net.netshot.netshot.device.Device;
  */
 public interface DeviceBasedTask {
 
-	public Device getDevice();
+	Device getDevice();
 
-	public void setDevice(Device device);
+	void setDevice(Device device);
 }

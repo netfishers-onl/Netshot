@@ -25,8 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
+import org.graalvm.polyglot.Value;
 
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.crypto.Sha2BasedHash;
@@ -36,13 +36,13 @@ import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.access.Cli;
 import net.netshot.netshot.device.access.Ssh;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
+import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
 import net.netshot.netshot.device.attribute.ConfigBinaryAttribute;
 import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
 import net.netshot.netshot.device.attribute.ConfigLongTextAttribute;
 import net.netshot.netshot.device.attribute.ConfigNumericAttribute;
 import net.netshot.netshot.device.attribute.ConfigTextAttribute;
-import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
-import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
 import net.netshot.netshot.work.TaskLogger;
 
 /**
@@ -51,16 +51,16 @@ import net.netshot.netshot.work.TaskLogger;
  *
  */
 @Slf4j
-public class JsConfigHelper {
-	
+public final class JsConfigHelper {
+
 	private final Device device;
 	private Config config;
 	private Config lastConfig;
 	private TaskLogger taskLogger;
 	private Cli cli;
-	
+
 	public JsConfigHelper(Device device, Config config, Config lastConfig,
-			Cli cli, TaskLogger taskLogger) {
+		Cli cli, TaskLogger taskLogger) {
 		this.device = device;
 		this.config = config;
 		this.lastConfig = lastConfig;
@@ -82,19 +82,19 @@ public class JsConfigHelper {
 				for (AttributeDefinition attribute : driver.getAttributes()) {
 					if (attribute.getLevel().equals(AttributeLevel.CONFIG) && attribute.getName().equals(key)) {
 						switch (attribute.getType()) {
-						case BINARY:
-							config.addAttribute(new ConfigBinaryAttribute(config, key, value.asBoolean()));
-							break;
-						case NUMERIC:
-							config.addAttribute(new ConfigNumericAttribute(config, key, value.asDouble()));
-							break;
-						case LONGTEXT:
-							config.addAttribute(new ConfigLongTextAttribute(config, key, value.asString()));
-							break;
-						case TEXT:
-							config.addAttribute(new ConfigTextAttribute(config, key, value.asString()));
-							break;
-						default:
+							case BINARY:
+								config.addAttribute(new ConfigBinaryAttribute(config, key, value.asBoolean()));
+								break;
+							case NUMERIC:
+								config.addAttribute(new ConfigNumericAttribute(config, key, value.asDouble()));
+								break;
+							case LONGTEXT:
+								config.addAttribute(new ConfigLongTextAttribute(config, key, value.asString()));
+								break;
+							case TEXT:
+								config.addAttribute(new ConfigTextAttribute(config, key, value.asString()));
+								break;
+							default:
 						}
 						break;
 					}
@@ -107,8 +107,8 @@ public class JsConfigHelper {
 	}
 
 	/**
-	 * 
-	 * @param input
+	 * Compute a custom hash based on the inputs.
+	 * @param inputs = the list of strings to hash
 	 */
 	@Export
 	public void computeCustomHash(String[] inputs) {
@@ -194,7 +194,7 @@ public class JsConfigHelper {
 	 */
 	@Export
 	public void download(String key, String method, String remoteFileName, String storeFileName,
-			boolean newSession, String expectedHash) throws Exception {
+		boolean newSession, String expectedHash) throws Exception {
 		if (remoteFileName == null) {
 			return;
 		}
@@ -207,7 +207,7 @@ public class JsConfigHelper {
 		}
 		if (storeName == null) {
 			try {
-				storeName = (new File(remoteFileName)).getName();
+				storeName = new File(remoteFileName).getName();
 				storeName = storeName.trim();
 				storeName = storeName.replaceAll("[^0-9_a-zA-Z\\(\\)\\%\\-\\.]", "");
 			}

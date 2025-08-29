@@ -18,22 +18,22 @@
  */
 package net.netshot.netshot.device.attribute;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-@Entity @DiscriminatorValue("S")
-public class DeviceTextAttribute extends DeviceAttribute {
+@Entity
+@DiscriminatorValue("S")
+public final class DeviceTextAttribute extends DeviceAttribute {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter

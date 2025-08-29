@@ -28,27 +28,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Transient;
-import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.Netshot;
-import net.netshot.netshot.compliance.CheckResult;
-import net.netshot.netshot.compliance.Policy;
-import net.netshot.netshot.compliance.Rule;
-import net.netshot.netshot.compliance.CheckResult.ResultOption;
-import net.netshot.netshot.device.Device;
-import net.netshot.netshot.device.DeviceDriver;
-import net.netshot.netshot.device.script.helper.JsDeviceHelper;
-import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.TaskLogger;
-
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.PolyglotException;
@@ -58,6 +37,26 @@ import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.slf4j.MarkerFactory;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.Netshot;
+import net.netshot.netshot.compliance.CheckResult;
+import net.netshot.netshot.compliance.CheckResult.ResultOption;
+import net.netshot.netshot.compliance.Policy;
+import net.netshot.netshot.compliance.Rule;
+import net.netshot.netshot.device.Device;
+import net.netshot.netshot.device.DeviceDriver;
+import net.netshot.netshot.device.script.helper.JsDeviceHelper;
+import net.netshot.netshot.rest.RestViews.DefaultView;
+import net.netshot.netshot.work.TaskLogger;
 
 /**
  * A JavaScriptRule is a Javascript-coded script that will check the device
@@ -70,39 +69,41 @@ import org.slf4j.MarkerFactory;
 public class JavaScriptRule extends Rule {
 
 	/** The allowed results. */
-	private static CheckResult.ResultOption[] ALLOWED_RESULTS = new CheckResult.ResultOption[] {
+	private static final CheckResult.ResultOption[] ALLOWED_RESULTS = new CheckResult.ResultOption[] {
 		CheckResult.ResultOption.CONFORMING,
 		CheckResult.ResultOption.NONCONFORMING,
 		CheckResult.ResultOption.NOTAPPLICABLE,
 	};
-	
-	/** Rule loader JavaScript source */
-	private static Source JSLOADER_SOURCE;
-
-	/** Max time (ms) to wait for script to execute */
-	private static long MAX_EXECUTION_TIME;
-
-	/** The Python execution engine (for eval caching) */
-	private static Engine engine = Engine.create();
 
 	/**
-	 * Initialize some additional static variables from global configuration.
+	 * Settings/config for the current class.
 	 */
-	public static void loadConfig() {
-		long maxExecutionTime = 60000;
-		try {
-			maxExecutionTime = Long.parseLong(Netshot.getConfig("netshot.javascript.maxexecutiontime",
-					Long.toString(maxExecutionTime)));
+	public static final class Settings {
+		/** Max time (ms) to wait for script to execute. */
+		@Getter
+		private int maxExecutionTime;
+
+		/**
+		 * Load settings from config.
+		 */
+		private void load() {
+			this.maxExecutionTime = Netshot.getConfig("netshot.javascript.maxexecutiontime", 
+				60000, 1, 60 * 60 * 1000);
 		}
-		catch (IllegalArgumentException e) {
-			log.error(
-				"Invalid value for JavaScript max execution time (netshot.javascript.maxexecutiontime), using {}ms.",
-				maxExecutionTime);
-		}
-		JavaScriptRule.MAX_EXECUTION_TIME = maxExecutionTime;
 	}
-	
-	static {
+
+	/** Settings for this class. */
+	public static final Settings SETTINGS = new Settings();
+
+	/** Rule loader JavaScript source. */
+	private static final Source JSLOADER_SOURCE = readLoaderSource();
+
+	/**
+	 * Read the loader source code from resource file.
+	 * @return the loader source
+	 */
+	private static Source readLoaderSource() {
+		Source source = null;
 		try {
 			log.info("Reading the JavaScript rule loader code from the resource JS file.");
 			// Read the JavaScript loader code from the resource file.
@@ -115,44 +116,54 @@ public class JavaScriptRule extends Rule {
 				buffer.append(line);
 				buffer.append("\n");
 			}
-			JSLOADER_SOURCE = Source.create("js", buffer.toString());
+			source = Source.create("js", buffer.toString());
 			reader.close();
 			in.close();
 			log.debug("The JavaScript rule loader code has been read from the resource JS file.");
 		}
 		catch (Exception e) {
 			log.error(MarkerFactory.getMarker("FATAL"),
-					"Unable to read the Javascript rule loader.", e);
+				"Unable to read the Javascript rule loader.", e);
 			System.err.println("NETSHOT FATAL ERROR");
 			e.printStackTrace();
 			System.exit(1);
 		}
-		JavaScriptRule.loadConfig();
+		return source;
+	}
+
+	/** The Python execution engine (for eval caching). */
+	private static Engine engine = Engine.create();
+
+	/**
+	 * Initialize some additional static variables from global configuration.
+	 */
+	public static void loadConfig() {
+		JavaScriptRule.SETTINGS.load();
 	}
 
 	/** The prepared. */
-	private boolean prepared = false;
+	private boolean prepared;
 
 	/** The js valid. */
-	private boolean jsValid = false;
+	private boolean jsValid;
 
 	/** The script. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@Column(length = 10000000)
 	}))
 	@Setter
-	private String script = "" +
-			"/*\n" +
-			" * Script template - to be customized.\n" +
-			" */\n" +
-			"function check(device) {\n" +
-			"    //var config = device.get('runningConfig');\n" +
-			"    //var name = device.get('name');\n" +
-			"    return CONFORMING;\n" +
-			"    //return NONCONFORMING;\n" +
-			"    //return NOTAPPLICABLE;\n" +
-			"}\n";
+	private String script = ""
+		+ "/*\n"
+		+ " * Script template - to be customized.\n"
+		+ " */\n"
+		+ "function check(device) {\n"
+		+ "    //var config = device.get('runningConfig');\n"
+		+ "    //var name = device.get('name');\n"
+		+ "    return CONFORMING;\n"
+		+ "    //return NONCONFORMING;\n"
+		+ "    //return NOTAPPLICABLE;\n"
+		+ "}\n";
 
 	/**
 	 * Instantiates a new JavaScript rule.
@@ -198,7 +209,9 @@ public class JavaScriptRule extends Rule {
 	}
 
 	/**
-	 * Prepare.
+	 * Prepare the rule.
+	 * @param context = the context
+	 * @param taskLogger = the task logger
 	 */
 	private void prepare(Context context, TaskLogger taskLogger) {
 		if (prepared) {
@@ -206,7 +219,7 @@ public class JavaScriptRule extends Rule {
 		}
 		prepared = true;
 		jsValid = false;
-		
+
 		try {
 			Value checkFunction = context.getBindings("js").getMember("check");
 			if (checkFunction == null || !checkFunction.canExecute()) {
@@ -224,7 +237,7 @@ public class JavaScriptRule extends Rule {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.compliance.Rule#check(net.netshot.netshot.device.Device, org.hibernate.Session)
 	 */
 	@Override
@@ -252,7 +265,7 @@ public class JavaScriptRule extends Rule {
 			});
 			Value result;
 			try {
-				result = futureResult.get(JavaScriptRule.MAX_EXECUTION_TIME, TimeUnit.MILLISECONDS);
+				result = futureResult.get(JavaScriptRule.SETTINGS.getMaxExecutionTime(), TimeUnit.MILLISECONDS);
 			}
 			catch (TimeoutException e1) {
 				try {
@@ -282,7 +295,7 @@ public class JavaScriptRule extends Rule {
 			for (CheckResult.ResultOption allowedResult : ALLOWED_RESULTS) {
 				if (allowedResult.toString().equals(txtResult)) {
 					taskLogger.info(String.format("The script returned %s (%d), comment '%s'.",
-							allowedResult.toString(), allowedResult.getValue(), comment));
+						allowedResult.toString(), allowedResult.getValue(), comment));
 					return new CheckResult(this, device, allowedResult, comment);
 				}
 			}

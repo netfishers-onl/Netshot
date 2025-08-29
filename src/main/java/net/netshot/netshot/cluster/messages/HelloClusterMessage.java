@@ -18,11 +18,10 @@
  */
 package net.netshot.netshot.cluster.messages;
 
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.cluster.ClusterMember;
@@ -33,9 +32,9 @@ import net.netshot.netshot.rest.RestViews.ClusteringView;
  */
 @XmlRootElement
 public class HelloClusterMessage extends ClusterMessage {
-	
-	/** Member info */
-	@Getter(onMethod=@__({
+
+	/** Member info. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(ClusteringView.class)
 	}))
 	@Setter
@@ -47,7 +46,7 @@ public class HelloClusterMessage extends ClusterMessage {
 	}
 
 	/**
-	 * Hidden constructor
+	 * Hidden constructor.
 	 */
 	protected HelloClusterMessage() {
 	}

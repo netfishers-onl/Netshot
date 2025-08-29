@@ -26,51 +26,50 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
-import com.augur.tacacs.Argument;
-import com.augur.tacacs.AuthenReply;
-import com.augur.tacacs.AuthorReply;
-import com.augur.tacacs.SessionClient;
-import com.augur.tacacs.TAC_PLUS.AUTHEN.METH;
-import com.augur.tacacs.TAC_PLUS.AUTHEN.SVC;
-import com.augur.tacacs.TAC_PLUS.AUTHEN.TYPE;
-
-import lombok.extern.slf4j.Slf4j;
-
-import com.augur.tacacs.TAC_PLUS.ACCT;
-import com.augur.tacacs.TAC_PLUS.PRIV_LVL;
-import com.augur.tacacs.TacacsClient;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
 
+import com.augur.tacacs.Argument;
+import com.augur.tacacs.AuthenReply;
+import com.augur.tacacs.AuthorReply;
+import com.augur.tacacs.SessionClient;
+import com.augur.tacacs.TAC_PLUS.ACCT;
+import com.augur.tacacs.TAC_PLUS.AUTHEN.METH;
+import com.augur.tacacs.TAC_PLUS.AUTHEN.SVC;
+import com.augur.tacacs.TAC_PLUS.AUTHEN.TYPE;
+import com.augur.tacacs.TAC_PLUS.PRIV_LVL;
+import com.augur.tacacs.TacacsClient;
+import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 
 /**
  * The Tacacs class authenticates the users against a TACACS+ server.
  */
 @Slf4j
-public class Tacacs {
+public final class Tacacs {
 
 	/** The AAA logger. */
-	final private static Logger aaaLogger = LoggerFactory.getLogger("AAA");
+	private static final Logger AAA_LOG = LoggerFactory.getLogger("AAA");
 
-	/** TACACS+ attribute name that will carry the role */
+	/** TACACS+ attribute name that will carry the role. */
 	private static String roleAttribute;
 
-	/** Configured roles */
+	/** Configured roles. */
 	private static Map<String, Integer> roles = new HashMap<>();
 
 	/** The client. */
-	private static TacacsClient client = null;
+	private static TacacsClient client;
 
-	/** Whether TACACS+ accounting is enabled */
-	private static boolean enableAccounting = false;
+	/** Whether TACACS+ accounting is enabled. */
+	private static boolean enableAccounting;
 
 	/**
 	 * Load server config.
 	 *
-	 * @param id the id
+	 * @param id = the id of the server in the config file
+	 * @param hosts = the list where to add the found host
+	 * @param keys = the list where to add the found key
 	 */
 	private static void loadServerConfig(int id, List<String> hosts, List<String> keys) {
 		String path = String.format("netshot.aaa.tacacs%d", id);
@@ -131,17 +130,18 @@ public class Tacacs {
 		}
 		Tacacs.loadAllServersConfig();
 	}
-	
+
 	public static boolean isAvailable() {
 		return Tacacs.client != null;
 	}
 
 	/**
-	 * Authenticates a user.
+	 * Authenticates a user using TACACS+.
 	 *
-	 * @param username the username
-	 * @param password the password
-	 * @return true, if successful
+	 * @param username = the username
+	 * @param password = the password
+	 * @param remoteAddress = the remote address of the user
+	 * @return the resulting user or null if authentication failed
 	 */
 	public static UiUser authenticate(String username, String password, String remoteAddress) {
 		if (!isAvailable()) {
@@ -164,10 +164,10 @@ public class Tacacs {
 				if (authoReply.isOK()) {
 					int level = UiUser.LEVEL_READONLY;
 					String passedRole = authoReply.getValue(roleAttribute);
-					aaaLogger.debug(MarkerFactory.getMarker("AAA"), "The TACACS+ server returned role: {}", passedRole);
+					AAA_LOG.debug(MarkerFactory.getMarker("AAA"), "The TACACS+ server returned role: {}", passedRole);
 
 					if (passedRole == null) {
-						aaaLogger.warn("No role returned from the TACACS+ server for user {} using the {} attribute, user will be read only", username, roleAttribute);
+						AAA_LOG.warn("No role returned from the TACACS+ server for user {} using the {} attribute, user will be read only", username, roleAttribute);
 					}
 					for (Map.Entry<String, Integer> role : roles.entrySet()) {
 						if (role.getKey().equals(passedRole)) {
@@ -175,45 +175,45 @@ public class Tacacs {
 						}
 					}
 
-					aaaLogger.info(MarkerFactory.getMarker("AAA"),
-							"The user {} passed TACACS+ authentication (with permission level {}).",
-							username, level);
+					AAA_LOG.info(MarkerFactory.getMarker("AAA"),
+						"The user {} passed TACACS+ authentication (with permission level {}).",
+						username, level);
 					UiUser user = new UiUser(username, level);
 					return user;
 				}
 				else {
 					// Authorization failed
 					if (authoReply.getData() != null) {
-						aaaLogger.info(MarkerFactory.getMarker("AAA"),
-								"The user {} failed TACACS+ authorization. Server data: {}.",
-								username, authoReply.getData());
+						AAA_LOG.info(MarkerFactory.getMarker("AAA"),
+							"The user {} failed TACACS+ authorization. Server data: {}.",
+							username, authoReply.getData());
 					}
 					else if (authoReply.getServerMsg() != null) {
-						aaaLogger.info(MarkerFactory.getMarker("AAA"),
-								"The user {} failed TACACS+ authorization. Server message: {}.",
-								username, authoReply.getServerMsg());
+						AAA_LOG.info(MarkerFactory.getMarker("AAA"),
+							"The user {} failed TACACS+ authorization. Server message: {}.",
+							username, authoReply.getServerMsg());
 					}
 					else {
-						aaaLogger.info(MarkerFactory.getMarker("AAA"),
-								"The user {} failed TACACS+ authorization.", username);
+						AAA_LOG.info(MarkerFactory.getMarker("AAA"),
+							"The user {} failed TACACS+ authorization.", username);
 					}
 				}
 			}
 			else {
 				// Authentication failed
 				if (authenReply.getData() != null) {
-					aaaLogger.info(MarkerFactory.getMarker("AAA"),
-							"The user {} failed TACACS+ authentication. Server data: {}.",
-							username, authenReply.getData());
+					AAA_LOG.info(MarkerFactory.getMarker("AAA"),
+						"The user {} failed TACACS+ authentication. Server data: {}.",
+						username, authenReply.getData());
 				}
 				else if (authenReply.getServerMsg() != null) {
-					aaaLogger.info(MarkerFactory.getMarker("AAA"),
-							"The user {} failed TACACS+ authentication. Server message: {}.",
-							username, authenReply.getServerMsg());
+					AAA_LOG.info(MarkerFactory.getMarker("AAA"),
+						"The user {} failed TACACS+ authentication. Server message: {}.",
+						username, authenReply.getServerMsg());
 				}
 				else {
-					aaaLogger.info(MarkerFactory.getMarker("AAA"),
-							"The user {} failed TACACS+ authentication.", username);
+					AAA_LOG.info(MarkerFactory.getMarker("AAA"),
+						"The user {} failed TACACS+ authentication.", username);
 				}
 			}
 		}
@@ -228,6 +228,11 @@ public class Tacacs {
 
 	/**
 	 * Log a message with TACACS+ accounting.
+	 * @param method = the called http method
+	 * @param path = the called http path
+	 * @param username = the username
+	 * @param response = the response
+	 * @param remoteAddress = the user IP address
 	 */
 	public static void account(String method, String path, String username, String response, String remoteAddress) {
 		if (!Tacacs.enableAccounting || !Tacacs.isAvailable()) {
@@ -242,5 +247,8 @@ public class Tacacs {
 		catch (TimeoutException | IOException e) {
 			log.warn("Error while sending TACACS+ accounting message", e);
 		}
+	}
+
+	private Tacacs() {
 	}
 }

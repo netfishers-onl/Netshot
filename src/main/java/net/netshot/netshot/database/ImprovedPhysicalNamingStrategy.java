@@ -58,7 +58,7 @@ public class ImprovedPhysicalNamingStrategy implements PhysicalNamingStrategy {
 		final StringBuilder buf = new StringBuilder(identifier.getText().replace('.', '_'));
 		for (int i = 1; i < buf.length() - 1; i++) {
 			if (Character.isLowerCase(buf.charAt(i - 1)) && Character.isUpperCase(buf.charAt(i))
-					&& Character.isLowerCase(buf.charAt(i + 1))) {
+				&& Character.isLowerCase(buf.charAt(i + 1))) {
 				buf.insert(i++, '_');
 			}
 		}

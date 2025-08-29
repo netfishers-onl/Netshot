@@ -24,6 +24,8 @@ import java.util.Date;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -33,9 +35,6 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Device;
@@ -47,7 +46,8 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
  * rule, until the expiration date/time.
  */
 @Entity
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 public class Exemption {
 
 	/**
@@ -60,20 +60,20 @@ public class Exemption {
 		private static final long serialVersionUID = 1684160749155998836L;
 
 		/** The rule. */
-		@Getter(onMethod=@__({
+		@Getter(onMethod = @__({
 			@ManyToOne,
 			@OnDelete(action = OnDeleteAction.CASCADE)
 		}))
 		@Setter
-		private Rule rule = null;
+		private Rule rule;
 
 		/** The device. */
-		@Getter(onMethod=@__({
+		@Getter(onMethod = @__({
 			@ManyToOne,
 			@OnDelete(action = OnDeleteAction.CASCADE)
 		}))
 		@Setter
-		private Device device = null;
+		private Device device;
 
 		/**
 		 * Instantiates a new key.
@@ -93,56 +93,63 @@ public class Exemption {
 			this.device = device;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see java.lang.Object#hashCode()
 		 */
 		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + ((device == null) ? 0 : device.hashCode());
-			result = prime * result + ((rule == null) ? 0 : rule.hashCode());
+			result = prime * result + (device == null ? 0 : device.hashCode());
+			result = prime * result + (rule == null ? 0 : rule.hashCode());
 			return result;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see java.lang.Object#equals(java.lang.Object)
 		 */
 		@Override
 		public boolean equals(Object obj) {
-			if (this == obj)
+			if (this == obj) {
 				return true;
-			if (obj == null)
+			}
+			if (obj == null) {
 				return false;
-			if (getClass() != obj.getClass())
+			}
+			if (getClass() != obj.getClass()) {
 				return false;
+			}
 			Key other = (Key) obj;
 			if (device == null) {
-				if (other.device != null)
+				if (other.device != null) {
 					return false;
+				}
 			}
-			else if (!device.equals(other.device))
+			else if (!device.equals(other.device)) {
 				return false;
+			}
 			if (rule == null) {
-				if (other.rule != null)
+				if (other.rule != null) {
 					return false;
+				}
 			}
-			else if (!rule.equals(other.rule))
+			else if (!rule.equals(other.rule)) {
 				return false;
+			}
 			return true;
 		}
 
 	}
 
 	/** The key. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@EmbeddedId
 	}))
 	@Setter
 	private Key key = new Key();
 
 	/** The expiration date. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -205,35 +212,40 @@ public class Exemption {
 		this.key.setDevice(device);
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((key == null) ? 0 : key.hashCode());
+		result = prime * result + (key == null ? 0 : key.hashCode());
 		return result;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		Exemption other = (Exemption) obj;
 		if (key == null) {
-			if (other.key != null)
+			if (other.key != null) {
 				return false;
+			}
 		}
-		else if (!key.equals(other.key))
+		else if (!key.equals(other.key)) {
 			return false;
+		}
 		return true;
 	}
 

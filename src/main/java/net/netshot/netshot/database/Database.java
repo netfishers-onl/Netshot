@@ -37,11 +37,32 @@ import java.util.TreeSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import jakarta.persistence.Entity;
 import javax.sql.DataSource;
 
-import com.mchange.v2.c3p0.C3P0Registry;
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.StatelessSession;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.service.ServiceRegistry;
+import org.slf4j.MarkerFactory;
 
+import com.mchange.v2.c3p0.C3P0Registry;
+import jakarta.persistence.Entity;
+import liquibase.UpdateSummaryOutputEnum;
+import liquibase.command.CommandScope;
+import liquibase.command.core.UpdateCommandStep;
+import liquibase.command.core.helpers.DbUrlConnectionArgumentsCommandStep;
+import liquibase.command.core.helpers.ShowSummaryArgument;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.aaa.ApiToken;
 import net.netshot.netshot.aaa.UiUser;
@@ -95,34 +116,11 @@ import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
 import net.netshot.netshot.work.tasks.DeviceJsScript;
 
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.StatelessSession;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.service.ServiceRegistry;
-import org.slf4j.MarkerFactory;
-
-import liquibase.UpdateSummaryOutputEnum;
-import liquibase.command.CommandScope;
-import liquibase.command.core.UpdateCommandStep;
-import liquibase.command.core.helpers.DbUrlConnectionArgumentsCommandStep;
-import liquibase.command.core.helpers.ShowSummaryArgument;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * The Database class, utilities to access the database.
  */
 @Slf4j
-public class Database {
+public final class Database {
 
 	/** The session factory. */
 	private static SessionFactory sessionFactory;
@@ -168,13 +166,13 @@ public class Database {
 	 * @return the tree set
 	 */
 	private static TreeSet<String> findClasses(String path, String packageName)
-			throws IOException {
+		throws IOException {
 		TreeSet<String> classes = new TreeSet<>();
 		if (path.startsWith("file:") && path.contains("!")) {
 			String[] split = path.split("!");
 			try {
 				URL jar = new URI(split[0]).toURL();
-				
+
 				ZipInputStream zip = new ZipInputStream(jar.openStream());
 				ZipEntry entry;
 				while ((entry = zip.getNextEntry()) != null) {
@@ -217,12 +215,12 @@ public class Database {
 			Class.forName("org.postgresql.Driver");
 			try (Connection connection = Database.getConnection(false)) {
 				liquibase.database.Database database = DatabaseFactory.getInstance()
-						.findCorrectDatabaseImplementation(new JdbcConnection(connection));
+					.findCorrectDatabaseImplementation(new JdbcConnection(connection));
 				new CommandScope(UpdateCommandStep.COMMAND_NAME)
-						.addArgumentValue(DbUrlConnectionArgumentsCommandStep.DATABASE_ARG, database)
-						.addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, "migration/netshot0.xml")
-						.addArgumentValue(ShowSummaryArgument.SHOW_SUMMARY_OUTPUT, UpdateSummaryOutputEnum.LOG)
-						.execute();
+					.addArgumentValue(DbUrlConnectionArgumentsCommandStep.DATABASE_ARG, database)
+					.addArgumentValue(UpdateCommandStep.CHANGELOG_FILE_ARG, "migration/netshot0.xml")
+					.addArgumentValue(ShowSummaryArgument.SHOW_SUMMARY_OUTPUT, UpdateSummaryOutputEnum.LOG)
+					.execute();
 			}
 		}
 		catch (Exception e) {
@@ -368,7 +366,7 @@ public class Database {
 	 * @return the configured driver class
 	 */
 	private static String getDriverClass() {
-		return Netshot.getConfig("netshot.db.driverclass", 
+		return Netshot.getConfig("netshot.db.driverclass",
 			Netshot.getConfig("netshot.db.driver_class", "org.postgresql.Driver"));
 	}
 
@@ -469,7 +467,7 @@ public class Database {
 			return Database.getConnection();
 		}
 		return DriverManager.getConnection(getUrl(), getUsername(), getPassword());
-	} 
+	}
 
 	/**
 	 * Gets the real object from the Hibernate proxy.
@@ -490,6 +488,9 @@ public class Database {
 			entity = (T) ((HibernateProxy) entity).getHibernateLazyInitializer().getImplementation();
 		}
 		return entity;
+	}
+
+	private Database() {
 	}
 
 }

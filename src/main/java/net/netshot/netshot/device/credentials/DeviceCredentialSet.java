@@ -21,6 +21,15 @@ package net.netshot.netshot.device.credentials;
 import java.util.Date;
 import java.util.UUID;
 
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -34,28 +43,17 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlID;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import net.netshot.netshot.device.Domain;
-import net.netshot.netshot.rest.RestViews.DefaultView;
-
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-
 import lombok.Getter;
 import lombok.Setter;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonView;
+import net.netshot.netshot.device.Domain;
+import net.netshot.netshot.rest.RestViews.DefaultView;
 
 /**
  * A credential set. Authentication data to access a device.
  */
-@Entity @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@XmlAccessorType(value = XmlAccessType.NONE)
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement()
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
@@ -66,9 +64,9 @@ import com.fasterxml.jackson.annotation.JsonView;
 	@Type(value = DeviceSshKeyAccount.class, name = "SSH Key"),
 	@Type(value = DeviceTelnetAccount.class, name = "Telnet")
 })
-abstract public class DeviceCredentialSet {
-	
-	static public String generateSpecificName() {
+public abstract class DeviceCredentialSet {
+
+	public static String generateSpecificName() {
 		return String.format("DEVICESPECIFIC-%s", UUID.randomUUID());
 	}
 
@@ -76,44 +74,44 @@ abstract public class DeviceCredentialSet {
 	@Getter
 	@Setter
 	protected Date changeDate;
-	
-	@Getter(onMethod=@__({
+
+	@Getter(onMethod = @__({
 		@Version
 	}))
 	@Setter
 	private int version;
-	
+
 	/** The id. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@XmlID, @Id, @GeneratedValue(strategy = GenerationType.IDENTITY)
 	}))
 	@Setter
 	protected long id;
-	
+
 	/** The name. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@NaturalId(mutable = true)
 	}))
 	@Setter
 	protected String name;
-	
+
 	/** The mgmtDomain. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne,
 		@OnDelete(action = OnDeleteAction.CASCADE),
 		@XmlElement, @JsonView(DefaultView.class),
 	}))
 	@Setter
 	protected Domain mgmtDomain;
-	
-	/** Device-specific credential set */
-	@Getter(onMethod=@__({
+
+	/** Device-specific credential set. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	protected boolean deviceSpecific = false;
+	protected boolean deviceSpecific;
 
 	/**
 	 * Instantiates a new device credential set.
@@ -131,7 +129,7 @@ abstract public class DeviceCredentialSet {
 		this.name = name;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -150,20 +148,21 @@ abstract public class DeviceCredentialSet {
 			if (other.name != null) {
 				return false;
 			}
-		} else if (!name.equals(other.name)) {
+		}
+		else if (!name.equals(other.name)) {
 			return false;
 		}
 		return true;
 	}
-	
-	/* (non-Javadoc)
+
+	/*(non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + (name == null ? 0 : name.hashCode());
 		return result;
 	}
 
@@ -171,5 +170,5 @@ abstract public class DeviceCredentialSet {
 	public String toString() {
 		return "Device Credential Set " + id + " (name '" + name + "', type " + this.getClass().getSimpleName() + ")";
 	}
-	
+
 }

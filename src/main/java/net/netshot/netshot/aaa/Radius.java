@@ -24,8 +24,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.netshot.netshot.Netshot;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -39,35 +37,36 @@ import net.jradius.client.auth.MSCHAPv2Authenticator;
 import net.jradius.client.auth.PAPAuthenticator;
 import net.jradius.client.auth.RadiusAuthenticator;
 import net.jradius.dictionary.Attr_CallingStationId;
+import net.jradius.dictionary.Attr_NASIdentifier;
 import net.jradius.dictionary.Attr_NASPort;
 import net.jradius.dictionary.Attr_NASPortType;
 import net.jradius.dictionary.Attr_ServiceType;
 import net.jradius.dictionary.Attr_UserName;
 import net.jradius.dictionary.Attr_UserPassword;
-import net.jradius.dictionary.Attr_NASIdentifier;
 import net.jradius.packet.AccessAccept;
 import net.jradius.packet.AccessRequest;
 import net.jradius.packet.RadiusResponse;
 import net.jradius.packet.attribute.AttributeFactory;
 import net.jradius.packet.attribute.AttributeList;
+import net.netshot.netshot.Netshot;
 
 /**
  * The Radius class authenticates the users against a RADIUS server.
  */
 @Slf4j
-public class Radius {
+public final class Radius {
 
 	/** The AAA logger. */
-	final private static Logger aaaLogger = LoggerFactory.getLogger("AAA");
+	private static final Logger AAA_LOG = LoggerFactory.getLogger("AAA");
 
 	/** The clients. */
 	private static List<RadiusClient> clients = new ArrayList<>();
-	
+
 	/** The authentication method. */
 	private static Class<? extends RadiusAuthenticator> authMethod = MSCHAPv2Authenticator.class;
-	
-	/** The nasIdentifier */
-	private static String nasIdentifier = null;
+
+	/** The nasIdentifier. */
+	private static String nasIdentifier;
 
 	/**
 	 * Load server config.
@@ -109,22 +108,22 @@ public class Radius {
 		log.info("Added RADIUS server {}", address);
 		String method = Netshot.getConfig("netshot.aaa.radius.method", "mschapv2");
 		switch (method) {
-		case "pap":
-			authMethod = PAPAuthenticator.class;
-			break;
-		case "chap":
-			authMethod = CHAPAuthenticator.class;
-			break;
-		case "eap-md5":
-			authMethod = EAPMD5Authenticator.class;
-			break;
-		case "eap-mschapv2":
-			authMethod = EAPMSCHAPv2Authenticator.class;
-			break;
-		case "mschapv2":
-			break;
-		default:
-			log.error("Invalid configured RADIUS method '{}'. Defaulting to MSCHAPv2.", method);
+			case "pap":
+				authMethod = PAPAuthenticator.class;
+				break;
+			case "chap":
+				authMethod = CHAPAuthenticator.class;
+				break;
+			case "eap-md5":
+				authMethod = EAPMD5Authenticator.class;
+				break;
+			case "eap-mschapv2":
+				authMethod = EAPMSCHAPv2Authenticator.class;
+				break;
+			case "mschapv2":
+				break;
+			default:
+				log.error("Invalid configured RADIUS method '{}'. Defaulting to MSCHAPv2.", method);
 		}
 		nasIdentifier = Netshot.getConfig("netshot.aaa.radius.nasidentifier", null);
 		clients.add(client);
@@ -152,7 +151,7 @@ public class Radius {
 	static {
 		AttributeFactory.loadAttributeDictionary("net.jradius.dictionary.AttributeDictionaryImpl");
 	}
-	
+
 	public static boolean isAvailable() {
 		return clients.size() > 0;
 	}
@@ -162,7 +161,8 @@ public class Radius {
 	 *
 	 * @param username the username
 	 * @param password the password
-	 * @return true, if successful
+	 * @param remoteAddress the remote address
+	 * @return the resulting user or null if authentication failed
 	 */
 	public static UiUser authenticate(String username, String password, String remoteAddress) {
 		if (!isAvailable()) {
@@ -180,11 +180,11 @@ public class Radius {
 		}
 
 		boolean first = true;
-		List<RadiusClient> clients;
+		List<RadiusClient> allClients;
 		synchronized (Radius.clients) {
-			clients = Radius.clients;
+			allClients = Radius.clients;
 		}
-		for (RadiusClient radiusClient : clients) {
+		for (RadiusClient radiusClient : allClients) {
 			AccessRequest request = new AccessRequest(radiusClient, attributeList);
 			request.addAttribute(new Attr_UserPassword(password));
 			RadiusResponse reply;
@@ -192,14 +192,14 @@ public class Radius {
 				reply = radiusClient.authenticate(request, authMethod.getDeclaredConstructor().newInstance(), 3);
 				if (reply == null) {
 					log.error("Request to RADIUS server {} timed out.", radiusClient.getRemoteInetAddress().toString());
-					aaaLogger.error(MarkerFactory.getMarker("AAA"), "Request to RADIUS server {} timed out.",
-							radiusClient.getRemoteInetAddress().toString());
+					AAA_LOG.error(MarkerFactory.getMarker("AAA"), "Request to RADIUS server {} timed out.",
+						radiusClient.getRemoteInetAddress().toString());
 				}
 				else {
 					// We got a reply
 					if (!first) {
-						clients.remove(radiusClient);
-						clients.add(0, radiusClient);
+						allClients.remove(radiusClient);
+						allClients.add(0, radiusClient);
 					}
 					if (reply instanceof AccessAccept) {
 						int level = UiUser.LEVEL_READONLY;
@@ -220,25 +220,28 @@ public class Radius {
 						}
 						catch (Exception e1) {
 						}
-						aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} passed authentication on RADIUS server {} (with permission level {}).",
-								username, radiusClient.getRemoteInetAddress().toString(), level);
+						AAA_LOG.info(MarkerFactory.getMarker("AAA"), "The user {} passed authentication on RADIUS server {} (with permission level {}).",
+							username, radiusClient.getRemoteInetAddress().toString(), level);
 						UiUser user = new UiUser(username, level);
 						return user;
 					}
 					else {
-						aaaLogger.info(MarkerFactory.getMarker("AAA"), "The user {} failed authentication on RADIUS server {}.",
-								username, radiusClient.getRemoteInetAddress().toString());
+						AAA_LOG.info(MarkerFactory.getMarker("AAA"), "The user {} failed authentication on RADIUS server {}.",
+							username, radiusClient.getRemoteInetAddress().toString());
 						return null;
 					}
 				}
 			}
 			catch (Exception e) {
 				log.error("Error while authenticating against RADIUS server {}.",
-						radiusClient.getRemoteInetAddress().toString(), e);
+					radiusClient.getRemoteInetAddress().toString(), e);
 			}
 			first = false;
 		}
 		return null;
+	}
+
+	private Radius() {
 	}
 
 }

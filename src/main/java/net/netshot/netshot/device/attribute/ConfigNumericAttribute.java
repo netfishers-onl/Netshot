@@ -18,22 +18,22 @@
  */
 package net.netshot.netshot.device.attribute;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-@Entity @DiscriminatorValue("N")
-public class ConfigNumericAttribute extends ConfigAttribute {
+@Entity
+@DiscriminatorValue("N")
+public final class ConfigNumericAttribute extends ConfigAttribute {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -41,7 +41,7 @@ public class ConfigNumericAttribute extends ConfigAttribute {
 
 	protected ConfigNumericAttribute() {
 	}
-	
+
 	public ConfigNumericAttribute(Config config, String name, double value) {
 		super(config, name);
 		this.number = value;
@@ -50,12 +50,12 @@ public class ConfigNumericAttribute extends ConfigAttribute {
 	@Override
 	@Transient
 	public String getAsText() {
-		if (number == null) {
+		if (this.number == null) {
 			return "";
 		}
-		return number.toString();
+		return this.number.toString();
 	}
-	
+
 	@Override
 	@Transient
 	public Object getData() {
@@ -64,18 +64,22 @@ public class ConfigNumericAttribute extends ConfigAttribute {
 
 	@Override
 	public boolean valueEquals(ConfigAttribute obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!(obj instanceof ConfigNumericAttribute))
-			return false;
-		ConfigNumericAttribute other = (ConfigNumericAttribute) obj;
-		if (number == null) {
-			if (other.number != null)
-				return false;
 		}
-		else if (!number.equals(other.number))
+		if (!(obj instanceof ConfigNumericAttribute)) {
 			return false;
+		}
+		ConfigNumericAttribute other = (ConfigNumericAttribute) obj;
+		if (this.number == null) {
+			if (other.number != null) {
+				return false;
+			}
+		}
+		else if (!this.number.equals(other.number)) {
+			return false;
+		}
 		return true;
 	}
-	
+
 }

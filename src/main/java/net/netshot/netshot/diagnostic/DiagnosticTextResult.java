@@ -18,34 +18,34 @@
  */
 package net.netshot.netshot.diagnostic;
 
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import java.util.Objects;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-@Entity @DiscriminatorValue("S")
+@Entity
+@DiscriminatorValue("S")
 public class DiagnosticTextResult extends DiagnosticResult {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Column(length = 524288),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String text;
-	
+
 	protected DiagnosticTextResult() {
 	}
-	
+
 	public DiagnosticTextResult(Device device, Diagnostic diagnostic, String value) {
 		super(device, diagnostic);
 		this.text = value;
@@ -59,7 +59,7 @@ public class DiagnosticTextResult extends DiagnosticResult {
 		}
 		return text;
 	}
-	
+
 	@Override
 	@Transient
 	public Object getData() {
@@ -68,10 +68,12 @@ public class DiagnosticTextResult extends DiagnosticResult {
 
 	@Override
 	public boolean valueEquals(DiagnosticResult obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!(obj instanceof DiagnosticTextResult))
+		}
+		if (!(obj instanceof DiagnosticTextResult)) {
 			return false;
+		}
 		DiagnosticTextResult other = (DiagnosticTextResult) obj;
 		return Objects.equals(this.text, other.text);
 	}

@@ -20,16 +20,15 @@ package net.netshot.netshot.cluster.messages;
 
 import java.lang.management.ManagementFactory;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.rest.RestViews.ClusteringView;
@@ -38,7 +37,7 @@ import net.netshot.netshot.rest.RestViews.ClusteringView;
  * HA-related message to be be exchanged with other Netshot instances
  * in a serialized form.
  */
-@XmlAccessorType(value = XmlAccessType.NONE)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement()
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
@@ -50,54 +49,55 @@ import net.netshot.netshot.rest.RestViews.ClusteringView;
 })
 public abstract class ClusterMessage {
 
-	/** Message ID counter */
-	static protected Long lastLocalMessageId = 0L;
+	/** Message ID counter. */
+	protected static Long lastLocalMessageId = 0L;
 
-	/** Sync base */
-	static final private Object lock = new Object();
+	/** Sync base. */
+	private static final Object LOCK = new Object();
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(ClusteringView.class)
 	}))
 	@Setter
 	private String instanceId;
 
-	/** Current system time */
-	@Getter(onMethod=@__({
+	/** Current system time. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(ClusteringView.class)
 	}))
 	@Setter
 	private long currentTime;
 
-	/** Current Netshot uptime */
-	@Getter(onMethod=@__({
+	/** Current Netshot uptime. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(ClusteringView.class)
 	}))
 	@Setter
 	private long upTime;
 
-	/** Message ID */
-	@Getter(onMethod=@__({
+	/** Message ID. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(ClusteringView.class)
 	}))
 	@Setter
 	private long messageId;
 
 	/**
-	 * Default constructor
+	 * Default constructor.
+	 * @param instanceId = ID of the instance
 	 */
 	public ClusterMessage(String instanceId) {
 		this.instanceId = instanceId;
 		this.currentTime = System.currentTimeMillis();
 		this.upTime = ManagementFactory.getRuntimeMXBean().getUptime();
-		synchronized (ClusterMessage.lock) {
+		synchronized (ClusterMessage.LOCK) {
 			ClusterMessage.lastLocalMessageId += 1;
 			this.messageId = ClusterMessage.lastLocalMessageId;
 		}
 	}
 
 	/**
-	 * Hidden constructor
+	 * Hidden constructor.
 	 */
 	protected ClusterMessage() {
 	}
@@ -105,6 +105,6 @@ public abstract class ClusterMessage {
 	@Override
 	public String toString() {
 		return "ClusterMessage [currentTime=" + currentTime + ", instanceId=" + instanceId + ", messageId=" + messageId
-				+ ", upTime=" + upTime + "]";
+			+ ", upTime=" + upTime + "]";
 	}
 }

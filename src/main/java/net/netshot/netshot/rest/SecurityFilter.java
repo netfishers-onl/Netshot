@@ -21,8 +21,12 @@ package net.netshot.netshot.rest;
 import java.io.IOException;
 import java.security.Principal;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.ws.rs.Priorities;
@@ -32,8 +36,6 @@ import jakarta.ws.rs.container.PreMatching;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriInfo;
-
-import net.netshot.netshot.Netshot;
 import net.netshot.netshot.aaa.User;
 
 /**
@@ -43,13 +45,16 @@ import net.netshot.netshot.aaa.User;
 @PreMatching
 public class SecurityFilter implements ContainerRequestFilter {
 
+		/** Authentication, Authorization, Accounting logger. */
+	private static final Logger AAA_LOG = LoggerFactory.getLogger("AAA");
+
 	public static final String USER_ATTRIBUTE = "user";
 
 	@Context
 	private HttpServletRequest httpRequest;
 
 	@Inject
-	jakarta.inject.Provider<UriInfo> uriInfo;
+	Provider<UriInfo> uriInfo;
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -70,9 +75,9 @@ public class SecurityFilter implements ContainerRequestFilter {
 	 */
 	private class Authorizer implements SecurityContext {
 
-		final private User user;
+		private final User user;
 
-		public Authorizer(User user) {
+		Authorizer(User user) {
 			this.user = user;
 		}
 
@@ -87,8 +92,8 @@ public class SecurityFilter implements ContainerRequestFilter {
 					}
 				}
 			}
-			Netshot.aaaLogger.debug("Role {} requested for user {}: result {}.", role,
-					user == null ? "<null>" : user.getUsername(), result);
+			AAA_LOG.debug("Role {} requested for user {}: result {}.", role,
+				user == null ? "<null>" : user.getUsername(), result);
 			return result;
 		}
 

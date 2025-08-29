@@ -18,19 +18,16 @@
  */
 package net.netshot.netshot.device.credentials;
 
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
-
-import jakarta.xml.bind.annotation.XmlElement;
-
 import net.netshot.netshot.database.StringEncryptorConverter;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
@@ -40,24 +37,24 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
  */
 @Entity
 @XmlRootElement
-public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
+public final class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 
 	/** The username. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String username;
 
 	/** The auth type. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String authType;
-	
+
 	/** The auth key. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@JsonSerialize(using = HideSecretSerializer.class),
 		@JsonDeserialize(using = HideSecretDeserializer.class),
@@ -65,16 +62,16 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	}))
 	@Setter
 	private String authKey;
-	
+
 	/** The priv type. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String privType;
-	
+
 	/** The priv key. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@JsonSerialize(using = HideSecretSerializer.class),
 		@JsonDeserialize(using = HideSecretDeserializer.class),
@@ -102,7 +99,7 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	 * @param privKey the priv key
 	 */
 	public DeviceSnmpv3Community(String community, String name, String username, String authType,
-			String authKey, String privType, String privKey) {
+		String authKey, String privType, String privKey) {
 		super(community, name);
 		this.username = username;
 		this.authType = authType;
@@ -120,7 +117,7 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + (name == null ? 0 : name.hashCode());
 		return result;
 	}
 
@@ -147,7 +144,8 @@ public class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 			if (other.name != null) {
 				return false;
 			}
-		} else if (!name.equals(other.name)) {
+		}
+		else if (!name.equals(other.name)) {
 			return false;
 		}
 		return true;

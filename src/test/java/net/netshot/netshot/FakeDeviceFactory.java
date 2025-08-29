@@ -24,6 +24,7 @@ import java.util.Set;
 
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
+import net.netshot.netshot.device.Device.NetworkClass;
 import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.DynamicDeviceGroup;
@@ -31,7 +32,7 @@ import net.netshot.netshot.device.Module;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.Network6Address;
 import net.netshot.netshot.device.NetworkInterface;
-import net.netshot.netshot.device.Device.NetworkClass;
+import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
 import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.attribute.ConfigLongTextAttribute;
 import net.netshot.netshot.device.attribute.ConfigTextAttribute;
@@ -39,7 +40,6 @@ import net.netshot.netshot.device.attribute.DeviceAttribute;
 import net.netshot.netshot.device.attribute.DeviceBinaryAttribute;
 import net.netshot.netshot.device.attribute.DeviceNumericAttribute;
 import net.netshot.netshot.device.attribute.DeviceTextAttribute;
-import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceSshAccount;
 import net.netshot.netshot.diagnostic.Diagnostic;
@@ -49,58 +49,58 @@ import net.netshot.netshot.diagnostic.SimpleDiagnostic;
 
 public class FakeDeviceFactory {
 
-	static public Device getFakeCiscoIosDevice() {
+	public static Device getFakeCiscoIosDevice() {
 		Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 		Diagnostic diagnostic = getReloadReasonIosSimpleDiagnostic();
 		return FakeDeviceFactory.getFakeCiscoIosDevice(domain, diagnostic, 100);
 	}
 
-	static public Config getFakeCiscoIosConfig(Device device) {
+	public static Config getFakeCiscoIosConfig(Device device) {
 		Config config = new Config(device);
-		ConfigAttribute runningConfig = new ConfigLongTextAttribute(config, "runningConfig", "" +
-			"version 16.1\n" +
-			"no service pad\n" +
-			"service timestamps debug datetime msec\n" +
-			"no service password-encryption\n" +
-			"!\n" +
-			"hostname " + device.getName() + "\n" +
-			"!\n"+
-			"boot-start-marker\n" +
-			"boot-end-marker\n" +
-			"!\n" +
-			"enable secret $6$aaa\n" +
-			"!\n" +
-			"ip cef\n" +
-			"ipv6 unicast-routing\f\n" + // \f to test normalization
-			"!\n" +
-			"interface GigabitEthernet0/0\n" +
-			" description Description of Gi0/0\n" +
-			" ip address 10.0.0.1 255.255.255.0\n" +
-			" no shutdown\n" +
-			"!\n" +
-			"interface GigabitEthernet0/1\n" +
-			" description Description of Gi0/1\n" +
-			" ip address 10.0.1.1 255.255.255.0\n" +
-			" no shutdown\n" +
-			"!\n" +
-			"interface GigabitEthernet0/2\n" +
-			" description Description of Gi0/2\n" +
-			" ip address 10.0.2.1 255.255.255.0\n" +
-			"!\n" +
-			"line con 0\n" +
-			" password something\n" +
-			"line vty 0 4\n" +
-			" password something\n" +
-			" transport input all\n" +
-			" transport output all\n" +
-			"!\n");
+		ConfigAttribute runningConfig = new ConfigLongTextAttribute(config, "runningConfig", ""
+			+ "version 16.1\n"
+			+ "no service pad\n"
+			+ "service timestamps debug datetime msec\n"
+			+ "no service password-encryption\n"
+			+ "!\n"
+			+ "hostname " + device.getName() + "\n"
+			+ "!\n"
+			+ "boot-start-marker\n"
+			+ "boot-end-marker\n"
+			+ "!\n"
+			+ "enable secret $6$aaa\n"
+			+ "!\n"
+			+ "ip cef\n"
+			+ "ipv6 unicast-routing\f\n" + // \f to test normalization
+			"!\n"
+			+ "interface GigabitEthernet0/0\n"
+			+ " description Description of Gi0/0\n"
+			+ " ip address 10.0.0.1 255.255.255.0\n"
+			+ " no shutdown\n"
+			+ "!\n"
+			+ "interface GigabitEthernet0/1\n"
+			+ " description Description of Gi0/1\n"
+			+ " ip address 10.0.1.1 255.255.255.0\n"
+			+ " no shutdown\n"
+			+ "!\n"
+			+ "interface GigabitEthernet0/2\n"
+			+ " description Description of Gi0/2\n"
+			+ " ip address 10.0.2.1 255.255.255.0\n"
+			+ "!\n"
+			+ "line con 0\n"
+			+ " password something\n"
+			+ "line vty 0 4\n"
+			+ " password something\n"
+			+ " transport input all\n"
+			+ " transport output all\n"
+			+ "!\n");
 		config.addAttribute(runningConfig);
 		ConfigAttribute iosVersion = new ConfigTextAttribute(config, "iosVersion", "16.1.6");
 		config.addAttribute(iosVersion);
 		return config;
 	}
 
-	static public Device getFakeCiscoIosDevice(Domain domain, Diagnostic diagnostic, int shift) {
+	public static Device getFakeCiscoIosDevice(Domain domain, Diagnostic diagnostic, int shift) {
 		Network4Address mgmtIp = null;
 		try {
 			mgmtIp = new Network4Address("172.16.0.0");
@@ -157,7 +157,7 @@ public class FakeDeviceFactory {
 		Config config = getFakeCiscoIosConfig(device);
 		device.getConfigs().add(config);
 		device.setLastConfig(config);
-		
+
 		DeviceAttribute mainMemorySize = new DeviceNumericAttribute(device, "mainMemorySize", 2048);
 		device.addAttribute(mainMemorySize);
 		DeviceAttribute configRegister = new DeviceTextAttribute(device, "configRegister", "0x1202");
@@ -173,12 +173,12 @@ public class FakeDeviceFactory {
 		return device;
 	}
 
-	static public DeviceGroup getAllDevicesGroup() {
+	public static DeviceGroup getAllDevicesGroup() {
 		DeviceGroup group = new DynamicDeviceGroup("All", null, "");
 		return group;
 	}
 
-	static public Diagnostic getReloadReasonIosSimpleDiagnostic() {
+	public static Diagnostic getReloadReasonIosSimpleDiagnostic() {
 		Diagnostic diagnostic = new SimpleDiagnostic("Reload reason", true,
 			getAllDevicesGroup(), AttributeType.TEXT, "CiscoIOS12",
 			"enable",
@@ -186,5 +186,8 @@ public class FakeDeviceFactory {
 			"(?s).*Last reload reason: (.+?)[\r\n]+",
 			"$1");
 		return diagnostic;
+	}
+
+	private FakeDeviceFactory() {
 	}
 }

@@ -25,7 +25,7 @@ import net.netshot.netshot.device.Domain;
  */
 public interface DomainBasedTask {
 
-	public Domain getDomain();
+	Domain getDomain();
 
-	public void setDomain(Domain domain);
+	void setDomain(Domain domain);
 }

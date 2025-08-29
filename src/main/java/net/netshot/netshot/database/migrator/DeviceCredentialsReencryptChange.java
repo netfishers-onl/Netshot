@@ -1,3 +1,21 @@
+/**
+ * Copyright 2013-2025 Netshot
+ * 
+ * This file is part of Netshot project.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package net.netshot.netshot.database.migrator;
 
 import java.sql.ResultSet;
@@ -21,7 +39,7 @@ import net.netshot.netshot.crypto.PasswordBasedEncryptor;
 import net.netshot.netshot.crypto.Sha2AesPasswordBasedEncryptor;
 
 /**
- * Custom DB migration class to reencrypt device credentials with up-to-date mechanisms
+ * Custom DB migration class to reencrypt device credentials with up-to-date mechanisms.
  */
 public class DeviceCredentialsReencryptChange implements CustomSqlChange {
 
@@ -80,15 +98,15 @@ public class DeviceCredentialsReencryptChange implements CustomSqlChange {
 					final String oldEncrypted = credentialSets.getString(column);
 					if (oldEncrypted != null) {
 						try {
-							if (dtype.equals("DeviceSnmpv3Community") &&
-							    (column.equals("username") ||
-								   column.equals("auth_type") ||
-								   column.equals("priv_type"))) {
+							if ("DeviceSnmpv3Community".equals(dtype)
+								&& ("username".equals(column)
+								|| "auth_type".equals(column)
+								|| "priv_type".equals(column))) {
 								// Keep these columns unencrypted from now
 								String plain = oldEncryptor.decrypt(oldEncrypted);
 								update.addNewColumnValue(column, plain);
 							}
-							else if (column.equals("username")) {
+							else if ("username".equals(column)) {
 								// Don't touch username for other credentialtypes
 							}
 							else {
@@ -101,7 +119,7 @@ public class DeviceCredentialsReencryptChange implements CustomSqlChange {
 							throw new CustomChangeException(
 								String.format(
 									"Crypto error while processing table '%s', column '%s' for id %d",
-								tableName, column, id), e);
+									tableName, column, id), e);
 						}
 					}
 				}
@@ -112,9 +130,9 @@ public class DeviceCredentialsReencryptChange implements CustomSqlChange {
 			throw new CustomChangeException(
 				"Database error while preparing device senstive data re-encryption", e);
 		}
-		
+
 		return statements.toArray(new SqlStatement[0]);
 	}
 
-	
+
 }

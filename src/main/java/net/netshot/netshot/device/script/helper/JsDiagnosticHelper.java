@@ -21,8 +21,8 @@ package net.netshot.netshot.device.script.helper;
 import java.util.List;
 import java.util.Map;
 
-import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
+import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyObject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ import net.netshot.netshot.work.TaskLogger;
  */
 @Slf4j
 public class JsDiagnosticHelper {
-	
+
 	/** The device the diagnostic is running on. */
 	public final Device device;
 	/** The list of diagnostics. */
@@ -47,7 +47,7 @@ public class JsDiagnosticHelper {
 	public Map<String, Object> jsDiagnostics;
 	/** The JS Logger. */
 	private TaskLogger taskLogger;
-	
+
 	/**
 	 * Instantiate a new JS diagnostic helper.
 	 * @param device The device to run the diagnostics on
@@ -61,7 +61,7 @@ public class JsDiagnosticHelper {
 		this.jsDiagnostics = jsDiagnostics;
 		this.taskLogger = taskLogger;
 	}
-	
+
 	/**
 	 * Set a diagnostic result.
 	 * @param key The key
@@ -70,33 +70,33 @@ public class JsDiagnosticHelper {
 	@Export
 	public void set(String key, Value value) {
 		if (value == null) {
-			taskLogger.warn(String.format("Value for diagnostic key '%s' is null", key));
+			this.taskLogger.warn(String.format("Value for diagnostic key '%s' is null", key));
 			return;
 		}
 		try {
 			for (Diagnostic diagnostic : diagnostics) {
 				if (diagnostic.getName().equals(key)) {
-					taskLogger.warn(String.format("Setting value for diagnostic key '%s'", key));
-					DiagnosticResult result = diagnostic.makeResult(device, value);
+					this.taskLogger.warn(String.format("Setting value for diagnostic key '%s'", key));
+					DiagnosticResult result = diagnostic.makeResult(this.device, value);
 					if (result != null) {
-						device.addDiagnosticResult(result);
+						this.device.addDiagnosticResult(result);
 					}
 				}
 			}
 		}
 		catch (Exception e) {
 			log.warn("Error while setting the diagnostic result '{}'.", key, e);
-			taskLogger.error(String.format("Can't set diagnostic result %s: %s", key,  e.toString()));
+			this.taskLogger.error(String.format("Can't set diagnostic result %s: %s", key, e.toString()));
 		}
 	}
-	
+
 	/**
 	 * Get the diagnostics.
 	 * @return the diagnostics
 	 */
 	@Export
 	public ProxyObject getDiagnostics() {
-		return ProxyObject.fromMap(jsDiagnostics);
+		return ProxyObject.fromMap(this.jsDiagnostics);
 	}
 
 }

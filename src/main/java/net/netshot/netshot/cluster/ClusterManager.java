@@ -18,22 +18,6 @@
  */
 package net.netshot.netshot.cluster;
 
-import net.netshot.netshot.Netshot;
-import net.netshot.netshot.TaskManager;
-import net.netshot.netshot.TaskManager.Mode;
-import net.netshot.netshot.cluster.ClusterMember.MastershipStatus;
-import net.netshot.netshot.cluster.messages.AssignTasksMessage;
-import net.netshot.netshot.cluster.messages.AutoSnapshotMessage;
-import net.netshot.netshot.cluster.messages.ClusterMessage;
-import net.netshot.netshot.cluster.messages.HelloClusterMessage;
-import net.netshot.netshot.cluster.messages.LoadTasksMessage;
-import net.netshot.netshot.cluster.messages.ReloadDriversMessage;
-import net.netshot.netshot.database.Database;
-import net.netshot.netshot.device.DeviceDriver;
-import net.netshot.netshot.rest.RestService;
-import net.netshot.netshot.rest.RestViews.ClusteringView;
-import net.netshot.netshot.work.tasks.TakeSnapshotTask;
-
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.sql.Connection;
@@ -54,43 +38,57 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
 import lombok.extern.slf4j.Slf4j;
-
+import net.netshot.netshot.Netshot;
+import net.netshot.netshot.TaskManager;
+import net.netshot.netshot.TaskManager.Mode;
+import net.netshot.netshot.cluster.ClusterMember.MastershipStatus;
+import net.netshot.netshot.cluster.messages.AssignTasksMessage;
+import net.netshot.netshot.cluster.messages.AutoSnapshotMessage;
+import net.netshot.netshot.cluster.messages.ClusterMessage;
+import net.netshot.netshot.cluster.messages.HelloClusterMessage;
+import net.netshot.netshot.cluster.messages.LoadTasksMessage;
+import net.netshot.netshot.cluster.messages.ReloadDriversMessage;
+import net.netshot.netshot.database.Database;
+import net.netshot.netshot.device.DeviceDriver;
+import net.netshot.netshot.rest.RestService;
+import net.netshot.netshot.rest.RestViews.ClusteringView;
+import net.netshot.netshot.work.tasks.TakeSnapshotTask;
 import org.postgresql.PGConnection;
 import org.postgresql.PGNotification;
 
 /**
- * Cluster Manager - main component of clustering feature
+ * Cluster Manager - main component of clustering feature.
  */
 @Slf4j
 public class ClusterManager extends Thread {
 
-	/** Name of the PSQL notification channel */
-	final private static String NOTIFICATION_CHANNEL = "clustering";
+	/** Name of the PSQL notification channel. */
+	private static final String NOTIFICATION_CHANNEL = "clustering";
 
-	/** Netshot clustering version */
-	final protected static int CLUSTERING_VERSION = 1;
+	/** Netshot clustering version. */
+	protected static final int CLUSTERING_VERSION = 1;
 
-	/** Timers */
-	final private static int HELLO_INTERVAL = 6000;
-	final private static int NEGOTIATING_HELLO_INTERVAL = 2000;
-	final private static int HELLO_HOLDTIME = 30000;
-	final private static int HELLO_DRIFTTIME = 30000;
-	final private static int NEGOTIATION_DURATION = 25000;
-	final private static int RECEIVE_TIMEOUT = 2000;
+	/** Timers. */
+	private static final int HELLO_INTERVAL = 6000;
+	private static final int NEGOTIATING_HELLO_INTERVAL = 2000;
+	private static final int HELLO_HOLDTIME = 30000;
+	private static final int HELLO_DRIFTTIME = 30000;
+	private static final int NEGOTIATION_DURATION = 25000;
+	private static final int RECEIVE_TIMEOUT = 2000;
 
-	/** Cluster Manager static instance */
-	private static ClusterManager nsClusterManager = null;
+	/** Cluster Manager static instance. */
+	private static ClusterManager nsClusterManager;
 
 	/** Whether a driver reload was just requested. */
-	private boolean driverReloadRequested = false;
+	private boolean driverReloadRequested;
 
 	/** Whether the task manager is requesting other servers to load and execute waiting tasks. */
-	private boolean loadTasksRequested = false;
+	private boolean loadTasksRequested;
 
 	/** Whether a member is requesting the cluster master to assign new tasks. */
-	private boolean assignTasksRequested = false;
+	private boolean assignTasksRequested;
 
-	/** IDs of devices to request auto snapshots for */
+	/** IDs of devices to request auto snapshots for. */
 	private Set<Long> autoSnapshotDeviceIds = new HashSet<>();
 
 	/**
@@ -119,7 +117,7 @@ public class ClusterManager extends Thread {
 	}
 
 	/**
-	 * Gets the list of cluster members for external use
+	 * Gets the list of cluster members for external use.
 	 * @return the cluster members
 	 */
 	public static List<ClusterMember> getClusterMembers() {
@@ -177,26 +175,26 @@ public class ClusterManager extends Thread {
 		}
 	}
 
-	/** JSON reader */
+	/** JSON reader. */
 	private ObjectReader jsonReader;
 
-	/** JSON writer */
+	/** JSON writer. */
 	private ObjectWriter jsonWriter;
 
-	/** Local cluster member  */
+	/** Local cluster member. */
 	private ClusterMember localMember;
 
-	/** Last master member  */
+	/** Last master member. */
 	private ClusterMember master;
 
-	/** All cluster members */
+	/** All cluster members. */
 	private Map<String, ClusterMember> members;
 
-	/** Time (epoch) of last hello message sent */
+	/** Time (epoch) of last hello message sent. */
 	private long lastSentHelloTime;
 
 	/**
-	 * Default constructor
+	 * Default constructor.
 	 */
 	public ClusterManager() {
 		// Set thread name
@@ -215,7 +213,7 @@ public class ClusterManager extends Thread {
 		int runnerPriority = Netshot.getConfig("netshot.cluster.runner.priority", 100);
 		int runnerWeight = Netshot.getConfig("netshot.cluster.runner.weight", 100);
 		if (runnerWeight < 1 || runnerWeight > 1000) {
-			log.error("Invalid value {} for runner weight, will use 100 by default", runnerWeight);;
+			log.error("Invalid value {} for runner weight, will use 100 by default", runnerWeight);
 			runnerWeight = 100;
 		}
 
@@ -234,7 +232,7 @@ public class ClusterManager extends Thread {
 				NetworkInterface networkInterface = NetworkInterface.getByInetAddress(mainAddress);
 				byte[] mainMac = networkInterface.getHardwareAddress();
 				if (mainMac != null && mainMac.length == 6 && (mainMac[0] != 0 || mainMac[1] != 0
-						|| mainMac[2] != 0 || mainMac[3] != 0 || mainMac[4] != 0 || mainMac[5] != 0)) {
+					|| mainMac[2] != 0 || mainMac[3] != 0 || mainMac[4] != 0 || mainMac[5] != 0)) {
 					localId = String.format("01ff%02x%02x%02x%02x%02x%02x%04x",
 						mainMac[0], mainMac[1], mainMac[2], mainMac[3], mainMac[4], mainMac[5], RestService.getRestPort());
 					log.info("Cluster ID {} was automatically generated based on main local MAC address", localId);
@@ -249,7 +247,7 @@ public class ClusterManager extends Thread {
 			byte[] randomBase = new byte[6];
 			new Random().nextBytes(randomBase);
 			localId = String.format("09ff%02x%02x%02x%02x%02x%02x0000",
-			randomBase[0], randomBase[1], randomBase[2], randomBase[3], randomBase[4], randomBase[5]);
+				randomBase[0], randomBase[1], randomBase[2], randomBase[3], randomBase[4], randomBase[5]);
 			log.warn("Cluster ID {} was randomly generated - you should rather configure netshot.cluster.id",
 				localId);
 		}
@@ -285,14 +283,14 @@ public class ClusterManager extends Thread {
 
 	/**
 	 * Receive cluster message(s) (from the PostgreSQL notification system).
-	 * @param connection
-	 * @return
-	 * @throws SQLException
+	 * @param pgConnection = the PostgreSQL connection
+	 * @return list of received messages
+	 * @throws SQLException in case of problem
 	 */
 	private List<ClusterMessage> receiveMessages(PGConnection pgConnection) throws SQLException {
 		List<ClusterMessage> messages = new ArrayList<>();
 		// Process all pending notifications
-		PGNotification notifications[] = pgConnection.getNotifications(RECEIVE_TIMEOUT);
+		PGNotification[] notifications = pgConnection.getNotifications(RECEIVE_TIMEOUT);
 		if (notifications != null) {
 			for (PGNotification notification : notifications) {
 				log.trace("Received notification (name {}): {}", notification.getName(), notification.getParameter());
@@ -423,8 +421,8 @@ public class ClusterManager extends Thread {
 									continue;
 								}
 								ClusterMember oldMember = this.members.get(message.getInstanceId());
-								if (oldMember == null || oldMember.getRunnerPriority() != member.getRunnerPriority() ||
-										oldMember.getRunnerWeight() != member.getRunnerWeight()) {
+								if (oldMember == null || oldMember.getRunnerPriority() != member.getRunnerPriority()
+									|| oldMember.getRunnerWeight() != member.getRunnerWeight()) {
 									runnerChanged = true;
 								}
 								if (oldMember == null) {
@@ -490,8 +488,8 @@ public class ClusterManager extends Thread {
 							if (member.equals(this.localMember)) {
 								continue;
 							}
-							if (member.getLastSeenTime() < currentTime - HELLO_HOLDTIME &&
-									!MastershipStatus.EXPIRED.equals(member.getStatus())) {
+							if (member.getLastSeenTime() < currentTime - HELLO_HOLDTIME
+								&& !MastershipStatus.EXPIRED.equals(member.getStatus())) {
 								log.warn("Member {} not seen since {}, going into EXPIRED state",
 									member.getInstanceId(), member.getLastSeenTime());
 								member.setStatus(MastershipStatus.EXPIRED);

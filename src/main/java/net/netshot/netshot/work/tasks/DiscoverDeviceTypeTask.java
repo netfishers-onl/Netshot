@@ -23,6 +23,17 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.quartz.JobKey;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
@@ -33,14 +44,11 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.database.Database;
 import net.netshot.netshot.TaskManager;
+import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.Domain;
@@ -56,25 +64,16 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.rest.RestViews.HookView;
 import net.netshot.netshot.work.Task;
 
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.quartz.JobKey;
-
 /**
  * This task discovers the type of the given device.
  */
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
-public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, DomainBasedTask {
+public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, DomainBasedTask {
 
 	/** The credential sets. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToMany,
 		@Fetch(FetchMode.SELECT),
 		@OnDelete(action = OnDeleteAction.CASCADE)
@@ -83,7 +82,7 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	private Set<DeviceCredentialSet> credentialSets = new HashSet<DeviceCredentialSet>();
 
 	/** The device address. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Embedded,
 		@AttributeOverrides({
 			@AttributeOverride(name = "address", column = @Column(name = "ipv4_address")),
@@ -95,18 +94,18 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	private Network4Address deviceAddress;
 
 	/** The success credential set. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Transient
 	}))
 	@Setter
-	private DeviceCredentialSet successCredentialSet = null;
+	private DeviceCredentialSet successCredentialSet;
 
 	@Getter
 	@Setter
-	private String discoveredDeviceType = null;
+	private String discoveredDeviceType;
 
 	/** The domain. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
@@ -114,16 +113,16 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	private Domain domain;
 
 	/** The device. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(HookView.class),
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
-	private Device device = null;
+	private Device device;
 
 	/** The snapshot task id. */
-	private long snapshotTaskId = 0;
+	private long snapshotTaskId;
 
 	/**
 	 * Instantiates a new discover device type task.
@@ -134,15 +133,13 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	/**
 	 * Instantiates a new discover device type task.
 	 * 
-	 * @param deviceAddress
-	 *          the device address
-	 * @param domain
-	 *          the domain
-	 * @param comments
-	 *          the comments
+	 * @param deviceAddress = the device address
+	 * @param domain = the domain
+	 * @param comments = the comments
+	 * @param author = the author
 	 */
 	public DiscoverDeviceTypeTask(Network4Address deviceAddress, Domain domain,
-			String comments, String author) {
+		String comments, String author) {
 		super(comments, deviceAddress.getIp(), author);
 		this.deviceAddress = deviceAddress;
 		this.domain = domain;
@@ -153,7 +150,8 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	 * 
 	 * @return the discovered device type description
 	 */
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getDiscoveredDeviceTypeDescription() {
 		String description = "Unknown";
@@ -188,8 +186,8 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 			this.debug("Got sysDesc = " + sysDesc);
 			this.debug("Got sysObjectID = " + sysObjectId);
 			log.trace("Got sysDesc '{}' and sysObjectID '{}'.", sysDesc,
-					sysObjectId);
-			
+				sysObjectId);
+
 			// Iterates over possible device classes
 			for (DeviceDriver driver : DeviceDriver.getAllDrivers()) {
 				if (driver.snmpAutoDiscover(this, sysObjectId, sysDesc, this.getJsLogger())) {
@@ -216,7 +214,7 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 
 	private boolean snmpv1Discover(DeviceSnmpCommunity community) {
 		log.trace("Task {}. SNMPv1 discovery with credential set {}.",
-				this.getId(), community.getName());
+			this.getId(), community.getName());
 		this.trace(String.format("Trying SNMPv1 discovery (credential set %s)", community.getName()));
 		try {
 			Snmp poller = new Snmp(deviceAddress, community);
@@ -235,7 +233,7 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 
 	private boolean snmpv2cDiscover(DeviceSnmpCommunity community) {
 		log.trace("Task {}. SNMPv2c discovery with credential set {}.",
-				this.getId(), community.getName());
+			this.getId(), community.getName());
 		this.trace(String.format("Trying SNMPv2c discovery (credential set %s)", community.getName()));
 		try {
 			Snmp poller = new Snmp(deviceAddress, community);
@@ -254,7 +252,7 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 
 	private boolean snmpv3Discover(DeviceSnmpv3Community cred) {
 		log.trace("Task {}. SNMPv3 discovery with credential set {}.",
-				this.getId(), cred.getName());
+			this.getId(), cred.getName());
 		this.trace(String.format("Trying SNMPv3 discovery (credential set %s)", cred.getName()));
 		try {
 			Snmp poller = new Snmp(deviceAddress, cred);
@@ -294,31 +292,28 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 
 		log.trace("Task {}. {} credential sets in the list.", this.getId(), credentialSets.size());
 		for (DeviceCredentialSet credentialSet : credentialSets) {
-			if (credentialSet instanceof DeviceSnmpv1Community) {
+			if (credentialSet instanceof DeviceSnmpv1Community snmpCommunity) {
 				log.trace("Task {}. SNMPv1 credential set.", this.getId());
 				didTrySnmp = true;
-				DeviceSnmpCommunity community = (DeviceSnmpv1Community) credentialSet;
-				if (snmpv1Discover(community)) {
+				if (snmpv1Discover(snmpCommunity)) {
 					this.status = Status.SUCCESS;
 					this.successCredentialSet = credentialSet;
 					break;
 				}
 			}
-			else if (credentialSet instanceof DeviceSnmpv2cCommunity) {
+			else if (credentialSet instanceof DeviceSnmpv2cCommunity snmpCommunity) {
 				log.trace("Task {}. SNMPv2c credential set.", this.getId());
 				didTrySnmp = true;
-				DeviceSnmpCommunity community = (DeviceSnmpv2cCommunity) credentialSet;
-				if (snmpv2cDiscover(community)) {
+				if (snmpv2cDiscover(snmpCommunity)) {
 					this.status = Status.SUCCESS;
 					this.successCredentialSet = credentialSet;
 					break;
 				}
 			}
-			else if (credentialSet instanceof DeviceSnmpv3Community) {
+			else if (credentialSet instanceof DeviceSnmpv3Community snmpCreds) {
 				log.trace("Task {}. SNMPv3 credential set.", this.getId());
 				didTrySnmp = true;
-				DeviceSnmpv3Community DeviceSnmpcred = (DeviceSnmpv3Community) credentialSet;
-				if (snmpv3Discover(DeviceSnmpcred)) {
+				if (snmpv3Discover(snmpCreds)) {
 					this.status = Status.SUCCESS;
 					this.successCredentialSet = credentialSet;
 					break;
@@ -335,7 +330,7 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 				device.addCredentialSet(successCredentialSet);
 				session.persist(device);
 				snapshotTask = new TakeSnapshotTask(device,
-						"Automatic snapshot after discovery", author, true, false, false);
+					"Automatic snapshot after discovery", author, true, false, false);
 				snapshotTask.setPriority(this.getPriority());
 				session.persist(snapshotTask);
 				session.getTransaction().commit();
@@ -377,7 +372,7 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 		if (!didTrySnmp) {
 			log.warn("Task {}. No available SNMP credential set.", this.getId());
 			this.error(
-					"No available SNMP credential set... can't start autodiscovery.");
+				"No available SNMP credential set... can't start autodiscovery.");
 		}
 		this.status = Status.FAILURE;
 	}
@@ -392,9 +387,9 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 		final int prime = 31;
 		int result = super.hashCode();
 		result = prime * result
-				+ ((creationDate == null) ? 0 : creationDate.hashCode());
+			+ (creationDate == null ? 0 : creationDate.hashCode());
 		result = prime * result
-				+ ((deviceAddress == null) ? 0 : deviceAddress.hashCode());
+			+ (deviceAddress == null ? 0 : deviceAddress.hashCode());
 		return result;
 	}
 
@@ -440,7 +435,8 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	 * @see net.netshot.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Device autodiscovery";
@@ -451,7 +447,8 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	 * 
 	 * @return the snapshot task id
 	 */
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public long getSnapshotTaskId() {
 		return snapshotTaskId;
 	}
@@ -474,15 +471,16 @@ public class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, Dom
 	@Transient
 	public JobKey getIdentity() {
 		return new JobKey(String.format("Task_%d", this.getId()),
-				String.format("DiscoverDeviceType_%s", this.getDeviceAddress().getIp()));
+			String.format("DiscoverDeviceType_%s", this.getDeviceAddress().getIp()));
 	}
 
 	/**
-	 * Get the ID of the device
+	 * Get the ID of the device.
 	 * 
 	 * @return the ID of the device
 	 */
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	protected long getDeviceId() {
 		if (this.device == null) {

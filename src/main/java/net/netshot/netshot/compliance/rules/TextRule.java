@@ -23,100 +23,99 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
+import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.compliance.CheckResult;
+import net.netshot.netshot.compliance.CheckResult.ResultOption;
 import net.netshot.netshot.compliance.Policy;
 import net.netshot.netshot.compliance.Rule;
-import net.netshot.netshot.compliance.CheckResult.ResultOption;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.TaskLogger;
 
-import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 public class TextRule extends Rule {
-	
-	@Getter(onMethod=@__({
+
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String field;
-	
-	@Getter(onMethod=@__({
+
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@Column(length = 10000)
 	}))
 	@Setter
 	private String context;
-	
-	@Getter(onMethod=@__({
+
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@Column(length = 10000000)
 	}))
 	private String text;
-	
-	@Getter(onMethod=@__({
+
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean regExp = false;
-	
-	@Getter(onMethod=@__({
+	private boolean regExp;
+
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean invert = false;
-	
-	@Getter(onMethod=@__({
+	private boolean invert;
+
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean anyBlock = false;
-	
-	@Getter(onMethod=@__({
+	private boolean anyBlock;
+
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean matchAll = false;
-	
-	@Getter(onMethod=@__({
+	private boolean matchAll;
+
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean normalize = false;
-	
-	@Getter(onMethod=@__({
+	private boolean normalize;
+
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String deviceDriver;
-	
+
 	private List<Pattern> hierarchy = new ArrayList<Pattern>();
-	
-	private boolean prepared = false;
-	
-	private boolean valid = false;
-	
-	private Pattern pattern = null;
-	
+
+	private boolean prepared;
+
+	private boolean valid;
+
+	private Pattern pattern;
+
 	protected TextRule() {
-		
+
 	}
-	
+
 	public TextRule(String name, Policy policy) {
 		super(name, policy);
 	}
@@ -127,9 +126,10 @@ public class TextRule extends Rule {
 			this.text = this.text.replace("\r", "");
 		}
 	}
-	
+
 	@Transient
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDeviceDriverDescription() {
 		if ("".equals(deviceDriver)) {
 			return "";
@@ -172,14 +172,14 @@ public class TextRule extends Rule {
 		}
 		valid = true;
 	}
-	
-	private String normalizeText(String text) {
-		if (text == null) {
+
+	private String normalizeText(String inputText) {
+		if (inputText == null) {
 			return null;
 		}
-		return text.replaceAll("[\\x0B\\f\\r]", "").replaceAll(" +\\n", "\n");
+		return inputText.replaceAll("[\\x0B\\f\\r]", "").replaceAll(" +\\n", "\n");
 	}
-	
+
 	private int findIndent(String line) {
 		for (int i = 0; i < line.length(); i++) {
 			if (line.charAt(i) != ' ') {
@@ -188,12 +188,12 @@ public class TextRule extends Rule {
 		}
 		return line.length();
 	}
-	
-	private List<String[]> findSections(String lines, Pattern pattern, String where) {
-		return findSections(lines.split("\\n"), pattern, where);
+
+	private List<String[]> findSections(String lines, Pattern sectionPattern, String where) {
+		return findSections(lines.split("\\n"), sectionPattern, where);
 	}
-	
-	private List<String[]> findSections(String[] lines, Pattern pattern, String where) {
+
+	private List<String[]> findSections(String[] lines, Pattern sectionPattern, String where) {
 		List<String[]> blocks = new ArrayList<String[]>();
 		StringJoiner joiner = new StringJoiner("\n");
 		String title = "";
@@ -212,7 +212,7 @@ public class TextRule extends Rule {
 				indent = findIndent(line);
 				joiner = new StringJoiner("\n");
 				String trimmedLine = line.trim();
-				title = (where.length() > 0 ? where + " > " + trimmedLine : trimmedLine);
+				title = where.length() > 0 ? where + " > " + trimmedLine : trimmedLine;
 			}
 		}
 		if (indent >= 0) {
@@ -245,10 +245,10 @@ public class TextRule extends Rule {
 			}
 			List<String[]> blocks = new ArrayList<String[]>();
 			blocks.add(new String[] { "", content });
-			for (Pattern pattern : hierarchy) {
+			for (Pattern blockPattern : hierarchy) {
 				List<String[]> selectedBlocks = new ArrayList<String[]>();
 				for (String[] block : blocks) {
-					selectedBlocks.addAll(findSections(block[1], pattern, block[0]));
+					selectedBlocks.addAll(findSections(block[1], blockPattern, block[0]));
 				}
 				blocks = selectedBlocks;
 			}
@@ -256,8 +256,8 @@ public class TextRule extends Rule {
 			int b = 1;
 			for (String[] block : blocks) {
 				boolean doesMatch =
-						regExp && (matchAll && pattern.matcher(block[1]).matches() || !matchAll && pattern.matcher(block[1]).find()) ||
-						!regExp && (matchAll && block[1].equals(text) || !matchAll && block[1].contains(text));
+					regExp && (matchAll && pattern.matcher(block[1]).matches() || !matchAll && pattern.matcher(block[1]).find())
+						|| !regExp && (matchAll && block[1].equals(text) || !matchAll && block[1].contains(text));
 				doesMatch = doesMatch ^ invert;
 				if (!doesMatch) {
 					taskLogger.debug(String.format("Non matching block, number %d (in [%s])", b++, block[0]));

@@ -24,12 +24,11 @@ import java.io.PrintStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.netshot.netshot.device.NetworkAddress;
-import net.netshot.netshot.work.TaskLogger;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.device.NetworkAddress;
+import net.netshot.netshot.work.TaskLogger;
 
 /**
  * A CLI object to access a device through command line.
@@ -76,7 +75,7 @@ public abstract class Cli {
 	@Setter
 	protected int commandTimeout = 120000;
 
-	/** The current task logger */
+	/** The current task logger. */
 	protected TaskLogger taskLogger;
 
 	/** The last command. */
@@ -149,7 +148,7 @@ public abstract class Cli {
 	public abstract void disconnect();
 
 	/**
-	 * Read until a string is matched
+	 * Read until a string is matched.
 	 *
 	 * @param expects the list of patterns to expect
 	 * @return the collected output

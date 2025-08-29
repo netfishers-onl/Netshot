@@ -38,20 +38,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import net.netshot.netshot.database.Database;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.query.Query;
+
+import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.compliance.SoftwareRule;
+import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device.NetworkClass;
 import net.netshot.netshot.device.Finder.Expression.FinderParseException;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
 import net.netshot.netshot.diagnostic.Diagnostic;
-
-import org.hibernate.HibernateException;
-import org.hibernate.query.Query;
-import org.hibernate.Session;
-
-import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -94,7 +93,7 @@ public class Finder {
 	/**
 	 * The Enum TokenType.
 	 */
-	public static enum TokenType {
+	public enum TokenType {
 
 		/** The and. */
 		AND("(?i)^\\s*(and)\\b", "AND"),
@@ -117,10 +116,10 @@ public class Finder {
 		/** The bracketout. */
 		BRACKETOUT("^\\s*(\\))", ")"),
 
-		/** Contains text, case sensitive */
+		/** Contains text, case sensitive. */
 		CONTAINS("(?i)^\\s*(contains)\\b", "CONTAINS"),
 
-		/** Contains text, case insensitive */
+		/** Contains text, case insensitive. */
 		CONTAINSNOCASE("(?i)^\\s*(containsnocase)\\b", "CONTAINSNOCASE"),
 
 		/** REGEXP matches. */
@@ -143,10 +142,10 @@ public class Finder {
 
 		/** The greaterthan. */
 		GREATERTHAN("(?i)^\\s*(greaterthan)\\b", "GREATERTHAN"),
-		
+
 		/** True. */
 		TRUE("(?i)^\\s*(true)\\b", "TRUE"),
-		
+
 		/** False. */
 		FALSE("(?i)^\\s*(false)\\b", "FALSE"),
 
@@ -158,19 +157,19 @@ public class Finder {
 
 		/** The module. */
 		MODULE("(?i)^\\s*(\\[module\\])", "MODULE"),
-		
+
 		/** Interface. */
 		INTERFACE("(?i)^\\s*(\\[interface\\])", "INTERFACE"),
 
 		/** The VRF. */
 		VRF("(?i)^\\s*(\\[vrf\\])", "VRF"),
-		
+
 		/** The virtual name. */
 		VIRTUALNAME("(?i)^\\s*(\\[virtual name\\])", "VIRTUAL NAME"),
 
 		/** The device. */
 		DEVICE("(?i)^\\s*(\\[device\\])", "DEVICE"),
-		
+
 		/** The domain token. */
 		DOMAIN("(?i)^\\s*(\\[domain\\])", "DOMAIN"),
 
@@ -182,13 +181,34 @@ public class Finder {
 
 		/** The SUBNET v6. */
 		SUBNETV6(
-				"^\\s*(((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))/(1[01][0-9]|12[0-8]|[0-9][0-9]|[0-9]))",
-				""),
+			"^\\s*(((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|"
+			+ "(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|"
+			+ "(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|"
+			+ "(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|"
+			+ "(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|"
+			+ "(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|"
+			+ "(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|"
+			+ "(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|"
+			+ "(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|"
+			+ "([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|"
+			+ "(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))"
+			+ "/(1[01][0-9]|12[0-8]|[0-9][0-9]|[0-9]))",
+			""),
 
 		/** The IP v6. */
 		IPV6(
-				"^\\s*((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))",
-				""),
+			"^\\s*((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|"
+			+ "(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|"
+			+ "(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|"
+			+ "(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|"
+			+ "(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|"
+			+ "(([0-9A-Fa-f]{1,4}:){6}((b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|"
+			+ "(1d{2})|(2[0-4]d)|(d{1,2}))b))|(([0-9A-Fa-f]{1,4}:){0,5}:((b((25[0-5])|(1d{2})|(2[0-4]d)|"
+			+ "(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|(::([0-9A-Fa-f]{1,4}:){0,5}((b((25[0-5])|"
+			+ "(1d{2})|(2[0-4]d)|(d{1,2}))b).){3}(b((25[0-5])|(1d{2})|(2[0-4]d)|(d{1,2}))b))|"
+			+ "([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|"
+			+ "(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))",
+			""),
 
 		/** The macsubnet. */
 		MACSUBNET("^\\s*([0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}/(4[0-8]|[1-3][0-9]|[0-9]))", ""),
@@ -222,7 +242,7 @@ public class Finder {
 			this.command = command;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see java.lang.Enum#toString()
 		 */
 		public String toString() {
@@ -265,7 +285,7 @@ public class Finder {
 		public TokenType type;
 
 		/** The expression. */
-		public Expression expression = null;
+		public Expression expression;
 
 		/**
 		 * Instantiates a new token.
@@ -284,7 +304,7 @@ public class Finder {
 	/**
 	 * The Class Expression.
 	 */
-	public static abstract class Expression {
+	public abstract static class Expression {
 
 		/** The device class. */
 		protected DeviceDriver driver;
@@ -298,7 +318,7 @@ public class Finder {
 			this.driver = driver;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see java.lang.Object#toString()
 		 */
 		public abstract String toString();
@@ -348,7 +368,7 @@ public class Finder {
 					}
 				}
 				throw new FinderParseException(String.format(
-						"Parsing error, unknown token at character %d.", position));
+					"Parsing error, unknown token at character %d.", position));
 			}
 			return tokens;
 		}
@@ -362,7 +382,7 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			ListIterator<Token> t = tokens.listIterator();
 			int brackets = 0;
 			List<Token> subTokens = new ArrayList<Token>();
@@ -379,7 +399,7 @@ public class Finder {
 					brackets--;
 					if (brackets < 0) {
 						throw new FinderParseException(
-								"Parsing error, unexpected closing bracket.");
+							"Parsing error, unexpected closing bracket.");
 					}
 					else if (brackets == 0) {
 						token.type = TokenType.ITEM;
@@ -398,7 +418,7 @@ public class Finder {
 			}
 			if (brackets > 0) {
 				throw new FinderParseException(
-						"Parsing error, missing closing bracket.");
+					"Parsing error, missing closing bracket.");
 			}
 
 			if (tokens.size() == 0) {
@@ -420,27 +440,27 @@ public class Finder {
 			if (expr != null) {
 				return expr;
 			}
-			
+
 			expr = NotOperator.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
-			
+
 			expr = ModuleExpression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
-			
+
 			expr = InterfaceExpression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
-			
+
 			expr = VrfExpression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
 			}
-			
+
 			expr = VirtualNameExpression.parse(tokens, parsingData);
 			if (expr != null) {
 				return expr;
@@ -477,7 +497,7 @@ public class Finder {
 			}
 
 			throw new FinderParseException(String.format(
-					"Parsing error at character %d.", tokens.get(0).position));
+				"Parsing error at character %d.", tokens.get(0).position));
 		}
 
 		/**
@@ -485,15 +505,15 @@ public class Finder {
 		 * @param token the token to check
 		 * @throws FinderParseException
 		 */
-		static protected void checkRegExp(Token token) throws FinderParseException {
+		protected static void checkRegExp(Token token) throws FinderParseException {
 			try {
 				Pattern.compile(token.text);
 			}
 			catch (PatternSyntaxException e1) {
 				// Note: should check for POSIX regular expressions, to match with DB RegExp engine.
 				throw new FinderParseException(String.format(
-						"Parsing error, invalid regular expression, at character %d.",
-						token.position));
+					"Parsing error, invalid regular expression, at character %d.",
+					token.position));
 			}
 		}
 
@@ -511,7 +531,7 @@ public class Finder {
 		/**
 		 * Sets the variables.
 		 *
-		 * @param Query<?> the query
+		 * @param query the query
 		 * @param itemPrefix the item prefix
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
@@ -538,7 +558,7 @@ public class Finder {
 			super(driver);
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		@Override
@@ -548,7 +568,7 @@ public class Finder {
 			return buffer.toString();
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
@@ -557,7 +577,7 @@ public class Finder {
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
@@ -574,7 +594,7 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			ListIterator<Token> t = tokens.listIterator();
 			while (t.hasNext()) {
 				boolean first = !t.hasPrevious();
@@ -582,8 +602,8 @@ public class Finder {
 				if (token.type == TokenType.NOT) {
 					if (!first) {
 						throw new FinderParseException(
-								String.format("Parsing error, misplaced NOT at character %d.",
-										token.position));
+							String.format("Parsing error, misplaced NOT at character %d.",
+								token.position));
 					}
 					else {
 						NotOperator notExpr = new NotOperator(parsingData.getDeviceDriver());
@@ -616,7 +636,7 @@ public class Finder {
 			super(driver);
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		public String toString() {
@@ -624,15 +644,16 @@ public class Finder {
 			int i = 0;
 			buffer.append("(");
 			for (Expression child : children) {
-				if (i++ > 0)
+				if (i++ > 0) {
 					buffer.append(") ").append(TokenType.AND).append(" (");
+				}
 				buffer.append(child.toString());
 			}
 			buffer.append(")");
 			return buffer.toString();
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
@@ -641,7 +662,7 @@ public class Finder {
 			criteria.where = "(";
 			for (Expression child : children) {
 				FinderCriteria childCriteria = child.buildHqlString(itemPrefix + "_"
-						+ i);
+					+ i);
 				if (i > 0) {
 					criteria.where += " and ";
 				}
@@ -655,7 +676,7 @@ public class Finder {
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
@@ -676,7 +697,7 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			ListIterator<Token> t = tokens.listIterator();
 			AndOperator andExpr = new AndOperator(parsingData.getDeviceDriver());
 			List<Token> tokenBuffer = new ArrayList<Token>();
@@ -685,8 +706,8 @@ public class Finder {
 				if (token.type == TokenType.AND) {
 					if (tokenBuffer.size() == 0) {
 						throw new FinderParseException(String.format(
-								"Parsing error, nothing before AND at character %d.",
-								token.position));
+							"Parsing error, nothing before AND at character %d.",
+							token.position));
 					}
 					andExpr.children.add(Expression.parse(tokenBuffer, parsingData));
 					tokenBuffer.clear();
@@ -698,7 +719,7 @@ public class Finder {
 			if (andExpr.children.size() > 0) {
 				if (tokenBuffer.size() == 0) {
 					throw new FinderParseException(
-							"Parsing error, nothing after last AND.");
+						"Parsing error, nothing after last AND.");
 				}
 				andExpr.children.add(Expression.parse(tokenBuffer, parsingData));
 				return andExpr;
@@ -725,7 +746,7 @@ public class Finder {
 			super(driver);
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		public String toString() {
@@ -733,15 +754,16 @@ public class Finder {
 			int i = 0;
 			buffer.append("(");
 			for (Expression child : children) {
-				if (i++ > 0)
+				if (i++ > 0) {
 					buffer.append(") ").append(TokenType.OR).append(" (");
+				}
 				buffer.append(child.toString());
 			}
 			buffer.append(")");
 			return buffer.toString();
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
@@ -750,7 +772,7 @@ public class Finder {
 			criteria.where = "(";
 			for (Expression child : children) {
 				FinderCriteria childCriteria = child.buildHqlString(itemPrefix + "_"
-						+ i);
+					+ i);
 				if (i > 0) {
 					criteria.where += " or ";
 				}
@@ -764,7 +786,7 @@ public class Finder {
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
@@ -785,7 +807,7 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			ListIterator<Token> t = tokens.listIterator();
 			OrOperator orExpr = new OrOperator(parsingData.getDeviceDriver());
 			List<Token> tokenBuffer = new ArrayList<Token>();
@@ -794,8 +816,8 @@ public class Finder {
 				if (token.type == TokenType.OR) {
 					if (tokenBuffer.size() == 0) {
 						throw new FinderParseException(String.format(
-								"Parsing error, nothing before OR at character %d.",
-								token.position));
+							"Parsing error, nothing before OR at character %d.",
+							token.position));
 					}
 					orExpr.children.add(Expression.parse(tokenBuffer, parsingData));
 					tokenBuffer.clear();
@@ -807,7 +829,7 @@ public class Finder {
 			if (orExpr.children.size() > 0) {
 				if (tokenBuffer.size() == 0) {
 					throw new FinderParseException(
-							"Parsing error, nothing after last OR.");
+						"Parsing error, nothing after last OR.");
 				}
 				orExpr.children.add(Expression.parse(tokenBuffer, parsingData));
 				return orExpr;
@@ -815,7 +837,7 @@ public class Finder {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * The Class ModuleExpression.
 	 */
@@ -845,33 +867,33 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 3 && tokens.get(0).type == TokenType.MODULE) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
 				switch (comparator.type) {
-				case IS:
-				case CONTAINS:
-				case CONTAINSNOCASE:
-				case STARTSWITH:
-				case ENDSWITH:
-				case MATCHES:
-					if (value.type == TokenType.QUOTE) {
-						if (comparator.type == TokenType.MATCHES) {
-							checkRegExp(value);
+					case IS:
+					case CONTAINS:
+					case CONTAINSNOCASE:
+					case STARTSWITH:
+					case ENDSWITH:
+					case MATCHES:
+						if (value.type == TokenType.QUOTE) {
+							if (comparator.type == TokenType.MATCHES) {
+								checkRegExp(value);
+							}
+							ModuleExpression modExpr = new ModuleExpression(parsingData.getDeviceDriver());
+							modExpr.sign = comparator.type;
+							modExpr.value = TokenType.unescape(value.text);
+							return modExpr;
 						}
-						ModuleExpression modExpr = new ModuleExpression(parsingData.getDeviceDriver());
-						modExpr.sign = comparator.type;
-						modExpr.value = TokenType.unescape(value.text);
-						return modExpr;
-					}
-					else {
-						throw new FinderParseException(String.format(
+						else {
+							throw new FinderParseException(String.format(
 								"Expecting a quoted string for MODULE at character %d.",
 								value.position));
-					}
-				default:
-					throw new FinderParseException(String.format(
+						}
+					default:
+						throw new FinderParseException(String.format(
 							"Invalid operator after MODULE at character %d.",
 							comparator.position));
 				}
@@ -879,62 +901,62 @@ public class Finder {
 			return null;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			if (TokenType.MATCHES.equals(sign)) {
 				criteria.where = String.format(
-						"((regexp_like(m.serialNumber, :%s) or regexp_like(m.partNumber, :%s)) and m.removed is not true)", itemPrefix,
-						itemPrefix);
+					"((regexp_like(m.serialNumber, :%s) or regexp_like(m.partNumber, :%s)) and m.removed is not true)", itemPrefix,
+					itemPrefix);
 			}
 			else if (TokenType.CONTAINSNOCASE.equals(sign)) {
 				criteria.where = String.format(
-						"((lower(m.serialNumber) like :%s or lower(m.partNumber) like :%s) and m.removed is not true)",
-						itemPrefix, itemPrefix);
+					"((lower(m.serialNumber) like :%s or lower(m.partNumber) like :%s) and m.removed is not true)",
+					itemPrefix, itemPrefix);
 			}
 			else {
 				criteria.where = String.format(
-						"((m.serialNumber like :%s or m.partNumber like :%s) and m.removed is not true)", itemPrefix,
-						itemPrefix);
+					"((m.serialNumber like :%s or m.partNumber like :%s) and m.removed is not true)", itemPrefix,
+					itemPrefix);
 			}
 			criteria.joins.add("d.modules m");
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
-			case CONTAINS:
-				target = "%" + value + "%";
-				break;
-			case CONTAINSNOCASE:
-				target = "%" + value.toLowerCase() + "%";
-				break;
-			case STARTSWITH:
-				target = value + "%";
-				break;
-			case ENDSWITH:
-				target = "%" + value;
-				break;
-			default:
-				target = value;
+				case CONTAINS:
+					target = "%" + value + "%";
+					break;
+				case CONTAINSNOCASE:
+					target = "%" + value.toLowerCase() + "%";
+					break;
+				case STARTSWITH:
+					target = value + "%";
+					break;
+				case ENDSWITH:
+					target = "%" + value;
+					break;
+				default:
+					target = value;
 			}
 			query.setParameter(itemPrefix, target);
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		@Override
 		public String toString() {
 			return String.format("[%s] %s \"%s\"", TokenType.MODULE, sign,
-					TokenType.escape(value));
+				TokenType.escape(value));
 		}
 
 	}
@@ -968,33 +990,33 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 3 && tokens.get(0).type == TokenType.INTERFACE) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
 				switch (comparator.type) {
-				case IS:
-				case CONTAINS:
-				case CONTAINSNOCASE:
-				case STARTSWITH:
-				case ENDSWITH:
-				case MATCHES:
-					if (value.type == TokenType.QUOTE) {
-						if (comparator.type == TokenType.MATCHES) {
-							checkRegExp(value);
+					case IS:
+					case CONTAINS:
+					case CONTAINSNOCASE:
+					case STARTSWITH:
+					case ENDSWITH:
+					case MATCHES:
+						if (value.type == TokenType.QUOTE) {
+							if (comparator.type == TokenType.MATCHES) {
+								checkRegExp(value);
+							}
+							InterfaceExpression modExpr = new InterfaceExpression(parsingData.getDeviceDriver());
+							modExpr.sign = comparator.type;
+							modExpr.value = TokenType.unescape(value.text);
+							return modExpr;
 						}
-						InterfaceExpression modExpr = new InterfaceExpression(parsingData.getDeviceDriver());
-						modExpr.sign = comparator.type;
-						modExpr.value = TokenType.unescape(value.text);
-						return modExpr;
-					}
-					else {
-						throw new FinderParseException(String.format(
+						else {
+							throw new FinderParseException(String.format(
 								"Expecting a quoted string for INTERFACE at character %d.",
 								value.position));
-					}
-				default:
-					throw new FinderParseException(String.format(
+						}
+					default:
+						throw new FinderParseException(String.format(
 							"Invalid operator after INTERFACE at character %d.",
 							comparator.position));
 				}
@@ -1002,62 +1024,62 @@ public class Finder {
 			return null;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			if (TokenType.MATCHES.equals(sign)) {
 				criteria.where = String.format(
-						"(regexp_like(ni.interfaceName, :%s) or regexp_like(ni.description, :%s))", itemPrefix,
-						itemPrefix);
+					"(regexp_like(ni.interfaceName, :%s) or regexp_like(ni.description, :%s))", itemPrefix,
+					itemPrefix);
 			}
 			else if (TokenType.CONTAINSNOCASE.equals(sign)) {
 				criteria.where = String.format(
-						"(lower(ni.interfaceName) like :%s or lower(ni.description) like :%s)",
-						itemPrefix, itemPrefix);
+					"(lower(ni.interfaceName) like :%s or lower(ni.description) like :%s)",
+					itemPrefix, itemPrefix);
 			}
 			else {
 				criteria.where = String.format(
-						"(ni.interfaceName like :%s or ni.description like :%s)", itemPrefix,
-						itemPrefix);
+					"(ni.interfaceName like :%s or ni.description like :%s)", itemPrefix,
+					itemPrefix);
 			}
 			criteria.joins.add("d.networkInterfaces ni");
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
-			case CONTAINS:
-				target = "%" + value + "%";
-				break;
-			case CONTAINSNOCASE:
-				target = "%" + value.toLowerCase() + "%";
-				break;
-			case STARTSWITH:
-				target = value + "%";
-				break;
-			case ENDSWITH:
-				target = "%" + value;
-				break;
-			default:
-				target = value;
+				case CONTAINS:
+					target = "%" + value + "%";
+					break;
+				case CONTAINSNOCASE:
+					target = "%" + value.toLowerCase() + "%";
+					break;
+				case STARTSWITH:
+					target = value + "%";
+					break;
+				case ENDSWITH:
+					target = "%" + value;
+					break;
+				default:
+					target = value;
 			}
 			query.setParameter(itemPrefix, target);
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		@Override
 		public String toString() {
 			return String.format("[%s] %s \"%s\"", TokenType.INTERFACE, sign,
-					TokenType.escape(value));
+				TokenType.escape(value));
 		}
 
 	}
@@ -1088,19 +1110,19 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 3 && tokens.get(0).type == TokenType.DEVICE) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
 				if (comparator.type != TokenType.IS) {
 					throw new FinderParseException(String.format(
-							"Invalid operator after DEVICE at character %d.",
-							comparator.position));
+						"Invalid operator after DEVICE at character %d.",
+						comparator.position));
 				}
 				if (value.type != TokenType.NUMERIC) {
 					throw new FinderParseException(String.format(
-							"Expecting a numeric value for DEVICE at character %d.",
-							value.position));
+						"Expecting a numeric value for DEVICE at character %d.",
+						value.position));
 				}
 				DeviceExpression devExpr = new DeviceExpression(parsingData.getDeviceDriver());
 				devExpr.value = Long.parseLong(value.text);
@@ -1109,7 +1131,7 @@ public class Finder {
 			return null;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
@@ -1118,7 +1140,7 @@ public class Finder {
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
@@ -1126,7 +1148,7 @@ public class Finder {
 			query.setParameter(itemPrefix, value);
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		@Override
@@ -1162,19 +1184,19 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 3 && tokens.get(0).type == TokenType.DOMAIN) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
 				if (comparator.type != TokenType.IS) {
 					throw new FinderParseException(String.format(
-							"Invalid operator after DOMAIN at character %d.",
-							comparator.position));
+						"Invalid operator after DOMAIN at character %d.",
+						comparator.position));
 				}
 				if (value.type != TokenType.NUMERIC) {
 					throw new FinderParseException(String.format(
-							"Expecting a numeric value for DOMAIN at character %d.",
-							value.position));
+						"Expecting a numeric value for DOMAIN at character %d.",
+						value.position));
 				}
 				DomainExpression domExpr = new DomainExpression(parsingData.getDeviceDriver());
 				domExpr.value = Long.parseLong(value.text);
@@ -1183,7 +1205,7 @@ public class Finder {
 			return null;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
@@ -1192,7 +1214,7 @@ public class Finder {
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
@@ -1200,7 +1222,7 @@ public class Finder {
 			query.setParameter(itemPrefix, value);
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		@Override
@@ -1223,7 +1245,7 @@ public class Finder {
 			super(driver);
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		@Override
@@ -1231,7 +1253,7 @@ public class Finder {
 			return "";
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		@Override
@@ -1241,7 +1263,7 @@ public class Finder {
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		@Override
@@ -1283,12 +1305,12 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			if (tokens.get(0).type == TokenType.MAC) {
 				if (tokens.size() != 3) {
 					throw new FinderParseException(String.format(
-							"Incomplete or incorrect expression after MAC at character %d.",
-							tokens.get(0).position));
+						"Incomplete or incorrect expression after MAC at character %d.",
+						tokens.get(0).position));
 				}
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
@@ -1299,16 +1321,16 @@ public class Finder {
 				if (value.type == TokenType.MACADDRESS) {
 					if (comparator.type != TokenType.IS) {
 						throw new FinderParseException(String.format(
-								"Invalid operator for simple MAC at character %d.",
-								comparator.position));
+							"Invalid operator for simple MAC at character %d.",
+							comparator.position));
 					}
 					mac = value.text;
 				}
 				else if (value.type == TokenType.MACSUBNET) {
 					if (comparator.type != TokenType.IN) {
 						throw new FinderParseException(String.format(
-								"Invalid operator for MAC with mask at character %d.",
-								comparator.position));
+							"Invalid operator for MAC with mask at character %d.",
+							comparator.position));
 					}
 					String[] values = value.text.split("/");
 					mac = values[0];
@@ -1324,15 +1346,15 @@ public class Finder {
 				}
 				catch (ParseException e) {
 					throw new FinderParseException(String.format(
-							"Error while parsing MAC address at character %d.",
-							value.position));
+						"Error while parsing MAC address at character %d.",
+						value.position));
 				}
 				return macExpr;
 			}
 			return null;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		@Override
@@ -1344,7 +1366,7 @@ public class Finder {
 			return String.format("[MAC] %s %s", this.sign, mac);
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		@Override
@@ -1354,8 +1376,8 @@ public class Finder {
 			criteria.joins.add("ni.physicalAddress mac");
 			if (this.sign == TokenType.IN) {
 				criteria.where = String.format(
-						"(mac.address >= :%s_0 and mac.address <= :%s_1)", itemPrefix,
-						itemPrefix);
+					"(mac.address >= :%s_0 and mac.address <= :%s_1)", itemPrefix,
+					itemPrefix);
 			}
 			else {
 				criteria.where = String.format("mac.address = :%s_0", itemPrefix);
@@ -1363,7 +1385,7 @@ public class Finder {
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		@Override
@@ -1415,12 +1437,12 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			if (tokens.get(0).type == TokenType.IP) {
 				if (tokens.size() != 3) {
 					throw new FinderParseException(String.format(
-							"Incomplete or incorrect expression after IP at character %d.",
-							tokens.get(0).position));
+						"Incomplete or incorrect expression after IP at character %d.",
+						tokens.get(0).position));
 				}
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
@@ -1432,19 +1454,19 @@ public class Finder {
 				if (value.type == TokenType.IPV4) {
 					if (comparator.type != TokenType.IS) {
 						throw new FinderParseException(String.format(
-								"Invalid operator for simple IP at character %d.",
-								comparator.position));
+							"Invalid operator for simple IP at character %d.",
+							comparator.position));
 					}
 					ip = value.text;
 					ipExpr.withMask = false;
 				}
 				else if (value.type == TokenType.SUBNETV4) {
 					if (comparator.type != TokenType.IS
-							&& comparator.type != TokenType.IN
-							&& comparator.type != TokenType.CONTAINS) {
+						&& comparator.type != TokenType.IN
+						&& comparator.type != TokenType.CONTAINS) {
 						throw new FinderParseException(String.format(
-								"Invalid operator for IP subnet at character %d.",
-								comparator.position));
+							"Invalid operator for IP subnet at character %d.",
+							comparator.position));
 					}
 					String[] values = value.text.split("/");
 					ip = values[0];
@@ -1452,8 +1474,8 @@ public class Finder {
 					ipExpr.withMask = true;
 					if (comparator.type == TokenType.CONTAINS && ipExpr.withMask) {
 						throw new FinderParseException(
-								String.format("IP CONTAINS must be followed by a simple IP address (at character %d).",
-										comparator.position));
+							String.format("IP CONTAINS must be followed by a simple IP address (at character %d).",
+								comparator.position));
 					}
 				}
 				else {
@@ -1466,24 +1488,24 @@ public class Finder {
 				}
 				catch (UnknownHostException e) {
 					throw new FinderParseException(
-							String.format("Error while parsing IP address at character %d.",
-									value.position));
+						String.format("Error while parsing IP address at character %d.",
+							value.position));
 				}
 				return ipExpr;
 			}
 			return null;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		@Override
 		public String toString() {
 			return String.format("[IP] %s %s", this.sign,
-					(this.withMask ? this.target.getPrefix() : this.target.getIp()));
+				this.withMask ? this.target.getPrefix() : this.target.getIp());
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		@Override
@@ -1493,32 +1515,32 @@ public class Finder {
 			criteria.joins.add("ni.ip4Addresses ip4");
 			if (this.sign == TokenType.IN) {
 				criteria.where = String.format(
-						"((d.mgmtAddress.address >= :%s_0 and d.mgmtAddress.address <= :%s_1) or (ip4.address >= :%s_0 and ip4.address < :%s_1))",
-						itemPrefix, itemPrefix, itemPrefix, itemPrefix);
+					"((d.mgmtAddress.address >= :%s_0 and d.mgmtAddress.address <= :%s_1) or (ip4.address >= :%s_0 and ip4.address < :%s_1))",
+					itemPrefix, itemPrefix, itemPrefix, itemPrefix);
 			}
 			else if (this.withMask) {
 				criteria.where = String
-						.format(
-								"((d.mgmtAddress.address = :%s_0 and d.mgmtAddress.prefixLength = :%s_1) or (ip4.address = :%s_0 and ip4.prefixLength = :%s_1))",
-								itemPrefix, itemPrefix, itemPrefix, itemPrefix);
+					.format(
+						"((d.mgmtAddress.address = :%s_0 and d.mgmtAddress.prefixLength = :%s_1) or (ip4.address = :%s_0 and ip4.prefixLength = :%s_1))",
+						itemPrefix, itemPrefix, itemPrefix, itemPrefix);
 			}
 			else if (this.sign == TokenType.CONTAINS) {
 				criteria.where = String.format("(i4.prefixLength = 0 or "
-						+ "(ip4.address < 0 and ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) - power(2, 32 - ip4.prefixLength) <= :%s_0 "
-						+ "and :%s_0 <= ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) - 1) or "
-						+ "(ip4.address >= 0 and ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) <= :%s_0 "
-						+ "and :%s_0 <= ip4.address -mod(ip4.address, power(2, 32 - ip4.prefixLength)) + power(2, 32 - ip4.prefixLength) - 1)",
-						itemPrefix, itemPrefix, itemPrefix, itemPrefix);
+					+ "(ip4.address < 0 and ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) - power(2, 32 - ip4.prefixLength) <= :%s_0 "
+					+ "and :%s_0 <= ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) - 1) or "
+					+ "(ip4.address >= 0 and ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) <= :%s_0 "
+					+ "and :%s_0 <= ip4.address -mod(ip4.address, power(2, 32 - ip4.prefixLength)) + power(2, 32 - ip4.prefixLength) - 1)",
+					itemPrefix, itemPrefix, itemPrefix, itemPrefix);
 			}
 			else {
 				criteria.where = String.format(
-						"(d.mgmtAddress.address = :%s_0 or ip4.address = :%s_0)",
-						itemPrefix, itemPrefix);
+					"(d.mgmtAddress.address = :%s_0 or ip4.address = :%s_0)",
+					itemPrefix, itemPrefix);
 			}
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		@Override
@@ -1531,8 +1553,8 @@ public class Finder {
 					max = (int) (0x7FFFFFFF);
 					min = (int) (0x80000000);
 				}
-				query.setParameter(itemPrefix + "_0", (max > min ? min : max));
-				query.setParameter(itemPrefix + "_1", (max > min ? max : min));
+				query.setParameter(itemPrefix + "_0", max > min ? min : max);
+				query.setParameter(itemPrefix + "_1", max > min ? max : min);
 			}
 			else if (this.withMask) {
 				query.setParameter(itemPrefix + "_0", this.target.getIntAddress());
@@ -1577,12 +1599,12 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			if (tokens.get(0).type == TokenType.IP) {
 				if (tokens.size() != 3) {
 					throw new FinderParseException(String.format(
-							"Incomplete expression after IP at character %d.",
-							tokens.get(0).position));
+						"Incomplete expression after IP at character %d.",
+						tokens.get(0).position));
 				}
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
@@ -1594,18 +1616,18 @@ public class Finder {
 				if (value.type == TokenType.IPV6) {
 					if (comparator.type != TokenType.IS) {
 						throw new FinderParseException(String.format(
-								"Invalid operator for simple IP at character %d.",
-								comparator.position));
+							"Invalid operator for simple IP at character %d.",
+							comparator.position));
 					}
 					ip = value.text;
 					ipExpr.withMask = false;
 				}
 				else if (value.type == TokenType.SUBNETV6) {
 					if (comparator.type != TokenType.IS
-							&& comparator.type != TokenType.IN) {
+						&& comparator.type != TokenType.IN) {
 						throw new FinderParseException(String.format(
-								"Invalid operator for IP subnet at character %d.",
-								comparator.position));
+							"Invalid operator for IP subnet at character %d.",
+							comparator.position));
 					}
 					String[] values = value.text.split("/");
 					ip = values[0];
@@ -1619,24 +1641,24 @@ public class Finder {
 				}
 				catch (UnknownHostException e) {
 					throw new FinderParseException(
-							String.format("Error while parsing IP address at character %d.",
-									value.position));
+						String.format("Error while parsing IP address at character %d.",
+							value.position));
 				}
 				return ipExpr;
 			}
 			return null;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		@Override
 		public String toString() {
 			return String.format("[IP] %s %s", this.sign,
-					(this.withMask ? this.target.getPrefix() : this.target.getIp()));
+				this.withMask ? this.target.getPrefix() : this.target.getIp());
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		@Override
@@ -1647,31 +1669,31 @@ public class Finder {
 			if (this.sign == TokenType.IN) {
 				if (this.target.getPrefixLength() <= 64) {
 					criteria.where = String.format(
-							"(ip6.address1 >= :%s_0 and ip6.address1 <= :%s_1)", itemPrefix,
-							itemPrefix);
+						"(ip6.address1 >= :%s_0 and ip6.address1 <= :%s_1)", itemPrefix,
+						itemPrefix);
 				}
 				else {
 					criteria.where = String
-							.format(
-									"(ip6.address2 >= :%s_0 and ip6.address2 <= :%s_1 and ip6.address1 = :%s_2)",
-									itemPrefix, itemPrefix, itemPrefix);
+						.format(
+							"(ip6.address2 >= :%s_0 and ip6.address2 <= :%s_1 and ip6.address1 = :%s_2)",
+							itemPrefix, itemPrefix, itemPrefix);
 				}
 			}
 			else if (this.withMask) {
 				criteria.where = String
-						.format(
-								"(ip6.address1 = :%s_0 and ip6.address2 = :%s_1 and ip6.prefixLength = :%s_2)",
-								itemPrefix, itemPrefix, itemPrefix);
+					.format(
+						"(ip6.address1 = :%s_0 and ip6.address2 = :%s_1 and ip6.prefixLength = :%s_2)",
+						itemPrefix, itemPrefix, itemPrefix);
 			}
 			else {
 				criteria.where = String.format(
-						"ip6.address1 = :%s_0 and ip6.address2 = :%s_1", itemPrefix,
-						itemPrefix);
+					"ip6.address1 = :%s_0 and ip6.address2 = :%s_1", itemPrefix,
+					itemPrefix);
 			}
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		@Override
@@ -1680,19 +1702,19 @@ public class Finder {
 			if (this.sign == TokenType.IN) {
 				if (this.target.getPrefixLength() <= 64) {
 					long mask = 0xFFFFFFFFFFFFFFFFL << (64 - this.target
-							.getPrefixLength());
+						.getPrefixLength());
 					long min = this.target.getAddress1() & mask;
 					long max = this.target.getAddress1() | ~mask;
-					query.setParameter(itemPrefix + "_0", (max > min ? min : max));
-					query.setParameter(itemPrefix + "_1", (max > min ? max : min));
+					query.setParameter(itemPrefix + "_0", max > min ? min : max);
+					query.setParameter(itemPrefix + "_1", max > min ? max : min);
 				}
 				else {
 					long mask = 0xFFFFFFFFFFFFFFFFL << (128 - this.target
-							.getPrefixLength());
+						.getPrefixLength());
 					long min = this.target.getAddress1() & mask;
 					long max = this.target.getAddress1() | ~mask;
-					query.setParameter(itemPrefix + "_0", (max > min ? min : max));
-					query.setParameter(itemPrefix + "_1", (max > min ? max : min));
+					query.setParameter(itemPrefix + "_0", max > min ? min : max);
+					query.setParameter(itemPrefix + "_1", max > min ? max : min);
 					query.setParameter(itemPrefix + "_2", this.target.getAddress1());
 				}
 			}
@@ -1714,8 +1736,8 @@ public class Finder {
 	 */
 	public abstract static class AttributeExpression extends Expression {
 
-		/** Pattern to find a diagnostic in a generic attribute */
-		static protected Pattern DIAGNOSTIC_PATTERN = Pattern.compile("(?i)^Diagnostic \"(.+)\"$");
+		/** Pattern to find a diagnostic in a generic attribute. */
+		protected static final Pattern DIAGNOSTIC_PATTERN = Pattern.compile("(?i)^Diagnostic \"(.+)\"$");
 
 		/** The item. */
 		public String item;
@@ -1731,6 +1753,10 @@ public class Finder {
 
 		/**
 		 * Build 'where' statement for the expression.
+		 * @param valueName = the name of the value
+		 * @param operator = the operator
+		 * @param itemPrefix = the item prefix
+		 * @param propertyFunction = the function
 		 *
 		 * @return the 'where' statement
 		 */
@@ -1757,7 +1783,7 @@ public class Finder {
 			}
 			else {
 				return preModifier + itemPrefix + "_" + propertyLevel.prefix + valueName + postModifier + " " + operator
-						+ " :" + itemPrefix;
+					+ " :" + itemPrefix;
 			}
 		}
 
@@ -1768,7 +1794,7 @@ public class Finder {
 		/**
 		 * The Enum PropertyLevel.
 		 */
-		public static enum PropertyLevel {
+		public enum PropertyLevel {
 			DEVICE("d.", true),
 			CONFIG("c.", true),
 			DIAGNOSTICRESULT("dr.", false),
@@ -1783,6 +1809,7 @@ public class Finder {
 			 * Instantiates a new property level.
 			 *
 			 * @param prefix the prefix
+			 * @param nativeProperty the native property
 			 */
 			PropertyLevel(String prefix, boolean nativeProperty) {
 				this.prefix = prefix;
@@ -1800,7 +1827,7 @@ public class Finder {
 		 * @param propertyLevel the property level
 		 */
 		public AttributeExpression(DeviceDriver driver,
-				String item, String property, PropertyLevel propertyLevel) {
+			String item, String property, PropertyLevel propertyLevel) {
 			super(driver);
 			this.item = item;
 			this.property = property;
@@ -1816,7 +1843,7 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 0 || tokens.get(0).type != TokenType.ITEM) {
 				return null;
 			}
@@ -1840,11 +1867,11 @@ public class Finder {
 			if (binaryExpression != null) {
 				return binaryExpression;
 			}
-			
+
 
 			throw new FinderParseException(String.format(
-					"Unknown configuration field [%s] at character %d.",
-					tokens.get(0).text, tokens.get(0).position));
+				"Unknown configuration field [%s] at character %d.",
+				tokens.get(0).text, tokens.get(0).position));
 		}
 
 		/**
@@ -1854,42 +1881,43 @@ public class Finder {
 		 */
 		protected abstract String getTextValue();
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		public String toString() {
 			return String.format("[%s] %s %s", item.toString(), sign,
-					this.getTextValue());
+				this.getTextValue());
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			switch (this.propertyLevel) {
-			case CONFIGATTRIBUTE:
-				criteria.joins.add(String.format("c.attributes %s_ca with %s_ca.name = :%s_name",
+				case CONFIGATTRIBUTE:
+					criteria.joins.add(String.format("c.attributes %s_ca with %s_ca.name = :%s_name",
 						itemPrefix, itemPrefix, itemPrefix));
-			case CONFIG:
-				criteria.whereJoins.add("d.lastConfig = c");
-				criteria.otherTables.add("Config c");
-				break;
-			case DEVICEATTRIBUTE:
-				criteria.joins.add(String.format("d.attributes %s_da with %s_da.name = :%s_name",
+					break;
+				case CONFIG:
+					criteria.whereJoins.add("d.lastConfig = c");
+					criteria.otherTables.add("Config c");
+					break;
+				case DEVICEATTRIBUTE:
+					criteria.joins.add(String.format("d.attributes %s_da with %s_da.name = :%s_name",
 						itemPrefix, itemPrefix, itemPrefix));
-				break;
-			case DIAGNOSTICRESULT:
-				criteria.joins.add(String.format("d.diagnosticResults %s_dr", itemPrefix));
-				criteria.joins.add(String.format("%s_dr.diagnostic %s_dg with %s_dg.name = :%s_name",
+					break;
+				case DIAGNOSTICRESULT:
+					criteria.joins.add(String.format("d.diagnosticResults %s_dr", itemPrefix));
+					criteria.joins.add(String.format("%s_dr.diagnostic %s_dg with %s_dg.name = :%s_name",
 						itemPrefix, itemPrefix, itemPrefix, itemPrefix));
-				break;
-			default:
-				break;
+					break;
+				default:
+					break;
 			}
 			return criteria;
 		}
-		
+
 		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			if (!propertyLevel.nativeProperty) {
@@ -1915,11 +1943,11 @@ public class Finder {
 		 * @param propertyLevel the property level
 		 */
 		public NumericAttributeExpression(DeviceDriver driver,
-				String item, String property, PropertyLevel propertyLevel) {
+			String item, String property, PropertyLevel propertyLevel) {
 			super(driver, item, property, propertyLevel);
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.AttributeExpression#getTextValue()
 		 */
 		protected String getTextValue() {
@@ -1928,32 +1956,33 @@ public class Finder {
 			return format.format(value);
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.AttributeExpression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			switch (sign) {
-			case GREATERTHAN:
-				criteria.where = this.buildWhere("number", ">", itemPrefix);
-				break;
-			case LESSTHAN:
-				criteria.where = this.buildWhere("number", "<", itemPrefix);
-				break;
-			default:
-				criteria.where = this.buildWhere("number", "=", itemPrefix);
-				break;
+				case GREATERTHAN:
+					criteria.where = this.buildWhere("number", ">", itemPrefix);
+					break;
+				case LESSTHAN:
+					criteria.where = this.buildWhere("number", "<", itemPrefix);
+					break;
+				default:
+					criteria.where = this.buildWhere("number", "=", itemPrefix);
+					break;
 			}
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			query.setParameter(itemPrefix, value);
 		}
+
 		/**
 		 * Parses the tokens to create an expression.
 		 *
@@ -1963,14 +1992,14 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			String property = null;
 			String item = null;
 			PropertyLevel level = PropertyLevel.DEVICE;
 			if (parsingData.getDeviceDriver() != null) {
 				for (AttributeDefinition attribute : parsingData.getDeviceDriver().getAttributes()) {
-					if (attribute.isSearchable() && attribute.getType() == AttributeType.NUMERIC &&
-							attribute.getTitle().equalsIgnoreCase(tokens.get(0).text)) {
+					if (attribute.isSearchable() && attribute.getType() == AttributeType.NUMERIC
+						&& attribute.getTitle().equalsIgnoreCase(tokens.get(0).text)) {
 						property = attribute.getName();
 						item = attribute.getTitle();
 						if (attribute.getLevel() == AttributeLevel.CONFIG) {
@@ -2002,35 +2031,35 @@ public class Finder {
 			}
 			if (tokens.size() != 3) {
 				throw new FinderParseException(String.format(
-						"Incomplete or incorrect expression after numeric item at character %d.",
-						tokens.get(0).position));
+					"Incomplete or incorrect expression after numeric item at character %d.",
+					tokens.get(0).position));
 			}
 			Token sign = tokens.get(1);
 			Token value = tokens.get(2);
 
 			if (sign.type != TokenType.IS && sign.type != TokenType.LESSTHAN
-					&& sign.type != TokenType.GREATERTHAN) {
+				&& sign.type != TokenType.GREATERTHAN) {
 				throw new FinderParseException(String.format(
-						"Parsing error, invalid numeric operator at position %d.",
-						sign.position));
+					"Parsing error, invalid numeric operator at position %d.",
+					sign.position));
 			}
 			if (value.type != TokenType.NUMERIC) {
 				throw new FinderParseException(String.format(
-						"Parsing error, should be a quoted date at character %d.",
-						value.position));
+					"Parsing error, should be a quoted date at character %d.",
+					value.position));
 			}
 			NumericAttributeExpression numExpr =
-					new NumericAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
-			
+				new NumericAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
+
 			try {
 				numExpr.value = Double.parseDouble(value.text);
 			}
 			catch (NumberFormatException e) {
 				throw new FinderParseException(String.format(
-						"Parsing error, uname to parse the numeric value at character %d.",
-								value.position));
+					"Parsing error, uname to parse the numeric value at character %d.",
+					value.position));
 			}
-			numExpr.sign = sign.type;	
+			numExpr.sign = sign.type;
 			return numExpr;
 		}
 
@@ -2053,19 +2082,19 @@ public class Finder {
 		 * @param propertyLevel the property level
 		 */
 		public EnumAttributeExpression(DeviceDriver driver,
-				String item, String property, PropertyLevel propertyLevel) {
+			String item, String property, PropertyLevel propertyLevel) {
 			super(driver, item, property, propertyLevel);
 			this.sign = TokenType.IS;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.AttributeExpression#getTextValue()
 		 */
 		protected String getTextValue() {
 			return "\"" + TokenType.escape(value.toString()) + "\"";
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.AttributeExpression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
@@ -2074,7 +2103,7 @@ public class Finder {
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
@@ -2091,7 +2120,7 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			String property = null;
 			String item = null;
 			@SuppressWarnings("rawtypes") Class theEnum = null;
@@ -2116,31 +2145,30 @@ public class Finder {
 			}
 			if (tokens.size() != 3) {
 				throw new FinderParseException(String.format(
-						"Incomplete or incorrect expression after enum item at character %d.",
-						tokens.get(0).position));
+					"Incomplete or incorrect expression after enum item at character %d.",
+					tokens.get(0).position));
 			}
 			Token sign = tokens.get(1);
 			Token value = tokens.get(2);
 			if (sign.type != TokenType.IS) {
 				throw new FinderParseException(String.format(
-						"Parsing error, invalid operator at position %d, should be 'IS'.",
-						sign.position));
+					"Parsing error, invalid operator at position %d, should be 'IS'.",
+					sign.position));
 			}
 			if (value.type != TokenType.QUOTE) {
 				throw new FinderParseException(String.format(
-						"Parsing error, should be a quoted string at character %d.",
-						value.position));
+					"Parsing error, should be a quoted string at character %d.",
+					value.position));
 			}
 			EnumAttributeExpression enumExpr =
-					new EnumAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
+				new EnumAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
 			try {
-				@SuppressWarnings("unchecked")
-				Object choice = Enum.valueOf(theEnum, value.text);
+				@SuppressWarnings("unchecked") Object choice = Enum.valueOf(theEnum, value.text);
 				enumExpr.value = choice;
 			}
 			catch (Exception e) {
 				throw new FinderParseException(String.format(
-						"Invalid value for item %s at character %d.", item, value.position));
+					"Invalid value for item %s at character %d.", item, value.position));
 			}
 			return enumExpr;
 		}
@@ -2154,7 +2182,7 @@ public class Finder {
 		/** The value. */
 		private String value;
 
-		private boolean longText = false;
+		private boolean longText;
 
 		/**
 		 * Instantiates a new text config item expression.
@@ -2165,18 +2193,18 @@ public class Finder {
 		 * @param propertyLevel the property level
 		 */
 		public TextAttributeExpression(DeviceDriver driver,
-				String item, String property, PropertyLevel propertyLevel) {
+			String item, String property, PropertyLevel propertyLevel) {
 			super(driver, item, property, propertyLevel);
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.AttributeExpression#getTextValue()
 		 */
 		protected String getTextValue() {
 			return "\"" + TokenType.escape(value) + "\"";
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.AttributeExpression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
@@ -2190,34 +2218,35 @@ public class Finder {
 				modifier = "lower";
 			}
 			criteria.where = this.buildWhere(longText ? "longText.text" : "text", operator, itemPrefix, modifier);
-			
+
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
-			case CONTAINS:
-				target = "%" + value + "%";
-				break;
-			case CONTAINSNOCASE:
-				target = "%" + value.toLowerCase() + "%";
-				break;
-			case STARTSWITH:
-				target = value + "%";
-				break;
-			case ENDSWITH:
-				target = "%" + value;
-				break;
-			default:
-				target = value;
+				case CONTAINS:
+					target = "%" + value + "%";
+					break;
+				case CONTAINSNOCASE:
+					target = "%" + value.toLowerCase() + "%";
+					break;
+				case STARTSWITH:
+					target = value + "%";
+					break;
+				case ENDSWITH:
+					target = "%" + value;
+					break;
+				default:
+					target = value;
 			}
 			query.setParameter(itemPrefix, target);
 		}
+
 		/**
 		 * Parses the tokens to create an expression.
 		 *
@@ -2227,7 +2256,7 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			String property = null;
 			String item = null;
 			PropertyLevel level = PropertyLevel.DEVICE;
@@ -2258,9 +2287,9 @@ public class Finder {
 			}
 			else if (parsingData.getDeviceDriver() != null) {
 				for (AttributeDefinition attribute : parsingData.getDeviceDriver().getAttributes()) {
-					if (attribute.isSearchable() &&
-							(attribute.getType() == AttributeType.LONGTEXT || attribute.getType() == AttributeType.TEXT) &&
-							attribute.getTitle().equalsIgnoreCase(tokens.get(0).text)) {
+					if (attribute.isSearchable()
+						&& (attribute.getType() == AttributeType.LONGTEXT || attribute.getType() == AttributeType.TEXT)
+						&& attribute.getTitle().equalsIgnoreCase(tokens.get(0).text)) {
 						property = attribute.getName();
 						item = attribute.getTitle();
 						if (attribute.getLevel() == AttributeLevel.CONFIG) {
@@ -2293,30 +2322,30 @@ public class Finder {
 			}
 			if (tokens.size() != 3) {
 				throw new FinderParseException(String.format(
-						"Incomplete or incorrect expression after text item at character %d.",
-						tokens.get(0).position));
+					"Incomplete or incorrect expression after text item at character %d.",
+					tokens.get(0).position));
 			}
 			Token sign = tokens.get(1);
 			Token value = tokens.get(2);
-			if (sign.type != TokenType.IS &&
-					sign.type != TokenType.CONTAINS &&
-					sign.type != TokenType.CONTAINSNOCASE &&
-					sign.type != TokenType.MATCHES &&
-					sign.type != TokenType.STARTSWITH && sign.type != TokenType.ENDSWITH) {
+			if (sign.type != TokenType.IS
+				&& sign.type != TokenType.CONTAINS
+				&& sign.type != TokenType.CONTAINSNOCASE
+				&& sign.type != TokenType.MATCHES
+				&& sign.type != TokenType.STARTSWITH && sign.type != TokenType.ENDSWITH) {
 				throw new FinderParseException(String.format(
-						"Invalid operator for a text item at character %d.",
-						sign.position));
+					"Invalid operator for a text item at character %d.",
+					sign.position));
 			}
 			if (value.type != TokenType.QUOTE) {
 				throw new FinderParseException(String.format(
-						"Parsing error, should be a quoted text, at character %d.",
-						value.position));
+					"Parsing error, should be a quoted text, at character %d.",
+					value.position));
 			}
 			if (sign.type == TokenType.MATCHES) {
 				checkRegExp(value);
 			}
 			TextAttributeExpression textExpr =
-					new TextAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
+				new TextAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
 			textExpr.value = value.text;
 			textExpr.sign = sign.type;
 			textExpr.longText = longText;
@@ -2329,8 +2358,8 @@ public class Finder {
 	 */
 	public static class DateAttributeExpression extends AttributeExpression {
 
-		public static abstract class TypedDate {
-			static public TypedDate parse(String text) throws ParseException {
+		public abstract static class TypedDate {
+			public static TypedDate parse(String text) throws ParseException {
 				try {
 					return new AbsoluteIso8601DateTime(text);
 				}
@@ -2363,19 +2392,22 @@ public class Finder {
 				}
 				throw new ParseException("Unable to parse date", 0);
 			}
+
 			public abstract Instant getStart();
+
 			public abstract Instant getEnd();
+
 			public abstract String getText();
 		}
 
-		public static abstract class AbsoluteDate extends TypedDate {
+		public abstract static class AbsoluteDate extends TypedDate {
 		}
 
 		public static class AbsoluteDateNoTime extends AbsoluteDate {
 			private LocalDate date;
 
 			public AbsoluteDateNoTime(String text) {
-				this.date = LocalDate.parse(text);			
+				this.date = LocalDate.parse(text);
 			}
 
 			public String getText() {
@@ -2431,14 +2463,15 @@ public class Finder {
 			}
 		}
 
-		public static abstract class RelativeDate extends TypedDate {
+		public abstract static class RelativeDate extends TypedDate {
 
 		}
 
 		public static class RelativeDateNow extends RelativeDate {
-			static private Pattern NOW_PATTERN = Pattern.compile("(?i)^NOW(\\s*((?<days>\\+|\\-\\s*[0-9]+)\\s*D))?(\\s*((?<hours>\\+|\\-\\s*[0-9]+)\\s*H))?$");
-			private long dayShift = 0;
-			private long hourShift = 0;
+			private static final Pattern NOW_PATTERN = Pattern.compile("(?i)^NOW(\\s*((?<days>\\+|\\-\\s*[0-9]+)\\s*D))?(\\s*((?<hours>\\+|\\-\\s*[0-9]+)\\s*H))?$");
+
+			private long dayShift;
+			private long hourShift;
 
 			public RelativeDateNow(String text) throws ParseException {
 				Matcher matcher = NOW_PATTERN.matcher(text);
@@ -2474,9 +2507,10 @@ public class Finder {
 		}
 
 		public static class RelativeDateToday extends RelativeDate {
-			static private Pattern TODAY_PATTERN = Pattern.compile("(?i)^TODAY(\\s*((?<days>\\+|\\-\\s*[0-9]+)\\s*D))?(\\s*((?<hours>\\+|\\-\\s*[0-9]+)\\s*H))?$");
-			private long dayShift = 0;
-			private long hourShift = 0;
+			private static final Pattern TODAY_PATTERN = Pattern.compile("(?i)^TODAY(\\s*((?<days>\\+|\\-\\s*[0-9]+)\\s*D))?(\\s*((?<hours>\\+|\\-\\s*[0-9]+)\\s*H))?$");
+
+			private long dayShift;
+			private long hourShift;
 
 			public RelativeDateToday(String text) throws ParseException {
 				Matcher matcher = TODAY_PATTERN.matcher(text);
@@ -2520,56 +2554,57 @@ public class Finder {
 		 * @param propertyLevel the property level
 		 */
 		public DateAttributeExpression(DeviceDriver driver,
-				String item, String property, PropertyLevel propertyLevel) {
+			String item, String property, PropertyLevel propertyLevel) {
 			super(driver, item, property, propertyLevel);
 		}
 
 		/** The value. */
 		private TypedDate value;
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.AttributeExpression#getTextValue()
 		 */
 		protected String getTextValue() {
 			return "\"" + this.value.getText() + "\"";
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.AttributeExpression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
 			FinderCriteria criteria = super.buildHqlString(itemPrefix);
 			switch (sign) {
-			case AFTER:
-				criteria.where = this.buildWhere("when", ">=", itemPrefix);
-				break;
-			case BEFORE:
-				criteria.where = this.buildWhere("when", "<=", itemPrefix);
-				break;
-			default:
-				criteria.where = "(" + this.buildWhere("when", ">=", itemPrefix + "_1") + " and "
+				case AFTER:
+					criteria.where = this.buildWhere("when", ">=", itemPrefix);
+					break;
+				case BEFORE:
+					criteria.where = this.buildWhere("when", "<=", itemPrefix);
+					break;
+				default:
+					criteria.where = "(" + this.buildWhere("when", ">=", itemPrefix + "_1") + " and "
 						+ this.buildWhere("when", "<=", itemPrefix + "_2") + ")";
 			}
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			switch (sign) {
-			case AFTER:
-				query.setParameter(itemPrefix, Date.from(this.value.getStart()));
-				break;
-			case BEFORE:
-				query.setParameter(itemPrefix, Date.from(this.value.getEnd()));
-				break;
-			default:
-				query.setParameter(itemPrefix + "_1", Date.from(this.value.getStart()));
-				query.setParameter(itemPrefix + "_2", Date.from(this.value.getEnd()));
+				case AFTER:
+					query.setParameter(itemPrefix, Date.from(this.value.getStart()));
+					break;
+				case BEFORE:
+					query.setParameter(itemPrefix, Date.from(this.value.getEnd()));
+					break;
+				default:
+					query.setParameter(itemPrefix + "_1", Date.from(this.value.getStart()));
+					query.setParameter(itemPrefix + "_2", Date.from(this.value.getEnd()));
 			}
 		}
+
 		/**
 		 * Parses the tokens to create an expression.
 		 *
@@ -2579,7 +2614,7 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			String property = null;
 			String item = null;
 			PropertyLevel level = PropertyLevel.DEVICE;
@@ -2593,8 +2628,8 @@ public class Finder {
 			}
 			else if (parsingData.getDeviceDriver() != null) {
 				for (AttributeDefinition attribute : parsingData.getDeviceDriver().getAttributes()) {
-					if (attribute.isSearchable() && attribute.getType() == AttributeType.DATE &&
-							attribute.getTitle().equalsIgnoreCase(tokens.get(0).text)) {
+					if (attribute.isSearchable() && attribute.getType() == AttributeType.DATE
+						&& attribute.getTitle().equalsIgnoreCase(tokens.get(0).text)) {
 						property = attribute.getName();
 						item = attribute.getTitle();
 						if (attribute.getLevel() == AttributeLevel.CONFIG) {
@@ -2612,34 +2647,34 @@ public class Finder {
 			}
 			if (tokens.size() != 3) {
 				throw new FinderParseException(String.format(
-						"Incomplete or incorrect expression after date item at character %d.",
-						tokens.get(0).position));
+					"Incomplete or incorrect expression after date item at character %d.",
+					tokens.get(0).position));
 			}
 			Token sign = tokens.get(1);
 			Token value = tokens.get(2);
 
 			if (sign.type != TokenType.BEFORE && sign.type != TokenType.AFTER
-					&& sign.type != TokenType.IS) {
+				&& sign.type != TokenType.IS) {
 
 				throw new FinderParseException(String.format(
-						"Parsing error, invalid date operator at position %d.",
-						sign.position));
+					"Parsing error, invalid date operator at position %d.",
+					sign.position));
 
 			}
 			if (value.type != TokenType.QUOTE) {
 				throw new FinderParseException(String.format(
-						"Parsing error, should be a quoted date at character %d.",
-						value.position));
+					"Parsing error, should be a quoted date at character %d.",
+					value.position));
 			}
 			DateAttributeExpression dateExpr = new DateAttributeExpression(
-					parsingData.getDeviceDriver(), item, property, level);
+				parsingData.getDeviceDriver(), item, property, level);
 			dateExpr.sign = sign.type;
 			try {
 				dateExpr.value = TypedDate.parse(value.text);
 			}
 			catch (ParseException e2) {
 				throw new FinderParseException(String.format(
-						"Invalid date/time at position %d.", value.position));
+					"Invalid date/time at position %d.", value.position));
 			}
 			return dateExpr;
 		}
@@ -2650,7 +2685,7 @@ public class Finder {
 	 * The Class BinaryAttributeExpression.
 	 */
 	public static class BinaryAttributeExpression extends AttributeExpression {
-		
+
 		private boolean value;
 
 		/**
@@ -2662,19 +2697,19 @@ public class Finder {
 		 * @param propertyLevel the property level
 		 */
 		public BinaryAttributeExpression(DeviceDriver driver,
-				String item, String property, PropertyLevel propertyLevel) {
+			String item, String property, PropertyLevel propertyLevel) {
 			super(driver, item, property, propertyLevel);
 			this.sign = TokenType.IS;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.AttributeExpression#getTextValue()
 		 */
 		protected String getTextValue() {
 			return value ? "TRUE" : "FALSE";
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.AttributeExpression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
@@ -2683,13 +2718,14 @@ public class Finder {
 			return criteria;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			query.setParameter(itemPrefix, this.value);
 		}
+
 		/**
 		 * Parses the tokens to create an expression.
 		 *
@@ -2699,14 +2735,14 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			String property = null;
 			String item = null;
 			PropertyLevel level = PropertyLevel.DEVICE;
 			if (parsingData.getDeviceDriver() != null) {
 				for (AttributeDefinition attribute : parsingData.getDeviceDriver().getAttributes()) {
-					if (attribute.isSearchable() && attribute.getType() == AttributeType.BINARY &&
-							attribute.getTitle().equalsIgnoreCase(tokens.get(0).text)) {
+					if (attribute.isSearchable() && attribute.getType() == AttributeType.BINARY
+						&& attribute.getTitle().equalsIgnoreCase(tokens.get(0).text)) {
 						property = attribute.getName();
 						item = attribute.getTitle();
 						if (attribute.getLevel() == AttributeLevel.CONFIG) {
@@ -2738,18 +2774,18 @@ public class Finder {
 			}
 			if (tokens.size() != 3) {
 				throw new FinderParseException(String.format(
-						"Incomplete or incorrect expression after enum item at character %d.",
-						tokens.get(0).position));
+					"Incomplete or incorrect expression after enum item at character %d.",
+					tokens.get(0).position));
 			}
 			Token sign = tokens.get(1);
 			Token value = tokens.get(2);
 			if (sign.type != TokenType.IS) {
 				throw new FinderParseException(String.format(
-						"Parsing error, invalid operator at position %d, should be 'IS'.",
-						sign.position));
+					"Parsing error, invalid operator at position %d, should be 'IS'.",
+					sign.position));
 			}
 			BinaryAttributeExpression binExpr =
-					new BinaryAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
+				new BinaryAttributeExpression(parsingData.getDeviceDriver(), item, property, level);
 			if (value.type == TokenType.TRUE) {
 				binExpr.value = true;
 			}
@@ -2758,8 +2794,8 @@ public class Finder {
 			}
 			else {
 				throw new FinderParseException(String.format(
-						"Parsing error, invalid operator at position %d, should be 'TRUE' or 'FALSE'.",
-						value.position));
+					"Parsing error, invalid operator at position %d, should be 'TRUE' or 'FALSE'.",
+					value.position));
 			}
 			return binExpr;
 		}
@@ -2768,7 +2804,7 @@ public class Finder {
 	/**
 	 * The Class FinderCriteria.
 	 */
-	private static class FinderCriteria {
+	private static final class FinderCriteria {
 
 		/** The where filter. */
 		public String where = "1 = 1";
@@ -2776,10 +2812,10 @@ public class Finder {
 		/** The HQL additional tables to join. */
 		public Set<String> joins = new TreeSet<String>();
 
-		/** The tables (other than the main device) to fetch from */
+		/** The tables (other than the main device) to fetch from. */
 		public Set<String> otherTables = new TreeSet<String>();
 
-		/** The where clauses to prepend to join other tables to the device one */
+		/** The where clauses to prepend to join other tables to the device one. */
 		public Set<String> whereJoins = new TreeSet<String>();
 	}
 
@@ -2787,18 +2823,18 @@ public class Finder {
 	 * The Class VrfExpression.
 	 */
 	public static class VrfExpression extends Expression {
-	
+
 
 		public VrfExpression(DeviceDriver driver) {
 			super(driver);
 		}
-	
+
 		/** The sign. */
 		public TokenType sign;
-	
+
 		/** The value. */
 		private String value;
-	
+
 		/**
 		 * Parses the tokens to create an expression.
 		 *
@@ -2808,41 +2844,41 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 3 && tokens.get(0).type == TokenType.VRF) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
 				switch (comparator.type) {
-				case IS:
-				case CONTAINS:
-				case CONTAINSNOCASE:
-				case STARTSWITH:
-				case ENDSWITH:
-				case MATCHES:
-					if (value.type == TokenType.QUOTE) {
-						if (comparator.type == TokenType.MATCHES) {
-							checkRegExp(value);
+					case IS:
+					case CONTAINS:
+					case CONTAINSNOCASE:
+					case STARTSWITH:
+					case ENDSWITH:
+					case MATCHES:
+						if (value.type == TokenType.QUOTE) {
+							if (comparator.type == TokenType.MATCHES) {
+								checkRegExp(value);
+							}
+							VrfExpression modExpr = new VrfExpression(parsingData.getDeviceDriver());
+							modExpr.sign = comparator.type;
+							modExpr.value = TokenType.unescape(value.text);
+							return modExpr;
 						}
-						VrfExpression modExpr = new VrfExpression(parsingData.getDeviceDriver());
-						modExpr.sign = comparator.type;
-						modExpr.value = TokenType.unescape(value.text);
-						return modExpr;
-					}
-					else {
-						throw new FinderParseException(String.format(
+						else {
+							throw new FinderParseException(String.format(
 								"Expecting a quoted string for VRF at character %d.",
 								value.position));
-					}
-				default:
-					throw new FinderParseException(String.format(
+						}
+					default:
+						throw new FinderParseException(String.format(
 							"Invalid operator after VRF at character %d.",
 							comparator.position));
 				}
 			}
 			return null;
 		}
-	
-		/* (non-Javadoc)
+
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
@@ -2859,58 +2895,58 @@ public class Finder {
 			criteria.joins.add("d.vrfInstances v");
 			return criteria;
 		}
-	
-		/* (non-Javadoc)
+
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
 			String target;
 			switch (sign) {
-			case CONTAINS:
-				target = "%" + value + "%";
-				break;
-			case CONTAINSNOCASE:
-				target = "%" + value.toLowerCase() + "%";
-				break;
-			case STARTSWITH:
-				target = value + "%";
-				break;
-			case ENDSWITH:
-				target = "%" + value;
-				break;
-			default:
-				target = value;
+				case CONTAINS:
+					target = "%" + value + "%";
+					break;
+				case CONTAINSNOCASE:
+					target = "%" + value.toLowerCase() + "%";
+					break;
+				case STARTSWITH:
+					target = value + "%";
+					break;
+				case ENDSWITH:
+					target = "%" + value;
+					break;
+				default:
+					target = value;
 			}
 			query.setParameter(itemPrefix, target);
 		}
-	
-		/* (non-Javadoc)
+
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		@Override
 		public String toString() {
 			return String.format("[%s] %s \"%s\"", TokenType.VRF, sign,
-					TokenType.escape(value));
+				TokenType.escape(value));
 		}
-	
+
 	}
 
 	/**
 	 * The Class VirtualNameExpression.
 	 */
 	public static class VirtualNameExpression extends Expression {
-	
-	
+
+
 		public VirtualNameExpression(DeviceDriver driver) {
 			super(driver);
 		}
-	
+
 		/** The sign. */
 		public TokenType sign;
-	
+
 		/** The value. */
 		private String value;
-	
+
 		/**
 		 * Parses the tokens to create an expression.
 		 *
@@ -2920,41 +2956,41 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens,
-				ParsingData parsingData) throws FinderParseException {
+			ParsingData parsingData) throws FinderParseException {
 			if (tokens.size() == 3 && tokens.get(0).type == TokenType.VIRTUALNAME) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
 				switch (comparator.type) {
-				case IS:
-				case CONTAINS:
-				case CONTAINSNOCASE:
-				case STARTSWITH:
-				case ENDSWITH:
-				case MATCHES:
-					if (value.type == TokenType.QUOTE) {
-						if (comparator.type == TokenType.MATCHES) {
-							checkRegExp(value);
+					case IS:
+					case CONTAINS:
+					case CONTAINSNOCASE:
+					case STARTSWITH:
+					case ENDSWITH:
+					case MATCHES:
+						if (value.type == TokenType.QUOTE) {
+							if (comparator.type == TokenType.MATCHES) {
+								checkRegExp(value);
+							}
+							VirtualNameExpression vnameExpr = new VirtualNameExpression(parsingData.getDeviceDriver());
+							vnameExpr.sign = comparator.type;
+							vnameExpr.value = TokenType.unescape(value.text);
+							return vnameExpr;
 						}
-						VirtualNameExpression vnameExpr = new VirtualNameExpression(parsingData.getDeviceDriver());
-						vnameExpr.sign = comparator.type;
-						vnameExpr.value = TokenType.unescape(value.text);
-						return vnameExpr;
-					}
-					else {
-						throw new FinderParseException(String.format(
+						else {
+							throw new FinderParseException(String.format(
 								"Expecting a quoted string for VirtualName at character %d.",
 								value.position));
-					}
-				default:
-					throw new FinderParseException(String.format(
+						}
+					default:
+						throw new FinderParseException(String.format(
 							"Invalid operator after VirtualName at character %d.",
 							comparator.position));
 				}
 			}
 			return null;
 		}
-	
-		/* (non-Javadoc)
+
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public FinderCriteria buildHqlString(String itemPrefix) {
@@ -2971,41 +3007,41 @@ public class Finder {
 			criteria.joins.add("d.virtualDevices v");
 			return criteria;
 		}
-	
-		/* (non-Javadoc)
+
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		public void setVariables(Query<?> query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
-			case CONTAINS:
-				target = "%" + value + "%";
-				break;
-			case CONTAINSNOCASE:
-				target = "%" + value.toLowerCase() + "%";
-				break;
-			case STARTSWITH:
-				target = value + "%";
-				break;
-			case ENDSWITH:
-				target = "%" + value;
-				break;
-			default:
-				target = value;
+				case CONTAINS:
+					target = "%" + value + "%";
+					break;
+				case CONTAINSNOCASE:
+					target = "%" + value.toLowerCase() + "%";
+					break;
+				case STARTSWITH:
+					target = value + "%";
+					break;
+				case ENDSWITH:
+					target = "%" + value;
+					break;
+				default:
+					target = value;
 			}
 			query.setParameter(itemPrefix, target);
 		}
-	
-		/* (non-Javadoc)
+
+		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#toString()
 		 */
 		@Override
 		public String toString() {
 			return String.format("[%s] %s \"%s\"", TokenType.VIRTUALNAME, sign,
-					TokenType.escape(value));
+				TokenType.escape(value));
 		}
-	
+
 	}
 
 	/**
@@ -3027,7 +3063,7 @@ public class Finder {
 	}
 
 	/** The Constant HQLPREFIX. */
-	private final static String HQLPREFIX = "var";
+	private static final String HQLPREFIX = "var";
 
 	/** The tokens. */
 	private List<Token> tokens;
@@ -3043,7 +3079,7 @@ public class Finder {
 	 * @throws FinderParseException the finder parse exception
 	 */
 	public Finder(String query, DeviceDriver driver)
-			throws FinderParseException {
+		throws FinderParseException {
 		this.tokens = Expression.tokenize(query);
 		if (this.tokens.size() == 0) {
 			this.expression = new NullExpression(driver);
@@ -3091,12 +3127,11 @@ public class Finder {
 	/**
 	 * Sets the variables.
 	 *
-	 * @param Query<?> the new variables
+	 * @param query the variables to set the variables on
 	 */
 	public void setVariables(Query<?> query) {
 		this.expression.setVariables(query, HQLPREFIX);
 	}
 
-	
 
 }

@@ -18,13 +18,13 @@
  */
 package net.netshot.netshot.device;
 
-import jakarta.persistence.Entity;
-
 import java.util.Iterator;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+
+import jakarta.persistence.Entity;
 
 /**
  * A static group of devices.
@@ -70,7 +70,7 @@ public class StaticDeviceGroup extends DeviceGroup {
 		while (membershipIt.hasNext()) {
 			DeviceGroupMembership membership = membershipIt.next();
 			if (membership.getDevice().equals(device)) {
-				membershipIt.remove();;
+				membershipIt.remove();
 			}
 		}
 	}
@@ -82,7 +82,7 @@ public class StaticDeviceGroup extends DeviceGroup {
 		this.cachedMemberships.clear();
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.DeviceGroup#refreshCache(org.hibernate.Session)
 	 */
 	@Override

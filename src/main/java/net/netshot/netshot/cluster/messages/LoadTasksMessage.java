@@ -19,7 +19,6 @@
 package net.netshot.netshot.cluster.messages;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
-
 import net.netshot.netshot.cluster.ClusterMember;
 
 /**
@@ -30,15 +29,16 @@ public class LoadTasksMessage extends ClusterMessage {
 
 	/**
 	 * Constructor.
+	 * @param memberInfo = info about the cluster member
 	 */
 	public LoadTasksMessage(ClusterMember memberInfo) {
 		super(memberInfo.getInstanceId());
 	}
 
 	/**
-	 * Hidden constructor
+	 * Hidden constructor.
 	 */
 	protected LoadTasksMessage() {
 	}
-	
+
 }

@@ -37,17 +37,6 @@ import java.util.function.Function;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.hibernate.Session;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.junit.jupiter.api.parallel.ResourceLock;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -67,12 +56,23 @@ import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.MissingDeviceDriverException;
 import net.netshot.netshot.device.DeviceDriver;
+import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.Network4Address;
-import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.rest.NetshotBadRequestException;
 import net.netshot.netshot.rest.RestService;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.api.parallel.ResourceLock;
 
 public class RestServiceTest {
 
@@ -108,9 +108,9 @@ public class RestServiceTest {
 		config.setProperty("netshot.log.file", "CONSOLE");
 		config.setProperty("netshot.log.level", "INFO");
 		config.setProperty("netshot.db.driver_class", "org.h2.Driver");
-		config.setProperty("netshot.db.url", 
-			"jdbc:h2:mem:restservicetest;TRACE_LEVEL_SYSTEM_OUT=2;" +
-			"CASE_INSENSITIVE_IDENTIFIERS=true;DB_CLOSE_DELAY=-1");
+		config.setProperty("netshot.db.url",
+			"jdbc:h2:mem:restservicetest;TRACE_LEVEL_SYSTEM_OUT=2;"
+				+ "CASE_INSENSITIVE_IDENTIFIERS=true;DB_CLOSE_DELAY=-1");
 		config.setProperty("netshot.http.ssl.enabled", "false");
 		URI uri = UriBuilder.fromUri(apiUrl).replacePath("/").build();
 		config.setProperty("netshot.http.baseurl", uri.toString());
@@ -150,7 +150,7 @@ public class RestServiceTest {
 		}
 	}
 
-	
+
 	@Nested
 	@DisplayName("Authentication Tests")
 	class ApiTokenTest {
@@ -227,7 +227,7 @@ public class RestServiceTest {
 			Assertions.assertEquals(
 				Response.Status.OK.getStatusCode(), response.statusCode(),
 				"Not getting 200 response for /user");
-			
+
 			Assertions.assertEquals(
 				JsonNodeFactory.instance.objectNode()
 					.put("id", token1.getId())
@@ -252,8 +252,8 @@ public class RestServiceTest {
 			"testpassword00",
 		};
 		private int testUserLevel = UiUser.LEVEL_ADMIN;
-		private int passwordAge = 0;
-		private UiUser testUser = null;
+		private int passwordAge;
+		private UiUser testUser;
 
 		private void createTestUser() {
 			try (Session session = Database.getSession()) {
@@ -283,7 +283,7 @@ public class RestServiceTest {
 
 		@Test
 		@DisplayName("Local user authentication and cookie")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void localUserAuth() throws IOException, InterruptedException {
 			this.createTestUser();
 			apiClient.setLogin(testUsername, testPassword);
@@ -302,7 +302,7 @@ public class RestServiceTest {
 
 		@Test
 		@DisplayName("Local user authentication and idle session timeout")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void sessionTimeout() throws IOException, InterruptedException {
 			this.createTestUser();
 			apiClient.setLogin(testUsername, testPassword);
@@ -326,7 +326,7 @@ public class RestServiceTest {
 			Assertions.assertEquals(
 				Response.Status.OK.getStatusCode(), response.statusCode(),
 				"Not getting 200 response for /user");
-			
+
 			Assertions.assertEquals(
 				JsonNodeFactory.instance.objectNode()
 					.put("id", this.testUser.getId())
@@ -343,7 +343,7 @@ public class RestServiceTest {
 			apiClient.setApiToken(null);
 			apiClient.setSessionCookie(
 				new HttpCookie(NetshotApiClient.SESSION_COOKIE_NAME,
-				"9212336284027029412"));
+					"9212336284027029412"));
 			HttpResponse<JsonNode> response = apiClient.get("/devices");
 			Assertions.assertEquals(
 				Response.Status.UNAUTHORIZED.getStatusCode(), response.statusCode(),
@@ -354,7 +354,7 @@ public class RestServiceTest {
 
 		@Test
 		@DisplayName("Expired password authentication attempt")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void expiredPasswordFailAuth() throws IOException, InterruptedException {
 			Properties config = RestServiceTest.getNetshotConfig();
 			config.setProperty("netshot.aaa.passwordpolicy.maxduration", "90");
@@ -373,7 +373,7 @@ public class RestServiceTest {
 
 		@Test
 		@DisplayName("Expired password, change and authentication attempt")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void expiredPasswordChangeAuth() throws IOException, InterruptedException {
 			Properties config = RestServiceTest.getNetshotConfig();
 			config.setProperty("netshot.aaa.passwordpolicy.maxduration", "90");
@@ -399,7 +399,7 @@ public class RestServiceTest {
 
 		@Test
 		@DisplayName("The password cannot be changed if auth fails")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void wrongAuthCantChangePassword() throws IOException, InterruptedException {
 			String newPassword = "testpassword1";
 			this.createTestUser();
@@ -419,7 +419,7 @@ public class RestServiceTest {
 
 		@Test
 		@DisplayName("Password policy")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void passwordChangeWithPolicy() throws IOException, InterruptedException {
 			Properties config = RestServiceTest.getNetshotConfig();
 			config.setProperty("netshot.aaa.passwordpolicy.maxhistory", "5");
@@ -448,7 +448,7 @@ public class RestServiceTest {
 					.put("username", testUsername)
 					// missing password
 					.put("newPassword", "New902C0pml;(EP!$");
-					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
 				Assertions.assertEquals(
 					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
 					"Not getting 400 response");
@@ -462,7 +462,7 @@ public class RestServiceTest {
 					.put("username", testUsername)
 					.put("password", "invalidpass")
 					.put("newPassword", "New902C0pml;(EP!$");
-					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
 				Assertions.assertEquals(
 					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
 					"Not getting 400 response");
@@ -477,7 +477,7 @@ public class RestServiceTest {
 					.put("username", testUsername)
 					.put("password", testPassword)
 					.put("newPassword", newPassword);
-					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
 				Assertions.assertEquals(
 					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
 					"Not getting 400 response");
@@ -492,7 +492,7 @@ public class RestServiceTest {
 					.put("username", testUsername)
 					.put("password", testPassword)
 					.put("newPassword", newPassword);
-					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
 				Assertions.assertEquals(
 					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
 					"Not getting 400 response");
@@ -522,7 +522,7 @@ public class RestServiceTest {
 					.put("username", testUsername)
 					.put("password", testPassword)
 					.put("newPassword", newPassword);
-					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
 				Assertions.assertEquals(
 					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
 					"Not getting 400 response");
@@ -537,7 +537,7 @@ public class RestServiceTest {
 					.put("username", testUsername)
 					.put("password", testPassword)
 					.put("newPassword", newPassword);
-					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
 				Assertions.assertEquals(
 					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
 					"Not getting 400 response");
@@ -552,7 +552,7 @@ public class RestServiceTest {
 					.put("username", testUsername)
 					.put("password", testPassword)
 					.put("newPassword", newPassword);
-					HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
+				HttpResponse<JsonNode> response = apiClient.put("/user/0", data);
 				Assertions.assertEquals(
 					Response.Status.OK.getStatusCode(), response.statusCode(),
 					"Not getting 200 response");
@@ -564,7 +564,7 @@ public class RestServiceTest {
 						"Password should have changed");
 				}
 			}
-			
+
 		}
 	}
 
@@ -573,10 +573,10 @@ public class RestServiceTest {
 	@TestInstance(Lifecycle.PER_CLASS)
 	class OidcAuthenticationTest {
 
-		final private URI redirectUri = URI.create("http://localhost:8080/");
-		final private String clientId = "netshot";
-		final private String clientSecret = "iR56DPj4ZX0TrB1NSCHsPNk6LAbrN3HE";
-		private FakeOidcIdpServer idpServer = null;
+		private final URI redirectUri = URI.create("http://localhost:8080/");
+		private final String clientId = "netshot";
+		private final String clientSecret = "iR56DPj4ZX0TrB1NSCHsPNk6LAbrN3HE";
+		private FakeOidcIdpServer idpServer;
 
 		@BeforeAll
 		void prepareOidc() throws IOException, InterruptedException, GeneralSecurityException {
@@ -635,7 +635,7 @@ public class RestServiceTest {
 				"Not getting 403 response while missing privileges");
 			Assertions.assertInstanceOf(MissingNode.class,
 				response.body(), "Response body not empty");
-			
+
 			// Forced logout and try again with cookie
 			HttpCookie sessionCookie = apiClient.getSessionCookie();
 			apiClient.logout();
@@ -714,7 +714,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("List domains")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void listDomains() throws IOException, InterruptedException {
 				{
 					HttpResponse<JsonNode> response = apiClient.get("/domains");
@@ -762,7 +762,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("List domains with pagination")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void listPaginatedDomains() throws IOException, InterruptedException {
 				try (Session session = Database.getSession()) {
 					session.beginTransaction();
@@ -802,7 +802,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("Create domain")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void createDomain() throws IOException, InterruptedException {
 				Domain domain = new Domain(
 					"Test", "Test Domain for creation",
@@ -830,7 +830,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("Delete domain")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void deleteDomain() throws IOException, InterruptedException {
 				Domain domain1 = new Domain(
 					"Test1", "Test Domain1 for deletion",
@@ -881,7 +881,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("Update domain")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void updateDomain() throws IOException, InterruptedException {
 				Domain domain = new Domain(
 					"Test1", "Test Domain1 for update",
@@ -944,7 +944,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("List users")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void listUsers() throws IOException, InterruptedException {
 				{
 					HttpResponse<JsonNode> response = apiClient.get("/users");
@@ -996,7 +996,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("Create user")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void createUser() throws IOException, InterruptedException {
 				String password = "userpass";
 				UiUser user = new UiUser("newuser", true, password);
@@ -1024,7 +1024,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("Delete user")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void deleteUser() throws IOException, InterruptedException {
 				UiUser user1 = new UiUser("user1", true, "pass1");
 				user1.setLevel(UiUser.LEVEL_EXECUTEREADWRITE);
@@ -1060,7 +1060,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("Update user")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void updateUser() throws IOException, InterruptedException {
 				UiUser user = new UiUser("user1", true, "pass1");
 				user.setLevel(UiUser.LEVEL_EXECUTEREADWRITE);
@@ -1094,7 +1094,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("Update remote user")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void updateRemoteUser() throws IOException, InterruptedException {
 				UiUser user = new UiUser("user1", false, "pass1");
 				user.setLevel(UiUser.LEVEL_OPERATOR);
@@ -1145,7 +1145,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("List tokens")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void listTokens() throws IOException, InterruptedException {
 				// Tokens already created like before all tests
 				HttpResponse<JsonNode> response = apiClient.get("/apitokens");
@@ -1159,7 +1159,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("Create token")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void createToken() throws IOException, InterruptedException {
 				String tokenString = "dZLV0zCn5gmbUJIebRHBxM4QjIAoNruK";
 				ApiToken token = new ApiToken(
@@ -1188,7 +1188,7 @@ public class RestServiceTest {
 
 			@Test
 			@DisplayName("Delete token")
-			@ResourceLock(value = "DB")
+			@ResourceLock("DB")
 			void deleteToken() throws IOException, InterruptedException {
 				ApiToken token1 = new ApiToken(
 					"Temp token", "dZLV0zCn5gmbUJIebRHBxM4QjIAoNruK", UiUser.LEVEL_OPERATOR);
@@ -1215,11 +1215,11 @@ public class RestServiceTest {
 
 	@Nested
 	@DisplayName("Device tests")
-	@ResourceLock(value = "DB")
+	@ResourceLock("DB")
 	class DeviceTest {
 
 		private String testDomainName = "Domain 1";
-		private Domain testDomain = null;
+		private Domain testDomain;
 
 		private static enum DeviceField {
 			AUTO_TRY_CREDENTIALS(Device::isAutoTryCredentials),
@@ -1245,6 +1245,7 @@ public class RestServiceTest {
 			COMMENTS(Device::getComments);
 
 			private Function<Device, ?> getter;
+
 			private DeviceField(Function<Device, ?> getter) {
 				this.getter = getter;
 			}
@@ -1364,7 +1365,7 @@ public class RestServiceTest {
 
 		@Test
 		@DisplayName("List devices")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void listDevices() throws IOException, InterruptedException {
 			{
 				HttpResponse<JsonNode> response = apiClient.get("/devices");
@@ -1408,14 +1409,14 @@ public class RestServiceTest {
 						.put("eos", device1.isEndOfSale())
 						.put("configCompliant", device1.isCompliant())
 						.put("softwareLevel", device1.getSoftwareLevel().toString()),
-						deviceNode1,
+					deviceNode1,
 					"Retrieved device doesn't match expected object");
 			}
 		}
 
 		@Test
 		@DisplayName("Get device")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void getDevice() throws IOException, InterruptedException, MissingDeviceDriverException {
 			this.createTestDomain();
 			Device device1 = new Device(this.getTestDriver().getName(),
@@ -1487,7 +1488,7 @@ public class RestServiceTest {
 
 		@Test
 		@DisplayName("Create device")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void createDevice() throws IOException, InterruptedException {
 			this.createTestDomain();
 			Device device1 = new Device(this.getTestDriver().getName(),
@@ -1524,14 +1525,14 @@ public class RestServiceTest {
 					.createQuery("from Device d", Device.class)
 					.uniqueResult();
 				device1.setId(newDevice.getId());
-				this.assertDevicesEqual(device1, newDevice, 
+				this.assertDevicesEqual(device1, newDevice,
 					DeviceField.CREATED_DATE, DeviceField.CREATOR);
 			}
 		}
 
 		@Test
 		@DisplayName("Create devices with same management address")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void createDevicesWithSameMgmtAddress() throws IOException, InterruptedException {
 			this.createTestDomain();
 			Device device1 = FakeDeviceFactory.getFakeCiscoIosDevice(this.testDomain, null, 0);
@@ -1591,7 +1592,7 @@ public class RestServiceTest {
 
 		@Test
 		@DisplayName("Delete device")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void deleteDevice() throws IOException, InterruptedException {
 			this.createTestDomain();
 			Device device1 = new Device(this.getTestDriver().getName(),
@@ -1639,13 +1640,13 @@ public class RestServiceTest {
 					.put("eos", device2.isEndOfSale())
 					.put("configCompliant", device2.isCompliant())
 					.put("softwareLevel", device2.getSoftwareLevel().toString()),
-					deviceNode,
+				deviceNode,
 				"Retrieved device doesn't match expected object");
 		}
 
 		@Test
 		@DisplayName("Edit device")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void editDevice() throws IOException, InterruptedException {
 			this.createTestDomain();
 			Device device1 = FakeDeviceFactory.getFakeCiscoIosDevice(this.testDomain, null, 1);
@@ -1726,16 +1727,16 @@ public class RestServiceTest {
 		}
 
 	}
-	
+
 
 	@Nested
 	@DisplayName("Report tests")
-	@ResourceLock(value = "DB")
+	@ResourceLock("DB")
 	class ReportTests {
 
 		private String testDomainName = "Domain 1";
-		private Domain testDomain = null;
-		private List<Device> testDevices = null;
+		private Domain testDomain;
+		private List<Device> testDevices;
 
 		private void createTestDomain() throws IOException {
 			try (Session session = Database.getSession()) {
@@ -1787,7 +1788,7 @@ public class RestServiceTest {
 
 		@Test
 		@DisplayName("Export data test")
-		@ResourceLock(value = "DB")
+		@ResourceLock("DB")
 		void exportDataTest() throws IOException, InterruptedException {
 			this.createTestDomain();
 			this.createTestDevices();

@@ -18,6 +18,13 @@
  */
 package net.netshot.netshot.device.attribute;
 
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
@@ -33,83 +40,86 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
+import lombok.Getter;
+import lombok.Setter;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-import java.util.Objects;
-
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-
-import lombok.Getter;
-import lombok.Setter;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonView;
-
-@Entity @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.CHAR)
 @DiscriminatorValue("A")
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-		@Type(value = ConfigNumericAttribute.class, name = "NUMERIC"),
-		@Type(value = ConfigTextAttribute.class, name = "TEXT"),
-		@Type(value = ConfigLongTextAttribute.class, name = "LONGTEXT"),
-		@Type(value = ConfigBinaryAttribute.class, name = "BINARY"),
-		@Type(value = ConfigBinaryFileAttribute.class, name = "BINARYFILE")
+	@Type(value = ConfigNumericAttribute.class, name = "NUMERIC"),
+	@Type(value = ConfigTextAttribute.class, name = "TEXT"),
+	@Type(value = ConfigLongTextAttribute.class, name = "LONGTEXT"),
+	@Type(value = ConfigBinaryAttribute.class, name = "BINARY"),
+	@Type(value = ConfigBinaryFileAttribute.class, name = "BINARYFILE")
 })
 public abstract class ConfigAttribute {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY)
 	}))
 	@Setter
 	protected long id;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	protected String name;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne
 	}))
 	@Setter
 	protected Config config;
-	
+
 	protected ConfigAttribute() {
-		
+
 	}
-	
+
 	public ConfigAttribute(Config config, String name) {
 		this.config = config;
 		this.name = name;
 	}
 
-	
+
 	@Transient
 	public abstract String getAsText();
-	
+
 
 	@Transient
 	public abstract Object getData();
 
 	public abstract boolean valueEquals(ConfigAttribute other);
 
+	/*(non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(name, config);
+		return Objects.hash(this.name, this.config);
 	}
 
+	/*(non-Javadoc)
+	 * @see java.lang.Object#equals()
+	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (!(obj instanceof ConfigAttribute)) return false;
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof ConfigAttribute)) {
+			return false;
+		}
 		ConfigAttribute other = (ConfigAttribute) obj;
-		return Objects.equals(name, other.name) && Objects.equals(config, other.config);
+		return Objects.equals(this.name, other.name)
+			&& Objects.equals(this.config, other.config);
 	}
-	
+
 }

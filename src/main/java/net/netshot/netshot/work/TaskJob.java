@@ -18,12 +18,6 @@
  */
 package net.netshot.netshot.work;
 
-import net.netshot.netshot.database.Database;
-import net.netshot.netshot.TaskManager;
-import net.netshot.netshot.hooks.Hook;
-import net.netshot.netshot.hooks.HookTrigger;
-import net.netshot.netshot.work.Task.Status;
-
 import java.util.List;
 
 import org.hibernate.Session;
@@ -33,6 +27,11 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.TaskManager;
+import net.netshot.netshot.database.Database;
+import net.netshot.netshot.hooks.Hook;
+import net.netshot.netshot.hooks.HookTrigger;
+import net.netshot.netshot.work.Task.Status;
 
 /**
  * A Quartz job which runs a Netshot task.
@@ -50,13 +49,13 @@ public class TaskJob implements Job {
 	public TaskJob() {
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see org.quartz.Job#execute(org.quartz.JobExecutionContext)
 	 */
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		log.debug("Starting job.");
 		Long id = (Long) context.getJobDetail().getJobDataMap()
-				.get(NETSHOT_TASK);
+			.get(NETSHOT_TASK);
 		if (id == 0) {
 			log.error("Invalid task, id is 0");
 			return;
@@ -141,7 +140,7 @@ public class TaskJob implements Job {
 			}
 			throw new JobExecutionException("Unable to save the task.");
 		}
-		finally  {
+		finally {
 			session.close();
 		}
 
@@ -176,7 +175,7 @@ public class TaskJob implements Job {
 				log.error("Error during the rollback.", e1);
 			}
 		}
-		finally  {
+		finally {
 			session.close();
 		}
 

@@ -29,7 +29,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
  */
 public class HideSecretSerializer extends JsonSerializer<String> {
 
-	private static String MASK_TEXT = "=";
+	private static final String MASK_TEXT = "=";
 
 	public static boolean isMasked(String text) {
 		return HideSecretSerializer.MASK_TEXT.equals(text);

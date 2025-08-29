@@ -30,9 +30,9 @@ import org.hibernate.Session;
 
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.Device;
-import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.Device.InvalidCredentialsException;
 import net.netshot.netshot.device.Device.MissingDeviceDriverException;
+import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
 import net.netshot.netshot.device.access.Cli;
 import net.netshot.netshot.device.access.Snmp;
@@ -48,14 +48,15 @@ import net.netshot.netshot.diagnostic.Diagnostic;
 import net.netshot.netshot.work.TaskLogger;
 
 @Slf4j
-public class RunDiagnosticCliScript extends CliScript {
-	
+public final class RunDiagnosticCliScript extends CliScript {
+
 	/** The diagnostics to execute. */
 	private List<Diagnostic> diagnostics;
 
 	/**
-	 * Instantiates a JS-based script.
-	 * @param code The JS code
+	 * Instantiates a diagnostic CLI script.
+	 * @param diagnostics = the list of diagnostics
+	 * @param cliLogging = whether to log CLI commands
 	 */
 	public RunDiagnosticCliScript(List<Diagnostic> diagnostics, boolean cliLogging) {
 		super(cliLogging);
@@ -64,17 +65,18 @@ public class RunDiagnosticCliScript extends CliScript {
 
 	@Override
 	protected void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
-			throws InvalidCredentialsException, IOException, UnsupportedOperationException, MissingDeviceDriverException {
+		throws InvalidCredentialsException, IOException, UnsupportedOperationException, MissingDeviceDriverException {
 		JsCliHelper jsCliHelper = null;
 		JsSnmpHelper jsSnmpHelper = null;
 		switch (protocol) {
-		case SNMP:
-			jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity)account, this.getJsLogger());
-			break;
-		case TELNET:
-		case SSH:
-			jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount)account, this.getJsLogger(), this.getCliLogger());
-			break;
+			case SNMP:
+				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.getJsLogger());
+				break;
+			case TELNET:
+			case SSH:
+			default:
+				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.getJsLogger(), this.getCliLogger());
+				break;
 		}
 		TaskLogger taskLogger = this.getJsLogger();
 		DeviceDriver driver = device.getDeviceDriver();
@@ -96,7 +98,7 @@ public class RunDiagnosticCliScript extends CliScript {
 				catch (Exception e1) {
 					log.error("Error while preparing the diagnostic {} for JS", diagnostic.getName(), e1);
 					taskLogger.error(String.format("Error while preparing the diagnostic %s for JS: '%s'.",
-							diagnostic.getName(), e1.getMessage()));
+						diagnostic.getName(), e1.getMessage()));
 				}
 			}
 			options.setDiagnosticHelper(new JsDiagnosticHelper(device, diagnostics, jsDiagnostics, taskLogger));
@@ -111,7 +113,7 @@ public class RunDiagnosticCliScript extends CliScript {
 		catch (PolyglotException e) {
 			log.error("Error while running script using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("Error while running script using driver %s: '%s'.",
-					driver.getName(), e.getMessage()));
+				driver.getName(), e.getMessage()));
 			if (e.getMessage().contains("Authentication failed")) {
 				throw new InvalidCredentialsException("Authentication failed");
 			}
@@ -122,7 +124,7 @@ public class RunDiagnosticCliScript extends CliScript {
 		catch (UnsupportedOperationException e) {
 			log.error("No such method while using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("No such method while using driver %s to execute script: '%s'.",
-					driver.getName(), e.getMessage()));
+				driver.getName(), e.getMessage()));
 			throw e;
 		}
 	}

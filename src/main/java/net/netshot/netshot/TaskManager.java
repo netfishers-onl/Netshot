@@ -30,15 +30,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 
-import net.netshot.netshot.cluster.ClusterManager;
-import net.netshot.netshot.cluster.ClusterMember;
-import net.netshot.netshot.cluster.ClusterMember.MastershipStatus;
-import net.netshot.netshot.database.Database;
-import net.netshot.netshot.work.MasterJob;
-import net.netshot.netshot.work.Task;
-import net.netshot.netshot.work.TaskJob;
-import net.netshot.netshot.work.Task.Status;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.quartz.Job;
@@ -51,23 +42,48 @@ import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.MarkerFactory;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.cluster.ClusterManager;
+import net.netshot.netshot.cluster.ClusterMember;
+import net.netshot.netshot.cluster.ClusterMember.MastershipStatus;
+import net.netshot.netshot.database.Database;
+import net.netshot.netshot.work.MasterJob;
+import net.netshot.netshot.work.Task;
+import net.netshot.netshot.work.Task.Status;
+import net.netshot.netshot.work.TaskJob;
 
 /**
  * The TaskManager schedules and runs the tasks.
  */
 @Slf4j
-public class TaskManager {
+public final class TaskManager {
 
-	/** Possible modes for the task manager */
-	public static enum Mode {
+	/**
+	 * Settings/config for the current class.
+	 */
+	public static final class Settings {
+		/** Max thread count for task execution. */
+		@Getter
+		private int threadCount;
+
+		/**
+		 * Load settings from config.
+		 */
+		private void load() {
+			this.threadCount = Netshot.getConfig("netshot.tasks.threadcount", 10, 1, 65535);
+		}
+	}
+
+	/** Possible modes for the task manager. */
+	public enum Mode {
 		SINGLE,
 		CLUSTER_MASTER,
 		CLUSTER_MEMBER,
 	}
 
-	/** Store the available runners with weighted-random selector */
-	public static class RunnerSet {
+	/** Store the available runners with weighted-random selector. */
+	public static final class RunnerSet {
 		private final NavigableMap<Double, String> map = new TreeMap<Double, String>();
 		private final Random random;
 		private double total = 0;
@@ -78,16 +94,19 @@ public class TaskManager {
 
 		public void add(double weight, String runnerId) {
 			if (weight > 0) {
-				total += weight;
-				map.put(total, runnerId);
+				this.total += weight;
+				this.map.put(this.total, runnerId);
 			}
 		}
 
 		public String getNextRunnerId() {
-			double value = random.nextDouble() * total;
-			return map.higherEntry(value).getValue();
+			double value = this.random.nextDouble() * this.total;
+			return this.map.higherEntry(value).getValue();
 		}
 	}
+
+	/** Settings for this class. */
+	public static final Settings SETTINGS = new Settings();
 
 	/** The master scheduler (used in master mode to dispatch jobs). */
 	private static Scheduler masterScheduler;
@@ -95,24 +114,21 @@ public class TaskManager {
 	/** The runner scheduler (used to run jobs). */
 	private static Scheduler runnerScheduler;
 
-	/** TaskManager mode */
+	/** TaskManager mode. */
 	private static Mode mode = Mode.SINGLE;
 
-	/** Available runners */
+	/** Available runners. */
 	private static RunnerSet runnerSet;
-
-	/** Max thread count for task execution */
-	public static int THREAD_COUNT;
 
 	/**
 	 * Initializes the task manager.
 	 */
 	public static void init() {
-		TaskManager.THREAD_COUNT = Netshot.getConfig("netshot.tasks.threadcount", 10, 1, 65535);
+		TaskManager.SETTINGS.load();
 		try {
 			Properties params = new Properties();
 			params.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
-			params.put("org.quartz.threadPool.threadCount", Integer.toString(TaskManager.THREAD_COUNT));
+			params.put("org.quartz.threadPool.threadCount", Integer.toString(TaskManager.SETTINGS.threadCount));
 			params.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "NetshotMasterScheduler");
 			params.put("org.quartz.scheduler.skipUpdateCheck", "true");
 			StdSchedulerFactory factory = new StdSchedulerFactory(params);
@@ -126,7 +142,7 @@ public class TaskManager {
 		try {
 			Properties params = new Properties();
 			params.put(StdSchedulerFactory.PROP_THREAD_POOL_CLASS, "org.quartz.simpl.SimpleThreadPool");
-			params.put("org.quartz.threadPool.threadCount", Integer.toString(TaskManager.THREAD_COUNT));
+			params.put("org.quartz.threadPool.threadCount", Integer.toString(TaskManager.SETTINGS.threadCount));
 			params.put(StdSchedulerFactory.PROP_SCHED_INSTANCE_NAME, "NetshotRunnerScheduler");
 			params.put("org.quartz.scheduler.skipUpdateCheck", "true");
 			StdSchedulerFactory factory = new StdSchedulerFactory(params);
@@ -153,6 +169,14 @@ public class TaskManager {
 	 */
 	public static Mode getMode() {
 		return TaskManager.mode;
+	}
+
+	/**
+	 * Gets the number of task threads.
+	 * @return the thread count
+	 */
+	public static int getThreadCount() {
+		return TaskManager.SETTINGS.threadCount;
 	}
 
 	/**
@@ -208,9 +232,9 @@ public class TaskManager {
 		Integer maxPriority = null;
 		Set<ClusterMember> activeMembers = new HashSet<>();
 		for (ClusterMember member : members) {
-			if (MastershipStatus.MASTER.equals(member.getStatus()) ||
-					MastershipStatus.MEMBER.equals(member.getStatus()) ||
-					MastershipStatus.NEGOTIATING.equals(member.getStatus())) {
+			if (MastershipStatus.MASTER.equals(member.getStatus())
+				|| MastershipStatus.MEMBER.equals(member.getStatus())
+				|| MastershipStatus.NEGOTIATING.equals(member.getStatus())) {
 				activeMembers.add(member);
 			}
 		}
@@ -219,14 +243,14 @@ public class TaskManager {
 				maxPriority = member.getRunnerPriority();
 			}
 		}
-		RunnerSet runnerSet = new RunnerSet();
+		RunnerSet newRunnerSet = new RunnerSet();
 		for (ClusterMember member : activeMembers) {
 			if (member.getRunnerPriority() == maxPriority) {
-				runnerSet.add(member.getRunnerWeight(), member.getInstanceId());
+				newRunnerSet.add(member.getRunnerWeight(), member.getInstanceId());
 			}
 		}
 		synchronized (TaskManager.masterScheduler) {
-			TaskManager.runnerSet = runnerSet;
+			TaskManager.runnerSet = newRunnerSet;
 		}
 		TaskManager.reassignOrphanTasks();
 	}
@@ -272,7 +296,7 @@ public class TaskManager {
 	 * @throws SchedulerException
 	 */
 	private static void addTaskToScheduler(Task task, boolean runnerTask,
-			boolean checkExistence, boolean forceNow) throws SchedulerException {
+		boolean checkExistence, boolean forceNow) throws SchedulerException {
 		Scheduler scheduler = runnerTask ? runnerScheduler : masterScheduler;
 		if (checkExistence) {
 			if (scheduler.checkExists(task.getIdentity())) {
@@ -409,16 +433,16 @@ public class TaskManager {
 		log.debug("Adding task {} to the system.", task.getId());
 
 		switch (TaskManager.mode) {
-		case SINGLE:
-			addTaskSingleMode(task);
-			break;
-		case CLUSTER_MASTER:
-			addTaskMasterMode(task);
-			break;
-		case CLUSTER_MEMBER:
-			addTaskMemberMode(task);
-			break;
-		default:
+			case SINGLE:
+				addTaskSingleMode(task);
+				break;
+			case CLUSTER_MASTER:
+				addTaskMasterMode(task);
+				break;
+			case CLUSTER_MEMBER:
+				addTaskMemberMode(task);
+				break;
+			default:
 		}
 	}
 
@@ -489,8 +513,8 @@ public class TaskManager {
 		try {
 			session.beginTransaction();
 			List<String> runnerIds = session.createQuery(
-					"select distinct t.runnerId from Task t where (t.status = :waiting or t.status = :running) and t.runnerId is not null",
-					String.class)
+				"select distinct t.runnerId from Task t where (t.status = :waiting or t.status = :running) and t.runnerId is not null",
+				String.class)
 				.setParameter("waiting", Task.Status.WAITING)
 				.setParameter("running", Task.Status.RUNNING)
 				.list();
@@ -506,9 +530,9 @@ public class TaskManager {
 			}
 			if (runnerIds.size() > 0) {
 				List<Task> tasks = session.createQuery(
-						"select t from Task t where (t.status = :waiting or t.status = :running) and "
+					"select t from Task t where (t.status = :waiting or t.status = :running) and "
 						+ "(t.runnerId in :runnerIds or t.runnerId is null)",
-						Task.class)
+					Task.class)
 					.setParameter("waiting", Task.Status.WAITING)
 					.setParameter("running", Task.Status.RUNNING)
 					.setParameterList("runnerIds", runnerIds)
@@ -544,32 +568,32 @@ public class TaskManager {
 		List<Task> tasks;
 		try {
 			switch (TaskManager.mode) {
-			case CLUSTER_MASTER:
-				tasks = session.createQuery(
+				case CLUSTER_MASTER:
+					tasks = session.createQuery(
 						"select t from Task t where t.status = :new or t.status = :scheduled or ((t.status = :waiting or t.status = :running) and t.runnerId = :myId)",
 						Task.class)
-					.setParameter("new", Task.Status.NEW)
-					.setParameter("scheduled", Task.Status.SCHEDULED)
-					.setParameter("waiting", Task.Status.WAITING)
-					.setParameter("running", Task.Status.RUNNING)
-					.setParameter("myId", ClusterManager.getLocalInstanceId())
-					.list();
-				break;
-			case CLUSTER_MEMBER:
-				tasks = session.createQuery(
+						.setParameter("new", Task.Status.NEW)
+						.setParameter("scheduled", Task.Status.SCHEDULED)
+						.setParameter("waiting", Task.Status.WAITING)
+						.setParameter("running", Task.Status.RUNNING)
+						.setParameter("myId", ClusterManager.getLocalInstanceId())
+						.list();
+					break;
+				case CLUSTER_MEMBER:
+					tasks = session.createQuery(
 						"select t from Task t where (t.status = :waiting or t.status = :running) and t.runnerId = :myId", Task.class)
-					.setParameter("waiting", Task.Status.WAITING)
-					.setParameter("running", Task.Status.RUNNING)
-					.setParameter("myId", ClusterManager.getLocalInstanceId())
-					.list();
-				break;
-			default:
-				tasks = session.createQuery(
+						.setParameter("waiting", Task.Status.WAITING)
+						.setParameter("running", Task.Status.RUNNING)
+						.setParameter("myId", ClusterManager.getLocalInstanceId())
+						.list();
+					break;
+				default:
+					tasks = session.createQuery(
 						"select t from Task t where t.status = :scheduled or t.status = :waiting or t.status = :running", Task.class)
-					.setParameter("scheduled", Task.Status.SCHEDULED)
-					.setParameter("waiting", Task.Status.WAITING)
-					.setParameter("running", Task.Status.RUNNING)
-					.list();
+						.setParameter("scheduled", Task.Status.SCHEDULED)
+						.setParameter("waiting", Task.Status.WAITING)
+						.setParameter("running", Task.Status.RUNNING)
+						.list();
 			}
 		}
 		catch (HibernateException e) {
@@ -610,6 +634,9 @@ public class TaskManager {
 				log.error("Unable to schedule the task {}.", task.getId(), e);
 			}
 		}
+	}
+
+	private TaskManager() {
 	}
 
 }

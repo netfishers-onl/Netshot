@@ -21,15 +21,22 @@ package net.netshot.netshot.work.tasks;
 import java.util.Collection;
 import java.util.Map;
 
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.type.SqlTypes;
+import org.quartz.JobKey;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -40,14 +47,6 @@ import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
 
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.type.SqlTypes;
-import org.quartz.JobKey;
-
 /**
  * This task schedules new tasks to take a new snapshot of each device of the
  * given group.
@@ -55,17 +54,17 @@ import org.quartz.JobKey;
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
-public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
+public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 
 	/** The device group. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private DeviceGroup deviceGroup;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Column(length = 10000000)
 	}))
 	@Setter
@@ -75,12 +74,12 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 	@Setter
 	private String deviceDriver;
 
-	/** Variable values for the script */
-	@Getter(onMethod=@__({
+	/** Variable values for the script. */
+	@Getter(onMethod = @__({
 		@JdbcTypeCode(SqlTypes.JSON)
 	}))
 	@Setter
-	private Map<String, String> userInputValues = null;
+	private Map<String, String> userInputValues;
 
 
 	public RunDeviceGroupScriptTask() {
@@ -88,18 +87,19 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 	}
 
 	public RunDeviceGroupScriptTask(DeviceGroup group, String script, DeviceDriver driver,
-			String comments, String author) {
+		String comments, String author) {
 		super(comments, group.getName(), author);
 		this.deviceGroup = group;
 		this.script = script;
 		this.deviceDriver = driver.getName();
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Group script execution";
@@ -107,8 +107,10 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 
 	/**
 	 * Get the ID of the associate group.
+	 * @return the ID of the group
 	 */
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public long getDeviceGroupId() {
 		if (this.deviceGroup == null) {
@@ -117,7 +119,7 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 		return this.deviceGroup.getId();
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#prepare()
 	 */
 	@Override
@@ -128,13 +130,13 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#run()
 	 */
 	@Override
 	public void run() {
 		log.debug("Task {}. Starting run script task for group {}.",
-				this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
+			this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
 		if (this.deviceGroup == null) {
 			this.info("The device group doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
@@ -169,7 +171,7 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 		this.status = Status.SUCCESS;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#clone()
 	 */
 	@Override
@@ -186,7 +188,7 @@ public class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
 	@Override
 	@Transient
 	public JobKey getIdentity() {
-		return new JobKey(String.format("Task_%d", this.getId()), 
-				String.format("RunDeviceGroupScript_%d", this.getDeviceGroupId()));
+		return new JobKey(String.format("Task_%d", this.getId()),
+			String.format("RunDeviceGroupScript_%d", this.getDeviceGroupId()));
 	}
 }

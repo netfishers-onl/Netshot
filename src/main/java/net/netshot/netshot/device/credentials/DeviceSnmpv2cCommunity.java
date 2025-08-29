@@ -27,15 +27,15 @@ import jakarta.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @XmlRootElement
-public class DeviceSnmpv2cCommunity extends DeviceSnmpCommunity {
+public final class DeviceSnmpv2cCommunity extends DeviceSnmpCommunity {
 
 	/**
 	 * Instantiates a new device snmpv2c community.
 	 */
 	protected DeviceSnmpv2cCommunity() {
-		
+
 	}
-	
+
 	/**
 	 * Instantiates a new device snmpv2c community.
 	 *
@@ -46,18 +46,18 @@ public class DeviceSnmpv2cCommunity extends DeviceSnmpCommunity {
 		super(community, name);
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.credentials.DeviceSnmpCommunity#hashCode()
 	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + (name == null ? 0 : name.hashCode());
 		return result;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.credentials.DeviceSnmpCommunity#equals(java.lang.Object)
 	 */
 	@Override
@@ -76,7 +76,8 @@ public class DeviceSnmpv2cCommunity extends DeviceSnmpCommunity {
 			if (other.name != null) {
 				return false;
 			}
-		} else if (!name.equals(other.name)) {
+		}
+		else if (!name.equals(other.name)) {
 			return false;
 		}
 		return true;

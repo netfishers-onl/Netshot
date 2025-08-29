@@ -20,31 +20,30 @@ package net.netshot.netshot.work.tasks;
 
 import java.util.List;
 
+import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.quartz.JobKey;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.database.Database;
 import net.netshot.netshot.compliance.HardwareRule;
 import net.netshot.netshot.compliance.Policy;
 import net.netshot.netshot.compliance.SoftwareRule;
 import net.netshot.netshot.compliance.SoftwareRule.ConformanceLevel;
+import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
 import net.netshot.netshot.work.TaskLogger;
-
-import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.quartz.JobKey;
 
 /**
  * This task checks the configuration compliance of a device.
@@ -52,10 +51,10 @@ import org.quartz.JobKey;
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
-public class CheckComplianceTask extends Task implements DeviceBasedTask {
+public final class CheckComplianceTask extends Task implements DeviceBasedTask {
 
 	/** The device. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
@@ -73,19 +72,20 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 	 *
 	 * @param device the device
 	 * @param comments the comments
+	 * @param author the author
 	 */
 	public CheckComplianceTask(Device device, String comments, String author) {
-		super(comments, (device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName()), author);
+		super(comments, device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName(), author);
 		this.device = device;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#run()
 	 */
 	@Override
 	public void run() {
 		log.debug("Task {}. Starting check compliance task for device {}.", this.getId(),
-				device == null ? "null" : device.getId());
+			device == null ? "null" : device.getId());
 		if (device == null) {
 			this.info("The device doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
@@ -103,15 +103,15 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 			// Start over from a fresh device from DB
 			device = session.get(Device.class, device.getId());
 			this.info(String.format("Check compliance task for device %s (%s).",
-					device.getName(), device.getMgmtAddress().getIp()));
+				device.getName(), device.getMgmtAddress().getIp()));
 			if (this.device.getLastConfig() == null) {
 				log.info("Task {}. Unable to fetch the device with its last config... has it been captured at least once?",
-						this.getId());
+					this.getId());
 				throw new Exception("No last config for this device. Has it been captured at least once?");
 			}
 			List<Policy> policies = session
-				.createQuery("select distinct p from Policy p join p.targetGroups g " +
-					"join g.cachedMemberships dm with dm.key.device.id = :id", Policy.class)
+				.createQuery("select distinct p from Policy p join p.targetGroups g "
+					+ "join g.cachedMemberships dm with dm.key.device.id = :id", Policy.class)
 				.setParameter("id", this.device.getId())
 				.list();
 
@@ -124,9 +124,9 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 			session.persist(this.device);
 			session.flush();
 			List<SoftwareRule> softwareRules = session
-				.createQuery("select sr from SoftwareRule sr where (sr.targetGroup is null) or " +
-					"sr.targetGroup in (select g from DeviceGroup g join g.cachedMemberships dm " +
-					"with dm.key.device.id = :id) order by sr.priority asc", SoftwareRule.class)
+				.createQuery("select sr from SoftwareRule sr where (sr.targetGroup is null) or "
+					+ "sr.targetGroup in (select g from DeviceGroup g join g.cachedMemberships dm "
+					+ "with dm.key.device.id = :id) order by sr.priority asc", SoftwareRule.class)
 				.setParameter("id", this.device.getId())
 				.list();
 			device.setSoftwareLevel(ConformanceLevel.UNKNOWN);
@@ -167,22 +167,24 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Device compliance check";
 	}
 
 	/**
-	 * Get the ID of the device
+	 * Get the ID of the device.
 	 * 
 	 * @return the ID of the device
 	 */
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public long getDeviceId() {
 		if (this.device == null) {
@@ -191,7 +193,7 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 		return this.device.getId();
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#clone()
 	 */
 	@Override
@@ -209,7 +211,7 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 	@Transient
 	public JobKey getIdentity() {
 		return new JobKey(String.format("Task_%d", this.getId()),
-				String.format("CheckCompliance_%d", this.getDeviceId()));
+			String.format("CheckCompliance_%d", this.getDeviceId()));
 	}
 
 	/*
@@ -219,11 +221,10 @@ public class CheckComplianceTask extends Task implements DeviceBasedTask {
 	@Override
 	@Transient
 	public long getRunnerHash() {
-		Device device = this.getDevice();
-		if (device == null) {
+		if (this.getDevice() == null) {
 			return 0;
 		}
-		return device.getId();
+		return this.getDevice().getId();
 	}
 
 }

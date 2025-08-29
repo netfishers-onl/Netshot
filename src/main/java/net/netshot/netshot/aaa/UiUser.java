@@ -18,6 +18,17 @@
  */
 package net.netshot.netshot.aaa;
 
+import java.io.InvalidClassException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import org.hibernate.annotations.NaturalId;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,9 +40,6 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -42,38 +50,46 @@ import net.netshot.netshot.crypto.Argon2idHash;
 import net.netshot.netshot.crypto.Hash;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-import java.io.InvalidClassException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
-import org.hibernate.annotations.NaturalId;
-
 /**
  * The User class represents a Netshot user.
  */
 @Entity(name = "\"user\"")
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @Table(indexes = {
-		@Index(name = "usernameIndex", columnList = "username") 
+	@Index(name = "usernameIndex", columnList = "username")
 })
 @EqualsAndHashCode
 @Slf4j
 public class UiUser implements User {
 
 	/**
-	 * Exception to be thrown in case of password check failure
+	 * Settings/config for the current class.
 	 */
-	static public class WrongPasswordException extends Exception {
+	public static final class Settings {
+		/** The max idle time of user (in seconds). */
+		@Getter
+		private int maxIdleTime;
+
+		/**
+		 * Load settings from config.
+		 */
+		private void load() {
+			this.maxIdleTime = Netshot.getConfig("netshot.aaa.maxidletime", 1800, 5, Integer.MAX_VALUE);
+		}
+	}
+
+	/**
+	 * Exception to be thrown in case of password check failure.
+	 */
+	public static class WrongPasswordException extends Exception {
 		public WrongPasswordException(String message) {
 			super(message);
 		}
 	}
 
-	/** The max idle time. */
-	public static int MAX_IDLE_TIME;
+	/** Settings for this class. */
+	public static final Settings SETTINGS = new Settings();
 
 	/**
 	 * Hash the password for future storage.
@@ -81,7 +97,7 @@ public class UiUser implements User {
 	 * @param password the plaintext password
 	 * @return the hashed password
 	 */
-	static private String hash(String password) {
+	private static String hash(String password) {
 		Hash hash = new Argon2idHash(password);
 		return hash.toHashString();
 	}
@@ -90,11 +106,11 @@ public class UiUser implements User {
 	 * Load the main policy from configuration.
 	 */
 	public static void loadConfig() {
-		UiUser.MAX_IDLE_TIME = Netshot.getConfig("netshot.aaa.maxidletime", 1800, 5, Integer.MAX_VALUE);
+		UiUser.SETTINGS.load();
 	}
 
 	/** The id. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id,
 		@GeneratedValue(strategy = GenerationType.IDENTITY),
 		@XmlElement, @JsonView(DefaultView.class)
@@ -103,7 +119,7 @@ public class UiUser implements User {
 	private long id;
 
 	/** The local. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -119,13 +135,13 @@ public class UiUser implements User {
 	@Setter
 	private List<String> oldHashedPasswords = new ArrayList<>();
 
-	/** Date of last password change */
+	/** Date of last password change. */
 	@Getter
 	@Setter
 	private Date lastPasswordChangeDate;
 
 	/** The username. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@NaturalId(mutable = true)
 	}))
@@ -133,7 +149,7 @@ public class UiUser implements User {
 	private String username;
 
 	/** The level. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 	}))
 	@Setter
@@ -224,7 +240,7 @@ public class UiUser implements User {
 	 * @throws PasswordPolicyException 
 	 */
 	public void checkPassword(String password, PasswordPolicy policy)
-			throws WrongPasswordException, PasswordPolicyException {
+		throws WrongPasswordException, PasswordPolicyException {
 		try {
 			Hash hash = Hash.fromHashString(this.hashedPassword);
 			if (!hash.check(password)) {
@@ -252,7 +268,7 @@ public class UiUser implements User {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.security.Principal#getName()
 	 */
 	@Override

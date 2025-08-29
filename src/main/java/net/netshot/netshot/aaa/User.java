@@ -28,43 +28,47 @@ import lombok.Getter;
 public interface User extends Principal {
 
 	/** Read-only authorization level. */
-	public final static int LEVEL_READONLY = 10;
-	public final static String ROLE_READONLY = "read-only";
+	int LEVEL_READONLY = 10;
+	String ROLE_READONLY = "read-only";
 
 	/** Operator authorization level. */
-	public final static int LEVEL_OPERATOR = 50;
-	public final static String ROLE_OPERATOR = "operator";
+	int LEVEL_OPERATOR = 50;
+	String ROLE_OPERATOR = "operator";
 
 	/** Read-write authorization level. */
-	public final static int LEVEL_READWRITE = 100;
-	public final static String ROLE_READWRITE = "read-write";
+	int LEVEL_READWRITE = 100;
+	String ROLE_READWRITE = "read-write";
 
 	/** Read-write and command executer (on devices) level. */
-	public final static int LEVEL_EXECUTEREADWRITE = 500;
-	public final static String ROLE_EXECUTEREADWRITE = "execute-read-write";
+	int LEVEL_EXECUTEREADWRITE = 500;
+	String ROLE_EXECUTEREADWRITE = "execute-read-write";
 
 	/** Admin authorization level. */
-	public final static int LEVEL_ADMIN = 1000;
-	public final static String ROLE_ADMIN = "admin";
+	int LEVEL_ADMIN = 1000;
+	String ROLE_ADMIN = "admin";
 
-	/** Role with name and level */
-	public static enum Role {
+	/** Role with name and level. */
+	enum Role {
 		READONLY(ROLE_READONLY, LEVEL_READONLY),
 		OPERATOR(ROLE_OPERATOR, LEVEL_OPERATOR),
 		READWRITE(ROLE_READWRITE, LEVEL_READWRITE),
 		EXECUTEREADWRITE(ROLE_EXECUTEREADWRITE, LEVEL_EXECUTEREADWRITE),
 		ADMIN(ROLE_ADMIN, LEVEL_ADMIN);
 
-		/** Name of the role */
+		/** Name of the role. */
 		@Getter
-		final private String name;
+		private String name;
 
-		/** Numerical authorization level of the role  */
+		/** Numerical authorization level of the role.  */
 		@Getter
-		final private int level;
+		private int level;
 
-		/** Private constructor */
-		private Role(String name, int level) {
+		/**
+		 * Private constructor.
+		 * @param name = the role name
+		 * @param level = the role level
+		 */
+		Role(String name, int level) {
 			this.name = name;
 			this.level = level;
 		}
@@ -75,13 +79,13 @@ public interface User extends Principal {
 	 *
 	 * @return the username
 	 */
-	public String getUsername();
+	String getUsername();
 
 	/**
 	 * Gets the level.
 	 *
 	 * @return the level
 	 */
-	public int getLevel();
-	
+	int getLevel();
+
 }

@@ -36,19 +36,20 @@ import net.netshot.netshot.work.TaskLogger;
 @Slf4j
 public class JsSnmpHelper {
 
-	/** The poller */
+	/** The poller. */
 	private Snmp poller;
-	/** The community (SNMP credentials rather) */
+	/** The community (SNMP credentials rather). */
 	protected DeviceSnmpCommunity community;
-	/** The JS logger */
+	/** The JS logger. */
 	private TaskLogger taskLogger;
 
-	/** An error was raised */
-	private boolean errored = false;
+	/** An error was raised. */
+	private boolean errored;
+
 	/**
 	 * Instantiate a new JsCliHelper JsSnmpHelper.
-	 * @param cli The device CLI
-	 * @param account The account to connect to the device
+	 * @param poller The SNMP poller
+	 * @param community The community to poll the device
 	 * @param taskLogger The task logger
 	 */
 	public JsSnmpHelper(Snmp poller, DeviceSnmpCommunity community, TaskLogger taskLogger) {
@@ -101,7 +102,7 @@ public class JsSnmpHelper {
 			throw e;
 		}
 	}
-	
+
 	/**
 	 * Pause the thread for the given number of milliseconds.
 	 * @param millis The number of milliseconds to wait for

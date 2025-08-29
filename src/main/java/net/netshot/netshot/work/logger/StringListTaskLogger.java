@@ -29,7 +29,7 @@ import net.netshot.netshot.work.TaskLogger;
  */
 public class StringListTaskLogger implements TaskLogger {
 
-	private List<String> logs;
+	private final List<String> logs;
 
 	public StringListTaskLogger(List<String> logs) {
 		this.logs = logs;
@@ -44,29 +44,29 @@ public class StringListTaskLogger implements TaskLogger {
 	public void warn(String message) {
 		this.logs.add("[WARN] " + sanitize(message));
 	}
-	
+
 	@Export
 	@Override
 	public void trace(String message) {
 		this.logs.add("[TRACE] " + sanitize(message));
 	}
-	
+
 	@Export
 	@Override
 	public void info(String message) {
 		this.logs.add("[INFO] " + sanitize(message));
 	}
-	
+
 	@Export
 	@Override
 	public void error(String message) {
 		this.logs.add("[ERROR] " + sanitize(message));
 	}
-	
+
 	@Export
 	@Override
 	public void debug(String message) {
 		this.logs.add("[DEBUG] " + sanitize(message));
 	}
-	
+
 }

@@ -1,3 +1,21 @@
+/**
+ * Copyright 2013-2025 Netshot
+ * 
+ * This file is part of Netshot project.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package net.netshot.netshot.crypto;
 
 import java.io.InvalidClassException;
@@ -9,19 +27,30 @@ import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
-import org.bouncycastle.crypto.params.Argon2Parameters;
-
 import lombok.Getter;
 import lombok.Setter;
+import org.bouncycastle.crypto.generators.Argon2BytesGenerator;
+import org.bouncycastle.crypto.params.Argon2Parameters;
 
 /**
  * Argon2id-based hash.
  */
-public class Argon2idHash extends Hash {
+public final class Argon2idHash extends Hash {
 
-	private static Charset HASH_CHARSET = StandardCharsets.US_ASCII;
-	private static Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
+	private static final Charset HASH_CHARSET = StandardCharsets.US_ASCII;
+	private static final Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
+
+	private static final int DEFAULT_SALT_SIZE = 8;
+	private static final int DEFAULT_HASH_SIZE = 16;
+	private static final int DEFAULT_ITERATIONS = 4;
+	private static final int DEFAULT_PARALLELISM = 2;
+	private static final int DEFAULT_MEMORY = 9 * 1024;
+
+	private static final int MIN_ITERATIONS = 1;
+	private static final int MAX_ITERATIONS = 100000;
+	private static final int MIN_PARALLELISM = 1;
+	private static final int MAX_PARALLELISM = 2 ^ 24 - 1;
+	private static final int MIN_MEMORY_PARALLELISM_FACTOR = 8;
 
 	private static final Pattern HASHSTRING_PATTERN = Pattern.compile(
 		"^\\$argon2id\\$v=(?<version>[0-9]+)\\$(?<params>[a-z=0-9,]+)(\\$(?<salt>[-A-Za-z0-9+/]+))?\\$(?<hash>[-A-Za-z0-9+/]+)$");
@@ -79,39 +108,39 @@ public class Argon2idHash extends Hash {
 				a2Hash.parallelism = Integer.parseInt(argon2ParamMatcher.group("parallelism"));
 			}
 		}
-		if (a2Hash.iterations < 1 || a2Hash.iterations > 100000) {
+		if (a2Hash.iterations < MIN_ITERATIONS || a2Hash.iterations > MAX_ITERATIONS) {
 			throw new IllegalArgumentException("Invalid or missing Argon2id iterations param");
 		}
-		if (a2Hash.parallelism < 1 || a2Hash.parallelism > (2 ^ 24 - 1)) {
+		if (a2Hash.parallelism < MIN_PARALLELISM || a2Hash.parallelism > MAX_PARALLELISM) {
 			throw new IllegalArgumentException("Invalid or missing parallelism param");
 		}
-		if (a2Hash.memory < 8 * a2Hash.parallelism || a2Hash.memory > Integer.MAX_VALUE) {
+		if (a2Hash.memory < MIN_MEMORY_PARALLELISM_FACTOR * a2Hash.parallelism || a2Hash.memory > Integer.MAX_VALUE) {
 			throw new IllegalArgumentException("Invalid or missing memory param");
 		}
 		return a2Hash;
 	}
 
-	private int saltSize = 8;
+	private int saltSize = DEFAULT_SALT_SIZE;
 
 	@Getter
-	private byte[] salt = null;
+	private byte[] salt;
 
-	private int hashSize = 16;
-
-	@Getter
-	private byte[] hash = null;
+	private int hashSize = DEFAULT_HASH_SIZE;
 
 	@Getter
-	@Setter
-	private int memory = 9 * 1024;
+	private byte[] hash;
 
 	@Getter
 	@Setter
-	private int iterations = 4;
+	private int memory = DEFAULT_MEMORY;
 
 	@Getter
 	@Setter
-	private int parallelism = 2;
+	private int iterations = DEFAULT_ITERATIONS;
+
+	@Getter
+	@Setter
+	private int parallelism = DEFAULT_PARALLELISM;
 
 	public Argon2idHash() {
 
@@ -148,7 +177,7 @@ public class Argon2idHash extends Hash {
 			.withParallelism(this.parallelism)
 			.withSalt(this.salt)
 			.build();
-		
+
 		Argon2BytesGenerator generator = new Argon2BytesGenerator();
 		generator.init(parameters);
 		StringBuffer sb = new StringBuffer();
@@ -196,7 +225,7 @@ public class Argon2idHash extends Hash {
 
 	public void setSalt(byte[] salt) {
 		this.salt = salt;
-		this.saltSize = (salt == null) ? 0 : salt.length;
+		this.saltSize = salt == null ? 0 : salt.length;
 	}
-	
+
 }

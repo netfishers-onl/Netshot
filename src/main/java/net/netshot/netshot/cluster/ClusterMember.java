@@ -18,26 +18,25 @@
  */
 package net.netshot.netshot.cluster;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.rest.RestViews.RestApiView;
 
-@XmlAccessorType(value = XmlAccessType.NONE)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement()
 public class ClusterMember implements Comparable<ClusterMember>, Cloneable {
 
 	/**
-	 * Mastership status of a cluster member
+	 * Mastership status of a cluster member.
 	 */
-	public static enum MastershipStatus {
+	public enum MastershipStatus {
 		MEMBER,
 		MASTER,
 		EXPIRED,
@@ -45,100 +44,110 @@ public class ClusterMember implements Comparable<ClusterMember>, Cloneable {
 	}
 
 	/** Is it the local server? */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(RestApiView.class)
 	}))
 	@Setter
-	private boolean local = false;
+	private boolean local;
 
-	/** Cluster member unique ID */
-	@Getter(onMethod=@__({
+	/** Cluster member unique ID. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String instanceId;
 
-	/** Member hostname */
-	@Getter(onMethod=@__({
+	/** Member hostname. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String hostname;
 
-	/** Clustering version (to check compatibility) */
-	@Getter(onMethod=@__({
+	/** Clustering version (to check compatibility). */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private int clusteringVersion;
 
-	/** Mastership priority of the instance (higher = better) */
-	@Getter(onMethod=@__({
+	/** Mastership priority of the instance (higher = better). */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private int masterPriority;
 
-	/** Job runner priority (higher = better) */
-	@Getter(onMethod=@__({
+	/** Job runner priority (higher = better). */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private int runnerPriority;
 
-	/** Job runner weight (for runners of same priority) */
-	@Getter(onMethod=@__({
+	/** Job runner weight (for runners of same priority). */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private int runnerWeight;
 
-	/** Netshot version */
-	@Getter(onMethod=@__({
+	/** Netshot version. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String appVersion;
 
-	/** JVM version */
-	@Getter(onMethod=@__({
+	/** JVM version. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String jvmVersion;
 
-	/** Hash of all drivers */
-	@Getter(onMethod=@__({
+	/** Hash of all drivers. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String driverHash;
 
-	/** Current status */
-	@Getter(onMethod=@__({
+	/** Current status. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	private MastershipStatus status;
 
-	/** Last status change */
-	@Getter(onMethod=@__({
+	/** Last status change. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(RestApiView.class)
 	}))
 	@Setter
 	private long lastStatusChangeTime;
 
-	/** Last seen */
-	@Getter(onMethod=@__({
+	/** Last seen. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(RestApiView.class)
 	}))
 	@Setter
 	private long lastSeenTime;
 
 	/**
-	 * Default constructor
+	 * Constructs a new ClusterMember instance with the specified parameters.
+	 *
+	 * @param instanceId        the unique identifier for the cluster member instance
+	 * @param hostname          the hostname of the cluster member
+	 * @param clusteringVersion the version of the clustering protocol used
+	 * @param masterPriority    the priority value for selection as master
+	 * @param runnerPriority    the priority value for selection as runner
+	 * @param runnerWeight      the weight value for runner tasks
+	 * @param appVersion        the application version running on the member
+	 * @param jvmVersion        the Java Virtual Machine version used by the member
+	 * @param driverHash        the hash of the driver set loaded on the member
 	 */
 	public ClusterMember(String instanceId, String hostname, int clusteringVersion, int masterPriority,
-			int runnerPriority, int runnerWeight, String appVersion, String jvmVersion, String driverHash) {
+		int runnerPriority, int runnerWeight, String appVersion, String jvmVersion, String driverHash) {
 		this.local = true;
 		this.instanceId = instanceId;
 		this.hostname = hostname;
@@ -155,7 +164,7 @@ public class ClusterMember implements Comparable<ClusterMember>, Cloneable {
 	}
 
 	/**
-	 * Hidden constructor for deserialization
+	 * Hidden constructor for deserialization.
 	 */
 	public ClusterMember() {
 	}
@@ -171,20 +180,30 @@ public class ClusterMember implements Comparable<ClusterMember>, Cloneable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((instanceId == null) ? 0 : instanceId.hashCode());
+		result = prime * result + (this.instanceId == null ? 0 : this.instanceId.hashCode());
 		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null) return false;
-		if (getClass() != obj.getClass()) return false;
-		ClusterMember other = (ClusterMember) obj;
-		if (instanceId == null) {
-			if (other.instanceId != null) return false;
+		if (this == obj) {
+			return true;
 		}
-		else if (!instanceId.equals(other.instanceId)) return false;
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		ClusterMember other = (ClusterMember) obj;
+		if (this.instanceId == null) {
+			if (other.instanceId != null) {
+				return false;
+			}
+		}
+		else if (!this.instanceId.equals(other.instanceId)) {
+			return false;
+		}
 		return true;
 	}
 
@@ -207,9 +226,16 @@ public class ClusterMember implements Comparable<ClusterMember>, Cloneable {
 
 	@Override
 	public String toString() {
-		return "ClusterMember [appVersion=" + appVersion + ", clusteringVersion=" + clusteringVersion + ", driverHash="
-				+ driverHash + ", instanceId=" + instanceId + ", jvmVersion=" + jvmVersion + ", lastSeenTime=" + lastSeenTime
-				+ ", lastStatusChangeTime=" + lastStatusChangeTime + ", masterPriority=" + masterPriority + ", runnerPriority="
-				+ runnerPriority + ", runnerWeight=" + runnerWeight + ", status=" + status + "]";
+		return "ClusterMember [appVersion=" + appVersion
+			+ ", clusteringVersion=" + clusteringVersion
+			+ ", driverHash=" + driverHash
+			+ ", instanceId=" + instanceId
+			+ ", jvmVersion=" + jvmVersion
+			+ ", lastSeenTime=" + lastSeenTime
+			+ ", lastStatusChangeTime=" + lastStatusChangeTime
+			+ ", masterPriority=" + masterPriority
+			+ ", runnerPriority=" + runnerPriority
+			+ ", runnerWeight=" + runnerWeight
+			+ ", status=" + status + "]";
 	}
 }

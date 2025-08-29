@@ -18,24 +18,24 @@
  */
 package net.netshot.netshot.diagnostic;
 
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Transient;
-import jakarta.xml.bind.annotation.XmlElement;
-
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-@Entity @DiscriminatorValue("N")
+@Entity
+@DiscriminatorValue("N")
 public class DiagnosticNumericResult extends DiagnosticResult {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -43,12 +43,12 @@ public class DiagnosticNumericResult extends DiagnosticResult {
 
 	protected DiagnosticNumericResult() {
 	}
-	
+
 	public DiagnosticNumericResult(Device device, Diagnostic diagnostic, double value) {
 		super(device, diagnostic);
 		this.number = value;
 	}
-	
+
 	public DiagnosticNumericResult(Device device, Diagnostic diagnostic, String value) {
 		super(device, diagnostic);
 		this.number = Double.parseDouble(value);
@@ -62,7 +62,7 @@ public class DiagnosticNumericResult extends DiagnosticResult {
 		}
 		return number.toString();
 	}
-	
+
 	@Override
 	@Transient
 	public Object getData() {
@@ -71,12 +71,14 @@ public class DiagnosticNumericResult extends DiagnosticResult {
 
 	@Override
 	public boolean valueEquals(DiagnosticResult obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!(obj instanceof DiagnosticNumericResult))
+		}
+		if (!(obj instanceof DiagnosticNumericResult)) {
 			return false;
+		}
 		DiagnosticNumericResult other = (DiagnosticNumericResult) obj;
 		return Objects.equals(this.number, other.number);
 	}
-	
+
 }

@@ -18,26 +18,24 @@
  */
 package net.netshot.netshot.device.attribute;
 
-import jakarta.xml.bind.annotation.XmlElement;
+import org.graalvm.polyglot.Value;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Getter;
 import lombok.Setter;
-
-import org.graalvm.polyglot.Value;
-
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-public class AttributeDefinition {
-	
-	static public enum AttributeLevel {
+public final class AttributeDefinition {
+
+	public enum AttributeLevel {
 		DEVICE,
 		CONFIG
 	}
-	
-	static public enum AttributeType {
+
+	public enum AttributeType {
 		NUMERIC,
 		TEXT,
 		LONGTEXT,
@@ -45,75 +43,75 @@ public class AttributeDefinition {
 		BINARY,
 		BINARYFILE
 	}
-	
-	@Getter(onMethod=@__({
+
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private AttributeType type;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private AttributeLevel level;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String name;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String title;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean comparable = false;
+	private boolean comparable;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean searchable = false;
+	private boolean searchable;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean checkable = false;
+	private boolean checkable;
 
 	@Getter
 	@Setter
-	private boolean dump = false;
+	private boolean dump;
 
 	@Getter
 	@Setter
-	private String preDump = null;
+	private String preDump;
 
 	@Getter
 	@Setter
-	private String postDump = null;
+	private String postDump;
 
 	@Getter
 	@Setter
-	private String preLineDump = null;
+	private String preLineDump;
 
 	@Getter
 	@Setter
-	private String postLineDump = null;
-	
+	private String postLineDump;
+
 	protected AttributeDefinition() {
-		
+
 	}
 
 	public AttributeDefinition(AttributeType type, AttributeLevel level, String name,
-			String title, boolean comparable, boolean searchable, boolean checkable) {
+		String title, boolean comparable, boolean searchable, boolean checkable) {
 		super();
 		this.type = type;
 		this.level = level;
@@ -123,7 +121,7 @@ public class AttributeDefinition {
 		this.searchable = searchable;
 		this.checkable = checkable;
 	}
-	
+
 	public AttributeDefinition(AttributeLevel level, String name, Value data) throws Exception {
 		this.level = level;
 		this.name = name;
@@ -133,23 +131,23 @@ public class AttributeDefinition {
 		}
 		String textType = data.getMember("type").asString();
 		switch (textType) {
-		case "Text":
-			this.type = AttributeType.TEXT;
-			break;
-		case "LongText":
-			this.type = AttributeType.LONGTEXT;
-			break;
-		case "Numeric":
-			this.type = AttributeType.NUMERIC;
-			break;
-		case "Binary":
-			this.type = AttributeType.BINARY;
-			break;
-		case "BinaryFile":
-			this.type = AttributeType.BINARYFILE;
-			break;
-		default:
-			throw new IllegalArgumentException("Invalid type for item %s.");
+			case "Text":
+				this.type = AttributeType.TEXT;
+				break;
+			case "LongText":
+				this.type = AttributeType.LONGTEXT;
+				break;
+			case "Numeric":
+				this.type = AttributeType.NUMERIC;
+				break;
+			case "Binary":
+				this.type = AttributeType.BINARY;
+				break;
+			case "BinaryFile":
+				this.type = AttributeType.BINARYFILE;
+				break;
+			default:
+				throw new IllegalArgumentException("Invalid type for item %s.");
 		}
 		this.searchable = JsDeviceHelper.getBooleanMember(data, "searchable", false);
 		this.comparable = JsDeviceHelper.getBooleanMember(data, "comparable", false);
@@ -176,7 +174,7 @@ public class AttributeDefinition {
 				if (dataDump.hasMember("postLine")) {
 					this.postLineDump = dataDump.getMember("postLine").asString();
 				}
-				
+
 			}
 		}
 	}
@@ -185,30 +183,30 @@ public class AttributeDefinition {
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("AttributeDefinition [");
-		if (type != null) {
+		if (this.type != null) {
 			builder.append("type=");
-			builder.append(type);
+			builder.append(this.type);
 			builder.append(", ");
 		}
-		if (level != null) {
+		if (this.level != null) {
 			builder.append("level=");
-			builder.append(level);
+			builder.append(this.level);
 			builder.append(", ");
 		}
-		if (name != null) {
+		if (this.name != null) {
 			builder.append("name=");
-			builder.append(name);
+			builder.append(this.name);
 			builder.append(", ");
 		}
-		if (title != null) {
+		if (this.title != null) {
 			builder.append("title=");
-			builder.append(title);
+			builder.append(this.title);
 			builder.append(", ");
 		}
 		builder.append("comparable=");
-		builder.append(comparable);
+		builder.append(this.comparable);
 		builder.append(", searchable=");
-		builder.append(searchable);
+		builder.append(this.searchable);
 		builder.append("]");
 		return builder.toString();
 	}

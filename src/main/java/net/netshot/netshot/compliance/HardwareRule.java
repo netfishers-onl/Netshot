@@ -24,6 +24,8 @@ import java.util.regex.PatternSyntaxException;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -35,9 +37,6 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Device;
@@ -50,11 +49,12 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
  * The Class HardwareRule.
  */
 @Entity
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 public class HardwareRule {
 
 	/** The id. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
 		@XmlAttribute, @JsonView(DefaultView.class)
 	}))
@@ -62,14 +62,14 @@ public class HardwareRule {
 	private long id;
 
 	/** The device class. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private String driver = null;
+	private String driver;
 
 	/** The target group. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne,
 		@XmlElement, @JsonView(DefaultView.class),
 		@OnDelete(action = OnDeleteAction.SET_NULL)
@@ -78,42 +78,42 @@ public class HardwareRule {
 	private DeviceGroup targetGroup;
 
 	/** The family. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String family = "";
 
 	/** The family reg exp. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean familyRegExp = false;
+	private boolean familyRegExp;
 
 	/** The part number. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String partNumber;
 
 	/** The part number reg exp. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private boolean partNumberRegExp = false;
+	private boolean partNumberRegExp;
 
 	/** The end of sale. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private Date endOfSale;
 
 	/** The end of life. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -127,9 +127,9 @@ public class HardwareRule {
 	}
 
 	public HardwareRule(String driver,
-			DeviceGroup targetGroup, String family, boolean familyRegExp,
-			String partNumber, boolean partNumberRegExp, Date endOfSale,
-			Date endOfLife) {
+		DeviceGroup targetGroup, String family, boolean familyRegExp,
+		String partNumber, boolean partNumberRegExp, Date endOfSale,
+		Date endOfLife) {
 		this.driver = driver;
 		this.targetGroup = targetGroup;
 		this.family = family;
@@ -146,7 +146,8 @@ public class HardwareRule {
 	 * @return the device type
 	 */
 	@Transient
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDeviceType() {
 		DeviceDriver deviceDriver = DeviceDriver.getDriverByName(driver);
 		if (deviceDriver == null) {
@@ -178,7 +179,7 @@ public class HardwareRule {
 			}
 		}
 		else {
-			if (!family.equals("") && !device.getFamily().equals(family)) {
+			if (!"".equals(family) && !device.getFamily().equals(family)) {
 				return;
 			}
 		}
@@ -195,7 +196,7 @@ public class HardwareRule {
 				}
 			}
 			else {
-				if (!partNumber.equals("") && !module.getPartNumber().equals(partNumber)) {
+				if (!"".equals(partNumber) && !module.getPartNumber().equals(partNumber)) {
 					continue;
 				}
 			}

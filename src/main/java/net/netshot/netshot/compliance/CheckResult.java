@@ -21,9 +21,15 @@ package net.netshot.netshot.compliance;
 import java.io.Serializable;
 import java.util.Date;
 
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
@@ -31,16 +37,8 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
-
-import org.apache.commons.lang3.StringUtils;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
@@ -49,7 +47,8 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
  * tested against a given device.
  */
 @Entity
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 public class CheckResult {
 
 	/**
@@ -61,20 +60,20 @@ public class CheckResult {
 		/** The Constant serialVersionUID. */
 		private static final long serialVersionUID = 8277228096576043644L;
 
-		@Getter(onMethod=@__({
+		@Getter(onMethod = @__({
 			@ManyToOne,
 			@OnDelete(action = OnDeleteAction.CASCADE)
 		}))
 		@Setter
-		private Rule rule = null;
+		private Rule rule;
 
 		/** The device. */
-		@Getter(onMethod=@__({
+		@Getter(onMethod = @__({
 			@ManyToOne,
 			@OnDelete(action = OnDeleteAction.CASCADE)
 		}))
 		@Setter
-		private Device device = null;
+		private Device device;
 
 		/**
 		 * Instantiates a new key.
@@ -94,42 +93,49 @@ public class CheckResult {
 			this.device = device;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see java.lang.Object#hashCode()
 		 */
 		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + ((device == null) ? 0 : device.hashCode());
-			result = prime * result + ((rule == null) ? 0 : rule.hashCode());
+			result = prime * result + (device == null ? 0 : device.hashCode());
+			result = prime * result + (rule == null ? 0 : rule.hashCode());
 			return result;
 		}
 
-		/* (non-Javadoc)
+		/*(non-Javadoc)
 		 * @see java.lang.Object#equals(java.lang.Object)
 		 */
 		@Override
 		public boolean equals(Object obj) {
-			if (this == obj)
+			if (this == obj) {
 				return true;
-			if (obj == null)
+			}
+			if (obj == null) {
 				return false;
-			if (getClass() != obj.getClass())
+			}
+			if (getClass() != obj.getClass()) {
 				return false;
+			}
 			Key other = (Key) obj;
 			if (device == null) {
-				if (other.device != null)
+				if (other.device != null) {
 					return false;
+				}
 			}
-			else if (!device.equals(other.device))
+			else if (!device.equals(other.device)) {
 				return false;
+			}
 			if (rule == null) {
-				if (other.rule != null)
+				if (other.rule != null) {
 					return false;
+				}
 			}
-			else if (!rule.equals(other.rule))
+			else if (!rule.equals(other.rule)) {
 				return false;
+			}
 			return true;
 		}
 
@@ -138,7 +144,7 @@ public class CheckResult {
 	/**
 	 * The Enum ResultOption.
 	 */
-	public static enum ResultOption {
+	public enum ResultOption {
 
 		/** The device is confirming to the rule. */
 		CONFORMING(0),
@@ -160,41 +166,41 @@ public class CheckResult {
 
 		/** The value. */
 		@Getter
-		final private int value;
+		private final int value;
 
 		/**
 		 * Instantiates a new result option.
 		 *
 		 * @param value the value
 		 */
-		private ResultOption(int value) {
+		ResultOption(int value) {
 			this.value = value;
 		}
 	}
 
 	/** The key. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@EmbeddedId
 	}))
 	@Setter
 	private Key key = new Key();
 
 	/** The check date. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private Date checkDate = new Date();
 
 	/** The comment. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@Column(length = 10000)
 	}))
 	private String comment = "";
 
 	/** The result. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -282,35 +288,40 @@ public class CheckResult {
 		this.key.setDevice(device);
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int hashResult = 1;
-		hashResult = prime * hashResult + ((key == null) ? 0 : key.hashCode());
+		hashResult = prime * hashResult + (key == null ? 0 : key.hashCode());
 		return hashResult;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (obj == null)
+		}
+		if (obj == null) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		CheckResult other = (CheckResult) obj;
 		if (key == null) {
-			if (other.key != null)
+			if (other.key != null) {
 				return false;
+			}
 		}
-		else if (!key.equals(other.key))
+		else if (!key.equals(other.key)) {
 			return false;
+		}
 		return true;
 	}
 

@@ -18,30 +18,30 @@
  */
 package net.netshot.netshot.device.attribute;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-@Entity @DiscriminatorValue("S")
-public class ConfigTextAttribute extends ConfigAttribute {
+@Entity
+@DiscriminatorValue("S")
+public final class ConfigTextAttribute extends ConfigAttribute {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String text;
-	
+
 	protected ConfigTextAttribute() {
 	}
-	
+
 	public ConfigTextAttribute(Config config, String name, String value) {
 		super(config, name);
 		this.text = value;
@@ -50,12 +50,12 @@ public class ConfigTextAttribute extends ConfigAttribute {
 	@Override
 	@Transient
 	public String getAsText() {
-		if (text == null) {
+		if (this.text == null) {
 			return "";
 		}
-		return text;
+		return this.text;
 	}
-	
+
 	@Override
 	@Transient
 	public Object getData() {
@@ -64,17 +64,21 @@ public class ConfigTextAttribute extends ConfigAttribute {
 
 	@Override
 	public boolean valueEquals(ConfigAttribute obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!(obj instanceof ConfigTextAttribute))
-			return false;
-		ConfigTextAttribute other = (ConfigTextAttribute) obj;
-		if (text == null) {
-			if (other.text != null)
-				return false;
 		}
-		else if (!text.equals(other.text))
+		if (!(obj instanceof ConfigTextAttribute)) {
 			return false;
+		}
+		ConfigTextAttribute other = (ConfigTextAttribute) obj;
+		if (this.text == null) {
+			if (other.text != null) {
+				return false;
+			}
+		}
+		else if (!this.text.equals(other.text)) {
+			return false;
+		}
 		return true;
 	}
 

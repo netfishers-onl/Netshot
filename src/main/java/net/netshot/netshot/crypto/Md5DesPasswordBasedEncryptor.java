@@ -1,3 +1,21 @@
+/**
+ * Copyright 2013-2025 Netshot
+ * 
+ * This file is part of Netshot project.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package net.netshot.netshot.crypto;
 
 import java.nio.charset.Charset;
@@ -18,14 +36,17 @@ import lombok.extern.slf4j.Slf4j;
  * Legacy MD5/DES-based password based encryption/decryption util class.
  */
 @Slf4j
-public class Md5DesPasswordBasedEncryptor extends PasswordBasedEncryptor {
+public final class Md5DesPasswordBasedEncryptor extends PasswordBasedEncryptor {
 
 	private static final String DEFAULT_ALGORITHM = "PBEWithMD5AndDES";
-	private static Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
-	private static Charset ENCRYPTED_CHARSET = StandardCharsets.US_ASCII;
+	private static final Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
+	private static final Charset ENCRYPTED_CHARSET = StandardCharsets.US_ASCII;
 
-	private int saltSize = 8;
-	private int keyIterations = 1000;
+	private static final int DEFAULT_SALT_SIZE = 8;
+	private static final int DEFAULT_KEY_ITERATIONS = 1000;
+
+	private int saltSize = DEFAULT_SALT_SIZE;
+	private int keyIterations = DEFAULT_KEY_ITERATIONS;
 
 	public Md5DesPasswordBasedEncryptor(String password) {
 		super(password);

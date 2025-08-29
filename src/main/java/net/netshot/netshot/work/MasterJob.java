@@ -18,10 +18,6 @@
  */
 package net.netshot.netshot.work;
 
-import net.netshot.netshot.database.Database;
-import net.netshot.netshot.TaskManager;
-import net.netshot.netshot.cluster.ClusterManager;
-
 import org.hibernate.Session;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -29,6 +25,9 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.TaskManager;
+import net.netshot.netshot.cluster.ClusterManager;
+import net.netshot.netshot.database.Database;
 
 /**
  * A Quartz job which runs a Netshot task.
@@ -46,13 +45,13 @@ public class MasterJob implements Job {
 	public MasterJob() {
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see org.quartz.Job#execute(org.quartz.JobExecutionContext)
 	 */
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		log.debug("Starting master task job.");
 		Long id = (Long) context.getJobDetail().getJobDataMap()
-				.get(NETSHOT_TASK);
+			.get(NETSHOT_TASK);
 		log.trace("The task id is {}.", id);
 		Task task = null;
 		Session session = Database.getSession();

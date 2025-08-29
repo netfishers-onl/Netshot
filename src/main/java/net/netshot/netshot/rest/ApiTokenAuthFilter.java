@@ -20,18 +20,19 @@ package net.netshot.netshot.rest;
 
 import java.io.IOException;
 
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.PreMatching;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-
 import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.database.Database;
-import net.netshot.netshot.Netshot;
 import net.netshot.netshot.aaa.ApiToken;
+import net.netshot.netshot.database.Database;
 
 /**
  * Filter to authenticate requests based on API token.
@@ -41,11 +42,14 @@ import net.netshot.netshot.aaa.ApiToken;
 @Slf4j
 public class ApiTokenAuthFilter implements ContainerRequestFilter {
 
-	/** Name of the HTTP header used for API token */
-	static public final String HTTP_API_TOKEN_HEADER = "X-Netshot-API-Token";
+	/** Authentication, Authorization, Accounting logger. */
+	private static final Logger AAA_LOG = LoggerFactory.getLogger("AAA");
 
-	/** Name of the attribute attached to the the request to carry the token */
-	static public final String ATTRIBUTE = "apiToken";
+	/** Name of the HTTP header used for API token. */
+	public static final String HTTP_API_TOKEN_HEADER = "X-Netshot-API-Token";
+
+	/** Name of the attribute attached to the the request to carry the token. */
+	public static final String ATTRIBUTE = "apiToken";
 
 	@Override
 	public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -53,7 +57,7 @@ public class ApiTokenAuthFilter implements ContainerRequestFilter {
 		if (token == null) {
 			return;
 		}
-		Netshot.aaaLogger.debug("Received request with API token.");
+		AAA_LOG.debug("Received request with API token.");
 		token = token.trim();
 		String hash = ApiToken.hashToken(token);
 		Session session = Database.getSession();
@@ -62,10 +66,10 @@ public class ApiTokenAuthFilter implements ContainerRequestFilter {
 				.createQuery("from ApiToken t where t.hashedToken = :hash", ApiToken.class)
 				.setParameter("hash", hash).uniqueResult();
 			if (apiToken == null) {
-				Netshot.aaaLogger.warn("Invalid API token received.");
+				AAA_LOG.warn("Invalid API token received.");
 			}
 			else {
-				Netshot.aaaLogger.info("Successful API token usage {}.", apiToken);
+				AAA_LOG.info("Successful API token usage {}.", apiToken);
 				requestContext.setProperty(ApiTokenAuthFilter.ATTRIBUTE, apiToken);
 			}
 		}

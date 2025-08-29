@@ -27,6 +27,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -44,16 +50,8 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
@@ -61,9 +59,10 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
  * A device configuration.
  */
 @Entity
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @Table(indexes = {
-		@Index(name = "changeDateIndex", columnList = "changeDate")
+	@Index(name = "changeDateIndex", columnList = "changeDate")
 })
 public class Config {
 
@@ -86,27 +85,27 @@ public class Config {
 			final int level = l < line.length() ? l : 0;
 			lastLevels.removeIf(le -> le.getKey() >= level);
 			lastLevels.add(Pair.of(level, lineIndex));
-			lineParents[lineIndex] = (lastLevels.size() > 1) ? lastLevels.get(lastLevels.size() - 2).getValue() : -1;
+			lineParents[lineIndex] = lastLevels.size() > 1 ? lastLevels.get(lastLevels.size() - 2).getValue() : -1;
 		}
 		return lineParents;
 	}
 
 	/** The id. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
 		@XmlAttribute, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	protected long id;
-	
-	@Getter(onMethod=@__({
+
+	@Getter(onMethod = @__({
 		@Version
 	}))
 	@Setter
 	private int version;
 
 	/** The device. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
@@ -114,33 +113,33 @@ public class Config {
 	protected Device device;
 
 	/** The change date. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	protected Date changeDate;
 
 	/** The author. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String author = "";
 
 	/** The attributes. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@OneToMany(mappedBy = "config", orphanRemoval = true, cascade = CascadeType.ALL)
 	}))
 	@Setter
 	private Set<ConfigAttribute> attributes = new HashSet<ConfigAttribute>();
 
-	/** Hash value, optionally set by the driver, to forcely consider the config changed or not */
-	@Getter(onMethod=@__({
+	/** Hash value, optionally set by the driver, to forcely consider the config changed or not. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private String customHash = null;
+	private String customHash;
 
 	/**
 	 * Instantiates a new config.
@@ -160,11 +159,11 @@ public class Config {
 	public void addAttribute(ConfigAttribute attribute) {
 		this.attributes.add(attribute);
 	}
-	
+
 	public void clearAttributes() {
 		attributes.clear();
 	}
-	
+
 	@Transient
 	public Map<String, ConfigAttribute> getAttributeMap() {
 		Map<String, ConfigAttribute> map = new HashMap<String, ConfigAttribute>();
@@ -175,7 +174,7 @@ public class Config {
 	}
 
 	/**
-	 * Return a config attribute based on name
+	 * Return a config attribute based on name.
 	 * @param name = name of the attribute to find
 	 * @return the found attribute or null if none
 	 */
@@ -196,8 +195,12 @@ public class Config {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (!(obj instanceof Config)) return false;
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof Config)) {
+			return false;
+		}
 		Config other = (Config) obj;
 		return id == other.id;
 	}

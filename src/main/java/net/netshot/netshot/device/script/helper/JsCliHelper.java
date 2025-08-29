@@ -37,18 +37,18 @@ import net.netshot.netshot.work.TaskLogger;
  */
 @Slf4j
 public class JsCliHelper {
-	
-	/** The CLI object to interact with the device via command line */
+
+	/** The CLI object to interact with the device via command line. */
 	private Cli cli;
-	/** The CLI account (SSH/Telnet) */
+	/** The CLI account (SSH/Telnet). */
 	private DeviceCliAccount account;
-	/** The JS logger */
+	/** The JS logger. */
 	private TaskLogger taskLogger;
-	/** The session logger */
+	/** The session logger. */
 	private TaskLogger cliLogger;
-	/** An error was raised */
-	private boolean errored = false;
-	
+	/** An error was raised. */
+	private boolean errored;
+
 	/**
 	 * Convert a string to an hexadecimal representation.
 	 * @param text The original text
@@ -64,7 +64,7 @@ public class JsCliHelper {
 		}
 		return hex.toString();
 	}
-	
+
 	/**
 	 * Instantiate a new JsCliHelper object.
 	 * @param cli The device CLI
@@ -78,7 +78,7 @@ public class JsCliHelper {
 		this.taskLogger = taskLogger;
 		this.cliLogger = cliLogger;
 	}
-	
+
 	/**
 	 * Remove the echoed command from a CLI output.
 	 * @param text The output
@@ -119,11 +119,11 @@ public class JsCliHelper {
 			this.cliLogger.trace(toHexAscii(command));
 		}
 		command = command.replaceAll("\\$\\$NetshotUsername\\$\\$",
-				Matcher.quoteReplacement(account.getUsername()));
+			Matcher.quoteReplacement(account.getUsername()));
 		command = command.replaceAll("\\$\\$NetshotPassword\\$\\$",
-				Matcher.quoteReplacement(account.getPassword()));
+			Matcher.quoteReplacement(account.getPassword()));
 		command = command.replaceAll("\\$\\$NetshotSuperPassword\\$\\$",
-				Matcher.quoteReplacement(account.getSuperPassword()));
+			Matcher.quoteReplacement(account.getSuperPassword()));
 		int oldTimeout = cli.getCommandTimeout();
 		if (timeout > 0) {
 			cli.setCommandTimeout(timeout);
@@ -131,8 +131,8 @@ public class JsCliHelper {
 		try {
 			log.debug("Command to be sent: '{}'.", command);
 			if (this.cliLogger != null) {
-				this.cliLogger.trace("Expecting one of the following " + expects.length +
-						" pattern(s) within " + (timeout > 0 ? timeout : oldTimeout) + "ms:");
+				this.cliLogger.trace("Expecting one of the following " + expects.length
+					+ " pattern(s) within " + (timeout > 0 ? timeout : oldTimeout) + "ms:");
 				for (String expect : expects) {
 					this.cliLogger.trace(expect);
 				}
@@ -170,7 +170,7 @@ public class JsCliHelper {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Add a trace message to the debug log.
 	 * @param message The message to add
@@ -195,7 +195,7 @@ public class JsCliHelper {
 
 	/**
 	 * Wait for a reply from the device CLI without sending anything.
-	 * @param command The command to send
+	 * @param expects = The patterns to wait for
 	 * @return the output from the device, result of the passed command
 	 */
 	@Export
@@ -211,7 +211,7 @@ public class JsCliHelper {
 	public String getLastCommand() {
 		return cli.getLastCommand();
 	}
-	
+
 	/**
 	 * Get the last expect match.
 	 * @return the last matched expect
@@ -220,7 +220,7 @@ public class JsCliHelper {
 	public String getLastExpectMatch() {
 		return cli.getLastExpectMatch().group();
 	}
-	
+
 	/**
 	 * Get the last expect specific match.
 	 * @param group The specific match to tget
@@ -235,7 +235,7 @@ public class JsCliHelper {
 			return null;
 		}
 	}
-	
+
 	/**
 	 * Get the last matched pattern.
 	 * @return the last matched pattern
@@ -244,7 +244,7 @@ public class JsCliHelper {
 	public String getLastExpectMatchPattern() {
 		return cli.getLastExpectMatchPattern();
 	}
-	
+
 	/**
 	 * Get the last match index.
 	 * @return the last matched index
@@ -253,7 +253,7 @@ public class JsCliHelper {
 	public int getLastExpectMatchIndex() {
 		return cli.getLastExpectMatchIndex();
 	}
-	
+
 	/**
 	 * Get the last full output of the device (after a command was sent).
 	 * @return the last full output
@@ -262,7 +262,7 @@ public class JsCliHelper {
 	public String getLastFullOutput() {
 		return cli.getLastFullOutput();
 	}
-	
+
 	/**
 	 * Check whether there was an error after the last command.
 	 * @return true if there was an error
@@ -271,7 +271,7 @@ public class JsCliHelper {
 	public boolean isErrored() {
 		return errored;
 	}
-	
+
 	/**
 	 * Pause the thread for the given number of milliseconds.
 	 * @param millis The number of milliseconds to wait for

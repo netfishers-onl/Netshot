@@ -20,7 +20,6 @@ package net.netshot.netshot.rest;
 
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.core.Response;
-
 import net.netshot.netshot.rest.RestService.RsErrorBean;
 
 /**
@@ -34,6 +33,6 @@ public class NetshotNotAuthorizedException extends ForbiddenException {
 
 	public NetshotNotAuthorizedException(String message, int errorCode) {
 		super(Response.status(Response.Status.FORBIDDEN)
-				.entity(new RsErrorBean(message, errorCode)).build());
+			.entity(new RsErrorBean(message, errorCode)).build());
 	}
 }

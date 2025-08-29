@@ -18,24 +18,22 @@
  */
 package net.netshot.netshot.diagnostic;
 
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.HostAccess.Export;
+import org.graalvm.polyglot.Value;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
-
-import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.Value;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.graalvm.polyglot.HostAccess.Export;
-
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.DeviceGroup;
@@ -51,20 +49,20 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 @XmlRootElement
-@XmlAccessorType(value = XmlAccessType.NONE)
+@XmlAccessorType(XmlAccessType.NONE)
 public class SimpleDiagnostic extends Diagnostic {
 
 	/**
 	 * A simple object to store command and CLI mode, to be passed to Javascript for execution.
 	 */
-	static public class JsSimpleDiagnostic {
-		@Getter(onMethod=@__({
+	public static class JsSimpleDiagnostic {
+		@Getter(onMethod = @__({
 			@Export
 		}))
 		@Setter
 		private String mode;
 
-		@Getter(onMethod=@__({
+		@Getter(onMethod = @__({
 			@Export
 		}))
 		@Setter
@@ -79,7 +77,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	/**
 	 * The type of device this diagnostic applies to.
 	 */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -88,7 +86,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	/**
 	 * The CLI mode to run the command in.
 	 */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -97,7 +95,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	/**
 	 * The CLI command to run.
 	 */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -106,7 +104,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	/**
 	 * The pattern to search for in the result string.
 	 */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -116,7 +114,7 @@ public class SimpleDiagnostic extends Diagnostic {
 	 * The replacement string (to replace the modifierPattern with). Also supports
 	 * regular expression backreferences.
 	 */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
@@ -131,25 +129,18 @@ public class SimpleDiagnostic extends Diagnostic {
 	/**
 	 * Instantiates a new diagnostic.
 	 * 
-	 * @param name
-	 *                              The name
-	 * @param enabled
-	 *                              True to enable the diagnostic
-	 * @param targetGroup
-	 *                              The group of devices the diagnostic applies to
-	 * @param resultType
-	 *                              The type of result expected by this diagnostic
-	 * @param cliMode
-	 *                              The CLI mode
-	 * @param command
-	 *                              The CLI command to issue
-	 * @param modifierPattern
-	 *                              The pattern to match
-	 * @param modifierReplacement
-	 *                              The replacement script if the pattern is matched
+	 * @param name = The name
+	 * @param enabled = True to enable the diagnostic
+	 * @param targetGroup = The group of devices the diagnostic applies to
+	 * @param resultType = The type of result expected by this diagnostic
+	 * @param deviceDriver = The device driver
+	 * @param cliMode = The CLI mode
+	 * @param command = The CLI command to issue
+	 * @param modifierPattern = The pattern to match
+	 * @param modifierReplacement = The replacement script if the pattern is matched
 	 */
 	public SimpleDiagnostic(String name, boolean enabled, DeviceGroup targetGroup, AttributeType resultType,
-			String deviceDriver, String cliMode, String command, String modifierPattern, String modifierReplacement) {
+		String deviceDriver, String cliMode, String command, String modifierPattern, String modifierReplacement) {
 		super(name, enabled, targetGroup, resultType);
 		this.deviceDriver = deviceDriver;
 		this.cliMode = cliMode;
@@ -165,7 +156,8 @@ public class SimpleDiagnostic extends Diagnostic {
 	 * @return the description of the device driver
 	 */
 	@Transient
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDeviceDriverDescription() {
 		if ("".equals(deviceDriver)) {
 			return "";
@@ -188,17 +180,17 @@ public class SimpleDiagnostic extends Diagnostic {
 			newValue = newValue.replaceAll(this.getModifierPattern(), this.getModifierReplacement());
 		}
 		switch (this.resultType) {
-		case LONGTEXT:
-			return new DiagnosticLongTextResult(device, this, newValue);
-		case TEXT:
-			return new DiagnosticTextResult(device, this, newValue);
-		case NUMERIC:
-			return new DiagnosticNumericResult(device, this, Double.parseDouble(newValue));
-		case BINARY:
-			boolean booleanValue = !"".equals(newValue) && !"false".equals(newValue.toLowerCase()) && !"no".equals(newValue.toLowerCase());
-			return new DiagnosticBinaryResult(device, this, booleanValue);
-		default:
-			return null;
+			case LONGTEXT:
+				return new DiagnosticLongTextResult(device, this, newValue);
+			case TEXT:
+				return new DiagnosticTextResult(device, this, newValue);
+			case NUMERIC:
+				return new DiagnosticNumericResult(device, this, Double.parseDouble(newValue));
+			case BINARY:
+				boolean booleanValue = !"".equals(newValue) && !"false".equals(newValue.toLowerCase()) && !"no".equals(newValue.toLowerCase());
+				return new DiagnosticBinaryResult(device, this, booleanValue);
+			default:
+				return null;
 		}
 	}
 
@@ -209,5 +201,5 @@ public class SimpleDiagnostic extends Diagnostic {
 		}
 		return Value.asValue(new JsSimpleDiagnostic(this.cliMode, this.command));
 	}
-	
+
 }

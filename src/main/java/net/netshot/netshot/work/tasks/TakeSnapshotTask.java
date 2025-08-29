@@ -22,21 +22,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.quartz.JobKey;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.database.Database;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.TaskManager;
 import net.netshot.netshot.cluster.ClusterManager;
+import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.device.Network4Address;
@@ -47,31 +51,45 @@ import net.netshot.netshot.rest.RestViews.HookView;
 import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
 
-import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.quartz.JobKey;
-
 /**
  * This task takes a snapshot of a device.
  */
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
-public class TakeSnapshotTask extends Task implements DeviceBasedTask {
+public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 
-	/** Allow trap from any IP of a device to trigger a automatic snapshot. */ 
-	private static boolean AUTOSNAPSHOT_ANYIP = false;
+	/**
+	 * Settings/config for the current class.
+	 */
+	public static final class Settings {
 
-	/** Minutes to wait before starting an automatic snapshot. */
-	public static int AUTOSNAPSHOT_INTERVAL = 10;
-	
+		/** Allow trap from any IP of a device to trigger a automatic snapshot. */
+		@Getter
+		private boolean autoSnapshotAnyIp;
+
+		/** Minutes to wait before starting an automatic snapshot. */
+		@Getter
+		private int autoSnapshotInterval;
+
+		/**
+		 * Load settings from config.
+		 */
+		private void load() {
+			this.autoSnapshotAnyIp = Netshot.getConfig("netshot.snapshots.auto.anyip", false);
+			this.autoSnapshotInterval = Netshot.getConfig("netshot.snapshots.auto.interval", 10, 1, 60 * 24 * 7);
+		}
+	}
+
+	/** Settings for this class. */
+	public static final Settings SETTINGS = new Settings();
+
 	/** The scheduled automatic snapshots. */
 	private static Set<Long> scheduledAutoSnapshots = ConcurrentHashMap.newKeySet();
 
 	/** Device IDs on which a snapshot is currently running. */
 	private static Set<Long> runningSnapshots = ConcurrentHashMap.newKeySet();
-	
+
 	/**
 	 * Clear scheduled auto snapshot.
 	 *
@@ -89,7 +107,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	public static void clearRunningSnapshot(Long deviceId) {
 		runningSnapshots.remove(deviceId);
 	}
-	
+
 	/**
 	 * Check whether an automatic snapshot is queued for the given device.
 	 *
@@ -114,10 +132,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	 * Load TakeSnapshotTask specific configuration from Netshot config file.
 	 */
 	public static void loadConfig() {
-		if (Netshot.getConfig("netshot.snapshots.auto.anyip", false)) {
-			AUTOSNAPSHOT_ANYIP = true;
-		}
-		AUTOSNAPSHOT_INTERVAL = Netshot.getConfig("netshot.snapshots.auto.interval", 10, 1, 60 * 24 * 7);
+		TakeSnapshotTask.SETTINGS.load();
 	}
 
 	static {
@@ -125,7 +140,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	}
 
 	/** The device. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE),
 		@XmlElement, @JsonView(HookView.class)
@@ -134,32 +149,32 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	private Device device;
 
 	/** Automatic snapshot. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(HookView.class)
 	}))
 	@Setter
-	private boolean automatic = false;
+	private boolean automatic;
 
-	/** Do not automatically start a run diagnostics task */
-	@Getter(onMethod=@__({
+	/** Do not automatically start a run diagnostics task. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(HookView.class)
 	}))
 	@Setter
-	private boolean dontRunDiagnostics = false;
+	private boolean dontRunDiagnostics;
 
-	/** Do not automatically start a check compliance task */
-	@Getter(onMethod=@__({
+	/** Do not automatically start a check compliance task. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(HookView.class)
 	}))
 	@Setter
-	private boolean dontCheckCompliance = false;
+	private boolean dontCheckCompliance;
 
 	/**
 	 * Instantiates a new take snapshot task.
 	 */
 	protected TakeSnapshotTask() {
 	}
-	
+
 
 	/**
 	 * Instantiates a new take snapshot task.
@@ -171,22 +186,22 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	 * @param dontCheckCompliance Set to true to disable compliance checking
 	 */
 	public TakeSnapshotTask(Device device, String comments, String author, boolean automatic,
-			boolean dontRunDiagnostics, boolean dontCheckCompliance) {
-		super(comments, (device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName()),
-				author);
+		boolean dontRunDiagnostics, boolean dontCheckCompliance) {
+		super(comments, device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName(),
+			author);
 		this.device = device;
 		this.automatic = automatic;
 		this.dontRunDiagnostics = dontRunDiagnostics;
 		this.dontCheckCompliance = dontCheckCompliance;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#run()
 	 */
 	@Override
 	public void run() {
 		log.debug("Task {}. Starting snapshot task for device {}.", this.getId(),
-				device == null ? "null" : device.getId());
+			device == null ? "null" : device.getId());
 		if (device == null) {
 			this.info("The device doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
@@ -201,7 +216,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 			// Start over from a fresh device from DB
 			device = session.get(Device.class, device.getId());
 			this.info(String.format("Snapshot task for device %s (%s).",
-					device.getName(), device.getMgmtAddress().getIp()));
+				device.getName(), device.getMgmtAddress().getIp()));
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				log.trace("Task {}. Device not INPRODUCTION, stopping the snapshot task.", this.getId());
 				this.warn("The device is not enabled (not in production).");
@@ -215,7 +230,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 				this.status = Status.CANCELLED;
 				return;
 			}
-			
+
 			cliScript.connectRun(session, device);
 			this.logs.append(cliScript.getPlainJsLog());
 			session.persist(device);
@@ -279,22 +294,24 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Device snapshot";
 	}
 
 	/**
-	 * Get the ID of the device
+	 * Get the ID of the device.
 	 * 
 	 * @return the ID of the device
 	 */
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	protected long getDeviceId() {
 		if (this.device == null) {
@@ -303,7 +320,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		return device.getId();
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#clone()
 	 */
 	@Override
@@ -315,27 +332,27 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 
 	public static boolean scheduleSnapshotIfNeeded(List<String> drivers, Network4Address address) {
 		log.debug("Request to take a snapshot of device with IP {}, if necessary.",
-				address.getIp());
+			address.getIp());
 		Device device;
 		Session session = Database.getSession();
 		try {
 			log.trace("Retrieving the device.");
 			device = session.createQuery(
-						"select d from Device d where d.status = :inprod and d.mgmtAddress.address = :ip",
+				"select d from Device d where d.status = :inprod and d.mgmtAddress.address = :ip",
+				Device.class)
+				.setParameter("inprod", Device.Status.INPRODUCTION)
+				.setParameter("ip", address.getAddress())
+				.uniqueResult();
+			if (device == null && TakeSnapshotTask.SETTINGS.isAutoSnapshotAnyIp()) {
+				log.warn("No device with such management IP {} in the database. Looking for this address in the interface table.",
+					address.getIp());
+				device = session
+					.createQuery(
+						"select d from Device d join d.networkInterfaces ni join ni.ip4Addresses a where d.status = :inprod and a.address = :ip",
 						Device.class)
 					.setParameter("inprod", Device.Status.INPRODUCTION)
 					.setParameter("ip", address.getAddress())
 					.uniqueResult();
-			if (device == null && AUTOSNAPSHOT_ANYIP) {
-				log.warn("No device with such management IP {} in the database. Looking for this address in the interface table.",
-						address.getIp());
-				device = session
-						.createQuery(
-							"select d from Device d join d.networkInterfaces ni join ni.ip4Addresses a where d.status = :inprod and a.address = :ip",
-							Device.class)
-						.setParameter("inprod", Device.Status.INPRODUCTION)
-						.setParameter("ip", address.getAddress())
-						.uniqueResult();
 			}
 			if (device == null) {
 				log.warn("No device with such IP address {} in the database.", address.getIp());
@@ -343,7 +360,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 			}
 			if (!drivers.contains(device.getDriver())) {
 				log.warn("The driver {} of the device {} in database isn't in the list of drivers requesting a snapshot (address {}).",
-						device.getDriver(), device.getId(), device.getMgmtAddress());
+					device.getDriver(), device.getId(), device.getMgmtAddress());
 				return false;
 			}
 		}
@@ -394,7 +411,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		}
 		try {
 			Task snapshot = new TakeSnapshotTask(device, "Automatic snapshot after config change", "Auto", true, false, false);
-			snapshot.schedule(TakeSnapshotTask.AUTOSNAPSHOT_INTERVAL);
+			snapshot.schedule(TakeSnapshotTask.SETTINGS.getAutoSnapshotInterval());
 			TaskManager.addTask(snapshot);
 		}
 		catch (Exception e) {
@@ -403,7 +420,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		return true;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#onSchedule()
 	 */
 	@Override
@@ -413,7 +430,7 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#onCancel()
 	 */
 	@Override
@@ -428,8 +445,8 @@ public class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	@Override
 	@Transient
 	public JobKey getIdentity() {
-		return new JobKey(String.format("Task_%d", this.getId()), 
-				String.format("RunDevice_%d", this.getDeviceId()));
+		return new JobKey(String.format("Task_%d", this.getId()),
+			String.format("RunDevice_%d", this.getDeviceId()));
 	}
 
 	/*

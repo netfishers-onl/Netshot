@@ -1,3 +1,21 @@
+/**
+ * Copyright 2013-2025 Netshot
+ * 
+ * This file is part of Netshot project.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package net.netshot.netshot.crypto;
 
 import java.io.InvalidClassException;
@@ -18,10 +36,26 @@ import lombok.Setter;
  * SHA2-based hash.
  * By default, SHA256, 1000 iterations and 8-byte salt.
  */
-public class Sha2BasedHash extends Hash {
-	private static Charset HASH_CHARSET = StandardCharsets.US_ASCII;
-	private static Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
-	private static String DEFAULT_ALGORITHM = "SHA-256";
+public final class Sha2BasedHash extends Hash {
+
+	private static final Charset HASH_CHARSET = StandardCharsets.US_ASCII;
+	private static final Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
+
+
+	private static final int TYPE5_TYPE = 5;
+	private static final String TYPE5_ALGORITHM = "SHA-256";
+	private static final int TYPE5_HASH_LENGTH = 32;
+
+	private static final int TYPE6_TYPE = 6;
+	private static final String TYPE6_ALGORITHM = "SHA-512";
+	private static final int TYPE6_HASH_LENGTH = 64;
+
+	private static final int DEFAULT_SALT_SIZE = 8;
+	private static final int DEFAULT_ITERATIONS = 1000;
+	private static final String DEFAULT_ALGORITHM = TYPE5_ALGORITHM;
+
+	private static final int MIN_ITERATIONS = 1;
+	private static final int MAX_ITERATIONS = 1 << 24;
 
 	private static final Pattern HASHSTRING_PATTERN = Pattern.compile(
 		"^\\$(?<version>5|6)(\\$t=(?<iterations>[0-9]+))?(\\$(?<salt>[-A-Za-z0-9+/]+))?\\$(?<hash>[-A-Za-z0-9+/]+)$");
@@ -54,15 +88,15 @@ public class Sha2BasedHash extends Hash {
 			throw new IllegalArgumentException("Hash component cannot be decoded", e);
 		}
 		int version = Integer.parseInt(matcher.group("version"));
-		if (version == 5) {
-			sha2Hash.algorithm = "SHA-256";
-			if (sha2Hash.hash.length != 32) {
+		if (version == TYPE5_TYPE) {
+			sha2Hash.algorithm = TYPE5_ALGORITHM;
+			if (sha2Hash.hash.length != TYPE5_HASH_LENGTH) {
 				throw new IllegalArgumentException("Invalid length for hash component");
 			}
 		}
-		else if (version == 6) {
-			sha2Hash.algorithm = "SHA-512";
-			if (sha2Hash.hash.length != 64) {
+		else if (version == TYPE6_TYPE) {
+			sha2Hash.algorithm = TYPE6_ALGORITHM;
+			if (sha2Hash.hash.length != TYPE6_HASH_LENGTH) {
 				throw new IllegalArgumentException("Invalid length for hash component");
 			}
 		}
@@ -72,7 +106,7 @@ public class Sha2BasedHash extends Hash {
 		final String iterationString = matcher.group("iterations");
 		if (iterationString != null) {
 			sha2Hash.iterations = Integer.parseInt(iterationString);
-			if (sha2Hash.iterations < 1 || sha2Hash.iterations > (1 << 24)) {
+			if (sha2Hash.iterations < MIN_ITERATIONS || sha2Hash.iterations > MAX_ITERATIONS) {
 				throw new IllegalArgumentException("Invalid iteration component value");
 			}
 		}
@@ -86,11 +120,11 @@ public class Sha2BasedHash extends Hash {
 		Sha2BasedHash sha2Hash = new Sha2BasedHash();
 		sha2Hash.setSalt(null);
 		sha2Hash.hash = Base64.getDecoder().decode(hashString.getBytes(HASH_CHARSET));
-		if (sha2Hash.hash.length == 32) {
-			sha2Hash.algorithm = "SHA-256";
+		if (sha2Hash.hash.length == TYPE5_HASH_LENGTH) {
+			sha2Hash.algorithm = TYPE5_ALGORITHM;
 		}
-		else if (sha2Hash.hash.length == 64) {
-			sha2Hash.algorithm = "SHA-512";
+		else if (sha2Hash.hash.length == TYPE6_HASH_LENGTH) {
+			sha2Hash.algorithm = TYPE6_ALGORITHM;
 		}
 		else {
 			throw new InvalidClassException("Invalid hash size for SHA2");
@@ -98,16 +132,17 @@ public class Sha2BasedHash extends Hash {
 		return sha2Hash;
 	}
 
-	private int saltSize = 8;
-	@Getter
-	private byte[] salt = null;
+	private int saltSize = DEFAULT_SALT_SIZE;
 
 	@Getter
-	private byte[] hash = null;
+	private byte[] salt;
+
+	@Getter
+	private byte[] hash;
 
 	@Getter
 	@Setter
-	private int iterations = 1000;
+	private int iterations = DEFAULT_ITERATIONS;
 
 	@Getter
 	@Setter
@@ -172,9 +207,9 @@ public class Sha2BasedHash extends Hash {
 		if (this.hash == null) {
 			return null;
 		}
-		int version = 5;
-		if ("SHA-512".equals(this.algorithm)) {
-			version = 6;
+		int version = TYPE5_TYPE;
+		if (TYPE6_ALGORITHM.equals(this.algorithm)) {
+			version = TYPE6_TYPE;
 		}
 		StringBuffer sb = new StringBuffer()
 			.append("$").append(version);
@@ -184,11 +219,11 @@ public class Sha2BasedHash extends Hash {
 		if (this.salt != null) {
 			sb.append("$").append(
 				new String(Base64.getEncoder().withoutPadding().encode(this.salt),
-				HASH_CHARSET));
+					HASH_CHARSET));
 		}
 		sb.append("$").append(
 			new String(Base64.getEncoder().withoutPadding().encode(this.hash),
-			HASH_CHARSET));
+				HASH_CHARSET));
 		return sb.toString();
 	}
 
@@ -198,7 +233,7 @@ public class Sha2BasedHash extends Hash {
 			return this.hash == null;
 		}
 		Sha2BasedHash other = new Sha2BasedHash();
-		other.salt = (this.salt == null) ? null : Arrays.copyOf(this.salt, this.salt.length);
+		other.salt = this.salt == null ? null : Arrays.copyOf(this.salt, this.salt.length);
 		other.saltSize = this.saltSize;
 		other.iterations = this.iterations;
 		other.algorithm = this.algorithm;
@@ -208,7 +243,7 @@ public class Sha2BasedHash extends Hash {
 
 	public void setSalt(byte[] salt) {
 		this.salt = salt;
-		this.saltSize = (salt == null) ? 0 : salt.length;
+		this.saltSize = salt == null ? 0 : salt.length;
 	}
-	
+
 }

@@ -24,10 +24,10 @@ import org.slf4j.LoggerFactory;
 import net.netshot.netshot.work.TaskLogger;
 
 /**
- * Slf4j logger-based Task Logger
+ * Slf4j logger-based Task Logger.
  */
 public class LoggerTaskLogger implements TaskLogger {
-	private Logger logger;
+	private final Logger logger;
 
 	public LoggerTaskLogger(Class<?> clazz) {
 		this.logger = LoggerFactory.getLogger(clazz);

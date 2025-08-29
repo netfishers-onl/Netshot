@@ -18,15 +18,13 @@
  */
 package net.netshot.netshot.device.credentials;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
-
 import net.netshot.netshot.database.StringEncryptorConverter;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
@@ -36,22 +34,22 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
  */
 @Entity
 public abstract class DeviceSnmpCommunity extends DeviceCredentialSet {
-	
+
 	/** The community. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@Convert(converter = StringEncryptorConverter.class)
 	}))
 	@Setter
 	private String community;
-	
+
 	/**
 	 * Instantiates a new device snmp community.
 	 */
 	protected DeviceSnmpCommunity() {
-		
+
 	}
-	
+
 	/**
 	 * Instantiates a new device snmp community.
 	 *
@@ -63,18 +61,18 @@ public abstract class DeviceSnmpCommunity extends DeviceCredentialSet {
 		this.community = community;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.credentials.DeviceCredentialSet#hashCode()
 	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + (name == null ? 0 : name.hashCode());
 		return result;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.credentials.DeviceCredentialSet#equals(java.lang.Object)
 	 */
 	@Override
@@ -93,10 +91,11 @@ public abstract class DeviceSnmpCommunity extends DeviceCredentialSet {
 			if (other.name != null) {
 				return false;
 			}
-		} else if (!name.equals(other.name)) {
+		}
+		else if (!name.equals(other.name)) {
 			return false;
 		}
 		return true;
 	}
-	
+
 }

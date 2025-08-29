@@ -36,7 +36,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -67,11 +66,16 @@ import net.netshot.netshot.compliance.rules.PythonRule;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.access.Ssh;
+import net.netshot.netshot.device.access.Telnet;
+import net.netshot.netshot.device.script.helper.PythonFileSystem;
 import net.netshot.netshot.rest.LoggerFilter;
 import net.netshot.netshot.rest.RestService;
 import net.netshot.netshot.work.tasks.TakeSnapshotTask;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+//CHECKSTYLE:OFF: IllegalImport
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
+//CHECKSTYLE:ON: IllegalImport
 
 /**
  * The Class Netshot. Starting point of Netshot
@@ -84,19 +88,19 @@ public class Netshot extends Thread {
 
 	/** The list of configuration files to look at, in sequence. */
 	private static final String[] CONFIG_FILENAMES = new String[] {
-		"netshot.conf", "/etc/netshot.conf" };
+		"netshot.conf", "/etc/netshot.conf"};
 
 	/** The application configuration as retrieved from the configuration file. */
 	private static Properties config;
 
-	/** The log. */
-	final static public Logger aaaLogger = LoggerFactory.getLogger("AAA");
+	/** Authentication, Authorization, Accounting logger. */
+	private static final Logger AAA_LOG = LoggerFactory.getLogger("AAA");
 
-	/** The machine hostname */
-	private static String hostname = null;
+	/** The machine hostname. */
+	private static String hostname;
 
 	/**
-	 * Retrieve the local machine hostname;
+	 * Retrieve the local machine hostname.
 	 * @return the local machine hostname
 	 */
 	public static String getHostname() {
@@ -160,7 +164,7 @@ public class Netshot extends Thread {
 	}
 
 	/**
-	 * Gets a config item as an Integer
+	 * Gets a config item as an Integer.
 	 * @param key the config key
 	 * @param defaultValue the default value
 	 * @return the config
@@ -180,7 +184,7 @@ public class Netshot extends Thread {
 	}
 
 	/**
-	 * Gets a config item as an Integer
+	 * Gets a config item as an Integer.
 	 * @param key the config key
 	 * @param defaultValue the default value
 	 * @param min the minimum acceptable value
@@ -191,7 +195,7 @@ public class Netshot extends Thread {
 		int value = Netshot.getConfig(key, defaultValue);
 		if (value < min || value > max) {
 			log.error("Unacceptable integer value for configuration item '{}' (not in the range {} to {}), using default value {}",
-					key, min, max, defaultValue);
+				key, min, max, defaultValue);
 			return defaultValue;
 		}
 		return value;
@@ -229,6 +233,7 @@ public class Netshot extends Thread {
 	/**
 	 * Read the application configuration from the files.
 	 *
+	 * @param filenames = the names of the files to read from
 	 * @return true, if successful
 	 */
 	protected static boolean readConfig(String[] filenames) {
@@ -254,14 +259,14 @@ public class Netshot extends Thread {
 	/**
 	 * Initialize the application configuration from Properties object.
 	 * 
-	 * @param config The configuration
+	 * @param newConfig The configuration
 	 * @return true
 	 */
-	protected static boolean initConfig(Properties config) {
-		Netshot.config = config;
+	protected static boolean initConfig(Properties newConfig) {
+		Netshot.config = newConfig;
 		return true;
 	}
-	
+
 	/**
 	 * Initializes the logging.
 	 *
@@ -271,11 +276,11 @@ public class Netshot extends Thread {
 		// Redirect JUL to SLF4J
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
-		
+
 		ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger)
-				LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+			LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
 		LoggerContext loggerContext = rootLogger.getLoggerContext();
-		
+
 		System.setProperty("org.jboss.logging.provider", "slf4j");
 
 		String logFile = Netshot.getConfig("netshot.log.file", "netshot.log");
@@ -288,17 +293,17 @@ public class Netshot extends Thread {
 		if (logLevelCfg != null && !logLevel.toString().equals(logLevelCfg)) {
 			log.error("Invalid log level (netshot.log.level) '{}'. Using {}.", logLevelCfg, logLevel);
 		}
-		
+
 		OutputStreamAppender<ILoggingEvent> appender;
 
-		if (logFile.equals("CONSOLE")) {
+		if ("CONSOLE".equals(logFile)) {
 			ConsoleAppender<ILoggingEvent> cAppender = new ConsoleAppender<>();
 			log.info("Will go on logging to the console.");
 			appender = cAppender;
 		}
 		else {
 			log.info("Switching to file logging, into {}, level {}, rotation using {} files of max {}MB.",
-					logFile, logLevel, logCount, logMaxSize);
+				logFile, logLevel, logCount, logMaxSize);
 
 			try {
 				RollingFileAppender<ILoggingEvent> rfAppender = new RollingFileAppender<>();
@@ -313,15 +318,15 @@ public class Netshot extends Thread {
 				fwRollingPolicy.setParent(rfAppender);
 				fwRollingPolicy.start();
 
-				SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new 
-						SizeBasedTriggeringPolicy<>();
+				SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new
+					SizeBasedTriggeringPolicy<>();
 				triggeringPolicy.setMaxFileSize(new FileSize(logMaxSize * FileSize.MB_COEFFICIENT));
 				triggeringPolicy.start();
 
 				rfAppender.setRollingPolicy(fwRollingPolicy);
 				rfAppender.setTriggeringPolicy(triggeringPolicy);
 				appender = rfAppender;
-				
+
 			}
 			catch (Exception e) {
 				log.error(MarkerFactory.getMarker("FATAL"), "Unable to log into file {}. Exiting.", logFile, e);
@@ -342,8 +347,8 @@ public class Netshot extends Thread {
 		appender.setName(appenderName);
 		rootLogger.detachAppender(appenderName);
 		rootLogger.addAppender(appender);
-		
-		Pattern logSetting = Pattern.compile("^netshot\\.log\\.class\\.(?<class>.*)"); 
+
+		Pattern logSetting = Pattern.compile("^netshot\\.log\\.class\\.(?<class>.*)");
 		Enumeration<?> propertyNames = Netshot.config.propertyNames();
 		while (propertyNames.hasMoreElements()) {
 			String propertyName = (String) propertyNames.nextElement();
@@ -352,7 +357,7 @@ public class Netshot extends Thread {
 				String propertyValue = Netshot.getConfig(propertyName);
 				String className = matcher.group("class").trim();
 				ch.qos.logback.classic.Logger classLogger = (ch.qos.logback.classic.Logger)
-						LoggerFactory.getLogger(className);
+					LoggerFactory.getLogger(className);
 				try {
 					Level classLevel = Level.valueOf(propertyValue);
 					classLogger.setLevel(classLevel);
@@ -363,7 +368,7 @@ public class Netshot extends Thread {
 				}
 			}
 		}
-		
+
 		return true;
 	}
 
@@ -377,16 +382,16 @@ public class Netshot extends Thread {
 		int auditCount = Netshot.getConfig("netshot.log.audit.count", 5, 1, 65535);
 		int auditMaxSize = Netshot.getConfig("netshot.log.audit.maxsize", 2, 1, Integer.MAX_VALUE);
 
-		((ch.qos.logback.classic.Logger) aaaLogger).setAdditive(false);
+		((ch.qos.logback.classic.Logger) AAA_LOG).setAdditive(false);
 		Level logLevel = Level.toLevel(auditLevelCfg, Level.OFF);
 		if (auditLevelCfg != null && !logLevel.toString().equals(auditLevelCfg)) {
 			log.error("Invalid log level (netshot.log.audit.level) '{}'. Using {}.", auditLevelCfg, logLevel);
 		}
-		((ch.qos.logback.classic.Logger) aaaLogger).setLevel(logLevel);
-		
+		((ch.qos.logback.classic.Logger) AAA_LOG).setLevel(logLevel);
+
 		if (auditFile != null) {
 			try {
-				LoggerContext loggerContext = ((ch.qos.logback.classic.Logger) aaaLogger).getLoggerContext();
+				LoggerContext loggerContext = ((ch.qos.logback.classic.Logger) AAA_LOG).getLoggerContext();
 				RollingFileAppender<ILoggingEvent> appender = new RollingFileAppender<>();
 				appender.setContext(loggerContext);
 				appender.setFile(auditFile);
@@ -399,8 +404,8 @@ public class Netshot extends Thread {
 				fwRollingPolicy.setParent(appender);
 				fwRollingPolicy.start();
 
-				SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new 
-						SizeBasedTriggeringPolicy<>();
+				SizeBasedTriggeringPolicy<ILoggingEvent> triggeringPolicy = new
+					SizeBasedTriggeringPolicy<>();
 				triggeringPolicy.setMaxFileSize(new FileSize(auditMaxSize * FileSize.MB_COEFFICIENT));
 				triggeringPolicy.start();
 
@@ -412,11 +417,11 @@ public class Netshot extends Thread {
 				encoder.start();
 				appender.setEncoder(encoder);
 				appender.setContext(loggerContext);
-				
+
 				appender.start();
-				((ch.qos.logback.classic.Logger) aaaLogger).addAppender(appender);
+				((ch.qos.logback.classic.Logger) AAA_LOG).addAppender(appender);
 				log.warn("Audit information will be logged to {}.", auditFile);
-				aaaLogger.error("Audit starting.");
+				AAA_LOG.error("Audit starting.");
 			}
 			catch (Exception e) {
 				log.error("Unable to log AAA data into file {}. Exiting.", auditFile, e);
@@ -425,7 +430,7 @@ public class Netshot extends Thread {
 		LoggerFilter.init();
 		return true;
 	}
-	
+
 	/** The exception handler. To be used by other threads. */
 	public static Thread.UncaughtExceptionHandler exceptionHandler = new Thread.UncaughtExceptionHandler() {
 		@Override
@@ -435,7 +440,7 @@ public class Netshot extends Thread {
 			System.exit(1);
 		}
 	};
-	
+
 	/**
 	 * Initialize remote Syslog logging.
 	 * @return true if everything went fine.
@@ -443,9 +448,9 @@ public class Netshot extends Thread {
 	protected static boolean initSyslogLogging() {
 
 		ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger)
-				LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+			LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
 		LoggerContext loggerContext = rootLogger.getLoggerContext();
-		
+
 		int syslogIndex = 1;
 		while (true) {
 			String host = Netshot.getConfig(String.format("netshot.log.syslog%d.host", syslogIndex));
@@ -453,7 +458,7 @@ public class Netshot extends Thread {
 				break;
 			}
 			host = host.trim();
-			if (host.equals("")) {
+			if ("".equals(host)) {
 				break;
 			}
 			SyslogAppender appender = new SyslogAppender();
@@ -465,7 +470,7 @@ public class Netshot extends Thread {
 			String facility = Netshot.getConfig(String.format("netshot.log.syslog%d.facility", syslogIndex));
 			appender.setFacility(facility == null ? "LOCAL7" : facility);
 			rootLogger.addAppender(appender);
-			((ch.qos.logback.classic.Logger) aaaLogger).addAppender(appender);
+			((ch.qos.logback.classic.Logger) AAA_LOG).addAppender(appender);
 			try {
 				appender.start();
 			}
@@ -475,7 +480,7 @@ public class Netshot extends Thread {
 			log.warn("Logging to syslog {}:{} has started", appender.getSyslogHost(), appender.getPort());
 			syslogIndex++;
 		}
-		
+
 		return true;
 	}
 
@@ -518,7 +523,9 @@ public class Netshot extends Thread {
 		TakeSnapshotTask.loadConfig();
 		JavaScriptRule.loadConfig();
 		PythonRule.loadConfig();
+		PythonFileSystem.loadConfig();
 		Ssh.loadConfig();
+		Telnet.loadConfig();
 	}
 
 	/**
@@ -583,6 +590,9 @@ public class Netshot extends Thread {
 			Database.update();
 			log.info("Initializing access to the database.");
 			Database.init();
+
+			Netshot.loadModuleConfigs();
+
 			log.info("Loading the device drivers.");
 			DeviceDriver.refreshDrivers();
 			//log.info("Starting the TFTP server.");
@@ -594,8 +604,6 @@ public class Netshot extends Thread {
 
 			log.info("Starting the clustering manager.");
 			ClusterManager.init();
-
-			Netshot.loadModuleConfigs();
 
 			log.info("Initializing the task manager.");
 			TaskManager.init();

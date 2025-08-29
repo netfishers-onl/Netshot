@@ -33,6 +33,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.fasterxml.jackson.jakarta.rs.json.JacksonXmlBindJsonProvider;
 import com.fasterxml.jackson.jakarta.rs.xml.JacksonXmlBindXMLProvider;
 import com.fasterxml.jackson.jakarta.rs.yaml.JacksonXmlBindYAMLProvider;
+
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.jaxrs2.integration.resources.AcceptHeaderOpenApiResource;
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
@@ -48,11 +49,13 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.security.SecurityScheme.In;
 import io.swagger.v3.oas.models.security.SecurityScheme.Type;
 import io.swagger.v3.oas.models.servers.Server;
+import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.rest.RestViews.RestApiView;
 
 /**
  * Netshot Web application definition.
  */
+@Slf4j
 public class NetshotWebApplication extends ResourceConfig {
 	public NetshotWebApplication() {
 		registerClasses(RestService.class, SecurityFilter.class, ApiTokenAuthFilter.class);
@@ -108,13 +111,13 @@ public class NetshotWebApplication extends ResourceConfig {
 		oas.addSecurityItem(new SecurityRequirement().addList("ApiTokenAuth"));
 		oas.addSecurityItem(new SecurityRequirement().addList("CookieAuth"));
 		SwaggerConfiguration oasConfig = new SwaggerConfiguration().openAPI(oas).prettyPrint(true)
-				.resourcePackages(Stream.of(RestService.class.getPackageName()).collect(Collectors.toSet()));
+			.resourcePackages(Stream.of(RestService.class.getPackageName()).collect(Collectors.toSet()));
 
 		try {
 			new JaxrsOpenApiContextBuilder<>().application(this).openApiConfiguration(oasConfig).buildContext(true);
 		}
 		catch (OpenApiConfigurationException e) {
-			RestService.log.error("Can't initialize OpenAPI for JAX-RS", e);
+			log.error("Can't initialize OpenAPI for JAX-RS", e);
 		}
 	}
 }

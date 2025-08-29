@@ -28,7 +28,7 @@ import net.netshot.netshot.work.TaskLogger;
  */
 public class TaskLogTaskLogger implements TaskLogger {
 
-	private Task task;
+	private final Task task;
 
 	public TaskLogTaskLogger(Task task) {
 		this.task = task;
@@ -39,25 +39,25 @@ public class TaskLogTaskLogger implements TaskLogger {
 	public void warn(String message) {
 		this.task.warn(message);
 	}
-	
+
 	@Override
 	@Export
 	public void trace(String message) {
 		this.task.trace(message);
 	}
-	
+
 	@Override
 	@Export
 	public void info(String message) {
 		this.task.info(message);
 	}
-	
+
 	@Override
 	@Export
 	public void error(String message) {
 		this.task.error(message);
 	}
-	
+
 	@Override
 	@Export
 	public void debug(String message) {

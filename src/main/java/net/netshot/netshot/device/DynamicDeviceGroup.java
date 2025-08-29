@@ -20,25 +20,24 @@ package net.netshot.netshot.device;
 
 import java.util.List;
 
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.query.Query;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Finder.Expression.FinderParseException;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-
-import org.hibernate.HibernateException;
-import org.hibernate.query.Query;
-import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 /**
  * A dynamic group of devices is defined by search criteria.
@@ -49,14 +48,14 @@ import org.hibernate.annotations.OnDeleteAction;
 public class DynamicDeviceGroup extends DeviceGroup {
 
 	/** The device class. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private String driver = null;
+	private String driver;
 
 	/** The query. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Column(length = 1000),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
@@ -112,7 +111,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 		return new Finder(this.query, this.getDeviceDriver());
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.DeviceGroup#refreshCache(org.hibernate.Session)
 	 */
 	@Override
@@ -153,16 +152,16 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	 *
 	 * @param device the device
 	 */
-	static public void refreshAllGroups(Device device) {
+	public static void refreshAllGroups(Device device) {
 		refreshAllGroups(device.getId());
 	}
 
 	/**
 	 * Refresh all groups.
 	 *
-	 * @param device the device
+	 * @param deviceId = the ID of the device to target
 	 */
-	static synchronized public void refreshAllGroups(Long deviceId) {
+	public static synchronized void refreshAllGroups(Long deviceId) {
 		log.debug("Refreshing all groups for device {}.", deviceId);
 		Session session = Database.getSession();
 		try {

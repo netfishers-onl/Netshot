@@ -24,14 +24,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Transient;
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlAttribute;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -41,14 +33,22 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
 /**
  * An IPv6 address.
  */
 @Embeddable
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
-public class Network6Address extends NetworkAddress {
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
+public final class Network6Address extends NetworkAddress {
 
 	/**
 	 * Int to ip.
@@ -69,15 +69,16 @@ public class Network6Address extends NetworkAddress {
 	 * @param address2 the address2
 	 * @return the inet address
 	 */
-	static public InetAddress longToInetAddress(long address1, long address2) {
+	public static InetAddress longToInetAddress(long address1, long address2) {
 		ByteBuffer buffer = ByteBuffer.allocate(16);
 		buffer.putLong(address1);
 		buffer.putLong(address2);
 		try {
 			return InetAddress.getByAddress(buffer.array());
-		} catch (UnknownHostException e) {
+		}
+		catch (UnknownHostException e) {
 			return null;
-		}	
+		}
 	}
 
 	public static class AddressOnlySerializer extends JsonSerializer<Network6Address> {
@@ -152,7 +153,8 @@ public class Network6Address extends NetworkAddress {
 				this.address2 = bBuffer.getLong();
 				return;
 			}
-		} catch (UnknownHostException e) {
+		}
+		catch (UnknownHostException e) {
 		}
 		throw new UnknownHostException("Unable to parse the IPv6 address.");
 	}
@@ -168,7 +170,7 @@ public class Network6Address extends NetworkAddress {
 		this(address, Integer.parseInt(length));
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -204,7 +206,7 @@ public class Network6Address extends NetworkAddress {
 		return address2;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.NetworkAddress#getInetAddress()
 	 */
 	@Override
@@ -213,7 +215,7 @@ public class Network6Address extends NetworkAddress {
 		return longToInetAddress(this.address1, this.address2);
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.NetworkAddress#getIP()
 	 */
 	@Transient
@@ -245,7 +247,7 @@ public class Network6Address extends NetworkAddress {
 		return prefixLength;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
@@ -285,7 +287,7 @@ public class Network6Address extends NetworkAddress {
 		this.prefixLength = prefixLength;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
@@ -295,7 +297,8 @@ public class Network6Address extends NetworkAddress {
 
 	private AddressUsage addressUsage = AddressUsage.PRIMARY;
 
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Override
 	public AddressUsage getAddressUsage() {
 		return addressUsage;
@@ -309,11 +312,11 @@ public class Network6Address extends NetworkAddress {
 	public boolean contains(Network6Address address) {
 		if (prefixLength <= 64) {
 			return (this.address1 >>> (64 - this.prefixLength)) == (address
-					.address1 >>> (64 - this.prefixLength));
+				.address1 >>> (64 - this.prefixLength));
 		}
 		else {
 			return (this.address1 == address.address1) && (this.address2 >>> (64 - this.prefixLength))
-					== (address.address2 >>> (64 - this.prefixLength));
+				== (address.address2 >>> (64 - this.prefixLength));
 		}
 	}
 

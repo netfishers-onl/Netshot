@@ -23,6 +23,16 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.Session;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,96 +49,84 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import org.hibernate.Session;
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-
 import lombok.Getter;
 import lombok.Setter;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonView;
-
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
 /**
  * A group of devices.
  */
-@Entity @Inheritance(strategy = InheritanceType.JOINED)
-@XmlAccessorType(value = XmlAccessType.NONE)
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement()
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-		@Type(value = DynamicDeviceGroup.class, name = "DynamicDeviceGroup"),
-		@Type(value = StaticDeviceGroup.class, name = "StaticDeviceGroup"),
+	@Type(value = DynamicDeviceGroup.class, name = "DynamicDeviceGroup"),
+	@Type(value = StaticDeviceGroup.class, name = "StaticDeviceGroup"),
 })
-abstract public class DeviceGroup {
-	
+public abstract class DeviceGroup {
+
 	/** The cached devices. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@OneToMany(mappedBy = "key.group", cascade = CascadeType.ALL, orphanRemoval = true),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	protected Set<DeviceGroupMembership> cachedMemberships = new HashSet<>();
-	
+
 	/** The change date. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	protected Date changeDate;
-	
-	/** Version internal field */
-	@Getter(onMethod=@__({
+
+	/** Version internal field. */
+	@Getter(onMethod = @__({
 		@Version
 	}))
 	@Setter
 	private int version;
-	
+
 	/** The id. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
 		@XmlAttribute, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	protected long id;
-	
+
 	/** The name. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@NaturalId(mutable = true),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	protected String name;
-	
+
 	/** Folder containing the group. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Column(length = 1000),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	protected String folder = "";
-	
+
 	/** Whether the group should be hidden in reports. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	protected boolean hiddenFromReports = false;
-	
+	protected boolean hiddenFromReports;
+
 	/**
 	 * Instantiates a new device group.
 	 */
 	protected DeviceGroup() {
-		
+
 	}
-	
+
 	/**
 	 * Instantiates a new device group.
 	 *
@@ -140,6 +138,7 @@ abstract public class DeviceGroup {
 
 	/**
 	 * Return cached members of this group.
+	 * @return the cached devices of the group
 	 */
 	@Transient
 	public Set<Device> getCachedDevices() {
@@ -149,7 +148,7 @@ abstract public class DeviceGroup {
 		}
 		return devices;
 	}
-	
+
 	/**
 	 * Refresh cache.
 	 *
@@ -157,7 +156,7 @@ abstract public class DeviceGroup {
 	 * @throws Exception the exception
 	 */
 	public abstract void refreshCache(Session session) throws Exception;
-	
+
 	/**
 	 * Update cached devices.
 	 *
@@ -176,5 +175,5 @@ abstract public class DeviceGroup {
 	public String toString() {
 		return "Device Group " + id + " (name '" + name + "')";
 	}
-	
+
 }

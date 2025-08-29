@@ -52,7 +52,6 @@ import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
-
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 
@@ -60,43 +59,43 @@ import net.netshot.netshot.Netshot;
  * The Oidc class authenticates the users using JSON Web Token.
  */
 @Slf4j
-public class Oidc {
+public final class Oidc {
 
 	/** The AAA logger. */
-	final private static Logger aaaLogger = LoggerFactory.getLogger("AAA");
+	private static final Logger AAA_LOG = LoggerFactory.getLogger("AAA");
 
-	/** IdP metadata (retrieved from issuer endpoint URL) */
-	private static OIDCProviderMetadata idpMetadata = null;
+	/** IdP metadata (retrieved from issuer endpoint URL). */
+	private static OIDCProviderMetadata idpMetadata;
 
-	/** OIDC client info */
-	private static OIDCClientInformation clientInfo = null;
+	/** OIDC client info. */
+	private static OIDCClientInformation clientInfo;
 
-	/** ID Token validator based on IdP metadata and client info */
-	private static IDTokenValidator idTokenValidator = null;
+	/** ID Token validator based on IdP metadata and client info. */
+	private static IDTokenValidator idTokenValidator;
 
-	/** Name of the claim that will carry the role */
+	/** Name of the claim that will carry the role. */
 	private static String roleClaim;
 
-	/** Default permission level for authenticated user */
-	private static int defaultLevel = 0;
+	/** Default permission level for authenticated user. */
+	private static int defaultLevel;
 
-	/** Name of the claim that will carry the username */
+	/** Name of the claim that will carry the username. */
 	private static String usernameClaim;
 
-	/** Configured roles */
+	/** Configured roles. */
 	private static Map<String, Integer> roles = new HashMap<>();
 
-	private static IdPDiscoveryDaemon idpDiscoveryThread = null;
+	private static IdPDiscoveryDaemon idpDiscoveryThread;
 
 	/**
 	 * Thread to refresh the IdP Metadata from endpoint URL in background.
 	 */
-	private static class IdPDiscoveryDaemon extends Thread {
+	private static final class IdPDiscoveryDaemon extends Thread {
 
 		private String endpoint;
 		private int refreshInterval;
 		private int retryInterval;
-		private boolean stopping = false;
+		private boolean stopping;
 
 		private IdPDiscoveryDaemon(String endpoint, int retryInterval, int refreshInterval) {
 			this.endpoint = endpoint;
@@ -117,13 +116,13 @@ public class Oidc {
 		public void run() {
 			log.info("Starting OIDC IdP metadata discovery daemon");
 			while (!this.stopping) {
-				int waitingTime = refreshInterval;
+				int waitingTime = this.refreshInterval;
 				try {
 					Oidc.fetchIdpMetadata(this.endpoint);
 				}
 				catch (Exception e) {
 					log.error("Error while fetching/preparing OIDC configuration", e);
-					waitingTime = retryInterval;
+					waitingTime = this.retryInterval;
 				}
 				try {
 					log.trace("OIDC IdP discovery - pausing for {}ms", waitingTime);
@@ -145,7 +144,7 @@ public class Oidc {
 		log.trace("OIDC IDP metadata {}", Oidc.idpMetadata);
 		Oidc.idTokenValidator = IDTokenValidator.create(Oidc.idpMetadata, Oidc.clientInfo);
 	}
-	
+
 	/**
 	 * Load the configuration from Netshot config file.
 	 */
@@ -225,17 +224,18 @@ public class Oidc {
 	/**
 	 * Exchange authorization code for ID/Access tokens.
 	 * @param code = the authorization code
+	 * @param redirectUrl = the redirect URL
 	 * @return the OIDC tokens
 	 * @throws Exception in case of problem
 	 */
-	private static OIDCTokens codeToTokens(String code, URL baseUrl) throws Exception {
+	private static OIDCTokens codeToTokens(String code, URL redirectUrl) throws Exception {
 		// Create token request
 		AuthorizationCode authCode = new AuthorizationCode(code);
-		AuthorizationGrant codeGrant = new AuthorizationCodeGrant(authCode, baseUrl.toURI());
+		AuthorizationGrant codeGrant = new AuthorizationCodeGrant(authCode, redirectUrl.toURI());
 
 		// Client authentication
 		ClientAuthentication clientAuth = new ClientSecretBasic(clientInfo.getID(), clientInfo.getSecret());
-		
+
 		// Prepare request
 		TokenRequest tokenRequest = new TokenRequest
 			.Builder(Oidc.idpMetadata.getTokenEndpointURI(), clientAuth, codeGrant)
@@ -245,12 +245,12 @@ public class Oidc {
 		// Send request
 		HTTPResponse response = request.send();
 		OIDCTokenResponse tokenResponse = OIDCTokenResponse.parse(response);
-		
+
 		if (!tokenResponse.indicatesSuccess()) {
 			TokenErrorResponse errorResponse = tokenResponse.toErrorResponse();
 			throw new RuntimeException("Token exchange failed: " + errorResponse.getErrorObject().getDescription());
 		}
-		
+
 		// Parse OIDC token response
 		AccessTokenResponse oidcTokenResponse = tokenResponse.toSuccessResponse();
 		return oidcTokenResponse.getTokens().toOIDCTokens();
@@ -258,23 +258,24 @@ public class Oidc {
 
 	/**
 	 * Exchange authorization code for tokens and validate.
-	 * @param authorizationCode
-	 * @return
+	 * @param authorizationCode = the authorization code to exchange for token
+	 * @param redirectUrl = the redirect URL
+	 * @return the authenticated user or null if authentication failed
 	 */
-	public static synchronized UiUser authenticateWithCode(String authorizationCode, URL baseUrl) {
+	public static synchronized UiUser authenticateWithCode(String authorizationCode, URL redirectUrl) {
 		if (!Oidc.isAvailable()) {
 			return null;
 		}
 		try {
 			// Exchange authorization token for tokens
-			final OIDCTokens tokens = codeToTokens(authorizationCode, baseUrl);
-			aaaLogger.debug(
+			final OIDCTokens tokens = codeToTokens(authorizationCode, redirectUrl);
+			AAA_LOG.debug(
 				MarkerFactory.getMarker("AAA"),
 				"OIDC authorization code exchanged for OIDC tokens"
 			);
 			final IDTokenClaimsSet tokenClaims = Oidc.idTokenValidator
 				.validate(tokens.getIDToken(), null);
-			aaaLogger.debug(
+			AAA_LOG.debug(
 				MarkerFactory.getMarker("AAA"),
 				"ID token successfully validated"
 			);
@@ -298,22 +299,25 @@ public class Oidc {
 			for (String passedRole : passedRoles) {
 				Integer roleLevel = roles.get(passedRole);
 				if (roleLevel != null) {
-					if (level == null || roleLevel > level)
-					level = roleLevel;
+					if (level == null || roleLevel > level) {
+						level = roleLevel;
+					}
 				}
 			}
 			if (level == null) {
 				level = Oidc.defaultLevel;
 			}
 			UiUser user = new UiUser(username, level);
-			aaaLogger.info("User {} successfully authenticated via OIDC (level {})", username, level);
+			AAA_LOG.info("User {} successfully authenticated via OIDC (level {})", username, level);
 			return user;
 		}
 		catch (Exception e) {
 			log.warn("Error while authenticating user based on OIDC authorization code", e);
-			aaaLogger.warn("Error while authenticating user based on OIDC authorization code", e);
+			AAA_LOG.warn("Error while authenticating user based on OIDC authorization code", e);
 			return null;
 		}
 	}
-}
 
+	private Oidc() {
+	}
+}

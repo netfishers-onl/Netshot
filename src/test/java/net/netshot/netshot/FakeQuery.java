@@ -27,13 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -57,9 +50,17 @@ import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryOptions;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+
 public class FakeQuery<R> implements Query<R> {
 
-	private Map<String, Object> parameters = new HashMap<>();
+	private final Map<String, Object> parameters = new HashMap<>();
 
 	public Map<String, Object> getParameterHash() {
 		return this.parameters;
@@ -493,13 +494,13 @@ public class FakeQuery<R> implements Query<R> {
 
 	@Override
 	public <P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments,
-			Class<P> javaType) {
+		Class<P> javaType) {
 		throw new UnsupportedOperationException("Unimplemented method 'setParameterList'");
 	}
 
 	@Override
 	public <P> Query<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> arguments,
-			BindableType<P> type) {
+		BindableType<P> type) {
 		throw new UnsupportedOperationException("Unimplemented method 'setParameterList'");
 	}
 
@@ -623,5 +624,5 @@ public class FakeQuery<R> implements Query<R> {
 		throw new UnsupportedOperationException("Unimplemented method 'setOrder'");
 	}
 
-	
+
 }

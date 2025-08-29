@@ -35,12 +35,12 @@ import net.netshot.netshot.Netshot;
  */
 public class CustomConnectionProvider extends AbstractMultiTenantConnectionProvider<TenantIdentifier> {
 
-	/** Map of ConnectionProvider objects (read-only and read-write) */
-	private Map<TenantIdentifier, ConnectionProvider> providerMap = new HashMap<>();
+	/** Map of ConnectionProvider objects (read-only and read-write). */
+	private final Map<TenantIdentifier, ConnectionProvider> providerMap = new HashMap<>();
 
 	private ConnectionProvider defaultProvider;
 
-	public void registerConnectionProvider(TenantIdentifier identifier, Map<String, Object> props, boolean defaultProvider) {
+	public void registerConnectionProvider(TenantIdentifier identifier, Map<String, Object> props, boolean asDefaultProvider) {
 		C3P0ConnectionProvider provider = new C3P0ConnectionProvider();
 		provider.injectServices((StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().build());
 		Map<String, Object> configProps = new HashMap<>(props);
@@ -69,7 +69,7 @@ public class CustomConnectionProvider extends AbstractMultiTenantConnectionProvi
 		configProps.put("hibernate.c3p0.debugUnreturnedConnectionStackTraces", "true");
 		provider.configure(configProps);
 		this.providerMap.put(identifier, provider);
-		if (defaultProvider) {
+		if (asDefaultProvider) {
 			this.defaultProvider = provider;
 		}
 	}
@@ -87,5 +87,5 @@ public class CustomConnectionProvider extends AbstractMultiTenantConnectionProvi
 		}
 		return cp;
 	}
-	
+
 }

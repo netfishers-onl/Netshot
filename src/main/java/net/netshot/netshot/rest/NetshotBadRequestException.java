@@ -29,7 +29,7 @@ import net.netshot.netshot.rest.RestService.RsErrorBean;
  */
 public class NetshotBadRequestException extends WebApplicationException {
 
-	static public enum Reason {
+	public enum Reason {
 		NETSHOT_INVALID_REQUEST_PARAMETER(10, Response.Status.BAD_REQUEST),
 		NETSHOT_DATABASE_ACCESS_ERROR(20, Response.Status.INTERNAL_SERVER_ERROR),
 		NETSHOT_INVALID_IP_ADDRESS(100, Response.Status.BAD_REQUEST),
@@ -108,7 +108,7 @@ public class NetshotBadRequestException extends WebApplicationException {
 		@Getter
 		Response.Status status;
 
-		private Reason(int code, Response.Status status) {
+		Reason(int code, Response.Status status) {
 			this.code = code;
 			this.status = status;
 		}
@@ -121,10 +121,10 @@ public class NetshotBadRequestException extends WebApplicationException {
 	 * Instantiates a new netshot bad request exception.
 	 *
 	 * @param message the message
-	 * @param errorCode the error code
+	 * @param reason the reason
 	 */
 	public NetshotBadRequestException(String message, NetshotBadRequestException.Reason reason) {
 		super(Response.status(reason.status)
-				.entity(new RsErrorBean(message, reason.code)).build());
+			.entity(new RsErrorBean(message, reason.code)).build());
 	}
 }

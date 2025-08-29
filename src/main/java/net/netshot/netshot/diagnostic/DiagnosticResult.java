@@ -21,6 +21,15 @@ package net.netshot.netshot.diagnostic;
 import java.util.Date;
 import java.util.Objects;
 
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
@@ -37,82 +46,72 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-
 import lombok.Getter;
 import lombok.Setter;
-
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonView;
-
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-@Entity @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.CHAR)
 @DiscriminatorValue("A")
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-		@Type(value = DiagnosticNumericResult.class, name = "NUMERIC"),
-		@Type(value = DiagnosticTextResult.class, name = "TEXT"),
-		@Type(value = DiagnosticLongTextResult.class, name = "LONGTEXT"),
-		@Type(value = DiagnosticBinaryResult.class, name = "BINARY")
+	@Type(value = DiagnosticNumericResult.class, name = "NUMERIC"),
+	@Type(value = DiagnosticTextResult.class, name = "TEXT"),
+	@Type(value = DiagnosticLongTextResult.class, name = "LONGTEXT"),
+	@Type(value = DiagnosticBinaryResult.class, name = "BINARY")
 })
 @FilterDef(name = "lightDiagAttributesOnly", defaultCondition = "type <> 'T'")
 public abstract class DiagnosticResult {
 
-	/** Unique ID of the diagnostic result **/
-	@Getter(onMethod=@__({
+	/** Unique ID of the diagnostic result. **/
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY)
 	}))
 	@Setter
 	protected long id;
 
-	/** The date this result was created on **/
-	@Getter(onMethod=@__({
+	/** The date this result was created on. **/
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private Date creationDate = new Date();
 
-	/** The last date this result was returned **/
-	@Getter(onMethod=@__({
+	/** The last date this result was returned. **/
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private Date lastCheckDate = new Date();
 
-	/** The diagnostic which created that result **/
-	@Getter(onMethod=@__({
+	/** The diagnostic which created that result. **/
+	@Getter(onMethod = @__({
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private Diagnostic diagnostic;
 
-	/** The device which created that result **/
-	@Getter(onMethod=@__({
+	/** The device which created that result. **/
+	@Getter(onMethod = @__({
 		@ManyToOne,
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private Device device;
-	
+
 	/**
-	 * Instantiates a new diagnostic result (for Hibernate)
+	 * Instantiates a new diagnostic result (for Hibernate).
 	 */
 	protected DiagnosticResult() {
 	}
-	
+
 	/**
-	 * Instantiates a new diagnostic result
+	 * Instantiates a new diagnostic result.
 	 * @param device The device
 	 * @param diagnostic The diagnostic
 	 */
@@ -127,7 +126,7 @@ public abstract class DiagnosticResult {
 	 */
 	@Transient
 	public abstract String getAsText();
-	
+
 
 	/**
 	 * Gets the result value as an object.
@@ -141,13 +140,14 @@ public abstract class DiagnosticResult {
 	 * @return the name of the diagnostic.
 	 */
 	@Transient
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getDiagnosticName() {
 		return this.getDiagnostic().getName();
 	}
-	
+
 	public abstract boolean valueEquals(DiagnosticResult obj);
-	
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(diagnostic, device);
@@ -155,8 +155,12 @@ public abstract class DiagnosticResult {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (!(obj instanceof DiagnosticResult)) return false;
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof DiagnosticResult)) {
+			return false;
+		}
 		DiagnosticResult other = (DiagnosticResult) obj;
 		return Objects.equals(diagnostic, other.diagnostic)
 			&& Objects.equals(device, other.device);

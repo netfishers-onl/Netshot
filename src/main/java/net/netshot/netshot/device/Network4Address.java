@@ -24,14 +24,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Transient;
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlAttribute;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -41,6 +33,13 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
 /**
@@ -48,8 +47,8 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
  */
 @Embeddable
 @XmlRootElement
-@XmlAccessorType(value = XmlAccessType.NONE)
-public class Network4Address extends NetworkAddress {
+@XmlAccessorType(XmlAccessType.NONE)
+public final class Network4Address extends NetworkAddress {
 
 	/**
 	 * Dotted mask to prefix length.
@@ -61,7 +60,7 @@ public class Network4Address extends NetworkAddress {
 	 *           the unknown host exception
 	 */
 	public static int dottedMaskToPrefixLength(String mask)
-			throws UnknownHostException {
+		throws UnknownHostException {
 		int n = ipToInt(mask);
 		n = ~n;
 		return (int) Math.round(32 - (Math.log(n + 1) / Math.log(2)));
@@ -89,7 +88,7 @@ public class Network4Address extends NetworkAddress {
 	 *           the unknown host exception
 	 */
 	public static InetAddress intToInetAddress(int address)
-			throws UnknownHostException {
+		throws UnknownHostException {
 		ByteBuffer buffer = ByteBuffer.allocate(4);
 		buffer.putInt(address);
 		return InetAddress.getByAddress(buffer.array());
@@ -140,7 +139,7 @@ public class Network4Address extends NetworkAddress {
 	 */
 	public static String prefixLengthToDottedMask(int length) {
 		return Network4Address.intToIP(Network4Address
-				.prefixLengthToIntAddress(length));
+			.prefixLengthToIntAddress(length));
 	}
 
 	/**
@@ -171,11 +170,10 @@ public class Network4Address extends NetworkAddress {
 
 
 	/** The address. */
-	private int address = 0;
+	private int address;
 
 	/** The prefix length. */
-	private int prefixLength = 0;
-
+	private int prefixLength;
 
 
 	/**
@@ -195,7 +193,7 @@ public class Network4Address extends NetworkAddress {
 	 *           the unknown host exception
 	 */
 	public Network4Address(Inet4Address address, int prefixLength)
-			throws UnknownHostException {
+		throws UnknownHostException {
 		this.address = inetAddressToInt(address);
 		if (prefixLength < 0 || prefixLength > 32) {
 			throw new UnknownHostException("Invalid prefix length");
@@ -226,7 +224,7 @@ public class Network4Address extends NetworkAddress {
 	 *           the unknown host exception
 	 */
 	public Network4Address(int address, int prefixLength)
-			throws UnknownHostException {
+		throws UnknownHostException {
 		this.address = address;
 		if (prefixLength < 0 || prefixLength > 32) {
 			throw new UnknownHostException("Invalid prefix length");
@@ -245,7 +243,7 @@ public class Network4Address extends NetworkAddress {
 	 *           the unknown host exception
 	 */
 	public Network4Address(String address, int prefixLength)
-			throws UnknownHostException {
+		throws UnknownHostException {
 		this.address = Network4Address.ipToInt(address);
 		if (prefixLength < 0 || prefixLength > 32) {
 			throw new UnknownHostException("Invalid prefix length");
@@ -264,7 +262,7 @@ public class Network4Address extends NetworkAddress {
 	 *           the unknown host exception
 	 */
 	public Network4Address(String address, String mask)
-			throws UnknownHostException {
+		throws UnknownHostException {
 		this.address = Network4Address.ipToInt(address);
 		this.prefixLength = Network4Address.dottedMaskToPrefixLength(mask);
 	}
@@ -422,8 +420,8 @@ public class Network4Address extends NetworkAddress {
 	 */
 	@Transient
 	public boolean isNormalUnicast() {
-		return (!this.isBroadcast() && !this.isLoopback() && !this.isMulticast() && !this
-				.isUndefined() && !this.isDirectedBroadcast());
+		return !this.isBroadcast() && !this.isLoopback() && !this.isMulticast() && !this
+			.isUndefined() && !this.isDirectedBroadcast();
 	}
 
 	/**
@@ -433,7 +431,7 @@ public class Network4Address extends NetworkAddress {
 	 */
 	@Transient
 	public boolean isUndefined() {
-		return (this.address == 0);
+		return this.address == 0;
 	}
 
 	/**
@@ -464,7 +462,7 @@ public class Network4Address extends NetworkAddress {
 	@Transient
 	public int getSubnetMin() {
 		return this.getIntAddress()
-				& Network4Address.prefixLengthToIntAddress(this.getPrefixLength());
+			& Network4Address.prefixLengthToIntAddress(this.getPrefixLength());
 	}
 
 	/**
@@ -475,7 +473,7 @@ public class Network4Address extends NetworkAddress {
 	@Transient
 	public int getSubnetMax() {
 		return this.getSubnetMin()
-				| ~Network4Address.prefixLengthToIntAddress(this.getPrefixLength());
+			| ~Network4Address.prefixLengthToIntAddress(this.getPrefixLength());
 	}
 
 	/**
@@ -487,12 +485,13 @@ public class Network4Address extends NetworkAddress {
 	 */
 	public boolean contains(Network4Address otherAddress) {
 		return (this.address >>> (32 - this.prefixLength)) == (otherAddress
-				.getIntAddress() >>> (32 - this.prefixLength));
+			.getIntAddress() >>> (32 - this.prefixLength));
 	}
 
 	private AddressUsage addressUsage = AddressUsage.PRIMARY;
 
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Override
 	public AddressUsage getAddressUsage() {
 		return addressUsage;

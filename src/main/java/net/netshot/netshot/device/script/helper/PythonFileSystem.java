@@ -35,6 +35,7 @@ import java.util.Set;
 
 import org.graalvm.polyglot.io.FileSystem;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 
@@ -44,22 +45,42 @@ import net.netshot.netshot.Netshot;
  * in read-only mode.
  */
 @Slf4j
-public class PythonFileSystem implements FileSystem {
-	
-	/** Python VirtualEnv folder (if any) */
-	public static String VENV_FOLDER = null;
-	
-	static {
-		String venv = Netshot.getConfig("netshot.python.virtualenv");
-		if (venv != null) {
-			File venvFile = new File(venv);
-			if (venvFile.exists() && venvFile.isDirectory()) {
-				VENV_FOLDER = venvFile.getAbsolutePath();
-			}
-			else {
-				log.warn("Python virtualenv folder {} doesn't exist or is not a directory", venv);
+public final class PythonFileSystem implements FileSystem {
+
+	/**
+	 * Settings/config for the current class.
+	 */
+	public static final class Settings {
+		/** Python VirtualEnv folder (if any). */
+		@Getter
+		private String venvFolder;
+
+		/**
+		 * Load settings from config.
+		 */
+		private void load() {
+			this.venvFolder = null;
+			String venv = Netshot.getConfig("netshot.python.virtualenv");
+			if (venv != null) {
+				File venvFile = new File(venv);
+				if (venvFile.exists() && venvFile.isDirectory()) {
+					this.venvFolder = venvFile.getAbsolutePath();
+				}
+				else {
+					log.warn("Python virtualenv folder {} doesn't exist or is not a directory", venv);
+				}
 			}
 		}
+	}
+
+	/** Settings for this class. */
+	public static final Settings SETTINGS = new Settings();
+
+	/**
+	 * Load the main policy from configuration.
+	 */
+	public static void loadConfig() {
+		PythonFileSystem.SETTINGS.load();
 	}
 
 	private final FileSystem delegate;
@@ -70,11 +91,11 @@ public class PythonFileSystem implements FileSystem {
 		this.delegate = FileSystem.newDefaultFileSystem();
 		this.libFolder = delegate.toRealPath(
 			delegate.parsePath(System.getProperty("java.home") + "/languages"));
-		if (VENV_FOLDER == null) {
+		if (PythonFileSystem.SETTINGS.getVenvFolder() == null) {
 			this.venvFolder = null;
 		}
 		else {
-			this.venvFolder = delegate.toRealPath(delegate.parsePath(VENV_FOLDER));
+			this.venvFolder = delegate.toRealPath(delegate.parsePath(PythonFileSystem.SETTINGS.getVenvFolder()));
 		}
 	}
 
@@ -89,8 +110,8 @@ public class PythonFileSystem implements FileSystem {
 			catch (IOException ioe) {
 			}
 		}
-		if (realPath == null || !(realPath.startsWith(libFolder) || (venvFolder != null && realPath.startsWith(venvFolder)) ||
-				(realPath.startsWith("/proc/")))) {
+		if (realPath == null || !(realPath.startsWith(libFolder) || (venvFolder != null && realPath.startsWith(venvFolder))
+			|| (realPath.startsWith("/proc/")))) {
 			log.info("Access ({}) to {} [{}] is denied", reason, path, realPath);
 			throw new SecurityException("Access to " + path + " is denied.");
 		}
@@ -108,7 +129,7 @@ public class PythonFileSystem implements FileSystem {
 
 	@Override
 	public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
-			throws IOException {
+		throws IOException {
 		for (OpenOption option : options) {
 			if (!option.equals(StandardOpenOption.READ)) {
 				log.warn("Denying new Byte channel for {} with option {}", path, option);

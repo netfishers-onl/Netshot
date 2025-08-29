@@ -20,6 +20,10 @@ package net.netshot.netshot.work.tasks;
 
 import java.util.Map;
 
+import org.hibernate.annotations.NaturalId;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,9 +35,6 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.DeviceDriver;
@@ -41,50 +42,49 @@ import net.netshot.netshot.device.script.JsCliScript;
 import net.netshot.netshot.device.script.JsCliScript.UserInputDefinition;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-import org.hibernate.annotations.NaturalId;
-
 @Entity
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 public class DeviceJsScript {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
 		@XmlAttribute, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private long id;
-	
-	@Getter(onMethod=@__({
+
+	@Getter(onMethod = @__({
 		@NaturalId,
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String name;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Column(length = 10000000),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String script;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String deviceDriver;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String author;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Transient,
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
-	private Map<String, UserInputDefinition> userInputDefinitions = null;
+	private Map<String, UserInputDefinition> userInputDefinitions;
 
 	protected DeviceJsScript() {
 
@@ -96,9 +96,10 @@ public class DeviceJsScript {
 		this.deviceDriver = deviceDriver;
 		this.author = author;
 	}
-	
+
 	@Transient
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	public String getRealDeviceType() {
 		DeviceDriver driver = DeviceDriver.getDriverByName(this.deviceDriver);
 		if (driver == null) {

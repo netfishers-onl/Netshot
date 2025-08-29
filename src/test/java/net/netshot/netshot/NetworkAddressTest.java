@@ -18,17 +18,15 @@
  */
 package net.netshot.netshot;
 
-import org.junit.jupiter.api.Assertions;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import net.netshot.netshot.device.Network4Address;
+import net.netshot.netshot.device.Network6Address;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import net.netshot.netshot.device.Network4Address;
-import net.netshot.netshot.device.Network6Address;
 
 public class NetworkAddressTest {
 
@@ -55,7 +53,7 @@ public class NetworkAddressTest {
 		@DisplayName("String IPv4 address with mask")
 		void stringAddressWithMask() throws UnknownHostException {
 			Network4Address address = new Network4Address("10.1.1.16", "255.255.255.128");
-			
+
 			Assertions.assertEquals(address.getPrefix(), "10.1.1.16/25", "The prefixes don't match");
 			Assertions.assertEquals(address.getInetAddress(), InetAddress.getByName("10.1.1.16"),
 				"The InetAddresses don't match");
@@ -68,7 +66,7 @@ public class NetworkAddressTest {
 		@DisplayName("Int IPv4 address with prefix length")
 		void intAddress() throws UnknownHostException {
 			Network4Address address = new Network4Address(0x0A0A1010, 16);
-			
+
 			Assertions.assertEquals(address.getPrefix(), "10.10.16.16/16", "The prefixes don't match");
 			Assertions.assertEquals(address.getInetAddress(), InetAddress.getByName("10.10.16.16"),
 				"The InetAddresses don't match");
@@ -81,7 +79,7 @@ public class NetworkAddressTest {
 		@DisplayName("Multicast IPv4 Address")
 		void multicastAddress() throws UnknownHostException {
 			Network4Address address = new Network4Address("239.0.0.16");
-			
+
 			Assertions.assertEquals(address.getPrefix(), "239.0.0.16/0", "The prefixes don't match");
 			Assertions.assertTrue(address.isMulticast(), "The prefix is not multicast");
 			Assertions.assertFalse(address.isBroadcast(), "The prefix is seen as broadcast");
@@ -92,7 +90,7 @@ public class NetworkAddressTest {
 		@DisplayName("Broadcast IPv4 Address")
 		void broadcastAddress() throws UnknownHostException {
 			Network4Address address = new Network4Address("255.255.255.255");
-			
+
 			Assertions.assertTrue(address.isBroadcast(), "The prefix is not broadcast");
 			Assertions.assertFalse(address.isMulticast(), "The prefix is seen as multicast");
 			Assertions.assertFalse(address.isNormalUnicast(), "The prefix is seen as unicast");
@@ -102,7 +100,7 @@ public class NetworkAddressTest {
 		@DisplayName("Directed broadcast IPv4 Address")
 		void directedBroadcastAddress() throws UnknownHostException {
 			Network4Address address = new Network4Address("192.168.0.255", 24);
-			
+
 			Assertions.assertEquals(address.getPrefix(), "192.168.0.255/24", "The prefixes don't match");
 			Assertions.assertTrue(address.isDirectedBroadcast(), "The prefix is not directed broadcast");
 			Assertions.assertFalse(address.isBroadcast(), "The prefix is seen as broadcast");
@@ -114,7 +112,7 @@ public class NetworkAddressTest {
 		@DisplayName("/32 IPv4 Address")
 		void slash32Address() throws UnknownHostException {
 			Network4Address address = new Network4Address("1.1.1.1", 32);
-			
+
 			Assertions.assertEquals(address.getPrefix(), "1.1.1.1/32", "The prefixes don't match");
 			Assertions.assertTrue(address.isNormalUnicast(), "The prefix is not normal unicast");
 			Assertions.assertFalse(address.isDirectedBroadcast(), "The prefix is seen as directed broadcast");
@@ -144,7 +142,7 @@ public class NetworkAddressTest {
 
 			Network4Address min = new Network4Address(address.getSubnetMin(), address.getPrefixLength());
 			Network4Address max = new Network4Address(address.getSubnetMax(), address.getPrefixLength());
-			
+
 			Assertions.assertEquals(min.getPrefix(), "192.0.2.0/24", "The min IPs don't match");
 			Assertions.assertEquals(max.getPrefix(), "192.0.2.255/24", "The max IPs don't match");
 		}
@@ -178,7 +176,7 @@ public class NetworkAddressTest {
 		@DisplayName("IPv6 Global Unicast")
 		void globalUnicastAddress() throws UnknownHostException {
 			Network6Address address = new Network6Address("2016:1:2:3::16", 64);
-			
+
 			Assertions.assertTrue(address.isGlobalUnicast(), "The address is not global unicast");
 			Assertions.assertFalse(address.isMulticast(), "The address is multicast");
 			Assertions.assertFalse(address.isLinkLocal(), "The address is link local");
@@ -188,7 +186,7 @@ public class NetworkAddressTest {
 		@DisplayName("IPv6 Multicast")
 		void multicastAddress() throws UnknownHostException {
 			Network6Address address = new Network6Address("ff01::1", 64);
-			
+
 			Assertions.assertTrue(address.isMulticast(), "The address is not multicast");
 			Assertions.assertFalse(address.isGlobalUnicast(), "The address is global unicast");
 			Assertions.assertFalse(address.isLinkLocal(), "The address is link local");
@@ -198,7 +196,7 @@ public class NetworkAddressTest {
 		@DisplayName("IPv6 Link Local")
 		void linkLocalAddress() throws UnknownHostException {
 			Network6Address address = new Network6Address("fe80::1", 128);
-			
+
 			Assertions.assertTrue(address.isLinkLocal(), "The address is not link local");
 			Assertions.assertFalse(address.isMulticast(), "The address is multicast");
 			Assertions.assertFalse(address.isGlobalUnicast(), "The address is global unicast");
@@ -210,7 +208,7 @@ public class NetworkAddressTest {
 			Network6Address address1 = new Network6Address("4001:1:2::", 64);
 			Network6Address address2 = new Network6Address("600:1:2::", 64);
 			Network6Address address3 = new Network6Address("fc01:1:2::", 64);
-			
+
 			Assertions.assertFalse(address1.isLinkLocal(), "The address 1 is link local");
 			Assertions.assertFalse(address1.isMulticast(), "The address 1 is multicast");
 			Assertions.assertFalse(address1.isGlobalUnicast(), "The address 1 is global unicast");

@@ -55,17 +55,17 @@ public class FakeOidcIdpServer {
 		}
 	}
 
-	final static private URI DEFAULT_BASE_URI = URI.create("http://localhost:8980/");
-	final static private String DISCOVERY_PATH = "/.well-known/openid-configuration";
-	final static private String AUTH_PATH = "/protocol/openid-connect/auth";
-	final static private String TOKEN_PATH = "/protocol/openid-connect/token";
-	final static private String JWKS_PATH = "/protocol/openid-connect/certs";
+	private static final URI DEFAULT_BASE_URI = URI.create("http://localhost:8980/");
+	private static final String DISCOVERY_PATH = "/.well-known/openid-configuration";
+	private static final String AUTH_PATH = "/protocol/openid-connect/auth";
+	private static final String TOKEN_PATH = "/protocol/openid-connect/token";
+	private static final String JWKS_PATH = "/protocol/openid-connect/certs";
 
-	final static private String SAMPLE_KID = "ukbTXswbjExjfqPBKPREf8VULCASfzi05E97YKsj6g0";
+	private static final String SAMPLE_KID = "ukbTXswbjExjfqPBKPREf8VULCASfzi05E97YKsj6g0";
 
 	// Sample RSA key (PCKS8, PEM-encoded)
-	final static private String SAMPLE_PRIVATE_KEY =
-			  "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDLFrHaHNdJAyV3"
+	private static final String SAMPLE_PRIVATE_KEY =
+		"MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDLFrHaHNdJAyV3"
 			+ "Tctaam0MX978CKEDKGlxeuRmSnjMVDfTljI7zThWowbJ4sqg6ICvDtTlfAAhIPxp"
 			+ "spPYHITyA79PV57/Y/k3Cz55DMpm19YwJUbEcHSn2Z6fIcOmXanPiNUB3A1Zx/Jx"
 			+ "ZHYPzgIaWGEwRTBECjSIlZwYM1iOVtZaMrOSqc5z2cfRVNfBYQ5/mDn3ZEGv+ny+"
@@ -93,8 +93,8 @@ public class FakeOidcIdpServer {
 			+ "oby0A0cpHjPY+bR+KlAPivKg";
 
 	// Sample IdP certificate for tests (private key above)
-	final static private String SAMPLE_CERTIFICATE =
-			"MIIClzCCAX8CBgGXq4B+JzANBgkqhkiG9w0BAQsFADAPMQ0wCwYDVQQDDAR0ZXN0MB4XDTI1MDYyNjA5"
+	private static final String SAMPLE_CERTIFICATE =
+		"MIIClzCCAX8CBgGXq4B+JzANBgkqhkiG9w0BAQsFADAPMQ0wCwYDVQQDDAR0ZXN0MB4XDTI1MDYyNjA5"
 			+ "MDgzNFoXDTM1MDYyNjA5MTAxNFowDzENMAsGA1UEAwwEdGVzdDCCASIwDQYJKoZIhvcNAQEBBQADggEP"
 			+ "ADCCAQoCggEBAMsWsdoc10kDJXdNy1pqbQxf3vwIoQMoaXF65GZKeMxUN9OWMjvNOFajBsniyqDogK8O"
 			+ "1OV8ACEg/Gmyk9gchPIDv09Xnv9j+TcLPnkMymbX1jAlRsRwdKfZnp8hw6Zdqc+I1QHcDVnH8nFkdg/O"
@@ -124,7 +124,7 @@ public class FakeOidcIdpServer {
 
 	private Map<String, User> authorizationCodes = new HashMap<>();
 
-	private Undertow server = null;
+	private Undertow server;
 
 	public FakeOidcIdpServer(URI baseUri) throws GeneralSecurityException {
 		this.baseUri = baseUri;
@@ -172,9 +172,9 @@ public class FakeOidcIdpServer {
 	}
 
 	private String signEncodeToken(ObjectNode token)
-			throws SignatureException, InvalidKeyException, NoSuchAlgorithmException {
+		throws SignatureException, InvalidKeyException, NoSuchAlgorithmException {
 		ObjectNode header = JsonNodeFactory.instance.objectNode().put("alg", "RS256").put("typ", "JWT").put("kid",
-				SAMPLE_KID);
+			SAMPLE_KID);
 		String jwt = encodeJson(header) + "." + encodeJson(token);
 		Signature signature = Signature.getInstance("SHA256withRSA");
 		signature.initSign(privKey);
@@ -190,21 +190,21 @@ public class FakeOidcIdpServer {
 
 	private ObjectNode generateIdToken(User user) {
 		ObjectNode token = JsonNodeFactory.instance.objectNode()
-				.put("exp", Instant.now().plus(1, ChronoUnit.HOURS).getEpochSecond()).put("iat", Instant.now().getEpochSecond())
-				.put("auth_time", Instant.now().getEpochSecond()).put("jti", "f9e39317-81e0-4334-a75e-994003f1d160")
-				.put("iss", this.baseUri.toString()).put("typ", "ID").put("azp", this.clientId)
-				.put("sid", "5eac7f33-3818-4438-b20a-78dfaec74abd").put("scope", "openid").put("acr", "1")
-				.put("aud", this.clientId).put("sub", "8b17b6a1-3c91-491b-9f9f-d7c314f08271")
-				.put("preferred_username", user.username).put("role", user.role);
+			.put("exp", Instant.now().plus(1, ChronoUnit.HOURS).getEpochSecond()).put("iat", Instant.now().getEpochSecond())
+			.put("auth_time", Instant.now().getEpochSecond()).put("jti", "f9e39317-81e0-4334-a75e-994003f1d160")
+			.put("iss", this.baseUri.toString()).put("typ", "ID").put("azp", this.clientId)
+			.put("sid", "5eac7f33-3818-4438-b20a-78dfaec74abd").put("scope", "openid").put("acr", "1")
+			.put("aud", this.clientId).put("sub", "8b17b6a1-3c91-491b-9f9f-d7c314f08271")
+			.put("preferred_username", user.username).put("role", user.role);
 		return token;
 	}
 
 	private ObjectNode generateAccessToken(User user) {
 		ObjectNode token = JsonNodeFactory.instance.objectNode()
-				.put("exp", Instant.now().plus(1, ChronoUnit.HOURS).getEpochSecond()).put("iat", Instant.now().getEpochSecond())
-				.put("jti", "trrtna:df789356-42fe-4bf3-8607-303161e9fe0e").put("iss", this.baseUri.toString())
-				.put("typ", "Bearer").put("azp", this.clientId).put("sid", "c83ec19e-fc41-4764-9fe6-2b92b46fa10e")
-				.put("acr", "1").put("preferred_username", user.username);
+			.put("exp", Instant.now().plus(1, ChronoUnit.HOURS).getEpochSecond()).put("iat", Instant.now().getEpochSecond())
+			.put("jti", "trrtna:df789356-42fe-4bf3-8607-303161e9fe0e").put("iss", this.baseUri.toString())
+			.put("typ", "Bearer").put("azp", this.clientId).put("sid", "c83ec19e-fc41-4764-9fe6-2b92b46fa10e")
+			.put("acr", "1").put("preferred_username", user.username);
 		return token;
 	}
 
@@ -251,20 +251,20 @@ public class FakeOidcIdpServer {
 				try {
 					checkBasicAuth(exchange.getRequestHeaders());
 					if (!MediaType.APPLICATION_FORM_URLENCODED_TYPE.withCharset(StandardCharsets.UTF_8.name())
-							.equals(MediaType.valueOf(
-								exchange.getRequestHeaders().getFirst(Headers.CONTENT_TYPE)))) {
+						.equals(MediaType.valueOf(
+							exchange.getRequestHeaders().getFirst(Headers.CONTENT_TYPE)))) {
 						throw new Exception("Received token request content type is not form-urlencoded");
 					}
 
-   				FormParserFactory.Builder builder = FormParserFactory.builder();
+					FormParserFactory.Builder builder = FormParserFactory.builder();
 					try (FormDataParser formDataParser = builder.build().createParser(exchange)) {
 						FormData formData = formDataParser.parseBlocking();
 						if (!"authorization_code".equals(
-								formData.get("grant_type").peek().getValue())) {
+							formData.get("grant_type").peek().getValue())) {
 							throw new Exception("The received grant_type is not correct");
 						}
 						if (!redirectUri.toString().equals(
-								formData.get("redirect_uri").peek().getValue())) {
+							formData.get("redirect_uri").peek().getValue())) {
 							throw new Exception("The received redirect_uri is not correct");
 						}
 						String code = formData.get("code").peek().getValue();
@@ -304,8 +304,8 @@ public class FakeOidcIdpServer {
 				BigInteger certModulus = ((RSAPublicKey) certificate.getPublicKey()).getModulus();
 				BigInteger certExponent = ((RSAPublicKey) certificate.getPublicKey()).getPublicExponent();
 				ObjectNode key = JsonNodeFactory.instance.objectNode().put("kid", SAMPLE_KID).put("kty", "RSA").put("alg", "RS256")
-						.put("n", Base64.getUrlEncoder().encodeToString(certModulus.toByteArray()))
-						.put("e", Base64.getUrlEncoder().encodeToString(certExponent.toByteArray()));
+					.put("n", Base64.getUrlEncoder().encodeToString(certModulus.toByteArray()))
+					.put("e", Base64.getUrlEncoder().encodeToString(certExponent.toByteArray()));
 				key.putArray("x5c").add(Base64.getEncoder().encodeToString(certificate.getEncoded()));
 				data.putArray("keys").add(key);
 				String content = data.toPrettyString();
@@ -315,10 +315,12 @@ public class FakeOidcIdpServer {
 			}
 		});
 
-	Undertow.Builder builder = Undertow
+		Undertow.Builder builder = Undertow
 			.builder()
 			.addHttpListener(this.baseUri.getPort(), this.baseUri.getHost())
-			.setHandler(routingHandler);this.server=builder.build();this.server.start();
+			.setHandler(routingHandler);
+		this.server = builder.build();
+		this.server.start();
 	}
 
 	public void shutdown() {

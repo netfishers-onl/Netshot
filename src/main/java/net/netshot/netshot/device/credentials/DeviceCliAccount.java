@@ -18,18 +18,16 @@
  */
 package net.netshot.netshot.device.credentials;
 
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
-
 import net.netshot.netshot.database.StringEncryptorConverter;
 import net.netshot.netshot.rest.RestViews.RestApiView;
 
@@ -41,14 +39,14 @@ import net.netshot.netshot.rest.RestViews.RestApiView;
 public abstract class DeviceCliAccount extends DeviceCredentialSet {
 
 	/** The username. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(RestApiView.class)
 	}))
 	@Setter
 	private String username;
-	
+
 	/** The password. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(RestApiView.class),
 		@JsonSerialize(using = HideSecretSerializer.class),
 		@JsonDeserialize(using = HideSecretDeserializer.class),
@@ -56,9 +54,9 @@ public abstract class DeviceCliAccount extends DeviceCredentialSet {
 	}))
 	@Setter
 	private String password;
-	
+
 	/** The super password. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(RestApiView.class),
 		@JsonSerialize(using = HideSecretSerializer.class),
 		@JsonDeserialize(using = HideSecretDeserializer.class),
@@ -66,14 +64,14 @@ public abstract class DeviceCliAccount extends DeviceCredentialSet {
 	}))
 	@Setter
 	private String superPassword;
-	
+
 	/**
 	 * Instantiates a new device cli account.
 	 */
 	protected DeviceCliAccount() {
 		// Reserved for Hibernate
 	}
-	
+
 	/**
 	 * Instantiates a new device cli account.
 	 *
@@ -83,25 +81,25 @@ public abstract class DeviceCliAccount extends DeviceCredentialSet {
 	 * @param name the name
 	 */
 	public DeviceCliAccount(String username, String password,
-			String superPassword, String name) {
+		String superPassword, String name) {
 		super(name);
 		this.username = username;
 		this.password = password;
 		this.superPassword = superPassword;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.credentials.DeviceCredentialSet#hashCode()
 	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + (name == null ? 0 : name.hashCode());
 		return result;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.credentials.DeviceCredentialSet#equals(java.lang.Object)
 	 */
 	@Override
@@ -120,7 +118,8 @@ public abstract class DeviceCliAccount extends DeviceCredentialSet {
 			if (other.name != null) {
 				return false;
 			}
-		} else if (!name.equals(other.name)) {
+		}
+		else if (!name.equals(other.name)) {
 			return false;
 		}
 		return true;

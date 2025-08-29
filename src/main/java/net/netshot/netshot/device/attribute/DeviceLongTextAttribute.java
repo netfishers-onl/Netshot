@@ -24,23 +24,23 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Transient;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Device;
 
-@Entity @DiscriminatorValue("T")
-public class DeviceLongTextAttribute extends DeviceAttribute {
+@Entity
+@DiscriminatorValue("T")
+public final class DeviceLongTextAttribute extends DeviceAttribute {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@OneToOne(orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	}))
 	@Setter
 	private LongTextConfiguration longText;
-	
+
 	protected DeviceLongTextAttribute() {
 	}
-	
+
 	public DeviceLongTextAttribute(Device device, String name, String value) {
 		super(device, name);
 		this.longText = new LongTextConfiguration(value);
@@ -53,6 +53,6 @@ public class DeviceLongTextAttribute extends DeviceAttribute {
 			return null;
 		}
 		return getLongText().getText();
- 	}
-	
+	}
+
 }

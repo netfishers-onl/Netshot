@@ -18,35 +18,35 @@
  */
 package net.netshot.netshot.diagnostic;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Transient;
-
 import java.util.Objects;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.attribute.LongTextConfiguration;
 
-@Entity @DiscriminatorValue("T")
+@Entity
+@DiscriminatorValue("T")
 public class DiagnosticLongTextResult extends DiagnosticResult {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private LongTextConfiguration longText;
-	
+
 	protected DiagnosticLongTextResult() {
 	}
-	
+
 	public DiagnosticLongTextResult(Device device, Diagnostic diagnostic, String value) {
 		super(device, diagnostic);
 		this.longText = new LongTextConfiguration(value);
@@ -60,7 +60,7 @@ public class DiagnosticLongTextResult extends DiagnosticResult {
 		}
 		return longText.getText();
 	}
-	
+
 	@Override
 	@Transient
 	public Object getData() {
@@ -68,14 +68,16 @@ public class DiagnosticLongTextResult extends DiagnosticResult {
 			return null;
 		}
 		return getLongText().getText();
- 	}
+	}
 
 	@Override
 	public boolean valueEquals(DiagnosticResult obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!(obj instanceof DiagnosticLongTextResult))
+		}
+		if (!(obj instanceof DiagnosticLongTextResult)) {
 			return false;
+		}
 		DiagnosticLongTextResult other = (DiagnosticLongTextResult) obj;
 		return Objects.equals(this.longText, other.longText);
 	}

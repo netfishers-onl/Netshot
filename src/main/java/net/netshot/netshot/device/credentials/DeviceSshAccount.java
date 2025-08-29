@@ -33,9 +33,9 @@ public class DeviceSshAccount extends DeviceCliAccount {
 	 * Instantiates a new device ssh account.
 	 */
 	protected DeviceSshAccount() {
-		
+
 	}
-	
+
 	/**
 	 * Instantiates a new device ssh account.
 	 *
@@ -45,22 +45,22 @@ public class DeviceSshAccount extends DeviceCliAccount {
 	 * @param name the name
 	 */
 	public DeviceSshAccount(String username, String password,
-			String superPassword, String name) {
+		String superPassword, String name) {
 		super(username, password, superPassword, name);
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.credentials.DeviceCliAccount#hashCode()
 	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = super.hashCode();
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + (name == null ? 0 : name.hashCode());
 		return result;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.credentials.DeviceCliAccount#equals(java.lang.Object)
 	 */
 	@Override
@@ -79,7 +79,8 @@ public class DeviceSshAccount extends DeviceCliAccount {
 			if (other.name != null) {
 				return false;
 			}
-		} else if (!name.equals(other.name)) {
+		}
+		else if (!name.equals(other.name)) {
 			return false;
 		}
 		return true;

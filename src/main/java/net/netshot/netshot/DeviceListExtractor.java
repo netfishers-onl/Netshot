@@ -35,7 +35,7 @@ import net.netshot.netshot.device.credentials.DeviceTelnetAccount;
 
 @Slf4j
 public class DeviceListExtractor extends Netshot {
-	
+
 	/**
 	 * Initializes the logging.
 	 *
@@ -45,7 +45,7 @@ public class DeviceListExtractor extends Netshot {
 		// Redirect JUL to SLF4J
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
-		
+
 		//ch.qos.logback.classic.Logger rootLogger = (ch.qos.logback.classic.Logger)
 		//		LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
 		
@@ -54,26 +54,29 @@ public class DeviceListExtractor extends Netshot {
 
 		return true;
 	}
-	
-	/** Function entry point/ */
+
+	/**
+	 * Function entry point.
+	 * @param args the program arguments
+	 */
 	public static void main(String[] args) {
 		System.out.println("Netshot Device List Extractor -- extracts and formats device data.");
 		System.out.println(String.format("Based on Netshot version %s.", Netshot.VERSION));
 		log.info("Starting now.");
-		
+
 		if (!Netshot.readConfig()) {
 			System.exit(1);
 		}
 		if (!DeviceListExtractor.initLogging()) {
 			System.exit(1);
 		}
-		
+
 		StringBuffer output = new StringBuffer();
 
 		try {
 			log.info("Initializing access to the database.");
 			Database.init();
-			
+
 			log.info("Requesting data from the DB...");
 			Session session = Database.getSession();
 			List<Device> devices = session
@@ -83,7 +86,7 @@ public class DeviceListExtractor extends Netshot {
 			for (Device device : devices) {
 				DeviceCliAccount cliAccount = null;
 				DeviceSnmpCommunity community = null;
-				
+
 				for (DeviceCredentialSet credentialSet : device.getCredentialSets()) {
 					if (credentialSet instanceof DeviceSshAccount) {
 						cliAccount = (DeviceSshAccount) credentialSet;
@@ -145,7 +148,7 @@ public class DeviceListExtractor extends Netshot {
 				output.append("\n");
 			}
 			System.out.println(output);
-			
+
 		}
 		catch (Exception e) {
 			System.err.println("NETSHOT FATAL ERROR: " + e.getMessage());

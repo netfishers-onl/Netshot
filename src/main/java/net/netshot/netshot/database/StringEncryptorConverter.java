@@ -47,5 +47,5 @@ public class StringEncryptorConverter implements AttributeConverter<String, Stri
 		Sha2AesPasswordBasedEncryptor encryptor = new Sha2AesPasswordBasedEncryptor(cryptPassword);
 		return encryptor.decrypt(dbData);
 	}
-	
+
 }

@@ -18,6 +18,16 @@
  */
 package net.netshot.netshot.device.attribute;
 
+import java.util.Objects;
+
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
@@ -33,77 +43,78 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
+import lombok.Getter;
+import lombok.Setter;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-import java.util.Objects;
-
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-
-import lombok.Getter;
-import lombok.Setter;
-
-@Entity @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "type", discriminatorType = DiscriminatorType.CHAR)
 @DiscriminatorValue("A")
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-		@Type(value = DeviceNumericAttribute.class, name = "INTEGER"),
-		@Type(value = DeviceTextAttribute.class, name = "TEXT"),
-		@Type(value = DeviceLongTextAttribute.class, name = "LONGTEXT"),
-		@Type(value = DeviceBinaryAttribute.class, name = "BINARY")
+	@Type(value = DeviceNumericAttribute.class, name = "INTEGER"),
+	@Type(value = DeviceTextAttribute.class, name = "TEXT"),
+	@Type(value = DeviceLongTextAttribute.class, name = "LONGTEXT"),
+	@Type(value = DeviceBinaryAttribute.class, name = "BINARY")
 })
 public abstract class DeviceAttribute {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY)
 	}))
 	@Setter
 	protected long id;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	protected String name;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne,
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	protected Device device;
-	
+
 	protected DeviceAttribute() {
-		
+
 	}
-	
+
 	public DeviceAttribute(Device device, String name) {
 		this.device = device;
 		this.name = name;
 	}
-	
+
 	@Transient
 	public abstract Object getData();
 
+	/*(non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
 	@Override
 	public int hashCode() {
-		return Objects.hash(name, device);
+		return Objects.hash(this.name, this.device);
 	}
 
+	/*(non-Javadoc)
+	 * @see java.lang.Object#equals()
+	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (!(obj instanceof DeviceAttribute)) return false;
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof DeviceAttribute)) {
+			return false;
+		}
 		DeviceAttribute other = (DeviceAttribute) obj;
-		return Objects.equals(name, other.name) && Objects.equals(device, other.device);
+		return Objects.equals(this.name, other.name)
+			&& Objects.equals(this.device, other.device);
 	}
 }

@@ -28,14 +28,14 @@ import lombok.Setter;
 import net.netshot.netshot.Netshot;
 
 /**
- * Password policy
+ * Password policy.
  */
 public class PasswordPolicy {
 
 	/**
-	 * Exception to be thrown in case of password policy check failure
+	 * Exception to be thrown in case of password policy check failure.
 	 */
-	static public class PasswordPolicyException extends Exception {
+	public static class PasswordPolicyException extends Exception {
 		public PasswordPolicyException(String message) {
 			super(message);
 		}
@@ -44,7 +44,7 @@ public class PasswordPolicy {
 	/**
 	 * Match for specific characters in the password.
 	 */
-	static public enum CharMatch {
+	public enum CharMatch {
 		ANY("mintotalchars", "minimum total length", ".", 1),
 		SPECIAL("minspecialchars", "minimum special characters count", "[!\"#$%&'()*+,-./:;<=>?@\\[\\]\\^_{}|~]", 0),
 		NUMERICAL("minnumericalchars", "minimum numerical character count", "[0-9]", 0),
@@ -63,7 +63,7 @@ public class PasswordPolicy {
 		@Getter
 		private int defaultValue;
 
-		private CharMatch(String name, String description, String pattern, int defaultValue) {
+		CharMatch(String name, String description, String pattern, int defaultValue) {
 			this.name = name;
 			this.description = description;
 			this.pattern = Pattern.compile(pattern);
@@ -81,7 +81,7 @@ public class PasswordPolicy {
 		}
 	}
 
-	static private PasswordPolicy mainPolicy;
+	private static PasswordPolicy mainPolicy;
 
 	/**
 	 * Load the main policy from configuration.
@@ -101,24 +101,24 @@ public class PasswordPolicy {
 	}
 
 	/**
-	 * Get the main password policy (as configured in Netshot config file)
+	 * Get the main password policy (as configured in Netshot config file).
 	 * @return the main password policy
 	 */
-	static public PasswordPolicy getMainPolicy() {
+	public static PasswordPolicy getMainPolicy() {
 		return PasswordPolicy.mainPolicy;
 	}
 
-	/** Max history count */
+	/** Max history count. */
 	@Getter
 	@Setter
-	private int maxHistory = 0;
+	private int maxHistory;
 
-	/** Max duration of the password, in days */
+	/** Max duration of the password, in days. */
 	@Getter
 	@Setter
-	private int maxDuration = 0;
+	private int maxDuration;
 
-	/** Min number of characters per character match */
+	/** Min number of characters per character match. */
 	@Getter
 	@Setter
 	private Map<CharMatch, Integer> minCharMatchCounts = new HashMap<>();

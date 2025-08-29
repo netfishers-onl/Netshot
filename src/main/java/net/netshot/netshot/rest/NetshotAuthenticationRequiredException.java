@@ -27,7 +27,7 @@ import jakarta.ws.rs.core.Response;
 public class NetshotAuthenticationRequiredException extends ForbiddenException {
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = -2463854660543944995L;
-	
+
 	/**
 	 * Default constructor.
 	 */

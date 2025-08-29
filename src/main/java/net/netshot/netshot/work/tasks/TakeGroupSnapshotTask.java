@@ -21,14 +21,19 @@ package net.netshot.netshot.work.tasks;
 import java.util.Calendar;
 import java.util.Collection;
 
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.quartz.JobKey;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -39,12 +44,6 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.rest.RestViews.HookView;
 import net.netshot.netshot.work.Task;
 
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.quartz.JobKey;
-
 /**
  * This task schedules new tasks to take a new snapshot of each device of the
  * given group.
@@ -52,34 +51,34 @@ import org.quartz.JobKey;
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
-public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
+public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 
 	/** The device group. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private DeviceGroup deviceGroup;
 
-	/** Only capture devices updated more than X hours ago **/
+	/** Only capture devices updated more than X hours ago. **/
 	@Getter
 	@Setter
 	private int limitToOutofdateDeviceHours = -1;
 
-	/** Do not automatically start a run diagnostics task */
-	@Getter(onMethod=@__({
+	/** Do not automatically start a run diagnostics task. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(HookView.class)
 	}))
 	@Setter
-	private boolean dontRunDiagnostics = false;
+	private boolean dontRunDiagnostics;
 
-	/** Do not automatically start a check compliance task */
-	@Getter(onMethod=@__({
+	/** Do not automatically start a check compliance task. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(HookView.class)
 	}))
 	@Setter
-	private boolean dontCheckCompliance = false;
+	private boolean dontCheckCompliance;
 
 	/**
 	 * Instantiates a new take group snapshot task.
@@ -93,12 +92,13 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 	 *
 	 * @param group the group
 	 * @param comments the comments
+	 * @param author the author
 	 * @param limitToOutofdateDeviceHours ignore devices that had a successful snapshot in the last given hours
 	 * @param dontRunDiagnostics Set to the true to disable running diagnostics
 	 * @param dontCheckCompliance Set to true to disable compliance checking
 	 */
 	public TakeGroupSnapshotTask(DeviceGroup group, String comments, String author,
-			int limitToOutofdateDeviceHours, boolean dontRunDiagnostics, boolean dontCheckCompliance) {
+		int limitToOutofdateDeviceHours, boolean dontRunDiagnostics, boolean dontCheckCompliance) {
 		super(comments, group.getName(), author);
 		this.deviceGroup = group;
 		this.limitToOutofdateDeviceHours = limitToOutofdateDeviceHours;
@@ -106,11 +106,12 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 		this.dontCheckCompliance = dontCheckCompliance;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Group snapshot";
@@ -118,8 +119,10 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 
 	/**
 	 * Get the ID of the associate group.
+	 * @return the ID of the group
 	 */
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public long getDeviceGroupId() {
 		if (this.deviceGroup == null) {
@@ -128,7 +131,7 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 		return this.deviceGroup.getId();
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#prepare()
 	 */
 	@Override
@@ -139,13 +142,13 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#run()
 	 */
 	@Override
 	public void run() {
 		log.debug("Task {}. Starting snapshot task for group {}.",
-				this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
+			this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
 		if (this.deviceGroup == null) {
 			this.info("The device group doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
@@ -159,12 +162,12 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 		for (Device device : devices) {
 			if (referenceDate.getTime().before(device.getChangeDate())) {
 				this.info(String.format("Ignoring device %s because it changed less than %d hours ago",
-						device.getName(), this.getLimitToOutofdateDeviceHours()));
+					device.getName(), this.getLimitToOutofdateDeviceHours()));
 				continue;
 			}
 			this.info(String.format("Starting snapshot task for device %s.", device.getName()));
 			TakeSnapshotTask task = new TakeSnapshotTask(device, comment, author, false,
-					this.dontRunDiagnostics, this.dontCheckCompliance);
+				this.dontRunDiagnostics, this.dontCheckCompliance);
 			task.setPriority(this.getPriority());
 			try {
 				TaskManager.addTask(task);
@@ -178,7 +181,7 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 		this.status = Status.SUCCESS;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#clone()
 	 */
 	@Override
@@ -195,7 +198,7 @@ public class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
 	@Override
 	@Transient
 	public JobKey getIdentity() {
-		return new JobKey(String.format("Task_%d", this.getId()), 
-				String.format("TakeGroupSnapshot_%d", this.getDeviceGroupId()));
+		return new JobKey(String.format("Task_%d", this.getId()),
+			String.format("TakeGroupSnapshot_%d", this.getDeviceGroupId()));
 	}
 }

@@ -24,11 +24,13 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.ext.ExceptionMapper;
+import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.aaa.Oidc;
 
 /**
  * Mapper to convert exception raised in the Web method to http error.
  */
+@Slf4j
 public class NetshotExceptionMapper implements ExceptionMapper<Throwable> {
 
 	@Context
@@ -39,7 +41,7 @@ public class NetshotExceptionMapper implements ExceptionMapper<Throwable> {
 			// RolesAllowedDynamicFeature raises ForbiddenException (which leads to 403 Forbidden)
 			// for both missing authentication and permission error
 			if (securityContext.getUserPrincipal() == null) {
-				RestService.log.info("Authentication required.", t);
+				log.info("Authentication required.", t);
 				// If no user at all was recognized, force a 401
 				// with OIDC info header if applicable
 				Response.ResponseBuilder builder = Response.fromResponse(fe.getResponse());
@@ -51,11 +53,11 @@ public class NetshotExceptionMapper implements ExceptionMapper<Throwable> {
 				return builder.build();
 			}
 			else {
-				RestService.log.info("Missing required permission.", t);
+				log.info("Missing required permission.", t);
 			}
 		}
 		else {
-			RestService.log.error("Uncaught exception thrown by REST service", t);
+			log.error("Uncaught exception thrown by REST service", t);
 		}
 
 		if (t instanceof WebApplicationException wae) {

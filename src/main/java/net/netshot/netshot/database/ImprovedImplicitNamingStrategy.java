@@ -102,7 +102,7 @@ public class ImprovedImplicitNamingStrategy implements ImplicitNamingStrategy {
 		final String owningEntity = transformEntityName(source.getOwningEntityNaming());
 		final String name = transformAttributePath(source.getOwningAttributePath());
 		final String entityName;
-		if (owningEntity != null && !owningEntity.trim().equals("")) {
+		if (owningEntity != null && !"".equals(owningEntity.trim())) {
 			entityName = owningEntity + "_" + name;
 		}
 		else {
@@ -119,13 +119,13 @@ public class ImprovedImplicitNamingStrategy implements ImplicitNamingStrategy {
 	@Override
 	public Identifier determineDiscriminatorColumnName(ImplicitDiscriminatorColumnNameSource source) {
 		return toIdentifier(source.getBuildingContext().getMappingDefaults().getImplicitDiscriminatorColumnName(),
-				source.getBuildingContext());
+			source.getBuildingContext());
 	}
 
 	@Override
 	public Identifier determineTenantIdColumnName(ImplicitTenantIdColumnNameSource source) {
 		return toIdentifier(source.getBuildingContext().getMappingDefaults().getImplicitTenantIdColumnName(),
-				source.getBuildingContext());
+			source.getBuildingContext());
 	}
 
 	@Override
@@ -173,9 +173,9 @@ public class ImprovedImplicitNamingStrategy implements ImplicitNamingStrategy {
 	@Override
 	public Identifier determineAnyDiscriminatorColumnName(ImplicitAnyDiscriminatorColumnNameSource source) {
 		return toIdentifier(
-				transformAttributePath(source.getAttributePath()) + "_"
-						+ source.getBuildingContext().getMappingDefaults().getImplicitDiscriminatorColumnName(),
-				source.getBuildingContext());
+			transformAttributePath(source.getAttributePath()) + "_"
+				+ source.getBuildingContext().getMappingDefaults().getImplicitDiscriminatorColumnName(),
+			source.getBuildingContext());
 	}
 
 	/**
@@ -188,9 +188,9 @@ public class ImprovedImplicitNamingStrategy implements ImplicitNamingStrategy {
 	@Override
 	public Identifier determineAnyKeyColumnName(ImplicitAnyKeyColumnNameSource source) {
 		return toIdentifier(
-				transformAttributePath(source.getAttributePath()) + "_"
-						+ source.getBuildingContext().getMappingDefaults().getImplicitIdColumnName(),
-				source.getBuildingContext());
+			transformAttributePath(source.getAttributePath()) + "_"
+				+ source.getBuildingContext().getMappingDefaults().getImplicitIdColumnName(),
+			source.getBuildingContext());
 	}
 
 	/**
@@ -203,7 +203,7 @@ public class ImprovedImplicitNamingStrategy implements ImplicitNamingStrategy {
 	@Override
 	public Identifier determineMapKeyColumnName(ImplicitMapKeyColumnNameSource source) {
 		return toIdentifier(transformAttributePath(source.getPluralAttributePath()) + "_KEY",
-				source.getBuildingContext());
+			source.getBuildingContext());
 	}
 
 	/**
@@ -216,7 +216,7 @@ public class ImprovedImplicitNamingStrategy implements ImplicitNamingStrategy {
 	@Override
 	public Identifier determineListIndexColumnName(ImplicitIndexColumnNameSource source) {
 		return toIdentifier(transformAttributePath(source.getPluralAttributePath()) + "_ORDER",
-				source.getBuildingContext());
+			source.getBuildingContext());
 	}
 
 	/**
@@ -229,7 +229,7 @@ public class ImprovedImplicitNamingStrategy implements ImplicitNamingStrategy {
 	@Override
 	public Identifier determineForeignKeyName(ImplicitForeignKeyNameSource source) {
 		return toIdentifier(NamingHelper.INSTANCE.generateHashedFkName("FK", source.getTableName(),
-				source.getReferencedTableName(), source.getColumnNames()), source.getBuildingContext());
+			source.getReferencedTableName(), source.getColumnNames()), source.getBuildingContext());
 	}
 
 	/**
@@ -242,8 +242,8 @@ public class ImprovedImplicitNamingStrategy implements ImplicitNamingStrategy {
 	@Override
 	public Identifier determineUniqueKeyName(ImplicitUniqueKeyNameSource source) {
 		return toIdentifier(
-				NamingHelper.INSTANCE.generateHashedConstraintName("UK", source.getTableName(), source.getColumnNames()),
-				source.getBuildingContext());
+			NamingHelper.INSTANCE.generateHashedConstraintName("UK", source.getTableName(), source.getColumnNames()),
+			source.getBuildingContext());
 	}
 
 	/**
@@ -256,8 +256,8 @@ public class ImprovedImplicitNamingStrategy implements ImplicitNamingStrategy {
 	@Override
 	public Identifier determineIndexName(ImplicitIndexNameSource source) {
 		return toIdentifier(
-				NamingHelper.INSTANCE.generateHashedConstraintName("IDX", source.getTableName(), source.getColumnNames()),
-				source.getBuildingContext());
+			NamingHelper.INSTANCE.generateHashedConstraintName("IDX", source.getTableName(), source.getColumnNames()),
+			source.getBuildingContext());
 	}
 
 	/**
@@ -285,7 +285,7 @@ public class ImprovedImplicitNamingStrategy implements ImplicitNamingStrategy {
 	protected Identifier toIdentifier(String stringForm, MetadataBuildingContext buildingContext) {
 
 		Identifier i = buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment().getIdentifierHelper()
-				.toIdentifier(stringForm);
+			.toIdentifier(stringForm);
 		return i;
 	}
 }

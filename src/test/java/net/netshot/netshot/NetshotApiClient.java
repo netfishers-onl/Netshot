@@ -32,6 +32,7 @@ import java.net.http.HttpResponse.ResponseInfo;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -54,7 +55,7 @@ public class NetshotApiClient {
 	/**
 	 * Simple exception to catch unexpected response and attach it.
 	 */
-	static public class WrongApiResponseException extends IOException {
+	public static class WrongApiResponseException extends IOException {
 		@Getter
 		private HttpResponse<?> response;
 
@@ -64,34 +65,42 @@ public class NetshotApiClient {
 		}
 	}
 
-	static protected final String SESSION_COOKIE_NAME = "NetshotSessionID";
+	protected static final String SESSION_COOKIE_NAME = "NetshotSessionID";
 
-	@Getter @Setter
+	@Getter
+	@Setter
 	private String apiUrl;
 
-	@Getter @Setter
+	@Getter
+	@Setter
 	private String apiToken;
 
-	@Getter @Setter
+	@Getter
+	@Setter
 	private String username;
 
-	@Getter @Setter
+	@Getter
+	@Setter
 	private String password;
 
-	/** To change the password on login */
-	@Getter @Setter
+	/** To change the password on login. */
+	@Getter
+	@Setter
 	private String newPassword;
 
-	@Getter @Setter
+	@Getter
+	@Setter
 	private String authorizationCode;
 
-	@Getter @Setter
+	@Getter
+	@Setter
 	private String redirectUri;
 
-	@Getter @Setter
+	@Getter
+	@Setter
 	private HttpCookie sessionCookie;
 
-	private ObjectMapper objectMapper = null;
+	private ObjectMapper objectMapper;
 
 	@Getter
 	private MediaType mediaType = MediaType.APPLICATION_JSON_TYPE;
@@ -192,7 +201,7 @@ public class NetshotApiClient {
 		String setCookie = response.headers().firstValue("Set-Cookie").get();
 		List<HttpCookie> cookies = HttpCookie.parse(setCookie);
 		for (HttpCookie cookie : cookies) {
-			if (cookie.getName().equals(SESSION_COOKIE_NAME)) {
+			if (SESSION_COOKIE_NAME.equals(cookie.getName())) {
 				this.sessionCookie = new HttpCookie(SESSION_COOKIE_NAME, cookie.getValue());
 				break;
 			}
@@ -223,8 +232,8 @@ public class NetshotApiClient {
 		if (this.apiToken != null) {
 			builder.header("X-Netshot-API-Token", this.apiToken);
 		}
-		else if ((this.username != null && this.password != null) ||
-				this.authorizationCode != null) {
+		else if ((this.username != null && this.password != null)
+			|| this.authorizationCode != null) {
 			if (this.sessionCookie == null) {
 				this.login();
 			}

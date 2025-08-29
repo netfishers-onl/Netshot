@@ -18,18 +18,17 @@
  */
 package net.netshot.netshot;
 
-import org.junit.jupiter.api.Assertions;
-
 import java.util.Calendar;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
 import org.quartz.JobKey;
 
 import net.netshot.netshot.work.Task;
 import net.netshot.netshot.work.Task.ScheduleType;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 public class TaskTest {
 
@@ -153,5 +152,8 @@ public class TaskTest {
 				"Next execution date for EVERY FIRST OF THE MONTH is not next first of the month");
 		}
 
+	}
+
+	private TaskTest() {
 	}
 }

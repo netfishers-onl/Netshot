@@ -22,11 +22,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-
 import org.apache.commons.lang3.StringUtils;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
@@ -35,6 +30,10 @@ import org.hibernate.Session;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -63,34 +62,35 @@ import net.netshot.netshot.work.TaskLogger;
 @Slf4j
 public class JsCliScript extends CliScript {
 
-	public static enum UserInputType {
+	public enum UserInputType {
 		STRING,
 	}
 
 	/**
-	 * Definition of user input data
+	 * Definition of user input data.
 	 */
-	@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.NONE)
 	public static class UserInputDefinition {
-		@Getter(onMethod=@__({
+		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
 		private String name;
 
-		@Getter(onMethod=@__({
+		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
 		private UserInputType type;
 
-		@Getter(onMethod=@__({
+		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
 		private String label;
 
-		@Getter(onMethod=@__({
+		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
@@ -120,11 +120,13 @@ public class JsCliScript extends CliScript {
 
 	@Getter
 	@Setter
-	private Map<String, String> userInputValues = null;
-	
+	private Map<String, String> userInputValues;
+
 	/**
 	 * Instantiates a JS-based script.
-	 * @param code The JS code
+	 * @param driverName = The name of the driver
+	 * @param code = The JavaScript code
+	 * @param cliLogging = whether to log CLI
 	 */
 	public JsCliScript(String driverName, String code, boolean cliLogging) {
 		super(cliLogging);
@@ -134,17 +136,18 @@ public class JsCliScript extends CliScript {
 
 	@Override
 	protected void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
-			throws InvalidCredentialsException, IOException, UnsupportedOperationException, MissingDeviceDriverException {
+		throws InvalidCredentialsException, IOException, UnsupportedOperationException, MissingDeviceDriverException {
 		JsCliHelper jsCliHelper = null;
 		JsSnmpHelper jsSnmpHelper = null;
 		switch (protocol) {
-		case SNMP:
-			jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity)account, this.getJsLogger());
-			break;
-		case TELNET:
-		case SSH:
-			jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount)account, this.getJsLogger(), this.getCliLogger());
-			break;
+			case SNMP:
+				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.getJsLogger());
+				break;
+			case TELNET:
+			case SSH:
+			default:
+				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.getJsLogger(), this.getCliLogger());
+				break;
 		}
 		TaskLogger taskLogger = this.getJsLogger();
 		DeviceDriver driver = device.getDeviceDriver();
@@ -162,7 +165,7 @@ public class JsCliScript extends CliScript {
 		catch (PolyglotException e) {
 			log.error("Error while running script using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("Error while running script  using driver %s: '%s'.",
-					driver.getName(), e.getMessage()));
+				driver.getName(), e.getMessage()));
 			if (e.getMessage().contains("Authentication failed")) {
 				throw new InvalidCredentialsException("Authentication failed");
 			}
@@ -173,7 +176,7 @@ public class JsCliScript extends CliScript {
 		catch (UnsupportedOperationException e) {
 			log.error("No such method while using driver {}.", driver.getName(), e);
 			taskLogger.error(String.format("No such method while using driver %s to execute script: '%s'.",
-					driver.getName(), e.getMessage()));
+				driver.getName(), e.getMessage()));
 			throw e;
 		}
 	}

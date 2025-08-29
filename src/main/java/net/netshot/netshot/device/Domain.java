@@ -22,6 +22,12 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.annotations.NaturalId;
+
+import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
@@ -36,28 +42,21 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-
-import org.hibernate.annotations.NaturalId;
 
 /**
  * A domain identifies a part of the network managed from the same IP address.
  */
 @Entity
 @XmlRootElement
-@XmlAccessorType(value = XmlAccessType.NONE)
-public class Domain {
+@XmlAccessorType(XmlAccessType.NONE)
+public final class Domain {
 
 	/** The id. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
 		@XmlAttribute, @JsonView(DefaultView.class)
 	}))
@@ -65,20 +64,20 @@ public class Domain {
 	private long id;
 
 	/** The change date. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private Date changeDate;
-	
-	@Getter(onMethod=@__({
+
+	@Getter(onMethod = @__({
 		@Version
 	}))
 	@Setter
 	private int version;
 
 	/** The name. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@NaturalId(mutable = true),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
@@ -86,34 +85,34 @@ public class Domain {
 	private String name;
 
 	/** The description. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String description;
 
 	/** The domain credential sets. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@OneToMany(mappedBy = "mgmtDomain")
 	}))
 	@Setter
 	private Set<DeviceCredentialSet> credentialSets = new HashSet<>();
 
 	/** The server4 address. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@JsonSerialize(using = Network4Address.AddressOnlySerializer.class),
 		@JsonDeserialize(using = Network4Address.AddressOnlyDeserializer.class),
 		@AttributeOverrides({
 			@AttributeOverride(name = "address", column = @Column(name = "ipv4_address")),
 			@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
-			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4_usage")) })
+			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4_usage"))})
 	}))
 	@Setter
 	private Network4Address server4Address;
 
 	/** The server6 address. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@JsonSerialize(using = Network6Address.AddressOnlySerializer.class),
 		@JsonDeserialize(using = Network6Address.AddressOnlyDeserializer.class),
@@ -121,7 +120,7 @@ public class Domain {
 			@AttributeOverride(name = "address1", column = @Column(name = "ipv6_address1")),
 			@AttributeOverride(name = "address2", column = @Column(name = "ipv6_address2")),
 			@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv6_pfxlen")),
-			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv6_usage")) })
+			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv6_usage"))})
 	}))
 	@Setter
 	private Network6Address server6Address;
@@ -146,7 +145,7 @@ public class Domain {
 	 *          the server6 address
 	 */
 	public Domain(String name, String description,
-			Network4Address server4Address, Network6Address server6Address) {
+		Network4Address server4Address, Network6Address server6Address) {
 		this.name = name;
 		this.description = description;
 		this.server4Address = server4Address;
@@ -162,7 +161,7 @@ public class Domain {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + (this.name == null ? 0 : this.name.hashCode());
 		return result;
 	}
 
@@ -183,12 +182,12 @@ public class Domain {
 			return false;
 		}
 		Domain other = (Domain) obj;
-		if (name == null) {
+		if (this.name == null) {
 			if (other.name != null) {
 				return false;
 			}
 		}
-		else if (!name.equals(other.name)) {
+		else if (!this.name.equals(other.name)) {
 			return false;
 		}
 		return true;

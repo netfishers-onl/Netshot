@@ -21,20 +21,7 @@ package net.netshot.netshot.diagnostic;
 import java.util.HashSet;
 import java.util.Set;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Transient;
 import javax.script.ScriptException;
-import jakarta.xml.bind.annotation.XmlAccessType;
-import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlAttribute;
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
 
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Value;
@@ -45,6 +32,19 @@ import org.hibernate.annotations.OnDeleteAction;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Device;
@@ -58,11 +58,13 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
  * @author sylvain.cadilhac
  *
  */
-@Entity @Inheritance(strategy = InheritanceType.JOINED)
-@XmlRootElement @XmlAccessorType(value = XmlAccessType.NONE)
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.SIMPLE_NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 public abstract class Diagnostic {
-	
+
 	/** The set of real rule types. */
 	private static final Set<Class<? extends Diagnostic>> DIAGNOSTIC_CLASSES;
 
@@ -83,7 +85,7 @@ public abstract class Diagnostic {
 	}
 
 	/** The id. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY),
 		@XmlAttribute, @JsonView(DefaultView.class)
 	}))
@@ -91,7 +93,7 @@ public abstract class Diagnostic {
 	private long id;
 
 	/** The name of the diagnostic. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@NaturalId(mutable = true),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
@@ -99,32 +101,32 @@ public abstract class Diagnostic {
 	private String name;
 
 	/** The target group. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne,
 		@XmlElement, @JsonView(DefaultView.class),
 		@OnDelete(action = OnDeleteAction.SET_NULL)
 	}))
 	@Setter
 	private DeviceGroup targetGroup;
-	
+
 	/** Is the diagnostic enabled? */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	protected boolean enabled = false;
-	
-	/** The type of data returned by the diagnostic */
-	@Getter(onMethod=@__({
+	protected boolean enabled;
+
+	/** The type of data returned by the diagnostic. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	protected AttributeType resultType;
-	
+
 	/**
 	 * Instantiate a new diagnostic.
 	 */
-	protected Diagnostic() {	
+	protected Diagnostic() {
 	}
 
 	/**
@@ -145,25 +147,26 @@ public abstract class Diagnostic {
 	 * Build a diagnostic result.
 	 * @param device the device
 	 * @param value the diagnostic result
+	 * @return the diagnostic result of the right type
 	 */
 	@Transient
 	public DiagnosticResult makeResult(Device device, Value value) {
 		switch (this.resultType) {
-		case LONGTEXT:
-			return new DiagnosticLongTextResult(device, this, value.asString());
-		case TEXT:
-			return new DiagnosticTextResult(device, this, value.asString());
-		case NUMERIC:
-			return new DiagnosticNumericResult(device, this, value.asDouble());
-		case BINARY:
-			return new DiagnosticBinaryResult(device, this, value.asBoolean());
-		default:
-			return null;
+			case LONGTEXT:
+				return new DiagnosticLongTextResult(device, this, value.asString());
+			case TEXT:
+				return new DiagnosticTextResult(device, this, value.asString());
+			case NUMERIC:
+				return new DiagnosticNumericResult(device, this, value.asDouble());
+			case BINARY:
+				return new DiagnosticBinaryResult(device, this, value.asBoolean());
+			default:
+				return null;
 		}
 	}
 
 	@Transient
-	abstract public Value getJsObject(Device device, Context context) throws ScriptException;
+	public abstract Value getJsObject(Device device, Context context) throws ScriptException;
 
 	@Override
 	public int hashCode() {
@@ -175,9 +178,15 @@ public abstract class Diagnostic {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		if (obj == null) return false;
-		if (!(obj instanceof Diagnostic)) return false;
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof Diagnostic)) {
+			return false;
+		}
 		Diagnostic other = (Diagnostic) obj;
 		return id == other.id;
 	}
@@ -186,5 +195,5 @@ public abstract class Diagnostic {
 	public String toString() {
 		return "Diagnostic " + id + " (name '" + name + "', type " + this.getClass().getSimpleName() + ")";
 	}
-	
+
 }

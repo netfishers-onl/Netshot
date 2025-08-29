@@ -24,8 +24,8 @@ import net.netshot.netshot.device.DeviceGroup;
  * Define device group specific task.
  */
 public interface GroupBasedTask {
-	public DeviceGroup getDeviceGroup();
+	DeviceGroup getDeviceGroup();
 
-	public void setDeviceGroup(DeviceGroup group);
-	
+	void setDeviceGroup(DeviceGroup group);
+
 }

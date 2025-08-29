@@ -18,14 +18,6 @@
  */
 package net.netshot.netshot;
 
-import org.junit.jupiter.api.Test;
-
-import net.netshot.netshot.device.Config;
-import net.netshot.netshot.device.Device;
-import net.netshot.netshot.device.DeviceDriver;
-import net.netshot.netshot.device.Finder;
-import net.netshot.netshot.device.Finder.Expression.FinderParseException;
-
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,12 +26,18 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 
+import net.netshot.netshot.device.Config;
+import net.netshot.netshot.device.Device;
+import net.netshot.netshot.device.DeviceDriver;
+import net.netshot.netshot.device.Finder;
+import net.netshot.netshot.device.Finder.Expression.FinderParseException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 public class DeviceTest {
-	
+
 	@Nested
 	@DisplayName("Device finder test")
 	class DeviceFinderTest {
@@ -53,7 +51,7 @@ public class DeviceTest {
 		 * @throws Exception
 		 */
 		private void assertFinder(String nsQuery, String driverName,
-					String expectedHql, Map<String, Object> expectedParameters) throws Exception {
+			String expectedHql, Map<String, Object> expectedParameters) throws Exception {
 			if (driverName != null) {
 				Netshot.readConfig();
 				DeviceDriver.refreshDrivers();
@@ -267,7 +265,7 @@ public class DeviceTest {
 		@Test
 		@DisplayName("Config line parents")
 		void configLineParents() {
-			String[] configLines = new String[]{
+			String[] configLines = new String[] {
 				/* 00 */ "version 16",
 				/* 01 */ "!",
 				/* 02 */ "service timestamps debug datetime msec",
@@ -320,7 +318,7 @@ public class DeviceTest {
 			};
 			int[] parents = new int[] {
 				-1, -1, -1, -1, -1, -1,
-				5,  5,  5,
+				5, 5, 5,
 				-1, -1, -1, -1, -1, -1, -1, -1, -1,
 				17, 17, 17, 17,
 				-1, -1,
@@ -331,7 +329,7 @@ public class DeviceTest {
 				30, 30, 30,
 				39, 39,
 				30,
-				-1 ,-1, -1, -1, -1, -1,
+				-1, -1, -1, -1, -1, -1,
 			};
 			int[] computedParents = Config.getLineParents(Arrays.asList(configLines));
 			Assertions.assertArrayEquals(parents, computedParents,

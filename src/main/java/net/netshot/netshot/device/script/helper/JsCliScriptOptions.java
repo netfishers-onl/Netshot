@@ -33,43 +33,43 @@ import net.netshot.netshot.work.TaskLogger;
  * @author sylvain.cadilhac
  *
  */
-public class JsCliScriptOptions {
-	@Getter(onMethod=@__({
+public final class JsCliScriptOptions {
+	@Getter(onMethod = @__({
 		@Export
 	}))
 	@Setter
 	private JsCliHelper cliHelper;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Export
 	}))
 	@Setter
 	private JsSnmpHelper snmpHelper;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Export
 	}))
 	@Setter
 	private JsConfigHelper configHelper;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Export
 	}))
 	@Setter
 	private JsDeviceHelper deviceHelper;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Export
 	}))
 	@Setter
 	private JsDiagnosticHelper diagnosticHelper;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Export
 	}))
-	private ProxyObject userInputs = null;
+	private ProxyObject userInputs;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@Export
 	}))
 	private TaskLogger taskLogger;

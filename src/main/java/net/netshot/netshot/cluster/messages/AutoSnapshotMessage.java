@@ -24,7 +24,6 @@ import java.util.Set;
 
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.cluster.ClusterMember;
@@ -37,8 +36,8 @@ import net.netshot.netshot.cluster.ClusterMember;
 @XmlRootElement
 public class AutoSnapshotMessage extends ClusterMessage {
 
-	/** Device IDs */
-	@Getter(onMethod=@__({
+	/** Device IDs. */
+	@Getter(onMethod = @__({
 		@XmlElement
 	}))
 	@Setter
@@ -46,18 +45,19 @@ public class AutoSnapshotMessage extends ClusterMessage {
 
 	/**
 	 * Constructor.
+	 * @param memberInfo = info about the cluster member
 	 */
 	public AutoSnapshotMessage(ClusterMember memberInfo) {
 		super(memberInfo.getInstanceId());
 	}
 
 	/**
-	 * Hidden constructor
+	 * Hidden constructor.
 	 */
 	protected AutoSnapshotMessage() {
 	}
 
-	public void addDeviceIds(Collection<Long> deviceIds) {
-		this.deviceIds.addAll(deviceIds);
+	public void addDeviceIds(Collection<Long> newDeviceIds) {
+		this.deviceIds.addAll(newDeviceIds);
 	}
 }

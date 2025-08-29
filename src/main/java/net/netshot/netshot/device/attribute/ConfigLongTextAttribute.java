@@ -18,33 +18,33 @@
  */
 package net.netshot.netshot.device.attribute;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Transient;
-
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.Config;
 
-@Entity @DiscriminatorValue("T")
-public class ConfigLongTextAttribute extends ConfigAttribute {
+@Entity
+@DiscriminatorValue("T")
+public final class ConfigLongTextAttribute extends ConfigAttribute {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@OneToOne(orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.ALL),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private LongTextConfiguration longText;
-	
+
 	protected ConfigLongTextAttribute() {
 	}
-	
+
 	public ConfigLongTextAttribute(Config config, String name, String value) {
 		super(config, name);
 		this.longText = new LongTextConfiguration(value);
@@ -53,12 +53,12 @@ public class ConfigLongTextAttribute extends ConfigAttribute {
 	@Override
 	@Transient
 	public String getAsText() {
-		if (longText == null || longText.getText() == null) {
+		if (this.longText == null || this.longText.getText() == null) {
 			return "";
 		}
-		return longText.getText();
+		return this.longText.getText();
 	}
-	
+
 	@Override
 	@Transient
 	public Object getData() {
@@ -66,21 +66,25 @@ public class ConfigLongTextAttribute extends ConfigAttribute {
 			return null;
 		}
 		return getLongText().getText();
- 	}
+	}
 
 	@Override
 	public boolean valueEquals(ConfigAttribute obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!(obj instanceof ConfigLongTextAttribute))
+		}
+		if (!(obj instanceof ConfigLongTextAttribute)) {
 			return false;
+		}
 		ConfigLongTextAttribute other = (ConfigLongTextAttribute) obj;
 		if (longText == null) {
-			if (other.longText != null)
+			if (other.longText != null) {
 				return false;
+			}
 		}
-		else if (!longText.equals(other.longText))
+		else if (!longText.equals(other.longText)) {
 			return false;
+		}
 		return true;
 	}
 

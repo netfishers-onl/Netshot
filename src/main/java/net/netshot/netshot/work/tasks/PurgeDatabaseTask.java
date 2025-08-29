@@ -24,14 +24,24 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.CacheMode;
+import org.hibernate.HibernateException;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.query.MutationQuery;
+import org.hibernate.query.Query;
+import org.quartz.JobKey;
+
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -43,57 +53,46 @@ import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
 
-import org.hibernate.CacheMode;
-import org.hibernate.HibernateException;
-import org.hibernate.query.MutationQuery;
-import org.hibernate.query.Query;
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.quartz.JobKey;
-
 /**
  * This task makes some clean up on the database.
  */
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
-public class PurgeDatabaseTask extends Task implements GroupBasedTask {
+public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private int days;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private int configDays = -1;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private int configSize = 0;
+	private int configSize;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private int configKeepDays = 0;
+	private int configKeepDays;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private int moduleDays = -1;
 
 	/** The device group. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
@@ -110,10 +109,17 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 	/**
 	 * Instantiates a new scan subnets task.
 	 *
-	 * @param comments the comments
+	 * @param comments = the comments
+	 * @param author = the author
+	 * @param days = remove tasks older than this number of days
+	 * @param configDays = remove configs older than this number of days
+	 * @param configSize = remove configs bigger than this size
+	 * @param configKeepDays = keep one config every this number of days
+	 * @param moduleDays = remove modules older than this number of days
+	 * @param group = device group to act on
 	 */
 	public PurgeDatabaseTask(String comments, String author, int days, int configDays,
-			int configSize, int configKeepDays, int moduleDays, DeviceGroup group) {
+		int configSize, int configKeepDays, int moduleDays, DeviceGroup group) {
 		super(comments, "Global", author);
 		this.days = days;
 		this.configDays = configDays;
@@ -123,17 +129,18 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 		this.deviceGroup = group;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#getTaskDescription()
 	 */
 	@Override
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Database purge";
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#run()
 	 */
 	@Override
@@ -154,7 +161,7 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				if (this.deviceGroup == null) {
 					count += session.createMutationQuery(
 						"delete Task t where (t.status = :cancelled or t.status = :failure "
-								+ "or t.status = :success) and (t.executionDate < :when)")
+							+ "or t.status = :success) and (t.executionDate < :when)")
 						.setParameter("cancelled", Task.Status.CANCELLED)
 						.setParameter("failure", Task.Status.FAILURE)
 						.setParameter("success", Task.Status.SUCCESS)
@@ -166,10 +173,10 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 						if (DeviceBasedTask.class.isAssignableFrom(taskClass)) {
 							count += session.createMutationQuery(
 								String.format(
-									"delete %1$s t where t in " +
-									"(select t from %1$s join t.device d join d.groupMemberships gm " +
-									"where gm.key.group = :group and (t.status = :cancelled or t.status = :failure or t.status = :success) " +
-									"and (t.executionDate < :when))", taskClass.getSimpleName()))
+									"delete %1$s t where t in "
+										+ "(select t from %1$s join t.device d join d.groupMemberships gm "
+										+ "where gm.key.group = :group and (t.status = :cancelled or t.status = :failure or t.status = :success) "
+										+ "and (t.executionDate < :when))", taskClass.getSimpleName()))
 								.setParameter("group", this.deviceGroup)
 								.setParameter("cancelled", Task.Status.CANCELLED)
 								.setParameter("failure", Task.Status.FAILURE)
@@ -225,18 +232,18 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 					if (deviceGroup == null) {
 						query = session
 							.createQuery(
-								"select c from Config c join c.attributes a where (a.class = ConfigLongTextAttribute or a.class = ConfigBinaryFileAttribute) " +
-								"group by c.id having ((max(length(a.longText.text)) > :size) or (max(a.fileSize) > :size)) and (c.changeDate < :when) " +
-								"order by c.device asc, c.changeDate desc", Config.class)
+								"select c from Config c join c.attributes a where (a.class = ConfigLongTextAttribute or a.class = ConfigBinaryFileAttribute) "
+									+ "group by c.id having ((max(length(a.longText.text)) > :size) or (max(a.fileSize) > :size)) and (c.changeDate < :when) "
+									+ "order by c.device asc, c.changeDate desc", Config.class)
 							.setParameter("size", configSize * 1024);
 					}
 					else {
 						query = session
 							.createQuery(
-								"select c from Config c join c.device d join d.groupMemberships gm join c.attributes a " +
-								"where gm.key.group = :group and (a.class = ConfigLongTextAttribute or a.class = ConfigBinaryFileAttribute) " +
-								"group by c.id having ((max(length(a.longText.text)) > :size) or (max(a.fileSize) > :size)) and (c.changeDate < :when) " +
-								"order by c.device asc, c.changeDate desc", Config.class)
+								"select c from Config c join c.device d join d.groupMemberships gm join c.attributes a "
+									+ "where gm.key.group = :group and (a.class = ConfigLongTextAttribute or a.class = ConfigBinaryFileAttribute) "
+									+ "group by c.id having ((max(length(a.longText.text)) > :size) or (max(a.fileSize) > :size)) and (c.changeDate < :when) "
+									+ "order by c.device asc, c.changeDate desc", Config.class)
 							.setParameter("group", this.deviceGroup)
 							.setParameter("size", configSize * 1024);
 					}
@@ -247,9 +254,9 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				}
 				else {
 					query = session.createQuery(
-							"select c from Config c join c.device d join d.groupMemberships gm " +
-							"where gm.key.group = :group and (c.changeDate < :when) " +
-							"order by c.device asc, c.changeDate desc", Config.class)
+						"select c from Config c join c.device d join d.groupMemberships gm "
+							+ "where gm.key.group = :group and (c.changeDate < :when) "
+							+ "order by c.device asc, c.changeDate desc", Config.class)
 						.setParameter("group", this.deviceGroup);
 				}
 				ScrollableResults<Config> configs = query
@@ -263,9 +270,9 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				while (configs.next()) {
 					try {
 						Config config = configs.get();
-						if ((config.getDevice().getLastConfig() != null && config.getDevice().getLastConfig().getId() == config.getId()) ||
-								(dontDeleteBefore != null && config.getChangeDate().before(dontDeleteBefore)) ||
-								(configKeepDays > 0 && dontDeleteDevice != config.getDevice().getId())) {
+						if ((config.getDevice().getLastConfig() != null && config.getDevice().getLastConfig().getId() == config.getId())
+							|| (dontDeleteBefore != null && config.getChangeDate().before(dontDeleteBefore))
+							|| (configKeepDays > 0 && dontDeleteDevice != config.getDevice().getId())) {
 							if (configKeepDays > 0) {
 								Calendar limitCalendar = Calendar.getInstance();
 								limitCalendar.setTime(config.getChangeDate());
@@ -310,7 +317,7 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 					log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 				}
 				log.error("Task {}. Database error while purging the old configurations from the database.",
-						this.getId(), e);
+					this.getId(), e);
 				this.error("Database error during the configuration purge.");
 				this.status = Status.FAILURE;
 				return;
@@ -323,7 +330,7 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 					log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 				}
 				log.error("Task {}. Error while purging the old configurations from the database.",
-						this.getId(), e);
+					this.getId(), e);
 				this.error("Error during the configuration purge.");
 				this.status = Status.FAILURE;
 				return;
@@ -352,9 +359,9 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				}
 				else {
 					query = session
-						.createMutationQuery("delete from Module m where m in " +
-							"(select m from Module m join m.device d join d.groupMemberships gm " +
-							"where gm.key.group = :group and m.removed and m.lastSeenDate <= :when)")
+						.createMutationQuery("delete from Module m where m in "
+							+ "(select m from Module m join m.device d join d.groupMemberships gm "
+							+ "where gm.key.group = :group and m.removed and m.lastSeenDate <= :when)")
 						.setParameter("group", this.deviceGroup)
 						.setParameter("when", when.getTime());
 				}
@@ -363,7 +370,7 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				session.getTransaction().commit();
 				log.trace("Task {}. Cleaning up done on modules, {} entries affected.", this.getId(), count);
 				this.info(String.format("Cleaning up done on modules, %d entries affected.", count));
-				
+
 			}
 			catch (Exception e) {
 				try {
@@ -373,7 +380,7 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 					log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 				}
 				log.error("Task {}. Error while purging the old modules from the database.",
-						this.getId(), e);
+					this.getId(), e);
 				this.error("Error during the module purge.");
 				this.status = Status.FAILURE;
 				return;
@@ -387,7 +394,7 @@ public class PurgeDatabaseTask extends Task implements GroupBasedTask {
 		log.trace("Task {}. Cleaning up process finished.", this.getId());
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#clone()
 	 */
 	@Override

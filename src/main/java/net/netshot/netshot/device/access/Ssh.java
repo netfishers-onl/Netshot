@@ -64,11 +64,11 @@ import org.apache.sshd.scp.client.ScpClientCreator;
 import org.apache.sshd.sftp.client.SftpClient;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.work.TaskLogger;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * An SSH CLI access.
@@ -76,17 +76,15 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Ssh extends Cli {
 
-	/** Default SSH TCP port */
-	static final public int DEFAULT_PORT = 22;
-
-	static private SshClient client = null;
+	/** Default SSH TCP port. */
+	public static final int DEFAULT_PORT = 22;
 
 	/**
-	 * Embedded class to represent SSH-specific configuration.
+	 * Settings/config for the current class.
 	 */
-	public static class SshConfig {
+	public static final class Settings {
 
-		static private String[] DEFAULT_SSH_KEX_ALGORITHMS = {
+		private static final String[] DEFAULT_SSH_KEX_ALGORITHMS = {
 			BuiltinDHFactories.Constants.DIFFIE_HELLMAN_GROUP18_SHA512,
 			BuiltinDHFactories.Constants.DIFFIE_HELLMAN_GROUP16_SHA512,
 			BuiltinDHFactories.Constants.DIFFIE_HELLMAN_GROUP14_SHA256,
@@ -95,8 +93,8 @@ public class Ssh extends Cli {
 			BuiltinDHFactories.Constants.DIFFIE_HELLMAN_GROUP_EXCHANGE_SHA1,
 			BuiltinDHFactories.Constants.DIFFIE_HELLMAN_GROUP1_SHA1,
 		};
-	
-		static private String[] DEFAULT_SSH_HOST_KEY_ALGORITHMS = {
+
+		private static final String[] DEFAULT_SSH_HOST_KEY_ALGORITHMS = {
 			KeyPairProvider.SSH_ED25519,
 			KeyUtils.RSA_SHA256_KEY_TYPE_ALIAS,
 			KeyUtils.RSA_SHA512_KEY_TYPE_ALIAS,
@@ -105,8 +103,8 @@ public class Ssh extends Cli {
 			KeyPairProvider.ECDSA_SHA2_NISTP256,
 			KeyPairProvider.SSH_DSS,
 		};
-	
-		static private String[] DEFAULT_SSH_CIPHERS = {
+
+		private static final String[] DEFAULT_SSH_CIPHERS = {
 			BuiltinCiphers.Constants.AES256_GCM,
 			BuiltinCiphers.Constants.AES128_GCM,
 			BuiltinCiphers.Constants.AES256_CTR,
@@ -118,8 +116,8 @@ public class Ssh extends Cli {
 			BuiltinCiphers.Constants.TRIPLE_DES_CBC,
 			BuiltinCiphers.Constants.BLOWFISH_CBC,
 		};
-	
-		static private String[] DEFAULT_SSH_MACS = {
+
+		private static final String[] DEFAULT_SSH_MACS = {
 			BuiltinMacs.Constants.HMAC_SHA2_256,
 			BuiltinMacs.Constants.HMAC_SHA2_512,
 			BuiltinMacs.Constants.HMAC_SHA1,
@@ -130,166 +128,192 @@ public class Ssh extends Cli {
 			BuiltinMacs.Constants.ETM_HMAC_SHA2_256,
 			BuiltinMacs.Constants.ETM_HMAC_SHA1,
 		};
-	
-		static private String[] DEFAULT_SSH_COMPRESSION_ALGORITHMS = {
+
+		private static final String[] DEFAULT_SSH_COMPRESSION_ALGORITHMS = {
 			BuiltinCompressions.Constants.NONE,
 			BuiltinCompressions.Constants.ZLIB,
 		};
 
-		public static void loadConfig() {
+		/** SSH connection timeout. */
+		@Getter
+		private int connectionTimeout;
+
+		/** SSH receive timeout. */
+		@Getter
+		private int receiveTimeout;
+
+		/** SSH command timeout. */
+		@Getter
+		private int commandTimeout;
+
+		/** Key exchange algorithms. */
+		@Getter
+		private String[] kexAlgorithms;
+
+		/** Host key algorithms. */
+		@Getter
+		private String[] hostKeyAlgorithms;
+
+		/** Ciphers. */
+		@Getter
+		private String[] ciphers;
+
+		/** MACs. */
+		@Getter
+		private String[] macs;
+
+		/** Compression algorithms. */
+		@Getter
+		private String[] compressionAlgorithms;
+
+		/**
+		 * Load settings from config.
+		 */
+		private void load() {
+			this.connectionTimeout = Netshot.getConfig("netshot.cli.ssh.connectiontimeout", 5000, 1, Integer.MAX_VALUE);
+			log.debug("The default connection timeout value for SSH sessions is {}s", this.connectionTimeout);
+
+			this.receiveTimeout = Netshot.getConfig("netshot.cli.ssh.receivetimeout", 60000, 1, Integer.MAX_VALUE);
+			log.debug("The default receive timeout value for SSH sessions is {}s", this.receiveTimeout);
+
+			this.commandTimeout = Netshot.getConfig("netshot.cli.ssh.commandtimeout", 120000, 1, Integer.MAX_VALUE);
+			log.debug("The default command timeout value for SSH sessions is {}s", this.commandTimeout);
+
 			String sshSetting;
-	
 			sshSetting = Netshot.getConfig("netshot.cli.ssh.kexalgorithms");
-			if (sshSetting != null) {
-				DEFAULT_SSH_KEX_ALGORITHMS = sshSetting.split(", *");
-			}
+			this.kexAlgorithms = (sshSetting == null) ? DEFAULT_SSH_KEX_ALGORITHMS : sshSetting.split(", *");
 			sshSetting = Netshot.getConfig("netshot.cli.ssh.hostkeyalgorithms");
-			if (sshSetting != null) {
-				DEFAULT_SSH_HOST_KEY_ALGORITHMS = sshSetting.split(", *");
-			}
+			this.hostKeyAlgorithms = (sshSetting == null) ? DEFAULT_SSH_HOST_KEY_ALGORITHMS : sshSetting.split(", *");
 			sshSetting = Netshot.getConfig("netshot.cli.ssh.ciphers");
-			if (sshSetting != null) {
-				DEFAULT_SSH_CIPHERS = sshSetting.split(", *");
-			}
+			this.ciphers = (sshSetting == null) ? DEFAULT_SSH_CIPHERS : sshSetting.split(", *");
 			sshSetting = Netshot.getConfig("netshot.cli.ssh.macs");
-			if (sshSetting != null) {
-				DEFAULT_SSH_MACS = sshSetting.split(", *");
-			}
+			this.macs = (sshSetting == null) ? DEFAULT_SSH_MACS : sshSetting.split(", *");
 			sshSetting = Netshot.getConfig("netshot.cli.ssh.compressionalgorithms");
-			if (sshSetting != null) {
-				DEFAULT_SSH_COMPRESSION_ALGORITHMS = sshSetting.split(", *");
-			}
+			this.compressionAlgorithms = (sshSetting == null) ? DEFAULT_SSH_COMPRESSION_ALGORITHMS : sshSetting.split(", *");
 		}
+	}
 
-		/** Key exchange algorithms allowed for the session */
-		private List<String> kexAlgorithms = Arrays.asList(DEFAULT_SSH_KEX_ALGORITHMS);
+	private static SshClient client;
 
-		/** Host key algorithms allowed for the session */
-		private List<String> hostKeyAlgorithms = Arrays.asList(DEFAULT_SSH_HOST_KEY_ALGORITHMS);
+	/**
+	 * Embedded class to represent SSH-specific configuration.
+	 */
+	public static final class SshConfig {
 
-		/** Ciphers allowed for the session */
-		private List<String> ciphers = Arrays.asList(DEFAULT_SSH_CIPHERS);
+		/** Key exchange algorithms allowed for the session. */
+		private List<String> kexAlgorithms = Arrays.asList(Ssh.SETTINGS.getKexAlgorithms());
 
-		/** MACs allowed for the session */
-		private List<String> macs = Arrays.asList(DEFAULT_SSH_MACS);
+		/** Host key algorithms allowed for the session. */
+		private List<String> hostKeyAlgorithms = Arrays.asList(Ssh.SETTINGS.getHostKeyAlgorithms());
 
-		/** Compression algorithms allowed for the session */
-		private List<String> compressionAlgorithms = Arrays.asList(DEFAULT_SSH_COMPRESSION_ALGORITHMS);
+		/** Ciphers allowed for the session. */
+		private List<String> ciphers = Arrays.asList(Ssh.SETTINGS.getCiphers());
 
-		/** Whether to allocate a PTY or not */
-		private boolean usePty = false;
+		/** MACs allowed for the session. */
+		private List<String> macs = Arrays.asList(Ssh.SETTINGS.getMacs());
 
-		/** Type of terminal */
+		/** Compression algorithms allowed for the session. */
+		private List<String> compressionAlgorithms = Arrays.asList(Ssh.SETTINGS.getCompressionAlgorithms());
+
+		/** Whether to allocate a PTY or not. */
+		private boolean usePty;
+
+		/** Type of terminal. */
 		private String terminalType = "vt100";
 
-		/** Number of columns in the terminal */
+		/** Number of columns in the terminal. */
 		private int terminalCols = 80;
 
-		/** Number of rows in the terminal */
+		/** Number of rows in the terminal. */
 		private int terminalRows = 24;
 
-		/** Height of the terminal */
+		/** Height of the terminal. */
 		private int terminalHeight = 640;
 
-		/** Width of the terminal */
+		/** Width of the terminal. */
 		private int terminalWidth = 480;
 
 		/*
 		 * Default constructor.
 		 */
 		public SshConfig() {
-			
+
 		}
-	
+
 		public void setKexAlgorithms(String[] kexAlgorithms) {
 			this.kexAlgorithms = Arrays.asList(kexAlgorithms);
 		}
-	
+
 		public void setHostKeyAlgorithms(String[] hostKeyAlgorithms) {
 			this.hostKeyAlgorithms = Arrays.asList(hostKeyAlgorithms);
 		}
-	
+
 		public void setCiphers(String[] ciphers) {
 			this.ciphers = Arrays.asList(ciphers);
 		}
-	
+
 		public void setMacs(String[] macs) {
 			this.macs = Arrays.asList(macs);
 		}
-	
+
 		public boolean isUsePty() {
 			return usePty;
 		}
-	
+
 		public void setUsePty(boolean usePty) {
 			this.usePty = usePty;
 		}
-	
+
 		public String getTerminalType() {
 			return terminalType;
 		}
-	
+
 		public void setTerminalType(String terminalType) {
 			this.terminalType = terminalType;
 		}
-	
+
 		public int getTerminalCols() {
 			return terminalCols;
 		}
-	
+
 		public void setTerminalCols(int terminalCols) {
 			this.terminalCols = terminalCols;
 		}
-	
+
 		public int getTerminalRows() {
 			return terminalRows;
 		}
-	
+
 		public void setTerminalRows(int terminalRows) {
 			this.terminalRows = terminalRows;
 		}
-	
+
 		public int getTerminalHeight() {
 			return terminalHeight;
 		}
-	
+
 		public void setTerminalHeight(int terminalHeight) {
 			this.terminalHeight = terminalHeight;
 		}
-	
+
 		public int getTerminalWidth() {
 			return terminalWidth;
 		}
-	
+
 		public void setTerminalWidth(int terminalWidth) {
 			this.terminalWidth = terminalWidth;
 		}
 	}
 
-	/** Default value for the SSH connection timeout */
-	static private int DEFAULT_CONNECTION_TIMEOUT = 5000;
-
-	/** Default value for the SSH receive timeout */
-	static private int DEFAULT_RECEIVE_TIMEOUT = 60000;
-
-	/** Default value for the SSH command timeout */
-	static private int DEFAULT_COMMAND_TIMEOUT = 120000;
+	/** Settings for this class. */
+	public static final Settings SETTINGS = new Settings();
 
 	/**
 	 * Initialize some additional static variables from global configuration.
 	 */
 	public static void loadConfig() {
-		DEFAULT_CONNECTION_TIMEOUT = Netshot.getConfig("netshot.cli.ssh.connectiontimeout", DEFAULT_CONNECTION_TIMEOUT, 1, Integer.MAX_VALUE);
-		log.debug("The default connection timeout value for SSH sessions is {}s", DEFAULT_CONNECTION_TIMEOUT);
-
-    DEFAULT_RECEIVE_TIMEOUT = Netshot.getConfig("netshot.cli.ssh.receivetimeout", DEFAULT_RECEIVE_TIMEOUT, 1, Integer.MAX_VALUE);
-		log.debug("The default receive timeout value for SSH sessions is {}s", DEFAULT_RECEIVE_TIMEOUT);
-		CoreModuleProperties.NIO2_READ_TIMEOUT.set(Ssh.client, Duration.ofMillis(DEFAULT_RECEIVE_TIMEOUT));
-
-		DEFAULT_COMMAND_TIMEOUT = Netshot.getConfig("netshot.cli.ssh.commandtimeout", DEFAULT_COMMAND_TIMEOUT, 1, Integer.MAX_VALUE);
-		log.debug("The default command timeout value for SSH sessions is {}s", DEFAULT_COMMAND_TIMEOUT);
-
-		SshConfig.loadConfig();
+		Ssh.SETTINGS.load();
+		CoreModuleProperties.NIO2_READ_TIMEOUT.set(Ssh.client, Duration.ofMillis(Ssh.SETTINGS.receiveTimeout));
 	}
 
 	static {
@@ -313,10 +337,10 @@ public class Ssh extends Cli {
 	/** The port. */
 	private int port = DEFAULT_PORT;
 
-	/** The SSH client session */
+	/** The SSH client session. */
 	private ClientSession session;
 
-	/** The SSH channel */
+	/** The SSH channel. */
 	private ChannelShell channel;
 
 	/** The username. */
@@ -326,12 +350,12 @@ public class Ssh extends Cli {
 	private String password;
 
 	/** The public key. */
-	private String publicKey = null;
+	private String publicKey;
 
 	/** The private key. */
-	private String privateKey = null;
+	private String privateKey;
 
-	/** The SSH connection config */
+	/** The SSH connection config. */
 	private SshConfig sshConfig = new SshConfig();
 
 	/**
@@ -349,9 +373,9 @@ public class Ssh extends Cli {
 		this.username = username;
 		this.password = password;
 		this.privateKey = null;
-		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
-		this.commandTimeout = DEFAULT_COMMAND_TIMEOUT;
-		this.receiveTimeout = DEFAULT_RECEIVE_TIMEOUT;
+		this.connectionTimeout = Ssh.SETTINGS.getConnectionTimeout();
+		this.commandTimeout = Ssh.SETTINGS.getCommandTimeout();
+		this.receiveTimeout = Ssh.SETTINGS.getReceiveTimeout();
 	}
 
 	/**
@@ -360,21 +384,22 @@ public class Ssh extends Cli {
 	 * @param host the host
 	 * @param port the port
 	 * @param username the SSH username
-	 * @param privateKey the RSA/DSA private key
+	 * @param publicKey The public key
+	 * @param privateKey the RSA/DSA/... private key
 	 * @param passphrase the passphrase which protects the private key
 	 * @param taskLogger the current task logger
 	 */
 	public Ssh(NetworkAddress host, int port, String username, String publicKey, String privateKey,
-			String passphrase, TaskLogger taskLogger) {
+		String passphrase, TaskLogger taskLogger) {
 		super(host, taskLogger);
 		this.port = port;
 		this.username = username;
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
 		this.password = passphrase;
-		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
-		this.commandTimeout = DEFAULT_COMMAND_TIMEOUT;
-		this.receiveTimeout = DEFAULT_RECEIVE_TIMEOUT;
+		this.connectionTimeout = Ssh.SETTINGS.getConnectionTimeout();
+		this.commandTimeout = Ssh.SETTINGS.getCommandTimeout();
+		this.receiveTimeout = Ssh.SETTINGS.getReceiveTimeout();
 	}
 
 	/**
@@ -382,20 +407,21 @@ public class Ssh extends Cli {
 	 *
 	 * @param host the host
 	 * @param username the SSH username
+	 * @param publicKey the public key
 	 * @param privateKey the RSA/DSA private key
 	 * @param passphrase the passphrase which protects the private key
 	 * @param taskLogger the current task logger
 	 */
 	public Ssh(NetworkAddress host, String username, String publicKey, String privateKey,
-			String passphrase, TaskLogger taskLogger) {
+		String passphrase, TaskLogger taskLogger) {
 		super(host, taskLogger);
 		this.username = username;
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
 		this.password = passphrase;
-		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
-		this.commandTimeout = DEFAULT_COMMAND_TIMEOUT;
-		this.receiveTimeout = DEFAULT_RECEIVE_TIMEOUT;
+		this.connectionTimeout = Ssh.SETTINGS.getConnectionTimeout();
+		this.commandTimeout = Ssh.SETTINGS.getCommandTimeout();
+		this.receiveTimeout = Ssh.SETTINGS.getReceiveTimeout();
 	}
 
 
@@ -412,9 +438,9 @@ public class Ssh extends Cli {
 		this.username = username;
 		this.password = password;
 		this.privateKey = null;
-		this.connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
-		this.commandTimeout = DEFAULT_COMMAND_TIMEOUT;
-		this.receiveTimeout = DEFAULT_RECEIVE_TIMEOUT;
+		this.connectionTimeout = Ssh.SETTINGS.getConnectionTimeout();
+		this.commandTimeout = Ssh.SETTINGS.getCommandTimeout();
+		this.receiveTimeout = Ssh.SETTINGS.getReceiveTimeout();
 	}
 
 	/**
@@ -432,7 +458,7 @@ public class Ssh extends Cli {
 		this.sshConfig = other.sshConfig;
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.access.Cli#connect()
 	 */
 	@Override
@@ -464,7 +490,7 @@ public class Ssh extends Cli {
 			}
 			else {
 				KeyPairResourceLoader loader = SecurityUtils.getKeyPairResourceParser();
-				FilePasswordProvider passwordProvider = (this.password == null) ? null : FilePasswordProvider.of(password);
+				FilePasswordProvider passwordProvider = this.password == null ? null : FilePasswordProvider.of(password);
 				Collection<KeyPair> keys = loader.loadKeyPairs(this.session, NamedResource.ofName("Specific"), passwordProvider, this.privateKey);
 				for (KeyPair key : keys) {
 					this.session.addPublicKeyIdentity(key);
@@ -519,7 +545,7 @@ public class Ssh extends Cli {
 
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.device.access.Cli#disconnect()
 	 */
 	@Override
@@ -559,7 +585,7 @@ public class Ssh extends Cli {
 	/**
 	 * Download a file using SCP.
 	 * @param remoteFileName The file to download (name with full path) from the device
-	 * @param targetStream  Output stream
+	 * @param localStream  Output stream
 	 * @param newSession True to download through a new SSH session
 	 */
 	public void scpDownload(String remoteFileName, OutputStream localStream, boolean newSession) throws IOException {
@@ -615,7 +641,7 @@ public class Ssh extends Cli {
 			throw new IOException("The SSH session is not connected, can't start the SFTP transfer");
 		}
 		this.taskLogger.info(String.format("Downloading '%s' to '%s' using SFTP.",
-				remoteFileName, localFileName.toString()));
+			remoteFileName, localFileName.toString()));
 
 
 		try (SftpClient sftpClient = SftpClientFactory.instance().createSftpClient(session)) {
@@ -635,5 +661,5 @@ public class Ssh extends Cli {
 	public void setSshConfig(SshConfig sshConfig) {
 		this.sshConfig = sshConfig;
 	}
-	
+
 }

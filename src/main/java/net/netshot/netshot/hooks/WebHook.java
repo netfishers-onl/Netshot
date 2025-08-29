@@ -30,10 +30,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Transient;
-import jakarta.xml.bind.annotation.XmlElement;
-
 import org.glassfish.jersey.client.ClientConfig;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -46,10 +42,13 @@ import com.fasterxml.jackson.jakarta.rs.xml.JacksonXmlBindXMLProvider;
 import com.fasterxml.jackson.jakarta.rs.yaml.JacksonXmlBindYAMLProvider;
 import com.fasterxml.jackson.jakarta.rs.yaml.YAMLMediaTypes;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.xml.bind.annotation.XmlElement;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.rest.RestViews.HookView;
@@ -65,11 +64,11 @@ import net.netshot.netshot.utils.InsecureTrustManager;
 public class WebHook extends Hook {
 
 	/**
-	 * Types of web hook
+	 * Types of web hook.
 	 */
-	static public enum Action {
+	public enum Action {
 		POST_XML, POST_JSON, POST_YAML,
-	};
+	}
 
 	static {
 		try {
@@ -83,21 +82,21 @@ public class WebHook extends Hook {
 			TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm()).init((KeyStore) null);
 		}
 		catch (Exception e) {
-			if (e instanceof KeyStoreException && e.getCause() != null &&
-					"stream does not represent a PKCS12 key store".equals(e.getCause().getMessage())) {
+			if (e instanceof KeyStoreException && e.getCause() != null
+				&& "stream does not represent a PKCS12 key store".equals(e.getCause().getMessage())) {
 				log.info("Changing trustStoreType to JKS");
 				System.setProperty("jakarta.net.ssl.trustStoreType", "JKS");
 			}
 		}
 	}
 
-	/** Action of the hook */
+	/** Action of the hook. */
 	private Action action;
 
-	/** The target http URL */
+	/** The target http URL. */
 	private String url;
 
-	/** Enable/disable SSL validation for https links */
+	/** Enable/disable SSL validation for https links. */
 	private boolean sslValidation = true;
 
 	/**
@@ -118,12 +117,12 @@ public class WebHook extends Hook {
 
 	@Transient
 	public URL getParsedUrl() throws MalformedURLException {
-		if (this.url == null || this.url.trim().equals("")) {
+		if (this.url == null || "".equals(this.url.trim())) {
 			throw new MalformedURLException("Empty URL");
 		}
 		try {
 			URL pUrl = new URI(this.url.trim()).toURL();
-			if (!pUrl.getProtocol().equals("http") && !pUrl.getProtocol().equals("https")) {
+			if (!"http".equals(pUrl.getProtocol()) && !"https".equals(pUrl.getProtocol())) {
 				throw new MalformedURLException("Invalid protocol");
 			}
 			return pUrl;
@@ -160,37 +159,37 @@ public class WebHook extends Hook {
 		ClientConfig config = new ClientConfig();
 		MediaType mediaType;
 		switch (this.action) {
-		case POST_JSON:
-			mediaType = MediaType.APPLICATION_JSON_TYPE;
-			JacksonXmlBindJsonProvider jsonProvider = new JacksonXmlBindJsonProvider();
-			jsonProvider.setDefaultView(HookView.class);
-			jsonProvider.setMapper(JsonMapper.builder()
-				.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
-				.build());
-			config.register(jsonProvider);
-			break;
-		case POST_XML:
-			mediaType = MediaType.APPLICATION_XML_TYPE;
-			JacksonXmlBindXMLProvider xmlProvider = new JacksonXmlBindXMLProvider();
-			xmlProvider.setDefaultView(HookView.class);
-			xmlProvider.setMapper(XmlMapper.builder()
-				.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
-				.build());
-			config.register(xmlProvider);
-			break;
-		case POST_YAML:
-			mediaType = YAMLMediaTypes.APPLICATION_JACKSON_YAML_TYPE;
-			JacksonXmlBindYAMLProvider yamlProvider = new JacksonXmlBindYAMLProvider();
-			yamlProvider.setDefaultView(RestApiView.class);
-			yamlProvider.setMapper(YAMLMapper.builder()
-				.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
-				.build());
-			config.register(yamlProvider);
-			break;
-		default:
-			throw new Exception("Invalid action");
+			case POST_JSON:
+				mediaType = MediaType.APPLICATION_JSON_TYPE;
+				JacksonXmlBindJsonProvider jsonProvider = new JacksonXmlBindJsonProvider();
+				jsonProvider.setDefaultView(HookView.class);
+				jsonProvider.setMapper(JsonMapper.builder()
+					.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
+					.build());
+				config.register(jsonProvider);
+				break;
+			case POST_XML:
+				mediaType = MediaType.APPLICATION_XML_TYPE;
+				JacksonXmlBindXMLProvider xmlProvider = new JacksonXmlBindXMLProvider();
+				xmlProvider.setDefaultView(HookView.class);
+				xmlProvider.setMapper(XmlMapper.builder()
+					.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
+					.build());
+				config.register(xmlProvider);
+				break;
+			case POST_YAML:
+				mediaType = YAMLMediaTypes.APPLICATION_JACKSON_YAML_TYPE;
+				JacksonXmlBindYAMLProvider yamlProvider = new JacksonXmlBindYAMLProvider();
+				yamlProvider.setDefaultView(RestApiView.class);
+				yamlProvider.setMapper(YAMLMapper.builder()
+					.disable(MapperFeature.DEFAULT_VIEW_INCLUSION)
+					.build());
+				config.register(yamlProvider);
+				break;
+			default:
+				throw new Exception("Invalid action");
 		}
-		
+
 		TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 		factory.init((KeyStore) null);
 

@@ -18,17 +18,15 @@
  */
 package net.netshot.netshot.device.credentials;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
-
 import net.netshot.netshot.database.StringEncryptorConverter;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
@@ -41,28 +39,28 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 @Entity
 @XmlRootElement()
 public class DeviceSshKeyAccount extends DeviceSshAccount {
-	
-	@Getter(onMethod=@__({
+
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@Column(length = 5000)
 	}))
 	@Setter
 	private String publicKey;
 
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
 		@Column(length = 5000),
 		@Convert(converter = StringEncryptorConverter.class)
 	}))
 	@Setter
 	private String privateKey;
-	
+
 	protected DeviceSshKeyAccount() {
-		
+
 	}
 
 	public DeviceSshKeyAccount(String username, String publicKey, String privateKey, String passphrase,
-			String superPassword, String name) {
+		String superPassword, String name) {
 		super(username, passphrase, superPassword, name);
 		this.publicKey = publicKey;
 		this.privateKey = privateKey;
@@ -73,31 +71,40 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 		final int prime = 31;
 		int result = super.hashCode();
 		result = prime * result
-				+ ((privateKey == null) ? 0 : privateKey.hashCode());
+			+ (privateKey == null ? 0 : privateKey.hashCode());
 		result = prime * result
-				+ ((publicKey == null) ? 0 : publicKey.hashCode());
+			+ (publicKey == null ? 0 : publicKey.hashCode());
 		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!super.equals(obj))
+		}
+		if (!super.equals(obj)) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if (getClass() != obj.getClass()) {
 			return false;
+		}
 		DeviceSshKeyAccount other = (DeviceSshKeyAccount) obj;
 		if (privateKey == null) {
-			if (other.privateKey != null)
+			if (other.privateKey != null) {
 				return false;
-		} else if (!privateKey.equals(other.privateKey))
+			}
+		}
+		else if (!privateKey.equals(other.privateKey)) {
 			return false;
+		}
 		if (publicKey == null) {
-			if (other.publicKey != null)
+			if (other.publicKey != null) {
 				return false;
-		} else if (!publicKey.equals(other.publicKey))
+			}
+		}
+		else if (!publicKey.equals(other.publicKey)) {
 			return false;
+		}
 		return true;
 	}
 

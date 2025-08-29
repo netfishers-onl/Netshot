@@ -30,11 +30,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import net.netshot.netshot.Netshot;
-import net.netshot.netshot.collector.TftpServer.TftpTransfer.Status;
-import net.netshot.netshot.device.Network4Address;
-import net.netshot.netshot.device.NetworkAddress;
-
 import org.apache.commons.net.tftp.TFTP;
 import org.apache.commons.net.tftp.TFTPAckPacket;
 import org.apache.commons.net.tftp.TFTPDataPacket;
@@ -43,6 +38,10 @@ import org.apache.commons.net.tftp.TFTPPacketException;
 import org.apache.commons.net.tftp.TFTPWriteRequestPacket;
 
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.Netshot;
+import net.netshot.netshot.collector.TftpServer.TftpTransfer.Status;
+import net.netshot.netshot.device.Network4Address;
+import net.netshot.netshot.device.NetworkAddress;
 
 /**
  * A TFTP server waits for TFTP uploads from the devices. The TFTP transfer must
@@ -58,13 +57,13 @@ public class TftpServer extends Collector {
 	private TFTP tftp;
 
 	/** The transfers. */
-	final private Set<TftpTransfer> transfers = new HashSet<>();
+	private final Set<TftpTransfer> transfers = new HashSet<>();
 
 	/** The static TFTP server instance. */
-	private static TftpServer nsTftpServer = null;
+	private static TftpServer nsTftpServer;
 
 
-	private static boolean running = false;
+	private static boolean running;
 
 	public static boolean isRunning() {
 		return running;
@@ -112,7 +111,7 @@ public class TftpServer extends Collector {
 			tftp.setDefaultTimeout(Duration.ZERO);
 			tftp.open(udpPort);
 			log.debug("Now listening for TFTP packets on UDP port {}.",
-					udpPort);
+				udpPort);
 			running = true;
 			while (true) {
 				try {
@@ -121,7 +120,7 @@ public class TftpServer extends Collector {
 						TFTPWriteRequestPacket requestPacket = (TFTPWriteRequestPacket) packet;
 						synchronized (transfers) {
 							Iterator<TftpTransfer> transferIterator = transfers
-									.iterator();
+								.iterator();
 							while (transferIterator.hasNext()) {
 								TftpTransfer transfer = transferIterator.next();
 								if (transfer.getStatus() != Status.PREPARED) {
@@ -158,7 +157,7 @@ public class TftpServer extends Collector {
 	 * The Class TftpTransferTimeoutException.
 	 */
 	public static class TftpTransferTimeoutException extends
-	TftpTransferException {
+		TftpTransferException {
 
 		/** The Constant serialVersionUID. */
 		private static final long serialVersionUID = 399042520858415551L;
@@ -200,7 +199,7 @@ public class TftpServer extends Collector {
 	 * @return the tftp transfer
 	 */
 	public TftpTransfer prepareTransfer(Network4Address source,
-			String fileName, int timeout) {
+		String fileName, int timeout) {
 		TftpTransfer transfer = new TftpTransfer(source, fileName, timeout);
 		synchronized (transfers) {
 			transfers.add(transfer);
@@ -233,7 +232,7 @@ public class TftpServer extends Collector {
 		private Status status = Status.PREPARED;
 
 		/** The request packet. */
-		private TFTPWriteRequestPacket requestPacket = null;
+		private TFTPWriteRequestPacket requestPacket;
 
 		/** The buffer. */
 		OutputStream buffer = new ByteArrayOutputStream();
@@ -303,12 +302,12 @@ public class TftpServer extends Collector {
 		 *             the tFTP packet exception
 		 */
 		private TFTPPacket getPacket() throws InterruptedIOException,
-		SocketException, IOException, TFTPPacketException {
+			SocketException, IOException, TFTPPacketException {
 			long maxTime = System.currentTimeMillis() + receiveTimeout * 1000;
 			while (true) {
 				TFTPPacket packet = tftp.bufferedReceive();
 				if (packet.getAddress().equals(requestPacket.getAddress())
-						&& packet.getPort() == requestPacket.getPort()) {
+					&& packet.getPort() == requestPacket.getPort()) {
 					return packet;
 				}
 				if (System.currentTimeMillis() > maxTime) {
@@ -371,7 +370,7 @@ public class TftpServer extends Collector {
 			}
 			TFTPPacket packet = requestPacket;
 			TFTPAckPacket ackPacket = new TFTPAckPacket(packet.getAddress(),
-					packet.getPort(), 0);
+				packet.getPort(), 0);
 			while (packet instanceof TFTPWriteRequestPacket) {
 				try {
 					tftp.bufferedSend(ackPacket);
@@ -390,8 +389,8 @@ public class TftpServer extends Collector {
 				if (block > lastBlock || (lastBlock == 65535 && block == 0)) {
 					try {
 						buffer.write(dataPacket.getData(),
-								dataPacket.getDataOffset(),
-								dataPacket.getDataLength());
+							dataPacket.getDataOffset(),
+							dataPacket.getDataLength());
 					}
 					catch (IOException e) {
 						status = Status.ERROR;
@@ -399,7 +398,7 @@ public class TftpServer extends Collector {
 					}
 				}
 				ackPacket = new TFTPAckPacket(requestPacket.getAddress(),
-						requestPacket.getPort(), block);
+					requestPacket.getPort(), block);
 				try {
 					tftp.bufferedSend(ackPacket);
 				}
@@ -443,7 +442,7 @@ public class TftpServer extends Collector {
 			}
 			try {
 				NetworkAddress address = NetworkAddress.getNetworkAddress(
-						packet.getAddress(), 0);
+					packet.getAddress(), 0);
 				if (!address.equals(source)) {
 					return false;
 				}
@@ -478,9 +477,9 @@ public class TftpServer extends Collector {
 			final int prime = 31;
 			int result = 1;
 			result = prime * result
-					+ ((fileName == null) ? 0 : fileName.hashCode());
+				+ (fileName == null ? 0 : fileName.hashCode());
 			result = prime * result
-					+ ((source == null) ? 0 : source.hashCode());
+				+ (source == null ? 0 : source.hashCode());
 			result = prime * result + (int) (startTime ^ (startTime >>> 32));
 			return result;
 		}
@@ -492,25 +491,32 @@ public class TftpServer extends Collector {
 		 */
 		@Override
 		public boolean equals(Object obj) {
-			if (this == obj)
+			if (this == obj) {
 				return true;
-			if (obj == null)
+			}
+			if (obj == null) {
 				return false;
-			if (getClass() != obj.getClass())
+			}
+			if (getClass() != obj.getClass()) {
 				return false;
+			}
 			TftpTransfer other = (TftpTransfer) obj;
 			if (fileName == null) {
-				if (other.fileName != null)
+				if (other.fileName != null) {
 					return false;
+				}
 			}
-			else if (!fileName.equals(other.fileName))
+			else if (!fileName.equals(other.fileName)) {
 				return false;
+			}
 			if (source == null) {
-				if (other.source != null)
+				if (other.source != null) {
 					return false;
+				}
 			}
-			else if (!source.equals(other.source))
+			else if (!source.equals(other.source)) {
 				return false;
+			}
 			return startTime == other.startTime;
 		}
 

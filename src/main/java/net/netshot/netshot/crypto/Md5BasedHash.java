@@ -1,3 +1,21 @@
+/**
+ * Copyright 2013-2025 Netshot
+ * 
+ * This file is part of Netshot project.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package net.netshot.netshot.crypto;
 
 import java.io.InvalidClassException;
@@ -19,11 +37,17 @@ import lombok.Setter;
  * By default, 1000 iterations and 8-byte salt.
  * Compatible with default Jasypt BasicPasswordEncryptor implementation.
  */
-public class Md5BasedHash extends Hash {
-	private static Charset HASH_CHARSET = StandardCharsets.US_ASCII;
-	private static Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
+public final class Md5BasedHash extends Hash {
+	private static final Charset HASH_CHARSET = StandardCharsets.US_ASCII;
+	private static final Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
 
-	private static int HASH_SIZE = 16; // MD5 hash size
+	private static final int HASH_SIZE = 16; // MD5 hash size
+
+	private static final int DEFAULT_SALT_SIZE = 8;
+	private static final int DEFAULT_ITERATIONS = 1000;
+
+	private static final int MIN_ITERATIONS = 1;
+	private static final int MAX_ITERATIONS = 1 << 24;
 
 	private static final Pattern HASHSTRING_PATTERN = Pattern.compile(
 		"^\\$1(\\$t=(?<iterations>[0-9]+))?(\\$(?<salt>[-A-Za-z0-9+/]+))?\\$(?<hash>[-A-Za-z0-9+/]+)$");
@@ -61,7 +85,7 @@ public class Md5BasedHash extends Hash {
 		final String iterationString = matcher.group("iterations");
 		if (iterationString != null) {
 			md5Hash.iterations = Integer.parseInt(iterationString);
-			if (md5Hash.iterations < 1 || md5Hash.iterations >= (1 << 24)) {
+			if (md5Hash.iterations < MIN_ITERATIONS || md5Hash.iterations >= MAX_ITERATIONS) {
 				throw new IllegalArgumentException("Invalid iteration component value");
 			}
 		}
@@ -87,16 +111,17 @@ public class Md5BasedHash extends Hash {
 		return md5Hash;
 	}
 
-	private int saltSize = 8;
-	@Getter
-	private byte[] salt = null;
+	private int saltSize = DEFAULT_SALT_SIZE;
 
 	@Getter
-	private byte[] hash = null;
+	private byte[] salt;
+
+	@Getter
+	private byte[] hash;
 
 	@Getter
 	@Setter
-	private int iterations = 1000;
+	private int iterations = DEFAULT_ITERATIONS;
 
 	public Md5BasedHash() {
 
@@ -165,11 +190,11 @@ public class Md5BasedHash extends Hash {
 		if (this.salt != null) {
 			sb.append("$").append(
 				new String(Base64.getEncoder().withoutPadding().encode(this.salt),
-				HASH_CHARSET));
+					HASH_CHARSET));
 		}
 		sb.append("$").append(
 			new String(Base64.getEncoder().withoutPadding().encode(this.hash),
-			HASH_CHARSET));
+				HASH_CHARSET));
 		return sb.toString();
 	}
 
@@ -179,7 +204,7 @@ public class Md5BasedHash extends Hash {
 			return this.hash == null;
 		}
 		Md5BasedHash other = new Md5BasedHash();
-		other.salt = (this.salt == null) ? null : Arrays.copyOf(this.salt, this.salt.length);
+		other.salt = this.salt == null ? null : Arrays.copyOf(this.salt, this.salt.length);
 		other.saltSize = this.saltSize;
 		other.iterations = this.iterations;
 		other.digest(input);
@@ -188,7 +213,7 @@ public class Md5BasedHash extends Hash {
 
 	public void setSalt(byte[] salt) {
 		this.salt = salt;
-		this.saltSize = (salt == null) ? 0 : salt.length;
+		this.saltSize = salt == null ? 0 : salt.length;
 	}
-	
+
 }

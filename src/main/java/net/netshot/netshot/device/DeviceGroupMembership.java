@@ -1,3 +1,21 @@
+/**
+ * Copyright 2013-2025 Netshot
+ * 
+ * This file is part of Netshot project.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package net.netshot.netshot.device;
 
 import java.io.Serializable;
@@ -17,7 +35,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Device membership within a group
+ * Device membership within a group.
  */
 @Entity
 @Table(name = "device_group_cached_devices")
@@ -27,8 +45,8 @@ public class DeviceGroupMembership {
 	private static class Key implements Serializable {
 
 		private static final long serialVersionUID = 10209729310192924L;
-	
-		@Getter(onMethod=@__({
+
+		@Getter(onMethod = @__({
 			@ManyToOne,
 			@JoinColumn(name = "owner_groups"),
 			@OnDelete(action = OnDeleteAction.CASCADE),
@@ -36,7 +54,7 @@ public class DeviceGroupMembership {
 		@Setter
 		private DeviceGroup group;
 
-		@Getter(onMethod=@__({
+		@Getter(onMethod = @__({
 			@ManyToOne,
 			@JoinColumn(name = "cached_devices"),
 			@OnDelete(action = OnDeleteAction.CASCADE),
@@ -47,8 +65,8 @@ public class DeviceGroupMembership {
 		protected Key() {
 			//
 		}
-	
-		public Key(Device device, DeviceGroup group) {
+
+		Key(Device device, DeviceGroup group) {
 			this.device = device;
 			this.group = group;
 		}
@@ -60,20 +78,24 @@ public class DeviceGroupMembership {
 
 		@Override
 		public boolean equals(Object obj) {
-			if (this == obj) return true;
-			if (!(obj instanceof Key)) return false;
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof Key)) {
+				return false;
+			}
 			Key other = (Key) obj;
 			return Objects.equals(group, other.group) && Objects.equals(device, other.device);
 		}
 	}
 
 	/** The key. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@EmbeddedId
 	}))
 	@Setter
 	private Key key = new Key();
-	
+
 	protected DeviceGroupMembership() {
 		//
 	}
@@ -91,5 +113,5 @@ public class DeviceGroupMembership {
 	public Device getDevice() {
 		return this.key.getDevice();
 	}
-	
+
 }

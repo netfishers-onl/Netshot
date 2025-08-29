@@ -22,47 +22,47 @@ import java.io.File;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonView;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
-@Entity @DiscriminatorValue("F")
-public class ConfigBinaryFileAttribute extends ConfigAttribute {
+@Entity
+@DiscriminatorValue("F")
+public final class ConfigBinaryFileAttribute extends ConfigAttribute {
 
-	/** Unique ID generated before saving */
-	@Getter(onMethod=@__({
+	/** Unique ID generated before saving. */
+	@Getter(onMethod = @__({
 		@Column(unique = true)
 	}))
 	@Setter
 	private String uid;
 
-	/** Original name of the file */
-	@Getter(onMethod=@__({
+	/** Original name of the file. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private String originalName;
 
-	/** File size (in bytes) */
-	@Getter(onMethod=@__({
+	/** File size (in bytes). */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private long fileSize = 0L;
-	
+	private long fileSize;
+
 	protected ConfigBinaryFileAttribute() {
 	}
-	
+
 	public ConfigBinaryFileAttribute(Config config, String name, String originalName) {
 		super(config, name);
 		this.uid = UUID.randomUUID().toString();
@@ -87,7 +87,7 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 	public String getAsText() {
 		return "";
 	}
-	
+
 	@Override
 	@Transient
 	public Object getData() {
@@ -96,20 +96,32 @@ public class ConfigBinaryFileAttribute extends ConfigAttribute {
 
 	@Override
 	public boolean valueEquals(ConfigAttribute obj) {
-		if (this == obj)
+		if (this == obj) {
 			return true;
-		if (!(obj instanceof ConfigBinaryFileAttribute))
+		}
+		if (!(obj instanceof ConfigBinaryFileAttribute)) {
 			return false;
+		}
 		ConfigBinaryFileAttribute other = (ConfigBinaryFileAttribute) obj;
-		if (fileSize != other.fileSize) return false;
+		if (this.fileSize != other.fileSize) {
+			return false;
+		}
 		if (originalName == null) {
-			if (other.originalName != null) return false;
+			if (other.originalName != null) {
+				return false;
+			}
 		}
-		else if (!originalName.equals(other.originalName)) return false;
-		if (uid == null) {
-			if (other.uid != null) return false;
+		else if (!this.originalName.equals(other.originalName)) {
+			return false;
 		}
-		else if (!uid.equals(other.uid)) return false;
+		if (this.uid == null) {
+			if (other.uid != null) {
+				return false;
+			}
+		}
+		else if (!this.uid.equals(other.uid)) {
+			return false;
+		}
 		return true;
 	}
 

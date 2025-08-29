@@ -118,7 +118,7 @@ $RECYCLE.BIN/
 *.sw[a-p]
 
 
-### Netshot ###
+### Netshot specific ###
 target
 .settings/*
 *.iml

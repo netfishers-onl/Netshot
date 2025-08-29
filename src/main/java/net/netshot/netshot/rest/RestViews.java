@@ -23,14 +23,18 @@ package net.netshot.netshot.rest;
  */
 public class RestViews {
 	// Default view
-	public static class DefaultView {};
+	public static class DefaultView {
+	}
 
 	// REST API view
-	public static class RestApiView extends DefaultView {};
+	public static class RestApiView extends DefaultView {
+	}
 
 	// View for hook objects
-	public static class HookView extends DefaultView {};
+	public static class HookView extends DefaultView {
+	}
 
 	// Clustering view
-	public static class ClusteringView extends DefaultView {};
+	public static class ClusteringView extends DefaultView {
+	}
 }

@@ -22,25 +22,23 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Transient;
-import jakarta.xml.bind.annotation.XmlElement;
-
-import com.fasterxml.jackson.annotation.JsonView;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-
 import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
-import net.netshot.netshot.database.Database;
+import com.fasterxml.jackson.annotation.JsonView;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Transient;
+import jakarta.xml.bind.annotation.XmlElement;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.TaskManager;
+import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.device.script.RunDiagnosticCliScript;
@@ -56,7 +54,7 @@ import net.netshot.netshot.work.Task;
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
-public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
+public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 
 	/** Device IDs on which diagnostics are currently being executed. */
 	private static Set<Long> runningDiagnostics = ConcurrentHashMap.newKeySet();
@@ -81,52 +79,55 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 	}
 
 	/** The device. */
-	@Getter(onMethod=@__({
+	@Getter(onMethod = @__({
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
 	private Device device;
 
-	/** Do not automatically start a check compliance task */
-	@Getter(onMethod=@__({
+	/** Do not automatically start a check compliance task. */
+	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(HookView.class)
 	}))
 	@Setter
-	private boolean dontCheckCompliance = false;
-	
+	private boolean dontCheckCompliance;
+
 	/**
 	 * Instantiate a new RunDiagnosticTask (for Hibernate).
 	 */
 	protected RunDiagnosticsTask() {
 	}
-	
+
 	/**
 	 * Instantiate a new RunDiagnosticTask.
 	 * @param device The device to run the task on
 	 * @param comments Any commends about this task
 	 * @param author Who requested that task
+	 * @param dontCheckCompliance Do not check compliance after these diagnostics
 	 */
 	public RunDiagnosticsTask(Device device, String comments, String author, boolean dontCheckCompliance) {
-		super(comments, (device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName()),
-				author);
+		super(comments, device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName(),
+			author);
 		this.device = device;
 		this.dontCheckCompliance = dontCheckCompliance;
 	}
-	
+
 	@Override
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public String getTaskDescription() {
 		return "Device diagnostics";
 	}
 
 	/**
-	 * Get the ID of the device
+	 * Get the ID of the device.
 	 * 
 	 * @return the ID of the device
 	 */
-	@XmlElement @JsonView(DefaultView.class)
+	@XmlElement
+	@JsonView(DefaultView.class)
 	@Transient
 	public long getDeviceId() {
 		if (this.device == null) {
@@ -135,7 +136,7 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 		return this.device.getId();
 	}
 
-	/* (non-Javadoc)
+	/*(non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#clone()
 	 */
 	@Override
@@ -148,7 +149,7 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 	@Override
 	public void run() {
 		log.debug("Task {}. Starting diagnostic task for device {}.", this.getId(),
-				device == null ? "null" : device.getId());
+			device == null ? "null" : device.getId());
 		if (device == null) {
 			this.info("The device doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
@@ -163,7 +164,7 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 			// Start over from a fresh device from DB
 			device = session.get(Device.class, device.getId());
 			this.trace(String.format("Run diagnostic task for device %s (%s).",
-					device.getName(), device.getMgmtAddress().getIp()));
+				device.getName(), device.getMgmtAddress().getIp()));
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				log.trace("Task {}. Device not INPRODUCTION, stopping the diagnostic task.", this.getId());
 				this.warn("The device is not enabled (not in production).");
@@ -179,9 +180,9 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 			}
 
 			List<Diagnostic> diagnostics = session.createQuery(
-				"select dg from Diagnostic dg join fetch dg.targetGroup tg where dg.enabled = :enabled and " +
-				"tg in (select gm.key.group from DeviceGroupMembership gm where gm.key.device = :device)",
-					Diagnostic.class)
+				"select dg from Diagnostic dg join fetch dg.targetGroup tg where dg.enabled = :enabled and "
+					+ "tg in (select gm.key.group from DeviceGroupMembership gm where gm.key.device = :device)",
+				Diagnostic.class)
 				.setParameter("device", device)
 				.setParameter("enabled", true)
 				.list();
@@ -196,7 +197,7 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 				this.info("No diagnostic was found that apply to this device.");
 			}
 			this.status = Status.SUCCESS;
-			
+
 		}
 		catch (Exception e) {
 			try {
@@ -243,7 +244,7 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 				log.error("Task {}. Error while registering the new task.", this.getId(), e);
 			}
 		}
-		
+
 	}
 
 	/*
@@ -253,8 +254,8 @@ public class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 	@Override
 	@Transient
 	public JobKey getIdentity() {
-		return new JobKey(String.format("Task_%d", this.getId()), 
-				String.format("RunDevice_%d", this.getDeviceId()));
+		return new JobKey(String.format("Task_%d", this.getId()),
+			String.format("RunDevice_%d", this.getDeviceId()));
 	}
 
 	/*

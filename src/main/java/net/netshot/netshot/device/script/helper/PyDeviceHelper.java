@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.HostAccess.Export;
+import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyArray;
 import org.graalvm.polyglot.proxy.ProxyHashMap;
 import org.hibernate.HibernateException;
@@ -36,26 +36,26 @@ import org.hibernate.Session;
 
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.Device;
+import net.netshot.netshot.device.Device.MissingDeviceDriverException;
+import net.netshot.netshot.device.Device.NetworkClass;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.Module;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.Network6Address;
 import net.netshot.netshot.device.NetworkAddress;
+import net.netshot.netshot.device.NetworkAddress.AddressUsage;
 import net.netshot.netshot.device.NetworkInterface;
 import net.netshot.netshot.device.PhysicalAddress;
-import net.netshot.netshot.device.Device.MissingDeviceDriverException;
-import net.netshot.netshot.device.Device.NetworkClass;
-import net.netshot.netshot.device.NetworkAddress.AddressUsage;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
+import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.attribute.DeviceAttribute;
-import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
-import net.netshot.netshot.diagnostic.DiagnosticResult;
-import net.netshot.netshot.work.TaskLogger;
 import net.netshot.netshot.device.attribute.DeviceBinaryAttribute;
 import net.netshot.netshot.device.attribute.DeviceLongTextAttribute;
 import net.netshot.netshot.device.attribute.DeviceNumericAttribute;
 import net.netshot.netshot.device.attribute.DeviceTextAttribute;
+import net.netshot.netshot.diagnostic.DiagnosticResult;
+import net.netshot.netshot.work.TaskLogger;
 
 /**
  * Class used to get  and set data on a device object from Python.
@@ -63,7 +63,7 @@ import net.netshot.netshot.device.attribute.DeviceTextAttribute;
  *
  */
 @Slf4j
-public class PyDeviceHelper {
+public final class PyDeviceHelper {
 
 	private Device device;
 	private Session session;
@@ -103,13 +103,13 @@ public class PyDeviceHelper {
 	}
 
 	public PyDeviceHelper(Device device, Session session, TaskLogger taskLogger, boolean readOnly)
-			throws MissingDeviceDriverException {
+		throws MissingDeviceDriverException {
 		this.device = device;
 		this.taskLogger = taskLogger;
 		this.readOnly = readOnly;
 		this.session = session;
 	}
-	
+
 	@Export
 	public void add(String key, Value data) {
 		if (readOnly) {
@@ -122,27 +122,27 @@ public class PyDeviceHelper {
 		}
 		try {
 			if ("module".equals(key)) {
-				
+
 				Module module = new Module(
-						getStringMember(data, "slot", ""),
-						getStringMember(data, "part_number", ""),
-						getStringMember(data, "serial_number", ""),
-						device
+					getStringMember(data, "slot", ""),
+					getStringMember(data, "part_number", ""),
+					getStringMember(data, "serial_number", ""),
+					device
 				);
 				device.getModules().add(module);
 			}
 			else if ("network_interface".equals(key)) {
 				NetworkInterface networkInterface = new NetworkInterface(
-						device,
-						data.getHashValue("name").asString(),
-						getStringMember(data, "virtual_device", ""),
-						getStringMember(data, "vrf", ""),
-						getBooleanMember(data, "enabled", true),
-						getBooleanMember(data, "level3", true),
-						getStringMember(data, "description", "")
+					device,
+					data.getHashValue("name").asString(),
+					getStringMember(data, "virtual_device", ""),
+					getStringMember(data, "vrf", ""),
+					getBooleanMember(data, "enabled", true),
+					getBooleanMember(data, "level3", true),
+					getStringMember(data, "description", "")
 				);
 				networkInterface.setPhysicalAddress(new PhysicalAddress(
-						getStringMember(data, "mac", "0000.0000.0000")));
+					getStringMember(data, "mac", "0000.0000.0000")));
 				Value ipAddresses = data.getHashValue("ip");
 				if (ipAddresses != null) {
 					for (long i = 0; i < ipAddresses.getArraySize(); i++) {
@@ -164,7 +164,7 @@ public class PyDeviceHelper {
 						networkInterface.addIpAddress(address);
 					}
 				}
-				
+
 				device.getNetworkInterfaces().add(networkInterface);
 			}
 			else if ("vrf".equals(key)) {
@@ -179,7 +179,7 @@ public class PyDeviceHelper {
 			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
 		}
 	}
-	
+
 	@Export
 	public void reset() {
 		if (readOnly) {
@@ -218,10 +218,10 @@ public class PyDeviceHelper {
 			for (AttributeDefinition attribute : driver.getAttributes()) {
 				if (attribute.getLevel().equals(AttributeLevel.DEVICE) && attribute.getName().equals(key)) {
 					switch (attribute.getType()) {
-					case BINARY:
-						device.addAttribute(new DeviceBinaryAttribute(device, key, value));
-						break;
-					default:
+						case BINARY:
+							device.addAttribute(new DeviceBinaryAttribute(device, key, value));
+							break;
+						default:
 					}
 					break;
 				}
@@ -232,8 +232,8 @@ public class PyDeviceHelper {
 			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
 		}
 	}
-	
-	
+
+
 	@Export
 	public void set(String key, Double value) {
 		if (readOnly) {
@@ -249,10 +249,10 @@ public class PyDeviceHelper {
 			for (AttributeDefinition attribute : driver.getAttributes()) {
 				if (attribute.getLevel().equals(AttributeLevel.DEVICE) && attribute.getName().equals(key)) {
 					switch (attribute.getType()) {
-					case NUMERIC:
-						device.addAttribute(new DeviceNumericAttribute(device, key, value));
-						break;
-					default:
+						case NUMERIC:
+							device.addAttribute(new DeviceNumericAttribute(device, key, value));
+							break;
+						default:
 					}
 					break;
 				}
@@ -263,7 +263,7 @@ public class PyDeviceHelper {
 			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
 		}
 	}
-	
+
 	@Export
 	public void set(String key, String value) {
 		if (readOnly) {
@@ -307,13 +307,13 @@ public class PyDeviceHelper {
 				for (AttributeDefinition attribute : driver.getAttributes()) {
 					if (attribute.getLevel().equals(AttributeLevel.DEVICE) && attribute.getName().equals(key)) {
 						switch (attribute.getType()) {
-						case LONGTEXT:
-							device.addAttribute(new DeviceLongTextAttribute(device, key, value));
-							break;
-						case TEXT:
-							device.addAttribute(new DeviceTextAttribute(device, key, value));
-							break;
-						default:
+							case LONGTEXT:
+								device.addAttribute(new DeviceLongTextAttribute(device, key, value));
+								break;
+							case TEXT:
+								device.addAttribute(new DeviceTextAttribute(device, key, value));
+								break;
+							default:
 						}
 						break;
 					}
@@ -329,14 +329,14 @@ public class PyDeviceHelper {
 	/**
 	 * Gets the device item.
 	 *
-	 * @param device the device
+	 * @param targetDevice the device
 	 * @param item the item
 	 * @return the device item
 	 */
-	private Object getDeviceItem(Device device, String item) {
+	private Object getDeviceItem(Device targetDevice, String item) {
 		DeviceDriver driver;
 		try {
-			driver = device.getDeviceDriver();
+			driver = targetDevice.getDeviceDriver();
 		}
 		catch (MissingDeviceDriverException e) {
 			return null;
@@ -345,44 +345,44 @@ public class PyDeviceHelper {
 			return driver.getDescription();
 		}
 		else if ("name".equals(item)) {
-			return device.getName();
+			return targetDevice.getName();
 		}
 		else if ("family".equals(item)) {
-			return device.getFamily();
+			return targetDevice.getFamily();
 		}
 		else if ("management_ip_address".equals(item)) {
-			return device.getMgmtAddress().getIp();
+			return targetDevice.getMgmtAddress().getIp();
 		}
 		else if ("management_domain".equals(item)) {
-			return device.getMgmtDomain().getName();
+			return targetDevice.getMgmtDomain().getName();
 		}
 		else if ("location".equals(item)) {
-			return device.getLocation();
+			return targetDevice.getLocation();
 		}
 		else if ("contact".equals(item)) {
-			return device.getContact();
+			return targetDevice.getContact();
 		}
 		else if ("software_version".equals(item)) {
-			return device.getSoftwareVersion();
+			return targetDevice.getSoftwareVersion();
 		}
 		else if ("serial_number".equals(item)) {
-			return device.getSerialNumber();
+			return targetDevice.getSerialNumber();
 		}
 		else if ("comments".equals(item)) {
-			return device.getComments();
+			return targetDevice.getComments();
 		}
 		else if ("network_class".equals(item)) {
-			return (device.getNetworkClass() == null ? null : device.getNetworkClass().toString());
+			return targetDevice.getNetworkClass() == null ? null : targetDevice.getNetworkClass().toString();
 		}
 		else if ("virtual_devices".equals(item)) {
-			return ProxyArray.fromList(List.copyOf(device.getVirtualDevices()));
+			return ProxyArray.fromList(List.copyOf(targetDevice.getVirtualDevices()));
 		}
 		else if ("vrfs".equals(item)) {
-			return ProxyArray.fromList(List.copyOf(device.getVrfInstances()));
+			return ProxyArray.fromList(List.copyOf(targetDevice.getVrfInstances()));
 		}
 		else if ("modules".equals(item)) {
 			List<Object> modules = new ArrayList<>();
-			for (Module m : device.getModules()) {
+			for (Module m : targetDevice.getModules()) {
 				Map<Object, Object> module = new HashMap<>();
 				module.put("slot", Value.asValue(m.getSlot()));
 				module.put("part_number", Value.asValue(m.getPartNumber()));
@@ -393,7 +393,7 @@ public class PyDeviceHelper {
 		}
 		else if ("interfaces".equals(item)) {
 			List<Object> networkInterfaces = new ArrayList<>();
-			for (NetworkInterface ni : device.getNetworkInterfaces()) {
+			for (NetworkInterface ni : targetDevice.getNetworkInterfaces()) {
 				Map<Object, Object> networkInterface = new HashMap<>();
 				networkInterface.put("name", ni.getInterfaceName());
 				networkInterface.put("description", ni.getDescription());
@@ -426,15 +426,15 @@ public class PyDeviceHelper {
 			String jsItem = pythonicToJavascriptic(item);
 			for (AttributeDefinition definition : driver.getAttributes()) {
 				if ((definition.getName().equals(jsItem) || definition.getTitle().equals(jsItem)) && definition.isCheckable()) {
-					if (definition.getLevel() == AttributeLevel.CONFIG && device.getLastConfig() != null) {
-						for (ConfigAttribute attribute : device.getLastConfig().getAttributes()) {
+					if (definition.getLevel() == AttributeLevel.CONFIG && targetDevice.getLastConfig() != null) {
+						for (ConfigAttribute attribute : targetDevice.getLastConfig().getAttributes()) {
 							if (attribute.getName().equals(jsItem)) {
 								return attribute.getData();
 							}
 						}
 					}
 					else if (definition.getLevel() == AttributeLevel.DEVICE) {
-						for (DeviceAttribute attribute : device.getAttributes()) {
+						for (DeviceAttribute attribute : targetDevice.getAttributes()) {
 							if (attribute.getName().equals(jsItem)) {
 								return attribute.getData();
 							}
@@ -442,7 +442,7 @@ public class PyDeviceHelper {
 					}
 				}
 			}
-			for (DiagnosticResult diagnosticResult : device.getDiagnosticResults()) {
+			for (DiagnosticResult diagnosticResult : targetDevice.getDiagnosticResults()) {
 				String diagnosticName = diagnosticResult.getDiagnosticName();
 				if (diagnosticName != null && diagnosticName.equals(item)) {
 					return diagnosticResult.getData();
@@ -472,19 +472,19 @@ public class PyDeviceHelper {
 	 * @throws HibernateException the hibernate exception
 	 */
 	private Device loadDevice(long id) throws HibernateException {
-		Device device = session
-				.createQuery("from Device d join fetch d.lastConfig where d.id = :id", Device.class)
-				.setParameter("id", id)
-				.uniqueResult();
-		return device;
+		Device foundDevice = session
+			.createQuery("from Device d join fetch d.lastConfig where d.id = :id", Device.class)
+			.setParameter("id", id)
+			.uniqueResult();
+		return foundDevice;
 	}
 
 	private Device loadDevice(String name) throws HibernateException {
-		Device device = session
-				.createQuery("from Device d join fetch d.lastConfig where d.name = :name", Device.class)
-				.setParameter("name", name)
-				.uniqueResult();
-		return device;
+		Device foundDevice = session
+			.createQuery("from Device d join fetch d.lastConfig where d.name = :name", Device.class)
+			.setParameter("name", name)
+			.uniqueResult();
+		return foundDevice;
 	}
 
 	/**
@@ -503,24 +503,24 @@ public class PyDeviceHelper {
 	@Export
 	public Object get(String item, long deviceId) {
 		log.debug("Python request for item {} on device {}.", item,
-				deviceId);
+			deviceId);
 		if (deviceId == this.device.getId()) {
 			return this.get(item);
 		}
 		try {
-			Device device = loadDevice(deviceId);
-			Object result = this.getDeviceItem(device, item);
-			session.evict(device);
+			Device targetDevice = loadDevice(deviceId);
+			Object result = this.getDeviceItem(targetDevice, item);
+			session.evict(targetDevice);
 			return result;
 		}
 		catch (ObjectNotFoundException e) {
 			log.error("Device not found on Python get, item {}, device {}.",
-					item, deviceId, e);
+				item, deviceId, e);
 			this.taskLogger.warn(String.format("Unable to find the device %d.", deviceId));
 		}
 		catch (Exception e) {
 			log.error("Error on Python get, item {}, device {}.", item,
-					deviceId, e);
+				deviceId, e);
 			this.taskLogger.warn(String.format("Unable to get data %s for device %d.", item, deviceId));
 		}
 		return null;
@@ -529,24 +529,24 @@ public class PyDeviceHelper {
 	@Export
 	public Object get(String item, String deviceName) {
 		log.debug("Python request for item {} on device named {}.", item,
-				deviceName);
+			deviceName);
 		try {
 			if (device.getName().equals(deviceName)) {
 				return this.get(item);
 			}
-			Device device = loadDevice(deviceName);
-			Object result = this.getDeviceItem(device, item);
-			session.evict(device);
+			Device targetDevice = loadDevice(deviceName);
+			Object result = this.getDeviceItem(targetDevice, item);
+			session.evict(targetDevice);
 			return result;
 		}
 		catch (ObjectNotFoundException e) {
 			log.error("Device not found on Python get, item {}, device named {}.",
-					item, deviceName, e);
+				item, deviceName, e);
 			this.taskLogger.warn(String.format("Unable to find the device named %s.", deviceName));
 		}
 		catch (Exception e) {
 			log.error("Error on Python get, item {}, device named {}.", item,
-					deviceName, e);
+				deviceName, e);
 			this.taskLogger.warn(String.format("Unable to get data %s for device named %s.", item, deviceName));
 		}
 		return null;

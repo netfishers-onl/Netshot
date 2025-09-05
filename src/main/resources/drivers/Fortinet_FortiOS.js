@@ -24,7 +24,7 @@ var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "Netshot Team",
-	version: "6.2" /* Version will appear in the Admin tab. */
+	version: "6.3" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -62,6 +62,18 @@ var Device = {
 	"haPeer": { /* This stores the name of an optional HA peer. */
 		type: "Text",
 		title: "HA peer name",
+		searchable: true,
+		checkable: true,
+	},
+	"haGroupName": { /* This stores the name of an optional HA Group Name. */
+		type: "Text",
+		title: "HA group name",
+		searchable: true,
+		checkable: true,
+	},
+	"haGroupId": { /* This stores the name of an optional HA Group ID. */
+		type: "Text",
+		title: "HA group ID",
 		searchable: true,
 		checkable: true
 	}
@@ -186,7 +198,8 @@ function snapshot(cli, device, config) {
 	var showSystemSnmp = cli.command("show system snmp sysinfo | grep .");
 	// Store the HA status
 	var getHa = cli.command("get system ha status | grep .");
-
+	// Store the HA config block
+	var showHa = cli.command("show system ha | grep .");
 
 	if (vdomMode) {
 		if (!useScp && version.match(/^6\.2\..*/)) {
@@ -253,6 +266,8 @@ function snapshot(cli, device, config) {
 			device.set("location", location[1]);
 		}
 	}
+
+	// Read HA Peers from the unit directly.
 	var peerPattern = /^(Master|Slave|Primary|Secondary) *: (.+?) *, +([A-Z0-9]+)(, HA cluster index = [0-9]|, cluster index = [0-9])*$/gm;
 	var match;
 	while (match = peerPattern.exec(getHa)) {
@@ -260,6 +275,16 @@ function snapshot(cli, device, config) {
 			device.set("haPeer", match[2]);
 			break;
 		}
+	}
+
+	// Read the HA Group Name and HA Group ID fields from the configuration directly.
+	var haInfos = cli.findSections(showHa, /config system ha/);
+	for (var s in haInfos) {
+		var haName = haInfos[s].config.match(/set group-name "(.*)"/);
+		device.set("haGroupName", haName ? haName[1] : "");
+		var haId = haInfos[s].config.match(/set group-id (.*)/);
+		device.get("haGroupId", haId ? haId[1] : "");
+		if (haName) break;
 	}
 
 	// Read the list of interfaces.

@@ -21,7 +21,7 @@ const Info = {
 	name: "AudioCodesMediant",
 	description: "AudioCodes Mediant MG/SBC",
 	author: "Netshot Team",
-	version: "1.3"
+	version: "1.4"
 };
 
 const Config = {
@@ -71,14 +71,19 @@ const Device = {
 	},
 	"flashSize": {
 		type: "Numeric",
-		title: "Flash size (MB)",
+		title: "Storage size (MB)",
 		searchable: true
 	},
 	"coreSpeed": {
 		type: "Numeric",
 		title: "Core speed (MHz)",
 		searchable: true
-	}
+	},
+	"coreCount": {
+		type: "Numeric",
+		title: "Number of cores",
+		searchable: true
+	},
 };
 
 const CLI = {
@@ -249,14 +254,18 @@ function snapshot(cli, device, config) {
 	if (ramMatch) {
 		device.set("ramSize", parseInt(ramMatch[1]));
 	}
-	const flashMatch = showVersion.match(/Flash size: ([0-9]+) ?MB?/m);
+	const flashMatch = showVersion.match(/(Flash|Disk total) size: ([0-9]+) ?MB?/m);
 	if (flashMatch) {
-		device.set("flashSize", parseInt(flashMatch[1]));
+		device.set("flashSize", parseInt(flashMatch[2]));
 	}
-	const coreMatch = showVersion.match(/(?:Core speed:|CPU.*@) ([0-9]+)Mhz/m);
-	if (coreMatch) {
-		device.set("coreSpeed", parseInt(coreMatch[1]));
+	const coreSpeedMatch = showVersion.match(/(?:Core speed:|CPU.* @) ([0-9.]+)(Mhz|Ghz)/m);
+	if (coreSpeedMatch) {
+		const factor = (coreSpeedMatch[2] === "Ghz") ? 1000 : 1;
+		const speed = Math.round(parseFloat(coreSpeedMatch[1]) * factor);
+		device.set("coreSpeed", speed);
 	}
+	const coreCountMatch = showVersion.match(/total ([0-9]+) cores?/m);
+	device.set("coreCount", coreCountMatch ? parseInt(coreCountMatch[1]) : 1);
 
 	device.set("family", "Unknown MGW/SBC");
 	const hardwareMatch = showVersion.match(/^HardwareVersion: (.+)/m);
@@ -270,13 +279,23 @@ function snapshot(cli, device, config) {
 	else if (showVersion.match(/^;Virtual Env/m)) {
 		device.set("family", "Mediant VE SBC")
 	}
-	const slotMatch = showVersion.match(/^;Slot Number: ([0-9]+)/m);
-	const boardSlot = slotMatch ? slotMatch[1] : undefined;
+	const boardMatch = showVersion.match(/^;HW Board Type: ([0-9]+) +FK Board Type: ([0-9]+)/m);
+	if (boardMatch) {
+		device.add("module", {
+			slot: "Mainboard",
+			partNumber: `HW ${boardMatch[1]},  FK ${boardMatch[2]}`,
+			serialNumber,
+		});
+	}
+	const boardTypes = boardMatch ? {
+		hw: boardMatch[1],
+		fk: boardMatch[2],
+	} : undefined;
 
 	const showAssembly = cli.command("show system assembly");
-	const rowPattern = /^\| *([0-9]+) +\| (.*?) *\| (.+?) *\|/mg;
+	const rowPattern3 = /^\| *(.+?) +\| (.*?) *\| (.+?) *\|$/mg;
 	while (true) {
-		const rowMatch = rowPattern.exec(showAssembly);
+		const rowMatch = rowPattern3.exec(showAssembly);
 		if (!rowMatch) {
 			break;
 		}
@@ -284,8 +303,23 @@ function snapshot(cli, device, config) {
 			slot: rowMatch[1],
 			partNumber: rowMatch[3],
 		};
-		if (module.slot === boardSlot && serialNumber) {
-			module.serialNumber = serialNumber;
+		if (module.slot === "Slot No." || module.partNumber === "Empty") {
+			continue;
+		}
+		device.add("module", module);
+	}
+	const rowPattern4 = /^\| *(.+?) +\| *(.*?) *\| *(.+?) *\| *(.+?) *\|$/mg;
+	while (true) {
+		const rowMatch = rowPattern4.exec(showAssembly);
+		if (!rowMatch) {
+			break;
+		}
+		const module = {
+			slot: rowMatch[1],
+			partNumber: rowMatch[4],
+		};
+		if (module.slot === "Slot No." || module.partNumber === "Empty") {
+			continue;
 		}
 		device.add("module", module);
 	}

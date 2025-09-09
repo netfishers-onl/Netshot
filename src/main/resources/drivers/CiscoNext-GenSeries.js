@@ -11,8 +11,8 @@
 var Info = {
   name: "CiscoNextGenSeries",
   description: "Cisco Catalyst Next-Gen Series",
-  author: "David Micallef (Pizu)",
-  version: "1.0"
+  author: "DMica(Pizu)",
+  version: "1.1"
 };
 
 /* ========================= CONFIG MAP ========================= */

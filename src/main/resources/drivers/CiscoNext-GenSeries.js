@@ -120,7 +120,8 @@ function ensureIfaceShape(obj, fallbackName, isL3) {
 
   if (obj.level3) {
     if (obj.vrf == null) obj.vrf = "default";
-  } else {
+  }
+  else {
     if (obj.vrf != null) delete obj.vrf;
   }
 

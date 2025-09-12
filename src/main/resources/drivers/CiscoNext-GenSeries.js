@@ -43,8 +43,6 @@ const Device = {};
 
 /* ========================= CLI LAYER ========================= */
 
-/* const ANSI = "(?:\\u001b\\[[0-9;]*[A-Za-z])*"; // permissive ANSI eater */
-
 const PROMPT_EXEC   = /^.*>\s?$/m;                        // e.g. 'Switch>'
 const PROMPT_ENABLE = /^.*(?:\(config[^)]*\))?#\s?$/m;    // e.g. 'Switch#' or 'Switch(config)#'
 
@@ -111,12 +109,6 @@ const ensureIfaceShape = (obj, fallbackName, isL3) => {
   if (!Array.isArray(obj.ip)) obj.ip = [];
   obj.ip = obj.ip.filter(x => x && typeof x === "object" && (x.ip || x.address));
 
-  if (obj.level3) {
-    if (obj.vrf == null) obj.vrf = "default";
-  } else {
-    if (obj.vrf != null) delete obj.vrf;
-  }
-
   // Just drop empty MAC keys; keep whatever format the device prints (dashes/colons/dots)
   if (!obj.mac) delete obj.mac;
   if (!obj.macAddress) delete obj.macAddress;
@@ -158,6 +150,7 @@ function addModuleOnce(device, mod) {
 /* ========================= SNAPSHOT ========================= */
 
 function snapshot(cli, device, config) {
+  // Switch from ssh to enable mode immediately
   try { cli.macro("enable"); } catch (e) {}
 
   // System
@@ -338,8 +331,7 @@ function snapshot(cli, device, config) {
       enabled: true,
       adminStatus: "Up",
       linkStatus: "Up",
-      ip: ips,
-      vrf: "default"
+      ip: ips
     };
     if (mac) {
       baseSvi.mac = mac;

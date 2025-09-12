@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "Netshot Team",
-	version: "2.5"
+	version: "2.6"
 };
 
 var Config = {
@@ -71,17 +71,20 @@ var Device = {
 	"mainMemorySize": {
 		type: "Numeric",
 		title: "Main memory size (MB)",
-		searchable: true
+		searchable: true,
+		checkable: true,
 	},
 	"configRegister": {
 		type: "Text",
 		title: "IOS config register",
-		searchable: true
+		searchable: true,
+		checkable: true,
 	},
 	"configurationSaved": {
 		type: "Binary",
 		title: "Configuration saved",
-		searchable: true
+		searchable: true,
+		checkable: true,
 	}
 };
 

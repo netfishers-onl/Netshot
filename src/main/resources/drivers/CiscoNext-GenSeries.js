@@ -57,17 +57,41 @@ const PAGER_RE = new RegExp(
 );
 
 const CLI = {
+  // Transport definitions typically don't need targets; Netshot will invoke
+  // the macro below and walk 'options' until the target prompt is reached.
   ssh: {
-    targets: [
-      { prompt: /(User\s*Name|Username|login):\s*$/mi, response: "%username%", optional: true },
-      { prompt: /Password:\s*$/mi, response: "%password%", optional: true },
-      { prompt: /Press any key to continue\.{0,3}\s*$/mi, response: "\n", optional: true },
-      { prompt: /[>#]\s?$/m }   // capture the prompt tail
-    ],
+    // No 'targets' here by design.
     macros: {
-      enable: { options: ["enable"], target: "enable" }
+      // One macro to rule them all: handle login prompts and end up in ENABLE.
+      enable: {
+        // The order here matters: if a prompt matches, Netshot enters that mode.
+        options: ["username", "password", "anykey", "exec", "enable"],
+        target: "enable"
+      }
     }
   },
+
+  /* ---------- Small, single-purpose modes for login banners ---------- */
+
+  username: {
+    // Matches various login banners: "User Name:", "Username:", "login:"
+    prompt: /(User\s*Name|Username|login):\s*$/mi,
+    response: "%username%"
+  },
+
+  password: {
+    prompt: /Password:\s*$/mi,
+    response: "%password%"
+  },
+
+  anykey: {
+    // Some devices show a "Press any key..." banner before login.
+    prompt: /Press any key to continue\.{0,3}\s*$/mi,
+    response: "\n",
+    optional: true
+  },
+
+  /* -------------------------- Normal modes --------------------------- */
 
   exec: {
     prompt: PROMPT_EXEC,
@@ -79,7 +103,9 @@ const CLI = {
 
   enable: {
     prompt: PROMPT_ENABLE,
+    // These are run once we’re at an enable-capable prompt.
     commands: [
+      // Some images don’t require enable; keep this optional.
       { command: "enable", expect: /Password:\s*$/mi, response: "%enablePassword%", optional: true },
       { command: "terminal datadump", optional: true },
       { command: "terminal length 0", optional: true },
@@ -325,14 +351,14 @@ function snapshot(cli, device, config) {
     const mac = vlanSelfMac[vlanId];
 
     const baseSvi = {
-      name: svi,
-      description: "",
-      level3: true,
-      enabled: true,
-      adminStatus: "Up",
-      linkStatus: "Up",
-      ip: ips
-    };
+		name: svi,
+		description: "",
+		level3: true,
+		enabled: true,
+		adminStatus: "Up",
+		linkStatus: "Up",
+		ip: ips
+		};
     if (mac) {
       baseSvi.mac = mac;
       baseSvi.macAddress = mac;
@@ -341,7 +367,7 @@ function snapshot(cli, device, config) {
     let o3 = ensureIfaceShape(baseSvi, svi, true);
     o3 = scrubMacs(o3);
     if (o3) addIfaceOnce(device, o3);
-  }
+    }
 
   // Hash
   if (typeof config.computeHash === "function") {

@@ -166,7 +166,7 @@ function snapshot(cli, device, config) {
   let inv = ""; try { inv = cli.command("show inventory"); } catch (e) {}
   const mModel = inv.match(/^\s*PID:\s+(\S+)/mi);
   if (mModel) device.set("model", mModel[1].trim());
-  const mSerial = inv.match(/^\s*SN:\s+(\S+)/mi);
+  const mSerial = inv.match(/\bSN:\s+(\S+)/i);
   if (mSerial) device.set("serialNumber", mSerial[1].trim());
 
   if (inv) {
@@ -364,23 +364,20 @@ function snmpAutoDiscover(sysObjectID, sysDesc) {
   // Must be a Cisco product leaf OID
   if (!/^1\.3\.6\.1\.4\.1\.9\.1\.\d+$/.test(oid)) return false;
 
-  // Known exacts (extend list as needed)
-  const exactOids = new Set([
-    "1.3.6.1.4.1.9.1.3214"   // Catalyst 1200 example
-  ]);
-  if (exactOids.has(oid)) return true;
+  // If description is missing and OID not in allow-list, don’t guess
+  if (!desc.trim()) return false;
 
-  // Hard excludes: avoid classic Cisco platforms
-  if (/\b(IOS\s*XE|IOS\s+Software|NX-OS|ASA|Adaptive Security Appliance|IOS XR)\b/i.test(desc)) {
+  // Hard excludes: avoid claiming classic Cisco platforms
+  if (/\b(IOS\s*XE|IOS\s+Software|NX-OS|ASA|Adaptive Security Appliance|IOS\s*XR)\b/i.test(desc)) {
     return false;
   }
 
-  // Positive identifiers
+  // Positive identifiers for Catalyst 1200/1300
   const familyHit =
-    /Catalyst\s*1200/i.test(desc) ||
-    /Catalyst\s*1300/i.test(desc) ||
-    /\bC1200-\S+\b/i.test(desc)   ||   // e.g. C1200-16T-2G
+    /\bCatalyst\s*1200\b/i.test(desc) ||
+    /\bCatalyst\s*1300\b/i.test(desc) ||
+    /\bC1200-\S+\b/i.test(desc) ||   // e.g. C1200-16T-2G
     /\bC1300-\S+\b/i.test(desc);
 
-  return familyHit;
+  return !!familyHit;
 }

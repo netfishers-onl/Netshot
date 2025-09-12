@@ -1,9 +1,16 @@
 /**
  * Cisco Catalyst Next-Gen Series (Cisco Business-like CLI) Driver for Netshot
- * Target: Catalyst 1200 Series (e.g., C1200-16T-2G)
+ * Target: Catalyst 1200/1300 Series (e.g., C1200-16T-2G)
  *
  * Author: David Micallef (Pizu)
- * Version: 1.0
+ * Version: 1.2 (ES6+)
+ *
+ * Notes:
+ * - Login flow via mini-modes + enable macro (no ssh.targets).
+ * - No VRF: these platforms don’t support it; helper won’t add vrf.
+ * - Robust “System *” capture handles wrapped lines.
+ * - Firmware regex accepts 2.1.1.1, 2.1.1.1.SPA, v2.1.1.1, etc.
+ * - Family derived from System Description or Inventory DESCR, with fallback.
  */
 
 /* ========================= DRIVER META ========================= */
@@ -12,7 +19,7 @@ const Info = {
   name: "CiscoNextGenSeries",
   description: "Cisco Catalyst Next-Gen Series",
   author: "DMica(Pizu)",
-  version: "1.1"
+  version: "1.2"
 };
 
 /* ========================= CONFIG MAP ========================= */
@@ -43,28 +50,25 @@ const Device = {};
 
 /* ========================= CLI LAYER ========================= */
 
-const PROMPT_EXEC   = /^.*>\s?$/m;                        // e.g. 'Switch>'
-const PROMPT_ENABLE = /^.*(?:\(config[^)]*\))?#\s?$/m;    // e.g. 'Switch#' or 'Switch(config)#'
+const PROMPT_EXEC   = /^.*>\s?$/m;
+const PROMPT_ENABLE = /^.*(?:\(config[^)]*\))?#\s?$/m;
 
 const PAGER_RE = new RegExp(
   "(?:^|\\r?\\n)" +
   "(?:" +
-    "\\-\\-More\\-\\-" +              // --More--
-    "|More:\\s*<space>.*" +           // More: <space> to continue, q to quit
-    "|\\[?more\\]?\\s*$" +            // some odd lowercase variants
+    "\\-\\-More\\-\\-" +
+    "|More:\\s*<space>.*" +
+    "|\\[?more\\]?\\s*$" +
   ")",
   "mi"
 );
 
 const CLI = {
-  // Transport definitions typically don't need targets; Netshot will invoke
-  // the macro below and walk 'options' until the target prompt is reached.
+  // Transport definition: macro walks options until target mode is reached.
   ssh: {
-    // No 'targets' here by design.
     macros: {
-      // One macro to rule them all: handle login prompts and end up in ENABLE.
       enable: {
-        // The order here matters: if a prompt matches, Netshot enters that mode.
+        // Order matters: clear banners first, then exec → enable.
         options: ["username", "password", "anykey", "exec", "enable"],
         target: "enable"
       }
@@ -74,7 +78,7 @@ const CLI = {
   /* ---------- Small, single-purpose modes for login banners ---------- */
 
   username: {
-    // Matches various login banners: "User Name:", "Username:", "login:"
+    // Matches "User Name:", "Username:", "login:"
     prompt: /(User\s*Name|Username|login):\s*$/mi,
     response: "%username%"
   },
@@ -85,7 +89,7 @@ const CLI = {
   },
 
   anykey: {
-    // Some devices show a "Press any key..." banner before login.
+    // Some images show "Press any key..." prior to the login prompts.
     prompt: /Press any key to continue\.{0,3}\s*$/mi,
     response: "\n",
     optional: true
@@ -103,9 +107,9 @@ const CLI = {
 
   enable: {
     prompt: PROMPT_ENABLE,
-    // These are run once we’re at an enable-capable prompt.
+    // Run once we’re at an enable-capable prompt.
     commands: [
-      // Some images don’t require enable; keep this optional.
+      // Some images don’t require enable; keep optional.
       { command: "enable", expect: /Password:\s*$/mi, response: "%enablePassword%", optional: true },
       { command: "terminal datadump", optional: true },
       { command: "terminal length 0", optional: true },
@@ -120,6 +124,9 @@ const CLI = {
 
 /* ========================= HELPERS ========================= */
 
+/**
+ * Normalize an interface object for Netshot without adding unsupported fields (e.g., VRF).
+ */
 const ensureIfaceShape = (obj, fallbackName, isL3) => {
   obj = (obj && typeof obj === "object") ? obj : {};
   obj.name = (obj.name != null ? String(obj.name) : String(fallbackName || "")).trim();
@@ -135,32 +142,32 @@ const ensureIfaceShape = (obj, fallbackName, isL3) => {
   if (!Array.isArray(obj.ip)) obj.ip = [];
   obj.ip = obj.ip.filter(x => x && typeof x === "object" && (x.ip || x.address));
 
-  // Just drop empty MAC keys; keep whatever format the device prints (dashes/colons/dots)
+  // Drop empty MAC keys; keep whatever delimiter style the device prints (dashes/colons/dots)
   if (!obj.mac) delete obj.mac;
   if (!obj.macAddress) delete obj.macAddress;
 
   return obj;
 };
 
-function scrubMacs(o) {
+const scrubMacs = o => {
   if (!o) return o;
   if (!o.mac) delete o.mac;
   if (!o.macAddress) delete o.macAddress;
   return o;
-}
+};
 
 // Dedup guards
 const addedIfaces = {};
-function addIfaceOnce(device, kindObj) {
+const addIfaceOnce = (device, kindObj) => {
   if (!kindObj || !kindObj.name) return;
   const key = String(kindObj.name).toLowerCase();
   if (addedIfaces[key]) return;
   addedIfaces[key] = true;
   device.add("networkInterface", kindObj);
-}
+};
 
 const addedModules = {};
-function addModuleOnce(device, mod) {
+const addModuleOnce = (device, mod) => {
   if (!mod) return;
   // Build a stable dedup key: slot|partNumber|serialNumber (lower-cased)
   const k = [
@@ -171,24 +178,50 @@ function addModuleOnce(device, mod) {
   if (addedModules[k]) return;
   addedModules[k] = true;
   device.add("module", mod);
-}
+};
 
 /* ========================= SNAPSHOT ========================= */
 
 function snapshot(cli, device, config) {
-  // Switch from ssh to enable mode immediately
+  // Land in enable mode first.
   try { cli.macro("enable"); } catch (e) {}
 
-  // System
+  /* -------- System (wrapped-field aware) -------- */
   let sys = ""; try { sys = cli.command("show system"); } catch (e) {}
-  const mName = sys.match(/^\s*System Name:\s+([^\r\n]+)$/mi);
-  if (mName) device.set("name", mName[1].trim());
-  const mContact = sys.match(/^\s*System Contact:\s+(.+)$/mi);
-  if (mContact) device.set("contact", mContact[1].trim());
-  const mLocation = sys.match(/^\s*System Location:\s+(.+)$/mi);
-  if (mLocation) device.set("location", mLocation[1].trim());
 
-  // Inventory -> Modules
+  // Capture a label whose value might wrap onto indented continuation lines.
+  const captureWrapped = (label, text) => {
+    const re = new RegExp(`^\\s*${label}:\\s+(.+)$`, "mi");
+    const m = text.match(re);
+    if (!m) return "";
+    const lines = [m[1].trim()];
+
+    const startIdx = text.indexOf(m[0]);
+    const rest = text.slice(startIdx + m[0].length);
+    const contRe = /^\s{2,}(\S.*)$/m; // continuation lines (indented)
+    let mm, offset = 0;
+    // eslint-disable-next-line no-cond-assign
+    while ((mm = contRe.exec(rest.slice(offset))) !== null) {
+      lines.push(mm[1].trim());
+      offset += mm.index + mm[0].length;
+      // Stop if the next non-empty line looks like a new "Field: value"
+      const ahead = rest.slice(offset);
+      const nextField = /^\s*\w[\w\s-]+:\s+\S/m.test(ahead);
+      if (nextField) break;
+    }
+    return lines.join(" ");
+  };
+
+  const sysName     = captureWrapped("System Name", sys);
+  const sysContact  = captureWrapped("System Contact", sys);
+  const sysLocation = captureWrapped("System Location", sys);
+  const sysDescr    = captureWrapped("System Description", sys);
+
+  if (sysName) device.set("name", sysName);
+  if (sysContact) device.set("contact", sysContact);
+  if (sysLocation) device.set("location", sysLocation);
+
+  /* -------- Inventory -> Modules/Model/Serial -------- */
   let inv = ""; try { inv = cli.command("show inventory"); } catch (e) {}
   const mModel = inv.match(/^\s*PID:\s+(\S+)/mi);
   if (mModel) device.set("model", mModel[1].trim());
@@ -201,6 +234,7 @@ function snapshot(cli, device, config) {
     // PID: C1200-16T-2G  VID:  V03  SN: DNI123456AB
     const r = /NAME:\s*"([^"]+)"\s+DESCR:\s*"([^"]+)"[\s\r\n]+PID:\s*([^\s]+)\s+VID:\s*([^\s]+)\s+SN:\s*([^\s]+)/gmi;
     let m;
+    // eslint-disable-next-line no-cond-assign
     while ((m = r.exec(inv)) !== null) {
       const mod = {
         slot: m[1].trim(),
@@ -213,18 +247,37 @@ function snapshot(cli, device, config) {
     }
   }
 
-  // Version
+  /* -------- Version -------- */
   let ver = ""; try { ver = cli.command("show version"); } catch (e) {}
-  const mVer = ver.match(/^\s*Version:\s*([0-9.]+)/mi) || ver.match(/Active-image:.*?_([0-9.]+)[_.]/i);
+  const mVer = ver.match(/^\s*Version:\s*([\w.\-]+)/mi) ||
+               ver.match(/Active-image:.*?_([\w.\-]+)[_.]/i);
   if (mVer) {
-    config.set("firmwareVersion", mVer[1]);
-    device.set("softwareVersion", mVer[1]);
+    const verStr = mVer[1].trim();
+    config.set("firmwareVersion", verStr);
+    device.set("softwareVersion", verStr);
   }
 
-  device.set("family", "Cisco Catalyst 1200");
+  /* -------- Family (from system/inventory) -------- */
+  const rawInvDescr = (() => {
+    const mm = inv.match(/NAME:\s*"[^"]+"\s+DESCR:\s*"([^"]+)"/i);
+    return mm ? mm[1].trim() : "";
+  })();
+
+  const deriveFamily = desc => {
+    if (!desc) return "";
+    // Trim at first parenthesis and the first comma segment is the “family-ish” bit.
+    const noParen = desc.split("(")[0];
+    const firstPart = noParen.split(",")[0].trim();
+    return firstPart || noParen.trim();
+  };
+
+  const famFromSys = deriveFamily(sysDescr);
+  const famFromInv = deriveFamily(rawInvDescr);
+  const family = famFromSys || famFromInv || "Cisco Catalyst (Next-Gen)";
+  device.set("family", family);
   device.set("networkClass", "SWITCH");
 
-  // Running-config
+  /* -------- Running-config -------- */
   let runCfg = ""; try { runCfg = cli.command("show running-config"); } catch (e) {}
   if (runCfg) {
     config.set("runningConfig", runCfg);
@@ -232,11 +285,23 @@ function snapshot(cli, device, config) {
     if (hn) device.set("name", hn[1]);
   }
 
-  // Interfaces: descriptions
+  // Fallbacks for Location/Contact if not fully present in "show system"
+  if ((!sysLocation || !sysContact) && runCfg) {
+    if (!sysLocation) {
+      const mLoc = runCfg.match(/^\s*snmp-server\s+location\s+(.+)\s*$/mi);
+      if (mLoc) device.set("location", mLoc[1].trim());
+    }
+    if (!sysContact) {
+      const mCon = runCfg.match(/^\s*snmp-server\s+contact\s+(.+)\s*$/mi);
+      if (mCon) device.set("contact", mCon[1].trim());
+    }
+  }
+
+  /* -------- Interfaces: descriptions -------- */
   let ifDescOut = ""; try { ifDescOut = cli.command("show interfaces description"); } catch (e) {}
   const physDesc = {};
   const namesFromDesc = [];
-  (ifDescOut || "").split(/\r?\n/).forEach(function (line) {
+  (ifDescOut || "").split(/\r?\n/).forEach(line => {
     const mm = line.match(/^(gi\d+|te\d+|fa\d+|eth\d+|Po\d+)\s+(.*)$/i);
     if (mm) {
       const n = mm[1].toLowerCase();
@@ -245,12 +310,12 @@ function snapshot(cli, device, config) {
     }
   });
 
-  // Interfaces: admin/oper states
+  /* -------- Interfaces: admin/oper states -------- */
   let ifCfgOut = ""; try { ifCfgOut = cli.command("show interfaces configuration"); } catch (e) {}
   const physState = {};
   const poState = {};
   const namesFromCfg = [];
-  (ifCfgOut || "").split(/\r?\n/).forEach(function (line) {
+  (ifCfgOut || "").split(/\r?\n/).forEach(line => {
     const l = line.replace(/\s{2,}/g, " ").trim();
 
     const mp = l.match(/^(gi\d+|te\d+|fa\d+|eth\d+)\s+\S+\s+\S+\s+\S+\s+(Enabled|Disabled)\s+\S+\s+(Up|Down)/i);
@@ -258,7 +323,7 @@ function snapshot(cli, device, config) {
       const n = mp[1].toLowerCase();
       const enabled = /^Enabled$/i.test(mp[2]);
       const operUp  = /^Up$/i.test(mp[3]);
-      physState[n] = { enabled: enabled, adminStatus: enabled ? "Up" : "Down", linkStatus: operUp ? "Up" : "Down" };
+      physState[n] = { enabled, adminStatus: enabled ? "Up" : "Down", linkStatus: operUp ? "Up" : "Down" };
       namesFromCfg.push(n);
       return;
     }
@@ -271,43 +336,45 @@ function snapshot(cli, device, config) {
       const pop = /^Up$/i.test(mc[3]);
       poState[pn] = { enabled: pen, adminStatus: pen ? "Up" : "Down", linkStatus: pop ? "Up" : "Down" };
       namesFromCfg.push(pn);
-      return;
     }
   });
 
-  function natKey(n) { return (n || "").replace(/\d+/g, function(x){return ("00000"+x).slice(-5);}).toLowerCase(); }
-  const seen = {}, physOrder = [], poOrder = [];
-  namesFromDesc.concat(namesFromCfg).forEach(function(n){
+  // Sort interfaces in natural order
+  const natKey = n => (n || "").replace(/\d+/g, x => (`00000${x}`).slice(-5)).toLowerCase();
+  const seen = {};
+  const physOrder = [];
+  const poOrder = [];
+  namesFromDesc.concat(namesFromCfg).forEach(n => {
     if (seen[n]) return; seen[n] = true;
     if (/^(gi\d+|te\d+|fa\d+|eth\d+)$/i.test(n)) physOrder.push(n);
     else if (/^po\d+$/i.test(n)) poOrder.push(n);
   });
-  physOrder.sort(function(a,b){ return natKey(a) < natKey(b) ? -1 : 1; });
-  poOrder.sort(function(a,b){ return natKey(a) < natKey(b) ? -1 : 1; });
+  physOrder.sort((a,b) => (natKey(a) < natKey(b) ? -1 : 1));
+  poOrder.sort((a,b) => (natKey(a) < natKey(b) ? -1 : 1));
 
-  // SVI IPs
+  /* -------- SVI IPs -------- */
   let ipIf = ""; try { ipIf = cli.command("show ip interface"); } catch (e) {}
   const sviIpMap = {};
-  (ipIf || "").split(/\r?\n/).forEach(function(line){
+  (ipIf || "").split(/\r?\n/).forEach(line => {
     const m = line.match(/^\s*([0-9.]+)\/(\d+)\s+vlan\s+(\d+)\s+[A-Z]+\/[A-Z]+/i);
     if (m) {
-      const ip = m[1], mask = parseInt(m[2], 10), vlan = parseInt(m[3],10);
-      const sviName = "Vlan" + vlan;
+      const ip = m[1]; const mask = parseInt(m[2], 10); const vlan = parseInt(m[3], 10);
+      const sviName = `Vlan${vlan}`;
       if (!sviIpMap[sviName]) sviIpMap[sviName] = [];
-      sviIpMap[sviName].push({ ip: ip, mask: mask, usage: "PRIMARY" });
+      sviIpMap[sviName].push({ ip, mask, usage: "PRIMARY" });
     }
   });
 
-  // Self MAC per VLAN
+  /* -------- Self MAC per VLAN -------- */
   let macTbl = ""; try { macTbl = cli.command("show mac address-table"); } catch (e) {}
   const vlanSelfMac = {};
-  (macTbl || "").split(/\r?\n/).forEach(function(line){
+  (macTbl || "").split(/\r?\n/).forEach(line => {
     const m = line.match(/^\s*(\d+)\s+([0-9a-f:\-\.]{12,})\s+0\s+self\s*$/i);
-    if (m) vlanSelfMac[parseInt(m[1],10)] = m[2]; // pass through unchanged
+    if (m) vlanSelfMac[parseInt(m[1], 10)] = m[2]; // keep device format (dashes/colons/dots)
   });
 
-  // Physical interfaces
-  for (let i = 0; i < physOrder.length; i++) {
+  /* -------- Physical interfaces -------- */
+  for (let i = 0; i < physOrder.length; i += 1) {
     const n = physOrder[i];
     const st = physState[n] || { enabled: false, adminStatus: "Down", linkStatus: "Down" };
     let o = ensureIfaceShape({
@@ -323,8 +390,8 @@ function snapshot(cli, device, config) {
     if (o) addIfaceOnce(device, o);
   }
 
-  // Port-channels
-  for (let j = 0; j < poOrder.length; j++) {
+  /* -------- Port-channels -------- */
+  for (let j = 0; j < poOrder.length; j += 1) {
     const pn = poOrder[j];
     const pst = poState[pn] || { enabled: false, adminStatus: "Down", linkStatus: "Down" };
     let po = ensureIfaceShape({
@@ -340,25 +407,26 @@ function snapshot(cli, device, config) {
     if (po) addIfaceOnce(device, po);
   }
 
-  // SVIs
-  const sviNames = Object.keys(sviIpMap).sort(function(a,b){
-    return (parseInt(a.replace(/\D/g,"")||"0",10) - parseInt(b.replace(/\D/g,"")||"0",10));
-  });
-  for (let s = 0; s < sviNames.length; s++) {
+  /* -------- SVIs -------- */
+  const sviNames = Object.keys(sviIpMap).sort(
+    (a, b) => (parseInt(a.replace(/\D/g, "") || "0", 10) - parseInt(b.replace(/\D/g, "") || "0", 10))
+  );
+
+  for (let s = 0; s < sviNames.length; s += 1) {
     const svi = sviNames[s];
-    const vlanId = parseInt(svi.replace(/\D/g,"")||"0",10);
+    const vlanId = parseInt(svi.replace(/\D/g, "") || "0", 10);
     const ips = sviIpMap[svi] || [];
     const mac = vlanSelfMac[vlanId];
 
     const baseSvi = {
-		name: svi,
-		description: "",
-		level3: true,
-		enabled: true,
-		adminStatus: "Up",
-		linkStatus: "Up",
-		ip: ips
-		};
+      name: svi,
+      description: "",
+      level3: true,
+      enabled: true,
+      adminStatus: "Up",
+      linkStatus: "Up",
+      ip: ips
+    };
     if (mac) {
       baseSvi.mac = mac;
       baseSvi.macAddress = mac;
@@ -367,10 +435,11 @@ function snapshot(cli, device, config) {
     let o3 = ensureIfaceShape(baseSvi, svi, true);
     o3 = scrubMacs(o3);
     if (o3) addIfaceOnce(device, o3);
-    }
+  }
 
-  // Hash
+  /* -------- Hash -------- */
   if (typeof config.computeHash === "function") {
+    // Reuse version in hash to avoid noisy diffs when firmware changes.
     const verStr = (mVer && mVer[1]) ? mVer[1] : "";
     config.computeHash(runCfg || "", null, verStr);
   }
@@ -378,22 +447,22 @@ function snapshot(cli, device, config) {
 
 /* ========================= ANALYZERS ========================= */
 
-function analyzeSyslog(message) { return false; }
-function analyzeTrap(trap, debug) { return false; }
+const analyzeSyslog = (/* message */) => false;
+const analyzeTrap = (/* trap, debug */) => false;
 
 /* ========================= SNMP AUTO-DISCOVERY ========================= */
 
-function snmpAutoDiscover(sysObjectID, sysDesc) {
+const snmpAutoDiscover = (sysObjectID, sysDesc) => {
   const oid  = String(sysObjectID || "");
   const desc = String(sysDesc || "");
 
   // Must be a Cisco product leaf OID
   if (!/^1\.3\.6\.1\.4\.1\.9\.1\.\d+$/.test(oid)) return false;
 
-  // If description is missing and OID not in allow-list, don’t guess
+  // If description is missing, don’t guess
   if (!desc.trim()) return false;
 
-  // Hard excludes: avoid claiming classic Cisco platforms
+  // Hard excludes: avoid classic Cisco platforms
   if (/\b(IOS\s*XE|IOS\s+Software|NX-OS|ASA|Adaptive Security Appliance|IOS\s*XR)\b/i.test(desc)) {
     return false;
   }
@@ -402,8 +471,8 @@ function snmpAutoDiscover(sysObjectID, sysDesc) {
   const familyHit =
     /\bCatalyst\s*1200\b/i.test(desc) ||
     /\bCatalyst\s*1300\b/i.test(desc) ||
-    /\bC1200-\S+\b/i.test(desc) ||   // e.g. C1200-16T-2G
+    /\bC1200-\S+\b/i.test(desc) ||   // e.g., C1200-16T-2G
     /\bC1300-\S+\b/i.test(desc);
 
   return !!familyHit;
-}
+};

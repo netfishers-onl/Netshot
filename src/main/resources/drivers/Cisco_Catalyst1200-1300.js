@@ -18,7 +18,7 @@
 const Info = {
   name: "CiscoNextGenSeries",
   description: "Cisco Catalyst Next-Gen Series",
-  author: "DMica(Pizu)",
+  author: "DMica (Pizu)",
   version: "1.2"
 };
 

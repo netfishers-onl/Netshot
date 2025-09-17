@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOS12",
 	description: "Cisco IOS and IOS-XE",
 	author: "Netshot Team",
-	version: "2.6"
+	version: "2.7"
 };
 
 var Config = {
@@ -237,10 +237,10 @@ function snapshot(cli, device, config) {
 	cli.macro("enable");
 	var runningConfig = cli.command("show running-config");
 
-	var changePattern = /^\! Last configuration change at (.+) by (.+)$/m;
+	var changePattern = /^\! Last configuration change at (.+?)( by (.+))?$/m;
 	var runningChangeMatch = runningConfig.match(changePattern);
-	if (runningChangeMatch != null) {
-		config.set("author", runningChangeMatch[2]);
+	if (runningChangeMatch && runningChangeMatch[3]) {
+		config.set("author", runningChangeMatch[3]);
 	}
 	runningConfig = configCleanup(runningConfig);
 	config.set("runningConfig", runningConfig);
@@ -465,6 +465,12 @@ function snapshot(cli, device, config) {
 		}
 		else if (system.match(/cisco C8200/)) {
 			device.set("family", "Cisco Catalyst 8200");
+		}
+		else if (system.match(/cisco C8300/)) {
+			device.set("family", "Cisco Catalyst 8300");
+		}
+		else if (system.match(/cisco C8500/)) {
+			device.set("family", "Cisco Catalyst 8500");
 		}
 		else if (system.match(/cisco C9200/)) {
 			device.set("family", "Cisco Catalyst 9200");

@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoIOSXR",
 	description: "Cisco IOS-XR",
 	author: "Netshot Team",
-	version: "1.8.5"
+	version: "1.9"
 };
 
 var Config = {
@@ -181,7 +181,7 @@ function snapshot(cli, device, config) {
 	var showVersion = cli.command("show version");
 	var showInventory = cli.command("admin show inventory");
 	showInventory += cli.command("show inventory");
-	var showInstall = cli.command("admin show install active");
+	var showInstall = cli.command("show install active");
 
 	var hostname = runningConfig.match(/^hostname (.+)/m);
 	if (!hostname) {

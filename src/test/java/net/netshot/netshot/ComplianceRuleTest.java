@@ -931,10 +931,11 @@ public class ComplianceRuleTest {
 					+ "  return result_option.CONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			// Use reflection to set the max execution time
-			Field maxTimeField = PythonRule.class.getDeclaredField("MAX_EXECUTION_TIME");
-			maxTimeField.setAccessible(true);
-			maxTimeField.setLong(null, 5000);
+			// Set max execution time
+			Properties config = new Properties();
+			config.setProperty("netshot.python.maxexecutiontime", "5000");
+			Netshot.initConfig(config);
+			JavaScriptRule.loadConfig();
 			// Check
 			CheckResult result = rule.check(device, nullSession, taskLogger);
 			Assertions.assertEquals(CheckResult.ResultOption.INVALIDRULE, result.getResult(),

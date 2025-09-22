@@ -31,6 +31,7 @@ import net.netshot.netshot.compliance.rules.TextRule;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.access.Ssh;
+import net.netshot.netshot.device.script.helper.PythonFileSystem;
 import net.netshot.netshot.work.TaskLogger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -45,6 +46,9 @@ public class ComplianceRuleTest {
 		Properties config = new Properties();
 		Netshot.initConfig(config);
 		Ssh.loadConfig();
+		JavaScriptRule.loadConfig();
+		PythonRule.loadConfig();
+		PythonFileSystem.loadConfig();
 		DeviceDriver.refreshDrivers();
 	}
 
@@ -566,10 +570,11 @@ public class ComplianceRuleTest {
 					+ " return CONFORMING;"
 					+ "}"
 			);
-			// Use reflection to set the max execution time
-			Field maxTimeField = JavaScriptRule.class.getDeclaredField("MAX_EXECUTION_TIME");
-			maxTimeField.setAccessible(true);
-			maxTimeField.setLong(null, 5000);
+			// Set max execution time
+			Properties config = new Properties();
+			config.setProperty("netshot.javascript.maxexecutiontime", "5000");
+			Netshot.initConfig(config);
+			JavaScriptRule.loadConfig();
 			// Check
 			CheckResult result = rule.check(device, nullSession, taskLogger);
 			Assertions.assertEquals(CheckResult.ResultOption.INVALIDRULE, result.getResult(),

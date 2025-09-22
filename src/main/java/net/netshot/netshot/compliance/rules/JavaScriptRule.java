@@ -274,8 +274,10 @@ public class JavaScriptRule extends Rule {
 				catch (Exception e2) {
 					log.warn("Error while closing abnormally long JavaScript context", e2);
 				}
-				throw new TimeoutException(
+				taskLogger.error(
 					"The rule took too long to execute (check for endless loop in the script or adjust netshot.javascript.maxexecutiontime value)");
+				return new CheckResult(this, device, CheckResult.ResultOption.INVALIDRULE,
+					"The rule took too long to execute");
 			}
 			String txtResult = null;
 			String comment = "";

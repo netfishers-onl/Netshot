@@ -12,15 +12,21 @@ RUN wget --quiet https://download.oracle.com/graalvm/${GRAALVM_VERSION%%.*}/arch
     mkdir ${JDIR}/languages && \
     update-alternatives --install /usr/bin/java java /usr/lib/jvm/${JDIR}/bin/java 92100
 
-FROM debian-graalvm AS builder
+FROM debian-graalvm AS debian-graalvm-graalpy
 ARG NETSHOT_VERSION
-COPY . /build
+COPY pom.xml mvnw /build/
+COPY .mvn /build/.mvn
 WORKDIR /build
 RUN GRAALPY_VERSION=$(JAVA_HOME=/ ./mvnw help:evaluate -Dexpression=polyglot.version -q -DforceStdout) && \
     echo GRAALPY_VERSION && \
     wget --quiet https://github.com/oracle/graalpython/releases/download/graal-${GRAALPY_VERSION}/graalpy-jvm-${GRAALPY_VERSION}-linux-amd64.tar.gz && \
     tar xvzf graalpy-jvm-${GRAALPY_VERSION}-linux-amd64.tar.gz && \
     mv graalpy-${GRAALPY_VERSION}-linux-amd64 graalpy
+
+FROM debian-graalvm-graalpy AS builder
+ARG NETSHOT_VERSION
+COPY . /build
+WORKDIR /build
 RUN sed -i -r "s/VERSION = \".*\";/VERSION = \"$NETSHOT_VERSION\";/g" \
        src/main/java/net/netshot/netshot/Netshot.java
 RUN ./mvnw package -Dmaven.test.skip

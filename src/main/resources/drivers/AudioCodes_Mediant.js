@@ -258,9 +258,9 @@ function snapshot(cli, device, config) {
 	if (flashMatch) {
 		device.set("flashSize", parseInt(flashMatch[2]));
 	}
-	const coreSpeedMatch = showVersion.match(/(?:Core speed:|CPU.* @) ([0-9.]+)(Mhz|Ghz)/m);
+	const coreSpeedMatch = showVersion.match(/(?:Core speed:|CPU.* @) ([0-9.]+)([MG][Hh]z)/m);
 	if (coreSpeedMatch) {
-		const factor = (coreSpeedMatch[2] === "Ghz") ? 1000 : 1;
+		const factor = (coreSpeedMatch[2].toLowerCase() === "ghz") ? 1000 : 1;
 		const speed = Math.round(parseFloat(coreSpeedMatch[1]) * factor);
 		device.set("coreSpeed", speed);
 	}
@@ -283,7 +283,7 @@ function snapshot(cli, device, config) {
 	if (boardMatch) {
 		device.add("module", {
 			slot: "Mainboard",
-			partNumber: `HW ${boardMatch[1]},  FK ${boardMatch[2]}`,
+			partNumber: `HW ${boardMatch[1]}; FK ${boardMatch[2]}`,
 			serialNumber,
 		});
 	}

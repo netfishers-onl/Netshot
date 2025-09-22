@@ -43,6 +43,7 @@ import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.access.Cli;
 import net.netshot.netshot.device.access.Snmp;
+import net.netshot.netshot.device.access.Ssh;
 import net.netshot.netshot.device.attribute.ConfigLongTextAttribute;
 import net.netshot.netshot.device.attribute.ConfigTextAttribute;
 import net.netshot.netshot.device.attribute.DeviceBinaryAttribute;
@@ -64,6 +65,7 @@ public class DeviceDriverTest {
 	@BeforeAll
 	static void initNetshot() throws Exception {
 		Netshot.readConfig();
+		Ssh.loadConfig();
 		DeviceDriver.refreshDrivers();
 	}
 

@@ -208,7 +208,7 @@ public class TextRule extends Rule {
 					indent = -1;
 				}
 			}
-			if (indent < 0 && pattern.matcher(line).matches()) {
+			if (indent < 0 && sectionPattern.matcher(line).matches()) {
 				indent = findIndent(line);
 				joiner = new StringJoiner("\n");
 				String trimmedLine = line.trim();

@@ -1898,6 +1898,8 @@ public class Finder {
 				case CONFIGATTRIBUTE:
 					criteria.joins.add(String.format("c.attributes %s_ca with %s_ca.name = :%s_name",
 						itemPrefix, itemPrefix, itemPrefix));
+					criteria.whereJoins.add("d.lastConfig = c");
+					criteria.otherTables.add("Config c");
 					break;
 				case CONFIG:
 					criteria.whereJoins.add("d.lastConfig = c");

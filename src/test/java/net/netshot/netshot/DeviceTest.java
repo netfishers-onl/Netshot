@@ -31,6 +31,8 @@ import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.Finder;
 import net.netshot.netshot.device.Finder.Expression.FinderParseException;
+import net.netshot.netshot.device.access.Ssh;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -54,6 +56,7 @@ public class DeviceTest {
 			String expectedHql, Map<String, Object> expectedParameters) throws Exception {
 			if (driverName != null) {
 				Netshot.readConfig();
+				Ssh.loadConfig();
 				DeviceDriver.refreshDrivers();
 			}
 			FakeQuery<Device> fakeQuery = new FakeQuery<>();

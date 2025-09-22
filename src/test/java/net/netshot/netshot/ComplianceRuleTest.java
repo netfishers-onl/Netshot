@@ -30,6 +30,7 @@ import net.netshot.netshot.compliance.rules.PythonRule;
 import net.netshot.netshot.compliance.rules.TextRule;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
+import net.netshot.netshot.device.access.Ssh;
 import net.netshot.netshot.work.TaskLogger;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -43,6 +44,7 @@ public class ComplianceRuleTest {
 	static void initNetshot() throws Exception {
 		Properties config = new Properties();
 		Netshot.initConfig(config);
+		Ssh.loadConfig();
 		DeviceDriver.refreshDrivers();
 	}
 

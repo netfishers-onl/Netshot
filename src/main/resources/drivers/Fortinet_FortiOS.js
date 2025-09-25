@@ -24,7 +24,7 @@ var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "Netshot Team",
-	version: "6.3" /* Version will appear in the Admin tab. */
+	version: "6.4" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -283,7 +283,7 @@ function snapshot(cli, device, config) {
 		var haName = haInfos[s].config.match(/set group-name "(.*)"/);
 		device.set("haGroupName", haName ? haName[1] : "");
 		var haId = haInfos[s].config.match(/set group-id (.*)/);
-		device.get("haGroupId", haId ? haId[1] : "");
+		device.set("haGroupId", haId ? haId[1] : "");
 		if (haName) break;
 	}
 

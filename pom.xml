@@ -18,6 +18,7 @@
 		<lombok.version>1.18.36</lombok.version>
 		<sshd.version>2.15.0</sshd.version>
 		<checkstyle.version>11.0.0</checkstyle.version>
+		<bouncycastle.version>1.82</bouncycastle.version>
 	</properties>
 	<build>
 		<finalName>netshot</finalName>
@@ -349,8 +350,18 @@
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bctls-jdk18on</artifactId>
-			<version>1.79</version>
+			<artifactId>bcpg-jdk18on</artifactId>
+			<version>${bouncycastle.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcpkix-jdk18on</artifactId>
+			<version>${bouncycastle.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk18on</artifactId>
+			<version>${bouncycastle.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>

@@ -581,11 +581,24 @@ public class Netshot extends Thread {
 			Netshot.checkJvm();
 			log.info("Selecting truststore.");
 			Netshot.setTruststore();
-			log.info("Enabling BouncyCastle security.");
-			Security.addProvider(new BouncyCastleProvider());
+
+			// Loading full BouncyCastle requires loading the signed JAR,
+			// which doesn't work with the packaged version of Netshot
+			// as we use shading to build a uber JAR.
+			// But we still require BouncyCastle (for Argon2 hash for example).
+			// And by default if Mina SSHD sees the BC classes in the classpath
+			// it will try to use it totally.
+			// Thus for now we keep BC dependencies, but we disable
+			// auto-loading by Mina SSHD.
+			// // log.info("Enabling BouncyCastle security.");
+			// // Security.addProvider(new BouncyCastleProvider());
+			System.setProperty("org.apache.sshd.security.provider.BC.enabled", "false");
+
+			// List actual registered providers
 			for (Provider p : Security.getProviders()) {
 				log.debug("Security provider {} is registered", p.getName());
 			}
+
 			log.info("Updating the database schema, if necessary.");
 			Database.update();
 			log.info("Initializing access to the database.");

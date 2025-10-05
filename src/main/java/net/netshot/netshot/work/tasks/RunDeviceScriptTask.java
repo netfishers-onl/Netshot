@@ -132,7 +132,7 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				log.trace("Task {}. Device not INPRODUCTION, stopping the run script task.", this.getId());
 				this.warn("The device is not enabled (not in production).");
-				this.status = Status.FAILURE;
+				this.status = Status.CANCELLED;
 				return;
 			}
 

@@ -168,7 +168,7 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				log.trace("Task {}. Device not INPRODUCTION, stopping the diagnostic task.", this.getId());
 				this.warn("The device is not enabled (not in production).");
-				this.status = Status.FAILURE;
+				this.status = Status.CANCELLED;
 				return;
 			}
 			locked = checkRunningDiagnostic(device.getId());

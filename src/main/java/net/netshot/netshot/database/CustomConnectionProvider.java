@@ -49,7 +49,7 @@ public class CustomConnectionProvider extends AbstractMultiTenantConnectionProvi
 		configProps.put(C3p0Settings.C3P0_MIN_SIZE,
 			Netshot.getConfig("netshot.db.pooler.minpoolsize", 5, 0, Integer.MAX_VALUE));
 		configProps.put(C3p0Settings.C3P0_MAX_SIZE,
-			Netshot.getConfig("netshot.db.pooler.maxpoolsize", 30, 0, Integer.MAX_VALUE));
+			Netshot.getConfig("netshot.db.pooler.maxpoolsize", 50, 0, Integer.MAX_VALUE));
 		configProps.put(C3p0Settings.C3P0_TIMEOUT,
 			Netshot.getConfig("netshot.db.pooler.maxidletimeout", 1800, 0, Integer.MAX_VALUE));
 		configProps.put("hibernate.c3p0.maxConnectionAge",

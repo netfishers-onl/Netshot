@@ -24,7 +24,7 @@ var Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "Netshot Team",
-	version: "6.4" /* Version will appear in the Admin tab. */
+	version: "6.4.1" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -74,6 +74,12 @@ var Device = {
 	"haGroupId": { /* This stores the name of an optional HA Group ID. */
 		type: "Text",
 		title: "HA group ID",
+		searchable: true,
+		checkable: true
+	},
+	"haMode": { /* This stores the HA mode of the Device : 'standalone' or 'a-p' or 'a-a'. */
+		type: "Text",
+		title: "HA mode",
 		searchable: true,
 		checkable: true
 	}
@@ -199,7 +205,7 @@ function snapshot(cli, device, config) {
 	// Store the HA status
 	var getHa = cli.command("get system ha status | grep .");
 	// Store the HA config block
-	var showHa = cli.command("show system ha | grep .");
+	var showHa = cli.command("show full-configuration system ha | grep .");
 
 	if (vdomMode) {
 		if (!useScp && version.match(/^6\.2\..*/)) {
@@ -284,7 +290,9 @@ function snapshot(cli, device, config) {
 		device.set("haGroupName", haName ? haName[1] : "");
 		var haId = haInfos[s].config.match(/set group-id (.*)/);
 		device.set("haGroupId", haId ? haId[1] : "");
-		if (haName) break;
+		var haMode = haInfos[s].config.match(/set mode (.*)/);
+		device.set("haMode", haMode ? haMode[1] : "");
+		if (haMode) break;
 	}
 
 	// Read the list of interfaces.

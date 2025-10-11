@@ -116,7 +116,10 @@ public class TaskJob implements Job {
 		session = Database.getSession();
 		try {
 			session.beginTransaction();
-			session.merge(task);
+			Task eTask = (Task) session.get(Task.class, id);
+			eTask.setStatus(task.getStatus());
+			eTask.setLog(task.getLog());
+			session.merge(eTask);
 			session.getTransaction().commit();
 		}
 		catch (Exception e) {

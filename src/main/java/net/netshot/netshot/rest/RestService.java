@@ -8125,13 +8125,13 @@ public class RestService extends Thread {
 							if (exportCompliance) {
 								row.createCell(++x).setCellValue((device.getSoftwareLevel() == null
 									? ConformanceLevel.UNKNOWN : device.getSoftwareLevel()).toString());
+								cell = row.createCell(++x);
 								if (device.getEosDate() != null) {
-									cell = row.createCell(++x);
 									cell.setCellValue(device.getEosDate());
 									cell.setCellStyle(dateCellStyle);
 								}
+								cell = row.createCell(++x);
 								if (device.getEolDate() != null) {
-									cell = row.createCell(++x);
 									cell.setCellValue(device.getEolDate());
 									cell.setCellStyle(dateCellStyle);
 								}

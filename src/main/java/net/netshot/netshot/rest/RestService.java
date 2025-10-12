@@ -169,6 +169,7 @@ import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.MissingDeviceDriverException;
+import net.netshot.netshot.device.Device.NetworkClass;
 import net.netshot.netshot.device.Device.Status;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.DeviceGroup;
@@ -1556,6 +1557,13 @@ public class RestService extends Thread {
 		@Setter
 		private Device.Status status;
 
+		/** The device networkClass. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private NetworkClass networkClass;
+
 		/** The device deviceDriver name. */
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
@@ -1625,6 +1633,7 @@ public class RestService extends Thread {
 				+ "d.family, "
 				+ "d.mgmtAddress, "
 				+ "d.status, "
+				+ "d.networkClass, "
 				+ "d.driver, "
 				+ "case when (d.eolDate < current_date()) then true else false end,  "
 				+ "case when (d.eosDate < current_date()) then true else false end, "
@@ -3017,6 +3026,7 @@ public class RestService extends Thread {
 					+ "d.family, "
 					+ "d.mgmtAddress, "
 					+ "d.status, "
+					+ "d.networkClass, "
 					+ "d.driver, "
 					+ "case when (d.eolDate < current_date()) then true else false end,  "
 					+ "case when (d.eosDate < current_date()) then true else false end, "
@@ -5304,9 +5314,9 @@ public class RestService extends Thread {
 		private Date expirationDate;
 
 		public RsLightExemptedDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
-			String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
+			NetworkClass networkClass, String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
 			Date expirationDate) {
-			super(id, name, family, mgmtAddress, status, driver, eol, eos, configCompliant, softwareLevel);
+			super(id, name, family, mgmtAddress, status, networkClass, driver, eol, eos, configCompliant, softwareLevel);
 			this.expirationDate = expirationDate;
 		}
 
@@ -5342,6 +5352,7 @@ public class RestService extends Thread {
 					+ "d.family, "
 					+ "d.mgmtAddress, "
 					+ "d.status, "
+					+ "d.networkClass, "
 					+ "d.driver, "
 					+ "case when (d.eolDate < current_date()) then true else false end,  "
 					+ "case when (d.eosDate < current_date()) then true else false end, "
@@ -5917,9 +5928,9 @@ public class RestService extends Thread {
 		private ResultOption result;
 
 		public RsLightPolicyRuleDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
-			String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
+			NetworkClass networkClass, String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
 			String policyName, String ruleName, Date checkDate, ResultOption result) {
-			super(id, name, family, mgmtAddress, status, driver, eol, eos, configCompliant, softwareLevel);
+			super(id, name, family, mgmtAddress, status, networkClass, driver, eol, eos, configCompliant, softwareLevel);
 			this.ruleName = ruleName;
 			this.policyName = policyName;
 			this.checkDate = checkDate;
@@ -5966,6 +5977,7 @@ public class RestService extends Thread {
 				+ "d.family, "
 				+ "d.mgmtAddress, "
 				+ "d.status, "
+				+ "d.networkClass, "
 				+ "d.driver, "
 				+ "case when (d.eolDate < current_date()) then true else false end,  "
 				+ "case when (d.eosDate < current_date()) then true else false end, "
@@ -6062,6 +6074,7 @@ public class RestService extends Thread {
 						+ "d.family, "
 						+ "d.mgmtAddress, "
 						+ "d.status, "
+						+ "d.networkClass, "
 						+ "d.driver, "
 						+ "case when (d.eolDate < current_date()) then true else false end,  "
 						+ "case when (d.eosDate < current_date()) then true else false end, "
@@ -6129,6 +6142,7 @@ public class RestService extends Thread {
 							+ "d.family, "
 							+ "d.mgmtAddress, "
 							+ "d.status, "
+							+ "d.networkClass, "
 							+ "d.driver, "
 							+ "case when (d.eolDate < current_date()) then true else false end,  "
 							+ "case when (d.eosDate < current_date()) then true else false end, "
@@ -6150,6 +6164,7 @@ public class RestService extends Thread {
 							+ "d.family, "
 							+ "d.mgmtAddress, "
 							+ "d.status, "
+							+ "d.networkClass, "
 							+ "d.driver, "
 							+ "case when (d.eolDate < current_date()) then true else false end,  "
 							+ "case when (d.eosDate < current_date()) then true else false end, "
@@ -6897,6 +6912,7 @@ public class RestService extends Thread {
 						+ "d.family, "
 						+ "d.mgmtAddress, "
 						+ "d.status, "
+						+ "d.networkClass, "
 						+ "d.driver, "
 						+ "case when (d.eolDate < current_date()) then true else false end,  "
 						+ "case when (d.eosDate < current_date()) then true else false end, "
@@ -6945,9 +6961,9 @@ public class RestService extends Thread {
 		private Date lastFailure;
 
 		public RsLightAccessFailureDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
-			String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
+			NetworkClass networkClass, String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
 			Date lastSuccess, Date lastFailure) {
-			super(id, name, family, mgmtAddress, status, driver, eol, eos, configCompliant, softwareLevel);
+			super(id, name, family, mgmtAddress, status, networkClass, driver, eol, eos, configCompliant, softwareLevel);
 			this.lastSuccess = lastSuccess;
 			this.lastFailure = lastFailure;
 		}
@@ -7001,6 +7017,7 @@ public class RestService extends Thread {
 					+ "d.family, "
 					+ "d.mgmtAddress, "
 					+ "d.status, "
+					+ "d.networkClass, "
 					+ "d.driver, "
 					+ "case when (d.eolDate < current_date()) then true else false end,  "
 					+ "case when (d.eosDate < current_date()) then true else false end, "

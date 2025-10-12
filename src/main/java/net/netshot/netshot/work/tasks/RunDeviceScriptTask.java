@@ -42,6 +42,7 @@ import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.script.JsCliScript;
 import net.netshot.netshot.rest.RestViews.DefaultView;
+import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
 
 /**
@@ -136,7 +137,7 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 				return;
 			}
 
-			cliScript = new JsCliScript(this.deviceDriver, this.script, false);
+			cliScript = new JsCliScript(this.deviceDriver, this.script, this.debugEnabled);
 			cliScript.setUserInputValues(this.userInputValues);
 			cliScript.connectRun(session, device);
 
@@ -164,6 +165,14 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 			return;
 		}
 		finally {
+			try {
+				if (this.debugEnabled) {
+					this.debugLog = new DebugLog(cliScript.getPlainCliLog());
+				}
+			}
+			catch (Exception e1) {
+				log.error("Task {}. Error while saving the debug logs.", this.getId(), e1);
+			}
 			session.close();
 		}
 	}

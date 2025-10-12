@@ -175,6 +175,7 @@ define([
 						device: device.get('id'),
 						script: that.scriptEditor.getValue(),
 						driver: that.deviceDriver,
+						debugEnabled: that.$('#debugsession').is(":checked"),
 					});
 					if (Object.keys(userInputs).length > 0) {
 						task.set({ userInputs });
@@ -211,6 +212,13 @@ define([
 			var that = this;
 			this.dialogButtons().eq(1).button('disable');
 			this.dialogButtons().eq(3).hide();
+
+			this.$("#hidden").hide();
+			this.$(".nsdialog-logo").dblclick(function() {
+				if (that.$('.nsdialog-page2').is(':visible')) {
+					that.$("#hidden").show();
+				}
+			});
 
 			_.each(this.deviceTypes.models, function(deviceType) {
 				$('<option />').attr('value', deviceType.get('name')).text(deviceType

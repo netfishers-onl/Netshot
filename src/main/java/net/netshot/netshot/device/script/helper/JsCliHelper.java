@@ -113,11 +113,13 @@ public class JsCliHelper {
 			command = "";
 		}
 		if (this.cliLogger != null) {
+			// Log before injecting secrets
 			this.cliLogger.trace(Instant.now() + " About to send the following command:");
 			this.cliLogger.trace(command);
 			this.cliLogger.trace("Hexadecimal:");
 			this.cliLogger.trace(toHexAscii(command));
 		}
+		log.debug("Command to be sent (secrets not replaced): '{}'.", command);
 		command = command.replaceAll("\\$\\$NetshotUsername\\$\\$",
 			Matcher.quoteReplacement(account.getUsername()));
 		command = command.replaceAll("\\$\\$NetshotPassword\\$\\$",
@@ -129,7 +131,6 @@ public class JsCliHelper {
 			cli.setCommandTimeout(timeout);
 		}
 		try {
-			log.debug("Command to be sent: '{}'.", command);
 			if (this.cliLogger != null) {
 				this.cliLogger.trace("Expecting one of the following " + expects.length
 					+ " pattern(s) within " + (timeout > 0 ? timeout : oldTimeout) + "ms:");

@@ -64,7 +64,11 @@ import org.apache.sshd.scp.client.ScpClientCreator;
 import org.apache.sshd.sftp.client.SftpClient;
 import org.apache.sshd.sftp.client.SftpClientFactory;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.device.NetworkAddress;
@@ -96,11 +100,11 @@ public class Ssh extends Cli {
 
 		private static final String[] DEFAULT_SSH_HOST_KEY_ALGORITHMS = {
 			KeyPairProvider.SSH_ED25519,
+			KeyPairProvider.ECDSA_SHA2_NISTP521,
+			KeyPairProvider.ECDSA_SHA2_NISTP256,
 			KeyUtils.RSA_SHA256_KEY_TYPE_ALIAS,
 			KeyUtils.RSA_SHA512_KEY_TYPE_ALIAS,
 			KeyPairProvider.SSH_RSA,
-			KeyPairProvider.ECDSA_SHA2_NISTP521,
-			KeyPairProvider.ECDSA_SHA2_NISTP256,
 			KeyPairProvider.SSH_DSS,
 		};
 
@@ -198,46 +202,66 @@ public class Ssh extends Cli {
 	/**
 	 * Embedded class to represent SSH-specific configuration.
 	 */
+	@XmlRootElement()
+	@XmlAccessorType(XmlAccessType.NONE)
 	public static final class SshConfig {
 
 		/** Key exchange algorithms allowed for the session. */
-		private List<String> kexAlgorithms = Arrays.asList(Ssh.SETTINGS.getKexAlgorithms());
+		private List<String> kexAlgorithms = null;
 
 		/** Host key algorithms allowed for the session. */
-		private List<String> hostKeyAlgorithms = Arrays.asList(Ssh.SETTINGS.getHostKeyAlgorithms());
+		private List<String> hostKeyAlgorithms = null;
 
 		/** Ciphers allowed for the session. */
-		private List<String> ciphers = Arrays.asList(Ssh.SETTINGS.getCiphers());
+		private List<String> ciphers = null;
 
 		/** MACs allowed for the session. */
-		private List<String> macs = Arrays.asList(Ssh.SETTINGS.getMacs());
+		private List<String> macs = null;
 
 		/** Compression algorithms allowed for the session. */
-		private List<String> compressionAlgorithms = Arrays.asList(Ssh.SETTINGS.getCompressionAlgorithms());
+		private List<String> compressionAlgorithms = null;
 
 		/** Whether to allocate a PTY or not. */
-		private boolean usePty;
+		@Setter
+		private Boolean usePty = null;
 
 		/** Type of terminal. */
-		private String terminalType = "vt100";
+		@Setter
+		private String terminalType = null;
 
 		/** Number of columns in the terminal. */
-		private int terminalCols = 80;
+		@Setter
+		private Integer terminalCols = null;
 
 		/** Number of rows in the terminal. */
-		private int terminalRows = 24;
+		@Setter
+		private Integer terminalRows = null;
 
 		/** Height of the terminal. */
-		private int terminalHeight = 640;
+		@Setter
+		private Integer terminalHeight = null;
 
 		/** Width of the terminal. */
-		private int terminalWidth = 480;
+		@Setter
+		private Integer terminalWidth = null;
 
 		/*
 		 * Default constructor.
 		 */
-		public SshConfig() {
-
+		public SshConfig(boolean withDefaults) {
+			if (withDefaults) {
+				this.kexAlgorithms = Arrays.asList(Ssh.SETTINGS.getKexAlgorithms());
+				this.hostKeyAlgorithms = Arrays.asList(Ssh.SETTINGS.getHostKeyAlgorithms());
+				this.ciphers = Arrays.asList(Ssh.SETTINGS.getCiphers());
+				this.macs = Arrays.asList(Ssh.SETTINGS.getMacs());
+				this.compressionAlgorithms = Arrays.asList(Ssh.SETTINGS.getCompressionAlgorithms());
+				this.usePty = true;
+				this.terminalType = "vt100";
+				this.terminalCols = 80;
+				this.terminalRows = 24;
+				this.terminalHeight = 480;
+				this.terminalWidth = 640;
+			}
 		}
 
 		public void setKexAlgorithms(String[] kexAlgorithms) {
@@ -254,54 +278,6 @@ public class Ssh extends Cli {
 
 		public void setMacs(String[] macs) {
 			this.macs = Arrays.asList(macs);
-		}
-
-		public boolean isUsePty() {
-			return usePty;
-		}
-
-		public void setUsePty(boolean usePty) {
-			this.usePty = usePty;
-		}
-
-		public String getTerminalType() {
-			return terminalType;
-		}
-
-		public void setTerminalType(String terminalType) {
-			this.terminalType = terminalType;
-		}
-
-		public int getTerminalCols() {
-			return terminalCols;
-		}
-
-		public void setTerminalCols(int terminalCols) {
-			this.terminalCols = terminalCols;
-		}
-
-		public int getTerminalRows() {
-			return terminalRows;
-		}
-
-		public void setTerminalRows(int terminalRows) {
-			this.terminalRows = terminalRows;
-		}
-
-		public int getTerminalHeight() {
-			return terminalHeight;
-		}
-
-		public void setTerminalHeight(int terminalHeight) {
-			this.terminalHeight = terminalHeight;
-		}
-
-		public int getTerminalWidth() {
-			return terminalWidth;
-		}
-
-		public void setTerminalWidth(int terminalWidth) {
-			this.terminalWidth = terminalWidth;
 		}
 	}
 
@@ -356,7 +332,7 @@ public class Ssh extends Cli {
 	private String privateKey;
 
 	/** The SSH connection config. */
-	private SshConfig sshConfig = new SshConfig();
+	private SshConfig sshConfig = new SshConfig(true);
 
 	/**
 	 * Instantiates a new SSH connection (password authentication).
@@ -533,6 +509,7 @@ public class Ssh extends Cli {
 					};
 				}
 				this.channel = this.session.createShellChannel(ptyConfig, Collections.emptyMap());
+				this.channel.setUsePty(this.sshConfig.usePty);
 				this.channel.setRedirectErrorStream(true);
 				this.channel.open().verify(Duration.ofMillis(this.connectionTimeout));
 				this.inStream = this.channel.getInvertedOut();
@@ -654,12 +631,40 @@ public class Ssh extends Cli {
 		}
 	}
 
-	public SshConfig getSshConfig() {
-		return sshConfig;
-	}
-
-	public void setSshConfig(SshConfig sshConfig) {
-		this.sshConfig = sshConfig;
+	public void applySshConfig(SshConfig other) {
+		if (other.kexAlgorithms != null) {
+			this.sshConfig.kexAlgorithms = other.kexAlgorithms;
+		}
+		if (other.hostKeyAlgorithms != null) {
+			this.sshConfig.hostKeyAlgorithms = other.hostKeyAlgorithms;
+		}
+		if (other.ciphers != null) {
+			this.sshConfig.ciphers = other.ciphers;
+		}
+		if (other.macs != null) {
+			this.sshConfig.macs = other.macs;
+		}
+		if (other.compressionAlgorithms != null) {
+			this.sshConfig.compressionAlgorithms = other.compressionAlgorithms;
+		}
+		if (other.usePty != null) {
+			this.sshConfig.usePty = other.usePty;
+		}
+		if (other.terminalType != null) {
+			this.sshConfig.terminalType = other.terminalType;
+		}
+		if (other.terminalCols != null) {
+			this.sshConfig.terminalCols = other.terminalCols;
+		}
+		if (other.terminalRows != null) {
+			this.sshConfig.terminalRows = other.terminalRows;
+		}
+		if (other.terminalHeight != null) {
+			this.sshConfig.terminalHeight = other.terminalHeight;
+		}
+		if (other.terminalWidth != null) {
+			this.sshConfig.terminalWidth = other.terminalWidth;
+		}
 	}
 
 }

@@ -152,20 +152,19 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 */
 	private static Source readLoaderSource() {
 		Source source = null;
-		try {
-			log.info("Reading the JavaScript driver loader code from the resource JS file.");
-			// Read the JavaScript loader code from the resource file.
-			String path = "interfaces/driver-loader.js";
+		String path = "interfaces/driver-loader.js";
+		try (
 			InputStream in = DeviceDriver.class.getResourceAsStream("/" + path);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+		) {
+			log.info("Reading the JavaScript driver loader code from the resource JS file.");
+			// Read the JavaScript loader code from the resource file.
 			StringBuilder buffer = new StringBuilder();
 			String line;
 			while ((line = reader.readLine()) != null) {
 				buffer.append(line);
 				buffer.append("\n");
 			}
-			reader.close();
-			in.close();
 			source = Source.newBuilder("js", buffer.toString(), "driver-loader.js").buildLiteral();
 			log.debug("The JavaScript driver loader code has been read from the resource JS file.");
 		}
@@ -332,7 +331,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 				while (e.hasMoreElements()) {
 					final JarEntry je = e.nextElement();
 					if (!je.isDirectory() && je.getName().startsWith(driverPathName)) {
-						log.info("Found Netshot device driver file {} (in jar).", file);
+						log.info("Found Netshot device driver file {} (in jar).", je.getName());
 						Reader reader = null;
 						try {
 							InputStream stream = jar.getInputStream(je);
@@ -505,7 +504,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		}
 		this.engine = Engine.create();
 
-		this.sshConfig = new SshConfig();
+		this.sshConfig = new SshConfig(false);
 		this.telnetConfig = new TelnetConfig();
 
 		try (Context context = this.getContext()) {

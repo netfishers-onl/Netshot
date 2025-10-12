@@ -198,7 +198,7 @@ public abstract class CliScript {
 					}
 					try {
 						sshTried = true;
-						cli.setSshConfig(deviceDriver.getSshConfig());
+						cli.applySshConfig(deviceDriver.getSshConfig());
 						taskLogger.info(String.format("Trying SSH to %s:%d using credentials %s.",
 							address.getIp(), sshPort, credentialSet.getName()));
 						cli.connect();
@@ -314,7 +314,7 @@ public abstract class CliScript {
 						}
 						try {
 							sshTried = true;
-							cli.setSshConfig(deviceDriver.getSshConfig());
+							cli.applySshConfig(deviceDriver.getSshConfig());
 							cli.connect();
 							taskLogger.info(String.format("Connected using SSH to %s:%d using credentials %s.",
 								address.getIp(), sshPort, credentialSet.getName()));
@@ -436,7 +436,7 @@ public abstract class CliScript {
 		}
 		if ((sshTried && !sshOpened && !telnetTried) || (telnetTried && !telnetOpened && !sshTried)
 			|| (sshTried && !sshOpened && telnetTried && !telnetOpened)) {
-			throw new IOException("Couldn't open either SSH or Telnet socket with the device.");
+			throw new IOException("Failed to connect to the device via SSH or Telnet.");
 		}
 		throw new InvalidCredentialsException("Couldn't find valid credentials.");
 	}

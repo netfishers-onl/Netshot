@@ -23,10 +23,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.security.Provider;
-import java.security.Security;
+import java.lang.instrument.Instrumentation;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,8 +70,8 @@ import net.netshot.netshot.device.access.Telnet;
 import net.netshot.netshot.device.script.helper.PythonFileSystem;
 import net.netshot.netshot.rest.LoggerFilter;
 import net.netshot.netshot.rest.RestService;
+import net.netshot.netshot.utils.BouncyCastleLoader;
 import net.netshot.netshot.work.tasks.TakeSnapshotTask;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 //CHECKSTYLE:OFF: IllegalImport
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
@@ -98,6 +98,9 @@ public class Netshot extends Thread {
 
 	/** The machine hostname. */
 	private static String hostname;
+
+	/** Java instrumentation. */
+	private static volatile Instrumentation instrumentation;
 
 	/**
 	 * Retrieve the local machine hostname.
@@ -582,22 +585,8 @@ public class Netshot extends Thread {
 			log.info("Selecting truststore.");
 			Netshot.setTruststore();
 
-			// Loading full BouncyCastle requires loading the signed JAR,
-			// which doesn't work with the packaged version of Netshot
-			// as we use shading to build a uber JAR.
-			// But we still require BouncyCastle (for Argon2 hash for example).
-			// And by default if Mina SSHD sees the BC classes in the classpath
-			// it will try to use it totally.
-			// Thus for now we keep BC dependencies, but we disable
-			// auto-loading by Mina SSHD.
-			// // log.info("Enabling BouncyCastle security.");
-			// // Security.addProvider(new BouncyCastleProvider());
-			System.setProperty("org.apache.sshd.security.provider.BC.enabled", "false");
-
-			// List actual registered providers
-			for (Provider p : Security.getProviders()) {
-				log.debug("Security provider {} is registered", p.getName());
-			}
+			log.info("Registering crypto libraries");
+			BouncyCastleLoader.registerBouncyCastle();
 
 			log.info("Updating the database schema, if necessary.");
 			Database.update();
@@ -645,7 +634,20 @@ public class Netshot extends Thread {
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
 
+	/**
+	 * The agentmain entry point.
+	 */
+	public static void agentmain(String agentArgs, Instrumentation inst) {
+		log.info("Netshot agentmain entrypoint");
+		instrumentation = inst;
+	}
+
+	public static void appendJar(JarFile jar) throws Exception {
+		if (instrumentation == null)
+			throw new IllegalStateException("Instrumentation not initialized");
+		instrumentation.appendToSystemClassLoaderSearch(jar);
 	}
 
 }

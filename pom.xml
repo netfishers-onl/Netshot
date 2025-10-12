@@ -16,7 +16,7 @@
 		<swagger.version>2.2.27</swagger.version>
 		<slf4j.version>2.0.16</slf4j.version>
 		<lombok.version>1.18.36</lombok.version>
-		<sshd.version>2.15.0</sshd.version>
+		<sshd.version>2.16.0</sshd.version>
 		<checkstyle.version>11.0.0</checkstyle.version>
 		<bouncycastle.version>1.82</bouncycastle.version>
 	</properties>
@@ -43,6 +43,24 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>3.8.1</version>
+				<executions>
+					<execution>
+						<id>copy-bc</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<includeGroupIds>org.bouncycastle</includeGroupIds>
+							<outputDirectory>${project.build.directory}/libs</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
 				<version>3.6.0</version>
 				<executions>
@@ -54,10 +72,30 @@
 						<configuration>
 							<shadedArtifactAttached>false</shadedArtifactAttached>
 							<createDependencyReducedPom>false</createDependencyReducedPom>
+							<artifactSet>
+								<excludes>
+									<exclude>org.bouncycastle:*</exclude>
+								</excludes>
+							</artifactSet>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>net.netshot.netshot.Netshot</mainClass>
+									<manifestEntries>
+										<Main-Class>net.netshot.netshot.Netshot</Main-Class>
+										<Launcher-Agent-Class>net.netshot.netshot.Netshot</Launcher-Agent-Class>
+									</manifestEntries>
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+									<resource>bc/bcpkix-jdk18on-${bouncycastle.version}.jar</resource>
+									<file>${project.build.directory}/libs/bcpkix-jdk18on-${bouncycastle.version}.jar</file>
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+									<resource>bc/bcprov-jdk18on-${bouncycastle.version}.jar</resource>
+									<file>${project.build.directory}/libs/bcprov-jdk18on-${bouncycastle.version}.jar</file>
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+									<resource>bc/bcutil-jdk18on-${bouncycastle.version}.jar</resource>
+									<file>${project.build.directory}/libs/bcutil-jdk18on-${bouncycastle.version}.jar</file>
 								</transformer>
 							</transformers>
 							<filters>
@@ -127,6 +165,12 @@
 			<artifactId>python</artifactId>
 			<version>${polyglot.version}</version>
 			<type>pom</type>
+			<exclusions>
+				<exclusion>
+					<artifactId>*</artifactId>
+					<groupId>org.bouncycastle</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.graalvm.polyglot</groupId>
@@ -350,7 +394,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
-			<artifactId>bcpg-jdk18on</artifactId>
+			<artifactId>bcutil-jdk18on</artifactId>
 			<version>${bouncycastle.version}</version>
 		</dependency>
 		<dependency>

@@ -50,7 +50,6 @@ import org.apache.sshd.client.keyverifier.AcceptAllServerKeyVerifier;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.common.NamedFactory;
 import org.apache.sshd.common.NamedResource;
-import org.apache.sshd.common.PropertyResolver;
 import org.apache.sshd.common.PropertyResolverUtils;
 import org.apache.sshd.common.channel.PtyChannelConfigurationHolder;
 import org.apache.sshd.common.channel.PtyMode;
@@ -60,9 +59,11 @@ import org.apache.sshd.common.config.keys.FilePasswordProvider;
 import org.apache.sshd.common.config.keys.KeyUtils;
 import org.apache.sshd.common.config.keys.loader.KeyPairResourceLoader;
 import org.apache.sshd.common.kex.BuiltinDHFactories;
+import org.apache.sshd.common.kex.KexProposalOption;
 import org.apache.sshd.common.keyprovider.KeyIdentityProvider;
 import org.apache.sshd.common.keyprovider.KeyPairProvider;
 import org.apache.sshd.common.mac.BuiltinMacs;
+import org.apache.sshd.common.session.SessionListener;
 import org.apache.sshd.common.util.io.IoUtils;
 import org.apache.sshd.common.util.security.SecurityUtils;
 import org.apache.sshd.core.CoreModuleProperties;
@@ -589,6 +590,116 @@ public class Ssh extends Cli {
 					Ssh.this.taskLogger.warn("SSH authentication failed (service {})", service);
 				}
 			});
+
+			// Add session listener to trace protocol negotiation details
+			this.session.addSessionListener(new SessionListener() {
+				@Override
+				public void sessionNegotiationEnd(
+						org.apache.sshd.common.session.Session session,
+						Map<KexProposalOption, String> clientProposal,
+						Map<KexProposalOption, String> serverProposal,
+						Map<KexProposalOption, String> negotiatedOptions,
+						Throwable reason) {
+					if (!Ssh.this.taskLogger.isTracing()) {
+						return;
+					}
+					if (reason != null) {
+						Ssh.this.taskLogger.trace("SSH Protocol Negotiation ended with error: {}", reason.getMessage());
+					}
+
+					Ssh.this.taskLogger.trace("SSH Protocol Negotiation {}:",
+						reason == null ? "Results" : "Proposals (Failed)");
+
+					// Log KEX algorithms
+					String kexClient = clientProposal.get(KexProposalOption.ALGORITHMS);
+					String kexServer = serverProposal.get(KexProposalOption.ALGORITHMS);
+					String kexNegotiated = negotiatedOptions.get(KexProposalOption.ALGORITHMS);
+					Ssh.this.taskLogger.trace("  Key Exchange:");
+					Ssh.this.taskLogger.trace("    Client proposed: {}", kexClient);
+					Ssh.this.taskLogger.trace("    Server proposed: {}", kexServer);
+					if (kexNegotiated != null) {
+						Ssh.this.taskLogger.trace("    Negotiated: {}", kexNegotiated);
+					}
+
+					// Log Server Host Key algorithms
+					String hostKeyClient = clientProposal.get(KexProposalOption.SERVERKEYS);
+					String hostKeyServer = serverProposal.get(KexProposalOption.SERVERKEYS);
+					String hostKeyNegotiated = negotiatedOptions.get(KexProposalOption.SERVERKEYS);
+					Ssh.this.taskLogger.trace("  Server Host Key:");
+					Ssh.this.taskLogger.trace("    Client proposed: {}", hostKeyClient);
+					Ssh.this.taskLogger.trace("    Server proposed: {}", hostKeyServer);
+					if (hostKeyNegotiated != null) {
+						Ssh.this.taskLogger.trace("    Negotiated: {}", hostKeyNegotiated);
+					}
+
+					// Log Cipher algorithms (client-to-server)
+					String cipherC2SClient = clientProposal.get(KexProposalOption.C2SENC);
+					String cipherC2SServer = serverProposal.get(KexProposalOption.C2SENC);
+					String cipherC2SNegotiated = negotiatedOptions.get(KexProposalOption.C2SENC);
+					Ssh.this.taskLogger.trace("  Cipher (Client-to-Server):");
+					Ssh.this.taskLogger.trace("    Client proposed: {}", cipherC2SClient);
+					Ssh.this.taskLogger.trace("    Server proposed: {}", cipherC2SServer);
+					if (cipherC2SNegotiated != null) {
+						Ssh.this.taskLogger.trace("    Negotiated: {}", cipherC2SNegotiated);
+					}
+
+					// Log Cipher algorithms (server-to-client)
+					String cipherS2CClient = clientProposal.get(KexProposalOption.S2CENC);
+					String cipherS2CServer = serverProposal.get(KexProposalOption.S2CENC);
+					String cipherS2CNegotiated = negotiatedOptions.get(KexProposalOption.S2CENC);
+					Ssh.this.taskLogger.trace("  Cipher (Server-to-Client):");
+					Ssh.this.taskLogger.trace("    Client proposed: {}", cipherS2CClient);
+					Ssh.this.taskLogger.trace("    Server proposed: {}", cipherS2CServer);
+					if (cipherS2CNegotiated != null) {
+						Ssh.this.taskLogger.trace("    Negotiated: {}", cipherS2CNegotiated);
+					}
+
+					// Log MAC algorithms (client-to-server)
+					String macC2SClient = clientProposal.get(KexProposalOption.C2SMAC);
+					String macC2SServer = serverProposal.get(KexProposalOption.C2SMAC);
+					String macC2SNegotiated = negotiatedOptions.get(KexProposalOption.C2SMAC);
+					Ssh.this.taskLogger.trace("  MAC (Client-to-Server):");
+					Ssh.this.taskLogger.trace("    Client proposed: {}", macC2SClient);
+					Ssh.this.taskLogger.trace("    Server proposed: {}", macC2SServer);
+					if (macC2SNegotiated != null) {
+						Ssh.this.taskLogger.trace("    Negotiated: {}", macC2SNegotiated);
+					}
+
+					// Log MAC algorithms (server-to-client)
+					String macS2CClient = clientProposal.get(KexProposalOption.S2CMAC);
+					String macS2CServer = serverProposal.get(KexProposalOption.S2CMAC);
+					String macS2CNegotiated = negotiatedOptions.get(KexProposalOption.S2CMAC);
+					Ssh.this.taskLogger.trace("  MAC (Server-to-Client):");
+					Ssh.this.taskLogger.trace("    Client proposed: {}", macS2CClient);
+					Ssh.this.taskLogger.trace("    Server proposed: {}", macS2CServer);
+					if (macS2CNegotiated != null) {
+						Ssh.this.taskLogger.trace("    Negotiated: {}", macS2CNegotiated);
+					}
+
+					// Log Compression algorithms (client-to-server)
+					String compC2SClient = clientProposal.get(KexProposalOption.C2SCOMP);
+					String compC2SServer = serverProposal.get(KexProposalOption.C2SCOMP);
+					String compC2SNegotiated = negotiatedOptions.get(KexProposalOption.C2SCOMP);
+					Ssh.this.taskLogger.trace("  Compression (Client-to-Server):");
+					Ssh.this.taskLogger.trace("    Client proposed: {}", compC2SClient);
+					Ssh.this.taskLogger.trace("    Server proposed: {}", compC2SServer);
+					if (compC2SNegotiated != null) {
+						Ssh.this.taskLogger.trace("    Negotiated: {}", compC2SNegotiated);
+					}
+
+					// Log Compression algorithms (server-to-client)
+					String compS2CClient = clientProposal.get(KexProposalOption.S2CCOMP);
+					String compS2CServer = serverProposal.get(KexProposalOption.S2CCOMP);
+					String compS2CNegotiated = negotiatedOptions.get(KexProposalOption.S2CCOMP);
+					Ssh.this.taskLogger.trace("  Compression (Server-to-Client):");
+					Ssh.this.taskLogger.trace("    Client proposed: {}", compS2CClient);
+					Ssh.this.taskLogger.trace("    Server proposed: {}", compS2CServer);
+					if (compS2CNegotiated != null) {
+						Ssh.this.taskLogger.trace("    Negotiated: {}", compS2CNegotiated);
+					}
+				}
+			});
+
 			this.session.auth().verify(Duration.ofMillis(this.connectionTimeout));
 			if (openChannel) {
 				PtyChannelConfigurationHolder ptyConfig = null;

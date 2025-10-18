@@ -18,6 +18,7 @@
  */
 package net.netshot.netshot.work;
 
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -28,6 +29,8 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 import org.quartz.Trigger;
+import org.slf4j.event.Level;
+import org.slf4j.helpers.MessageFormatter;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -57,7 +60,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.logger.TaskLogTaskLogger;
 import net.netshot.netshot.work.tasks.CheckComplianceTask;
 import net.netshot.netshot.work.tasks.CheckGroupComplianceTask;
 import net.netshot.netshot.work.tasks.CheckGroupSoftwareTask;
@@ -201,8 +203,7 @@ public abstract class Task implements Cloneable {
 	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
-	@Setter
-	protected boolean debugEnabled;
+	protected boolean debugEnabled = false;
 
 	/** The debug log. */
 	@Getter(onMethod = @__({
@@ -229,6 +230,37 @@ public abstract class Task implements Cloneable {
 
 	/** The log. */
 	protected StringBuffer logs = new StringBuffer();
+
+	/** Full debug logs */
+	protected StringBuffer fullLogs = null;
+
+	/** Task logger. */
+	protected TaskLogger logger = new TaskLogger() {
+		@Override
+		public void log(Level level, String message, Object... params) {
+			if (fullLogs != null) {
+				fullLogs
+					.append(Instant.now())
+					.append(" [").append(level).append("] ")
+					.append(MessageFormatter.arrayFormat(message, params).getMessage())
+					.append("\n");
+			}
+			if (level.toInt() <= Level.TRACE.toInt()) {
+				// Don't log traces to base logs
+				return;
+			}
+			logs
+				.append(Instant.now())
+				.append(" [").append(level).append("] ")
+				.append(MessageFormatter.arrayFormat(message, params).getMessage())
+				.append("\n");
+		}
+
+		@Override
+		public boolean isTracing() {
+			return debugEnabled;
+		}
+	};
 
 	/** The schedule reference. */
 	@Getter(onMethod = @__({
@@ -306,6 +338,9 @@ public abstract class Task implements Cloneable {
 		this.target = target;
 		this.author = author;
 		this.debugEnabled = debugEnabled;
+		if (this.debugEnabled) {
+			this.fullLogs = new StringBuffer();
+		}
 	}
 
 	/**
@@ -465,46 +500,6 @@ public abstract class Task implements Cloneable {
 		}
 	}
 
-	public void debug(String message) {
-		this.logs.append("[DEBUG] ");
-		this.logs.append(message);
-		this.logs.append("\n");
-	}
-
-	public void trace(String message) {
-		this.logs.append("[TRACE] ");
-		this.logs.append(message);
-		this.logs.append("\n");
-	}
-
-	public void info(String message) {
-		this.logs.append("[INFO] ");
-		this.logs.append(message);
-		this.logs.append("\n");
-	}
-
-	public void warn(String message) {
-		this.logs.append("[WARN] ");
-		this.logs.append(message);
-		this.logs.append("\n");
-	}
-
-	public void error(String message) {
-		this.logs.append("[ERROR] ");
-		this.logs.append(message);
-		this.logs.append("\n");
-	}
-
-
-	/**
-	 * Get the JS logger.
-	 * @return the JS logger
-	 */
-	@Transient
-	protected TaskLogger getJsLogger() {
-		return new TaskLogTaskLogger(this);
-	}
-
 	/**
 	 * On cancel.
 	 */
@@ -524,6 +519,17 @@ public abstract class Task implements Cloneable {
 	 */
 	public void prepare(Session session) {
 		// Override to actually do something
+	}
+
+	/**
+	 * Enable or disable full debugging on this task
+	 * @param debugEnabled true to enable full debugging
+	 */
+	public void setDebugEnabled(boolean debugEnabled) {
+		this.debugEnabled = debugEnabled;
+		if (debugEnabled && this.fullLogs == null) {
+			this.fullLogs = new StringBuffer();
+		}
 	}
 
 	/**
@@ -570,8 +576,9 @@ public abstract class Task implements Cloneable {
 	/**
 	 * Sets the cancelled.
 	 */
-	public void setCancelled() {
+	public void setCancelled(String reason) {
 		this.status = Status.CANCELLED;
+		this.logger.warn(reason);
 	}
 
 	/**

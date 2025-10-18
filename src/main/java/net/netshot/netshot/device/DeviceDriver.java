@@ -48,7 +48,10 @@ import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
+import org.slf4j.event.Level;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -70,7 +73,6 @@ import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
 import net.netshot.netshot.work.TaskLogger;
-import net.netshot.netshot.work.logger.LoggerTaskLogger;
 
 /**
  * This is a device driver.
@@ -134,6 +136,19 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		public Location(LocationType type, String fileName) {
 			this.type = type;
 			this.fileName = fileName;
+		}
+	}
+
+	public static class LoggerTaskLogger implements TaskLogger {
+		private final Logger logger;
+
+		public LoggerTaskLogger(Class<?> clazz) {
+			this.logger = LoggerFactory.getLogger(clazz);
+		}
+
+		@Override
+		public void log(Level level, String message, Object... params) {
+			this.logger.makeLoggingEventBuilder(level).log(message, params);
 		}
 	}
 

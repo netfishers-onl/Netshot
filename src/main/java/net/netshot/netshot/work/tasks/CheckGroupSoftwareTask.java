@@ -135,12 +135,12 @@ public final class CheckGroupSoftwareTask extends Task implements GroupBasedTask
 		log.debug("Task {}. Starting check software compliance and hardware support status task for group {}.",
 			this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
 		if (this.deviceGroup == null) {
-			this.info("The device group doesn't exist, the task will be cancelled.");
+			this.logger.info("The device group doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
-		this.trace(String.format("Check software compliance task for group %s.",
-			this.deviceGroup.getName()));
+		this.logger.trace("Check software compliance task for group {}.",
+			this.deviceGroup.getName());
 
 		Session session = Database.getSession();
 		try {
@@ -187,7 +187,7 @@ public final class CheckGroupSoftwareTask extends Task implements GroupBasedTask
 				log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 			}
 			log.error("Task {}. Error while checking compliance.", this.getId(), e);
-			this.error("Error while checking compliance: " + e.getMessage());
+			this.logger.error("Error while checking compliance: {}", e.getMessage());
 			this.status = Status.FAILURE;
 			return;
 		}

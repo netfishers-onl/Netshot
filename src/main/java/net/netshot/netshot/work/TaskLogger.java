@@ -19,22 +19,60 @@
 package net.netshot.netshot.work;
 
 import org.graalvm.polyglot.HostAccess.Export;
+import org.slf4j.event.Level;
 
 public interface TaskLogger {
 
-	@Export
-	void trace(String message);
+	/**
+	 * Convert a string to an hexadecimal representation.
+	 * @param text The original text
+	 * @return the hexadecimal representation of the text
+	 */
+	default String toHexAscii(String text) {
+		StringBuilder hex = new StringBuilder();
+		for (int i = 0; i < text.length(); i++) {
+			if (i % 32 == 0 && i > 0) {
+				hex.append("\n");
+			}
+			hex.append(" ").append(String.format("%02x", (int) text.charAt(i)));
+		}
+		return hex.toString();
+	}
+
+	default boolean isTracing() {
+		return true;
+	}
+
+	void log(Level level, String message, Object... params);
 
 	@Export
-	void debug(String message);
+	default void hexTrace(String message) {
+		this.log(Level.TRACE, toHexAscii(message));
+	}
 
 	@Export
-	void info(String message);
+	default void trace(String message, Object... params) {
+		this.log(Level.TRACE, message, params);
+	}
 
 	@Export
-	void warn(String message);
+	default void debug(String message, Object... params) {
+		this.log(Level.DEBUG, message, params);
+	}
 
 	@Export
-	void error(String message);
+	default void info(String message, Object... params) {
+		this.log(Level.INFO, message, params);
+	}
+
+	@Export
+	default void warn(String message, Object... params) {
+		this.log(Level.WARN, message, params);
+	}
+
+	@Export
+	default void error(String message, Object... params) {
+		this.log(Level.ERROR, message, params);
+	}
 
 }

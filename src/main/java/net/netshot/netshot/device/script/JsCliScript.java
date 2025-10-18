@@ -126,10 +126,10 @@ public class JsCliScript extends CliScript {
 	 * Instantiates a JS-based script.
 	 * @param driverName = The name of the driver
 	 * @param code = The JavaScript code
-	 * @param cliLogging = whether to log CLI
+	 * @param logger = The task logger
 	 */
-	public JsCliScript(String driverName, String code, boolean cliLogging) {
-		super(cliLogging);
+	public JsCliScript(String driverName, String code, TaskLogger logger) {
+		super(logger);
 		this.driverName = driverName;
 		this.code = code;
 	}
@@ -141,21 +141,20 @@ public class JsCliScript extends CliScript {
 		JsSnmpHelper jsSnmpHelper = null;
 		switch (protocol) {
 			case SNMP:
-				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.getJsLogger());
+				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.taskLogger);
 				break;
 			case TELNET:
 			case SSH:
 			default:
-				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.getJsLogger(), this.getCliLogger());
+				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.taskLogger);
 				break;
 		}
-		TaskLogger taskLogger = this.getJsLogger();
 		DeviceDriver driver = device.getDeviceDriver();
 		try (Context context = driver.getContext()) {
 			driver.loadCode(context);
 			context.eval("js", code);
-			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, taskLogger);
-			options.setDeviceHelper(new JsDeviceHelper(device, cli, null, taskLogger, false));
+			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskLogger);
+			options.setDeviceHelper(new JsDeviceHelper(device, cli, null, this.taskLogger, false));
 			options.setUserInputs(this.userInputValues);
 			context
 				.getBindings("js")
@@ -164,8 +163,8 @@ public class JsCliScript extends CliScript {
 		}
 		catch (PolyglotException e) {
 			log.error("Error while running script using driver {}.", driver.getName(), e);
-			taskLogger.error(String.format("Error while running script  using driver %s: '%s'.",
-				driver.getName(), e.getMessage()));
+			this.taskLogger.error("Error while running script  using driver {}: '{}'.",
+				driver.getName(), e.getMessage());
 			if (e.getMessage().contains("Authentication failed")) {
 				throw new InvalidCredentialsException("Authentication failed");
 			}
@@ -175,8 +174,8 @@ public class JsCliScript extends CliScript {
 		}
 		catch (UnsupportedOperationException e) {
 			log.error("No such method while using driver {}.", driver.getName(), e);
-			taskLogger.error(String.format("No such method while using driver %s to execute script: '%s'.",
-				driver.getName(), e.getMessage()));
+			this.taskLogger.error("No such method while using driver {} to execute script: '{}'.",
+				driver.getName(), e.getMessage());
 			throw e;
 		}
 	}

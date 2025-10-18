@@ -111,7 +111,7 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 		log.debug("Task {}. Starting script task for device {}.", this.getId(),
 			device == null ? "null" : device.getId());
 		if (device == null) {
-			this.info("The device doesn't exist, the task will be cancelled.");
+			this.logger.info("The device doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
@@ -122,27 +122,25 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 			session.beginTransaction();
 			// Start over from a fresh device from DB
 			device = session.get(Device.class, device.getId());
-			this.info(String.format("Run script task for device %s (%s).",
-				device.getName(), device.getMgmtAddress().getIp()));
+			this.logger.info("Run script task for device {} ({}).",
+				device.getName(), device.getMgmtAddress().getIp());
 			if (deviceDriver == null || !deviceDriver.equals(device.getDriver())) {
 				log.trace("Task {}. The script doesn't apply to the driver of the device.", this.getId());
-				this.error("The script doesn't apply to the driver of the device.");
+				this.logger.error("The script doesn't apply to the driver of the device.");
 				this.status = Status.CANCELLED;
 				return;
 			}
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				log.trace("Task {}. Device not INPRODUCTION, stopping the run script task.", this.getId());
-				this.warn("The device is not enabled (not in production).");
+				this.logger.warn("The device is not enabled (not in production).");
 				this.status = Status.CANCELLED;
 				return;
 			}
 
-			cliScript = new JsCliScript(this.deviceDriver, this.script, this.debugEnabled);
+			cliScript = new JsCliScript(this.deviceDriver, this.script, this.logger);
 			cliScript.setUserInputValues(this.userInputValues);
 			cliScript.connectRun(session, device);
 
-			this.info(String.format("Device logs (%d next lines):", cliScript.getJsLog().size()));
-			this.logs.append(cliScript.getPlainJsLog());
 			session.merge(device);
 			session.getTransaction().commit();
 			this.status = Status.SUCCESS;
@@ -155,19 +153,15 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 				log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 			}
 			log.error("Task {}. Error while running the script.", this.getId(), e);
-			this.error("Error while running the script: " + e.getMessage());
-			if (cliScript != null) {
-				this.info(String.format("Device logs (%d next lines):", cliScript.getJsLog().size()));
-				this.logs.append(cliScript.getPlainJsLog());
-			}
+			this.logger.error("Error while running the script: {}", e.getMessage());
 
 			this.status = Status.FAILURE;
 			return;
 		}
 		finally {
 			try {
-				if (this.debugEnabled) {
-					this.debugLog = new DebugLog(cliScript.getPlainCliLog());
+				if (this.fullLogs != null) {
+					this.debugLog = new DebugLog(this.fullLogs.toString());
 				}
 			}
 			catch (Exception e1) {

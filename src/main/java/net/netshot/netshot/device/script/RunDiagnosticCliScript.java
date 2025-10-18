@@ -56,10 +56,10 @@ public final class RunDiagnosticCliScript extends CliScript {
 	/**
 	 * Instantiates a diagnostic CLI script.
 	 * @param diagnostics = the list of diagnostics
-	 * @param cliLogging = whether to log CLI commands
+	 * @param logger = the task logger
 	 */
-	public RunDiagnosticCliScript(List<Diagnostic> diagnostics, boolean cliLogging) {
-		super(cliLogging);
+	public RunDiagnosticCliScript(List<Diagnostic> diagnostics, TaskLogger logger) {
+		super(logger);
 		this.diagnostics = diagnostics;
 	}
 
@@ -70,21 +70,20 @@ public final class RunDiagnosticCliScript extends CliScript {
 		JsSnmpHelper jsSnmpHelper = null;
 		switch (protocol) {
 			case SNMP:
-				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.getJsLogger());
+				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.taskLogger);
 				break;
 			case TELNET:
 			case SSH:
 			default:
-				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.getJsLogger(), this.getCliLogger());
+				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.taskLogger);
 				break;
 		}
-		TaskLogger taskLogger = this.getJsLogger();
 		DeviceDriver driver = device.getDeviceDriver();
 		// Filter on the device driver
 		try (Context context = driver.getContext()) {
 			driver.loadCode(context);
-			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, taskLogger);
-			options.setDeviceHelper(new JsDeviceHelper(device, cli, null, taskLogger, false));
+			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskLogger);
+			options.setDeviceHelper(new JsDeviceHelper(device, cli, null, this.taskLogger, false));
 
 			Map<String, Object> jsDiagnostics = new HashMap<String, Object>();
 			for (Diagnostic diagnostic : this.diagnostics) {
@@ -97,23 +96,23 @@ public final class RunDiagnosticCliScript extends CliScript {
 				}
 				catch (Exception e1) {
 					log.error("Error while preparing the diagnostic {} for JS", diagnostic.getName(), e1);
-					taskLogger.error(String.format("Error while preparing the diagnostic %s for JS: '%s'.",
-						diagnostic.getName(), e1.getMessage()));
+					this.taskLogger.error("Error while preparing the diagnostic {} for JS: '{}'.",
+						diagnostic.getName(), e1.getMessage());
 				}
 			}
-			options.setDiagnosticHelper(new JsDiagnosticHelper(device, diagnostics, jsDiagnostics, taskLogger));
+			options.setDiagnosticHelper(new JsDiagnosticHelper(device, diagnostics, jsDiagnostics, this.taskLogger));
 
 			if (jsDiagnostics.size() > 0) {
 				context.getBindings("js")
 					.getMember("_connect")
-					.execute("diagnostics", protocol.value(), options, taskLogger);
+					.execute("diagnostics", protocol.value(), options, this.taskLogger);
 			}
 
 		}
 		catch (PolyglotException e) {
 			log.error("Error while running script using driver {}.", driver.getName(), e);
-			taskLogger.error(String.format("Error while running script using driver %s: '%s'.",
-				driver.getName(), e.getMessage()));
+			this.taskLogger.error("Error while running script using driver {}: '{}'.",
+				driver.getName(), e.getMessage());
 			if (e.getMessage().contains("Authentication failed")) {
 				throw new InvalidCredentialsException("Authentication failed");
 			}
@@ -123,8 +122,8 @@ public final class RunDiagnosticCliScript extends CliScript {
 		}
 		catch (UnsupportedOperationException e) {
 			log.error("No such method while using driver {}.", driver.getName(), e);
-			taskLogger.error(String.format("No such method while using driver %s to execute script: '%s'.",
-				driver.getName(), e.getMessage()));
+			this.taskLogger.error("No such method while using driver {} to execute script: '{}'.",
+				driver.getName(), e.getMessage());
 			throw e;
 		}
 	}

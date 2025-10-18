@@ -64,7 +64,6 @@ import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.glassfish.jersey.servlet.ServletProperties;
-import org.graalvm.polyglot.HostAccess.Export;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
@@ -75,6 +74,8 @@ import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
+import org.slf4j.event.Level;
+import org.slf4j.helpers.MessageFormatter;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -5225,44 +5226,11 @@ public class RestService extends Thread {
 
 			StringBuilder taskLog = new StringBuilder();
 			TaskLogger taskLogger = new TaskLogger() {
-
 				@Override
-				@Export
-				public void warn(String message) {
-					taskLog.append("[WARN] ");
-					taskLog.append(message);
-					taskLog.append("\n");
-				}
-
-				@Override
-				@Export
-				public void trace(String message) {
-					taskLog.append("[TRACE] ");
-					taskLog.append(message);
-					taskLog.append("\n");
-				}
-
-				@Override
-				@Export
-				public void info(String message) {
-					taskLog.append("[INFO] ");
-					taskLog.append(message);
-					taskLog.append("\n");
-				}
-
-				@Override
-				@Export
-				public void error(String message) {
-					taskLog.append("[ERROR] ");
-					taskLog.append(message);
-					taskLog.append("\n");
-				}
-
-				@Override
-				@Export
-				public void debug(String message) {
-					taskLog.append("[DEBUG] ");
-					taskLog.append(message);
+				public void log(Level level, String message, Object... params) {
+					taskLog.append("[%s] ".formatted(level.toString()));
+					taskLog.append(
+						MessageFormatter.arrayFormat(message, params).getMessage());
 					taskLog.append("\n");
 				}
 			};

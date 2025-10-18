@@ -19,7 +19,6 @@
 package net.netshot.netshot.device.script;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -29,8 +28,6 @@ import javax.script.ScriptException;
 
 import org.hibernate.Session;
 
-import jakarta.persistence.Transient;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.InvalidCredentialsException;
@@ -49,81 +46,17 @@ import net.netshot.netshot.device.credentials.DeviceSshAccount;
 import net.netshot.netshot.device.credentials.DeviceSshKeyAccount;
 import net.netshot.netshot.device.credentials.DeviceTelnetAccount;
 import net.netshot.netshot.work.TaskLogger;
-import net.netshot.netshot.work.logger.StringListTaskLogger;
 
 /**
  * Something to execute on a device.
- * @author sylvain.cadilhac
- *
  */
 @Slf4j
 public abstract class CliScript {
 
-	/** The log. */
-	@Getter(onMethod = @__({
-		@Transient
-	}))
-	protected transient List<String> jsLog = new ArrayList<String>();
+	protected transient TaskLogger taskLogger;
 
-	/** Session debug log. */
-	protected transient List<String> cliLog;
-
-	protected CliScript(boolean cliLogging) {
-		if (cliLogging) {
-			cliLog = new ArrayList<String>();
-		}
-	}
-
-
-	/**
-	 * Gets the plain log.
-	 *
-	 * @return the plain log
-	 */
-	@Transient
-	public String getPlainJsLog() {
-		StringBuffer buffer = new StringBuffer();
-		for (String log : this.jsLog) {
-			buffer.append(log);
-			buffer.append("\n");
-		}
-		return buffer.toString();
-	}
-
-	/**
-	 * Gets the session debug logs as plain string.
-	 * @return the logs
-	 */
-	@Transient
-	public String getPlainCliLog() {
-		if (this.cliLog == null) {
-			return null;
-		}
-		StringBuffer buffer = new StringBuffer();
-		for (String log : this.cliLog) {
-			buffer.append(log);
-			buffer.append("\n");
-		}
-		return buffer.toString();
-	}
-
-	/**
-	 * Get the JS logger.
-	 * @return the JS logger
-	 */
-	public TaskLogger getJsLogger() {
-		return new StringListTaskLogger(this.jsLog);
-	}
-
-	/**
-	 * Get the CLI logger.
-	 * @return the CLI logger, of null if disabled
-	 */
-	protected TaskLogger getCliLogger() {
-		if (cliLog == null) {
-			return null;
-		}
-		return new StringListTaskLogger(cliLog);
+	protected CliScript(TaskLogger taskLogger) {
+		this.taskLogger = taskLogger;
 	}
 
 	/**
@@ -155,7 +88,6 @@ public abstract class CliScript {
 		boolean snmpWorth = deviceDriver.getProtocols().contains(DriverProtocol.SNMP);
 		boolean sshTried = false;
 		boolean telnetTried = false;
-		TaskLogger taskLogger = this.getJsLogger();
 
 		Network4Address address = device.getConnectAddress();
 		if (address == null) {
@@ -190,25 +122,26 @@ public abstract class CliScript {
 							((DeviceSshKeyAccount) credentialSet).getPublicKey(),
 							((DeviceSshKeyAccount) credentialSet).getPrivateKey(),
 							((DeviceSshKeyAccount) credentialSet).getPassword(),
-							taskLogger);
+							this.taskLogger);
 					}
 					else {
 						cli = new Ssh(address, sshPort, ((DeviceSshAccount) credentialSet).getUsername(),
-							((DeviceSshAccount) credentialSet).getPassword(), taskLogger);
+							((DeviceSshAccount) credentialSet).getPassword(), this.taskLogger);
 					}
 					try {
 						sshTried = true;
 						cli.applySshConfig(deviceDriver.getSshConfig());
-						taskLogger.info(String.format("Trying SSH to %s:%d using credentials %s.",
-							address.getIp(), sshPort, credentialSet.getName()));
+						this.taskLogger.info("Trying SSH to {}:{} using credentials {}.",
+							address.getIp(), sshPort, credentialSet.getName());
 						cli.connect();
-						taskLogger.info(String.format("Connected using SSH to %s:%d using credentials %s.",
-							address.getIp(), sshPort, credentialSet.getName()));
+						this.taskLogger.info("Connected using SSH to {}:{} using credentials {}.",
+							address.getIp(), sshPort, credentialSet.getName());
 						this.run(session, device, cli, null, DriverProtocol.SSH, (DeviceCliAccount) credentialSet);
 						return;
 					}
 					catch (InvalidCredentialsException e) {
-						taskLogger.warn(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()));
+						this.taskLogger.warn("Authentication failed using SSH credential set {}.",
+							credentialSet.getName());
 						this.waitBetweenAttempts();
 					}
 					catch (ScriptException e) {
@@ -218,13 +151,13 @@ public abstract class CliScript {
 						log.warn("Error while opening SSH connection to {}:{}.", address.getIp(), sshPort, e);
 						if ("No more authentication methods available".equals(e.getMessage())
 							|| "Protocol error: expected packet type 61, got 50".equals(e.getMessage())) {
-							taskLogger.warn(String.format("Authentication failed %s:%d using SSH credential set %s.",
-								address, sshPort, credentialSet.getName()));
+							this.taskLogger.warn("Authentication failed {}:{} using SSH credential set {}.",
+								address.getIp(), sshPort, credentialSet.getName());
 							this.waitBetweenAttempts();
 						}
 						else {
-							taskLogger.warn(String.format("Unable to connect using SSH to %s:%d: %s",
-								address.getIp(), sshPort, e.getMessage()));
+							this.taskLogger.warn("Unable to connect using SSH to {}:{}: {}",
+								address.getIp(), sshPort, e.getMessage());
 							sshOpened = false;
 							break;
 						}
@@ -238,19 +171,19 @@ public abstract class CliScript {
 		if (telnetOpened) {
 			for (DeviceCredentialSet credentialSet : credentialSets) {
 				if (credentialSet instanceof DeviceTelnetAccount) {
-					final Telnet cli = new Telnet(address, telnetPort, taskLogger);
+					final Telnet cli = new Telnet(address, telnetPort, this.taskLogger);
 					try {
 						telnetTried = true;
 						cli.setTelnetConfig(deviceDriver.getTelnetConfig());
-						taskLogger.info(String.format("Trying Telnet to %s:%d with credentials %s.",
-							address.getIp(), telnetPort, credentialSet.getName()));
+						this.taskLogger.info("Trying Telnet to {}:{} with credentials {}.",
+							address.getIp(), telnetPort, credentialSet.getName());
 						cli.connect();
-						taskLogger.info(String.format("Connected using Telnet to %s:%d.", address.getIp(), telnetPort));
+						this.taskLogger.info("Connected using Telnet to {}:{}.", address.getIp(), telnetPort);
 						this.run(session, device, cli, null, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
 						return;
 					}
 					catch (InvalidCredentialsException e) {
-						taskLogger.warn(String.format("Authentication failed using Telnet credential set %s.", credentialSet.getName()));
+						this.taskLogger.warn("Authentication failed using Telnet credentials {}.", credentialSet.getName());
 						this.waitBetweenAttempts();
 					}
 					catch (ScriptException e) {
@@ -258,7 +191,7 @@ public abstract class CliScript {
 					}
 					catch (IOException e) {
 						log.warn("Unable to open a Telnet connection to {}:{}.", address.getIp(), telnetPort, e);
-						taskLogger.warn(String.format("Unable to open a Telnet socket to %s:%d.", address.getIp(), telnetPort));
+						this.taskLogger.warn("Unable to open a Telnet socket to {}:{}.", address.getIp(), telnetPort);
 						telnetOpened = false;
 						break;
 					}
@@ -286,7 +219,7 @@ public abstract class CliScript {
 					}
 					catch (IOException e) {
 						log.warn("Unable to poll {} using SNMP credential set {}", address.getIp(), credentialSet.getName());
-						taskLogger.warn(String.format("Unable to poll %s using SNMP credential set %s", address.getIp(), credentialSet.getName()));
+						this.taskLogger.warn("Unable to poll {} using SNMP credentials {}", address.getIp(), credentialSet.getName());
 					}
 					finally {
 						poller.stop();
@@ -299,25 +232,25 @@ public abstract class CliScript {
 			if (sshOpened) {
 				for (DeviceCredentialSet credentialSet : globalCredentialSets) {
 					if (credentialSet instanceof DeviceSshAccount) {
-						taskLogger.info(String.format("Auto-trying SSH with credentials %s.", credentialSet.getName()));
+						this.taskLogger.info("Auto-trying SSH with credentials {}.", credentialSet.getName());
 						Ssh cli;
 						if (credentialSet instanceof DeviceSshKeyAccount) {
 							cli = new Ssh(address, sshPort, ((DeviceSshKeyAccount) credentialSet).getUsername(),
 								((DeviceSshKeyAccount) credentialSet).getPublicKey(),
 								((DeviceSshKeyAccount) credentialSet).getPrivateKey(),
 								((DeviceSshKeyAccount) credentialSet).getPassword(),
-								taskLogger);
+								this.taskLogger);
 						}
 						else {
 							cli = new Ssh(address, sshPort, ((DeviceSshAccount) credentialSet).getUsername(),
-								((DeviceSshAccount) credentialSet).getPassword(), taskLogger);
+								((DeviceSshAccount) credentialSet).getPassword(), this.taskLogger);
 						}
 						try {
 							sshTried = true;
 							cli.applySshConfig(deviceDriver.getSshConfig());
 							cli.connect();
-							taskLogger.info(String.format("Connected using SSH to %s:%d using credentials %s.",
-								address.getIp(), sshPort, credentialSet.getName()));
+							this.taskLogger.info("Connected using SSH to {}:{} using credentials {}.",
+								address.getIp(), sshPort, credentialSet.getName());
 							this.run(session, device, cli, null, DriverProtocol.SSH, (DeviceCliAccount) credentialSet);
 							Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
 							while (ci.hasNext()) {
@@ -330,7 +263,7 @@ public abstract class CliScript {
 							return;
 						}
 						catch (InvalidCredentialsException e) {
-							taskLogger.warn(String.format("Authentication failed using SSH credential set %s.", credentialSet.getName()));
+							this.taskLogger.warn("Authentication failed using SSH credentials {}.", credentialSet.getName());
 							this.waitBetweenAttempts();
 						}
 						catch (ScriptException e) {
@@ -340,13 +273,13 @@ public abstract class CliScript {
 							log.warn("Error while opening SSH connection to {}:{}.", address.getIp(), sshPort, e);
 							if ("No more authentication methods available".equals(e.getMessage())
 								|| "Protocol error: expected packet type 61, got 50".equals(e.getMessage())) {
-								taskLogger.warn(String.format("Authentication failed %s:%d using SSH credential set %s.",
-									address, sshPort, credentialSet.getName()));
+								this.taskLogger.warn("Authentication failed {}:{} using SSH credential {}.",
+									address.getIp(), sshPort, credentialSet.getName());
 								this.waitBetweenAttempts();
 							}
 							else {
-								taskLogger.warn(String.format("Unable to connect using SSH to %s:%d: %s",
-									address.getIp(), sshPort, e.getMessage()));
+								this.taskLogger.warn("Unable to connect using SSH to {}:{}: {}",
+									address.getIp(), sshPort, e.getMessage());
 								break;
 							}
 						}
@@ -359,13 +292,13 @@ public abstract class CliScript {
 			if (telnetOpened) {
 				for (DeviceCredentialSet credentialSet : globalCredentialSets) {
 					if (credentialSet instanceof DeviceTelnetAccount) {
-						taskLogger.info(String.format("Auto-trying Telnet with credentials %s.", credentialSet.getName()));
-						final Telnet cli = new Telnet(address, telnetPort, taskLogger);
+						this.taskLogger.info("Auto-trying Telnet with credentials {}.", credentialSet.getName());
+						final Telnet cli = new Telnet(address, telnetPort, this.taskLogger);
 						try {
 							telnetTried = true;
 							cli.setTelnetConfig(deviceDriver.getTelnetConfig());
 							cli.connect();
-							taskLogger.info(String.format("Connected using Telnet to %s:%d.", address.getIp(), telnetPort));
+							this.taskLogger.info("Connected using Telnet to {}:{}.", address.getIp(), telnetPort);
 							this.run(session, device, cli, null, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
 							Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
 							while (ci.hasNext()) {
@@ -378,7 +311,7 @@ public abstract class CliScript {
 							return;
 						}
 						catch (InvalidCredentialsException e) {
-							taskLogger.warn(String.format("Authentication failed using Telnet credential set %s.", credentialSet.getName()));
+							this.taskLogger.warn("Authentication failed using Telnet credentials {}.", credentialSet.getName());
 							this.waitBetweenAttempts();
 						}
 						catch (ScriptException e) {
@@ -386,7 +319,7 @@ public abstract class CliScript {
 						}
 						catch (IOException e) {
 							log.warn("Unable to open a Telnet connection to {}:{}.", address.getIp(), telnetPort, e);
-							taskLogger.warn(String.format("Unable to open a Telnet socket to %s:%d.", address.getIp(), telnetPort));
+							this.taskLogger.warn("Unable to open a Telnet socket to {}:{}.", address.getIp(), telnetPort);
 							telnetOpened = false;
 							break;
 						}
@@ -399,7 +332,7 @@ public abstract class CliScript {
 			if (snmpWorth) {
 				for (DeviceCredentialSet credentialSet : globalCredentialSets) {
 					if (credentialSet instanceof DeviceSnmpCommunity) {
-						taskLogger.trace(String.format("Will try SNMP credentials %s.", credentialSet.getName()));
+						this.taskLogger.trace("Will try SNMP credentials {}.", credentialSet.getName());
 						Snmp poller = new Snmp(address, (DeviceSnmpCommunity) credentialSet);
 						try {
 							try {
@@ -423,7 +356,7 @@ public abstract class CliScript {
 						}
 						catch (IOException e) {
 							log.warn("Unable to poll {} using SNMP credential set {}", address.getIp(), credentialSet.getName());
-							taskLogger.warn(String.format("Unable to poll %s using SNMP credential set %s", address.getIp(), credentialSet.getName()));
+							this.taskLogger.warn("Unable to poll {} using SNMP credential set {}", address.getIp(), credentialSet.getName());
 							break;
 						}
 						finally {

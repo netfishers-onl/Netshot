@@ -102,10 +102,10 @@ public class DeviceListExtractor extends Netshot {
 					cliAccount = (DeviceCliAccount) device.getSpecificCredentialSet();
 				}
 				if (cliAccount == null) {
-					log.warn(String.format("No CLI account found for device %s.", device.getName()));
+					log.warn("No CLI account found for device {}.", device.getName());
 				}
 				if (community == null) {
-					log.warn(String.format("No SNMP community found for device %s.", device.getName()));
+					log.warn("No SNMP community found for device {}.", device.getName());
 				}
 				List<String> fields = new ArrayList<>();
 				fields.add(device.getMgmtAddress().getInetAddress().getHostAddress());		// Col. 1 = IP Address <<<

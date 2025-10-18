@@ -252,7 +252,7 @@ public class TextRule extends Rule {
 				}
 				blocks = selectedBlocks;
 			}
-			taskLogger.debug(String.format("Found %d block(s) matching the context.", blocks.size()));
+			taskLogger.debug("Found {} block(s) matching the context.", blocks.size());
 			int b = 1;
 			for (String[] block : blocks) {
 				boolean doesMatch =
@@ -260,11 +260,11 @@ public class TextRule extends Rule {
 						|| !regExp && (matchAll && block[1].equals(text) || !matchAll && block[1].contains(text));
 				doesMatch = doesMatch ^ invert;
 				if (!doesMatch) {
-					taskLogger.debug(String.format("Non matching block, number %d (in [%s])", b++, block[0]));
+					taskLogger.debug("Non matching block, number {} (in [{}])", b++, block[0]);
 					return new CheckResult(this, device, ResultOption.NONCONFORMING);
 				}
 				else if (anyBlock) {
-					taskLogger.debug(String.format("Matching block, number %d (in [%s])", b++, block[0]));
+					taskLogger.debug("Matching block, number {} (in [{}])", b++, block[0]);
 					return new CheckResult(this, device, ResultOption.CONFORMING);
 				}
 			}

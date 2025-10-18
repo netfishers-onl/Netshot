@@ -296,8 +296,8 @@ public class JavaScriptRule extends Rule {
 			}
 			for (CheckResult.ResultOption allowedResult : ALLOWED_RESULTS) {
 				if (allowedResult.toString().equals(txtResult)) {
-					taskLogger.info(String.format("The script returned %s (%d), comment '%s'.",
-						allowedResult.toString(), allowedResult.getValue(), comment));
+					taskLogger.info("The script returned {} ({}), comment '{}'.",
+						allowedResult.toString(), allowedResult.getValue(), comment);
 					return new CheckResult(this, device, allowedResult, comment);
 				}
 			}

@@ -282,7 +282,7 @@ public final class JsConfigHelper {
 		}
 		catch (Exception e) {
 			log.warn("Error during snapshot while downloading file for attribute key '{}'.", key);
-			taskLogger.error(String.format("Error while downloading file for attribute key %s: %s", key, e.getMessage()));
+			taskLogger.error("Error while downloading file for attribute key {}: {}", key, e.getMessage());
 			throw e;
 		}
 	}

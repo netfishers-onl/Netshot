@@ -18,42 +18,24 @@
  */
 package net.netshot.netshot;
 
+import org.slf4j.event.Level;
+import org.slf4j.helpers.MessageFormatter;
+
 import net.netshot.netshot.work.TaskLogger;
 
 public class FakeTaskLogger implements TaskLogger {
+
 	private final StringBuffer buffer = new StringBuffer();
-
-	public void trace(String message) {
-		buffer.append("TRACE - ");
-		buffer.append(message);
-		buffer.append("\n");
-	}
-
-	public void debug(String message) {
-		buffer.append("DEBUG - ");
-		buffer.append(message);
-		buffer.append("\n");
-	}
-
-	public void info(String message) {
-		buffer.append("INFO - ");
-		buffer.append(message);
-		buffer.append("\n");
-	}
-
-	public void warn(String message) {
-		buffer.append("WARN - ");
-		buffer.append(message);
-		buffer.append("\n");
-	}
-
-	public void error(String message) {
-		buffer.append("ERROR - ");
-		buffer.append(message);
-		buffer.append("\n");
-	}
 
 	public String getLog() {
 		return buffer.toString();
+	}
+
+	@Override
+	public void log(Level level, String message, Object... params) {
+		buffer.append("[%s] ".formatted(level.toString()));
+		buffer.append(
+			MessageFormatter.arrayFormat(message, params).getMessage());
+		buffer.append("\n");
 	}
 }

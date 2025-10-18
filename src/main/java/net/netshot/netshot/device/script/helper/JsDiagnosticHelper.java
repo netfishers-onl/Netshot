@@ -70,13 +70,13 @@ public class JsDiagnosticHelper {
 	@Export
 	public void set(String key, Value value) {
 		if (value == null) {
-			this.taskLogger.warn(String.format("Value for diagnostic key '%s' is null", key));
+			this.taskLogger.warn("Value for diagnostic key '{}' is null", key);
 			return;
 		}
 		try {
 			for (Diagnostic diagnostic : diagnostics) {
 				if (diagnostic.getName().equals(key)) {
-					this.taskLogger.warn(String.format("Setting value for diagnostic key '%s'", key));
+					this.taskLogger.warn("Setting value for diagnostic key '{}'", key);
 					DiagnosticResult result = diagnostic.makeResult(this.device, value);
 					if (result != null) {
 						this.device.addDiagnosticResult(result);
@@ -86,7 +86,7 @@ public class JsDiagnosticHelper {
 		}
 		catch (Exception e) {
 			log.warn("Error while setting the diagnostic result '{}'.", key, e);
-			this.taskLogger.error(String.format("Can't set diagnostic result %s: %s", key, e.toString()));
+			this.taskLogger.error("Can't set diagnostic result {}: {}", key, e.toString());
 		}
 	}
 

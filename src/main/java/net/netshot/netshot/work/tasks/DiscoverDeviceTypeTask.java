@@ -183,14 +183,14 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 		try {
 			sysDesc = poller.getAsString("1.3.6.1.2.1.1.1.0");
 			sysObjectId = poller.getAsString("1.3.6.1.2.1.1.2.0");
-			this.debug("Got sysDesc = " + sysDesc);
-			this.debug("Got sysObjectID = " + sysObjectId);
+			this.logger.debug("Got sysDesc = {}", sysDesc);
+			this.logger.debug("Got sysObjectID = {}", sysObjectId);
 			log.trace("Got sysDesc '{}' and sysObjectID '{}'.", sysDesc,
 				sysObjectId);
 
 			// Iterates over possible device classes
 			for (DeviceDriver driver : DeviceDriver.getAllDrivers()) {
-				if (driver.snmpAutoDiscover(this, sysObjectId, sysDesc, this.getJsLogger())) {
+				if (driver.snmpAutoDiscover(this, sysObjectId, sysDesc, this.logger)) {
 					log.trace("The driver {} did accept the OID.", driver.getName());
 					this.discoveredDeviceType = driver.getName();
 					return true;
@@ -199,7 +199,7 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 		}
 		catch (IOException e) {
 			log.warn("Error while polling the device via SNMP.", e);
-			this.error("Error while polling the device via SNMP.");
+			this.logger.error("Error while polling the device via SNMP.");
 		}
 		finally {
 			try {
@@ -215,18 +215,18 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 	private boolean snmpv1Discover(DeviceSnmpCommunity community) {
 		log.trace("Task {}. SNMPv1 discovery with credential set {}.",
 			this.getId(), community.getName());
-		this.trace(String.format("Trying SNMPv1 discovery (credential set %s)", community.getName()));
+		this.logger.trace("Trying SNMPv1 discovery (credentials {})", community.getName());
 		try {
 			Snmp poller = new Snmp(deviceAddress, community);
 			return snmpDiscover(poller);
 		}
 		catch (UnknownHostException e) {
 			log.warn("Task {}. SNMPv1 unknown host error.", this.getId(), e);
-			this.warn("SNMPv1 unknown host error: " + e.getMessage());
+			this.logger.warn("SNMPv1 unknown host error: {}", e.getMessage());
 		}
 		catch (Exception e) {
 			log.error("Task {}. SNMPv1 error while polling the device.", this.getId(), e);
-			this.warn("Error while SNMPv1 polling the device: " + e.getMessage());
+			this.logger.warn("Error while SNMPv1 polling the device: {}", e.getMessage());
 		}
 		return false;
 	}
@@ -234,18 +234,18 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 	private boolean snmpv2cDiscover(DeviceSnmpCommunity community) {
 		log.trace("Task {}. SNMPv2c discovery with credential set {}.",
 			this.getId(), community.getName());
-		this.trace(String.format("Trying SNMPv2c discovery (credential set %s)", community.getName()));
+		this.logger.trace("Trying SNMPv2c discovery (credential set {})", community.getName());
 		try {
 			Snmp poller = new Snmp(deviceAddress, community);
 			return snmpDiscover(poller);
 		}
 		catch (UnknownHostException e) {
 			log.warn("Task {}. SNMPv2 unknown host error.", this.getId(), e);
-			this.warn("SNMPv2 unknown host error: " + e.getMessage());
+			this.logger.warn("SNMPv2 unknown host error: {}", e.getMessage());
 		}
 		catch (Exception e) {
 			log.error("Task {}. SNMPv2 error while polling the device.", this.getId(), e);
-			this.warn("Error while SNMPv2 polling the device: " + e.getMessage());
+			this.logger.warn("Error while SNMPv2 polling the device: {}", e.getMessage());
 		}
 		return false;
 	}
@@ -253,18 +253,18 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 	private boolean snmpv3Discover(DeviceSnmpv3Community cred) {
 		log.trace("Task {}. SNMPv3 discovery with credential set {}.",
 			this.getId(), cred.getName());
-		this.trace(String.format("Trying SNMPv3 discovery (credential set %s)", cred.getName()));
+		this.logger.trace("Trying SNMPv3 discovery (credentials {})", cred.getName());
 		try {
 			Snmp poller = new Snmp(deviceAddress, cred);
 			return snmpDiscover(poller);
 		}
 		catch (UnknownHostException e) {
 			log.warn("Task {}. SNMPv3 unknown host error.", this.getId(), e);
-			this.warn("SNMPv3 unknown host error: " + e.getMessage());
+			this.logger.warn("SNMPv3 unknown host error: {}", e.getMessage());
 		}
 		catch (Exception e) {
 			log.error("Task {}. SNMPv3 error while polling the device.", this.getId(), e);
-			this.warn("Error while SNMPv3 polling the device: " + e.getMessage());
+			this.logger.warn("Error while SNMPv3 polling the device: {}", e.getMessage());
 		}
 		return false;
 	}
@@ -344,11 +344,11 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 					log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 				}
 				log.error("Task {}. Couldn't save the new device.", this.getId(), e);
-				this.error("Database error while adding the device");
+				this.logger.error("Database error while adding the device");
 			}
 			catch (Exception e) {
 				log.error("Task {}. Error while saving the new device or the new task.", this.getId(), e);
-				this.error("Couldn't add the device after discovery");
+				this.logger.error("Couldn't add the device after discovery");
 			}
 			finally {
 				session.close();
@@ -371,8 +371,8 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 		}
 		if (!didTrySnmp) {
 			log.warn("Task {}. No available SNMP credential set.", this.getId());
-			this.error(
-				"No available SNMP credential set... can't start autodiscovery.");
+			this.logger.error(
+				"No available SNMP credential set... cannot start autodiscovery.");
 		}
 		this.status = Status.FAILURE;
 	}

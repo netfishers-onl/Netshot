@@ -386,7 +386,7 @@ public class DeviceDriverTest {
 			Cli fakeCli = new CiscoIOS12FakeCli(null, credentials, taskLogger);
 			Session nullSession = null;
 			Device device = FakeDeviceFactory.getFakeCiscoIosDevice();
-			SnapshotCliScript script = new SnapshotCliScript(true);
+			SnapshotCliScript script = new SnapshotCliScript(this.taskLogger);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
 			runMethod.setAccessible(true);
@@ -663,7 +663,7 @@ public class DeviceDriverTest {
 			Session nullSession = null;
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("ZPENodeGrid", null, domain, "test");
-			SnapshotCliScript script = new SnapshotCliScript(true);
+			SnapshotCliScript script = new SnapshotCliScript(this.taskLogger);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
 			runMethod.setAccessible(true);
@@ -1140,7 +1140,7 @@ public class DeviceDriverTest {
 			Session nullSession = null;
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("AristaMOS", null, domain, "test");
-			SnapshotCliScript script = new SnapshotCliScript(true);
+			SnapshotCliScript script = new SnapshotCliScript(this.taskLogger);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
 			runMethod.setAccessible(true);

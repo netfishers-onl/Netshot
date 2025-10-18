@@ -21,6 +21,7 @@ package net.netshot.netshot.work.tasks;
 import java.util.Map;
 
 import org.hibernate.annotations.NaturalId;
+import org.slf4j.event.Level;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -41,6 +42,7 @@ import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.script.JsCliScript;
 import net.netshot.netshot.device.script.JsCliScript.UserInputDefinition;
 import net.netshot.netshot.rest.RestViews.DefaultView;
+import net.netshot.netshot.work.TaskLogger;
 
 @Entity
 @XmlRootElement
@@ -109,12 +111,30 @@ public class DeviceJsScript {
 	}
 
 	/**
+	 * Create a task logger which does nothing.
+	 * @return
+	 */
+	private TaskLogger makeVoidLogger() {
+		return new TaskLogger() {
+			@Override
+			public boolean isTracing() {
+				return false;
+			}
+
+			@Override
+			public void log(Level level, String message, Object... params) {
+				// Ignore
+			}
+		};
+	}
+
+	/**
 	 * Actually populate user input definitions by evaluating the script and extract Input variable.
 	 * @throws IllegalAccessException
 	 */
 	public void extractUserInputDefinitions() throws IllegalArgumentException {
 		if (this.userInputDefinitions == null) {
-			final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, false);
+			final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, this.makeVoidLogger());
 			this.userInputDefinitions = jsScript.extractInputDefinitions();
 		}
 	}
@@ -125,7 +145,7 @@ public class DeviceJsScript {
 	 * @throws IllegalArgumentException
 	 */
 	public void validateUserInputs(Map<String, String> userInputs) throws IllegalArgumentException {
-		final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, false);
+		final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, this.makeVoidLogger());
 		jsScript.setUserInputValues(userInputs);
 		jsScript.validateUserInputs();
 	}

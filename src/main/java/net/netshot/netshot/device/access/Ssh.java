@@ -583,7 +583,7 @@ public class Ssh extends Cli {
 		if (!session.isOpen()) {
 			throw new IOException("The SSH session is not connected, can't start the SCP transfer");
 		}
-		this.taskLogger.info(String.format("Downloading '%s' using SCP.", remoteFileName));
+		this.taskLogger.info("Downloading '{}' using SCP.", remoteFileName);
 
 		ScpClient scpClient = ScpClientCreator.instance().createScpClient(session);
 		scpClient.download(remoteFileName, localStream);
@@ -617,8 +617,8 @@ public class Ssh extends Cli {
 		if (!session.isOpen()) {
 			throw new IOException("The SSH session is not connected, can't start the SFTP transfer");
 		}
-		this.taskLogger.info(String.format("Downloading '%s' to '%s' using SFTP.",
-			remoteFileName, localFileName.toString()));
+		this.taskLogger.info("Downloading '{}' to '{}' using SFTP.",
+			remoteFileName, localFileName.toString());
 
 
 		try (SftpClient sftpClient = SftpClientFactory.instance().createSftpClient(session)) {

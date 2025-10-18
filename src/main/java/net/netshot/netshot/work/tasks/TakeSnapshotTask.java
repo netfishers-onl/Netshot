@@ -203,36 +203,35 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		log.debug("Task {}. Starting snapshot task for device {}.", this.getId(),
 			device == null ? "null" : device.getId());
 		if (device == null) {
-			this.info("The device doesn't exist, the task will be cancelled.");
+			this.logger.info("The device doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
 		boolean locked = false;
 
 		Session session = Database.getSession();
-		CliScript cliScript = new SnapshotCliScript(this.debugEnabled);
+		CliScript cliScript = new SnapshotCliScript(this.logger);
 		try {
 			session.beginTransaction();
 			// Start over from a fresh device from DB
 			device = session.get(Device.class, device.getId());
-			this.info(String.format("Snapshot task for device %s (%s).",
-				device.getName(), device.getMgmtAddress().getIp()));
+			this.logger.info("Snapshot task for device {} ({}).",
+				device.getName(), device.getMgmtAddress().getIp());
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				log.trace("Task {}. Device not INPRODUCTION, stopping the snapshot task.", this.getId());
-				this.warn("The device is not enabled (not in production).");
+				this.logger.warn("The device is not enabled (not in production).");
 				this.status = Status.CANCELLED;
 				return;
 			}
 			locked = checkRunningSnapshot(device.getId());
 			if (!locked) {
 				log.trace("Task {}. Snapshot task already ongoing for this device, cancelling.", this.getId());
-				this.warn("A snapshot task is already running for this device, cancelling this task.");
+				this.logger.warn("A snapshot task is already running for this device, cancelling this task.");
 				this.status = Status.CANCELLED;
 				return;
 			}
 
 			cliScript.connectRun(session, device);
-			this.logs.append(cliScript.getPlainJsLog());
 			session.persist(device);
 			session.getTransaction().commit();
 			this.status = Status.SUCCESS;
@@ -244,16 +243,15 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 			catch (Exception e1) {
 				log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 			}
-			this.logs.append(cliScript.getPlainJsLog());
 			log.error("Task {}. Error while taking the snapshot.", this.getId(), e);
-			this.error("Error while taking the snapshot: " + e.getMessage());
+			this.logger.error("Error while taking the snapshot: {}", e.getMessage());
 			this.status = Status.FAILURE;
 			return;
 		}
 		finally {
 			try {
-				if (this.debugEnabled) {
-					this.debugLog = new DebugLog(cliScript.getPlainCliLog());
+				if (this.fullLogs != null) {
+					this.debugLog = new DebugLog(this.fullLogs.toString());
 				}
 			}
 			catch (Exception e1) {

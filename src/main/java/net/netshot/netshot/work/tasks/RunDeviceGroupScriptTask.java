@@ -138,7 +138,7 @@ public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTa
 		log.debug("Task {}. Starting run script task for group {}.",
 			this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
 		if (this.deviceGroup == null) {
-			this.info("The device group doesn't exist, the task will be cancelled.");
+			this.logger.info("The device group doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
@@ -149,13 +149,13 @@ public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTa
 		DeviceDriver driver = DeviceDriver.getDriverByName(this.deviceDriver);
 		if (driver == null) {
 			log.error("Task {}. No such device driver {}.", this.getId(), deviceDriver);
-			this.error("Unknown device driver.");
+			this.logger.error("Unknown device driver.");
 			this.status = Status.FAILURE;
 			return;
 		}
 
 		for (Device device : devices) {
-			this.info(String.format("Starting run script task for device %s.", device.getName()));
+			this.logger.info("Starting run script task for device {}.", device.getName());
 			RunDeviceScriptTask task = new RunDeviceScriptTask(device, script, driver, comment, author);
 			task.setPriority(this.getPriority());
 			task.setUserInputValues(this.userInputValues);
@@ -164,7 +164,7 @@ public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTa
 			}
 			catch (Exception e) {
 				log.error("Task {}. Error while scheduling the individual snapshot task.", this.getId(), e);
-				this.error("Error while scheduling the task.");
+				this.logger.error("Error while scheduling the task.");
 			}
 		}
 		log.debug("Task {}. Everything went fine.", this.getId());

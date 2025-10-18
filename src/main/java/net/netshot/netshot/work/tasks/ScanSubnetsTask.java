@@ -138,8 +138,7 @@ public final class ScanSubnetsTask extends Task implements DomainBasedTask {
 						max--;
 					}
 					log.trace("Task {}. Will scan from {} to {}.", this.getId(), min, max);
-					this.info(String.format("Will scan %s (from %d to %d)", subnet.getPrefix(),
-						min, max));
+					this.logger.info("Will scan {} (from {} to {})", subnet.getPrefix(), min, max);
 					List<Integer> existing = session
 						.createQuery(
 							"select d.mgmtAddress.address from Device d where d.mgmtAddress.address >= :min and d.mgmtAddress.address <= :max",
@@ -157,7 +156,7 @@ public final class ScanSubnetsTask extends Task implements DomainBasedTask {
 			catch (HibernateException e) {
 				log.error("Task {}. Error while retrieving the existing devices in the scope.",
 					this.getId(), e);
-				this.error("Error while checking the existing devices.");
+				this.logger.error("Error while checking the existing devices.");
 				this.status = Status.FAILURE;
 				return;
 			}
@@ -171,7 +170,7 @@ public final class ScanSubnetsTask extends Task implements DomainBasedTask {
 			}
 			catch (Exception e) {
 				log.error("Task {}. Error while retrieving the communities.", this.getId(), e);
-				this.error("Error while getting the communities.");
+				this.logger.error("Error while getting the communities.");
 				this.status = Status.FAILURE;
 				return;
 			}
@@ -181,7 +180,7 @@ public final class ScanSubnetsTask extends Task implements DomainBasedTask {
 		}
 		if (knownCommunities.size() == 0) {
 			log.error("Task {}. No available SNMP community to scan devices.", this.getId());
-			this.error("No available SNMP community to scan devices.");
+			this.logger.error("No available SNMP community to scan devices.");
 			this.status = Status.FAILURE;
 			return;
 		}
@@ -193,10 +192,10 @@ public final class ScanSubnetsTask extends Task implements DomainBasedTask {
 				Network4Address address = new Network4Address(a, 32);
 				if (!address.isNormalUnicast()) {
 					log.trace("Task {}. Bad address {} skipped.", this.getId(), a);
-					this.info(String.format("Skipping %s.", address.getIp()));
+					this.logger.info("Skipping {}.", address.getIp());
 					continue;
 				}
-				this.info("Adding a task to scan " + address.getIp());
+				this.logger.info("Adding a task to scan {}", address.getIp());
 				log.trace("Task {}. Will add a discovery task for device with IP {} ({}).",
 					this.getId(), a, address.getIp());
 				DiscoverDeviceTypeTask discoverTask = new DiscoverDeviceTypeTask(address, this.getDomain(), comments, author);
@@ -208,7 +207,7 @@ public final class ScanSubnetsTask extends Task implements DomainBasedTask {
 			}
 			catch (Exception e) {
 				log.error("Task {}. Error while adding discovery task.", this.getId(), e);
-				this.error("Error while adding discover device type: " + e.getMessage());
+				this.logger.error("Error while adding discover device type: {}", e.getMessage());
 			}
 		}
 

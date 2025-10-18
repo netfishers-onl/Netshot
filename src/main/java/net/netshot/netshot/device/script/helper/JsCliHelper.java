@@ -21,10 +21,12 @@ package net.netshot.netshot.device.script.helper;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.graalvm.polyglot.HostAccess.Export;
 
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.access.Cli;
 import net.netshot.netshot.device.access.Cli.WithBufferIOException;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
@@ -100,11 +102,11 @@ public class JsCliHelper {
 			this.taskLogger.hexTrace(command);
 		}
 		log.debug("Command to be sent (secrets not replaced): '{}'.", command);
-		command = command.replaceAll("\\$\\$NetshotUsername\\$\\$",
+		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
 			Matcher.quoteReplacement(account.getUsername()));
-		command = command.replaceAll("\\$\\$NetshotPassword\\$\\$",
+		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_PASSWORD),
 			Matcher.quoteReplacement(account.getPassword()));
-		command = command.replaceAll("\\$\\$NetshotSuperPassword\\$\\$",
+		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_SUPERPASSWORD),
 			Matcher.quoteReplacement(account.getSuperPassword()));
 		int oldTimeout = cli.getCommandTimeout();
 		if (timeout > 0) {

@@ -28,15 +28,20 @@ import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.sshd.client.ClientBuilder;
 import org.apache.sshd.client.SshClient;
+import org.apache.sshd.client.auth.keyboard.UserInteraction;
+import org.apache.sshd.client.auth.password.PasswordAuthenticationReporter;
 import org.apache.sshd.client.channel.ChannelShell;
 import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.apache.sshd.client.config.hosts.HostConfigEntryResolver;
@@ -45,6 +50,8 @@ import org.apache.sshd.client.keyverifier.AcceptAllServerKeyVerifier;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.common.NamedFactory;
 import org.apache.sshd.common.NamedResource;
+import org.apache.sshd.common.PropertyResolver;
+import org.apache.sshd.common.PropertyResolverUtils;
 import org.apache.sshd.common.channel.PtyChannelConfigurationHolder;
 import org.apache.sshd.common.channel.PtyMode;
 import org.apache.sshd.common.cipher.BuiltinCiphers;
@@ -71,6 +78,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
+import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.work.TaskLogger;
 
@@ -199,6 +207,29 @@ public class Ssh extends Cli {
 
 	private static SshClient client;
 
+
+	/**
+	 * Instruction for SSH user interactive authentication mode.
+	 */
+	@XmlRootElement()
+	@XmlAccessorType(XmlAccessType.NONE)
+	public static final class SshInteractionInstruction {
+		@Getter
+		private Pattern promptPattern;
+
+		@Getter
+		private Boolean echo;
+
+		@Getter
+		private String response;
+
+		public SshInteractionInstruction(Pattern promptPattern, Boolean echo, String result) {
+			this.promptPattern = promptPattern;
+			this.echo = echo;
+			this.response = result;
+		}
+	}
+
 	/**
 	 * Embedded class to represent SSH-specific configuration.
 	 */
@@ -220,6 +251,11 @@ public class Ssh extends Cli {
 
 		/** Compression algorithms allowed for the session. */
 		private List<String> compressionAlgorithms = null;
+
+		/** User interaction instructions. */
+		@Setter
+		@Getter
+		private List<SshInteractionInstruction> interactionInstructions = null;
 
 		/** Whether to allocate a PTY or not. */
 		@Setter
@@ -463,6 +499,76 @@ public class Ssh extends Cli {
 			this.session.setCompressionFactoriesNames(this.sshConfig.compressionAlgorithms);
 			if (privateKey == null || publicKey == null) {
 				this.session.addPasswordIdentity(this.password);
+				if (Ssh.this.sshConfig.interactionInstructions != null) {
+					PropertyResolverUtils.updateProperty(
+						this.session, UserInteraction.AUTO_DETECT_PASSWORD_PROMPT, false);
+				}
+				this.session.setUserInteraction(new UserInteraction() {
+					@Override
+					public String[] interactive(ClientSession session, String name, String instruction, String lang,
+							String[] prompts, boolean[] echos) {
+						if (Ssh.this.taskLogger.isTracing()) {
+							List<String> promptEchoes = new ArrayList<>();
+							for (int p = 0; p < Math.min(prompts.length, echos.length); p++) {
+								promptEchoes.add("%s (%s)".formatted(prompts[p], echos[p] ? "echo" : "no echo"));
+							}
+							Ssh.this.taskLogger.trace(
+								"SSH user interactive authentication, name '{}', instruction '{}', lang '{}', prompts {}",
+								name, instruction, lang, String.join(", ", promptEchoes));
+						}
+						if (Ssh.this.sshConfig.interactionInstructions == null) {
+							if (prompts.length == 1 && echos.length == 1 && !echos[0]) {
+								Ssh.this.taskLogger.debug("Password requested in user interactive mode (prompt '{}')",
+									prompts[0]);
+								return new String[] { Ssh.this.password };
+							}
+							Ssh.this.taskLogger.error("Multiple prompts returned by device in SSH user interactive " +
+								"mode while the driver doesn't provide user interaction instructions.");
+							throw new RuntimeException("Cannot reply to multiple SSH user interaction prompts");
+						}
+						List<String> responses = new ArrayList<>();
+						for (int p = 0; p < Math.min(prompts.length, echos.length); p++) {
+							for (SshInteractionInstruction configInstruction : Ssh.this.sshConfig.interactionInstructions) {
+								if (configInstruction.promptPattern != null) {
+									Matcher matcher = configInstruction.promptPattern.matcher(prompts[p]);
+									if (!matcher.matches()) {
+										continue;
+									}
+								}
+								if (configInstruction.echo != null && !configInstruction.echo.equals(echos[p])) {
+									continue;
+								}
+								Ssh.this.taskLogger.trace(
+									"Found matching instruction for SSH user interaction, prompt '{}'", prompts[p]);
+								if (configInstruction.response == null) {
+									Ssh.this.taskLogger.trace("Will send device password");
+									responses.add(Ssh.this.password);
+								}
+								else {
+									String response = configInstruction.response;
+									Ssh.this.taskLogger.trace("Will send planned response '{}'", response);
+									response = response.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
+										Matcher.quoteReplacement(Ssh.this.username));
+									response = response.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_PASSWORD),
+										Matcher.quoteReplacement(Ssh.this.password));
+									responses.add(response);
+								}
+								break;
+							}
+							if (responses.size() < p + 1) {
+								Ssh.this.taskLogger.warn(
+									"No driver instruction for SSH user interaction prompt '{}'", prompts[p]);
+								responses.add("");
+							}
+						}
+						return responses.toArray(new String[0]);
+					}
+					@Override
+					public String getUpdatedPassword(ClientSession session, String prompt, String lang) {
+						Ssh.this.taskLogger.warn("SSH password update requested by the device: '{}'", prompt);
+						return null;
+					}
+				});
 			}
 			else {
 				KeyPairResourceLoader loader = SecurityUtils.getKeyPairResourceParser();
@@ -472,6 +578,17 @@ public class Ssh extends Cli {
 					this.session.addPublicKeyIdentity(key);
 				}
 			}
+			this.session.setPasswordAuthenticationReporter(new PasswordAuthenticationReporter() {
+				@Override
+				public void signalAuthenticationSuccess(ClientSession session, String service, String password) throws Exception {
+					Ssh.this.taskLogger.debug("SSH authentication succeeded (service {})", service);
+				}
+				@Override
+				public void signalAuthenticationFailure(ClientSession session, String service, String password,
+					boolean partial, List<String> serverMethods) throws Exception {
+					Ssh.this.taskLogger.warn("SSH authentication failed (service {})", service);
+				}
+			});
 			this.session.auth().verify(Duration.ofMillis(this.connectionTimeout));
 			if (openChannel) {
 				PtyChannelConfigurationHolder ptyConfig = null;
@@ -664,6 +781,9 @@ public class Ssh extends Cli {
 		}
 		if (other.terminalWidth != null) {
 			this.sshConfig.terminalWidth = other.terminalWidth;
+		}
+		if (other.interactionInstructions != null) {
+			this.sshConfig.interactionInstructions = other.interactionInstructions;
 		}
 	}
 

@@ -29,6 +29,10 @@ import lombok.Setter;
 @Entity
 public class DebugLog {
 
+	public static String sanitize(String text) {
+		return text.replace("\0", "");
+	}
+
 	@Getter(onMethod = @__({
 		@Id, @GeneratedValue(strategy = GenerationType.IDENTITY)
 	}))
@@ -45,7 +49,7 @@ public class DebugLog {
 	}
 
 	public DebugLog(String text) {
-		this.text = text;
+		this.text = DebugLog.sanitize(text);
 	}
 
 	public String toString() {

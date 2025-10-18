@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Pattern;
 
 import org.apache.commons.codec.binary.Hex;
 import org.graalvm.polyglot.Context;
@@ -67,9 +68,11 @@ import net.netshot.netshot.Netshot;
 import net.netshot.netshot.collector.SnmpTrapReceiver;
 import net.netshot.netshot.collector.SyslogServer;
 import net.netshot.netshot.device.access.Ssh.SshConfig;
+import net.netshot.netshot.device.access.Ssh.SshInteractionInstruction;
 import net.netshot.netshot.device.access.Telnet.TelnetConfig;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import net.netshot.netshot.device.script.helper.JsUtils;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
 import net.netshot.netshot.work.TaskLogger;
@@ -81,6 +84,10 @@ import net.netshot.netshot.work.TaskLogger;
 @XmlAccessorType(XmlAccessType.NONE)
 @Slf4j
 public class DeviceDriver implements Comparable<DeviceDriver> {
+
+	public static final String PLACEHOLDER_USERNAME = "$$NetshotUsername$$";
+	public static final String PLACEHOLDER_PASSWORD = "$$NetshotPassword$$";
+	public static final String PLACEHOLDER_SUPERPASSWORD = "$$NetshotSuperPassword$$";
 
 	public static class DeviceDrivers extends ArrayList<DeviceDriver> {
 		//
@@ -665,6 +672,38 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 										algos.add(algo.asString());
 									}
 									this.sshConfig.setMacs(algos.toArray(new String[0]));
+								}
+							}
+							Value auth = cliSshConfig.getMember("auth");
+							if (auth != null && auth.hasMembers()) {
+								Value interactive = auth.getMember("interactive");
+								if (interactive != null && interactive.hasMembers()) {
+									Value interactions = interactive.getMember("interactions");
+									if (interactions != null && interactions.hasArrayElements()) {
+										List<SshInteractionInstruction> instructions = new ArrayList<>();
+										for (long i = 0; i < interactions.getArraySize(); i++) {
+											Value interaction = interactions.getArrayElement(i);
+											Value echo = interaction.getMember("echo");
+											Pattern promptPattern = null;
+											Value prompt = interaction.getMember("prompt");
+											if (prompt != null) {
+												try {
+													promptPattern = JsUtils.jsRegExpToPattern(prompt);
+												}
+												catch (Exception e) {
+													throw new IllegalArgumentException(
+														"Invalid RegExp used as SSH interaction prompt (index %d)".formatted(i));
+												}
+											}
+											Value response = interaction.getMember("response");
+											instructions.add(new SshInteractionInstruction(
+												promptPattern,
+												(echo != null && echo.isBoolean()) ? echo.asBoolean() : null,
+												(response != null && response.isString()) ? response.asString() : null
+											));
+										}
+										this.sshConfig.setInteractionInstructions(instructions);
+									}
 								}
 							}
 						}

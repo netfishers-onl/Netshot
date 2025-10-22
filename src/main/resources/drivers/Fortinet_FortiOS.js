@@ -20,17 +20,17 @@
 /**
  * 'Info' object = Meta data of the driver.
  */
-var Info = {
+const Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "Netshot Team",
-	version: "6.4.1" /* Version will appear in the Admin tab. */
+	version: "7.0" /* Version will appear in the Admin tab. */
 };
 
 /**
  * 'Config' object = Data fields to be included in each configuration revision.
  */
-var Config = {
+const Config = {
 	"osVersion": { /* This stores the detected FortiOS version on each snapshot. */
 		type: "Text",
 		title: "FortiOS version",
@@ -58,7 +58,7 @@ var Config = {
 /**
  * 'Device' object = Data fields to add to devices of this type.
  */
-var Device = {
+const Device = {
 	"haPeer": { /* This stores the name of an optional HA peer. */
 		type: "Text",
 		title: "HA peer name",
@@ -88,7 +88,7 @@ var Device = {
 /**
  * 'CLI' object = Definition of the finite state machine to recognize and handle the CLI prompt changes.
  */
-var CLI = {
+const CLI = {
 	telnet: { /* Entry point for Telnet access. */
 		macros: { /* List of available macros in the CLI mode. */
 			basic: { /* 'basic' macro (will be called in the snapshot procedure. */
@@ -160,27 +160,25 @@ function snapshot(cli, device, config) {
 	cli.macro("basic");
 
 	// 'status' will be used to read the version, hostname, etc.
-	var status = cli.command("get system status");
+	const status = cli.command("get system status");
 
 	// Read version and family from the 'status' output.
-	var version = status.match(/Version: (.*) v([0-9]+.*)/);
-	var family = (version ? version[1] : "FortiOS device");
+	const version = status.match(/Version: (.*) v([0-9]+.*)/);
+	const family = (version ? version[1] : "FortiOS device");
 	device.set("family", family);
-	version = (version ? version[2] : "Unknown");
-	device.set("softwareVersion", version);
-	config.set("osVersion", version);
+	const osVersion = (version ? version[2] : "Unknown");
+	device.set("softwareVersion", osVersion);
+	config.set("osVersion", osVersion);
 
 	device.set("networkClass", "FIREWALL");
 
 	// Whether to use SCP to download the configuration rather than show
-	var useScp = false;
-	// The main configuration
-	var configuration = null;
+	let useScp = false;
 	// Configuration of 'global' mode
-	var globalConfig = null;
+	let globalConfig = null;
 
 	// Read the HA peer hostname from a 'get system ha status' in global mode.
-	var vdomMode = true;
+	let vdomMode = true;
 	try {
 		cli.command("config global", { clearPrompt: true });
 	}
@@ -189,7 +187,7 @@ function snapshot(cli, device, config) {
 	}
 
 	try {
-		var getSystemGlobalAdminScp = cli.command("get system global | grep admin-scp");
+		const getSystemGlobalAdminScp = cli.command("get system global | grep admin-scp");
 		if (getSystemGlobalAdminScp.match(/enable/)) {
 			useScp = true;
 		}
@@ -199,13 +197,13 @@ function snapshot(cli, device, config) {
 	}
 
 	// Store the interface config block
-	var showSystemInterface = cli.command("show system interface | grep .");
+	const showSystemInterface = cli.command("show system interface | grep .");
 	// Store the SNMP config block
-	var showSystemSnmp = cli.command("show system snmp sysinfo | grep .");
+	const showSystemSnmp = cli.command("show system snmp sysinfo | grep .");
 	// Store the HA status
-	var getHa = cli.command("get system ha status | grep .");
+	const getHa = cli.command("get system ha status | grep .");
 	// Store the HA config block
-	var showHa = cli.command("show full-configuration system ha | grep .");
+	const showHa = cli.command("show full-configuration system ha | grep .");
 
 	if (vdomMode) {
 		if (!useScp && version.match(/^6\.2\..*/)) {
@@ -217,7 +215,8 @@ function snapshot(cli, device, config) {
 		cli.command("end", { clearPrompt: true });
 	}
 
-	var configuration;
+	// The main configuration
+	let configuration = null;
 	if (useScp) {
 		try {
 			configuration = device.textDownload("sys_config", { method: "scp" });
@@ -238,15 +237,15 @@ function snapshot(cli, device, config) {
 	}
 
 	// Read the device hostname from the 'status' output.
-	var hostname = status.match(/Hostname: (.*)$/m);
+	let hostname = status.match(/Hostname: (.*)$/m);
 	if (hostname) {
 		hostname = hostname[1];
 		device.set("name", hostname);
 	}
 	// Read the serial number from the 'status' output.
-	var serial = status.match(/Serial-Number: (.*)/);
+	const serial = status.match(/Serial-Number: (.*)/);
 	if (serial) {
-		var module = {
+		const module = {
 			slot: "Chassis",
 			partNumber: family,
 			serialNumber: serial[1]
@@ -261,22 +260,23 @@ function snapshot(cli, device, config) {
 	// Read the contact and location fields from the configuration directly.
 	device.set("contact", "");
 	device.set("location", "");
-	var sysInfos = cli.findSections(showSystemSnmp, /config system snmp sysinfo/);
-	for (var s in sysInfos) {
-		var contact = sysInfos[s].config.match(/set contact-info "(.*)"/);
+	const sysInfos = cli.findSections(showSystemSnmp, /config system snmp sysinfo/);
+	for (const s in sysInfos) {
+		const contact = sysInfos[s].config.match(/set contact-info "(.*)"/);
 		if (contact) {
 			device.set("contact", contact[1]);
 		}
-		var location = sysInfos[s].config.match(/set location "(.*)"/);
+		const location = sysInfos[s].config.match(/set location "(.*)"/);
 		if (location) {
 			device.set("location", location[1]);
 		}
 	}
 
 	// Read HA Peers from the unit directly.
-	var peerPattern = /^(Master|Slave|Primary|Secondary) *: (.+?) *, +([A-Z0-9]+)(, HA cluster index = [0-9]|, cluster index = [0-9])*$/gm;
-	var match;
-	while (match = peerPattern.exec(getHa)) {
+	const peerPattern = /^(Master|Slave|Primary|Secondary) *: (.+?) *, +([A-Z0-9]+)(, HA cluster index = [0-9]|, cluster index = [0-9])*$/gm;
+	while (true) {
+		const match = peerPattern.exec(getHa);
+		if (!match) break;
 		if (match[2] != hostname) {
 			device.set("haPeer", match[2]);
 			break;
@@ -284,75 +284,113 @@ function snapshot(cli, device, config) {
 	}
 
 	// Read the HA Group Name and HA Group ID fields from the configuration directly.
-	var haInfos = cli.findSections(showHa, /config system ha/);
-	for (var s in haInfos) {
-		var haName = haInfos[s].config.match(/set group-name "(.*)"/);
+	const haInfos = cli.findSections(showHa, /config system ha/);
+	for (const s in haInfos) {
+		const haName = haInfos[s].config.match(/set group-name "(.*)"/);
 		device.set("haGroupName", haName ? haName[1] : "");
-		var haId = haInfos[s].config.match(/set group-id (.*)/);
+		const haId = haInfos[s].config.match(/set group-id (.*)/);
 		device.set("haGroupId", haId ? haId[1] : "");
 		var haMode = haInfos[s].config.match(/set mode (.*)/);
 		device.set("haMode", haMode ? haMode[1] : "");
 		if (haMode) break;
 	}
 
+	// Extract the MAC addresses from ifconfig
+	const ifMacs = {};
+	try {
+		const ifconfig = cli.command("fnsysctl ifconfig");
+		const macPattern = /^(.+?)\s+Link encap:(.+?)\s+HWaddr ([0-9a-fA-F:]+)/mg;
+		while (true) {
+			const macMatch = macPattern.exec(ifconfig);
+			if (!macMatch) break;
+			ifMacs[macMatch[1]] = macMatch[3];
+		}
+	}
+	catch (err) {
+		cli.debug("fnsysctl ifconfig failed, MAC addresses cannot be retrieved");
+	}
+
 	// Read the list of interfaces.
-	var vdomArp = {};
-	var interfaces = cli.findSections(showSystemInterface, /^ *edit "(.*)"/m);
-	for (var i in interfaces) {
-		var networkInterface = {
+	const interfaces = cli.findSections(showSystemInterface, /^ *edit "(.*)"/m);
+	for (const i in interfaces) {
+		const networkInterface = {
 			name: interfaces[i].match[1],
 			ip: []
 		};
-		var ipAddress = interfaces[i].config.match(/set ip (\d+\.\d+\.\d+\.\d+) (\d+\.\d+\.\d+\.\d+)/);
+		const interfaceConfig = interfaces[i].config;
+		const ipAddress = interfaceConfig.match(/set ip (\d+\.\d+\.\d+\.\d+) (\d+\.\d+\.\d+\.\d+)/);
 		if (ipAddress) {
-			var ip = {
+			const ip = {
 				ip: ipAddress[1],
 				mask: ipAddress[2],
 				usage: "PRIMARY"
 			};
 			networkInterface.ip.push(ip);
 		}
-		var vdom = interfaces[i].config.match(/set vdom "(.*?)"/);
-		if (vdom) {
-			vdom = vdom[1];
-			networkInterface.virtualDevice = vdom;
-			if (typeof(vdomArp[vdom]) != "object") {
-				var arp;
-				if (vdomMode) {
-					cli.command("config global", { clearPrompt: true });
-					arp = cli.command("sudo " + vdom + " get system arp | grep .");
-					cli.command("end", { clearPrompt: true });
-				}
-				else {
-					arp = cli.command("get system arp | grep .");
-				}
-
-				vdomArp[vdom] = {};
-				var arpPattern = /^(\d+\.\d+\.\d+\.\d+) +[0-9]+ +([0-9a-f:]+) (.*)/gm;
-				var match;
-				while (match = arpPattern.exec(arp)) {
-					vdomArp[vdom][match[3]] = match[2];
-				}
-			}
-			if (typeof(vdomArp[vdom]) == "object") {
-				if (typeof(vdomArp[vdom][networkInterface.name]) == "string") {
-					networkInterface.mac = vdomArp[vdom][networkInterface.name];
-				}
-			}
-
+		const vdomMatch = interfaceConfig.match(/set vdom "(.*?)"/);
+		if (vdomMatch) {
+			networkInterface.virtualDevice = vdomMatch[1];
 		}
-		if (interfaces[i].config.match(/set status down/)) {
+		if (interfaceConfig.match(/set status down/)) {
 			networkInterface.disabled = true;
 		}
-		var descMatch = interfaces[i].config.match(/set description "(.+)"/);
+		const descMatch = interfaceConfig.match(/set description "(.+)"/);
 		if (descMatch) {
 			networkInterface.description = descMatch[1];
 		}
+		if (ifMacs[networkInterface.name]) {
+			networkInterface.mac = ifMacs[networkInterface.name];
+		}
+
+		const secIpConfigs = cli.findSections(interfaceConfig, /^ *config secondaryip/m);
+		for (const c in secIpConfigs) {
+			const secIpConfig = secIpConfigs[c].config;
+			const ipPattern = /^ *set ip (\d+\.\d+\.\d+\.\d+) (\d+\.\d+\.\d+\.\d+)/mg;
+			while (true) {
+				const ipMatch = ipPattern.exec(secIpConfig);
+				if (!ipMatch) break;
+				const ip = {
+					ip: ipMatch[1],
+					mask: ipMatch[2],
+					usage: "SECONDARY"
+				};
+				networkInterface.ip.push(ip);
+			}
+		}
+
+		const ipv6Configs = cli.findSections(interfaceConfig, /^ *config ipv6/m);
+		for (const c in ipv6Configs) {
+			const ipv6Config = ipv6Configs[c].config;
+			const ip6AddressMatch = ipv6Config.match(/set ip6-address ([0-9a-f:]+)\/(\d+)/);
+			if (ip6AddressMatch) {
+				const ip = {
+					ipv6: ip6AddressMatch[1],
+					mask: parseInt(ip6AddressMatch[2]),
+					usage: "PRIMARY"
+				};
+				networkInterface.ip.push(ip);
+			}
+			const ip6ExtraAddrs = cli.findSections(ipv6Config, /^ *config ip6-extra-addr/m);
+			for (const a in ip6ExtraAddrs) {
+				const ip6Pattern = /edit ([0-9a-f:]+)\/(\d+)/mg;
+				while (true) {
+					const ip6Match = ip6Pattern.exec(ip6ExtraAddrs[a].config);
+					if (!ip6Match) break;
+					const ip = {
+						ipv6: ip6Match[1],
+						mask: parseInt(ip6Match[2]),
+						usage: "SECONDARY"
+					};
+					networkInterface.ip.push(ip);
+				}
+			}
+		}
+
 		device.add("networkInterface", networkInterface);
 	}
 
-	var removeChangingParts = function(text) {
-		var cleaned = text;
+	const removeChangingParts = function(text) {
+		let cleaned = text;
 		cleaned = cleaned.replace(/^#conf_file_ver=.*/mg, "");
 		cleaned = cleaned.replace(/^ *set (passphrase|password|passwd|secondary-secret) ENC .*$/mg, "");
 		cleaned = cleaned.replace(/^ *set private-key "(.|[\r\n])*?"$/mg, "");
@@ -370,7 +408,7 @@ function snapshot(cli, device, config) {
 		// If only the passwords are changing (they are hashed with a new salt at each 'show') then
 		// just keep the previous configuration.
 		// That means we could miss a password change in the history of configurations, but no choice...
-		var previousConfiguration = device.get("configuration");
+		const previousConfiguration = device.get("configuration");
 		if (typeof previousConfiguration === "string" &&
 				removeChangingParts(previousConfiguration) === removeChangingParts(configuration)) {
 			config.set("configuration", previousConfiguration);

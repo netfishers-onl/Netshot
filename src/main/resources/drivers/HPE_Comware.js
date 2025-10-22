@@ -21,7 +21,7 @@ const Info = {
 	name: "HPEComware",
 	description: "HPE Comware OS",
 	author: "Netshot Team",
-	version: "0.2"
+	version: "0.3"
 };
 
 const Config = {

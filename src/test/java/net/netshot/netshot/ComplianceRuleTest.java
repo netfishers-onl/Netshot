@@ -527,7 +527,7 @@ public class ComplianceRuleTest {
 					+ "}"
 			);
 			rule.check(device, nullSession, taskLogger);
-			Assertions.assertTrue(taskLogger.getLog().contains("DEBUG - Debug message\n"),
+			Assertions.assertTrue(taskLogger.getLog().contains("[DEBUG] Debug message\n"),
 				"Debug message is not correct");
 		}
 
@@ -883,7 +883,7 @@ public class ComplianceRuleTest {
 					+ "" + "\n"
 			);
 			rule.check(device, nullSession, taskLogger);
-			Assertions.assertTrue(taskLogger.getLog().contains("DEBUG - Debug message\n"),
+			Assertions.assertTrue(taskLogger.getLog().contains("[DEBUG] Debug message\n"),
 				"Debug message is not correct");
 		}
 

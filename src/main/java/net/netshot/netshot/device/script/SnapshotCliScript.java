@@ -54,6 +54,7 @@ import net.netshot.netshot.device.script.helper.JsCliScriptOptions;
 import net.netshot.netshot.device.script.helper.JsConfigHelper;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.device.script.helper.JsSnmpHelper;
+import net.netshot.netshot.device.script.helper.JsUtils;
 import net.netshot.netshot.work.TaskLogger;
 
 @Slf4j
@@ -82,6 +83,8 @@ public final class SnapshotCliScript extends CliScript {
 
 		DeviceDriver driver = device.getDeviceDriver();
 		try (Context context = driver.getContext()) {
+			this.taskLogger.info("Starting snapshot of device {} using driver {} version {}",
+				device.getId(), driver.getName(), driver.getVersion());
 			driver.loadCode(context);
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskLogger);
 			options.setDeviceHelper(new JsDeviceHelper(device, cli, session, this.taskLogger, false));
@@ -187,7 +190,7 @@ public final class SnapshotCliScript extends CliScript {
 		catch (PolyglotException e) {
 			log.error("Error while running snapshot using driver {}.", driver.getName(), e);
 			this.taskLogger.error("Error while running snapshot using driver {}: '{}'.",
-				driver.getName(), e.getMessage());
+				driver.getName(), JsUtils.jsErrorToMessage(e));
 			if (e.getMessage() != null && e.getMessage().contains("Authentication failed")) {
 				throw new InvalidCredentialsException("Authentication failed");
 			}

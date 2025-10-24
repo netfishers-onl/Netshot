@@ -51,6 +51,7 @@ import net.netshot.netshot.device.script.helper.JsCliHelper;
 import net.netshot.netshot.device.script.helper.JsCliScriptOptions;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.device.script.helper.JsSnmpHelper;
+import net.netshot.netshot.device.script.helper.JsUtils;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.TaskLogger;
 
@@ -164,7 +165,7 @@ public class JsCliScript extends CliScript {
 		catch (PolyglotException e) {
 			log.error("Error while running script using driver {}.", driver.getName(), e);
 			this.taskLogger.error("Error while running script  using driver {}: '{}'.",
-				driver.getName(), e.getMessage());
+				driver.getName(), JsUtils.jsErrorToMessage(e));
 			if (e.getMessage().contains("Authentication failed")) {
 				throw new InvalidCredentialsException("Authentication failed");
 			}

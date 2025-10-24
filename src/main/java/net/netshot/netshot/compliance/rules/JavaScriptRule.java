@@ -32,6 +32,7 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
+import org.graalvm.polyglot.SourceSection;
 import org.graalvm.polyglot.Value;
 import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;
@@ -55,6 +56,7 @@ import net.netshot.netshot.compliance.Rule;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
+import net.netshot.netshot.device.script.helper.JsUtils;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.TaskLogger;
 
@@ -303,7 +305,7 @@ public class JavaScriptRule extends Rule {
 			}
 		}
 		catch (Exception e) {
-			taskLogger.error("Error while running the script: " + e.getMessage());
+			taskLogger.error("Error while running the script: {}", JsUtils.jsErrorToMessage(e));
 			log.error("Error while running the script on device {}.", device.getId(), e);
 		}
 		finally {

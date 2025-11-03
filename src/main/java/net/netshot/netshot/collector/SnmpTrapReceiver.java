@@ -394,12 +394,11 @@ public class SnmpTrapReceiver implements CommandResponder, AuthenticationFailure
 	 */
 	private <A extends Address> void processAuthenticatedTrap(CommandResponderEvent<A> event) {
 		Address address = event.getPeerAddress();
-		if (address instanceof IpAddress) {
-			InetAddress inetAddress = ((IpAddress) address).getInetAddress();
-			if (inetAddress instanceof Inet4Address) {
+		if (address instanceof IpAddress ipAddress) {
+			InetAddress inetAddress = ipAddress.getInetAddress();
+			if (inetAddress instanceof Inet4Address ip4Address) {
 				try {
-					Network4Address source = new Network4Address(
-						(Inet4Address) inetAddress, 32);
+					Network4Address source = new Network4Address(ip4Address, 32);
 					Map<String, Object> data = new HashMap<>();
 					for (VariableBinding var : event.getPDU().getVariableBindings()) {
 						data.put(var.getOid().toDottedString(), var.getVariable().toString());

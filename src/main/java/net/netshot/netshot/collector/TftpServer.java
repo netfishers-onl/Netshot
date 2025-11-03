@@ -116,8 +116,7 @@ public class TftpServer extends Collector {
 			while (true) {
 				try {
 					TFTPPacket packet = tftp.receive();
-					if (packet instanceof TFTPWriteRequestPacket) {
-						TFTPWriteRequestPacket requestPacket = (TFTPWriteRequestPacket) packet;
+					if (packet instanceof TFTPWriteRequestPacket requestPacket) {
 						synchronized (transfers) {
 							Iterator<TftpTransfer> transferIterator = transfers
 								.iterator();
@@ -383,8 +382,7 @@ public class TftpServer extends Collector {
 				}
 			}
 			int lastBlock = 0;
-			while (packet instanceof TFTPDataPacket) {
-				TFTPDataPacket dataPacket = (TFTPDataPacket) packet;
+			while (packet instanceof TFTPDataPacket dataPacket) {
 				int block = dataPacket.getBlockNumber();
 				if (block > lastBlock || (lastBlock == 65535 && block == 0)) {
 					try {

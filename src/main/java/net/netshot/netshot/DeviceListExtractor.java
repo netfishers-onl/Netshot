@@ -88,18 +88,19 @@ public class DeviceListExtractor extends Netshot {
 				DeviceSnmpCommunity community = null;
 
 				for (DeviceCredentialSet credentialSet : device.getCredentialSets()) {
-					if (credentialSet instanceof DeviceSshAccount) {
-						cliAccount = (DeviceSshAccount) credentialSet;
+					if (credentialSet instanceof DeviceSshAccount sa) {
+						cliAccount = sa;
 					}
-					else if (cliAccount == null && credentialSet instanceof DeviceTelnetAccount) {
-						cliAccount = (DeviceTelnetAccount) credentialSet;
+					else if (cliAccount == null && credentialSet instanceof DeviceTelnetAccount ta) {
+						cliAccount = ta;
 					}
-					else if (credentialSet instanceof DeviceSnmpCommunity) {
-						community = (DeviceSnmpCommunity) credentialSet;
+					else if (credentialSet instanceof DeviceSnmpCommunity sc) {
+						community = sc;
 					}
 				}
-				if (device.getSpecificCredentialSet() != null && device.getSpecificCredentialSet() instanceof DeviceCliAccount) {
-					cliAccount = (DeviceCliAccount) device.getSpecificCredentialSet();
+				if (device.getSpecificCredentialSet() != null &&
+						device.getSpecificCredentialSet() instanceof DeviceCliAccount ca) {
+					cliAccount = ca;
 				}
 				if (cliAccount == null) {
 					log.warn("No CLI account found for device {}.", device.getName());

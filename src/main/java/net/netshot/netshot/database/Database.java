@@ -484,9 +484,9 @@ public final class Database {
 		if (entity == null) {
 			return null;
 		}
-		if (entity instanceof HibernateProxy) {
+		if (entity instanceof HibernateProxy proxy) {
 			Hibernate.initialize(entity);
-			entity = (T) ((HibernateProxy) entity).getHibernateLazyInitializer().getImplementation();
+			entity = (T) proxy.getHibernateLazyInitializer().getImplementation();
 		}
 		return entity;
 	}

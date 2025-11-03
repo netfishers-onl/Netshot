@@ -97,8 +97,7 @@ public class Snmp extends Poller {
 			this.target.setVersion(SnmpConstants.version2c);
 			start();
 		}
-		else if (community instanceof DeviceSnmpv3Community) {
-			DeviceSnmpv3Community v3Credentials = (DeviceSnmpv3Community) community;
+		else if (community instanceof DeviceSnmpv3Community v3Credentials) {
 			// Prepare target
 			log.debug("Prepare SNMPv3 context");
 			this.target = new UserTarget<>();

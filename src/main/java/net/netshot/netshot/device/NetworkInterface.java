@@ -187,9 +187,9 @@ public final class NetworkInterface {
 	 * @param address the address
 	 */
 	public void addIpAddress(NetworkAddress address) {
-		if (address.getPrefixLength() == 32 && address instanceof Network4Address) {
+		if (address.getPrefixLength() == 32 && address instanceof Network4Address n4Address) {
 			for (Network4Address ip : this.ip4Addresses) {
-				if (ip.contains((Network4Address) address)) {
+				if (ip.contains(n4Address)) {
 					((Network4Address) address).setPrefixLength(ip.getPrefixLength());
 					if (ip.getAddressUsage() == AddressUsage.SECONDARY) {
 						if (address.getAddressUsage() == AddressUsage.HSRP) {
@@ -203,19 +203,19 @@ public final class NetworkInterface {
 				}
 			}
 		}
-		else if (address.getPrefixLength() == 128 && address instanceof Network6Address) {
+		else if (address.getPrefixLength() == 128 && address instanceof Network6Address n6Address) {
 			for (Network6Address ip : this.ip6Addresses) {
-				if (ip.contains((Network6Address) address)) {
+				if (ip.contains(n6Address)) {
 					((Network6Address) address).setPrefixLength(ip.getPrefixLength());
 					break;
 				}
 			}
 		}
-		if (address instanceof Network4Address) {
-			this.ip4Addresses.add((Network4Address) address);
+		if (address instanceof Network4Address n4Address) {
+			this.ip4Addresses.add(n4Address);
 		}
-		else {
-			this.ip6Addresses.add((Network6Address) address);
+		else if (address instanceof Network6Address n6Address) {
+			this.ip6Addresses.add(n6Address);
 		}
 	}
 

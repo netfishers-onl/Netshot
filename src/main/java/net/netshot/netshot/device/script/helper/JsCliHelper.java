@@ -137,8 +137,8 @@ public class JsCliHelper {
 			if (this.taskLogger.isTracing()) {
 				this.taskLogger.trace(Instant.now() + " I/O exception: {}", e.getMessage());
 			}
-			if (e instanceof WithBufferIOException) {
-				String buffer = ((WithBufferIOException) e).getReceivedBuffer().toString();
+			if (e instanceof WithBufferIOException wioException) {
+				String buffer = wioException.getReceivedBuffer().toString();
 				if (this.taskLogger.isTracing()) {
 					this.taskLogger.trace(Instant.now() + " The receive buffer is:");
 					this.taskLogger.trace(buffer);

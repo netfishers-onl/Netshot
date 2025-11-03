@@ -604,9 +604,9 @@ public final class JsDeviceHelper {
 				if (cli == null) {
 					throw new IllegalArgumentException("Can't use SCP method as no CLI access exists in this context.");
 				}
-				else if (cli instanceof Ssh) {
+				else if (cli instanceof Ssh sshCli) {
 					ByteArrayOutputStream targetStream = new ByteArrayOutputStream();
-					((Ssh) cli).scpDownload(remoteFileName, targetStream, newSession);
+					sshCli.scpDownload(remoteFileName, targetStream, newSession);
 					return targetStream.toString(charset);
 				}
 				else {

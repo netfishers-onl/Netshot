@@ -226,10 +226,10 @@ public final class JsConfigHelper {
 			if ("scp".equals(method)) {
 				for (AttributeDefinition attribute : driver.getAttributes()) {
 					if (attribute.getLevel().equals(AttributeLevel.CONFIG) && attribute.getName().equals(key)) {
-						if (cli instanceof Ssh) {
+						if (cli instanceof Ssh sshCli) {
 							if (AttributeType.BINARYFILE.equals(attribute.getType())) {
 								ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, key, storeName);
-								((Ssh) cli).scpDownload(remoteFileName, fileAttribute.getFileName().toString(), newSession);
+								sshCli.scpDownload(remoteFileName, fileAttribute.getFileName().toString(), newSession);
 								this.checkFileSum(fileAttribute.getFileName().toPath(), expectedHash);
 								fileAttribute.setFileSize(fileAttribute.getFileName().length());
 								config.addAttribute(fileAttribute);
@@ -253,9 +253,9 @@ public final class JsConfigHelper {
 				for (AttributeDefinition attribute : driver.getAttributes()) {
 					if (attribute.getLevel().equals(AttributeLevel.CONFIG) && attribute.getName().equals(key)) {
 						if (AttributeType.BINARYFILE.equals(attribute.getType())) {
-							if (cli instanceof Ssh) {
+							if (cli instanceof Ssh sshCli) {
 								ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, key, storeName);
-								((Ssh) cli).sftpDownload(remoteFileName, fileAttribute.getFileName().toString(), newSession);
+								sshCli.sftpDownload(remoteFileName, fileAttribute.getFileName().toString(), newSession);
 								this.checkFileSum(fileAttribute.getFileName().toPath(), expectedHash);
 								fileAttribute.setFileSize(fileAttribute.getFileName().length());
 								config.addAttribute(fileAttribute);

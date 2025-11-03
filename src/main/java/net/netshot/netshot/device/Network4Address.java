@@ -121,8 +121,8 @@ public final class Network4Address extends NetworkAddress {
 	public static int ipToInt(String address) throws UnknownHostException {
 		try {
 			InetAddress inetAddress = InetAddress.getByName(address);
-			if (inetAddress instanceof Inet4Address) {
-				return Network4Address.inetAddressToInt((Inet4Address) inetAddress);
+			if (inetAddress instanceof Inet4Address ip4Address) {
+				return Network4Address.inetAddressToInt(ip4Address);
 			}
 		}
 		catch (Exception e) {

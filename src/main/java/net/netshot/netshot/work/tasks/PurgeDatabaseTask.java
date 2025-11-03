@@ -282,8 +282,8 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 						}
 						else {
 							for (ConfigAttribute attribute : config.getAttributes()) {
-								if (attribute instanceof ConfigBinaryFileAttribute) {
-									toDeleteFiles.add(((ConfigBinaryFileAttribute) attribute).getFileName());
+								if (attribute instanceof ConfigBinaryFileAttribute cbfa) {
+									toDeleteFiles.add(cbfa.getFileName());
 								}
 							}
 							session.remove(config);
@@ -299,7 +299,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				}
 				session.getTransaction().commit();
 				log.trace("Task {}. Cleaning up done on configurations, {} entries affected.", this.getId(), count);
-				this.logger.info("Cleaning up done on configurations, {} entries affected.", count);
+				this.logger.info("Cleaning up done on configurations, {} entries affected.", count);
 				for (File toDeleteFile : toDeleteFiles) {
 					try {
 						toDeleteFile.delete();

@@ -57,12 +57,13 @@ public abstract class NetworkAddress {
 	 * @return the network address
 	 */
 	public static NetworkAddress getNetworkAddress(InetAddress inetAddress, int prefixLength) throws UnknownHostException {
-		if (inetAddress instanceof Inet4Address) {
-			return new Network4Address((Inet4Address) inetAddress, prefixLength);
+		if (inetAddress instanceof Inet4Address ip4Address) {
+			return new Network4Address(ip4Address, prefixLength);
 		}
-		else {
-			return new Network6Address((Inet6Address) inetAddress, prefixLength);
+		else if (inetAddress instanceof Inet6Address ip6Address) {
+			return new Network6Address(ip6Address, prefixLength);
 		}
+		return null;
 	}
 
 	/**

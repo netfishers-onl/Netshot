@@ -117,11 +117,11 @@ public abstract class CliScript {
 			for (DeviceCredentialSet credentialSet : credentialSets) {
 				if (credentialSet instanceof DeviceSshAccount) {
 					final Ssh cli;
-					if (credentialSet instanceof DeviceSshKeyAccount) {
-						cli = new Ssh(address, sshPort, ((DeviceSshKeyAccount) credentialSet).getUsername(),
-							((DeviceSshKeyAccount) credentialSet).getPublicKey(),
-							((DeviceSshKeyAccount) credentialSet).getPrivateKey(),
-							((DeviceSshKeyAccount) credentialSet).getPassword(),
+					if (credentialSet instanceof DeviceSshKeyAccount sshKeyAccount) {
+						cli = new Ssh(address, sshPort, sshKeyAccount.getUsername(),
+							sshKeyAccount.getPublicKey(),
+							sshKeyAccount.getPrivateKey(),
+							sshKeyAccount.getPassword(),
 							this.taskLogger);
 					}
 					else {
@@ -234,11 +234,11 @@ public abstract class CliScript {
 					if (credentialSet instanceof DeviceSshAccount) {
 						this.taskLogger.info("Auto-trying SSH with credentials {}.", credentialSet.getName());
 						Ssh cli;
-						if (credentialSet instanceof DeviceSshKeyAccount) {
-							cli = new Ssh(address, sshPort, ((DeviceSshKeyAccount) credentialSet).getUsername(),
-								((DeviceSshKeyAccount) credentialSet).getPublicKey(),
-								((DeviceSshKeyAccount) credentialSet).getPrivateKey(),
-								((DeviceSshKeyAccount) credentialSet).getPassword(),
+						if (credentialSet instanceof DeviceSshKeyAccount sshKeyAccount) {
+							cli = new Ssh(address, sshPort, sshKeyAccount.getUsername(),
+								sshKeyAccount.getPublicKey(),
+								sshKeyAccount.getPrivateKey(),
+								sshKeyAccount.getPassword(),
 								this.taskLogger);
 						}
 						else {
@@ -291,7 +291,7 @@ public abstract class CliScript {
 			}
 			if (telnetOpened) {
 				for (DeviceCredentialSet credentialSet : globalCredentialSets) {
-					if (credentialSet instanceof DeviceTelnetAccount) {
+					if (credentialSet instanceof DeviceTelnetAccount telnetAccount) {
 						this.taskLogger.info("Auto-trying Telnet with credentials {}.", credentialSet.getName());
 						final Telnet cli = new Telnet(address, telnetPort, this.taskLogger);
 						try {
@@ -299,7 +299,7 @@ public abstract class CliScript {
 							cli.setTelnetConfig(deviceDriver.getTelnetConfig());
 							cli.connect();
 							this.taskLogger.info("Connected using Telnet to {}:{}.", address.getIp(), telnetPort);
-							this.run(session, device, cli, null, DriverProtocol.TELNET, (DeviceCliAccount) credentialSet);
+							this.run(session, device, cli, null, DriverProtocol.TELNET, telnetAccount);
 							Iterator<DeviceCredentialSet> ci = credentialSets.iterator();
 							while (ci.hasNext()) {
 								DeviceCredentialSet c = ci.next();
@@ -331,9 +331,9 @@ public abstract class CliScript {
 			}
 			if (snmpWorth) {
 				for (DeviceCredentialSet credentialSet : globalCredentialSets) {
-					if (credentialSet instanceof DeviceSnmpCommunity) {
+					if (credentialSet instanceof DeviceSnmpCommunity snmpCommunity) {
 						this.taskLogger.trace("Will try SNMP credentials {}.", credentialSet.getName());
-						Snmp poller = new Snmp(address, (DeviceSnmpCommunity) credentialSet);
+						Snmp poller = new Snmp(address, snmpCommunity);
 						try {
 							try {
 								poller.getAsString("1.3.6.1.2.1.1.3.0"); /* sysUptime.0 */

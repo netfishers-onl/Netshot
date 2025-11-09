@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
@@ -88,10 +89,6 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	public static final String PLACEHOLDER_USERNAME = "$$NetshotUsername$$";
 	public static final String PLACEHOLDER_PASSWORD = "$$NetshotPassword$$";
 	public static final String PLACEHOLDER_SUPERPASSWORD = "$$NetshotSuperPassword$$";
-
-	public static class DeviceDrivers extends ArrayList<DeviceDriver> {
-		//
-	}
 
 	/**
 	 * Possible protocols for a device driver.
@@ -202,7 +199,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	/**
 	 * The list of loaded newDrivers.
 	 */
-	private static Map<String, DeviceDriver> drivers = new HashMap<String, DeviceDriver>();
+	private static Map<String, DeviceDriver> drivers = new ConcurrentHashMap<>();
 
 	/**
 	 * Hash for all drivers.
@@ -232,6 +229,24 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			return null;
 		}
 		return drivers.get(name);
+	}
+
+	/**
+	 * Gets a driver by description.
+	 * 
+	 * @param description The description to look for
+	 * @return the device driver from that name, or null if not found
+	 */
+	public static DeviceDriver getDriverByDescription(String description) {
+		if (description == null) {
+			return null;
+		}
+		for (DeviceDriver driver : getAllDrivers()) {
+			if (description.equalsIgnoreCase(driver.getDescription())) {
+				return driver;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -556,7 +571,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 					}
 					try {
 						Value data = config.getMember(key);
-						AttributeDefinition item = new AttributeDefinition(AttributeLevel.CONFIG, key, data);
+						AttributeDefinition item = new AttributeDefinition(this, AttributeLevel.CONFIG, key, data);
 						this.attributes.add(item);
 						this.attributesByName.get(AttributeLevel.CONFIG).put(item.getName(), item);
 					}
@@ -576,7 +591,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 					}
 					try {
 						Value data = device.getMember(key);
-						AttributeDefinition item = new AttributeDefinition(AttributeLevel.DEVICE, key, data);
+						AttributeDefinition item = new AttributeDefinition(this, AttributeLevel.DEVICE, key, data);
 						this.attributes.add(item);
 						this.attributesByName.get(AttributeLevel.DEVICE).put(item.getName(), item);
 					}
@@ -892,6 +907,16 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	@Transient
 	public AttributeDefinition getAttributeDefinition(AttributeDefinition.AttributeLevel attributeLevel, String attributeName) {
 		return this.attributesByName.get(attributeLevel).get(attributeName);
+	}
+
+	@Transient
+	public AttributeDefinition getAttributeDefinitionByTitle(String title) {
+		for (AttributeDefinition attribute : this.getAttributes()) {
+			if (attribute.getTitle().equalsIgnoreCase(title)) {
+				return attribute;
+			}
+		}
+		return null;
 	}
 
 	@Override

@@ -46,7 +46,6 @@ define([
 				}
 				options.data = JSON.stringify({
 					query: this.filter.query,
-					driver: this.filter.driver
 				});
 			}
 			return Backbone.Collection.prototype.fetch.call(this, options);
@@ -70,17 +69,16 @@ define([
 			var maskv6 = "/([0-9]|[0-9][0-9]|1[01][0-9]|12[0-8])";
 			if (text.match(new RegExp("^" + ipv4 + maskv4 + "$"))
 					|| text.match(new RegExp("^" + ipv6 + maskv6 + "$"))) {
-				query = "[IP] IN " + text;
+				query = "[IP] in " + text;
 			}
 			else if (text.match(new RegExp("^" + ipv4 + "$"))
 					|| text.match(new RegExp("^" + ipv6 + "$"))) {
-				query = "[IP] IS " + text;
+				query = "[IP] is " + text;
 			}
 			else {
-				query = '[Name] CONTAINSNOCASE "' + text.replace(/"/, "\\\"") + '"';
+				query = '[Name] containsnocase "' + text.replace(/"/, "\\\"") + '"';
 			}
 			this.filter.query = query;
-			this.filter.driver = "";
 		},
 
 		comparator: function(config) {

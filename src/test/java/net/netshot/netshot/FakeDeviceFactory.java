@@ -22,6 +22,7 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
 
+import net.netshot.netshot.compliance.SoftwareRule.ConformanceLevel;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.NetworkClass;
@@ -97,6 +98,8 @@ public class FakeDeviceFactory {
 		config.addAttribute(runningConfig);
 		ConfigAttribute iosVersion = new ConfigTextAttribute(config, "iosVersion", "16.1.6");
 		config.addAttribute(iosVersion);
+		ConfigAttribute iosImageFile = new ConfigTextAttribute(config, "iosImageFile", "cisco-ios-16.1.6.bin");
+		config.addAttribute(iosImageFile);
 		return config;
 	}
 
@@ -116,6 +119,7 @@ public class FakeDeviceFactory {
 		device.setLocation("Test Location");
 		device.setContact("Test Contact");
 		device.setSoftwareVersion("16.1.6");
+		device.setSoftwareLevel(ConformanceLevel.GOLD);
 		device.setCreator("tester");
 		DeviceCredentialSet cs = new DeviceSshAccount("user", "pass", "pass",
 			DeviceCredentialSet.generateSpecificName());
@@ -162,7 +166,7 @@ public class FakeDeviceFactory {
 		device.addAttribute(mainMemorySize);
 		DeviceAttribute configRegister = new DeviceTextAttribute(device, "configRegister", "0x1202");
 		device.addAttribute(configRegister);
-		DeviceAttribute configurationSaved = new DeviceBinaryAttribute(device, "configurationSaved", false);
+		DeviceAttribute configurationSaved = new DeviceBinaryAttribute(device, "configurationSaved", true);
 		device.addAttribute(configurationSaved);
 
 		if (diagnostic != null) {

@@ -10,10 +10,12 @@ define([
 	'text!templates/devices/editStaticGroup.html',
 	'text!templates/devices/editDynamicGroup.html',
 	'text!templates/devices/editStaticGroupDeviceListItem.html',
-	'views/devices/SearchToolbox' ], function($, _, Backbone, Dialog,
+	'views/devices/SearchToolbox',
+	'views/devices/PreviewDeviceListDialog' ], function($, _, Backbone, Dialog,
 			DeviceCollection, DeviceGroupModel, editGroupTemplate,
 			editStaticGroupTemplate, editDynamicGroupTemplate,
-			editStaticGroupDeviceListItemTemplate, SearchToolbox) {
+			editStaticGroupDeviceListItemTemplate, SearchToolbox,
+			PreviewDeviceListDialog) {
 
 	return Dialog.extend({
 
@@ -26,6 +28,28 @@ define([
 		},
 
 		buttons: {
+			"Preview": function() {
+				var that = this;
+				var $button = this.dialogButtons().eq(0).button('disable');
+				$button.button('disable');
+				that.$("#error").hide();
+				that.previewDevices = new DeviceCollection([]);
+				that.previewDevices.filter = {
+					type: "advanced",
+					query: this.searchToolbox.getExpression(),
+				};
+				that.previewDevices.fetch().done(function() {
+					that.previewDialog = new PreviewDeviceListDialog({
+						devices: that.previewDevices,
+					});
+					$button.button('enable');
+				}).fail(function(data) {
+					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
+					that.$("#errormsg").text("Error: " + error.errorMsg);
+					that.$("#error").show();
+					$button.button('enable');
+				});
+			},
 			"Cancel": function() {
 				this.close();
 			},
@@ -48,8 +72,7 @@ define([
 					});
 				}
 				else if (that.model.get('type').match(/DynamicDeviceGroup$/)) {
-					group.driver = that.$('#devicetype').val();
-					group.query = that.$('#expression').val();
+					group.query = that.searchToolbox.getExpression();
 				}
 
 				saveModel.save(group).done(function(data) {
@@ -76,6 +99,7 @@ define([
 
 		renderStaticGroup: function() {
 			var that = this;
+			this.dialogButtons().eq(1).hide();
 			var template = _.template(editStaticGroupTemplate);
 			this.$('#groupdetails').html(template(this.model.toJSON()));
 			this.staticDevices = new DeviceCollection([]);
@@ -155,38 +179,10 @@ define([
 			var that = this;
 			var template = _.template(editDynamicGroupTemplate);
 			this.$('#groupdetails').html(template(this.model.toJSON()));
-			var searchToolbox = new SearchToolbox({
+			this.searchToolbox = new SearchToolbox({
 				onRendered: function() {
-					that.$('#devicetype').val(that.model.get('driver'));
-					that.$('#expression').val(that.model.get('query'));
+					this.setExpression(that.model.get('query'));
 				}
-			});
-			this.$('#preview').button({
-				icons: {
-					primary: "ui-icon-search"
-				}
-			}).click(function() {
-				var $this = $(this);
-				$this.button('disable');
-				that.$("#error").hide();
-				that.searchedDevices = new DeviceCollection([]);
-				that.searchedDevices.filter = {
-					type: "advanced",
-					query: that.$('#expression').val(),
-					driver: that.$('#devicetype').val()
-				};
-				that.searchedDevices.fetch().done(function() {
-					that.htmlBuffer = "";
-					that.searchedDevices.each(that.renderSearchedDeviceListItem, that);
-					that.$("#previewdevices").html(that.htmlBuffer).show();
-					$this.button('enable');
-				}).fail(function(data) {
-					var error = $.parseJSON(data.responseText || '{ "errorMsg": "Unknown" }');
-					that.$("#errormsg").text("Error: " + error.errorMsg);
-					that.$("#error").show();
-					$this.button('enable');
-				});
-				return false;
 			});
 		},
 

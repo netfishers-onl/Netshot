@@ -130,20 +130,20 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 					primary: "ui-icon-newwin"
 				},
 				text: false
-			}).click(function() {
+			}).addClass("nsbutton-icononly").click(function() {
 				that.advancedSearchDialog = new AdvancedSearchDialog({
 					devicesView: that
 				});
 			});
 			$('#nstoolbar-devices-schedule').button().off('click').on('click', function() {
-				createTaskDialog = new CreateTaskDialog();
+				new CreateTaskDialog();
 			});
 			this.$('#nsdevices-clearsearch').unbind('click').button({
 				icons: {
 					primary: "ui-icon-close"
 				},
 				text: false
-			}).click(function() {
+			}).addClass("nsbutton-icononly").click(function() {
 				$(this).button('disable');
 				that.devices.resetFilter();
 				that.fetchDevices();

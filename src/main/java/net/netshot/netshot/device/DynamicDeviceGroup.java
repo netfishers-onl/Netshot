@@ -36,7 +36,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.database.Database;
-import net.netshot.netshot.device.Finder.Expression.FinderParseException;
+import net.netshot.netshot.device.Finder.FinderParseException;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
 /**
@@ -46,13 +46,6 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 @OnDelete(action = OnDeleteAction.CASCADE)
 @Slf4j
 public class DynamicDeviceGroup extends DeviceGroup {
-
-	/** The device class. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	private String driver;
 
 	/** The query. */
 	@Getter(onMethod = @__({
@@ -74,13 +67,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 
 	public DynamicDeviceGroup(String name, String driver, String query) {
 		super(name);
-		this.driver = driver;
 		this.query = query;
-	}
-
-	@Transient
-	public DeviceDriver getDeviceDriver() {
-		return DeviceDriver.getDriverByName(driver);
 	}
 
 	/**
@@ -108,7 +95,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	 */
 	@Transient
 	private Finder getFinder() throws FinderParseException {
-		return new Finder(this.query, this.getDeviceDriver());
+		return new Finder(this.query);
 	}
 
 	/*(non-Javadoc)
@@ -136,11 +123,11 @@ public class DynamicDeviceGroup extends DeviceGroup {
 		log.debug("Checking membership of device {} in group {}.", device.getId(), this.getId());
 		long deviceId = device.getId();
 		if (this.query.isEmpty()) {
-			return this.getDeviceDriver() == null || this.getDeviceDriver().getName().equals(device.getDriver());
+			return true;
 		}
-		String deviceQuery = String.format("[DEVICE] IS %d AND (%s)", deviceId, this.query);
+		String deviceQuery = String.format("[Device] is %d and (%s)", deviceId, this.query);
 		log.trace("Finder query: '{}'.", deviceQuery);
-		Finder finder = new Finder(deviceQuery, this.getDeviceDriver());
+		Finder finder = new Finder(deviceQuery);
 		Query<Long> cacheQuery = session.createQuery("select d.id" + finder.getHql(), Long.class);
 		finder.setVariables(cacheQuery);
 		return cacheQuery.uniqueResult() != null;

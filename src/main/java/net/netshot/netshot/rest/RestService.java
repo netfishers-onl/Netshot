@@ -176,7 +176,7 @@ import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.device.Finder;
-import net.netshot.netshot.device.Finder.Expression.FinderParseException;
+import net.netshot.netshot.device.Finder.FinderParseException;
 import net.netshot.netshot.device.Module;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.Network6Address;
@@ -1082,8 +1082,7 @@ public class RestService extends Thread {
 							.header("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))
 							.build();
 					}
-					else if (attribute instanceof ConfigBinaryFileAttribute) {
-						ConfigBinaryFileAttribute fileAttribute = (ConfigBinaryFileAttribute) attribute;
+					else if (attribute instanceof ConfigBinaryFileAttribute fileAttribute) {
 						File file = fileAttribute.getFileName();
 						String fileName = fileAttribute.getOriginalName();
 						if (fileName == null) {
@@ -2947,13 +2946,6 @@ public class RestService extends Thread {
 	@XmlAccessorType(XmlAccessType.NONE)
 	public static class RsSearchCriteria {
 
-		/** The device class name. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private String driver;
-
 		/** The query. */
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
@@ -3004,12 +2996,10 @@ public class RestService extends Thread {
 	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
 	public RsSearchResults searchDevices(RsSearchCriteria criteria)
 		throws WebApplicationException {
-		log.debug("REST request, search devices, query '{}', driver '{}'.",
-			criteria.getQuery(), criteria.getDriver());
+		log.debug("REST request, search devices, query '{}'.", criteria.getQuery());
 
-		DeviceDriver driver = DeviceDriver.getDriverByName(criteria.getDriver());
 		try {
-			Finder finder = new Finder(criteria.getQuery(), driver);
+			Finder finder = new Finder(criteria.getQuery());
 			Session session = Database.getSession();
 			try {
 				Query<RsLightDevice> query = session.createQuery("select new RsLightDevice("
@@ -3098,9 +3088,6 @@ public class RestService extends Thread {
 			}
 			else if ("DynamicDeviceGroup".equals(rsGroup.getType())) {
 				DynamicDeviceGroup dynamicGroup = new DynamicDeviceGroup(name);
-				if (rsGroup.getDriver() != null) {
-					dynamicGroup.setDriver(rsGroup.getDriver());
-				}
 				if (rsGroup.getQuery() != null) {
 					dynamicGroup.setQuery(rsGroup.getQuery());
 				}
@@ -3305,13 +3292,6 @@ public class RestService extends Thread {
 		@Setter
 		private List<Long> staticDevices = new ArrayList<>();
 
-		/** The device class name. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private String driver;
-
 		/** The query. */
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
@@ -3381,7 +3361,6 @@ public class RestService extends Thread {
 				staticGroup.updateCachedDevices(devices);
 			}
 			else if (group instanceof DynamicDeviceGroup dynamicGroup) {
-				dynamicGroup.setDriver(rsGroup.getDriver());
 				dynamicGroup.setQuery(rsGroup.getQuery());
 				try {
 					dynamicGroup.refreshCache(session);
@@ -4999,45 +4978,45 @@ public class RestService extends Thread {
 				rule.addExemption(exemption);
 			}
 
-			if (rule instanceof JavaScriptRule) {
+			if (rule instanceof JavaScriptRule jsRule) {
 				if (rsRule.getScript() != null) {
 					String script = rsRule.getScript().trim();
-					((JavaScriptRule) rule).setScript(script);
+					jsRule.setScript(script);
 				}
 			}
-			else if (rule instanceof PythonRule) {
+			else if (rule instanceof PythonRule pyRule) {
 				if (rsRule.getScript() != null) {
 					String script = rsRule.getScript().trim();
-					((PythonRule) rule).setScript(script);
+					pyRule.setScript(script);
 				}
 			}
-			else if (rule instanceof TextRule) {
+			else if (rule instanceof TextRule textRule) {
 				if (rsRule.getText() != null) {
-					((TextRule) rule).setText(rsRule.getText());
+					textRule.setText(rsRule.getText());
 				}
 				if (rsRule.getRegExp() != null) {
-					((TextRule) rule).setRegExp(rsRule.getRegExp());
+					textRule.setRegExp(rsRule.getRegExp());
 				}
 				if (rsRule.getContext() != null) {
-					((TextRule) rule).setContext(rsRule.getContext());
+					textRule.setContext(rsRule.getContext());
 				}
 				if (rsRule.getField() != null) {
-					((TextRule) rule).setField(rsRule.getField());
+					textRule.setField(rsRule.getField());
 				}
 				if (rsRule.getDriver() != null) {
-					((TextRule) rule).setDeviceDriver(rsRule.getDriver());
+					textRule.setDeviceDriver(rsRule.getDriver());
 				}
 				if (rsRule.getInvert() != null) {
-					((TextRule) rule).setInvert(rsRule.getInvert());
+					textRule.setInvert(rsRule.getInvert());
 				}
 				if (rsRule.getMatchAll() != null) {
-					((TextRule) rule).setMatchAll(rsRule.getMatchAll());
+					textRule.setMatchAll(rsRule.getMatchAll());
 				}
 				if (rsRule.getAnyBlock() != null) {
-					((TextRule) rule).setAnyBlock(rsRule.getAnyBlock());
+					textRule.setAnyBlock(rsRule.getAnyBlock());
 				}
 				if (rsRule.getNormalize() != null) {
-					((TextRule) rule).setNormalize(rsRule.getNormalize());
+					textRule.setNormalize(rsRule.getNormalize());
 				}
 			}
 
@@ -9391,8 +9370,7 @@ public class RestService extends Thread {
 				trigger.setHook(hook);
 			}
 		}
-		if (hook instanceof WebHook) {
-			WebHook webHook = (WebHook) hook;
+		if (hook instanceof WebHook webHook) {
 			try {
 				webHook.getParsedUrl();
 			}
@@ -9502,8 +9480,7 @@ public class RestService extends Thread {
 			throw new NetshotBadRequestException("Invalid name for the hook",
 				NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK_NAME);
 		}
-		if (rsHook instanceof WebHook) {
-			WebHook rsWebHook = (WebHook) rsHook;
+		if (rsHook instanceof WebHook rsWebHook) {
 			try {
 				rsWebHook.getParsedUrl();
 			}
@@ -9541,9 +9518,8 @@ public class RestService extends Thread {
 				// Ensure we keep the same HookTrigger object instances
 				hook.getTriggers().retainAll(rsHook.getTriggers());
 				hook.getTriggers().addAll(rsHook.getTriggers());
-				if (rsHook instanceof WebHook) {
-					WebHook rsWebHook = (WebHook) rsHook;
-					WebHook webHook = (WebHook) hook;
+				if (rsHook instanceof WebHook rsWebHook &&
+				    hook instanceof WebHook webHook) {
 					webHook.setAction(rsWebHook.getAction());
 					webHook.setUrl(rsWebHook.getUrl());
 					webHook.setSslValidation(rsWebHook.isSslValidation());

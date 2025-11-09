@@ -32,7 +32,6 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
-import org.graalvm.polyglot.SourceSection;
 import org.graalvm.polyglot.Value;
 import org.hibernate.Session;
 import org.hibernate.annotations.OnDelete;

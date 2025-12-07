@@ -43,7 +43,7 @@ import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 @Entity
 @OnDelete(action = OnDeleteAction.CASCADE)
@@ -222,7 +222,7 @@ public class TextRule extends Rule {
 	}
 
 	@Override
-	public CheckResult check(Device device, Session session, TaskLogger taskLogger) {
+	public CheckResult check(Device device, Session session, TaskContext taskContext) {
 		if (!this.isEnabled()) {
 			return new CheckResult(this, device, ResultOption.DISABLED);
 		}
@@ -237,7 +237,7 @@ public class TextRule extends Rule {
 			return new CheckResult(this, device, ResultOption.EXEMPTED);
 		}
 		try {
-			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, null, session, taskLogger, true);
+			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, null, session, taskContext, true);
 			String content = deviceHelper.get(field).toString();
 			content = content.replace("\r", "");
 			if (isNormalize()) {
@@ -252,7 +252,7 @@ public class TextRule extends Rule {
 				}
 				blocks = selectedBlocks;
 			}
-			taskLogger.debug("Found {} block(s) matching the context.", blocks.size());
+			taskContext.debug("Found {} block(s) matching the context.", blocks.size());
 			int b = 1;
 			for (String[] block : blocks) {
 				boolean doesMatch =
@@ -260,26 +260,26 @@ public class TextRule extends Rule {
 						|| !regExp && (matchAll && block[1].equals(text) || !matchAll && block[1].contains(text));
 				doesMatch = doesMatch ^ invert;
 				if (!doesMatch) {
-					taskLogger.debug("Non matching block, number {} (in [{}])", b++, block[0]);
+					taskContext.debug("Non matching block, number {} (in [{}])", b++, block[0]);
 					return new CheckResult(this, device, ResultOption.NONCONFORMING);
 				}
 				else if (anyBlock) {
-					taskLogger.debug("Matching block, number {} (in [{}])", b++, block[0]);
+					taskContext.debug("Matching block, number {} (in [{}])", b++, block[0]);
 					return new CheckResult(this, device, ResultOption.CONFORMING);
 				}
 			}
 			return new CheckResult(this, device, ResultOption.CONFORMING);
 		}
 		catch (StackOverflowError e) {
-			taskLogger.info("Overflow error (you might want to rewrite the regular expression)");
+			taskContext.info("Overflow error (you might want to rewrite the regular expression)");
 			return new CheckResult(this, device, ResultOption.INVALIDRULE, "Overflow error.");
 		}
 		catch (Exception e) {
-			taskLogger.info("No such field '" + field + "' on this device");
+			taskContext.info("No such field '" + field + "' on this device");
 			return new CheckResult(this, device, ResultOption.NOTAPPLICABLE, "No such field.");
 		}
 		finally {
-			taskLogger.debug("End of check");
+			taskContext.debug("End of check");
 		}
 	}
 

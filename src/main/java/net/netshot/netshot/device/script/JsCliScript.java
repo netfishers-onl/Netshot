@@ -53,7 +53,7 @@ import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.device.script.helper.JsSnmpHelper;
 import net.netshot.netshot.device.script.helper.JsUtils;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * A JavaScript-based script to execute on a device.
@@ -127,9 +127,9 @@ public class JsCliScript extends CliScript {
 	 * Instantiates a JS-based script.
 	 * @param driverName = The name of the driver
 	 * @param code = The JavaScript code
-	 * @param logger = The task logger
+	 * @param logger = The task context
 	 */
-	public JsCliScript(String driverName, String code, TaskLogger logger) {
+	public JsCliScript(String driverName, String code, TaskContext logger) {
 		super(logger);
 		this.driverName = driverName;
 		this.code = code;
@@ -142,20 +142,20 @@ public class JsCliScript extends CliScript {
 		JsSnmpHelper jsSnmpHelper = null;
 		switch (protocol) {
 			case SNMP:
-				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.taskLogger);
+				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.taskContext);
 				break;
 			case TELNET:
 			case SSH:
 			default:
-				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.taskLogger);
+				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.taskContext);
 				break;
 		}
 		DeviceDriver driver = device.getDeviceDriver();
 		try (Context context = driver.getContext()) {
 			driver.loadCode(context);
 			context.eval("js", code);
-			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskLogger);
-			options.setDeviceHelper(new JsDeviceHelper(device, cli, null, this.taskLogger, false));
+			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
+			options.setDeviceHelper(new JsDeviceHelper(device, cli, null, this.taskContext, false));
 			options.setUserInputs(this.userInputValues);
 			context
 				.getBindings("js")
@@ -164,7 +164,7 @@ public class JsCliScript extends CliScript {
 		}
 		catch (PolyglotException e) {
 			log.error("Error while running script using driver {}.", driver.getName(), e);
-			this.taskLogger.error("Error while running script  using driver {}: '{}'.",
+			this.taskContext.error("Error while running script  using driver {}: '{}'.",
 				driver.getName(), JsUtils.jsErrorToMessage(e));
 			if (e.getMessage().contains("Authentication failed")) {
 				throw new InvalidCredentialsException("Authentication failed");
@@ -175,7 +175,7 @@ public class JsCliScript extends CliScript {
 		}
 		catch (UnsupportedOperationException e) {
 			log.error("No such method while using driver {}.", driver.getName(), e);
-			this.taskLogger.error("No such method while using driver {} to execute script: '{}'.",
+			this.taskContext.error("No such method while using driver {} to execute script: '{}'.",
 				driver.getName(), e.getMessage());
 			throw e;
 		}

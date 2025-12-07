@@ -21,9 +21,9 @@ package net.netshot.netshot;
 import org.slf4j.event.Level;
 import org.slf4j.helpers.MessageFormatter;
 
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
-public class FakeTaskLogger implements TaskLogger {
+public class FakeTaskContext implements TaskContext {
 
 	private final StringBuffer buffer = new StringBuffer();
 
@@ -37,5 +37,10 @@ public class FakeTaskLogger implements TaskLogger {
 		buffer.append(
 			MessageFormatter.arrayFormat(message, params).getMessage());
 		buffer.append("\n");
+	}
+
+	@Override
+	public String getIdentifier() {
+		return "Test";
 	}
 }

@@ -55,12 +55,12 @@ import net.netshot.netshot.device.script.helper.JsConfigHelper;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.device.script.helper.JsSnmpHelper;
 import net.netshot.netshot.device.script.helper.JsUtils;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 @Slf4j
 public final class SnapshotCliScript extends CliScript {
 
-	public SnapshotCliScript(TaskLogger logger) {
+	public SnapshotCliScript(TaskContext logger) {
 		super(logger);
 	}
 
@@ -72,27 +72,27 @@ public final class SnapshotCliScript extends CliScript {
 		JsSnmpHelper jsSnmpHelper = null;
 		switch (protocol) {
 			case SNMP:
-				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.taskLogger);
+				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.taskContext);
 				break;
 			case TELNET:
 			case SSH:
 			default:
-				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.taskLogger);
+				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.taskContext);
 				break;
 		}
 
 		DeviceDriver driver = device.getDeviceDriver();
 		try (Context context = driver.getContext()) {
-			this.taskLogger.info("Starting snapshot of device {} using driver {} version {}",
+			this.taskContext.info("Starting snapshot of device {} using driver {} version {}",
 				device.getId(), driver.getName(), driver.getVersion());
 			driver.loadCode(context);
-			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskLogger);
-			options.setDeviceHelper(new JsDeviceHelper(device, cli, session, this.taskLogger, false));
+			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
+			options.setDeviceHelper(new JsDeviceHelper(device, cli, session, this.taskContext, false));
 			Config config = new Config(device);
 			Config lastConfig = Database.unproxy(device.getLastConfig());
-			options.setConfigHelper(new JsConfigHelper(device, config, lastConfig, cli, this.taskLogger));
+			options.setConfigHelper(new JsConfigHelper(device, config, lastConfig, cli, this.taskContext));
 			context.getBindings("js").getMember("_connect")
-				.execute("snapshot", protocol.value(), options, this.taskLogger);
+				.execute("snapshot", protocol.value(), options, this.taskContext);
 
 			// Check whether the config has actually changed
 			boolean different = false;
@@ -128,7 +128,7 @@ public final class SnapshotCliScript extends CliScript {
 				device.getConfigs().add(config);
 			}
 			else {
-				this.taskLogger.info("The configuration hasn't changed. Not storing a new one in the DB.");
+				this.taskContext.info("The configuration hasn't changed. Not storing a new one in the DB.");
 			}
 
 			String path = Netshot.getConfig("netshot.snapshots.dump");
@@ -179,17 +179,17 @@ public final class SnapshotCliScript extends CliScript {
 						}
 					}
 					output.close();
-					this.taskLogger.info("The configuration has been saved as a file in the dump folder.");
+					this.taskContext.info("The configuration has been saved as a file in the dump folder.");
 				}
 				catch (Exception e) {
 					log.warn("Couldn't write the configuration into file.", e);
-					this.taskLogger.warn("Unable to write the configuration to a file.");
+					this.taskContext.warn("Unable to write the configuration to a file.");
 				}
 			}
 		}
 		catch (PolyglotException e) {
 			log.error("Error while running snapshot using driver {}.", driver.getName(), e);
-			this.taskLogger.error("Error while running snapshot using driver {}: '{}'.",
+			this.taskContext.error("Error while running snapshot using driver {}: '{}'.",
 				driver.getName(), JsUtils.jsErrorToMessage(e));
 			if (e.getMessage() != null && e.getMessage().contains("Authentication failed")) {
 				throw new InvalidCredentialsException("Authentication failed");
@@ -200,7 +200,7 @@ public final class SnapshotCliScript extends CliScript {
 		}
 		catch (InvalidOperationException e) {
 			log.error("No such method 'snapshot' while using driver {}.", driver.getName(), e);
-			this.taskLogger.error("No such method 'snapshot' while using driver %s to take snapshot: '{}'.",
+			this.taskContext.error("No such method 'snapshot' while using driver %s to take snapshot: '{}'.",
 				driver.getName(), e.getMessage());
 			throw e;
 		}

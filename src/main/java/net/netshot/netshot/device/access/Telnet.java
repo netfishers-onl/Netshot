@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * A Telnet CLI access.
@@ -123,10 +123,10 @@ public class Telnet extends Cli {
 	 * Instantiates a new telnet.
 	 *
 	 * @param host the host
-	 * @param taskLogger the current task logger
+	 * @param taskContext the current task context
 	 */
-	public Telnet(NetworkAddress host, TaskLogger taskLogger) {
-		super(host, taskLogger);
+	public Telnet(NetworkAddress host, TaskContext taskContext) {
+		super(host, taskContext);
 	}
 
 	/**
@@ -134,10 +134,10 @@ public class Telnet extends Cli {
 	 *
 	 * @param host the host
 	 * @param port the port
-	 * @param taskLogger the current task logger
+	 * @param taskContext the current task context
 	 */
-	public Telnet(NetworkAddress host, int port, TaskLogger taskLogger) {
-		this(host, taskLogger);
+	public Telnet(NetworkAddress host, int port, TaskContext taskContext) {
+		this(host, taskContext);
 		this.port = port;
 		this.connectionTimeout = Telnet.SETTINGS.getConnectionTimeout();
 		this.commandTimeout = Telnet.SETTINGS.getCommandTimeout();

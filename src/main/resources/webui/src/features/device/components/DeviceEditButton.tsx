@@ -250,7 +250,7 @@ function DeviceEditForm() {
           <FormControl
             isRequired
             type={FormControlType.LongText}
-            label={t("RSA Private Key")}
+            label={t("SSH Private Key")}
             placeholder={t("Type your private key")}
             control={form.control}
             name="specificCredentialSet.privateKey"

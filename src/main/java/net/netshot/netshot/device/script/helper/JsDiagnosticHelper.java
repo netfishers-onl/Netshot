@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.diagnostic.Diagnostic;
 import net.netshot.netshot.diagnostic.DiagnosticResult;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * This class is used to control the diagnostic results from JavaScript.
@@ -46,20 +46,20 @@ public class JsDiagnosticHelper {
 	/** The list of JS diagnostics. */
 	public Map<String, Object> jsDiagnostics;
 	/** The JS Logger. */
-	private TaskLogger taskLogger;
+	private TaskContext taskContext;
 
 	/**
 	 * Instantiate a new JS diagnostic helper.
 	 * @param device The device to run the diagnostics on
 	 * @param diagnostics The list of diagnostics
 	 * @param jsDiagnostics The set of JS diagnostics to run
-	 * @param taskLogger the JS logger
+	 * @param taskContext the JS logger
 	 */
-	public JsDiagnosticHelper(Device device, List<Diagnostic> diagnostics, Map<String, Object> jsDiagnostics, TaskLogger taskLogger) {
+	public JsDiagnosticHelper(Device device, List<Diagnostic> diagnostics, Map<String, Object> jsDiagnostics, TaskContext taskContext) {
 		this.device = device;
 		this.diagnostics = diagnostics;
 		this.jsDiagnostics = jsDiagnostics;
-		this.taskLogger = taskLogger;
+		this.taskContext = taskContext;
 	}
 
 	/**
@@ -70,13 +70,13 @@ public class JsDiagnosticHelper {
 	@Export
 	public void set(String key, Value value) {
 		if (value == null) {
-			this.taskLogger.warn("Value for diagnostic key '{}' is null", key);
+			this.taskContext.warn("Value for diagnostic key '{}' is null", key);
 			return;
 		}
 		try {
 			for (Diagnostic diagnostic : diagnostics) {
 				if (diagnostic.getName().equals(key)) {
-					this.taskLogger.warn("Setting value for diagnostic key '{}'", key);
+					this.taskContext.warn("Setting value for diagnostic key '{}'", key);
 					DiagnosticResult result = diagnostic.makeResult(this.device, value);
 					if (result != null) {
 						this.device.addDiagnosticResult(result);
@@ -86,7 +86,7 @@ public class JsDiagnosticHelper {
 		}
 		catch (Exception e) {
 			log.warn("Error while setting the diagnostic result '{}'.", key, e);
-			this.taskLogger.error("Can't set diagnostic result {}: {}", key, e.toString());
+			this.taskContext.error("Can't set diagnostic result {}: {}", key, e.toString());
 		}
 	}
 

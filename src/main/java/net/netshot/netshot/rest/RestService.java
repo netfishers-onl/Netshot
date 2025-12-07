@@ -19,13 +19,13 @@
 package net.netshot.netshot.rest;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -210,7 +210,7 @@ import net.netshot.netshot.rest.RestViews.RestApiView;
 import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
 import net.netshot.netshot.work.Task.ScheduleType;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 import net.netshot.netshot.work.tasks.CheckComplianceTask;
 import net.netshot.netshot.work.tasks.CheckGroupComplianceTask;
 import net.netshot.netshot.work.tasks.CheckGroupSoftwareTask;
@@ -1083,7 +1083,6 @@ public class RestService extends Thread {
 							.build();
 					}
 					else if (attribute instanceof ConfigBinaryFileAttribute fileAttribute) {
-						File file = fileAttribute.getFileName();
 						String fileName = fileAttribute.getOriginalName();
 						if (fileName == null) {
 							fileName = "%s.dat".formatted(attribute.getName());
@@ -1098,7 +1097,7 @@ public class RestService extends Thread {
 						}
 						catch (Exception e) {
 						}
-						return Response.ok(file, MediaType.APPLICATION_OCTET_STREAM)
+						return Response.ok(fileAttribute.getFilePath().toFile(), MediaType.APPLICATION_OCTET_STREAM)
 							.header("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))
 							.build();
 					}
@@ -1108,6 +1107,7 @@ public class RestService extends Thread {
 				Response.Status.BAD_REQUEST);
 		}
 		catch (HibernateException e) {
+			log.error("Unable to get the configuration", e);
 			throw new WebApplicationException("Unable to get the configuration",
 				Response.Status.INTERNAL_SERVER_ERROR);
 		}
@@ -2120,14 +2120,14 @@ public class RestService extends Thread {
 				this.suggestReturnCode(Response.Status.NOT_FOUND);
 				return;
 			}
-			List<File> toDeleteFiles = new ArrayList<>();
+			List<java.nio.file.Path> toDeletePathes = new ArrayList<>();
 			List<ConfigBinaryFileAttribute> attributes = session
 				.createQuery("from ConfigBinaryFileAttribute cfa where cfa.config.device = :device",
 					ConfigBinaryFileAttribute.class)
 				.setParameter("device", device)
 				.list();
 			for (ConfigBinaryFileAttribute attribute : attributes) {
-				toDeleteFiles.add(attribute.getFileName());
+				toDeletePathes.add(attribute.getFilePath());
 			}
 			// Remove the long text attributes (due to delete cascade constraint)
 			session
@@ -2146,12 +2146,12 @@ public class RestService extends Thread {
 			session.remove(device);
 			session.getTransaction().commit();
 			AAA_LOG.info("Device of ID {} has been deleted.", device.getId());
-			for (File toDeleteFile : toDeleteFiles) {
+			for (java.nio.file.Path toDeletePath : toDeletePathes) {
 				try {
-					toDeleteFile.delete();
+					Files.delete(toDeletePath);
 				}
 				catch (Exception e) {
-					log.error("Error while removing binary file {}", toDeleteFile, e);
+					log.error("Error while removing binary file {}", toDeletePath, e);
 				}
 			}
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
@@ -2428,7 +2428,6 @@ public class RestService extends Thread {
 						cliAccount.setSuperPassword(rsCliAccount.getSuperPassword());
 					}
 					if (DeviceSshKeyAccount.class.isInstance(credentialSet)) {
-						((DeviceSshKeyAccount) cliAccount).setPublicKey(((DeviceSshKeyAccount) rsCliAccount).getPublicKey());
 						((DeviceSshKeyAccount) cliAccount).setPrivateKey(((DeviceSshKeyAccount) rsCliAccount).getPrivateKey());
 					}
 				}
@@ -2886,7 +2885,6 @@ public class RestService extends Thread {
 					cliAccount.setSuperPassword(rsCliAccount.getSuperPassword());
 				}
 				if (DeviceSshKeyAccount.class.isInstance(credentialSet)) {
-					((DeviceSshKeyAccount) cliAccount).setPublicKey(((DeviceSshKeyAccount) rsCliAccount).getPublicKey());
 					((DeviceSshKeyAccount) cliAccount).setPrivateKey(((DeviceSshKeyAccount) rsCliAccount).getPrivateKey());
 				}
 			}
@@ -5204,7 +5202,7 @@ public class RestService extends Thread {
 
 
 			StringBuilder taskLog = new StringBuilder();
-			TaskLogger taskLogger = new TaskLogger() {
+			TaskContext taskContext = new TaskContext() {
 				@Override
 				public void log(Level level, String message, Object... params) {
 					taskLog.append("[%s] ".formatted(level.toString()));
@@ -5212,10 +5210,15 @@ public class RestService extends Thread {
 						MessageFormatter.arrayFormat(message, params).getMessage());
 					taskLog.append("\n");
 				}
+
+				@Override
+				public String getIdentifier() {
+					return "RuleTest";
+				}
 			};
 
 			rule.setEnabled(true);
-			CheckResult check = rule.check(device, session, taskLogger);
+			CheckResult check = rule.check(device, session, taskContext);
 			result.setResult(check.getResult());
 			result.setScriptError(taskLog.toString());
 			result.setComment(check.getComment());

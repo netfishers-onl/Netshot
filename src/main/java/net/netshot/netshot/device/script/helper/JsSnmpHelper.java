@@ -26,7 +26,7 @@ import org.graalvm.polyglot.HostAccess.Export;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.access.Snmp;
 import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * This class is used to pass SNMP control to JavaScript.
@@ -41,7 +41,7 @@ public class JsSnmpHelper {
 	/** The community (SNMP credentials rather). */
 	protected DeviceSnmpCommunity community;
 	/** The JS logger. */
-	private TaskLogger taskLogger;
+	private TaskContext taskContext;
 
 	/** An error was raised. */
 	private boolean errored;
@@ -50,12 +50,12 @@ public class JsSnmpHelper {
 	 * Instantiate a new JsCliHelper JsSnmpHelper.
 	 * @param poller The SNMP poller
 	 * @param community The community to poll the device
-	 * @param taskLogger The task logger
+	 * @param taskContext The task context
 	 */
-	public JsSnmpHelper(Snmp poller, DeviceSnmpCommunity community, TaskLogger taskLogger) {
+	public JsSnmpHelper(Snmp poller, DeviceSnmpCommunity community, TaskContext taskContext) {
 		this.poller = poller;
 		this.community = community;
-		this.taskLogger = taskLogger;
+		this.taskContext = taskContext;
 	}
 
 	/**
@@ -80,7 +80,7 @@ public class JsSnmpHelper {
 		}
 		catch (IOException e) {
 			log.error("SNMP I/O error.", e);
-			this.taskLogger.error("I/O error: " + e.getMessage());
+			this.taskContext.error("I/O error: " + e.getMessage());
 			throw e;
 		}
 	}
@@ -98,7 +98,7 @@ public class JsSnmpHelper {
 		}
 		catch (IOException e) {
 			log.error("SNMP I/O error.", e);
-			this.taskLogger.error("I/O error: " + e.getMessage());
+			this.taskContext.error("I/O error: " + e.getMessage());
 			throw e;
 		}
 	}

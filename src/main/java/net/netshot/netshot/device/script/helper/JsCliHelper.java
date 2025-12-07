@@ -30,7 +30,7 @@ import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.access.Cli;
 import net.netshot.netshot.device.access.Cli.WithBufferIOException;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * This class is used to pass CLI control to JavaScript.
@@ -44,8 +44,8 @@ public class JsCliHelper {
 	private Cli cli;
 	/** The CLI account (SSH/Telnet). */
 	private DeviceCliAccount account;
-	/** The task logger. */
-	private TaskLogger taskLogger;
+	/** The task context. */
+	private TaskContext taskContext;
 	/** An error was raised. */
 	private boolean errored;
 
@@ -53,12 +53,12 @@ public class JsCliHelper {
 	 * Instantiate a new JsCliHelper object.
 	 * @param cli The device CLI
 	 * @param account The account to connect to the device
-	 * @param taskLogger The task logger
+	 * @param taskContext The task context
 	 */
-	public JsCliHelper(Cli cli, DeviceCliAccount account, TaskLogger taskLogger) {
+	public JsCliHelper(Cli cli, DeviceCliAccount account, TaskContext taskContext) {
 		this.cli = cli;
 		this.account = account;
-		this.taskLogger = taskLogger;
+		this.taskContext = taskContext;
 	}
 
 	/**
@@ -94,12 +94,12 @@ public class JsCliHelper {
 		if (command == null) {
 			command = "";
 		}
-		if (this.taskLogger.isTracing()) {
+		if (this.taskContext.isTracing()) {
 			// Log before injecting secrets
-			this.taskLogger.trace(Instant.now() + " About to send the following command:");
-			this.taskLogger.trace(command);
-			this.taskLogger.trace("Hexadecimal:");
-			this.taskLogger.hexTrace(command);
+			this.taskContext.trace(Instant.now() + " About to send the following command:");
+			this.taskContext.trace(command);
+			this.taskContext.trace("Hexadecimal:");
+			this.taskContext.hexTrace(command);
 		}
 		log.debug("Command to be sent (secrets not replaced): '{}'.", command);
 		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
@@ -113,37 +113,37 @@ public class JsCliHelper {
 			cli.setCommandTimeout(timeout);
 		}
 		try {
-			if (this.taskLogger.isTracing()) {
-				this.taskLogger.trace("Expecting one of the following {} pattern(s) within {}ms:",
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace("Expecting one of the following {} pattern(s) within {}ms:",
 					expects.length, timeout > 0 ? timeout : oldTimeout);
 				for (String expect : expects) {
-					this.taskLogger.trace(expect);
+					this.taskContext.trace(expect);
 				}
 			}
 			String result = cli.send(command, expects);
-			if (this.taskLogger.isTracing()) {
-				this.taskLogger.trace(Instant.now() + " Received the following output:");
-				this.taskLogger.trace(cli.getLastFullOutput());
-				this.taskLogger.trace("Hexadecimal:");
-				this.taskLogger.hexTrace(cli.getLastFullOutput());
-				this.taskLogger.trace("The following pattern matched:");
-				this.taskLogger.trace(this.getLastExpectMatchPattern());
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace(Instant.now() + " Received the following output:");
+				this.taskContext.trace(cli.getLastFullOutput());
+				this.taskContext.trace("Hexadecimal:");
+				this.taskContext.hexTrace(cli.getLastFullOutput());
+				this.taskContext.trace("The following pattern matched:");
+				this.taskContext.trace(this.getLastExpectMatchPattern());
 			}
 			return result;
 		}
 		catch (IOException e) {
 			log.error("CLI I/O error.", e);
-			this.taskLogger.error("I/O error: " + e.getMessage());
-			if (this.taskLogger.isTracing()) {
-				this.taskLogger.trace(Instant.now() + " I/O exception: {}", e.getMessage());
+			this.taskContext.error("I/O error: " + e.getMessage());
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace(Instant.now() + " I/O exception: {}", e.getMessage());
 			}
 			if (e instanceof WithBufferIOException wioException) {
 				String buffer = wioException.getReceivedBuffer().toString();
-				if (this.taskLogger.isTracing()) {
-					this.taskLogger.trace(Instant.now() + " The receive buffer is:");
-					this.taskLogger.trace(buffer);
-					this.taskLogger.trace("Hexadecimal:");
-					this.taskLogger.hexTrace(buffer);
+				if (this.taskContext.isTracing()) {
+					this.taskContext.trace(Instant.now() + " The receive buffer is:");
+					this.taskContext.trace(buffer);
+					this.taskContext.trace("Hexadecimal:");
+					this.taskContext.hexTrace(buffer);
 				}
 			}
 			this.errored = true;
@@ -160,7 +160,7 @@ public class JsCliHelper {
 	 */
 	@Export
 	public void trace(String message) {
-		this.taskLogger.trace(Instant.now() + " " + message);
+		this.taskContext.trace(Instant.now() + " " + message);
 	}
 
 	/**

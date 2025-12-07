@@ -234,8 +234,8 @@ public abstract class Task implements Cloneable {
 	/** Full debug logs */
 	protected StringBuffer fullLogs = null;
 
-	/** Task logger. */
-	protected TaskLogger logger = new TaskLogger() {
+	/** Task context. */
+	protected TaskContext logger = new TaskContext() {
 		@Override
 		public void log(Level level, String message, Object... params) {
 			if (fullLogs != null) {
@@ -259,6 +259,11 @@ public abstract class Task implements Cloneable {
 		@Override
 		public boolean isTracing() {
 			return debugEnabled;
+		}
+
+		@Override
+		public String getIdentifier() {
+			return "%s_%d".formatted(Task.this.getClass().getSimpleName(), Task.this.getId());
 		}
 	};
 

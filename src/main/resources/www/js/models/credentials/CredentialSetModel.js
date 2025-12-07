@@ -15,7 +15,6 @@ define([
 			'username': "login",
 			'password': "=",
 			'superPassword': "=",
-			'publicKey': "",
 			'privateKey': "",
 			'username': "",
 			'authType': "SHA",
@@ -44,7 +43,7 @@ define([
 			else if (type.match(/(Telnet|SSH)/i)) {
 				selAttrs.push('username', 'password', 'superPassword');
 				if (type.match(/Key/)) {
-					selAttrs.push('publicKey', 'privateKey');
+					selAttrs.push('privateKey');
 				}
 			}
 			return _.pick(attrs, selAttrs);

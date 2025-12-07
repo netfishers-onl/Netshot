@@ -191,7 +191,7 @@ public class TaskJob implements Job {
 			log.error("Unable to repeat the task {} again.", id);
 		}
 
-		log.warn("End of task {} ().", id, task.getStatus());
+		log.warn("End of task {} of type {}: {}.", id, task.getClass().getSimpleName(), task.getStatus());
 
 	}
 

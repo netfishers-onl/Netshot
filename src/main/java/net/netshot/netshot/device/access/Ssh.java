@@ -24,7 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.time.Duration;
@@ -81,7 +81,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.NetworkAddress;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * An SSH CLI access.
@@ -131,14 +131,14 @@ public class Ssh extends Cli {
 		};
 
 		private static final String[] DEFAULT_SSH_MACS = {
-			BuiltinMacs.Constants.HMAC_SHA2_256,
+			BuiltinMacs.Constants.ETM_HMAC_SHA2_512,
+			BuiltinMacs.Constants.ETM_HMAC_SHA2_256,
 			BuiltinMacs.Constants.HMAC_SHA2_512,
+			BuiltinMacs.Constants.HMAC_SHA2_256,
 			BuiltinMacs.Constants.HMAC_SHA1,
 			BuiltinMacs.Constants.HMAC_SHA1_96,
 			BuiltinMacs.Constants.HMAC_MD5,
 			BuiltinMacs.Constants.HMAC_MD5_96,
-			BuiltinMacs.Constants.ETM_HMAC_SHA2_512,
-			BuiltinMacs.Constants.ETM_HMAC_SHA2_256,
 			BuiltinMacs.Constants.ETM_HMAC_SHA1,
 		};
 
@@ -179,6 +179,14 @@ public class Ssh extends Cli {
 		@Getter
 		private String[] compressionAlgorithms;
 
+		private String[] readAlgorithms(String configKey, String[] defaultValue) {
+			String value = Netshot.getConfig("netshot.cli.ssh.%s".formatted(configKey));
+			if (value == null) {
+				return defaultValue;
+			}
+			return value.split(", *");
+		}
+
 		/**
 		 * Load settings from config.
 		 */
@@ -192,17 +200,11 @@ public class Ssh extends Cli {
 			this.commandTimeout = Netshot.getConfig("netshot.cli.ssh.commandtimeout", 120000, 1, Integer.MAX_VALUE);
 			log.debug("The default command timeout value for SSH sessions is {}s", this.commandTimeout);
 
-			String sshSetting;
-			sshSetting = Netshot.getConfig("netshot.cli.ssh.kexalgorithms");
-			this.kexAlgorithms = (sshSetting == null) ? DEFAULT_SSH_KEX_ALGORITHMS : sshSetting.split(", *");
-			sshSetting = Netshot.getConfig("netshot.cli.ssh.hostkeyalgorithms");
-			this.hostKeyAlgorithms = (sshSetting == null) ? DEFAULT_SSH_HOST_KEY_ALGORITHMS : sshSetting.split(", *");
-			sshSetting = Netshot.getConfig("netshot.cli.ssh.ciphers");
-			this.ciphers = (sshSetting == null) ? DEFAULT_SSH_CIPHERS : sshSetting.split(", *");
-			sshSetting = Netshot.getConfig("netshot.cli.ssh.macs");
-			this.macs = (sshSetting == null) ? DEFAULT_SSH_MACS : sshSetting.split(", *");
-			sshSetting = Netshot.getConfig("netshot.cli.ssh.compressionalgorithms");
-			this.compressionAlgorithms = (sshSetting == null) ? DEFAULT_SSH_COMPRESSION_ALGORITHMS : sshSetting.split(", *");
+			this.kexAlgorithms = this.readAlgorithms("kexalgorithms", DEFAULT_SSH_KEX_ALGORITHMS);
+			this.hostKeyAlgorithms = this.readAlgorithms("hostkeyalgorithms", DEFAULT_SSH_HOST_KEY_ALGORITHMS);
+			this.ciphers = this.readAlgorithms("ciphers", DEFAULT_SSH_CIPHERS);
+			this.macs = this.readAlgorithms("macs", DEFAULT_SSH_MACS);
+			this.compressionAlgorithms = this.readAlgorithms("compressionalgorithms", DEFAULT_SSH_COMPRESSION_ALGORITHMS);
 		}
 	}
 
@@ -229,6 +231,26 @@ public class Ssh extends Cli {
 			this.echo = echo;
 			this.response = result;
 		}
+	}
+
+	/**
+	 * One user interaction in the keyboard-interactive authentication process.
+	 */
+	public static final class SshUserInteraction {
+		/** Prompt to match (regular expression). null for any. */
+		@Getter
+		@Setter
+		private String prompt;
+
+		/** Match whether echo option is expected or not. null for any. */
+		@Getter
+		@Setter
+		private Boolean echo;
+
+		/** Response to send. Can be $$NetshotPassword$$. */
+		@Getter
+		@Setter
+		private String response;
 	}
 
 	/**
@@ -282,6 +304,11 @@ public class Ssh extends Cli {
 		@Setter
 		private Integer terminalWidth = null;
 
+		/** User interactions. */
+		@Getter
+		@Setter
+		private List<SshUserInteraction> userInteractions;
+
 		/*
 		 * Default constructor.
 		 */
@@ -315,6 +342,10 @@ public class Ssh extends Cli {
 
 		public void setMacs(String[] macs) {
 			this.macs = Arrays.asList(macs);
+		}
+
+		public void setCompressionAlgorithms(String[] compressionAlgorithms) {
+			this.compressionAlgorithms = Arrays.asList(compressionAlgorithms);
 		}
 	}
 
@@ -362,9 +393,6 @@ public class Ssh extends Cli {
 	/** The password or passphrase. */
 	private String password;
 
-	/** The public key. */
-	private String publicKey;
-
 	/** The private key. */
 	private String privateKey;
 
@@ -378,10 +406,10 @@ public class Ssh extends Cli {
 	 * @param port the port
 	 * @param username the username
 	 * @param password the password
-	 * @param taskLogger the current task logger
+	 * @param taskContext the current task context
 	 */
-	public Ssh(NetworkAddress host, int port, String username, String password, TaskLogger taskLogger) {
-		super(host, taskLogger);
+	public Ssh(NetworkAddress host, int port, String username, String password, TaskContext taskContext) {
+		super(host, taskContext);
 		this.port = port;
 		this.username = username;
 		this.password = password;
@@ -397,17 +425,15 @@ public class Ssh extends Cli {
 	 * @param host the host
 	 * @param port the port
 	 * @param username the SSH username
-	 * @param publicKey The public key
 	 * @param privateKey the RSA/DSA/... private key
 	 * @param passphrase the passphrase which protects the private key
-	 * @param taskLogger the current task logger
+	 * @param taskContext the current task context
 	 */
-	public Ssh(NetworkAddress host, int port, String username, String publicKey, String privateKey,
-		String passphrase, TaskLogger taskLogger) {
-		super(host, taskLogger);
+	public Ssh(NetworkAddress host, int port, String username, String privateKey,
+		String passphrase, TaskContext taskContext) {
+		super(host, taskContext);
 		this.port = port;
 		this.username = username;
-		this.publicKey = publicKey;
 		this.privateKey = privateKey;
 		this.password = passphrase;
 		this.connectionTimeout = Ssh.SETTINGS.getConnectionTimeout();
@@ -420,16 +446,14 @@ public class Ssh extends Cli {
 	 *
 	 * @param host the host
 	 * @param username the SSH username
-	 * @param publicKey the public key
 	 * @param privateKey the RSA/DSA private key
 	 * @param passphrase the passphrase which protects the private key
-	 * @param taskLogger the current task logger
+	 * @param taskContext the current task context
 	 */
-	public Ssh(NetworkAddress host, String username, String publicKey, String privateKey,
-		String passphrase, TaskLogger taskLogger) {
-		super(host, taskLogger);
+	public Ssh(NetworkAddress host, String username, String privateKey,
+		String passphrase, TaskContext taskContext) {
+		super(host, taskContext);
 		this.username = username;
-		this.publicKey = publicKey;
 		this.privateKey = privateKey;
 		this.password = passphrase;
 		this.connectionTimeout = Ssh.SETTINGS.getConnectionTimeout();
@@ -444,10 +468,10 @@ public class Ssh extends Cli {
 	 * @param host the host
 	 * @param username the username
 	 * @param password the password
-	 * @param taskLogger the current task logger
+	 * @param taskContext the current task context
 	 */
-	public Ssh(NetworkAddress host, String username, String password, TaskLogger taskLogger) {
-		super(host, taskLogger);
+	public Ssh(NetworkAddress host, String username, String password, TaskContext taskContext) {
+		super(host, taskContext);
 		this.username = username;
 		this.password = password;
 		this.privateKey = null;
@@ -462,11 +486,10 @@ public class Ssh extends Cli {
 	 * @param other the other SSH object
 	 */
 	public Ssh(Ssh other) {
-		super(other.host, other.taskLogger);
+		super(other.host, other.taskContext);
 		this.port = other.port;
 		this.username = other.username;
 		this.password = other.password;
-		this.publicKey = other.publicKey;
 		this.privateKey = other.privateKey;
 		this.sshConfig = other.sshConfig;
 	}
@@ -498,7 +521,7 @@ public class Ssh extends Cli {
 			this.session.setCipherFactoriesNames(this.sshConfig.ciphers);
 			this.session.setMacFactoriesNames(this.sshConfig.macs);
 			this.session.setCompressionFactoriesNames(this.sshConfig.compressionAlgorithms);
-			if (privateKey == null || publicKey == null) {
+			if (privateKey == null) {
 				this.session.addPasswordIdentity(this.password);
 				if (Ssh.this.sshConfig.interactionInstructions != null) {
 					PropertyResolverUtils.updateProperty(
@@ -508,22 +531,22 @@ public class Ssh extends Cli {
 					@Override
 					public String[] interactive(ClientSession session, String name, String instruction, String lang,
 							String[] prompts, boolean[] echos) {
-						if (Ssh.this.taskLogger.isTracing()) {
+						if (Ssh.this.taskContext.isTracing()) {
 							List<String> promptEchoes = new ArrayList<>();
 							for (int p = 0; p < Math.min(prompts.length, echos.length); p++) {
 								promptEchoes.add("%s (%s)".formatted(prompts[p], echos[p] ? "echo" : "no echo"));
 							}
-							Ssh.this.taskLogger.trace(
+							Ssh.this.taskContext.trace(
 								"SSH user interactive authentication, name '{}', instruction '{}', lang '{}', prompts {}",
 								name, instruction, lang, String.join(", ", promptEchoes));
 						}
 						if (Ssh.this.sshConfig.interactionInstructions == null) {
 							if (prompts.length == 1 && echos.length == 1 && !echos[0]) {
-								Ssh.this.taskLogger.debug("Password requested in user interactive mode (prompt '{}')",
+								Ssh.this.taskContext.debug("Password requested in user interactive mode (prompt '{}')",
 									prompts[0]);
 								return new String[] { Ssh.this.password };
 							}
-							Ssh.this.taskLogger.error("Multiple prompts returned by device in SSH user interactive " +
+							Ssh.this.taskContext.error("Multiple prompts returned by device in SSH user interactive " +
 								"mode while the driver doesn't provide user interaction instructions.");
 							throw new RuntimeException("Cannot reply to multiple SSH user interaction prompts");
 						}
@@ -539,15 +562,15 @@ public class Ssh extends Cli {
 								if (configInstruction.echo != null && !configInstruction.echo.equals(echos[p])) {
 									continue;
 								}
-								Ssh.this.taskLogger.trace(
+								Ssh.this.taskContext.trace(
 									"Found matching instruction for SSH user interaction, prompt '{}'", prompts[p]);
 								if (configInstruction.response == null) {
-									Ssh.this.taskLogger.trace("Will send device password");
+									Ssh.this.taskContext.trace("Will send device password");
 									responses.add(Ssh.this.password);
 								}
 								else {
 									String response = configInstruction.response;
-									Ssh.this.taskLogger.trace("Will send planned response '{}'", response);
+									Ssh.this.taskContext.trace("Will send planned response '{}'", response);
 									response = response.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
 										Matcher.quoteReplacement(Ssh.this.username));
 									response = response.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_PASSWORD),
@@ -557,7 +580,7 @@ public class Ssh extends Cli {
 								break;
 							}
 							if (responses.size() < p + 1) {
-								Ssh.this.taskLogger.warn(
+								Ssh.this.taskContext.warn(
 									"No driver instruction for SSH user interaction prompt '{}'", prompts[p]);
 								responses.add("");
 							}
@@ -566,7 +589,7 @@ public class Ssh extends Cli {
 					}
 					@Override
 					public String getUpdatedPassword(ClientSession session, String prompt, String lang) {
-						Ssh.this.taskLogger.warn("SSH password update requested by the device: '{}'", prompt);
+						Ssh.this.taskContext.warn("SSH password update requested by the device: '{}'", prompt);
 						return null;
 					}
 				});
@@ -582,12 +605,12 @@ public class Ssh extends Cli {
 			this.session.setPasswordAuthenticationReporter(new PasswordAuthenticationReporter() {
 				@Override
 				public void signalAuthenticationSuccess(ClientSession session, String service, String password) throws Exception {
-					Ssh.this.taskLogger.debug("SSH authentication succeeded (service {})", service);
+					Ssh.this.taskContext.debug("SSH authentication succeeded (service {})", service);
 				}
 				@Override
 				public void signalAuthenticationFailure(ClientSession session, String service, String password,
 					boolean partial, List<String> serverMethods) throws Exception {
-					Ssh.this.taskLogger.warn("SSH authentication failed (service {})", service);
+					Ssh.this.taskContext.warn("SSH authentication failed (service {})", service);
 				}
 			});
 
@@ -600,102 +623,102 @@ public class Ssh extends Cli {
 						Map<KexProposalOption, String> serverProposal,
 						Map<KexProposalOption, String> negotiatedOptions,
 						Throwable reason) {
-					if (!Ssh.this.taskLogger.isTracing()) {
+					if (!Ssh.this.taskContext.isTracing()) {
 						return;
 					}
 					if (reason != null) {
-						Ssh.this.taskLogger.trace("SSH Protocol Negotiation ended with error: {}", reason.getMessage());
+						Ssh.this.taskContext.trace("SSH Protocol Negotiation ended with error: {}", reason.getMessage());
 					}
 
-					Ssh.this.taskLogger.trace("SSH Protocol Negotiation {}:",
+					Ssh.this.taskContext.trace("SSH Protocol Negotiation {}:",
 						reason == null ? "Results" : "Proposals (Failed)");
 
 					// Log KEX algorithms
 					String kexClient = clientProposal.get(KexProposalOption.ALGORITHMS);
 					String kexServer = serverProposal.get(KexProposalOption.ALGORITHMS);
 					String kexNegotiated = negotiatedOptions.get(KexProposalOption.ALGORITHMS);
-					Ssh.this.taskLogger.trace("  Key Exchange:");
-					Ssh.this.taskLogger.trace("    Client proposed: {}", kexClient);
-					Ssh.this.taskLogger.trace("    Server proposed: {}", kexServer);
+					Ssh.this.taskContext.trace("  Key Exchange:");
+					Ssh.this.taskContext.trace("    Client proposed: {}", kexClient);
+					Ssh.this.taskContext.trace("    Server proposed: {}", kexServer);
 					if (kexNegotiated != null) {
-						Ssh.this.taskLogger.trace("    Negotiated: {}", kexNegotiated);
+						Ssh.this.taskContext.trace("    Negotiated: {}", kexNegotiated);
 					}
 
 					// Log Server Host Key algorithms
 					String hostKeyClient = clientProposal.get(KexProposalOption.SERVERKEYS);
 					String hostKeyServer = serverProposal.get(KexProposalOption.SERVERKEYS);
 					String hostKeyNegotiated = negotiatedOptions.get(KexProposalOption.SERVERKEYS);
-					Ssh.this.taskLogger.trace("  Server Host Key:");
-					Ssh.this.taskLogger.trace("    Client proposed: {}", hostKeyClient);
-					Ssh.this.taskLogger.trace("    Server proposed: {}", hostKeyServer);
+					Ssh.this.taskContext.trace("  Server Host Key:");
+					Ssh.this.taskContext.trace("    Client proposed: {}", hostKeyClient);
+					Ssh.this.taskContext.trace("    Server proposed: {}", hostKeyServer);
 					if (hostKeyNegotiated != null) {
-						Ssh.this.taskLogger.trace("    Negotiated: {}", hostKeyNegotiated);
+						Ssh.this.taskContext.trace("    Negotiated: {}", hostKeyNegotiated);
 					}
 
 					// Log Cipher algorithms (client-to-server)
 					String cipherC2SClient = clientProposal.get(KexProposalOption.C2SENC);
 					String cipherC2SServer = serverProposal.get(KexProposalOption.C2SENC);
 					String cipherC2SNegotiated = negotiatedOptions.get(KexProposalOption.C2SENC);
-					Ssh.this.taskLogger.trace("  Cipher (Client-to-Server):");
-					Ssh.this.taskLogger.trace("    Client proposed: {}", cipherC2SClient);
-					Ssh.this.taskLogger.trace("    Server proposed: {}", cipherC2SServer);
+					Ssh.this.taskContext.trace("  Cipher (Client-to-Server):");
+					Ssh.this.taskContext.trace("    Client proposed: {}", cipherC2SClient);
+					Ssh.this.taskContext.trace("    Server proposed: {}", cipherC2SServer);
 					if (cipherC2SNegotiated != null) {
-						Ssh.this.taskLogger.trace("    Negotiated: {}", cipherC2SNegotiated);
+						Ssh.this.taskContext.trace("    Negotiated: {}", cipherC2SNegotiated);
 					}
 
 					// Log Cipher algorithms (server-to-client)
 					String cipherS2CClient = clientProposal.get(KexProposalOption.S2CENC);
 					String cipherS2CServer = serverProposal.get(KexProposalOption.S2CENC);
 					String cipherS2CNegotiated = negotiatedOptions.get(KexProposalOption.S2CENC);
-					Ssh.this.taskLogger.trace("  Cipher (Server-to-Client):");
-					Ssh.this.taskLogger.trace("    Client proposed: {}", cipherS2CClient);
-					Ssh.this.taskLogger.trace("    Server proposed: {}", cipherS2CServer);
+					Ssh.this.taskContext.trace("  Cipher (Server-to-Client):");
+					Ssh.this.taskContext.trace("    Client proposed: {}", cipherS2CClient);
+					Ssh.this.taskContext.trace("    Server proposed: {}", cipherS2CServer);
 					if (cipherS2CNegotiated != null) {
-						Ssh.this.taskLogger.trace("    Negotiated: {}", cipherS2CNegotiated);
+						Ssh.this.taskContext.trace("    Negotiated: {}", cipherS2CNegotiated);
 					}
 
 					// Log MAC algorithms (client-to-server)
 					String macC2SClient = clientProposal.get(KexProposalOption.C2SMAC);
 					String macC2SServer = serverProposal.get(KexProposalOption.C2SMAC);
 					String macC2SNegotiated = negotiatedOptions.get(KexProposalOption.C2SMAC);
-					Ssh.this.taskLogger.trace("  MAC (Client-to-Server):");
-					Ssh.this.taskLogger.trace("    Client proposed: {}", macC2SClient);
-					Ssh.this.taskLogger.trace("    Server proposed: {}", macC2SServer);
+					Ssh.this.taskContext.trace("  MAC (Client-to-Server):");
+					Ssh.this.taskContext.trace("    Client proposed: {}", macC2SClient);
+					Ssh.this.taskContext.trace("    Server proposed: {}", macC2SServer);
 					if (macC2SNegotiated != null) {
-						Ssh.this.taskLogger.trace("    Negotiated: {}", macC2SNegotiated);
+						Ssh.this.taskContext.trace("    Negotiated: {}", macC2SNegotiated);
 					}
 
 					// Log MAC algorithms (server-to-client)
 					String macS2CClient = clientProposal.get(KexProposalOption.S2CMAC);
 					String macS2CServer = serverProposal.get(KexProposalOption.S2CMAC);
 					String macS2CNegotiated = negotiatedOptions.get(KexProposalOption.S2CMAC);
-					Ssh.this.taskLogger.trace("  MAC (Server-to-Client):");
-					Ssh.this.taskLogger.trace("    Client proposed: {}", macS2CClient);
-					Ssh.this.taskLogger.trace("    Server proposed: {}", macS2CServer);
+					Ssh.this.taskContext.trace("  MAC (Server-to-Client):");
+					Ssh.this.taskContext.trace("    Client proposed: {}", macS2CClient);
+					Ssh.this.taskContext.trace("    Server proposed: {}", macS2CServer);
 					if (macS2CNegotiated != null) {
-						Ssh.this.taskLogger.trace("    Negotiated: {}", macS2CNegotiated);
+						Ssh.this.taskContext.trace("    Negotiated: {}", macS2CNegotiated);
 					}
 
 					// Log Compression algorithms (client-to-server)
 					String compC2SClient = clientProposal.get(KexProposalOption.C2SCOMP);
 					String compC2SServer = serverProposal.get(KexProposalOption.C2SCOMP);
 					String compC2SNegotiated = negotiatedOptions.get(KexProposalOption.C2SCOMP);
-					Ssh.this.taskLogger.trace("  Compression (Client-to-Server):");
-					Ssh.this.taskLogger.trace("    Client proposed: {}", compC2SClient);
-					Ssh.this.taskLogger.trace("    Server proposed: {}", compC2SServer);
+					Ssh.this.taskContext.trace("  Compression (Client-to-Server):");
+					Ssh.this.taskContext.trace("    Client proposed: {}", compC2SClient);
+					Ssh.this.taskContext.trace("    Server proposed: {}", compC2SServer);
 					if (compC2SNegotiated != null) {
-						Ssh.this.taskLogger.trace("    Negotiated: {}", compC2SNegotiated);
+						Ssh.this.taskContext.trace("    Negotiated: {}", compC2SNegotiated);
 					}
 
 					// Log Compression algorithms (server-to-client)
 					String compS2CClient = clientProposal.get(KexProposalOption.S2CCOMP);
 					String compS2CServer = serverProposal.get(KexProposalOption.S2CCOMP);
 					String compS2CNegotiated = negotiatedOptions.get(KexProposalOption.S2CCOMP);
-					Ssh.this.taskLogger.trace("  Compression (Server-to-Client):");
-					Ssh.this.taskLogger.trace("    Client proposed: {}", compS2CClient);
-					Ssh.this.taskLogger.trace("    Server proposed: {}", compS2CServer);
+					Ssh.this.taskContext.trace("  Compression (Server-to-Client):");
+					Ssh.this.taskContext.trace("    Client proposed: {}", compS2CClient);
+					Ssh.this.taskContext.trace("    Server proposed: {}", compS2CServer);
 					if (compS2CNegotiated != null) {
-						Ssh.this.taskLogger.trace("    Negotiated: {}", compS2CNegotiated);
+						Ssh.this.taskContext.trace("    Negotiated: {}", compS2CNegotiated);
 					}
 				}
 			});
@@ -774,15 +797,15 @@ public class Ssh extends Cli {
 	/**
 	 * Download a file using SCP.
 	 * @param remoteFileName The file to download (name with full path) from the device
-	 * @param localFileName  The local file name (name with full path) where to write
+	 * @param localFilePath  The local file path (name with full path) where to write
 	 * @param newSession True to download through a new SSH session
 	 */
-	public void scpDownload(String remoteFileName, String localFileName, boolean newSession) throws IOException {
-		if (localFileName == null) {
+	public void scpDownload(String remoteFileName, Path localFilePath, boolean newSession) throws IOException {
+		if (localFilePath == null) {
 			throw new FileNotFoundException("Invalid destination file name for SCP copy operation. "
 				+ "Have you defined 'netshot.snapshots.binary.path'?");
 		}
-		try (OutputStream localStream = Files.newOutputStream(Paths.get(localFileName))) {
+		try (OutputStream localStream = Files.newOutputStream(localFilePath)) {
 			this.scpDownload(remoteFileName, localStream, newSession);
 		}
 	}
@@ -811,7 +834,7 @@ public class Ssh extends Cli {
 		if (!session.isOpen()) {
 			throw new IOException("The SSH session is not connected, can't start the SCP transfer");
 		}
-		this.taskLogger.info("Downloading '{}' using SCP.", remoteFileName);
+		this.taskContext.info("Downloading '{}' using SCP.", remoteFileName);
 
 		ScpClient scpClient = ScpClientCreator.instance().createScpClient(session);
 		scpClient.download(remoteFileName, localStream);
@@ -820,19 +843,32 @@ public class Ssh extends Cli {
 	/**
 	 * Download a file using SFTP.
 	 * @param remoteFileName The file to download (name with full path) from the device
-	 * @param localFileName  The local file name (name with full path) where to write
+	 * @param localFilePath  The local file path (name with full path) where to write
 	 * @param newSession True to download through a new SSH session
 	 */
-	public void sftpDownload(String remoteFileName, String localFileName, boolean newSession) throws IOException {
-		if (localFileName == null) {
+	public void sftpDownload(String remoteFileName, Path localFilePath, boolean newSession) throws IOException {
+		if (localFilePath == null) {
 			throw new FileNotFoundException("Invalid destination file name for SFTP copy operation. "
 				+ "Have you defined 'netshot.snapshots.binary.path'?");
 		}
+
+		try (OutputStream localStream = Files.newOutputStream(localFilePath)) {
+			this.sftpDownload(remoteFileName, localStream, newSession);
+		}
+	}
+
+	/**
+	 * Download a file using SFTP.
+	 * @param remoteFileName The file to download (name with full path) from the device
+	 * @param localStream  Output stream
+	 * @param newSession True to download through a new SSH session
+	 */
+	public void sftpDownload(String remoteFileName, OutputStream localStream, boolean newSession) throws IOException {
 		if (newSession) {
 			Ssh newSsh = new Ssh(this);
 			try {
 				newSsh.connect(false);
-				newSsh.sftpDownload(remoteFileName, localFileName, false);
+				newSsh.sftpDownload(remoteFileName, localStream, false);
 			}
 			finally {
 				newSsh.disconnect();
@@ -845,15 +881,10 @@ public class Ssh extends Cli {
 		if (!session.isOpen()) {
 			throw new IOException("The SSH session is not connected, can't start the SFTP transfer");
 		}
-		this.taskLogger.info("Downloading '{}' to '{}' using SFTP.",
-			remoteFileName, localFileName.toString());
-
+		this.taskContext.info("Downloading '{}' using SFTP.", remoteFileName);
 
 		try (SftpClient sftpClient = SftpClientFactory.instance().createSftpClient(session)) {
-			try (
-				InputStream remoteStream = sftpClient.read(remoteFileName);
-				OutputStream localStream = Files.newOutputStream(Paths.get(localFileName));
-			) {
+			try (InputStream remoteStream = sftpClient.read(remoteFileName)) {
 				IoUtils.copy(remoteStream, localStream);
 			}
 		}

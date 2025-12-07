@@ -33,9 +33,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.help.HelpFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -59,14 +59,17 @@ import net.netshot.netshot.aaa.Radius;
 import net.netshot.netshot.aaa.Tacacs;
 import net.netshot.netshot.aaa.UiUser;
 import net.netshot.netshot.cluster.ClusterManager;
-import net.netshot.netshot.collector.SnmpTrapReceiver;
-import net.netshot.netshot.collector.SyslogServer;
 import net.netshot.netshot.compliance.rules.JavaScriptRule;
 import net.netshot.netshot.compliance.rules.PythonRule;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.access.Ssh;
 import net.netshot.netshot.device.access.Telnet;
+import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
+import net.netshot.netshot.device.collector.Collector;
+import net.netshot.netshot.device.collector.SnmpTrapReceiver;
+import net.netshot.netshot.device.collector.SshServer;
+import net.netshot.netshot.device.collector.SyslogServer;
 import net.netshot.netshot.device.script.helper.PythonFileSystem;
 import net.netshot.netshot.rest.LoggerFilter;
 import net.netshot.netshot.rest.RestService;
@@ -529,6 +532,8 @@ public class Netshot extends Thread {
 		PythonFileSystem.loadConfig();
 		Ssh.loadConfig();
 		Telnet.loadConfig();
+		Collector.loadConfig();
+		ConfigBinaryFileAttribute.loadConfig();
 	}
 
 	/**
@@ -553,8 +558,15 @@ public class Netshot extends Thread {
 		}
 
 		if (commandLine.hasOption("h")) {
-			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp("netshot", options);
+			HelpFormatter formatter = HelpFormatter.builder()
+				.setShowSince(false)
+				.get();
+			try {
+				formatter.printHelp("netshot", null, options, null, true);
+			}
+			catch (IOException e) {
+				// Ignore
+			}
 			return;
 		}
 
@@ -597,12 +609,14 @@ public class Netshot extends Thread {
 
 			log.info("Loading the device drivers.");
 			DeviceDriver.refreshDrivers();
-			//log.info("Starting the TFTP server.");
-			//TftpServer.init();
 			log.info("Starting the Syslog server.");
 			SyslogServer.init();
 			log.info("Starting the SNMP v1/v2c/v3 trap receiver.");
 			SnmpTrapReceiver.init();
+			log.info("Starting the SSH/SCP/SFTP server.");
+			SshServer.init();
+			//log.info("Starting the TFTP server.");
+			//TftpServer.init();
 
 			log.info("Starting the clustering manager.");
 			ClusterManager.init();

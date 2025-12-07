@@ -66,17 +66,17 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
-import net.netshot.netshot.collector.SnmpTrapReceiver;
-import net.netshot.netshot.collector.SyslogServer;
 import net.netshot.netshot.device.access.Ssh.SshConfig;
 import net.netshot.netshot.device.access.Ssh.SshInteractionInstruction;
 import net.netshot.netshot.device.access.Telnet.TelnetConfig;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import net.netshot.netshot.device.script.helper.JsUtils;
+import net.netshot.netshot.device.collector.SnmpTrapReceiver;
+import net.netshot.netshot.device.collector.SyslogServer;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * This is a device driver.
@@ -143,10 +143,10 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		}
 	}
 
-	public static class LoggerTaskLogger implements TaskLogger {
+	public static class ReceiverTaskContext implements TaskContext {
 		private final Logger logger;
 
-		public LoggerTaskLogger(Class<?> clazz) {
+		public ReceiverTaskContext(Class<?> clazz) {
 			this.logger = LoggerFactory.getLogger(clazz);
 		}
 
@@ -154,13 +154,18 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		public void log(Level level, String message, Object... params) {
 			this.logger.makeLoggingEventBuilder(level).log(message, params);
 		}
+
+		@Override
+		public String getIdentifier() {
+			return this.logger.getName();
+		}
 	}
 
 	/** JS logger for SNMP-related messages. */
-	private static final TaskLogger JS_SNMP_LOGGER = new LoggerTaskLogger(SnmpTrapReceiver.class);
+	private static final TaskContext JS_SNMP_LOGGER = new ReceiverTaskContext(SnmpTrapReceiver.class);
 
 	/** JS logger for Syslog-related messages. */
-	private static final TaskLogger JS_SYSLOG_LOGGER = new LoggerTaskLogger(SyslogServer.class);
+	private static final TaskContext JS_SYSLOG_LOGGER = new ReceiverTaskContext(SyslogServer.class);
 
 	/** The Javascript loader code. */
 	private static final Source JSLOADER_SOURCE = readLoaderSource();
@@ -689,6 +694,17 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 									this.sshConfig.setMacs(algos.toArray(new String[0]));
 								}
 							}
+							{
+								Value compressionAlgorithms = cliSshConfig.getMember("compressionAlgorithms");
+								if (compressionAlgorithms != null && compressionAlgorithms.hasArrayElements()) {
+									Set<String> algos = new HashSet<>();
+									for (long i = 0; i < compressionAlgorithms.getArraySize(); i++) {
+										Value algo = compressionAlgorithms.getArrayElement(i);
+										algos.add(algo.asString());
+									}
+									this.sshConfig.setCompressionAlgorithms(algos.toArray(new String[0]));
+								}
+							}
 							Value auth = cliSshConfig.getMember("auth");
 							if (auth != null && auth.hasMembers()) {
 								Value interactive = auth.getMember("interactive");
@@ -874,10 +890,10 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 * @param task The auto discovery task
 	 * @param sysObjectId The received sysObjectId
 	 * @param sysDesc The received sysDesc
-	 * @param taskLogger The logger from the task
+	 * @param taskContext The logger from the task
 	 * @return true if the passed SNMP information matches a device of this driver
 	 */
-	public boolean snmpAutoDiscover(Task task, String sysObjectId, String sysDesc, TaskLogger taskLogger) {
+	public boolean snmpAutoDiscover(Task task, String sysObjectId, String sysDesc, TaskContext taskContext) {
 		if (!canSnmpAutodiscover) {
 			return false;
 		}
@@ -886,7 +902,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			Value result = context
 				.getBindings("js")
 				.getMember("_snmpAutoDiscover")
-				.execute(sysObjectId, sysDesc, taskLogger);
+				.execute(sysObjectId, sysDesc, taskContext);
 			if (result != null && result.isBoolean()) {
 				return result.asBoolean();
 			}

@@ -106,12 +106,12 @@ const _connect = (_function, _protocol, _options) => {
 	const _cli = _options.getCliHelper();
 	const _snmp = _options.getSnmpHelper();
 	const _deviceHelper = _options.getDeviceHelper();
-	const _logger = _options.getTaskLogger();
+	const _taskContext = _options.getTaskContext();
 
 	const debug = (message) => {
 		if (typeof message  === "string") {
 			message = String(message);
-			_logger.debug(message);
+			_taskContext.debug(message);
 		}
 	};
 
@@ -297,7 +297,7 @@ const _connect = (_function, _protocol, _options) => {
 			if (typeof(options) === "object" && typeof(options.mode) === "string") {
 				mode = CLI[options.mode];
 				if (typeof(mode) !== "object") {
-					throw `No mode ${option.mode} can be found in CLI object.`;
+					throw `No mode ${options.mode} can be found in CLI object.`;
 				}
 				this._applyPager(mode, options.mode);
 			}
@@ -660,12 +660,12 @@ const _connect = (_function, _protocol, _options) => {
 					newSession = options.newSession;
 				}
 				else if (typeof options.newSession !== "undefined") {
-					throw "Invalid option type newSession (should be a boolean) in config.download";
+					throw "Invalid 'newSession' option (should be a boolean) in config.download";
 				}
 				if (options.method === "sftp" || options.method === "scp") {
 					method = options.method;
 				}
-				else {
+				else if (typeof options.method !== "undefined") {
 					throw "Invalid 'method' option in config.download";
 				}
 				if (typeof options.storeFileName === "string") {
@@ -685,7 +685,8 @@ const _connect = (_function, _protocol, _options) => {
 				throw "Invalid type for options argument in config.download";
 			}
 
-			_options.getConfigHelper().download(key, method, fileName, storeFileName, newSession, checksum);
+			_options.getConfigHelper()
+				.download(key, method, fileName, storeFileName, newSession, checksum);
 		},
 		computeHash: function(...params) {
 			const inputs = params.map((i, idx) => {
@@ -708,7 +709,76 @@ const _connect = (_function, _protocol, _options) => {
 		isChangedHash: function() {
 			return _options.getConfigHelper().getCustomHash() !== 
 			       _options.getConfigHelper().getLastCustomHash();
-		}
+		},
+		requestUpload: function(options) {
+			let method = null; // any method
+			let sourceIp = null;
+			if (typeof options === "object") {
+				if (typeof options.method === "string") {
+					if (!["scp", "sftp"].includes(options.method)) {
+						throw `Invalid 'method' ${options.method} in config.requestUpload.`;
+					}
+					method = options.method;
+				}
+				else if (typeof options.method !== "undefined") {
+					throw "Invalid 'method' option in config.requestUpload.";
+				}
+				if (typeof options.sourceIp === "string") {
+					sourceIp = String(options.sourceIp);
+				}
+				else if (typeof options.sourceIp !== "undefined") {
+					throw "Invalid 'sourceIp' option in config.requestUpload.";
+				}
+			}
+			else if (typeof options !== "undefined") {
+				throw "Invalid type for options argument in config.requestUpload.";
+			}
+			return _options.getConfigHelper()
+				.requestUpload(method, sourceIp, timeout, checksum);
+		},
+		awaitUpload: function(ticketId, timeout) {
+			if (typeof ticketId !== "number" || !Number.isInteger(ticketId)) {
+				throw "Invalid type for ticketId in config.awaitUpload (expected integer).";
+			}
+			if (typeof timeout === "undefined") {
+				timeout = 60000; // Default 60 seconds
+			}
+			if (typeof timeout !== "number" || timeout <= 0) {
+				throw "Invalid timeout in config.awaitUpload (expected positive number in milliseconds).";
+			}
+			return _toNative(_options.getConfigHelper().awaitUpload(ticketId, timeout));
+		},
+		commitUpload: function(ticketId, fileId, key, options) {
+			if (typeof ticketId !== "number" || !Number.isInteger(ticketId)) {
+				throw "Invalid type for ticketId in config.commitUpload (expected integer).";
+			}
+			if (typeof fileId !== "number" || !Number.isInteger(fileId)) {
+				throw "Invalid type for fileId in config.commitUpload (expected integer).";
+			}
+			if (typeof key !== "string") {
+				throw "Invalid type for key in config.commitUpload (expected string).";
+			}
+			let storeName = null;
+			let expectedHash = null;
+			if (typeof options === "object") {
+				if (typeof options.storeName === "string") {
+					storeName = String(options.storeName);
+				}
+				else if (typeof options.storeName !== "undefined") {
+					throw "Invalid 'storeName' option in config.commitUpload.";
+				}
+				if (typeof options.checksum === "string") {
+					expectedHash = String(options.checksum);
+				}
+				else if (typeof options.checksum !== "undefined") {
+					throw "Invalid 'checksum' option in config.commitUpload.";
+				}
+			}
+			else if (typeof options !== "undefined") {
+				throw "Invalid type for options argument in config.commitUpload.";
+			}
+			_options.getConfigHelper().commitUpload(ticketId, fileId, String(key), storeName, expectedHash);
+		},
 	};
 	
 	const diagnosticHelper = {
@@ -764,19 +834,19 @@ const _connect = (_function, _protocol, _options) => {
 				}
 			}
 			catch (diagError) {
-				_logger.warn(`Error while running diagnostic '${name}'`);
-				_logger.warn(String(diagError));
+				_taskContext.warn(`Error while running diagnostic '${name}'`);
+				_taskContext.warn(String(diagError));
 			}
 		}
 	}
 }
 
 
-const _analyzeSyslog = (_message, _logger) => {
+const _analyzeSyslog = (_message, _taskContext) => {
 	if (typeof(analyzeSyslog) === "function") {
 		const debug = (message) => {
 			if (typeof(message) === "string") {
-				_logger.debug(message);
+				_taskContext.debug(message);
 			}
 		};
 		return analyzeSyslog(_message, debug);
@@ -786,11 +856,11 @@ const _analyzeSyslog = (_message, _logger) => {
 	}
 }
 
-const _snmpAutoDiscover = (_sysObjectID, _sysDesc, _logger) => {
+const _snmpAutoDiscover = (_sysObjectID, _sysDesc, _taskContext) => {
 	if (typeof(snmpAutoDiscover) === "function") {
 		const debug = (message) => {
 			if (typeof(message) === "string") {
-				_logger.debug(message);
+				_taskContext.debug(message);
 			}
 		};
 		if (snmpAutoDiscover(_sysObjectID, _sysDesc, debug)) {
@@ -806,12 +876,12 @@ const _snmpAutoDiscover = (_sysObjectID, _sysDesc, _logger) => {
 }
 
 
-const _analyzeTrap = (_data, _logger) => {
+const _analyzeTrap = (_data, _taskContext) => {
 	if (typeof(analyzeTrap) === "function") {
 		const data = { ..._data };
 		const debug = (message) => {
 			if (typeof(message) === "string") {
-				_logger.debug(message);
+				_taskContext.debug(message);
 			}
 		};
 		if (analyzeTrap(data, debug)) {

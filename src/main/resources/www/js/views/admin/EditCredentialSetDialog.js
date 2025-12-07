@@ -44,7 +44,6 @@ define([
 					credentialSet.password = that.$('#credentialspassword').val();
 					credentialSet.superPassword = that.$('#credentialssuper').val();
 					if (credentialSet.type.match(/Key/)) {
-						credentialSet.publicKey = that.$('#credentialspublickey').val();
 						credentialSet.privateKey = that.$('#credentialsprivatekey').val();
 					}
 				}

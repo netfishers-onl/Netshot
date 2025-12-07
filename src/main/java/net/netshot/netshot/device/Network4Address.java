@@ -210,7 +210,7 @@ public final class Network4Address extends NetworkAddress {
 	 *           the unknown host exception
 	 */
 	public Network4Address(String address) throws UnknownHostException {
-		this(address, 0);
+		this(address, 32);
 	}
 
 	/**

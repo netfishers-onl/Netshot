@@ -42,7 +42,7 @@ import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.script.JsCliScript;
 import net.netshot.netshot.device.script.JsCliScript.UserInputDefinition;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 @Entity
 @XmlRootElement
@@ -111,11 +111,11 @@ public class DeviceJsScript {
 	}
 
 	/**
-	 * Create a task logger which does nothing.
+	 * Create a task context which does nothing.
 	 * @return
 	 */
-	private TaskLogger makeVoidLogger() {
-		return new TaskLogger() {
+	private TaskContext makeVoidLogger() {
+		return new TaskContext() {
 			@Override
 			public boolean isTracing() {
 				return false;
@@ -124,6 +124,11 @@ public class DeviceJsScript {
 			@Override
 			public void log(Level level, String message, Object... params) {
 				// Ignore
+			}
+
+			@Override
+			public String getIdentifier() {
+				return "Void";
 			}
 		};
 	}

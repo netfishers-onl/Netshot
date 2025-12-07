@@ -11,6 +11,7 @@ services:
       NETSHOT_DB_ENCRYPTIONPASSWORD: "change_this_pass_too"
       NETSHOT_HTTP_TRUSTXFORWARDEDFOR: "true"
       NETSHOT_HTTP_BASEPORT: "8080"
+      NETSHOT_SNAPSHOTS_BINARY_PATH: "/var/local/netshot"
     labels:
       traefik.docker.network: ${COMPOSE_PROJECT_NAME}_front
       traefik.http.routers.netshot-https.rule: "PathPrefix(`/`)"
@@ -22,7 +23,8 @@ services:
     depends_on:
       database:
         condition: service_healthy
-        
+    volumes:
+      - "binarydata:/var/local/netshot"
     ports:
       - "162:1162/udp"
       - "514:1514/udp"
@@ -70,6 +72,7 @@ services:
 
 volumes:
   dbdata:
+  binarydata:
 
 networks:
   front:

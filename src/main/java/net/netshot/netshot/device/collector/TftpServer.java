@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.netshot.netshot.collector;
+package net.netshot.netshot.device.collector;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,7 +39,7 @@ import org.apache.commons.net.tftp.TFTPWriteRequestPacket;
 
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
-import net.netshot.netshot.collector.TftpServer.TftpTransfer.Status;
+import net.netshot.netshot.device.collector.TftpServer.TftpTransfer.Status;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.NetworkAddress;
 

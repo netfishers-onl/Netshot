@@ -46,7 +46,6 @@ define([
 					authKey: that.$('#credentialssnmpv3authkey').val(),
 					privType: that.$('#credentialssnmpv3privtype').val(),
 					privKey: that.$('#credentialssnmpv3privkey').val(),
-					publicKey: that.$('#credentialspublickey').val(),
 					privateKey: that.$('#credentialsprivatekey').val()
 				};
 				var domain = that.$('#credentialsdomain').val();

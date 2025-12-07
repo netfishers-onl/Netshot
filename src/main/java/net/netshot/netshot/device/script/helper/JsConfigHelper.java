@@ -18,54 +18,229 @@
  */
 package net.netshot.netshot.device.script.helper;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.PublicKey;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.sshd.common.config.keys.PublicKeyEntry;
 import org.graalvm.polyglot.HostAccess.Export;
 import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.proxy.ProxyObject;
 
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.crypto.Argon2idHash;
+import net.netshot.netshot.crypto.Hash;
 import net.netshot.netshot.crypto.Sha2BasedHash;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
+import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.access.Cli;
 import net.netshot.netshot.device.access.Ssh;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
+import net.netshot.netshot.device.collector.Collector;
+import net.netshot.netshot.device.collector.SshServer;
+import net.netshot.netshot.device.collector.TransferProtocol;
+import net.netshot.netshot.device.collector.UploadTicket;
+import net.netshot.netshot.utils.PasswordGenerator;
 import net.netshot.netshot.device.attribute.ConfigBinaryAttribute;
 import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
 import net.netshot.netshot.device.attribute.ConfigLongTextAttribute;
 import net.netshot.netshot.device.attribute.ConfigNumericAttribute;
 import net.netshot.netshot.device.attribute.ConfigTextAttribute;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * Class used to control a device config from JavaScript.
- * @author sylvain.cadilhac
- *
  */
 @Slf4j
-public final class JsConfigHelper {
+public final class JsConfigHelper implements UploadTicket.Owner {
+
+	/**
+	 * Uploaded file metadata.
+	 */
+	private class UploadedFile {
+		private long id;
+		private Path path;
+		private String name;
+		private long size;
+
+		public UploadedFile(long id, Path path) {
+			this.id = id;
+			this.path = path;
+			this.name = path.getFileName().toString();
+			this.size = path.toFile().length();
+		}
+
+		public long getId() {
+			return this.id;
+		}
+
+		public Path getPath() {
+			return this.path;
+		}
+
+		public String getName() {
+			return this.name;
+		}
+
+		public long getSize() {
+			return this.size;
+		}
+	}
+
+	private class ConfigUploadTicket implements UploadTicket {
+
+		private long id;
+		private Set<TransferProtocol> protocols;
+		private String username;
+		private String password;
+		private Hash passwordHash;
+		private NetworkAddress expectedSourceIp;
+		private Path rootPath;
+		private Map<Long, UploadedFile> uploadedFiles = new HashMap<>();
+		private boolean sessionCompleted = false;
+
+		public ConfigUploadTicket(long id, Set<TransferProtocol> protocols,
+				String username, String password, NetworkAddress expectedSourceIp,
+				Path rootPath) {
+			this.id = id;
+			this.protocols = protocols;
+			this.username = username;
+			this.password = password;
+			this.passwordHash = new Argon2idHash(password);
+			this.expectedSourceIp = expectedSourceIp;
+			this.rootPath = rootPath;
+		}
+
+		@Override
+		public Owner getOwner() {
+			return JsConfigHelper.this;
+		}
+
+		@Override
+		public Set<TransferProtocol> getAllowedProtocols() {
+			return this.protocols;
+		}
+
+		@Override
+		public String getUsername() {
+			return this.username;
+		}
+
+		@Override
+		public boolean checkPassword(NetworkAddress source, String password) {
+			if (this.expectedSourceIp != null && Objects.equals(this.expectedSourceIp, source)) {
+				log.warn("Error during snapshot while requesting upload ticket: " +
+					"invalid source IP {} vs {}.", source, this.expectedSourceIp);
+				taskContext.error("Error while requesting upload ticket: " +
+					"invalid source IP {} vs {}.", source, this.expectedSourceIp);
+				return false;
+			}
+			return this.passwordHash.check(password);
+		}
+
+		@Override
+		public Path getRootPath() {
+			return this.rootPath;
+		}
+
+		@Override
+		public boolean isValid() {
+			return true;
+		}
+
+		private void clearTextPassword() {
+			this.password = null;
+		}
+
+		@Override
+		public void onFileWritten(Path filePath) {
+			synchronized (this) {
+				// Use next available ID (size + 1 ensures unique incrementing IDs)
+				long fileId = this.uploadedFiles.size() + 1;
+				Path absolutePath = this.rootPath.resolve(filePath);
+				UploadedFile file = new UploadedFile(fileId, absolutePath);
+				this.uploadedFiles.put(fileId, file);
+				log.debug("File uploaded via ticket {}: {} (id: {}, size: {})",
+					this.id, filePath, fileId, file.getSize());
+				taskContext.debug("File uploaded via ticket {}: {} (id: {}, size: {})",
+					this.id, filePath, fileId, file.getSize());
+			}
+		}
+
+		@Override
+		public void onSessionStarted() {
+			log.info("Upload session started for ticket {}", this.id);
+			taskContext.info("Upload session started for ticket {}", this.id);
+		}
+
+		@Override
+		public void onSessionStopped() {
+			synchronized (this) {
+				this.sessionCompleted = true;
+				int fileCount = this.uploadedFiles.size();
+				log.info("Upload session stopped for ticket {}, {} file(s) uploaded",
+					this.id, fileCount);
+				taskContext.info("Upload session stopped for ticket {}, {} file(s) uploaded",
+					this.id, fileCount);
+				this.notifyAll();
+			}
+		}
+
+		public Map<Long, UploadedFile> getUploadedFiles() {
+			synchronized (this) {
+				return new HashMap<>(this.uploadedFiles);
+			}
+		}
+
+		public UploadedFile getUploadedFile(long fileId) {
+			synchronized (this) {
+				return this.uploadedFiles.get(fileId);
+			}
+		}
+
+		public boolean awaitCompletion(long timeout) throws InterruptedException {
+			synchronized (this) {
+				if (!this.sessionCompleted) {
+					this.wait(timeout);
+				}
+				return this.sessionCompleted;
+			}
+		}
+		
+	}
 
 	private final Device device;
 	private Config config;
 	private Config lastConfig;
-	private TaskLogger taskLogger;
+	private TaskContext taskContext;
 	private Cli cli;
 
+	/** Upload tickets of this config helper context. */
+	private Map<Long, ConfigUploadTicket> uploadTickets = new HashMap<>();
+
 	public JsConfigHelper(Device device, Config config, Config lastConfig,
-		Cli cli, TaskLogger taskLogger) {
+		Cli cli, TaskContext taskContext) {
 		this.device = device;
 		this.config = config;
 		this.lastConfig = lastConfig;
 		this.cli = cli;
-		this.taskLogger = taskLogger;
+		this.taskContext = taskContext;
 	}
 
 	@Export
@@ -132,27 +307,29 @@ public final class JsConfigHelper {
 		return lastConfig.getCustomHash();
 	}
 
-	private void checkFileSha256(Path filePath, String expected) throws IOException {
+	private String checkFileSha256(Path filePath, String expected) throws IOException {
 		try (InputStream is = Files.newInputStream(filePath)) {
 			String computed = DigestUtils.sha256Hex(is).toLowerCase();
-			if (!expected.toLowerCase().equals(computed)) {
+			if (!expected.equalsIgnoreCase(computed)) {
 				log.warn("Invalid computed SHA256 hash for received file: {} vs {}", computed, expected);
 				throw new IllegalArgumentException(
 					"Invalid computed SHA256 hash for received file: %s vs %s".formatted(computed, expected));
 			}
-			taskLogger.debug("Checksum of downloaded file was successfully verified (%s).".formatted(computed));
+			taskContext.debug("Checksum of downloaded file was successfully verified (%s).".formatted(computed));
+			return computed;
 		}
 	}
 
-	private void checkFileMd5(Path filePath, String expected) throws IOException {
+	private String checkFileMd5(Path filePath, String expected) throws IOException {
 		try (InputStream is = Files.newInputStream(filePath)) {
 			String computed = DigestUtils.md5Hex(is).toLowerCase();
-			if (!expected.toLowerCase().equals(computed)) {
+			if (!expected.equalsIgnoreCase(computed)) {
 				log.warn("Invalid computed MD5 hash for received file: {} vs {}", computed, expected);
 				throw new IllegalArgumentException(
 					"Invalid computed MD5 hash for received file: %s vs %s".formatted(computed, expected));
 			}
-			taskLogger.debug("Checksum of downloaded file was successfully verified (%s).".formatted(computed));
+			taskContext.debug("Checksum of downloaded file was successfully verified (%s).".formatted(computed));
+			return computed;
 		}
 	}
 
@@ -165,7 +342,7 @@ public final class JsConfigHelper {
 	private void checkFileSum(Path filePath, String expected) throws IOException {
 		if (expected == null) {
 			log.info("Skipping verification of downloaded file (no checksum was provided).");
-			taskLogger.debug("Skipping verification of downloaded file (no checksum provided).");
+			taskContext.debug("Skipping verification of downloaded file (no checksum provided).");
 			return;
 		}
 		if (expected.length() == 32) {
@@ -184,21 +361,10 @@ public final class JsConfigHelper {
 	}
 
 	/**
-	 * Download a binary file from the device, using SCP.
-	 * @param key the name of the config attribute
-	 * @param method "scp" or "sftp" for now
-	 * @param remoteFileName the file (including full path) to download from the device
-	 * @param storeFileName the file name to store (null to use remoreFileName)
-	 * @param newSession use a new SSH session to download the file
-	 * @param expectedHash if not null verify the hash of the received file (SHA256 or MD5)
+	 * Normalize the store file name.
 	 */
-	@Export
-	public void download(String key, String method, String remoteFileName, String storeFileName,
-		boolean newSession, String expectedHash) throws Exception {
-		if (remoteFileName == null) {
-			return;
-		}
-		String storeName = storeFileName;
+	private String normalizeStoreName(String requestedStoreName, String remoteFileName) {
+		String storeName = requestedStoreName;
 		if (storeName != null) {
 			storeName = storeName.trim();
 			if ("".equals(storeName)) {
@@ -207,7 +373,7 @@ public final class JsConfigHelper {
 		}
 		if (storeName == null) {
 			try {
-				storeName = new File(remoteFileName).getName();
+				storeName = Paths.get(remoteFileName).getFileName().toString();
 				storeName = storeName.trim();
 				storeName = storeName.replaceAll("[^0-9_a-zA-Z\\(\\)\\%\\-\\.]", "");
 			}
@@ -221,68 +387,364 @@ public final class JsConfigHelper {
 				storeName = null;
 			}
 		}
-		try {
-			DeviceDriver driver = device.getDeviceDriver();
-			if ("scp".equals(method)) {
-				for (AttributeDefinition attribute : driver.getAttributes()) {
-					if (attribute.getLevel().equals(AttributeLevel.CONFIG) && attribute.getName().equals(key)) {
-						if (cli instanceof Ssh sshCli) {
-							if (AttributeType.BINARYFILE.equals(attribute.getType())) {
-								ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, key, storeName);
-								sshCli.scpDownload(remoteFileName, fileAttribute.getFileName().toString(), newSession);
-								this.checkFileSum(fileAttribute.getFileName().toPath(), expectedHash);
-								fileAttribute.setFileSize(fileAttribute.getFileName().length());
-								config.addAttribute(fileAttribute);
-							}
-							else {
-								log.warn("Error during snapshot: can't use SCP download method on attribute '{}' (should be binary or long text type).", key);
-								throw new IllegalArgumentException(String.format(
-									"Can't use SCP download method on attribute '%s' which is not of type binary-file.", key));
-							}
+		return storeName;
+	}
+
+	/**
+	 * Download a binary file from the device, using SCP.
+	 * @param key the name of the config attribute
+	 * @param protocol the transfer protocol (SFTP or SCP)
+	 * @param remoteFileName the file (including full path) to download from the device
+	 * @param storeFileName the file name to store (null to use remoreFileName)
+	 * @param newSession use a new SSH session to download the file
+	 * @param expectedHash if not null verify the hash of the received file (SHA256 or MD5)
+	 */
+	public void download(AttributeDefinition attribute, TransferProtocol protocol, String remoteFileName, String storeFileName,
+		boolean newSession, String expectedHash) throws Exception {
+
+		if (!AttributeType.BINARYFILE.equals(attribute.getType())) {
+			log.warn("Error during snapshot: can't use download method on attribute '{}'" +
+				" (not a binary file attribute).", attribute.getName());
+			taskContext.error("Can't use download method on attribute '{}'" +
+				" (not a binary file attribute).", attribute.getName());
+			throw new IllegalArgumentException(
+				"Can't use SCP/SFTP download method on non-binary-file attribute");
+		}
+
+		if (remoteFileName == null) {
+			log.warn("Error during snapshot, remote file name is missing in download request (for attribute '{}').", attribute.getName());
+			taskContext.error("Remote file name is missing in download request (for attribute '{}').", attribute.getName());
+			throw new IllegalArgumentException("Remote file name to download is missing in download request");
+		}
+		String storeName = this.normalizeStoreName(storeFileName, remoteFileName);
+		if (storeName == null) {
+			log.warn("Error during snapshot, unable to generate a store file name in download request (for attribute '{}').", attribute.getName());
+			taskContext.error("Unable to generate a store file name in download request (for attribute '{}').", attribute.getName());
+			throw new IllegalArgumentException("Unable to generate a proper store file name in download request");
+		}
+
+		if (TransferProtocol.SCP.equals(protocol) || TransferProtocol.SFTP.equals(protocol)) {
+			if (cli == null) {
+				throw new IllegalArgumentException("Can't use SCP/SFTP download method as no CLI access exists in the current context.");
+			}
+
+			if (cli instanceof Ssh sshCli) {
+				try {
+					ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, attribute.getName(), storeName);
+					Path targetPath = fileAttribute.getFilePath().toAbsolutePath();
+					Path tempPath = fileAttribute.getTempFilePath();
+					tempPath.toFile().deleteOnExit();
+					log.trace("Temporary file path for download is {}", tempPath);
+					try {
+						if (TransferProtocol.SCP.equals(protocol)) {
+							sshCli.scpDownload(remoteFileName, tempPath, newSession);
 						}
-						else {
-							log.warn("Error during snapshot: can't use SCP method with non-SSH CLI access (for attribute '{}').", key);
-							throw new IllegalArgumentException(String.format(
-								"Can't use SCP method with non-SSH CLI access (for attribute '{}').", key));
+						else if (TransferProtocol.SFTP.equals(protocol)) {
+							sshCli.sftpDownload(remoteFileName, tempPath, newSession);
 						}
-						break;
+						this.checkFileSum(tempPath, expectedHash);
+						fileAttribute.setFileSize(tempPath.toFile().length());
+						try (InputStream is = new FileInputStream(tempPath.toFile())) {
+							String cs = "sha256:" + DigestUtils.sha256Hex(is).toLowerCase();
+							log.trace("Computed SHA256 for the received file is {}", cs);
+							fileAttribute.setChecksum(cs);
+						}
+						Files.move(tempPath, targetPath);
+						config.addAttribute(fileAttribute);
+						return;
+					}
+					catch (IOException e) {
+						log.debug("Removing temporary file path {}", tempPath);
+						Files.deleteIfExists(tempPath);
+						throw e;
 					}
 				}
-			}
-			else if ("sftp".equals(method)) {
-				for (AttributeDefinition attribute : driver.getAttributes()) {
-					if (attribute.getLevel().equals(AttributeLevel.CONFIG) && attribute.getName().equals(key)) {
-						if (AttributeType.BINARYFILE.equals(attribute.getType())) {
-							if (cli instanceof Ssh sshCli) {
-								ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, key, storeName);
-								sshCli.sftpDownload(remoteFileName, fileAttribute.getFileName().toString(), newSession);
-								this.checkFileSum(fileAttribute.getFileName().toPath(), expectedHash);
-								fileAttribute.setFileSize(fileAttribute.getFileName().length());
-								config.addAttribute(fileAttribute);
-							}
-							else {
-								log.warn("Error during snapshot: can't use SFTP method with non-SSH CLI access (for attribute '{}').", key);
-								throw new IllegalArgumentException(String.format(
-									"Can't use SFTP method with non-SSH CLI access (for attribute '{}').", key));
-							}
-						}
-						else {
-							log.warn("Error during snapshot: can't use SFTP download method on non-binary-file attribute '{}'.", key);
-							throw new IllegalArgumentException(String.format(
-								"Can't use SFTPdownload method on attribute '%s' which is not of type binary-file.", key));
-						}
-						break;
-					}
+				catch (Exception e) {
+					log.warn(
+						"Error during snapshot while downloading file for attribute key '{}'.",
+						attribute.getName());
+					taskContext.error("Error while downloading file for attribute key {}: {}",
+						attribute.getName(), e.getMessage());
+					throw e;
 				}
 			}
-			else {
-				log.warn("Invalid download method '{}' during snapshot.", method);
-				throw new IllegalArgumentException(String.format("Invalid download method %s", method));
+
+			// Not SSH-based CLI session
+			log.warn("Error during snapshot: can't use SCP/SFTP method with non-SSH CLI access (for attribute '{}').", attribute.getName());
+			taskContext.error("Can't use SCP/SFTP method with non-SSH CLI access (for attribute '{}').", attribute.getName());
+			throw new IllegalArgumentException("Can't use SCP/SFTP method with non-SSH CLI access.");
+		}
+
+		log.warn("Error during snapshot: unsupported download protocol '{}' (for attribute '{}').", protocol, attribute.getName());
+		taskContext.error("Unsupported download protocol '{}' (for attribute '{}').", protocol, attribute.getName());
+		throw new IllegalArgumentException("Unsupported download protocol.");
+	}
+
+	/**
+	 * Download a binary file from the device - to be called from JS.
+	 * @param key the name of the config attribute
+	 * @param method "scp" or "sftp"
+	 * @param remoteFileName the file (including full path) to download from the device
+	 * @param storeFileName the file name to store (null to use remoreFileName)
+	 * @param newSession use a new SSH session to download the file
+	 * @param expectedHash if not null verify the hash of the received file (SHA256 or MD5)
+	 */
+	@Export
+	public void download(String key, String method, String remoteFileName, String storeFileName,
+		boolean newSession, String expectedHash) throws Exception {
+
+		TransferProtocol protocol = null;
+		if (method != null) {
+			protocol = TransferProtocol.valueOf(method.toUpperCase());
+		}
+
+		if (protocol == null) {
+			log.warn("Error during snapshot, invalid download method '{}'.", method);
+			taskContext.error("Invalid download method '{}'.", method);
+			throw new IllegalArgumentException("Invalid download method");
+		}
+
+		DeviceDriver driver = this.device.getDeviceDriver();
+		AttributeDefinition attribute = driver.getAttributeDefinition(AttributeLevel.CONFIG, key);
+		if (attribute == null) {
+			log.warn("Error during snapshot, requested attribute key '{}' doesn't exist.", key);
+			taskContext.error("Requested attribute key '{}' doesn't exist.", key);
+			throw new IllegalArgumentException("Unknown attribute key");
+		}
+
+		this.download(attribute, protocol, remoteFileName, storeFileName, newSession, expectedHash);
+	}
+
+
+	/**
+	 * Request an upload ticket (SCP/SFTP).
+	 */
+	public ConfigUploadTicket requestUpload(Set<TransferProtocol> protocols,
+		NetworkAddress sourceIp) throws IOException {
+
+		if (!SshServer.isRunning()) {
+			log.warn("Error during snapshot while requesting upload ticket: " +
+				"the embedded SSH server is not running.");
+			taskContext.error("Error while requesting upload ticket for key: " +
+				"the embedded SSH server is not running.");
+			throw new IOException("The SSH server is not running.");
+		}
+		for (TransferProtocol protocol : protocols) {
+			if (!SshServer.isRunning(protocol)) {
+				log.warn("Error during snapshot while requesting upload ticket: " +
+					"the transfer protocol {} is not enabled.", protocol);
+				taskContext.error("Error while requesting upload ticket: " +
+					"the transfer protocol {} is not enabled.", protocol);
+				throw new IOException("The SSH server is not running.");
 			}
 		}
+
+		long ticketId = this.uploadTickets.size() + 1;
+
+		final String username = this.taskContext.getIdentifier()
+			.replace("Task", "")
+			.replace("_", "")
+			.toLowerCase()
+			+ "_%d".formatted(ticketId);
+		String password = PasswordGenerator.generateAlphanumeric(24);
+
+		Path rootPath = ConfigBinaryFileAttribute.makeTempFolder(username);
+
+		ConfigUploadTicket ticket = new ConfigUploadTicket(ticketId,
+			protocols, username, password, sourceIp, rootPath);
+		this.uploadTickets.put(ticketId, ticket);
+
+		SshServer.getServer().registerUploadTicket(ticket);
+		return ticket;
+	}
+
+	@Export
+	public ProxyObject requestUpload(String method, String sourceIp) throws Exception {
+
+		Set<TransferProtocol> protocols =
+			new HashSet<>(Arrays.asList(TransferProtocol.SCP, TransferProtocol.SFTP));
+		if (method != null) {
+			protocols = Collections.singleton(TransferProtocol.valueOf(method.toUpperCase()));
+		}
+
+		NetworkAddress sourceAddress = null;
+		if (sourceIp != null) {
+			try {
+				sourceAddress = NetworkAddress.getNetworkAddress(sourceIp);
+			}
+			catch (Exception e) {
+				log.warn("Error during snapshot, invalid source IP address '{}'.", sourceIp);
+				taskContext.error("Invalid source IP address '{}'.", sourceIp);
+				throw new IllegalArgumentException("Invalid source IP address");
+			}
+		}
+
+		log.debug("Requesting upload ticket, protocols {}, source address {}",
+			protocols, sourceAddress);
+		this.taskContext.debug(
+			"Requesting upload ticket, protocols {}, source address {}",
+			protocols, sourceAddress);
+
+		ConfigUploadTicket ticket = this.requestUpload(protocols, sourceAddress);
+
+		Map<String, Object> hostKeys = new HashMap<>();
+		for (PublicKey pk : SshServer.getServer().getPublicHostKeys()) {
+			try {
+				// Convert to OpenSSH format: "ssh-rsa AAAAB3NzaC1yc2E..."
+				String opensshFormat = PublicKeyEntry.toString(pk);
+
+				// Split to get key type and base64 data
+				String[] parts = opensshFormat.split("\\s+", 2);
+				if (parts.length >= 2) {
+					hostKeys.put(parts[0], parts[1]);
+				}
+			}
+			catch (Exception e) {
+				log.warn("Unable to convert public key to OpenSSH format", e);
+				taskContext.error("Unable to convert public key to OpenSSH format: {}", e.getMessage());
+			}
+		}
+
+		final NetworkAddress host;
+		try {
+			host = Collector.getCollectorAddress(this.device.getMgmtDomain());
+		}
 		catch (Exception e) {
-			log.warn("Error during snapshot while downloading file for attribute key '{}'.", key);
-			taskLogger.error("Error while downloading file for attribute key {}: {}", key, e.getMessage());
+			log.warn("Unable to retrieve SSH server IP address for domain {}", this.device.getMgmtDomain(), e);
+			taskContext.error("Unable to retrieve SSH server IP address for domain {}: {}",
+				this.device.getMgmtDomain(), e.getMessage());
+			throw e;
+		}
+
+		int port = SshServer.SETTINGS.getTcpPort();
+
+		log.debug("Upload ticket details: username '{}', password '{}...', host '{}:{}', hostkeys '{}'",
+			ticket.username, ticket.password.substring(0, 1), host, port, hostKeys);
+		taskContext.info("Upload ticket details: username '{}', password '{}...', host '{}:{}', hostkeys '{}'",
+			ticket.username, ticket.password.substring(0, 1), host, port, hostKeys);
+
+		Map<String, Object> result = new HashMap<>();
+		result.put("id", ticket.id);
+		result.put("username", ticket.username);
+		result.put("password", ticket.password);
+		result.put("host", host);
+		result.put("port", port);
+		result.put("hostkeys", ProxyObject.fromMap(hostKeys));
+		ProxyObject proxy = ProxyObject.fromMap(result);
+
+		// We don't need it anymore
+		ticket.clearTextPassword();
+		return proxy;
+	}
+
+	@Export
+	public ProxyObject awaitUpload(long ticketId, long timeout) throws InterruptedException {
+		ConfigUploadTicket ticket = this.uploadTickets.get(ticketId);
+		if (ticket == null) {
+			log.warn("No such upload ticket {}", ticketId);
+			this.taskContext.error("No such upload ticket {}", ticketId);
+			return null;
+		}
+		log.debug("Waiting for upload ticket {} (timeout: {} ms)", ticketId, timeout);
+		this.taskContext.info("Waiting for upload ticket {} (timeout: {} ms)", ticketId, timeout);
+
+		boolean completed = ticket.awaitCompletion(timeout);
+
+		if (!completed) {
+			log.warn("Timeout while waiting for upload ticket {}", ticketId);
+			this.taskContext.warn("Timeout while waiting for upload ticket {}", ticketId);
+		}
+
+		Map<Long, UploadedFile> uploadedFiles = ticket.getUploadedFiles();
+		log.info("Upload ticket {} completed: {} file(s) uploaded", ticketId, uploadedFiles.size());
+		this.taskContext.info("Upload ticket {} completed: {} file(s) uploaded", ticketId, uploadedFiles.size());
+
+		// Convert uploaded files to list of objects for JavaScript
+		Object[] files = new Object[uploadedFiles.size()];
+		int i = 0;
+		for (UploadedFile file : uploadedFiles.values()) {
+			Map<String, Object> fileInfo = new HashMap<>();
+			fileInfo.put("id", file.getId());
+			fileInfo.put("name", file.getName());
+			fileInfo.put("size", file.getSize());
+			files[i++] = fileInfo;
+		}
+
+		Map<String, Object> result = new HashMap<>();
+		result.put("completed", completed);
+		result.put("files", files);
+		result.put("fileCount", uploadedFiles.size());
+
+		return ProxyObject.fromMap(result);
+	}
+
+	@Export
+	public void commitUpload(long ticketId, long fileId, String key, String storeName, String expectedHash) throws Exception {
+		ConfigUploadTicket ticket = this.uploadTickets.get(ticketId);
+		if (ticket == null) {
+			log.warn("No such upload ticket {}", ticketId);
+			this.taskContext.error("No such upload ticket {}", ticketId);
+			throw new IllegalArgumentException("No such upload ticket");
+		}
+
+		UploadedFile uploadedFile = ticket.getUploadedFile(fileId);
+		if (uploadedFile == null) {
+			log.warn("No such file {} in upload ticket {}", fileId, ticketId);
+			this.taskContext.error("No such file {} in upload ticket {}", fileId, ticketId);
+			throw new IllegalArgumentException("No such file in upload ticket");
+		}
+
+		DeviceDriver driver = this.device.getDeviceDriver();
+		AttributeDefinition attribute = driver.getAttributeDefinition(AttributeLevel.CONFIG, key);
+		if (attribute == null) {
+			log.warn("Error during snapshot, requested attribute key '{}' doesn't exist.", key);
+			taskContext.error("Requested attribute key '{}' doesn't exist.", key);
+			throw new IllegalArgumentException("Unknown attribute key");
+		}
+
+		if (!AttributeType.BINARYFILE.equals(attribute.getType())) {
+			log.warn("Error during snapshot: can't use commitUpload method on attribute '{}'" +
+				" (not a binary file attribute).", attribute.getName());
+			taskContext.error("Can't use commitUpload method on attribute '{}'" +
+				" (not a binary file attribute).", attribute.getName());
+			throw new IllegalArgumentException(
+				"Can't use commitUpload method on non-binary-file attribute");
+		}
+
+		Path tempPath = uploadedFile.getPath();
+		String finalStoreName = this.normalizeStoreName(storeName, uploadedFile.getName());
+		if (finalStoreName == null) {
+			log.warn("Error during snapshot, unable to generate a store file name in commitUpload (for attribute '{}').", attribute.getName());
+			taskContext.error("Unable to generate a store file name in commitUpload (for attribute '{}').", attribute.getName());
+			throw new IllegalArgumentException("Unable to generate a proper store file name in commitUpload");
+		}
+
+		try {
+			ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, attribute.getName(), finalStoreName);
+			Path targetPath = fileAttribute.getFilePath().toAbsolutePath();
+
+			// Verify checksum if provided
+			this.checkFileSum(tempPath, expectedHash);
+
+			fileAttribute.setFileSize(tempPath.toFile().length());
+			try (InputStream is = new FileInputStream(tempPath.toFile())) {
+				String cs = "sha256:" + DigestUtils.sha256Hex(is).toLowerCase();
+				log.trace("Computed SHA256 for the uploaded file is {}", cs);
+				fileAttribute.setChecksum(cs);
+			}
+			Files.move(tempPath, targetPath);
+			config.addAttribute(fileAttribute);
+
+			log.info("Committed uploaded file {} from ticket {} to attribute '{}' as '{}'",
+				fileId, ticketId, key, finalStoreName);
+			taskContext.info("Committed uploaded file {} from ticket {} to attribute '{}' as '{}'",
+				fileId, ticketId, key, finalStoreName);
+		}
+		catch (Exception e) {
+			log.warn("Error during snapshot while committing uploaded file for attribute key '{}'.",
+				attribute.getName(), e);
+			taskContext.error("Error while committing uploaded file for attribute key {}: {}",
+				attribute.getName(), e.getMessage());
 			throw e;
 		}
 	}

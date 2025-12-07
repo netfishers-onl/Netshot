@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.netshot.netshot.collector;
+package net.netshot.netshot.device.collector;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

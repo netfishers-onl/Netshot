@@ -18,7 +18,8 @@
  */
 package net.netshot.netshot.work.tasks;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -266,7 +267,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				long dontDeleteDevice = -1;
 				Date dontDeleteBefore = null;
 				int count = 0;
-				List<File> toDeleteFiles = new ArrayList<File>();
+				List<Path> toDeletePathes = new ArrayList<>();
 				while (configs.next()) {
 					try {
 						Config config = configs.get();
@@ -283,7 +284,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 						else {
 							for (ConfigAttribute attribute : config.getAttributes()) {
 								if (attribute instanceof ConfigBinaryFileAttribute cbfa) {
-									toDeleteFiles.add(cbfa.getFileName());
+									toDeletePathes.add(cbfa.getFilePath());
 								}
 							}
 							session.remove(config);
@@ -300,12 +301,12 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				session.getTransaction().commit();
 				log.trace("Task {}. Cleaning up done on configurations, {} entries affected.", this.getId(), count);
 				this.logger.info("Cleaning up done on configurations, {} entries affected.", count);
-				for (File toDeleteFile : toDeleteFiles) {
+				for (Path toDeletePath : toDeletePathes) {
 					try {
-						toDeleteFile.delete();
+						Files.delete(toDeletePath);
 					}
 					catch (Exception e) {
-						log.error("Error while removing binary file {}", toDeleteFile, e);
+						log.error("Error while removing binary file {}", toDeletePath, e);
 					}
 				}
 			}

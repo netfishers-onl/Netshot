@@ -21,7 +21,13 @@ package net.netshot.netshot.work;
 import org.graalvm.polyglot.HostAccess.Export;
 import org.slf4j.event.Level;
 
-public interface TaskLogger {
+/**
+ * Task context (logging, etc.) to be attached to scripts etc.
+ */
+public interface TaskContext {
+
+	@Export
+	String getIdentifier();
 
 	/**
 	 * Convert a string to an hexadecimal representation.

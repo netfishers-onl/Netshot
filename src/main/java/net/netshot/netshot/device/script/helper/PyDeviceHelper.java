@@ -55,7 +55,7 @@ import net.netshot.netshot.device.attribute.DeviceLongTextAttribute;
 import net.netshot.netshot.device.attribute.DeviceNumericAttribute;
 import net.netshot.netshot.device.attribute.DeviceTextAttribute;
 import net.netshot.netshot.diagnostic.DiagnosticResult;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * Class used to get  and set data on a device object from Python.
@@ -67,7 +67,7 @@ public final class PyDeviceHelper {
 
 	private Device device;
 	private Session session;
-	private TaskLogger taskLogger;
+	private TaskContext taskContext;
 	private boolean readOnly;
 
 	public static String getStringMember(Value value, String key, String defaultResult) {
@@ -102,10 +102,10 @@ public final class PyDeviceHelper {
 		return field;
 	}
 
-	public PyDeviceHelper(Device device, Session session, TaskLogger taskLogger, boolean readOnly)
+	public PyDeviceHelper(Device device, Session session, TaskContext taskContext, boolean readOnly)
 		throws MissingDeviceDriverException {
 		this.device = device;
-		this.taskLogger = taskLogger;
+		this.taskContext = taskContext;
 		this.readOnly = readOnly;
 		this.session = session;
 	}
@@ -114,7 +114,7 @@ public final class PyDeviceHelper {
 	public void add(String key, Value data) {
 		if (readOnly) {
 			log.warn("Adding key '{}' is forbidden.", key);
-			taskLogger.error("Adding key {} is forbidden", key);
+			taskContext.error("Adding key {} is forbidden", key);
 			return;
 		}
 		if (data == null) {
@@ -176,7 +176,7 @@ public final class PyDeviceHelper {
 		}
 		catch (Exception e) {
 			log.warn("Error during snapshot while adding device attribute key '{}'.", key, e);
-			taskLogger.error("Can't add device attribute {}: {}", key, e.getMessage());
+			taskContext.error("Can't add device attribute {}: {}", key, e.getMessage());
 		}
 	}
 
@@ -184,7 +184,7 @@ public final class PyDeviceHelper {
 	public void reset() {
 		if (readOnly) {
 			log.warn("Resetting device is forbidden.");
-			taskLogger.error("Resetting key is forbidden");
+			taskContext.error("Resetting key is forbidden");
 			return;
 		}
 		device.setFamily("");
@@ -207,7 +207,7 @@ public final class PyDeviceHelper {
 	public void set(String key, Boolean value) {
 		if (readOnly) {
 			log.warn("Setting key '{}' is forbidden.", key);
-			taskLogger.error("Setting key {} is forbidden", key);
+			taskContext.error("Setting key {} is forbidden", key);
 			return;
 		}
 		if (value == null) {
@@ -229,7 +229,7 @@ public final class PyDeviceHelper {
 		}
 		catch (Exception e) {
 			log.warn("Error during snapshot while setting device attribute key '{}'.", key);
-			taskLogger.error("Can't add device attribute {}: {}", key, e.getMessage());
+			taskContext.error("Can't add device attribute {}: {}", key, e.getMessage());
 		}
 	}
 
@@ -238,7 +238,7 @@ public final class PyDeviceHelper {
 	public void set(String key, Double value) {
 		if (readOnly) {
 			log.warn("Setting key '{}' is forbidden.", key);
-			taskLogger.error("Setting key {} is forbidden", key);
+			taskContext.error("Setting key {} is forbidden", key);
 			return;
 		}
 		if (value == null) {
@@ -260,7 +260,7 @@ public final class PyDeviceHelper {
 		}
 		catch (Exception e) {
 			log.warn("Error during snapshot while setting device attribute key '{}'.", key);
-			taskLogger.error("Can't add device attribute {}: {}", key, e.getMessage());
+			taskContext.error("Can't add device attribute {}: {}", key, e.getMessage());
 		}
 	}
 
@@ -268,7 +268,7 @@ public final class PyDeviceHelper {
 	public void set(String key, String value) {
 		if (readOnly) {
 			log.warn("Setting key '{}' is forbidden.", key);
-			taskLogger.error("Setting key {} is forbidden", key);
+			taskContext.error("Setting key {} is forbidden", key);
 			return;
 		}
 		if (value == null) {
@@ -322,7 +322,7 @@ public final class PyDeviceHelper {
 		}
 		catch (Exception e) {
 			log.warn("Error during snapshot while setting device attribute key '{}'.", key);
-			taskLogger.error("Can't add device attribute {}: {}", key, e.getMessage());
+			taskContext.error("Can't add device attribute {}: {}", key, e.getMessage());
 		}
 	}
 
@@ -516,12 +516,12 @@ public final class PyDeviceHelper {
 		catch (ObjectNotFoundException e) {
 			log.error("Device not found on Python get, item {}, device {}.",
 				item, deviceId, e);
-			this.taskLogger.warn("Unable to find the device {}.", deviceId);
+			this.taskContext.warn("Unable to find the device {}.", deviceId);
 		}
 		catch (Exception e) {
 			log.error("Error on Python get, item {}, device {}.", item,
 				deviceId, e);
-			this.taskLogger.warn("Unable to get data %s for device {}.", item, deviceId);
+			this.taskContext.warn("Unable to get data %s for device {}.", item, deviceId);
 		}
 		return null;
 	}
@@ -542,19 +542,19 @@ public final class PyDeviceHelper {
 		catch (ObjectNotFoundException e) {
 			log.error("Device not found on Python get, item {}, device named {}.",
 				item, deviceName, e);
-			this.taskLogger.warn("Unable to find the device named {}.", deviceName);
+			this.taskContext.warn("Unable to find the device named {}.", deviceName);
 		}
 		catch (Exception e) {
 			log.error("Error on Python get, item {}, device named {}.", item,
 				deviceName, e);
-			this.taskLogger.warn("Unable to get data {} for device named {}.", item, deviceName);
+			this.taskContext.warn("Unable to get data {} for device named {}.", item, deviceName);
 		}
 		return null;
 	}
 
 	@Export
 	public void debug(String message) {
-		taskLogger.debug(message);
+		taskContext.debug(message);
 	}
 
 	/**

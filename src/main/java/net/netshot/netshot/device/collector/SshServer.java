@@ -29,7 +29,6 @@ import java.security.KeyPair;
 import java.security.Principal;
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -60,10 +59,9 @@ import org.apache.sshd.common.session.SessionContext;
 import org.apache.sshd.common.session.SessionListener;
 import org.apache.sshd.common.util.buffer.Buffer;
 import org.apache.sshd.core.CoreModuleProperties;
-import org.apache.sshd.scp.common.ScpFileOpener;
 import org.apache.sshd.scp.common.ScpSourceStreamResolver;
 import org.apache.sshd.scp.common.ScpTargetStreamResolver;
-import org.apache.sshd.scp.common.helpers.LocalFileScpTargetStreamResolver;
+import org.apache.sshd.scp.common.helpers.DefaultScpFileOpener;
 import org.apache.sshd.scp.common.helpers.ScpTimestampCommandDetails;
 import org.apache.sshd.scp.server.ScpCommandFactory;
 import org.apache.sshd.server.ServerBuilder;
@@ -87,7 +85,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.device.NetworkAddress;
-import net.netshot.netshot.device.collector.UploadTicket.Owner;
 
 /**
  * SSH server to receive files via SFTP/SCP.
@@ -340,7 +337,7 @@ public final class SshServer {
 	/**
 	 * File opener to be called when a device tries to send or receive a file via SCP.
 	 */
-	private class DeviceScpFileOpener implements ScpFileOpener {
+	private class DeviceScpFileOpener extends DefaultScpFileOpener {
 
 		/** Common error message for all download attempts. */
 		private static final String FORBIDDEN_MESSAGE =
@@ -402,18 +399,10 @@ public final class SshServer {
 			return null; // Unreachable
 		}
 
-		// @Override
-		// public Path resolveLocalPath(Session session, FileSystem fileSystem, String commandPath)
-		// 		throws IOException, InvalidPathException {
-		// 	UploadTicket ticket = session.getAttribute(UPLOAD_TICKET);
-		// 	return ticket.getTargetFilePath();
-		// }
-
 		@Override
 		public Path resolveIncomingReceiveLocation(Session session, Path path, boolean recursive, boolean shouldBeDir,
 				boolean preserve) throws IOException {
-			throwForbiddenException(session, "resolveIncomingReceiveLocation");
-			return null; // Unreachable
+			return super.resolveIncomingReceiveLocation(session, path, recursive, shouldBeDir, preserve);
 		}
 
 		@Override
@@ -444,13 +433,15 @@ public final class SshServer {
 		@Override
 		public OutputStream openWrite(Session session, Path file, long size, Set<PosixFilePermission> permissions,
 				OpenOption... options) throws IOException {
-			throw new IOException("This method should not be called.");
+			log.info("SSH/scp server open file request - session {}, path {}, permissions {}, options {}",
+				session, file, permissions, options);
+			return super.openWrite(session, file, size, permissions, options);
 		}
 
 		@Override
 		public void closeWrite(Session session, Path file, long size, Set<PosixFilePermission> permissions, OutputStream os)
 				throws IOException {
-			log.debug("SCP closeWrite: file {}, size {}", file, size);
+			log.debug("SSH/SCP server close write request: session {}, file {}, size {}", session, file, size);
 
 			// Close the output stream first
 			if (os != null) {
@@ -466,27 +457,17 @@ public final class SshServer {
 			// Trigger onFileWritten callback
 			UploadTicket ticket = session.getAttribute(UPLOAD_TICKET);
 			if (ticket != null) {
-				// Get the relative path from the root
-				Path rootPath = ticket.getRootPath();
-				Path relativePath = file;
-				if (file.isAbsolute()) {
-					try {
-						relativePath = rootPath.relativize(file);
-					}
-					catch (IllegalArgumentException e) {
-						// If we can't relativize, use the file as is
-						log.warn("Cannot relativize path {} against root {}", file, rootPath, e);
-					}
+				log.info("File written via SCP in session {}: {}", session, file);
+				if (!ticket.onFileWritten(file)) {
+					Files.deleteIfExists(file);
 				}
-				log.info("File written via SCP in session {}: {}", session, relativePath);
-				ticket.onFileWritten(relativePath);
 			}
 		}
 
 		@Override
 		public ScpTargetStreamResolver createScpTargetStreamResolver(Session session, Path path) throws IOException {
 			log.debug("Create SCP target stream resolver for session {}, path {}", session, path);
-			return new LocalFileScpTargetStreamResolver(path, this);
+			return super.createScpTargetStreamResolver(session, path);
 		}
 	}
 
@@ -525,27 +506,19 @@ public final class SshServer {
 		@Override
 		public void closeFile(SftpSubsystemProxy subsystem, FileHandle fileHandle, Path file, String handle,
 				Channel channel, Set<? extends OpenOption> options) throws IOException {
-			log.debug("SFTP closeFile: file {}, handle {}, options {}", file, handle, options);
+			log.info("SSH/SFTP server close file request - session {}, path {}, options {}",
+				subsystem.getSession(), file, options);
 
 			// Trigger onFileWritten callback if this was a write operation
 			if (options.contains(java.nio.file.StandardOpenOption.WRITE) ||
 			    options.contains(java.nio.file.StandardOpenOption.CREATE)) {
 				UploadTicket ticket = subsystem.getSession().getAttribute(UPLOAD_TICKET);
 				if (ticket != null) {
-					// Get the relative path from the root
-					Path rootPath = ticket.getRootPath();
-					Path relativePath = file;
-					if (file.isAbsolute()) {
-						try {
-							relativePath = rootPath.relativize(file);
-						}
-						catch (IllegalArgumentException e) {
-							// If we can't relativize, use the file as is
-							log.warn("Cannot relativize path {} against root {}", file, rootPath, e);
-						}
+					log.info("File written via SFTP in session {}: {}", subsystem.getSession(), file);
+					if (!ticket.onFileWritten(file)) {
+						log.warn("File {} received through session {}", subsystem.getSession(), file);
+						Files.deleteIfExists(file);
 					}
-					log.info("File written via SFTP in session {}: {}", subsystem.getSession(), relativePath);
-					ticket.onFileWritten(relativePath);
 				}
 			}
 		}
@@ -569,7 +542,6 @@ public final class SshServer {
 		@Override
 		public DirectoryStream<Path> openDirectory(SftpSubsystemProxy subsystem, DirectoryHandle dirHandle, Path dir,
 				String handle, LinkOption... linkOptions) throws IOException {
-			log.warn("openDirectory dirHandle {}, dir {}, handle {}, linkOptions {}", dirHandle, dir, handle, linkOptions);
 			throwForbiddenException(subsystem, "openDirectory");
 			return null; // Unreachable
 		}
@@ -577,10 +549,9 @@ public final class SshServer {
 		@Override
 		public SeekableByteChannel openFile(SftpSubsystemProxy subsystem, FileHandle fileHandle, Path file, String handle,
 				Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
-			log.warn("openFile fileHandle {}, file {}, handle {}, options {}, attrs {}", fileHandle, file, handle, options, attrs);
+			log.info("SSH/SFTP server open file request - session {}, path {}, options {}, attrs {}",
+				subsystem.getSession(), file, options, attrs);
 			return SftpFileSystemAccessor.super.openFile(subsystem, fileHandle, file, handle, options, attrs);
-			//throwForbiddenException(subsystem, "openFile");
-			//return null; // Unreachable
 		}
 
 		@Override
@@ -593,9 +564,10 @@ public final class SshServer {
 		public Map<String, ?> readFileAttributes(SftpSubsystemProxy subsystem, Path file, String view,
 				LinkOption... options) throws IOException {
 				
-			var a = Files.readAttributes(file, view, options);
-			log.warn("readFileAttributes: {}", a);
-			return a;
+			Map<String, ?> attributes = Files.readAttributes(file, view, options);
+			log.debug("SSH/SFTP server read file attribute request, session {}, path {}, options {} => attributes {}",
+				subsystem.getSession(), file, options, attributes);
+			return attributes;
 		}
 
 		@Override
@@ -635,20 +607,6 @@ public final class SshServer {
 			return null; // Unreachable
 		}
 
-		// @Override
-		// public Path resolveLocalFilePath(SftpSubsystemProxy subsystem, Path rootDir, String remotePath)
-		// 		throws IOException, InvalidPathException {
-		// 	log.warn("resolveLocalFilePath rootDir {}, remotePath {}", rootDir, remotePath);
-		// 	UploadTicket ticket = subsystem.getSession().getAttribute(UPLOAD_TICKET);
-		// 	if (ticket == null) {
-		// 		log.warn("Invalid upload ticket in SFTP session {}", subsystem.getSession());
-		// 	}
-		// 	if (".".equals(remotePath)) {
-		// 		return Path.of("/", ticket.getUsername());
-		// 	}
-		// 	return ticket.getTargetFilePath();
-		// }
-
 		@Override
 		public NavigableMap<String, Object> resolveReportedFileAttributes(SftpSubsystemProxy subsystem, Path file,
 				int flags, NavigableMap<String, Object> attrs, LinkOption... options) throws IOException {
@@ -673,12 +631,6 @@ public final class SshServer {
 				throws IOException {
 			throwForbiddenException(subsystem, "setFileOwner");
 		}
-
-		// @Override
-		// public void setFilePermissions(SftpSubsystemProxy subsystem, Path file, Set<PosixFilePermission> perms,
-		// 		LinkOption... options) throws IOException {
-		// 	//throwForbiddenException(subsystem, "setFilePermissions");
-		// }
 
 		@Override
 		public void setGroupOwner(SftpSubsystemProxy subsystem, Path file, Principal value, LinkOption... options)
@@ -708,6 +660,9 @@ public final class SshServer {
 		@Override
 		public Path getUserHomeDir(SessionContext session) throws IOException {
 			UploadTicket ticket = session.getAttribute(UPLOAD_TICKET);
+			if (ticket == null) {
+				return null;
+			}
 			return ticket.getRootPath();
 		}
 
@@ -752,6 +707,7 @@ public final class SshServer {
 		this.sshd.setHost(SshServer.SETTINGS.listenHost.getHostAddress());
 
 		CoreModuleProperties.MAX_CONCURRENT_SESSIONS.set(this.sshd, SshServer.SETTINGS.maxConcurrentSessions);
+		CoreModuleProperties.SERVER_IDENTIFICATION.set(this.sshd, "NETSHOT-%s".formatted(Netshot.VERSION));
 
 		this.sshd.setKeyExchangeFactories(
 			NamedFactory.setUpTransformedFactories(true,
@@ -862,59 +818,6 @@ public final class SshServer {
 		catch (IOException e) {
 			log.error("Cannot start the embedded SSH server", e);
 			this.stop();
-		}
-
-		try {
-			Owner testOwner = new Owner() {};
-			UploadTicket sampleTicket = new UploadTicket() {
-				@Override
-				public Owner getOwner() {
-					return testOwner;
-				}
-
-				@Override
-				public Set<TransferProtocol> getAllowedProtocols() {
-					return new HashSet<>(Arrays.asList(TransferProtocol.SCP, TransferProtocol.SFTP));
-				}
-
-				@Override
-				public String getUsername() {
-					return "test";
-				}
-
-				@Override
-				public boolean checkPassword(NetworkAddress source, String password) {
-					return "test".equals(password);
-				}
-
-				@Override
-				public Path getRootPath() {
-					return Paths.get("/tmp", "testdir");
-				}
-
-				@Override
-				public boolean isValid() {
-					return true;
-				}
-
-				@Override
-				public void onSessionStarted() {
-				}
-
-				@Override
-				public void onSessionStopped() {
-				}
-
-				@Override
-				public void onFileWritten(Path filePath) {
-				}
-				
-			};
-			this.registerUploadTicket(sampleTicket);
-		}
-		catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 

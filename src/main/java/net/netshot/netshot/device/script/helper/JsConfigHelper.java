@@ -25,18 +25,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.sshd.common.config.keys.PublicKeyEntry;
 import org.graalvm.polyglot.HostAccess.Export;
 import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.proxy.ProxyArray;
 import org.graalvm.polyglot.proxy.ProxyObject;
 
 import lombok.extern.slf4j.Slf4j;
@@ -114,6 +118,7 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		private Path rootPath;
 		private Map<Long, UploadedFile> uploadedFiles = new HashMap<>();
 		private boolean sessionCompleted = false;
+		boolean valid = true;
 
 		public ConfigUploadTicket(long id, Set<TransferProtocol> protocols,
 				String username, String password, NetworkAddress expectedSourceIp,
@@ -161,7 +166,7 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 
 		@Override
 		public boolean isValid() {
-			return true;
+			return this.valid;
 		}
 
 		private void clearTextPassword() {
@@ -169,17 +174,21 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		}
 
 		@Override
-		public void onFileWritten(Path filePath) {
+		public boolean onFileWritten(Path filePath) {
 			synchronized (this) {
+				if (!this.valid) {
+					log.debug("File written callback on {} while ticket is not valid anymore", filePath);
+					return false;
+				}
 				// Use next available ID (size + 1 ensures unique incrementing IDs)
 				long fileId = this.uploadedFiles.size() + 1;
-				Path absolutePath = this.rootPath.resolve(filePath);
-				UploadedFile file = new UploadedFile(fileId, absolutePath);
+				UploadedFile file = new UploadedFile(fileId, filePath);
 				this.uploadedFiles.put(fileId, file);
 				log.debug("File uploaded via ticket {}: {} (id: {}, size: {})",
 					this.id, filePath, fileId, file.getSize());
 				taskContext.debug("File uploaded via ticket {}: {} (id: {}, size: {})",
 					this.id, filePath, fileId, file.getSize());
+				return true;
 			}
 		}
 
@@ -214,13 +223,32 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 			}
 		}
 
-		public boolean awaitCompletion(long timeout) throws InterruptedException {
+		public boolean awaitCompletion(long timeout) throws IOException {
 			synchronized (this) {
 				if (!this.sessionCompleted) {
-					this.wait(timeout);
+					try {
+						this.wait(timeout);
+					}
+					catch (InterruptedException e) {
+						throw new IOException(e);
+					}
 				}
 				return this.sessionCompleted;
 			}
+		}
+
+		public void cleanUp() {
+			synchronized (this) {
+				this.valid = false;
+				log.debug("Removing temporary upload directory {}", this.getRootPath());
+				try {
+					FileUtils.deleteDirectory(this.getRootPath().toFile());
+				}
+				catch (IOException e) {
+					log.warn("Error while removing upload directory {}", this.getRootPath(), e);
+				}
+			}
+			SshServer.getServer().clearUploadTickets(JsConfigHelper.this);
 		}
 		
 	}
@@ -241,6 +269,15 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		this.lastConfig = lastConfig;
 		this.cli = cli;
 		this.taskContext = taskContext;
+	}
+
+	/**
+	 * To be called when the helper needs to release its resources or files.
+	 */
+	public void release() {
+		for (ConfigUploadTicket ticket : this.uploadTickets.values()) {
+			ticket.cleanUp();
+		}
 	}
 
 	@Export
@@ -361,7 +398,7 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 	}
 
 	/**
-	 * Normalize the store file name.
+	 * Normalize the storage file name.
 	 */
 	private String normalizeStoreName(String requestedStoreName, String remoteFileName) {
 		String storeName = requestedStoreName;
@@ -619,15 +656,15 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		int port = SshServer.SETTINGS.getTcpPort();
 
 		log.debug("Upload ticket details: username '{}', password '{}...', host '{}:{}', hostkeys '{}'",
-			ticket.username, ticket.password.substring(0, 1), host, port, hostKeys);
-		taskContext.info("Upload ticket details: username '{}', password '{}...', host '{}:{}', hostkeys '{}'",
-			ticket.username, ticket.password.substring(0, 1), host, port, hostKeys);
+			ticket.username, ticket.password.substring(0, 1), host.getIp(), port, hostKeys);
+		taskContext.debug("Upload ticket details: username '{}', password '{}...', host '{}:{}'",
+			ticket.username, ticket.password.substring(0, 1), host.getIp(), port, hostKeys);
 
 		Map<String, Object> result = new HashMap<>();
 		result.put("id", ticket.id);
 		result.put("username", ticket.username);
 		result.put("password", ticket.password);
-		result.put("host", host);
+		result.put("host", host.getIp());
 		result.put("port", port);
 		result.put("hostkeys", ProxyObject.fromMap(hostKeys));
 		ProxyObject proxy = ProxyObject.fromMap(result);
@@ -638,7 +675,7 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 	}
 
 	@Export
-	public ProxyObject awaitUpload(long ticketId, long timeout) throws InterruptedException {
+	public ProxyObject awaitUpload(long ticketId, long timeout) throws IOException {
 		ConfigUploadTicket ticket = this.uploadTickets.get(ticketId);
 		if (ticket == null) {
 			log.warn("No such upload ticket {}", ticketId);
@@ -653,6 +690,7 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		if (!completed) {
 			log.warn("Timeout while waiting for upload ticket {}", ticketId);
 			this.taskContext.warn("Timeout while waiting for upload ticket {}", ticketId);
+			throw new IOException("Timeout while waiting for upload ticket");
 		}
 
 		Map<Long, UploadedFile> uploadedFiles = ticket.getUploadedFiles();
@@ -660,19 +698,18 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		this.taskContext.info("Upload ticket {} completed: {} file(s) uploaded", ticketId, uploadedFiles.size());
 
 		// Convert uploaded files to list of objects for JavaScript
-		Object[] files = new Object[uploadedFiles.size()];
-		int i = 0;
+		List<Object> files = new ArrayList<>(uploadedFiles.size());
 		for (UploadedFile file : uploadedFiles.values()) {
 			Map<String, Object> fileInfo = new HashMap<>();
 			fileInfo.put("id", file.getId());
 			fileInfo.put("name", file.getName());
 			fileInfo.put("size", file.getSize());
-			files[i++] = fileInfo;
+			files.add(ProxyObject.fromMap(fileInfo));
 		}
 
 		Map<String, Object> result = new HashMap<>();
 		result.put("completed", completed);
-		result.put("files", files);
+		result.put("files", ProxyArray.fromList(files));
 		result.put("fileCount", uploadedFiles.size());
 
 		return ProxyObject.fromMap(result);
@@ -711,13 +748,14 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 				"Can't use commitUpload method on non-binary-file attribute");
 		}
 
-		Path tempPath = uploadedFile.getPath();
 		String finalStoreName = this.normalizeStoreName(storeName, uploadedFile.getName());
 		if (finalStoreName == null) {
 			log.warn("Error during snapshot, unable to generate a store file name in commitUpload (for attribute '{}').", attribute.getName());
 			taskContext.error("Unable to generate a store file name in commitUpload (for attribute '{}').", attribute.getName());
 			throw new IllegalArgumentException("Unable to generate a proper store file name in commitUpload");
 		}
+
+		Path tempPath = uploadedFile.getPath();
 
 		try {
 			ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, attribute.getName(), finalStoreName);

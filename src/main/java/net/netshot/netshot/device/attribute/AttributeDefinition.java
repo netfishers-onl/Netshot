@@ -156,7 +156,7 @@ public final class AttributeDefinition {
 		this.name = name;
 		this.title = data.getMember("title").asString();
 		if (!this.title.matches("^[0-9A-Za-z\\-_\\(\\)][0-9A-Za-z \\-_\\(\\)]+$")) {
-			throw new IllegalArgumentException("Invalid title for item %s.");
+			throw new IllegalArgumentException("Invalid title for item %s.".formatted(name));
 		}
 		String textType = data.getMember("type").asString();
 		switch (textType) {

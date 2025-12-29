@@ -62,8 +62,8 @@ public class JsUtils {
 	 * @param e the exception to convert
 	 * @return a formatted error message including file name, line, and column if available
 	 */
-	public static String jsErrorToMessage(Exception e) {
-		if (e.getCause() != null && e.getCause() instanceof PolyglotException pe && pe.isGuestException()) {
+	public static String jsErrorToMessage(Throwable e) {
+		if (e instanceof PolyglotException pe && pe.isGuestException()) {
 			SourceSection source = pe.getSourceLocation();
 			if (source != null) {
 				return "%s at %s:%d:%d".formatted(
@@ -73,6 +73,9 @@ public class JsUtils {
 					source.getStartColumn()
 				);
 			}
+		}
+		else if (e.getCause() != null && e.getCause() instanceof PolyglotException) {
+			return jsErrorToMessage(e.getCause());
 		}
 		return e.getMessage();
 	}

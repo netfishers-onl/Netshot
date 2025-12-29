@@ -2,6 +2,7 @@ package net.netshot.netshot;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.EnumSet;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -38,10 +39,11 @@ public class CliTest {
 
 	// Helper to access the protected cleanUpOutput method
 	private String cleanUpOutput(String input) throws Exception {
-		Method method = Cli.class.getDeclaredMethod("cleanUpTerminalOutput", StringBuilder.class);
+		// cleanUpCommandOutput(StringBuilder buffer, EnumSet<CleanUpAction> cleanUpActions)
+		Method method = Cli.class.getDeclaredMethod("cleanUpCommandOutput", StringBuilder.class, EnumSet.class);
 		method.setAccessible(true);
 		StringBuilder buffer = new StringBuilder(input);
-		method.invoke(cli, buffer);
+		method.invoke(cli, buffer, null);
 		return buffer.toString();
 	}
 
@@ -153,6 +155,7 @@ public class CliTest {
 	@Test
 	@DisplayName("Don't remove standalone carriage return")
 	void testStandaloneCarriageReturn() throws Exception {
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETURNS, false);
 		cli.setOuputCleanUpAction(Cli.CleanUpAction.NORMALIZE_LINE_ENDINGS, true);
 		String input = "Before\rAfter";
 		String result = cleanUpOutput(input);
@@ -264,7 +267,7 @@ public class CliTest {
 	@Test
 	@DisplayName("Test stripAnsiCodes configuration - disabled")
 	void testStripAnsiCodesDisabled() throws Exception {
-		cli.setOuputCleanUpAction(Cli.CleanUpAction.NORMALIZE_LINE_ENDINGS, false);
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.STRIP_ANSI_CODES, false);
 
 		String input = "\u001b[1;31mRed Text\u001b[0m";
 		String result = cleanUpOutput(input);
@@ -274,7 +277,7 @@ public class CliTest {
 	@Test
 	@DisplayName("Test normalizeCarriageReturns configuration - disabled")
 	void testNormalizeCarriageReturnsDisabled() throws Exception {
-		cli.setOuputCleanUpAction(Cli.CleanUpAction.NORMALIZE_LINE_ENDINGS, false);
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETURNS, false);
 
 		String input = "Line1\r\nLine2\rLine3";
 		String result = cleanUpOutput(input);
@@ -284,7 +287,7 @@ public class CliTest {
 	@Test
 	@DisplayName("Test combined configuration - both disabled")
 	void testBothConfigurationsDisabled() throws Exception {
-		cli.setOuputCleanUpAction(Cli.CleanUpAction.NORMALIZE_LINE_ENDINGS, false);
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.STRIP_ANSI_CODES, false);
 		cli.setOuputCleanUpAction(Cli.CleanUpAction.NORMALIZE_LINE_ENDINGS, false);
 
 		String input = "\u001b[31mRed\u001b[0m\r\nText";
@@ -297,6 +300,7 @@ public class CliTest {
 	void testStripAnsiOnly() throws Exception {
 		cli.setOuputCleanUpAction(Cli.CleanUpAction.STRIP_ANSI_CODES, true);
 		cli.setOuputCleanUpAction(Cli.CleanUpAction.NORMALIZE_LINE_ENDINGS, false);
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETURNS, false);
 
 		String input = "\u001b[31mRed\u001b[0m\r\nText\rMore";
 		String result = cleanUpOutput(input);
@@ -398,9 +402,9 @@ public class CliTest {
 	@Test
 	@DisplayName("Test removeBeforeCarriageReturn for pager sequences")
 	void testRemoveBeforeCarriageReturn() throws Exception {
-		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETUNS, true);
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETURNS, true);
 
-		// Simulate CiscoAsyncOS pager: text + pager prompt + \r + spaces (same length as prompt) + \r + continuation
+		// Simulate pager: text + pager prompt + \r + spaces (same length as prompt) + \r + continuation
 		// Prompt is 33 chars, spaces should be 33 to fully overwrite it
 		String input = "some text-Press Any Key For More-\r                                 \rmore text";
 
@@ -424,7 +428,7 @@ public class CliTest {
 	@Test
 	@DisplayName("Test removeBeforeCarriageReturn with newlines")
 	void testRemoveBeforeCarriageReturnWithNewlines() throws Exception {
-		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETUNS, true);
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETURNS, true);
 
 		// Each line should be processed independently
 		// "line1 old" (9 chars) → \r → "new" (3 chars) overwrites first 3 → "newe1 old"
@@ -438,7 +442,7 @@ public class CliTest {
 	@Test
 	@DisplayName("Test removeBeforeCarriageReturn disabled")
 	void testRemoveBeforeCarriageReturnDisabled() throws Exception {
-		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETUNS, false);
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETURNS, false);
 		cli.setOuputCleanUpAction(Cli.CleanUpAction.NORMALIZE_LINE_ENDINGS, false);
 
 		String input = "old\rnew";
@@ -451,7 +455,7 @@ public class CliTest {
 	@Test
 	@DisplayName("Test processCarriageReturns with multiple \\r on same line")
 	void testProcessCarriageReturnsMultiple() throws Exception {
-		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETUNS, true);
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETURNS, true);
 		cli.setOuputCleanUpAction(Cli.CleanUpAction.NORMALIZE_LINE_ENDINGS, true);
 
 		// Multiple \r with overwrites: "first" → "second" → "thirdd" (last 'd' from "second" remains)
@@ -465,7 +469,7 @@ public class CliTest {
 	@Test
 	@DisplayName("Test processCarriageReturns with \\r at end of line")
 	void testProcessCarriageReturnsAtEnd() throws Exception {
-		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETUNS, true);
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETURNS, true);
 		cli.setOuputCleanUpAction(Cli.CleanUpAction.NORMALIZE_LINE_ENDINGS, true);
 
 		// \r at end of line (no content after) - should not remove anything
@@ -479,7 +483,7 @@ public class CliTest {
 	@Test
 	@DisplayName("Test processCarriageReturns with consecutive \\r characters")
 	void testProcessCarriageReturnsConsecutive() throws Exception {
-		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETUNS, true);
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETURNS, true);
 		cli.setOuputCleanUpAction(Cli.CleanUpAction.NORMALIZE_LINE_ENDINGS, true);
 
 		// Multiple consecutive \r: "before" → empty → empty → "aftere" (last 'e' from "before" remains)
@@ -493,8 +497,7 @@ public class CliTest {
 	@Test
 	@DisplayName("Test processCarriageReturns with empty result")
 	void testProcessCarriageReturnsEmpty() throws Exception {
-		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETUNS, true);
-		cli.setOuputCleanUpAction(Cli.CleanUpAction.NORMALIZE_LINE_ENDINGS, true);
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETURNS, true);
 
 		// Only \r characters, no content after
 		String input = "text\r\r\r";
@@ -507,7 +510,7 @@ public class CliTest {
 	@Test
 	@DisplayName("Test processCarriageReturns with mixed content")
 	void testProcessCarriageReturnsMixed() throws Exception {
-		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETUNS, true);
+		cli.setOuputCleanUpAction(Cli.CleanUpAction.PROCESS_CARRIAGE_RETURNS, true);
 		cli.setOuputCleanUpAction(Cli.CleanUpAction.NORMALIZE_LINE_ENDINGS, true);
 
 		// Complex case: multiple lines with various \r patterns

@@ -107,6 +107,7 @@ import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletSessionConfig;
+import io.undertow.util.Headers;
 import jakarta.annotation.security.DenyAll;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
@@ -1078,8 +1079,10 @@ public class RestService extends Thread {
 						}
 						catch (Exception e) {
 						}
-						return Response.ok(text)
-							.header("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))
+						byte[] content = text.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+						return Response.ok(content, MediaType.APPLICATION_OCTET_STREAM)
+							.header(Headers.CONTENT_DISPOSITION_STRING, "attachment; filename=\"%s\"".formatted(fileName))
+							.header(Headers.CONTENT_LENGTH_STRING, content.length)
 							.build();
 					}
 					else if (attribute instanceof ConfigBinaryFileAttribute fileAttribute) {
@@ -1097,8 +1100,10 @@ public class RestService extends Thread {
 						}
 						catch (Exception e) {
 						}
-						return Response.ok(fileAttribute.getFilePath().toFile(), MediaType.APPLICATION_OCTET_STREAM)
-							.header("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))
+						java.io.File file = fileAttribute.getFilePath().toFile();
+						return Response.ok(file, MediaType.APPLICATION_OCTET_STREAM)
+							.header(Headers.CONTENT_DISPOSITION_STRING, "attachment; filename=\"%s\"".formatted(fileName))
+							.header(Headers.CONTENT_LENGTH_STRING, file.length())
 							.build();
 					}
 				}
@@ -2570,8 +2575,10 @@ public class RestService extends Thread {
 			DebugLog debugLog = task.getDebugLog();
 			String text = debugLog == null ? "" : debugLog.getText();
 			String fileName = String.format("debug_%d.log", id);
-			return Response.ok(text)
-				.header("Content-Disposition", "attachment; filename=" + fileName)
+			byte[] content = text.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+			return Response.ok(content, MediaType.APPLICATION_OCTET_STREAM)
+				.header(Headers.CONTENT_DISPOSITION_STRING, "attachment; filename=\"%s\"".formatted(fileName))
+				.header(Headers.CONTENT_LENGTH_STRING, content.length)
 				.build();
 		}
 		catch (ObjectNotFoundException e) {
@@ -8538,7 +8545,12 @@ public class RestService extends Thread {
 
 				ByteArrayOutputStream output = new ByteArrayOutputStream();
 				workBook.write(output);
-				return Response.ok(output.toByteArray()).header("Content-Disposition", "attachment; filename=" + fileName).build();
+				byte[] content = output.toByteArray();
+				return Response
+					.ok(content, MediaType.APPLICATION_OCTET_STREAM)
+					.header(Headers.CONTENT_DISPOSITION_STRING, "attachment; filename=\"%s\"".formatted(fileName))
+					.header(Headers.CONTENT_LENGTH_STRING, content.length)
+					.build();
 			}
 			catch (IOException e) {
 				log.error("Unable to write the resulting file.", e);

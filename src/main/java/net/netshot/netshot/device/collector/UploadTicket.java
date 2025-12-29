@@ -43,6 +43,7 @@ public interface UploadTicket {
 	/**
 	 * Called when a file has been written via SFTP or SCP.
 	 * @param filePath the relative path from the root path
+	 * @return true if the file was consumed, false to remove it
 	 */
-	public void onFileWritten(Path filePath);
+	public boolean onFileWritten(Path filePath);
 }

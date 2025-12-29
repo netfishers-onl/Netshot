@@ -1185,7 +1185,7 @@ public class DeviceDriverTest {
 
 		private static final String PAGER = "-Press Any Key For More-";
 		private static final String POST_PAGER = "\r                         \r";
-		private static final int PAGE_SIZE = 893;
+		private static final int PAGE_SIZE = 20;
 
 		private CliMode cliMode = CliMode.INIT;
 		private final String hostname = "esa.netshot.lab";
@@ -1209,9 +1209,22 @@ public class DeviceDriverTest {
 		protected void printPaged(String text) {
 			if (text != null) {
 				this.nextPages = new ArrayDeque<>();
-				for (int p = 0; p < text.length(); p += PAGE_SIZE) {
-					String page = text.substring(p, (p + PAGE_SIZE > text.length()) ? text.length() : (p + PAGE_SIZE));
-					this.nextPages.add(page);
+				ArrayDeque<String> lines = new ArrayDeque<>(Arrays.asList(text.split("\n")));
+				int lineCount = 0;
+				StringBuilder page = new StringBuilder();
+
+				while (lines.size() > 0) {
+					if (lineCount == PAGE_SIZE) {
+						this.nextPages.add(page.toString());
+						page.setLength(0);
+						lineCount = 0;
+					}
+					page.append(lines.removeFirst());
+					page.append("\n");
+					lineCount++;
+				}
+				if (page.length() > 0) {
+					this.nextPages.add(page.toString());
 				}
 			}
 			if (this.cliMode == CliMode.PAGING) {

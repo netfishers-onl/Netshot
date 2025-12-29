@@ -45,11 +45,9 @@ public abstract class Cli {
 		/** Replace \r\n with \n. */
 		NORMALIZE_LINE_ENDINGS,
 		/** \r followed by characters rewrites the line. */
-		PROCESS_CARRIAGE_RETUNS,
+		PROCESS_CARRIAGE_RETURNS,
 		/** Backspace \b erases previous character. */
 		PROCESS_BACKSPACES,
-		/** Remove the found prompt from the output. */
-		STRIP_PROMPT,
 	}
 
 	/**
@@ -72,6 +70,129 @@ public abstract class Cli {
 
 	}
 
+	/**
+	 * Input for a CLI command.
+	 */
+	public static class CommandInput {
+		/** The command to send (null to just wait for output). */
+		@Getter
+		@Setter
+		private String command;
+
+		/** The list of patterns to expect. */
+		@Getter
+		@Setter
+		private String[] expects;
+
+		/** The command timeout (null to use CLI default). */
+		@Getter
+		@Setter
+		private Integer commandTimeout;
+
+		/** The output cleanup actions (null to use CLI default). */
+		@Getter
+		@Setter
+		private EnumSet<CleanUpAction> cleanUpActions;
+
+		/** The minimum time to wait after expect match to discover additional output (null for no wait). */
+		@Getter
+		@Setter
+		private Integer discoverWaitTime;
+
+		/**
+		 * Creates a new CommandInput with all parameters.
+		 *
+		 * @param command the command to send
+		 * @param expects the patterns to expect
+		 * @param commandTimeout the command timeout (null for default)
+		 * @param cleanUpActions the cleanup actions (null for default)
+		 * @param discoverWaitTime minimum time to wait after match to discover more output (null for no wait)
+		 */
+		public CommandInput(String command, String[] expects, Integer commandTimeout,
+				EnumSet<CleanUpAction> cleanUpActions, Integer discoverWaitTime) {
+			this.command = command;
+			this.expects = expects;
+			this.commandTimeout = commandTimeout;
+			this.cleanUpActions = cleanUpActions;
+			this.discoverWaitTime = discoverWaitTime;
+		}
+
+		/**
+		 * Creates a new CommandInput with command and expects only (using defaults).
+		 *
+		 * @param command the command to send
+		 * @param expects the patterns to expect
+		 */
+		public CommandInput(String command, String[] expects) {
+			this(command, expects, null, null, null);
+		}
+
+		/**
+		 * Creates a new CommandInput with command and single expect pattern.
+		 *
+		 * @param command the command to send
+		 * @param expect the pattern to expect
+		 */
+		public CommandInput(String command, String expect) {
+			this(command, new String[] { expect }, null, null, null);
+		}
+	}
+
+	/**
+	 * The output of a CLI command or read operation.
+	 */
+	public static class CommandOutput {
+		/** The command that was sent. */
+		@Getter
+		private final String command;
+
+		/** The cleaned output string (may have prompt stripped based on settings). */
+		@Getter
+		private final String output;
+
+		/** The full cleaned output (always includes the prompt if it was matched). */
+		@Getter
+		private final String fullOutput;
+
+		/** The raw uncleaned buffer as received from the device. */
+		@Getter
+		private final String rawBuffer;
+
+		/** The matcher that found the expected pattern. */
+		@Getter
+		private final Matcher expectMatch;
+
+		/** The index of the matched pattern in the expects array. */
+		@Getter
+		private final int expectMatchIndex;
+
+		/** The pattern string that was matched. */
+		@Getter
+		private final String expectMatchPattern;
+
+		/**
+		 * Creates a new CommandOutput object.
+		 *
+		 * @param command the command that was sent
+		 * @param output the cleaned output (possibly with prompt removed)
+		 * @param fullOutput the full cleaned output (with prompt)
+		 * @param rawBuffer the raw uncleaned buffer
+		 * @param expectMatch the matcher that found the expected pattern
+		 * @param expectMatchIndex the index of the matched pattern
+		 * @param expectMatchPattern the pattern string that was matched
+		 */
+		public CommandOutput(String command, String output, String fullOutput, String rawBuffer, Matcher expectMatch,
+				int expectMatchIndex, String expectMatchPattern) {
+			this.command = command;
+			this.output = output;
+			this.fullOutput = fullOutput;
+			this.rawBuffer = rawBuffer;
+			this.expectMatch = expectMatch;
+			this.expectMatchIndex = expectMatchIndex;
+			this.expectMatchPattern = expectMatchPattern;
+		}
+	}
+
 	/** The connection timeout. */
 	@Getter
 	@Setter
@@ -90,35 +211,14 @@ public abstract class Cli {
 	/** Clean up actions on CLI output. */
 	@Getter
 	@Setter
-	protected EnumSet<CleanUpAction> outputCleanUpActions = EnumSet.of(
+	protected EnumSet<CleanUpAction> cleanUpActions = EnumSet.of(
 		CleanUpAction.STRIP_ANSI_CODES,
-		CleanUpAction.STRIP_PROMPT,
 		CleanUpAction.PROCESS_BACKSPACES,
-		CleanUpAction.PROCESS_CARRIAGE_RETUNS
+		CleanUpAction.PROCESS_CARRIAGE_RETURNS
 	);
 
 	/** The current task context. */
 	protected TaskContext taskContext;
-
-	/** The last command. */
-	@Getter
-	protected String lastCommand;
-
-	/** The last expect match. */
-	@Getter
-	protected Matcher lastExpectMatch;
-
-	/** The last expect match pattern. */
-	@Getter
-	protected String lastExpectMatchPattern;
-
-	/** The last expect match index. */
-	@Getter
-	protected int lastExpectMatchIndex = -1;
-
-	/** The last full output. */
-	@Getter
-	protected String lastFullOutput;
 
 	/** The in stream. */
 	protected InputStream inStream;
@@ -150,6 +250,10 @@ public abstract class Cli {
 	 */
 	public abstract void connect() throws IOException;
 
+	/**
+	 * Disconnect.
+	 */
+	public abstract void disconnect();
 
 	/**
 	 * Enable or disable the given clean up action.
@@ -158,40 +262,33 @@ public abstract class Cli {
 	 */
 	public void setOuputCleanUpAction(CleanUpAction action, boolean enable) {
 		if (enable) {
-			this.outputCleanUpActions.add(action);
+			this.cleanUpActions.add(action);
 		}
 		else {
-			this.outputCleanUpActions.remove(action);
+			this.cleanUpActions.remove(action);
 		}
 	}
 
 	/**
-	 * Send.
+	 * Send a command using CommandInput object.
 	 *
-	 * @param command the command
-	 * @param expect the expect
-	 * @return the string
+	 * @param input the command input with all parameters
+	 * @return the CommandOutput object
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public String send(String command, String expect) throws IOException {
-		String[] expects = new String[1];
-		expects[0] = expect;
-		return send(command, expects);
-	}
+	public CommandOutput send(CommandInput input) throws IOException {
+		// Send command if present
+		if (input.getCommand() != null) {
+			log.debug("Command to send: '{}'.", input.getCommand());
+			this.write(input.getCommand());
+		}
 
-	/**
-	 * Disconnect.
-	 */
-	public abstract void disconnect();
+		// Wait for expected output
+		// Extract parameters from input, using defaults where needed
+		String[] expects = input.getExpects();
+		int commandTimeout = input.getCommandTimeout() == null ? this.commandTimeout : input.getCommandTimeout();
+		int discoverWaitTime = input.getDiscoverWaitTime() == null ? 0 : input.getDiscoverWaitTime();
 
-	/**
-	 * Read until a string is matched.
-	 *
-	 * @param expects the list of patterns to expect
-	 * @return the collected output
-	 * @throws IOException Signals that an I/O exception has occurred.
-	 */
-	protected String readUntil(String[] expects) throws IOException {
 		Pattern[] patterns = new Pattern[expects.length];
 		for (int i = 0; i < expects.length; i++) {
 			patterns[i] = Pattern.compile(expects[i], Pattern.MULTILINE);
@@ -216,30 +313,44 @@ public abstract class Cli {
 			}
 
 			// Only process patterns if new data was received or this is the first iteration
-			if (bufferChanged) {
-				// Clean up output (remove ANSI codes, normalize line endings, etc.)
+			// AND we've waited long enough after last activity
+			if (bufferChanged && System.currentTimeMillis() >= lastActivityTime + discoverWaitTime) {
 				// Create a copy of the buffer for cleanup (don't modify the original buffer)
 				StringBuilder cleanBuffer = new StringBuilder(buffer);
-				this.cleanUpTerminalOutput(cleanBuffer);
+				this.cleanUpCommandOutput(cleanBuffer, input.cleanUpActions);
 
-				for (int i = 0; i < patterns.length; i++) {
-					Matcher matcher = patterns[i].matcher(cleanBuffer);
-					if (matcher.find()) {
-						String cleanOutput = cleanBuffer.toString();
-						this.lastExpectMatch = matcher;
-						this.lastExpectMatchIndex = i;
-						this.lastFullOutput = cleanOutput;
-						this.lastExpectMatchPattern = expects[i];
-						// Return output with or without the matched prompt based on stripPrompt setting
-						if (this.outputCleanUpActions.contains(CleanUpAction.STRIP_PROMPT)) {
-							return matcher.replaceFirst("");
+				if (patterns.length == 0) {
+					// No pattern provided => returns what was captured
+					return new CommandOutput(
+						input.getCommand(),
+						cleanBuffer.toString(),
+						cleanBuffer.toString(),
+						buffer.toString(),
+						null,
+						-1,
+						""
+					);
+				}
+				else {
+					for (int i = 0; i < patterns.length; i++) {
+						Matcher matcher = patterns[i].matcher(cleanBuffer);
+						if (matcher.find()) {
+							return new CommandOutput(
+								input.getCommand(),
+								matcher.replaceFirst(""),
+								cleanBuffer.toString(),
+								buffer.toString(),
+								matcher,
+								i,
+								expects[i]
+							);
 						}
-						return cleanOutput;
 					}
+					bufferChanged = false;
 				}
 			}
 
-			if (System.currentTimeMillis() > lastActivityTime + this.commandTimeout) {
+			if (System.currentTimeMillis() > lastActivityTime + commandTimeout) {
 				throw new WithBufferIOException("Timeout waiting for the command output.", buffer);
 			}
 
@@ -250,8 +361,6 @@ public abstract class Cli {
 				Thread.currentThread().interrupt();
 				throw new IOException("Thread interrupted while waiting for data", e);
 			}
-
-			bufferChanged = false;
 		}
 	}
 
@@ -270,30 +379,47 @@ public abstract class Cli {
 	 *
 	 * @param command the command
 	 * @param expects the expects
-	 * @return the string
+	 * @return the CommandOutput object
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	public String send(String command, String[] expects) throws IOException {
-		log.debug("Command to send: '{}'.", command);
-		this.write(command);
-		this.lastCommand = command;
-		return this.readUntil(expects);
+	public CommandOutput send(String command, String[] expects) throws IOException {
+		return send(new CommandInput(command, expects));
 	}
 
+	/**
+	 * Send.
+	 *
+	 * @param command the command
+	 * @param expect the expect
+	 * @return the CommandOutput object
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
+	public CommandOutput send(String command, String expect) throws IOException {
+		return send(new CommandInput(command, expect));
+	}
 
 	/**
 	 * Cleans up CLI output.
 	 *
 	 * @param buffer the input buffer coming from device's terminal
-	 * @return the cleaned string
+	 * @param cleanUpActions the cleanup actions to apply (use default class actions if null)
 	 */
-	protected void cleanUpTerminalOutput(StringBuilder buffer) {
+	protected void cleanUpCommandOutput(StringBuilder buffer, EnumSet<CleanUpAction> cleanUpActions) {
+		EnumSet<CleanUpAction> actions = cleanUpActions == null ? this.cleanUpActions : cleanUpActions;
 
 		// Apply cleanup steps in order, modifying buffer in-place
-		this.removeAnsiCodes(buffer);
-		this.processBackspaces(buffer);
-		this.processCarriageReturns(buffer);
-		this.normalizeLineEndings(buffer);
+		if (actions.contains(CleanUpAction.STRIP_ANSI_CODES)) {
+			this.removeAnsiCodes(buffer);
+		}
+		if (actions.contains(CleanUpAction.PROCESS_BACKSPACES)) {
+			this.processBackspaces(buffer);
+		}
+		if (actions.contains(CleanUpAction.PROCESS_CARRIAGE_RETURNS)) {
+			this.processCarriageReturns(buffer);
+		}
+		if (actions.contains(CleanUpAction.NORMALIZE_LINE_ENDINGS)) {
+			this.normalizeLineEndings(buffer);
+		}
 	}
 
 	/**
@@ -302,10 +428,6 @@ public abstract class Cli {
 	 * @param buffer the string buffer (modified in-place)
 	 */
 	private void removeAnsiCodes(StringBuilder buffer) {
-		if (!this.outputCleanUpActions.contains(CleanUpAction.STRIP_ANSI_CODES)) {
-			return;
-		}
-
 		// Process buffer by directly deleting unwanted characters
 		int i = 0;
 		while (i < buffer.length()) {
@@ -393,10 +515,6 @@ public abstract class Cli {
 	 * @param buffer the string buffer (modified in-place)
 	 */
 	private void processBackspaces(StringBuilder buffer) {
-		if (!this.outputCleanUpActions.contains(CleanUpAction.PROCESS_BACKSPACES)) {
-			return;
-		}
-
 		int i = 0;
 		while (i < buffer.length()) {
 			// Check for pattern: non-backspace char followed by backspace
@@ -424,10 +542,6 @@ public abstract class Cli {
 	 * @param buffer the string buffer (modified in-place)
 	 */
 	private void processCarriageReturns(StringBuilder buffer) {
-		if (!this.outputCleanUpActions.contains(CleanUpAction.PROCESS_CARRIAGE_RETUNS)) {
-			return;
-		}
-
 		int i = 0;
 		int lineStart = 0; // Track start of current line
 
@@ -440,8 +554,16 @@ public abstract class Cli {
 				i++;
 			}
 			else if (ch == '\r') {
-				// Found a \r - extract content after it until next \r or \n
-				int contentStart = i + 1;
+				// Count consecutive \r characters
+				int crStart = i;
+				int crCount = 0;
+				while (i < buffer.length() && buffer.charAt(i) == '\r') {
+					crCount++;
+					i++;
+				}
+
+				// Find content after the \r sequence
+				int contentStart = i;
 				int contentEnd = contentStart;
 
 				// Find the end of content (next \r or \n or end of buffer)
@@ -456,15 +578,15 @@ public abstract class Cli {
 				if (contentLength > 0) {
 					// Extract the content that will overwrite
 					String content = buffer.substring(contentStart, contentEnd);
-					int lineLength = i - lineStart;
+					int lineLength = crStart - lineStart;
 
 					// Save the tail if the line is longer than the new content
 					String tail = "";
 					if (lineLength > contentLength) {
-						tail = buffer.substring(lineStart + contentLength, i);
+						tail = buffer.substring(lineStart + contentLength, crStart);
 					}
 
-					// Delete from lineStart to contentEnd (old line + \r + new content)
+					// Delete from lineStart to contentEnd (old line + \r's + new content)
 					buffer.delete(lineStart, contentEnd);
 
 					// Insert new content + tail at lineStart
@@ -474,8 +596,16 @@ public abstract class Cli {
 					i = lineStart + content.length() + tail.length();
 				}
 				else {
-					// No content after \r, just move forward
-					i++;
+					// No content after \r sequence
+					if (crCount > 1) {
+						// Multiple consecutive \r's with no content - delete all
+						buffer.delete(crStart, crStart + crCount);
+						i = crStart; // Reset to start of deleted region
+					}
+					else {
+						// Single \r with no content after (either before \n or at end) - keep it
+						// i is already advanced past the \r
+					}
 				}
 			}
 			else {
@@ -485,16 +615,12 @@ public abstract class Cli {
 	}
 
 	/**
-	 * Normalizes line endings by converting CRLF to LF and removing standalone \r.
+	 * Normalizes line endings by converting CRLF to LF and removing trailing \r.
 	 * Only active when normalizeCarriageReturns is enabled.
 	 *
 	 * @param buffer the string buffer (modified in-place)
 	 */
 	private void normalizeLineEndings(StringBuilder buffer) {
-		if (!this.outputCleanUpActions.contains(CleanUpAction.NORMALIZE_LINE_ENDINGS)) {
-			return;
-		}
-
 		int i = 0;
 
 		while (i < buffer.length()) {
@@ -505,6 +631,14 @@ public abstract class Cli {
 					// CRLF -> LF: delete the \r, keep the \n
 					buffer.deleteCharAt(i);
 					continue;
+				}
+				else if (i + 1 >= buffer.length()) {
+					// Trailing \r at end of buffer: delete it if there are newlines in the buffer
+					// (indicating multi-line content)
+					if (buffer.indexOf("\n") >= 0) {
+						buffer.deleteCharAt(i);
+						continue;
+					}
 				}
 			}
 			i++;

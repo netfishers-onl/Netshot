@@ -242,26 +242,46 @@ function snapshot(cli, device, config) {
 		device.add("networkInterface", networkInterface);
 	}
 
-	const removeChangingParts = (text) => {
-		let cleaned = text;
-		cleaned = cleaned.replace(/^#conf_file_ver=.*/mg, "");
-		cleaned = cleaned.replace(/^ *set (passphrase|password|passwd|secondary-secret|crptpasswd) ENC .*$/mg, "");
-		cleaned = cleaned.replace(/^ *set private-key "(.|[\r\n])*?"$/mg, "");
-		return cleaned;
-	};
-
-	// If only the passwords are changing (they are hashed with a new salt at each 'show') then
-	// just keep the previous configuration.
-	// That means we could miss a password change in the history of configurations, but no choice...
-	config.computeHash(removeChangingParts(configuration));
+	// We don't suppress the useless configuration changes anymore
+	// as we now take full backups of the device.
+	//config.computeHash(removeChangingParts(configuration));
 
 	const ticket = config.requestUpload();
 	const backupName = "backup.tar";
 	const encryptPass = "netshot";
 	cli.command(`execute backup all-settings sftp ${ticket.host}:${ticket.port} ${backupName} ${ticket.username} ${ticket.password} ${encryptPass}`);
-	cli.awaitUpload(ticket.id);
-	
-
+	let md5 = null;
+	let attempt = 0;
+	while (true) {
+		const backupOutput = cli.command("", {
+			mode: { prompt: null },
+			discoverWaitTime: 5000,
+		});
+		const md5Match = backupOutput.match(/MD5: ([0-9a-f]+)/);
+		if (md5Match) {
+			md5 = md5Match[1];
+			cli.debug(`Archive MD5 checksum should be ${md5}`);
+		}
+		const resultMatch = backupOutput.match(/Backup all settings...(.+)/);
+		if (resultMatch) {
+			const result = resultMatch[1];
+			if (result !== "Ok.") {
+				cli.debug(`Full backup output:\n${backupOutput}`);
+				throw `Full backup (execute backup all-settings) returned ${result}`;
+			}
+			break;
+		}
+		attempt += 1;
+		if (attempt > 360) {
+			throw `Could not get full backup (execute backup all-settings) result after 15 minutes`;
+		}
+	}
+	const uploadResult = config.awaitUpload(ticket.id);
+	if (uploadResult.files.length !== 1) {
+		throw `Invalid number of files (${uploadResult.files.length}) received by Netshot server`;
+	}
+	const file = uploadResult.files[0];
+	config.commitUpload(ticket.id, file.id, "backupArchive", { checksum: md5 });
 };
 
 // No known log message upon configuration change

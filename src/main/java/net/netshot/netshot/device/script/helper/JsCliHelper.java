@@ -20,6 +20,7 @@ package net.netshot.netshot.device.script.helper;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,6 +49,8 @@ public class JsCliHelper {
 	private TaskContext taskContext;
 	/** An error was raised. */
 	private boolean errored;
+	/** The last output from a send command. */
+	private Cli.CommandOutput lastOutput;
 
 	/**
 	 * Instantiate a new JsCliHelper object.
@@ -86,50 +89,73 @@ public class JsCliHelper {
 	 * @param command The command to send
 	 * @param expects The list of possible outputs to match
 	 * @param timeout The maximum time to wait for the reply
+	 * @param cleanUpActions The cleanup actions to apply (array of CleanUpAction names, null for default)
+	 * @param discoverWaitTime Minimum time to wait after match to discover additional output (0 for no wait)
 	 * @return the output from the device, result of the passed command
 	 */
 	@Export
-	public String send(String command, String[] expects, int timeout) {
+	public String send(String command, String[] expects, int timeout, String[] cleanUpActions, int discoverWaitTime) {
 		this.errored = false;
 		if (command == null) {
 			command = "";
 		}
+		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
+			Matcher.quoteReplacement(account.getUsername()));
 		if (this.taskContext.isTracing()) {
 			// Log before injecting secrets
-			this.taskContext.trace(Instant.now() + " About to send the following command:");
+			this.taskContext.trace(Instant.now() + " About to send the following (secrets not inserted):");
 			this.taskContext.trace(command);
 			this.taskContext.trace("Hexadecimal:");
 			this.taskContext.hexTrace(command);
 		}
-		log.debug("Command to be sent (secrets not replaced): '{}'.", command);
-		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
-			Matcher.quoteReplacement(account.getUsername()));
+		log.debug("Command to be sent (secrets not inserted): '{}'.", command);
 		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_PASSWORD),
 			Matcher.quoteReplacement(account.getPassword()));
 		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_SUPERPASSWORD),
 			Matcher.quoteReplacement(account.getSuperPassword()));
-		int oldTimeout = cli.getCommandTimeout();
+
+		// Prepare CommandInput
+		Cli.CommandInput input = new Cli.CommandInput(command, expects);
+
 		if (timeout > 0) {
-			cli.setCommandTimeout(timeout);
+			input.setCommandTimeout(timeout);
 		}
+
+		if (cleanUpActions != null) {
+			EnumSet<Cli.CleanUpAction> actions = EnumSet.noneOf(Cli.CleanUpAction.class);
+			for (String action : cleanUpActions) {
+				try {
+					actions.add(Cli.CleanUpAction.valueOf(action));
+				}
+				catch (IllegalArgumentException e) {
+					log.warn("Invalid cleanup action '{}', ignoring.", action);
+				}
+			}
+			input.setCleanUpActions(actions);
+		}
+
+		if (discoverWaitTime > 0) {
+			input.setDiscoverWaitTime(discoverWaitTime);
+		}
+
 		try {
 			if (this.taskContext.isTracing()) {
 				this.taskContext.trace("Expecting one of the following {} pattern(s) within {}ms:",
-					expects.length, timeout > 0 ? timeout : oldTimeout);
+					expects.length, input.getCommandTimeout() == null ? cli.getCommandTimeout() : input.getCommandTimeout());
 				for (String expect : expects) {
 					this.taskContext.trace(expect);
 				}
 			}
-			String result = cli.send(command, expects);
+			this.lastOutput = cli.send(input);
 			if (this.taskContext.isTracing()) {
 				this.taskContext.trace(Instant.now() + " Received the following output:");
-				this.taskContext.trace(cli.getLastFullOutput());
+				this.taskContext.trace(this.lastOutput.getFullOutput());
 				this.taskContext.trace("Hexadecimal:");
-				this.taskContext.hexTrace(cli.getLastFullOutput());
+				this.taskContext.hexTrace(this.lastOutput.getFullOutput());
 				this.taskContext.trace("The following pattern matched:");
 				this.taskContext.trace(this.getLastExpectMatchPattern());
 			}
-			return result;
+			return this.lastOutput.getOutput();
 		}
 		catch (IOException e) {
 			log.error("CLI I/O error.", e);
@@ -148,10 +174,19 @@ public class JsCliHelper {
 			}
 			this.errored = true;
 		}
-		finally {
-			cli.setCommandTimeout(oldTimeout);
-		}
 		return null;
+	}
+
+	/**
+	 * Send a command to the device and wait for a result.
+	 * @param command The command to send
+	 * @param expects The list of possible outputs to match
+	 * @param timeout The maximum time to wait for the reply
+	 * @return the output from the device, result of the passed command
+	 */
+	@Export
+	public String send(String command, String[] expects, int timeout) {
+		return send(command, expects, timeout, null, 0);
 	}
 
 	/**
@@ -190,7 +225,10 @@ public class JsCliHelper {
 	 */
 	@Export
 	public String getLastCommand() {
-		return cli.getLastCommand();
+		if (this.lastOutput == null) {
+			return null;
+		}
+		return this.lastOutput.getCommand();
 	}
 
 	/**
@@ -199,7 +237,10 @@ public class JsCliHelper {
 	 */
 	@Export
 	public String getLastExpectMatch() {
-		return cli.getLastExpectMatch().group();
+		if (this.lastOutput == null || this.lastOutput.getExpectMatch() == null) {
+			return null;
+		}
+		return this.lastOutput.getExpectMatch().group();
 	}
 
 	/**
@@ -210,7 +251,7 @@ public class JsCliHelper {
 	@Export
 	public String getLastExpectMatchGroup(int group) {
 		try {
-			return cli.getLastExpectMatch().group(group);
+			return this.lastOutput.getExpectMatch().group(group);
 		}
 		catch (Exception e) {
 			return null;
@@ -223,7 +264,10 @@ public class JsCliHelper {
 	 */
 	@Export
 	public String getLastExpectMatchPattern() {
-		return cli.getLastExpectMatchPattern();
+		if (this.lastOutput == null) {
+			return null;
+		}
+		return this.lastOutput.getExpectMatchPattern();
 	}
 
 	/**
@@ -232,7 +276,10 @@ public class JsCliHelper {
 	 */
 	@Export
 	public int getLastExpectMatchIndex() {
-		return cli.getLastExpectMatchIndex();
+		if (this.lastOutput == null) {
+			return -1;
+		}
+		return this.lastOutput.getExpectMatchIndex();
 	}
 
 	/**
@@ -241,7 +288,10 @@ public class JsCliHelper {
 	 */
 	@Export
 	public String getLastFullOutput() {
-		return cli.getLastFullOutput();
+		if (this.lastOutput == null) {
+			return null;
+		}
+		return this.lastOutput.getFullOutput();
 	}
 
 	/**

@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.Set;
 
 import net.netshot.netshot.device.NetworkAddress;
+import net.netshot.netshot.device.collector.SshServer.SessionLogBuffer;
 
 /**
  * This class represents a "ticket" or permission to upload data
@@ -34,8 +35,11 @@ public interface UploadTicket {
 	/** Whether the ticket is still valid. */
 	public boolean isValid();
 
-	/** Called when the SSH session is authenticated and started. */
-	public void onSessionStarted();
+	/**
+	 * Called when the SSH session is authenticated and started.
+	 * @param sessionLogs the SSH session logs (protocol negotiation details)
+	 */
+	public void onSessionStarted(SessionLogBuffer logBuffer);
 
 	/** Called when the SSH session is closed. */
 	public void onSessionStopped();

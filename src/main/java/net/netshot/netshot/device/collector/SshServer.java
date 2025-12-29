@@ -28,6 +28,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.Principal;
 import java.security.PublicKey;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -80,11 +81,15 @@ import org.apache.sshd.sftp.server.SftpSubsystemFactory;
 import org.apache.sshd.sftp.server.SftpSubsystemProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
+import org.slf4j.helpers.MessageFormatter;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.device.NetworkAddress;
+
+import org.apache.sshd.common.kex.KexProposalOption;
 
 /**
  * SSH server to receive files via SFTP/SCP.
@@ -254,6 +259,64 @@ public final class SshServer {
 	/** Upload Ticket attribute to be attached to SSH sessions. */
 	public static final AttributeKey<UploadTicket> UPLOAD_TICKET = new AttributeKey<>();
 
+	/** Session log buffer attribute to be attached to SSH sessions. */
+	public static final AttributeKey<SessionLogBuffer> SESSION_LOG_BUFFER = new AttributeKey<>();
+
+	/**
+	 * Buffer to collect session logs for later retrieval by upload ticket.
+	 */
+	public static final class SessionLogBuffer {
+		private final StringBuilder buffer = new StringBuilder();
+		private final String remoteAddress;
+
+		public SessionLogBuffer(String remoteAddress) {
+			this.remoteAddress = remoteAddress;
+		}
+
+		public void trace(String message, Object... params) {
+			log(Level.TRACE, message, params);
+		}
+
+		public void debug(String message, Object... params) {
+			log(Level.DEBUG, message, params);
+		}
+
+		public void info(String message, Object... params) {
+			log(Level.INFO, message, params);
+		}
+
+		public void warn(String message, Object... params) {
+			log(Level.WARN, message, params);
+		}
+
+		public void error(String message, Object... params) {
+			log(Level.ERROR, message, params);
+		}
+
+		private void log(Level level, String message, Object... params) {
+			synchronized (buffer) {
+				buffer
+					.append(Instant.now())
+					.append(" [").append(level).append("] ")
+					.append("[").append(remoteAddress).append("] ")
+					.append(MessageFormatter.arrayFormat(message, params).getMessage())
+					.append("\n");
+			}
+		}
+
+		public String getLogs() {
+			synchronized (buffer) {
+				return buffer.toString();
+			}
+		}
+
+		public void clear() {
+			synchronized (buffer) {
+				buffer.setLength(0);
+			}
+		}
+	}
+
 	/** Settings for this class. */
 	public static final Settings SETTINGS = new Settings();
 
@@ -286,6 +349,124 @@ public final class SshServer {
 	 * Session listener to track session lifecycle and trigger ticket callbacks.
 	 */
 	private class DeviceSessionListener implements SessionListener {
+		@Override
+		public void sessionCreated(Session session) {
+			// Create log buffer for this session
+			String remoteAddress = session.getRemoteAddress() == null ? "unknown" :
+				session.getRemoteAddress().toString();
+			SessionLogBuffer logBuffer = new SessionLogBuffer(remoteAddress);
+			session.setAttribute(SESSION_LOG_BUFFER, logBuffer);
+			logBuffer.debug("SSH session created from {}", remoteAddress);
+		}
+
+		@Override
+		public void sessionNegotiationEnd(
+				Session session,
+				Map<KexProposalOption, String> clientProposal,
+				Map<KexProposalOption, String> serverProposal,
+				Map<KexProposalOption, String> negotiatedOptions,
+				Throwable reason) {
+			SessionLogBuffer logBuffer = session.getAttribute(SESSION_LOG_BUFFER);
+			if (logBuffer == null) {
+				return;
+			}
+
+			if (reason != null) {
+				logBuffer.trace("SSH Protocol Negotiation ended with error: {}", reason.getMessage());
+			}
+
+			logBuffer.trace("SSH Protocol Negotiation {}:",
+				reason == null ? "Results" : "Proposals (Failed)");
+
+			// Log KEX algorithms
+			String kexClient = clientProposal.get(KexProposalOption.ALGORITHMS);
+			String kexServer = serverProposal.get(KexProposalOption.ALGORITHMS);
+			String kexNegotiated = negotiatedOptions.get(KexProposalOption.ALGORITHMS);
+			logBuffer.trace("  Key Exchange:");
+			logBuffer.trace("    Client proposed: {}", kexClient);
+			logBuffer.trace("    Server proposed: {}", kexServer);
+			if (kexNegotiated != null) {
+				logBuffer.trace("    Negotiated: {}", kexNegotiated);
+			}
+
+			// Log Server Host Key algorithms
+			String hostKeyClient = clientProposal.get(KexProposalOption.SERVERKEYS);
+			String hostKeyServer = serverProposal.get(KexProposalOption.SERVERKEYS);
+			String hostKeyNegotiated = negotiatedOptions.get(KexProposalOption.SERVERKEYS);
+			logBuffer.trace("  Server Host Key:");
+			logBuffer.trace("    Client proposed: {}", hostKeyClient);
+			logBuffer.trace("    Server proposed: {}", hostKeyServer);
+			if (hostKeyNegotiated != null) {
+				logBuffer.trace("    Negotiated: {}", hostKeyNegotiated);
+			}
+
+			// Log Cipher algorithms (client-to-server)
+			String cipherC2SClient = clientProposal.get(KexProposalOption.C2SENC);
+			String cipherC2SServer = serverProposal.get(KexProposalOption.C2SENC);
+			String cipherC2SNegotiated = negotiatedOptions.get(KexProposalOption.C2SENC);
+			logBuffer.trace("  Cipher (Client-to-Server):");
+			logBuffer.trace("    Client proposed: {}", cipherC2SClient);
+			logBuffer.trace("    Server proposed: {}", cipherC2SServer);
+			if (cipherC2SNegotiated != null) {
+				logBuffer.trace("    Negotiated: {}", cipherC2SNegotiated);
+			}
+
+			// Log Cipher algorithms (server-to-client)
+			String cipherS2CClient = clientProposal.get(KexProposalOption.S2CENC);
+			String cipherS2CServer = serverProposal.get(KexProposalOption.S2CENC);
+			String cipherS2CNegotiated = negotiatedOptions.get(KexProposalOption.S2CENC);
+			logBuffer.trace("  Cipher (Server-to-Client):");
+			logBuffer.trace("    Client proposed: {}", cipherS2CClient);
+			logBuffer.trace("    Server proposed: {}", cipherS2CServer);
+			if (cipherS2CNegotiated != null) {
+				logBuffer.trace("    Negotiated: {}", cipherS2CNegotiated);
+			}
+
+			// Log MAC algorithms (client-to-server)
+			String macC2SClient = clientProposal.get(KexProposalOption.C2SMAC);
+			String macC2SServer = serverProposal.get(KexProposalOption.C2SMAC);
+			String macC2SNegotiated = negotiatedOptions.get(KexProposalOption.C2SMAC);
+			logBuffer.trace("  MAC (Client-to-Server):");
+			logBuffer.trace("    Client proposed: {}", macC2SClient);
+			logBuffer.trace("    Server proposed: {}", macC2SServer);
+			if (macC2SNegotiated != null) {
+				logBuffer.trace("    Negotiated: {}", macC2SNegotiated);
+			}
+
+			// Log MAC algorithms (server-to-client)
+			String macS2CClient = clientProposal.get(KexProposalOption.S2CMAC);
+			String macS2CServer = serverProposal.get(KexProposalOption.S2CMAC);
+			String macS2CNegotiated = negotiatedOptions.get(KexProposalOption.S2CMAC);
+			logBuffer.trace("  MAC (Server-to-Client):");
+			logBuffer.trace("    Client proposed: {}", macS2CClient);
+			logBuffer.trace("    Server proposed: {}", macS2CServer);
+			if (macS2CNegotiated != null) {
+				logBuffer.trace("    Negotiated: {}", macS2CNegotiated);
+			}
+
+			// Log Compression algorithms (client-to-server)
+			String compC2SClient = clientProposal.get(KexProposalOption.C2SCOMP);
+			String compC2SServer = serverProposal.get(KexProposalOption.C2SCOMP);
+			String compC2SNegotiated = negotiatedOptions.get(KexProposalOption.C2SCOMP);
+			logBuffer.trace("  Compression (Client-to-Server):");
+			logBuffer.trace("    Client proposed: {}", compC2SClient);
+			logBuffer.trace("    Server proposed: {}", compC2SServer);
+			if (compC2SNegotiated != null) {
+				logBuffer.trace("    Negotiated: {}", compC2SNegotiated);
+			}
+
+			// Log Compression algorithms (server-to-client)
+			String compS2CClient = clientProposal.get(KexProposalOption.S2CCOMP);
+			String compS2CServer = serverProposal.get(KexProposalOption.S2CCOMP);
+			String compS2CNegotiated = negotiatedOptions.get(KexProposalOption.S2CCOMP);
+			logBuffer.trace("  Compression (Server-to-Client):");
+			logBuffer.trace("    Client proposed: {}", compS2CClient);
+			logBuffer.trace("    Server proposed: {}", compS2CServer);
+			if (compS2CNegotiated != null) {
+				logBuffer.trace("    Negotiated: {}", compS2CNegotiated);
+			}
+		}
+
 		@Override
 		public void sessionClosed(Session session) {
 			UploadTicket ticket = session.getAttribute(UPLOAD_TICKET);
@@ -875,7 +1056,10 @@ public final class SshServer {
 		log.info("Authentication succeeded for incoming request on embedded SSH server from {}, for ticket {}",
 			session.getRemoteAddress(), username);
 		session.setAttribute(UPLOAD_TICKET, ticket);
-		ticket.onSessionStarted();
+
+		// Get the session log buffer and pass logs to the ticket
+		SessionLogBuffer logBuffer = session.getAttribute(SESSION_LOG_BUFFER);
+		ticket.onSessionStarted(logBuffer);
 		return true;
 	}
 

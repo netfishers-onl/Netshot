@@ -58,6 +58,7 @@ import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
 import net.netshot.netshot.device.collector.Collector;
 import net.netshot.netshot.device.collector.SshServer;
+import net.netshot.netshot.device.collector.SshServer.SessionLogBuffer;
 import net.netshot.netshot.device.collector.TransferProtocol;
 import net.netshot.netshot.device.collector.UploadTicket;
 import net.netshot.netshot.utils.PasswordGenerator;
@@ -193,9 +194,15 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		}
 
 		@Override
-		public void onSessionStarted() {
+		public void onSessionStarted(SessionLogBuffer logBuffer) {
 			log.info("Upload session started for ticket {}", this.id);
 			taskContext.info("Upload session started for ticket {}", this.id);
+			// Indent session logs
+			StringBuffer logs = new StringBuffer();
+			for (String line : logBuffer.getLogs().split("\n")) {
+				logs.append("  ").append(line).append("\n");
+			}
+			taskContext.trace("Session logs for ticket {}:\n{}", this.id, logs);
 		}
 
 		@Override

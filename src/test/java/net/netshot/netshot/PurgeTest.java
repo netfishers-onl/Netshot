@@ -173,7 +173,7 @@ public class PurgeTest {
 				.getSingleResultOrNull(),
 			"Unexpected number of config entries");
 		Assertions.assertEquals(
-			expected * 2, // two attributes per config are created by FakeDeviceFactory
+			expected * 3, // three attributes per config are created by FakeDeviceFactory
 			session.createNativeQuery("select count(1) from config_attribute ca", Long.class)
 				.getSingleResultOrNull(),
 			"Unexpected number of config attribute entries");

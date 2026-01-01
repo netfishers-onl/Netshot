@@ -1,3 +1,21 @@
+/**
+ * Copyright 2013-2025 Netshot
+ * 
+ * This file is part of Netshot project.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package net.netshot.netshot.device.collector;
 
 import java.io.IOException;
@@ -232,8 +250,10 @@ public final class SshServer {
 				hostKeyPathString = System.getProperty("java.io.tmpdir");
 				this.hostKeyPath = Paths.get(hostKeyPathString);
 				if (this.enabled) {
-					log.warn("Embedded SSH server host keys will be stored in system temp directory: {}. " +
-						"Set netshot.sshserver.hostkeypath configuration to a persistent location to avoid " +
+					log.warn("Embedded SSH server host keys will be stored in system temp directory: {}. "
+					+
+						"Set netshot.sshserver.hostkeypath configuration to a persistent location to avoid "
+					+
 						"host key regeneration.", this.hostKeyPath);
 				}
 			}
@@ -269,8 +289,8 @@ public final class SshServer {
 		private final StringBuilder buffer = new StringBuilder();
 		private final String remoteAddress;
 
-		public SessionLogBuffer(String remoteAddress) {
-			this.remoteAddress = remoteAddress;
+		public SessionLogBuffer(String address) {
+			this.remoteAddress = address;
 		}
 
 		public void trace(String message, Object... params) {
@@ -348,11 +368,12 @@ public final class SshServer {
 	/**
 	 * Session listener to track session lifecycle and trigger ticket callbacks.
 	 */
-	private class DeviceSessionListener implements SessionListener {
+	private final class DeviceSessionListener implements SessionListener {
 		@Override
 		public void sessionCreated(Session session) {
 			// Create log buffer for this session
-			String remoteAddress = session.getRemoteAddress() == null ? "unknown" :
+			String remoteAddress = session.getRemoteAddress() == null ? "unknown"
+				:
 				session.getRemoteAddress().toString();
 			SessionLogBuffer logBuffer = new SessionLogBuffer(remoteAddress);
 			session.setAttribute(SESSION_LOG_BUFFER, logBuffer);
@@ -480,7 +501,7 @@ public final class SshServer {
 	/**
 	 * Authenticator to be called when a device tries to authenticate in keyboard interactive mode.
 	 */
-	private class DeviceKeyboardInteractiveAuthenticator implements KeyboardInteractiveAuthenticator {
+	private final class DeviceKeyboardInteractiveAuthenticator implements KeyboardInteractiveAuthenticator {
 
 		@Override
 		public InteractiveChallenge generateChallenge(ServerSession session, String username, String lang,
@@ -505,7 +526,7 @@ public final class SshServer {
 	/**
 	 * Authenticator to be called when a device tries to authenticate with a password.
 	 */
-	private class DevicePasswordAuthenticator implements PasswordAuthenticator {
+	private final class DevicePasswordAuthenticator implements PasswordAuthenticator {
 
 		@Override
 		public boolean authenticate(String username, String password, ServerSession session)
@@ -518,7 +539,7 @@ public final class SshServer {
 	/**
 	 * File opener to be called when a device tries to send or receive a file via SCP.
 	 */
-	private class DeviceScpFileOpener extends DefaultScpFileOpener {
+	private final class DeviceScpFileOpener extends DefaultScpFileOpener {
 
 		/** Common error message for all download attempts. */
 		private static final String FORBIDDEN_MESSAGE =
@@ -655,7 +676,7 @@ public final class SshServer {
 	/**
 	 * File system accessor to be called when a device tries to interact with files via SFTP.
 	 */
-	private class DeviceSftpFileSystemAccessor implements SftpFileSystemAccessor {
+	private final class DeviceSftpFileSystemAccessor implements SftpFileSystemAccessor {
 
 		/** Common error message for all download attempts. */
 		private static final String FORBIDDEN_MESSAGE =
@@ -691,8 +712,8 @@ public final class SshServer {
 				subsystem.getSession(), file, options);
 
 			// Trigger onFileWritten callback if this was a write operation
-			if (options.contains(java.nio.file.StandardOpenOption.WRITE) ||
-			    options.contains(java.nio.file.StandardOpenOption.CREATE)) {
+			if (options.contains(java.nio.file.StandardOpenOption.WRITE)
+					|| options.contains(java.nio.file.StandardOpenOption.CREATE)) {
 				UploadTicket ticket = subsystem.getSession().getAttribute(UPLOAD_TICKET);
 				if (ticket != null) {
 					log.info("File written via SFTP in session {}: {}", subsystem.getSession(), file);
@@ -744,7 +765,7 @@ public final class SshServer {
 		@Override
 		public Map<String, ?> readFileAttributes(SftpSubsystemProxy subsystem, Path file, String view,
 				LinkOption... options) throws IOException {
-				
+
 			Map<String, ?> attributes = Files.readAttributes(file, view, options);
 			log.debug("SSH/SFTP server read file attribute request, session {}, path {}, options {} => attributes {}",
 				subsystem.getSession(), file, options, attributes);
@@ -837,7 +858,7 @@ public final class SshServer {
 	/**
 	 * File system factory to be used when a device wants to upload data via SCP/SFTP.
 	 */
-	private class DeviceVirtualFileSystemFactory implements FileSystemFactory {
+	private final class DeviceVirtualFileSystemFactory implements FileSystemFactory {
 		@Override
 		public Path getUserHomeDir(SessionContext session) throws IOException {
 			UploadTicket ticket = session.getAttribute(UPLOAD_TICKET);

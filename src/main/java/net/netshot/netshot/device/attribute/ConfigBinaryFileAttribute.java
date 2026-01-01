@@ -87,12 +87,15 @@ public final class ConfigBinaryFileAttribute extends ConfigAttribute {
 
 	/**
 	 * Create a temporary folder for binary file attributes based on given prefix.
+	 * @param prefix the prefix for the temporary folder
+	 * @return the path to the temporary folder
+	 * @throws IOException if the folder cannot be created
 	 */
 	public static Path makeTempFolder(String prefix) throws IOException {
 		if (ConfigBinaryFileAttribute.SETTINGS.storageFolderPath == null) {
 			throw new IllegalStateException(
-				"Cannot get a folder path to save temporary binary file attribute. " +
-				"Is netshot.snapshots.binary.path defined?");
+				"Cannot get a folder path to save temporary binary file attribute. "
+				+ "Is netshot.snapshots.binary.path defined?");
 		}
 		Path folder = Files.createTempDirectory(ConfigBinaryFileAttribute.SETTINGS.storageFolderPath, prefix);
 		folder.toFile().deleteOnExit();
@@ -145,8 +148,8 @@ public final class ConfigBinaryFileAttribute extends ConfigAttribute {
 	public Path getFilePath() {
 		if (ConfigBinaryFileAttribute.SETTINGS.storageFolderPath == null) {
 			throw new IllegalStateException(
-				"Cannot get a file path to save binary file attribute. " +
-				"Is netshot.snapshots.binary.path defined?");
+				"Cannot get a file path to save binary file attribute. "
+				+ "Is netshot.snapshots.binary.path defined?");
 		}
 		return ConfigBinaryFileAttribute.SETTINGS.storageFolderPath
 			.resolve("%s.data".formatted(this.getUid()))
@@ -157,8 +160,8 @@ public final class ConfigBinaryFileAttribute extends ConfigAttribute {
 	public Path getTempFilePath() {
 		if (ConfigBinaryFileAttribute.SETTINGS.storageFolderPath == null) {
 			throw new IllegalStateException(
-				"Cannot get a file path to save binary file attribute. " +
-				"Is netshot.snapshots.binary.path defined?");
+				"Cannot get a file path to save binary file attribute. "
+				+ "Is netshot.snapshots.binary.path defined?");
 		}
 		return ConfigBinaryFileAttribute.SETTINGS.storageFolderPath
 			.resolve(".download.%s.data".formatted(this.getUid()))

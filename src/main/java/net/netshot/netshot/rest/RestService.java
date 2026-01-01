@@ -8299,7 +8299,7 @@ public class RestService extends Thread {
 				}
 
 				if (exportCompliance) {
-		 		log.debug("Exporting compliance data");
+			log.debug("Exporting compliance data");
 					List<RsLightPolicyRuleDevice> checkResults = getConfigComplianceDeviceStatuses(domains, groups,
 						new HashSet<Long>(), new HashSet<>(
 							Arrays.asList(new CheckResult.ResultOption[] { CheckResult.ResultOption.CONFORMING,
@@ -9533,8 +9533,8 @@ public class RestService extends Thread {
 				// Ensure we keep the same HookTrigger object instances
 				hook.getTriggers().retainAll(rsHook.getTriggers());
 				hook.getTriggers().addAll(rsHook.getTriggers());
-				if (rsHook instanceof WebHook rsWebHook &&
-				    hook instanceof WebHook webHook) {
+				if (rsHook instanceof WebHook rsWebHook
+						&& hook instanceof WebHook webHook) {
 					webHook.setAction(rsWebHook.getAction());
 					webHook.setUrl(rsWebHook.getUrl());
 					webHook.setSslValidation(rsWebHook.isSslValidation());

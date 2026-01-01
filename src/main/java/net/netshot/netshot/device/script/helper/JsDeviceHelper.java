@@ -590,11 +590,12 @@ public final class JsDeviceHelper {
 
 	/**
 	 * Download a text file from the device, using SCP or SFTP, and return this text.
-	 * @param method the transfer protocol to use
+	 * @param protocol the transfer protocol to use
 	 * @param remoteFileName the file (including full path) to download from the device
 	 * @param charset the text charset
 	 * @param newSession start the SCP/SFTP download in a new SSH session
 	 * @return the downloaded text
+	 * @throws Exception if an error occurs during the download
 	 */
 	public String textDownload(TransferProtocol protocol, String remoteFileName,
 			Charset charset, boolean newSession) throws Exception {

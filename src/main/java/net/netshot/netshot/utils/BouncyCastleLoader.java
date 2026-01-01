@@ -1,3 +1,21 @@
+/**
+ * Copyright 2013-2025 Netshot
+ * 
+ * This file is part of Netshot project.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package net.netshot.netshot.utils;
 
 import java.io.File;
@@ -27,7 +45,14 @@ import net.netshot.netshot.Netshot;
  * files and loads them using Java instrumentation.
  */
 @Slf4j
-public class BouncyCastleLoader {
+public final class BouncyCastleLoader {
+
+	/**
+	 * Private constructor to hide utility class constructor.
+	 */
+	private BouncyCastleLoader() {
+		// Utility class
+	}
 
 	/** Folder in main JAR where to find the BC JARs to load. */
 	private static final String RESOURCE_PATH = "bc/";
@@ -39,8 +64,10 @@ public class BouncyCastleLoader {
 	/**
 	 * Extract a single JAR from inside the uber-jar to a temporary file,
 	 * and return its URL.
-	 * @param jar the JAR file to
-	 * @param je the JAR entry 
+	 *
+	 * @param jar the JAR file
+	 * @param je the JAR entry
+	 * @throws Exception in case of error
 	 */
 	private static void loadJar(JarFile jar, JarEntry je) throws Exception {
 		log.debug("Extracting embedded JAR {}", je.getName());
@@ -49,14 +76,14 @@ public class BouncyCastleLoader {
 
 		try (InputStream in = jar.getInputStream(je)) {
 			String baseName = new File(je.getName()).getName();
-			String prefix = "netshot_" +
-				baseName
-					.replace(".jar", "")
-					.replaceAll("\\W+", "-");
+			String prefix = "netshot_"
+					+ baseName
+							.replace(".jar", "")
+							.replaceAll("\\W+", "-");
 			String suffix = ".jar";
-			Path tempFile = tmpPath == null ?
-				Files.createTempFile(prefix, suffix) :
-				Files.createTempFile(Path.of(tmpPath), prefix, suffix);
+			Path tempFile = tmpPath == null
+					? Files.createTempFile(prefix, suffix)
+					: Files.createTempFile(Path.of(tmpPath), prefix, suffix);
 			log.trace("Copying {} into {}", je.getName(), tempFile);
 			tempFile.toFile().deleteOnExit();
 			Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
@@ -67,6 +94,8 @@ public class BouncyCastleLoader {
 
 	/**
 	 * Extract all JARs from the RESOURCE_PATH inside the uber-jar.
+	 *
+	 * @throws Exception in case of error
 	 */
 	private static void loadAllJars() throws Exception {
 		// Locate the running uber-jar
@@ -143,7 +172,10 @@ public class BouncyCastleLoader {
 
 	/**
 	 * Try to register BC assuming it can be found in the classpath.
+	 *
+	 * @param source the source description
 	 * @return true if registering was successful
+	 * @throws Exception in case of error
 	 */
 	private static boolean tryRegister(String source) throws Exception {
 		try {
@@ -162,6 +194,8 @@ public class BouncyCastleLoader {
 
 	/**
 	 * Load BC jars if needed and register the Bouncy Castle provider.
+	 *
+	 * @throws Exception in case of error
 	 */
 	public static void registerBouncyCastle() throws Exception {
 		// Check if BC classes are already on the classpath (dev mode)
@@ -179,7 +213,8 @@ public class BouncyCastleLoader {
 		if (BouncyCastleLoader.tryRegister("embedded JARs")) {
 			return;
 		}
-		log.warn("Could not load BouncyCastle crypto library: " +
-			"some algorithms might not be available for protocols like SSH");
+		log.warn("Could not load BouncyCastle crypto library: "
+				+ "some algorithms might not be available for protocols like SSH");
 	}
 }
+

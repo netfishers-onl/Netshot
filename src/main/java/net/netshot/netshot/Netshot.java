@@ -107,6 +107,7 @@ public class Netshot extends Thread {
 
 	/**
 	 * Retrieve the local machine hostname.
+	 *
 	 * @return the local machine hostname
 	 */
 	public static String getHostname() {
@@ -171,6 +172,7 @@ public class Netshot extends Thread {
 
 	/**
 	 * Gets a config item as an Integer.
+	 *
 	 * @param key the config key
 	 * @param defaultValue the default value
 	 * @return the config
@@ -191,6 +193,7 @@ public class Netshot extends Thread {
 
 	/**
 	 * Gets a config item as an Integer.
+	 *
 	 * @param key the config key
 	 * @param defaultValue the default value
 	 * @param min the minimum acceptable value
@@ -201,7 +204,7 @@ public class Netshot extends Thread {
 		int value = Netshot.getConfig(key, defaultValue);
 		if (value < min || value > max) {
 			log.error("Unacceptable integer value for configuration item '{}' (not in the range {} to {}), using default value {}",
-				key, min, max, defaultValue);
+					key, min, max, defaultValue);
 			return defaultValue;
 		}
 		return value;
@@ -239,7 +242,7 @@ public class Netshot extends Thread {
 	/**
 	 * Read the application configuration from the files.
 	 *
-	 * @param filenames = the names of the files to read from
+	 * @param filenames the names of the files to read from
 	 * @return true, if successful
 	 */
 	protected static boolean readConfig(String[] filenames) {
@@ -264,8 +267,8 @@ public class Netshot extends Thread {
 
 	/**
 	 * Initialize the application configuration from Properties object.
-	 * 
-	 * @param newConfig The configuration
+	 *
+	 * @param newConfig the configuration
 	 * @return true
 	 */
 	protected static boolean initConfig(Properties newConfig) {
@@ -449,7 +452,8 @@ public class Netshot extends Thread {
 
 	/**
 	 * Initialize remote Syslog logging.
-	 * @return true if everything went fine.
+	 *
+	 * @return true if everything went fine
 	 */
 	protected static boolean initSyslogLogging() {
 
@@ -587,7 +591,9 @@ public class Netshot extends Thread {
 		if (!Netshot.readConfig(configFileNames)) {
 			System.exit(1);
 		}
-		if (!Netshot.initMainLogging() || !Netshot.initAuditLogging() || !Netshot.initSyslogLogging()) {
+		if (!Netshot.initMainLogging()
+				|| !Netshot.initAuditLogging()
+				|| !Netshot.initSyslogLogging()) {
 			System.exit(1);
 		}
 
@@ -652,16 +658,27 @@ public class Netshot extends Thread {
 
 	/**
 	 * The agentmain entry point.
+	 *
+	 * @param agentArgs the agent arguments
+	 * @param inst the instrumentation
 	 */
 	public static void agentmain(String agentArgs, Instrumentation inst) {
 		log.info("Netshot agentmain entrypoint");
 		instrumentation = inst;
 	}
 
+	/**
+	 * Append a JAR to the system class loader search.
+	 *
+	 * @param jar the JAR file to append
+	 * @throws Exception if instrumentation is not initialized
+	 */
 	public static void appendJar(JarFile jar) throws Exception {
-		if (instrumentation == null)
+		if (instrumentation == null) {
 			throw new IllegalStateException("Instrumentation not initialized");
+		}
 		instrumentation.appendToSystemClassLoaderSearch(jar);
 	}
 
 }
+

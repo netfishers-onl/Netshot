@@ -240,8 +240,8 @@ public class Finder {
 		public static String escapeKey(String key) {
 			// Escape special characters in reverse order to avoid double-escaping
 			return key.replace("\\", "\\\\")
-			          .replace(">", "\\>")
-			          .replace("]", "\\]");
+					.replace(">", "\\>")
+					.replace("]", "\\]");
 		}
 
 		/**
@@ -264,7 +264,7 @@ public class Finder {
 		 */
 		public static String escapeValue(String value) {
 			return value.replace("\\", "\\\\")
-			            .replace("\"", "\\\"");
+						.replace("\"", "\\\"");
 		}
 
 		/**
@@ -275,7 +275,7 @@ public class Finder {
 		 */
 		public static String unescapeValue(String value) {
 			return value.replace("\\\"", "\"")
-			            .replace("\\\\", "\\");
+						.replace("\\\\", "\\");
 		}
 	}
 
@@ -397,7 +397,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -612,7 +611,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -700,7 +698,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -745,7 +742,6 @@ public class Finder {
 		/**
 		 * Instantiates a new or operator.
 		 *
-		 * @param driverName the device class
 		 */
 		public OrOperator() {
 			super();
@@ -796,7 +792,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -851,7 +846,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -964,7 +958,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -1015,8 +1008,8 @@ public class Finder {
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public String buildHqlString(String itemPrefix) {
-			return "d.id in (select d.id from Device d left join d.networkInterfaces ni where " +
-				this.buildWhere(itemPrefix) + ")";
+			return "d.id in (select d.id from Device d left join d.networkInterfaces ni where "
+				+ this.buildWhere(itemPrefix) + ")";
 		}
 
 		/*(non-Javadoc)
@@ -1063,7 +1056,6 @@ public class Finder {
 		/**
 		 * Instantiates a new device expression.
 		 *
-		 * @param driverName the device class
 		 */
 		public DeviceExpression() {
 			super();
@@ -1076,7 +1068,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -1134,7 +1125,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -1195,7 +1185,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -1337,7 +1326,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -1408,8 +1396,8 @@ public class Finder {
 		 */
 		@Override
 		public String buildHqlString(String itemPrefix) {
-			return "d.id in (select d.id from Device d left join d.networkInterfaces ni " +
-					"left join ni.physicalAddress mac where " + this.buildWhere(itemPrefix) + ")";
+			return "d.id in (select d.id from Device d left join d.networkInterfaces ni "
+				+ "left join ni.physicalAddress mac where " + this.buildWhere(itemPrefix) + ")";
 		}
 
 		/*(non-Javadoc)
@@ -1450,7 +1438,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -1517,23 +1504,23 @@ public class Finder {
 		private String buildWhere(String itemPrefix) {
 			if (this.sign == TokenType.IN) {
 				return
-					("(d.mgmtAddress.address >= :%s_0 and d.mgmtAddress.address <= :%s_1) or " +
-					"(ip4.address >= :%s_0 and ip4.address < :%s_1)")
+					("(d.mgmtAddress.address >= :%s_0 and d.mgmtAddress.address <= :%s_1) or "
+						+ "(ip4.address >= :%s_0 and ip4.address < :%s_1)")
 					.formatted(itemPrefix, itemPrefix, itemPrefix, itemPrefix);
 			}
 			else if (this.withMask) {
 				return
-					("(d.mgmtAddress.address = :%s_0 and d.mgmtAddress.prefixLength = :%s_1) or " +
-					"(ip4.address = :%s_0 and ip4.prefixLength = :%s_1)")
+					("(d.mgmtAddress.address = :%s_0 and d.mgmtAddress.prefixLength = :%s_1) or "
+						+ "(ip4.address = :%s_0 and ip4.prefixLength = :%s_1)")
 					.formatted(itemPrefix, itemPrefix, itemPrefix, itemPrefix);
 			}
 			else if (this.sign == TokenType.CONTAINS) {
 				return
-					("i4.prefixLength = 0 or " +
-					"(ip4.address < 0 and ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) - power(2, 32 - ip4.prefixLength) <= :%s_0 " +
-					"and :%s_0 <= ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) - 1) or " +
-					"(ip4.address >= 0 and ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) <= :%s_0 " +
-					"and :%s_0 <= ip4.address -mod(ip4.address, power(2, 32 - ip4.prefixLength)) + power(2, 32 - ip4.prefixLength) - 1)")
+					("i4.prefixLength = 0 or "
+						+ "(ip4.address < 0 and ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) - power(2, 32 - ip4.prefixLength) <= :%s_0 "
+						+ "and :%s_0 <= ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) - 1) or "
+						+ "(ip4.address >= 0 and ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) <= :%s_0 "
+						+ "and :%s_0 <= ip4.address -mod(ip4.address, power(2, 32 - ip4.prefixLength)) + power(2, 32 - ip4.prefixLength) - 1)")
 					.formatted(itemPrefix, itemPrefix, itemPrefix, itemPrefix);
 			}
 			return "d.mgmtAddress.address = :%s_0 or ip4.address = :%s_0"
@@ -1545,8 +1532,8 @@ public class Finder {
 		 */
 		@Override
 		public String buildHqlString(String itemPrefix) {
-			return "d.id in (select d.id from Device d left join d.networkInterfaces ni " +
-				"left join ni.ip4Addresses ip4 where " + this.buildWhere(itemPrefix) + ")";
+			return "d.id in (select d.id from Device d left join d.networkInterfaces ni "
+				+ "left join ni.ip4Addresses ip4 where " + this.buildWhere(itemPrefix) + ")";
 		}
 
 		/*(non-Javadoc)
@@ -1594,7 +1581,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -1674,8 +1660,8 @@ public class Finder {
 		 */
 		@Override
 		public String buildHqlString(String itemPrefix) {
-			return "d.id in (select d.id from Device d left join d.networkInterfaces ni " +
-						"left join ni.ip6Addresses ip6 where " + this.buildWhere(itemPrefix) + ")";
+			return "d.id in (select d.id from Device d left join d.networkInterfaces ni "
+				+ "left join ni.ip6Addresses ip6 where " + this.buildWhere(itemPrefix) + ")";
 		}
 
 		/*(non-Javadoc)
@@ -1763,11 +1749,11 @@ public class Finder {
 
 		@Override
 		public String buildHqlString(String itemPrefix) {
-			return "d.id in (select d.id from Device d " +
-				"join d.diagnosticResults %s_dr ".formatted(itemPrefix) +
-				"where %s_dr.diagnostic = :%s_diagnostic and (".formatted(itemPrefix, itemPrefix) +
-				this.buildWhere(itemPrefix, "%s_dr".formatted(itemPrefix)) +
-				"))";
+			return "d.id in (select d.id from Device d "
+				+ "join d.diagnosticResults %s_dr ".formatted(itemPrefix)
+					+ "where %s_dr.diagnostic = :%s_diagnostic and (".formatted(itemPrefix, itemPrefix)
+					+ this.buildWhere(itemPrefix, "%s_dr".formatted(itemPrefix))
+					+ "))";
 		}
 
 		/**
@@ -1967,7 +1953,10 @@ public class Finder {
 
 		@Override
 		protected String getTextValue() {
-			if (value == Math.floor(value)) return String.format("%.0f", value); return Double.toString(value);
+		if (value == Math.floor(value)) {
+			return String.format("%.0f", value);
+		}
+		return Double.toString(value);
 		}
 
 		@Override
@@ -2003,9 +1992,9 @@ public class Finder {
 			Token sign = tokens.get(1);
 			Token value = tokens.get(2);
 
-			if (sign.type != TokenType.IS &&
-					sign.type != TokenType.LESSTHAN &&
-					sign.type != TokenType.GREATERTHAN) {
+			if (sign.type != TokenType.IS
+				&& sign.type != TokenType.LESSTHAN
+						&& sign.type != TokenType.GREATERTHAN) {
 				throw new FinderParseException(
 					"Invalid operator for a numeric diagnostic '%s' at character %d."
 					.formatted(diagnostic.getName(), sign.position));
@@ -2139,9 +2128,9 @@ public class Finder {
 
 		@Override
 		public String buildHqlString(String itemPrefix) {
-			return "d.id in (select d.id from Device d " +
-				"join d.complianceCheckResults %s_cr ".formatted(itemPrefix) +
-				"where %s_cr.key.rule = :%s_rule and %s_cr.result = :%s)".formatted(
+			return "d.id in (select d.id from Device d "
+				+ "join d.complianceCheckResults %s_cr ".formatted(itemPrefix)
+					+ "where %s_cr.key.rule = :%s_rule and %s_cr.result = :%s)".formatted(
 					itemPrefix, itemPrefix, itemPrefix, itemPrefix);
 		}
 
@@ -2283,7 +2272,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -2385,8 +2373,8 @@ public class Finder {
 			if (this.attribute.getDriver() == null) {
 				if (AttributeLevel.CONFIG.equals(this.attribute.getLevel())) {
 					// Native config property
-					return "d.id in (select d.id from Device d, Config c " +
-						"where d.lastConfig = c and (" + this.buildWhere(itemPrefix, "c") + "))";
+					return "d.id in (select d.id from Device d, Config c "
+						+ "where d.lastConfig = c and (" + this.buildWhere(itemPrefix, "c") + "))";
 				}
 				else {
 					// Native device property
@@ -2396,19 +2384,19 @@ public class Finder {
 			else {
 				if (AttributeLevel.CONFIG.equals(this.attribute.getLevel())) {
 					// Driver-specific config attribute
-					return "d.id in (select d.id from Device d, Config c " +
-						"join c.attributes %s_ca with %s_ca.name = :%s_name ".formatted(itemPrefix, itemPrefix, itemPrefix) +
-						"where d.driver = :%s_driver and d.lastConfig = c and (".formatted(itemPrefix) +
-						this.buildWhere(itemPrefix, "%s_ca".formatted(itemPrefix)) +
-						"))";
+					return "d.id in (select d.id from Device d, Config c "
+						+ "join c.attributes %s_ca with %s_ca.name = :%s_name ".formatted(itemPrefix, itemPrefix, itemPrefix)
+							+ "where d.driver = :%s_driver and d.lastConfig = c and (".formatted(itemPrefix)
+							+ this.buildWhere(itemPrefix, "%s_ca".formatted(itemPrefix))
+							+ "))";
 				}
 				else {
 					// Driver-specific device attribute
-					return "d.id in (select d.id from Device d " +
-						"join d.attributes %s_da with %s_da.name = :%s_name ".formatted(itemPrefix, itemPrefix, itemPrefix) +
-						"where d.driver = :%s_driver and (".formatted(itemPrefix) +
-						this.buildWhere(itemPrefix, "%s_da".formatted(itemPrefix)) +
-						"))";
+					return "d.id in (select d.id from Device d "
+						+ "join d.attributes %s_da with %s_da.name = :%s_name ".formatted(itemPrefix, itemPrefix, itemPrefix)
+							+ "where d.driver = :%s_driver and (".formatted(itemPrefix)
+							+ this.buildWhere(itemPrefix, "%s_da".formatted(itemPrefix))
+							+ "))";
 				}
 			}
 		}
@@ -2492,9 +2480,9 @@ public class Finder {
 			Token sign = tokens.get(1);
 			Token value = tokens.get(2);
 
-			if (sign.type != TokenType.IS &&
-					sign.type != TokenType.LESSTHAN &&
-					sign.type != TokenType.GREATERTHAN) {
+			if (sign.type != TokenType.IS
+				&& sign.type != TokenType.LESSTHAN
+						&& sign.type != TokenType.GREATERTHAN) {
 				throw new FinderParseException("Parsing error, invalid numeric operator at position %d.".formatted(sign.position));
 			}
 			if (value.type != TokenType.NUMERICVALUE) {
@@ -2559,7 +2547,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -2707,7 +2694,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -3047,7 +3033,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -3167,7 +3152,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -3221,7 +3205,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -3269,8 +3252,8 @@ public class Finder {
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public String buildHqlString(String itemPrefix) {
-			return "d.id in (select d.id from Device d left join d.vrfInstances v where " +
-				this.buildWhere(itemPrefix) + ")";
+			return "d.id in (select d.id from Device d left join d.vrfInstances v where "
+				+ this.buildWhere(itemPrefix) + ")";
 		}
 
 		/*(non-Javadoc)
@@ -3323,7 +3306,6 @@ public class Finder {
 		 * Parses the tokens to create an expression.
 		 *
 		 * @param tokens the tokens
-		 * @param parsingData other contextual parsing data
 		 * @return the expression
 		 * @throws FinderParseException the finder parse exception
 		 */
@@ -3374,8 +3356,8 @@ public class Finder {
 		 * @see net.netshot.netshot.device.Finder.Expression#buildHqlString(java.lang.String)
 		 */
 		public String buildHqlString(String itemPrefix) {
-			return "d.id in (select d.id from Device d left join d.virtualDevices v where " +
-				this.buildWhere(itemPrefix) + ")";
+			return "d.id in (select d.id from Device d left join d.virtualDevices v where "
+				+ this.buildWhere(itemPrefix) + ")";
 		}
 
 		/*(non-Javadoc)

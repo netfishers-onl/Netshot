@@ -50,7 +50,7 @@ public final class AttributeDefinition {
 	 * Should be applied to Enum's which can be used
 	 * as attribute values.
 	 */
-	public static interface EnumAttribute {
+	public interface EnumAttribute {
 
 	}
 

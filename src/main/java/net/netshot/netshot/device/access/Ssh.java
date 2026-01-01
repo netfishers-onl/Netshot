@@ -226,10 +226,10 @@ public class Ssh extends Cli {
 		@Getter
 		private String response;
 
-		public SshInteractionInstruction(Pattern promptPattern, Boolean echo, String result) {
+		public SshInteractionInstruction(Pattern promptPattern, Boolean echo, String response) {
 			this.promptPattern = promptPattern;
 			this.echo = echo;
-			this.response = result;
+			this.response = response;
 		}
 	}
 
@@ -482,7 +482,7 @@ public class Ssh extends Cli {
 
 	/**
 	 * Create a SSH object by duplicating another one.
-	 * 
+	 *
 	 * @param other the other SSH object
 	 */
 	public Ssh(Ssh other) {
@@ -504,8 +504,9 @@ public class Ssh extends Cli {
 
 	/**
 	 * Create the SSH session and open the channel (if openChannel is true).
-	 * @param openChannel Whether to open the 
-	 * @throws IOException
+	 *
+	 * @param openChannel Whether to open the channel
+	 * @throws IOException in case of I/O error
 	 */
 	public void connect(boolean openChannel) throws IOException {
 		try {
@@ -529,7 +530,7 @@ public class Ssh extends Cli {
 				}
 				this.session.setUserInteraction(new UserInteraction() {
 					@Override
-					public String[] interactive(ClientSession session, String name, String instruction, String lang,
+					public String[] interactive(ClientSession sshSession, String name, String instruction, String lang,
 							String[] prompts, boolean[] echos) {
 						if (Ssh.this.taskContext.isTracing()) {
 							List<String> promptEchoes = new ArrayList<>();
@@ -546,7 +547,8 @@ public class Ssh extends Cli {
 									prompts[0]);
 								return new String[] { Ssh.this.password };
 							}
-							Ssh.this.taskContext.error("Multiple prompts returned by device in SSH user interactive " +
+							Ssh.this.taskContext.error("Multiple prompts returned by device in SSH user interactive "
+								+
 								"mode while the driver doesn't provide user interaction instructions.");
 							throw new RuntimeException("Cannot reply to multiple SSH user interaction prompts");
 						}
@@ -588,7 +590,7 @@ public class Ssh extends Cli {
 						return responses.toArray(new String[0]);
 					}
 					@Override
-					public String getUpdatedPassword(ClientSession session, String prompt, String lang) {
+					public String getUpdatedPassword(ClientSession sshSession, String prompt, String lang) {
 						Ssh.this.taskContext.warn("SSH password update requested by the device: '{}'", prompt);
 						return null;
 					}
@@ -604,11 +606,11 @@ public class Ssh extends Cli {
 			}
 			this.session.setPasswordAuthenticationReporter(new PasswordAuthenticationReporter() {
 				@Override
-				public void signalAuthenticationSuccess(ClientSession session, String service, String password) throws Exception {
+				public void signalAuthenticationSuccess(ClientSession sshSession, String service, String givenPassword) throws Exception {
 					Ssh.this.taskContext.debug("SSH authentication succeeded (service {})", service);
 				}
 				@Override
-				public void signalAuthenticationFailure(ClientSession session, String service, String password,
+				public void signalAuthenticationFailure(ClientSession sshSession, String service, String givenPassword,
 					boolean partial, List<String> serverMethods) throws Exception {
 					Ssh.this.taskContext.warn("SSH authentication failed (service {})", service);
 				}
@@ -618,7 +620,7 @@ public class Ssh extends Cli {
 			this.session.addSessionListener(new SessionListener() {
 				@Override
 				public void sessionNegotiationEnd(
-						org.apache.sshd.common.session.Session session,
+						org.apache.sshd.common.session.Session sshSession,
 						Map<KexProposalOption, String> clientProposal,
 						Map<KexProposalOption, String> serverProposal,
 						Map<KexProposalOption, String> negotiatedOptions,
@@ -796,9 +798,11 @@ public class Ssh extends Cli {
 
 	/**
 	 * Download a file using SCP.
+	 *
 	 * @param remoteFileName The file to download (name with full path) from the device
 	 * @param localFilePath  The local file path (name with full path) where to write
 	 * @param newSession True to download through a new SSH session
+	 * @throws IOException in case of I/O error
 	 */
 	public void scpDownload(String remoteFileName, Path localFilePath, boolean newSession) throws IOException {
 		if (localFilePath == null) {
@@ -812,9 +816,11 @@ public class Ssh extends Cli {
 
 	/**
 	 * Download a file using SCP.
+	 *
 	 * @param remoteFileName The file to download (name with full path) from the device
 	 * @param localStream  Output stream
 	 * @param newSession True to download through a new SSH session
+	 * @throws IOException in case of I/O error
 	 */
 	public void scpDownload(String remoteFileName, OutputStream localStream, boolean newSession) throws IOException {
 		if (newSession) {
@@ -842,9 +848,11 @@ public class Ssh extends Cli {
 
 	/**
 	 * Download a file using SFTP.
+	 *
 	 * @param remoteFileName The file to download (name with full path) from the device
 	 * @param localFilePath  The local file path (name with full path) where to write
 	 * @param newSession True to download through a new SSH session
+	 * @throws IOException in case of I/O error
 	 */
 	public void sftpDownload(String remoteFileName, Path localFilePath, boolean newSession) throws IOException {
 		if (localFilePath == null) {
@@ -859,9 +867,11 @@ public class Ssh extends Cli {
 
 	/**
 	 * Download a file using SFTP.
+	 *
 	 * @param remoteFileName The file to download (name with full path) from the device
 	 * @param localStream  Output stream
 	 * @param newSession True to download through a new SSH session
+	 * @throws IOException in case of I/O error
 	 */
 	public void sftpDownload(String remoteFileName, OutputStream localStream, boolean newSession) throws IOException {
 		if (newSession) {

@@ -1,3 +1,21 @@
+/**
+ * Copyright 2013-2025 Netshot
+ * 
+ * This file is part of Netshot project.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package net.netshot.netshot.utils;
 
 import java.security.SecureRandom;
@@ -8,7 +26,7 @@ import java.util.List;
 /**
  * Secure password generator.
  */
-public class PasswordGenerator {
+public final class PasswordGenerator {
 
 	private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
@@ -29,6 +47,8 @@ public class PasswordGenerator {
 
 	/**
 	 * Private constructor - use builder() to create instances.
+	 *
+	 * @param builder the builder
 	 */
 	private PasswordGenerator(Builder builder) {
 		this.length = builder.length;
@@ -52,7 +72,7 @@ public class PasswordGenerator {
 	/**
 	 * Generate a password with default settings (16 chars, all character types).
 	 *
-	 * @return A randomly generated password
+	 * @return a randomly generated password
 	 */
 	public static String generateDefault() {
 		return builder().build().generate();
@@ -61,21 +81,21 @@ public class PasswordGenerator {
 	/**
 	 * Generate a secure alphanumeric-only password (no special characters).
 	 *
-	 * @param length The desired password length
-	 * @return A randomly generated alphanumeric password
+	 * @param passwordLength the desired password length
+	 * @return a randomly generated alphanumeric password
 	 */
-	public static String generateAlphanumeric(int length) {
+	public static String generateAlphanumeric(int passwordLength) {
 		return builder()
-			.length(length)
-			.includeSpecialChars(false)
-			.build()
-			.generate();
+				.length(passwordLength)
+				.includeSpecialChars(false)
+				.build()
+				.generate();
 	}
 
 	/**
 	 * Generate a password based on this generator's configuration.
 	 *
-	 * @return A randomly generated password
+	 * @return a randomly generated password
 	 * @throws IllegalStateException if no character sets are enabled
 	 */
 	public String generate() {
@@ -85,7 +105,8 @@ public class PasswordGenerator {
 
 		if (customCharSet != null && !customCharSet.isEmpty()) {
 			charPool.append(customCharSet);
-		} else {
+		}
+		else {
 			if (includeUppercase) {
 				String chars = excludeAmbiguous ? removeAmbiguous(UPPERCASE, "O") : UPPERCASE;
 				charPool.append(chars);
@@ -144,9 +165,9 @@ public class PasswordGenerator {
 	/**
 	 * Remove ambiguous characters from a character set.
 	 *
-	 * @param charSet The original character set
-	 * @param ambiguous Characters to remove
-	 * @return The filtered character set
+	 * @param charSet the original character set
+	 * @param ambiguous characters to remove
+	 * @return the filtered character set
 	 */
 	private String removeAmbiguous(String charSet, String ambiguous) {
 		StringBuilder result = new StringBuilder();
@@ -173,23 +194,23 @@ public class PasswordGenerator {
 		/**
 		 * Set the password length.
 		 *
-		 * @param length The desired password length (minimum 1)
-		 * @return This builder
+		 * @param passwordLength the desired password length (minimum 1)
+		 * @return this builder
 		 * @throws IllegalArgumentException if length is less than 1
 		 */
-		public Builder length(int length) {
-			if (length < 1) {
+		public Builder length(int passwordLength) {
+			if (passwordLength < 1) {
 				throw new IllegalArgumentException("Password length must be at least 1");
 			}
-			this.length = length;
+			this.length = passwordLength;
 			return this;
 		}
 
 		/**
 		 * Include uppercase letters (A-Z).
 		 *
-		 * @param include Whether to include uppercase letters
-		 * @return This builder
+		 * @param include whether to include uppercase letters
+		 * @return this builder
 		 */
 		public Builder includeUppercase(boolean include) {
 			this.includeUppercase = include;
@@ -199,8 +220,8 @@ public class PasswordGenerator {
 		/**
 		 * Include lowercase letters (a-z).
 		 *
-		 * @param include Whether to include lowercase letters
-		 * @return This builder
+		 * @param include whether to include lowercase letters
+		 * @return this builder
 		 */
 		public Builder includeLowercase(boolean include) {
 			this.includeLowercase = include;
@@ -210,8 +231,8 @@ public class PasswordGenerator {
 		/**
 		 * Include digits (0-9).
 		 *
-		 * @param include Whether to include digits
-		 * @return This builder
+		 * @param include whether to include digits
+		 * @return this builder
 		 */
 		public Builder includeDigits(boolean include) {
 			this.includeDigits = include;
@@ -221,8 +242,8 @@ public class PasswordGenerator {
 		/**
 		 * Include special characters (!@#$%^&*()-_=+[]{}|;:,.<>?).
 		 *
-		 * @param include Whether to include special characters
-		 * @return This builder
+		 * @param include whether to include special characters
+		 * @return this builder
 		 */
 		public Builder includeSpecialChars(boolean include) {
 			this.includeSpecialChars = include;
@@ -233,8 +254,8 @@ public class PasswordGenerator {
 		 * Exclude ambiguous characters (0, O, 1, l) that look similar.
 		 * Useful for passwords that will be manually typed.
 		 *
-		 * @param exclude Whether to exclude ambiguous characters
-		 * @return This builder
+		 * @param exclude whether to exclude ambiguous characters
+		 * @return this builder
 		 */
 		public Builder excludeAmbiguous(boolean exclude) {
 			this.excludeAmbiguous = exclude;
@@ -245,8 +266,8 @@ public class PasswordGenerator {
 		 * Use a custom character set instead of the standard sets.
 		 * When set, this overrides all include* settings.
 		 *
-		 * @param charSet The custom character set to use
-		 * @return This builder
+		 * @param charSet the custom character set to use
+		 * @return this builder
 		 */
 		public Builder customCharSet(String charSet) {
 			this.customCharSet = charSet;
@@ -256,10 +277,11 @@ public class PasswordGenerator {
 		/**
 		 * Build the PasswordGenerator instance.
 		 *
-		 * @return A new PasswordGenerator
+		 * @return a new PasswordGenerator
 		 */
 		public PasswordGenerator build() {
 			return new PasswordGenerator(this);
 		}
 	}
 }
+

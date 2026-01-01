@@ -98,8 +98,8 @@ public class DeviceListExtractor extends Netshot {
 						community = sc;
 					}
 				}
-				if (device.getSpecificCredentialSet() != null &&
-						device.getSpecificCredentialSet() instanceof DeviceCliAccount ca) {
+				if (device.getSpecificCredentialSet() != null
+						&& device.getSpecificCredentialSet() instanceof DeviceCliAccount ca) {
 					cliAccount = ca;
 				}
 				if (cliAccount == null) {

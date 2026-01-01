@@ -84,7 +84,7 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		private String name;
 		private long size;
 
-		public UploadedFile(long id, Path path) {
+		UploadedFile(long id, Path path) {
 			this.id = id;
 			this.path = path;
 			this.name = path.getFileName().toString();
@@ -121,7 +121,7 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		private boolean sessionCompleted = false;
 		boolean valid = true;
 
-		public ConfigUploadTicket(long id, Set<TransferProtocol> protocols,
+		ConfigUploadTicket(long id, Set<TransferProtocol> protocols,
 				String username, String password, NetworkAddress expectedSourceIp,
 				Path rootPath) {
 			this.id = id;
@@ -149,15 +149,15 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		}
 
 		@Override
-		public boolean checkPassword(NetworkAddress source, String password) {
+		public boolean checkPassword(NetworkAddress source, String givenPassword) {
 			if (this.expectedSourceIp != null && Objects.equals(this.expectedSourceIp, source)) {
-				log.warn("Error during snapshot while requesting upload ticket: " +
-					"invalid source IP {} vs {}.", source, this.expectedSourceIp);
-				taskContext.error("Error while requesting upload ticket: " +
-					"invalid source IP {} vs {}.", source, this.expectedSourceIp);
+				log.warn("Error during snapshot while requesting upload ticket: "
+					+ "invalid source IP {} vs {}.", source, this.expectedSourceIp);
+				taskContext.error("Error while requesting upload ticket: "
+					+ "invalid source IP {} vs {}.", source, this.expectedSourceIp);
 				return false;
 			}
-			return this.passwordHash.check(password);
+			return this.passwordHash.check(givenPassword);
 		}
 
 		@Override
@@ -406,6 +406,9 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 
 	/**
 	 * Normalize the storage file name.
+	 * @param requestedStoreName the requested store name
+	 * @param remoteFileName the remote file name
+	 * @return the normalized store name
 	 */
 	private String normalizeStoreName(String requestedStoreName, String remoteFileName) {
 		String storeName = requestedStoreName;
@@ -436,21 +439,22 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 
 	/**
 	 * Download a binary file from the device, using SCP.
-	 * @param key the name of the config attribute
+	 * @param attribute the config attribute definition
 	 * @param protocol the transfer protocol (SFTP or SCP)
 	 * @param remoteFileName the file (including full path) to download from the device
 	 * @param storeFileName the file name to store (null to use remoreFileName)
 	 * @param newSession use a new SSH session to download the file
 	 * @param expectedHash if not null verify the hash of the received file (SHA256 or MD5)
+	 * @throws Exception if an error occurs during the download
 	 */
 	public void download(AttributeDefinition attribute, TransferProtocol protocol, String remoteFileName, String storeFileName,
 		boolean newSession, String expectedHash) throws Exception {
 
 		if (!AttributeType.BINARYFILE.equals(attribute.getType())) {
-			log.warn("Error during snapshot: can't use download method on attribute '{}'" +
-				" (not a binary file attribute).", attribute.getName());
-			taskContext.error("Can't use download method on attribute '{}'" +
-				" (not a binary file attribute).", attribute.getName());
+			log.warn("Error during snapshot: can't use download method on attribute '{}'"
+				+ " (not a binary file attribute).", attribute.getName());
+			taskContext.error("Can't use download method on attribute '{}'"
+				+ " (not a binary file attribute).", attribute.getName());
 			throw new IllegalArgumentException(
 				"Can't use SCP/SFTP download method on non-binary-file attribute");
 		}
@@ -562,23 +566,27 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 
 	/**
 	 * Request an upload ticket (SCP/SFTP).
+	 * @param protocols the allowed transfer protocols
+	 * @param sourceIp the expected source IP address
+	 * @return the upload ticket
+	 * @throws IOException if an error occurs
 	 */
 	public ConfigUploadTicket requestUpload(Set<TransferProtocol> protocols,
 		NetworkAddress sourceIp) throws IOException {
 
 		if (!SshServer.isRunning()) {
-			log.warn("Error during snapshot while requesting upload ticket: " +
-				"the embedded SSH server is not running.");
-			taskContext.error("Error while requesting upload ticket for key: " +
-				"the embedded SSH server is not running.");
+			log.warn("Error during snapshot while requesting upload ticket: "
+				+ "the embedded SSH server is not running.");
+			taskContext.error("Error while requesting upload ticket for key: "
+				+ "the embedded SSH server is not running.");
 			throw new IOException("The SSH server is not running.");
 		}
 		for (TransferProtocol protocol : protocols) {
 			if (!SshServer.isRunning(protocol)) {
-				log.warn("Error during snapshot while requesting upload ticket: " +
-					"the transfer protocol {} is not enabled.", protocol);
-				taskContext.error("Error while requesting upload ticket: " +
-					"the transfer protocol {} is not enabled.", protocol);
+				log.warn("Error during snapshot while requesting upload ticket: "
+					+ "the transfer protocol {} is not enabled.", protocol);
+				taskContext.error("Error while requesting upload ticket: "
+					+ "the transfer protocol {} is not enabled.", protocol);
 				throw new IOException("The SSH server is not running.");
 			}
 		}
@@ -747,10 +755,10 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		}
 
 		if (!AttributeType.BINARYFILE.equals(attribute.getType())) {
-			log.warn("Error during snapshot: can't use commitUpload method on attribute '{}'" +
-				" (not a binary file attribute).", attribute.getName());
-			taskContext.error("Can't use commitUpload method on attribute '{}'" +
-				" (not a binary file attribute).", attribute.getName());
+			log.warn("Error during snapshot: can't use commitUpload method on attribute '{}'"
+				+ " (not a binary file attribute).", attribute.getName());
+			taskContext.error("Can't use commitUpload method on attribute '{}'"
+				+ " (not a binary file attribute).", attribute.getName());
 			throw new IllegalArgumentException(
 				"Can't use commitUpload method on non-binary-file attribute");
 		}

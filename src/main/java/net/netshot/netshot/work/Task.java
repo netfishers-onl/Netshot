@@ -231,7 +231,7 @@ public abstract class Task implements Cloneable {
 	/** The log. */
 	protected StringBuffer logs = new StringBuffer();
 
-	/** Full debug logs */
+	/** Full debug logs. */
 	protected StringBuffer fullLogs = null;
 
 	/** Task context. */
@@ -333,10 +333,10 @@ public abstract class Task implements Cloneable {
 	/**
 	 * Instantiates a new task.
 	 *
-	 * @param comments = the comments
-	 * @param target = the target
-	 * @param author = the author
-	 * @param debugEnabled = whether to enable debugging
+	 * @param comments the comments
+	 * @param target the target
+	 * @param author the author
+	 * @param debugEnabled whether to enable debugging
 	 */
 	public Task(String comments, String target, String author, boolean debugEnabled) {
 		this.comments = comments;
@@ -351,9 +351,9 @@ public abstract class Task implements Cloneable {
 	/**
 	 * Instantiates a new task.
 	 *
-	 * @param comments = the comments
-	 * @param target = the target
-	 * @param author = the author
+	 * @param comments the comments
+	 * @param target the target
+	 * @param author the author
 	 */
 	public Task(String comments, String target, String author) {
 		this.comments = comments;
@@ -364,7 +364,8 @@ public abstract class Task implements Cloneable {
 	/**
 	 * Generate the identity of the task. Used by Quartz.
 	 * Two tasks with the same identity won't be executed concurrently.
-	 * @return the identity of the task.
+	 *
+	 * @return the identity of the task
 	 */
 	@Transient
 	public abstract JobKey getIdentity();
@@ -520,14 +521,16 @@ public abstract class Task implements Cloneable {
 
 	/**
 	 * Prepare.
-	 * @param session = the session
+	 *
+	 * @param session the session
 	 */
 	public void prepare(Session session) {
 		// Override to actually do something
 	}
 
 	/**
-	 * Enable or disable full debugging on this task
+	 * Enable or disable full debugging on this task.
+	 *
 	 * @param debugEnabled true to enable full debugging
 	 */
 	public void setDebugEnabled(boolean debugEnabled) {
@@ -545,8 +548,9 @@ public abstract class Task implements Cloneable {
 	/**
 	 * This can return a hash for the task to select a stable runner.
 	 * This is used to run all the tasks related to the same device
-	 * on the same cluter runner.
-	 * @return the hash or null
+	 * on the same cluster runner.
+	 *
+	 * @return the hash or 0
 	 */
 	@Transient
 	public long getRunnerHash() {
@@ -580,6 +584,8 @@ public abstract class Task implements Cloneable {
 
 	/**
 	 * Sets the cancelled.
+	 *
+	 * @param reason the reason for cancellation
 	 */
 	public void setCancelled(String reason) {
 		this.status = Status.CANCELLED;

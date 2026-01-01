@@ -112,7 +112,8 @@ public class DeviceJsScript {
 
 	/**
 	 * Create a task context which does nothing.
-	 * @return
+	 *
+	 * @return the void task context
 	 */
 	private TaskContext makeVoidLogger() {
 		return new TaskContext() {
@@ -135,7 +136,8 @@ public class DeviceJsScript {
 
 	/**
 	 * Actually populate user input definitions by evaluating the script and extract Input variable.
-	 * @throws IllegalAccessException
+	 *
+	 * @throws IllegalArgumentException if the script is invalid
 	 */
 	public void extractUserInputDefinitions() throws IllegalArgumentException {
 		if (this.userInputDefinitions == null) {
@@ -146,8 +148,9 @@ public class DeviceJsScript {
 
 	/**
 	 * Validate passed user inputs against input definitions.
-	 * @param userInputs = the data to validate
-	 * @throws IllegalArgumentException
+	 *
+	 * @param userInputs the data to validate
+	 * @throws IllegalArgumentException if validation fails
 	 */
 	public void validateUserInputs(Map<String, String> userInputs) throws IllegalArgumentException {
 		final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, this.makeVoidLogger());

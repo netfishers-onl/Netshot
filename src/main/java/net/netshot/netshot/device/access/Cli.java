@@ -39,8 +39,8 @@ import net.netshot.netshot.work.TaskContext;
 public abstract class Cli {
 
 	/** Possible clean up actions to enable on the Cli instance. */
-	public static enum CleanUpAction {
-		/** Remove ANSI codes like colors/ */
+	public enum CleanUpAction {
+		/** Remove ANSI codes like colors. */
 		STRIP_ANSI_CODES,
 		/** Replace \r\n with \n. */
 		NORMALIZE_LINE_ENDINGS,
@@ -52,17 +52,16 @@ public abstract class Cli {
 
 	/**
 	 * An IOException, with an attached buffer.
-	 *
 	 */
 	public class WithBufferIOException extends IOException {
 		private static final long serialVersionUID = -1759143581862318498L;
 
-		public WithBufferIOException(String message, CharSequence receivedBuffer) {
-			super(message);
-			this.receivedBuffer = receivedBuffer.toString();
-		}
-
 		private String receivedBuffer;
+
+		public WithBufferIOException(String message, CharSequence buffer) {
+			super(message);
+			this.receivedBuffer = buffer.toString();
+		}
 
 		public String getReceivedBuffer() {
 			return receivedBuffer;
@@ -257,8 +256,9 @@ public abstract class Cli {
 
 	/**
 	 * Enable or disable the given clean up action.
-	 * @param action = the action
-	 * @param enable = true to enable, false to disable
+	 *
+	 * @param action the action
+	 * @param enable true to enable, false to disable
 	 */
 	public void setOuputCleanUpAction(CleanUpAction action, boolean enable) {
 		if (enable) {
@@ -286,7 +286,7 @@ public abstract class Cli {
 		// Wait for expected output
 		// Extract parameters from input, using defaults where needed
 		String[] expects = input.getExpects();
-		int commandTimeout = input.getCommandTimeout() == null ? this.commandTimeout : input.getCommandTimeout();
+		int timeout = input.getCommandTimeout() == null ? this.commandTimeout : input.getCommandTimeout();
 		int discoverWaitTime = input.getDiscoverWaitTime() == null ? 0 : input.getDiscoverWaitTime();
 
 		Pattern[] patterns = new Pattern[expects.length];
@@ -350,7 +350,7 @@ public abstract class Cli {
 				}
 			}
 
-			if (System.currentTimeMillis() > lastActivityTime + commandTimeout) {
+			if (System.currentTimeMillis() > lastActivityTime + timeout) {
 				throw new WithBufferIOException("Timeout waiting for the command output.", buffer);
 			}
 
@@ -402,22 +402,22 @@ public abstract class Cli {
 	 * Cleans up CLI output.
 	 *
 	 * @param buffer the input buffer coming from device's terminal
-	 * @param cleanUpActions the cleanup actions to apply (use default class actions if null)
+	 * @param actions the cleanup actions to apply (use default class actions if null)
 	 */
-	protected void cleanUpCommandOutput(StringBuilder buffer, EnumSet<CleanUpAction> cleanUpActions) {
-		EnumSet<CleanUpAction> actions = cleanUpActions == null ? this.cleanUpActions : cleanUpActions;
+	protected void cleanUpCommandOutput(StringBuilder buffer, EnumSet<CleanUpAction> actions) {
+		EnumSet<CleanUpAction> cleanupActions = actions == null ? this.cleanUpActions : actions;
 
 		// Apply cleanup steps in order, modifying buffer in-place
-		if (actions.contains(CleanUpAction.STRIP_ANSI_CODES)) {
+		if (cleanupActions.contains(CleanUpAction.STRIP_ANSI_CODES)) {
 			this.removeAnsiCodes(buffer);
 		}
-		if (actions.contains(CleanUpAction.PROCESS_BACKSPACES)) {
+		if (cleanupActions.contains(CleanUpAction.PROCESS_BACKSPACES)) {
 			this.processBackspaces(buffer);
 		}
-		if (actions.contains(CleanUpAction.PROCESS_CARRIAGE_RETURNS)) {
+		if (cleanupActions.contains(CleanUpAction.PROCESS_CARRIAGE_RETURNS)) {
 			this.processCarriageReturns(buffer);
 		}
-		if (actions.contains(CleanUpAction.NORMALIZE_LINE_ENDINGS)) {
+		if (cleanupActions.contains(CleanUpAction.NORMALIZE_LINE_ENDINGS)) {
 			this.normalizeLineEndings(buffer);
 		}
 	}
@@ -451,7 +451,8 @@ public abstract class Cli {
 					while (deleteEnd < buffer.length()) {
 						char c = buffer.charAt(deleteEnd);
 						// CSI sequences end with a letter (@-Z or a-z per ECMA-48)
-						if ((c >= '@' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+						if ((c >= '@' && c <= 'Z')
+								|| (c >= 'a' && c <= 'z')) {
 							deleteEnd++;
 							break;
 						}
@@ -469,7 +470,8 @@ public abstract class Cli {
 							deleteEnd++;
 							break;
 						}
-						if (c == '\u001B' && deleteEnd + 1 < buffer.length() && buffer.charAt(deleteEnd + 1) == '\\') {
+						if (c == '\u001B' && deleteEnd + 1 < buffer.length()
+								&& buffer.charAt(deleteEnd + 1) == '\\') {
 							deleteEnd += 2;
 							break;
 						}
@@ -479,7 +481,8 @@ public abstract class Cli {
 					continue;
 				}
 				// Character set selection: ESC ( or ESC )
-				else if ((next == '(' || next == ')') && i + 2 < buffer.length()) {
+				else if ((next == '(' || next == ')')
+						&& i + 2 < buffer.length()) {
 					buffer.delete(i, i + 3);
 					continue;
 				}
@@ -495,10 +498,10 @@ public abstract class Cli {
 				}
 			}
 			// Filter out control characters (except newline, tab, carriage return, backspace)
-			else if ((ch >= '\u0000' && ch <= '\u0007') ||  // \b is \u0008, keep it for later processing
-			         (ch >= '\u000B' && ch <= '\u000C') ||
-			         (ch >= '\u000E' && ch <= '\u001F') ||
-			         ch == '\u007F') {
+			else if ((ch >= '\u0000' && ch <= '\u0007')  // \b is \u0008, keep it for later processing
+					|| (ch >= '\u000B' && ch <= '\u000C')
+					|| (ch >= '\u000E' && ch <= '\u001F')
+					|| ch == '\u007F') {
 				buffer.deleteCharAt(i);
 				continue;
 			}
@@ -518,9 +521,9 @@ public abstract class Cli {
 		int i = 0;
 		while (i < buffer.length()) {
 			// Check for pattern: non-backspace char followed by backspace
-			if (i + 1 < buffer.length() &&
-			    buffer.charAt(i) != '\b' &&
-			    buffer.charAt(i + 1) == '\b') {
+			if (i + 1 < buffer.length()
+					&& buffer.charAt(i) != '\b'
+					&& buffer.charAt(i + 1) == '\b') {
 				// Delete both characters (simulates backspace deleting previous char)
 				buffer.delete(i, i + 2);
 				// Step back to check for cascading backspaces, but don't go below 0
@@ -567,9 +570,9 @@ public abstract class Cli {
 				int contentEnd = contentStart;
 
 				// Find the end of content (next \r or \n or end of buffer)
-				while (contentEnd < buffer.length() &&
-				       buffer.charAt(contentEnd) != '\r' &&
-				       buffer.charAt(contentEnd) != '\n') {
+				while (contentEnd < buffer.length()
+						&& buffer.charAt(contentEnd) != '\r'
+						&& buffer.charAt(contentEnd) != '\n') {
 					contentEnd++;
 				}
 
@@ -627,7 +630,8 @@ public abstract class Cli {
 			char ch = buffer.charAt(i);
 
 			if (ch == '\r') {
-				if (i + 1 < buffer.length() && buffer.charAt(i + 1) == '\n') {
+				if (i + 1 < buffer.length()
+						&& buffer.charAt(i + 1) == '\n') {
 					// CRLF -> LF: delete the \r, keep the \n
 					buffer.deleteCharAt(i);
 					continue;

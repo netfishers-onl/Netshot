@@ -355,7 +355,7 @@ public class RestService extends Thread {
 			uriBuilder.uri(
 				Netshot.getConfig("netshot.http.baseurl", "http://localhost:8080"));
 		}
-		int port = Netshot.getConfig("netshot.http.baseport", 0, 1, 65535);
+		int port = Netshot.getConfig("netshot.http.baseport", 0, 0, 65535);
 		if (port != 0) {
 			uriBuilder.port(port);
 		}

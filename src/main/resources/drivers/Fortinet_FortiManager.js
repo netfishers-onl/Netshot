@@ -24,7 +24,7 @@ const Info = {
 	name: "FortinetFortiManager", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiManager and FortiAnalyzer", /* Description to be used in the UI. */
 	author: "Najihel",
-	version: "2.0" /* Version will appear in the Admin tab. */
+	version: "2.1" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -156,8 +156,9 @@ function snapshot(cli, device, config) {
 	// Store the SNMP config block
 	const showSystemSnmp = cli.command("show system snmp sysinfo");
 
-	// The configuration is retrieved by a simple 'show' at the root level. Add grep to avoid paging.
-	let configuration = cli.command("show", { timeout: 120000 });
+	// The configuration is retrieved by a simple 'show' at the root level.
+	const configuration = cli.command("show", { timeout: 120000 });
+	config.set("configuration", configuration);
 
 	// Read the device hostname from the 'status' output.
 	let hostname = status.match(/^Hostname[\s]*:[\s]*(.*)$/m);
@@ -242,46 +243,62 @@ function snapshot(cli, device, config) {
 		device.add("networkInterface", networkInterface);
 	}
 
-	// We don't suppress the useless configuration changes anymore
-	// as we now take full backups of the device.
-	//config.computeHash(removeChangingParts(configuration));
+	var removeChangingParts = function(text) {
+		var cleaned = text;
+		cleaned = cleaned.replace(/^#conf_file_ver=.*/mg, "");
+		cleaned = cleaned.replace(/^ *set (passphrase|password|passwd|secondary-secret|crptpasswd) ENC .*$/mg, "");
+		cleaned = cleaned.replace(/^ *set private-key "(.|[\r\n])*?"$/mg, "");
+		return cleaned;
+	}
 
-	const ticket = config.requestUpload();
-	const backupName = "backup.tar";
-	const encryptPass = "netshot";
-	cli.command(`execute backup all-settings sftp ${ticket.host}:${ticket.port} ${backupName} ${ticket.username} ${ticket.password} ${encryptPass}`);
-	let md5 = null;
-	let attempt = 0;
-	while (true) {
-		const backupOutput = cli.command("", {
-			mode: { prompt: null },
-			discoverWaitTime: 5000,
-		});
-		const md5Match = backupOutput.match(/MD5: ([0-9a-f]+)/);
-		if (md5Match) {
-			md5 = md5Match[1];
-			cli.debug(`Archive MD5 checksum should be ${md5}`);
-		}
-		const resultMatch = backupOutput.match(/Backup all settings...(.+)/);
-		if (resultMatch) {
-			const result = resultMatch[1];
-			if (result !== "Ok.") {
-				cli.debug(`Full backup output:\n${backupOutput}`);
-				throw `Full backup (execute backup all-settings) returned ${result}`;
+	try {
+		const ticket = config.requestUpload();
+		const backupName = "backup.tar";
+		const encryptPass = "netshot";
+		cli.command(`execute backup all-settings sftp ${ticket.host}:${ticket.port} ${backupName} ${ticket.username} ${ticket.password} ${encryptPass}`);
+		let md5 = null;
+		let attempt = 0;
+		while (true) {
+			const backupOutput = cli.command("", {
+				mode: { prompt: null },
+				discoverWaitTime: 5000,
+			});
+			const md5Match = backupOutput.match(/MD5: ([0-9a-f]+)/);
+			if (md5Match) {
+				md5 = md5Match[1];
+				cli.debug(`Archive MD5 checksum should be ${md5}`);
 			}
-			break;
+			const resultMatch = backupOutput.match(/Backup all settings...(.+)/);
+			if (resultMatch) {
+				const result = resultMatch[1];
+				if (result !== "Ok.") {
+					cli.debug(`Full backup output:\n${backupOutput}`);
+					throw `Full backup (execute backup all-settings) returned ${result}`;
+				}
+				break;
+			}
+			attempt += 1;
+			if (attempt > 360) {
+				throw `Could not get full backup (execute backup all-settings) result after 15 minutes`;
+			}
 		}
-		attempt += 1;
-		if (attempt > 360) {
-			throw `Could not get full backup (execute backup all-settings) result after 15 minutes`;
+		const uploadResult = config.awaitUpload(ticket.id);
+		if (uploadResult.files.length !== 1) {
+			throw `Invalid number of files (${uploadResult.files.length}) received by Netshot server`;
+		}
+		const file = uploadResult.files[0];
+		config.commitUpload(ticket.id, file.id, "backupArchive", { checksum: md5 });
+	}
+	catch (e) {
+		const error = String(e);
+		if (error.match(/server is not running/)) {
+			cli.debug("Netshot SSH server is disabled, the full backup won't be taken");
+			config.computeHash(removeChangingParts(configuration));
+		}
+		else {
+			throw e;
 		}
 	}
-	const uploadResult = config.awaitUpload(ticket.id);
-	if (uploadResult.files.length !== 1) {
-		throw `Invalid number of files (${uploadResult.files.length}) received by Netshot server`;
-	}
-	const file = uploadResult.files[0];
-	config.commitUpload(ticket.id, file.id, "backupArchive", { checksum: md5 });
 };
 
 // No known log message upon configuration change

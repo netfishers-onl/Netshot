@@ -201,11 +201,14 @@ public class Finder {
 		/** The macaddress. */
 		MACADDRESS("^\\s*(?<val>[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4}\\.[0-9a-fA-F]{4})", ""),
 
-		/** The quote. */
+		/** The quoted text. */
 		QUOTEDTEXT("^\\s*\"(?<val>.*?)(?<!\\\\)\"", ""),
 
 		/** The numeric. */
-		NUMERICVALUE("^\\s*(?<val>[0-9\\.,]+)\\b", "");
+		NUMERICVALUE("^\\s*(?<val>[0-9\\.,]+)\\b", ""),
+
+		/** Enum keyword. */
+		ENUMWORD("^\\s*(?<val>[A-Z0-9_]+)", "");
 
 		/** The pattern. */
 		private Pattern pattern;
@@ -2118,7 +2121,7 @@ public class Finder {
 
 		@Override
 		public String toString() {
-			return "[%s > %s > %s] %s \"%s\"".formatted(
+			return "[%s > %s > %s] %s %s".formatted(
 				TokenType.RULE,
 				TokenType.escapeKey(this.policy.getName()),
 				TokenType.escapeKey(this.rule.getName()),
@@ -2179,8 +2182,8 @@ public class Finder {
 			if (sign.type != TokenType.IS) {
 				throw new FinderParseException("Invalid operator for a rule item at character %d.".formatted(sign.position));
 			}
-			if (value.type != TokenType.QUOTEDTEXT) {
-				throw new FinderParseException("Parsing error, should be a quoted text at character %d.".formatted(value.position));
+			if (value.type != TokenType.QUOTEDTEXT && value.type != TokenType.ENUMWORD) {
+				throw new FinderParseException("Parsing error, should be a quoted text or enum keyword at character %d.".formatted(value.position));
 			}
 
 			ComplianceRuleExpression ruleExpr = new ComplianceRuleExpression(policy, rule);
@@ -2525,7 +2528,7 @@ public class Finder {
 		 * @see net.netshot.netshot.device.Finder.AttributeExpression#getTextValue()
 		 */
 		protected String getTextValue() {
-			return "\"%s\"".formatted(TokenType.escapeValue(value.toString()));
+			return "%s".formatted(TokenType.escapeValue(value.toString()));
 		}
 
 		@Override
@@ -2599,9 +2602,9 @@ public class Finder {
 			if (sign.type != TokenType.IS) {
 				throw new FinderParseException("Parsing error, invalid operator at position %d, should be 'is'.".formatted(sign.position));
 			}
-			if (value.type != TokenType.QUOTEDTEXT) {
+			if (value.type != TokenType.QUOTEDTEXT && value.type != TokenType.ENUMWORD) {
 				throw new FinderParseException(
-					"Parsing error, should be a quoted string at character %d."
+					"Parsing error, should be a quoted string or enum keyword at character %d."
 						.formatted(value.position));
 			}
 			EnumAttributeExpression enumExpr =

@@ -381,6 +381,20 @@ public class DeviceTest {
 				routers0To9.add("router%05d".formatted(i));
 			}
 			assertFinder("[Status] is \"DISABLED\"",
+				"[Status] is DISABLED",
+				" from Device d where d.status = :var",
+				Map.of("var", Device.Status.DISABLED),
+				routers0To9);
+		}
+
+		@Test
+		@DisplayName("Query disabled devices without quotes")
+		void queryDisabledNoQuote() throws Exception {
+			List<String> routers0To9 = new ArrayList<>();
+			for (int i = 0; i < 10; i++) {
+				routers0To9.add("router%05d".formatted(i));
+			}
+			assertFinder("[Status] is DISABLED",
 				null,
 				" from Device d where d.status = :var",
 				Map.of("var", Device.Status.DISABLED),
@@ -400,7 +414,7 @@ public class DeviceTest {
 		@Test
 		@DisplayName("Query device by network class")
 		void queryByNetworkClass() throws Exception {
-			assertFinder("[Network Class] is \"FIREWALL\"",
+			assertFinder("[Network Class] is FIREWALL",
 				null,
 				" from Device d where d.networkClass = :var",
 				Map.of("var", Device.NetworkClass.FIREWALL),
@@ -583,7 +597,7 @@ public class DeviceTest {
 		@Test
 		@DisplayName("Query device by software level")
 		void queryBySoftwareLevel() throws Exception {
-			assertFinder("not ([Software Level] is \"GOLD\")",
+			assertFinder("not ([Software Level] is GOLD)",
 				null,
 				" from Device d where not (d.softwareLevel = :var_0)",
 				Map.of(
@@ -829,7 +843,7 @@ public class DeviceTest {
 		@DisplayName("Combined query - diagnostic AND status")
 		void queryCombinedDiagnosticAndStatus() throws Exception {
 			assertFinder("[DIAGNOSTIC > CPU Usage] GREATERTHAN 70 AND [STATUS] IS \"INPRODUCTION\"",
-				"([Diagnostic > CPU Usage] greaterthan 70) and ([Status] is \"INPRODUCTION\")",
+				"([Diagnostic > CPU Usage] greaterthan 70) and ([Status] is INPRODUCTION)",
 				" from Device d where (d.id in (select d.id from Device d join d.diagnosticResults var_0_dr where var_0_dr.diagnostic = :var_0_diagnostic and (var_0_dr.number > :var_0))) and (d.status = :var_1)",
 				Map.of(
 					"var_0_diagnostic", testDiagnostics.get(AttributeType.NUMERIC),  // CPU Usage
@@ -842,7 +856,7 @@ public class DeviceTest {
 	@Test
 	@DisplayName("Query device by compliance rule - IS CONFORMING")
 	void queryByComplianceRuleConforming() throws Exception {
-		assertFinder("[Rule > Security Policy > Password Check] is \"CONFORMING\"",
+		assertFinder("[Rule > Security Policy > Password Check] is CONFORMING",
 			null,
 			" from Device d where d.id in (select d.id from Device d join d.complianceCheckResults var_cr where var_cr.key.rule = :var_rule and var_cr.result = :var)",
 			Map.of(
@@ -856,7 +870,7 @@ public class DeviceTest {
 	@DisplayName("Query device by compliance rule - IS NONCONFORMING")
 	void queryByComplianceRuleNonconforming() throws Exception {
 		assertFinder("[Rule > Security Policy > Password Check] is \"NONCONFORMING\"",
-			null,
+			"[Rule > Security Policy > Password Check] is NONCONFORMING",
 			" from Device d where d.id in (select d.id from Device d join d.complianceCheckResults var_cr where var_cr.key.rule = :var_rule and var_cr.result = :var)",
 			Map.of(
 				"var_rule", testRules.get("Security Policy/Password Check"),
@@ -868,7 +882,7 @@ public class DeviceTest {
 	@Test
 	@DisplayName("Query device by compliance rule - IS NOTAPPLICABLE")
 	void queryByComplianceRuleNotapplicable() throws Exception {
-		assertFinder("[Rule > Security Policy > SNMP Community] is \"NOTAPPLICABLE\"",
+		assertFinder("[Rule > Security Policy > SNMP Community] is NOTAPPLICABLE",
 			null,
 			" from Device d where d.id in (select d.id from Device d join d.complianceCheckResults var_cr where var_cr.key.rule = :var_rule and var_cr.result = :var)",
 			Map.of(
@@ -881,7 +895,7 @@ public class DeviceTest {
 	@Test
 	@DisplayName("Query device by compliance rule - IS EXEMPTED")
 	void queryByComplianceRuleExempted() throws Exception {
-		assertFinder("[Rule > Security Policy > Password Check] is \"EXEMPTED\"",
+		assertFinder("[Rule > Security Policy > Password Check] is EXEMPTED",
 			null,
 			" from Device d where d.id in (select d.id from Device d join d.complianceCheckResults var_cr where var_cr.key.rule = :var_rule and var_cr.result = :var)",
 			Map.of(
@@ -894,7 +908,7 @@ public class DeviceTest {
 	@Test
 	@DisplayName("Query device by compliance rule - IS DISABLED")
 	void queryByComplianceRuleDisabled() throws Exception {
-		assertFinder("[Rule > Config Policy > Hostname Standard] is \"DISABLED\"",
+		assertFinder("[Rule > Config Policy > Hostname Standard] is DISABLED",
 			null,
 			" from Device d where d.id in (select d.id from Device d join d.complianceCheckResults var_cr where var_cr.key.rule = :var_rule and var_cr.result = :var)",
 			Map.of(
@@ -907,7 +921,7 @@ public class DeviceTest {
 	@Test
 	@DisplayName("Query device by compliance rule - different rule")
 	void queryByComplianceRuleDifferentRule() throws Exception {
-		assertFinder("[Rule > Config Policy > Hostname Standard] is \"CONFORMING\"",
+		assertFinder("[Rule > Config Policy > Hostname Standard] is CONFORMING",
 			null,
 			" from Device d where d.id in (select d.id from Device d join d.complianceCheckResults var_cr where var_cr.key.rule = :var_rule and var_cr.result = :var)",
 			Map.of(
@@ -921,21 +935,21 @@ public class DeviceTest {
 	@DisplayName("Query device by unknown policy - throws exception")
 	void queryByUnknownPolicy() throws Exception {
 		Assertions.assertThrows(FinderParseException.class,
-			() -> new Finder("[Rule > Unknown Policy > Some Rule] is \"CONFORMING\""));
+			() -> new Finder("[Rule > Unknown Policy > Some Rule] is CONFORMING"));
 	}
 
 	@Test
 	@DisplayName("Query device by unknown rule - throws exception")
 	void queryByUnknownRule() throws Exception {
 		Assertions.assertThrows(FinderParseException.class,
-			() -> new Finder("[Rule > Security Policy > Unknown Rule] is \"CONFORMING\""));
+			() -> new Finder("[Rule > Security Policy > Unknown Rule] is CONFORMING"));
 	}
 
 	@Test
 	@DisplayName("Combined query - compliance rule AND status")
 	void queryCombinedComplianceAndStatus() throws Exception {
 		assertFinder("[RULE > Security Policy > Password Check] IS \"CONFORMING\" AND [STATUS] IS \"INPRODUCTION\"",
-			"([Rule > Security Policy > Password Check] is \"CONFORMING\") and ([Status] is \"INPRODUCTION\")",
+			"([Rule > Security Policy > Password Check] is CONFORMING) and ([Status] is INPRODUCTION)",
 			" from Device d where (d.id in (select d.id from Device d join d.complianceCheckResults var_0_cr where var_0_cr.key.rule = :var_0_rule and var_0_cr.result = :var_0)) and (d.status = :var_1)",
 			Map.of(
 				"var_0_rule", testRules.get("Security Policy/Password Check"),

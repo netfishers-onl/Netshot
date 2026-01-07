@@ -501,6 +501,16 @@ public class DeviceTest {
 		@DisplayName("Query device by driver starting with text")
 		void queryByDriverMatching() throws Exception {
 			assertFinder("[Driver] startswith \"Juniper\"",
+				"[Type] startswith \"Juniper\"",
+				null, // Generated HQL depends on current driver list
+				Map.of("var", "Juniper%"),
+				List.of("router00012"));
+		}
+
+		@Test
+		@DisplayName("Query device by type starting with text")
+		void queryByTypeMatching() throws Exception {
+			assertFinder("[Type] startswith \"Juniper\"",
 				null,
 				null, // Generated HQL depends on current driver list
 				Map.of("var", "Juniper%"),

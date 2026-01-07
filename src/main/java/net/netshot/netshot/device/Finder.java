@@ -143,7 +143,10 @@ public class Finder {
 		/** The domain token. */
 		DOMAIN("(?i)^\\s*(\\[domain\\])", "Domain"),
 
-		/** A driver (by description i.e. nice name). */
+		/** A type of device (= driver, by description i.e. nice name). */
+		TYPE("(?i)^\\s*(\\[type\\])", "Type"),
+
+		/** Legacy alias for type. */
 		DRIVER("(?i)^\\s*(\\[driver\\])", "Driver"),
 
 		/** A diagnostic result token, e.g. [DIAG > My diag] (with escaping) */
@@ -1192,7 +1195,8 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens) throws FinderParseException {
-			if (tokens.size() == 3 && tokens.get(0).type == TokenType.DRIVER) {
+			if (tokens.size() == 3 &&
+					(tokens.get(0).type == TokenType.TYPE || tokens.get(0).type == TokenType.DRIVER)) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
 				switch (comparator.type) {
@@ -1275,7 +1279,7 @@ public class Finder {
 		 */
 		@Override
 		public String toString() {
-			return "[%s] %s \"%s\"".formatted(TokenType.DRIVER, sign,
+			return "[%s] %s \"%s\"".formatted(TokenType.TYPE, sign,
 				TokenType.escapeValue(value));
 		}
 	}

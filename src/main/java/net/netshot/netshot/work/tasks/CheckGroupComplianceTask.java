@@ -18,6 +18,7 @@
  */
 package net.netshot.netshot.work.tasks;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.CacheMode;
@@ -43,6 +44,7 @@ import net.netshot.netshot.compliance.Policy;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceGroup;
+import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
 
@@ -139,6 +141,8 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 		this.logger.trace("Check compliance task for group {}.",
 			this.deviceGroup.getName());
 
+		List<Long> deviceIds = new ArrayList<>();
+
 		Session session = Database.getSession();
 		try {
 			List<Policy> policies =
@@ -164,6 +168,7 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 					.scroll(ScrollMode.FORWARD_ONLY);
 				while (devices.next()) {
 					Device device = devices.get();
+					deviceIds.add(device.getId());
 					this.logger.info("Checking configuration compliance of device {} ({})", device.getName(), device.getId());
 					policy.check(device, session, this.logger);
 					session.persist(device);
@@ -189,6 +194,9 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 		finally {
 			session.close();
 		}
+
+		log.debug("Task {}. Request to refresh all the groups for the devices after compliance check.", this.getId());
+		DynamicDeviceGroup.refreshAllGroupsOfDevices(deviceIds);
 	}
 
 	/*

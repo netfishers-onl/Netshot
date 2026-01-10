@@ -267,7 +267,7 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		}
 
 		log.debug("Task {}. Request to refresh all the groups for the device after the snapshot.", this.getId());
-		DynamicDeviceGroup.refreshAllGroups(device);
+		DynamicDeviceGroup.refreshAllGroupsOfOneDevice(device);
 
 		if (!this.dontRunDiagnostics) {
 			try {

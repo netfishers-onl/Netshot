@@ -2075,7 +2075,7 @@ public class RestService extends Thread {
 				session.close();
 			}
 			if (newDevice != null) {
-				DynamicDeviceGroup.refreshAllGroups(newDevice);
+				DynamicDeviceGroup.refreshAllGroupsOfOneDevice(newDevice);
 			}
 			try {
 				TaskManager.addTask(task);
@@ -2506,7 +2506,7 @@ public class RestService extends Thread {
 		finally {
 			session.close();
 		}
-		DynamicDeviceGroup.refreshAllGroups(device);
+		DynamicDeviceGroup.refreshAllGroupsOfOneDevice(device);
 		return this.getDevice(id);
 	}
 

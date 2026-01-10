@@ -355,7 +355,7 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 			}
 
 			if (device != null) {
-				DynamicDeviceGroup.refreshAllGroups(device);
+				DynamicDeviceGroup.refreshAllGroupsOfOneDevice(device);
 			}
 
 			try {

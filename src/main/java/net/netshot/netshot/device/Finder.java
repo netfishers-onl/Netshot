@@ -38,7 +38,7 @@ import java.util.regex.PatternSyntaxException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.query.Query;
+import org.hibernate.query.MutationQuery;
 
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.compliance.CheckResult;
@@ -567,7 +567,7 @@ public class Finder {
 		 * @param query the query
 		 * @param itemPrefix the item prefix
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			// Nothing
 		}
 	}
@@ -608,7 +608,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			child.setVariables(query, itemPrefix + "_0");
 		}
@@ -691,7 +691,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			int i = 0;
 			for (Expression child : children) {
@@ -785,7 +785,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			int i = 0;
 			for (Expression child : children) {
@@ -909,7 +909,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
@@ -1021,7 +1021,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
@@ -1104,7 +1104,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			query.setParameter(itemPrefix, value);
 		}
@@ -1161,7 +1161,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			query.setParameter(itemPrefix, value);
 		}
@@ -1252,7 +1252,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
@@ -1309,7 +1309,7 @@ public class Finder {
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		@Override
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 		}
 
@@ -1411,7 +1411,7 @@ public class Finder {
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		@Override
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			if (this.sign == TokenType.IN) {
 				long mask = 0xFFFFFFFFFFFFFFFFL << (48 - this.prefixLength);
@@ -1547,7 +1547,7 @@ public class Finder {
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		@Override
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			if (this.sign == TokenType.IN) {
 				int min = this.target.getSubnetMin();
@@ -1675,7 +1675,7 @@ public class Finder {
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
 		@Override
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			if (this.sign == TokenType.IN) {
 				if (this.target.getPrefixLength() <= 64) {
@@ -1878,7 +1878,7 @@ public class Finder {
 		}
 
 		@Override
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			query.setParameter("%s_diagnostic".formatted(itemPrefix), this.diagnostic);
 			if (TokenType.STARTSWITH.equals(sign)) {
 				query.setParameter(itemPrefix, value + "%");
@@ -1979,7 +1979,7 @@ public class Finder {
 		}
 
 		@Override
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			query.setParameter("%s_diagnostic".formatted(itemPrefix), this.diagnostic);
 			query.setParameter(itemPrefix, value);
 		}
@@ -2053,7 +2053,7 @@ public class Finder {
 		}
 
 		@Override
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			query.setParameter("%s_diagnostic".formatted(itemPrefix), this.diagnostic);
 			query.setParameter(itemPrefix, value);
 		}
@@ -2142,7 +2142,7 @@ public class Finder {
 		}
 
 		@Override
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			query.setParameter("%s_rule".formatted(itemPrefix), this.rule);
 			query.setParameter(itemPrefix, this.value);
 		}
@@ -2408,7 +2408,7 @@ public class Finder {
 			}
 		}
 
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			if (this.attribute.getDriver() != null) {
 				query.setParameter(itemPrefix + "_driver", this.attribute.getDriver().getName());
@@ -2459,7 +2459,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			query.setParameter(itemPrefix, value);
 		}
@@ -2545,7 +2545,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			query.setParameter(itemPrefix, value);
 		}
@@ -2675,7 +2675,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
@@ -3021,7 +3021,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			switch (sign) {
 				case AFTER:
@@ -3150,7 +3150,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			query.setParameter(itemPrefix, this.value);
 		}
@@ -3266,7 +3266,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			String target;
 			switch (sign) {
 				case CONTAINS:
@@ -3370,7 +3370,7 @@ public class Finder {
 		/*(non-Javadoc)
 		 * @see net.netshot.netshot.device.Finder.Expression#setVariables(org.hibernate.Query, java.lang.String)
 		 */
-		public void setVariables(Query<?> query, String itemPrefix) {
+		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			String target;
 			switch (sign) {
@@ -3453,7 +3453,7 @@ public class Finder {
 	 *
 	 * @param query the variables to set the variables on
 	 */
-	public void setVariables(Query<?> query) {
+	public void setVariables(MutationQuery query) {
 		this.expression.setVariables(query, HQLPREFIX);
 	}
 

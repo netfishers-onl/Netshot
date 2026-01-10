@@ -41,6 +41,7 @@ import net.netshot.netshot.compliance.SoftwareRule;
 import net.netshot.netshot.compliance.SoftwareRule.ConformanceLevel;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
+import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
 
@@ -162,6 +163,8 @@ public final class CheckComplianceTask extends Task implements DeviceBasedTask {
 			session.close();
 		}
 
+		log.debug("Task {}. Request to refresh all the groups for the device after compliance check.", this.getId());
+		DynamicDeviceGroup.refreshAllGroupsOfOneDevice(device);
 
 	}
 

@@ -231,7 +231,7 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 		}
 
 		log.debug("Task {}. Request to refresh all the groups for the device after the diagnostics.", this.getId());
-		DynamicDeviceGroup.refreshAllGroups(device);
+		DynamicDeviceGroup.refreshAllGroupsOfOneDevice(device);
 
 		if (!this.dontCheckCompliance) {
 			try {

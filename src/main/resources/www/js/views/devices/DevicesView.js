@@ -475,6 +475,8 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 				var editGroupDialog = new EditGroupDialog({
 					model: that.group,
 					onEdited: function() {
+						// Ensure to update the model in the collection
+						that.groups.set(that.group);
 						var $folder = that.$("#nsdevices-groups>ul");
 						var path = that.group.getPath();
 						for (f in path) {

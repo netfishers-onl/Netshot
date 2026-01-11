@@ -250,41 +250,40 @@ public class DeviceTest {
 						device.addDiagnosticResult(binResult);
 					}
 
+					testDevices.add(device);
+					session.persist(device);
 
-				testDevices.add(device);
-				session.persist(device);
-
-				// Add compliance check results AFTER device is persisted
-				if (i == 31) {
-					CheckResult conformingResult = new CheckResult(
-						testRules.get("Security Policy/Password Check"), device, CheckResult.ResultOption.CONFORMING);
-					session.persist(conformingResult);
-				}
-				if (i == 32) {
-					CheckResult nonconformingResult = new CheckResult(
-						testRules.get("Security Policy/Password Check"), device, CheckResult.ResultOption.NONCONFORMING);
-					session.persist(nonconformingResult);
-				}
-				if (i == 33) {
-					CheckResult conformingResult = new CheckResult(
-						testRules.get("Config Policy/Hostname Standard"), device, CheckResult.ResultOption.CONFORMING);
-					session.persist(conformingResult);
-				}
-				if (i == 34) {
-					CheckResult notapplicableResult = new CheckResult(
-						testRules.get("Security Policy/SNMP Community"), device, CheckResult.ResultOption.NOTAPPLICABLE);
-					session.persist(notapplicableResult);
-				}
-				if (i == 35) {
-					CheckResult exemptedResult = new CheckResult(
-						testRules.get("Security Policy/Password Check"), device, CheckResult.ResultOption.EXEMPTED);
-					session.persist(exemptedResult);
-				}
-				if (i == 36) {
-					CheckResult disabledResult = new CheckResult(
-						testRules.get("Config Policy/Hostname Standard"), device, CheckResult.ResultOption.DISABLED);
-					session.persist(disabledResult);
-				}
+					// Add compliance check results AFTER device is persisted
+					if (i == 31) {
+						CheckResult conformingResult = new CheckResult(
+							testRules.get("Security Policy/Password Check"), device, CheckResult.ResultOption.CONFORMING);
+						session.persist(conformingResult);
+					}
+					if (i == 32) {
+						CheckResult nonconformingResult = new CheckResult(
+							testRules.get("Security Policy/Password Check"), device, CheckResult.ResultOption.NONCONFORMING);
+						session.persist(nonconformingResult);
+					}
+					if (i == 33) {
+						CheckResult conformingResult = new CheckResult(
+							testRules.get("Config Policy/Hostname Standard"), device, CheckResult.ResultOption.CONFORMING);
+						session.persist(conformingResult);
+					}
+					if (i == 34) {
+						CheckResult notapplicableResult = new CheckResult(
+							testRules.get("Security Policy/SNMP Community"), device, CheckResult.ResultOption.NOTAPPLICABLE);
+						session.persist(notapplicableResult);
+					}
+					if (i == 35) {
+						CheckResult exemptedResult = new CheckResult(
+							testRules.get("Security Policy/Password Check"), device, CheckResult.ResultOption.EXEMPTED);
+						session.persist(exemptedResult);
+					}
+					if (i == 36) {
+						CheckResult disabledResult = new CheckResult(
+							testRules.get("Config Policy/Hostname Standard"), device, CheckResult.ResultOption.DISABLED);
+						session.persist(disabledResult);
+					}
 				}
 
 				session.getTransaction().commit();

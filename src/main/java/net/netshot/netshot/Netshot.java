@@ -582,9 +582,12 @@ public class Netshot extends Thread {
 		System.out.println(String.format("Starting Netshot version %s.", Netshot.VERSION));
 		log.info("Starting Netshot");
 
-		String[] configFileNames = Netshot.CONFIG_FILENAMES;
+		final String[] configFileNames;
 		String configFilename = commandLine.getOptionValue("c");
-		if (configFilename != null) {
+		if (configFilename == null) {
+			configFileNames = Netshot.CONFIG_FILENAMES;
+		}
+		else {
 			configFileNames = new String[] { configFilename };
 		}
 
@@ -638,7 +641,7 @@ public class Netshot extends Thread {
 			Signal.handle(new Signal("HUP"), new SignalHandler() {
 				@Override
 				public void handle(Signal sig) {
-					Netshot.readConfig();
+					Netshot.readConfig(configFileNames);
 					Netshot.initMainLogging();
 					Netshot.initAuditLogging();
 					Netshot.initSyslogLogging();

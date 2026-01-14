@@ -133,17 +133,17 @@ public class DynamicDeviceGroup extends DeviceGroup {
 				log.trace("Finder query for group: '{}'.", deviceQuery);
 				Finder finder = new Finder(deviceQuery);
 				MutationQuery deleteQuery = session.createMutationQuery(
-					"delete from DeviceGroupMembership m where m.key.group = :group and " +
-					"m.key.device.id = :deviceId and " +
-					"m.key.device not in (select d " + finder.getHql() + ")");
+					"delete from DeviceGroupMembership m where m.key.group = :group and "
+					+ "m.key.device.id = :deviceId and "
+					+ "m.key.device not in (select d " + finder.getHql() + ")");
 				deleteQuery.setParameter("group", group);
 				deleteQuery.setParameter("deviceId", deviceId);
 				finder.setVariables(deleteQuery);
 				deleteQuery.executeUpdate();
 				MutationQuery insertQuery = session.createMutationQuery(
-					"insert into DeviceGroupMembership(key.device, key.group) " +
-					"select d, :group " + finder.getHql() + " " +
-					"on conflict do nothing");
+					"insert into DeviceGroupMembership(key.device, key.group) "
+					+ "select d, :group " + finder.getHql() + " "
+					+ "on conflict do nothing");
 				insertQuery.setParameter("group", group);
 				finder.setVariables(insertQuery);
 				insertQuery.executeUpdate();

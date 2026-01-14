@@ -1195,8 +1195,8 @@ public class Finder {
 		 * @throws FinderParseException the finder parse exception
 		 */
 		public static Expression parse(List<Token> tokens) throws FinderParseException {
-			if (tokens.size() == 3 &&
-					(tokens.get(0).type == TokenType.TYPE || tokens.get(0).type == TokenType.DRIVER)) {
+			if (tokens.size() == 3
+					&& (tokens.get(0).type == TokenType.TYPE || tokens.get(0).type == TokenType.DRIVER)) {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
 				switch (comparator.type) {

@@ -1,3 +1,21 @@
+/**
+ * Copyright 2013-2025 Netshot
+ * 
+ * This file is part of Netshot project.
+ * 
+ * Netshot is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * Netshot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package net.netshot.netshot;
 
 import java.net.UnknownHostException;
@@ -93,8 +111,8 @@ public class DemoDataCreator {
 			+ "enable secret $6$aaa\n"
 			+ "!\n"
 			+ "ip cef\n"
-			+ "ipv6 unicast-routing\f\n" + // \f to test normalization
-			"!\n"
+			+ "ipv6 unicast-routing\f\n" // \f to test normalization
+			+ "!\n"
 			+ allInterfaceConfig.toString()
 			+ "snmp-server location %s\n".formatted(location)
 			+ "!\n"
@@ -239,7 +257,8 @@ public class DemoDataCreator {
 				int lastSpace = currentPath.lastIndexOf(" ");
 				if (lastSpace > 0) {
 					currentPath.setLength(lastSpace);
-				} else {
+				}
+				else {
 					currentPath.setLength(0);
 				}
 				continue;

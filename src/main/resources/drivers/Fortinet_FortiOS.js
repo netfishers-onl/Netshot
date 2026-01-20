@@ -138,7 +138,7 @@ var CLI = {
 		}
 	},
 	basic: { /* The basic FortiOS prompt. */
-		prompt: /^[A-Za-z0-9_\-\~]+?\s(\([A-Za-z0-9_\-\~\.\s]+?\)\s)?[#$]\s?$/,
+		prompt: /^[A-Za-z0-9_\-\~]+?\s(\([A-Za-z0-9_\-\~\. ]+?\)\s)?[#$]\s?$/,
 		error: /^(Unknown action|Command fail)/m,
 		pager: { /* 'pager': define how to handle the pager for long outputs. */
 			match: /^--More-- /,

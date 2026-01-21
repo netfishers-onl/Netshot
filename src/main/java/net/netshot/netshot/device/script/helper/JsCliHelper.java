@@ -148,7 +148,7 @@ public class JsCliHelper {
 			}
 			this.lastOutput = cli.send(input);
 			if (this.taskContext.isTracing()) {
-				this.taskContext.trace(Instant.now() + " Received the following output:");
+				this.taskContext.trace("Received the following output:");
 				this.taskContext.trace(this.lastOutput.getFullOutput());
 				this.taskContext.trace("Hexadecimal:");
 				this.taskContext.hexTrace(this.lastOutput.getFullOutput());

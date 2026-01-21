@@ -382,6 +382,14 @@ public abstract class Task implements Cloneable {
 		task.setScheduleFactor(this.scheduleFactor);
 		task.setPriority(this.priority);
 		task.setId(0);
+		// Clear debug logs
+		task.setDebugEnabled(this.isDebugEnabled());
+		// Clear logs
+		task.setLogs(new StringBuffer());
+		// Reset status
+		task.setStatus(Status.NEW);
+		// Clear execution date
+		task.setExecutionDate(null);
 		return task;
 	}
 
@@ -415,10 +423,6 @@ public abstract class Task implements Cloneable {
 	@XmlElement
 	@JsonView(DefaultView.class)
 	public Date getNextExecutionDate() {
-		Calendar reference = Calendar.getInstance();
-		reference.setTime(this.scheduleReference);
-		Calendar inOneMinute = Calendar.getInstance();
-		inOneMinute.add(Calendar.MINUTE, 1);
 
 		int factor = this.scheduleFactor;
 		if (factor <= 0) {
@@ -447,6 +451,8 @@ public abstract class Task implements Cloneable {
 		}
 
 		if (unit > 0) {
+			Calendar inOneMinute = Calendar.getInstance();
+			inOneMinute.add(Calendar.MINUTE, 1);
 			Calendar targetCalendar = Calendar.getInstance();
 			targetCalendar.setTime(this.scheduleReference);
 			if (targetCalendar.get(Calendar.YEAR) < inOneMinute.get(Calendar.YEAR)) {

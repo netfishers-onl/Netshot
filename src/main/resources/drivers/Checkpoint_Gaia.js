@@ -28,7 +28,7 @@ const Info = {
 	name: "CheckpointGaia",
 	description: "Checkpoint Gaia",
 	author: "Netshot Team",
-	version: "3.0"
+	version: "3.1"
 };
 
 const Config = {
@@ -275,7 +275,7 @@ function snapshot(cli, device, config) {
 		const ipv6 = intf.config.match(/^ *ipv6-address ([A-Fa-f0-9:]+)\/(\d+)/m);
 		if (ipv6) {
 			networkInterface.ip.push({
-				ip: match[1],
+				ipv6: match[1],
 				mask: parseInt(match[2]),
 				usage: "PRIMARY"
 			});

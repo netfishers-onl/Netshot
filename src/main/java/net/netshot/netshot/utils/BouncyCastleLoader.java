@@ -30,6 +30,7 @@ import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import org.apache.sshd.common.kex.BuiltinDHFactories;
 import org.apache.sshd.common.util.security.SecurityUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -147,6 +148,25 @@ public final class BouncyCastleLoader {
 			catch (Exception e) {
 				log.warn("Error during key pair generator warmup, {} algorithm might not be available: {}",
 					keyType, e.getMessage());
+			}
+		}
+
+		// Warm up KEX (Key Exchange) algorithms
+		final BuiltinDHFactories[] kexTypes = new BuiltinDHFactories[] {
+			BuiltinDHFactories.curve25519,       // For curve25519-sha256
+			BuiltinDHFactories.curve25519_libssh, // For curve25519-sha256@libssh.org
+			BuiltinDHFactories.curve448,         // For curve448-sha512
+		};
+		for (BuiltinDHFactories kexType : kexTypes) {
+			try {
+				log.trace("Warming up KEX algorithm: {}", kexType.getName());
+				// Force the DHFactory to check if it's supported (triggers internal initialization)
+				if (kexType.isSupported()) {
+					kexType.create();
+				}
+			}
+			catch (Exception e) {
+				log.trace("KEX algorithm {} not available: {}", kexType.getName(), e.getMessage());
 			}
 		}
 

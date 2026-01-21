@@ -156,6 +156,7 @@ public class DeviceTest {
 					if (i == 10) {
 						device.getNetworkInterfaces().get(0)
 							.setDescription("Specific description");
+						device.setSerialNumber("SERIALNUMBER10");
 					}
 					if (i == 11) {
 						device.getModules().get(0)
@@ -493,6 +494,18 @@ public class DeviceTest {
 				null,
 				" from Device d where d.id = :var",
 				Map.of("var", id),
+				List.of(device.getName()));
+		}
+
+		@Test
+		@DisplayName("Query device by serial number")
+		void queryBySerialNumber() throws Exception {
+			Device device = testDevices.get(10);
+			String serial = device.getSerialNumber();
+			assertFinder("[Serial Number] is \"%s\"".formatted(serial),
+				null,
+				" from Device d where d.serialNumber like :var",
+				Map.of("var", serial),
 				List.of(device.getName()));
 		}
 

@@ -81,6 +81,11 @@ define([
 			type: "TEXT",
 		}, {
 			level: "DEVICE",
+			name: "serialNumber",
+			title: "Serial Number",
+			type: "TEXT",
+		}, {
+			level: "DEVICE",
 			name: "softwareLevel",
 			title: "Software Level",
 			type: "ENUM",

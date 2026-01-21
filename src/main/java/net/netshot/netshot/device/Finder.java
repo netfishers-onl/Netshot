@@ -1082,10 +1082,10 @@ public class Finder {
 				Token comparator = tokens.get(1);
 				Token value = tokens.get(2);
 				if (comparator.type != TokenType.IS) {
-					throw new FinderParseException("Invalid operator after DEVICE at character %d.".formatted(comparator.position));
+					throw new FinderParseException("Invalid operator after ID at character %d.".formatted(comparator.position));
 				}
 				if (value.type != TokenType.NUMERICVALUE) {
-					throw new FinderParseException("Expecting a numeric value for DEVICE at character %d.".formatted(value.position));
+					throw new FinderParseException("Expecting a numeric value for ID at character %d.".formatted(value.position));
 				}
 				DeviceExpression devExpr = new DeviceExpression();
 				devExpr.value = Long.parseLong(value.value);
@@ -2755,6 +2755,14 @@ public class Finder {
 						AttributeLevel.DEVICE,
 						"softwareVersion",
 						"Software Version");
+				}
+				else if ("Serial Number".equalsIgnoreCase(tokens.get(0).key2)) {
+					attribute = new AttributeDefinition(
+						null,
+						AttributeType.TEXT, 
+						AttributeLevel.DEVICE,
+						"serialNumber",
+						"Serial Number");
 				}
 			}
 			else {

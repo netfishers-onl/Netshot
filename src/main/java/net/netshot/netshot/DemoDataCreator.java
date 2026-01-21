@@ -153,10 +153,10 @@ public class DemoDataCreator {
 			DeviceCredentialSet.generateSpecificName());
 		cs.setDeviceSpecific(true);
 		device.setSpecificCredentialSet(cs);
-		device.setSerialNumber("16161616TEST16");
+		device.setSerialNumber("1616TEST%05d".formatted(shift));
 		device.setComments("Comments for testing");
 		device.setVrfInstances(new HashSet<String>(Set.of("VRF1", "VRF2")));
-		device.getModules().add(new Module("chassis", "TESTCHASSIS", "16161616TEST16", device));
+		device.getModules().add(new Module("chassis", "TESTCHASSIS", device.getSerialNumber(), device));
 		device.getModules().add(new Module("slot", "TESTSLOT", "29038POSD203", device));
 		{
 			NetworkInterface ni = new NetworkInterface(device, "GigabitEthernet0/0", "", "VRF1", true, true, "Desc for interface 0/0");

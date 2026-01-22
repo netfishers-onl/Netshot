@@ -100,7 +100,6 @@ import io.undertow.Undertow;
 import io.undertow.UndertowOptions;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.PathHandler;
-import io.undertow.server.handlers.SameSiteCookieHandler;
 import io.undertow.server.handlers.resource.ClassPathResourceManager;
 import io.undertow.server.handlers.resource.ResourceHandler;
 import io.undertow.servlet.Servlets;
@@ -453,6 +452,7 @@ public class RestService extends Thread {
 					.setName(RestService.SESSION_COOKIE_NAME)
 					.setHttpOnly(true)
 					.setSecure(httpUseSsl)
+					.setAttribute("SameSite", "Strict")
 				)
 				.setDefaultSessionTimeout(UiUser.SETTINGS.getMaxIdleTime());
 
@@ -461,7 +461,6 @@ public class RestService extends Thread {
 				.addDeployment(servletBuilder);
 			manager.deploy();
 			HttpHandler servletHandler = manager.start();
-			HttpHandler strictServletHandler = new SameSiteCookieHandler(servletHandler, "Strict");
 
 			// === Static files from /www/ (classpath) ===
 			ResourceHandler staticHandler = Handlers.resource(
@@ -471,7 +470,7 @@ public class RestService extends Thread {
 			// === Routing ===
 			PathHandler pathHandler = Handlers.path()
 				.addPrefixPath(HTTP_STATIC_PATH, staticHandler)
-				.addPrefixPath(HTTP_API_PATH, strictServletHandler);
+				.addPrefixPath(HTTP_API_PATH, servletHandler);
 
 			builder.setHandler(pathHandler);
 

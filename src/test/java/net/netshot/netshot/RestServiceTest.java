@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpCookie;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
@@ -133,7 +134,7 @@ public class RestServiceTest {
 	private NetshotApiClient apiClient;
 
 	@BeforeEach
-	void createToken() {
+	void createToken() throws URISyntaxException {
 		RestServiceTest.createApiTokens();
 		this.apiClient = new NetshotApiClient(RestServiceTest.apiUrl,
 			RestServiceTest.API_TOKENS.get(UiUser.LEVEL_ADMIN));
@@ -293,7 +294,7 @@ public class RestServiceTest {
 				"Unable to get data using username/password and cookie API access");
 			HttpCookie sessionCookie = apiClient.getSessionCookie();
 			apiClient.logout();
-			apiClient.setSessionCookie(sessionCookie);
+			apiClient.addSessionCookie(sessionCookie);
 			HttpResponse<JsonNode> response2 = apiClient.get("/domains");
 			Assertions.assertEquals(
 				Response.Status.UNAUTHORIZED.getStatusCode(), response2.statusCode(),
@@ -341,9 +342,7 @@ public class RestServiceTest {
 		@DisplayName("Wrong cookie")
 		void wrongCookie() throws IOException, InterruptedException {
 			apiClient.setApiToken(null);
-			apiClient.setSessionCookie(
-				new HttpCookie(NetshotApiClient.SESSION_COOKIE_NAME,
-					"9212336284027029412"));
+			apiClient.addSessionCookie("9212336284027029412");
 			HttpResponse<JsonNode> response = apiClient.get("/devices");
 			Assertions.assertEquals(
 				Response.Status.UNAUTHORIZED.getStatusCode(), response.statusCode(),
@@ -639,7 +638,7 @@ public class RestServiceTest {
 			// Forced logout and try again with cookie
 			HttpCookie sessionCookie = apiClient.getSessionCookie();
 			apiClient.logout();
-			apiClient.setSessionCookie(sessionCookie);
+			apiClient.addSessionCookie(sessionCookie);
 			HttpResponse<JsonNode> response3 = apiClient.get("/domains");
 			Assertions.assertEquals(
 				Response.Status.UNAUTHORIZED.getStatusCode(), response3.statusCode(),

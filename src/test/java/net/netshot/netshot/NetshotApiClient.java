@@ -21,8 +21,10 @@ package net.netshot.netshot;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.CookieManager;
 import java.net.HttpCookie;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -31,8 +33,6 @@ import java.net.http.HttpResponse.BodySubscriber;
 import java.net.http.HttpResponse.ResponseInfo;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.List;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -69,7 +69,7 @@ public class NetshotApiClient {
 
 	@Getter
 	@Setter
-	private String apiUrl;
+	private URI apiUrl;
 
 	@Getter
 	@Setter
@@ -96,10 +96,6 @@ public class NetshotApiClient {
 	@Setter
 	private String redirectUri;
 
-	@Getter
-	@Setter
-	private HttpCookie sessionCookie;
-
 	private ObjectMapper objectMapper;
 
 	@Getter
@@ -107,15 +103,21 @@ public class NetshotApiClient {
 
 	private HttpClient httpClient;
 
-	public NetshotApiClient(String apiUrl, String apiToken) {
-		this.httpClient = HttpClient.newHttpClient();
-		this.apiUrl = apiUrl;
+	private CookieManager cookieManager;
+
+	private NetshotApiClient(String apiUrl) throws URISyntaxException {
+		this.cookieManager = new CookieManager();
+		this.httpClient = HttpClient.newBuilder().cookieHandler(this.cookieManager).build();
+		this.apiUrl = new URI(apiUrl);
+	}
+
+	public NetshotApiClient(String apiUrl, String apiToken) throws URISyntaxException {
+		this(apiUrl);
 		this.apiToken = apiToken;
 	}
 
-	public NetshotApiClient(String apiUrl, String username, String password) {
-		this.httpClient = HttpClient.newHttpClient();
-		this.apiUrl = apiUrl;
+	public NetshotApiClient(String apiUrl, String username, String password) throws URISyntaxException {
+		this(apiUrl);
 		this.username = username;
 		this.password = password;
 	}
@@ -198,24 +200,33 @@ public class NetshotApiClient {
 		if (response.statusCode() != Response.Status.OK.getStatusCode()) {
 			throw new WrongApiResponseException("Netshot REST API login failed", response);
 		}
-		String setCookie = response.headers().firstValue("Set-Cookie").get();
-		List<HttpCookie> cookies = HttpCookie.parse(setCookie);
-		for (HttpCookie cookie : cookies) {
-			if (SESSION_COOKIE_NAME.equals(cookie.getName())) {
-				this.sessionCookie = new HttpCookie(SESSION_COOKIE_NAME, cookie.getValue());
-				break;
+	}
+
+	public HttpCookie getSessionCookie() {
+		for (HttpCookie cookie : this.cookieManager.getCookieStore().get(this.apiUrl)) {
+			if (cookie.getName().equals(SESSION_COOKIE_NAME)) {
+				return cookie;
 			}
 		}
+		return null;
+	}
+
+	public void addSessionCookie(HttpCookie cookie) {
+		this.cookieManager.getCookieStore().add(this.apiUrl, cookie);
+	}
+
+	public void addSessionCookie(String value) {
+		HttpCookie cookie = new HttpCookie(SESSION_COOKIE_NAME, value);
+		this.addSessionCookie(cookie);
 	}
 
 	protected void logout() throws IOException, InterruptedException {
-		if (this.sessionCookie == null) {
+		if (this.getSessionCookie() == null) {
 			return;
 		}
 		HttpRequest.Builder builder = HttpRequest.newBuilder();
 		builder.version(HttpClient.Version.HTTP_1_1);
 		builder.uri(URI.create(this.apiUrl + "/user/0"));
-		builder.header("Cookie", this.sessionCookie.toString());
 		builder.DELETE();
 		HttpRequest request = builder.build();
 		HttpResponse<JsonNode> response =
@@ -223,7 +234,6 @@ public class NetshotApiClient {
 		if (response.statusCode() != Response.Status.NO_CONTENT.getStatusCode()) {
 			throw new RuntimeException("Netshot REST API logout failed");
 		}
-		this.sessionCookie = null;
 	}
 
 	protected HttpRequest.Builder initRequest(String path) throws IOException, InterruptedException {
@@ -234,10 +244,9 @@ public class NetshotApiClient {
 		}
 		else if ((this.username != null && this.password != null)
 			|| this.authorizationCode != null) {
-			if (this.sessionCookie == null) {
+			if (this.getSessionCookie() == null) {
 				this.login();
 			}
-			builder.header("Cookie", this.sessionCookie.toString());
 		}
 		builder.header("Accept", this.mediaType.toString());
 		builder.uri(URI.create(this.apiUrl + path));

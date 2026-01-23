@@ -18,7 +18,8 @@
  */
 package net.netshot.netshot.work.tasks;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -153,7 +154,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 			try {
 				session.beginTransaction();
 				log.trace("Task {}. Cleaning up tasks finished more than {} days ago...", this.getId(), days);
-				this.info(String.format("Cleaning up tasks more than %d days ago...", days));
+				this.logger.info("Cleaning up tasks more than {} days ago...", days);
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * days);
 
@@ -188,7 +189,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				}
 				session.getTransaction().commit();
 				log.trace("Task {}. Cleaning up done on tasks, {} entries affected.", this.getId(), count);
-				this.info(String.format("Cleaning up done on tasks, %d entries affected.", count));
+				this.logger.info("Cleaning up done on tasks, {} entries affected.", count);
 			}
 			catch (HibernateException e) {
 				try {
@@ -198,7 +199,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 
 				}
 				log.error("Task {}. Database error while purging the old tasks from the database.", this.getId(), e);
-				this.error("Database error during the task purge.");
+				this.logger.error("Database error during the task purge.");
 				this.status = Status.FAILURE;
 				return;
 			}
@@ -210,7 +211,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 
 				}
 				log.error("Task {}. Error while purging the old tasks from the database.", this.getId(), e);
-				this.error("Error during the task purge.");
+				this.logger.error("Error during the task purge.");
 				this.status = Status.FAILURE;
 				return;
 			}
@@ -224,7 +225,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 			try {
 				session.beginTransaction();
 				log.trace("Task {}. Cleaning up configurations taken more than {} days ago...", this.getId(), configDays);
-				this.info(String.format("Cleaning up configurations older than %d days...", configDays));
+				this.logger.info("Cleaning up configurations older than {} days...", configDays);
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * configDays);
 				Query<Config> query;
@@ -266,7 +267,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				long dontDeleteDevice = -1;
 				Date dontDeleteBefore = null;
 				int count = 0;
-				List<File> toDeleteFiles = new ArrayList<File>();
+				List<Path> toDeletePathes = new ArrayList<>();
 				while (configs.next()) {
 					try {
 						Config config = configs.get();
@@ -282,8 +283,8 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 						}
 						else {
 							for (ConfigAttribute attribute : config.getAttributes()) {
-								if (attribute instanceof ConfigBinaryFileAttribute) {
-									toDeleteFiles.add(((ConfigBinaryFileAttribute) attribute).getFileName());
+								if (attribute instanceof ConfigBinaryFileAttribute cbfa) {
+									toDeletePathes.add(cbfa.getFilePath());
 								}
 							}
 							session.remove(config);
@@ -299,13 +300,13 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				}
 				session.getTransaction().commit();
 				log.trace("Task {}. Cleaning up done on configurations, {} entries affected.", this.getId(), count);
-				this.info(String.format("Cleaning up done on configurations, %d entries affected.", count));
-				for (File toDeleteFile : toDeleteFiles) {
+				this.logger.info("Cleaning up done on configurations, {} entries affected.", count);
+				for (Path toDeletePath : toDeletePathes) {
 					try {
-						toDeleteFile.delete();
+						Files.delete(toDeletePath);
 					}
 					catch (Exception e) {
-						log.error("Error while removing binary file {}", toDeleteFile, e);
+						log.error("Error while removing binary file {}", toDeletePath, e);
 					}
 				}
 			}
@@ -318,7 +319,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				}
 				log.error("Task {}. Database error while purging the old configurations from the database.",
 					this.getId(), e);
-				this.error("Database error during the configuration purge.");
+				this.logger.error("Database error during the configuration purge.");
 				this.status = Status.FAILURE;
 				return;
 			}
@@ -331,7 +332,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				}
 				log.error("Task {}. Error while purging the old configurations from the database.",
 					this.getId(), e);
-				this.error("Error during the configuration purge.");
+				this.logger.error("Error during the configuration purge.");
 				this.status = Status.FAILURE;
 				return;
 			}
@@ -346,7 +347,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 			try {
 				session.beginTransaction();
 				log.trace("Task {}. Cleaning up hardware modules removed more than {} days ago...", this.getId(), moduleDays);
-				this.info(String.format("Cleaning up hardware modules removed more than %d days...", moduleDays));
+				this.logger.info("Cleaning up hardware modules removed more than {} days...", moduleDays);
 				Calendar when = Calendar.getInstance();
 				when.add(Calendar.DATE, -1 * moduleDays);
 
@@ -369,7 +370,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				int count = query.executeUpdate();
 				session.getTransaction().commit();
 				log.trace("Task {}. Cleaning up done on modules, {} entries affected.", this.getId(), count);
-				this.info(String.format("Cleaning up done on modules, %d entries affected.", count));
+				this.logger.info("Cleaning up done on modules, {} entries affected.", count);
 
 			}
 			catch (Exception e) {
@@ -381,7 +382,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				}
 				log.error("Task {}. Error while purging the old modules from the database.",
 					this.getId(), e);
-				this.error("Error during the module purge.");
+				this.logger.error("Error during the module purge.");
 				this.status = Status.FAILURE;
 				return;
 			}

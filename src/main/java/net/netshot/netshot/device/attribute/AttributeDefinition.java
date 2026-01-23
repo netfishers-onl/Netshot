@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Getter;
 import lombok.Setter;
+import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
@@ -32,7 +33,7 @@ public final class AttributeDefinition {
 
 	public enum AttributeLevel {
 		DEVICE,
-		CONFIG
+		CONFIG,
 	}
 
 	public enum AttributeType {
@@ -41,8 +42,21 @@ public final class AttributeDefinition {
 		LONGTEXT,
 		DATE,
 		BINARY,
-		BINARYFILE
+		BINARYFILE,
+		ENUM,
 	}
+
+	/**
+	 * Should be applied to Enum's which can be used
+	 * as attribute values.
+	 */
+	public interface EnumAttribute {
+
+	}
+
+	@Getter
+	@Setter
+	private DeviceDriver driver;
 
 	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
@@ -110,9 +124,10 @@ public final class AttributeDefinition {
 
 	}
 
-	public AttributeDefinition(AttributeType type, AttributeLevel level, String name,
-		String title, boolean comparable, boolean searchable, boolean checkable) {
+	public AttributeDefinition(DeviceDriver driver, AttributeType type, AttributeLevel level,
+		String name, String title, boolean comparable, boolean searchable, boolean checkable) {
 		super();
+		this.driver = driver;
 		this.type = type;
 		this.level = level;
 		this.name = name;
@@ -122,12 +137,26 @@ public final class AttributeDefinition {
 		this.checkable = checkable;
 	}
 
-	public AttributeDefinition(AttributeLevel level, String name, Value data) throws Exception {
+	public AttributeDefinition(DeviceDriver driver, AttributeType type, AttributeLevel level,
+		String name, String title) {
+		super();
+		this.driver = driver;
+		this.type = type;
+		this.level = level;
+		this.name = name;
+		this.title = title;
+		this.comparable = false;
+		this.searchable = false;
+		this.checkable = false;
+	}
+
+	public AttributeDefinition(DeviceDriver driver, AttributeLevel level, String name, Value data) throws Exception {
+		this.driver = driver;
 		this.level = level;
 		this.name = name;
 		this.title = data.getMember("title").asString();
 		if (!this.title.matches("^[0-9A-Za-z\\-_\\(\\)][0-9A-Za-z \\-_\\(\\)]+$")) {
-			throw new IllegalArgumentException("Invalid title for item %s.");
+			throw new IllegalArgumentException("Invalid title for item %s.".formatted(name));
 		}
 		String textType = data.getMember("type").asString();
 		switch (textType) {

@@ -46,7 +46,7 @@ import lombok.Setter;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * A policy is a set of rules, applied to a group of devices.
@@ -125,9 +125,9 @@ public class Policy {
 	 * Check all devices of the target groups against the policy.
 	 *
 	 * @param session the session
-	 * @param taskLogger the task logger
+	 * @param taskContext the task context
 	 */
-	public void check(Session session, TaskLogger taskLogger) {
+	public void check(Session session, TaskContext taskContext) {
 		if (targetGroups == null) {
 			return;
 		}
@@ -136,7 +136,7 @@ public class Policy {
 			devices.addAll(group.getCachedDevices());
 		}
 		for (Device device : devices) {
-			this.check(device, session, taskLogger);
+			this.check(device, session, taskContext);
 		}
 	}
 
@@ -145,12 +145,12 @@ public class Policy {
 	 *
 	 * @param device the device
 	 * @param session the session
-	 * @param taskLogger the task logger
+	 * @param taskContext the task context
 	 */
-	public void check(Device device, Session session, TaskLogger taskLogger) {
+	public void check(Device device, Session session, TaskContext taskContext) {
 		for (Rule rule : rules) {
-			taskLogger.info(String.format("Evaluating rule %s (policy %s)...", rule.getName(), this.getName()));
-			device.getComplianceCheckResults().add(rule.check(device, session, taskLogger));
+			taskContext.info("Evaluating rule {} (policy {})...", rule.getName(), this.getName());
+			device.getComplianceCheckResults().add(rule.check(device, session, taskContext));
 		}
 	}
 

@@ -212,6 +212,7 @@ public final class Database {
 	 */
 	public static void update() throws Exception {
 		try {
+			System.setProperty("liquibase.analytics.enabled", "false");
 			Class.forName("org.postgresql.Driver");
 			try (Connection connection = Database.getConnection(false)) {
 				liquibase.database.Database database = DatabaseFactory.getInstance()
@@ -483,9 +484,9 @@ public final class Database {
 		if (entity == null) {
 			return null;
 		}
-		if (entity instanceof HibernateProxy) {
+		if (entity instanceof HibernateProxy proxy) {
 			Hibernate.initialize(entity);
-			entity = (T) ((HibernateProxy) entity).getHibernateLazyInitializer().getImplementation();
+			entity = (T) proxy.getHibernateLazyInitializer().getImplementation();
 		}
 		return entity;
 	}

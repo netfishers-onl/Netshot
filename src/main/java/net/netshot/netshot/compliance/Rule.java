@@ -53,7 +53,7 @@ import net.netshot.netshot.compliance.rules.PythonRule;
 import net.netshot.netshot.compliance.rules.TextRule;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 
 /**
@@ -148,10 +148,10 @@ public abstract class Rule {
 	 *
 	 * @param device the device
 	 * @param session the session
-	 * @param taskLogger the task logger
+	 * @param taskContext the task context
 	 * @return the result of the check
 	 */
-	public CheckResult check(Device device, Session session, TaskLogger taskLogger) {
+	public CheckResult check(Device device, Session session, TaskContext taskContext) {
 		log.warn("Called generic rule check.");
 		if (!this.isEnabled()) {
 			return new CheckResult(this, device, ResultOption.DISABLED);

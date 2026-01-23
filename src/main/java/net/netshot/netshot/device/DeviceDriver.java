@@ -37,8 +37,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Pattern;
 
 import org.apache.commons.codec.binary.Hex;
 import org.graalvm.polyglot.Context;
@@ -48,7 +50,10 @@ import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.proxy.ProxyObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
+import org.slf4j.event.Level;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -61,16 +66,17 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
-import net.netshot.netshot.collector.SnmpTrapReceiver;
-import net.netshot.netshot.collector.SyslogServer;
 import net.netshot.netshot.device.access.Ssh.SshConfig;
+import net.netshot.netshot.device.access.Ssh.SshInteractionInstruction;
 import net.netshot.netshot.device.access.Telnet.TelnetConfig;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import net.netshot.netshot.device.script.helper.JsUtils;
+import net.netshot.netshot.device.collector.SnmpTrapReceiver;
+import net.netshot.netshot.device.collector.SyslogServer;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
-import net.netshot.netshot.work.TaskLogger;
-import net.netshot.netshot.work.logger.LoggerTaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * This is a device driver.
@@ -80,9 +86,9 @@ import net.netshot.netshot.work.logger.LoggerTaskLogger;
 @Slf4j
 public class DeviceDriver implements Comparable<DeviceDriver> {
 
-	public static class DeviceDrivers extends ArrayList<DeviceDriver> {
-		//
-	}
+	public static final String PLACEHOLDER_USERNAME = "$$NetshotUsername$$";
+	public static final String PLACEHOLDER_PASSWORD = "$$NetshotPassword$$";
+	public static final String PLACEHOLDER_SUPERPASSWORD = "$$NetshotSuperPassword$$";
 
 	/**
 	 * Possible protocols for a device driver.
@@ -137,11 +143,29 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		}
 	}
 
+	public static class ReceiverTaskContext implements TaskContext {
+		private final Logger logger;
+
+		public ReceiverTaskContext(Class<?> clazz) {
+			this.logger = LoggerFactory.getLogger(clazz);
+		}
+
+		@Override
+		public void log(Level level, String message, Object... params) {
+			this.logger.makeLoggingEventBuilder(level).log(message, params);
+		}
+
+		@Override
+		public String getIdentifier() {
+			return this.logger.getName();
+		}
+	}
+
 	/** JS logger for SNMP-related messages. */
-	private static final TaskLogger JS_SNMP_LOGGER = new LoggerTaskLogger(SnmpTrapReceiver.class);
+	private static final TaskContext JS_SNMP_LOGGER = new ReceiverTaskContext(SnmpTrapReceiver.class);
 
 	/** JS logger for Syslog-related messages. */
-	private static final TaskLogger JS_SYSLOG_LOGGER = new LoggerTaskLogger(SyslogServer.class);
+	private static final TaskContext JS_SYSLOG_LOGGER = new ReceiverTaskContext(SyslogServer.class);
 
 	/** The Javascript loader code. */
 	private static final Source JSLOADER_SOURCE = readLoaderSource();
@@ -152,20 +176,19 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 */
 	private static Source readLoaderSource() {
 		Source source = null;
-		try {
-			log.info("Reading the JavaScript driver loader code from the resource JS file.");
-			// Read the JavaScript loader code from the resource file.
-			String path = "interfaces/driver-loader.js";
+		String path = "interfaces/driver-loader.js";
+		try (
 			InputStream in = DeviceDriver.class.getResourceAsStream("/" + path);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+		) {
+			log.info("Reading the JavaScript driver loader code from the resource JS file.");
+			// Read the JavaScript loader code from the resource file.
 			StringBuilder buffer = new StringBuilder();
 			String line;
 			while ((line = reader.readLine()) != null) {
 				buffer.append(line);
 				buffer.append("\n");
 			}
-			reader.close();
-			in.close();
 			source = Source.newBuilder("js", buffer.toString(), "driver-loader.js").buildLiteral();
 			log.debug("The JavaScript driver loader code has been read from the resource JS file.");
 		}
@@ -181,7 +204,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	/**
 	 * The list of loaded newDrivers.
 	 */
-	private static Map<String, DeviceDriver> drivers = new HashMap<String, DeviceDriver>();
+	private static Map<String, DeviceDriver> drivers = new ConcurrentHashMap<>();
 
 	/**
 	 * Hash for all drivers.
@@ -211,6 +234,24 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			return null;
 		}
 		return drivers.get(name);
+	}
+
+	/**
+	 * Gets a driver by description.
+	 * 
+	 * @param description The description to look for
+	 * @return the device driver from that name, or null if not found
+	 */
+	public static DeviceDriver getDriverByDescription(String description) {
+		if (description == null) {
+			return null;
+		}
+		for (DeviceDriver driver : getAllDrivers()) {
+			if (description.equalsIgnoreCase(driver.getDescription())) {
+				return driver;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -332,7 +373,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 				while (e.hasMoreElements()) {
 					final JarEntry je = e.nextElement();
 					if (!je.isDirectory() && je.getName().startsWith(driverPathName)) {
-						log.info("Found Netshot device driver file {} (in jar).", file);
+						log.info("Found Netshot device driver file {} (in jar).", je.getName());
 						Reader reader = null;
 						try {
 							InputStream stream = jar.getInputStream(je);
@@ -505,7 +546,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		}
 		this.engine = Engine.create();
 
-		this.sshConfig = new SshConfig();
+		this.sshConfig = new SshConfig(false);
 		this.telnetConfig = new TelnetConfig();
 
 		try (Context context = this.getContext()) {
@@ -535,7 +576,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 					}
 					try {
 						Value data = config.getMember(key);
-						AttributeDefinition item = new AttributeDefinition(AttributeLevel.CONFIG, key, data);
+						AttributeDefinition item = new AttributeDefinition(this, AttributeLevel.CONFIG, key, data);
 						this.attributes.add(item);
 						this.attributesByName.get(AttributeLevel.CONFIG).put(item.getName(), item);
 					}
@@ -555,7 +596,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 					}
 					try {
 						Value data = device.getMember(key);
-						AttributeDefinition item = new AttributeDefinition(AttributeLevel.DEVICE, key, data);
+						AttributeDefinition item = new AttributeDefinition(this, AttributeLevel.DEVICE, key, data);
 						this.attributes.add(item);
 						this.attributesByName.get(AttributeLevel.DEVICE).put(item.getName(), item);
 					}
@@ -651,6 +692,49 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 										algos.add(algo.asString());
 									}
 									this.sshConfig.setMacs(algos.toArray(new String[0]));
+								}
+							}
+							{
+								Value compressionAlgorithms = cliSshConfig.getMember("compressionAlgorithms");
+								if (compressionAlgorithms != null && compressionAlgorithms.hasArrayElements()) {
+									Set<String> algos = new HashSet<>();
+									for (long i = 0; i < compressionAlgorithms.getArraySize(); i++) {
+										Value algo = compressionAlgorithms.getArrayElement(i);
+										algos.add(algo.asString());
+									}
+									this.sshConfig.setCompressionAlgorithms(algos.toArray(new String[0]));
+								}
+							}
+							Value auth = cliSshConfig.getMember("auth");
+							if (auth != null && auth.hasMembers()) {
+								Value interactive = auth.getMember("interactive");
+								if (interactive != null && interactive.hasMembers()) {
+									Value interactions = interactive.getMember("interactions");
+									if (interactions != null && interactions.hasArrayElements()) {
+										List<SshInteractionInstruction> instructions = new ArrayList<>();
+										for (long i = 0; i < interactions.getArraySize(); i++) {
+											Value interaction = interactions.getArrayElement(i);
+											Value echo = interaction.getMember("echo");
+											Pattern promptPattern = null;
+											Value prompt = interaction.getMember("prompt");
+											if (prompt != null) {
+												try {
+													promptPattern = JsUtils.jsRegExpToPattern(prompt);
+												}
+												catch (Exception e) {
+													throw new IllegalArgumentException(
+														"Invalid RegExp used as SSH interaction prompt (index %d)".formatted(i));
+												}
+											}
+											Value response = interaction.getMember("response");
+											instructions.add(new SshInteractionInstruction(
+												promptPattern,
+												(echo != null && echo.isBoolean()) ? echo.asBoolean() : null,
+												(response != null && response.isString()) ? response.asString() : null
+											));
+										}
+										this.sshConfig.setInteractionInstructions(instructions);
+									}
 								}
 							}
 						}
@@ -806,10 +890,10 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 * @param task The auto discovery task
 	 * @param sysObjectId The received sysObjectId
 	 * @param sysDesc The received sysDesc
-	 * @param taskLogger The logger from the task
+	 * @param taskContext The logger from the task
 	 * @return true if the passed SNMP information matches a device of this driver
 	 */
-	public boolean snmpAutoDiscover(Task task, String sysObjectId, String sysDesc, TaskLogger taskLogger) {
+	public boolean snmpAutoDiscover(Task task, String sysObjectId, String sysDesc, TaskContext taskContext) {
 		if (!canSnmpAutodiscover) {
 			return false;
 		}
@@ -818,7 +902,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			Value result = context
 				.getBindings("js")
 				.getMember("_snmpAutoDiscover")
-				.execute(sysObjectId, sysDesc, taskLogger);
+				.execute(sysObjectId, sysDesc, taskContext);
 			if (result != null && result.isBoolean()) {
 				return result.asBoolean();
 			}
@@ -839,6 +923,16 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	@Transient
 	public AttributeDefinition getAttributeDefinition(AttributeDefinition.AttributeLevel attributeLevel, String attributeName) {
 		return this.attributesByName.get(attributeLevel).get(attributeName);
+	}
+
+	@Transient
+	public AttributeDefinition getAttributeDefinitionByTitle(String title) {
+		for (AttributeDefinition attribute : this.getAttributes()) {
+			if (attribute.getTitle().equalsIgnoreCase(title)) {
+				return attribute;
+			}
+		}
+		return null;
 	}
 
 	@Override

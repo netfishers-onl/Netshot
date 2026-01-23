@@ -57,7 +57,7 @@ import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.script.helper.PyDeviceHelper;
 import net.netshot.netshot.device.script.helper.PythonFileSystem;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * A PythonRule is a Python-coded script that will check the device attributes,
@@ -250,9 +250,9 @@ public class PythonRule extends Rule {
 	/**
 	 * Prepare the rule (try to evaluate the script).
 	 * @param context = the context
-	 * @param taskLogger = the task logger
+	 * @param taskContext = the task context
 	 */
-	private void prepare(Context context, TaskLogger taskLogger) {
+	private void prepare(Context context, TaskContext taskContext) {
 		if (prepared) {
 			return;
 		}
@@ -263,14 +263,14 @@ public class PythonRule extends Rule {
 			Value checkFunction = context.getBindings("python").getMember("check");
 			if (checkFunction == null || !checkFunction.canExecute()) {
 				log.warn("The check sub wasn't found in the script");
-				taskLogger.error("The 'check' sub couldn't be found in the script.");
+				taskContext.error("The 'check' sub couldn't be found in the script.");
 			}
 			else {
 				pyValid = true;
 			}
 		}
 		catch (PolyglotException e) {
-			taskLogger.error("Error while evaluating the Python script.");
+			taskContext.error("Error while evaluating the Python script.");
 			log.warn("Error while evaluating the Python script.", e);
 			pyValid = false;
 		}
@@ -280,7 +280,7 @@ public class PythonRule extends Rule {
 	 * @see net.netshot.netshot.compliance.Rule#check(net.netshot.netshot.device.Device, org.hibernate.Session)
 	 */
 	@Override
-	public CheckResult check(Device device, Session session, TaskLogger taskLogger) {
+	public CheckResult check(Device device, Session session, TaskContext taskContext) {
 		if (!this.isEnabled()) {
 			return new CheckResult(this, device, ResultOption.DISABLED);
 		}
@@ -288,14 +288,14 @@ public class PythonRule extends Rule {
 		try (Context context = this.getContext()) {
 			context.eval(this.getSource());
 			context.eval(PYLOADER_SOURCE);
-			prepare(context, taskLogger);
+			prepare(context, taskContext);
 			if (!this.pyValid) {
 				return new CheckResult(this, device, ResultOption.INVALIDRULE);
 			}
 			if (device.isExempted(this)) {
 				return new CheckResult(this, device, ResultOption.EXEMPTED);
 			}
-			PyDeviceHelper deviceHelper = new PyDeviceHelper(device, session, taskLogger, true);
+			PyDeviceHelper deviceHelper = new PyDeviceHelper(device, session, taskContext, true);
 			Future<Value> futureResult = Executors.newSingleThreadExecutor().submit(new Callable<Value>() {
 				@Override
 				public Value call() throws Exception {
@@ -313,7 +313,7 @@ public class PythonRule extends Rule {
 				catch (Exception e2) {
 					log.warn("Error while closing abnormally long Python context", e2);
 				}
-				taskLogger.error(
+				taskContext.error(
 					"The rule took too long to execute (check for endless loop in the script or adjust netshot.python.maxexecutiontime value)");
 				return new CheckResult(this, device, CheckResult.ResultOption.INVALIDRULE,
 					"The rule took too long to execute");
@@ -335,23 +335,23 @@ public class PythonRule extends Rule {
 			}
 			for (CheckResult.ResultOption allowedResult : ALLOWED_RESULTS) {
 				if (allowedResult.toString().equals(txtResult)) {
-					taskLogger.info(String.format("The script returned %s (%d), comment '%s'.",
-						allowedResult.toString(), allowedResult.getValue(), comment));
+					taskContext.info("The script returned {} ({}), comment '{}'.",
+						allowedResult.toString(), allowedResult.getValue(), comment);
 					return new CheckResult(this, device, allowedResult, comment);
 				}
 			}
 		}
 		catch (IOException e) {
-			taskLogger.error("Error while evaluating the Python script.");
+			taskContext.error("Error while evaluating the Python script.");
 			log.warn("Error while evaluating the Python script.", e);
 			pyValid = false;
 		}
 		catch (Exception e) {
-			taskLogger.error("Error while running the script: " + e.getMessage());
+			taskContext.error("Error while running the script: " + e.getMessage());
 			log.error("Error while running the script on device {}.", device.getId(), e);
 		}
 		finally {
-			taskLogger.debug("End of check");
+			taskContext.debug("End of check");
 		}
 		return new CheckResult(this, device, ResultOption.INVALIDRULE);
 	}

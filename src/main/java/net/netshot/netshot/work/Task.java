@@ -18,6 +18,7 @@
  */
 package net.netshot.netshot.work;
 
+import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -28,6 +29,8 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 import org.quartz.Trigger;
+import org.slf4j.event.Level;
+import org.slf4j.helpers.MessageFormatter;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -57,7 +60,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.logger.TaskLogTaskLogger;
 import net.netshot.netshot.work.tasks.CheckComplianceTask;
 import net.netshot.netshot.work.tasks.CheckGroupComplianceTask;
 import net.netshot.netshot.work.tasks.CheckGroupSoftwareTask;
@@ -201,8 +203,7 @@ public abstract class Task implements Cloneable {
 	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
-	@Setter
-	protected boolean debugEnabled;
+	protected boolean debugEnabled = false;
 
 	/** The debug log. */
 	@Getter(onMethod = @__({
@@ -229,6 +230,42 @@ public abstract class Task implements Cloneable {
 
 	/** The log. */
 	protected StringBuffer logs = new StringBuffer();
+
+	/** Full debug logs. */
+	protected StringBuffer fullLogs = null;
+
+	/** Task context. */
+	protected TaskContext logger = new TaskContext() {
+		@Override
+		public void log(Level level, String message, Object... params) {
+			if (fullLogs != null) {
+				fullLogs
+					.append(Instant.now())
+					.append(" [").append(level).append("] ")
+					.append(MessageFormatter.arrayFormat(message, params).getMessage())
+					.append("\n");
+			}
+			if (level.toInt() <= Level.TRACE.toInt()) {
+				// Don't log traces to base logs
+				return;
+			}
+			logs
+				.append(Instant.now())
+				.append(" [").append(level).append("] ")
+				.append(MessageFormatter.arrayFormat(message, params).getMessage())
+				.append("\n");
+		}
+
+		@Override
+		public boolean isTracing() {
+			return debugEnabled;
+		}
+
+		@Override
+		public String getIdentifier() {
+			return "%s_%d".formatted(Task.this.getClass().getSimpleName(), Task.this.getId());
+		}
+	};
 
 	/** The schedule reference. */
 	@Getter(onMethod = @__({
@@ -296,24 +333,27 @@ public abstract class Task implements Cloneable {
 	/**
 	 * Instantiates a new task.
 	 *
-	 * @param comments = the comments
-	 * @param target = the target
-	 * @param author = the author
-	 * @param debugEnabled = whether to enable debugging
+	 * @param comments the comments
+	 * @param target the target
+	 * @param author the author
+	 * @param debugEnabled whether to enable debugging
 	 */
 	public Task(String comments, String target, String author, boolean debugEnabled) {
 		this.comments = comments;
 		this.target = target;
 		this.author = author;
 		this.debugEnabled = debugEnabled;
+		if (this.debugEnabled) {
+			this.fullLogs = new StringBuffer();
+		}
 	}
 
 	/**
 	 * Instantiates a new task.
 	 *
-	 * @param comments = the comments
-	 * @param target = the target
-	 * @param author = the author
+	 * @param comments the comments
+	 * @param target the target
+	 * @param author the author
 	 */
 	public Task(String comments, String target, String author) {
 		this.comments = comments;
@@ -324,7 +364,8 @@ public abstract class Task implements Cloneable {
 	/**
 	 * Generate the identity of the task. Used by Quartz.
 	 * Two tasks with the same identity won't be executed concurrently.
-	 * @return the identity of the task.
+	 *
+	 * @return the identity of the task
 	 */
 	@Transient
 	public abstract JobKey getIdentity();
@@ -341,6 +382,14 @@ public abstract class Task implements Cloneable {
 		task.setScheduleFactor(this.scheduleFactor);
 		task.setPriority(this.priority);
 		task.setId(0);
+		// Clear debug logs
+		task.setDebugEnabled(this.isDebugEnabled());
+		// Clear logs
+		task.setLogs(new StringBuffer());
+		// Reset status
+		task.setStatus(Status.NEW);
+		// Clear execution date
+		task.setExecutionDate(null);
 		return task;
 	}
 
@@ -374,10 +423,6 @@ public abstract class Task implements Cloneable {
 	@XmlElement
 	@JsonView(DefaultView.class)
 	public Date getNextExecutionDate() {
-		Calendar reference = Calendar.getInstance();
-		reference.setTime(this.scheduleReference);
-		Calendar inOneMinute = Calendar.getInstance();
-		inOneMinute.add(Calendar.MINUTE, 1);
 
 		int factor = this.scheduleFactor;
 		if (factor <= 0) {
@@ -406,6 +451,8 @@ public abstract class Task implements Cloneable {
 		}
 
 		if (unit > 0) {
+			Calendar inOneMinute = Calendar.getInstance();
+			inOneMinute.add(Calendar.MINUTE, 1);
 			Calendar targetCalendar = Calendar.getInstance();
 			targetCalendar.setTime(this.scheduleReference);
 			if (targetCalendar.get(Calendar.YEAR) < inOneMinute.get(Calendar.YEAR)) {
@@ -465,46 +512,6 @@ public abstract class Task implements Cloneable {
 		}
 	}
 
-	public void debug(String message) {
-		this.logs.append("[DEBUG] ");
-		this.logs.append(message);
-		this.logs.append("\n");
-	}
-
-	public void trace(String message) {
-		this.logs.append("[TRACE] ");
-		this.logs.append(message);
-		this.logs.append("\n");
-	}
-
-	public void info(String message) {
-		this.logs.append("[INFO] ");
-		this.logs.append(message);
-		this.logs.append("\n");
-	}
-
-	public void warn(String message) {
-		this.logs.append("[WARN] ");
-		this.logs.append(message);
-		this.logs.append("\n");
-	}
-
-	public void error(String message) {
-		this.logs.append("[ERROR] ");
-		this.logs.append(message);
-		this.logs.append("\n");
-	}
-
-
-	/**
-	 * Get the JS logger.
-	 * @return the JS logger
-	 */
-	@Transient
-	protected TaskLogger getJsLogger() {
-		return new TaskLogTaskLogger(this);
-	}
-
 	/**
 	 * On cancel.
 	 */
@@ -520,10 +527,23 @@ public abstract class Task implements Cloneable {
 
 	/**
 	 * Prepare.
-	 * @param session = the session
+	 *
+	 * @param session the session
 	 */
 	public void prepare(Session session) {
 		// Override to actually do something
+	}
+
+	/**
+	 * Enable or disable full debugging on this task.
+	 *
+	 * @param debugEnabled true to enable full debugging
+	 */
+	public void setDebugEnabled(boolean debugEnabled) {
+		this.debugEnabled = debugEnabled;
+		if (debugEnabled && this.fullLogs == null) {
+			this.fullLogs = new StringBuffer();
+		}
 	}
 
 	/**
@@ -534,8 +554,9 @@ public abstract class Task implements Cloneable {
 	/**
 	 * This can return a hash for the task to select a stable runner.
 	 * This is used to run all the tasks related to the same device
-	 * on the same cluter runner.
-	 * @return the hash or null
+	 * on the same cluster runner.
+	 *
+	 * @return the hash or 0
 	 */
 	@Transient
 	public long getRunnerHash() {
@@ -569,9 +590,12 @@ public abstract class Task implements Cloneable {
 
 	/**
 	 * Sets the cancelled.
+	 *
+	 * @param reason the reason for cancellation
 	 */
-	public void setCancelled() {
+	public void setCancelled(String reason) {
 		this.status = Status.CANCELLED;
+		this.logger.warn(reason);
 	}
 
 	/**

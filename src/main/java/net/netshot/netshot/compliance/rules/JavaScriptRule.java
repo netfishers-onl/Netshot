@@ -55,8 +55,9 @@ import net.netshot.netshot.compliance.Rule;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
+import net.netshot.netshot.device.script.helper.JsUtils;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * A JavaScriptRule is a Javascript-coded script that will check the device
@@ -211,9 +212,9 @@ public class JavaScriptRule extends Rule {
 	/**
 	 * Prepare the rule.
 	 * @param context = the context
-	 * @param taskLogger = the task logger
+	 * @param taskContext = the task context
 	 */
-	private void prepare(Context context, TaskLogger taskLogger) {
+	private void prepare(Context context, TaskContext taskContext) {
 		if (prepared) {
 			return;
 		}
@@ -224,14 +225,14 @@ public class JavaScriptRule extends Rule {
 			Value checkFunction = context.getBindings("js").getMember("check");
 			if (checkFunction == null || !checkFunction.canExecute()) {
 				log.warn("The check function wasn't found in the script");
-				taskLogger.error("The 'check' function couldn't be found in the script.");
+				taskContext.error("The 'check' function couldn't be found in the script.");
 			}
 			else {
 				jsValid = true;
 			}
 		}
 		catch (PolyglotException e) {
-			taskLogger.error("Error while evaluating the Javascript script.");
+			taskContext.error("Error while evaluating the Javascript script.");
 			log.warn("Error while evaluating the Javascript script.", e);
 			jsValid = false;
 		}
@@ -241,7 +242,7 @@ public class JavaScriptRule extends Rule {
 	 * @see net.netshot.netshot.compliance.Rule#check(net.netshot.netshot.device.Device, org.hibernate.Session)
 	 */
 	@Override
-	public CheckResult check(Device device, Session session, TaskLogger taskLogger) {
+	public CheckResult check(Device device, Session session, TaskContext taskContext) {
 		if (!this.isEnabled()) {
 			return new CheckResult(this, device, ResultOption.DISABLED);
 		}
@@ -249,14 +250,14 @@ public class JavaScriptRule extends Rule {
 		try (Context context = this.getContext()) {
 			context.eval(this.getSource());
 			context.eval(JSLOADER_SOURCE);
-			prepare(context, taskLogger);
+			prepare(context, taskContext);
 			if (!this.jsValid) {
 				return new CheckResult(this, device, ResultOption.INVALIDRULE);
 			}
 			if (device.isExempted(this)) {
 				return new CheckResult(this, device, ResultOption.EXEMPTED);
 			}
-			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, null, session, taskLogger, true);
+			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, null, session, taskContext, true);
 			Future<Value> futureResult = Executors.newSingleThreadExecutor().submit(new Callable<Value>() {
 				@Override
 				public Value call() throws Exception {
@@ -274,7 +275,7 @@ public class JavaScriptRule extends Rule {
 				catch (Exception e2) {
 					log.warn("Error while closing abnormally long JavaScript context", e2);
 				}
-				taskLogger.error(
+				taskContext.error(
 					"The rule took too long to execute (check for endless loop in the script or adjust netshot.javascript.maxexecutiontime value)");
 				return new CheckResult(this, device, CheckResult.ResultOption.INVALIDRULE,
 					"The rule took too long to execute");
@@ -296,18 +297,18 @@ public class JavaScriptRule extends Rule {
 			}
 			for (CheckResult.ResultOption allowedResult : ALLOWED_RESULTS) {
 				if (allowedResult.toString().equals(txtResult)) {
-					taskLogger.info(String.format("The script returned %s (%d), comment '%s'.",
-						allowedResult.toString(), allowedResult.getValue(), comment));
+					taskContext.info("The script returned {} ({}), comment '{}'.",
+						allowedResult.toString(), allowedResult.getValue(), comment);
 					return new CheckResult(this, device, allowedResult, comment);
 				}
 			}
 		}
 		catch (Exception e) {
-			taskLogger.error("Error while running the script: " + e.getMessage());
+			taskContext.error("Error while running the script: {}", JsUtils.jsErrorToMessage(e));
 			log.error("Error while running the script on device {}.", device.getId(), e);
 		}
 		finally {
-			taskLogger.debug("End of check");
+			taskContext.debug("End of check");
 		}
 		return new CheckResult(this, device, ResultOption.INVALIDRULE);
 	}

@@ -28,13 +28,23 @@
 		<a href="<%- attribute.downloadLink %>" data-config-item="<%- attribute.name %>" data-config-action="download">Download</a>
 	<% } %>
 	<% if (attribute.type == "BINARYFILE") { %>
-		<div class="nsicon-container">
-			<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+		<div>
+			<div class="nsicon-container">
+				<span class="ui-icon ui-icon-disk" style="float: left;"></span>
+			</div>
+			<% if (typeof(attribute.fileSize) === "number" && attribute.fileSize > 0) { %>
+				<a href="<%- attribute.downloadLink %>" data-config-item="<%- attribute.name %>" data-config-action="download"><% if (typeof(attribute.originalName) === "string" && attribute.originalName.length > 0) { %><%- attribute.originalName %><% } else { %>Download<% } %></a>  (<%- formatFileSize(attribute.fileSize) %>)
+			<% } else { %>
+				Empty file
+			<% } %>
 		</div>
-		<% if (typeof(attribute.fileSize) === "number" && attribute.fileSize > 0) { %>
-			<a href="<%- attribute.downloadLink %>" data-config-item="<%- attribute.name %>" data-config-action="download"><% if (typeof(attribute.originalName) === "string" && attribute.originalName.length > 0) { %><%- attribute.originalName %><% } else { %>Download<% } %></a>  (<%- formatFileSize(attribute.fileSize) %>)
-		<% } else { %>
-			Empty file
+		<% if (attribute.checksum) { %>
+		<div>
+			<div class="nsicon-container">
+				<span class="ui-icon ui-icon-key" style="float: left;"></span>
+			</div>
+			<span><%- attribute.checksum %></span>
+		</div>
 		<% } %>
 	<% } %>
 	</td>
@@ -42,7 +52,9 @@
 
 <% } %>
 
+<% if (typeof author === "string" && author) { %>
 <tr class="configdetails">
 	<td class="maincolumn">Probable author</td>
 	<td><%- author %></td>
 </tr>
+<% } %>

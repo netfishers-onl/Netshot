@@ -42,6 +42,7 @@ import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.device.Module;
+import net.netshot.netshot.device.attribute.AttributeDefinition.EnumAttribute;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
 /**
@@ -55,7 +56,7 @@ public class SoftwareRule implements Comparable<SoftwareRule> {
 	/**
 	 * The Enum ConformanceLevel.
 	 */
-	public enum ConformanceLevel {
+	public enum ConformanceLevel implements EnumAttribute {
 
 		/** The gold. */
 		GOLD,

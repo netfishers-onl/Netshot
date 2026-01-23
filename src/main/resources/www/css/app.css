@@ -91,6 +91,12 @@ th[role=columnheader]:not(.no-sort):hover:after {
 	background-color: #0366d6;
 }
 
+.nsbutton-icononly {
+	border: none !important;;
+	background-color: transparent !important;;
+	box-shadow: none !important;;
+}
+
 .nsdialog-progress {
 	margin-top: 40px;
 }
@@ -1077,10 +1083,23 @@ h1 {
 	color: #000;
 }
 
-#nsdevices-advancedsearch #expression {
+#nsdevices-searchtoolbox #expression {
+	margin-top: 5px;
 	width: 600px;
 	background-image: none;
 	background-color: #F1FF99;
+}
+
+#nsdevices-searchtoolbox #builder-clear {
+	float: right;
+	font-size: 9px;
+	right: 47px;
+	top: 9px;
+}
+
+#nsdevices-searchtoolbox .nestedselect {
+	margin-top: 5px;
+	margin-left: 10px;
 }
 
 
@@ -1120,7 +1139,7 @@ h1 {
 }
 
 #nsdevice-groupeditform #expression {
-	width: 400px;
+	width: 550px;
 	background-image: none;
 	background-color: #F1FF99;
 }
@@ -1457,6 +1476,11 @@ input.spinner {
 
 #nsdevice-deviceeditform #devicecredentials {
 	padding-left: 10px;
+}
+
+#nsdevices-previewdevicelist #alldevices {
+	margin-top: 5px;
+	height: 400px;
 }
 
 #nsdevices-selectdeviceform #devicesearch {

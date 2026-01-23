@@ -33,9 +33,8 @@ define([
 				$button.button('disable');
 				that.devicesView.devices.resetFilter();
 				that.devicesView.devices.filter.type = "advanced";
-				that.devicesView.devices.filter.query = that.$("#expression").val();
+				that.devicesView.devices.filter.query = that.searchToolbox.getExpression();
 				that.devicesView.devices.filter.text = "Advanced search";
-				that.devicesView.devices.filter.driver = that.$('#devicetype').val();
 				that.devicesView.decorateGroupList();
 				that.devicesView.devices.fetch().done(function() {
 					$('#nsdevices-searchfield').val("Advanced search")
@@ -45,7 +44,7 @@ define([
 					that.devicesView.renderDeviceList();
 					that.devicesView.saveFilter();
 					if (that.devicesView.devices.length == 0) {
-						that.$('#expression').val(that.devicesView.devices.filter.query);
+						that.searchToolbox.setExpression(that.devicesView.devices.filter.query);
 						that.$("#errormsg").text("No device found.");
 						that.$("#error").show();
 						$button.button('enable');
@@ -64,11 +63,10 @@ define([
 
 		onCreate: function() {
 			var that = this;
-			var searchToolbox = new SearchToolbox({
+			this.searchToolbox = new SearchToolbox({
 				onRendered: function() {
 					if (that.devicesView.devices.filter.type == "advanced" || that.devicesView.devices.filter.type == "simple") {
-						that.$('#devicetype').val(that.devicesView.devices.filter.driver).trigger("change");
-						that.$('#expression').val(that.devicesView.devices.filter.query);
+						this.setExpression(that.devicesView.devices.filter.query);
 					}
 				}
 			});

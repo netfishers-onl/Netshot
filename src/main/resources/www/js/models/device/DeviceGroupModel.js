@@ -22,7 +22,6 @@ define([
 				'folder',
 				'hiddenFromReports',
 				'staticDevices',
-				'driver',
 				'query'
 			]);
 			options.attrs = attrs;

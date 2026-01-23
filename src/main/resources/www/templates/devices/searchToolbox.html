@@ -1,25 +1,83 @@
 <fieldset>
-	<label for="devicetype">Type: </label>
-	<select name="devicetype" id="devicetype"
-		class="text ui-widget-content ui-corner-all"></select>
-</fieldset>
-
-<fieldset>
-	<label for="expression">Expression: </label>
-	<input type="text" name="expression" id="expression" autofocus="autofocus"
-		autocomplete="off" class="text ui-widget-content ui-corner-all" value="" />
-</fieldset>
-
-<fieldset>
-<fieldset title="Expression builder">
+	<label for="expression">Search expression: </label>
+	<input
+		type="text"
+		name="expression"
+		id="expression"
+		autofocus="autofocus"
+		autocomplete="off"
+		class="text ui-widget-content ui-corner-all"
+		value=""
+	/>
 	<button id="builder-clear">Clear</button>
-	<button id="builder-not">NOT</button>
-	<button id="builder-and">AND</button>
-	<button id="builder-or">OR</button>
+</fieldset>
+
+<fieldset>
+<fieldset title="Expression builder">
+	<button id="builder-not">not</button>
+	<button id="builder-and">and</button>
+	<button id="builder-or">or</button>
 </fieldset>
 <fieldset title="Expression builder">
-	<select name="fieldname" id="fieldname"
-		class="text ui-widget-content ui-corner-all"></select>
-	<div id="fieldbuttons"></span>
+	<div id="fieldarea">
+		<div>
+			<select
+				name="fieldtype"
+				id="fieldtype"
+				class="text ui-widget-content ui-corner-all"
+			/>
+		</div>
+		<div class="nestedselect">
+			<select
+				name="genericfieldname"
+				id="genericfieldname"
+				style="display: none;"
+				class="text ui-widget-content ui-corner-all"
+			/>
+		</div>
+		<div class="nestedselect">
+			<select
+				name="devicetype"
+				id="devicetype"
+				style="display: none;"
+				class="text ui-widget-content ui-corner-all"
+			/>
+			<div class="nestedselect">
+				<select
+					name="driverfieldname"
+					id="driverfieldname"
+					style="display: none;"
+					class="text ui-widget-content ui-corner-all"
+				/>
+			</div>
+		</div>
+		<div class="nestedselect">
+			<select
+				name="policy"
+				id="policy"
+				style="display: none;"
+				class="text ui-widget-content ui-corner-all"
+			/>
+			<div class="nestedselect">
+				<select
+					name="rule"
+					id="rule"
+					style="display: none;"
+					class="text ui-widget-content ui-corner-all"
+				/>
+			</div>
+		</div>
+		<div class="nestedselect">
+			<select
+				name="diagnostic"
+				id="diagnostic"
+				style="display: none;"
+				class="text ui-widget-content ui-corner-all"
+			/>
+		</div>
+	</div>
+	<div id="valuearea">
+		<div id="fieldbuttons"></div>
+	</div>
 </fieldset>
 </fieldset>

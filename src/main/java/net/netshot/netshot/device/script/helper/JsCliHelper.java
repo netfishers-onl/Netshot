@@ -20,15 +20,18 @@ package net.netshot.netshot.device.script.helper;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.graalvm.polyglot.HostAccess.Export;
 
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.access.Cli;
 import net.netshot.netshot.device.access.Cli.WithBufferIOException;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * This class is used to pass CLI control to JavaScript.
@@ -42,41 +45,23 @@ public class JsCliHelper {
 	private Cli cli;
 	/** The CLI account (SSH/Telnet). */
 	private DeviceCliAccount account;
-	/** The JS logger. */
-	private TaskLogger taskLogger;
-	/** The session logger. */
-	private TaskLogger cliLogger;
+	/** The task context. */
+	private TaskContext taskContext;
 	/** An error was raised. */
 	private boolean errored;
-
-	/**
-	 * Convert a string to an hexadecimal representation.
-	 * @param text The original text
-	 * @return the hexadecimal representation of the text
-	 */
-	private static String toHexAscii(String text) {
-		StringBuilder hex = new StringBuilder();
-		for (int i = 0; i < text.length(); i++) {
-			if (i % 32 == 0 && i > 0) {
-				hex.append("\n");
-			}
-			hex.append(" ").append(String.format("%02x", (int) text.charAt(i)));
-		}
-		return hex.toString();
-	}
+	/** The last output from a send command. */
+	private Cli.CommandOutput lastOutput;
 
 	/**
 	 * Instantiate a new JsCliHelper object.
 	 * @param cli The device CLI
 	 * @param account The account to connect to the device
-	 * @param taskLogger The task logger
-	 * @param cliLogger The CLI logger (may be null; to log all exchanges)
+	 * @param taskContext The task context
 	 */
-	public JsCliHelper(Cli cli, DeviceCliAccount account, TaskLogger taskLogger, TaskLogger cliLogger) {
+	public JsCliHelper(Cli cli, DeviceCliAccount account, TaskContext taskContext) {
 		this.cli = cli;
 		this.account = account;
-		this.taskLogger = taskLogger;
-		this.cliLogger = cliLogger;
+		this.taskContext = taskContext;
 	}
 
 	/**
@@ -104,71 +89,104 @@ public class JsCliHelper {
 	 * @param command The command to send
 	 * @param expects The list of possible outputs to match
 	 * @param timeout The maximum time to wait for the reply
+	 * @param cleanUpActions The cleanup actions to apply (array of CleanUpAction names, null for default)
+	 * @param discoverWaitTime Minimum time to wait after match to discover additional output (0 for no wait)
 	 * @return the output from the device, result of the passed command
 	 */
 	@Export
-	public String send(String command, String[] expects, int timeout) {
+	public String send(String command, String[] expects, int timeout, String[] cleanUpActions, int discoverWaitTime) {
 		this.errored = false;
 		if (command == null) {
 			command = "";
 		}
-		if (this.cliLogger != null) {
-			this.cliLogger.trace(Instant.now() + " About to send the following command:");
-			this.cliLogger.trace(command);
-			this.cliLogger.trace("Hexadecimal:");
-			this.cliLogger.trace(toHexAscii(command));
-		}
-		command = command.replaceAll("\\$\\$NetshotUsername\\$\\$",
+		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
 			Matcher.quoteReplacement(account.getUsername()));
-		command = command.replaceAll("\\$\\$NetshotPassword\\$\\$",
-			Matcher.quoteReplacement(account.getPassword()));
-		command = command.replaceAll("\\$\\$NetshotSuperPassword\\$\\$",
-			Matcher.quoteReplacement(account.getSuperPassword()));
-		int oldTimeout = cli.getCommandTimeout();
-		if (timeout > 0) {
-			cli.setCommandTimeout(timeout);
+		if (this.taskContext.isTracing()) {
+			// Log before injecting secrets
+			this.taskContext.trace(Instant.now() + " About to send the following (secrets not inserted):");
+			this.taskContext.trace(command);
+			this.taskContext.trace("Hexadecimal:");
+			this.taskContext.hexTrace(command);
 		}
-		try {
-			log.debug("Command to be sent: '{}'.", command);
-			if (this.cliLogger != null) {
-				this.cliLogger.trace("Expecting one of the following " + expects.length
-					+ " pattern(s) within " + (timeout > 0 ? timeout : oldTimeout) + "ms:");
-				for (String expect : expects) {
-					this.cliLogger.trace(expect);
+		log.debug("Command to be sent (secrets not inserted): '{}'.", command);
+		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_PASSWORD),
+			Matcher.quoteReplacement(account.getPassword()));
+		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_SUPERPASSWORD),
+			Matcher.quoteReplacement(account.getSuperPassword()));
+
+		// Prepare CommandInput
+		Cli.CommandInput input = new Cli.CommandInput(command, expects);
+
+		if (timeout > 0) {
+			input.setCommandTimeout(timeout);
+		}
+
+		if (cleanUpActions != null) {
+			EnumSet<Cli.CleanUpAction> actions = EnumSet.noneOf(Cli.CleanUpAction.class);
+			for (String action : cleanUpActions) {
+				try {
+					actions.add(Cli.CleanUpAction.valueOf(action));
+				}
+				catch (IllegalArgumentException e) {
+					log.warn("Invalid cleanup action '{}', ignoring.", action);
 				}
 			}
-			String result = cli.send(command, expects);
-			if (this.cliLogger != null) {
-				this.cliLogger.trace(Instant.now() + " Received the following output:");
-				this.cliLogger.trace(cli.getLastFullOutput());
-				this.cliLogger.trace("Hexadecimal:");
-				this.cliLogger.trace(toHexAscii(cli.getLastFullOutput()));
-				this.cliLogger.trace("The following pattern matched:");
-				this.cliLogger.trace(this.getLastExpectMatchPattern());
+			input.setCleanUpActions(actions);
+		}
+
+		if (discoverWaitTime > 0) {
+			input.setDiscoverWaitTime(discoverWaitTime);
+		}
+
+		try {
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace("Expecting one of the following {} pattern(s) within {}ms:",
+					expects.length, input.getCommandTimeout() == null ? cli.getCommandTimeout() : input.getCommandTimeout());
+				for (String expect : expects) {
+					this.taskContext.trace(expect);
+				}
 			}
-			return result;
+			this.lastOutput = cli.send(input);
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace("Received the following output:");
+				this.taskContext.trace(this.lastOutput.getFullOutput());
+				this.taskContext.trace("Hexadecimal:");
+				this.taskContext.hexTrace(this.lastOutput.getFullOutput());
+				this.taskContext.trace("The following pattern matched:");
+				this.taskContext.trace(this.getLastExpectMatchPattern());
+			}
+			return this.lastOutput.getOutput();
 		}
 		catch (IOException e) {
 			log.error("CLI I/O error.", e);
-			this.taskLogger.error("I/O error: " + e.getMessage());
-			if (this.cliLogger != null) {
-				this.cliLogger.trace(Instant.now() + " I/O exception: " + e.getMessage());
+			this.taskContext.error("I/O error: " + e.getMessage());
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace(Instant.now() + " I/O exception: {}", e.getMessage());
 			}
-			if (e instanceof WithBufferIOException) {
-				String buffer = ((WithBufferIOException) e).getReceivedBuffer().toString();
-				if (this.cliLogger != null) {
-					this.cliLogger.trace(Instant.now() + " The receive buffer is:");
-					this.cliLogger.trace(buffer);
-					this.cliLogger.trace("Hexadecimal:");
-					this.cliLogger.trace(toHexAscii(buffer));
+			if (e instanceof WithBufferIOException wioException) {
+				String buffer = wioException.getReceivedBuffer().toString();
+				if (this.taskContext.isTracing()) {
+					this.taskContext.trace(Instant.now() + " The receive buffer is:");
+					this.taskContext.trace(buffer);
+					this.taskContext.trace("Hexadecimal:");
+					this.taskContext.hexTrace(buffer);
 				}
 			}
 			this.errored = true;
 		}
-		finally {
-			cli.setCommandTimeout(oldTimeout);
-		}
 		return null;
+	}
+
+	/**
+	 * Send a command to the device and wait for a result.
+	 * @param command The command to send
+	 * @param expects The list of possible outputs to match
+	 * @param timeout The maximum time to wait for the reply
+	 * @return the output from the device, result of the passed command
+	 */
+	@Export
+	public String send(String command, String[] expects, int timeout) {
+		return send(command, expects, timeout, null, 0);
 	}
 
 	/**
@@ -177,9 +195,7 @@ public class JsCliHelper {
 	 */
 	@Export
 	public void trace(String message) {
-		if (this.cliLogger != null) {
-			this.cliLogger.trace(Instant.now() + " " + message);
-		}
+		this.taskContext.trace(Instant.now() + " " + message);
 	}
 
 	/**
@@ -209,7 +225,10 @@ public class JsCliHelper {
 	 */
 	@Export
 	public String getLastCommand() {
-		return cli.getLastCommand();
+		if (this.lastOutput == null) {
+			return null;
+		}
+		return this.lastOutput.getCommand();
 	}
 
 	/**
@@ -218,7 +237,10 @@ public class JsCliHelper {
 	 */
 	@Export
 	public String getLastExpectMatch() {
-		return cli.getLastExpectMatch().group();
+		if (this.lastOutput == null || this.lastOutput.getExpectMatch() == null) {
+			return null;
+		}
+		return this.lastOutput.getExpectMatch().group();
 	}
 
 	/**
@@ -229,7 +251,7 @@ public class JsCliHelper {
 	@Export
 	public String getLastExpectMatchGroup(int group) {
 		try {
-			return cli.getLastExpectMatch().group(group);
+			return this.lastOutput.getExpectMatch().group(group);
 		}
 		catch (Exception e) {
 			return null;
@@ -242,7 +264,10 @@ public class JsCliHelper {
 	 */
 	@Export
 	public String getLastExpectMatchPattern() {
-		return cli.getLastExpectMatchPattern();
+		if (this.lastOutput == null) {
+			return null;
+		}
+		return this.lastOutput.getExpectMatchPattern();
 	}
 
 	/**
@@ -251,7 +276,10 @@ public class JsCliHelper {
 	 */
 	@Export
 	public int getLastExpectMatchIndex() {
-		return cli.getLastExpectMatchIndex();
+		if (this.lastOutput == null) {
+			return -1;
+		}
+		return this.lastOutput.getExpectMatchIndex();
 	}
 
 	/**
@@ -260,7 +288,10 @@ public class JsCliHelper {
 	 */
 	@Export
 	public String getLastFullOutput() {
-		return cli.getLastFullOutput();
+		if (this.lastOutput == null) {
+			return null;
+		}
+		return this.lastOutput.getFullOutput();
 	}
 
 	/**

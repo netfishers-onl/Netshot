@@ -298,8 +298,8 @@ public class ClusterManager extends Thread {
 					ClusterMessage message = this.jsonReader.forType(ClusterMessage.class)
 						.readValue(notification.getParameter());
 					if (message.getInstanceId().equals(this.localMember.getInstanceId())) {
-						if (message instanceof HelloClusterMessage) {
-							String receivedHostname = ((HelloClusterMessage) message).getMemberInfo().getHostname();
+						if (message instanceof HelloClusterMessage helloMessage) {
+							String receivedHostname = helloMessage.getMemberInfo().getHostname();
 							if (!this.localMember.getHostname().equals(receivedHostname)) {
 								log.error(
 									"Received hello message from our instance ID but with different hostname ({})... please check cluster member ID conflict",
@@ -410,8 +410,7 @@ public class ClusterManager extends Thread {
 								log.trace("Ignored - similar message already processed");
 								continue;
 							}
-							if (message instanceof HelloClusterMessage) {
-								HelloClusterMessage helloMessage = (HelloClusterMessage) message;
+							if (message instanceof HelloClusterMessage helloMessage) {
 								ClusterMember member = helloMessage.getMemberInfo();
 								member.setLastSeenTime(System.currentTimeMillis()); // Set last seen time
 								// Check clustering version
@@ -471,9 +470,8 @@ public class ClusterManager extends Thread {
 									}
 								}
 							}
-							else if (message instanceof AutoSnapshotMessage) {
+							else if (message instanceof AutoSnapshotMessage snapshotMessage) {
 								if (MastershipStatus.MASTER.equals(this.localMember.getStatus())) {
-									AutoSnapshotMessage snapshotMessage = (AutoSnapshotMessage) message;
 									for (long deviceId : snapshotMessage.getDeviceIds()) {
 										TakeSnapshotTask.scheduleSnapshotIfNeeded(deviceId);
 									}

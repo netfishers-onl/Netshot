@@ -18,6 +18,7 @@
  */
 package net.netshot.netshot.work.tasks;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.CacheMode;
@@ -43,9 +44,9 @@ import net.netshot.netshot.compliance.Policy;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceGroup;
+import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
-import net.netshot.netshot.work.TaskLogger;
 
 /**
  * This task checks the configuration compliance status of a group of devices.
@@ -133,19 +134,19 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 		log.debug("Task {}. Starting check compliance task for group {}.",
 			this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
 		if (this.deviceGroup == null) {
-			this.info("The device group doesn't exist, the task will be cancelled.");
+			this.logger.info("The device group doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
-		this.trace(String.format("Check compliance task for group %s.",
-			this.deviceGroup.getName()));
+		this.logger.trace("Check compliance task for group {}.",
+			this.deviceGroup.getName());
+
+		List<Long> deviceIds = new ArrayList<>();
 
 		Session session = Database.getSession();
 		try {
 			List<Policy> policies =
 				session.createQuery("select p from Policy p", Policy.class).list();
-
-			TaskLogger taskLogger = this.getJsLogger();
 
 			session.beginTransaction();
 			session
@@ -167,8 +168,9 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 					.scroll(ScrollMode.FORWARD_ONLY);
 				while (devices.next()) {
 					Device device = devices.get();
-					taskLogger.info(String.format("Checking configuration compliance of device %s (%d)", device.getName(), device.getId()));
-					policy.check(device, session, taskLogger);
+					deviceIds.add(device.getId());
+					this.logger.info("Checking configuration compliance of device {} ({})", device.getName(), device.getId());
+					policy.check(device, session, this.logger);
 					session.persist(device);
 					session.flush();
 					session.evict(device);
@@ -185,13 +187,16 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 				log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 			}
 			log.error("Task {}. Error while checking compliance.", this.getId(), e);
-			this.error("Error while checking compliance: " + e.getMessage());
+			this.logger.error("Error while checking compliance: {}", e.getMessage());
 			this.status = Status.FAILURE;
 			return;
 		}
 		finally {
 			session.close();
 		}
+
+		log.debug("Task {}. Request to refresh all the groups for the devices after compliance check.", this.getId());
+		DynamicDeviceGroup.refreshAllGroupsOfDevices(deviceIds);
 	}
 
 	/*

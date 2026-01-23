@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.netshot.netshot.collector;
+package net.netshot.netshot.device.collector;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,7 +39,7 @@ import org.apache.commons.net.tftp.TFTPWriteRequestPacket;
 
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
-import net.netshot.netshot.collector.TftpServer.TftpTransfer.Status;
+import net.netshot.netshot.device.collector.TftpServer.TftpTransfer.Status;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.NetworkAddress;
 
@@ -116,8 +116,7 @@ public class TftpServer extends Collector {
 			while (true) {
 				try {
 					TFTPPacket packet = tftp.receive();
-					if (packet instanceof TFTPWriteRequestPacket) {
-						TFTPWriteRequestPacket requestPacket = (TFTPWriteRequestPacket) packet;
+					if (packet instanceof TFTPWriteRequestPacket requestPacket) {
 						synchronized (transfers) {
 							Iterator<TftpTransfer> transferIterator = transfers
 								.iterator();
@@ -383,8 +382,7 @@ public class TftpServer extends Collector {
 				}
 			}
 			int lastBlock = 0;
-			while (packet instanceof TFTPDataPacket) {
-				TFTPDataPacket dataPacket = (TFTPDataPacket) packet;
+			while (packet instanceof TFTPDataPacket dataPacket) {
 				int block = dataPacket.getBlockNumber();
 				if (block > lastBlock || (lastBlock == 65535 && block == 0)) {
 					try {

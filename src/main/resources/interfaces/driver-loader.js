@@ -106,26 +106,13 @@ const _connect = (_function, _protocol, _options) => {
 	const _cli = _options.getCliHelper();
 	const _snmp = _options.getSnmpHelper();
 	const _deviceHelper = _options.getDeviceHelper();
-	const _logger = _options.getTaskLogger();
+	const _taskContext = _options.getTaskContext();
 
 	const debug = (message) => {
 		if (typeof message  === "string") {
 			message = String(message);
-			_logger.debug(message);
+			_taskContext.debug(message);
 		}
-	};
-
-	const _toNative = function(o) {
-		if (o == null || typeof(o) == "undefined") {
-			return null;
-		}
-		if (typeof(o) == "object" && (o instanceof Array || o.class.toString().match(/^class \[/))) {
-			return o.map(i => _toNative(i));
-		}
-		if (typeof(o) == "object") {
-			return Object.entries(o).reduce((p, [k, v]) => p[k] = _toNative(v), {});
-		}
-		return o;
 	};
 	
 	const cli = {
@@ -158,7 +145,7 @@ const _connect = (_function, _protocol, _options) => {
 					if (typeof(avoid) === "string") {
 						avoid = [avoid];
 					}
-					if (typeof(avoid) !== "object" || !(avoid instanceof Array)) {
+					if (!Array.isArray(avoid)) {
 						throw `In CLI mode ${name}, the pager avoid command is invalid.`;
 					}
 					avoid.forEach((avoidCommand) => {
@@ -189,12 +176,12 @@ const _connect = (_function, _protocol, _options) => {
 			this._applyPager(CLI[this._mode], this._mode);
 		},
 		
-		_macro: function(macro) {
-			_cli.trace(`Macro '${macro}' was called (current mode is '${this._mode}').`);
+		_macro: function(macroName) {
+			_cli.trace(`Macro '${macroName}' was called (current mode is '${this._mode}').`);
 			if (this.recursion++ > 10) {
 				throw "Too many steps while switching to a new mode.";
 			}
-			if (typeof(macro) !== "string") {
+			if (typeof(macroName) !== "string") {
 				throw "Invalid called macro.";
 			}
 			if (typeof(CLI[this._mode]) !== "object") {
@@ -203,14 +190,14 @@ const _connect = (_function, _protocol, _options) => {
 			if (typeof(CLI[this._mode].macros) !== "object") {
 				throw `No targets array in ${this._mode} mode in CLI object.`;
 			}
-			const nextOne = CLI[this._mode].macros[macro];
-			if (typeof(nextOne) != "object") {
-				throw `Cannot find macro ${macro} in macros of mode ${this._mode} in CLI object.`;
+			const macro = CLI[this._mode].macros[macroName];
+			if (typeof(macro) != "object") {
+				throw `Cannot find macro ${macroName} in macros of mode ${this._mode} in CLI object.`;
 			}
 			if (this._runningTarget === null) {
-				const target = nextOne.target;
+				const target = macro.target;
 				if (typeof(target) !== "string") {
-					throw `Cannot find target in macro ${macro} of mode ${this._mode} in CLI object.`;
+					throw `Cannot find target ${target} of macro ${macroName} of mode ${this._mode} in CLI object.`;
 				}
 				if (typeof(CLI[target]) !== "object") {
 					throw `No mode ${target} in CLI.`;
@@ -218,17 +205,17 @@ const _connect = (_function, _protocol, _options) => {
 				this._runningTarget = target;
 			}
 			let cmd = undefined;
-			if (typeof(nextOne.cmd) !== "undefined") {
-				if (typeof(nextOne.cmd) !== "string") {
+			if (typeof(macro.cmd) !== "undefined") {
+				if (typeof(macro.cmd) !== "string") {
 					throw `Invalid 'cmd' in macro of mode ${this._mode} in CLI object.`;
 				}
-				cmd = nextOne.cmd;
+				cmd = macro.cmd;
 			}
 			const prompts = [];
-			if (!(nextOne.options instanceof Array)) {
+			if (!(macro.options instanceof Array)) {
 				throw `Invalid 'options' array in macro of mode ${this._mode} in CLI object.`;
 			}
-			nextOne.options.forEach((option) => {
+			macro.options.forEach((option) => {
 				if (typeof option !== "string") {
 					throw `Invalid option in macro of ${this._mode} in CLI object.`;
 				}
@@ -243,18 +230,30 @@ const _connect = (_function, _protocol, _options) => {
 			if (cmd === undefined) {
 				cmd = "";
 			}
-			else if (nextOne.noCr !== true) {
+			else if (macro.noCr !== true) {
 				cmd += this.CR;
 			}
-			if (typeof(nextOne.waitBefore) === "number") {
-				this.sleep(nextOne.waitBefore);
+			if (typeof(macro.waitBefore) === "number") {
+				this.sleep(macro.waitBefore);
 			}
-			const output = (typeof(nextOne.timeout) === "number") ? _cli.send(cmd, prompts, nextOne.timeout) : _cli.send(cmd, prompts);
-			if (typeof(nextOne.waitAfter) === "number") {
-				this.sleep(nextOne.waitAfter);
+			const sendParams = { // defaults
+				timeout: -1,
+				cleanUpActions: null,
+				discoverWaitTime: -1,
+			};
+			if (typeof(macro.timeout) === "number") {
+				sendParams.timeout = macro.timeout;
+			}
+			if (typeof(macro.discoverWaitTime) === "number") {
+				sendParams.discoverWaitTime = macro.discoverWaitTime;
+			}
+			const output = _cli.send(cmd, prompts, sendParams.timeout,
+					sendParams.cleanUpActions, sendParams.discoverWaitTime);
+			if (typeof(macro.waitAfter) === "number") {
+				this.sleep(macro.waitAfter);
 			}
 			if (_cli.isErrored()) {
-				throw `Error while running CLI macro '${macro}'.`;
+				throw `Error while running CLI macro '${macroName}'.`;
 			}
 			if (CLI[this._mode].error instanceof RegExp) {
 				const errorMatch = CLI[this._mode].error.exec(output);
@@ -269,7 +268,7 @@ const _connect = (_function, _protocol, _options) => {
 					throw message;
 				}
 			}
-			this._mode = nextOne.options[_cli.getLastExpectMatchIndex()];
+			this._mode = macro.options[_cli.getLastExpectMatchIndex()];
 			this._modeHistory.push(this._mode);
 			this._strictPrompt = _cli.getLastExpectMatchGroup(1);
 			if (this._mode === this._runningTarget) {
@@ -297,7 +296,7 @@ const _connect = (_function, _protocol, _options) => {
 			if (typeof(options) === "object" && typeof(options.mode) === "string") {
 				mode = CLI[options.mode];
 				if (typeof(mode) !== "object") {
-					throw `No mode ${option.mode} can be found in CLI object.`;
+					throw `No mode ${options.mode} can be found in CLI object.`;
 				}
 				this._applyPager(mode, options.mode);
 			}
@@ -314,8 +313,8 @@ const _connect = (_function, _protocol, _options) => {
 			else {
 				mode = CLI[this._mode];
 			}
-			if (!(mode.prompt instanceof RegExp)) {
-				throw "No regexp prompt in the selected mode.";
+			if (mode.prompt && !(mode.prompt instanceof RegExp)) {
+				throw "The prompt in the selected mode is not a RegExp.";
 			}
 			
 			const prompts = [];
@@ -331,11 +330,13 @@ const _connect = (_function, _protocol, _options) => {
 			if (clearPrompt) {
 				this._strictPrompt = null;
 			}
-			let prompt = mode.prompt.source;
-			prompt = stripPreviousMatch(prompt, this._strictPrompt);
-			prompts.push(prompt);
-			if (typeof(this.pagerMatch) !== "undefined") {
-				prompts.push(this.pagerMatch.source);
+			if (mode.prompt) {
+				let prompt = mode.prompt.source;
+				prompt = stripPreviousMatch(prompt, this._strictPrompt);
+				prompts.push(prompt);
+				if (typeof(this.pagerMatch) !== "undefined") {
+					prompts.push(this.pagerMatch.source);
+				}
 			}
 			
 			let result = "";
@@ -344,16 +345,27 @@ const _connect = (_function, _protocol, _options) => {
 				toSend += this.CR;
 			}
 			while (true) {
-				let buffer;
-				
-				if (typeof(options) === "object" && typeof(options.timeout) === "number") {
-					buffer = _cli.send(toSend, prompts, options.timeout);
+				const sendParams = { // defaults
+					timeout: -1,
+					cleanUpActions: null,
+					discoverWaitTime: -1,
+				};
+				if (typeof(options) === "object") {
+					if (typeof(options.timeout) === "number") {
+						sendParams.timeout = options.timeout;
+					}
+					if (Array.isArray(options.cleanUpActions)) {
+						sendParams.cleanUpActions = options.cleanUpActions;
+					}
+					if (typeof(options.discoverWaitTime) === "number") {
+						sendParams.discoverWaitTime = options.discoverWaitTime;
+					}
 				}
-				else {
-					buffer = _cli.send(toSend, prompts);
-				}
+				const buffer = _cli.send(toSend, prompts,
+					sendParams.timeout, sendParams.cleanUpActions, sendParams.discoverWaitTime);
+
 				if (_cli.isErrored()) {
-					throw `Error while waiting for a response from the device after command '${command}'`;
+					throw `CLI error after command '${command}'`;
 				}
 				if (_cli.getLastExpectMatchIndex() === 1) {
 					result += _cli.getLastFullOutput();
@@ -363,14 +375,6 @@ const _connect = (_function, _protocol, _options) => {
 					result += buffer;
 					break;
 				}
-			}
-			while (true) {
-				let cleanResult = result.replace(/[^\b][\b]/, "");
-				cleanResult = cleanResult.replace(/.*\r(.+)/, "$1");
-				if (cleanResult === result) {
-					break;
-				}
-				result = cleanResult;
 			}
 			result = _cli.removeEcho(result, command);
 			if (mode.error instanceof RegExp) {
@@ -570,14 +574,14 @@ const _connect = (_function, _protocol, _options) => {
 			if (typeof(key) === "string") {
 				key = String(key);
 				if (typeof(id) === "undefined") {
-					return _toNative(_deviceHelper.get(key));
+					return _deviceHelper.get(key);
 				}
 				else if (typeof(id) === "number" && !isNaN(id)) {
-					return _toNative(_deviceHelper.get(key, id));
+					return _deviceHelper.get(key, id);
 				}
 				else if (typeof(id) === "string") {
 					const name = String(id);
-					return _toNative(_deviceHelper.get(key, name));
+					return _deviceHelper.get(key, name);
 				}
 				else {
 					throw "Invalid device id to retrieve data from.";
@@ -660,12 +664,12 @@ const _connect = (_function, _protocol, _options) => {
 					newSession = options.newSession;
 				}
 				else if (typeof options.newSession !== "undefined") {
-					throw "Invalid option type newSession (should be a boolean) in config.download";
+					throw "Invalid 'newSession' option (should be a boolean) in config.download";
 				}
 				if (options.method === "sftp" || options.method === "scp") {
 					method = options.method;
 				}
-				else {
+				else if (typeof options.method !== "undefined") {
 					throw "Invalid 'method' option in config.download";
 				}
 				if (typeof options.storeFileName === "string") {
@@ -685,7 +689,8 @@ const _connect = (_function, _protocol, _options) => {
 				throw "Invalid type for options argument in config.download";
 			}
 
-			_options.getConfigHelper().download(key, method, fileName, storeFileName, newSession, checksum);
+			_options.getConfigHelper()
+				.download(key, method, fileName, storeFileName, newSession, checksum);
 		},
 		computeHash: function(...params) {
 			const inputs = params.map((i, idx) => {
@@ -708,7 +713,75 @@ const _connect = (_function, _protocol, _options) => {
 		isChangedHash: function() {
 			return _options.getConfigHelper().getCustomHash() !== 
 			       _options.getConfigHelper().getLastCustomHash();
-		}
+		},
+		requestUpload: function(options) {
+			let method = null; // any method
+			let sourceIp = null;
+			if (typeof options === "object") {
+				if (typeof options.method === "string") {
+					if (!["scp", "sftp"].includes(options.method)) {
+						throw `Invalid 'method' ${options.method} in config.requestUpload.`;
+					}
+					method = options.method;
+				}
+				else if (typeof options.method !== "undefined") {
+					throw "Invalid 'method' option in config.requestUpload.";
+				}
+				if (typeof options.sourceIp === "string") {
+					sourceIp = String(options.sourceIp);
+				}
+				else if (typeof options.sourceIp !== "undefined") {
+					throw "Invalid 'sourceIp' option in config.requestUpload.";
+				}
+			}
+			else if (typeof options !== "undefined") {
+				throw "Invalid type for options argument in config.requestUpload.";
+			}
+			return _options.getConfigHelper().requestUpload(method, sourceIp);
+		},
+		awaitUpload: function(ticketId, timeout) {
+			if (typeof ticketId !== "number" || !Number.isInteger(ticketId)) {
+				throw "Invalid type for ticketId in config.awaitUpload (expected integer).";
+			}
+			if (typeof timeout === "undefined") {
+				timeout = 60000; // Default 60 seconds
+			}
+			if (typeof timeout !== "number" || timeout <= 0) {
+				throw "Invalid timeout in config.awaitUpload (expected positive number in milliseconds).";
+			}
+			return _options.getConfigHelper().awaitUpload(ticketId, timeout);
+		},
+		commitUpload: function(ticketId, fileId, key, options) {
+			if (typeof ticketId !== "number" || !Number.isInteger(ticketId)) {
+				throw "Invalid type for ticketId in config.commitUpload (expected integer).";
+			}
+			if (typeof fileId !== "number" || !Number.isInteger(fileId)) {
+				throw "Invalid type for fileId in config.commitUpload (expected integer).";
+			}
+			if (typeof key !== "string") {
+				throw "Invalid type for key in config.commitUpload (expected string).";
+			}
+			let storeName = null;
+			let expectedHash = null;
+			if (typeof options === "object") {
+				if (typeof options.storeName === "string") {
+					storeName = String(options.storeName);
+				}
+				else if (typeof options.storeName !== "undefined") {
+					throw "Invalid 'storeName' option in config.commitUpload.";
+				}
+				if (typeof options.checksum === "string") {
+					expectedHash = String(options.checksum);
+				}
+				else if (typeof options.checksum !== "undefined") {
+					throw "Invalid 'checksum' option in config.commitUpload.";
+				}
+			}
+			else if (typeof options !== "undefined") {
+				throw "Invalid type for options argument in config.commitUpload.";
+			}
+			_options.getConfigHelper().commitUpload(ticketId, fileId, String(key), storeName, expectedHash);
+		},
 	};
 	
 	const diagnosticHelper = {
@@ -764,19 +837,19 @@ const _connect = (_function, _protocol, _options) => {
 				}
 			}
 			catch (diagError) {
-				_logger.warn(`Error while running diagnostic '${name}'`);
-				_logger.warn(String(diagError));
+				_taskContext.warn(`Error while running diagnostic '${name}'`);
+				_taskContext.warn(String(diagError));
 			}
 		}
 	}
 }
 
 
-const _analyzeSyslog = (_message, _logger) => {
+const _analyzeSyslog = (_message, _taskContext) => {
 	if (typeof(analyzeSyslog) === "function") {
 		const debug = (message) => {
 			if (typeof(message) === "string") {
-				_logger.debug(message);
+				_taskContext.debug(message);
 			}
 		};
 		return analyzeSyslog(_message, debug);
@@ -786,11 +859,11 @@ const _analyzeSyslog = (_message, _logger) => {
 	}
 }
 
-const _snmpAutoDiscover = (_sysObjectID, _sysDesc, _logger) => {
+const _snmpAutoDiscover = (_sysObjectID, _sysDesc, _taskContext) => {
 	if (typeof(snmpAutoDiscover) === "function") {
 		const debug = (message) => {
 			if (typeof(message) === "string") {
-				_logger.debug(message);
+				_taskContext.debug(message);
 			}
 		};
 		if (snmpAutoDiscover(_sysObjectID, _sysDesc, debug)) {
@@ -806,12 +879,12 @@ const _snmpAutoDiscover = (_sysObjectID, _sysDesc, _logger) => {
 }
 
 
-const _analyzeTrap = (_data, _logger) => {
+const _analyzeTrap = (_data, _taskContext) => {
 	if (typeof(analyzeTrap) === "function") {
 		const data = { ..._data };
 		const debug = (message) => {
 			if (typeof(message) === "string") {
-				_logger.debug(message);
+				_taskContext.debug(message);
 			}
 		};
 		if (analyzeTrap(data, debug)) {

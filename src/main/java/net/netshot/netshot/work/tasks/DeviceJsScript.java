@@ -21,6 +21,7 @@ package net.netshot.netshot.work.tasks;
 import java.util.Map;
 
 import org.hibernate.annotations.NaturalId;
+import org.slf4j.event.Level;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -41,6 +42,7 @@ import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.script.JsCliScript;
 import net.netshot.netshot.device.script.JsCliScript.UserInputDefinition;
 import net.netshot.netshot.rest.RestViews.DefaultView;
+import net.netshot.netshot.work.TaskContext;
 
 @Entity
 @XmlRootElement
@@ -109,23 +111,49 @@ public class DeviceJsScript {
 	}
 
 	/**
+	 * Create a task context which does nothing.
+	 *
+	 * @return the void task context
+	 */
+	private TaskContext makeVoidLogger() {
+		return new TaskContext() {
+			@Override
+			public boolean isTracing() {
+				return false;
+			}
+
+			@Override
+			public void log(Level level, String message, Object... params) {
+				// Ignore
+			}
+
+			@Override
+			public String getIdentifier() {
+				return "Void";
+			}
+		};
+	}
+
+	/**
 	 * Actually populate user input definitions by evaluating the script and extract Input variable.
-	 * @throws IllegalAccessException
+	 *
+	 * @throws IllegalArgumentException if the script is invalid
 	 */
 	public void extractUserInputDefinitions() throws IllegalArgumentException {
 		if (this.userInputDefinitions == null) {
-			final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, false);
+			final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, this.makeVoidLogger());
 			this.userInputDefinitions = jsScript.extractInputDefinitions();
 		}
 	}
 
 	/**
 	 * Validate passed user inputs against input definitions.
-	 * @param userInputs = the data to validate
-	 * @throws IllegalArgumentException
+	 *
+	 * @param userInputs the data to validate
+	 * @throws IllegalArgumentException if validation fails
 	 */
 	public void validateUserInputs(Map<String, String> userInputs) throws IllegalArgumentException {
-		final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, false);
+		final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, this.makeVoidLogger());
 		jsScript.setUserInputValues(userInputs);
 		jsScript.validateUserInputs();
 	}

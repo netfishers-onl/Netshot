@@ -132,7 +132,7 @@ public final class Network6Address extends NetworkAddress {
 	 * @throws UnknownHostException the unknown host exception
 	 */
 	public Network6Address(String address) throws UnknownHostException {
-		this(address, 0);
+		this(address, 128);
 	}
 
 	/**

@@ -271,8 +271,7 @@ public final class TaskManager {
 		try {
 			session.beginTransaction();
 			task.onCancel();
-			task.setCancelled();
-			task.warn(reason);
+			task.setCancelled(reason);
 			session.merge(task);
 			session.getTransaction().commit();
 			log.trace("Task successfully cancelled.");

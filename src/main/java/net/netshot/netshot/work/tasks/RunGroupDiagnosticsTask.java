@@ -133,7 +133,7 @@ public final class RunGroupDiagnosticsTask extends Task implements GroupBasedTas
 		log.debug("Task {}. Starting diagnostics task for group {}.",
 			this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
 		if (this.deviceGroup == null) {
-			this.info("The device group doesn't exist, the task will be cancelled.");
+			this.logger.info("The device group doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
@@ -141,7 +141,7 @@ public final class RunGroupDiagnosticsTask extends Task implements GroupBasedTas
 		log.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
 		String comment = String.format("Started due to group %s diagnotics", this.getDeviceGroup().getName());
 		for (Device device : devices) {
-			this.info(String.format("Scheduling diagnostics task for device %s.", device.getName()));
+			this.logger.info("Scheduling diagnostics task for device {}.", device.getName());
 			RunDiagnosticsTask task = new RunDiagnosticsTask(device, comment, author, this.dontCheckCompliance);
 			task.setPriority(this.getPriority());
 			try {
@@ -150,7 +150,7 @@ public final class RunGroupDiagnosticsTask extends Task implements GroupBasedTas
 			catch (Exception e) {
 				log.error("Task {}. Error while scheduling the individual diagnostics task.",
 					this.getId(), e);
-				this.error("Error while scheduling the task.");
+				this.logger.error("Error while scheduling the task.");
 			}
 		}
 		log.debug("Everything went fine.");

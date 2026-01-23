@@ -21,6 +21,7 @@ package net.netshot.netshot.device.script.helper;
 import java.io.ByteArrayOutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -52,6 +53,7 @@ import net.netshot.netshot.device.access.Cli;
 import net.netshot.netshot.device.access.Ssh;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import net.netshot.netshot.device.collector.TransferProtocol;
 import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.attribute.DeviceAttribute;
 import net.netshot.netshot.device.attribute.DeviceBinaryAttribute;
@@ -59,7 +61,7 @@ import net.netshot.netshot.device.attribute.DeviceLongTextAttribute;
 import net.netshot.netshot.device.attribute.DeviceNumericAttribute;
 import net.netshot.netshot.device.attribute.DeviceTextAttribute;
 import net.netshot.netshot.diagnostic.DiagnosticResult;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 
 /**
  * Class used to get  and set data on a device object from JavaScript.
@@ -71,7 +73,7 @@ public final class JsDeviceHelper {
 	private Device device;
 	private Cli cli;
 	private Session session;
-	private TaskLogger taskLogger;
+	private TaskContext taskContext;
 	private boolean readOnly;
 
 	/** Common update date for modules and other items. */
@@ -93,11 +95,11 @@ public final class JsDeviceHelper {
 		return defaultResult;
 	}
 
-	public JsDeviceHelper(Device device, Cli cli, Session session, TaskLogger taskLogger, boolean readOnly) throws MissingDeviceDriverException {
+	public JsDeviceHelper(Device device, Cli cli, Session session, TaskContext taskContext, boolean readOnly) throws MissingDeviceDriverException {
 		this.device = device;
 		this.cli = cli;
 		this.session = session;
-		this.taskLogger = taskLogger;
+		this.taskContext = taskContext;
 		this.readOnly = readOnly;
 		this.updateDate = new Date();
 	}
@@ -106,7 +108,7 @@ public final class JsDeviceHelper {
 	public void add(String key, Value data) {
 		if (readOnly) {
 			log.warn("Adding key '{}' is forbidden.", key);
-			taskLogger.error(String.format("Adding key %s is forbidden", key));
+			taskContext.error("Adding key {} is forbidden", key);
 			return;
 		}
 		if (data == null) {
@@ -183,7 +185,7 @@ public final class JsDeviceHelper {
 		}
 		catch (Exception e) {
 			log.warn("Error during snapshot while adding device attribute key '{}'.", key, e);
-			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
+			taskContext.error("Can't add device attribute {}: {}", key, e.getMessage());
 		}
 	}
 
@@ -191,7 +193,7 @@ public final class JsDeviceHelper {
 	public void reset() {
 		if (readOnly) {
 			log.warn("Resetting device is forbidden.");
-			taskLogger.error(String.format("Resetting key is forbidden"));
+			taskContext.error("Resetting key is forbidden");
 			return;
 		}
 		device.setFamily("");
@@ -214,7 +216,7 @@ public final class JsDeviceHelper {
 	public void set(String key, Boolean value) {
 		if (readOnly) {
 			log.warn("Setting key '{}' is forbidden.", key);
-			taskLogger.error(String.format("Setting key %s is forbidden", key));
+			taskContext.error("Setting key {} is forbidden", key);
 			return;
 		}
 		if (value == null) {
@@ -236,7 +238,7 @@ public final class JsDeviceHelper {
 		}
 		catch (Exception e) {
 			log.warn("Error during snapshot while setting device attribute key '{}'.", key);
-			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
+			taskContext.error("Can't add device attribute {}: {}", key, e.getMessage());
 		}
 	}
 
@@ -245,7 +247,7 @@ public final class JsDeviceHelper {
 	public void set(String key, Double value) {
 		if (readOnly) {
 			log.warn("Setting key '{}' is forbidden.", key);
-			taskLogger.error(String.format("Setting key %s is forbidden", key));
+			taskContext.error("Setting key {} is forbidden", key);
 			return;
 		}
 		if (value == null) {
@@ -267,7 +269,7 @@ public final class JsDeviceHelper {
 		}
 		catch (Exception e) {
 			log.warn("Error during snapshot while setting device attribute key '{}'.", key);
-			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
+			taskContext.error("Can't add device attribute {}: {}", key, e.getMessage());
 		}
 	}
 
@@ -275,7 +277,7 @@ public final class JsDeviceHelper {
 	public void set(String key, String value) {
 		if (readOnly) {
 			log.warn("Setting key '{}' is forbidden.", key);
-			taskLogger.error(String.format("Setting key %s is forbidden", key));
+			taskContext.error("Setting key {} is forbidden", key);
 			return;
 		}
 		if (value == null) {
@@ -329,7 +331,7 @@ public final class JsDeviceHelper {
 		}
 		catch (Exception e) {
 			log.warn("Error during snapshot while setting device attribute key '{}'.", key);
-			taskLogger.error(String.format("Can't add device attribute %s: %s", key, e.getMessage()));
+			taskContext.error("Can't add device attribute {}: {}", key, e.getMessage());
 		}
 	}
 
@@ -522,12 +524,12 @@ public final class JsDeviceHelper {
 		catch (ObjectNotFoundException e) {
 			log.error("Device not found on JavaScript get, item {}, device {}.",
 				item, deviceId, e);
-			this.taskLogger.warn(String.format("Unable to find the device %d.", deviceId));
+			this.taskContext.warn("Unable to find the device {}.", deviceId);
 		}
 		catch (Exception e) {
 			log.error("Error on JavaScript get, item {}, device {}.", item,
 				deviceId, e);
-			this.taskLogger.warn(String.format("Unable to get data %s for device %d.", item, deviceId));
+			this.taskContext.warn("Unable to get data %s for device {}.", item, deviceId);
 		}
 		return null;
 	}
@@ -548,19 +550,19 @@ public final class JsDeviceHelper {
 		catch (ObjectNotFoundException e) {
 			log.error("Device not found on JavaScript get, item {}, device named {}.",
 				item, deviceName, e);
-			this.taskLogger.warn(String.format("Unable to find the device named %s.", deviceName));
+			this.taskContext.warn("Unable to find the device named {}.", deviceName);
 		}
 		catch (Exception e) {
 			log.error("Error on JavaScript get, item {}, device named {}.", item,
 				deviceName, e);
-			this.taskLogger.warn(String.format("Unable to get data %s for device named %s.", item, deviceName));
+			this.taskContext.warn("Unable to get data {} for device named {}.", item, deviceName);
 		}
 		return null;
 	}
 
 	@Export
 	public void debug(String message) {
-		taskLogger.debug(message);
+		taskContext.debug(message);
 	}
 
 	/**
@@ -588,42 +590,84 @@ public final class JsDeviceHelper {
 
 	/**
 	 * Download a text file from the device, using SCP or SFTP, and return this text.
-	 * @param method "scp" for now
+	 * @param protocol the transfer protocol to use
 	 * @param remoteFileName the file (including full path) to download from the device
 	 * @param charset the text charset
 	 * @param newSession start the SCP/SFTP download in a new SSH session
 	 * @return the downloaded text
+	 * @throws Exception if an error occurs during the download
 	 */
-	@Export
-	public String textDownload(String method, String remoteFileName, String charset, boolean newSession) throws Exception {
+	public String textDownload(TransferProtocol protocol, String remoteFileName,
+			Charset charset, boolean newSession) throws Exception {
+
 		if (remoteFileName == null) {
-			return null;
+			log.warn("Remote file name is missing in textDownload request.");
+			taskContext.error("Remote file name is missing in textDownload request.");
+			throw new IllegalArgumentException("Remote file name to download is missing in textDownload request");
 		}
-		try {
-			if ("scp".equals(method)) {
-				if (cli == null) {
-					throw new IllegalArgumentException("Can't use SCP method as no CLI access exists in this context.");
-				}
-				else if (cli instanceof Ssh) {
-					ByteArrayOutputStream targetStream = new ByteArrayOutputStream();
-					((Ssh) cli).scpDownload(remoteFileName, targetStream, newSession);
-					return targetStream.toString(charset);
+		if (TransferProtocol.SCP.equals(protocol) || TransferProtocol.SFTP.equals(protocol)) {
+			if (cli == null) {
+				log.warn("Error during textDownload: can't use SCP/SFTP textDownload as no CLI access exists in the context.");
+				taskContext.error("Can't use SCP/SFTP method in textDownload request as no CLI access exists in the context.");
+				throw new IllegalArgumentException("Can't use SCP/SFTP textDownload method as no CLI access exists in this context.");
+			}
+
+			if (cli instanceof Ssh sshCli) {
+				ByteArrayOutputStream targetStream = new ByteArrayOutputStream();
+				if (TransferProtocol.SCP.equals(protocol)) {
+					sshCli.scpDownload(remoteFileName, targetStream, newSession);
 				}
 				else {
-					log.warn("Error during snapshot: can't use SCP method with non-SSH CLI access.");
-					throw new IllegalArgumentException("Can't use SCP method with non-SSH CLI access.");
+					sshCli.sftpDownload(remoteFileName, targetStream, newSession);
 				}
+				return targetStream.toString(charset);
 			}
-			else {
-				log.warn("Invalid download method '{}' during snapshot.", method);
-				taskLogger.error(String.format("Invalid download method %s", method));
-				throw new IllegalArgumentException("Invalid download method");
-			}
+
+			// Not SSH-base CLI session
+			log.warn("Error during textDownload: can't use SCP/SFTP method with non-SSH CLI access.");
+			taskContext.error("Can't use SCP/SFTP method with non-SSH CLI access in textDownload request.");
+			throw new IllegalArgumentException("Can't use SCP/SFTP method with non-SSH CLI access in textDownload request.");
+		}
+		
+
+		log.warn("Error during textDownload: can't use SCP/SFTP method with non-SSH CLI access.");
+		taskContext.error("Can't use SCP/SFTP method with non-SSH CLI access in textDownload request.");
+		throw new IllegalArgumentException("Unsupported .");
+
+	}
+
+	/**
+	 * Download a text file from the device, using SCP or SFTP, and return this text - to be called from JS.
+	 * @param method "scp" or "sftp"
+	 * @param remoteFileName the file (including full path) to download from the device
+	 * @param charsetName the text charset, to decode the received data
+	 * @param newSession start the SCP/SFTP download in a new SSH session
+	 * @return the downloaded text
+	 */
+	@Export
+	public String textDownload(String method, String remoteFileName, String charsetName, boolean newSession) throws Exception {
+
+		TransferProtocol protocol = null;
+		if (method != null) {
+			protocol = TransferProtocol.valueOf(method.toUpperCase());
+		}
+
+		if (protocol == null) {
+			log.warn("Error during textDownload, invalid download method '{}'.", method);
+			taskContext.error("Invalid download method '{}' in textDownload.", method);
+			throw new IllegalArgumentException("Invalid download method");
+		}
+
+		final Charset charset;
+		try {
+			charset = Charset.forName(charsetName);
 		}
 		catch (Exception e) {
-			log.warn("Error during while downloading file '{}'.", remoteFileName);
-			taskLogger.error(String.format("Error while downloading file '%s:' %s", remoteFileName, e.getMessage()));
-			throw e;
+			log.warn("Error during textDownload, invalid charset name '{}'.", charsetName);
+			taskContext.error("Invalid charset name '{}' in textDownload.", method);
+			throw new IllegalArgumentException("Invalid charset");
 		}
+
+		return this.textDownload(protocol, remoteFileName, charset, newSession);
 	}
 }

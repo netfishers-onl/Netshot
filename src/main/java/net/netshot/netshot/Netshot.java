@@ -23,19 +23,19 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.security.Provider;
-import java.security.Security;
+import java.lang.instrument.Instrumentation;
 import java.util.Enumeration;
 import java.util.Properties;
+import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.help.HelpFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
@@ -59,19 +59,22 @@ import net.netshot.netshot.aaa.Radius;
 import net.netshot.netshot.aaa.Tacacs;
 import net.netshot.netshot.aaa.UiUser;
 import net.netshot.netshot.cluster.ClusterManager;
-import net.netshot.netshot.collector.SnmpTrapReceiver;
-import net.netshot.netshot.collector.SyslogServer;
 import net.netshot.netshot.compliance.rules.JavaScriptRule;
 import net.netshot.netshot.compliance.rules.PythonRule;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.access.Ssh;
 import net.netshot.netshot.device.access.Telnet;
+import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
+import net.netshot.netshot.device.collector.Collector;
+import net.netshot.netshot.device.collector.SnmpTrapReceiver;
+import net.netshot.netshot.device.collector.SshServer;
+import net.netshot.netshot.device.collector.SyslogServer;
 import net.netshot.netshot.device.script.helper.PythonFileSystem;
 import net.netshot.netshot.rest.LoggerFilter;
 import net.netshot.netshot.rest.RestService;
+import net.netshot.netshot.utils.BouncyCastleLoader;
 import net.netshot.netshot.work.tasks.TakeSnapshotTask;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 //CHECKSTYLE:OFF: IllegalImport
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
@@ -99,8 +102,12 @@ public class Netshot extends Thread {
 	/** The machine hostname. */
 	private static String hostname;
 
+	/** Java instrumentation. */
+	private static volatile Instrumentation instrumentation;
+
 	/**
 	 * Retrieve the local machine hostname.
+	 *
 	 * @return the local machine hostname
 	 */
 	public static String getHostname() {
@@ -165,6 +172,7 @@ public class Netshot extends Thread {
 
 	/**
 	 * Gets a config item as an Integer.
+	 *
 	 * @param key the config key
 	 * @param defaultValue the default value
 	 * @return the config
@@ -185,6 +193,7 @@ public class Netshot extends Thread {
 
 	/**
 	 * Gets a config item as an Integer.
+	 *
 	 * @param key the config key
 	 * @param defaultValue the default value
 	 * @param min the minimum acceptable value
@@ -195,7 +204,7 @@ public class Netshot extends Thread {
 		int value = Netshot.getConfig(key, defaultValue);
 		if (value < min || value > max) {
 			log.error("Unacceptable integer value for configuration item '{}' (not in the range {} to {}), using default value {}",
-				key, min, max, defaultValue);
+					key, min, max, defaultValue);
 			return defaultValue;
 		}
 		return value;
@@ -233,7 +242,7 @@ public class Netshot extends Thread {
 	/**
 	 * Read the application configuration from the files.
 	 *
-	 * @param filenames = the names of the files to read from
+	 * @param filenames the names of the files to read from
 	 * @return true, if successful
 	 */
 	protected static boolean readConfig(String[] filenames) {
@@ -258,8 +267,8 @@ public class Netshot extends Thread {
 
 	/**
 	 * Initialize the application configuration from Properties object.
-	 * 
-	 * @param newConfig The configuration
+	 *
+	 * @param newConfig the configuration
 	 * @return true
 	 */
 	protected static boolean initConfig(Properties newConfig) {
@@ -443,7 +452,8 @@ public class Netshot extends Thread {
 
 	/**
 	 * Initialize remote Syslog logging.
-	 * @return true if everything went fine.
+	 *
+	 * @return true if everything went fine
 	 */
 	protected static boolean initSyslogLogging() {
 
@@ -526,6 +536,8 @@ public class Netshot extends Thread {
 		PythonFileSystem.loadConfig();
 		Ssh.loadConfig();
 		Telnet.loadConfig();
+		Collector.loadConfig();
+		ConfigBinaryFileAttribute.loadConfig();
 	}
 
 	/**
@@ -550,8 +562,15 @@ public class Netshot extends Thread {
 		}
 
 		if (commandLine.hasOption("h")) {
-			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp("netshot", options);
+			HelpFormatter formatter = HelpFormatter.builder()
+				.setShowSince(false)
+				.get();
+			try {
+				formatter.printHelp("netshot", null, options, null, true);
+			}
+			catch (IOException e) {
+				// Ignore
+			}
 			return;
 		}
 
@@ -563,16 +582,21 @@ public class Netshot extends Thread {
 		System.out.println(String.format("Starting Netshot version %s.", Netshot.VERSION));
 		log.info("Starting Netshot");
 
-		String[] configFileNames = Netshot.CONFIG_FILENAMES;
+		final String[] configFileNames;
 		String configFilename = commandLine.getOptionValue("c");
-		if (configFilename != null) {
+		if (configFilename == null) {
+			configFileNames = Netshot.CONFIG_FILENAMES;
+		}
+		else {
 			configFileNames = new String[] { configFilename };
 		}
 
 		if (!Netshot.readConfig(configFileNames)) {
 			System.exit(1);
 		}
-		if (!Netshot.initMainLogging() || !Netshot.initAuditLogging() || !Netshot.initSyslogLogging()) {
+		if (!Netshot.initMainLogging()
+				|| !Netshot.initAuditLogging()
+				|| !Netshot.initSyslogLogging()) {
 			System.exit(1);
 		}
 
@@ -582,22 +606,8 @@ public class Netshot extends Thread {
 			log.info("Selecting truststore.");
 			Netshot.setTruststore();
 
-			// Loading full BouncyCastle requires loading the signed JAR,
-			// which doesn't work with the packaged version of Netshot
-			// as we use shading to build a uber JAR.
-			// But we still require BouncyCastle (for Argon2 hash for example).
-			// And by default if Mina SSHD sees the BC classes in the classpath
-			// it will try to use it totally.
-			// Thus for now we keep BC dependencies, but we disable
-			// auto-loading by Mina SSHD.
-			// // log.info("Enabling BouncyCastle security.");
-			// // Security.addProvider(new BouncyCastleProvider());
-			System.setProperty("org.apache.sshd.security.provider.BC.enabled", "false");
-
-			// List actual registered providers
-			for (Provider p : Security.getProviders()) {
-				log.debug("Security provider {} is registered", p.getName());
-			}
+			log.info("Registering crypto libraries");
+			BouncyCastleLoader.registerBouncyCastle();
 
 			log.info("Updating the database schema, if necessary.");
 			Database.update();
@@ -608,12 +618,14 @@ public class Netshot extends Thread {
 
 			log.info("Loading the device drivers.");
 			DeviceDriver.refreshDrivers();
-			//log.info("Starting the TFTP server.");
-			//TftpServer.init();
 			log.info("Starting the Syslog server.");
 			SyslogServer.init();
 			log.info("Starting the SNMP v1/v2c/v3 trap receiver.");
 			SnmpTrapReceiver.init();
+			log.info("Starting the SSH/SCP/SFTP server.");
+			SshServer.init();
+			//log.info("Starting the TFTP server.");
+			//TftpServer.init();
 
 			log.info("Starting the clustering manager.");
 			ClusterManager.init();
@@ -629,7 +641,7 @@ public class Netshot extends Thread {
 			Signal.handle(new Signal("HUP"), new SignalHandler() {
 				@Override
 				public void handle(Signal sig) {
-					Netshot.readConfig();
+					Netshot.readConfig(configFileNames);
 					Netshot.initMainLogging();
 					Netshot.initAuditLogging();
 					Netshot.initSyslogLogging();
@@ -645,7 +657,31 @@ public class Netshot extends Thread {
 			e.printStackTrace();
 			System.exit(1);
 		}
+	}
 
+	/**
+	 * The agentmain entry point.
+	 *
+	 * @param agentArgs the agent arguments
+	 * @param inst the instrumentation
+	 */
+	public static void agentmain(String agentArgs, Instrumentation inst) {
+		log.info("Netshot agentmain entrypoint");
+		instrumentation = inst;
+	}
+
+	/**
+	 * Append a JAR to the system class loader search.
+	 *
+	 * @param jar the JAR file to append
+	 * @throws Exception if instrumentation is not initialized
+	 */
+	public static void appendJar(JarFile jar) throws Exception {
+		if (instrumentation == null) {
+			throw new IllegalStateException("Instrumentation not initialized");
+		}
+		instrumentation.appendToSystemClassLoaderSearch(jar);
 	}
 
 }
+

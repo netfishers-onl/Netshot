@@ -68,7 +68,6 @@ define([
 					username: that.$('#credentialsusername').val(),
 					password: that.$('#credentialspassword').val(),
 					superPassword: that.$('#credentialssuper').val(),
-					publicKey: that.$('#credentialspublickey').val(),
 					privateKey: that.$('#credentialsprivatekey').val()
 				};
 				if (credentialSet.type !== "Global") {
@@ -91,7 +90,11 @@ define([
 
 		onCreate: function() {
 			var that = this;
-			var overrideConnectSettings = !!(this.model.get('connectAddress') || this.model.get('sshPort') || this.model.get('telnetPort'));
+			var overrideConnectSettings = !!(
+				this.model.get('connectAddress') ||
+				(this.model.get('sshPort') && this.model.get('sshPort') !== 22) ||
+				(this.model.get('sshPort') && this.model.get('telnetPort') != 23)
+			);
 			that.$('#overrideconnectsettings').change(function() {
 				if (that.$('#overrideconnectsettings').is(":checked")) {
 					that.$('#deviceconnectionsettings').show();
@@ -144,7 +147,6 @@ define([
 				that.$('#credentialsusername').val("");
 				that.$('#credentialspassword').val("");
 				that.$('#credentialssuper').val("");
-				that.$('#credentialspublickey').val("");
 				that.$('#credentialsprivatekey').val("");
 			});
 			

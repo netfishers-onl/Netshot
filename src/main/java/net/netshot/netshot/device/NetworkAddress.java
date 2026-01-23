@@ -57,12 +57,29 @@ public abstract class NetworkAddress {
 	 * @return the network address
 	 */
 	public static NetworkAddress getNetworkAddress(InetAddress inetAddress, int prefixLength) throws UnknownHostException {
-		if (inetAddress instanceof Inet4Address) {
-			return new Network4Address((Inet4Address) inetAddress, prefixLength);
+		if (inetAddress instanceof Inet4Address ip4Address) {
+			return new Network4Address(ip4Address, prefixLength);
 		}
-		else {
-			return new Network6Address((Inet6Address) inetAddress, prefixLength);
+		else if (inetAddress instanceof Inet6Address ip6Address) {
+			return new Network6Address(ip6Address, prefixLength);
 		}
+		return null;
+	}
+
+	/**
+	 * Gets the network address.
+	 *
+	 * @param inetAddress the inet address
+	 * @return the network address
+	 */
+	public static NetworkAddress getNetworkAddress(InetAddress inetAddress) throws UnknownHostException {
+		if (inetAddress instanceof Inet4Address ip4Address) {
+			return new Network4Address(ip4Address, 32);
+		}
+		else if (inetAddress instanceof Inet6Address ip6Address) {
+			return new Network6Address(ip6Address, 128);
+		}
+		return null;
 	}
 
 	/**
@@ -91,7 +108,14 @@ public abstract class NetworkAddress {
 	 * @throws UnknownHostException the unknown host exception
 	 */
 	public static NetworkAddress getNetworkAddress(String address) throws UnknownHostException {
-		return getNetworkAddress(address, 0);
+		NetworkAddress na = getNetworkAddress(address, 0);
+		if (na instanceof Network4Address n4a) {
+			n4a.setPrefixLength(32);
+		}
+		else if (na instanceof Network6Address n6a) {
+			n6a.setPrefixLength(128);
+		}
+		return na;
 	}
 
 	/**

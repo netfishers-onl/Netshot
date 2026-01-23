@@ -20,9 +20,11 @@ package net.netshot.netshot.device;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -70,6 +72,7 @@ import net.netshot.netshot.compliance.SoftwareRule;
 import net.netshot.netshot.compliance.SoftwareRule.ConformanceLevel;
 import net.netshot.netshot.device.access.Ssh;
 import net.netshot.netshot.device.access.Telnet;
+import net.netshot.netshot.device.attribute.AttributeDefinition.EnumAttribute;
 import net.netshot.netshot.device.attribute.DeviceAttribute;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.diagnostic.DiagnosticResult;
@@ -103,7 +106,7 @@ public final class Device {
 	/**
 	 * The Enum NetworkClass.
 	 */
-	public enum NetworkClass {
+	public enum NetworkClass implements EnumAttribute {
 
 		/** The firewall. */
 		FIREWALL,
@@ -143,7 +146,7 @@ public final class Device {
 	/**
 	 * The Enum Status.
 	 */
-	public enum Status {
+	public enum Status implements EnumAttribute {
 
 		/** The disabled. */
 		DISABLED,
@@ -578,6 +581,15 @@ public final class Device {
 		return id == other.id;
 	}
 
+	@Transient
+	public Map<String, DeviceAttribute> getAttributeMap() {
+		Map<String, DeviceAttribute> map = new HashMap<>();
+		for (DeviceAttribute a : this.attributes) {
+			map.put(a.getName(), a);
+		}
+		return map;
+	}
+
 	/**
 	 * Return a device attribute based on name.
 	 * @param attributeName = name of the attribute to find
@@ -591,6 +603,20 @@ public final class Device {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Remove the given attribute.
+	 * @param attributeName the name of the attribute to remove
+	 */
+	public void removeAttribute(String attributeName) {
+		Iterator<DeviceAttribute> attributeIt = this.attributes.iterator();
+		while (attributeIt.hasNext()) {
+			if (attributeIt.next().getName().equals(attributeName)) {
+				attributeIt.remove();
+			}
+		}
+		return;
 	}
 
 	@Transient

@@ -87,6 +87,7 @@ public class TaskJob implements Job {
 				eTask.setRunning();
 				eTask.setFailed();
 				eTask.setLog(e.getMessage());
+				eTask.setDebugLog(task.getDebugLog());
 				session.merge(eTask);
 				session.getTransaction().commit();
 			}
@@ -116,7 +117,11 @@ public class TaskJob implements Job {
 		session = Database.getSession();
 		try {
 			session.beginTransaction();
-			session.merge(task);
+			Task eTask = (Task) session.get(Task.class, id);
+			eTask.setStatus(task.getStatus());
+			eTask.setLog(task.getLog());
+			eTask.setDebugLog(task.getDebugLog());
+			session.merge(eTask);
 			session.getTransaction().commit();
 		}
 		catch (Exception e) {
@@ -186,7 +191,7 @@ public class TaskJob implements Job {
 			log.error("Unable to repeat the task {} again.", id);
 		}
 
-		log.warn("End of task {}.", id);
+		log.warn("End of task {} of type {}: {}.", id, task.getClass().getSimpleName(), task.getStatus());
 
 	}
 

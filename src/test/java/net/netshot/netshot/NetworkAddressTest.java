@@ -80,7 +80,7 @@ public class NetworkAddressTest {
 		void multicastAddress() throws UnknownHostException {
 			Network4Address address = new Network4Address("239.0.0.16");
 
-			Assertions.assertEquals(address.getPrefix(), "239.0.0.16/0", "The prefixes don't match");
+			Assertions.assertEquals(address.getPrefix(), "239.0.0.16/32", "The prefixes don't match");
 			Assertions.assertTrue(address.isMulticast(), "The prefix is not multicast");
 			Assertions.assertFalse(address.isBroadcast(), "The prefix is seen as broadcast");
 			Assertions.assertFalse(address.isNormalUnicast(), "The prefix is seen as normal unicast");

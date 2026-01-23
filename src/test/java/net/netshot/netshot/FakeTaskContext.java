@@ -16,25 +16,31 @@
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.netshot.netshot.work;
+package net.netshot.netshot;
 
-import org.graalvm.polyglot.HostAccess.Export;
+import org.slf4j.event.Level;
+import org.slf4j.helpers.MessageFormatter;
 
-public interface TaskLogger {
+import net.netshot.netshot.work.TaskContext;
 
-	@Export
-	void trace(String message);
+public class FakeTaskContext implements TaskContext {
 
-	@Export
-	void debug(String message);
+	private final StringBuffer buffer = new StringBuffer();
 
-	@Export
-	void info(String message);
+	public String getLog() {
+		return buffer.toString();
+	}
 
-	@Export
-	void warn(String message);
+	@Override
+	public void log(Level level, String message, Object... params) {
+		buffer.append("[%s] ".formatted(level.toString()));
+		buffer.append(
+			MessageFormatter.arrayFormat(message, params).getMessage());
+		buffer.append("\n");
+	}
 
-	@Export
-	void error(String message);
-
+	@Override
+	public String getIdentifier() {
+		return "Test";
+	}
 }

@@ -41,9 +41,9 @@ import net.netshot.netshot.compliance.SoftwareRule;
 import net.netshot.netshot.compliance.SoftwareRule.ConformanceLevel;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
+import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
-import net.netshot.netshot.work.TaskLogger;
 
 /**
  * This task checks the configuration compliance of a device.
@@ -87,7 +87,7 @@ public final class CheckComplianceTask extends Task implements DeviceBasedTask {
 		log.debug("Task {}. Starting check compliance task for device {}.", this.getId(),
 			device == null ? "null" : device.getId());
 		if (device == null) {
-			this.info("The device doesn't exist, the task will be cancelled.");
+			this.logger.info("The device doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
@@ -102,8 +102,8 @@ public final class CheckComplianceTask extends Task implements DeviceBasedTask {
 				.executeUpdate();
 			// Start over from a fresh device from DB
 			device = session.get(Device.class, device.getId());
-			this.info(String.format("Check compliance task for device %s (%s).",
-				device.getName(), device.getMgmtAddress().getIp()));
+			this.logger.info("Check compliance task for device {} ({}).",
+				device.getName(), device.getMgmtAddress().getIp());
 			if (this.device.getLastConfig() == null) {
 				log.info("Task {}. Unable to fetch the device with its last config... has it been captured at least once?",
 					this.getId());
@@ -115,11 +115,10 @@ public final class CheckComplianceTask extends Task implements DeviceBasedTask {
 				.setParameter("id", this.device.getId())
 				.list();
 
-			TaskLogger taskLogger = this.getJsLogger();
-			taskLogger.info(String.format("Checking configuration compliance of device %s (%d)...",
-				this.device.getName(), this.device.getId()));
+			this.logger.info("Checking configuration compliance of device {} ({})...",
+				this.device.getName(), this.device.getId());
 			for (Policy policy : policies) {
-				policy.check(device, session, taskLogger);
+				policy.check(device, session, this.logger);
 			}
 			session.persist(this.device);
 			session.flush();
@@ -156,7 +155,7 @@ public final class CheckComplianceTask extends Task implements DeviceBasedTask {
 				log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
 			}
 			log.error("Task {}. Error while checking compliance.", this.getId(), e);
-			this.error("Error while checking compliance: " + e.getMessage());
+			this.logger.error("Error while checking compliance: {}", e.getMessage());
 			this.status = Status.FAILURE;
 			return;
 		}
@@ -164,6 +163,8 @@ public final class CheckComplianceTask extends Task implements DeviceBasedTask {
 			session.close();
 		}
 
+		log.debug("Task {}. Request to refresh all the groups for the device after compliance check.", this.getId());
+		DynamicDeviceGroup.refreshAllGroupsOfOneDevice(device);
 
 	}
 

@@ -1421,4 +1421,22 @@
 			</column>
 		</addColumn>
 	</changeSet>
+	<changeSet author="netshot" id="0.24.0_1">
+		<sql>UPDATE device SET driver = 'RiverbedRiOS' WHERE driver = 'Riverbed'</sql>
+		<sql>UPDATE device SET driver = 'PaloAltoPANOS' WHERE driver = 'Palo Alto PAN-OS'</sql>
+	</changeSet>
+	<changeSet author="netshot" id="0.24.0_2">
+		<customChange class="net.netshot.netshot.database.migrator.DynamicDeviceGroupDriverRemoval"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.24.0_3">
+		<dropColumn tableName="dynamic_device_group" columnName="driver" />
+	</changeSet>
+	<changeSet author="netshot" id="0.24.0_4">
+		<dropColumn tableName="device_credential_set" columnName="public_key" />
+	</changeSet>
+	<changeSet author="netshot" id="0.24.0_5">
+		<addColumn tableName="config_attribute">
+			<column name="checksum" type="VARCHAR(255)"/>
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

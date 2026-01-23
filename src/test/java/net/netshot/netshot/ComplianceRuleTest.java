@@ -31,7 +31,7 @@ import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.access.Ssh;
 import net.netshot.netshot.device.script.helper.PythonFileSystem;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -57,7 +57,7 @@ public class ComplianceRuleTest {
 
 		Policy policy = new Policy("Fake policy", null);
 		Device device = FakeDeviceFactory.getFakeCiscoIosDevice();
-		TaskLogger taskLogger = new FakeTaskLogger();
+		TaskContext taskContext = new FakeTaskContext();
 		Session nullSession;
 		TextRule rule;
 
@@ -77,7 +77,7 @@ public class ComplianceRuleTest {
 		@DisplayName("Conforming rule")
 		void matchAll() {
 			rule.setText("no service pad");
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -86,7 +86,7 @@ public class ComplianceRuleTest {
 		@DisplayName("Non-conforming rule")
 		void matchAllFail() {
 			rule.setText("no service mlqksd");
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.NONCONFORMING, result.getResult(),
 				"The result is not NONCONFORMING");
 		}
@@ -95,7 +95,7 @@ public class ComplianceRuleTest {
 		@DisplayName("Disabled rule")
 		void disabled() {
 			rule.setEnabled(false);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.DISABLED, result.getResult(),
 				"The result is not DISABLED");
 		}
@@ -104,7 +104,7 @@ public class ComplianceRuleTest {
 		@DisplayName("Unknown field rule")
 		void unknownField() {
 			rule.setField("doesNotExist");
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.INVALIDRULE, result.getResult(),
 				"The result is not INVALIDRULE");
 		}
@@ -114,7 +114,7 @@ public class ComplianceRuleTest {
 		void contextAllBlocks() {
 			rule.setContext("^interface .*");
 			rule.setText(" description ");
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -124,7 +124,7 @@ public class ComplianceRuleTest {
 		void contextAllBlocksFail() {
 			rule.setContext("^interface .*");
 			rule.setText(" no shutdown");
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.NONCONFORMING, result.getResult(),
 				"The result is not NONCONFORMING");
 		}
@@ -135,7 +135,7 @@ public class ComplianceRuleTest {
 			rule.setContext("^interface .*");
 			rule.setText(" no shutdown");
 			rule.setAnyBlock(true);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -146,7 +146,7 @@ public class ComplianceRuleTest {
 			rule.setContext("^interface .*");
 			rule.setText(" no description");
 			rule.setAnyBlock(true);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.NONCONFORMING, result.getResult(),
 				"The result is not NONCONFORMING");
 		}
@@ -158,7 +158,7 @@ public class ComplianceRuleTest {
 			rule.setText(" password something");
 			rule.setAnyBlock(true);
 			rule.setMatchAll(true);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -168,7 +168,7 @@ public class ComplianceRuleTest {
 		void multilineRegexp() {
 			rule.setText("(?m)^hostname router[0-9]+$");
 			rule.setRegExp(true);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -178,7 +178,7 @@ public class ComplianceRuleTest {
 		void regexpFail() {
 			rule.setText("^hostname router[0-9]+");
 			rule.setRegExp(true);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.NONCONFORMING, result.getResult(),
 				"The result is not NONCONFORMING");
 		}
@@ -188,7 +188,7 @@ public class ComplianceRuleTest {
 		void invalidRegexp() {
 			rule.setText("^(h");
 			rule.setRegExp(true);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.INVALIDRULE, result.getResult(),
 				"The result is not INVALIDRULE");
 		}
@@ -198,7 +198,7 @@ public class ComplianceRuleTest {
 		void withoutNormalization() {
 			rule.setText("(?m)^ipv6 unicast-routing$");
 			rule.setRegExp(true);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.NONCONFORMING, result.getResult(),
 				"The result is not NONCONFORMING");
 		}
@@ -209,7 +209,7 @@ public class ComplianceRuleTest {
 			rule.setText("(?m)^ipv6 unicast-routing$");
 			rule.setRegExp(true);
 			rule.setNormalize(true);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -221,7 +221,7 @@ public class ComplianceRuleTest {
 
 		Policy policy = new Policy("Fake policy", null);
 		Device device = FakeDeviceFactory.getFakeCiscoIosDevice();
-		FakeTaskLogger taskLogger = new FakeTaskLogger();
+		FakeTaskContext taskContext = new FakeTaskContext();
 		Session nullSession;
 		JavaScriptRule rule;
 
@@ -249,7 +249,7 @@ public class ComplianceRuleTest {
 		@Test
 		@DisplayName("Conforming rule")
 		void conformingRule() {
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -258,7 +258,7 @@ public class ComplianceRuleTest {
 		@DisplayName("Not applicable rule")
 		void notApplicableRule() {
 			device.setDriver("None");
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.NOTAPPLICABLE, result.getResult(),
 				"The result is not NOTAPPLICABLE");
 		}
@@ -267,7 +267,7 @@ public class ComplianceRuleTest {
 		@DisplayName("Non conforming rule")
 		void nonConformingRule() {
 			device.setName("router2");
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.NONCONFORMING, result.getResult(),
 				"The result is not NONCONFORMING");
 		}
@@ -283,7 +283,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -299,7 +299,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -315,7 +315,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -331,7 +331,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -347,7 +347,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -363,7 +363,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -379,7 +379,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -395,7 +395,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -411,7 +411,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -427,7 +427,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -444,7 +444,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -461,7 +461,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -478,7 +478,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -495,7 +495,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -512,7 +512,7 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -526,8 +526,8 @@ public class ComplianceRuleTest {
 					+ "  return NONCONFORMING;"
 					+ "}"
 			);
-			rule.check(device, nullSession, taskLogger);
-			Assertions.assertTrue(taskLogger.getLog().contains("DEBUG - Debug message\n"),
+			rule.check(device, nullSession, taskContext);
+			Assertions.assertTrue(taskContext.getLog().contains("[DEBUG] Debug message\n"),
 				"Debug message is not correct");
 		}
 
@@ -540,7 +540,7 @@ public class ComplianceRuleTest {
 					+ "  return { result: CONFORMING, comment: record.address };"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			String comment = result.getComment();
 			Assertions.assertTrue("8.8.8.8".equals(comment) || "8.8.4.4".equals(comment),
 				"The resolved IP is not 8.8.8.8 nor 8.8.4.4");
@@ -555,7 +555,7 @@ public class ComplianceRuleTest {
 					+ "  return { result: CONFORMING, comment: record.name };"
 					+ "}"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(result.getComment(), "dns.google",
 				"The resolved name is not dns.google");
 		}
@@ -575,10 +575,10 @@ public class ComplianceRuleTest {
 			Netshot.initConfig(config);
 			JavaScriptRule.loadConfig();
 			// Check
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.INVALIDRULE, result.getResult(),
 				"The result is not INVALIDRULE");
-			Assertions.assertTrue(taskLogger.getLog().contains("rule took too long"),
+			Assertions.assertTrue(taskContext.getLog().contains("rule took too long"),
 				"Error message is not correct");
 		}
 	}
@@ -589,7 +589,7 @@ public class ComplianceRuleTest {
 
 		Policy policy = new Policy("Fake policy", null);
 		Device device = FakeDeviceFactory.getFakeCiscoIosDevice();
-		FakeTaskLogger taskLogger = new FakeTaskLogger();
+		FakeTaskContext taskContext = new FakeTaskContext();
 		Session nullSession;
 		PythonRule rule;
 
@@ -617,7 +617,7 @@ public class ComplianceRuleTest {
 		@Test
 		@DisplayName("Conforming rule")
 		void conformingRule() {
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -626,7 +626,7 @@ public class ComplianceRuleTest {
 		@DisplayName("Not applicable rule")
 		void notApplicableRule() {
 			device.setDriver("None");
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.NOTAPPLICABLE, result.getResult(),
 				"The result is not NOTAPPLICABLE");
 		}
@@ -635,7 +635,7 @@ public class ComplianceRuleTest {
 		@DisplayName("Non conforming rule")
 		void nonConformingRule() {
 			device.setName("router2");
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.NONCONFORMING, result.getResult(),
 				"The result is not NONCONFORMING");
 		}
@@ -650,7 +650,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -665,7 +665,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -680,7 +680,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -695,7 +695,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -710,7 +710,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -725,7 +725,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -740,7 +740,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -755,7 +755,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -770,7 +770,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -785,7 +785,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -801,7 +801,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -817,7 +817,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -833,7 +833,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -850,7 +850,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -867,7 +867,7 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.CONFORMING, result.getResult(),
 				"The result is not CONFORMING");
 		}
@@ -882,8 +882,8 @@ public class ComplianceRuleTest {
 					+ "  return result_option.NONCONFORMING" + "\n"
 					+ "" + "\n"
 			);
-			rule.check(device, nullSession, taskLogger);
-			Assertions.assertTrue(taskLogger.getLog().contains("DEBUG - Debug message\n"),
+			rule.check(device, nullSession, taskContext);
+			Assertions.assertTrue(taskContext.getLog().contains("[DEBUG] Debug message\n"),
 				"Debug message is not correct");
 		}
 
@@ -898,7 +898,7 @@ public class ComplianceRuleTest {
 					+ "    'comment': record['address']" + "\n"
 					+ "  }" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			String comment = result.getComment();
 			Assertions.assertTrue("8.8.8.8".equals(comment) || "8.8.4.4".equals(comment),
 				"The resolved IP is not 8.8.8.8 nor 8.8.4.4");
@@ -915,7 +915,7 @@ public class ComplianceRuleTest {
 					+ "    'comment': record['name']" + "\n"
 					+ "  }" + "\n"
 			);
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(result.getComment(), "dns.google",
 				"The resolved name is not dns.google");
 		}
@@ -936,10 +936,10 @@ public class ComplianceRuleTest {
 			Netshot.initConfig(config);
 			JavaScriptRule.loadConfig();
 			// Check
-			CheckResult result = rule.check(device, nullSession, taskLogger);
+			CheckResult result = rule.check(device, nullSession, taskContext);
 			Assertions.assertEquals(CheckResult.ResultOption.INVALIDRULE, result.getResult(),
 				"The result is not INVALIDRULE");
-			Assertions.assertTrue(taskLogger.getLog().contains("rule took too long"),
+			Assertions.assertTrue(taskContext.getLog().contains("rule took too long"),
 				"Error message is not correct");
 		}
 	}

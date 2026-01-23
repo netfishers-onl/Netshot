@@ -42,13 +42,6 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 
 	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
-		@Column(length = 5000)
-	}))
-	@Setter
-	private String publicKey;
-
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class),
 		@Column(length = 5000),
 		@Convert(converter = StringEncryptorConverter.class)
 	}))
@@ -59,10 +52,9 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 
 	}
 
-	public DeviceSshKeyAccount(String username, String publicKey, String privateKey, String passphrase,
+	public DeviceSshKeyAccount(String username, String privateKey, String passphrase,
 		String superPassword, String name) {
 		super(username, passphrase, superPassword, name);
-		this.publicKey = publicKey;
 		this.privateKey = privateKey;
 	}
 
@@ -72,8 +64,6 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 		int result = super.hashCode();
 		result = prime * result
 			+ (privateKey == null ? 0 : privateKey.hashCode());
-		result = prime * result
-			+ (publicKey == null ? 0 : publicKey.hashCode());
 		return result;
 	}
 
@@ -95,14 +85,6 @@ public class DeviceSshKeyAccount extends DeviceSshAccount {
 			}
 		}
 		else if (!privateKey.equals(other.privateKey)) {
-			return false;
-		}
-		if (publicKey == null) {
-			if (other.publicKey != null) {
-				return false;
-			}
-		}
-		else if (!publicKey.equals(other.publicKey)) {
 			return false;
 		}
 		return true;

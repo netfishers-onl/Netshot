@@ -21,6 +21,7 @@ package net.netshot.netshot.device.script;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Map;
@@ -46,6 +47,7 @@ import net.netshot.netshot.device.access.Snmp;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import net.netshot.netshot.device.attribute.ConfigAttribute;
+import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
@@ -54,42 +56,110 @@ import net.netshot.netshot.device.script.helper.JsCliScriptOptions;
 import net.netshot.netshot.device.script.helper.JsConfigHelper;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.device.script.helper.JsSnmpHelper;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.device.script.helper.JsUtils;
+import net.netshot.netshot.work.TaskContext;
 
 @Slf4j
 public final class SnapshotCliScript extends CliScript {
 
-	public SnapshotCliScript(boolean cliLogging) {
-		super(cliLogging);
+	public SnapshotCliScript(TaskContext logger) {
+		super(logger);
+	}
+
+	/**
+	 * Dump the new configuration into dump folder.
+	 * @param device = the device
+	 * @param config = the config
+	 */
+	protected void dumpConfig(Device device, Config config) {
+		String path = Netshot.getConfig("netshot.snapshots.dump");
+		if (path != null) {
+			try {
+				BufferedWriter output = new BufferedWriter(
+					new FileWriter(Paths.get(path, device.getName()).normalize().toFile()));
+				Map<String, ConfigAttribute> newAttributes = config.getAttributeMap();
+				for (AttributeDefinition definition : device.getDeviceDriver().getAttributes()) {
+					if (!definition.isDump()) {
+						continue;
+					}
+					String preText = definition.getPreDump();
+					if (preText != null) {
+						preText = preText.replaceAll("%when%",
+							Matcher.quoteReplacement(new Date().toString()));
+						output.write(preText);
+						output.write("\r\n");
+					}
+					ConfigAttribute newAttribute = newAttributes.get(definition.getName());
+					if (newAttribute != null) {
+						String text = newAttribute.getAsText();
+						if (text != null) {
+							if (definition.getPreLineDump() != null || definition.getPostLineDump() != null) {
+								String[] lines = text.split("\\r?\\n");
+								for (String line : lines) {
+									if (definition.getPreLineDump() != null) {
+										output.write(definition.getPreLineDump());
+									}
+									output.write(line);
+									if (definition.getPostLineDump() != null) {
+										output.write(definition.getPostLineDump());
+									}
+									output.write("\r\n");
+								}
+							}
+							else {
+								output.write(text);
+							}
+						}
+					}
+					String postText = definition.getPostDump();
+					if (postText != null) {
+						postText = postText.replaceAll("%when%",
+							Matcher.quoteReplacement(new Date().toString()));
+						output.write(postText);
+						output.write("\r\n");
+					}
+				}
+				output.close();
+				this.taskContext.info("The configuration has been saved as a file in the dump folder.");
+			}
+			catch (Exception e) {
+				log.warn("Couldn't write the configuration into file.", e);
+				this.taskContext.warn("Unable to write the configuration to a file.");
+			}
+		}
 	}
 
 	@Override
 	protected void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
 		throws InvalidCredentialsException, IOException, InvalidOperationException, MissingDeviceDriverException {
 
-		TaskLogger taskLogger = this.getJsLogger();
 		JsCliHelper jsCliHelper = null;
 		JsSnmpHelper jsSnmpHelper = null;
 		switch (protocol) {
 			case SNMP:
-				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, taskLogger);
+				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.taskContext);
 				break;
 			case TELNET:
 			case SSH:
 			default:
-				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, taskLogger, this.getCliLogger());
+				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.taskContext);
 				break;
 		}
+		JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
 
 		DeviceDriver driver = device.getDeviceDriver();
 		try (Context context = driver.getContext()) {
+			this.taskContext.info("Starting snapshot of device {} using driver {} version {}",
+				device.getId(), driver.getName(), driver.getVersion());
 			driver.loadCode(context);
-			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, taskLogger);
-			options.setDeviceHelper(new JsDeviceHelper(device, cli, session, taskLogger, false));
+			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, cli, session, this.taskContext, false);
+			options.setDeviceHelper(deviceHelper);
 			Config config = new Config(device);
 			Config lastConfig = Database.unproxy(device.getLastConfig());
-			options.setConfigHelper(new JsConfigHelper(device, config, lastConfig, cli, taskLogger));
-			context.getBindings("js").getMember("_connect").execute("snapshot", protocol.value(), options, taskLogger);
+			JsConfigHelper configHelper = new JsConfigHelper(device, config, lastConfig, cli, this.taskContext);
+			options.setConfigHelper(configHelper);
+			context.getBindings("js").getMember("_connect")
+				.execute("snapshot", protocol.value(), options, this.taskContext);
 
 			// Check whether the config has actually changed
 			boolean different = false;
@@ -125,69 +195,27 @@ public final class SnapshotCliScript extends CliScript {
 				device.getConfigs().add(config);
 			}
 			else {
-				taskLogger.info("The configuration hasn't changed. Not storing a new one in the DB.");
-			}
-
-			String path = Netshot.getConfig("netshot.snapshots.dump");
-			if (path != null) {
-				try {
-					BufferedWriter output = new BufferedWriter(
-						new FileWriter(Paths.get(path, device.getName()).normalize().toFile()));
-					Map<String, ConfigAttribute> newAttributes = config.getAttributeMap();
-					for (AttributeDefinition definition : driver.getAttributes()) {
-						if (!definition.isDump()) {
-							continue;
+				this.taskContext.info("The configuration hasn't changed. Not storing a new one in the DB.");
+				for (ConfigAttribute ca : config.getAttributes()) {
+					if (ca instanceof ConfigBinaryFileAttribute cbfa) {
+						try {
+							log.debug("Removing useless file {}", cbfa.getFilePath());
+							Files.deleteIfExists(cbfa.getFilePath());
 						}
-						String preText = definition.getPreDump();
-						if (preText != null) {
-							preText = preText.replaceAll("%when%",
-								Matcher.quoteReplacement(new Date().toString()));
-							output.write(preText);
-							output.write("\r\n");
-						}
-						ConfigAttribute newAttribute = newAttributes.get(definition.getName());
-						if (newAttribute != null) {
-							String text = newAttribute.getAsText();
-							if (text != null) {
-								if (definition.getPreLineDump() != null || definition.getPostLineDump() != null) {
-									String[] lines = text.split("\\r?\\n");
-									for (String line : lines) {
-										if (definition.getPreLineDump() != null) {
-											output.write(definition.getPreLineDump());
-										}
-										output.write(line);
-										if (definition.getPostLineDump() != null) {
-											output.write(definition.getPostLineDump());
-										}
-										output.write("\r\n");
-									}
-								}
-								else {
-									output.write(text);
-								}
-							}
-						}
-						String postText = definition.getPostDump();
-						if (postText != null) {
-							postText = postText.replaceAll("%when%",
-								Matcher.quoteReplacement(new Date().toString()));
-							output.write(postText);
-							output.write("\r\n");
+						catch (IOException e) {
+							log.warn("Unable to delete binary file attribute {}", cbfa.getFilePath(), e);
+							this.taskContext.warn("Unable to delete binary file attribute {}", cbfa.getFilePath(), e);
 						}
 					}
-					output.close();
-					taskLogger.info("The configuration has been saved as a file in the dump folder.");
-				}
-				catch (Exception e) {
-					log.warn("Couldn't write the configuration into file.", e);
-					taskLogger.warn("Unable to write the configuration as a file.");
 				}
 			}
+			this.dumpConfig(device, config);
+
 		}
 		catch (PolyglotException e) {
 			log.error("Error while running snapshot using driver {}.", driver.getName(), e);
-			taskLogger.error(String.format("Error while running snapshot using driver %s: '%s'.",
-				driver.getName(), e.getMessage()));
+			this.taskContext.error("Error while running snapshot using driver {}: '{}'.",
+				driver.getName(), JsUtils.jsErrorToMessage(e));
 			if (e.getMessage() != null && e.getMessage().contains("Authentication failed")) {
 				throw new InvalidCredentialsException("Authentication failed");
 			}
@@ -197,9 +225,14 @@ public final class SnapshotCliScript extends CliScript {
 		}
 		catch (InvalidOperationException e) {
 			log.error("No such method 'snapshot' while using driver {}.", driver.getName(), e);
-			taskLogger.error(String.format("No such method 'snapshot' while using driver %s to take snapshot: '%s'.",
-				driver.getName(), e.getMessage()));
+			this.taskContext.error("No such method 'snapshot' while using driver %s to take snapshot: '{}'.",
+				driver.getName(), e.getMessage());
 			throw e;
+		}
+		finally {
+			if (options.getConfigHelper() != null) {
+				options.getConfigHelper().release();
+			}
 		}
 	}
 

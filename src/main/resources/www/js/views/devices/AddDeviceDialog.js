@@ -67,7 +67,6 @@ define([
 						username: that.$('#credentialsusername').val(),
 						password: that.$('#credentialspassword').val(),
 						superPassword: that.$('#credentialssuper').val(),
-						publicKey: that.$('#credentialspublickey').val(),
 						privateKey: that.$('#credentialsprivatekey').val()
 					};
 					if (credentialSet.type !== "Global") {

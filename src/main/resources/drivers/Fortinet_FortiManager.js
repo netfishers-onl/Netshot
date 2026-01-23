@@ -20,17 +20,17 @@
 /**
  * 'Info' object = Meta data of the driver.
  */
-var Info = {
+const Info = {
 	name: "FortinetFortiManager", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiManager and FortiAnalyzer", /* Description to be used in the UI. */
 	author: "Najihel",
-	version: "1.2" /* Version will appear in the Admin tab. */
+	version: "2.1" /* Version will appear in the Admin tab. */
 };
 
 /**
  * 'Config' object = Data fields to be included in each configuration revision.
  */
-var Config = {
+const Config = {
 	"osVersion": { /* This stores the detected FortiManager OS version on each snapshot. */
 		type: "Text",
 		title: "FortiManager OS version",
@@ -52,13 +52,17 @@ var Config = {
 			pre: "## Configuration (taken on %when%):",
 			post: "## End of configuration"
 		}
-	}
+	},
+	"backupArchive": {
+		type: "BinaryFile",
+		title: "Backup Archive",
+	},
 };
 
 /**
  * 'Device' object = Data fields to add to devices of this type.
  */
-var Device = {
+const Device = {
 	"haPeer": { /* This stores the name of an optional HA peer. */
 		type: "Text",
 		title: "HA peer name",
@@ -70,7 +74,7 @@ var Device = {
 /**
  * 'CLI' object = Definition of the finite state machine to recognize and handle the CLI prompt changes.
  */
-var CLI = {
+const CLI = {
 	telnet: { /* Entry point for Telnet access. */
 		macros: { /* List of available macros in the CLI mode. */
 			basic: { /* 'basic' macro (will be called in the snapshot procedure. */
@@ -133,12 +137,12 @@ function snapshot(cli, device, config) {
 	cli.macro("basic");
 
 	// 'status' will be used to read the version, hostname, etc.
-	var status = cli.command("get system status");
+	const status = cli.command("get system status");
 
 	// Read version and family from the 'status' output.
-	var version = status.match(/^Version[\s]*: v([0-9]+.*)/m);
-	var platform = status.match(/^Platform Full Name[\s]*: ((.*?)(-.*)?)$/m);
-	var family = (platform ? platform[2] : "FortiManager");
+	let version = status.match(/^Version[\s]*: v([0-9]+.*)/m);
+	let platform = status.match(/^Platform Full Name[\s]*: ((.*?)(-.*)?)$/m);
+	const family = (platform ? platform[2] : "FortiManager");
 	platform = (platform ? platform[1] : "FortiManager");
 	device.set("family", family);
 	version = (version ? version[1] : "Unknown");
@@ -147,41 +151,25 @@ function snapshot(cli, device, config) {
 
 	device.set("networkClass", "SERVER");
 
-	// The main configuration
-	var configuration = null;
-
 	// Store the interface config block
-	var showSystemInterface = cli.command("show system interface");
+	const showSystemInterface = cli.command("show system interface");
 	// Store the SNMP config block
-	var showSystemSnmp = cli.command("show system snmp sysinfo");
+	const showSystemSnmp = cli.command("show system snmp sysinfo");
 
-	// Store the HA status
-	var getHa = "";
-	var haCommands = ["get system ha-status", "diagnose ha status"];
-	while (true) {
-		try {
-			getHa = haCommands.shift();
-			break;
-		}
-		catch (e) {
-			// ignore
-		}
-	}
-
-	var configuration;
-	// The configuration is retrieved by a simple 'show' at the root level. Add grep to avoid paging.
-	configuration = cli.command("show", { timeout: 120000 });
+	// The configuration is retrieved by a simple 'show' at the root level.
+	const configuration = cli.command("show", { timeout: 120000 });
+	config.set("configuration", configuration);
 
 	// Read the device hostname from the 'status' output.
-	var hostname = status.match(/^Hostname[\s]*:[\s]*(.*)$/m);
+	let hostname = status.match(/^Hostname[\s]*:[\s]*(.*)$/m);
 	if (hostname) {
 		hostname = hostname[1];
 		device.set("name", hostname);
 	}
 	// Read the serial number from the 'status' output.
-	var serial = status.match(/^Serial Number[\s]*:[\s]*(.*)$/m);
+	const serial = status.match(/^Serial Number[\s]*:[\s]*(.*)$/m);
 	if (serial) {
-		var module = {
+		const module = {
 			slot: "Chassis",
 			partNumber: platform,
 			serialNumber: serial[1]
@@ -193,40 +181,51 @@ function snapshot(cli, device, config) {
 		device.set("serialNumber", "");
 	}
 
+
+	// Store the HA status
+	for (const haCommand of ["get system ha-status", "diagnose ha status"]) {
+		try {
+			const getHa = cli.command(haCommand);
+			const peerPattern = /^([\s]*hostname:[\s]*)(.*)$/gm;
+			while (true) {
+				const match = peerPattern.exec(getHa);
+				if (!match) break;
+				if (match[2] !== hostname) {
+					device.set("haPeer", match[2]);
+					break;
+				}
+			}
+		}
+		catch (e) {
+			// continue
+		}
+	}
+
 	// Read the contact and location fields from the configuration directly.
 	device.set("contact", "");
 	device.set("location", "");
-	var sysInfos = cli.findSections(showSystemSnmp, /config system snmp sysinfo/);
-	for (var s in sysInfos) {
-		var contact = sysInfos[s].config.match(/set contact_info "(.*)"/);
+	const sysInfos = cli.findSections(showSystemSnmp, /config system snmp sysinfo/);
+	for (const sysInfo of sysInfos) {
+		const contact = sysInfo.config.match(/set contact_info "(.*)"/);
 		if (contact) {
 			device.set("contact", contact[1]);
 		}
-		var location = sysInfos[s].config.match(/set location "(.*)"/);
+		const location = sysInfo.config.match(/set location "(.*)"/);
 		if (location) {
 			device.set("location", location[1]);
 		}
 	}
-	var peerPattern = /^([\s]*hostname:[\s]*)(.*)$/gm;
-	var match;
-	while (match = peerPattern.exec(getHa)) {
-		if (match[2] != hostname) {
-			device.set("haPeer", match[2]);
-			break;
-		}
-	}
 
 	// Read the list of interfaces.
-	var vdomArp = {};
-	var interfaces = cli.findSections(showSystemInterface, /^ *edit "(.*)"/m);
-	for (var i in interfaces) {
-		var networkInterface = {
-			name: interfaces[i].match[1],
+	const interfaces = cli.findSections(showSystemInterface, /^ *edit "(.*)"/m);
+	for (const iface of interfaces) {
+		const networkInterface = {
+			name: iface.match[1],
 			ip: []
 		};
-		var ipAddress = interfaces[i].config.match(/set ip (\d+\.\d+\.\d+\.\d+) (\d+\.\d+\.\d+\.\d+)/);
+		const ipAddress = iface.config.match(/set ip (\d+\.\d+\.\d+\.\d+) (\d+\.\d+\.\d+\.\d+)/);
 		if (ipAddress) {
-			var ip = {
+			const ip = {
 				ip: ipAddress[1],
 				mask: ipAddress[2],
 				usage: "PRIMARY"
@@ -234,10 +233,10 @@ function snapshot(cli, device, config) {
 			networkInterface.ip.push(ip);
 		}
 
-		if (interfaces[i].config.match(/set status down/)) {
+		if (iface.config.match(/set status down/)) {
 			networkInterface.disabled = true;
 		}
-		var descMatch = interfaces[i].config.match(/set description "(.+)"/);
+		const descMatch = iface.config.match(/set description "(.+)"/);
 		if (descMatch) {
 			networkInterface.description = descMatch[1];
 		}
@@ -252,18 +251,54 @@ function snapshot(cli, device, config) {
 		return cleaned;
 	}
 
-	// If only the passwords are changing (they are hashed with a new salt at each 'show') then
-	// just keep the previous configuration.
-	// That means we could miss a password change in the history of configurations, but no choice...
-	var previousConfiguration = device.get("configuration");
-	if (typeof previousConfiguration === "string" &&
-			removeChangingParts(previousConfiguration) === removeChangingParts(configuration)) {
-		config.set("configuration", previousConfiguration);
+	try {
+		const ticket = config.requestUpload();
+		const backupName = "backup.tar";
+		const encryptPass = "netshot";
+		cli.command(`execute backup all-settings sftp ${ticket.host}:${ticket.port} ${backupName} ${ticket.username} ${ticket.password} ${encryptPass}`);
+		let md5 = null;
+		let attempt = 0;
+		while (true) {
+			const backupOutput = cli.command("", {
+				mode: { prompt: null },
+				discoverWaitTime: 5000,
+			});
+			const md5Match = backupOutput.match(/MD5: ([0-9a-f]+)/);
+			if (md5Match) {
+				md5 = md5Match[1];
+				cli.debug(`Archive MD5 checksum should be ${md5}`);
+			}
+			const resultMatch = backupOutput.match(/Backup all settings...(.+)/);
+			if (resultMatch) {
+				const result = resultMatch[1];
+				if (result !== "Ok.") {
+					cli.debug(`Full backup output:\n${backupOutput}`);
+					throw `Full backup (execute backup all-settings) returned ${result}`;
+				}
+				break;
+			}
+			attempt += 1;
+			if (attempt > 360) {
+				throw `Could not get full backup (execute backup all-settings) result after 15 minutes`;
+			}
+		}
+		const uploadResult = config.awaitUpload(ticket.id);
+		if (uploadResult.files.length !== 1) {
+			throw `Invalid number of files (${uploadResult.files.length}) received by Netshot server`;
+		}
+		const file = uploadResult.files[0];
+		config.commitUpload(ticket.id, file.id, "backupArchive", { checksum: md5 });
 	}
-	else {
-		config.set("configuration", configuration);
+	catch (e) {
+		const error = String(e);
+		if (error.match(/server is not running/)) {
+			cli.debug("Netshot SSH server is disabled, the full backup won't be taken");
+			config.computeHash(removeChangingParts(configuration));
+		}
+		else {
+			throw e;
+		}
 	}
-
 };
 
 // No known log message upon configuration change

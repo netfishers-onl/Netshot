@@ -151,7 +151,7 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 		log.debug("Task {}. Starting diagnostic task for device {}.", this.getId(),
 			device == null ? "null" : device.getId());
 		if (device == null) {
-			this.info("The device doesn't exist, the task will be cancelled.");
+			this.logger.info("The device doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
@@ -163,18 +163,18 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 			session.beginTransaction();
 			// Start over from a fresh device from DB
 			device = session.get(Device.class, device.getId());
-			this.trace(String.format("Run diagnostic task for device %s (%s).",
-				device.getName(), device.getMgmtAddress().getIp()));
+			this.logger.trace("Run diagnostic task for device {} ({}).",
+				device.getName(), device.getMgmtAddress().getIp());
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				log.trace("Task {}. Device not INPRODUCTION, stopping the diagnostic task.", this.getId());
-				this.warn("The device is not enabled (not in production).");
-				this.status = Status.FAILURE;
+				this.logger.warn("The device is not enabled (not in production).");
+				this.status = Status.CANCELLED;
 				return;
 			}
 			locked = checkRunningDiagnostic(device.getId());
 			if (!locked) {
 				log.trace("Task {}. A Diagnostic task already ongoing for this device, cancelling.", this.getId());
-				this.warn("A diagnostic task is already running for this device, cancelling this task.");
+				this.logger.warn("A diagnostic task is already running for this device, cancelling this task.");
 				this.status = Status.CANCELLED;
 				return;
 			}
@@ -187,14 +187,13 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 				.setParameter("enabled", true)
 				.list();
 			if (diagnostics.size() > 0) {
-				cliScript = new RunDiagnosticCliScript(diagnostics, this.debugEnabled);
+				cliScript = new RunDiagnosticCliScript(diagnostics, this.logger);
 				cliScript.connectRun(session, device);
-				this.logs.append(cliScript.getPlainJsLog());
 				session.merge(device);
 				session.getTransaction().commit();
 			}
 			else {
-				this.info("No diagnostic was found that apply to this device.");
+				this.logger.info("No diagnostic was found that apply to this device.");
 			}
 			this.status = Status.SUCCESS;
 
@@ -212,14 +211,14 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 				// Add SQL error if possible
 				message += " / " + e.getCause().getCause().getMessage();
 			}
-			this.error("Error while executing the diagnostics: " + message);
+			this.logger.error("Error while executing the diagnostics: {}", message);
 			this.status = Status.FAILURE;
 			return;
 		}
 		finally {
 			try {
-				if (this.debugEnabled && cliScript != null) {
-					this.debugLog = new DebugLog(cliScript.getPlainCliLog());
+				if (this.fullLogs != null) {
+					this.debugLog = new DebugLog(this.fullLogs.toString());
 				}
 			}
 			catch (Exception e1) {
@@ -232,7 +231,7 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 		}
 
 		log.debug("Task {}. Request to refresh all the groups for the device after the diagnostics.", this.getId());
-		DynamicDeviceGroup.refreshAllGroups(device);
+		DynamicDeviceGroup.refreshAllGroupsOfOneDevice(device);
 
 		if (!this.dontCheckCompliance) {
 			try {

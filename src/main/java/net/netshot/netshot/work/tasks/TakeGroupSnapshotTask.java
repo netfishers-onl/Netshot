@@ -150,7 +150,7 @@ public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask 
 		log.debug("Task {}. Starting snapshot task for group {}.",
 			this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
 		if (this.deviceGroup == null) {
-			this.info("The device group doesn't exist, the task will be cancelled.");
+			this.logger.info("The device group doesn't exist, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
@@ -161,11 +161,11 @@ public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask 
 		referenceDate.add(Calendar.HOUR, -this.getLimitToOutofdateDeviceHours());
 		for (Device device : devices) {
 			if (referenceDate.getTime().before(device.getChangeDate())) {
-				this.info(String.format("Ignoring device %s because it changed less than %d hours ago",
-					device.getName(), this.getLimitToOutofdateDeviceHours()));
+				this.logger.info("Ignoring device {} because it changed less than {} hours ago",
+					device.getName(), this.getLimitToOutofdateDeviceHours());
 				continue;
 			}
-			this.info(String.format("Starting snapshot task for device %s.", device.getName()));
+			this.logger.info("Starting snapshot task for device {}.", device.getName());
 			TakeSnapshotTask task = new TakeSnapshotTask(device, comment, author, false,
 				this.dontRunDiagnostics, this.dontCheckCompliance);
 			task.setPriority(this.getPriority());
@@ -174,7 +174,7 @@ public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask 
 			}
 			catch (Exception e) {
 				log.error("Task {}. Error while scheduling the individual snapshot task.", this.getId(), e);
-				this.error("Error while scheduling the task.");
+				this.logger.error("Error while scheduling the task.");
 			}
 		}
 		log.debug("Task {}. Everything went fine.", this.getId());

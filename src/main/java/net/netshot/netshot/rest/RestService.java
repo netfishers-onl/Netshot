@@ -19,13 +19,13 @@
 package net.netshot.netshot.rest;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -64,7 +64,6 @@ import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.glassfish.jersey.servlet.ServletProperties;
-import org.graalvm.polyglot.HostAccess.Export;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
@@ -75,6 +74,8 @@ import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
+import org.slf4j.event.Level;
+import org.slf4j.helpers.MessageFormatter;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -99,13 +100,13 @@ import io.undertow.Undertow;
 import io.undertow.UndertowOptions;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.PathHandler;
-import io.undertow.server.handlers.SameSiteCookieHandler;
 import io.undertow.server.handlers.resource.ClassPathResourceManager;
 import io.undertow.server.handlers.resource.ResourceHandler;
 import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.DeploymentInfo;
 import io.undertow.servlet.api.DeploymentManager;
 import io.undertow.servlet.api.ServletSessionConfig;
+import io.undertow.util.Headers;
 import jakarta.annotation.security.DenyAll;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
@@ -175,7 +176,7 @@ import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.device.Finder;
-import net.netshot.netshot.device.Finder.Expression.FinderParseException;
+import net.netshot.netshot.device.Finder.FinderParseException;
 import net.netshot.netshot.device.Module;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.Network6Address;
@@ -209,7 +210,7 @@ import net.netshot.netshot.rest.RestViews.RestApiView;
 import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
 import net.netshot.netshot.work.Task.ScheduleType;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 import net.netshot.netshot.work.tasks.CheckComplianceTask;
 import net.netshot.netshot.work.tasks.CheckGroupComplianceTask;
 import net.netshot.netshot.work.tasks.CheckGroupSoftwareTask;
@@ -353,7 +354,7 @@ public class RestService extends Thread {
 			uriBuilder.uri(
 				Netshot.getConfig("netshot.http.baseurl", "http://localhost:8080"));
 		}
-		int port = Netshot.getConfig("netshot.http.baseport", 0, 1, 65535);
+		int port = Netshot.getConfig("netshot.http.baseport", 0, 0, 65535);
 		if (port != 0) {
 			uriBuilder.port(port);
 		}
@@ -451,6 +452,7 @@ public class RestService extends Thread {
 					.setName(RestService.SESSION_COOKIE_NAME)
 					.setHttpOnly(true)
 					.setSecure(httpUseSsl)
+					.setAttribute("SameSite", "Strict")
 				)
 				.setDefaultSessionTimeout(UiUser.SETTINGS.getMaxIdleTime());
 
@@ -459,7 +461,6 @@ public class RestService extends Thread {
 				.addDeployment(servletBuilder);
 			manager.deploy();
 			HttpHandler servletHandler = manager.start();
-			HttpHandler strictServletHandler = new SameSiteCookieHandler(servletHandler, "Strict");
 
 			// === Static files from /www/ (classpath) ===
 			ResourceHandler staticHandler = Handlers.resource(
@@ -469,7 +470,7 @@ public class RestService extends Thread {
 			// === Routing ===
 			PathHandler pathHandler = Handlers.path()
 				.addPrefixPath(HTTP_STATIC_PATH, staticHandler)
-				.addPrefixPath(HTTP_API_PATH, strictServletHandler);
+				.addPrefixPath(HTTP_API_PATH, servletHandler);
 
 			builder.setHandler(pathHandler);
 
@@ -1077,13 +1078,13 @@ public class RestService extends Thread {
 						}
 						catch (Exception e) {
 						}
-						return Response.ok(text)
-							.header("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))
+						byte[] content = text.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+						return Response.ok(content, MediaType.APPLICATION_OCTET_STREAM)
+							.header(Headers.CONTENT_DISPOSITION_STRING, "attachment; filename=\"%s\"".formatted(fileName))
+							.header(Headers.CONTENT_LENGTH_STRING, content.length)
 							.build();
 					}
-					else if (attribute instanceof ConfigBinaryFileAttribute) {
-						ConfigBinaryFileAttribute fileAttribute = (ConfigBinaryFileAttribute) attribute;
-						File file = fileAttribute.getFileName();
+					else if (attribute instanceof ConfigBinaryFileAttribute fileAttribute) {
 						String fileName = fileAttribute.getOriginalName();
 						if (fileName == null) {
 							fileName = "%s.dat".formatted(attribute.getName());
@@ -1098,8 +1099,10 @@ public class RestService extends Thread {
 						}
 						catch (Exception e) {
 						}
+						java.io.File file = fileAttribute.getFilePath().toFile();
 						return Response.ok(file, MediaType.APPLICATION_OCTET_STREAM)
-							.header("Content-Disposition", String.format("attachment; filename=\"%s\"", fileName))
+							.header(Headers.CONTENT_DISPOSITION_STRING, "attachment; filename=\"%s\"".formatted(fileName))
+							.header(Headers.CONTENT_LENGTH_STRING, file.length())
 							.build();
 					}
 				}
@@ -1108,6 +1111,7 @@ public class RestService extends Thread {
 				Response.Status.BAD_REQUEST);
 		}
 		catch (HibernateException e) {
+			log.error("Unable to get the configuration", e);
 			throw new WebApplicationException("Unable to get the configuration",
 				Response.Status.INTERNAL_SERVER_ERROR);
 		}
@@ -2070,7 +2074,7 @@ public class RestService extends Thread {
 				session.close();
 			}
 			if (newDevice != null) {
-				DynamicDeviceGroup.refreshAllGroups(newDevice);
+				DynamicDeviceGroup.refreshAllGroupsOfOneDevice(newDevice);
 			}
 			try {
 				TaskManager.addTask(task);
@@ -2120,14 +2124,14 @@ public class RestService extends Thread {
 				this.suggestReturnCode(Response.Status.NOT_FOUND);
 				return;
 			}
-			List<File> toDeleteFiles = new ArrayList<>();
+			List<java.nio.file.Path> toDeletePathes = new ArrayList<>();
 			List<ConfigBinaryFileAttribute> attributes = session
 				.createQuery("from ConfigBinaryFileAttribute cfa where cfa.config.device = :device",
 					ConfigBinaryFileAttribute.class)
 				.setParameter("device", device)
 				.list();
 			for (ConfigBinaryFileAttribute attribute : attributes) {
-				toDeleteFiles.add(attribute.getFileName());
+				toDeletePathes.add(attribute.getFilePath());
 			}
 			// Remove the long text attributes (due to delete cascade constraint)
 			session
@@ -2146,12 +2150,12 @@ public class RestService extends Thread {
 			session.remove(device);
 			session.getTransaction().commit();
 			AAA_LOG.info("Device of ID {} has been deleted.", device.getId());
-			for (File toDeleteFile : toDeleteFiles) {
+			for (java.nio.file.Path toDeletePath : toDeletePathes) {
 				try {
-					toDeleteFile.delete();
+					Files.delete(toDeletePath);
 				}
 				catch (Exception e) {
-					log.error("Error while removing binary file {}", toDeleteFile, e);
+					log.error("Error while removing binary file {}", toDeletePath, e);
 				}
 			}
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
@@ -2428,7 +2432,6 @@ public class RestService extends Thread {
 						cliAccount.setSuperPassword(rsCliAccount.getSuperPassword());
 					}
 					if (DeviceSshKeyAccount.class.isInstance(credentialSet)) {
-						((DeviceSshKeyAccount) cliAccount).setPublicKey(((DeviceSshKeyAccount) rsCliAccount).getPublicKey());
 						((DeviceSshKeyAccount) cliAccount).setPrivateKey(((DeviceSshKeyAccount) rsCliAccount).getPrivateKey());
 					}
 				}
@@ -2502,7 +2505,7 @@ public class RestService extends Thread {
 		finally {
 			session.close();
 		}
-		DynamicDeviceGroup.refreshAllGroups(device);
+		DynamicDeviceGroup.refreshAllGroupsOfOneDevice(device);
 		return this.getDevice(id);
 	}
 
@@ -2571,8 +2574,10 @@ public class RestService extends Thread {
 			DebugLog debugLog = task.getDebugLog();
 			String text = debugLog == null ? "" : debugLog.getText();
 			String fileName = String.format("debug_%d.log", id);
-			return Response.ok(text)
-				.header("Content-Disposition", "attachment; filename=" + fileName)
+			byte[] content = text.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+			return Response.ok(content, MediaType.APPLICATION_OCTET_STREAM)
+				.header(Headers.CONTENT_DISPOSITION_STRING, "attachment; filename=\"%s\"".formatted(fileName))
+				.header(Headers.CONTENT_LENGTH_STRING, content.length)
 				.build();
 		}
 		catch (ObjectNotFoundException e) {
@@ -2886,7 +2891,6 @@ public class RestService extends Thread {
 					cliAccount.setSuperPassword(rsCliAccount.getSuperPassword());
 				}
 				if (DeviceSshKeyAccount.class.isInstance(credentialSet)) {
-					((DeviceSshKeyAccount) cliAccount).setPublicKey(((DeviceSshKeyAccount) rsCliAccount).getPublicKey());
 					((DeviceSshKeyAccount) cliAccount).setPrivateKey(((DeviceSshKeyAccount) rsCliAccount).getPrivateKey());
 				}
 			}
@@ -2946,13 +2950,6 @@ public class RestService extends Thread {
 	@XmlAccessorType(XmlAccessType.NONE)
 	public static class RsSearchCriteria {
 
-		/** The device class name. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private String driver;
-
 		/** The query. */
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
@@ -3003,12 +3000,10 @@ public class RestService extends Thread {
 	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
 	public RsSearchResults searchDevices(RsSearchCriteria criteria)
 		throws WebApplicationException {
-		log.debug("REST request, search devices, query '{}', driver '{}'.",
-			criteria.getQuery(), criteria.getDriver());
+		log.debug("REST request, search devices, query '{}'.", criteria.getQuery());
 
-		DeviceDriver driver = DeviceDriver.getDriverByName(criteria.getDriver());
 		try {
-			Finder finder = new Finder(criteria.getQuery(), driver);
+			Finder finder = new Finder(criteria.getQuery());
 			Session session = Database.getSession();
 			try {
 				Query<RsLightDevice> query = session.createQuery("select new RsLightDevice("
@@ -3097,9 +3092,6 @@ public class RestService extends Thread {
 			}
 			else if ("DynamicDeviceGroup".equals(rsGroup.getType())) {
 				DynamicDeviceGroup dynamicGroup = new DynamicDeviceGroup(name);
-				if (rsGroup.getDriver() != null) {
-					dynamicGroup.setDriver(rsGroup.getDriver());
-				}
 				if (rsGroup.getQuery() != null) {
 					dynamicGroup.setQuery(rsGroup.getQuery());
 				}
@@ -3304,13 +3296,6 @@ public class RestService extends Thread {
 		@Setter
 		private List<Long> staticDevices = new ArrayList<>();
 
-		/** The device class name. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private String driver;
-
 		/** The query. */
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
@@ -3380,7 +3365,6 @@ public class RestService extends Thread {
 				staticGroup.updateCachedDevices(devices);
 			}
 			else if (group instanceof DynamicDeviceGroup dynamicGroup) {
-				dynamicGroup.setDriver(rsGroup.getDriver());
 				dynamicGroup.setQuery(rsGroup.getQuery());
 				try {
 					dynamicGroup.refreshCache(session);
@@ -4998,45 +4982,45 @@ public class RestService extends Thread {
 				rule.addExemption(exemption);
 			}
 
-			if (rule instanceof JavaScriptRule) {
+			if (rule instanceof JavaScriptRule jsRule) {
 				if (rsRule.getScript() != null) {
 					String script = rsRule.getScript().trim();
-					((JavaScriptRule) rule).setScript(script);
+					jsRule.setScript(script);
 				}
 			}
-			else if (rule instanceof PythonRule) {
+			else if (rule instanceof PythonRule pyRule) {
 				if (rsRule.getScript() != null) {
 					String script = rsRule.getScript().trim();
-					((PythonRule) rule).setScript(script);
+					pyRule.setScript(script);
 				}
 			}
-			else if (rule instanceof TextRule) {
+			else if (rule instanceof TextRule textRule) {
 				if (rsRule.getText() != null) {
-					((TextRule) rule).setText(rsRule.getText());
+					textRule.setText(rsRule.getText());
 				}
 				if (rsRule.getRegExp() != null) {
-					((TextRule) rule).setRegExp(rsRule.getRegExp());
+					textRule.setRegExp(rsRule.getRegExp());
 				}
 				if (rsRule.getContext() != null) {
-					((TextRule) rule).setContext(rsRule.getContext());
+					textRule.setContext(rsRule.getContext());
 				}
 				if (rsRule.getField() != null) {
-					((TextRule) rule).setField(rsRule.getField());
+					textRule.setField(rsRule.getField());
 				}
 				if (rsRule.getDriver() != null) {
-					((TextRule) rule).setDeviceDriver(rsRule.getDriver());
+					textRule.setDeviceDriver(rsRule.getDriver());
 				}
 				if (rsRule.getInvert() != null) {
-					((TextRule) rule).setInvert(rsRule.getInvert());
+					textRule.setInvert(rsRule.getInvert());
 				}
 				if (rsRule.getMatchAll() != null) {
-					((TextRule) rule).setMatchAll(rsRule.getMatchAll());
+					textRule.setMatchAll(rsRule.getMatchAll());
 				}
 				if (rsRule.getAnyBlock() != null) {
-					((TextRule) rule).setAnyBlock(rsRule.getAnyBlock());
+					textRule.setAnyBlock(rsRule.getAnyBlock());
 				}
 				if (rsRule.getNormalize() != null) {
-					((TextRule) rule).setNormalize(rsRule.getNormalize());
+					textRule.setNormalize(rsRule.getNormalize());
 				}
 			}
 
@@ -5224,51 +5208,23 @@ public class RestService extends Thread {
 
 
 			StringBuilder taskLog = new StringBuilder();
-			TaskLogger taskLogger = new TaskLogger() {
-
+			TaskContext taskContext = new TaskContext() {
 				@Override
-				@Export
-				public void warn(String message) {
-					taskLog.append("[WARN] ");
-					taskLog.append(message);
+				public void log(Level level, String message, Object... params) {
+					taskLog.append("[%s] ".formatted(level.toString()));
+					taskLog.append(
+						MessageFormatter.arrayFormat(message, params).getMessage());
 					taskLog.append("\n");
 				}
 
 				@Override
-				@Export
-				public void trace(String message) {
-					taskLog.append("[TRACE] ");
-					taskLog.append(message);
-					taskLog.append("\n");
-				}
-
-				@Override
-				@Export
-				public void info(String message) {
-					taskLog.append("[INFO] ");
-					taskLog.append(message);
-					taskLog.append("\n");
-				}
-
-				@Override
-				@Export
-				public void error(String message) {
-					taskLog.append("[ERROR] ");
-					taskLog.append(message);
-					taskLog.append("\n");
-				}
-
-				@Override
-				@Export
-				public void debug(String message) {
-					taskLog.append("[DEBUG] ");
-					taskLog.append(message);
-					taskLog.append("\n");
+				public String getIdentifier() {
+					return "RuleTest";
 				}
 			};
 
 			rule.setEnabled(true);
-			CheckResult check = rule.check(device, session, taskLogger);
+			CheckResult check = rule.check(device, session, taskContext);
 			result.setResult(check.getResult());
 			result.setScriptError(taskLog.toString());
 			result.setComment(check.getComment());
@@ -8125,13 +8081,13 @@ public class RestService extends Thread {
 							if (exportCompliance) {
 								row.createCell(++x).setCellValue((device.getSoftwareLevel() == null
 									? ConformanceLevel.UNKNOWN : device.getSoftwareLevel()).toString());
+								cell = row.createCell(++x);
 								if (device.getEosDate() != null) {
-									cell = row.createCell(++x);
 									cell.setCellValue(device.getEosDate());
 									cell.setCellStyle(dateCellStyle);
 								}
+								cell = row.createCell(++x);
 								if (device.getEolDate() != null) {
-									cell = row.createCell(++x);
 									cell.setCellValue(device.getEolDate());
 									cell.setCellStyle(dateCellStyle);
 								}
@@ -8342,7 +8298,7 @@ public class RestService extends Thread {
 				}
 
 				if (exportCompliance) {
-		 		log.debug("Exporting compliance data");
+			log.debug("Exporting compliance data");
 					List<RsLightPolicyRuleDevice> checkResults = getConfigComplianceDeviceStatuses(domains, groups,
 						new HashSet<Long>(), new HashSet<>(
 							Arrays.asList(new CheckResult.ResultOption[] { CheckResult.ResultOption.CONFORMING,
@@ -8588,7 +8544,12 @@ public class RestService extends Thread {
 
 				ByteArrayOutputStream output = new ByteArrayOutputStream();
 				workBook.write(output);
-				return Response.ok(output.toByteArray()).header("Content-Disposition", "attachment; filename=" + fileName).build();
+				byte[] content = output.toByteArray();
+				return Response
+					.ok(content, MediaType.APPLICATION_OCTET_STREAM)
+					.header(Headers.CONTENT_DISPOSITION_STRING, "attachment; filename=\"%s\"".formatted(fileName))
+					.header(Headers.CONTENT_LENGTH_STRING, content.length)
+					.build();
 			}
 			catch (IOException e) {
 				log.error("Unable to write the resulting file.", e);
@@ -9423,8 +9384,7 @@ public class RestService extends Thread {
 				trigger.setHook(hook);
 			}
 		}
-		if (hook instanceof WebHook) {
-			WebHook webHook = (WebHook) hook;
+		if (hook instanceof WebHook webHook) {
 			try {
 				webHook.getParsedUrl();
 			}
@@ -9534,8 +9494,7 @@ public class RestService extends Thread {
 			throw new NetshotBadRequestException("Invalid name for the hook",
 				NetshotBadRequestException.Reason.NETSHOT_INVALID_HOOK_NAME);
 		}
-		if (rsHook instanceof WebHook) {
-			WebHook rsWebHook = (WebHook) rsHook;
+		if (rsHook instanceof WebHook rsWebHook) {
 			try {
 				rsWebHook.getParsedUrl();
 			}
@@ -9573,9 +9532,8 @@ public class RestService extends Thread {
 				// Ensure we keep the same HookTrigger object instances
 				hook.getTriggers().retainAll(rsHook.getTriggers());
 				hook.getTriggers().addAll(rsHook.getTriggers());
-				if (rsHook instanceof WebHook) {
-					WebHook rsWebHook = (WebHook) rsHook;
-					WebHook webHook = (WebHook) hook;
+				if (rsHook instanceof WebHook rsWebHook
+						&& hook instanceof WebHook webHook) {
 					webHook.setAction(rsWebHook.getAction());
 					webHook.setUrl(rsWebHook.getUrl());
 					webHook.setSslValidation(rsWebHook.isSslValidation());

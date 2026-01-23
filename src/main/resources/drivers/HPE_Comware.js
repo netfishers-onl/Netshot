@@ -21,7 +21,7 @@ const Info = {
 	name: "HPEComware",
 	description: "HPE Comware OS",
 	author: "Netshot Team",
-	version: "0.2"
+	version: "0.3"
 };
 
 const Config = {
@@ -205,7 +205,7 @@ function snapshot(cli, device, config) {
 
 	device.set("networkClass", "SWITCHROUTER");
 	
-	const platformMatch = displayVersion.match(/^HPE (.+?)(-| ).*uptime is [0-9]+ weeks/m);
+	const platformMatch = displayVersion.match(/^HPE? (.+?)(-| ).*uptime is [0-9]+ weeks/m);
 	const platform = platformMatch ? platformMatch[1] : "Unknown Comware switch";
 	device.set("family", platform);
 

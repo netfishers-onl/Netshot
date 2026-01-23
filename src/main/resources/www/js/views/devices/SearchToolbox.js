@@ -6,130 +6,126 @@ define([
 	'models/device/DeviceTypeCollection',
 	'models/domain/DomainCollection',
 	'models/diagnostic/DiagnosticCollection',
+	'models/compliance/PolicyCollection',
+	'models/compliance/RuleCollection',
 	'text!templates/devices/searchToolbox.html',
 	'rangyinput'
 ], function($, _, Backbone, DeviceTypeCollection, DomainCollection, DiagnosticCollection,
-		searchToolboxTemplate) {
+		PolicyCollection, RuleCollection, searchToolboxTemplate) {
 
 	return Backbone.View.extend({
 
 		el: "#nsdevices-searchtoolbox",
+
+		fieldTypes: {
+			GENERIC: "Generic attributes",
+			DRIVER: "Type-specific attributes",
+			COMPLIANCE: "Compliance rule results",
+			DIAGNOSTIC: "Diagnostic results",
+		},
 		
-		defaultAttributes: [ {
+		genericAttributes: [ {
 			level: "DEVICE",
 			name: "creationDate",
-			title: "Creation date",
+			title: "Creation Date",
 			type: "DATE",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "comments",
 			title: "Comments",
 			type: "TEXT",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "contact",
 			title: "Contact",
 			type: "TEXT",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "location",
 			title: "Location",
 			type: "TEXT",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "modules",
 			title: "Module",
 			type: "TEXT",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "interfaces",
 			title: "Interface",
 			type: "TEXT",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "networkClass",
-			title: "Network class",
+			title: "Network Class",
 			type: "ENUM",
 			values: [
 				"FIREWALL", "LOADBALANCER", "ROUTER", "SERVER", "SWITCH",
 				"SWITCHROUTER", "ACCESSPOINT", "WIRELESSCONTROLLER",
-				"CONSOLESERVER", "UNKNOWN",
+				"CONSOLESERVER", "UNKNOWN", "VOICEGATEWAY",
 			],
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "ipAddress",
 			title: "IP",
 			type: "IPADDRESS",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "macAddress",
 			title: "MAC",
 			type: "MACADDRESS",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "softwareVersion",
-			title: "Software version",
+			title: "Software Version",
 			type: "TEXT",
-			searchable: true
+		}, {
+			level: "DEVICE",
+			name: "serialNumber",
+			title: "Serial Number",
+			type: "TEXT",
 		}, {
 			level: "DEVICE",
 			name: "softwareLevel",
 			title: "Software Level",
 			type: "ENUM",
 			values: [ "GOLD", "SILVER", "BRONZE", "UNKNOWN" ],
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "status",
 			title: "Status",
 			type: "ENUM",
 			values: [ "INPRODUCTION", "DISABLED", "PREPRODUCTION" ],
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "vrf",
 			title: "VRF",
 			type: "TEXT",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "name",
 			title: "Name",
 			type: "TEXT",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "vitualName",
 			title: "Virtual Name",
 			type: "TEXT",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "family",
 			title: "Family",
 			type: "TEXT",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "changeDate",
 			title: "Last change date",
 			type: "DATE",
-			searchable: true
 		}, {
 			level: "DEVICE",
-			name: "device",
-			title: "Device",
+			name: "id",
+			title: "ID",
 			type: "ID",
-			searchable: true
 		}, {
 			level: "DEVICE",
 			name: "domain",
@@ -143,8 +139,12 @@ define([
 					};
 				});
 			},
-			searchable: true
-		} ],
+		}, {
+			level: "DEVICE",
+			name: "type",
+			title: "Type",
+			type: "_DEVICETYPE",
+		} ].sort((a, b) => a.title.localeCompare(b.title)),
 
 		template: _.template(searchToolboxTemplate),
 
@@ -153,160 +153,382 @@ define([
 			this.deviceTypes = new DeviceTypeCollection([]);
 			this.domains = new DomainCollection([]);
 			this.diagnostics = new DiagnosticCollection([]);
-			$.when(this.deviceTypes.fetch(), this.domains.fetch(), this.diagnostics.fetch()).done(function() {
-				that.render();
+			this.policies = new PolicyCollection([]);
+			this.rules = new RuleCollection([]);
+			this.render();
+		},
+
+		setExpression: function(expression) {
+			this.$('#expression').val(expression).keydown();
+		},
+
+		getExpression: function() {
+			return this.$('#expression').val();
+		},
+
+		escapeValue: function(value) {
+			return value.replace(/\\/g, "\\\\").replace(/"/g, "\\\"");
+		},
+
+		addActionButtons: function(actions) {
+			var that = this;
+			_.each(actions, function(action, caption) {
+				$('<button />').text(caption).button().click(function() {
+					that.$('#expression').replaceSelectedText(action);
+					that.$('#builder-clear').show();
+					return false;
+				}).appendTo(that.$('#fieldbuttons'));
 			});
 		},
 
-		getAttributes: function(driver) {
+		setActionButtons: function(actions) {
 			var that = this;
-			var attributes = this.defaultAttributes;
-			if (typeof driver === "object" && driver) {
-				attributes = _.union(attributes, driver.get("attributes"));
+			this.$('#fieldbuttons button').button('destroy');
+			this.$('#fieldbuttons').empty();
+			this.addActionButtons(actions);
+		},
+
+		diagnosticToActions: function(diagnostic) {
+			var that = this;
+			if (!diagnostic) {
+				return [];
 			}
-			attributes = _.sortBy(attributes, "title");
-			attributes = _.union(attributes, that.diagnostics.map(function(diagnostic) {
-				return {
-					level: "DEVICE",
-					title: 'Diagnostic "' + diagnostic.get("name") + '"',
-					name: diagnostic.get("name") + " (diagnostic)",
-					type: diagnostic.get("resultType"),
-					searchable: true
-				};
-			}));
-			return attributes;
+			var name = "Diagnostic > " + this.escapeValue(diagnostic.get('name'));
+			var resultType = diagnostic.get('resultType');
+			var actions = {
+				'NUMERIC': {
+					'is': '[' + name + '] is 16',
+					'lessthan': '[' + name + '] lessthan 16',
+					'greaterthan': '[' + name + '] greaterthan 16',
+				},
+				'TEXT': {
+					'is': '[' + name + '] is "text"',
+					'contains': '[' + name + '] contains "text"',
+					'containsnocase': '[' + name + '] containsnocase "text"',
+					'startswith': '[' + name + '] startswith "text"',
+					'endswith': '[' + name + '] endswith "text"',
+					'matches': '[' + name + '] matches "pattern"',
+				},
+				'BINARY': {
+					'true': '[' + name + '] is true',
+					'false': '[' + name + '] is false',
+				},
+			};
+			return actions[resultType];
+		},
+
+		attributeToActions: function(attribute, driverDescription) {
+			var that = this;
+			if (!attribute) {
+				return [];
+			}
+			var name = this.escapeValue(attribute.title);
+			if (driverDescription) {
+				name = driverDescription + " > " + name;
+			}
+			var type = attribute.type;
+
+			var exampleValue = attribute.exampleValue || "text";
+
+			var actions = {
+				'TEXT': {
+					'is': '[' + name + '] is "' + exampleValue + '"',
+					'contains': '[' + name + '] contains "' + exampleValue + '"',
+					'containsnocase': '[' + name + '] containsnocase "' + exampleValue + '"',
+					'startswith': '[' + name + '] startswith "' + exampleValue + '"',
+					'endswith': '[' + name + '] endswith "' + exampleValue + '"',
+					'matches': '[' + name + '] matches "pattern"',
+				},
+				'LONGTEXT': {
+					'is': '[' + name + '] is "' + exampleValue + '"',
+					'contains': '[' + name + '] contains "' + exampleValue + '"',
+					'containsnocase': '[' + name + '] containsnocase "' + exampleValue + '"',
+					'startswith': '[' + name + '] startswith "' + exampleValue + '"',
+					'endswith': '[' + name + '] endswith "' + exampleValue + '"',
+					'matches': '[' + name + '] matches "pattern"',
+				},
+				'NUMERIC': {
+					'is': '[' + name + '] is 16',
+					'lessthan': '[' + name + '] lessthan 16',
+					'greaterthan': '[' + name + '] greaterthan 16'
+				},
+				'ID': {
+					'is': '[' + name + '] is 16',
+				},
+				'DATE': {
+					'is': '[' + name + '] is "2012-01-16"',
+					'before': '[' + name + '] before "2012-01-16"',
+					'after': '[' + name + '] after "2012-01-16"',
+					'before (relative)': '[' + name + '] before "Now -1d"',
+				},
+				'IPADDRESS': {
+					'is': '[' + name + '] is 16.16.16.16',
+					'in': '[' + name + '] in 16.16.0.0/16'
+				},
+				'MACADDRESS': {
+					'is': '[' + name + '] is 1616.1616.1616',
+					'in': '[' + name + '] in 1616.1616.1616/32'
+				},
+				'BINARY': {
+					'true': '[' + name + '] is true',
+					'false': '[' + name + '] is false'
+				},
+				'ENUM': function() {
+					var buttons = {};
+					var values = this.values;
+					if (typeof values === "function") {
+						values = values.call(that);
+					}
+					for (a in values) {
+						var value = values[a];
+						if (typeof value === "string") {
+							buttons[value] = '[' + this.title + '] is "' + value + '"';
+						}
+						else {
+							buttons[value.caption] = '[' + this.title + '] is ' + value.id;
+						}
+					}
+					return buttons;
+				},
+				'_DEVICETYPE': function() {
+					const name = this.name;
+					const exampleValue = "Cisco IOS and IOS-XE";
+					const buttons = {
+						'is': '[' + name + '] is "' + exampleValue + '"',
+						'contains': '[' + name + '] contains "' + exampleValue + '"',
+						'containsnocase': '[' + name + '] containsnocase "' + exampleValue + '"',
+						'startswith': '[' + name + '] startswith "' + exampleValue + '"',
+						'endswith': '[' + name + '] endswith "' + exampleValue + '"',
+						'matches': '[' + name + '] matches "pattern"',
+					};
+					that.deviceTypes.each(function(type) {
+						buttons[type.get('description')] = '[' + name + '] is "' + type.get('description') + '"';
+					});
+					return buttons;
+				},
+			};
+
+			if (typeof actions[type] === "function") {
+				return actions[type].call(attribute);
+			}
+
+			return actions[type];
 		},
 		
 		render: function() {
 			var that = this;
 			this.$el.html(this.template);
-			$('<option />').attr('value', "").text("[Any]").appendTo(this.$('#devicetype'));
-			this.deviceTypes.each(function(deviceType) {
-				$('<option />').attr('value', deviceType.get('name')).text(deviceType
-						.get('description')).appendTo(that.$('#devicetype'));
+
+			for (var t in this.fieldTypes) {
+				$('<option />')
+					.attr('value', t)
+					.text(this.fieldTypes[t])
+					.appendTo(that.$('#fieldtype'));
+			}
+
+			for (var a in this.genericAttributes) {
+				var attribute = this.genericAttributes[a];
+				$('<option />')
+					.attr('value', attribute.name)
+					.text(attribute.title)
+					.appendTo(that.$('#genericfieldname'));
+			}
+
+			this.$('#builder-clear')
+				.unbind('click')
+				.button({
+					icons: {
+						primary: "ui-icon-close"
+					},
+					text: false,
+				})
+				.addClass("nsbutton-icononly")
+				.click(function() {
+					that.$('#expression').focus().val("");
+					$(this).hide();
+					return false;
+				})
+				.hide();
+
+			this.$('#expression').keydown(function() {
+				that.$('#builder-clear').toggle($(this).val() !== "");
 			});
-			this.$('#builder-clear').click(function() {
-				that.$('#expression').focus().val("");
-				return false;
-			});
+
 			this.$('#builder-not').click(function() {
-				that.$('#expression').focus().val('NOT (' + that.$('#expression').val() + ')');
+				that.$('#expression').focus().val('not (' + that.$('#expression').val() + ')');
 				return false;
 			});
 			this.$('#builder-and').click(function() {
-				var text = '(' + that.$('#expression').val() + ') AND ()';
+				var text = '(' + that.$('#expression').val() + ') and ()';
 				that.$('#expression').focus().val(text);
 				var l = text.length;
 				that.$('#expression').setSelection(l - 1, l - 1);
 				return false;
 			});
 			this.$('#builder-or').click(function() {
-				var text = '(' + that.$('#expression').val() + ') OR ()';
+				var text = '(' + that.$('#expression').val() + ') or ()';
 				that.$('#expression').focus().val(text);
 				var l = text.length;
 				that.$('#expression').setSelection(l - 1, l - 1);
 				return false;
 			});
-			this.$('#fieldname').change(function() {
-				that.$('#fieldbuttons button').button('destroy');
-				that.$('#fieldbuttons').empty();
-				var attributes = that.getAttributes(that.driver);
-				var attribute = _.findWhere(attributes, { name: $(this).val() });
-				var name = attribute.title;
-				var type = attribute.type;
 
-				var actions = {
-					'TEXT': {
-						'IS': '[' + name + '] IS "text"',
-						'CONTAINS': '[' + name + '] CONTAINS "text"',
-						'CONTAINSNOCASE': '[' + name + '] CONTAINSNOCASE "text"',
-						'STARTSWITH': '[' + name + '] STARTSWITH "text"',
-						'ENDSWITH': '[' + name + '] ENDSWITH "text"',
-						'MATCHES': '[' + name + '] MATCHES "pattern"',
-					},
-					'LONGTEXT': {
-						'IS': '[' + name + '] IS "text"',
-						'CONTAINS': '[' + name + '] CONTAINS "text"',
-						'CONTAINSNOCASE': '[' + name + '] CONTAINSNOCASE "text"',
-						'STARTSWITH': '[' + name + '] STARTSWITH "text"',
-						'ENDSWITH': '[' + name + '] ENDSWITH "text"',
-						'MATCHES': '[' + name + '] MATCHES "pattern"',
-					},
-					'NUMERIC': {
-						'IS': '[' + name + '] IS 16',
-						'LESSTHAN': '[' + name + '] LESSTHAN 16',
-						'GREATERTHAN': '[' + name + '] GREATERTHAN 16'
-					},
-					'ID': {
-						'IS': '[' + name + '] IS 16',
-					},
-					'DATE': {
-						'IS': '[' + name + '] IS "2012-01-16"',
-						'BEFORE': '[' + name + '] BEFORE "2012-01-16"',
-						'AFTER': '[' + name + '] AFTER "2012-01-16"',
-						'BEFORE (relative)': '[' + name + '] BEFORE "NOW -1d"',
-					},
-					'IPADDRESS': {
-						'IS': '[' + name + '] IS 16.16.16.16',
-						'IN': '[' + name + '] IN 16.16.0.0/16'
-					},
-					'MACADDRESS': {
-						'IS': '[' + name + '] IS 1616.1616.1616',
-						'IN': '[' + name + '] IN 1616.1616.1616/32'
-					},
-					'BINARY': {
-						'TRUE': '[' + name + '] IS TRUE',
-						'FALSE': '[' + name + '] IS FALSE'
-					},
-					'ENUM': function() {
-						var buttons = {};
-						var values = this.values;
-						if (typeof values === "function") {
-							values = values.call(that);
-						}
-						for (a in values) {
-							var value = values[a];
-							if (typeof value === "string") {
-								buttons[value] = '[' + this.title + '] IS "' + value + '"';
-							}
-							else {
-								buttons[value.caption] = '[' + this.title + '] IS ' + value.id;
-							}
-						}
-						return buttons;
-					}
-				};
-
-				var buttons;
-				if (typeof actions[type] === "object" && actions[type]) {
-					buttons = actions[type];
+			this.$('#fieldtype').change(function() {
+				var type = $(this).val();
+				var $genericFieldSelect = that.$('#genericfieldname').hide();
+				var $typeSelect = that.$('#devicetype').hide();
+				that.$('#driverfieldname').hide();
+				var $policySelect = that.$('#policy').hide();
+				that.$('#rule').hide();
+				var $diagnosticSelect = that.$('#diagnostic').hide();
+				that.setActionButtons();
+				if (type === "GENERIC") {
+					$.when(
+						that.domains.fetch(),
+						that.deviceTypes.fetch(),
+					).then(function() {
+						$genericFieldSelect.show().change();
+					});
 				}
-				else {
-					buttons = actions[type].call(attribute);
+				else if (type === "DRIVER") {
+					$typeSelect.empty();
+					that.deviceTypes.fetch().then(function() {
+						that.deviceTypes.each(function(deviceType) {
+							$('<option />')
+								.attr('value', deviceType.get('name'))
+								.text(deviceType.get('description'))
+								.appendTo($typeSelect);
+						});
+						$typeSelect.show().change();
+					});
 				}
-				_.each(buttons, function(action, caption) {
-					$('<button />').text(caption).button().click(function() {
-						that.$('#expression').replaceSelectedText(action);
-						return false;
-					}).appendTo(that.$('#fieldbuttons'));
-				});
+				else if (type === "COMPLIANCE") {
+					$policySelect.empty();
+					that.policies.fetch().then(function() {
+						that.policies.each(function(policy) {
+							$('<option />')
+								.attr('value', policy.get('id'))
+								.text(policy.get('name'))
+								.appendTo($policySelect);
+						});
+						if (that.policies.length === 0) {
+							$('<option />')
+								.attr('value', -1)
+								.text("(No policy defined)")
+								.appendTo($policySelect);
+						}
+						$policySelect.show().change();
+					});
+				}
+				else if (type === "DIAGNOSTIC") {
+					$diagnosticSelect.empty();
+					that.diagnostics.fetch().then(function() {
+						that.diagnostics.each(function(policy) {
+							$('<option />')
+								.attr('value', policy.get('id'))
+								.text(policy.get('name'))
+								.appendTo($diagnosticSelect);
+						});
+						if (that.diagnostics.length === 0) {
+							$('<option />')
+								.attr('value', -1)
+								.text("(No diagnostic defined)")
+								.appendTo($diagnosticSelect);
+						}
+						$diagnosticSelect.show().change();
+					});
+				}
 			});
+
+			this.$('#genericfieldname').change(function() {
+				var attributes = that.genericAttributes;
+				var attribute = _.findWhere(attributes, { name: $(this).val() });
+				var actions = that.attributeToActions(attribute);
+				that.setActionButtons(actions);
+			});
+
 			this.$('#devicetype').change(function() {
-				that.$('#fieldname').empty();
+				var $driverFieldSelect = that.$('#driverfieldname');
+				$driverFieldSelect.empty();
 				that.driver = that.deviceTypes.findWhere({ name: $(this).val() });
-				var attributes = that.getAttributes(that.driver);
+				var attributes = that.driver.get("attributes");
 				for (var a in attributes) {
 					var attribute = attributes[a];
 					if (!attribute.searchable) continue;
-					$('<option />').attr('value', attribute.name)
-							.text(attribute.title).appendTo(that.$('#fieldname'));
+					$('<option />')
+						.attr('value', attribute.name)
+						.text(attribute.title)
+						.appendTo($driverFieldSelect);
 				}
-				that.$('#fieldname').change();
-			}).change();
+				$driverFieldSelect.show().change();
+			});
+
+			this.$('#driverfieldname').change(function() {
+				var attributes = that.driver.get('attributes');
+				var attribute = _.findWhere(attributes, { name: $(this).val() });
+				var actions = that.attributeToActions(attribute, that.driver.get('description'));
+				that.setActionButtons(actions);
+			});
+
+			this.$('#policy').change(function() {
+				var policyId = $(this).val();
+				that.policy = that.policies.get(policyId);
+				var $ruleSelect = that.$('#rule');
+				$ruleSelect.empty();
+				if (that.policy) {
+					that.rules.reset();
+					that.rules.policy = that.policy;
+					that.rules.fetch().then(function() {
+						that.rules.each(function(rule) {
+							$('<option />')
+								.attr('value', rule.get('id'))
+								.text(rule.get('name'))
+								.appendTo($ruleSelect);
+						});
+						if (that.rules.length === 0) {
+							$('<option />')
+								.attr('value', -1)
+								.text("(No rule defined in this policy)")
+								.appendTo($ruleSelect);
+						}
+						$ruleSelect.show().change();
+					});
+				}
+			});
+
+			this.$('#rule').change(function() {
+				that.rule = that.rules.get($(this).val());
+				var actions = {};
+				if (that.rule) {
+					var name = "Rule > " +
+						that.escapeValue(that.policy.get("name")) +
+						" > " + that.escapeValue(that.rule.get("name"));
+					_.each([
+						"CONFORMING",
+						"NONCONFORMING",
+						"NOTAPPLICABLE",
+						"EXEMPTED",
+						"DISABLED",
+						"INVALIDRULE",
+					], function(o) {
+						actions[o] = "[" + name + "] is \"" + o + "\"";
+					});
+				}
+				that.setActionButtons(actions);
+			});
+
+			this.$('#diagnostic').change(function() {
+				that.diagnostic = that.diagnostics.get($(this).val());
+				var actions = that.diagnosticToActions(that.diagnostic);
+				that.setActionButtons(actions);
+			});
+
+			this.$('#fieldtype').change();
+
 			this.$('button').button().addClass('ui-button');
 
 			if (typeof this.options.onRendered === "function") {
-				this.options.onRendered();
+				this.options.onRendered.call(this);
 			}
 
 			return this;

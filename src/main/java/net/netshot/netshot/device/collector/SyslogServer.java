@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.netshot.netshot.collector;
+package net.netshot.netshot.device.collector;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -94,8 +94,8 @@ public class SyslogServer extends Collector {
 				socket.receive(dato);
 				InetAddress address = dato.getAddress();
 				List<String> matchingDrivers = new ArrayList<>();
-				if (address instanceof Inet4Address) {
-					Network4Address source = new Network4Address((Inet4Address) address, 32);
+				if (address instanceof Inet4Address ip4Address) {
+					Network4Address source = new Network4Address(ip4Address, 32);
 					String message = new String(dato.getData(), 0, dato.getLength());
 					log.trace("Received Syslog message: '{}'.", message);
 

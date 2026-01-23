@@ -24,8 +24,10 @@ import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -53,7 +55,7 @@ import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceSshAccount;
 import net.netshot.netshot.device.script.SnapshotCliScript;
-import net.netshot.netshot.work.TaskLogger;
+import net.netshot.netshot.work.TaskContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -72,13 +74,13 @@ public class DeviceDriverTest {
 	/**
 	 * CLI class to mock a connection to a device.
 	 */
-	public abstract static class FakeCli extends Cli {
+	private abstract static class FakeCli extends Cli {
 
 		protected PrintStream srvOutStream;
 		protected DeviceCliAccount cliAccount;
 
-		public FakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskLogger taskLogger) throws IOException {
-			super(host, taskLogger);
+		public FakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
+			super(host, taskContext);
 			PipedOutputStream pipedStream = new PipedOutputStream();
 			this.srvOutStream = new PrintStream(pipedStream);
 			this.inStream = new PipedInputStream(pipedStream, 16384);
@@ -111,8 +113,8 @@ public class DeviceDriverTest {
 		private final String hostname = "router1";
 		private final Pattern commandPattern = Pattern.compile("(.+)\r");
 
-		public CiscoIOS12FakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskLogger taskLogger) throws IOException {
-			super(host, cliAccount, taskLogger);
+		public CiscoIOS12FakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
+			super(host, cliAccount, taskContext);
 		}
 
 		private void printPrompt() {
@@ -376,17 +378,17 @@ public class DeviceDriverTest {
 	@DisplayName("CiscoIOS12 driver test")
 	class CiscoIOS12Test {
 
-		TaskLogger taskLogger = new FakeTaskLogger();
+		TaskContext taskContext = new FakeTaskContext();
 
 		@Test
 		@DisplayName("CiscoIOS12 Snapshot")
 		void snapshot() throws NoSuchMethodException, SecurityException, IOException,
 			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 			DeviceCliAccount credentials = new DeviceSshAccount("admin", "admin", "admin", "admin/admin");
-			Cli fakeCli = new CiscoIOS12FakeCli(null, credentials, taskLogger);
+			Cli fakeCli = new CiscoIOS12FakeCli(null, credentials, taskContext);
 			Session nullSession = null;
 			Device device = FakeDeviceFactory.getFakeCiscoIosDevice();
-			SnapshotCliScript script = new SnapshotCliScript(true);
+			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
 			runMethod.setAccessible(true);
@@ -441,8 +443,8 @@ public class DeviceDriverTest {
 		private final String currentPath = "/";
 		private List<String> pagedLines;
 
-		public ZPENodeGridFakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskLogger taskLogger) throws IOException {
-			super(host, cliAccount, taskLogger);
+		public ZPENodeGridFakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
+			super(host, cliAccount, taskContext);
 		}
 
 		private void printPrompt() {
@@ -652,18 +654,18 @@ public class DeviceDriverTest {
 	@DisplayName("ZPENodeGrid driver test")
 	class ZPENodeGridTest {
 
-		TaskLogger taskLogger = new FakeTaskLogger();
+		TaskContext taskContext = new FakeTaskContext();
 
 		@Test
 		@DisplayName("ZPENodeGrid Snapshot")
 		void snapshot() throws NoSuchMethodException, SecurityException, IOException,
 			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 			DeviceCliAccount credentials = new DeviceSshAccount("admin", "admin", "admin", "admin/admin");
-			Cli fakeCli = new ZPENodeGridFakeCli(null, credentials, taskLogger);
+			Cli fakeCli = new ZPENodeGridFakeCli(null, credentials, taskContext);
 			Session nullSession = null;
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("ZPENodeGrid", null, domain, "test");
-			SnapshotCliScript script = new SnapshotCliScript(true);
+			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
 			runMethod.setAccessible(true);
@@ -721,8 +723,8 @@ public class DeviceDriverTest {
 		private final String hostname = "switch1";
 		private final Pattern commandPattern = Pattern.compile("(.+)\r");
 
-		public AristaMOSFakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskLogger taskLogger) throws IOException {
-			super(host, cliAccount, taskLogger);
+		public AristaMOSFakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
+			super(host, cliAccount, taskContext);
 		}
 
 		private void printPrompt() {
@@ -1129,18 +1131,18 @@ public class DeviceDriverTest {
 	@DisplayName("Arista MOS driver test")
 	class AristaMOSTest {
 
-		TaskLogger taskLogger = new FakeTaskLogger();
+		TaskContext taskContext = new FakeTaskContext();
 
 		@Test
 		@DisplayName("Arista MOS Snapshot")
 		void snapshot() throws NoSuchMethodException, SecurityException, IOException,
 			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 			DeviceCliAccount credentials = new DeviceSshAccount("admin", "admin", "admin", "admin/admin");
-			Cli fakeCli = new AristaMOSFakeCli(null, credentials, taskLogger);
+			Cli fakeCli = new AristaMOSFakeCli(null, credentials, taskContext);
 			Session nullSession = null;
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("AristaMOS", null, domain, "test");
-			SnapshotCliScript script = new SnapshotCliScript(true);
+			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
 			runMethod.setAccessible(true);
@@ -1169,8 +1171,368 @@ public class DeviceDriverTest {
 		}
 	}
 
-	private DeviceDriverTest() {
+
+	/**
+	 * Fake CiscoAsyncOS CLI.
+	 */
+	public static class CiscoAsyncOSFakeCli extends FakeCli {
+		public enum CliMode {
+			INIT,
+			OPER,
+			PAGING,
+			SHOWCONFIG_OPTION,
+		}
+
+		private static final String PAGER = "-Press Any Key For More-";
+		private static final String POST_PAGER = "\r                         \r";
+		private static final int PAGE_SIZE = 20;
+
+		private CliMode cliMode = CliMode.INIT;
+		private final String hostname = "esa.netshot.lab";
+		private final Pattern commandPattern = Pattern.compile("(.+)\r");
+		private Deque<String> nextPages;
+
+		public CiscoAsyncOSFakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
+			super(host, cliAccount, taskContext);
+		}
+
+		private void printPrompt() {
+			switch (this.cliMode) {
+				case OPER:
+					this.srvOutStream.printf("%s> ", this.hostname);
+					break;
+				default:
+					break;
+			}
+		}
+
+		protected void printPaged(String text) {
+			if (text != null) {
+				this.nextPages = new ArrayDeque<>();
+				ArrayDeque<String> lines = new ArrayDeque<>(Arrays.asList(text.split("\n")));
+				int lineCount = 0;
+				StringBuilder page = new StringBuilder();
+
+				while (lines.size() > 0) {
+					if (lineCount == PAGE_SIZE) {
+						this.nextPages.add(page.toString());
+						page.setLength(0);
+						lineCount = 0;
+					}
+					page.append(lines.removeFirst());
+					page.append("\n");
+					lineCount++;
+				}
+				if (page.length() > 0) {
+					this.nextPages.add(page.toString());
+				}
+			}
+			if (this.cliMode == CliMode.PAGING) {
+				this.srvOutStream.print(POST_PAGER);
+			}
+			String page = this.nextPages.pop();
+			this.srvOutStream.print(page);
+			if (!this.nextPages.isEmpty()) {
+				this.cliMode = CliMode.PAGING;
+				this.srvOutStream.print(PAGER);
+			}
+			else {
+				this.cliMode = CliMode.OPER;
+				this.printPrompt();
+			}
+		}
+
+		protected void cmdShowConfigOptions() {
+			this.srvOutStream.print(
+				"Choose the passphrase option:\n" +
+				"1. Mask passphrases (Files with masked passphrases cannot be loaded using loadconfig command)\n" +
+				"2. Encrypt passphrases\n" +
+				"[1]> "
+			);
+			this.cliMode = CliMode.SHOWCONFIG_OPTION;
+		}
+
+		protected void cmdShowConfig(boolean showSecrets) {
+			String config = 
+				"<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\r\n" +
+				"<!DOCTYPE config SYSTEM \"config.dtd\">\r\n" +
+				"\r\n" +
+				"<!--\r\n" +
+				"  Product: Cisco M600V Secure Email and Web Manager\r\n" +
+				"  Model Number: M600V\r\n" +
+				"  Version: 15.0.1-416\r\n" +
+				"  Serial Number: BE59F09812A56BFCA12A-1478FC8D8A90\r\n" +
+				"  Number of CPUs: 8\r\n" +
+				"  Memory (GB): 15\r\n" +
+				"  Current Time: Wed Sep 17 15:04:21 2025\r\n" +
+				"  Feature \"Cisco Centralized Email Reporting\": Quantity = 1, Time Remaining = \"Perpetual\"\r\n" +
+				"  Feature \"Cisco IronPort Centralized Email Message Tracking\": Quantity = 1, Time Remaining = \"Perpetual\"\r\n" +
+				"  Feature \"Incoming Mail Handling\": Quantity = 1, Time Remaining = \"Perpetual\"\r\n" +
+				"-->\r\n" +
+				"<config>\r\n" +
+				"<!--\r\n" +
+				"******************************************************************************\r\n" +
+				"*                           Network Configuration                            *\r\n" +
+				"******************************************************************************\r\n" +
+				"-->\r\n" +
+				"\r\n" +
+				"  <hostname>" + this.hostname + "</hostname>\r\n" +
+				"\r\n" +
+				"  <ports>\r\n" +
+				"    <port_interface>\r\n" +
+				"      <port_name>Management</port_name>\r\n" +
+				"      <direct>\r\n" +
+				"        <jack>Management</jack>\r\n" +
+				"        <jack_mtu>1500</jack_mtu>\r\n" +
+				"      </direct>\r\n" +
+				"    </port_interface>\r\n" +
+				"    <port_interface>\r\n" +
+				"      <port_name>Data 1</port_name>\r\n" +
+				"      <direct>\r\n" +
+				"        <jack>Data 1</jack>\r\n" +
+				"        <jack_mtu>1500</jack_mtu>\r\n" +
+				"      </direct>\r\n" +
+				"    </port_interface>\r\n" +
+				"  </ports>\r\n" +
+				"  <interfaces>\r\n" +
+				"    <interface>\r\n" +
+				"      <interface_name>Production</interface_name>\r\n" +
+				"      <ip>172.16.1.10</ip>\r\n" +
+				"      <phys_interface>Data 1</phys_interface>\r\n" +
+				"      <netmask>255.255.255.224</netmask>\r\n" +
+				"      <interface_hostname>ciscom600v.lab.netshot.net</interface_hostname>\r\n" +
+				"      <sshd_port>22</sshd_port>\r\n" +
+				"      <httpsd_port>443</httpsd_port>\r\n" +
+				"      <api_httpd_port>6080</api_httpd_port>\r\n" +
+				"      <api_httpsd_port>6443</api_httpsd_port>\r\n" +
+				"    </interface>\r\n" +
+				"    <interface>\r\n" +
+				"      <interface_name>Management</interface_name>\r\n" +
+				"      <ip>172.16.254.10</ip>\r\n" +
+				"      <phys_interface>Management</phys_interface>\r\n" +
+				"      <netmask>0xffffffe0</netmask>\r\n" +
+				"      <interface_hostname>ciscom600v.lab.netshot.net</interface_hostname>\r\n" +
+				"      <sshd_port>22</sshd_port>\r\n" +
+				"      <trailblazer_httpsd_port>4431</trailblazer_httpsd_port>\r\n" +
+				"      <httpsd_port>443</httpsd_port>\r\n" +
+				"      <api_httpd_port>6080</api_httpd_port>\r\n" +
+				"      <api_httpsd_port>6443</api_httpsd_port>\r\n" +
+				"    </interface>\r\n" +
+				"  </interfaces>\r\n" +
+				"\r\n" +
+				"  <ip_groups>\r\n" +
+				"  </ip_groups>\r\n" +
+				"\r\n" +
+				"  <allow_arp_multicast>0</allow_arp_multicast>\r\n" +
+				"  <dehydration_enabled>0</dehydration_enabled>\r\n" +
+				"\r\n" +
+				"  <ethernet_settings>\r\n" +
+				"    <ethernet>\r\n" +
+				"      <ethernet_interface>Management</ethernet_interface>\r\n" +
+				"      <media>manual</media>\r\n" +
+				"      <media_opt></media_opt>\r\n" +
+				"      <macaddr>06:2b:74:dc:d4:d7</macaddr>\r\n" +
+				"    </ethernet>\r\n" +
+				"    <ethernet>\r\n" +
+				"      <ethernet_interface>Data 1</ethernet_interface>\r\n" +
+				"      <media>manual</media>\r\n" +
+				"      <media_opt></media_opt>\r\n" +
+				"      <macaddr>06:cd:d8:74:9b:ef</macaddr>\r\n" +
+				"    </ethernet>\r\n" +
+				"  </ethernet_settings>\r\n" +
+				"\r\n" +
+				"  <dns>\r\n" +
+				"    <local_dns>\r\n" +
+				"      <dns_ip priority=\"0\">172.16.254.98</dns_ip>\r\n" +
+				"      <dns_ip priority=\"0\">172.16.254.99</dns_ip>\r\n" +
+				"    </local_dns>\r\n" +
+				"    <dns_ptr_timeout>20</dns_ptr_timeout>\r\n" +
+				"\r\n" +
+				"  </dns>\r\n" +
+				"\r\n" +
+				"  <dns_cache_ttl_min>1800</dns_cache_ttl_min>\r\n" +
+				"\r\n" +
+				"  <dns_interface></dns_interface>\r\n" +
+				"\r\n" +
+				"  <default_gateway>172.16.1.30</default_gateway>\r\n" +
+				"\r\n" +
+				"  <routes>\r\n" +
+				"    <route>\r\n" +
+				"      <route_name>MGMT</route_name>\r\n" +
+				"      <destination>172.16.254.0/24</destination>\r\n" +
+				"      <gateway>172.16.254.30</gateway>\r\n" +
+				"    </route>\r\n" +
+				"  </routes>\r\n" +
+				"\r\n" +
+				"<!--\r\n" +
+				"******************************************************************************\r\n" +
+				"*                            System Configuration                            *\r\n" +
+				"******************************************************************************\r\n" +
+				"-->\r\n" +
+				"\r\n" +
+				"  <fips_mode>0</fips_mode>\r\n" +
+				"  <config_encryption>\r\n" +
+				"  </config_encryption>\r\n" +
+				"  <ntp>\r\n" +
+				"    <ntp_server>172.18.114.78</ntp_server>\r\n" +
+				"    <ntp_server>172.18.115.56</ntp_server>\r\n" +
+				"    <ntp_server_info>\r\n" +
+				"      <ntp_server_addr>172.18.114.78</ntp_server_addr>\r\n" +
+				"    </ntp_server_info>\r\n" +
+				"    <ntp_server_info>\r\n" +
+				"      <ntp_server_addr>172.18.115.56</ntp_server_addr>\r\n" +
+				"    </ntp_server_info>\r\n" +
+				"    <ntp_source_ip_interface></ntp_source_ip_interface>\r\n" +
+				"    <ntp_use_auth>0</ntp_use_auth>\r\n" +
+				"  </ntp>\r\n" +
+				"\r\n";
+				if (showSecrets) {
+					config +=
+						"  <https_certificate>\r\n" +
+						"    <certificate>\r\n" +
+						"-----BEGIN CERTIFICATE-----\r\n" +
+						"MIID8TCCAtmgAwIBAgIUU0V+Vgqhs6fsS4MX6dbNYFn2Nk4wDQYJKoZIhvcNAQEL\r\n" +
+						"BQAwgYcxCzAJBgNVBAYTAkZSMQwwCgYDVQQIDANJZEYxDjAMBgNVBAcMBVBhcmlz\r\n" +
+						"MRAwDgYDVQQKDAdOZXRzaG90MQ0wCwYDVQQLDARUZXN0MRUwEwYDVQQDDAxBc3lu\r\n" +
+						"Y09TIHRlc3QxIjAgBgkqhkiG9w0BCQEWE2NvbnRhY3RAbmV0c2hvdC5uZXQwHhcN\r\n" +
+						"MjUwOTIwMTI1MjA5WhcNMjYwOTIwMTI1MjA5WjCBhzELMAkGA1UEBhMCRlIxDDAK\r\n" +
+						"BgNVBAgMA0lkRjEOMAwGA1UEBwwFUGFyaXMxEDAOBgNVBAoMB05ldHNob3QxDTAL\r\n" +
+						"BgNVBAsMBFRlc3QxFTATBgNVBAMMDEFzeW5jT1MgdGVzdDEiMCAGCSqGSIb3DQEJ\r\n" +
+						"ARYTY29udGFjdEBuZXRzaG90Lm5ldDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC\r\n" +
+						"AQoCggEBANNRfOo37uan0pRKrfSVpefgwbZwZ/J5MRtaeZcBqHvompZA8FTz6Yp1\r\n" +
+						"amNuKehdKXae/gYCc83cNTwS7IBivz30iZt4/1VewIwKiZEVbK4DbsGQioseb3vO\r\n" +
+						"gJoot7FzGrkoKnHn9n9cZmOA2zWiKE7SqVztg1MXcKnZhz5QE1mIG4Abz8dAYnM7\r\n" +
+						"yRQ7DuDl9L7ESFQA8NcsML+zZ1q8kpQz82Oq10lolbnMolHCJx8jjAYnnMG/tK4I\r\n" +
+						"Q6gUFPxS0gNsgoKnOe6OYMX7Z06hU5sibVc6jF+wCnVZLjEMuOhpCvLcZmbaYTmg\r\n" +
+						"Cy7KpGF6ILyKKG83NlOYttHJBSA3eP8CAwEAAaNTMFEwHQYDVR0OBBYEFMABqRHf\r\n" +
+						"1AxhRgx/dCyPTbbIkJYjMB8GA1UdIwQYMBaAFMABqRHf1AxhRgx/dCyPTbbIkJYj\r\n" +
+						"MA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBADQ5fEVeNuw8RaFf\r\n" +
+						"hv97+xQfej39CSDCI9foSSFr6LL624S4wyiSwWKrtg9lH+mxozg5q2NXUW+qWKPR\r\n" +
+						"NDuOBY9SNVwkEoLqsdXbOIncuvwXBJ+5+/Md/IVjH5O88Gb6fEczhb0snBqp9+8v\r\n" +
+						"jD75NoACvUucKL4J5A8M54mw+wZvRn64RhwUhigqQETRilUUsVAJITRdXvXtyYK0\r\n" +
+						"Jtb1Bt8xVvOHzMi/n6I8yKdjuIrDiec4+XGaXK9DqNeZc4znTVXkx3Sr1HLs3BT4\r\n" +
+						"SlvJ+y6SluxPcAoSFBGy4uC8DhJiWXpPaCDWPY1IE7aBiwMFCzdQrczWnp6vOKIa\r\n" +
+						"Ahhsx70=\r\n" +
+						"-----END CERTIFICATE-----\r\n" +
+						"\r\n" +
+						"    </certificate>\r\n" +
+						"      <key>MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDTUXzqN+7mp9KUSq30laXn4MG2cGfyeTEbWnmXAah76JqWQPBU8+mKdWpjbinoXSl2nv4GAnPN3DU8EuyAYr899ImbeP9VXsCMComRFWyuA27BkIqLHm97zoCaKLexcxq5KCpx5/Z/XGZjgNs1oihO0qlc7YNTF3Cp2Yc+UBNZiBuAG8/HQGJzO8kUOw7g5fS+xEhUAPDXLDC/s2davJKUM/NjqtdJaJW5zKJRwicfI4wGJ5zBv7SuCEOoFBT8UtIDbIKCpznujmDF+2dOoVObIm1XOoxfsAp1WS4xDLjoaQry3GZm2mE5oAsuyqRheiC8iihvNzZTmLbRyQUgN3j/AgMBAAECggEAFwB7Zgyj6Yws+iKi4B5bSmvcSh00Lgrjvdl8ULlH0K0CCVw/jM+8BRaWIlqUdIw804JSSO8tZyQS0LDdTiBG4YSOZ1OlX3KKkkkiA56JukCkvAHIGC/o7K4OsOPBEwS3d54X+KwfgxTYuaNbY8bR4mVAit1OT9YbrQarl6x5tA36ZUCGKAWwa+SsII7x/LZ5s6q2208TBIQYWFTLTNQgcOol03KSYANxQi20+sf013Wm6tqKFs/xiaJ0Q/6OdzpC1YtJmOemsQZY0aV50h/uY7tzAy1cpLr6TW86X4rYrhNVYfz2zGDQbQ8CwqyNcwoSj48+ppDRIi2GvZtBro5m6QKBgQDqq/ViLQqo8gNmtNRFeKJItnnvNHz52HERsFytpGTEwdNdmKn35fd2zbpWpLhqvSPd4hNs+oGtqRdAkrQymQRAXY0G6n2DF55UwWoz+P6WJyS9EVPGt9XILLXiO+1x9PwdfDINv4gE7wnGzocIm6jZ4IHMqP4w6129PrTW/k8bLQKBgQDmhiwej7mExF8zTj7NS5Yu8KaCS7GfzmySTI47DDD6OTS3tT37LeHgmfojd0VYKWaHSDAYnnyEQNX1G5C4illSE5vI0ITtbBE5LMLWmFVEa82Aql6K6y06AM+D76vrRsbRZqXSAiO9S9bbUxg3uYmjb2Nk6H09VHgjy7syMb4QWwKBgQCPd2VjCepUcvCFX9POTPvZvEU7ajllfV9S0yE1vyUj7ONNe0GeHmd1qDxdMALWrp84zTfXDicthgyDG60yqb2hpA/NxJnLBSt04XIOKBFstq2NMQSonkcCQ+NGViDJ5F4loIHxScDcU08EzcpcBt3ppYl1F3OfcKU0RxvDvGGcWQKBgAkOtocQ4Jot2Qu8BE2urZz0iaZO8RC1XKC271O0m+wI+WBKd7/5wok/o4tnMUtQfR3NoU4mVAAiSAXUanBFx1KpQJK4VrC5cUfM0W77F0aT8cQfbY2JxgIkbALkFN4urrsljFhfCyZx52RAtI/j81t/kekyFVGmkv3dEGLdf3lHAoGBANOYiFXnco4vW+FMFVZxGjeYS4X5SfZUgaye1XpRZUUmfKS0rGxrw9C8mneiKQEqlksYHnU3yYsFdG7R3WyPMR1TvJhIIKUgfxjXAAAnq96BnBe3Y3Y4Lh6X8KVXzyHw8yZ8zvWBVLJznpJ96EycwUeSYTCwBiWo6FkUhwfCygGm</key>\r\n" +
+						"  </https_certificate>\r\n";
+				}
+			config +=
+				"  <crl_sources>\r\n" +
+				"    <crl_listener_enabled>0</crl_listener_enabled>\r\n" +
+				"    <crl_delivery_enabled>0</crl_delivery_enabled>\r\n" +
+				"    <crl_gui_enabled>0</crl_gui_enabled>\r\n" +
+				"  </crl_sources>\r\n" +
+				"<!--\r\n" +
+				"******************************************************************************\r\n" +
+				"*                             Filebeat Configuration.                        *\r\n" +
+				"******************************************************************************\r\n" +
+				"-->\r\n" +
+				"\r\n" +
+				"<filebeat_config>\r\n" +
+				"  <customer_details>\r\n" +
+				"    <cd_allocation></cd_allocation>\r\n" +
+				"    <cd_data_center></cd_data_center>\r\n" +
+				"    <cd_name></cd_name>\r\n" +
+				"  </customer_details>\r\n" +
+				"  <kafka>\r\n" +
+				"    <cert></cert>\r\n" +
+				"    <host></host>\r\n" +
+				"    <topic></topic>\r\n" +
+				"  </kafka>\r\n" +
+				"</filebeat_config>\r\n" +
+				"</config>\r\n" +
+				"\r\n";
+			this.printPaged(config);
+		}
+
+		protected void cmdVersion() {
+			this.srvOutStream.print(
+				"\r\n" +
+				"Current Version\r\n" +
+				"===============\r\n" +
+				"Product: Cisco M600V Secure Email and Web Manager\r\n" +
+				"Model: M600V\r\n" +
+				"Version: 15.0.0-416\r\n" +
+				"Build Date: 2023-11-10\r\n" +
+				"Install Date: 2024-06-11 12:17:23\r\n" +
+				"Serial #: BE59F09812A56BFCA12A-1478FC8D8A90\r\n" +
+				"BIOS: 4.11.fp\r\n" +
+				"CPUs: 8 expected, 8 allocated\r\n" +
+				"Memory: 16384 MB expected, 15360 MB allocated\r\n" +
+				"RAID: NA\r\n" +
+				"RAID Status: Unknown\r\n" +
+				"RAID Type: NA\r\n" +
+				"BMC: NA\r\n"
+			);
+			this.printPrompt();
+		}
+
+		@Override
+		protected void write(String value) {
+			if (this.cliMode == CliMode.INIT) {
+				this.cliMode = CliMode.OPER;
+				this.printPrompt();
+			}
+			if (this.cliMode.equals(CliMode.PAGING) && " ".equals(value)) {
+				this.printPaged(null);
+				return;
+			}
+			Matcher commandMatcher = commandPattern.matcher(value);
+			while (commandMatcher.find()) {
+				String command = commandMatcher.group(1);
+				// Echo command back
+				this.srvOutStream.print(command + "\r\n");
+
+				if (this.cliMode.equals(CliMode.OPER) && "showconfig".equals(command)) {
+					this.cmdShowConfigOptions();
+				}
+				else if (this.cliMode.equals(CliMode.SHOWCONFIG_OPTION) && "1".equals(command)) {
+					this.cmdShowConfig(false);
+				}
+				else if (this.cliMode.equals(CliMode.SHOWCONFIG_OPTION) && "2".equals(command)) {
+					this.cmdShowConfig(true);
+				}
+				else if (this.cliMode.equals(CliMode.SHOWCONFIG_OPTION)) {
+					this.cmdShowConfigOptions();
+				}
+				else if (this.cliMode.equals(CliMode.OPER) && "version".equals(command)) {
+					this.cmdVersion();
+				}
+				else if (this.cliMode.equals(CliMode.OPER)) {
+					this.srvOutStream.print("\nUnknown command or missing feature key: %s".formatted(command));
+					this.printPrompt();
+				}
+			}
+		}
 	}
 
+	@Nested
+	@DisplayName("Cisco AsyncOS driver test")
+	class CiscoAsyncOSTest {
+
+		TaskContext taskContext = new FakeTaskContext();
+
+		@Test
+		@DisplayName("Cisco AsyncOS Snapshot")
+		void snapshot() throws NoSuchMethodException, SecurityException, IOException,
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+			DeviceCliAccount credentials = new DeviceSshAccount("admin", "admin", "admin", "admin/admin");
+			Cli fakeCli = new CiscoAsyncOSFakeCli(null, credentials, taskContext);
+			Session nullSession = null;
+			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
+			Device device = new Device("CiscoAsyncOS", null, domain, "test");
+			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
+			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
+				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
+			runMethod.setAccessible(true);
+			runMethod.invoke(script, nullSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
+			Config config = device.getLastConfig();
+			Assertions.assertNotNull(config, "The config doesn't exist");
+			Assertions.assertEquals("esa.netshot.lab", device.getName(), "The device name is incorrect");
+		}
+	}
 
 }

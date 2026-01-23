@@ -130,20 +130,20 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 					primary: "ui-icon-newwin"
 				},
 				text: false
-			}).click(function() {
+			}).addClass("nsbutton-icononly").click(function() {
 				that.advancedSearchDialog = new AdvancedSearchDialog({
 					devicesView: that
 				});
 			});
 			$('#nstoolbar-devices-schedule').button().off('click').on('click', function() {
-				createTaskDialog = new CreateTaskDialog();
+				new CreateTaskDialog();
 			});
 			this.$('#nsdevices-clearsearch').unbind('click').button({
 				icons: {
 					primary: "ui-icon-close"
 				},
 				text: false
-			}).click(function() {
+			}).addClass("nsbutton-icononly").click(function() {
 				$(this).button('disable');
 				that.devices.resetFilter();
 				that.fetchDevices();
@@ -404,14 +404,15 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 			var $folder = this.$("#nsdevices-groups>ul");
 			var path = group.getPath();
 			for (f in path) {
-				var $child = $folder.children('li[data-folder="' + $.escapeSingleQuotes(path[f]) + '"]');
+				var selector = 'li[data-folder=' + $.escapeSelector(path[f]) + ']';
+				var $child = $folder.children(selector);
 				if ($child.length === 0) {
 					var item = this.groupFolderItemTemplate({
 						name: path[f]
 					});
 					$folder.append($(item));
 				}
-				$folder = $folder.children('li[data-folder="' + $.escapeSingleQuotes(path[f]) + '"]').children('ul');
+				$folder = $folder.children(selector).children('ul');
 			}
 			var item = this.groupItemTemplate(group.toJSON());
 			$folder.append($(item));
@@ -474,6 +475,8 @@ function($, _, Backbone, devicesTemplate, devicesToolbarTemplate,
 				var editGroupDialog = new EditGroupDialog({
 					model: that.group,
 					onEdited: function() {
+						// Ensure to update the model in the collection
+						that.groups.set(that.group);
 						var $folder = that.$("#nsdevices-groups>ul");
 						var path = that.group.getPath();
 						for (f in path) {

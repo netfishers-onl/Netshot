@@ -18,8 +18,10 @@
  */
 package net.netshot.netshot.device.attribute;
 
-import java.io.File;
-import java.nio.file.Paths;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -31,13 +33,74 @@ import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 
+@Slf4j
 @Entity
 @DiscriminatorValue("F")
 public final class ConfigBinaryFileAttribute extends ConfigAttribute {
+
+
+	/**
+	 * Settings/config for the current class.
+	 */
+	public static final class Settings {
+		/** Where the binary files are stored. */
+		@Getter
+		private Path storageFolderPath;
+
+		/**
+		 * Load settings from config.
+		 */
+		private void load() {
+			String folder = Netshot.getConfig("netshot.snapshots.binary.path",
+					"/var/local/netshot");
+			try {
+				this.storageFolderPath = Path.of(folder).normalize();
+				if (!Files.isDirectory(this.storageFolderPath)) {
+					log.error("Storage path '{}' for binary files is not a folder. Binary files won't be saved!",
+						this.storageFolderPath);
+					this.storageFolderPath = null;
+				}
+			}
+			catch (InvalidPathException e) {
+				log.error(
+					"Invalid configured storage path '{}' for binary files. Binary files won't be saved!",
+					folder, e);
+				this.storageFolderPath = null;
+			}
+		}
+	}
+
+	/** Settings for this class. */
+	public static final Settings SETTINGS = new Settings();
+
+	/**
+	 * Load the main policy from configuration.
+	 */
+	public static void loadConfig() {
+		ConfigBinaryFileAttribute.SETTINGS.load();
+	}
+
+	/**
+	 * Create a temporary folder for binary file attributes based on given prefix.
+	 * @param prefix the prefix for the temporary folder
+	 * @return the path to the temporary folder
+	 * @throws IOException if the folder cannot be created
+	 */
+	public static Path makeTempFolder(String prefix) throws IOException {
+		if (ConfigBinaryFileAttribute.SETTINGS.storageFolderPath == null) {
+			throw new IllegalStateException(
+				"Cannot get a folder path to save temporary binary file attribute. "
+				+ "Is netshot.snapshots.binary.path defined?");
+		}
+		Path folder = Files.createTempDirectory(ConfigBinaryFileAttribute.SETTINGS.storageFolderPath, prefix);
+		folder.toFile().deleteOnExit();
+		return folder;
+	}
 
 	/** Unique ID generated before saving. */
 	@Getter(onMethod = @__({
@@ -60,6 +123,13 @@ public final class ConfigBinaryFileAttribute extends ConfigAttribute {
 	@Setter
 	private long fileSize;
 
+	/** File checksum (SHA256). */
+	@Getter(onMethod = @__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private String checksum;
+
 	protected ConfigBinaryFileAttribute() {
 	}
 
@@ -72,14 +142,30 @@ public final class ConfigBinaryFileAttribute extends ConfigAttribute {
 	/**
 	 * Get the full filename where to store data of the configuration attribute.
 	 * @return a File object, where to store data of the attribute
+	 * @throws IllegalAccessException 
 	 */
 	@Transient
-	public File getFileName() {
-		String path = Netshot.getConfig("netshot.snapshots.binary.path");
-		if (path == null) {
-			return null;
+	public Path getFilePath() {
+		if (ConfigBinaryFileAttribute.SETTINGS.storageFolderPath == null) {
+			throw new IllegalStateException(
+				"Cannot get a file path to save binary file attribute. "
+				+ "Is netshot.snapshots.binary.path defined?");
 		}
-		return Paths.get(path, String.format("%s.data", this.getUid())).normalize().toFile();
+		return ConfigBinaryFileAttribute.SETTINGS.storageFolderPath
+			.resolve("%s.data".formatted(this.getUid()))
+			.normalize();
+	}
+
+	@Transient
+	public Path getTempFilePath() {
+		if (ConfigBinaryFileAttribute.SETTINGS.storageFolderPath == null) {
+			throw new IllegalStateException(
+				"Cannot get a file path to save binary file attribute. "
+				+ "Is netshot.snapshots.binary.path defined?");
+		}
+		return ConfigBinaryFileAttribute.SETTINGS.storageFolderPath
+			.resolve(".download.%s.data".formatted(this.getUid()))
+			.normalize();
 	}
 
 	@Override

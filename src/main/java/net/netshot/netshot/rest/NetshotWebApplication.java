@@ -63,6 +63,7 @@ public class NetshotWebApplication extends ResourceConfig {
 		register(RolesAllowedDynamicFeature.class);
 		property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, "true");
 		property(ServerProperties.APPLICATION_NAME, "Netshot");
+		property(ServerProperties.WADL_FEATURE_DISABLE, true);
 		register(LoggerFilter.class);
 		register(ResponseCodeFilter.class);
 		// property(ServerProperties.TRACING, "ALL");

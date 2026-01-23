@@ -16,12 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.netshot.netshot.collector;
+package net.netshot.netshot.device.collector;
 
-/**
- * A collector is a service running in background to collect data from devices.
- */
-public abstract class Collector extends Thread {
-
-
+/** Possible file transfer protocols. */
+public enum TransferProtocol {
+	SFTP,
+	SCP
 }
+

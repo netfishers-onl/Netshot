@@ -105,7 +105,6 @@ public class JsCliHelper {
 			// Log before injecting secrets
 			this.taskContext.trace(Instant.now() + " About to send the following (secrets not inserted):");
 			this.taskContext.trace(command);
-			this.taskContext.trace("Hexadecimal:");
 			this.taskContext.hexTrace(command);
 		}
 		log.debug("Command to be sent (secrets not inserted): '{}'.", command);
@@ -150,7 +149,6 @@ public class JsCliHelper {
 			if (this.taskContext.isTracing()) {
 				this.taskContext.trace("Received the following output:");
 				this.taskContext.trace(this.lastOutput.getFullOutput());
-				this.taskContext.trace("Hexadecimal:");
 				this.taskContext.hexTrace(this.lastOutput.getFullOutput());
 				this.taskContext.trace("The following pattern matched:");
 				this.taskContext.trace(this.getLastExpectMatchPattern());
@@ -168,7 +166,6 @@ public class JsCliHelper {
 				if (this.taskContext.isTracing()) {
 					this.taskContext.trace(Instant.now() + " The receive buffer is:");
 					this.taskContext.trace(buffer);
-					this.taskContext.trace("Hexadecimal:");
 					this.taskContext.hexTrace(buffer);
 				}
 			}

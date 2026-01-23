@@ -53,7 +53,7 @@ public interface TaskContext {
 
 	@Export
 	default void hexTrace(String message) {
-		this.log(Level.TRACE, toHexAscii(message));
+		this.log(Level.TRACE, "Hexadecimal\n" + toHexAscii(message));
 	}
 
 	@Export

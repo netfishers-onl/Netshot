@@ -6951,22 +6951,27 @@ public class RestService extends Thread {
 			}
 
 			Query<RsLightAccessFailureDevice> query = session
-				.createQuery("select new RsLightAccessFailureDevice("
+				.createQuery(
+					"select new RsLightAccessFailureDevice("
 					+ "d.id, "
 					+ "d.name, "
 					+ "d.family, "
 					+ "d.mgmtAddress, "
 					+ "d.status, "
 					+ "d.driver, "
-					+ "case when (d.eolDate < current_date()) then true else false end,  "
+					+ "case when (d.eolDate < current_date()) then true else false end, "
 					+ "case when (d.eosDate < current_date()) then true else false end, "
 					+ "case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, "
 					+ "d.softwareLevel, "
-					+ "(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) as lastSuccess, "
-					+ "(select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :failure) as lastFailure "
-					+ ") from Device d where d.status = :enabled " + domainFilter
-					+ "and (select max(t.executionDate) from TakeSnapshotTask t where t.device = d and t.status = :success) < :when "
-					+ "order by lastSuccess desc",
+					+ "max(case when t.status = :success then t.executionDate end), "
+					+ "max(case when t.status = :failure then t.executionDate end) "
+					+ ") from Device d "
+					+ "left join TakeSnapshotTask t on t.device = d "
+					+ "where d.status = :enabled " + domainFilter
+					+ "group by d.id, d.name, d.family, d.mgmtAddress, d.status, d.driver, d.eolDate, d.eosDate, d.softwareLevel "
+					+ "having max(case when t.status = :success then t.executionDate end) < :when "
+					+ "or max(case when t.status = :success then t.executionDate end) is null "
+					+ "order by max(case when t.status = :success then t.executionDate end) desc nulls last",
 					RsLightAccessFailureDevice.class)
 				.setParameter("when", when.getTime())
 				.setParameter("success", Task.Status.SUCCESS)

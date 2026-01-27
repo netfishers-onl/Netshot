@@ -326,10 +326,10 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 			this.device = null;
 			try {
 				session.beginTransaction();
-				device = new Device(this.discoveredDeviceType, deviceAddress, domain, this.author);
-				device.addCredentialSet(successCredentialSet);
-				session.persist(device);
-				snapshotTask = new TakeSnapshotTask(device,
+				this.device = new Device(this.discoveredDeviceType, deviceAddress, domain, this.author);
+				this.device.addCredentialSet(successCredentialSet);
+				session.persist(this.device);
+				snapshotTask = new TakeSnapshotTask(this.device,
 					"Automatic snapshot after discovery", author, true, false, false);
 				snapshotTask.setPriority(this.getPriority());
 				session.persist(snapshotTask);
@@ -472,6 +472,15 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 	public JobKey getIdentity() {
 		return new JobKey(String.format("Task_%d", this.getId()),
 			String.format("DiscoverDeviceType_%s", this.getDeviceAddress().getIp()));
+	}
+
+	@Override
+	public void copyResultsTo(Task target) {
+		super.copyResultsTo(target);
+		DiscoverDeviceTypeTask t = (DiscoverDeviceTypeTask) target;
+		t.setDiscoveredDeviceType(this.discoveredDeviceType);
+		t.setDevice(this.device);
+		t.setSnapshotTaskId(this.snapshotTaskId);
 	}
 
 	/**

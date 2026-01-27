@@ -117,11 +117,8 @@ public class TaskJob implements Job {
 		session = Database.getSession();
 		try {
 			session.beginTransaction();
-			Task eTask = (Task) session.get(Task.class, id);
-			eTask.setStatus(task.getStatus());
-			eTask.setLog(task.getLog());
-			eTask.setDebugLog(task.getDebugLog());
-			session.merge(eTask);
+			Task persistentTask = session.get(Task.class, id);
+			task.copyResultsTo(persistentTask);
 			session.getTransaction().commit();
 		}
 		catch (Exception e) {
@@ -135,9 +132,8 @@ public class TaskJob implements Job {
 			try {
 				session.clear();
 				session.beginTransaction();
-				Task eTask = (Task) session.get(Task.class, id);
+				Task eTask = session.get(Task.class, id);
 				eTask.setFailed();
-				session.merge(eTask);
 				session.getTransaction().commit();
 			}
 			catch (Exception e1) {

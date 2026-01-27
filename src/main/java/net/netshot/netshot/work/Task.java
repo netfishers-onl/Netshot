@@ -667,6 +667,23 @@ public abstract class Task implements Cloneable {
 		this.status = Status.WAITING;
 	}
 
+	/**
+	 * Copies task execution results to another task instance.
+	 * This is used to update a persistent task with results from execution
+	 * without triggering cascade loading of associations.
+	 *
+	 * Subclasses should override this method and call super.copyResultsTo(target)
+	 * to copy their own result fields.
+	 *
+	 * @param target the persistent task to copy results to
+	 */
+	public void copyResultsTo(Task target) {
+		target.setStatus(this.status);
+		target.setLog(this.getLog());
+		target.setExecutionDate(this.executionDate);
+		//target.setDebugLog(this.debugLog);
+	}
+
 	@Override
 	public String toString() {
 		return "Task " + id + " (type " + this.getClass().getSimpleName() + ", target '" + target

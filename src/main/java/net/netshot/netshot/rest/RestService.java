@@ -916,70 +916,42 @@ public class RestService extends Thread {
 	public List<Task> getDeviceTasks(@PathParam("id") @Parameter(description = "Device ID") Long id, @BeanParam PaginationParams paginationParams)
 		throws WebApplicationException {
 		log.debug("REST request, get device {} tasks.", id);
-		if (paginationParams.offset != null) {
-			throw new NetshotBadRequestException("Offset is not supported on this endpoint",
-				NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
-		}
 		if (paginationParams.limit == null) {
 			paginationParams.limit = 100;
 		}
 		Session session = Database.getSession(true);
 		try {
-			List<Task> tasks = new ArrayList<>();
-
+			List<String> deviceTaskConditions = new ArrayList<>();
 			for (Class<? extends Task> taskClass : Task.getTaskClasses()) {
 				if (DeviceBasedTask.class.isAssignableFrom(taskClass)) {
-					tasks.addAll(session.createQuery(
-						String.format("select t from %s t where t.device.id = :deviceId order by t.changeDate desc",
-							taskClass.getSimpleName()), taskClass)
-						.setParameter("deviceId", id)
-						.setMaxResults(paginationParams.limit)
-						.list());
+					deviceTaskConditions.add(String.format(
+						"t.id IN (select sub.id from %s sub where sub.device.id = :deviceId)",
+						taskClass.getSimpleName()));
 				}
 			}
-
-			Collections.sort(tasks, new Comparator<Task>() {
-				private int getPriority(Task.Status status) {
-					switch (status) {
-						case RUNNING: return 1;
-						case WAITING: return 2;
-						case SCHEDULED: return 3;
-						case NEW: return 4;
-						default: return 10;
-					}
-				}
-
-				private Date getSignificantDate(Task t) {
-					if (t.getExecutionDate() == null) {
-						return t.getChangeDate();
-					}
-					else {
-						return t.getExecutionDate();
-					}
-				}
-
-				@Override
-				public int compare(Task o1, Task o2) {
-					int statusDiff = Integer.compare(
-						this.getPriority(o1.getStatus()), this.getPriority(o2.getStatus()));
-					if (statusDiff == 0) {
-						Date d1 = this.getSignificantDate(o1);
-						Date d2 = this.getSignificantDate(o2);
-						if (d1 == null) {
-							return d2 == null ? 0 : -1;
-						}
-						else {
-							return d2 == null ? 1 : d2.compareTo(d1);
-						}
-					}
-					return statusDiff;
-				}
-			});
-			int max = tasks.size();
-			if (paginationParams.limit < tasks.size()) {
-				max = paginationParams.limit;
+			if (deviceTaskConditions.isEmpty()) {
+				return Collections.emptyList();
 			}
-			return tasks.subList(0, max);
+			String hql = String.format(
+				"select t from Task t where " +
+				String.join(" or ", deviceTaskConditions) + " " +
+				"order by " +
+				"case t.status " +
+				"when :running then 1 " +
+				"when :waiting then 2 " +
+				"when :scheduled then 3 " +
+				"when :newStatus then 4 " +
+				"else 10 end asc, " +
+				"coalesce(t.executionDate, t.changeDate) desc nulls first");
+			Query<Task> query = session.createQuery(hql, Task.class)
+				.setParameter("deviceId", id)
+				.setParameter("running", Task.Status.RUNNING)
+				.setParameter("waiting", Task.Status.WAITING)
+				.setParameter("scheduled", Task.Status.SCHEDULED)
+				.setParameter("newStatus", Task.Status.NEW)
+				.setMaxResults(paginationParams.limit);
+			paginationParams.apply(query);
+			return query.list();
 		}
 		catch (Exception e) {
 			log.error("Unable to fetch the tasks.", e);

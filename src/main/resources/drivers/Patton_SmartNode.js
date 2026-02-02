@@ -21,7 +21,7 @@ var Info = {
 	name: "PattonSmartNode",
 	description: "Patton SmartNode (SmartWare, Trinity)",
 	author: "Netshot Team",
-	version: "1.0"
+	version: "1.1"
 };
 
 var Config = {
@@ -265,29 +265,31 @@ function snapshot(cli, device, config) {
 
 		const contexts = {};
 		for (const contextSection of cli.findSections(runningConfig, /^context ip (.+)/m)) {
-			const context = {
-				name: contextSection.match[1],
-				intfs: {},
-			};
-			contexts[context.name] = context;
+			const contextName = contextSection.match[1];
+			if (typeof contexts[contextName] === "undefined") {
+				contexts[contextName] = {
+					name: contextName,
+					intfs: {},
+				};
+			}
 			for (const intfSection of cli.findSections(contextSection.config, /^ +interface (.+)/m)) {
 				const intf = {
 					name: intfSection.match[1],
-					ips: [],
+					ip: [],
 				};
 				const ipPattern = /^ +ipaddress (.+) ([0-9a-f.:]+)\/([0-9]+)/mg;
 				while (true) {
 					const ipMatch = ipPattern.exec(intfSection.config);
 					if (!ipMatch) break;
 					if (ipMatch[1].includes(":")) {
-						intf.ips.push({
+						intf.ip.push({
 							ipv6: ipMatch[2],
 							mask: parseInt(ipMatch[3]),
 							usage: "PRIMARY",
 						});
 					}
 					else {
-						intf.ips.push({
+						intf.ip.push({
 							ip: ipMatch[2],
 							mask: parseInt(ipMatch[3]),
 							usage: "PRIMARY",
@@ -314,7 +316,7 @@ function snapshot(cli, device, config) {
 				ni.vrf = contextName;
 				try {
 					const intf = contexts[contextName].intfs[intfName];
-					ni.ip = intf.ips;
+					ni.ip = intf.ip;
 				}
 				catch (err1) {
 					// Ignore
@@ -367,27 +369,34 @@ function snapshot(cli, device, config) {
 
 		const contexts = {};
 		for (const contextSection of cli.findSections(runningConfig, /^context ip (.+)/m)) {
-			const context = {
-				name: contextSection.match[1],
-				intfs: {},
-			};
-			contexts[context.name] = context;
+			const contextName = contextSection.match[1];
+			if (typeof contexts[contextName] === "undefined") {
+				contexts[contextName] = {
+					name: contextName,
+					intfs: {},
+				};
+			}
+			const context = contexts[contextName];
 			for (const intfSection of cli.findSections(contextSection.config, /^ +interface (.+)/m)) {
 				const intf = {
 					name: intfSection.match[1],
-					ips: [],
+					ip: [],
+					vrf: context.name,
 				};
 				const ipPattern = /^ +ipaddress ([0-9.]+) ([0-9.]+)/mg;
 				while (true) {
 					const ipMatch = ipPattern.exec(intfSection.config);
 					if (!ipMatch) break;
-					intf.ips.push({
+					intf.ip.push({
 						ip: ipMatch[1],
 						mask: ipMatch[2],
 						usage: "PRIMARY",
 					});
 				}
-				context.intfs[intf.name] = intf;
+				contexts[context.name].intfs[intf.name] = intf;
+				if (intfSection.config.match(/^ +loopback/m)) {
+					device.add("networkInterface", intf);
+				}
 			}
 		}
 
@@ -407,7 +416,7 @@ function snapshot(cli, device, config) {
 				ni.vrf = contextName;
 				try {
 					const intf = contexts[contextName].intfs[intfName];
-					ni.ip = intf.ips;
+					ni.ip = intf.ip;
 				}
 				catch (err1) {
 					// Ignore

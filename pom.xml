@@ -16,7 +16,7 @@
 		<swagger.version>2.2.41</swagger.version>
 		<slf4j.version>2.0.17</slf4j.version>
 		<lombok.version>1.18.42</lombok.version>
-		<sshd.version>2.16.0</sshd.version>
+		<sshd.version>2.17.1</sshd.version>
 		<checkstyle.version>11.0.0</checkstyle.version>
 		<bouncycastle.version>1.83</bouncycastle.version>
 	</properties>

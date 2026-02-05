@@ -87,14 +87,6 @@ import net.netshot.netshot.rest.RestViews.RestApiView;
 @XmlAccessorType(XmlAccessType.NONE)
 public class Device {
 
-	public static class InvalidCredentialsException extends Exception {
-		private static final long serialVersionUID = 2762061771246688828L;
-
-		public InvalidCredentialsException(String message) {
-			super(message);
-		}
-	}
-
 	public static class MissingDeviceDriverException extends Exception {
 		private static final long serialVersionUID = -7286042265874166550L;
 

@@ -42,6 +42,7 @@ import org.apache.sshd.client.ClientBuilder;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.auth.keyboard.UserInteraction;
 import org.apache.sshd.client.auth.password.PasswordAuthenticationReporter;
+import org.apache.sshd.client.auth.pubkey.PublicKeyAuthenticationReporter;
 import org.apache.sshd.client.channel.ChannelShell;
 import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.apache.sshd.client.config.hosts.HostConfigEntryResolver;
@@ -594,6 +595,14 @@ public class Ssh extends Cli {
 						Ssh.this.taskContext.warn("SSH password update requested by the device: '{}'", prompt);
 						return null;
 					}
+					@Override
+					public void serverVersionInfo(ClientSession session, List<String> lines) {
+						Ssh.this.taskContext.debug("SSH version info: {}", String.join("\n", lines));
+					}
+					@Override
+					public void welcome(ClientSession session, String banner, String lang) {
+						Ssh.this.taskContext.debug("Welcome banner: {}", banner);
+					}
 				});
 			}
 			else {
@@ -607,12 +616,24 @@ public class Ssh extends Cli {
 			this.session.setPasswordAuthenticationReporter(new PasswordAuthenticationReporter() {
 				@Override
 				public void signalAuthenticationSuccess(ClientSession sshSession, String service, String givenPassword) throws Exception {
-					Ssh.this.taskContext.debug("SSH authentication succeeded (service {})", service);
+					Ssh.this.taskContext.debug("SSH password authentication succeeded (service {})", service);
 				}
 				@Override
 				public void signalAuthenticationFailure(ClientSession sshSession, String service, String givenPassword,
 					boolean partial, List<String> serverMethods) throws Exception {
-					Ssh.this.taskContext.warn("SSH authentication failed (service {})", service);
+					Ssh.this.taskContext.warn("SSH password authentication failed (service {})", service);
+					throw new InvalidCredentialsException("Invalid SSH password");
+				}
+			});
+			this.session.setPublicKeyAuthenticationReporter(new PublicKeyAuthenticationReporter() {
+				public void signalAuthenticationSuccess(ClientSession session, String service, KeyPair identity) throws Exception {
+					Ssh.this.taskContext.debug("SSH public key authentication succeeded (service {})", service);
+				}
+				public void signalAuthenticationFailure(
+								ClientSession session, String service, KeyPair identity, boolean partial, List<String> serverMethods)
+								throws Exception {
+					Ssh.this.taskContext.warn("SSH public key authentication failed (service {})", service);
+					throw new InvalidCredentialsException("Invalid SSH public key");
 				}
 			});
 
@@ -725,7 +746,13 @@ public class Ssh extends Cli {
 				}
 			});
 
-			this.session.auth().verify(Duration.ofMillis(this.connectionTimeout));
+			try {
+				this.session.auth().verify(Duration.ofMillis(this.connectionTimeout));
+			}
+			catch (IOException e) {
+				throw new InvalidCredentialsException("Authentication error: " + e.getMessage());
+			}
+
 			if (openChannel) {
 				PtyChannelConfigurationHolder ptyConfig = null;
 				if (this.sshConfig.usePty) {

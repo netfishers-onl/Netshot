@@ -30,11 +30,11 @@ import org.hibernate.Session;
 
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.Device;
-import net.netshot.netshot.device.Device.InvalidCredentialsException;
 import net.netshot.netshot.device.Device.MissingDeviceDriverException;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
 import net.netshot.netshot.device.access.Cli;
+import net.netshot.netshot.device.access.InvalidCredentialsException;
 import net.netshot.netshot.device.access.Snmp;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;

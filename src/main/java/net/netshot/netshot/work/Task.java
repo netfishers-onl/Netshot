@@ -681,7 +681,7 @@ public abstract class Task implements Cloneable {
 		target.setStatus(this.status);
 		target.setLog(this.getLog());
 		target.setExecutionDate(this.executionDate);
-		//target.setDebugLog(this.debugLog);
+		target.setDebugLog(this.debugLog);
 	}
 
 	@Override

@@ -675,13 +675,13 @@ public abstract class Task implements Cloneable {
 	 * Subclasses should override this method and call super.copyResultsTo(target)
 	 * to copy their own result fields.
 	 *
-	 * @param target the persistent task to copy results to
+	 * @param newTask the persistent task to copy results to
 	 */
-	public void copyResultsTo(Task target) {
-		target.setStatus(this.status);
-		target.setLog(this.getLog());
-		target.setExecutionDate(this.executionDate);
-		target.setDebugLog(this.debugLog);
+	public void copyResultsTo(Task newTask) {
+		newTask.setStatus(this.status);
+		newTask.setLog(this.getLog());
+		newTask.setExecutionDate(this.executionDate);
+		newTask.setDebugLog(this.debugLog);
 	}
 
 	@Override

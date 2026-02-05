@@ -932,16 +932,16 @@ public class RestService extends Thread {
 				return Collections.emptyList();
 			}
 			String hql = String.format(
-				"select t from Task t where " +
-				String.join(" or ", deviceTaskConditions) + " " +
-				"order by " +
-				"case t.status " +
-				"when :running then 1 " +
-				"when :waiting then 2 " +
-				"when :scheduled then 3 " +
-				"when :newStatus then 4 " +
-				"else 10 end asc, " +
-				"coalesce(t.executionDate, t.changeDate) desc nulls first");
+				"select t from Task t where "
+				+ String.join(" or ", deviceTaskConditions) + " "
+				+ "order by "
+				+ "case t.status "
+				+ "when :running then 1 "
+				+ "when :waiting then 2 "
+				+ "when :scheduled then 3 "
+				+ "when :newStatus then 4 "
+				+ "else 10 end asc, "
+				+ "coalesce(t.executionDate, t.changeDate) desc nulls first");
 			Query<Task> query = session.createQuery(hql, Task.class)
 				.setParameter("deviceId", id)
 				.setParameter("running", Task.Status.RUNNING)

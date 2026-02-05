@@ -596,11 +596,11 @@ public class Ssh extends Cli {
 						return null;
 					}
 					@Override
-					public void serverVersionInfo(ClientSession session, List<String> lines) {
+					public void serverVersionInfo(ClientSession sshSession, List<String> lines) {
 						Ssh.this.taskContext.debug("SSH version info: {}", String.join("\n", lines));
 					}
 					@Override
-					public void welcome(ClientSession session, String banner, String lang) {
+					public void welcome(ClientSession sshSession, String banner, String lang) {
 						Ssh.this.taskContext.debug("Welcome banner: {}", banner);
 					}
 				});
@@ -626,11 +626,11 @@ public class Ssh extends Cli {
 				}
 			});
 			this.session.setPublicKeyAuthenticationReporter(new PublicKeyAuthenticationReporter() {
-				public void signalAuthenticationSuccess(ClientSession session, String service, KeyPair identity) throws Exception {
+				public void signalAuthenticationSuccess(ClientSession sshSession, String service, KeyPair identity) throws Exception {
 					Ssh.this.taskContext.debug("SSH public key authentication succeeded (service {})", service);
 				}
 				public void signalAuthenticationFailure(
-								ClientSession session, String service, KeyPair identity, boolean partial, List<String> serverMethods)
+								ClientSession sshSession, String service, KeyPair identity, boolean partial, List<String> serverMethods)
 								throws Exception {
 					Ssh.this.taskContext.warn("SSH public key authentication failed (service {})", service);
 					throw new InvalidCredentialsException("Invalid SSH public key");

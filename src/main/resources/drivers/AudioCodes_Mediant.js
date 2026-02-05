@@ -21,7 +21,7 @@ const Info = {
 	name: "AudioCodesMediant",
 	description: "AudioCodes Mediant MG/SBC",
 	author: "Netshot Team",
-	version: "1.4"
+	version: "1.5"
 };
 
 const Config = {
@@ -93,10 +93,6 @@ const CLI = {
 				options: [ "username", "password", "enable", "disable" ],
 				target: "enable"
 			},
-			configure: {
-				options: [ "username", "password", "enable", "disable" ],
-				target: "configure"
-			}
 		}
 	},
 	ssh: {
@@ -109,10 +105,6 @@ const CLI = {
 				options: [ "enable", "disable" ],
 				target: "enable"
 			},
-			configure: {
-				options: [ "enable", "disable" ],
-				target: "configure"
-			}
 		}
 	},
 	username: {
@@ -150,11 +142,6 @@ const CLI = {
 				options: [ "enable", "disable", "enableSecret" ],
 				target: "enable"
 			},
-			configure: {
-				cmd: "enable",
-				options: [ "enable", "disable", "enableSecret" ],
-				target: "configure"
-			}
 		}
 	},
 	enableSecret: {
@@ -208,7 +195,7 @@ const CLI = {
 	},
 
 	configure: {
-		prompt: /^([A-Za-z\-_0-9\.\/ ]+\(conf[0-9\-a-zA-Z]+\)# )$/,
+		prompt: /^([A-Za-z\-_0-9\.\/ ]+\([0-9\-a-zA-Z ]+\)# )$/,
 		clearPrompt: true,
 		macros: {
 			exit: {

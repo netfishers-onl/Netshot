@@ -178,6 +178,10 @@ public final class SshServer {
 		@Getter
 		private int tcpPort;
 
+		/** External TCP port (can be different than tcpPort if port translation is used). */
+		@Getter
+		private int externalTcpPort;
+
 		/** The listen address (e.g. 0.0.0.0 or 127.0.0.1) */
 		@Getter
 		private InetAddress listenHost;
@@ -233,6 +237,8 @@ public final class SshServer {
 			}
 
 			this.tcpPort = Netshot.getConfig("netshot.sshserver.port", DEFAULT_SSH_SERVER_PORT, 1, 65535);
+			this.externalTcpPort = Netshot.getConfig("netshot.sshserver.externalport", this.tcpPort, 1, 65535);
+
 			String listenAddress = Netshot.getConfig("netshot.sshserver.listenaddress", "0.0.0.0");
 			try {
 				this.listenHost = InetAddress.getByName(listenAddress);
@@ -387,13 +393,17 @@ public final class SshServer {
 				Map<KexProposalOption, String> serverProposal,
 				Map<KexProposalOption, String> negotiatedOptions,
 				Throwable reason) {
+			if (reason != null) {
+				log.info("SSH Protocol Negotiation ended with error: {}", reason.getMessage());
+			}
+
 			SessionLogBuffer logBuffer = session.getAttribute(SESSION_LOG_BUFFER);
 			if (logBuffer == null) {
 				return;
 			}
 
 			if (reason != null) {
-				logBuffer.trace("SSH Protocol Negotiation ended with error: {}", reason.getMessage());
+				logBuffer.warn("SSH Protocol Negotiation ended with error: {}", reason.getMessage());
 			}
 
 			logBuffer.trace("SSH Protocol Negotiation {}:",
@@ -702,7 +712,9 @@ public final class SshServer {
 		@Override
 		public void closeDirectory(SftpSubsystemProxy subsystem, DirectoryHandle dirHandle, Path dir, String handle,
 				DirectoryStream<Path> ds) throws IOException {
-			throwForbiddenException(subsystem, "closeDirectory");
+			log.info("SSH/SFTP server close directory request - session {}, path {}",
+				subsystem.getSession(), dir);
+			SftpFileSystemAccessor.super.closeDirectory(subsystem, dirHandle, dir, handle, ds);
 		}
 
 		@Override
@@ -744,8 +756,9 @@ public final class SshServer {
 		@Override
 		public DirectoryStream<Path> openDirectory(SftpSubsystemProxy subsystem, DirectoryHandle dirHandle, Path dir,
 				String handle, LinkOption... linkOptions) throws IOException {
-			throwForbiddenException(subsystem, "openDirectory");
-			return null; // Unreachable
+			log.info("SSH/SFTP server open directory request - session {}, path {}, options {}",
+				subsystem.getSession(), dir, linkOptions);
+			return SftpFileSystemAccessor.super.openDirectory(subsystem, dirHandle, dir, handle, linkOptions);
 		}
 
 		@Override
@@ -812,8 +825,9 @@ public final class SshServer {
 		@Override
 		public NavigableMap<String, Object> resolveReportedFileAttributes(SftpSubsystemProxy subsystem, Path file,
 				int flags, NavigableMap<String, Object> attrs, LinkOption... options) throws IOException {
-			throwForbiddenException(subsystem, "resolveReportedFileAttributes");
-			return null; // Unreachable
+			log.info("SSH/SFTP server resolve reported file attributes - session {}, path {}, flags {}, attrs {}",
+				subsystem.getSession(), file, flags, attrs);
+			return SftpFileSystemAccessor.super.resolveReportedFileAttributes(subsystem, file, flags, attrs, options);
 		}
 
 		@Override

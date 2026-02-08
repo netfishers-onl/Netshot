@@ -52,6 +52,7 @@ import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.common.NamedFactory;
 import org.apache.sshd.common.NamedResource;
 import org.apache.sshd.common.PropertyResolverUtils;
+import org.apache.sshd.common.SshException;
 import org.apache.sshd.common.channel.PtyChannelConfigurationHolder;
 import org.apache.sshd.common.channel.PtyMode;
 import org.apache.sshd.common.cipher.BuiltinCiphers;
@@ -749,8 +750,16 @@ public class Ssh extends Cli {
 			try {
 				this.session.auth().verify(Duration.ofMillis(this.connectionTimeout));
 			}
-			catch (IOException e) {
-				throw new InvalidCredentialsException("Authentication error: " + e.getMessage());
+			catch (SshException e) {
+				if (e.getCause() != null && e.getCause() instanceof InvalidCredentialsException credException) {
+					// Already intercepted by *AuthenticationReporter
+					throw credException;
+				}
+				if (e.getDisconnectCode() == 0) {
+					// No specific message in case of simple password authentication
+					throw new InvalidCredentialsException("Authentication error: " + e.getMessage());
+				}
+				throw e;
 			}
 
 			if (openChannel) {

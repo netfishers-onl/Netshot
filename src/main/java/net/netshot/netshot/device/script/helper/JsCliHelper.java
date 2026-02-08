@@ -103,7 +103,7 @@ public class JsCliHelper {
 			Matcher.quoteReplacement(account.getUsername()));
 		if (this.taskContext.isTracing()) {
 			// Log before injecting secrets
-			this.taskContext.trace(Instant.now() + " About to send the following (secrets not inserted):");
+			this.taskContext.trace("About to send the following (secrets not inserted):");
 			this.taskContext.trace(command);
 			this.taskContext.hexTrace(command);
 		}
@@ -159,12 +159,12 @@ public class JsCliHelper {
 			log.error("CLI I/O error.", e);
 			this.taskContext.error("I/O error: " + e.getMessage());
 			if (this.taskContext.isTracing()) {
-				this.taskContext.trace(Instant.now() + " I/O exception: {}", e.getMessage());
+				this.taskContext.trace("I/O exception: {}", e.getMessage());
 			}
 			if (e instanceof WithBufferIOException wioException) {
 				String buffer = wioException.getReceivedBuffer().toString();
 				if (this.taskContext.isTracing()) {
-					this.taskContext.trace(Instant.now() + " The receive buffer is:");
+					this.taskContext.trace("The receive buffer is:");
 					this.taskContext.trace(buffer);
 					this.taskContext.hexTrace(buffer);
 				}
@@ -192,7 +192,7 @@ public class JsCliHelper {
 	 */
 	@Export
 	public void trace(String message) {
-		this.taskContext.trace(Instant.now() + " " + message);
+		this.taskContext.trace(message);
 	}
 
 	/**

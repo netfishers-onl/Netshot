@@ -92,6 +92,7 @@ import org.apache.sshd.server.auth.password.PasswordChangeRequiredException;
 import org.apache.sshd.server.forward.RejectAllForwardingFilter;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 import org.apache.sshd.server.session.ServerSession;
+import org.apache.sshd.sftp.SftpModuleProperties;
 import org.apache.sshd.sftp.server.DirectoryHandle;
 import org.apache.sshd.sftp.server.FileHandle;
 import org.apache.sshd.sftp.server.SftpFileSystemAccessor;
@@ -779,7 +780,7 @@ public final class SshServer {
 		public Map<String, ?> readFileAttributes(SftpSubsystemProxy subsystem, Path file, String view,
 				LinkOption... options) throws IOException {
 
-			Map<String, ?> attributes = Files.readAttributes(file, view, options);
+			Map<String, ?> attributes = SftpFileSystemAccessor.super.readFileAttributes(subsystem, file, view, options);
 			log.debug("SSH/SFTP server read file attribute request, session {}, path {}, options {} => attributes {}",
 				subsystem.getSession(), file, options, attributes);
 			return attributes;
@@ -799,7 +800,10 @@ public final class SshServer {
 		@Override
 		public LinkOption[] resolveFileAccessLinkOptions(SftpSubsystemProxy subsystem, Path file, int cmd, String extension,
 				boolean followLinks) throws IOException {
-			return new LinkOption[] {};
+			LinkOption[] linkOptions = SftpFileSystemAccessor.super.resolveFileAccessLinkOptions(subsystem, file, cmd, extension, followLinks);
+			log.debug("SSH/SFTP server resolve file access link options request, session {}, path {}, cmd {}, extension {}, followLinks {} => {}",
+				subsystem.getSession(), file, cmd, extension, followLinks, linkOptions);
+			return linkOptions;
 		}
 
 		@Override
@@ -924,6 +928,8 @@ public final class SshServer {
 
 		CoreModuleProperties.MAX_CONCURRENT_SESSIONS.set(this.sshd, SshServer.SETTINGS.maxConcurrentSessions);
 		CoreModuleProperties.SERVER_IDENTIFICATION.set(this.sshd, "NETSHOT-%s".formatted(Netshot.VERSION));
+		// The default value causes an error on Cisco ISE SFTP client: "Outbound message too long 262169"
+		SftpModuleProperties.MAX_WRITEDATA_PACKET_LENGTH.set(this.sshd, 255 * 1024);
 
 		this.sshd.setKeyExchangeFactories(
 			NamedFactory.setUpTransformedFactories(true,
@@ -1035,6 +1041,7 @@ public final class SshServer {
 			log.error("Cannot start the embedded SSH server", e);
 			this.stop();
 		}
+
 	}
 
 	/**

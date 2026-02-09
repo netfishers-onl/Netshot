@@ -19,7 +19,6 @@
 package net.netshot.netshot.device.script.helper;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

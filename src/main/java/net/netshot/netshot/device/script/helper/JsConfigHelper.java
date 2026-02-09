@@ -597,7 +597,7 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 			.replace("Task", "")
 			.replace("_", "")
 			.toLowerCase()
-			+ "_%d".formatted(ticketId);
+			+ "t%d".formatted(ticketId);
 		String password = PasswordGenerator.generateAlphanumeric(24);
 
 		Path rootPath = ConfigBinaryFileAttribute.makeTempFolder(username);

@@ -180,12 +180,7 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 			this.status = Status.SUCCESS;
 		}
 		catch (Exception e) {
-			try {
-				session.getTransaction().rollback();
-			}
-			catch (Exception e1) {
-				log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
-			}
+			Database.rollbackSilently(session);
 			log.error("Task {}. Error while checking compliance.", this.getId(), e);
 			this.logger.error("Error while checking compliance: {}", e.getMessage());
 			this.status = Status.FAILURE;

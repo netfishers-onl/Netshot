@@ -204,7 +204,7 @@ public final class TaskManager {
 			session.getTransaction().commit();
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Database error while scheduling new tasks (master scheduler)", e);
 		}
 		finally {
@@ -277,7 +277,7 @@ public final class TaskManager {
 			log.trace("Task successfully cancelled.");
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while updating the cancelled task.", e);
 			throw e;
 		}
@@ -339,14 +339,16 @@ public final class TaskManager {
 				session.persist(task);
 			}
 			else {
-				session.merge(task);
+				Task persistentTask = session.get(Task.class, task.getId());
+				persistentTask.setScheduled();
+				session.merge(persistentTask);
 			}
 			session.getTransaction().commit();
 			session.evict(task);
 			log.trace("Task successfully added to the database.");
 		}
 		catch (Exception e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new task.", e);
 			throw e;
 		}
@@ -379,7 +381,7 @@ public final class TaskManager {
 			log.trace("Task successfully added to the database.");
 		}
 		catch (Exception e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new task.", e);
 			throw e;
 		}
@@ -411,7 +413,7 @@ public final class TaskManager {
 			log.trace("Task successfully added to the database.");
 		}
 		catch (Exception e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new task.", e);
 			throw e;
 		}
@@ -548,7 +550,7 @@ public final class TaskManager {
 			}
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Database error while re-assigning orphan tasks", e);
 		}
 		finally {

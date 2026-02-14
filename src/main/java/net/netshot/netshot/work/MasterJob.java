@@ -68,12 +68,7 @@ public class MasterJob implements Job {
 		}
 		catch (Exception e) {
 			log.error("Error while retrieving and assigning the task to a runner.", e);
-			try {
-				session.getTransaction().rollback();
-			}
-			catch (Exception e1) {
-
-			}
+			Database.rollbackSilently(session);
 			throw new JobExecutionException("Unable to assign the task to a runner.");
 		}
 		finally {

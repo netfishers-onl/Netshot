@@ -652,7 +652,7 @@ public class RestService extends Thread {
 				return new RsDomain(domain);
 			}
 			catch (HibernateException e) {
-				session.getTransaction().rollback();
+				Database.rollbackSilently(session);
 				log.error("Error while adding a domain.", e);
 				if (this.isDuplicateException(e)) {
 					throw new NetshotBadRequestException(
@@ -727,12 +727,12 @@ public class RestService extends Thread {
 			return new RsDomain(domain);
 		}
 		catch (NetshotBadRequestException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Cannot edit the domain.", e);
 			throw e;
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while editing the domain.", e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
@@ -782,7 +782,7 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			if (e instanceof ConstraintViolationException) {
 				throw new NetshotBadRequestException(
 					"Unable to delete the domain, there must be devices or credential sets using it.",
@@ -2036,7 +2036,7 @@ public class RestService extends Thread {
 				AAA_LOG.info("{} has been created.", newDevice);
 			}
 			catch (Exception e) {
-				session.getTransaction().rollback();
+				Database.rollbackSilently(session);
 				log.error("Error while creating the device", e);
 				throw new NetshotBadRequestException("Database error",
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
@@ -2132,7 +2132,7 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to delete the device {}.", id, e);
 			if (e instanceof ConstraintViolationException) {
 				throw new NetshotBadRequestException(
@@ -2285,7 +2285,7 @@ public class RestService extends Thread {
 			if (rsDevice.getIpAddress() != null) {
 				Network4Address v4Address = new Network4Address(rsDevice.getIpAddress());
 				if (!v4Address.isNormalUnicast()) {
-					session.getTransaction().rollback();
+					Database.rollbackSilently(session);
 					throw new NetshotBadRequestException("Invalid IP address",
 						NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
 				}
@@ -2298,7 +2298,7 @@ public class RestService extends Thread {
 				else {
 					Network4Address v4ConnectAddress = new Network4Address(rsDevice.getConnectIpAddress());
 					if (!v4ConnectAddress.isNormalUnicast() && !v4ConnectAddress.isLoopback()) {
-						session.getTransaction().rollback();
+						Database.rollbackSilently(session);
 						throw new NetshotBadRequestException("Invalid Connect IP address",
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
 					}
@@ -2318,7 +2318,7 @@ public class RestService extends Thread {
 						device.setSshPort(port);
 					}
 					catch (Exception e) {
-						session.getTransaction().rollback();
+						Database.rollbackSilently(session);
 						throw new NetshotBadRequestException("Invalid SSH port",
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
 					}
@@ -2337,7 +2337,7 @@ public class RestService extends Thread {
 						device.setTelnetPort(port);
 					}
 					catch (Exception e) {
-						session.getTransaction().rollback();
+						Database.rollbackSilently(session);
 						throw new NetshotBadRequestException("Invalid Telnet port",
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
 					}
@@ -2441,13 +2441,13 @@ public class RestService extends Thread {
 			AAA_LOG.info("{} has been edited.", device);
 		}
 		catch (UnknownHostException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.warn("User posted an invalid IP address.", e);
 			throw new NetshotBadRequestException("Malformed IP address",
 				NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Cannot edit the device.", e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
@@ -2469,7 +2469,7 @@ public class RestService extends Thread {
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (NetshotBadRequestException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Cannot edit the device.", e);
 			throw e;
 		}
@@ -2713,7 +2713,7 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (Exception e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to delete the credentials {}", id, e);
 			if (e instanceof NetshotBadRequestException) {
 				throw e;
@@ -2778,7 +2778,7 @@ public class RestService extends Thread {
 			return credentialSet;
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			Throwable t = e.getCause();
 			log.error("Can't add the credentials.", e);
 			if (t != null && t.getMessage().contains("uplicate")) {
@@ -2888,7 +2888,7 @@ public class RestService extends Thread {
 			AAA_LOG.info("{} has been edited", credentialSet);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			Throwable t = e.getCause();
 			log.error("Unable to save the credentials {}.", id, e);
 			if (t != null && t.getMessage().contains("uplicate")) {
@@ -2905,7 +2905,7 @@ public class RestService extends Thread {
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (NetshotBadRequestException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			throw e;
 		}
 		finally {
@@ -3090,7 +3090,7 @@ public class RestService extends Thread {
 			return deviceGroup;
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new device group.", e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
@@ -3102,7 +3102,7 @@ public class RestService extends Thread {
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			throw e;
 		}
 		finally {
@@ -3222,7 +3222,7 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to delete the group {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the group",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
@@ -3365,14 +3365,14 @@ public class RestService extends Thread {
 			return group;
 		}
 		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to find a device while editing group {}.", id, e);
 			throw new NetshotBadRequestException(
 				"Unable to find a device. Refresh and try again.",
 				NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE_IN_STATICGROUP);
 		}
 		catch (PersistenceException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to save the group {}.", id, e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
@@ -3383,7 +3383,7 @@ public class RestService extends Thread {
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			throw e;
 		}
 		finally {
@@ -4533,14 +4533,14 @@ public class RestService extends Thread {
 			return policy;
 		}
 		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("The posted group doesn't exist", e);
 			throw new NetshotBadRequestException(
 				"Invalid group",
 				NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new policy.", e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
@@ -4590,7 +4590,7 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to delete the policy {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the policy",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
@@ -4663,14 +4663,14 @@ public class RestService extends Thread {
 			return policy;
 		}
 		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to find a group to be assigned to the policy {}.", id, e);
 			throw new NetshotBadRequestException(
 				"Unable to find the group.",
 				NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to save the policy {}.", id, e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
@@ -4681,7 +4681,7 @@ public class RestService extends Thread {
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			throw e;
 		}
 		finally {
@@ -4863,7 +4863,7 @@ public class RestService extends Thread {
 			return rule;
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new rule.", e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
@@ -4875,7 +4875,7 @@ public class RestService extends Thread {
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (NetshotBadRequestException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new rule.", e);
 			throw e;
 		}
@@ -5001,7 +5001,7 @@ public class RestService extends Thread {
 			return rule;
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new rule.", e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
@@ -5013,7 +5013,7 @@ public class RestService extends Thread {
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			throw e;
 		}
 		finally {
@@ -5055,7 +5055,7 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to delete the rule {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the rule.",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
@@ -6250,14 +6250,14 @@ public class RestService extends Thread {
 			return rule;
 		}
 		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("The posted group doesn't exist", e);
 			throw new NetshotBadRequestException(
 				"Invalid group",
 				NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new rule.", e);
 			throw new NetshotBadRequestException(
 				"Unable to add the rule to the database",
@@ -6303,7 +6303,7 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to delete the rule {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the rule.",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
@@ -6373,14 +6373,14 @@ public class RestService extends Thread {
 			return rule;
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the rule.", e);
 			throw new NetshotBadRequestException(
 				"Unable to save the rule.",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			throw e;
 		}
 		finally {
@@ -6547,14 +6547,14 @@ public class RestService extends Thread {
 			return rule;
 		}
 		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("The posted group doesn't exist", e);
 			throw new NetshotBadRequestException(
 				"Invalid group",
 				NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new rule.", e);
 			throw new NetshotBadRequestException(
 				"Unable to add the policy to the database",
@@ -6599,7 +6599,7 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to delete the rule {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the rule.",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
@@ -6670,14 +6670,14 @@ public class RestService extends Thread {
 			AAA_LOG.info("{} has been edited", rule);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the rule.", e);
 			throw new NetshotBadRequestException(
 				"Unable to save the rule.",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			throw e;
 		}
 		finally {
@@ -6760,14 +6760,14 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new rule.", e);
 			throw new NetshotBadRequestException(
 				"Unable to add the policy to the database",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			throw e;
 		}
 		finally {
@@ -7114,7 +7114,7 @@ public class RestService extends Thread {
 			return user;
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to retrieve the user {}.", rsLogin.getUsername(), e);
 			throw new NetshotBadRequestException("Unable to retrieve the user.",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
@@ -7211,14 +7211,14 @@ public class RestService extends Thread {
 							"User {} changed its password.", username, remoteAddress);
 					}
 					catch (HibernateException e) {
-						session.getTransaction().rollback();
+						Database.rollbackSilently(session);
 						log.error("Error while updating a user.", e);
 						throw new NetshotBadRequestException(
 							"Unable to update the user in the database",
 							NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 					}
 					catch (PasswordPolicyException e) {
-						session.getTransaction().rollback();
+						Database.rollbackSilently(session);
 						log.error("New user password doesn't comply with password policy.", e);
 						user = null;
 						throw new NetshotBadRequestException(
@@ -7441,7 +7441,7 @@ public class RestService extends Thread {
 			return user;
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new user.", e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
@@ -7537,7 +7537,7 @@ public class RestService extends Thread {
 			return user;
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to save the user {}.", id, e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
@@ -7548,7 +7548,7 @@ public class RestService extends Thread {
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			throw e;
 		}
 		finally {
@@ -7597,7 +7597,7 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			throw new NetshotBadRequestException("Unable to delete the user.",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
@@ -7752,7 +7752,7 @@ public class RestService extends Thread {
 			return apiToken;
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new API token.", e);
 			throw new NetshotBadRequestException(
 				"Unable to add the API token to the database",
@@ -7831,13 +7831,13 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("The API token doesn't exist.");
 			throw new NetshotBadRequestException("The API token doesn't exist.",
 				NetshotBadRequestException.Reason.NETSHOT_INVALID_USER);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			throw new NetshotBadRequestException("Unable to delete the API token.",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
@@ -8614,7 +8614,7 @@ public class RestService extends Thread {
 				this.suggestReturnCode(Response.Status.CREATED);
 			}
 			catch (HibernateException e) {
-				session.getTransaction().rollback();
+				Database.rollbackSilently(session);
 				log.error("Error while saving the new rule.", e);
 				if (this.isDuplicateException(e)) {
 					throw new NetshotBadRequestException(
@@ -8661,12 +8661,12 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (NetshotBadRequestException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Cannot delete the script.", e);
 			throw e;
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to delete the script {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the script.",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
@@ -9021,14 +9021,14 @@ public class RestService extends Thread {
 			return diagnostic;
 		}
 		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("The posted group doesn't exist", e);
 			throw new NetshotBadRequestException(
 				"Invalid group",
 				NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while saving the new diagnostic.", e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
@@ -9163,7 +9163,7 @@ public class RestService extends Thread {
 			return diagnostic;
 		}
 		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to find the group {} to be assigned to the diagnostic {}.",
 				rsDiagnostic.getTargetGroup(), id, e);
 			throw new NetshotBadRequestException(
@@ -9171,7 +9171,7 @@ public class RestService extends Thread {
 				NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to save the diagnostic {}.", id, e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException("A diagnostic with this name already exists.",
@@ -9181,7 +9181,7 @@ public class RestService extends Thread {
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		catch (WebApplicationException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			throw e;
 		}
 		finally {
@@ -9233,13 +9233,13 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (ObjectNotFoundException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("The diagnostic {} to be deleted doesn't exist.", id, e);
 			throw new NetshotBadRequestException("The diagnostic doesn't exist.",
 				NetshotBadRequestException.Reason.NETSHOT_INVALID_DIAGNOSTIC);
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to delete the diagnostic {}.", id, e);
 			throw new NetshotBadRequestException("Unable to delete the diagnostic",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
@@ -9383,7 +9383,7 @@ public class RestService extends Thread {
 			return hook;
 		}
 		catch (HibernateException e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			Throwable t = e.getCause();
 			log.error("Can't add the hook.", e);
 			if (t != null && t.getMessage().contains("uplicate")) {
@@ -9432,7 +9432,7 @@ public class RestService extends Thread {
 			this.suggestReturnCode(Response.Status.NO_CONTENT);
 		}
 		catch (Exception e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Unable to delete the hook {}", id, e);
 			throw new NetshotBadRequestException(
 				"Unable to delete the hook",
@@ -9520,7 +9520,7 @@ public class RestService extends Thread {
 				return rsHook;
 			}
 			catch (HibernateException e) {
-				session.getTransaction().rollback();
+				Database.rollbackSilently(session);
 				Throwable t = e.getCause();
 				log.error("Unable to save the hook {}.", id, e);
 				if (t != null && t.getMessage().contains("uplicate")) {
@@ -9532,7 +9532,7 @@ public class RestService extends Thread {
 					NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 			}
 			catch (NetshotBadRequestException e) {
-				session.getTransaction().rollback();
+				Database.rollbackSilently(session);
 				throw e;
 			}
 			finally {

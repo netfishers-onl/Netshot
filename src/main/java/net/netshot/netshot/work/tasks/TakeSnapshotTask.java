@@ -237,12 +237,7 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 			this.status = Status.SUCCESS;
 		}
 		catch (Exception e) {
-			try {
-				session.getTransaction().rollback();
-			}
-			catch (Exception e1) {
-				log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
-			}
+			Database.rollbackSilently(session);
 			log.error("Task {}. Error while taking the snapshot.", this.getId(), e);
 			this.logger.error("Error while taking the snapshot: {}", e.getMessage());
 			this.status = Status.FAILURE;

@@ -80,8 +80,8 @@ public class TaskJob implements Job {
 		}
 		catch (Exception e) {
 			log.error("Error while retrieving, updating or preparing the task.", e);
+			Database.rollbackSilently(session);
 			try {
-				session.getTransaction().rollback();
 				session.beginTransaction();
 				Task eTask = (Task) session.get(Task.class, id);
 				eTask.setRunning();
@@ -123,12 +123,7 @@ public class TaskJob implements Job {
 		}
 		catch (Exception e) {
 			log.error("Error while updating the task {} after execution.", id, e);
-			try {
-				session.getTransaction().rollback();
-			}
-			catch (Exception e1) {
-				log.error("Error during the rollback.", e1);
-			}
+			Database.rollbackSilently(session);
 			try {
 				session.clear();
 				session.beginTransaction();
@@ -169,12 +164,7 @@ public class TaskJob implements Job {
 		}
 		catch (Exception e) {
 			log.error("Error while processing hooks after task {}.", id, e);
-			try {
-				session.getTransaction().rollback();
-			}
-			catch (Exception e1) {
-				log.error("Error during the rollback.", e1);
-			}
+			Database.rollbackSilently(session);
 		}
 		finally {
 			session.close();

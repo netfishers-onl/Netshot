@@ -491,6 +491,22 @@ public final class Database {
 		return entity;
 	}
 
+	/**
+	 * Silently rolls back the current transaction of the given session.
+	 * If the rollback fails, the exception is logged but not rethrown,
+	 * so as not to mask the original exception that triggered the rollback.
+	 *
+	 * @param session the Hibernate session
+	 */
+	public static void rollbackSilently(Session session) {
+		try {
+			session.getTransaction().rollback();
+		}
+		catch (Exception e) {
+			log.error("Error during transaction rollback.", e);
+		}
+	}
+
 	private Database() {
 	}
 

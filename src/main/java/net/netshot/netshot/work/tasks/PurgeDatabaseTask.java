@@ -192,24 +192,14 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				this.logger.info("Cleaning up done on tasks, {} entries affected.", count);
 			}
 			catch (HibernateException e) {
-				try {
-					session.getTransaction().rollback();
-				}
-				catch (Exception e1) {
-
-				}
+				Database.rollbackSilently(session);
 				log.error("Task {}. Database error while purging the old tasks from the database.", this.getId(), e);
 				this.logger.error("Database error during the task purge.");
 				this.status = Status.FAILURE;
 				return;
 			}
 			catch (Exception e) {
-				try {
-					session.getTransaction().rollback();
-				}
-				catch (Exception e1) {
-
-				}
+				Database.rollbackSilently(session);
 				log.error("Task {}. Error while purging the old tasks from the database.", this.getId(), e);
 				this.logger.error("Error during the task purge.");
 				this.status = Status.FAILURE;
@@ -311,12 +301,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				}
 			}
 			catch (HibernateException e) {
-				try {
-					session.getTransaction().rollback();
-				}
-				catch (Exception e1) {
-					log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
-				}
+				Database.rollbackSilently(session);
 				log.error("Task {}. Database error while purging the old configurations from the database.",
 					this.getId(), e);
 				this.logger.error("Database error during the configuration purge.");
@@ -324,12 +309,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 				return;
 			}
 			catch (Exception e) {
-				try {
-					session.getTransaction().rollback();
-				}
-				catch (Exception e1) {
-					log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
-				}
+				Database.rollbackSilently(session);
 				log.error("Task {}. Error while purging the old configurations from the database.",
 					this.getId(), e);
 				this.logger.error("Error during the configuration purge.");
@@ -374,12 +354,7 @@ public final class PurgeDatabaseTask extends Task implements GroupBasedTask {
 
 			}
 			catch (Exception e) {
-				try {
-					session.getTransaction().rollback();
-				}
-				catch (Exception e1) {
-					log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
-				}
+				Database.rollbackSilently(session);
 				log.error("Task {}. Error while purging the old modules from the database.",
 					this.getId(), e);
 				this.logger.error("Error during the module purge.");

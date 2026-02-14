@@ -632,10 +632,10 @@ public class Netshot extends Thread {
 
 			log.info("Initializing the task manager.");
 			TaskManager.init();
-			log.info("Starting the REST service.");
-			RestService.init();
 			log.info("Scheduling the existing tasks.");
 			TaskManager.rescheduleAll();
+			log.info("Starting the REST service.");
+			RestService.init();
 
 			log.info("Starting signal listener.");
 			Signal.handle(new Signal("HUP"), new SignalHandler() {

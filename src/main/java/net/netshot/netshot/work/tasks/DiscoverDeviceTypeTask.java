@@ -337,12 +337,7 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 				this.snapshotTaskId = snapshotTask.getId();
 			}
 			catch (HibernateException e) {
-				try {
-					session.getTransaction().rollback();
-				}
-				catch (Exception e1) {
-					log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
-				}
+				Database.rollbackSilently(session);
 				log.error("Task {}. Couldn't save the new device.", this.getId(), e);
 				this.logger.error("Database error while adding the device");
 			}

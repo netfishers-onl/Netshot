@@ -199,12 +199,7 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 
 		}
 		catch (Exception e) {
-			try {
-				session.getTransaction().rollback();
-			}
-			catch (Exception e1) {
-				log.error("Task {}. Error during transaction rollback.", this.getId(), e1);
-			}
+			Database.rollbackSilently(session);
 			log.error("Task {}. Error while executing the diagnostics.", this.getId(), e);
 			String message = e.getMessage();
 			if (e.getCause() != null && e.getCause().getCause() != null) {

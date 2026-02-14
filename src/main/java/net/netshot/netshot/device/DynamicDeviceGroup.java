@@ -168,7 +168,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 			session.getTransaction().commit();
 		}
 		catch (Exception e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while refreshing the dynamic groups.", e);
 		}
 		finally {
@@ -201,7 +201,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 			session.getTransaction().commit();
 		}
 		catch (Exception e) {
-			session.getTransaction().rollback();
+			Database.rollbackSilently(session);
 			log.error("Error while refreshing the dynamic groups.", e);
 		}
 		finally {

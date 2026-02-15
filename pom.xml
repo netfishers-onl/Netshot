@@ -17,6 +17,7 @@
 		<slf4j.version>2.0.17</slf4j.version>
 		<lombok.version>1.18.42</lombok.version>
 		<sshd.version>2.17.1</sshd.version>
+		<netty.version>4.2.10.Final</netty.version>
 		<checkstyle.version>11.0.0</checkstyle.version>
 		<bouncycastle.version>1.83</bouncycastle.version>
 	</properties>
@@ -497,17 +498,27 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.sshd</groupId>
-			<artifactId>sshd-mina</artifactId>
-			<version>${sshd.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.sshd</groupId>
 			<artifactId>sshd-sftp</artifactId>
 			<version>${sshd.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.sshd</groupId>
 			<artifactId>sshd-scp</artifactId>
+			<version>${sshd.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-transport</artifactId>
+			<version>${netty.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-handler</artifactId>
+			<version>${netty.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.sshd</groupId>
+			<artifactId>sshd-netty</artifactId>
 			<version>${sshd.version}</version>
 		</dependency>
 	</dependencies>

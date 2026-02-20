@@ -18,7 +18,8 @@
  */
 package net.netshot.netshot.device;
 
-import java.util.Collection;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -119,10 +120,14 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	 * @param session = the DB session
 	 * @param deviceId = the ID of the device to target
 	 */
-	public static synchronized void refreshAllGroupsOfOneDevice(Session session, Long deviceId) {
+	public static void refreshAllGroupsOfOneDevice(Session session, Long deviceId) {
 		List<DynamicDeviceGroup> allGroups = session
 			.createQuery("select ddg from DynamicDeviceGroup ddg", DynamicDeviceGroup.class)
 			.list();
+		session
+			.createMutationQuery("delete from DeviceGroupMembership m where m.key.device.id = :deviceId")
+			.setParameter("deviceId", deviceId)
+			.executeUpdate();
 		for (DynamicDeviceGroup group : allGroups) {
 			try {
 				log.trace("Checking device {} vs group {}", deviceId, group.getId());
@@ -132,14 +137,6 @@ public class DynamicDeviceGroup extends DeviceGroup {
 				}
 				log.trace("Finder query for group: '{}'.", deviceQuery);
 				Finder finder = new Finder(deviceQuery);
-				MutationQuery deleteQuery = session.createMutationQuery(
-					"delete from DeviceGroupMembership m where m.key.group = :group and "
-					+ "m.key.device.id = :deviceId and "
-					+ "m.key.device not in (select d " + finder.getHql() + ")");
-				deleteQuery.setParameter("group", group);
-				deleteQuery.setParameter("deviceId", deviceId);
-				finder.setVariables(deleteQuery);
-				deleteQuery.executeUpdate();
 				MutationQuery insertQuery = session.createMutationQuery(
 					"insert into DeviceGroupMembership(key.device, key.group) "
 					+ "select d, :group " + finder.getHql() + " "
@@ -190,14 +187,36 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	 * 
 	 * @param deviceIds = the list of devices to process
 	 */
-	public static synchronized void refreshAllGroupsOfDevices(Collection<Long> deviceIds) {
-		log.debug("Refreshing all groups of {} devices.", deviceIds.size());
+	public static synchronized void refreshAllGroups() {
+		log.debug("Refreshing all dynamic groups.");
+		Instant before = Instant.now();
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
-			for (Long deviceId : deviceIds) {
-				refreshAllGroupsOfOneDevice(session, deviceId);
+			List<DynamicDeviceGroup> allGroups = session
+				.createQuery("select ddg from DynamicDeviceGroup ddg", DynamicDeviceGroup.class)
+				.list();
+			for (DynamicDeviceGroup group : allGroups) {
+				try {
+					log.trace("Refreshing group {} ({})", group.getId(), group.getName());
+					session.createMutationQuery(
+						"delete from DeviceGroupMembership m where m.key.group = :group")
+						.setParameter("group", group)
+						.executeUpdate();
+					Finder finder = new Finder(group.getQuery());
+					MutationQuery insertQuery = session.createMutationQuery(
+						"insert into DeviceGroupMembership(key.device, key.group) "
+						+ "select d, :group " + finder.getHql() + " "
+						+ "on conflict do nothing");
+					insertQuery.setParameter("group", group);
+					finder.setVariables(insertQuery);
+					insertQuery.executeUpdate();
+				}
+				catch (FinderParseException e) {
+					log.error("Parse error while updating the group {}.", group.getId(), e);
+				}
 			}
+
 			session.getTransaction().commit();
 		}
 		catch (Exception e) {
@@ -206,6 +225,11 @@ public class DynamicDeviceGroup extends DeviceGroup {
 		}
 		finally {
 			session.close();
+		}
+		Instant after = Instant.now();
+		Duration duration = Duration.between(before, after);
+		if (duration.toMillis() > 1000) {
+			log.info("Refreshing all dynamic groups took {}ms", duration.toMillis());
 		}
 	}
 

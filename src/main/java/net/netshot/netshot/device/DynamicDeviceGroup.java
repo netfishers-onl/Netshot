@@ -183,9 +183,7 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	}
 
 	/**
-	 * Refresh all dynamic groups of given devices.
-	 * 
-	 * @param deviceIds = the list of devices to process
+	 * Refresh all dynamic groups.
 	 */
 	public static synchronized void refreshAllGroups() {
 		log.debug("Refreshing all dynamic groups.");

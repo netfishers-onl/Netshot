@@ -1407,6 +1407,7 @@ public class RestServiceTest {
 						.put("eol", device1.isEndOfLife())
 						.put("eos", device1.isEndOfSale())
 						.put("configCompliant", device1.isCompliant())
+						.put("serialNumber", device1.getSerialNumber())
 						.put("softwareLevel", device1.getSoftwareLevel().toString()),
 					deviceNode1,
 					"Retrieved device doesn't match expected object");
@@ -1635,6 +1636,7 @@ public class RestServiceTest {
 					.put("mgmtAddress", device2.getMgmtAddress().getIp())
 					.put("status", device2.getStatus().toString())
 					.put("driver", device2.getDriver())
+					.put("serialNumber", device2.getSerialNumber())
 					.put("eol", device2.isEndOfLife())
 					.put("eos", device2.isEndOfSale())
 					.put("configCompliant", device2.isCompliant())

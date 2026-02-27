@@ -361,11 +361,11 @@ public final class SshServer {
 	private static SshServer nsSshServer;
 
 	public static boolean isRunning() {
-		return nsSshServer != null;
+		return nsSshServer != null && nsSshServer.sshd != null;
 	}
 
 	public static boolean isRunning(TransferProtocol protocol) {
-		return nsSshServer != null && SETTINGS.isProtocolEnabled(protocol);
+		return isRunning() && SETTINGS.isProtocolEnabled(protocol);
 	}
 
 	public static SshServer getServer() {

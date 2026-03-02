@@ -1,0 +1,25 @@
+services:
+  netshot:
+    pull_policy: never
+    build: .
+    environment:
+      NETSHOT_AAA_OIDC_IDP_URL: "http://idp:4000"
+      NETSHOT_AAA_OIDC_CLIENTID: "netshot"
+      NETSHOT_AAA_OIDC_CLIENTSECRET: "secret"
+    depends_on:
+      idp:
+        condition: service_started
+    networks:
+      - front
+
+  idp:
+    build: ./dev/oidc-idp
+    environment:
+      ISSUER: "http://idp:4000"
+    ports:
+      - "4000:4000"
+    networks:
+      - front
+
+networks:
+  front:

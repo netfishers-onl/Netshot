@@ -35,6 +35,7 @@ services:
   database:
     image: postgres:17
     restart: unless-stopped
+    shm_size: 1gb
     environment:
       POSTGRES_PASSWORD: "change_this_pass"
       POSTGRES_USER: "netshot"

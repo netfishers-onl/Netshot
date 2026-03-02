@@ -24,7 +24,6 @@
 
 const http   = require('http');
 const crypto = require('crypto');
-const url    = require('url');
 
 // ── Configuration ─────────────────────────────────────────────────────────────
 
@@ -266,9 +265,9 @@ function renderLoggedOutPage() {
 // ── Request handler ───────────────────────────────────────────────────────────
 
 async function handler(req, res) {
-  const parsed   = url.parse(req.url, true);
+  const parsed   = new URL(req.url, `http://localhost`);
   const pathname = parsed.pathname;
-  const query    = parsed.query;
+  const query    = Object.fromEntries(parsed.searchParams);
 
   // ── GET /.well-known/openid-configuration ──────────────────────────────────
   if (req.method === 'GET' && pathname === '/.well-known/openid-configuration') {

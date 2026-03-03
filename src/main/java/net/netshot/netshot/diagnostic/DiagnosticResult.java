@@ -146,6 +146,17 @@ public abstract class DiagnosticResult {
 		return this.getDiagnostic().getName();
 	}
 
+	/**
+	 * Gets the ID of the associated diagnostic. To be sent along the result via REST.
+	 * @return the id of the diagnostic.
+	 */
+	@Transient
+	@XmlElement
+	@JsonView(DefaultView.class)
+	public Long getDiagnosticId() {
+		return this.getDiagnostic().getId();
+	}
+
 	public abstract boolean valueEquals(DiagnosticResult obj);
 
 	@Override

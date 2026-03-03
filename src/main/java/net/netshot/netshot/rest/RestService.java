@@ -2954,7 +2954,8 @@ public class RestService extends Thread {
 	/**
 	 * Search devices.
 	 *
-	 * @param criteria the criteria
+	 * @param criteria the search criteria
+	 * @param paginationParams = the pagination parameters
 	 * @return the rs search results
 	 * @throws WebApplicationException the web application exception
 	 */
@@ -2969,7 +2970,7 @@ public class RestService extends Thread {
 		description = "Find devices using a string-based query."
 	)
 	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
-	public RsSearchResults searchDevices(RsSearchCriteria criteria)
+	public RsSearchResults searchDevices(RsSearchCriteria criteria, @BeanParam PaginationParams paginationParams)
 		throws WebApplicationException {
 		log.debug("REST request, search devices, query '{}'.", criteria.getQuery());
 
@@ -2990,6 +2991,7 @@ public class RestService extends Thread {
 					+ "d.softwareLevel) " + finder.getHql(), RsLightDevice.class);
 				finder.setVariables(query);
 				query.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
+				paginationParams.apply(query);
 				List<RsLightDevice> devices = query.list();
 				RsSearchResults results = new RsSearchResults();
 				results.setDevices(devices);
@@ -4842,13 +4844,51 @@ public class RestService extends Thread {
 
 			Rule rule;
 			if ("TextRule".equals(rsRule.getType())) {
-				rule = new TextRule(name, policy);
+				TextRule textRule = new TextRule(name, policy);
+				rule = textRule;
+				if (rsRule.getText() != null) {
+					textRule.setText(rsRule.getText());
+				}
+				if (rsRule.getRegExp() != null) {
+					textRule.setRegExp(rsRule.getRegExp());
+				}
+				if (rsRule.getContext() != null) {
+					textRule.setContext(rsRule.getContext());
+				}
+				if (rsRule.getField() != null) {
+					textRule.setField(rsRule.getField());
+				}
+				if (rsRule.getDriver() != null) {
+					textRule.setDeviceDriver(rsRule.getDriver());
+				}
+				if (rsRule.getInvert() != null) {
+					textRule.setInvert(rsRule.getInvert());
+				}
+				if (rsRule.getMatchAll() != null) {
+					textRule.setMatchAll(rsRule.getMatchAll());
+				}
+				if (rsRule.getAnyBlock() != null) {
+					textRule.setAnyBlock(rsRule.getAnyBlock());
+				}
+				if (rsRule.getNormalize() != null) {
+					textRule.setNormalize(rsRule.getNormalize());
+				}
 			}
 			else if ("JavaScriptRule".equals(rsRule.getType())) {
-				rule = new JavaScriptRule(name, policy);
+				JavaScriptRule jsRule = new JavaScriptRule(name, policy);
+				rule = jsRule;
+				if (rsRule.getScript() != null) {
+					String script = rsRule.getScript().trim();
+					jsRule.setScript(script);
+				}
 			}
 			else if ("PythonRule".equals(rsRule.getType())) {
-				rule = new PythonRule(name, policy);
+				PythonRule pyRule = new PythonRule(name, policy);
+				rule = pyRule;
+				if (rsRule.getScript() != null) {
+					String script = rsRule.getScript().trim();
+					pyRule.setScript(script);
+				}
 			}
 			else {
 				throw new NetshotBadRequestException(

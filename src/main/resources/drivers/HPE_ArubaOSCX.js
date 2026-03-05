@@ -21,7 +21,7 @@ const Info = {
 	name: "HPEArubaOSCX",
 	description: "HPE ArubaOS CX",
 	author: "Netshot Team",
-	version: "1.1"
+	version: "1.2"
 };
 
 const Config = {
@@ -388,7 +388,7 @@ function analyzeSyslog(message) {
  */
 function analyzeTrap(trap, debug) {
 	for (const t in trap) {
-		if (t === "1.3.6.1.6.3.1.1.4.1.0" && trap[t] === "11.3.6.1.4.1.47196.4.1.1.3.20.0.1") {
+		if (t === "1.3.6.1.6.3.1.1.4.1.0" && trap[t] === "1.3.6.1.4.1.47196.4.1.1.3.20.0.1") {
 			// arubaWiredConfigurationChangeNotification
 			return true;
 		}

@@ -56,7 +56,7 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 @XmlAccessorType(XmlAccessType.NONE)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-	@Type(value = DeviceNumericAttribute.class, name = "INTEGER"),
+	@Type(value = DeviceNumericAttribute.class, name = "NUMERIC"),
 	@Type(value = DeviceTextAttribute.class, name = "TEXT"),
 	@Type(value = DeviceLongTextAttribute.class, name = "LONGTEXT"),
 	@Type(value = DeviceBinaryAttribute.class, name = "BINARY")

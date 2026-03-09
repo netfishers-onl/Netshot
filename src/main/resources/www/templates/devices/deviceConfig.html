@@ -14,7 +14,7 @@
 <tr class="configdetails">
 	<td class="maincolumn"><%- attribute.title %></td>
 	<td>
-	<% if (attribute.type == "INTEGER") { %><%- attribute.number %><% } %>
+	<% if (attribute.type == "NUMERIC") { %><%- attribute.number %><% } %>
 	<% if (attribute.type == "TEXT") { %><%- attribute.text %><% } %>
 	<% if (attribute.type == "BINARY") { if (attribute.assumption === true) { %>Yes<% } else { %>No<% } } %>
 	<% if (attribute.type == "LONGTEXT") { %>

@@ -21,7 +21,7 @@ const Info = {
 	name: "AudioCodesMediant",
 	description: "AudioCodes Mediant MG/SBC",
 	author: "Netshot Team",
-	version: "1.5"
+	version: "1.7"
 };
 
 const Config = {
@@ -130,7 +130,7 @@ const CLI = {
 		fail: "Authentication failed - Telnet authentication failure."
 	},
 	disable: {
-		prompt: /^([A-Za-z\-_0-9\.\/]+\> )$/,
+		prompt: /^([A-Za-z\-_0-9\.\/ ]+\> )$/,
 		pager: {
 			avoid: "terminal length 0",
 			match: /^\s*--MORE--$/,
@@ -213,7 +213,8 @@ function snapshot(cli, device, config) {
 	cli.macro("disable");
 
 	// Version info
-	const showVersion = cli.command("show system version");
+	// On some models an additional \r is needed to get the prompt back
+	const showVersion = cli.command("show system version\r");
 
 	const hostnameMatch = showVersion.match(/^;Board: (.+)/m);
 	if (hostnameMatch) {

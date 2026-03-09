@@ -21,7 +21,7 @@ var Info = {
 	name: "HPEArubaOSSwitch",
 	description: "HPE ArubaOS-Switch",
 	author: "Netshot Team",
-	version: "1.2"
+	version: "1.3"
 };
 
 var Config = {
@@ -411,7 +411,9 @@ function analyzeSyslog(message) {
  */
 function analyzeTrap(trap, debug) {
 	// 1.3.6.1.4.1.11.2.14.11.5.1.7.1.29.1.0.7 = hpSwitchRunningConfigChange
-	return trap["1.3.6.1.6.3.1.1.4.1.0"] === "1.3.6.1.4.1.11.2.14.11.5.1.7.1.29.1.0.7";
+	// 1.3.6.1.4.1.11.2.14.11.5.1.7.1.29.1.12.6.1.3 = hpSwitchRunningCfgChgEventMethod
+	return trap["1.3.6.1.6.3.1.1.4.1.0"] === "1.3.6.1.4.1.11.2.14.11.5.1.7.1.29.1.0.7" ||
+	  (typeof trap["1.3.6.1.4.1.11.2.14.11.5.1.7.1.29.1.12.6.1.3"] !== "undefined");
 }
 
 function snmpAutoDiscover(sysObjectID, sysDesc) {

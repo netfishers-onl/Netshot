@@ -1,35 +1,33 @@
-import { Button, Heading, Skeleton, Stack, useDisclosure } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { createColumnHelper } from "@tanstack/react-table";
-import { useCallback, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
+import { Button, Heading, Skeleton, Stack, Text } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { createColumnHelper } from "@tanstack/react-table"
+import { useMemo } from "react"
+import { useTranslation } from "react-i18next"
+import { useParams } from "react-router"
 
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { DataTable, EmptyResult } from "@/components";
-import TaskDialog from "@/components/TaskDialog";
-import TaskStatusTag from "@/components/TaskStatusTag";
-import { usePagination, useToast } from "@/hooks";
-import { Task } from "@/types";
-import { formatDate } from "@/utils";
+import api from "@/api"
+import { DataTable, EmptyResult } from "@/components"
+import TaskDialog from "@/components/TaskDialog"
+import TaskStatusTag from "@/components/TaskStatusTag"
+import { usePagination } from "@/hooks"
+import { Task } from "@/types"
+import { formatDate } from "@/utils"
 
-import { QUERIES } from "../constants";
+import { useCustomDialog } from "@/dialog"
+import { QUERIES } from "../constants"
 
-const columnHelper = createColumnHelper<Task>();
+const columnHelper = createColumnHelper<Task>()
 
 /**
  * @todo: Add pagination (paginator)
  */
 export default function DeviceTaskScreen() {
-  const params = useParams<{ id: string }>();
-  const { t } = useTranslation();
-  const toast = useToast();
+  const params = useParams<{ id: string }>()
+  const { t } = useTranslation()
+  const taskDialog = useCustomDialog()
   const pagination = usePagination({
     limit: 20,
-  });
-  const disclosure = useDisclosure();
-  const [taskId, setTaskId] = useState<number>(null);
+  })
 
   const { data = [], isPending } = useQuery({
     queryKey: [QUERIES.DEVICE_TASKS, params.id, pagination.limit],
@@ -37,17 +35,16 @@ export default function DeviceTaskScreen() {
       api.device.getAllTasksById(+params.id, {
         limit: pagination.limit,
       }),
-  });
+  })
 
-  const openTask = useCallback((id: number) => {
-    setTaskId(id);
-    disclosure.onOpen();
-  }, []);
+  function openTask(id: number) {
+    taskDialog.open(<TaskDialog id={id} />)
+  }
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("taskDescription", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Type"),
       }),
       columnHelper.accessor("status", {
@@ -55,12 +52,11 @@ export default function DeviceTaskScreen() {
         header: t("Status"),
       }),
       columnHelper.accessor("executionDate", {
-        cell: (info) =>
-          info.getValue() ? formatDate(info.getValue()) : t("N/A"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
         header: t("Execution time"),
       }),
       columnHelper.accessor("comments", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Comments"),
       }),
       columnHelper.display({
@@ -68,7 +64,7 @@ export default function DeviceTaskScreen() {
         cell: (info) => (
           <Button
             variant="ghost"
-            colorScheme="green"
+            colorPalette="green"
             onClick={() => openTask(info.row.original.id)}
           >
             {t("See details")}
@@ -82,18 +78,13 @@ export default function DeviceTaskScreen() {
       }),
     ],
     [t, openTask]
-  );
-
-  const onClose = useCallback(() => {
-    setTaskId(null);
-    disclosure.onClose();
-  }, []);
+  )
 
   return (
     <>
-      <Stack spacing="6" flex="1" overflow="auto">
+      <Stack gap="6" flex="1" overflow="auto">
         {isPending ? (
-          <Stack spacing="3">
+          <Stack gap="3">
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -113,7 +104,6 @@ export default function DeviceTaskScreen() {
           </>
         )}
       </Stack>
-      <TaskDialog id={taskId} {...disclosure} onClose={onClose} />
     </>
-  );
+  )
 }

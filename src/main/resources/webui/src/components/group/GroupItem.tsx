@@ -1,56 +1,43 @@
-import { Protected } from "@/components";
-import Icon from "@/components/Icon";
-import { Group, Level } from "@/types";
+import { Protected } from "@/components"
+import Icon from "@/components/Icon"
+import { Group, Level } from "@/types"
 import {
   Box,
   BoxProps,
   Flex,
   IconButton,
   Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
+  Portal,
   Spacer,
   Stack,
   Text,
-} from "@chakra-ui/react";
-import { MouseEvent, ReactElement, useCallback, useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import EditGroupButton from "./EditGroupButton";
-import RemoveGroupButton from "./RemoveGroupButton";
-import { useSearchParams } from "react-router";
+} from "@chakra-ui/react"
+import { MouseEvent } from "react"
+import { useTranslation } from "react-i18next"
+import EditGroupButton from "./EditGroupButton"
+import RemoveGroupButton from "./RemoveGroupButton"
+import { useTreeGroup } from "./TreeGroupProvider"
 
 export type GroupItemProps = {
-  group: Group;
-  showMenu: boolean;
-  onGroupSelect?(group: Group): void;
-  isSelected?(group: Group): boolean;
-  renderGroupChildren?(group: Group): ReactElement;
-} & BoxProps;
+  group: Group
+} & BoxProps
 
 export default function GroupItem(props: GroupItemProps) {
-  const { group, showMenu, onGroupSelect, isSelected, renderGroupChildren, ...other } =
-    props;
+  const { group, ...other } = props
 
-  const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
-  const isRouteParamsSelected = useMemo(() => {
-    return (group.id === parseInt(searchParams.get("group")));
-  }, [searchParams, group]);
+  const { t } = useTranslation()
+  const ctx = useTreeGroup()
 
-  const selected = isRouteParamsSelected || (isSelected ? isSelected(group) : false);
+  const selected = ctx.isSelected ? ctx.isSelected(group) : false
 
-  const select = useCallback(
-    (evt: MouseEvent<HTMLDivElement>) => {
-      if (!onGroupSelect) {
-        return;
-      }
+  function select(evt: MouseEvent<HTMLDivElement>) {
+    if (!ctx.onGroupSelect) {
+      return
+    }
 
-      evt.stopPropagation();
-      onGroupSelect(group);
-    },
-    [onGroupSelect, group]
-  );
+    evt?.stopPropagation()
+    ctx.onGroupSelect(group)
+  }
 
   return (
     <Box {...other}>
@@ -67,46 +54,54 @@ export default function GroupItem(props: GroupItemProps) {
         bg={selected ? "green.50" : "white"}
         onClick={select}
       >
-        <Stack direction="row" spacing="3" alignItems="center">
-          <Stack direction="row" spacing="3" alignItems="center">
+        <Stack direction="row" gap="3" alignItems="center">
+          <Stack direction="row" gap="3" alignItems="center">
             <Icon name="code" color="green.600" />
             <Text>{group?.name}</Text>
           </Stack>
         </Stack>
         <Spacer />
-        {renderGroupChildren?.(group)}
-        {showMenu &&
+        {ctx.renderGroupChildren?.(group)}
+        {ctx.showMenu && (
           <Protected minLevel={Level.ReadWrite}>
-            <Menu>
-              <MenuButton
-                as={IconButton}
-                variant="ghost"
-                icon={<Icon name="moreHorizontal" />}
-                aria-label="Open group options"
-                onClick={(e) => e.stopPropagation()}
-              />
-              <MenuList>
-                <EditGroupButton
-                  group={group}
-                  renderItem={(open) => (
-                    <MenuItem icon={<Icon name="edit" />} onClick={open}>
-                      {t("Edit")}
-                    </MenuItem>
-                  )}
-                />
-
-                <RemoveGroupButton
-                  group={group}
-                  renderItem={(open) => (
-                    <MenuItem icon={<Icon name="trash" />} onClick={open}>
-                      {t("Remove")}
-                    </MenuItem>
-                  )}
-                />
-              </MenuList>
-            </Menu>
-          </Protected>}
+            <Menu.Root>
+              <Menu.Trigger asChild>
+                <IconButton
+                  variant="ghost"
+                  aria-label="Open group options"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Icon name="moreHorizontal" />
+                </IconButton>
+              </Menu.Trigger>
+              <Portal>
+                <Menu.Positioner>
+                  <Menu.Content>
+                    <EditGroupButton
+                      group={group}
+                      renderItem={(open) => (
+                        <Menu.Item onSelect={() => open(null)} value="item-0">
+                          <Icon name="edit" />
+                          {t("Edit")}
+                        </Menu.Item>
+                      )}
+                    />
+                    <RemoveGroupButton
+                      group={group}
+                      renderItem={(open) => (
+                        <Menu.Item onSelect={() => open(null)} value="item-1">
+                          <Icon name="trash" />
+                          {t("Remove")}
+                        </Menu.Item>
+                      )}
+                    />
+                  </Menu.Content>
+                </Menu.Positioner>
+              </Portal>
+            </Menu.Root>
+          </Protected>
+        )}
       </Flex>
     </Box>
-  );
+  )
 }

@@ -1,84 +1,67 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { DataTable, EmptyResult } from "@/components";
-import { useModalConfig } from "@/dialog";
-import { useToast } from "@/hooks";
+import api from "@/api"
+import { DataTable, EmptyResult, EntityLink } from "@/components"
+import { useDialogConfig } from "@/dialog"
 import {
   DeviceSoftwareLevel,
   GroupDeviceBySoftwareLevel,
   GroupSoftwareComplianceStat,
-} from "@/types";
-import { getSoftwareLevelColor } from "@/utils";
-import {
-  Box,
-  Skeleton,
-  Spacer,
-  Stack,
-  StackProps,
-  Tag,
-  Text,
-} from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { createColumnHelper } from "@tanstack/react-table";
-import { PropsWithChildren, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
-import { QUERIES } from "../constants";
+} from "@/types"
+import { getSoftwareLevelColor } from "@/utils"
+import { Box, Skeleton, Spacer, Stack, StackProps, Tag, Text } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { createColumnHelper } from "@tanstack/react-table"
+import { PropsWithChildren, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { QUERIES } from "../constants"
 
-const columnHelper = createColumnHelper<GroupDeviceBySoftwareLevel>();
+const columnHelper = createColumnHelper<GroupDeviceBySoftwareLevel>()
 
 export type SoftwareComplianceDeviceListProps = {
-  level: DeviceSoftwareLevel;
-  groupId: number;
-};
+  level: DeviceSoftwareLevel
+  groupId: number
+}
 
-function SoftwareComplianceDeviceList(
-  props: SoftwareComplianceDeviceListProps
-) {
-  const { level, groupId } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-  const modalConfig = useModalConfig();
+function SoftwareComplianceDeviceList(props: SoftwareComplianceDeviceListProps) {
+  const { level, groupId } = props
+  const { t } = useTranslation()
+  const dialogConfig = useDialogConfig()
 
   const { data, isPending } = useQuery({
     queryKey: [QUERIES.SOFTWARE_COMPLIANCE_DEVICES, level],
-    queryFn: async () =>
-        api.report.getAllGroupDevicesBySoftwareLevel(groupId, level),
-  });
+    queryFn: async () => api.report.getAllGroupDevicesBySoftwareLevel(groupId, level),
+  })
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("name", {
         cell: (info) => (
-          <Text
-            as={Link}
+          <EntityLink
             to={`/app/devices/${info.row.original.id}/compliance`}
-            onClick={() => modalConfig.close()}
-            textDecoration="underline"
+            onClick={() => dialogConfig.close()}
           >
             {info.getValue()}
-          </Text>
+          </EntityLink>
         ),
         header: t("Device name"),
       }),
       columnHelper.accessor("mgmtAddress", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Management IP"),
       }),
       columnHelper.accessor("softwareLevel", {
         cell: (info) => {
-          const level = info.getValue();
+          const level = info.getValue()
 
-          return <Tag colorScheme={getSoftwareLevelColor(level)}>{level}</Tag>;
+          return <Tag.Root colorPalette={getSoftwareLevelColor(level)}>{level}</Tag.Root>
         },
         header: t("Software level"),
       }),
     ],
     [t]
-  );
+  )
 
   return isPending ? (
-    <Stack spacing="3">
+    <Stack gap="3">
       <Skeleton h="60px"></Skeleton>
       <Skeleton h="60px"></Skeleton>
       <Skeleton h="60px"></Skeleton>
@@ -91,34 +74,31 @@ function SoftwareComplianceDeviceList(
       ) : (
         <EmptyResult
           title={t("There is no device")}
-          description={t(
-            "Device with level {{ level }} appears when software rule is validated",
-            {
-              level: t(level),
-            }
-          )}
+          description={t("Device with level {{ level }} appears when software rule is validated", {
+            level: t(level),
+          })}
         />
       )}
     </Stack>
-  );
+  )
 }
 
 type SoftwareComplianteDeviceBoxProps = PropsWithChildren<
   {
-    level: DeviceSoftwareLevel;
-    count: number;
-    isActive: boolean;
+    level: DeviceSoftwareLevel
+    count: number
+    isActive: boolean
   } & StackProps
->;
+>
 
 function SoftwareComplianteDeviceBox(props: SoftwareComplianteDeviceBoxProps) {
-  const { children, level, count, isActive, ...other } = props;
+  const { children, level, count, isActive, ...other } = props
 
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   const bg = useMemo(() => {
-    return getSoftwareLevelColor(level);
-  }, [level]);
+    return getSoftwareLevelColor(level)
+  }, [level])
 
   return (
     <Stack
@@ -134,41 +114,30 @@ function SoftwareComplianteDeviceBox(props: SoftwareComplianteDeviceBoxProps) {
         bg: "grey.50",
       }}
       p="5"
-      spacing="3"
+      gap="3"
       {...other}
     >
       <Box w="14px" h="14px" borderRadius="4px" bg={bg} />
       {children}
       <Spacer />
-      <Text>
-        {/* TODO: pluralize */}
-        {t("{{count}} device(s)", { count })}
-      </Text>
+      <Text>{t("{{count}} device", { count })}</Text>
     </Stack>
-  );
+  )
 }
 
 type SoftwareComplianceDialogProps = {
-  item: GroupSoftwareComplianceStat;
-};
+  item: GroupSoftwareComplianceStat
+}
 
-export default function SoftwareComplianceDialog(
-  props: SoftwareComplianceDialogProps
-) {
-  const { item } = props;
-  const { t } = useTranslation();
-  const [selected, setSelected] = useState<DeviceSoftwareLevel>(
-    DeviceSoftwareLevel.GOLD
-  );
+export default function SoftwareComplianceDialog(props: SoftwareComplianceDialogProps) {
+  const { item } = props
+  const { t } = useTranslation()
+  const [selected, setSelected] = useState<DeviceSoftwareLevel>(DeviceSoftwareLevel.GOLD)
 
   const nonCompliantDeviceCount = useMemo(
-    () =>
-      item.deviceCount -
-      item.goldDeviceCount -
-      item.silverDeviceCount -
-      item.bronzeDeviceCount,
+    () => item.deviceCount - item.goldDeviceCount - item.silverDeviceCount - item.bronzeDeviceCount,
     [item]
-  );
+  )
 
   const triggers = useMemo(
     () => [
@@ -194,12 +163,12 @@ export default function SoftwareComplianceDialog(
       },
     ],
     [t, nonCompliantDeviceCount, item]
-  );
+  )
 
   return (
-    <Stack direction="row" spacing="7" overflow="auto" flex="1">
+    <Stack direction="row" gap="7" overflow="auto" flex="1">
       <Stack flex="0 0 340px" overflow="auto">
-        <Stack spacing="2" overflow="auto">
+        <Stack gap="2" overflow="auto">
           {triggers.map((trigger) => (
             <SoftwareComplianteDeviceBox
               key={trigger.label}
@@ -213,9 +182,7 @@ export default function SoftwareComplianceDialog(
           ))}
         </Stack>
       </Stack>
-      {selected && (
-        <SoftwareComplianceDeviceList groupId={item.groupId} level={selected} />
-      )}
+      {selected && <SoftwareComplianceDeviceList groupId={item.groupId} level={selected} />}
     </Stack>
-  );
+  )
 }

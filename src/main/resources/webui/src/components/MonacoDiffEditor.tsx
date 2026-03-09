@@ -1,41 +1,36 @@
-import colors from "@/theme/colors";
-import { Box } from "@chakra-ui/react";
-import { editor } from "monaco-editor";
-import { useLayoutEffect, useRef } from "react";
+import { colors } from "@/theme/tokens/colors"
+import { Box } from "@chakra-ui/react"
+import { editor } from "monaco-editor"
+import { useLayoutEffect, useRef } from "react"
 
 editor.defineTheme("netshot", {
   base: "vs",
   inherit: true,
   colors: {
-    "editor.background": colors.white,
-    "editorLineNumber.foreground": colors.grey[400],
-    "editor.selectionHighlightBackground": colors.green[100],
+    "editor.background": colors.white.value,
+    "editorLineNumber.foreground": colors.grey[400].value,
+    "editor.selectionHighlightBackground": colors.green[100].value,
   },
   rules: [
-    { token: "variable", foreground: colors.red[500] },
-    { token: "constant", foreground: colors.red[500] },
+    { token: "variable", foreground: colors.red[500].value },
+    { token: "constant", foreground: colors.red[500].value },
   ],
-});
+})
 
 export type MonacoDiffEditorProps = {
-  language?: string;
-  readOnly?: boolean;
-  original: string;
-  modified: string;
-};
+  language?: string
+  readOnly?: boolean
+  original: string
+  modified: string
+}
 
 export default function MonacoDiffEditor(props: MonacoDiffEditorProps) {
-  const {
-    original,
-    modified,
-    readOnly = false,
-    language = "typescript",
-  } = props;
-  const container = useRef<HTMLDivElement>(null);
-  const ide = useRef<editor.IStandaloneDiffEditor>();
+  const { original, modified, readOnly = false, language = "typescript" } = props
+  const container = useRef<HTMLDivElement>(null)
+  const ide = useRef<editor.IStandaloneDiffEditor>(null)
 
   useLayoutEffect(() => {
-    if (!container?.current) return;
+    if (!container?.current) return
 
     ide.current = editor.createDiffEditor(container.current, {
       automaticLayout: true,
@@ -43,17 +38,17 @@ export default function MonacoDiffEditor(props: MonacoDiffEditorProps) {
       theme: "netshot",
       fontSize: 14,
       fontFamily: "SF Mono",
-    });
+    })
 
     ide.current.setModel({
       original: editor.createModel(original, language),
       modified: editor.createModel(modified, language),
-    });
+    })
 
     return () => {
-      ide?.current?.dispose();
-    };
-  }, [container, original, modified, language, readOnly]);
+      ide?.current?.dispose()
+    }
+  }, [container, original, modified, language, readOnly])
 
-  return <Box flex="1" ref={container} />;
+  return <Box flex="1" ref={container} />
 }

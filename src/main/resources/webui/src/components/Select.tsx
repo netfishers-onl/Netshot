@@ -1,165 +1,251 @@
-import { transparentize } from "@/theme";
-import { Option } from "@/types";
+import { Option } from "@/types"
+import { splitProps } from "@/utils"
 import {
-  FormControl,
-  FormErrorMessage,
-  FormHelperText,
-  FormLabel,
-  SystemStyleObject,
-} from "@chakra-ui/react";
-import {
-  ChakraStylesConfig,
-  Select as NativeSelect,
-  Props,
-} from "chakra-react-select";
-import { FocusEventHandler, ReactNode, useMemo } from "react";
-import {
-  FieldPath,
-  PathValue,
-  UseControllerProps,
-  useController,
-} from "react-hook-form";
+  Select as ChakraSelect,
+  Field,
+  FieldRootProps,
+  HStack,
+  IconButton,
+  Portal,
+  SelectRootProps,
+  SelectValueChangeDetails,
+  Skeleton,
+  useListCollection,
+} from "@chakra-ui/react"
+import { useVirtualizer } from "@tanstack/react-virtual"
+import { ReactElement, useEffect, useMemo, useRef } from "react"
+import { flushSync } from "react-dom"
+import { FieldPath, FieldValues, useController, UseControllerProps } from "react-hook-form"
+import Icon from "./Icon"
 
-export type SelectProps<T> = {
-  label?: string;
-  helperText?: string;
-  children?: ReactNode;
-  onFocus?: FocusEventHandler<HTMLElement>;
-  onChange?(value: Option<PathValue<T, FieldPath<T>>>): void;
-  onBlur?: FocusEventHandler<HTMLElement>;
-  sx?: SystemStyleObject;
-  menuPortalTarget?: HTMLElement;
-} & Props &
-  UseControllerProps<T>;
+export type SelectProps<
+  TFieldValues extends FieldValues,
+  TName extends FieldPath<TFieldValues>,
+  T,
+> = {
+  label?: string
+  placeholder?: string
+  helperText?: string
+  isLoading?: boolean
+  isClearable?: boolean
+  options: Option<T>[]
+  noOptionsMessage?: ReactElement | string
+  fieldProps?: FieldRootProps
+  itemToString?(item: Option<T>): string
+  itemToValue?(item: Option<T>): string
+  onSelectItem?(item: T | T[], options: Option<T>[]): void
+} & Omit<SelectRootProps, "collection" | "name" | "value" | "onValueChange"> &
+  UseControllerProps<TFieldValues, TName>
 
-function Select<T>(props: SelectProps<T>) {
+export function Select<TFieldValues extends FieldValues, TName extends FieldPath<TFieldValues>, T>(
+  props: SelectProps<TFieldValues, TName, T>
+) {
   const {
-    control,
-    name,
-    value,
-    defaultValue,
+    options = [],
     label,
     placeholder,
-    options = [],
     helperText,
-    children,
-    onFocus,
-    onChange,
-    onBlur,
-    isRequired,
-    isReadOnly,
+    required,
+    readOnly,
+    disabled,
+    multiple,
     isLoading,
-    isDisabled,
-    sx,
-    menuPortalTarget = document.body,
-    ...other
-  } = props;
+    isClearable,
+    noOptionsMessage,
+    fieldProps = {},
+    onBlur,
+    onFocus,
+    itemToString,
+    itemToValue,
+    onSelectItem,
+    ...selectRootProps
+  } = props
 
-  const {
-    field,
-    fieldState: { error },
-  } = useController({
-    name,
-    control,
-    defaultValue,
+  const [controllerProps] = splitProps(props, [
+    "name",
+    "rules",
+    "shouldUnregister",
+    "defaultValue",
+    "control",
+    "disabled",
+    "exact",
+  ])
+
+  const { field, fieldState } = useController({
+    ...controllerProps,
     rules: {
-      required: isRequired,
+      ...(controllerProps.rules || {}),
+      required,
     },
-  });
+  })
 
-  const styles = useMemo(() => {
-    const outlineColor = transparentize("green.500", 0.16);
+  const contentRef = useRef<HTMLDivElement | null>(null)
+  const isDisabled = disabled || isLoading
+  const getItemString = itemToString || ((item: Option<T>) => item.label)
+  const getItemValue = itemToValue || ((item: Option<T>) => String(item.value))
 
-    return {
-      placeholder: (provided) => ({
-        ...provided,
-        color: "darkGrey.50",
-      }),
-      control: (provided) => ({
-        ...provided,
-        "&[data-focus=true]": {
-          borderColor: "green.400",
-          outline: "3px solid",
-          outlineColor: outlineColor,
-        },
-      }),
-      valueContainer: (provided) => ({
-        ...provided,
-        px: 3,
-      }),
-      menuList: (provided) => ({
-        ...provided,
-        p: 2,
-        borderWidth: 1,
-        borderColor: "grey.100",
-        borderRadius: "xl",
-        boxShadow: "0 2px 10px 0 rgba(140, 149, 159, .16)",
-        bg: "white",
-      }),
-      option: (provided, state) => {
-        const bg = state.isSelected ? "green.50" : state.isFocused ? "grey.100" : null;
-        const color = state.isSelected ? "green.800" : state.isFocused ? "black" : "text";
-        return {
-          ...provided,
-          borderRadius: "lg",
-          transition: "all .2s ease",
-          bg,
-          color,
-          "&[data-focus]": {
-            bg,
-            color,
-          }
-        };
-      },
-      clearIndicator: (base) => ({
-        ...base,
-        border: 0,
-      }),
-    } as ChakraStylesConfig;
-  }, []);
+  const { collection, set } = useListCollection<Option<T>>({
+    initialItems: [],
+    itemToString: getItemString,
+    itemToValue: getItemValue,
+  })
+
+  const virtualizer = useVirtualizer({
+    count: collection.size,
+    getScrollElement: () => contentRef.current,
+    estimateSize: () => 40,
+    overscan: 10,
+    scrollPaddingEnd: 32,
+  })
+
+  const optionsMap = useMemo(() => {
+    return new Map<string, Option<T>>(options.map((option) => [getItemValue(option), option]))
+  }, [options, getItemValue])
+
+  const onValueChange = (details: SelectValueChangeDetails<Option<T>>) => {
+    if (!details.value || details.value.length === 0) {
+      field.onChange(null)
+      return
+    }
+
+    if (multiple) {
+      const selectedOptions = details.value.map((val) => optionsMap.get(val))
+
+      field.onChange(selectedOptions.map(getItemValue))
+      onSelectItem?.(
+        selectedOptions.map((opt) => opt.value),
+        options
+      )
+    } else {
+      const selectedOption = optionsMap.get(details.value[0])
+
+      if (selectedOption) {
+        field.onChange(getItemValue(selectedOption))
+        onSelectItem?.(selectedOption.value, options)
+      }
+    }
+  }
+
+  const handleScrollToIndexFn = (details: { index: number }) => {
+    flushSync(() => {
+      virtualizer.scrollToIndex(details.index, {
+        align: "center",
+        behavior: "auto",
+      })
+    })
+  }
+
+  useEffect(() => {
+    set(options)
+  }, [options])
+
+  const value = useMemo(() => {
+    if (multiple) {
+      return field.value ? field.value : []
+    }
+
+    return field.value ? [field.value] : []
+  }, [field, isLoading, multiple])
 
   return (
-    <FormControl sx={sx} isRequired={isRequired} isReadOnly={isReadOnly}>
-      {label && <FormLabel mb={2}>{label}</FormLabel>}
-
-      <NativeSelect
-        styles={{
-          menuPortal: (base) => ({
-            ...base,
-            zIndex: 99999,
-          }),
-          menu: (base) => ({
-            ...base,
-            zIndex: "999!important",
-          }),
+    <Field.Root
+      required={required}
+      readOnly={readOnly}
+      disabled={isDisabled}
+      invalid={false}
+      {...fieldProps}
+    >
+      {label && (
+        <Field.Label>
+          {label}
+          <Field.RequiredIndicator />
+        </Field.Label>
+      )}
+      <ChakraSelect.Root
+        size="lg"
+        name={field.name}
+        value={value}
+        multiple={multiple}
+        onValueChange={onValueChange}
+        onInteractOutside={() => {
+          field.onBlur()
         }}
-        menuPortalTarget={document.body}
-        menuPosition="fixed"
-        chakraStyles={styles}
-        value={field.value}
-        placeholder={placeholder}
-        options={options}
-        onChange={(opts: Option<PathValue<T, FieldPath<T>>>) => {
-          field.onChange(opts);
-          if (onChange) onChange(opts);
-        }}
-        isLoading={isLoading}
-        onBlur={(e) => {
-          field.onBlur();
-          if (onBlur) onBlur(e);
-        }}
+        onBlur={onBlur}
         onFocus={onFocus}
-        ref={field.ref}
-        isReadOnly={isReadOnly}
-        isDisabled={isDisabled || isLoading}
-        isRequired={isRequired}
-        {...other}
-      />
+        collection={collection}
+        disabled={isDisabled}
+        scrollToIndexFn={handleScrollToIndexFn}
+        {...selectRootProps}
+      >
+        <ChakraSelect.HiddenSelect />
+        <ChakraSelect.Control>
+          <ChakraSelect.Trigger>
+            <ChakraSelect.ValueText placeholder={placeholder} />
+          </ChakraSelect.Trigger>
+          <ChakraSelect.IndicatorGroup>
+            {isClearable && value?.length > 0 && (
+              <ChakraSelect.ClearTrigger asChild>
+                <IconButton size="sm" variant="ghost">
+                  <Icon name="x" />
+                </IconButton>
+              </ChakraSelect.ClearTrigger>
+            )}
+            <ChakraSelect.Indicator />
+          </ChakraSelect.IndicatorGroup>
+        </ChakraSelect.Control>
+        <Portal>
+          <ChakraSelect.Positioner>
+            <ChakraSelect.Content ref={contentRef}>
+              {isLoading ? (
+                <>
+                  <Skeleton w="100%" h="48px" />
+                  <Skeleton w="100%" h="48px" />
+                  <Skeleton w="100%" h="48px" />
+                </>
+              ) : options?.length > 0 ? (
+                <div
+                  style={{
+                    height: `${virtualizer.getTotalSize()}px`,
+                    width: "100%",
+                    position: "relative",
+                  }}
+                >
+                  {virtualizer.getVirtualItems().map((virtualItem) => {
+                    const item = collection.items[virtualItem.index]
 
-      {helperText && <FormHelperText>{helperText}</FormHelperText>}
-      {error && <FormErrorMessage>{error?.message}</FormErrorMessage>}
-    </FormControl>
-  );
+                    return (
+                      <ChakraSelect.Item
+                        item={item}
+                        key={item.label}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: `${virtualItem.size}px`,
+                          transform: `translateY(${virtualItem.start}px)`,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <ChakraSelect.ItemText>{item.label}</ChakraSelect.ItemText>
+                        <ChakraSelect.ItemIndicator />
+                      </ChakraSelect.Item>
+                    )
+                  })}
+                </div>
+              ) : (
+                <HStack justifyContent="center" h="42px">
+                  {noOptionsMessage || "No options available"}
+                </HStack>
+              )}
+            </ChakraSelect.Content>
+          </ChakraSelect.Positioner>
+        </Portal>
+      </ChakraSelect.Root>
+      {helperText && <Field.HelperText>{helperText}</Field.HelperText>}
+      {fieldState.error && <Field.ErrorText>{fieldState.error?.message}</Field.ErrorText>}
+    </Field.Root>
+  )
 }
-
-export default Select;

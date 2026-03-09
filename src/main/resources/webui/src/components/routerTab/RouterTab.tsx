@@ -1,26 +1,18 @@
-import { Box, Flex, Text } from "@chakra-ui/react";
-import { PropsWithChildren } from "react";
-import { NavLink } from "react-router";
+import { Box, Flex, Text } from "@chakra-ui/react"
+import { PropsWithChildren } from "react"
+import { NavLink } from "react-router"
 
 type RouterTabProps = {
-  to: string;
-};
+  to: string
+}
 
 export default function RouterTab(props: PropsWithChildren<RouterTabProps>) {
-  const { children, to } = props;
+  const { children, to } = props
   return (
     <NavLink to={to}>
       {({ isActive }) => (
-        <Flex
-          h="44px"
-          alignItems="center"
-          justifyContent="center"
-          position="relative"
-        >
-          <Text
-            transition="all .2s ease"
-            color={isActive ? "black" : "grey.400"}
-          >
+        <Flex h="44px" alignItems="center" justifyContent="center" position="relative">
+          <Text transition="all .2s ease" color={isActive ? "black" : "grey.400"}>
             {children}
           </Text>
           {isActive && (
@@ -36,5 +28,5 @@ export default function RouterTab(props: PropsWithChildren<RouterTabProps>) {
         </Flex>
       )}
     </NavLink>
-  );
+  )
 }

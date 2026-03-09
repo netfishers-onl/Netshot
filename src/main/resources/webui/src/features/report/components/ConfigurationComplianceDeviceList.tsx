@@ -1,28 +1,26 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { EmptyResult, Search } from "@/components";
-import { QUERIES } from "@/constants";
-import { usePagination, useToast } from "@/hooks";
-import { ConfigComplianceDeviceStatus, Group } from "@/types";
-import { groupItemsByProperty, search } from "@/utils";
-import { Skeleton, Spacer, Stack } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import DeviceConfigurationCompliancePanel from "./DeviceConfigurationCompliancePanel";
-import { useCallback } from "react";
+import api from "@/api"
+import { EmptyResult, Search } from "@/components"
+import { QUERIES } from "@/constants"
+import { usePagination } from "@/hooks"
+import { ConfigComplianceDeviceStatus, Group } from "@/types"
+import { groupItemsByProperty, search } from "@/utils"
+import { Skeleton, Spacer, Stack } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { useCallback } from "react"
+import { useTranslation } from "react-i18next"
+import DeviceConfigurationCompliancePanel from "./DeviceConfigurationCompliancePanel"
 
 export type ConfigurationComplianceDeviceListProps = {
-  group: Group;
-};
+  group: Group
+}
 
 export default function ConfigurationComplianceDeviceList(
   props: ConfigurationComplianceDeviceListProps
 ) {
-  const { group } = props;
+  const { group } = props
 
-  const { t } = useTranslation();
-  const toast = useToast();
-  const pagination = usePagination();
+  const { t } = useTranslation()
+  const pagination = usePagination()
 
   const { data, isPending } = useQuery({
     queryKey: [
@@ -32,15 +30,14 @@ export default function ConfigurationComplianceDeviceList(
       group.name,
       pagination.query,
     ],
-    queryFn: async () =>
-        api.report.getAllGroupConfigNonCompliantDevices(group.id),
-    select: useCallback((res: ConfigComplianceDeviceStatus[]): Map<"name", ConfigComplianceDeviceStatus[]> => {
-      return groupItemsByProperty(
-        search(res, "name").with(pagination.query),
-        "name"
-      );
-    }, [pagination.query]),
-  });
+    queryFn: async () => api.report.getAllGroupConfigNonCompliantDevices(group.id),
+    select: useCallback(
+      (res: ConfigComplianceDeviceStatus[]): Map<"name", ConfigComplianceDeviceStatus[]> => {
+        return groupItemsByProperty(search(res, "name").with(pagination.query), "name")
+      },
+      [pagination.query]
+    ),
+  })
 
   return (
     <>
@@ -54,7 +51,7 @@ export default function ConfigurationComplianceDeviceList(
         <Spacer />
       </Stack>
       {isPending ? (
-        <Stack spacing="3">
+        <Stack gap="3">
           <Skeleton h="60px"></Skeleton>
           <Skeleton h="60px"></Skeleton>
           <Skeleton h="60px"></Skeleton>
@@ -65,11 +62,7 @@ export default function ConfigurationComplianceDeviceList(
           {data?.size > 0 ? (
             <>
               {Array.from(data.entries()).map(([key, value]) => (
-                <DeviceConfigurationCompliancePanel
-                  configs={value}
-                  name={key}
-                  key={key}
-                />
+                <DeviceConfigurationCompliancePanel configs={value} name={key} key={key} />
               ))}
             </>
           ) : (
@@ -81,5 +74,5 @@ export default function ConfigurationComplianceDeviceList(
         </>
       )}
     </>
-  );
+  )
 }

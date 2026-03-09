@@ -1,64 +1,58 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { Dialog } from "@/dialog";
-import { useToast } from "@/hooks";
-import { User } from "@/types";
-import { Text } from "@chakra-ui/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent, ReactElement, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { QUERIES } from "../constants";
+import api from "@/api"
+import { NetshotError } from "@/api/httpClient"
+import { MUTATIONS } from "@/constants"
+import { useConfirmDialogWithMutation } from "@/dialog"
+import { useToast } from "@/hooks"
+import { PropsWithRenderItem, User } from "@/types"
+import { Text } from "@chakra-ui/react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { MouseEvent } from "react"
+import { useTranslation } from "react-i18next"
+import { QUERIES } from "../constants"
 
-export type RemoveUserButtonProps = {
-  user: User;
-  renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
-};
+export type RemoveUserButtonProps = PropsWithRenderItem<{
+  user: User
+}>
 
 export default function RemoveUserButton(props: RemoveUserButtonProps) {
-  const { user, renderItem } = props;
-  const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const toast = useToast();
+  const { user, renderItem } = props
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const toast = useToast()
+  const dialog = useConfirmDialogWithMutation()
 
   const mutation = useMutation({
+    mutationKey: MUTATIONS.ADMIN_USER_REMOVE,
     mutationFn: async () => api.admin.removeUser(user?.id),
-    onSuccess() {
-      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_USERS] });
-      dialog.close();
-    },
     onError(err: NetshotError) {
-      toast.error(err);
+      toast.error(err)
     },
-  });
+  })
 
-  const dialog = Dialog.useConfirm({
-    title: t("Remove user"),
-    description: (
-      <Text>
-        {t("You are about to remove the user {{username}}", {
-          username: user?.username,
-        })}
-      </Text>
-    ),
-    isLoading: mutation.isPending,
-    onConfirm() {
-      mutation.mutate();
-    },
-    confirmButton: {
-      label: t("Remove"),
-      props: {
-        colorScheme: "red",
+  const open = (evt: MouseEvent) => {
+    evt?.stopPropagation()
+    const dialogRef = dialog.open(MUTATIONS.ADMIN_USER_REMOVE, {
+      title: t("Remove user"),
+      description: (
+        <Text>
+          {t("You are about to remove the user {{username}}", {
+            username: user?.username,
+          })}
+        </Text>
+      ),
+      async onConfirm() {
+        await mutation.mutateAsync()
+        queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_USERS] })
+        dialogRef.close()
       },
-    },
-  });
+      confirmButton: {
+        label: t("Remove"),
+        props: {
+          colorPalette: "red",
+        },
+      },
+    })
+  }
 
-  const open = useCallback(
-    (evt: MouseEvent) => {
-      evt.stopPropagation();
-      dialog.open();
-    },
-    [dialog]
-  );
-
-  return renderItem(open);
+  return renderItem(open)
 }

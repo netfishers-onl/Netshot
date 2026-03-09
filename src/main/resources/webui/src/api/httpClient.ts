@@ -1,6 +1,7 @@
-import withQuery, { WithQueryOptions } from "with-query";
+import withQuery, { WithQueryOptions } from "with-query"
 
-import i18n from "@/i18n";
+import i18n from "@/i18n"
+import oidc from "./oidc"
 
 export enum HttpMethod {
   GET = "GET",
@@ -11,21 +12,22 @@ export enum HttpMethod {
 }
 
 type HttpPayload<B> = {
-  body?: B;
-  queryParams?: Record<string, unknown>;
-  queryParamsOptions?: WithQueryOptions;
-  headers?: Record<string, string>;
-};
+  body?: B
+  queryParams?: Record<string, unknown>
+  queryParamsOptions?: WithQueryOptions
+  headers?: Record<string, string>
+  signal?: AbortSignal
+}
 
 type HttpClientOptions = {
-  baseUrl?: string;
-};
+  baseUrl?: string
+}
 
 export type NetshotError = {
-  title: string;
-  description: string;
-  code: NetshotErrorCode;
-  response?: Response;
+  title: string
+  description: string
+  code: NetshotErrorCode
+  response?: Response
 }
 
 export enum NetshotErrorCode {
@@ -51,156 +53,181 @@ export enum HttpEventType {
   Forbidden = "forbidden",
 }
 
-export type HttpEventCallback = (url: string, params: RequestInit, response: Response) => void;
+export type HttpEventCallback = (url: string, params: RequestInit, response: Response) => void
+
+type ExecuteHttpEventCallbackConfig = {
+  requestUrl: string
+  requestOptions: RequestInit
+  response: Response
+}
+
+export function isNetshotError(obj: unknown): obj is NetshotError {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "title" in obj &&
+    "description" in obj &&
+    "code" in obj &&
+    typeof (obj as NetshotError).title === "string" &&
+    typeof (obj as NetshotError).description === "string"
+  )
+}
 
 function createHttpClient(opts: HttpClientOptions = {}) {
-  const { baseUrl = "" } = opts;
-  const listeners = new Map<HttpEventType, HttpEventCallback>();
+  const { baseUrl = "" } = opts
+  const listeners = new Map<HttpEventType, HttpEventCallback>()
 
   async function request<B = object>(
-      method: HttpMethod, url: string, payload: HttpPayload<B> = {}): Promise<Response> {
-    const {
-      body,
-      queryParams,
-      queryParamsOptions = {},
-      headers = {},
-    } = payload;
+    method: HttpMethod,
+    url: string,
+    payload: HttpPayload<B> = {}
+  ): Promise<Response> {
+    const { body, queryParams, queryParamsOptions = {}, headers = {}, signal } = payload
 
-    const requestUrl = baseUrl +
-      (queryParams ? withQuery(url, queryParams, queryParamsOptions) : url);
+    const requestUrl =
+      baseUrl + (queryParams ? withQuery(url, queryParams, queryParamsOptions) : url)
 
     if (!headers["Accept"]) {
-      headers["Accept"] = "application/json";
+      headers["Accept"] = "application/json"
     }
 
     const requestOptions: RequestInit = {
       method,
       headers,
-    };
+      signal,
+    }
 
     if (typeof body === "object") {
-      requestOptions.body = JSON.stringify(body as B);
-      headers["Content-Type"] = "application/json";
-    }
-    else if (body && headers["Content-Type"]) {
-      requestOptions.body = body as string;
+      requestOptions.body = JSON.stringify(body as B)
+      headers["Content-Type"] = "application/json"
+    } else if (body && headers["Content-Type"]) {
+      requestOptions.body = body as string
     }
 
-    const response = await fetch(requestUrl, requestOptions);
+    const response = await fetch(requestUrl, requestOptions)
+
+    const oidcData = oidc.extracDataFromHeaders(response.headers)
+
+    if (oidcData.endpoint && oidcData.clientId) {
+      oidc.setEndpoint(oidcData.endpoint)
+      oidc.setClientId(oidcData.clientId)
+    }
 
     if (!response.ok) {
-      if (response.status === HttpStatus.Forbidden) {
-        for (const [type, callback] of listeners) {
-          if (type === HttpEventType.Forbidden) {
-            callback(requestUrl, requestOptions, response);
-          }
-        }
+      const callbackConfig = {
+        requestUrl,
+        requestOptions,
+        response,
       }
+
+      if (response.status === HttpStatus.Forbidden || response.status === HttpStatus.Unauthorized) {
+        executeHttpEventCallback(HttpEventType.Forbidden, callbackConfig)
+      }
+
       try {
-        const result = await response.json();
+        const result = await response.json()
+
         if (result.errorMsg) {
           throw {
             title: i18n.t("Error"),
             description: i18n.t(result.errorMsg),
             code: result.errorCode,
             response,
-          } as NetshotError;
+          } as NetshotError
         }
-      }
-      catch (jsonErr) {
+      } catch (jsonErr) {
         if (typeof jsonErr.code !== "undefined") {
-          throw jsonErr;
+          throw jsonErr
         }
         throw {
           title: i18n.t("Error"),
           description: i18n.t("Netshot server error"),
           code: NetshotErrorCode.GenericServer,
           response,
-        } as NetshotError;
+        } as NetshotError
       }
     }
 
-    return response;
+    return response
+  }
+
+  function executeHttpEventCallback(
+    eventType: HttpEventType,
+    config: ExecuteHttpEventCallbackConfig
+  ) {
+    for (const [type, callback] of listeners) {
+      if (type === eventType) {
+        callback(config.requestUrl, config.requestOptions, config.response)
+      }
+    }
   }
 
   return {
     request,
 
     async get<R>(url: string, payload: HttpPayload<null> = {}) {
-      const response = await request<null>(HttpMethod.GET, url, payload);
+      const response = await request<null>(HttpMethod.GET, url, payload)
       try {
-        return await response.json() as R;
-      }
-      catch (e) {
-        return null;
+        return (await response.json()) as R
+      } catch (e) {
+        console.error(e)
+        return null
       }
     },
 
-    async post<R, B>(
-      url: string,
-      body: B,
-      meta: Omit<HttpPayload<B>, "body"> = {}
-    ) {
+    async post<R, B>(url: string, body: B, meta: Omit<HttpPayload<B>, "body"> = {}) {
       const response = await request<B>(HttpMethod.POST, url, {
         ...meta,
         body,
-      });
+      })
       try {
-        return await response.json() as R;
-      }
-      catch (e) {
-        return null;
+        return (await response.json()) as R
+      } catch (e) {
+        console.error(e)
+        return null
       }
     },
 
-    async put<R, B>(
-      url: string,
-      body: B,
-      meta: Omit<HttpPayload<B>, "body"> = {}
-    ) {
+    async put<R, B>(url: string, body: B, meta: Omit<HttpPayload<B>, "body"> = {}) {
       const response = await request<B>(HttpMethod.PUT, url, {
         ...meta,
         body,
-      });
+      })
       try {
-        return await response.json() as R;
-      }
-      catch (e) {
-        return null;
+        return (await response.json()) as R
+      } catch (e) {
+        console.error(e)
+        return null
       }
     },
 
-    async patch<R, B>(
-      url: string,
-      body: B,
-      meta: HttpPayload<B> = {}
-    ) {
+    async patch<R, B>(url: string, body: B, meta: HttpPayload<B> = {}) {
       const response = await request<B>(HttpMethod.PATCH, url, {
         ...meta,
         body,
-      });
+      })
       try {
-        return await response.json() as R;
-      }
-      catch (e) {
-        return null;
+        return (await response.json()) as R
+      } catch (e) {
+        console.error(e)
+        return null
       }
     },
 
     async delete(url: string, payload: HttpPayload<null> = {}) {
-      await request<null>(HttpMethod.DELETE, url, payload);
+      await request<null>(HttpMethod.DELETE, url, payload)
     },
 
     on(type: HttpEventType, callback: HttpEventCallback) {
-      listeners.set(type, callback);
+      listeners.set(type, callback)
     },
 
     off(type: HttpEventType) {
-      listeners.delete(type);
+      listeners.delete(type)
     },
-  };
+  }
 }
 
 export default createHttpClient({
   baseUrl: "/api",
-});
+})

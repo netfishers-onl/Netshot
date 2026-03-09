@@ -1,35 +1,31 @@
-import Search from "@/components/Search";
-import { useThrottle } from "@/hooks";
-import { Stack } from "@chakra-ui/react";
-import { useCallback, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useSidebar } from "../../contexts/SidebarProvider";
+import Search from "@/components/Search"
+import { useDebounce } from "@/hooks"
+import { Stack } from "@chakra-ui/react"
+import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { useSidebar } from "../../contexts/SidebarProvider"
 
 export default function SidebarSearch() {
-  const { t } = useTranslation();
-  const ctx = useSidebar();
-  const [query, setQuery] = useState<string>("");
-  const throttledValue = useThrottle(query);
+  const { t } = useTranslation()
+  const ctx = useSidebar()
+  const [query, setQuery] = useState<string>("")
+  const debouncedValue = useDebounce(query)
 
-  const onQuery = useCallback((query: string) => {
-    setQuery(query);
-  }, []);
+  function onQuery(query: string) {
+    setQuery(query)
+  }
 
-  const onClear = useCallback(() => {
-    ctx.setQuery("");
-  }, [ctx]);
+  function onClear() {
+    ctx.setQuery("")
+  }
 
   useEffect(() => {
-    ctx.setQuery(throttledValue);
-  }, [throttledValue]);
+    ctx.setQuery(debouncedValue)
+  }, [debouncedValue])
 
   return (
-    <Stack p="6" spacing="5">
-      <Search
-        placeholder={t("Search...")}
-        onQuery={onQuery}
-        onClear={onClear}
-      />
+    <Stack p="6" gap="5">
+      <Search placeholder={t("Search...")} onQuery={onQuery} onClear={onClear} />
     </Stack>
-  );
+  )
 }

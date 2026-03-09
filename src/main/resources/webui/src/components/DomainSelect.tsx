@@ -1,71 +1,40 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { QUERIES } from "@/constants";
-import useToast from "@/hooks/useToast";
-import { Domain, Option } from "@/types";
-import { Text } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import Select, { SelectProps } from "./Select";
-import { useCallback } from "react";
+import { useDomains } from "@/features/administration/api"
+import { Text } from "@chakra-ui/react"
+import { FieldPath, FieldValues } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { Select, SelectProps } from "./Select"
 
-export type DomainSelectProps<T> = {
-  withAny?: boolean;
-} & SelectProps<T>;
+export type DomainSelectProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+> = Omit<SelectProps<TFieldValues, TName, string | number>, "options">
 
 export default function DomainSelect<T>(props: DomainSelectProps<T>) {
-  const {
-    control,
-    name,
-    defaultValue,
-    isRequired,
-    withAny = false,
-    isReadOnly,
-    ...other
-  } = props;
+  const { control, name, required, readOnly, multiple = false } = props
 
-  const { t } = useTranslation();
-  const toast = useToast();
+  const { t } = useTranslation()
 
-  const { isPending, data: options } = useQuery({
-    queryKey: [QUERIES.DOMAIN_LIST],
-    queryFn: async () => {
-      return api.admin.getAllDomains({
-        limit: 999,
-        offset: 0,
-      });
-    },
-    select: useCallback((domains: Domain[]): Option<number>[] => {
-      const options = domains.map((domain) => ({
-        label: domain?.name,
-        value: domain?.id,
-      }));
+  const { isPending, data = [] } = useDomains()
 
-      if (withAny) {
-        options.unshift({
-          label: t("[Any]"),
-          value: null,
-        });
-      }
-
-      return options;
-    }, []),
-  });
+  const options = data.map((domain) => ({
+    label: domain?.name,
+    value: domain?.id,
+  }))
 
   return (
     <Select
       label={t("Domain")}
       placeholder={t("Select a domain")}
-      name={name}
-      defaultValue={defaultValue}
       control={control}
-      isReadOnly={isReadOnly}
-      isRequired={isRequired}
-      isPending={isPending}
-      noOptionsMessage={() => <Text>{t("No domain found")}</Text>}
+      name={name}
+      readOnly={readOnly}
+      required={required}
+      isLoading={isPending}
+      noOptionsMessage={<Text>{t("No domain found")}</Text>}
       options={options}
-      isClearable
-      {...other}
+      multiple={multiple}
+      itemToString={(item) => item?.label}
+      itemToValue={(item) => item.value?.toString()}
     />
-  );
+  )
 }

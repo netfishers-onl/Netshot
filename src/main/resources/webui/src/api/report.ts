@@ -7,49 +7,36 @@ import {
   GroupSoftwareComplianceStat,
   HardwareSupportDevice,
   HardwareSupportStat,
-} from "@/types";
-import { getFilenameFromContentDispositionHeader } from "@/utils";
-import httpClient, { HttpMethod } from "./httpClient";
+} from "@/types"
+import { getFilenameFromContentDispositionHeader } from "@/utils"
+import httpClient, { HttpMethod } from "./httpClient"
 import {
   ReportDeviceAccessFailureQueryParams,
   ReportExportDataQueryParams,
   ReportQueryParams,
-} from "./types";
+} from "./types"
 
-async function getAllConfigComplianceDeviceStatuses(
-  queryParams: ReportQueryParams
-) {
-  return httpClient.get<ConfigComplianceDeviceStatus[]>(
-    "/reports/configcompliancedevicestatuses",
-    {
-      queryParams,
-    }
-  );
+async function getAllConfigComplianceDeviceStatuses(queryParams: ReportQueryParams) {
+  return httpClient.get<ConfigComplianceDeviceStatus[]>("/reports/configcompliancedevicestatuses", {
+    queryParams,
+  })
 }
 
 async function getAllGroupConfigComplianceStats(queryParams: ReportQueryParams) {
-  return httpClient.get<GroupConfigComplianceStat[]>(
-    "/reports/groupconfigcompliancestats",
-    {
-      queryParams,
-      queryParamsOptions: {
-        stringifyOpt: {
-          arrayFormat: "repeat",
-        },
+  return httpClient.get<GroupConfigComplianceStat[]>("/reports/groupconfigcompliancestats", {
+    queryParams,
+    queryParamsOptions: {
+      stringifyOpt: {
+        arrayFormat: "repeat",
       },
-    }
-  );
+    },
+  })
 }
 
-async function getAllDeviceAccessFailures(
-  queryParams: ReportDeviceAccessFailureQueryParams
-) {
-  return httpClient.get<DeviceAccessFailure[]>(
-    "/reports/accessfailuredevices",
-    {
-      queryParams,
-    }
-  );
+async function getAllDeviceAccessFailures(queryParams: ReportDeviceAccessFailureQueryParams) {
+  return httpClient.get<DeviceAccessFailure[]>("/reports/accessfailuredevices", {
+    queryParams,
+  })
 }
 
 async function getAllGroupConfigNonCompliantDevices(
@@ -61,7 +48,7 @@ async function getAllGroupConfigNonCompliantDevices(
     {
       queryParams,
     }
-  );
+  )
 }
 
 async function getAllGroupDevicesBySoftwareLevel(
@@ -74,30 +61,25 @@ async function getAllGroupDevicesBySoftwareLevel(
     {
       queryParams,
     }
-  );
+  )
 }
 
 async function getAllGroupSoftwareComplianceStats(
   queryParams: {
-    domain?: number;
+    domain?: number
   } = {}
 ) {
-  return httpClient.get<GroupSoftwareComplianceStat[]>(
-    "/reports/groupsoftwarecompliancestats",
-    {
-      queryParams,
-    }
-  );
+  return httpClient.get<GroupSoftwareComplianceStat[]>("/reports/groupsoftwarecompliancestats", {
+    queryParams,
+  })
 }
 
 async function getAllHardwareSupportDevices(type: "eos" | "eol", date: number) {
-  return httpClient.get<HardwareSupportDevice[]>(
-    `/reports/hardwaresupportdevices/${type}/${date}`
-  );
+  return httpClient.get<HardwareSupportDevice[]>(`/reports/hardwaresupportdevices/${type}/${date}`)
 }
 
 async function getAllHardwareSupportStats() {
-  return httpClient.get<HardwareSupportStat[]>(`/reports/hardwaresupportstats`);
+  return httpClient.get<HardwareSupportStat[]>(`/reports/hardwaresupportstats`)
 }
 
 async function getConfigChangeOverLastDay() {
@@ -108,7 +90,7 @@ async function getConfigChangeOverLastDay() {
         tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
     }
-  );
+  )
 }
 
 async function exportData(queryParams: ReportExportDataQueryParams) {
@@ -119,12 +101,12 @@ async function exportData(queryParams: ReportExportDataQueryParams) {
         arrayFormat: "repeat",
       },
     },
-  });
+  })
 
   return {
     blob: await req.blob(),
     filename: getFilenameFromContentDispositionHeader(req.headers),
-  };
+  }
 }
 
 export default {
@@ -138,4 +120,4 @@ export default {
   getAllDeviceAccessFailures,
   getConfigChangeOverLastDay,
   exportData,
-};
+}

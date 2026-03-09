@@ -1,135 +1,110 @@
-import api, { CreateOrUpdateRule } from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { Dialog } from "@/dialog";
-import { useToast } from "@/hooks";
-import { Rule, RuleType } from "@/types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent, ReactElement, useCallback, useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { BLOCK_OPTIONS, QUERIES, TEXT_OPTIONS } from "../constants";
-import { RuleForm } from "../types";
-import { RuleEditForm } from "./RuleEditForm";
-import RuleEditScript from "./RuleEditScript";
+import { MUTATIONS } from "@/constants"
+import { useFormDialogWithMutation } from "@/dialog"
+import { useToast } from "@/hooks"
+import { PropsWithRenderItem, Rule, RuleType } from "@/types"
+import { booleanToString, stringToBoolean } from "@/utils"
+import { MouseEvent, useEffect, useMemo } from "react"
+import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { useUpdateRule } from "../api"
+import { RuleForm } from "../types"
+import { RuleEditForm } from "./RuleEditForm"
+import RuleEditScript from "./RuleEditScript"
 
-export type EditRuleButtonProps = {
-  policyId: number;
-  rule: Rule;
-  renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
-};
+export type EditRuleButtonProps = PropsWithRenderItem<{
+  policyId: number
+  rule: Rule
+}>
 
 export default function EditRuleButton(props: EditRuleButtonProps) {
-  const { policyId, rule, renderItem } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-  const queryClient = useQueryClient();
+  const { policyId, rule, renderItem } = props
+  const { t } = useTranslation()
+  const toast = useToast()
+  const dialog = useFormDialogWithMutation()
 
   const defaultValues = useMemo(() => {
-    const anyBlock = BLOCK_OPTIONS.find(
-      (option) => option.value === rule?.anyBlock
-    );
-    const invert = TEXT_OPTIONS.find((option) => option.value === rule?.invert);
-
     const values = {
       name: rule?.name,
       script: rule?.script,
-      text: rule?.text,
+      text: rule?.text ?? "",
       regExp: rule?.regExp,
-      context: rule?.context,
-      driver: null,
-      field: {
-        label: rule?.field,
-        value: rule?.field,
-      },
-      anyBlock,
+      context: rule?.context ?? "",
+      driver: rule?.deviceDriver,
+      field: rule?.field,
       matchAll: rule?.matchAll,
-      invert,
+      anyBlock: booleanToString(rule?.anyBlock),
+      invert: booleanToString(rule?.invert),
       normalize: rule?.normalize,
-    } as RuleForm;
+    } as RuleForm
 
-    return values;
-  }, [rule]);
+    return values
+  }, [rule])
 
   const form = useForm<RuleForm>({
     mode: "onChange",
     defaultValues,
-  });
+  })
 
-  const mutation = useMutation({
-    mutationFn: async (payload: CreateOrUpdateRule) =>
-      api.rule.update(rule.id, payload),
-    onSuccess(res) {
-      dialog.close();
-      toast.success({
-        title: t("Success"),
-        description: t("Rule {{name}} has been successfully updated", {
-          name: res?.name,
-        }),
-      });
-
-      queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_RULE_LIST, policyId] });
-      queryClient.invalidateQueries({ queryKey: [QUERIES.RULE_DETAIL, +policyId, res.id] });
-    },
-    onError(err: NetshotError) {
-      toast.error(err);
-    },
-  });
-
-  const onSubmit = useCallback(
-    async (values: RuleForm) => {
-      mutation.mutate({
-        id: rule.id,
-        name: rule.name,
-        driver: values.driver.value?.name,
-        field: values.field?.value,
-        context: values.context,
-        script: values.script,
-        text: values.text,
-        anyBlock: values.anyBlock?.value,
-        matchAll: values.matchAll,
-        invert: values.invert?.value,
-        normalize: values.normalize,
-        enabled: rule.enabled,
-        policy: policyId,
-        regExp: rule.regExp,
-        type: rule.type,
-      });
-    },
-    [mutation]
-  );
+  const mutation = useUpdateRule(rule)
 
   const hasScript = useMemo(
     () => rule?.type === RuleType.Javascript || rule?.type === RuleType.Python,
     [rule]
-  );
+  )
 
-  const dialog = Dialog.useForm({
-    title: t("Edit rule"),
-    description: hasScript ? (
-      <RuleEditScript type={rule?.type} deviceDriver={rule.deviceDriver} />
-    ) : (
-      <RuleEditForm type={rule?.type} deviceDriver={rule.deviceDriver} />
-    ),
-    form,
-    isLoading: mutation.isPending,
-    size: "2xl",
-    variant: hasScript ? "full-floating" : "floating",
-    onSubmit,
-    onCancel() {
-      form.reset();
-    },
-    submitButton: {
-      label: t("Apply changes"),
-    },
-  });
+  const open = (evt: MouseEvent) => {
+    evt?.stopPropagation()
+    const dialogRef = dialog.open(MUTATIONS.RULE_UPDATE, {
+      title: t("Edit rule"),
+      description: hasScript ? (
+        <RuleEditScript type={rule?.type} />
+      ) : (
+        <RuleEditForm type={rule?.type} />
+      ),
+      form,
+      size: "lg",
+      variant: hasScript ? "full-floating" : null,
+      async onSubmit(values: RuleForm) {
+        console.log(values)
+        await mutation.mutateAsync({
+          id: rule.id,
+          name: values.name,
+          driver: values.driver,
+          field: values.field,
+          context: values.context,
+          script: values.script,
+          text: values.text,
+          anyBlock: stringToBoolean(values.anyBlock),
+          matchAll: values.matchAll,
+          invert: stringToBoolean(values.invert),
+          normalize: values.normalize,
+          enabled: rule.enabled,
+          policy: policyId,
+          regExp: values.regExp,
+          type: rule.type,
+        })
 
-  const open = useCallback(
-    (evt: MouseEvent) => {
-      evt.stopPropagation();
-      dialog.open();
-    },
-    [dialog]
-  );
+        dialogRef.close()
 
-  return renderItem(open);
+        toast.success({
+          title: t("Success"),
+          description: t("Rule {{name}} has been successfully updated", {
+            name: values.name,
+          }),
+        })
+      },
+      onCancel() {
+        form.reset()
+      },
+      submitButton: {
+        label: t("Apply changes"),
+      },
+    })
+  }
+
+  useEffect(() => {
+    form.reset(defaultValues)
+  }, [rule])
+
+  return renderItem(open)
 }

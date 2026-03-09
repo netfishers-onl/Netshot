@@ -7,6 +7,12 @@ export enum TaskScheduleType {
   Monthly = "MONTHLY",
 }
 
+export enum SchedulePriority {
+  Low = 3,
+  Normal = 5,
+  High = 8,
+}
+
 export enum TaskType {
   TakeSnapshot = "TakeSnapshotTask",
   TakeGroupSnapshot = "TakeGroupSnapshotTask",
@@ -31,25 +37,26 @@ export enum TaskStatus {
 }
 
 export type Task = {
-  author: string;
-  changeDate: string;
-  comments: string;
-  creationDate: string;
-  debugEnabled: boolean;
-  executionDate: string;
-  id: number;
-  scheduleReference: string;
-  scheduleType: TaskScheduleType;
-  scheduleFactor: number;
-  status: TaskStatus;
-  target: string;
-  runnerId: string;
-  log: string;
-  nextExecutionDate: string;
-  taskDescription: string;
-  repeating: boolean;
-  type: string;
-  script?: string;
-  userInputValues?: Record<string, string>;
-  deviceId?: number;
-};
+  author: string
+  changeDate: string
+  comments: string
+  creationDate: string
+  debugEnabled: boolean
+  executionDate: string
+  id: number
+  scheduleReference: string
+  scheduleType: TaskScheduleType
+  scheduleFactor: number
+  status: TaskStatus
+  target: string
+  runnerId: string
+  log: string
+  nextExecutionDate: string
+  taskDescription: string
+  repeating: boolean
+  type: string
+  script?: string
+  userInputValues?: Record<string, string>
+  deviceId?: number
+  priority: SchedulePriority
+}

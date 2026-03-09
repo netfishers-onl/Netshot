@@ -1,26 +1,19 @@
-import { Box, BoxProps } from "@chakra-ui/react";
-import NativeChart, {
-  ChartConfiguration,
-  ChartTypeRegistry,
-} from "chart.js/auto";
-import mergeWith from "lodash.mergewith";
-import { useLayoutEffect, useMemo, useRef } from "react";
-
-import { useColor } from "@/theme";
+import { Box, BoxProps, useToken } from "@chakra-ui/react"
+import NativeChart, { ChartConfiguration, ChartTypeRegistry } from "chart.js/auto"
+import mergeWith from "lodash.mergewith"
+import { useLayoutEffect, useMemo, useRef } from "react"
 
 export type ChartProps<T extends keyof ChartTypeRegistry = "line"> = {
-  config: ChartConfiguration<T>;
-} & BoxProps;
+  config: ChartConfiguration<T>
+} & BoxProps
 
-export default function Chart<T extends keyof ChartTypeRegistry = "line">(
-  props: ChartProps<T>
-) {
-  const { config, ...other } = props;
-  const ctx = useRef<HTMLCanvasElement>();
-  const chart = useRef<NativeChart>();
-  const green500 = useColor("green.500");
-  const greyColor = useColor("grey.400");
-  const grey100 = useColor("grey.100");
+export default function Chart<T extends keyof ChartTypeRegistry = "line">(props: ChartProps<T>) {
+  const { config, ...other } = props
+  const ctx = useRef<HTMLCanvasElement>(null)
+  const chart = useRef<NativeChart>(null)
+  const [green500] = useToken("colors", "green.500")
+  const [greyColor] = useToken("colors", "grey.400")
+  const [grey100] = useToken("colors", "grey.100")
 
   const defaultConfig = useMemo(() => {
     return {
@@ -89,20 +82,21 @@ export default function Chart<T extends keyof ChartTypeRegistry = "line">(
           }, */
         },
       },
-    } as ChartConfiguration;
-  }, [green500, grey100, greyColor]);
+    } as ChartConfiguration
+  }, [green500, grey100, greyColor])
 
   useLayoutEffect(() => {
-    chart.current = new NativeChart(
-      ctx.current,
-      mergeWith(defaultConfig, config)
-    );
+    chart.current = new NativeChart(ctx.current, mergeWith({}, defaultConfig, config))
 
     return () => {
-      chart.current.destroy();
-      chart.current = null;
-    };
-  }, [ctx, chart, config, defaultConfig]);
+      chart.current.destroy()
+      chart.current = null
+    }
+  }, [ctx, chart, config, defaultConfig])
 
-  return <Box as="canvas" ref={ctx} {...other} />;
+  return (
+    <Box {...other} asChild>
+      <canvas ref={ctx} />
+    </Box>
+  )
 }

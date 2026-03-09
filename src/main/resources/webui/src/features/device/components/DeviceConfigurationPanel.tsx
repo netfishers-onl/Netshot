@@ -1,92 +1,80 @@
-import {
-  Divider,
-  IconButton,
-  Skeleton,
-  Spacer,
-  Stack,
-  Tag,
-  Text,
-} from "@chakra-ui/react";
-import { motion, useAnimationControls } from "framer-motion";
-import { useCallback, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
-
-import Icon from "@/components/Icon";
-import { useDeviceTypeOptions, useToast } from "@/hooks";
-import { DeviceConfig, DeviceAttributeDefinition, Config, ConfigNumericAttribute, ConfigTextAttribute, ConfigBinaryAttribute, ConfigAttribute, DeviceAttributeType, DeviceAttributeLevel } from "@/types";
-import { formatDate } from "@/utils";
-
-import { useDevice } from "../contexts/device";
-import DeviceConfigurationAttribute from "./DeviceConfigurationAttribute";
-import DeviceConfigurationCompareButton from "./DeviceConfigurationCompareButton";
-
-
-
-
-
+import Icon from "@/components/Icon"
+import { Config } from "@/types"
+import { formatDate, getConfigDeviceAttributeDefinitions } from "@/utils"
+import { Button, IconButton, Separator, Skeleton, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
+import { motion, useAnimationControls } from "framer-motion"
+import { useCallback, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { useDevice } from "../contexts/device"
+import { useDeviceConfigurationCompareStore } from "../stores"
+import DeviceConfigurationAttribute from "./DeviceConfigurationAttribute"
 
 export type DeviceConfigurationPanelProps = {
-  config: Config;
-};
+  config: Config
+}
 
-export default function DeviceConfigurationPanel(
-  props: DeviceConfigurationPanelProps
-) {
-  const { config } = props;
-  const { t } = useTranslation();
-  const controls = useAnimationControls();
-  const { type, isLoading } = useDevice();
-  const params = useParams<{ id: string }>();
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
-
-  const attributeDefinitions = useMemo<DeviceAttributeDefinition[]>(() => {
-    return type?.attributes.filter(a => a.level === DeviceAttributeLevel.Config);
-  }, [type]);
+export default function DeviceConfigurationPanel(props: DeviceConfigurationPanelProps) {
+  const { config } = props
+  const { t } = useTranslation()
+  const controls = useAnimationControls()
+  const { type, isLoading } = useDevice()
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(true)
+  const attributeDefinitions = type ? getConfigDeviceAttributeDefinitions(type.attributes) : []
+  const setCurrent = useDeviceConfigurationCompareStore((state) => state.setCurrent)
 
   const changeDate = useMemo(() => {
-    return formatDate(config?.changeDate);
-  }, [config]);
+    return formatDate(config?.changeDate)
+  }, [config])
 
   const toggleCollapse = useCallback(async () => {
-    setIsCollapsed((prev) => !prev);
-    await controls.start(isCollapsed ? "show" : "hidden");
-  }, [controls, isCollapsed]);
+    setIsCollapsed((prev) => !prev)
+    await controls.start(isCollapsed ? "show" : "hidden")
+  }, [controls, isCollapsed])
 
   return (
-    <Stack
-      borderWidth="1px"
-      borderColor="grey.100"
-      borderRadius="2xl"
-      key={config.id}
-      spacing="0"
-    >
+    <Stack borderWidth="1px" borderColor="grey.100" borderRadius="2xl" key={config.id} gap="0">
       <Stack
         direction="row"
-        spacing="3"
+        gap="3"
         alignItems="center"
         p="3"
         onClick={toggleCollapse}
         cursor="pointer"
+        _hover={{
+          "& .compare-button": {
+            opacity: 1,
+          },
+        }}
       >
         <IconButton
           variant="ghost"
-          colorScheme="green"
-          icon={<Icon name="chevronDown" />}
+          colorPalette="green"
           aria-label={t("Open")}
-          sx={{
+          css={{
             transform: isCollapsed ? "rotate(-90deg)" : "",
           }}
-        />
+        >
+          <Icon name="chevronDown" />
+        </IconButton>
         <Text fontSize="md" fontWeight="semibold">
           {changeDate}
         </Text>
-        {config?.author && <Tag colorScheme="grey">{config?.author}</Tag>}
+        {config?.author && <Tag.Root colorPalette="grey">{config?.author}</Tag.Root>}
 
         <Spacer />
-        <DeviceConfigurationCompareButton config={config} id={+params?.id} />
+        <Button
+          variant="ghost"
+          colorPalette="green"
+          className="compare-button"
+          opacity="0"
+          onClick={(evt) => {
+            evt.stopPropagation()
+            setCurrent(config)
+          }}
+        >
+          {t("Compare")}
+        </Button>
       </Stack>
-
       <motion.div
         initial="hidden"
         animate={controls}
@@ -102,8 +90,8 @@ export default function DeviceConfigurationPanel(
           duration: 0.2,
         }}
       >
-        <Divider />
-        <Stack direction="column" spacing="3" p="6">
+        <Separator />
+        <Stack direction="column" gap="3" p="6">
           {isLoading ? (
             <>
               <Skeleton w="80px" h="40px" />
@@ -124,5 +112,5 @@ export default function DeviceConfigurationPanel(
         </Stack>
       </motion.div>
     </Stack>
-  );
+  )
 }

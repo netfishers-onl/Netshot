@@ -1,110 +1,100 @@
-import {
-  FunctionComponent,
-  PropsWithChildren,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { ButtonProps } from "@chakra-ui/react"
+import mergeWith from "lodash.mergewith"
+import { createContext, memo, PropsWithChildren, useContext } from "react"
+import { useShallow } from "zustand/react/shallow"
+import { DialogConfigContext } from "./dialogConfigContext"
+import { useDialogStore } from "./store"
 
-import DialogContext from "./dialogContext";
-import { BaseDialogProps, DialogConfig } from "./types";
+export type DialogProviderConfig = {
+  form?: {
+    submitButton?: {
+      label?: string
+      props?: ButtonProps
+    }
+    cancelButton?: {
+      label?: string
+      props?: ButtonProps
+    }
+  }
+  confirm?: {
+    confirmButton?: {
+      label?: string
+      props?: ButtonProps
+    }
+    cancelButton?: {
+      label?: string
+      props?: ButtonProps
+    }
+  }
+  alert?: {
+    closeButton?: {
+      label?: string
+      props?: ButtonProps
+    }
+  }
+}
 
-/**
- * Dialog Injection Provider
- * @description Permet d'injecter des dialogs à partir du hook useDialog, cela évite de déclarer les dialogs directement dans le JSX des composants et donc réduire le code
- */
-export function DialogProvider(props: PropsWithChildren) {
-  // Liste de configuration de dialog
-  const [configs, setConfigs] = useState<
-    Record<string, DialogConfig<BaseDialogProps>>
-  >({});
-
-  // Ajout d'une configuration de dialog dans la liste
-  const add = useCallback(
-    <P extends BaseDialogProps>(
-      key: string,
-      component: FunctionComponent<P>
-    ) => {
-      setConfigs((prev) => ({
-        ...prev,
-        [key]: {
-          component,
-          props: null,
-          isOpen: false,
-        },
-      }));
+const DEFAULT_PROVDER_CONFIG: DialogProviderConfig = {
+  form: {
+    submitButton: {
+      label: "Submit",
+      props: {
+        colorPalette: "green",
+      },
     },
-    []
-  );
-
-  const remove = useCallback((key: string) => {
-    setConfigs((prev) => {
-      const configs = Object.assign({}, prev);
-      delete configs[key];
-      return configs;
-    });
-  }, []);
-
-  // Mise à jour d'une configuration de dialog dans la liste
-  const update = useCallback(
-    <P extends BaseDialogProps>(
-      key: string,
-      config: Partial<DialogConfig<P>>
-    ) => {
-      setConfigs((prev) => ({
-        ...prev,
-        [key]: {
-          ...prev[key],
-          ...config,
-        },
-      }));
+    cancelButton: {
+      label: "Cancel",
     },
-    []
-  );
-
-  const updateProps = useCallback(
-    <P extends BaseDialogProps>(key: string, props: P) => {
-      setConfigs((prev) => ({
-        ...prev,
-        [key]: {
-          ...prev[key],
-          props: {
-            ...prev[key].props,
-            ...props,
-          },
-        },
-      }));
+  },
+  confirm: {
+    confirmButton: {
+      label: "Confirm",
+      props: {
+        colorPalette: "green",
+      },
     },
-    []
-  );
+    cancelButton: {
+      label: "Cancel",
+    },
+  },
+  alert: {
+    closeButton: {
+      label: "OK",
+      props: {
+        colorPalette: "green",
+      },
+    },
+  },
+}
 
-  // Contexte utilisé par le provider
-  const ctx = useMemo(
-    () => ({
-      add,
-      remove,
-      update,
-      updateProps,
-    }),
-    [add, remove, update, updateProps]
-  );
+const DialogProviderContext = createContext<DialogProviderConfig>(null)
+export const useDialogProviderConfig = () => useContext(DialogProviderContext)
+
+const DialogInstance = memo(({ configId }: { configId: string }) => {
+  const config = useDialogStore((state) => state.configs.find((config) => config.id === configId))
+
+  if (!config) return
 
   return (
-    <DialogContext.Provider value={ctx}>
-      {props?.children}
+    <DialogConfigContext.Provider value={config}>
+      <config.component />
+    </DialogConfigContext.Provider>
+  )
+})
 
-      {Object.keys(configs).map((key) => {
-        // Récupération de la configuration et génération du composant de la dialog
-        const { component: Component, props, isOpen } = configs[key];
+export function DialogProvider({
+  children,
+  config = {},
+}: PropsWithChildren<{ config?: DialogProviderConfig }>) {
+  const configIds = useDialogStore(useShallow((state) => state.configs.map((config) => config.id)))
 
-        return (
-          <Component
-            key={key}
-            isOpen={isOpen}
-            {...props}
-          />
-        );
-      })}
-    </DialogContext.Provider>
-  );
+  return (
+    <DialogProviderContext.Provider value={mergeWith({}, DEFAULT_PROVDER_CONFIG, config)}>
+      {children}
+
+      {configIds.map((id) => (
+        <DialogInstance key={id} configId={id} />
+      ))}
+    </DialogProviderContext.Provider>
+  )
 }

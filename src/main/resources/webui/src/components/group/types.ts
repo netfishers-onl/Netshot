@@ -1,4 +1,4 @@
-import { DeviceType, Option, SimpleDevice } from "@/types";
+import { DeviceType } from "@/types"
 
 export enum FormStep {
   Type,
@@ -6,10 +6,10 @@ export enum FormStep {
 }
 
 export type AddGroupForm = {
-  name: string;
-  folder: string;
-  visibleInReports: boolean;
-  staticDevices: SimpleDevice[];
-  driver: Option<DeviceType>;
-  query: string;
-};
+  name: string
+  folder: string
+  visibleInReports: boolean
+  staticDevices: number[]
+  driver: DeviceType["name"]
+  query: string
+}

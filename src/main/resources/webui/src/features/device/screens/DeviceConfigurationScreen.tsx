@@ -1,78 +1,48 @@
-import api, { PaginationQueryParams } from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { EmptyResult } from "@/components";
-import Search from "@/components/Search";
-import { useToast } from "@/hooks";
-import { Button, Skeleton, Stack } from "@chakra-ui/react";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
-import DeviceConfigurationPanel from "../components/DeviceConfigurationPanel";
-import { QUERIES } from "../constants";
-
-const LIMIT = 25;
+import { EmptyResult } from "@/components"
+import Search from "@/components/Search"
+import { Button, Skeleton, Stack } from "@chakra-ui/react"
+import { AnimatePresence } from "framer-motion"
+import { useState } from "react"
+import { useTranslation } from "react-i18next"
+import { useParams } from "react-router"
+import { useInfiniteDeviceConfigs } from "../api"
+import { DeviceConfigurationCompareWidget } from "../components/DeviceConfigurationCompareWidget"
+import DeviceConfigurationPanel from "../components/DeviceConfigurationPanel"
+import { useDeviceConfigurationCompareStore } from "../stores"
 
 export default function DeviceConfigurationScreen() {
-  const params = useParams<{ id: string }>();
-  const { t } = useTranslation();
-  const toast = useToast();
-  const [query, setQuery] = useState<string>("");
+  const params = useParams<{ id: string }>()
+  const { t } = useTranslation()
+  const [query, setQuery] = useState<string>("")
+  const current = useDeviceConfigurationCompareStore((state) => state.current)
 
-  const {
-    data,
-    isLoading,
-    isSuccess,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: [QUERIES.DEVICE_CONFIGS, params.id, query],
-    queryFn: async ({ pageParam }) => {
-      const pagination = {
-        limit: LIMIT,
-        offset: pageParam,
-      } as PaginationQueryParams;
+  const { data, isPending, isSuccess, hasNextPage, fetchNextPage, isFetchingNextPage } =
+    useInfiniteDeviceConfigs(+params.id, query)
 
-      return api.device.getAllConfigsById(+params.id, pagination);
-    },
-    initialPageParam: 0,
-    getNextPageParam(lastPage, allPages) {
-      return lastPage?.length === LIMIT ? allPages.length * LIMIT : undefined;
-    },
-  });
+  function onQuery(value: string) {
+    setQuery(value)
+  }
 
-  const onQuery = useCallback((value: string) => {
-    setQuery(value);
-  }, []);
+  function onQueryClear() {
+    setQuery("")
+  }
 
-  const onQueryClear = useCallback(() => {
-    setQuery("");
-  }, []);
-
-  if (data?.pages?.[0]?.length === 0) {
+  if (data?.length === 0) {
     return (
       <EmptyResult
         title={t("There is no configuration for this device")}
-        description={t(
-          "This device does not have any configuration, please run a snapshot"
-        )}
+        description={t("This device does not have any configuration, please run a snapshot")}
       />
-    );
+    )
   }
 
   return (
-    <Stack spacing="6">
-      <Stack direction="row" spacing="3">
-        <Search
-          placeholder={t("Search...")}
-          onQuery={onQuery}
-          onClear={onQueryClear}
-          w="50%"
-        />
+    <Stack gap="6">
+      <Stack direction="row" gap="3">
+        <Search placeholder={t("Search...")} onQuery={onQuery} onClear={onQueryClear} w="50%" />
       </Stack>
-      <Stack spacing="3">
-        {isLoading ? (
+      <Stack gap="3">
+        {isPending ? (
           <>
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -81,20 +51,17 @@ export default function DeviceConfigurationScreen() {
           </>
         ) : (
           <>
+            <AnimatePresence>{current && <DeviceConfigurationCompareWidget />}</AnimatePresence>
             {isSuccess &&
-              data?.pages?.map((page) =>
-                page.map((config) => (
-                  <DeviceConfigurationPanel config={config} key={config?.id} />
-                ))
-              )}
+              data?.map((config) => <DeviceConfigurationPanel config={config} key={config?.id} />)}
           </>
         )}
       </Stack>
       {hasNextPage && (
-        <Button onClick={() => fetchNextPage()} isLoading={isFetchingNextPage}>
+        <Button onClick={() => fetchNextPage()} loading={isFetchingNextPage}>
           {t("Load more")}
         </Button>
       )}
     </Stack>
-  );
+  )
 }

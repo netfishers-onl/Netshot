@@ -1,4 +1,4 @@
-import { Box, BoxProps } from "@chakra-ui/react";
+import { Steps, Box, BoxProps } from "@chakra-ui/react";
 import { editor, languages } from "monaco-editor";
 import {
   MutableRefObject,

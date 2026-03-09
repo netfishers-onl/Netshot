@@ -1,26 +1,20 @@
-import { Divider, Stack } from "@chakra-ui/react";
-import { Outlet } from "react-router";
-import { DeviceSidebar } from "../components";
-import DeviceSidebarProvider from "../contexts/DeviceSidebarProvider";
-import DeviceBulkActionScreen from "./DeviceBulkActionScreen";
-import { DeviceSidebarContext } from "../contexts/device-sidebar";
+import { Separator, Stack } from "@chakra-ui/react"
+import { Outlet } from "react-router"
+import { DeviceSidebar } from "../components"
+import { useDeviceSidebarStore } from "../stores"
+import DeviceBulkActionScreen from "./DeviceBulkActionScreen"
 
 export default function DeviceScreen() {
+  const selected = useDeviceSidebarStore((state) => state.selected)
+  const isMultipleDeviceSelected = selected?.length > 1
+
   return (
-    <DeviceSidebarProvider>
-      <Stack direction="row" flex="1" overflow="auto" spacing="0">
-        <DeviceSidebar />
-        <Divider orientation="vertical" />
-        <Stack flex="1" overflow="auto">
-          <DeviceSidebarContext.Consumer>
-            {({ selected }) => (
-              <>
-                {selected?.length > 1 ? <DeviceBulkActionScreen /> : <Outlet />}
-              </>
-            )}
-          </DeviceSidebarContext.Consumer>
-        </Stack>
+    <Stack direction="row" flex="1" overflow="auto" gap="0">
+      <DeviceSidebar />
+      <Separator orientation="vertical" />
+      <Stack flex="1" overflow="auto">
+        {isMultipleDeviceSelected ? <DeviceBulkActionScreen /> : <Outlet />}
       </Stack>
-    </DeviceSidebarProvider>
-  );
+    </Stack>
+  )
 }

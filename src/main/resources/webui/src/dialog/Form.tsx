@@ -1,138 +1,106 @@
-import {
-  Button,
-  ButtonProps,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Stack,
-} from "@chakra-ui/react";
-import { useMemo } from "react";
-import { FieldValues, FormProvider, UseFormReturn, useFormState } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-
-import { genericMemo } from "@/utils";
-
-import { ModalConfigContext } from "./ModalConfigContext";
-import { BaseDialogProps, PromiseOrVoid } from "./types";
+import { Button, ButtonProps, CloseButton, Dialog, Portal, Stack } from "@chakra-ui/react"
+import mergeWith from "lodash.mergewith"
+import { FieldValues, FormProvider, UseFormReturn, useFormState } from "react-hook-form"
+import { useDialogConfig } from "./dialogConfigContext"
+import { useDialogProviderConfig } from "./DialogProvider"
+import { useDialogStore } from "./store"
+import { BaseDialogProps, PromiseOrVoid } from "./types"
 
 export type FormDialogProps<F extends FieldValues = FieldValues> = {
-  onSubmit(data: F): PromiseOrVoid;
-  form: UseFormReturn<F>;
+  onSubmit(data: F): PromiseOrVoid
+  form: UseFormReturn<F>
   submitButton?: {
-    label?: string;
-    props?: ButtonProps;
-  };
+    label?: string
+    props?: ButtonProps
+  }
   cancelButton?: {
-    label?: string;
-    props?: ButtonProps;
-  };
-} & BaseDialogProps;
+    label?: string
+    props?: ButtonProps
+  }
+} & BaseDialogProps
 
-function FormDialog<F extends FieldValues = FieldValues>(props: FormDialogProps<F>) {
-  const {
-    isOpen,
-    title,
-    description,
-    isLoading,
-    onCancel,
-    onSubmit,
-    form,
-    submitButton,
-    cancelButton,
-    size,
-    variant,
-  } = props;
+export default function FormDialog<F extends FieldValues = FieldValues>() {
+  const providerConfig = useDialogProviderConfig()
+  const config = useDialogConfig<FormDialogProps<F>>()
+  const currentConfig = useDialogStore((state) => state.configs.find((c) => c.id === config.id))
+  const formState = useFormState({ control: config.props.form.control })
+  const { submitButton, cancelButton } = mergeWith({}, providerConfig.form, config.props)
 
-  const { t } = useTranslation();
+  const submitButtonConfig: FormDialogProps["submitButton"] = {
+    label: submitButton?.label,
+    props: {
+      type: "submit",
+      variant: "primary",
+      disabled: !formState?.isValid,
+      loading: config.props.isLoading,
+      autoFocus: true,
+      ...submitButton?.props,
+    },
+  }
 
-  // Permet d'observer l'état du formulaire dans ce contexte
-  const formState = useFormState({ control: form.control });
-
-  // Combine les options fournies et par défaut
-  const submitButtonConfig: FormDialogProps["submitButton"] = useMemo(
-    () => ({
-      label: submitButton?.label || "submit",
-      props: {
-        type: "submit",
-        variant: "primary",
-        isDisabled: !formState?.isValid,
-        isLoading,
-        autoFocus: true,
-        ...submitButton?.props,
+  const cancelButtonConfig: FormDialogProps["cancelButton"] = {
+    label: cancelButton?.label,
+    props: {
+      variant: "default",
+      disabled: currentConfig.props.isLoading,
+      onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
+        evt?.stopPropagation()
+        if (config.props.onCancel) config.props.onCancel()
+        config.close()
       },
-    }),
-    [formState.isValid, submitButton, isLoading]
-  );
-
-  const cancelButtonConfig: FormDialogProps["cancelButton"] = useMemo(
-    () => ({
-      label: cancelButton?.label || t("Cancel"),
-      props: {
-        variant: "default",
-        disabled: isLoading,
-        onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
-          evt.stopPropagation();
-          onCancel();
-        },
-        ...cancelButton?.props,
-      },
-    }),
-    [cancelButton, isLoading]
-  );
+      ...cancelButton?.props,
+    },
+  }
 
   return (
-    <ModalConfigContext.Provider
-      value={{
-        close: onCancel,
-      }}
-    >
-      <FormProvider {...form}>
-        <Modal
-          initialFocusRef={null}
-          finalFocusRef={null}
-          isOpen={isOpen}
-          isCentered
-          onClose={onCancel}
-          motionPreset="slideInBottom"
-          size={size}
-          variant={variant}
-          scrollBehavior="inside"
-          blockScrollOnMount={false}
-        >
-          <ModalOverlay />
-          <ModalContent
-            containerProps={{
-              as: "form",
-              onSubmit: form.handleSubmit(onSubmit),
-            }}
-          >
-            <ModalHeader as="h3" fontSize="2xl" fontWeight="semibold">
-              {title}
-              <ModalCloseButton />
-            </ModalHeader>
-            <ModalBody>
-              {typeof description === "function" ? description() : description}
-            </ModalBody>
-
-            <ModalFooter>
-              <Stack direction="row" spacing="3">
-                <Button {...cancelButtonConfig.props}>
-                  {cancelButtonConfig?.label}
-                </Button>
-                <Button {...submitButtonConfig.props}>
-                  {submitButtonConfig?.label}
-                </Button>
-              </Stack>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-      </FormProvider>
-    </ModalConfigContext.Provider>
-  );
+    <FormProvider {...config.props.form}>
+      <Dialog.Root
+        open={config.props.isOpen}
+        placement="center"
+        motionPreset="slide-in-bottom"
+        size={config.props.size}
+        variant={config.props.variant}
+        scrollBehavior="inside"
+        preventScroll={false}
+        closeOnInteractOutside={false}
+        onOpenChange={(e) => {
+          if (!e.open) {
+            config.close()
+          }
+        }}
+        onExitComplete={() => {
+          config.remove()
+        }}
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content
+              as="form"
+              onSubmit={config.props.form.handleSubmit(config.props.onSubmit)}
+            >
+              <Dialog.Header as="h3" fontSize="2xl" fontWeight="semibold">
+                {config.props.title}
+                <Dialog.CloseTrigger />
+              </Dialog.Header>
+              <Dialog.Body>
+                {typeof config.props.description === "function"
+                  ? config.props.description()
+                  : config.props.description}
+              </Dialog.Body>
+              <Dialog.Footer>
+                <Stack direction="row" gap="3">
+                  <Button {...cancelButtonConfig.props}>{cancelButtonConfig?.label}</Button>
+                  <Button {...submitButtonConfig.props}>{submitButtonConfig?.label}</Button>
+                </Stack>
+              </Dialog.Footer>
+              <Dialog.CloseTrigger asChild>
+                <CloseButton size="sm" variant="outline" />
+              </Dialog.CloseTrigger>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
+    </FormProvider>
+  )
 }
-
-export default genericMemo(FormDialog);

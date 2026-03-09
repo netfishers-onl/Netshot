@@ -1,62 +1,45 @@
-import api, { TestRuleTextOnDevicePayload } from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { DeviceAutocomplete, Icon } from "@/components";
-import { useToast } from "@/hooks";
-import { SimpleDevice } from "@/types";
-import { IconButton, Stack } from "@chakra-ui/react";
-import { useMutation } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { TestRuleTextOnDevicePayload } from "@/api"
+import { DeviceAutocomplete, Icon } from "@/components"
+import { SimpleDevice } from "@/types"
+import { IconButton, Stack } from "@chakra-ui/react"
+import { useState } from "react"
+import { useTranslation } from "react-i18next"
+import { useTestRuleText } from "../api"
 
 export type TestRuleOnDevice = {
-  rule: TestRuleTextOnDevicePayload;
-};
+  rule: TestRuleTextOnDevicePayload
+}
 
 export default function TestRuleTextOnDevice(props: TestRuleOnDevice) {
-  const { rule } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-  const [device, setDevice] = useState<SimpleDevice>(null);
+  const { rule } = props
+  const { t } = useTranslation()
+  const mutation = useTestRuleText()
+  const [device, setDevice] = useState<SimpleDevice>(null)
 
-  const mutation = useMutation({
-    mutationFn: async (payload: TestRuleTextOnDevicePayload) =>
-        api.rule.testText(payload),
-    onSuccess(res) {
-      toast.script({
-        title: t("Result: {{result}}", {
-          result: res.result,
-        }),
-        description: res.comment,
-      });
-    },
-    onError(err: NetshotError) {
-      toast.error(err);
-    },
-  });
-
-  const runTest = useCallback(() => {
+  function runTest() {
     mutation.mutate({
-      device: device.id,
+      device: device?.id,
       ...rule,
-    });
-  }, [device, rule]);
+    })
+  }
 
   return (
     <Stack direction="row">
       <DeviceAutocomplete
-        value={device}
-        onFocus={() => setDevice(null)}
-        onChange={(device) => {
-          setDevice(device);
+        selectionBehavior="replace"
+        value={device ? [device.id.toString()] : []}
+        onSelectItem={(device) => {
+          setDevice(device)
         }}
       />
       <IconButton
         aria-label={t("Test on device")}
-        icon={<Icon name="play" />}
-        isDisabled={!device}
-        onClick={runTest}
-        isLoading={mutation.isPending}
-      />
+        disabled={device === null}
+        onClick={() => runTest()}
+        loading={mutation.isPending}
+      >
+        <Icon name="play" />
+      </IconButton>
     </Stack>
-  );
+  )
 }

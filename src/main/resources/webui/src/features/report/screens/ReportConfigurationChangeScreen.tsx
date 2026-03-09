@@ -1,15 +1,12 @@
-import { Heading, Stack } from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
-import {
-  ReportConfigurationChangeList,
-  ReportConfigurationChart,
-} from "../components";
+import { Heading, Stack } from "@chakra-ui/react"
+import { useTranslation } from "react-i18next"
+import { ReportConfigurationChangeList, ReportConfigurationChart } from "../components"
 
 export default function ReportConfigurationChangeScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   return (
-    <Stack spacing="8" p="9" flex="1" overflow="auto">
+    <Stack gap="8" p="9" flex="1" overflow="auto">
       <Stack direction="row">
         <Heading as="h1" fontSize="4xl">
           {t("Configuration changes")}
@@ -18,5 +15,5 @@ export default function ReportConfigurationChangeScreen() {
       <ReportConfigurationChart />
       <ReportConfigurationChangeList />
     </Stack>
-  );
+  )
 }

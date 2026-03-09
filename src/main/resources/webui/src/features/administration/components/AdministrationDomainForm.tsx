@@ -1,26 +1,26 @@
-import { FormControl } from "@/components";
-import { FormControlType } from "@/components/FormControl";
-import validators from "@/utils/validators";
-import { Stack } from "@chakra-ui/react";
-import { useFormContext } from "react-hook-form";
-import { useTranslation } from "react-i18next";
+import { FormControl } from "@/components"
+import { FormControlType } from "@/components/FormControl"
+import validators from "@/utils/validators"
+import { Stack } from "@chakra-ui/react"
+import { useFormContext } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 
 export type DomainForm = {
-  name: string;
-  description: string;
-  ipAddress: string;
-};
+  name: string
+  description: string
+  ipAddress: string
+}
 
 export default function AdministrationDomainForm() {
-  const form = useFormContext<DomainForm>();
-  const { t } = useTranslation();
+  const form = useFormContext<DomainForm>()
+  const { t } = useTranslation()
 
   return (
-    <Stack spacing="6">
+    <Stack gap="6">
       <FormControl
         label={t("Name")}
         placeholder={t("e.g. my domain name")}
-        isRequired
+        required
         control={form.control}
         name="name"
       />
@@ -28,14 +28,14 @@ export default function AdministrationDomainForm() {
         type={FormControlType.LongText}
         label={t("Description")}
         placeholder={t("e.g. describe the domain")}
-        isRequired
+        required
         control={form.control}
         name="description"
       />
       <FormControl
         label={t("Server IP address")}
         placeholder={t("e.g. 10.4.3.8")}
-        isRequired
+        required
         control={form.control}
         name="ipAddress"
         rules={{
@@ -43,5 +43,5 @@ export default function AdministrationDomainForm() {
         }}
       />
     </Stack>
-  );
+  )
 }

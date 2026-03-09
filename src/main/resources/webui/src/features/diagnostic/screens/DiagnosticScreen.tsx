@@ -1,15 +1,15 @@
-import { Divider, Stack } from "@chakra-ui/react";
-import { Outlet } from "react-router";
-import { Sidebar } from "../components/sidebar";
+import { Separator, Stack } from "@chakra-ui/react"
+import { Outlet } from "react-router"
+import { Sidebar } from "../components/sidebar"
 
 export default function DiagnosticScreen() {
   return (
-    <Stack direction="row" flex="1" overflow="auto" spacing="0">
+    <Stack direction="row" flex="1" overflow="auto" gap="0">
       <Sidebar />
-      <Divider orientation="vertical" />
+      <Separator orientation="vertical" />
       <Stack flex="1" overflow="auto">
         <Outlet />
       </Stack>
     </Stack>
-  );
+  )
 }

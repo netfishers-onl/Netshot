@@ -1,88 +1,74 @@
-import api, { CreateOrUpdatePolicy } from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { QUERIES } from "@/constants";
-import { Dialog } from "@/dialog";
-import { useToast } from "@/hooks";
-import { Policy } from "@/types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent, ReactElement, useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import PolicyForm, { Form } from "./PolicyForm";
+import api, { CreateOrUpdatePolicy } from "@/api"
+import { NetshotError } from "@/api/httpClient"
+import { MUTATIONS, QUERIES } from "@/constants"
+import { useFormDialogWithMutation } from "@/dialog"
+import { useToast } from "@/hooks"
+import { Policy, PropsWithRenderItem } from "@/types"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { MouseEvent } from "react"
+import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import PolicyForm, { Form } from "./PolicyForm"
 
-export type EditPolicyButtonProps = {
-  policy: Policy;
-  renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
-};
+export type EditPolicyButtonProps = PropsWithRenderItem<{
+  policy: Policy
+}>
 
 export default function EditPolicyButton(props: EditPolicyButtonProps) {
-  const { policy, renderItem } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-  const queryClient = useQueryClient();
+  const { policy, renderItem } = props
+  const { t } = useTranslation()
+  const toast = useToast()
+  const queryClient = useQueryClient()
+  const dialog = useFormDialogWithMutation()
 
   const form = useForm<Form>({
     mode: "onChange",
     defaultValues: {
       name: policy?.name,
-      targetGroups: policy?.targetGroups,
+      targetGroups: policy?.targetGroups?.map((group) => group.id),
     },
-  });
+  })
 
   const mutation = useMutation({
-    mutationFn: async (payload: CreateOrUpdatePolicy) =>
-      api.policy.update(policy.id, payload),
-    onSuccess(res) {
-      dialog.close();
-      toast.success({
-        title: t("Success"),
-        description: t(
-          "Policy {{policyName}} has been successfully updated",
-          {
-            policyName: res?.name,
-          }
-        ),
-      });
-
-      queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_LIST] });
-    },
+    mutationKey: MUTATIONS.POLICY_UPDATE,
+    mutationFn: async (payload: CreateOrUpdatePolicy) => api.policy.update(policy.id, payload),
     onError(err: NetshotError) {
-      toast.error(err);
+      toast.error(err)
     },
-  });
+  })
 
-  const onSubmit = useCallback(
-    async (values: Form) => {
-      mutation.mutate({
-        name: values.name,
-        targetGroups: values.targetGroups.map((group) => group.id),
-      });
-    },
-    [mutation]
-  );
+  const open = (evt: MouseEvent) => {
+    evt?.stopPropagation()
+    const dialogRef = dialog.open(MUTATIONS.POLICY_UPDATE, {
+      title: t("Edit policy"),
+      description: <PolicyForm />,
+      form,
+      size: "lg",
+      async onSubmit(values: Form) {
+        await mutation.mutateAsync({
+          name: values.name,
+          targetGroups: values.targetGroups,
+        })
 
-  const dialog = Dialog.useForm({
-    title: t("Edit policy"),
-    description: <PolicyForm />,
-    form,
-    isLoading: mutation.isPending,
-    size: "2xl",
-    onSubmit,
-    onCancel() {
-      form.reset();
-    },
-    submitButton: {
-      label: t("Apply changes"),
-    },
-  });
+        dialogRef.close()
 
-  const open = useCallback(
-    (evt: MouseEvent) => {
-      evt.stopPropagation();
-      dialog.open();
-    },
-    [dialog]
-  );
+        toast.success({
+          title: t("Success"),
+          description: t("Policy {{policyName}} has been successfully updated", {
+            policyName: values.name,
+          }),
+        })
 
-  return renderItem(open);
+        queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_LIST] })
+      },
+      onCancel() {
+        form.reset()
+      },
+      submitButton: {
+        label: t("Apply changes"),
+      },
+    })
+  }
+
+  return renderItem(open)
 }

@@ -1,28 +1,17 @@
+import { Tooltip } from "@/components/ui/tooltip"
 import {
-  FormControl as NativeFormControl,
-  FormControlProps as NativeFormControlProps,
-  FormHelperText,
-  FormLabel,
+  Field,
   IconButton,
   Input,
   InputGroup,
-  InputLeftElement,
   type InputProps,
-  InputRightElement,
-  SystemProps,
+  SystemStyleObject,
   Textarea,
-  Tooltip,
-} from "@chakra-ui/react";
-import {
-  forwardRef,
-  MutableRefObject,
-  ReactElement,
-  useCallback,
-  useState,
-} from "react";
-import { useController,UseControllerProps } from "react-hook-form";
+} from "@chakra-ui/react"
+import { forwardRef, ReactElement, RefObject, useCallback, useState } from "react"
+import { useController, UseControllerProps } from "react-hook-form"
 
-import Icon from "./Icon";
+import Icon from "./Icon"
 
 export enum FormControlType {
   Text = "text",
@@ -37,27 +26,27 @@ export enum FormControlType {
 }
 
 export type FormControlProps<T> = {
-  label?: string;
-  type?: FormControlType;
-  helperText?: string;
-  uppercase?: boolean;
-  rows?: number;
-  onFocus?(): void;
-  suffix?: ReactElement;
-  prefix?: ReactElement;
+  label?: string
+  type?: FormControlType
+  helperText?: string
+  uppercase?: boolean
+  rows?: number
+  onFocus?(): void
+  suffix?: ReactElement
+  prefix?: ReactElement
 } & InputProps &
-  SystemProps &
-  UseControllerProps<T>;
+  SystemStyleObject &
+  UseControllerProps<T>
 
 declare module "react" {
-  function forwardRef<T, P = {}>(
+  function forwardRef<T, P = object>(
     render: (props: P, ref: React.Ref<T>) => React.ReactNode | null
-  ): (props: P & React.RefAttributes<T>) => React.ReactNode | null;
+  ): (props: P & React.RefAttributes<T>) => React.ReactNode | null
 }
 
 function FormControl<T>(
   props: FormControlProps<T>,
-  ref: MutableRefObject<HTMLInputElement | HTMLTextAreaElement>
+  ref: RefObject<HTMLInputElement | HTMLTextAreaElement>
 ) {
   const {
     label,
@@ -66,8 +55,8 @@ function FormControl<T>(
     name,
     defaultValue,
     rules = {},
-    isRequired,
-    isReadOnly,
+    required,
+    disabled,
     type = FormControlType.Text,
     helperText,
     uppercase = false,
@@ -76,10 +65,12 @@ function FormControl<T>(
     autoFocus,
     suffix,
     prefix,
+    autoComplete,
+    variant,
     ...other
-  } = props;
+  } = props
 
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     field,
@@ -88,45 +79,47 @@ function FormControl<T>(
     control,
     name,
     rules: {
-      required: isRequired,
+      required,
       ...rules,
     },
     defaultValue,
-  });
+  })
 
-  let inputProps = {
+  const inputProps = {
     onChange(e) {
-      field.onChange(uppercase ? e.target.value.toUpperCase() : e);
+      field.onChange(uppercase ? e.target.value.toUpperCase() : e)
     },
     onBlur() {
-      field.onBlur();
+      field.onBlur()
     },
     onFocus() {
-      if (onFocus) onFocus();
+      if (onFocus) onFocus()
     },
     placeholder,
     name,
     ref(inputRef) {
-      field.ref(inputRef);
+      field.ref(inputRef)
 
       if (ref) {
-        ref.current = inputRef;
+        ref.current = inputRef
       }
     },
     autoFocus,
-  };
+    variant,
+  }
 
   const togglePassword = useCallback(() => {
-    setShowPassword((prev) => !prev);
-  }, []);
+    setShowPassword((prev) => !prev)
+  }, [])
 
   return (
-    <NativeFormControl
-      isRequired={isRequired}
-      isReadOnly={isReadOnly}
-      {...(other as NativeFormControlProps)}
-    >
-      {label && <FormLabel>{label}</FormLabel>}
+    <Field.Root required={required} disabled={disabled} {...other}>
+      {label && (
+        <Field.Label>
+          {label}
+          <Field.RequiredIndicator />
+        </Field.Label>
+      )}
       {[
         FormControlType.Text,
         FormControlType.Number,
@@ -135,52 +128,51 @@ function FormControl<T>(
         FormControlType.Time,
         FormControlType.Url,
       ].includes(type) && (
-        <InputGroup>
-          {prefix && <InputLeftElement>{prefix}</InputLeftElement>}
+        <InputGroup startElement={prefix} endElement={suffix}>
           <Input
             type={type}
-            value={field.value as string}
-            autoComplete="off"
+            value={String(field.value as string)}
+            autoComplete={autoComplete}
             {...inputProps}
           />
-          {suffix && <InputRightElement>{suffix}</InputRightElement>}
         </InputGroup>
       )}
       {type === FormControlType.Password && (
-        <InputGroup>
+        <InputGroup
+          endElement={
+            <Tooltip
+              content={showPassword ? "Hide password" : "Show password"}
+              positioning={{
+                placement: "top",
+              }}
+            >
+              <span>
+                <IconButton
+                  variant="ghost"
+                  bg="transparent!important"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={togglePassword}
+                >
+                  {showPassword ? <Icon name="eye" /> : <Icon name="eyeOff" />}
+                </IconButton>
+              </span>
+            </Tooltip>
+          }
+        >
           <Input
             type={showPassword ? "text" : "password"}
-            value={field.value as string}
+            value={String(field.value as string)}
             {...inputProps}
           />
-          <InputRightElement>
-            <Tooltip
-              shouldWrapChildren
-              placement="top"
-              label={showPassword ? "Hide password" : "Show password"}
-            >
-              <IconButton
-                variant="ghost"
-                bg="transparent!important"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                icon={
-                  showPassword ? <Icon name="eye" /> : <Icon name="eyeOff" />
-                }
-                onClick={togglePassword}
-              />
-            </Tooltip>
-          </InputRightElement>
         </InputGroup>
       )}
       {type === FormControlType.LongText && (
-        <Textarea rows={rows} value={field.value as string} {...inputProps} />
+        <Textarea rows={rows} value={String(field.value as string)} {...inputProps} />
       )}
-      {helperText && <FormHelperText>{helperText}</FormHelperText>}
-      {error && (
-        <FormHelperText color="red.500">{error?.message}</FormHelperText>
-      )}
-    </NativeFormControl>
-  );
+      {helperText && <Field.HelperText>{helperText}</Field.HelperText>}
+      {error && <Field.HelperText color="red.500">{error?.message}</Field.HelperText>}
+    </Field.Root>
+  )
 }
 
-export default forwardRef(FormControl);
+export default forwardRef(FormControl)

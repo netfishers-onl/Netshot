@@ -1,37 +1,40 @@
-import Icon from "@/components/Icon";
-import { Group } from "@/types";
-import { Folder, isGroup } from "@/utils";
-import { Box, BoxProps, Flex, Stack, Text } from "@chakra-ui/react";
-import { motion, useAnimationControls } from "framer-motion";
-import { MouseEvent, ReactElement, useCallback, useState } from "react";
-import GroupOrFolderItem from "./GroupOrFolderItem";
+import Icon from "@/components/Icon"
+import { Folder, isGroup } from "@/utils"
+import { Box, BoxProps, Flex, Stack, Text } from "@chakra-ui/react"
+import { motion, useAnimationControls } from "framer-motion"
+import { MouseEvent, useEffect, useState } from "react"
+import GroupOrFolderItem from "./GroupOrFolderItem"
+import { useTreeGroup } from "./TreeGroupProvider"
 
 export type FolderItemProps = {
-  folder: Folder;
-  showMenu: boolean;
-  onGroupSelect(group: Group): void;
-  isSelected?(group: Group): boolean;
-  renderGroupChildren?(group: Group): ReactElement;
-} & BoxProps;
+  folder: Folder
+} & BoxProps
 
 export default function FolderItem(props: FolderItemProps) {
-  const { folder, showMenu, onGroupSelect, isSelected, renderGroupChildren, ...other } =
-    props;
-  const controls = useAnimationControls();
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
+  const { folder, ...other } = props
 
-  const toggleCollapse = useCallback(
-    async (evt: MouseEvent) => {
-      evt.stopPropagation();
-      setIsCollapsed((prev) => !prev);
-      await controls.start(isCollapsed ? "show" : "hidden");
-    },
-    [controls, isCollapsed]
-  );
+  const ctx = useTreeGroup()
+  const controls = useAnimationControls()
+  const [isOpen, setIsOpen] = useState<boolean>(
+    ctx.expandedKeys?.length > 0 ? ctx.expandedKeys.includes(folder.name) : false
+  )
+
+  async function toggleCollapse(evt?: MouseEvent) {
+    evt?.stopPropagation()
+    setIsOpen((prev) => !prev)
+  }
+
+  async function runAnimation() {
+    await controls.start(isOpen ? "show" : "hidden")
+  }
+
+  useEffect(() => {
+    runAnimation()
+  }, [isOpen])
 
   return (
     <Box {...other}>
-      <Stack direction="column" spacing="0" onClick={toggleCollapse}>
+      <Stack direction="column" gap="0" onClick={toggleCollapse}>
         <Flex
           borderRadius="xl"
           transition="all .2s ease"
@@ -43,15 +46,15 @@ export default function FolderItem(props: FolderItemProps) {
             bg: "grey.50",
           }}
         >
-          <Stack direction="row" spacing="3" alignItems="center">
+          <Stack direction="row" gap="3" alignItems="center">
             <Icon
               name="chevronDown"
               color="grey.500"
-              sx={{
-                transform: isCollapsed ? "rotate(-90deg)" : "",
+              css={{
+                transform: isOpen ? "" : "rotate(-90deg)",
               }}
             />
-            <Stack direction="row" spacing="3" alignItems="center">
+            <Stack direction="row" gap="3" alignItems="center">
               <Icon name="folder" color="green.600" />
               <Text>{folder?.name}</Text>
             </Stack>
@@ -72,21 +75,17 @@ export default function FolderItem(props: FolderItemProps) {
             duration: 0.2,
           }}
         >
-          <Stack direction="column" spacing="0">
+          <Stack direction="column" gap="0">
             {folder?.children?.map((child) => (
               <GroupOrFolderItem
                 pl="6"
                 item={child}
-                showMenu={showMenu}
                 key={isGroup(child) ? child?.id : child?.name}
-                onGroupSelect={onGroupSelect}
-                renderGroupChildren={renderGroupChildren}
-                isSelected={isSelected}
               />
             ))}
           </Stack>
         </motion.div>
       </Stack>
     </Box>
-  );
+  )
 }

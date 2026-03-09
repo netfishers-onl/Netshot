@@ -1,84 +1,60 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { DomainSelect, GroupOrFolderItem, Icon, Search } from "@/components";
-import { QUERIES as GLOBAL_QUERIES } from "@/constants";
-import { Dialog } from "@/dialog";
-import { usePagination, useToast } from "@/hooks";
-import { useColor } from "@/theme";
-import {
-  DeviceSoftwareLevel,
-  Group,
-  GroupSoftwareComplianceStat,
-  Option,
-} from "@/types";
-import {
-  createFoldersFromGroups,
-  getSoftwareLevelColor,
-  isGroup,
-  search,
-} from "@/utils";
+import api from "@/api"
+import { DomainSelect, Icon, Search, TreeGroup } from "@/components"
+import { QUERIES as GLOBAL_QUERIES } from "@/constants"
+import { useAlertDialog } from "@/dialog"
+import { usePagination } from "@/hooks"
+import { DeviceSoftwareLevel, Group, GroupSoftwareComplianceStat } from "@/types"
+import { createFoldersFromGroups, getSoftwareLevelColor, search } from "@/utils"
 import {
   Box,
   Button,
+  Dialog,
   Heading,
   Menu,
-  MenuButton,
-  MenuList,
-  ModalCloseButton,
-  ModalHeader,
+  Portal,
   Skeleton,
   Spacer,
   Stack,
   Tag,
   Text,
-} from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { MouseEvent, useCallback, useMemo } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import SoftwareComplianceDialog from "../components/SoftwareComplianceDialog";
-import { QUERIES } from "../constants";
+} from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { MouseEvent, useCallback, useMemo } from "react"
+import { useForm, useWatch } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import SoftwareComplianceDialog from "../components/SoftwareComplianceDialog"
+import { QUERIES } from "../constants"
 
 type FilterForm = {
-  domain: Option<number>;
-};
+  domain: number
+}
 
 type LevelTagProps = {
-  level: DeviceSoftwareLevel;
-  count: number;
-};
+  level: DeviceSoftwareLevel
+  count: number
+}
 
 function LevelTag(props: LevelTagProps) {
-  const { level, count } = props;
-  const { t } = useTranslation();
-
-  const gold = useColor("yellow.500");
-  const silver = useColor("grey.200");
-  const bronze = useColor("bronze.500");
-  const nonCompliant = useColor("grey.900");
-  const unknown = useColor("grey.50");
+  const { level, count } = props
+  const { t } = useTranslation()
 
   const label = useMemo(() => {
     if (level === DeviceSoftwareLevel.GOLD) {
-      return t("Gold");
+      return t("Gold")
+    } else if (level === DeviceSoftwareLevel.SILVER) {
+      return t("Silver")
+    } else if (level === DeviceSoftwareLevel.BRONZE) {
+      return t("Bronze")
+    } else if (level === DeviceSoftwareLevel.NON_COMPLIANT) {
+      return t("Non compliant")
+    } else {
+      return t("Unknown")
     }
-    else if (level === DeviceSoftwareLevel.SILVER) {
-      return t("Silver");
-    }
-    else if (level === DeviceSoftwareLevel.BRONZE) {
-      return t("Bronze");
-    }
-    else if (level === DeviceSoftwareLevel.NON_COMPLIANT) {
-      return t("Non compliant");
-    }
-    else {
-      return t("Unknown");
-    }
-  }, [level]);
+  }, [level])
 
   const bg = useMemo(() => {
-    return getSoftwareLevelColor(level);
-  }, [level]);
+    return getSoftwareLevelColor(level)
+  }, [level])
 
   return (
     <Box
@@ -97,129 +73,90 @@ function LevelTag(props: LevelTagProps) {
         {label}: {count}
       </Text>
     </Box>
-  );
+  )
 }
 
-function ReportSoftwareComplianceGroupItem({
-  item,
-}: {
-  item: GroupSoftwareComplianceStat;
-}) {
-  const { t } = useTranslation();
-
-  const dialog = Dialog.useAlert({
-    title: (
-      <ModalHeader
-        as={Stack}
-        display="flex"
-        direction="row"
-        alignItems="center"
-        spacing="4"
-      >
-        <Heading as="h3" fontSize="2xl" fontWeight="semibold">
-          {t("Software compliance")}
-        </Heading>
-
-        <Tag colorScheme="grey">{item.groupName}</Tag>
-        <ModalCloseButton />
-      </ModalHeader>
-    ),
-    description: <SoftwareComplianceDialog item={item} />,
-    variant: "full-floating",
-    hideFooter: true,
-  }, [item]);
+function ReportSoftwareComplianceGroupItem({ item }: { item: GroupSoftwareComplianceStat }) {
+  const { t } = useTranslation()
+  const dialog = useAlertDialog()
 
   const nonCompliantDeviceCount = useMemo(
-    () =>
-      item.deviceCount -
-      item.goldDeviceCount -
-      item.silverDeviceCount -
-      item.bronzeDeviceCount,
+    () => item.deviceCount - item.goldDeviceCount - item.silverDeviceCount - item.bronzeDeviceCount,
     [item]
-  );
+  )
 
-  const openDetail = useCallback(
-    (evt: MouseEvent<HTMLDivElement>) => {
-      evt.stopPropagation();
-      dialog.open();
-    },
-    [dialog]
-  );
+  const openDetail = (evt: MouseEvent<HTMLDivElement>) => {
+    evt?.stopPropagation()
+    dialog.open({
+      title: (
+        <Dialog.Header as={Stack} display="flex" direction="row" alignItems="center" gap="4">
+          <Heading as="h3" fontSize="2xl" fontWeight="semibold">
+            {t("Software compliance")}
+          </Heading>
+
+          <Tag.Root colorScheme="grey">
+            <Tag.Label>{item.groupName}</Tag.Label>
+          </Tag.Root>
+          <Dialog.CloseTrigger />
+        </Dialog.Header>
+      ),
+      description: <SoftwareComplianceDialog item={item} />,
+      variant: "full-floating",
+      hideFooter: true,
+    })
+  }
 
   return (
-    <Stack
-      onClick={openDetail}
-      direction="row"
-      px="6"
-      alignItems="center"
-      spacing="4"
-    >
+    <Stack onClick={openDetail} direction="row" px="6" alignItems="center" gap="4">
       <LevelTag level={DeviceSoftwareLevel.GOLD} count={item.goldDeviceCount} />
-      <LevelTag
-        level={DeviceSoftwareLevel.SILVER}
-        count={item.silverDeviceCount}
-      />
-      <LevelTag
-        level={DeviceSoftwareLevel.BRONZE}
-        count={item.bronzeDeviceCount}
-      />
-      <LevelTag
-        level={DeviceSoftwareLevel.NON_COMPLIANT}
-        count={nonCompliantDeviceCount}
-      />
+      <LevelTag level={DeviceSoftwareLevel.SILVER} count={item.silverDeviceCount} />
+      <LevelTag level={DeviceSoftwareLevel.BRONZE} count={item.bronzeDeviceCount} />
+      <LevelTag level={DeviceSoftwareLevel.NON_COMPLIANT} count={nonCompliantDeviceCount} />
     </Stack>
-  );
+  )
 }
 
 export default function ReportSoftwareComplianceScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
-  const toast = useToast();
-  const pagination = usePagination();
+  const pagination = usePagination()
   const form = useForm<FilterForm>({
     defaultValues: {
       domain: null,
     },
-  });
+  })
 
   const domain = useWatch({
     control: form.control,
-    name: "domain.value",
-  });
+    name: "domain",
+  })
 
   const { data, isPending, refetch } = useQuery({
     queryKey: [QUERIES.SOFTWARE_COMPLIANCE, pagination.query, domain],
-    queryFn: async () =>
-      api.report.getAllGroupSoftwareComplianceStats(
-        domain
-          ? {
-              domain,
-            }
-          : {}
-      ),
-    select: useCallback((res: GroupSoftwareComplianceStat[]): GroupSoftwareComplianceStat[] => {
+    queryFn: async () => api.report.getAllGroupSoftwareComplianceStats(domain ? { domain } : {}),
+    select(res) {
       return search(
         res.filter((item) => item.deviceCount > 0),
         "groupName"
-      ).with(pagination.query);
-    }, [pagination.query]),
-  });
+      ).with(pagination.query)
+    },
+  })
 
   const { data: groups, isPending: isGroupPending } = useQuery({
     queryKey: [GLOBAL_QUERIES.DEVICE_GROUPS, pagination.query],
     queryFn: async () => {
-      return api.group.getAll(pagination);
+      return api.group.getAll(pagination)
     },
-    select: useCallback(createFoldersFromGroups, []),
-  });
+    select: createFoldersFromGroups,
+  })
 
   const clearFilter = useCallback(() => {
-    form.setValue("domain", null);
-  }, [form]);
+    form.setValue("domain", null)
+  }, [form])
 
   const getGroupChildren = useCallback(
     (group: Group) => {
-      let item = data?.find((stat) => stat.groupId === group.id);
+      let item = data?.find((stat) => stat.groupId === group.id)
 
       if (!item) {
         item = {
@@ -229,20 +166,20 @@ export default function ReportSoftwareComplianceScreen() {
           goldDeviceCount: 0,
           silverDeviceCount: 0,
           bronzeDeviceCount: 0,
-        };
+        }
       }
 
-      return <ReportSoftwareComplianceGroupItem item={item} />;
+      return <ReportSoftwareComplianceGroupItem item={item} />
     },
     [data]
-  );
+  )
 
   return (
-    <Stack spacing="8" p="9" flex="1" overflow="auto">
+    <Stack gap="8" p="9" flex="1" overflow="auto">
       <Heading as="h1" fontSize="4xl">
         {t("Software compliance")}
       </Heading>
-      <Stack direction="row" spacing="3">
+      <Stack direction="row" gap="3">
         <Search
           placeholder={t("Search...")}
           onQuery={pagination.onQuery}
@@ -250,73 +187,43 @@ export default function ReportSoftwareComplianceScreen() {
           w="30%"
         />
         <Spacer />
-        <Menu>
-          <MenuButton
-            as={Button}
-            variant="primary"
-            leftIcon={<Icon name="filter" />}
-          >
-            {t("Filters")}
-          </MenuButton>
-          <MenuList minWidth="280px">
-            <Stack spacing="6" p="3" as="form">
-              <DomainSelect control={form.control} name="domain" />
-              <Stack spacing="2">
-                <Button onClick={clearFilter}>{t("Clear all")}</Button>
-              </Stack>
-            </Stack>
-          </MenuList>
-        </Menu>
-        <Button onClick={() => refetch()} leftIcon={<Icon name="refreshCcw" />}>
+        <Menu.Root>
+          <Menu.Trigger asChild>
+            <Button variant="primary">
+              <Icon name="filter" />
+              {t("Filters")}
+            </Button>
+          </Menu.Trigger>
+          <Portal>
+            <Menu.Positioner>
+              <Menu.Content w="240px">
+                <Stack gap="6" p="3" as="form">
+                  <DomainSelect control={form.control} name="domain" />
+                  <Stack gap="2">
+                    <Button onClick={clearFilter}>{t("Clear all")}</Button>
+                  </Stack>
+                </Stack>
+              </Menu.Content>
+            </Menu.Positioner>
+          </Portal>
+        </Menu.Root>
+        <Button onClick={() => refetch()}>
+          <Icon name="refreshCcw" />
           {t("Refresh")}
         </Button>
       </Stack>
       <Stack flex="1" overflow="auto">
         {isGroupPending && isPending ? (
-          <Stack spacing="3" pb="6">
+          <Stack gap="3" pb="6">
             <Skeleton height="36px" />
             <Skeleton height="36px" />
             <Skeleton height="36px" />
             <Skeleton height="36px" />
           </Stack>
         ) : (
-          <>
-            {groups?.map((group) => (
-              <GroupOrFolderItem
-                item={group}
-                key={isGroup(group) ? group?.id : group?.name}
-                renderGroupChildren={getGroupChildren}
-              />
-            ))}
-          </>
+          <TreeGroup items={groups} renderGroupChildren={getGroupChildren} />
         )}
       </Stack>
-      {/* <Grid
-        templateColumns={{
-          base: "repeat(4, 1fr)",
-          "2xl": "repeat(6, 1fr)",
-        }}
-        gap="6"
-      >
-        {isLoading ? (
-          <>
-            <Skeleton w="100%" h="320px" borderRadius="3xl"></Skeleton>
-            <Skeleton w="100%" h="320px" borderRadius="3xl"></Skeleton>
-            <Skeleton w="100%" h="320px" borderRadius="3xl"></Skeleton>
-            <Skeleton w="100%" h="320px" borderRadius="3xl"></Skeleton>
-            <Skeleton w="100%" h="320px" borderRadius="3xl"></Skeleton>
-            <Skeleton w="100%" h="320px" borderRadius="3xl"></Skeleton>
-            <Skeleton w="100%" h="320px" borderRadius="3xl"></Skeleton>
-            <Skeleton w="100%" h="320px" borderRadius="3xl"></Skeleton>
-          </>
-        ) : (
-          <>
-            {data.map((item) => (
-              <SoftwareComplianceItem key={item.groupId} item={item} />
-            ))}
-          </>
-        )}
-      </Grid> */}
     </Stack>
-  );
+  )
 }

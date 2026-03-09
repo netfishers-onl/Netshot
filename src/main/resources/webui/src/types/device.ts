@@ -1,6 +1,6 @@
-import { Address } from "./address";
-import { CredentialSet } from "./credentialSet";
-import { MgmtDomain } from "./mgmtDomain";
+import { Address } from "./address"
+import { CredentialSet } from "./credentialSet"
+import { MgmtDomain } from "./mgmtDomain"
 
 export enum DeviceStatus {
   Production = "INPRODUCTION",
@@ -34,96 +34,94 @@ export enum DeviceAddressUsage {
 }
 
 export type DeviceModule = {
-  id: number;
-  slot: string;
-  partNumber: string;
-  serialNumber: string;
-  firstSeenDate: number;
-  lastSeenDate: number;
-  removed: boolean;
-};
+  id: number
+  slot: string
+  partNumber: string
+  serialNumber: string
+  firstSeenDate: number
+  lastSeenDate: number
+  removed: boolean
+}
 
 export type DeviceOwnerGroup = {
-  changeDate: number;
-  id: number;
-  name: string;
-  folder: string;
-  hiddenFromReports: boolean;
-  type: string;
-};
+  changeDate: number
+  id: number
+  name: string
+  folder: string
+  hiddenFromReports: boolean
+  type: string
+}
 
 export type SimpleDevice = {
-  id: number;
-  name: string;
-  family: string;
-  mgmtAddress: string;
-  status: DeviceStatus;
-  driver: string;
-  softwareLevel: DeviceSoftwareLevel;
-  configCompliant: boolean;
-  eos: boolean;
-  eol: boolean;
-};
+  id: number
+  name: string
+  family: string
+  mgmtAddress: string
+  status: DeviceStatus
+  driver: string
+  softwareLevel: DeviceSoftwareLevel
+  configCompliant: boolean
+  eos: boolean
+  eol: boolean
+}
 
 export type DeviceNumericAttribute = {
-  type: string;
-  name: string;
-  number: number;
-};
+  type: string
+  name: string
+  number: number
+}
 
 export type DeviceTextAttribute = {
-  type: string;
-  name: string;
-  text: string;
-};
+  type: string
+  name: string
+  text: string
+}
 
 export type DeviceBinaryAttribute = {
-  type: string;
-  name: string;
-  assumption: boolean;
-};
+  type: string
+  name: string
+  assumption: boolean
+}
 
-export type DeviceAttribute =
-  DeviceNumericAttribute |
-  DeviceTextAttribute |
-  DeviceBinaryAttribute;
+export type DeviceAttribute = DeviceNumericAttribute | DeviceTextAttribute | DeviceBinaryAttribute
 
 export type Device = {
-  attributes: DeviceAttribute[];
-  autoTryCredentials: boolean;
-  changeDate: number;
-  comments: string;
-  contact: string;
-  createdDate: number;
-  creator: string;
-  credentialSets: CredentialSet[];
-  specificCredentialSet: CredentialSet;
-  driver: string;
-  eolDate: number;
-  eolModule: DeviceModule;
-  eosDate: number;
-  eosModule: DeviceModule;
-  family: string;
-  id: number;
-  location: string;
-  mgmtAddress: string;
-  mgmtDomain: MgmtDomain;
-  name: string;
-  networkClass: DeviceNetworkClass;
-  ownerGroups: DeviceOwnerGroup[];
-  serialNumber: string;
-  softwareLevel: DeviceSoftwareLevel;
-  softwareVersion: string;
-  status: DeviceStatus;
-  sshPort: string;
-  telnetPort: string;
-  connectAddress: string;
-  credentialSetIds: number[];
-  realDeviceType: string;
-  endOfLife: boolean;
-  endOfSale: boolean;
-  compliant: true;
-};
+  attributes: DeviceAttribute[]
+  autoTryCredentials: boolean
+  changeDate: number
+  comments: string
+  contact: string
+  createdDate: number
+  creator: string
+  credentialSets: CredentialSet[]
+  specificCredentialSet: CredentialSet
+  driver: string
+  eolDate: number
+  eolModule: DeviceModule
+  eosDate: number
+  eosModule: DeviceModule
+  family: string
+  id: number
+  location: string
+  mgmtAddress: string
+  mgmtDomain: MgmtDomain
+  name: string
+  networkClass: DeviceNetworkClass
+  ownerGroups: DeviceOwnerGroup[]
+  serialNumber: string
+  softwareLevel: DeviceSoftwareLevel
+  softwareVersion: string
+  status: DeviceStatus
+  sshPort: string
+  telnetPort: string
+  connectAddress: string
+  credentialSetIds: number[]
+  realDeviceType: string
+  endOfLife: boolean
+  endOfSale: boolean
+  compliant: true
+  lastConnectionDate: number
+}
 
 export enum DeviceComplianceResultType {
   Conforming = "CONFORMING",
@@ -135,39 +133,40 @@ export enum DeviceComplianceResultType {
 }
 
 export type DeviceComplianceResult = {
-  id: number;
-  ruleName: string;
-  policyName: string;
-  result: DeviceComplianceResultType;
-  comment: string;
-  checkDate: number;
-  expirationDate: number;
-};
+  id: number
+  ruleName: string
+  policyName: string
+  result: DeviceComplianceResultType
+  comment: string
+  checkDate: number
+  expirationDate: number
+}
 
 export type DeviceDiagnosticResult = {
-  creationDate: number;
-  lastCheckDate: number;
-  diagnosticName: string;
-  type: string;
-};
+  creationDate: number
+  lastCheckDate: number
+  diagnosticName: string
+  diagnosticId: number
+  type: string
+}
 
 export type DeviceInterface = {
-  id: number;
-  interfaceName: string;
-  ip4Addresses: Address[];
-  ip6Addresses: Address[];
-  vrfInstance: string;
-  virtualDevice: string;
-  description: string;
-  enabled: boolean;
-  level3: boolean;
-  macAddress: string;
-};
+  id: number
+  interfaceName: string
+  ip4Addresses: Address[]
+  ip6Addresses: Address[]
+  vrfInstance: string
+  virtualDevice: string
+  description: string
+  enabled: boolean
+  level3: boolean
+  macAddress: string
+}
 
 export type DeviceFamily = {
-  driver: string;
-  deviceFamily: string;
-};
+  driver: string
+  deviceFamily: string
+}
 
 export enum DeviceAttributeType {
   Numeric = "NUMERIC",
@@ -176,27 +175,27 @@ export enum DeviceAttributeType {
   Date = "DATE",
   Binary = "BINARY",
   BinaryFile = "BINARYFILE",
-};
+}
 
 export enum DeviceAttributeLevel {
   Device = "DEVICE",
   Config = "CONFIG",
-};
+}
 
 export type DeviceAttributeDefinition = {
-  name: string;
-  checkable: boolean;
-  comparable: boolean;
-  dump: boolean;
-  level: DeviceAttributeLevel;
-  postDump: string;
-  postLineDump: string;
-  preDump: string;
-  preLineDump: string;
-  searchable: boolean;
-  title: string;
-  type: DeviceAttributeType;
-};
+  name: string
+  checkable: boolean
+  comparable: boolean
+  dump: boolean
+  level: DeviceAttributeLevel
+  postDump: string
+  postLineDump: string
+  preDump: string
+  preLineDump: string
+  searchable: boolean
+  title: string
+  type: DeviceAttributeType
+}
 
 export enum DeviceTypeProtocol {
   Ssh = "SSH",
@@ -205,43 +204,43 @@ export enum DeviceTypeProtocol {
 }
 
 export type DeviceType = {
-  attributes: DeviceAttributeDefinition[];
-  author: string;
-  cliMainModes: string[];
-  description: string;
+  attributes: DeviceAttributeDefinition[]
+  author: string
+  cliMainModes: string[]
+  description: string
   location: {
-    type: string;
-    fileName: string;
-  };
-  name: string;
-  priority: number;
-  protocols: DeviceTypeProtocol[];
-  sourceHash: string;
+    type: string
+    fileName: string
+  }
+  name: string
+  priority: number
+  protocols: DeviceTypeProtocol[]
+  sourceHash: string
   sshConfig: {
-    ciphers: string[];
-    hostKeyAlgorithms: string[];
-    kexAlgorithms: string[];
-    macs: string[];
-    terminalCols: number;
-    terminalHeight: number;
-    terminalRows: number;
-    terminalType: string;
-    terminalWidth: number;
-    usePty: boolean;
-  };
+    ciphers: string[]
+    hostKeyAlgorithms: string[]
+    kexAlgorithms: string[]
+    macs: string[]
+    terminalCols: number
+    terminalHeight: number
+    terminalRows: number
+    terminalType: string
+    terminalWidth: number
+    usePty: boolean
+  }
   telnetConfig: {
-    terminalType: string;
-  };
-  version: string;
-};
+    terminalType: string
+  }
+  version: string
+}
 
 export type DeviceAccessFailure = {
-  driver: string;
-  family: string;
-  id: number;
-  lastFailure: number;
-  lastSuccess: number;
-  mgmtAddress: Address;
-  name: string;
-  status: DeviceStatus;
-};
+  driver: string
+  family: string
+  id: number
+  lastFailure: number
+  lastSuccess: number
+  mgmtAddress: string
+  name: string
+  status: DeviceStatus
+}

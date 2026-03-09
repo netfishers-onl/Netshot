@@ -1,145 +1,116 @@
-import { Box, Button, ButtonGroup, Flex, Stack, Text } from "@chakra-ui/react";
-import { useCallback, useMemo } from "react";
-import { useTranslation } from "react-i18next";
+import { Box, Button, Flex, Stack, Text } from "@chakra-ui/react"
+import { useMemo } from "react"
+import { useTranslation } from "react-i18next"
 
-import { Icon } from "@/components";
-import { useToast } from "@/hooks";
-import { Config, ConfigAttribute, ConfigBinaryAttribute, ConfigLongTextAttribute, ConfigNumericAttribute, ConfigTextAttribute, DeviceAttributeDefinition, DeviceAttributeType } from "@/types";
-import { downloadFromUrl } from "@/utils";
+import { Icon } from "@/components"
+import { useDownloadConfigMutation } from "@/hooks"
+import {
+  Config,
+  ConfigAttribute,
+  ConfigBinaryAttribute,
+  ConfigLongTextAttribute,
+  ConfigNumericAttribute,
+  ConfigTextAttribute,
+  DeviceAttributeDefinition,
+  DeviceAttributeType,
+} from "@/types"
 
-import DeviceConfigurationViewButton from "./DeviceConfigurationViewButton";
-
+import DeviceConfigurationViewButton from "./DeviceConfigurationViewButton"
 
 type ConfigNumericAttributeValueType = {
-  attribute: ConfigNumericAttribute;
-};
+  attribute: ConfigNumericAttribute
+}
 
 function ConfigNumericAttributeValue(props: ConfigNumericAttributeValueType) {
-  const { attribute } = props;
-  const { t } = useTranslation();
+  const { attribute } = props
+  const { t } = useTranslation()
 
-  return (
-    <Text>{attribute?.number ?? t("N/A")}</Text>
-  )
+  return <Text>{attribute?.number ?? t("N/A")}</Text>
 }
 
 type ConfigTextAttributeValueType = {
-  attribute: ConfigTextAttribute;
-};
+  attribute: ConfigTextAttribute
+}
 
 function ConfigTextAttributeValue(props: ConfigTextAttributeValueType) {
-  const { attribute } = props;
-  const { t } = useTranslation();
+  const { attribute } = props
+  const { t } = useTranslation()
 
-  return (
-    <Text>{attribute?.text ?? t("N/A")}</Text>
-  )
+  return <Text>{attribute?.text ?? t("N/A")}</Text>
 }
 
 type ConfigLongTextAttributeValueType = {
-  configId: number;
-  attribute: ConfigLongTextAttribute;
-  definition: DeviceAttributeDefinition;
-};
+  configId: number
+  attribute: ConfigLongTextAttribute
+  definition: DeviceAttributeDefinition
+}
 
 function ConfigLongTextAttributeValue(props: ConfigLongTextAttributeValueType) {
-  const { configId, attribute, definition } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-
-  const download = useCallback(async () => {
-    try {
-      await downloadFromUrl(`/api/configs/${configId}/${attribute?.name}`);
-    }
-    catch (err) {
-      toast.error({
-        title: t("Download error"),
-        description: t("An error occurred during the file download"),
-      });
-    }
-  }, [configId, attribute?.name, toast, t]);  
+  const { configId, attribute, definition } = props
+  const { t } = useTranslation()
+  const download = useDownloadConfigMutation(configId, attribute?.name)
 
   return (
-    <Stack direction="row" spacing="2">
-      <ButtonGroup size="sm" isAttached variant="ghost">
-        <DeviceConfigurationViewButton
-          id={configId}
-          definition={definition}
-          attribute={attribute}
-          renderItem={(open) => (
-            <Button
-              leftIcon={<Icon name="eye" />}
-              onClick={open}
-            >
-              {t("View")}
-            </Button>
-          )}
-        />
-        <Button
-          leftIcon={<Icon name="download" />}
-          onClick={download}
-        >
-          {t("Download")}
-        </Button>
-      </ButtonGroup>
+    <Stack direction="row" gap="2">
+      <DeviceConfigurationViewButton
+        id={configId}
+        definition={definition}
+        attribute={attribute}
+        renderItem={(open) => (
+          <Button onClick={open} size="sm" variant="default">
+            <Icon name="eye" />
+            {t("View")}
+          </Button>
+        )}
+      />
+      <Button
+        size="sm"
+        variant="default"
+        onClick={() => download.mutate()}
+        loading={download.isPending}
+      >
+        <Icon name="download" />
+        {t("Download")}
+      </Button>
     </Stack>
   )
 }
 
 type ConfigBinaryAttributeValueType = {
-  attribute: ConfigBinaryAttribute;
-};
-
-function ConfigBinaryAttributeValue(props: ConfigBinaryAttributeValueType) {
-  const { attribute } = props;
-  const { t } = useTranslation();
-
-  if (attribute?.assumption === true) {
-    return (
-      <Text>{t("True")}</Text>
-    )
-  }
-  else if (attribute?.assumption === false) {
-    return (
-      <Text>{t("False")}</Text>
-    )
-  }
-  return (
-    <Text>{t("N/A")}</Text>
-  )
+  attribute: ConfigBinaryAttribute
 }
 
+function ConfigBinaryAttributeValue(props: ConfigBinaryAttributeValueType) {
+  const { attribute } = props
+  const { t } = useTranslation()
+
+  if (attribute?.assumption === true) {
+    return <Text>{t("True")}</Text>
+  } else if (attribute?.assumption === false) {
+    return <Text>{t("False")}</Text>
+  }
+  return <Text>{t("N/A")}</Text>
+}
 
 type ConfigBinaryFileAttributeValueType = {
-  configId: number;
-  attribute: ConfigLongTextAttribute;
-};
+  configId: number
+  attribute: ConfigLongTextAttribute
+}
 
 function ConfigBinaryFileAttributeValue(props: ConfigBinaryFileAttributeValueType) {
-  const { configId, attribute } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-
-  const download = useCallback(async () => {
-    try {
-      await downloadFromUrl(`/api/configs/${configId}/${attribute?.name}`);
-    }
-    catch (err) {
-      toast.error({
-        title: t("Download error"),
-        description: t("An error occurred during the file download"),
-      });
-    }
-  }, [configId, attribute?.name, toast, t]);  
+  const { configId, attribute } = props
+  const { t } = useTranslation()
+  const download = useDownloadConfigMutation(configId, attribute?.name)
 
   return (
-    <Stack direction="row" spacing="2">
+    <Stack direction="row" gap="2">
       <Button
         variant="ghost"
-        leftIcon={<Icon name="download" />}
         size="sm"
-        onClick={download}
+        onClick={() => download.mutate()}
+        loading={download.isPending}
       >
+        <Icon name="download" />
         {t("Download")}
       </Button>
     </Stack>
@@ -147,77 +118,64 @@ function ConfigBinaryFileAttributeValue(props: ConfigBinaryFileAttributeValueTyp
 }
 
 type ConfigAttributeValueType = {
-  config: Config;
-  attribute: ConfigAttribute;
-  definition: DeviceAttributeDefinition;
-};
+  config: Config
+  attribute: ConfigAttribute
+  definition: DeviceAttributeDefinition
+}
 
 function ConfigAttributeValue(props: ConfigAttributeValueType) {
-  const { config, attribute, definition } = props;
-  const { t } = useTranslation();
+  const { config, attribute, definition } = props
+  const { t } = useTranslation()
 
   switch (definition.type) {
-  case DeviceAttributeType.Numeric:
-    return (
-      <ConfigNumericAttributeValue attribute={attribute as ConfigNumericAttribute} />
-    );
-  case DeviceAttributeType.Text:
-    return (
-      <ConfigTextAttributeValue attribute={attribute as ConfigTextAttribute} />
-    );
-  case DeviceAttributeType.LongText:
-    return (
-      <ConfigLongTextAttributeValue
-        configId={config.id}
-        attribute={attribute as ConfigLongTextAttribute}
-        definition={definition}
-      />
-    );
-  case DeviceAttributeType.Binary:
-    return (
-      <ConfigBinaryAttributeValue attribute={attribute as ConfigBinaryAttribute} />
-    );
-  case DeviceAttributeType.BinaryFile:
-    return (
-      <ConfigBinaryFileAttributeValue
-        configId={config.id}
-        attribute={attribute as ConfigBinaryAttribute}
-      />
-    );
-  default:
-    return (
-      <Text>{t("Unsupported attribute")}</Text>
-    );
+    case DeviceAttributeType.Numeric:
+      return <ConfigNumericAttributeValue attribute={attribute as ConfigNumericAttribute} />
+    case DeviceAttributeType.Text:
+      return <ConfigTextAttributeValue attribute={attribute as ConfigTextAttribute} />
+    case DeviceAttributeType.LongText:
+      return (
+        <ConfigLongTextAttributeValue
+          configId={config.id}
+          attribute={attribute as ConfigLongTextAttribute}
+          definition={definition}
+        />
+      )
+    case DeviceAttributeType.Binary:
+      return <ConfigBinaryAttributeValue attribute={attribute as ConfigBinaryAttribute} />
+    case DeviceAttributeType.BinaryFile:
+      return (
+        <ConfigBinaryFileAttributeValue
+          configId={config.id}
+          attribute={attribute as ConfigBinaryAttribute}
+        />
+      )
+    default:
+      return <Text>{t("Unsupported attribute")}</Text>
   }
 }
 
 export type DeviceConfigurationAttributeProps = {
-  config: Config;
-  definition: DeviceAttributeDefinition;
-};
+  config: Config
+  definition: DeviceAttributeDefinition
+}
 
-export default function DeviceConfigurationAttribute(
-  props: DeviceConfigurationAttributeProps
-) {
-  const { config, definition } = props;
-  const { t } = useTranslation();
+export default function DeviceConfigurationAttribute(props: DeviceConfigurationAttributeProps) {
+  const { config, definition } = props
+  const { t } = useTranslation()
   const attribute = useMemo<ConfigAttribute>(() => {
-    return config?.attributes?.find(a => a.name === definition.name);
-  }, [config, definition]);
+    return config?.attributes?.find((a) => a.name === definition.name)
+  }, [config, definition])
 
   return (
     <Flex alignItems="center">
-      <Box flex="0 0 auto" w="200px">
+      <Box flex="0 0 auto" w="240px">
         <Text color="grey.400">{t(definition.title)}</Text>
       </Box>
-      {attribute ?
-        <ConfigAttributeValue
-          config={config}
-          attribute={attribute}
-          definition={definition}
-        />
-        :
-        <Text>{t("N/A")}</Text>}
+      {attribute ? (
+        <ConfigAttributeValue config={config} attribute={attribute} definition={definition} />
+      ) : (
+        <Text>{t("N/A")}</Text>
+      )}
     </Flex>
-  );
+  )
 }

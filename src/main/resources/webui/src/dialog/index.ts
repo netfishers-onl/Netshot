@@ -1,7 +1,8 @@
-export { default as Alert } from "./Alert";
-export { default as Confirm } from "./Confirm";
-export * from "./DialogProvider";
-export { default as Form } from "./Form";
-export * from "./ModalConfigContext";
-export * from "./types";
-export * from "./useDialog";
+export { default as Alert } from "./Alert"
+export { default as Confirm } from "./Confirm"
+export * from "./dialogConfigContext"
+export * from "./DialogProvider"
+export * from "./extensions"
+export { default as Form } from "./Form"
+export * from "./types"
+export * from "./useDialog"

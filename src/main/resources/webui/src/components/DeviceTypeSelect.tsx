@@ -1,45 +1,50 @@
-import { useDeviceTypeOptions } from "@/hooks";
-import { Text } from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
-import Select, { SelectProps } from "./Select";
+import { useDeviceTypeOptions } from "@/hooks"
+import { Text } from "@chakra-ui/react"
+import { FieldPath, FieldValues } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { Select, SelectProps } from "./Select"
 
-export type DeviceTypeSelectProps<T> = {
-  withAny?: boolean;
-  showLabel?: boolean;
-} & SelectProps<T>;
+export type DeviceTypeSelectProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+> = Omit<SelectProps<TFieldValues, TName, string | number>, "options">
 
-export default function DeviceTypeSelect<T>(props: DeviceTypeSelectProps<T>) {
+export default function DeviceTypeSelect<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+>(props: DeviceTypeSelectProps<TFieldValues, TName>) {
   const {
     control,
     name,
-    value,
-    isRequired,
-    isReadOnly,
-    withAny = false,
-    showLabel = true,
+    required,
+    readOnly,
     defaultValue,
-    ...other
-  } = props;
+    label,
+    placeholder,
+    helperText,
+    isClearable,
+  } = props
 
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
-  const { isLoading, options } = useDeviceTypeOptions({
-    withAny,
-  });
+  const { isPending, options } = useDeviceTypeOptions()
 
   return (
     <Select
-      label={showLabel ? t("Device type") : null}
-      placeholder={t("Select a device type")}
+      label={label}
+      placeholder={placeholder ?? t("Select a device type")}
       control={control}
       name={name}
       defaultValue={defaultValue}
-      isReadOnly={isReadOnly}
-      isRequired={isRequired}
-      isLoading={isLoading}
-      noOptionsMessage={() => <Text>{t("No device type found")}</Text>}
+      readOnly={readOnly}
+      required={required}
+      isLoading={isPending}
+      helperText={helperText}
+      isClearable={isClearable}
+      noOptionsMessage={<Text>{t("No device type found")}</Text>}
       options={options}
-      {...other}
+      itemToString={(item) => item?.label}
+      itemToValue={(item) => item.value?.name}
     />
-  );
+  )
 }

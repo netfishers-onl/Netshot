@@ -1,100 +1,78 @@
-import api from "@/api";
-import { Icon } from "@/components";
-import { QUERIES } from "@/constants";
-import { Dialog } from "@/dialog";
-import { useToast } from "@/hooks";
-import { Script } from "@/types";
-import {
-  IconButton,
-  Stack,
-  StackProps,
-  SystemStyleObject,
-  Tag,
-  Text,
-  Tooltip,
-} from "@chakra-ui/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent, useCallback, useMemo } from "react";
-import { useTranslation } from "react-i18next";
+import api from "@/api"
+import { Icon } from "@/components"
+import { Tooltip } from "@/components/ui/tooltip"
+import { MUTATIONS, QUERIES } from "@/constants"
+import { useConfirmDialogWithMutation } from "@/dialog"
+import { useToast } from "@/hooks"
+import { Script } from "@/types"
+import { IconButton, Stack, StackProps, Tag, Text } from "@chakra-ui/react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { MouseEvent } from "react"
+import { useTranslation } from "react-i18next"
 
 export type DeviceScriptItemProps = {
-  isSelected?: boolean;
-  script: Script;
-} & StackProps;
+  isSelected?: boolean
+  script: Script
+} & StackProps
 
 export default function DeviceScriptItem(props: DeviceScriptItemProps) {
-  const { isSelected, script, ...other } = props;
+  const { isSelected, script, ...other } = props
 
-  const toast = useToast();
-  const { t } = useTranslation();
-  const queryClient = useQueryClient();
+  const toast = useToast()
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const dialog = useConfirmDialogWithMutation()
 
-  const selectedStyle = useMemo(() => {
-    if (!isSelected) {
-      return {};
-    }
-
-    return {
-      borderColor: "green.500",
-    } as SystemStyleObject;
-  }, [isSelected]);
-
-  const { mutate, isPending: isLoading } = useMutation({
+  const { mutateAsync, isPending: isLoading } = useMutation({
+    mutationKey: MUTATIONS.SCRIPT_REMOVE,
     mutationFn: api.script.remove,
-    onSuccess() {
-      toast.success({
-        title: t("Success"),
-        description: t("Device script was successfully removed"),
-      });
-
-      removeDialog.close();
-
-      queryClient.invalidateQueries({ queryKey: [QUERIES.SCRIPT_LIST] });
-    },
     onError() {
       toast.error({
         title: t("Error"),
         description: t("An error occurred during remove"),
-      });
+      })
     },
-  });
+  })
 
-  const removeDialog = Dialog.useConfirm({
-    title: t("Remove device script"),
-    description: (
-      <Text>
-        {t("You are about to remove the script ")}{" "}
-        <Text fontWeight="semibold" as="span">
-          {script.name}?
+  const open = (evt: MouseEvent<HTMLButtonElement>) => {
+    evt?.stopPropagation()
+    const dialogRef = dialog.open(MUTATIONS.SCRIPT_REMOVE, {
+      title: t("Remove device script"),
+      description: (
+        <Text>
+          {t("You are about to remove the script ")}{" "}
+          <Text fontWeight="semibold" as="span">
+            {script.name}?
+          </Text>
         </Text>
-      </Text>
-    ),
-    isLoading,
-    onConfirm() {
-      mutate(script?.id);
-    },
-    confirmButton: {
-      label: t("Remove"),
-      props: {
-        colorScheme: "red",
-      },
-    },
-  });
+      ),
+      isLoading,
+      async onConfirm() {
+        await mutateAsync(script?.id)
+        toast.success({
+          title: t("Success"),
+          description: t("Device script was successfully removed"),
+        })
 
-  const open = useCallback(
-    (evt: MouseEvent<HTMLButtonElement>) => {
-      evt.stopPropagation();
-      removeDialog.open();
-    },
-    [removeDialog]
-  );
+        dialogRef.close()
+
+        queryClient.invalidateQueries({ queryKey: [QUERIES.SCRIPT_LIST] })
+      },
+      confirmButton: {
+        label: t("Remove"),
+        props: {
+          colorPalette: "red",
+        },
+      },
+    })
+  }
 
   return (
     <Stack
       position="relative"
-      spacing="2"
+      gap="2"
       p="4"
-      borderColor="grey.100"
+      borderColor={isSelected ? "green.500" : "grey.100"}
       borderWidth="1px"
       borderRadius="2xl"
       bg="white"
@@ -105,15 +83,14 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
           opacity: 1,
         },
       }}
-      sx={selectedStyle}
       {...other}
     >
       <Text fontWeight="semibold">{script?.name}</Text>
-      <Stack direction="row" spacing="4">
-        <Tag colorScheme="grey">{script?.deviceDriver}</Tag>
-        <Tag colorScheme="green">{script?.author}</Tag>
+      <Stack direction="row" gap="4">
+        <Tag.Root colorPalette="grey">{script?.deviceDriver}</Tag.Root>
+        <Tag.Root colorPalette="green">{script?.author}</Tag.Root>
       </Stack>
-      <Tooltip label={t("Remove script")}>
+      <Tooltip content={t("Remove script")}>
         <IconButton
           position="absolute"
           top="4"
@@ -122,12 +99,13 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
           transition="all .2s ease"
           size="sm"
           aria-label={t("Remove device script")}
-          icon={<Icon name="trash" />}
           onClick={open}
           variant="ghost"
-          colorScheme="green"
-        />
+          colorPalette="green"
+        >
+          <Icon name="trash" />
+        </IconButton>
       </Tooltip>
     </Stack>
-  );
+  )
 }

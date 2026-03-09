@@ -1,28 +1,28 @@
-import { Icon, Protected, SidebarLink } from "@/components";
-import { Level } from "@/types";
-import { Button, Divider, Stack, Text } from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
-import { SidebarProvider } from "../../contexts";
-import { SidebarContext } from "../../contexts/SidebarProvider";
-import AddPolicyButton from "../AddPolicyButton";
-import SidebarList from "./SidebarList";
-import SidebarSearch from "./SidebarSearch";
-import SidebarSearchList from "./SidebarSearchList";
+import { Icon, Protected, SidebarLink } from "@/components"
+import { Level } from "@/types"
+import { Button, Separator, Stack, Text } from "@chakra-ui/react"
+import { useTranslation } from "react-i18next"
+import { SidebarProvider } from "../../contexts"
+import { SidebarContext } from "../../contexts/SidebarProvider"
+import AddPolicyButton from "../AddPolicyButton"
+import SidebarList from "./SidebarList"
+import SidebarSearch from "./SidebarSearch"
+import SidebarSearchList from "./SidebarSearchList"
 
 export default function Sidebar() {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   return (
     <SidebarProvider>
-      <Stack w="300px" overflow="auto" spacing="0">
+      <Stack w="300px" overflow="auto" gap="0">
         <SidebarContext.Consumer>
           {({ query }) => (
             <>
               <SidebarSearch />
-              <Divider />
+              <Separator />
               {!query && (
                 <>
-                  <Stack spacing="0" py="4" px="5">
+                  <Stack gap="0" py="4" px="5">
                     <SidebarLink
                       to="./hardware"
                       label={t("Hardware")}
@@ -34,7 +34,7 @@ export default function Sidebar() {
                       description={t("Software version compliance")}
                     />
                   </Stack>
-                  <Divider />
+                  <Separator />
                 </>
               )}
 
@@ -43,11 +43,12 @@ export default function Sidebar() {
               </Stack>
               {query ? <SidebarSearchList /> : <SidebarList />}
               <Protected minLevel={Level.Operator}>
-                <Divider />
+                <Separator />
                 <Stack p="6">
                   <AddPolicyButton
                     renderItem={(open) => (
-                      <Button leftIcon={<Icon name="plus" />} onClick={open}>
+                      <Button onClick={open}>
+                        <Icon name="plus" />
                         {t("Add policy")}
                       </Button>
                     )}
@@ -59,5 +60,5 @@ export default function Sidebar() {
         </SidebarContext.Consumer>
       </Stack>
     </SidebarProvider>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import { Stack, Text } from "@chakra-ui/react";
+import { Steps, Stack, Text } from "@chakra-ui/react";
 import { NavLink } from "react-router";
 
 export type SidebarLinkProps = {
@@ -22,7 +22,7 @@ export default function SidebarLink(props: SidebarLinkProps) {
           }}
           px="4"
           py="3"
-          spacing="0"
+          gap="0"
         >
           <Text fontWeight="medium">{label}</Text>
           <Text color="grey.400">{description}</Text>

@@ -1,32 +1,29 @@
-import api, { CreateOrUpdateHardwareRule } from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { ANY_OPTION } from "@/constants";
-import { Dialog } from "@/dialog";
-import { useToast } from "@/hooks";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent, ReactElement, useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { QUERIES } from "../constants";
-import { HardwareRuleFormValues } from "../types";
-import HardwareRuleForm from "./HardwareRuleForm";
+import api, { CreateOrUpdateHardwareRule } from "@/api"
+import { NetshotError } from "@/api/httpClient"
+import { MUTATIONS } from "@/constants"
+import { useFormDialogWithMutation } from "@/dialog"
+import { useToast } from "@/hooks"
+import { PropsWithRenderItem } from "@/types"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { QUERIES } from "../constants"
+import { HardwareRuleFormValues } from "../types"
+import HardwareRuleForm from "./HardwareRuleForm"
 
-export type AddHardwareRuleButtonProps = {
-  renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
-};
+export type AddHardwareRuleButtonProps = PropsWithRenderItem
 
-export default function AddHardwareRuleButton(
-  props: AddHardwareRuleButtonProps
-) {
-  const { renderItem } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-  const queryClient = useQueryClient();
+export default function AddHardwareRuleButton(props: AddHardwareRuleButtonProps) {
+  const { renderItem } = props
+  const { t } = useTranslation()
+  const toast = useToast()
+  const queryClient = useQueryClient()
+  const dialog = useFormDialogWithMutation()
 
   const form = useForm<HardwareRuleFormValues>({
     mode: "onChange",
     defaultValues: {
-      driver: ANY_OPTION,
+      driver: null,
       family: "",
       familyRegExp: false,
       group: null,
@@ -35,55 +32,51 @@ export default function AddHardwareRuleButton(
       endOfLife: "",
       endOfSale: "",
     },
-  });
+  })
 
   const mutation = useMutation({
-    mutationFn: async (payload: CreateOrUpdateHardwareRule) =>
-      api.hardwareRule.create(payload),
-    onSuccess() {
-      dialog.close();
-      toast.success({
-        title: t("Success"),
-        description: t("Hardware rule has been successfully created"),
-      });
-
-      queryClient.invalidateQueries({ queryKey: [QUERIES.HARDWARE_RULE_LIST] });
-    },
+    mutationKey: MUTATIONS.HARDWARE_RULE_CREATE,
+    mutationFn: async (payload: CreateOrUpdateHardwareRule) => api.hardwareRule.create(payload),
     onError(err: NetshotError) {
-      toast.error(err);
+      toast.error(err)
     },
-  });
+  })
 
-  const onSubmit = useCallback(
-    async (values: HardwareRuleFormValues) => {
-      mutation.mutate({
-        driver: values.driver.value?.name,
-        family: values.family,
-        familyRegExp: values.familyRegExp,
-        group: values.group?.id,
-        partNumber: values.partNumber,
-        partNumberRegExp: values.partNumberRegExp,
-        endOfLife: values.endOfLife,
-        endOfSale: values.endOfSale,
-      });
-    },
-    [mutation]
-  );
+  const open = () => {
+    const dialogRef = dialog.open(MUTATIONS.HARDWARE_RULE_CREATE, {
+      title: t("Add hardware rule"),
+      description: <HardwareRuleForm />,
+      form,
+      size: "lg",
+      async onSubmit(values: HardwareRuleFormValues) {
+        await mutation.mutateAsync({
+          driver: values.driver,
+          family: values.family,
+          familyRegExp: values.familyRegExp,
+          group: values.group,
+          partNumber: values.partNumber,
+          partNumberRegExp: values.partNumberRegExp,
+          endOfLife: values.endOfLife,
+          endOfSale: values.endOfSale,
+        })
 
-  const dialog = Dialog.useForm({
-    title: t("Add hardware rule"),
-    description: <HardwareRuleForm />,
-    form,
-    isLoading: mutation.isPending,
-    size: "2xl",
-    onSubmit,
-    onCancel() {
-      form.reset();
-    },
-    submitButton: {
-      label: t("Add rule"),
-    },
-  });
+        dialogRef.close()
 
-  return renderItem(dialog.open);
+        toast.success({
+          title: t("Success"),
+          description: t("Hardware rule has been successfully created"),
+        })
+
+        queryClient.invalidateQueries({ queryKey: [QUERIES.HARDWARE_RULE_LIST] })
+      },
+      onCancel() {
+        form.reset()
+      },
+      submitButton: {
+        label: t("Add rule"),
+      },
+    })
+  }
+
+  return renderItem(open)
 }

@@ -1,96 +1,91 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { Dialog } from "@/dialog";
-import { useToast } from "@/hooks";
-import { Hook } from "@/types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent, ReactElement, useCallback, useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { QUERIES, WEBHOOK_DATA_TYPE_OPTIONS } from "../constants";
-import AdministrationWebhookForm, {
-  WebhookForm,
-} from "./AdministrationWebhookForm";
+import api from "@/api"
+import { NetshotError } from "@/api/httpClient"
+import { MUTATIONS } from "@/constants"
+import { useFormDialogWithMutation } from "@/dialog"
+import { useToast } from "@/hooks"
+import { Hook, PropsWithRenderItem } from "@/types"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useEffect, useMemo } from "react"
+import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { QUERIES } from "../constants"
+import AdministrationWebhookForm, { WebhookForm } from "./AdministrationWebhookForm"
 
-export type EditWebhookButtonProps = {
-  webhook: Hook;
-  renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
-};
+export type EditWebhookButtonProps = PropsWithRenderItem<{
+  webhook: Hook
+}>
 
 export default function EditWebhookButton(props: EditWebhookButtonProps) {
-  const { webhook, renderItem } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-  const queryClient = useQueryClient();
+  const { webhook, renderItem } = props
+  const { t } = useTranslation()
+  const toast = useToast()
+  const queryClient = useQueryClient()
+  const dialog = useFormDialogWithMutation()
 
   const defaultValues = useMemo(() => {
-    const action = WEBHOOK_DATA_TYPE_OPTIONS.find(
-      (option) => option.value === webhook.action
-    );
-
     return {
       name: webhook.name,
       enabled: webhook.enabled,
-      action,
+      action: webhook.action,
       url: webhook.url,
       sslValidation: webhook.sslValidation,
       triggers: webhook.triggers,
-    };
-  }, [webhook]);
+    }
+  }, [webhook])
 
   const form = useForm<WebhookForm>({
     mode: "onChange",
     defaultValues,
-  });
+  })
 
   const mutation = useMutation({
-    mutationFn: async (payload: Partial<Hook>) =>
-      api.admin.updateHook(webhook?.id, payload),
-    onSuccess(res) {
-      dialog.close();
-      toast.success({
-        title: t("Success"),
-        description: t("Webhook {{name}} has been successfully updated", {
-          name: res?.name,
-        }),
-      });
-
-      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_WEBHOOKS] });
-    },
+    mutationKey: MUTATIONS.ADMIN_HOOK_UPDATE,
+    mutationFn: async (payload: Partial<Hook>) => api.admin.updateHook(webhook?.id, payload),
     onError(err: NetshotError) {
-      toast.error(err);
+      toast.error(err)
     },
-  });
+  })
 
-  const onSubmit = useCallback(
-    async (values: WebhookForm) => {
-      mutation.mutate({
-        name: values.name,
-        action: values.action?.value,
-        url: values.url,
-        enabled: values.enabled,
-        sslValidation: values.sslValidation,
-        triggers: values.triggers,
-        type: "Web",
-      });
-    },
-    [mutation]
-  );
+  useEffect(() => {
+    form.reset(defaultValues)
+  }, [webhook])
 
-  const dialog = Dialog.useForm({
-    title: t("Update webhook"),
-    description: <AdministrationWebhookForm />,
-    form,
-    isLoading: mutation.isPending,
-    size: "2xl",
-    onSubmit,
-    onCancel() {
-      form.reset();
-    },
-    submitButton: {
-      label: t("Apply changes"),
-    },
-  });
+  const open = () => {
+    const dialogRef = dialog.open(MUTATIONS.ADMIN_HOOK_UPDATE, {
+      title: t("Update webhook"),
+      description: <AdministrationWebhookForm />,
+      form,
+      size: "lg",
+      async onSubmit(values: WebhookForm) {
+        await mutation.mutateAsync({
+          name: values.name,
+          action: values.action,
+          url: values.url,
+          enabled: values.enabled,
+          sslValidation: values.sslValidation,
+          triggers: values.triggers,
+          type: "Web",
+        })
 
-  return renderItem(dialog.open);
+        dialogRef.close()
+
+        toast.success({
+          title: t("Success"),
+          description: t("Webhook {{name}} has been successfully updated", {
+            name: values.name,
+          }),
+        })
+
+        queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_WEBHOOKS] })
+      },
+      onCancel() {
+        form.reset()
+      },
+      submitButton: {
+        label: t("Apply changes"),
+      },
+    })
+  }
+
+  return renderItem(open)
 }

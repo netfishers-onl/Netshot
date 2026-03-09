@@ -1,108 +1,101 @@
-import { genericMemo } from "@/utils";
 import {
   Button,
   ButtonProps,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
+  CloseButton,
+  Dialog,
+  Heading,
+  Portal,
   Stack,
   Text,
-} from "@chakra-ui/react";
-import { isValidElement, useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { ModalConfigContext } from "./ModalConfigContext";
-import { BaseDialogProps } from "./types";
+} from "@chakra-ui/react"
+import mergeWith from "lodash.mergewith"
+import { isValidElement } from "react"
+import { useDialogConfig } from "./dialogConfigContext"
+import { useDialogProviderConfig } from "./DialogProvider"
+import { useDialogStore } from "./store"
+import { BaseDialogProps } from "./types"
 
 export type AlertDialogProps = {
   closeButton?: {
-    label?: string;
-    props?: ButtonProps;
-  };
-} & BaseDialogProps;
+    label?: string
+    props?: ButtonProps
+  }
+} & BaseDialogProps
 
-function AlertDialog(props: AlertDialogProps) {
-  const { t } = useTranslation();
-  const {
-    isOpen,
-    title,
-    description,
-    isLoading,
-    onCancel,
-    closeButton,
-    size,
-    variant,
-    hideFooter,
-  } = props;
-  const isTitleComponent = useMemo(() => isValidElement(title), [title]);
-  const isDescriptionComponent = useMemo(
-    () => isValidElement(description),
-    [description]
-  );
-  const closeButtonConfig: AlertDialogProps["closeButton"] = useMemo(
-    () => ({
-      label: closeButton?.label || t("OK"),
-      props: {
-        variant: "primary",
-        isLoading,
-        onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
-          evt.stopPropagation();
-          if (onCancel) onCancel();
-        },
-        ...closeButton?.props,
+export default function AlertDialog() {
+  const providerConfig = useDialogProviderConfig()
+  const config = useDialogConfig<AlertDialogProps>()
+  const currentConfig = useDialogStore((state) => state.configs.find((c) => c.id === config.id))
+  const isTitleComponent = isValidElement(config?.props?.title)
+  const isDescriptionComponent = isValidElement(config?.props?.description)
+  const { closeButton } = mergeWith({}, providerConfig.alert, config.props)
+
+  const closeButtonConfig: AlertDialogProps["closeButton"] = {
+    label: closeButton?.label,
+    props: {
+      variant: "primary",
+      loading: currentConfig.props.isLoading,
+      onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
+        evt?.stopPropagation()
+        if (config.props?.onCancel) config.props?.onCancel()
+        config.close()
       },
-    }),
-    [closeButton, isLoading]
-  );
+      ...closeButton?.props,
+    },
+  }
 
   return (
-    <ModalConfigContext.Provider
-      value={{
-        close: onCancel,
+    <Dialog.Root
+      open={config.props.isOpen}
+      placement="center"
+      motionPreset="slide-in-bottom"
+      size={config.props.size}
+      variant={config.props.variant}
+      closeOnInteractOutside={false}
+      scrollBehavior="inside"
+      onOpenChange={(e) => {
+        if (!e.open) {
+          config.close()
+        }
+      }}
+      onExitComplete={() => {
+        if (config.props?.onCancel) config.props.onCancel()
+        config.remove()
       }}
     >
-      <Modal
-        isOpen={isOpen}
-        isCentered
-        onClose={onCancel}
-        motionPreset="slideInBottom"
-        size={size}
-        variant={variant}
-        scrollBehavior="inside"
-      >
-        <ModalOverlay />
-        <ModalContent>
-          {isTitleComponent ? (
-            <>{title}</>
-          ) : (
-            <ModalHeader as="h3" fontSize="2xl" fontWeight="semibold">
-              {title}
-              <ModalCloseButton />
-            </ModalHeader>
-          )}
-          <ModalBody>
-            {isDescriptionComponent ? (
-              <>{description}</>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            {isTitleComponent ? (
+              <>{config.props.title}</>
             ) : (
-              <Text>{description}</Text>
+              <Dialog.Header>
+                <Heading as="h3" fontSize="2xl" fontWeight="semibold">
+                  {config.props.title}
+                </Heading>
+              </Dialog.Header>
             )}
-          </ModalBody>
-          {!hideFooter && (
-            <ModalFooter>
-              <Stack direction="row" spacing="3">
-                <Button {...closeButtonConfig?.props}>
-                  {closeButtonConfig?.label}
-                </Button>
-              </Stack>
-            </ModalFooter>
-          )}
-        </ModalContent>
-      </Modal>
-    </ModalConfigContext.Provider>
-  );
+            <Dialog.Body>
+              {isDescriptionComponent ? (
+                <>{config.props.description}</>
+              ) : (
+                <Text>{config.props.description as string}</Text>
+              )}
+            </Dialog.Body>
+            {!config.props.hideFooter && (
+              <Dialog.Footer>
+                <Stack direction="row" gap="3">
+                  <Button {...closeButtonConfig?.props}>{closeButtonConfig?.label}</Button>
+                </Stack>
+              </Dialog.Footer>
+            )}
+            <Dialog.CloseTrigger asChild>
+              <CloseButton size="sm" variant="outline" />
+            </Dialog.CloseTrigger>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
+  )
 }
-
-export default genericMemo(AlertDialog);

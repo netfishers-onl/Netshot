@@ -1,34 +1,35 @@
-import { SimpleDevice } from "@/types";
-import { Stack, Tag, Text } from "@chakra-ui/react";
-import { PropsWithChildren } from "react";
+import { SimpleDevice } from "@/types"
+import { Stack, StackProps, Tag, Text } from "@chakra-ui/react"
+import { forwardRef, PropsWithChildren, Ref } from "react"
 
 export type GroupDeviceBoxProps = PropsWithChildren<{
-  device: SimpleDevice;
-}>;
+  device: SimpleDevice
+}> &
+  StackProps
 
-export default function GroupDeviceBox(props: GroupDeviceBoxProps) {
-  const { device, children } = props;
+export default forwardRef((props: GroupDeviceBoxProps, ref: Ref<HTMLDivElement>) => {
+  const { device, children, ...stackProps } = props
   return (
     <Stack
       p="4"
-      spacing="3"
-      border="1px"
-      borderColor="grey.100"
+      gap="3"
+      border="1px solid {colors.grey.100}"
       bg="white"
       borderRadius="2xl"
-      boxShadow="sm"
       position="relative"
+      ref={ref}
+      {...stackProps}
     >
-      <Stack spacing="0">
+      <Stack gap="0">
         <Text fontSize="xs" color="grey.400">
           {device?.mgmtAddress}
         </Text>
         <Text fontWeight="medium">{device?.name}</Text>
       </Stack>
-      <Tag alignSelf="start" colorScheme="grey">
+      <Tag.Root alignSelf="start" colorPalette="grey">
         {device?.family}
-      </Tag>
+      </Tag.Root>
       {children}
     </Stack>
-  );
-}
+  )
+})

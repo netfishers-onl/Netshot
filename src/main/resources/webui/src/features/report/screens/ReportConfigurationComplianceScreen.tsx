@@ -1,18 +1,15 @@
-import { Divider, Stack } from "@chakra-ui/react";
-import { Outlet } from "react-router";
-import { ConfigurationComplianceSidebar } from "../components";
-import ConfigurationComplianceProvider from "../contexts/ConfigurationComplianceSidebarProvider";
+import { Separator, Stack } from "@chakra-ui/react"
+import { Outlet } from "react-router"
+import { ConfigurationComplianceSidebar } from "../components"
 
 export default function ReportConfigurationComplianceScreen() {
   return (
-    <ConfigurationComplianceProvider>
-      <Stack direction="row" flex="1" overflow="auto" spacing="0">
-        <ConfigurationComplianceSidebar />
-        <Divider orientation="vertical" />
-        <Stack flex="1" overflow="auto">
-          <Outlet />
-        </Stack>
+    <Stack direction="row" flex="1" overflow="auto" gap="0">
+      <ConfigurationComplianceSidebar />
+      <Separator orientation="vertical" />
+      <Stack flex="1" overflow="auto">
+        <Outlet />
       </Stack>
-    </ConfigurationComplianceProvider>
-  );
+    </Stack>
+  )
 }

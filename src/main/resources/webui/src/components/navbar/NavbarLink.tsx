@@ -1,21 +1,21 @@
-import { Button } from "@chakra-ui/react";
-import { PropsWithChildren } from "react";
-import { NavLink } from "react-router";
+import { Button } from "@chakra-ui/react"
+import { PropsWithChildren } from "react"
+import { NavLink } from "react-router"
 
 type NavbarLinkProps = PropsWithChildren<{
-  to: string;
-}>;
+  to: string
+}>
 
 export default function NavbarLink(props: NavbarLinkProps) {
-  const { to, children } = props;
+  const { to, children } = props
 
   return (
     <NavLink to={to}>
       {({ isActive }) => (
-        <Button size="sm" variant="navbar" isActive={isActive}>
+        <Button size="sm" variant="navbar" className={isActive ? `router-active` : null}>
           {children}
         </Button>
       )}
     </NavLink>
-  );
+  )
 }

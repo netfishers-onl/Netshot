@@ -1,104 +1,111 @@
-import api, { CreateDevicePayload } from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { DeviceTypeSelect, DomainSelect, Select, Switch } from "@/components";
-import FormControl, { FormControlType } from "@/components/FormControl";
-import TaskDialog from "@/components/TaskDialog";
-import { Dialog } from "@/dialog";
-import { useToast } from "@/hooks";
-import { CredentialSetType, DeviceType, Option } from "@/types";
-import { Divider, Stack, useDisclosure } from "@chakra-ui/react";
-import { useMutation } from "@tanstack/react-query";
-import {
-  MouseEvent,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-import { useForm, useFormContext, useWatch } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { CREDENTIAL_OPTIONS } from "../constants";
+import api, { CreateDevicePayload } from "@/api"
+import { NetshotError } from "@/api/httpClient"
+import { DeviceTypeSelect, DomainSelect, Switch } from "@/components"
+import FormControl, { FormControlType } from "@/components/FormControl"
+import { Select } from "@/components/Select"
+import TaskDialog from "@/components/TaskDialog"
+import { MUTATIONS } from "@/constants"
+import { useCustomDialog, useFormDialogWithMutation } from "@/dialog"
+import { useToast } from "@/hooks"
+import { CredentialSetType, DeviceType, PropsWithRenderItem } from "@/types"
+import { Separator, Stack } from "@chakra-ui/react"
+import { useMutation } from "@tanstack/react-query"
+import { useEffect } from "react"
+import { useForm, useFormContext, useWatch } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { useDeviceCredentialOptions } from "../hooks"
 
 type Form = {
-  ipAddress: string;
-  domain: Option<number>;
-  autoDiscover: boolean;
-  deviceType?: Option<DeviceType>;
-  credentialType?: Option<CredentialSetType>;
-  overrideConnectionSetting?: boolean;
-  connectIpAddress?: string;
-  sshPort?: string;
-  telnetPort?: string;
-  specificCredentialSet?: CreateDevicePayload["specificCredentialSet"];
-};
+  ipAddress: string
+  domain: string
+  autoDiscover: boolean
+  deviceType?: DeviceType["name"]
+  credentialType?: CredentialSetType
+  overrideConnectionSetting?: boolean
+  connectIpAddress?: string
+  sshPort?: string
+  telnetPort?: string
+  specificCredentialSet?: CreateDevicePayload["specificCredentialSet"]
+}
 
-export type DeviceCreateButtonProps = {
-  renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
-};
+export type DeviceCreateButtonProps = PropsWithRenderItem
 
 function DeviceCreateForm() {
-  const form = useFormContext();
-  const { t } = useTranslation();
+  const form = useFormContext()
+  const { t } = useTranslation()
+  const deviceCredentialOptions = useDeviceCredentialOptions()
 
   const autoDiscover = useWatch({
     control: form.control,
     name: "autoDiscover",
-  });
+  })
 
   const overrideConnectionSetting = useWatch({
     control: form.control,
     name: "overrideConnectionSetting",
-  });
+  })
 
   const credentialType = useWatch({
     control: form.control,
-    name: "credentialType.value",
-  });
+    name: "credentialType",
+  })
+
+  useEffect(() => {
+    const { unsubscribe } = form.watch((values) => {
+      console.log(values)
+    })
+
+    return () => unsubscribe()
+  }, [form])
 
   // When autodiscover changes reset fields
   useEffect(() => {
-    form.setValue(
-      "credentialType",
-      autoDiscover ? null : CREDENTIAL_OPTIONS[0]
-    );
-    form.setValue("overrideConnectionSetting", false);
-    form.setValue("deviceType", null);
-  }, [autoDiscover]);
+    form.setValue("credentialType", autoDiscover ? null : deviceCredentialOptions.options[0].value)
+    form.setValue("overrideConnectionSetting", false)
+    form.setValue("deviceType", null)
+  }, [autoDiscover])
 
   // When credential type changes reset all relative field
   useEffect(() => {
-    form.setValue("specificCredentialSet.username", "");
-    form.setValue("specificCredentialSet.publicKey", "");
-    form.setValue("specificCredentialSet.privateKey", "");
-    form.setValue("specificCredentialSet.password", "");
-    form.setValue("specificCredentialSet.superPassword", "");
-  }, [credentialType]);
+    if (credentialType === CredentialSetType.SSH || credentialType === CredentialSetType.Telnet) {
+      form.setValue("specificCredentialSet.username", "")
+      form.setValue("specificCredentialSet.password", "")
+      form.setValue("specificCredentialSet.superPassword", "")
+      return
+    } else if (credentialType === CredentialSetType.SSHKey) {
+      form.setValue("specificCredentialSet.username", "")
+      form.setValue("specificCredentialSet.privateKey", "")
+      form.setValue("specificCredentialSet.password", "")
+      form.setValue("specificCredentialSet.superPassword", "")
+    } else {
+      form.setValue("specificCredentialSet", null)
+    }
+  }, [credentialType])
 
   // When override connection setting changes reset all relative field
   useEffect(() => {
-    form.setValue("connectIPAddress", "");
-    form.setValue("sshPort", "");
-    form.setValue("telnetPort", "");
-  }, [overrideConnectionSetting]);
+    form.setValue("connectIPAddress", "")
+    form.setValue("sshPort", "")
+    form.setValue("telnetPort", "")
+  }, [overrideConnectionSetting])
 
   return (
-    <Stack spacing="6">
-      <DomainSelect isRequired control={form.control} name="domain" />
+    <Stack gap="6">
+      <DomainSelect required control={form.control} name="domain" />
       <FormControl
-        isRequired
+        required
         label={t("IP Address")}
         placeholder={t("Device IP address")}
         control={form.control}
         name="ipAddress"
         rules={{
           pattern: {
-            value:
-              /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
+            value: /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
             message: t("This is not a valid IP address"),
           },
         }}
       />
-      <Divider />
+      <Separator />
       <Switch
         label={t("Autodiscover")}
         description={t("Automatically discover device type")}
@@ -107,12 +114,8 @@ function DeviceCreateForm() {
       />
       {!autoDiscover && (
         <>
-          <DeviceTypeSelect
-            isRequired
-            control={form.control}
-            name="deviceType"
-          />
-          <Divider />
+          <DeviceTypeSelect required control={form.control} name="deviceType" />
+          <Separator />
           <Switch
             label={t("Override connection")}
             description={t("Replace default connection settings")}
@@ -122,7 +125,7 @@ function DeviceCreateForm() {
           {overrideConnectionSetting && (
             <>
               <FormControl
-                isRequired
+                required
                 label={t("Connect IP")}
                 placeholder={t("e.g. 10.216.5.3")}
                 control={form.control}
@@ -135,7 +138,7 @@ function DeviceCreateForm() {
                   },
                 }}
               />
-              <Stack direction="row" spacing="4">
+              <Stack direction="row" gap="4">
                 <FormControl
                   label={t("SSH port")}
                   placeholder={t("e.g. 22")}
@@ -151,28 +154,26 @@ function DeviceCreateForm() {
               </Stack>
             </>
           )}
-          <Divider />
+          <Separator />
           <Select
             control={form.control}
             name="credentialType"
-            options={CREDENTIAL_OPTIONS}
+            options={deviceCredentialOptions.options}
             label={t("Credentials")}
             placeholder={t("Select a credential")}
-            isRequired
+            required
           />
-          {[CredentialSetType.SSH, CredentialSetType.Telnet].includes(
-            credentialType
-          ) && (
+          {[CredentialSetType.SSH, CredentialSetType.Telnet].includes(credentialType) && (
             <>
               <FormControl
-                isRequired
+                required
                 label={t("Username")}
                 placeholder={t("e.g. admin")}
                 control={form.control}
                 name="specificCredentialSet.username"
               />
               <FormControl
-                isRequired
+                required
                 type={FormControlType.Password}
                 label={t("Password")}
                 placeholder={t("Type your password")}
@@ -180,7 +181,7 @@ function DeviceCreateForm() {
                 name="specificCredentialSet.password"
               />
               <FormControl
-                isRequired
+                required
                 type={FormControlType.Password}
                 label={t("Super password")}
                 placeholder={t("Type your super password")}
@@ -193,22 +194,14 @@ function DeviceCreateForm() {
           {credentialType === CredentialSetType.SSHKey && (
             <>
               <FormControl
-                isRequired
+                required
                 label={t("Username")}
                 placeholder={t("e.g. admin")}
                 control={form.control}
                 name="specificCredentialSet.username"
               />
               <FormControl
-                isRequired
-                type={FormControlType.LongText}
-                label={t("RSA Public Key")}
-                placeholder={t("Type your public key")}
-                control={form.control}
-                name="specificCredentialSet.publicKey"
-              />
-              <FormControl
-                isRequired
+                required
                 type={FormControlType.LongText}
                 label={t("SSH Private Key")}
                 placeholder={t("Type your private key")}
@@ -216,7 +209,7 @@ function DeviceCreateForm() {
                 name="specificCredentialSet.privateKey"
               />
               <FormControl
-                isRequired
+                required
                 type={FormControlType.Password}
                 label={t("Passphrase")}
                 placeholder={t("Type your passphrase")}
@@ -224,7 +217,7 @@ function DeviceCreateForm() {
                 name="specificCredentialSet.password"
               />
               <FormControl
-                isRequired
+                required
                 type={FormControlType.Password}
                 label={t("Super password")}
                 placeholder={t("Type your super password")}
@@ -236,15 +229,15 @@ function DeviceCreateForm() {
         </>
       )}
     </Stack>
-  );
+  )
 }
 
 export default function DeviceCreateButton(props: DeviceCreateButtonProps) {
-  const { renderItem } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-  const disclosure = useDisclosure();
-  const [taskId, setTaskId] = useState<number>(null);
+  const { renderItem } = props
+  const { t } = useTranslation()
+  const toast = useToast()
+  const dialog = useFormDialogWithMutation()
+  const taskDialog = useCustomDialog()
 
   const form = useForm<Form>({
     mode: "onChange",
@@ -259,92 +252,71 @@ export default function DeviceCreateButton(props: DeviceCreateButtonProps) {
       telnetPort: "",
       deviceType: null,
       credentialType: null,
-      specificCredentialSet: {
-        username: "",
-        publicKey: "",
-        privateKey: "",
-        password: "",
-        superPassword: "",
-      },
+      specificCredentialSet: null,
     },
-  });
+  })
 
   const mutation = useMutation({
-    mutationFn: async (payload: CreateDevicePayload) =>
-        api.device.create(payload),
+    mutationKey: MUTATIONS.DEVICE_CREATE,
+    mutationFn: async (payload: CreateDevicePayload) => api.device.create(payload),
     onError(err: NetshotError) {
-      toast.error(err);
+      toast.error(err)
     },
-  });
+  })
 
-  const onSubmit = useCallback(
-    async (data: Form) => {
-      let newDevice = {
-        deviceType: data?.deviceType?.value?.name,
-        autoDiscoveryTask: -1,
-        autoDiscover: data.autoDiscover,
-        ipAddress: data?.ipAddress,
-        domainId: data?.domain?.value,
-      } as CreateDevicePayload;
+  const open = () => {
+    const dialogRef = dialog.open(MUTATIONS.DEVICE_CREATE, {
+      title: t("Add device"),
+      description: <DeviceCreateForm />,
+      form,
+      async onSubmit(values: Form) {
+        let newDevice = {
+          deviceType: values?.deviceType,
+          autoDiscoveryTask: -1,
+          autoDiscover: values.autoDiscover,
+          ipAddress: values?.ipAddress,
+          domainId: +values?.domain,
+        } as CreateDevicePayload
 
-      if (data.overrideConnectionSetting) {
-        newDevice = {
-          ...newDevice,
-          connectIpAddress: data.connectIpAddress,
-          sshPort: data.sshPort,
-          telnetPort: data.telnetPort,
-        };
-      }
+        if (values.overrideConnectionSetting) {
+          newDevice = {
+            ...newDevice,
+            connectIpAddress: values.connectIpAddress,
+            sshPort: values.sshPort,
+            telnetPort: values.telnetPort,
+          }
+        }
 
-      if (data?.credentialType !== null) {
-        if (data.credentialType.value !== null) {
-          const { username, password, superPassword } =
-            data.specificCredentialSet;
+        if (!values.autoDiscover && values.credentialType !== CredentialSetType.GLOBAL) {
+          const { username, password, superPassword } = values.specificCredentialSet
 
           newDevice.specificCredentialSet = {
-            type: data.credentialType.value,
+            type: values.credentialType,
             username,
             password,
             superPassword,
-          };
+          }
 
-          if (data.credentialType.value === CredentialSetType.SSHKey) {
-            const { publicKey, privateKey } = data.specificCredentialSet;
-
+          if (values.credentialType === CredentialSetType.SSHKey) {
             newDevice.specificCredentialSet = {
               ...newDevice.specificCredentialSet,
-              publicKey,
-              privateKey,
-            };
+              privateKey: values.specificCredentialSet.privateKey,
+            }
           }
         }
-      }
 
-      const task = await mutation.mutateAsync(newDevice);
+        const task = await mutation.mutateAsync(newDevice)
 
-      dialog.close();
-      setTaskId(task?.id);
-      disclosure.onOpen();
-    },
-    [mutation, disclosure]
-  );
+        dialogRef.close()
 
-  const dialog = Dialog.useForm({
-    title: t("Add device"),
-    description: <DeviceCreateForm />,
-    form,
-    isLoading: mutation.isPending,
-    onSubmit,
-    size: "xl",
-    submitButton: {
-      label: t("Add"),
-    },
-  });
+        taskDialog.open(<TaskDialog id={task?.id} />)
+      },
+      size: "lg",
+      submitButton: {
+        label: t("Add"),
+      },
+    })
+  }
 
-  return (
-    <>
-      {renderItem(dialog.open)}
-      {taskId && <TaskDialog id={taskId} {...disclosure} />}
-    </>
-  );
+  return renderItem(open)
 }

@@ -1,149 +1,130 @@
-import {
-  DomainSelect,
-  Icon,
-  PolicySelect,
-  TreeGroupSelector,
-} from "@/components";
-import Search from "@/components/Search";
-import { Dialog } from "@/dialog";
-import { useThrottle } from "@/hooks";
-import { Group, Option } from "@/types";
-import { IconButton, Stack } from "@chakra-ui/react";
-import {
-  MouseEvent,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-import { useForm, useFormContext, useWatch } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { useConfigurationCompliance } from "../contexts";
+import { DomainSelect, Icon, PolicySelect, TreeGroupSelector } from "@/components"
+import Search from "@/components/Search"
+import { useFormDialog } from "@/dialog"
+import { PropsWithRenderItem } from "@/types"
+import { IconButton, Stack } from "@chakra-ui/react"
+import { useCallback } from "react"
+import { useForm, useFormContext, useWatch } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { useShallow } from "zustand/react/shallow"
+import { useConfigurationComplianceSidebarStore } from "../stores/useConfigurationComplianceSidebarStore"
 
 type FilterForm = {
-  domains: Option<number>[];
-  groups: Group[];
-  policies: Option<number>[];
-};
+  domains: number[]
+  groups: number[]
+  policies: number[]
+}
 
 function ConfigurationComplianceSidebarSearchFilterForm() {
-  const form = useFormContext();
+  const form = useFormContext()
 
   const groups = useWatch({
     control: form.control,
     name: "groups",
-  });
+  })
 
   const onGroupSelect = useCallback(
-    (selectedGroups: Group[]) => {
-      form.setValue("groups", selectedGroups);
+    (selectedGroups: number[]) => {
+      form.setValue("groups", selectedGroups)
     },
     [form]
-  );
+  )
 
   return (
     <Stack>
-      <DomainSelect isMulti control={form.control} name="domains" />
-      <TreeGroupSelector
-        value={groups}
-        onChange={onGroupSelect}
-        withAny
-        isMulti
-      />
-      <PolicySelect isMulti control={form.control} name="policies" />
+      <DomainSelect multiple control={form.control} name="domains" />
+      <TreeGroupSelector value={groups} onChange={onGroupSelect} withAny isMulti />
+      <PolicySelect multiple control={form.control} name="policies" />
     </Stack>
-  );
+  )
 }
 
-type ConfigurationComplianceSidebarSearchFilterProps = {
-  renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
-};
+type ConfigurationComplianceSidebarSearchFilterProps = PropsWithRenderItem
 
 function ConfigurationComplianceSidebarSearchFilter(
   props: ConfigurationComplianceSidebarSearchFilterProps
 ) {
-  const { renderItem } = props;
+  const { renderItem } = props
 
-  const { t } = useTranslation();
-  const ctx = useConfigurationCompliance();
+  const { t } = useTranslation()
+  const { domains, groups, policies, setFilters } = useConfigurationComplianceSidebarStore(
+    useShallow((state) => ({
+      domains: state.domains,
+      groups: state.groups,
+      policies: state.policies,
+      setFilters: state.setFilters,
+    }))
+  )
+
+  const dialog = useFormDialog()
   const form = useForm<FilterForm>({
     defaultValues: {
-      domains: ctx.filters.domains,
-      groups: ctx.filters.groups,
-      policies: ctx.filters.policies,
+      domains,
+      groups,
+      policies,
     },
-  });
+  })
 
-  const onSubmit = useCallback(
-    (values: FilterForm) => {
-      ctx.setFilters({
-        domains: values.domains,
-        groups: values.groups,
-        policies: values.policies,
-      });
+  const open = () => {
+    const dialogRef = dialog.open({
+      title: t("Advanced filters"),
+      description: <ConfigurationComplianceSidebarSearchFilterForm />,
+      form,
+      onSubmit(values: FilterForm) {
+        setFilters(values)
 
-      dialog.close();
-    },
-    [form]
-  );
+        dialogRef.close()
+      },
+      onCancel() {
+        form.reset()
+        setFilters(form.getValues())
+        dialogRef.close()
+      },
+      submitButton: {
+        label: t("Apply filters"),
+      },
+      cancelButton: {
+        label: t("Clear all"),
+      },
+    })
+  }
 
-  const dialog = Dialog.useForm({
-    title: t("Advanced filters"),
-    description: <ConfigurationComplianceSidebarSearchFilterForm />,
-    form,
-    onSubmit,
-    onCancel() {
-      form.reset();
-      onSubmit(form.getValues());
-    },
-    submitButton: {
-      label: t("Apply filters"),
-    },
-    cancelButton: {
-      label: t("Clear all"),
-    },
-  });
-
-  return renderItem(dialog.open);
+  return renderItem(open)
 }
 
 export default function ConfigurationComplianceSidebarSearch() {
-  const { t } = useTranslation();
-  const ctx = useConfigurationCompliance();
-  const [query, setQuery] = useState<string>("");
-  const throttledValue = useThrottle(query);
+  const { t } = useTranslation()
+  const { query, setQuery } = useConfigurationComplianceSidebarStore(
+    useShallow((state) => ({
+      query: state.query,
+      setQuery: state.setQuery,
+    }))
+  )
 
-  const onQuery = useCallback((query: string) => {
-    setQuery(query);
-  }, []);
+  const onQuery = (query: string) => {
+    setQuery(query)
+  }
 
-  const onClear = useCallback(() => {
-    ctx.setQuery("");
-  }, [ctx]);
-
-  useEffect(() => {
-    ctx.setQuery(throttledValue);
-  }, [throttledValue]);
+  const onClear = () => {
+    setQuery("")
+  }
 
   return (
-    <Stack p="6" spacing="5">
+    <Stack p="6" gap="5">
       <Search
-        clear={Boolean(ctx.query)}
+        clear={Boolean(query)}
         placeholder={t("Search...")}
         onQuery={onQuery}
         onClear={onClear}
       >
         <ConfigurationComplianceSidebarSearchFilter
           renderItem={(open) => (
-            <IconButton
-              onClick={open}
-              variant="ghost"
-              aria-label={t("Open filter")}
-              icon={<Icon name="filter" />}
-            />
+            <IconButton onClick={open} variant="ghost" aria-label={t("Open filter")}>
+              <Icon name="filter" />
+            </IconButton>
           )}
         />
       </Search>
     </Stack>
-  );
+  )
 }

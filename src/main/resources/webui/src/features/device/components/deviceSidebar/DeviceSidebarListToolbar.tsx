@@ -1,44 +1,37 @@
-import { Icon } from "@/components";
-import {
-  Button,
-  IconButton,
-  Spacer,
-  Stack,
-  Text,
-  Tooltip,
-} from "@chakra-ui/react";
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { useDeviceSidebar } from "../../contexts/device-sidebar";
+import { Icon } from "@/components"
+import { Tooltip } from "@/components/ui/tooltip"
+import { Button, IconButton, Spacer, Stack, Text } from "@chakra-ui/react"
+import { useTranslation } from "react-i18next"
+import { useShallow } from "zustand/react/shallow"
+import { useDeviceSidebarStore } from "../../stores"
 
 export default function DeviceSidebarListToolbar() {
-  const { t } = useTranslation();
-  const ctx = useDeviceSidebar();
-
-  const isSelectedAll = useMemo(() => ctx.isSelectedAll(), [ctx]);
+  const { t } = useTranslation()
+  const { isSelectedAll, total, selectAll, refresh } = useDeviceSidebarStore(
+    useShallow((state) => ({
+      isSelectedAll: state.isSelectedAll,
+      total: state.total,
+      selectAll: state.selectAll,
+      refresh: state.refresh,
+    }))
+  )
 
   return (
     <Stack direction="row" alignItems="center" px="6" py="3">
-      <Text>{t("{{length}} devices", { length: ctx.total })}</Text>
+      <Text>{t("{{count}} device", { count: total })}</Text>
       <Spacer />
-      <Stack direction="row" spacing="2">
-        {(!isSelectedAll && ctx.total > 0) &&
-          <Button
-            alignSelf="start"
-            size="sm"
-            onClick={ctx.selectAll}
-          >
+      <Stack direction="row" gap="2">
+        {!isSelectedAll() && total > 0 && (
+          <Button alignSelf="start" size="sm" onClick={selectAll}>
             {t("Select all")}
-          </Button>}
-        <Tooltip label={t("Refresh device list")}>
-          <IconButton
-            aria-label={t("Refresh device list")}
-            size="sm"
-            icon={<Icon name="refreshCcw" />}
-            onClick={ctx.refreshDeviceList}
-          />
+          </Button>
+        )}
+        <Tooltip content={t("Refresh device list")}>
+          <IconButton aria-label={t("Refresh device list")} size="sm" onClick={refresh}>
+            <Icon name="refreshCcw" />
+          </IconButton>
         </Tooltip>
       </Stack>
     </Stack>
-  );
+  )
 }

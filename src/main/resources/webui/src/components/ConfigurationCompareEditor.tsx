@@ -1,63 +1,54 @@
-import api from "@/api";
-import { MonacoDiffEditor } from "@/components";
-import Icon from "@/components/Icon";
-import { QUERIES } from "@/constants";
-import { DeviceConfig } from "@/types";
-import { formatDate } from "@/utils";
-import { Center, Flex, Spinner, Stack, Tag, Text } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
+import api from "@/api"
+import { MonacoDiffEditor } from "@/components"
+import Icon from "@/components/Icon"
+import { QUERIES } from "@/constants"
+import { Config, DeviceAttributeDefinition } from "@/types"
+import { Center, Flex, Spinner, Stack, Text } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 export type CompareEditorProps = {
-  current: DeviceConfig;
-  compare: DeviceConfig;
-};
+  current: Config
+  compare: Config
+  attribute: DeviceAttributeDefinition
+}
 
 export default function ConfigurationCompareEditor(props: CompareEditorProps) {
-  const { current, compare } = props;
-  const { t } = useTranslation();
+  const { current, compare, attribute } = props
+  const { t } = useTranslation()
   const {
     data: original,
     isPending: isOriginalPending,
     isError: isOriginalError,
   } = useQuery({
-    queryKey: [QUERIES.DEVICE_CONFIG_COMPARE, "configuration", current.id],
-    queryFn: async () => api.config.getItem(current.id, "configuration")
-  });
+    queryKey: [QUERIES.DEVICE_CONFIG_COMPARE, attribute.name, current.id],
+    queryFn: async () => api.config.getItem(current.id, attribute.name),
+  })
 
   const {
     data: modified,
     isPending: isModifiedPending,
     isError: isModifiedError,
   } = useQuery({
-    queryKey: [QUERIES.DEVICE_CONFIG_COMPARE, "configuration", compare.id],
-    queryFn: async () => api.config.getItem(compare.id, "configuration")
-  });
-
-  const currentDate = useMemo(() => {
-    return formatDate(current?.changeDate);
-  }, [current]);
-
-  const compareDate = useMemo(() => {
-    return formatDate(compare?.changeDate);
-  }, [compare]);
+    queryKey: [QUERIES.DEVICE_CONFIG_COMPARE, attribute.name, compare.id],
+    queryFn: async () => api.config.getItem(compare.id, attribute.name),
+  })
 
   if (isOriginalPending || isModifiedPending) {
     return (
       <Center flex="1">
-        <Stack spacing="3" alignItems="center">
+        <Stack gap="3" alignItems="center">
           <Spinner size="lg" />
           <Text>{t("Loading configuration")}</Text>
         </Stack>
       </Center>
-    );
+    )
   }
 
   if (isOriginalError || isModifiedError) {
     return (
       <Center flex="1">
-        <Stack alignItems="center" spacing="3">
+        <Stack alignItems="center" gap="3">
           <Flex
             alignItems="center"
             justifyContent="center"
@@ -71,29 +62,8 @@ export default function ConfigurationCompareEditor(props: CompareEditorProps) {
           <Text>{t("Unable to load configuration")}</Text>
         </Stack>
       </Center>
-    );
+    )
   }
 
-  return (
-    <Stack flex="1" spacing="4">
-      <Stack direction="row">
-        <Stack flex="1">
-          <Tag alignSelf="start" colorScheme="grey">
-            {t("current:")} {currentDate}
-          </Tag>
-        </Stack>
-        <Stack flex="1">
-          <Tag alignSelf="start" colorScheme="grey">
-            {t("compare:")} {compareDate}
-          </Tag>
-        </Stack>
-      </Stack>
-      <MonacoDiffEditor
-        readOnly
-        original={original}
-        modified={modified}
-        language="cfg"
-      />
-    </Stack>
-  );
+  return <MonacoDiffEditor readOnly original={original} modified={modified} language="cfg" />
 }

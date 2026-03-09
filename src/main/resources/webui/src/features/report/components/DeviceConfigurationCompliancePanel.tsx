@@ -1,92 +1,75 @@
-import { DataTable } from "@/components";
-import Icon from "@/components/Icon";
-import { ConfigComplianceDeviceStatus } from "@/types";
-import { formatDate } from "@/utils";
-import {
-  Button,
-  Divider,
-  IconButton,
-  Spacer,
-  Stack,
-  Tag,
-  Text,
-} from "@chakra-ui/react";
-import { createColumnHelper } from "@tanstack/react-table";
-import { motion, useAnimationControls } from "framer-motion";
-import { useCallback, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { DataTable } from "@/components"
+import Icon from "@/components/Icon"
+import { ConfigComplianceDeviceStatus } from "@/types"
+import { formatDate } from "@/utils"
+import { Button, IconButton, Separator, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
+import { createColumnHelper } from "@tanstack/react-table"
+import { motion, useAnimationControls } from "framer-motion"
+import { useCallback, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { Link } from "react-router"
 
 export type DeviceConfigurationPanelProps = {
-  name: string;
-  configs: ConfigComplianceDeviceStatus[];
-};
+  name: string
+  configs: ConfigComplianceDeviceStatus[]
+}
 
-const columnHelper = createColumnHelper<ConfigComplianceDeviceStatus>();
+const columnHelper = createColumnHelper<ConfigComplianceDeviceStatus>()
 
-export default function DeviceConfigurationCompliancePanel(
-  props: DeviceConfigurationPanelProps
-) {
-  const { name, configs } = props;
-  const { t } = useTranslation();
-  const controls = useAnimationControls();
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(true);
+export default function DeviceConfigurationCompliancePanel(props: DeviceConfigurationPanelProps) {
+  const { name, configs } = props
+  const { t } = useTranslation()
+  const controls = useAnimationControls()
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(true)
 
   const toggleCollapse = useCallback(async () => {
-    setIsCollapsed((prev) => !prev);
-    await controls.start(isCollapsed ? "show" : "hidden");
-  }, [controls, isCollapsed]);
+    setIsCollapsed((prev) => !prev)
+    await controls.start(isCollapsed ? "show" : "hidden")
+  }, [controls, isCollapsed])
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("configCompliant", {
         cell: (info) => {
-          const value = info.getValue();
+          const value = info.getValue()
 
           if (value) {
             return (
-              <Tag bg="green.50" color="green.900">
+              <Tag.Root bg="green.50" color="green.900">
                 {t("Compliant")}
-              </Tag>
-            );
+              </Tag.Root>
+            )
           }
 
           return (
-            <Tag bg="green.900" color="green.50">
+            <Tag.Root bg="green.900" color="green.50">
               {t("Non compliant")}
-            </Tag>
-          );
+            </Tag.Root>
+          )
         },
         header: t("Status"),
       }),
       columnHelper.accessor("policyName", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Policy"),
       }),
       columnHelper.accessor("ruleName", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Rule"),
       }),
       columnHelper.accessor("checkDate", {
-        cell: (info) =>
-          info.getValue() ? formatDate(info.getValue()) : t("N/A"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
         header: t("Test date/time"),
       }),
     ],
     [t]
-  );
+  )
 
   return (
-    <Stack
-      borderWidth="1px"
-      borderColor="grey.100"
-      borderRadius="2xl"
-      key={name}
-      spacing="0"
-    >
+    <Stack borderWidth="1px" borderColor="grey.100" borderRadius="2xl" key={name} gap="0">
       <Stack
         direction="row"
-        spacing="3"
+        gap="3"
         alignItems="center"
         p="3"
         onClick={toggleCollapse}
@@ -94,28 +77,23 @@ export default function DeviceConfigurationCompliancePanel(
       >
         <IconButton
           variant="ghost"
-          colorScheme="green"
-          icon={<Icon name="chevronDown" />}
+          colorPalette="green"
           aria-label={t("Open")}
-          sx={{
+          css={{
             transform: isCollapsed ? "rotate(-90deg)" : "",
           }}
-        />
+        >
+          <Icon name="chevronDown" />
+        </IconButton>
         <Text fontSize="md" fontWeight="semibold">
           {name}
         </Text>
 
         <Spacer />
-        <Button
-          colorScheme="green"
-          variant="ghost"
-          as={Link}
-          to={`/app/devices/${configs?.[0]?.id}/compliance`}
-        >
-          {t("See details")}
+        <Button colorPalette="green" variant="ghost" asChild>
+          <Link to={`/app/devices/${configs?.[0]?.id}/compliance`}>{t("See details")}</Link>
         </Button>
       </Stack>
-
       <motion.div
         initial="hidden"
         animate={controls}
@@ -131,16 +109,11 @@ export default function DeviceConfigurationCompliancePanel(
           duration: 0.2,
         }}
       >
-        <Divider />
-        <Stack direction="column" spacing="3" pb="1">
-          <DataTable
-            columns={columns}
-            data={configs}
-            border="none"
-            borderRadius="0"
-          />
+        <Separator />
+        <Stack direction="column" gap="3" pb="1">
+          <DataTable columns={columns} data={configs} border="none" borderRadius="0" />
         </Stack>
       </motion.div>
     </Stack>
-  );
+  )
 }

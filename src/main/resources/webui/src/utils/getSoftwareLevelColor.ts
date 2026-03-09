@@ -1,18 +1,18 @@
-import { DeviceSoftwareLevel } from "@/types";
+import { DeviceSoftwareLevel } from "@/types"
 
 /**
  * Get the correct color for software level
  */
 export function getSoftwareLevelColor(softwareLevel: DeviceSoftwareLevel) {
   if (softwareLevel === DeviceSoftwareLevel.GOLD) {
-    return "yellow.500";
+    return "yellow"
   } else if (softwareLevel === DeviceSoftwareLevel.SILVER) {
-    return "grey.200";
+    return "grey"
   } else if (softwareLevel === DeviceSoftwareLevel.BRONZE) {
-    return "bronze.500";
+    return "bronze"
   } else if (softwareLevel === DeviceSoftwareLevel.NON_COMPLIANT) {
-    return "red.400";
+    return "red"
   } else {
-    return "purple.200";
+    return "purple"
   }
 }

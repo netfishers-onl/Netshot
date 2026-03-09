@@ -1,40 +1,31 @@
-import { useCallback } from "react";
-import { UseControllerProps, useController } from "react-hook-form";
-import MonacoEditor, { MonacoEditorProps } from "./MonacoEditor";
+import { useCallback } from "react"
+import { UseControllerProps, useController } from "react-hook-form"
+import MonacoEditor, { MonacoEditorProps } from "./MonacoEditor"
 
 export type MonacoEditorControlProps<T> = {
-  isRequired?: boolean;
+  required?: boolean
 } & MonacoEditorProps &
-  UseControllerProps<T>;
+  UseControllerProps<T>
 
-export default function MonacoEditorControl<T>(
-  props: MonacoEditorControlProps<T>
-) {
-  const {
-    name,
-    defaultValue,
-    rules,
-    control,
-    isRequired = false,
-    ...other
-  } = props;
+export default function MonacoEditorControl<T>(props: MonacoEditorControlProps<T>) {
+  const { name, defaultValue, rules, control, required = false, ...other } = props
 
   const { field } = useController({
     name,
     defaultValue,
     rules: {
-      required: isRequired,
+      required,
       ...rules,
     },
     control,
-  });
+  })
 
   const handleChange = useCallback(
     (value: string) => {
-      field.onChange(value);
+      field.onChange(value)
     },
     [field]
-  );
+  )
 
   return (
     <MonacoEditor
@@ -43,5 +34,5 @@ export default function MonacoEditorControl<T>(
       onBlur={field.onBlur}
       {...other}
     />
-  );
+  )
 }

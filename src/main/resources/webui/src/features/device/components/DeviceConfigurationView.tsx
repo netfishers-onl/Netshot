@@ -1,4 +1,4 @@
-import { Center, Flex, Spinner, Stack, Text } from "@chakra-ui/react";
+import { Steps, Center, Flex, Spinner, Stack, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 
@@ -32,7 +32,7 @@ export default function DeviceConfigurationView(
   if (isPending) {
     return (
       <Center h="500px">
-        <Stack alignItems="center" spacing="3">
+        <Stack alignItems="center" gap="3">
           <Spinner />
           <Text>{t("Loading configuration")}</Text>
         </Stack>
@@ -43,7 +43,7 @@ export default function DeviceConfigurationView(
   if (isError) {
     return (
       <Center h="500px">
-        <Stack alignItems="center" spacing="3">
+        <Stack alignItems="center" gap="3">
           <Flex
             alignItems="center"
             justifyContent="center"

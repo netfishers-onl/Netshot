@@ -5,6 +5,7 @@ import device from "./device";
 import diagnostic from "./diagnostic";
 import group from "./group";
 import hardwareRule from "./hardwareRule";
+import oidc from "./oidc";
 import policy from "./policy";
 import report from "./report";
 import rule from "./rule";
@@ -30,4 +31,5 @@ export default {
   policy,
   rule,
   report,
+  oidc
 };

@@ -1,68 +1,66 @@
-import api, { ReportDeviceAccessFailureQueryParams } from "@/api";
-import { NetshotError } from "@/api/httpClient";
+import api, { ReportDeviceAccessFailureQueryParams } from "@/api"
 import {
   DataTable,
   DomainSelect,
   EmptyResult,
+  EntityLink,
   FormControl,
   Icon,
   Search,
-} from "@/components";
-import { FormControlType } from "@/components/FormControl";
-import { usePagination, useToast } from "@/hooks";
-import { DeviceAccessFailure, Option } from "@/types";
-import { formatDate, search } from "@/utils";
+} from "@/components"
+import { FormControlType } from "@/components/FormControl"
+import { Tooltip } from "@/components/ui/tooltip"
+import { usePagination } from "@/hooks"
+import { DeviceAccessFailure } from "@/types"
+import { formatDate, search } from "@/utils"
 import {
   Button,
   Heading,
   IconButton,
   Menu,
-  MenuButton,
-  MenuList,
+  Portal,
   Skeleton,
   Spacer,
   Stack,
   Text,
-  Tooltip,
-} from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { createColumnHelper } from "@tanstack/react-table";
-import { useCallback, useMemo } from "react";
-import { useForm, useWatch } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router";
-import { QUERIES } from "../constants";
+} from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { createColumnHelper } from "@tanstack/react-table"
+import { useMemo } from "react"
+import { useForm, useWatch } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { Link, useNavigate } from "react-router"
+import { QUERIES } from "../constants"
 
 type FilterForm = {
-  domain: Option<number>;
-  days: number;
-};
+  domain: string
+  days: number
+}
 
-const columnHelper = createColumnHelper<DeviceAccessFailure>();
+const columnHelper = createColumnHelper<DeviceAccessFailure>()
 
 export default function ReportDeviceAccessFailure() {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
   const pagination = usePagination({
     limit: 50,
-  });
-  const toast = useToast();
-  const navigate = useNavigate();
+  })
+  const navigate = useNavigate()
   const form = useForm<FilterForm>({
     defaultValues: {
       domain: null,
       days: 7,
     },
-  });
+  })
 
   const domain = useWatch({
     control: form.control,
-    name: "domain.value",
-  });
+    name: "domain",
+  })
 
   const days = useWatch({
     control: form.control,
     name: "days",
-  });
+  })
   const {
     data = [],
     isPending,
@@ -80,55 +78,54 @@ export default function ReportDeviceAccessFailure() {
       const queryParams: ReportDeviceAccessFailureQueryParams = {
         ...pagination,
         days,
-      };
-
-      if (domain) {
-        queryParams.domain = domain;
       }
 
-      return api.report.getAllDeviceAccessFailures(queryParams);
+      if (domain) {
+        queryParams.domain = +domain
+      }
+
+      return api.report.getAllDeviceAccessFailures(queryParams)
     },
-    select: useCallback((res: DeviceAccessFailure[]): DeviceAccessFailure[] => {
-      return search(res, "name").with(pagination.query);
-    }, [pagination.query]),
-  });
+    select(res) {
+      return search(res, "name").with(pagination.query)
+    },
+  })
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("name", {
-        cell: (info) => info.getValue(),
+        cell: (info) => (
+          <EntityLink to={`/app/devices/${info.row.original.id}/general`}>
+            {info.getValue()}
+          </EntityLink>
+        ),
         header: t("Device"),
       }),
       columnHelper.accessor("mgmtAddress", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Management IP"),
       }),
       columnHelper.accessor("family", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Family"),
       }),
       columnHelper.accessor("lastSuccess", {
-        cell: (info) =>
-          info.getValue() ? formatDate(info.getValue()) : t("N/A"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
         header: t("Last successful snapshot"),
       }),
       columnHelper.accessor("lastFailure", {
-        cell: (info) =>
-          info.getValue() ? formatDate(info.getValue()) : t("N/A"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
         header: t("Last failed snapshot"),
       }),
       columnHelper.display({
         id: "actions",
         cell: (info) => (
-          <Tooltip label={t("Go to device")}>
-            <IconButton
-              variant="ghost"
-              colorScheme="green"
-              as={Link}
-              to={`/app/devices/${info.getValue()}/general`}
-              aria-label={t("Go to device")}
-              icon={<Icon name="arrowRight" />}
-            />
+          <Tooltip content={t("Go to device")}>
+            <IconButton variant="ghost" colorPalette="green" aria-label={t("Go to device")} asChild>
+              <Link to={`/app/devices/${info.getValue()}/general`}>
+                <Icon name="arrowRight" />
+              </Link>
+            </IconButton>
           </Tooltip>
         ),
         header: "",
@@ -139,26 +136,23 @@ export default function ReportDeviceAccessFailure() {
       }),
     ],
     [t]
-  );
+  )
 
-  const clearFilter = useCallback(() => {
-    form.reset();
-  }, [form]);
+  function clearFilter() {
+    form.reset()
+  }
 
-  const navigateToDevice = useCallback(
-    (row: DeviceAccessFailure) => {
-      navigate(`/app/devices/${row.id}/general`);
-    },
-    [navigate]
-  );
+  function navigateToDevice(row: DeviceAccessFailure) {
+    navigate(`/app/devices/${row.id}/general`)
+  }
 
   return (
     <>
-      <Stack spacing="6" p="9" flex="1" overflowY="auto">
+      <Stack gap="6" p="9" flex="1" overflowY="auto">
         <Heading as="h1" fontSize="4xl">
           {t("Device access failures")}
         </Heading>
-        <Stack direction="row" spacing="3">
+        <Stack direction="row" gap="3">
           <Search
             placeholder={t("Search...")}
             onQuery={pagination.onQuery}
@@ -166,43 +160,46 @@ export default function ReportDeviceAccessFailure() {
             w="30%"
           />
           <Spacer />
-          <Menu>
-            <MenuButton
-              as={Button}
-              variant="primary"
-              leftIcon={<Icon name="filter" />}
-            >
-              {t("Filters")}
-            </MenuButton>
-            <MenuList minWidth="280px">
-              <Stack spacing="6" p="3" as="form">
-                <DomainSelect control={form.control} name="domain" />
-                <FormControl
-                  label={t("Device without successful snapshot for")}
-                  type={FormControlType.Number}
-                  control={form.control}
-                  name="days"
-                  suffix={
-                    <Text color="grey.500" pr="4">
-                      {t("Days")}
-                    </Text>
-                  }
-                />
-                <Stack spacing="2">
-                  <Button onClick={clearFilter}>{t("Clear all")}</Button>
-                </Stack>
-              </Stack>
-            </MenuList>
-          </Menu>
-          <Button
-            onClick={() => refetch()}
-            leftIcon={<Icon name="refreshCcw" />}
-          >
+          <Menu.Root>
+            <Menu.Trigger asChild>
+              <Button variant="primary">
+                <Icon name="filter" />
+                {t("Filters")}
+              </Button>
+            </Menu.Trigger>
+            <Portal>
+              <Menu.Positioner>
+                <Menu.Content>
+                  <Stack gap="6" p="3" asChild>
+                    <form>
+                      <DomainSelect control={form.control} name="domain" />
+                      <FormControl
+                        label={t("Device without successful snapshot for")}
+                        type={FormControlType.Number}
+                        control={form.control}
+                        name="days"
+                        suffix={
+                          <Text color="grey.500" pr="4">
+                            {t("Days")}
+                          </Text>
+                        }
+                      />
+                      <Stack gap="2">
+                        <Button onClick={clearFilter}>{t("Clear all")}</Button>
+                      </Stack>
+                    </form>
+                  </Stack>
+                </Menu.Content>
+              </Menu.Positioner>
+            </Portal>
+          </Menu.Root>
+          <Button onClick={() => refetch()}>
+            <Icon name="refreshCcw" />
             {t("Refresh")}
           </Button>
         </Stack>
         {isPending ? (
-          <Stack spacing="3">
+          <Stack gap="3">
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -221,14 +218,12 @@ export default function ReportDeviceAccessFailure() {
             ) : (
               <EmptyResult
                 title={t("There is no access failure")}
-                description={t(
-                  "Here you can view the access failure date for a device"
-                )}
+                description={t("Here you can view the access failure date for a device")}
               ></EmptyResult>
             )}
           </>
         )}
       </Stack>
     </>
-  );
+  )
 }

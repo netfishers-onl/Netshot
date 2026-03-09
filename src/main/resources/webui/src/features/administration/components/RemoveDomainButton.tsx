@@ -1,64 +1,62 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { Dialog } from "@/dialog";
-import { useToast } from "@/hooks";
-import { Domain } from "@/types";
-import { Text } from "@chakra-ui/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent, ReactElement, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { QUERIES } from "../constants";
+import api from "@/api"
+import { NetshotError } from "@/api/httpClient"
+import { MUTATIONS } from "@/constants"
+import { useConfirmDialogWithMutation } from "@/dialog"
+import { useToast } from "@/hooks"
+import { Domain, PropsWithRenderItem } from "@/types"
+import { Text } from "@chakra-ui/react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { MouseEvent, useCallback } from "react"
+import { useTranslation } from "react-i18next"
+import { QUERIES } from "../constants"
 
-export type RemoveDomainButtonProps = {
-  domain: Domain;
-  renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
-};
+export type RemoveDomainButtonProps = PropsWithRenderItem<{
+  domain: Domain
+}>
 
 export default function RemoveDomainButton(props: RemoveDomainButtonProps) {
-  const { domain, renderItem } = props;
-  const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const toast = useToast();
+  const { domain, renderItem } = props
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const toast = useToast()
+  const dialog = useConfirmDialogWithMutation()
 
   const mutation = useMutation({
+    mutationKey: MUTATIONS.ADMIN_DOMAIN_REMOVE,
     mutationFn: async () => api.admin.removeDomain(domain?.id),
-    onSuccess() {
-      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_DEVICE_DOMAINS] });
-      dialog.close();
-    },
     onError(err: NetshotError) {
-      toast.error(err);
+      console.log(err)
+      toast.error(err)
     },
-  });
-
-  const dialog = Dialog.useConfirm({
-    title: t("Remove domain"),
-    description: (
-      <Text>
-        {t("You are about to remove the domain {{name}}", {
-          name: domain?.name,
-        })}
-      </Text>
-    ),
-    isLoading: mutation.isPending,
-    onConfirm() {
-      mutation.mutate();
-    },
-    confirmButton: {
-      label: t("Remove"),
-      props: {
-        colorScheme: "red",
-      },
-    },
-  });
+  })
 
   const open = useCallback(
     (evt: MouseEvent) => {
-      evt.stopPropagation();
-      dialog.open();
+      evt?.stopPropagation()
+      const dialogRef = dialog.open(MUTATIONS.ADMIN_DOMAIN_REMOVE, {
+        title: t("Remove domain"),
+        description: (
+          <Text>
+            {t("You are about to remove the domain {{name}}", {
+              name: domain?.name,
+            })}
+          </Text>
+        ),
+        async onConfirm() {
+          await mutation.mutateAsync()
+          queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_DEVICE_DOMAINS] })
+          dialogRef.close()
+        },
+        confirmButton: {
+          label: t("Remove"),
+          props: {
+            colorPalette: "red",
+          },
+        },
+      })
     },
     [dialog]
-  );
+  )
 
-  return renderItem(open);
+  return renderItem(open)
 }

@@ -1,5 +1,5 @@
 import { TaskStatus } from "@/types";
-import { Spinner, Stack, Tag, Text } from "@chakra-ui/react";
+import { Steps, Spinner, Stack, Tag, Text } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 
 export type TaskStatusTagProps = {
@@ -11,25 +11,25 @@ export default function TaskStatusTag(props: TaskStatusTagProps) {
   const { t } = useTranslation();
 
   if (status === TaskStatus.Scheduled) {
-    return <Tag colorScheme="yellow">{t("Scheduled")}</Tag>;
+    return <Tag.Root colorPalette="yellow">{t("Scheduled")}</Tag.Root>;
   } else if (status === TaskStatus.Running) {
     return (
-      <Stack direction="row" alignItems="center" spacing="3">
+      <Stack direction="row" alignItems="center" gap="3">
         <Spinner size="sm" />
         <Text>{t("Running")}</Text>
       </Stack>
     );
   } else if (status === TaskStatus.Failure) {
-    return <Tag colorScheme="red">{t("Failure")}</Tag>;
+    return <Tag.Root colorPalette="red">{t("Failure")}</Tag.Root>;
   } else if (status === TaskStatus.Cancelled) {
-    return <Tag colorScheme="grey">{t("Cancelled")}</Tag>;
+    return <Tag.Root colorPalette="grey">{t("Cancelled")}</Tag.Root>;
   } else if (status === TaskStatus.Success) {
-    return <Tag colorScheme="green">{t("Success")}</Tag>;
+    return <Tag.Root colorPalette="green">{t("Success")}</Tag.Root>;
   } else if (status === TaskStatus.Waiting) {
-    return <Tag colorScheme="grey">{t("Waiting")}</Tag>;
+    return <Tag.Root colorPalette="grey">{t("Waiting")}</Tag.Root>;
   } else if (status === TaskStatus.New) {
-    return <Tag colorScheme="grey">{t("New")}</Tag>;
+    return <Tag.Root colorPalette="grey">{t("New")}</Tag.Root>;
   } else {
-    return <Tag colorScheme="grey">{t("Unknown")}</Tag>;
+    return <Tag.Root colorPalette="grey">{t("Unknown")}</Tag.Root>;
   }
 }

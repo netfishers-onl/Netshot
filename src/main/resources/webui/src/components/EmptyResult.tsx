@@ -1,4 +1,4 @@
-import { Center, Heading, Stack, Text } from "@chakra-ui/react";
+import { Steps, Center, Heading, Stack, Text } from "@chakra-ui/react";
 import { PropsWithChildren } from "react";
 
 export type EmptyResultProps = {
@@ -13,8 +13,8 @@ export default function EmptyResult(
 
   return (
     <Center flex="1">
-      <Stack spacing="6" alignItems="center">
-        <Stack spacing="2" alignItems="center">
+      <Stack gap="6" alignItems="center">
+        <Stack gap="2" alignItems="center">
           <Heading as="h4" fontSize="xl">
             {title}
           </Heading>

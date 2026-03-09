@@ -1,96 +1,120 @@
-import { TestRuleTextOnDevicePayload } from "@/api";
-import { Checkbox, DeviceTypeSelect, Select } from "@/components";
-import FormControl, { FormControlType } from "@/components/FormControl";
-import { useDeviceTypeOptions } from "@/hooks";
-import { RuleType } from "@/types";
-import { Heading, Stack, StackProps } from "@chakra-ui/react";
-import { useEffect, useMemo, useState } from "react";
-import { useFormContext, useWatch } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { BLOCK_OPTIONS, TEXT_OPTIONS } from "../constants";
-import { RuleForm } from "../types";
-import TestRuleTextOnDevice from "./TestRuleTextOnDevice";
+import { TestRuleTextOnDevicePayload } from "@/api"
+import { Checkbox, DeviceTypeSelect } from "@/components"
+import FormControl, { FormControlType } from "@/components/FormControl"
+import { Select } from "@/components/Select"
+import { useDiagnostics } from "@/features/diagnostic/api"
+import { useDeviceTypeOptions } from "@/hooks"
+import { Rule, RuleType } from "@/types"
+import { stringToBoolean } from "@/utils"
+import { Heading, Separator, Stack, StackProps } from "@chakra-ui/react"
+import { useMemo } from "react"
+import { useFormContext, useWatch } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { useRuleBlockOptions, useRuleTextOptions } from "../hooks"
+import { RuleForm } from "../types"
+import TestRuleTextOnDevice from "./TestRuleTextOnDevice"
 
 export type RuleEditFormProps = {
-  type: RuleType;
-  deviceDriver?: string;
-} & StackProps;
+  type: Rule["type"]
+} & StackProps
 
 export function RuleEditForm(props: RuleEditFormProps) {
-  const { type, deviceDriver, ...other } = props;
-  const form = useFormContext<RuleForm>();
-  const { t } = useTranslation();
-  const [fieldOptions, setFieldOptions] = useState([]);
+  const { type, ...stackProps } = props
+  const form = useFormContext<RuleForm>()
+  const { t } = useTranslation()
+  const ruleBlockOptions = useRuleBlockOptions()
+  const ruleTextOptions = useRuleTextOptions()
+  const { isPending, getOptionByDriver } = useDeviceTypeOptions()
+  const diagnosticQuery = useDiagnostics()
 
-  // Get device type options
-  const { isLoading, getOptionByDriver } = useDeviceTypeOptions({
-    withAny: true,
-  });
-
-  const hasScript = useMemo(
-    () => type === RuleType.Javascript || type === RuleType.Python,
-    [type]
-  );
+  const hasScript = type === RuleType.Javascript || type === RuleType.Python
 
   const driver = useWatch({
     control: form.control,
-    name: "driver.value",
-  });
+    name: "driver",
+  })
 
-  useEffect(() => {
-    if (isLoading) {
-      return;
+  function getDriverFields() {
+    const driverOption = getOptionByDriver(driver)
+
+    if (!driverOption) {
+      return []
     }
 
-    form.setValue("driver", getOptionByDriver(deviceDriver));
-  }, [isLoading, deviceDriver]);
-
-  useEffect(() => {
-    if (!driver) return;
-
-    setFieldOptions([
-      ...driver.attributes.map((attr) => ({
+    return [
+      ...driverOption.value.attributes.map((attr) => ({
         label: t(attr.title),
         value: attr.name,
       })),
-    ]);
-  }, [driver]);
+    ]
+  }
+
+  function getAnyFields() {
+    return [
+      ...[
+        { label: t("Contact"), value: "contact" },
+        { label: t("Location"), value: "location" },
+        { label: t("Name"), value: "name" },
+      ],
+      ...diagnosticQuery.data.map((diagnostic) => ({
+        label: `Diagnostic "${diagnostic.name}"`,
+        value: diagnostic.name,
+      })),
+    ]
+  }
+
+  const fieldOptions = useMemo(() => {
+    if (diagnosticQuery.isLoading || isPending) {
+      return []
+    }
+
+    if (driver) {
+      return getDriverFields()
+    } else {
+      return getAnyFields()
+    }
+  }, [driver, isPending, diagnosticQuery.isLoading])
 
   const testRule = useMemo(() => {
-    const values = form.getValues();
+    const values = form.getValues()
 
     return {
-      anyBlock: values.anyBlock?.value,
+      anyBlock: stringToBoolean(values.anyBlock),
       context: values.context,
-      driver: values.driver?.value?.name,
-      field: values.field?.value,
-      invert: values.invert?.value,
+      driver: values.driver,
+      field: values.field,
+      invert: stringToBoolean(values.invert),
       matchAll: values.matchAll,
       normalize: values.normalize,
       regExp: values.regExp,
       text: values.text,
-      type,
-    } as TestRuleTextOnDevicePayload;
-  }, [form, type]);
+      type: type,
+    } as TestRuleTextOnDevicePayload
+  }, [form, type])
 
   return (
-    <Stack spacing="6" px={hasScript ? 0 : 6} {...other}>
+    <Stack gap="6" {...stackProps}>
       <FormControl
-        isRequired
+        required
         label={t("Name")}
         placeholder={t("Name")}
         control={form.control}
         name="name"
       />
-
       {!hasScript && (
         <>
-          <DeviceTypeSelect withAny control={form.control} name="driver" />
+          <DeviceTypeSelect
+            control={form.control}
+            name="driver"
+            placeholder={t("[Any]")}
+            isClearable
+          />
           <Select
             options={fieldOptions}
             control={form.control}
             name="field"
             label={t("Field")}
+            placeholder={t("Select a field")}
           />
           <FormControl
             type={FormControlType.LongText}
@@ -100,21 +124,23 @@ export function RuleEditForm(props: RuleEditFormProps) {
             name="context"
           />
           <Select
-            isRequired
-            options={BLOCK_OPTIONS}
+            required
+            options={ruleBlockOptions.options}
             control={form.control}
             name="anyBlock"
             label={t("Block validation")}
+            placeholder={t("Select a block validation")}
           />
           <Select
-            isRequired
-            options={TEXT_OPTIONS}
+            required
+            options={ruleTextOptions.options}
             control={form.control}
             name="invert"
             label={t("Existing text")}
+            placeholder={t("Select an existing text")}
           />
 
-          <Stack spacing="6" flex="1">
+          <Stack gap="6" flex="1">
             <Checkbox control={form.control} name="regExp">
               {t("The provided text is a regular expression")}
             </Checkbox>
@@ -133,7 +159,9 @@ export function RuleEditForm(props: RuleEditFormProps) {
             control={form.control}
             name="text"
           />
-          <Stack spacing="5" mb="6">
+
+          <Separator />
+          <Stack gap="5" mb="6">
             <Heading as="h4" size="md">
               {t("Test on device")}
             </Heading>
@@ -142,5 +170,5 @@ export function RuleEditForm(props: RuleEditFormProps) {
         </>
       )}
     </Stack>
-  );
+  )
 }

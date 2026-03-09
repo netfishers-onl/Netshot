@@ -1,30 +1,30 @@
-import Search from "@/components/Search";
-import { useThrottle } from "@/hooks";
-import { Flex, Stack, Text } from "@chakra-ui/react";
-import { useCallback, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useDiagnosticSidebar } from "../../contexts/DiagnosticSidebarProvider";
+import Search from "@/components/Search"
+import { useThrottle } from "@/hooks"
+import { Flex, Stack, Text } from "@chakra-ui/react"
+import { useCallback, useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { useDiagnosticSidebar } from "../../contexts/DiagnosticSidebarProvider"
 
 export default function SidebarSearch() {
-  const { t } = useTranslation();
-  const ctx = useDiagnosticSidebar();
-  const [query, setQuery] = useState<string>("");
-  const throttledValue = useThrottle(query);
+  const { t } = useTranslation()
+  const ctx = useDiagnosticSidebar()
+  const [query, setQuery] = useState<string>("")
+  const throttledValue = useThrottle(query)
 
   const onQuery = useCallback((query: string) => {
-    setQuery(query);
-  }, []);
+    setQuery(query)
+  }, [])
 
   const onClear = useCallback(() => {
-    ctx.setQuery("");
-  }, [ctx]);
+    ctx.setQuery("")
+  }, [ctx])
 
   useEffect(() => {
-    ctx.setQuery(throttledValue);
-  }, [throttledValue]);
+    ctx.setQuery(throttledValue)
+  }, [throttledValue])
 
   return (
-    <Stack p="6" spacing="5">
+    <Stack p="6" gap="5">
       <Search
         clear={Boolean(ctx.query)}
         placeholder={t("Search...")}
@@ -33,9 +33,9 @@ export default function SidebarSearch() {
       />
       {ctx.query && (
         <Flex>
-          <Text>{t("{{x}} diagnostic(s)", { x: ctx.total })}</Text>
+          <Text>{t("{{count}} diagnostic", { count: ctx.total })}</Text>
         </Flex>
       )}
     </Stack>
-  );
+  )
 }

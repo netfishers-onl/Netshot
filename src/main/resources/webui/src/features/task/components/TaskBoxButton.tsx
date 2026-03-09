@@ -1,5 +1,5 @@
 import { Icon } from "@/components";
-import { Flex, Stack, StackProps, Text } from "@chakra-ui/react";
+import { Steps, Flex, Stack, StackProps, Text } from "@chakra-ui/react";
 import { useMemo } from "react";
 
 export type TaskBoxButtonProps = {
@@ -25,7 +25,7 @@ export default function TaskBoxButton(props: TaskBoxButtonProps) {
   return (
     <Stack
       direction="row"
-      spacing="4"
+      gap="4"
       border="1px solid"
       borderColor="grey.100"
       borderRadius="2xl"
@@ -52,7 +52,7 @@ export default function TaskBoxButton(props: TaskBoxButtonProps) {
       >
         <Icon name={icon} color="green.800" />
       </Flex>
-      <Stack spacing="0">
+      <Stack gap="0">
         <Text fontWeight="semibold">{label}</Text>
         <Text color="grey.400">{description}</Text>
       </Stack>

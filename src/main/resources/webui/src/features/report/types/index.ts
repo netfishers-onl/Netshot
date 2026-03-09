@@ -1,11 +1,15 @@
+import { Option } from "@/types"
+
 export enum ExportMimeType {
-  Xls = ".xls",
+  Xls = "xlsx",
 }
 
 export type PeriodRange = {
-  from: Date;
-  to: Date;
-};
+  from: Date
+  to: Date
+}
+
+export type PeriodValue = (from?: Date) => PeriodRange
 
 export enum PeriodType {
   LastHour = "Last hour",
@@ -15,7 +19,4 @@ export enum PeriodType {
   SpecificDay = "Specific day",
 }
 
-export type Period = {
-  label: PeriodType;
-  value?: (from?: Date) => PeriodRange;
-};
+export type Period = Option<PeriodValue, PeriodType>

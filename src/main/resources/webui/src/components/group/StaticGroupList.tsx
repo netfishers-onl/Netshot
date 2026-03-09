@@ -1,84 +1,59 @@
-import { DeviceAutocomplete, Icon } from "@/components";
-import { SimpleDevice } from "@/types";
-import {
-  Center,
-  Heading,
-  IconButton,
-  Stack,
-  Text,
-  Tooltip,
-} from "@chakra-ui/react";
-import { useCallback, useRef, useState } from "react";
-import { useFieldArray, useFormContext } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import GroupDeviceBox from "./GroupDeviceBox";
-import { AddGroupForm } from "./types";
-
-export type StaticGroupListProps = {};
+import { DeviceAutocomplete, Icon } from "@/components"
+import { Tooltip } from "@/components/ui/tooltip"
+import { SimpleDevice } from "@/types"
+import { Center, Heading, IconButton, Stack, Text } from "@chakra-ui/react"
+import { useFieldArray, useFormContext } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import GroupDeviceBox from "./GroupDeviceBox"
+import { AddGroupForm } from "./types"
 
 export default function StaticGroupList() {
-  const { t } = useTranslation();
-  const form = useFormContext<AddGroupForm>();
-  // Increase the version to reset the search cache
-  const [cacheVersion, setCacheVersion] = useState<number>(1);
+  const { t } = useTranslation()
+  const form = useFormContext<AddGroupForm>()
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "staticDevices",
     keyName: "uid",
-  });
+  })
 
-  const addDevice = useCallback(
-    (device: SimpleDevice) => {
-      setCacheVersion(v => v + 1);
-      append(device);
-    },
-    [append]
-  );
+  const removeDevice = (index: number) => {
+    remove(index)
+  }
 
-  const removeDevice = useCallback((index: number) => {
-    setCacheVersion(v => v + 1);
-    remove(index);
-  }, [remove]);
-
-  const excludeSelected = useCallback(
-    (options: SimpleDevice[]): SimpleDevice[] => {
-      const selectedIds: number[] = fields.map((f, i) => f.id);
-      return options.filter((o) => !selectedIds.includes(o.id));
-    },
-  [fields]);
+  const excludeSelected = (options: SimpleDevice[]): SimpleDevice[] => {
+    const selectedIds: number[] = fields.map((f) => f.id)
+    return options.filter((o) => !selectedIds.includes(o.id))
+  }
 
   return (
     <>
-      <DeviceAutocomplete
-        onChange={addDevice}
-        filterBy={excludeSelected}
-        cacheOptions={cacheVersion}
-      />
-      <Stack flex="1">
+      <DeviceAutocomplete onSelectItem={append} filterBy={excludeSelected} />
+      <Stack flex="1" overflowY="auto">
         {fields.length > 0 ? (
           <>
             {fields.map((device, index) => (
               <GroupDeviceBox device={device} key={device?.id}>
-                <Tooltip title={t("Remove device")}>
+                <Tooltip content={t("Remove device")}>
                   <IconButton
                     aria-label={t("Remove device")}
-                    icon={<Icon name="trash" />}
                     position="absolute"
                     top="2"
                     right="2"
                     variant="ghost"
-                    colorScheme="green"
+                    colorPalette="green"
                     onClick={() => removeDevice(index)}
-                  />
+                  >
+                    <Icon name="trash" />
+                  </IconButton>
                 </Tooltip>
               </GroupDeviceBox>
             ))}
           </>
         ) : (
           <Center flex="1">
-            <Stack alignItems="center" spacing="4">
-              <Stack alignItems="center" spacing="1">
+            <Stack alignItems="center" gap="4">
+              <Stack alignItems="center" gap="1">
                 <Heading size="md">{t("No devices selected")}</Heading>
                 <Text color="grey.400">
                   {t("Please add equipment using the auto-complete above")}
@@ -89,5 +64,5 @@ export default function StaticGroupList() {
         )}
       </Stack>
     </>
-  );
+  )
 }

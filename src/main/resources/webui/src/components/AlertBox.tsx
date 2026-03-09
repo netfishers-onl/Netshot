@@ -1,23 +1,23 @@
-import { Flex, Stack } from "@chakra-ui/react";
-import { PropsWithChildren, useMemo } from "react";
-import Icon from "./Icon";
+import { Flex, Stack } from "@chakra-ui/react"
+import { PropsWithChildren, useMemo } from "react"
+import Icon from "./Icon"
 
 type AlertBoxProps = {
-  type: "success" | "error" | "warning";
-};
+  type: "success" | "error" | "warning"
+}
 
 export default function AlertBox(props: PropsWithChildren<AlertBoxProps>) {
-  const { children, type } = props;
+  const { children, type } = props
 
   const icon = useMemo(() => {
-    let bg: string;
+    let bg: string
 
     if (type === "error") {
-      bg = "red.50";
+      bg = "red.50"
     } else if (type === "warning") {
-      bg = "yellow.50";
+      bg = "yellow.50"
     } else if (type === "success") {
-      bg = "green.50";
+      bg = "green.50"
     }
 
     return (
@@ -33,13 +33,13 @@ export default function AlertBox(props: PropsWithChildren<AlertBoxProps>) {
         {type === "success" && <Icon name="check" color="green.800" />}
         {type === "warning" && <Icon name="alertTriangle" color="yellow.800" />}
       </Flex>
-    );
-  }, [type]);
+    )
+  }, [type])
 
   return (
     <Stack
       direction="row"
-      spacing="3"
+      gap="3"
       borderWidth="1px"
       borderColor="grey.100"
       borderRadius="2xl"
@@ -51,5 +51,5 @@ export default function AlertBox(props: PropsWithChildren<AlertBoxProps>) {
       {icon}
       {children}
     </Stack>
-  );
+  )
 }

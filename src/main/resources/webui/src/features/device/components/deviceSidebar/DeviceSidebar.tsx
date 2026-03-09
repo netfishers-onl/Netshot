@@ -1,75 +1,71 @@
-import { Protected } from "@/components";
-import Icon from "@/components/Icon";
-import { Level } from "@/types";
-import {
-  Button,
-  Divider,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Stack,
-} from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
-import { DeviceSidebarContext } from "../../contexts/device-sidebar";
-import DeviceCreateButton from "../DeviceCreateButton";
-import DeviceScanSubnetButton from "../DeviceScanSubnetButton";
-import DeviceSidebarGroup from "./DeviceSidebarGroup";
-import DeviceSidebarList from "./DeviceSidebarList";
-import DeviceSidebarListToolbar from "./DeviceSidebarListToolbar";
-import DeviceSidebarSearch from "./DeviceSidebarSearch";
-import DeviceSidebarSearchList from "./DeviceSidebarSearchList";
+import { Protected } from "@/components"
+import Icon from "@/components/Icon"
+import { Level } from "@/types"
+import { Button, Menu, Portal, Separator, Stack } from "@chakra-ui/react"
+import { useTranslation } from "react-i18next"
+import { useDeviceSidebarStore } from "../../stores"
+import DeviceCreateButton from "../DeviceCreateButton"
+import DeviceScanSubnetButton from "../DeviceScanSubnetButton"
+import DeviceSidebarGroup from "./DeviceSidebarGroup"
+import DeviceSidebarList from "./DeviceSidebarList"
+import DeviceSidebarListToolbar from "./DeviceSidebarListToolbar"
+import DeviceSidebarSearch from "./DeviceSidebarSearch"
+import DeviceSidebarSearchList from "./DeviceSidebarSearchList"
 
 export default function DeviceSidebar() {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
+  const query = useDeviceSidebarStore((state) => state.query)
 
   return (
-    <Stack w="300px" overflow="auto" spacing="0">
-      <DeviceSidebarContext.Consumer>
-        {({ query }) => (
-          <>
-            <DeviceSidebarSearch />
-            <Divider />
-            {query ? null : (
-              <>
-                <DeviceSidebarGroup />
-                <Divider />
-              </>
-            )}
+    <Stack w="300px" overflow="auto" gap="0">
+      <DeviceSidebarSearch />
+      <Separator />
+      {query ? null : (
+        <>
+          <DeviceSidebarGroup />
+          <Separator />
+        </>
+      )}
 
-            <DeviceSidebarListToolbar />
-            <Divider />
-            {query ? <DeviceSidebarSearchList /> : <DeviceSidebarList />}
+      <DeviceSidebarListToolbar />
+      <Separator />
+      {query ? <DeviceSidebarSearchList /> : <DeviceSidebarList />}
 
-            <Protected minLevel={Level.Operator}>
-              <Divider />
-              <Stack p="6">
-                <Menu matchWidth>
-                  <MenuButton as={Button} leftIcon={<Icon name="plus" />}>
-                    {t("Add device")}
-                  </MenuButton>
-                  <MenuList>
-                    <DeviceCreateButton
-                      renderItem={(open) => (
-                        <MenuItem icon={<Icon name="plus" />} onClick={open}>
-                          {t("Add simple device")}
-                        </MenuItem>
-                      )}
-                    />
-                    <DeviceScanSubnetButton
-                      renderItem={(open) => (
-                        <MenuItem icon={<Icon name="crosshair" />} onClick={open}>
-                          {t("Scan subnets for devices")}
-                        </MenuItem>
-                      )}
-                    />
-                  </MenuList>
-                </Menu>
-              </Stack>
-            </Protected>
-          </>
-        )}
-      </DeviceSidebarContext.Consumer>
+      <Protected minLevel={Level.Operator}>
+        <Separator />
+        <Stack p="6">
+          <Menu.Root positioning={{ sameWidth: true }}>
+            <Menu.Trigger asChild>
+              <Button>
+                <Icon name="plus" />
+                {t("Add device")}
+              </Button>
+            </Menu.Trigger>
+            <Portal>
+              <Menu.Positioner>
+                <Menu.Content>
+                  <DeviceCreateButton
+                    renderItem={(open) => (
+                      <Menu.Item onSelect={open} value="add-simple-device">
+                        <Icon name="plus" />
+                        {t("Add simple device")}
+                      </Menu.Item>
+                    )}
+                  />
+                  <DeviceScanSubnetButton
+                    renderItem={(open) => (
+                      <Menu.Item onSelect={open} value="scan-subnets-for-device">
+                        <Icon name="crosshair" />
+                        {t("Scan subnets for devices")}
+                      </Menu.Item>
+                    )}
+                  />
+                </Menu.Content>
+              </Menu.Positioner>
+            </Portal>
+          </Menu.Root>
+        </Stack>
+      </Protected>
     </Stack>
-  );
+  )
 }

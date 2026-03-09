@@ -1,140 +1,114 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { Protected } from "@/components";
-import Icon from "@/components/Icon";
-import { AddGroupButton, GroupOrFolderItem } from "@/components/group";
-import { QUERIES } from "@/constants";
-import { usePagination, useToast } from "@/hooks";
-import { Group, Level } from "@/types";
-import { createFoldersFromGroups, Folder, isGroup } from "@/utils";
-import {
-  Divider,
-  Flex,
-  Heading,
-  IconButton,
-  Skeleton,
-  Stack,
-  Tooltip,
-} from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router";
-import { useDeviceSidebar } from "../../contexts/device-sidebar";
+import api from "@/api"
+import { AddGroupButton, getExpandedKeys, Icon, Protected, TreeGroup } from "@/components"
+import { Tooltip } from "@/components/ui/tooltip"
+import { QUERIES } from "@/constants"
+import { usePagination } from "@/hooks"
+import { Group, Level } from "@/types"
+import { createFoldersFromGroups } from "@/utils"
+import { Flex, Heading, IconButton, Separator, Skeleton, Stack } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { useLayoutEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { useLocation, useNavigate, useSearchParams } from "react-router"
+import { useDeviceSidebarStore } from "../../stores"
 
 export default function DeviceSidebarGroup() {
-  const scrollContainer = useRef<HTMLDivElement>(null);
-  const [scroll, setScroll] = useState<number>(0);
-  const toast = useToast();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const ctx = useDeviceSidebar();
-  const { t } = useTranslation();
-  const pagination = usePagination();
+  const scrollContainer = useRef<HTMLDivElement>(null)
+  const [scroll, setScroll] = useState<number>(0)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const setGroup = useDeviceSidebarStore((state) => state.setGroup)
+  const { t } = useTranslation()
+  const pagination = usePagination()
+  const [searchParams] = useSearchParams()
+  const selectedGroupId = +searchParams.get("group")
 
   const { data: items, isPending } = useQuery({
     queryKey: [QUERIES.DEVICE_GROUPS],
     queryFn: async () => api.group.getAll(pagination),
-    select: useCallback((groups: Group[]): (Group | Folder)[] => {
-      return createFoldersFromGroups(groups);
-    }, []),
-  });
+    select: createFoldersFromGroups,
+  })
 
   useLayoutEffect(() => {
-    if (!scrollContainer?.current) return;
+    if (!scrollContainer?.current) return
 
     scrollContainer.current.onscroll = (evt) => {
-      const target = evt.target as HTMLDivElement;
+      const target = evt.target as HTMLDivElement
 
-      setScroll(target.scrollTop);
-    };
-  }, [scrollContainer]);
+      setScroll(target.scrollTop)
+    }
+  }, [scrollContainer])
 
-  const onGroupSelect = useCallback(
-    (group: Group) => {
-      if (ctx.group?.id === group.id) {
-        navigate(
-          {
-            pathname: location.pathname,
-            search: null,
-          },
-          {
-            replace: true,
-          }
-        );
-
-        ctx.setGroup(null);
-        return;
-      }
-
+  const onGroupSelect = (group: Group) => {
+    if (group?.id === group.id) {
       navigate(
         {
           pathname: location.pathname,
-          search: `?group=${group.id}`,
+          search: null,
         },
-        { replace: true }
-      );
+        {
+          replace: true,
+        }
+      )
 
-      ctx.setGroup(group);
-    },
-    [location, navigate]
-  );
+      setGroup(null)
+      return
+    }
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: `?group=${group.id}`,
+      },
+      { replace: true }
+    )
+
+    setGroup(group)
+  }
+
+  let expandedKeys: string[] = []
+
+  if (items?.length > 0 && selectedGroupId) {
+    expandedKeys = getExpandedKeys(items, selectedGroupId)
+  }
 
   return (
-    <Stack spacing="0">
-      <Flex
-        justifyContent="space-between"
-        alignItems="center"
-        px="6"
-        pt="3"
-        pb="1"
-      >
+    <Stack gap="0">
+      <Flex justifyContent="space-between" alignItems="center" px="6" pt="3" pb="1">
         <Heading fontSize="md" fontWeight="medium">
           {t("Groups")}
         </Heading>
         <Protected minLevel={Level.ReadWrite}>
           <AddGroupButton
             renderItem={(open) => (
-              <Tooltip label={t("Add group")}>
-                <IconButton
-                  variant="ghost"
-                  icon={<Icon name="plus" />}
-                  onClick={open}
-                  aria-label={t("Add group")}
-                />
+              <Tooltip content={t("Add group")}>
+                <IconButton variant="ghost" onClick={open} aria-label={t("Add group")}>
+                  <Icon name="plus" />
+                </IconButton>
               </Tooltip>
             )}
           />
         </Protected>
       </Flex>
-      {scroll > 0 && <Divider />}
-      <Stack
-        px="6"
-        spacing="0"
-        overflow="auto"
-        height="200px"
-        ref={scrollContainer}
-      >
+      {scroll > 0 && <Separator />}
+      <Stack px="6" gap="0" overflow="auto" height="200px" ref={scrollContainer}>
         {isPending ? (
-          <Stack spacing="3" pb="6">
+          <Stack gap="3" pb="6">
             <Skeleton height="36px" />
             <Skeleton height="36px" />
             <Skeleton height="36px" />
             <Skeleton height="36px" />
           </Stack>
         ) : (
-          <>
-            {items?.map((item) => (
-              <GroupOrFolderItem
-                item={item}
-                showMenu
-                key={isGroup(item) ? item?.id : item?.name}
-                onGroupSelect={onGroupSelect}
-              />
-            ))}
-          </>
+          <TreeGroup
+            items={items}
+            showMenu={true}
+            onGroupSelect={onGroupSelect}
+            isSelected={(group) => group.id === selectedGroupId}
+            expandedKeys={expandedKeys}
+          />
         )}
       </Stack>
     </Stack>
-  );
+  )
 }

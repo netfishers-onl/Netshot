@@ -1,254 +1,178 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { DataTable, EmptyResult, Icon, Protected, Search } from "@/components";
-import { useAuth } from "@/contexts";
-import { usePagination, useToast } from "@/hooks";
-import { Level, SoftwareRule } from "@/types";
-import { getSoftwareLevelColor, search } from "@/utils";
-import {
-  Button,
-  Heading,
-  IconButton,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Skeleton,
-  Spacer,
-  Stack,
-  Tag,
-  Text,
-  Tooltip,
-  UseDisclosureProps,
-  useDisclosure,
-} from "@chakra-ui/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Row, createColumnHelper } from "@tanstack/react-table";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import AddSoftwareRuleButton from "../components/AddSoftwareRuleButton";
-import EditSoftwareRuleButton from "../components/EditSoftwareRuleButton";
-import RemoveSoftwareRuleButton from "../components/RemoveSoftwareRuleButton";
-import { QUERIES } from "../constants";
+import api from "@/api"
+import { NetshotError } from "@/api/httpClient"
+import { DataTable, EmptyResult, Icon, Protected, Search } from "@/components"
+import { Tooltip } from "@/components/ui/tooltip"
+import { MUTATIONS } from "@/constants"
+import { useAuth } from "@/contexts"
+import { useConfirmDialogWithMutation } from "@/dialog"
+import { usePagination, useToast } from "@/hooks"
+import { Level, SoftwareRule } from "@/types"
+import { getNextItemInArray, getSoftwareLevelColor, search } from "@/utils"
+import { Button, Heading, IconButton, Skeleton, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { createColumnHelper } from "@tanstack/react-table"
+import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
+import AddSoftwareRuleButton from "../components/AddSoftwareRuleButton"
+import EditSoftwareRuleButton from "../components/EditSoftwareRuleButton"
+import RemoveSoftwareRuleButton from "../components/RemoveSoftwareRuleButton"
+import { QUERIES } from "../constants"
 
-type ConfirmReorderDialogProps = {
-  reorderState: {
-    id: number;
-    nextId: number;
-  };
-} & UseDisclosureProps;
-
-function ConfirmReorderDialog(props: ConfirmReorderDialogProps) {
-  const { isOpen, onClose, reorderState } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-
-  const mutation = useMutation({
-    mutationFn: () => {
-      return api.softwareRule.reorder(reorderState.id, reorderState.nextId);
-    },
-    onError(err: NetshotError) {
-      toast.error(err);
-    },
-    onSuccess() {
-      onClose();
-    },
-  });
-
-  const confirm = useCallback(() => {
-    mutation.mutate();
-  }, [mutation]);
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      isCentered
-      onClose={onClose}
-      motionPreset="slideInBottom"
-      size="lg"
-    >
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader as="h3" fontSize="2xl" fontWeight="semibold">
-          {t("Change priority")}
-        </ModalHeader>
-        <ModalBody>
-          <Text>{t("Are you sure to change rules priorities?")}</Text>
-        </ModalBody>
-        <ModalFooter>
-          <Stack direction="row" spacing="3">
-            <Button onClick={onClose}>{t("Cancel")}</Button>
-            <Button variant="primary" onClick={confirm}>
-              {t("Apply changes")}
-            </Button>
-          </Stack>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
-}
-
-const columnHelper = createColumnHelper<SoftwareRule>();
+const columnHelper = createColumnHelper<SoftwareRule>()
 
 export default function ComplianceSoftwareRuleScreen() {
-  const { t } = useTranslation();
-  const pagination = usePagination();
-  const toast = useToast();
-  const { user } = useAuth();
-  const disclosure = useDisclosure();
-  const [reorderState, setReorderState] = useState({
-    id: null,
-    nextId: null,
-  });
-  const [data, setData] = useState<SoftwareRule[]>([]);
+  const { t } = useTranslation()
+  const pagination = usePagination()
+  const { user } = useAuth()
+  const [data, setData] = useState<SoftwareRule[]>([])
+  const dialog = useConfirmDialogWithMutation()
+  const toast = useToast()
+  const queryClient = useQueryClient()
 
-  const { data: rules, isPending, isSuccess, refetch } = useQuery({
+  const {
+    data: rules,
+    isPending,
+    isSuccess,
+  } = useQuery({
     queryKey: [QUERIES.SOFTWARE_RULE_LIST, pagination.query],
     queryFn: api.softwareRule.getAll,
-    select: useCallback((res: SoftwareRule[]): SoftwareRule[] => {
-      return search(res, "deviceType", "family").with(pagination.query);
-    }, [pagination.query]),
-  });
+    select: (res: SoftwareRule[]): SoftwareRule[] => {
+      return search(res, "deviceType", "family").with(pagination.query)
+    },
+  })
 
   useEffect(() => {
     if (isSuccess) {
-      setData(rules);
+      setData(rules)
     }
-  }, [isSuccess, rules]);
+  }, [isSuccess, rules])
 
-  const isDraggable = useMemo(() => {
-    return (user?.level || 0) >= Level.ReadWrite;
-  }, [user]);
+  const isDraggable = user?.level || 0 >= Level.ReadWrite
 
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor("targetGroup", {
-        cell: (info) => info.getValue()?.name || t("[Any]"),
-        header: t("Group"),
-        size: 10000,
-      }),
-      columnHelper.accessor("deviceType", {
-        cell: (info) => info.getValue() || t("[Any]"),
-        header: t("Device"),
-        size: 10000,
-      }),
-      columnHelper.accessor("family", {
-        cell: (info) => info.getValue(),
-        header: t("Device family"),
-        size: 10000,
-      }),
-      columnHelper.accessor("partNumber", {
-        cell: (info) => info.getValue(),
-        header: t("Part number"),
-        size: 10000,
-      }),
-      columnHelper.accessor("version", {
-        cell: (info) => info.getValue(),
-        header: t("Version"),
-        size: 10000,
-      }),
-      columnHelper.accessor("level", {
-        cell: (info) => {
-          const level = info.getValue();
+  const columns = [
+    columnHelper.accessor("targetGroup", {
+      cell: (info) => <Text>{info.getValue()?.name || t("[Any]")}</Text>,
+      header: t("Group"),
+      size: 10000,
+    }),
+    columnHelper.accessor("deviceType", {
+      cell: (info) => <Text>{info.getValue() || t("[Any]")}</Text>,
+      header: t("Device"),
+      size: 10000,
+    }),
+    columnHelper.accessor("family", {
+      cell: (info) => <Text>{info.getValue()}</Text>,
+      header: t("Device family"),
+      size: 10000,
+    }),
+    columnHelper.accessor("partNumber", {
+      cell: (info) => <Text>{info.getValue()}</Text>,
+      header: t("Part number"),
+      size: 10000,
+    }),
+    columnHelper.accessor("version", {
+      cell: (info) => <Text>{info.getValue()}</Text>,
+      header: t("Version"),
+      size: 10000,
+    }),
+    columnHelper.accessor("level", {
+      cell: (info) => {
+        const level = info.getValue()
 
-          return <Tag colorScheme={getSoftwareLevelColor(level)}>{level}</Tag>;
-        },
-        header: t("Level"),
-        size: 10000,
-      }),
-      columnHelper.display({
-        id: "actions",
-        cell: (info) => {
-          const rule = info.row.original;
+        return <Tag.Root colorPalette={getSoftwareLevelColor(level)}>{level}</Tag.Root>
+      },
+      header: t("Level"),
+      size: 10000,
+    }),
+    columnHelper.display({
+      id: "actions",
+      cell: (info) => {
+        const rule = info.row.original
 
-          return (
-            <Protected minLevel={Level.ReadWrite}>
-              <Stack direction="row" spacing="2">
-                <EditSoftwareRuleButton
-                  rule={rule}
-                  renderItem={(open) => (
-                    <Tooltip label={t("Edit")}>
-                      <IconButton
-                        variant="ghost"
-                        colorScheme="green"
-                        aria-label={t("Edit the rule")}
-                        icon={<Icon name="edit" />}
-                        onClick={open}
-                      />
-                    </Tooltip>
-                  )}
-                />
+        return (
+          <Protected minLevel={Level.ReadWrite}>
+            <Stack direction="row" gap="2">
+              <EditSoftwareRuleButton
+                rule={rule}
+                renderItem={(open) => (
+                  <Tooltip content={t("Edit")}>
+                    <IconButton
+                      variant="ghost"
+                      colorPalette="green"
+                      aria-label={t("Edit the rule")}
+                      onClick={open}
+                    >
+                      <Icon name="edit" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              />
 
-                <RemoveSoftwareRuleButton
-                  rule={rule}
-                  renderItem={(open) => (
-                    <Tooltip label={t("Remove")}>
-                      <IconButton
-                        variant="ghost"
-                        colorScheme="green"
-                        aria-label={t("Remove the rule")}
-                        icon={<Icon name="trash" />}
-                        onClick={open}
-                      />
-                    </Tooltip>
-                  )}
-                />
-              </Stack>
-            </Protected>
-          );
-        },
-        header: "",
-        enableSorting: false,
-        meta: {
-          align: "right",
-        },
-        minSize: 80,
-        size: 200,
-      }),
-    ],
-    [t]
-  );
+              <RemoveSoftwareRuleButton
+                rule={rule}
+                renderItem={(open) => (
+                  <Tooltip content={t("Remove")}>
+                    <IconButton
+                      variant="ghost"
+                      colorPalette="green"
+                      aria-label={t("Remove the rule")}
+                      onClick={open}
+                    >
+                      <Icon name="trash" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              />
+            </Stack>
+          </Protected>
+        )
+      },
+      header: "",
+      enableSorting: false,
+      meta: {
+        align: "right",
+      },
+      minSize: 80,
+      size: 200,
+    }),
+  ]
 
-  const onDrag = useCallback(
-    (row: Row<SoftwareRule>, reorderedData: SoftwareRule[]) => {
-      setData(reorderedData);
+  const reorderMutation = useMutation({
+    mutationKey: MUTATIONS.SOFTWARE_RULE_REORDER,
+    mutationFn: ({ id, nextId }: { id: number; nextId: number }) => {
+      return api.softwareRule.reorder(id, nextId)
     },
-    []
-  );
-
-  const onDrop = useCallback(
-    (row: Row<SoftwareRule>, reorderedData: SoftwareRule[]) => {
-      const currentIndex = reorderedData.findIndex(
-        (item) => item.id === +row.id
-      );
-      const next = reorderedData[currentIndex + 1];
-
-      setData(reorderedData);
-
-      setReorderState({
-        id: row.id,
-        nextId: next?.id,
-      });
-
-      disclosure.onOpen();
+    onError(err: NetshotError) {
+      toast.error(err)
     },
-    []
-  );
+  })
 
-  const handleClose = useCallback(() => {
-    disclosure.onClose();
-    refetch();
-  }, [disclosure]);
+  function onDrop(row: SoftwareRule, reorderedData: SoftwareRule[]) {
+    const id = row.id
+    const nextItem = getNextItemInArray(row, reorderedData, "id")
+
+    const dialogRef = dialog.open(MUTATIONS.SOFTWARE_RULE_REORDER, {
+      title: t("Change priority"),
+      description: t("Are you sure to change rules priorities?"),
+      async onConfirm() {
+        await reorderMutation.mutateAsync({ id: id, nextId: nextItem?.id })
+
+        queryClient.invalidateQueries({ queryKey: [QUERIES.SOFTWARE_RULE_LIST] })
+
+        setData(reorderedData)
+
+        dialogRef.close()
+      },
+    })
+  }
 
   return (
     <>
-      <Stack spacing="6" p="9" flex="1" overflow="auto">
+      <Stack gap="6" p="9" flex="1" overflow="auto">
         <Heading as="h1" fontSize="4xl">
           {t("Software version compliance")}
         </Heading>
-        <Stack direction="row" spacing="3">
+        <Stack direction="row" gap="3">
           <Search
             placeholder={t("Search...")}
             onQuery={pagination.onQuery}
@@ -257,14 +181,11 @@ export default function ComplianceSoftwareRuleScreen() {
           />
           <Spacer />
           <Protected minLevel={Level.ReadWrite}>
-            <Skeleton isLoaded={!isPending}>
+            <Skeleton loading={!!isPending}>
               <AddSoftwareRuleButton
                 renderItem={(open) => (
-                  <Button
-                    onClick={open}
-                    variant="primary"
-                    leftIcon={<Icon name="plus" />}
-                  >
+                  <Button onClick={open} variant="primary">
+                    <Icon name="plus" />
                     {t("Add rule")}
                   </Button>
                 )}
@@ -273,7 +194,7 @@ export default function ComplianceSoftwareRuleScreen() {
           </Protected>
         </Stack>
         {isPending ? (
-          <Stack spacing="3">
+          <Stack gap="3">
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
             <Skeleton h="60px"></Skeleton>
@@ -288,23 +209,17 @@ export default function ComplianceSoftwareRuleScreen() {
                 loading={isPending}
                 draggable={isDraggable}
                 primaryKey="id"
-                onDragRow={onDrag}
                 onDropRow={onDrop}
               />
             ) : (
               <EmptyResult
                 title={t("There is no software rule")}
-                description={t(
-                  "You can add rule to check device software compliance"
-                )}
+                description={t("You can add rule to check device software compliance")}
               >
                 <AddSoftwareRuleButton
                   renderItem={(open) => (
-                    <Button
-                      onClick={open}
-                      variant="primary"
-                      leftIcon={<Icon name="plus" />}
-                    >
+                    <Button onClick={open} variant="primary">
+                      <Icon name="plus" />
                       {t("Add rule")}
                     </Button>
                   )}
@@ -315,5 +230,5 @@ export default function ComplianceSoftwareRuleScreen() {
         )}
       </Stack>
     </>
-  );
+  )
 }

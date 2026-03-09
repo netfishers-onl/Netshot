@@ -1,42 +1,35 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { QUERIES } from "@/constants";
-import { useToast } from "@/hooks";
-import { Heading, Skeleton, Stack, Text } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
-import { ConfigurationComplianceDeviceList } from "../components";
+import api from "@/api"
+import { QUERIES } from "@/constants"
+import { Heading, Skeleton, Stack, Text } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
+import { useParams } from "react-router"
+import { ConfigurationComplianceDeviceList } from "../components"
 
 export default function ReportConfigurationComplianceDetailScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
   const params = useParams<{
-    id: string;
-  }>();
-  const toast = useToast();
+    id: string
+  }>()
 
-  const {
-    data: group,
-    isPending,
-    isSuccess,
-  } = useQuery({
+  const { data: group, isSuccess } = useQuery({
     queryKey: [QUERIES.DEVICE_GROUPS, +params?.id],
     queryFn: async () => {
       /**
        * @todo: Add devices count and non compliant count
        */
-      return api.group.getById(+params.id);
+      return api.group.getById(+params.id)
     },
-  });
+  })
 
   return (
-    <Stack p="9" spacing="6" flex="1" overflowY="auto">
-      <Stack direction="row" spacing="6" alignItems="center">
-        <Stack spacing="2">
-          <Skeleton isLoaded={isSuccess}>
+    <Stack p="9" gap="6" flex="1" overflowY="auto">
+      <Stack direction="row" gap="6" alignItems="center">
+        <Stack gap="2">
+          <Skeleton loading={!isSuccess}>
             <Heading fontWeight="medium">{group?.name}</Heading>
           </Skeleton>
-          <Skeleton isLoaded={isSuccess}>
+          <Skeleton loading={!isSuccess}>
             <Text color="grey.500">
               {t(
                 "Here is a list of non-compliant devices. You can check why a device is not compliant by clicking on it."
@@ -45,8 +38,7 @@ export default function ReportConfigurationComplianceDetailScreen() {
           </Skeleton>
         </Stack>
       </Stack>
-
       {isSuccess && <ConfigurationComplianceDeviceList group={group} />}
     </Stack>
-  );
+  )
 }

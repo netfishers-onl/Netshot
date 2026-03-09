@@ -1,29 +1,29 @@
-import { Skeleton, Spacer, Stack, Switch, Text } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { createColumnHelper } from "@tanstack/react-table";
-import { useCallback, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
+import { Skeleton, Spacer, Stack, Switch, Text } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { createColumnHelper } from "@tanstack/react-table"
+import { useCallback, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
+import { useParams } from "react-router"
 
-import api from "@/api";
-import { DataTable, EmptyResult } from "@/components";
-import Search from "@/components/Search";
-import { usePagination } from "@/hooks";
-import { DeviceModule } from "@/types";
-import { formatDate, search } from "@/utils";
+import api from "@/api"
+import { DataTable, EmptyResult } from "@/components"
+import Search from "@/components/Search"
+import { usePagination } from "@/hooks"
+import { DeviceModule } from "@/types"
+import { formatDate, search } from "@/utils"
 
-import { QUERIES } from "../constants";
+import { QUERIES } from "../constants"
 
-const columnHelper = createColumnHelper<DeviceModule>();
+const columnHelper = createColumnHelper<DeviceModule>()
 
 /**
  * @todo: Add pagination (paginator)
  */
 export default function DeviceModuleScreen() {
-  const params = useParams<{ id: string }>();
-  const { t } = useTranslation();
-  const pagination = usePagination();
-  const [history, setHistory] = useState(false);
+  const params = useParams<{ id: string }>()
+  const { t } = useTranslation()
+  const pagination = usePagination()
+  const [history, setHistory] = useState(false)
 
   const { data = [], isPending } = useQuery({
     queryKey: [
@@ -39,49 +39,55 @@ export default function DeviceModuleScreen() {
         ...pagination,
         history,
       }),
-    select: useCallback((res: DeviceModule[]): DeviceModule[] => {
-      return search(res, "serialNumber", "partNumber", "slot").with(pagination.query);
-    }, [pagination.query]),
-  });
+    select: useCallback(
+      (res: DeviceModule[]): DeviceModule[] => {
+        return search(res, "serialNumber", "partNumber", "slot").with(pagination.query)
+      },
+      [pagination.query]
+    ),
+  })
 
   const columns = useMemo(() => {
     const columns = [
       columnHelper.accessor("slot", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Slot"),
         enableSorting: true,
       }),
       columnHelper.accessor("partNumber", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Part number"),
         enableSorting: true,
       }),
       columnHelper.accessor("serialNumber", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Serial number"),
         enableSorting: true,
       }),
-    ];
+    ]
 
     if (history) {
-      columns.push({
-        accessorKey: "firstSeenDate",
-        cell: (info) => info.getValue() ? formatDate(info.getValue()) : t("N/A"),
-        header: t("First seen"),
-        enableSorting: true,
-      }, {
-        accessorKey: "lastSeenDate",
-        cell: (info) => info.getValue() ? formatDate(info.getValue()) : t("N/A"),
-        header: t("Last seen"),
-        enableSorting: true,
-      });
+      columns.push(
+        {
+          accessorKey: "firstSeenDate",
+          cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
+          header: t("First seen"),
+          enableSorting: true,
+        },
+        {
+          accessorKey: "lastSeenDate",
+          cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
+          header: t("Last seen"),
+          enableSorting: true,
+        }
+      )
     }
 
-    return columns;
-  }, [t, history]);
+    return columns
+  }, [t, history])
 
   return (
-    <Stack spacing="6" flex="1" overflow="auto">
+    <Stack gap="6" flex="1" overflow="auto">
       <Stack direction="row" alignItems="center">
         <Search
           placeholder={t("Search...")}
@@ -91,14 +97,13 @@ export default function DeviceModuleScreen() {
         />
         <Spacer />
         <Text>{t("Show history")}</Text>
-        <Switch
-          isChecked={history}
-          size="md"
-          onChange={() => setHistory((prev) => !prev)}
-        />
+        <Switch.Root checked={history} size="md" onCheckedChange={(evt) => setHistory(evt.checked)}>
+          <Switch.HiddenInput />
+          <Switch.Control />
+        </Switch.Root>
       </Stack>
       {isPending ? (
-        <Stack spacing="3">
+        <Stack gap="3">
           <Skeleton h="60px"></Skeleton>
           <Skeleton h="60px"></Skeleton>
           <Skeleton h="60px"></Skeleton>
@@ -119,5 +124,5 @@ export default function DeviceModuleScreen() {
         </>
       )}
     </Stack>
-  );
+  )
 }

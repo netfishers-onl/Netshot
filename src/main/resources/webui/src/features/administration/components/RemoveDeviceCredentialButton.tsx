@@ -1,83 +1,71 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { Dialog } from "@/dialog";
-import { useToast } from "@/hooks";
-import { CredentialSet } from "@/types";
-import { Text } from "@chakra-ui/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MouseEvent, ReactElement, useCallback } from "react";
-import { useTranslation } from "react-i18next";
-import { QUERIES } from "../constants";
+import api from "@/api"
+import { NetshotError } from "@/api/httpClient"
+import { MUTATIONS } from "@/constants"
+import { useConfirmDialogWithMutation } from "@/dialog"
+import { useToast } from "@/hooks"
+import { CredentialSet, PropsWithRenderItem } from "@/types"
+import { Text } from "@chakra-ui/react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { MouseEvent } from "react"
+import { useTranslation } from "react-i18next"
+import { QUERIES } from "../constants"
 
-export type RemoveDeviceCredentialButtonProps = {
-  credential: CredentialSet;
-  renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
-};
+export type RemoveDeviceCredentialButtonProps = PropsWithRenderItem<{
+  credential: CredentialSet
+}>
 
-export default function RemoveDeviceCredentialButton(
-  props: RemoveDeviceCredentialButtonProps
-) {
-  const { credential, renderItem } = props;
-  const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const toast = useToast();
+export default function RemoveDeviceCredentialButton(props: RemoveDeviceCredentialButtonProps) {
+  const { credential, renderItem } = props
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+  const toast = useToast()
+  const dialog = useConfirmDialogWithMutation()
 
   const mutation = useMutation({
-    mutationFn: async () =>
-        api.admin.removeCredentialSet(credential?.id),
-    onSuccess() {
-      queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_DEVICE_CREDENTIALS] });
-      dialog.close();
-
-      toast.success({
-        title: t("Success"),
-        description: t(
-          "Device creddential {{name}} has been successfully removed",
-          {
-            name: credential?.name,
-          }
-        ),
-      });
-    },
+    mutationKey: MUTATIONS.ADMIN_CREDENTIAL_SET_REMOVE,
+    mutationFn: async () => api.admin.removeCredentialSet(credential?.id),
     onError(err: NetshotError) {
-      toast.error(err);
+      toast.error(err)
     },
-  });
+  })
 
-  const dialog = Dialog.useConfirm({
-    title: t("Remove credential"),
-    description: (
-      <Text>
-        {t("You are about to remove the credential ")}
+  const open = (evt: MouseEvent) => {
+    evt?.stopPropagation()
+    const dialogRef = dialog.open(MUTATIONS.ADMIN_CREDENTIAL_SET_REMOVE, {
+      title: t("Remove credential"),
+      description: (
+        <Text>
+          {t("You are about to remove the credential ")}
 
-        <Text as="span" fontWeight="semibold">
-          {t("{{name}}", {
-            name: credential.name,
-          })}
+          <Text as="span" fontWeight="semibold">
+            {t("{{name}}", {
+              name: credential.name,
+            })}
+          </Text>
+
+          {t(", are you sure?")}
         </Text>
+      ),
+      async onConfirm() {
+        await mutation.mutateAsync()
+        queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_DEVICE_CREDENTIALS] })
+        dialogRef.close()
 
-        {t(", are you sure?")}
-      </Text>
-    ),
-    isLoading: mutation.isPending,
-    onConfirm() {
-      mutation.mutate();
-    },
-    confirmButton: {
-      label: t("Remove"),
-      props: {
-        colorScheme: "red",
+        toast.success({
+          title: t("Success"),
+          description: t("Device creddential {{name}} has been successfully removed", {
+            name: credential?.name,
+          }),
+        })
       },
-    },
-  });
+      confirmButton: {
+        label: t("Remove"),
+        props: {
+          colorPalette: "red",
+        },
+      },
+    })
+  }
 
-  const open = useCallback(
-    (evt: MouseEvent) => {
-      evt.stopPropagation();
-      dialog.open();
-    },
-    [dialog]
-  );
-
-  return renderItem(open);
+  return renderItem(open)
 }

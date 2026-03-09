@@ -1,33 +1,22 @@
-import { Icon } from "@/components";
-import { Flex, Stack, StackProps, Text } from "@chakra-ui/react";
-import { useMemo } from "react";
+import { Icon } from "@/components"
+import { Flex, Stack, StackProps, Text } from "@chakra-ui/react"
 
 export type DiagnosticBoxButtonProps = {
-  icon: string;
-  label: string;
-  description: string;
-  isActive: boolean;
-} & StackProps;
+  icon: string
+  label: string
+  description: string
+  isActive: boolean
+} & StackProps
 
 export default function DiagnosticBoxButton(props: DiagnosticBoxButtonProps) {
-  const { icon, label, description, isActive, ...other } = props;
-
-  const styles = useMemo(() => {
-    if (!isActive) {
-      return {} as StackProps;
-    }
-
-    return {
-      borderColor: "green.400",
-    } as StackProps;
-  }, [isActive]);
+  const { icon, label, description, isActive, ...stackProps } = props
 
   return (
     <Stack
       direction="row"
-      spacing="4"
+      gap="4"
       border="1px solid"
-      borderColor="grey.100"
+      borderColor={isActive ? "green.400" : "grey.100"}
       borderRadius="2xl"
       transition="all .2s ease"
       p="5"
@@ -39,8 +28,7 @@ export default function DiagnosticBoxButton(props: DiagnosticBoxButtonProps) {
         bg: "green.50",
       }}
       cursor="pointer"
-      {...other}
-      {...styles}
+      {...stackProps}
     >
       <Flex
         alignItems="center"
@@ -52,10 +40,10 @@ export default function DiagnosticBoxButton(props: DiagnosticBoxButtonProps) {
       >
         <Icon name={icon} color="green.800" />
       </Flex>
-      <Stack spacing="0">
+      <Stack gap="0">
         <Text fontWeight="semibold">{label}</Text>
         <Text color="grey.400">{description}</Text>
       </Stack>
     </Stack>
-  );
+  )
 }

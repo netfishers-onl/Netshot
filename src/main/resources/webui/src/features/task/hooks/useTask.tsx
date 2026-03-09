@@ -1,56 +1,48 @@
-import api, { TaskQueryParams } from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import TaskStatusTag from "@/components/TaskStatusTag";
-import { QUERIES } from "@/constants";
-import { usePagination, useToast } from "@/hooks";
-import { Task, TaskStatus } from "@/types";
-import { formatDate } from "@/utils";
-import { Button, Text, useDisclosure } from "@chakra-ui/react";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { createColumnHelper } from "@tanstack/react-table";
-import { endOfDay, startOfDay } from "date-fns";
-import { useCallback, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import api, { TaskQueryParams } from "@/api"
+import { EntityLink } from "@/components"
+import TaskDialog from "@/components/TaskDialog"
+import TaskStatusTag from "@/components/TaskStatusTag"
+import { QUERIES } from "@/constants"
+import { useCustomDialog } from "@/dialog"
+import { usePagination } from "@/hooks"
+import { Task, TaskStatus } from "@/types"
+import { formatDate } from "@/utils"
+import { Button, Text } from "@chakra-ui/react"
+import { useInfiniteQuery } from "@tanstack/react-query"
+import { createColumnHelper } from "@tanstack/react-table"
+import { endOfDay, startOfDay } from "date-fns"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 
 export type FilterForm = {
-  executionDate: string;
-};
+  executionDate: string
+}
 
-const columnHelper = createColumnHelper<Task>();
+const columnHelper = createColumnHelper<Task>()
 
 export function useTask(status?: TaskStatus) {
-  const { t } = useTranslation();
-  const toast = useToast();
-  const disclosure = useDisclosure();
+  const { t } = useTranslation()
+  const dialog = useCustomDialog()
 
   const pagination = usePagination({
     limit: 50,
-  });
-  const [taskId, setTaskId] = useState<number>(null);
+  })
   const [filters, setFilters] = useState<{
-    before: number;
-    after: number;
+    before: number
+    after: number
   }>({
     before: null,
     after: null,
-  });
+  })
 
   const form = useForm<FilterForm>({
     defaultValues: {
       executionDate: "",
     },
-  });
+  })
 
-  const {
-    data,
-    isPending,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-    refetch,
-  } = useInfiniteQuery({
+  const query = useInfiniteQuery({
     queryKey: [
       QUERIES.TASK,
       status ? status : "all",
@@ -62,10 +54,10 @@ export function useTask(status?: TaskStatus) {
       let params = {
         offset: pageParam,
         limit: pagination.limit,
-      } as TaskQueryParams;
+      } as TaskQueryParams
 
       if (status) {
-        params.status = status;
+        params.status = status
       }
 
       if (filters.before && filters.after) {
@@ -73,139 +65,112 @@ export function useTask(status?: TaskStatus) {
           ...params,
           before: filters.before,
           after: filters.after,
-        };
+        }
       }
 
-      return api.task.getAll(params);
+      return api.task.getAll(params)
     },
     initialPageParam: 0,
     getNextPageParam(lastPage, allPages) {
-      return lastPage?.length === pagination.limit
-        ? allPages.length * pagination.limit
-        : undefined;
+      return lastPage?.length === pagination.limit ? allPages.length * pagination.limit : undefined
     },
-  });
+  })
 
-  const applyFilter = useCallback((values: FilterForm) => {
+  function applyFilter(values: FilterForm) {
     setFilters({
       before: endOfDay(new Date(values.executionDate)).getTime(),
       after: startOfDay(new Date(values.executionDate)).getTime(),
-    });
-  }, []);
+    })
+  }
 
-  const clearFilter = useCallback(() => {
+  function clearFilter() {
     setFilters({
       before: null,
       after: null,
-    });
+    })
 
-    form.setValue("executionDate", "");
-  }, []);
+    form.setValue("executionDate", "")
+  }
 
-  const openTask = useCallback((id: number) => {
-    setTaskId(id);
-    disclosure.onOpen();
-  }, []);
+  function openTask(id: number) {
+    dialog.open(<TaskDialog id={id} />)
+  }
 
-  const onClose = useCallback(() => {
-    setTaskId(null);
-    disclosure.onClose();
-  }, []);
-
-  const onBottomReached = useCallback(() => {
-    if (isFetchingNextPage) {
-      return;
+  function onBottomReached() {
+    if (query.isFetchingNextPage) {
+      return
     }
 
-    if (!hasNextPage) {
-      return;
+    if (!query.hasNextPage) {
+      return
     }
 
-    fetchNextPage();
-  }, [isFetchingNextPage, hasNextPage, fetchNextPage]);
+    query.fetchNextPage()
+  }
 
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor("taskDescription", {
-        cell: (info) => info.getValue(),
-        header: t("Type"),
-      }),
-      columnHelper.accessor("target", {
-        cell: (info) => {
-          if (!info.row.original.deviceId) {
-            return info.getValue();
-          }
+  const columns = [
+    columnHelper.accessor("taskDescription", {
+      cell: (info) => <Text>{info.getValue()}</Text>,
+      header: t("Type"),
+    }),
+    columnHelper.accessor("target", {
+      cell: (info) => {
+        if (!info.row.original.deviceId) {
+          return <Text>{info.getValue()}</Text>
+        }
 
-          return (
-            <Text
-              as={Link}
-              to={`/app/devices/${info.row.original.deviceId}/tasks`}
-              textDecoration="underline"
-            >
-              {info.getValue()}
-            </Text>
-          );
-        },
-        header: t("Target"),
-      }),
-      columnHelper.accessor("author", {
-        cell: (info) => info.getValue(),
-        header: t("Creator"),
-      }),
-      columnHelper.accessor("status", {
-        cell: (info) => <TaskStatusTag status={info.getValue()} />,
-        header: t("Status"),
-      }),
-      columnHelper.accessor("executionDate", {
-        cell: (info) =>
-          info.getValue() ? formatDate(info.getValue()) : t("N/A"),
-        header: t("Execution time"),
-      }),
-      columnHelper.accessor("comments", {
-        cell: (info) => info.getValue(),
-        header: t("Comments"),
-      }),
-      columnHelper.display({
-        id: "actions",
-        cell: (info) => (
-          <Button
-            variant="ghost"
-            colorScheme="green"
-            onClick={() => openTask(info.row.original.id)}
+        return (
+          <EntityLink
+            to={`/app/devices/${info.row.original.deviceId}/tasks`}
+            textDecoration="underline"
           >
-            {t("See details")}
-          </Button>
-        ),
-        header: "",
-        enableSorting: false,
-        meta: {
-          align: "right",
-        },
-      }),
-    ],
-    [t]
-  );
+            {info.getValue()}
+          </EntityLink>
+        )
+      },
+      header: t("Target"),
+    }),
+    columnHelper.accessor("author", {
+      cell: (info) => <Text>{info.getValue()}</Text>,
+      header: t("Creator"),
+    }),
+    columnHelper.accessor("status", {
+      cell: (info) => <TaskStatusTag status={info.getValue()} />,
+      header: t("Status"),
+    }),
+    columnHelper.accessor("executionDate", {
+      cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
+      header: t("Execution time"),
+    }),
+    columnHelper.accessor("comments", {
+      cell: (info) => <Text>{info.getValue()}</Text>,
+      header: t("Comments"),
+    }),
+    columnHelper.display({
+      id: "actions",
+      cell: (info) => (
+        <Button variant="ghost" colorPalette="green" onClick={() => openTask(info.row.original.id)}>
+          {t("See details")}
+        </Button>
+      ),
+      header: "",
+      enableSorting: false,
+      meta: {
+        align: "right",
+      },
+    }),
+  ]
 
-  const flatData = useMemo(
-    () => data?.pages?.flatMap((page) => page) ?? [],
-    [data]
-  );
+  const flatData = query.data?.pages?.flatMap((page) => page) ?? []
 
   return {
+    ...query,
     data: flatData,
-    isLoading: isPending,
-    hasNextPage,
-    fetchNextPage,
-    isFetchingNextPage,
-    refetch,
     pagination,
     onBottomReached,
-    disclosure,
-    taskId,
-    onClose,
     applyFilter,
     clearFilter,
     form,
     columns,
-  };
+  }
 }

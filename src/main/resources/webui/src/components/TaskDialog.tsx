@@ -1,230 +1,245 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { QUERIES } from "@/constants";
-import { useToast } from "@/hooks";
-import { TaskStatus } from "@/types";
-import { formatDate } from "@/utils";
+import api from "@/api"
+import { QUERIES } from "@/constants"
+import { useDialogConfig } from "@/dialog"
+import { TaskStatus } from "@/types"
+import { formatDate, getSchedulePriorityLabel } from "@/utils"
 import {
   Box,
   Button,
-  Divider,
+  Dialog,
   Flex,
   Heading,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
+  Portal,
+  Separator,
   Skeleton,
   Spinner,
   Stack,
   Tag,
   Text,
-  UseDisclosureReturn,
-} from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
+} from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { useState } from "react"
+import { Download } from "react-feather"
+import { useTranslation } from "react-i18next"
 
 export type TaskDialogProps = {
-  id: number;
-} & UseDisclosureReturn;
+  id: number
+}
 
 export default function TaskDialog(props: TaskDialogProps) {
-  const { isOpen, onClose, id } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-  const [showLog, setShowLog] = useState<boolean>(false);
-  
+  const { id } = props
+  const { t } = useTranslation()
+  const dialogConfig = useDialogConfig()
+  const [showLog, setShowLog] = useState<boolean>(false)
+
   const { data: task, isPending } = useQuery({
     queryKey: [QUERIES.TASK, id],
     queryFn: async () => api.task.getById(id),
     enabled: Boolean(id),
     refetchIntervalInBackground: true,
     refetchInterval: (q) => {
-      if (open) {
-        const taskStatus = q.state.data?.status;
+      if (dialogConfig.props.isOpen) {
+        const taskStatus = q.state.data?.status
         if (
           taskStatus === TaskStatus.Cancelled ||
           taskStatus === TaskStatus.Failure ||
           taskStatus === TaskStatus.Success
         ) {
-          return false;
+          return false
         }
-        return 5000;
+        return 5000
       }
-      return false;
+      return false
     },
-  });
+  })
 
-  const toggleLog = useCallback(() => {
-    setShowLog((prev) => !prev);
-  }, []);
+  const creationDate = task?.creationDate ? formatDate(task?.creationDate) : null
+  const executionDate = task?.executionDate ? formatDate(task?.executionDate) : null
+  const priorityLabel = getSchedulePriorityLabel(task?.priority)
 
-  const creationDate = useMemo(() => {
-    return task?.creationDate ? formatDate(task?.creationDate) : null;
-  }, [task]);
-
-  const executionDate = useMemo(() => {
-    return task?.executionDate ? formatDate(task?.executionDate) : null;
-  }, [task]);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setShowLog(false);
-    }
-  }, [isOpen]);
+  function toggleLog() {
+    setShowLog((prev) => !prev)
+  }
 
   return (
-    <Modal
-      isOpen={isOpen}
-      isCentered
-      motionPreset="slideInBottom"
-      onClose={onClose}
-      size="2xl"
+    <Dialog.Root
+      open={dialogConfig.props.isOpen}
+      placement="center"
+      motionPreset="slide-in-bottom"
+      size="lg"
+      onOpenChange={(e) => {
+        if (!e.open) {
+          dialogConfig.close()
+        }
+      }}
+      onExitComplete={() => {
+        dialogConfig.remove()
+      }}
     >
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader as="h3" fontSize="xl" lineHeight="120%" fontWeight="bold">
-          {t("Task details")}
-        </ModalHeader>
-        <ModalBody>
-          <Stack spacing="6">
-            <Stack spacing="3">
-              <Flex alignItems="center">
-                <Box w="140px">
-                  <Text color="grey.400">{t("ID")}</Text>
-                </Box>
-                <Skeleton isLoaded={!isPending}>
-                  <Text>{task?.id ?? "N/A"}</Text>
-                </Skeleton>
-              </Flex>
-              <Flex alignItems="center">
-                <Box w="140px">
-                  <Text color="grey.400">{t("Description")}</Text>
-                </Box>
-                <Skeleton isLoaded={!isPending}>
-                  <Text>{task?.taskDescription ?? "N/A"}</Text>
-                </Skeleton>
-              </Flex>
-              <Flex alignItems="center">
-                <Box w="140px">
-                  <Text color="grey.400">{t("Comments")}</Text>
-                </Box>
-                <Skeleton isLoaded={!isPending}>
-                  <Text>{task?.comments ?? "N/A"}</Text>
-                </Skeleton>
-              </Flex>
-              <Flex alignItems="center">
-                <Box w="140px">
-                  <Text color="grey.400">{t("Creation")}</Text>
-                </Box>
-                <Skeleton isLoaded={!isPending}>
-                  <Text>{creationDate ?? "N/A"}</Text>
-                </Skeleton>
-              </Flex>
-              <Flex alignItems="center">
-                <Box w="140px">
-                  <Text color="grey.400">{t("Execution")}</Text>
-                </Box>
-                <Skeleton isLoaded={!isPending}>
-                  <Text>{executionDate ?? "N/A"}</Text>
-                </Skeleton>
-              </Flex>
-              <Flex alignItems="center">
-                <Box w="140px">
-                  <Text color="grey.400">{t("Status")}</Text>
-                </Box>
-                <Skeleton isLoaded={!isPending}>
-                  {task?.status === TaskStatus.Scheduled && (
-                    <Tag colorScheme="yellow">{t("Scheduled")}</Tag>
-                  )}
-                  {task?.status === TaskStatus.Running && (
-                    <Stack direction="row" alignItems="center" spacing="3">
-                      <Spinner size="sm" />
-                      <Text>{t("Running")}</Text>
-                    </Stack>
-                  )}
-                  {task?.status === TaskStatus.Failure && (
-                    <Tag colorScheme="red">{t("Failure")}</Tag>
-                  )}
-                  {task?.status === TaskStatus.Cancelled && (
-                    <Tag colorScheme="grey">{t("Cancelled")}</Tag>
-                  )}
-                  {task?.status === TaskStatus.Success && (
-                    <Tag colorScheme="green">{t("Success")}</Tag>
-                  )}
-                  {task?.status === TaskStatus.Waiting && (
-                    <Tag colorScheme="grey">{t("Waiting")}</Tag>
-                  )}
-                  {task?.status === TaskStatus.New && (
-                    <Tag colorScheme="grey">{t("New")}</Tag>
-                  )}
-                </Skeleton>
-              </Flex>
-            </Stack>
-
-            {task?.script && (
-              <>
-                <Divider />
-                <Stack spacing="4">
-                  <Heading size="sm">{t("Script")}</Heading>
-                  <Stack spacing="4">
-                    <Box
-                      p="6"
-                      borderWidth="1px"
-                      borderColor="grey.100"
-                      borderRadius="xl"
-                    >
-                      <Text fontFamily="mono" whiteSpace="pre-wrap">
-                        {task?.script}
-                      </Text>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header as="h3" fontSize="xl" lineHeight="120%" fontWeight="bold">
+              {t("Task details")}
+            </Dialog.Header>
+            <Dialog.Body>
+              <Stack gap="6">
+                <Stack gap="3">
+                  <Flex alignItems="center">
+                    <Box w="140px">
+                      <Text color="grey.400">{t("ID")}</Text>
                     </Box>
+                    <Skeleton loading={isPending}>
+                      <Text>{task?.id ?? "N/A"}</Text>
+                    </Skeleton>
+                  </Flex>
+                  <Flex alignItems="center">
+                    <Box w="140px">
+                      <Text color="grey.400">{t("Description")}</Text>
+                    </Box>
+                    <Skeleton loading={isPending}>
+                      <Text>{task?.taskDescription ?? "N/A"}</Text>
+                    </Skeleton>
+                  </Flex>
+                  <Flex alignItems="center">
+                    <Box w="140px">
+                      <Text color="grey.400">{t("Comments")}</Text>
+                    </Box>
+                    <Skeleton loading={isPending}>
+                      <Text>{task?.comments ?? "N/A"}</Text>
+                    </Skeleton>
+                  </Flex>
+                  <Flex alignItems="center">
+                    <Box w="140px">
+                      <Text color="grey.400">{t("Creation")}</Text>
+                    </Box>
+                    <Skeleton loading={isPending}>
+                      <Text>{creationDate ?? "N/A"}</Text>
+                    </Skeleton>
+                  </Flex>
+                  <Flex alignItems="center">
+                    <Box w="140px">
+                      <Text color="grey.400">{t("Execution")}</Text>
+                    </Box>
+                    <Skeleton loading={isPending}>
+                      <Text>{executionDate ?? "N/A"}</Text>
+                    </Skeleton>
+                  </Flex>
+                  <Flex alignItems="center">
+                    <Box w="140px">
+                      <Text color="grey.400">{t("Priority")}</Text>
+                    </Box>
+                    <Skeleton loading={isPending}>
+                      <Text>{t(priorityLabel ?? "N/A")}</Text>
+                    </Skeleton>
+                  </Flex>
+                  <Flex alignItems="center">
+                    <Box w="140px">
+                      <Text color="grey.400">{t("Status")}</Text>
+                    </Box>
+                    <Skeleton loading={isPending}>
+                      {task?.status === TaskStatus.Scheduled && (
+                        <Tag.Root colorPalette="yellow">{t("Scheduled")}</Tag.Root>
+                      )}
+                      {task?.status === TaskStatus.Running && (
+                        <Stack direction="row" alignItems="center" gap="3">
+                          <Spinner size="sm" />
+                          <Text>{t("Running")}</Text>
+                        </Stack>
+                      )}
+                      {task?.status === TaskStatus.Failure && (
+                        <Tag.Root colorPalette="red">{t("Failure")}</Tag.Root>
+                      )}
+                      {task?.status === TaskStatus.Cancelled && (
+                        <Tag.Root colorPalette="grey">{t("Cancelled")}</Tag.Root>
+                      )}
+                      {task?.status === TaskStatus.Success && (
+                        <Tag.Root colorPalette="green">{t("Success")}</Tag.Root>
+                      )}
+                      {task?.status === TaskStatus.Waiting && (
+                        <Tag.Root colorPalette="grey">{t("Waiting")}</Tag.Root>
+                      )}
+                      {task?.status === TaskStatus.New && (
+                        <Tag.Root colorPalette="grey">{t("New")}</Tag.Root>
+                      )}
+                    </Skeleton>
+                  </Flex>
+                </Stack>
 
-                    {Object.keys(task?.userInputValues)?.map((key) => (
-                      <Flex alignItems="center" key={key}>
-                        <Box w="140px">
-                          <Text color="grey.400">{key}</Text>
+                {task?.script && (
+                  <>
+                    <Separator />
+                    <Stack gap="4">
+                      <Heading size="md" fontWeight="semibold">
+                        {t("Script")}
+                      </Heading>
+                      <Stack gap="4">
+                        <Box p="6" borderWidth="1px" borderColor="grey.100" borderRadius="xl">
+                          <Text fontFamily="mono" whiteSpace="pre-wrap">
+                            {task?.script}
+                          </Text>
                         </Box>
 
-                        <Text>{task?.userInputValues[key] ?? "N/A"}</Text>
-                      </Flex>
-                    ))}
-                  </Stack>
-                </Stack>
-              </>
-            )}
+                        {Object.keys(task?.userInputValues)?.map((key) => (
+                          <Flex alignItems="center" key={key}>
+                            <Box w="140px">
+                              <Text color="grey.400">{key}</Text>
+                            </Box>
 
-            {showLog && (
-              <>
-                <Divider />
-                <Heading size="sm">{t("Log")}</Heading>
-                <Box
-                  p="6"
-                  borderWidth="1px"
-                  borderColor="grey.100"
-                  borderRadius="xl"
-                >
-                  <Text fontFamily="mono" whiteSpace="pre-wrap">
-                    {task?.log}
-                  </Text>
-                </Box>
-              </>
-            )}
-          </Stack>
-        </ModalBody>
-        <ModalFooter>
-          <Stack direction="row" spacing="3">
-            <Button onClick={toggleLog} isDisabled={task?.log === ""}>
-              {t(showLog ? "Hide logs" : "Show logs")}
-            </Button>
-            <Button variant="primary" onClick={onClose}>
-              {t("OK")}
-            </Button>
-          </Stack>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
+                            <Text>{task?.userInputValues[key] ?? "N/A"}</Text>
+                          </Flex>
+                        ))}
+                      </Stack>
+                    </Stack>
+                  </>
+                )}
+
+                {showLog && (
+                  <>
+                    <Separator />
+                    <Stack gap="4">
+                      <Heading size="md" fontWeight="semibold">
+                        {t("Debug logs")}
+                      </Heading>
+                      <Box
+                        p="6"
+                        bg="grey.50"
+                        borderWidth="1px"
+                        borderColor="grey.100"
+                        borderRadius="xl"
+                      >
+                        <Text fontFamily="mono" whiteSpace="pre-wrap">
+                          {task?.log}
+                        </Text>
+                      </Box>
+                      <Button variant="ghost" size="sm" alignSelf="start" asChild>
+                        <a
+                          href={`/api/tasks/${task.id}/debuglog`}
+                          download={`task-${task?.id}-debug.log`}
+                        >
+                          <Download />
+                          {t("Download logs")}
+                        </a>
+                      </Button>
+                    </Stack>
+                  </>
+                )}
+              </Stack>
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Stack direction="row" gap="3">
+                <Button onClick={toggleLog} disabled={task?.log === ""}>
+                  {t(showLog ? "Hide logs" : "Show logs")}
+                </Button>
+                <Button variant="primary" onClick={() => dialogConfig.close()}>
+                  {t("OK")}
+                </Button>
+              </Stack>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
+  )
 }

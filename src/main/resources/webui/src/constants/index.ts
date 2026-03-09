@@ -1,89 +1,99 @@
-import i18n from "@/i18n";
-import { DeviceSoftwareLevel, Level } from "@/types";
-
 export const QUERIES = {
   SERVER_INFO: "server-info",
   USER: "user",
   TASK: "task",
   CREDENTIAL_SET_LIST: "credential-set-list",
-  DOMAIN_LIST: "domain-list",
+  DOMAIN_LIST: "domain:list",
+  DOMAIN_OPTION_LIST: "domain:option:list",
   DIAGNOSTIC_LIST: "diagnostic-list",
   SCRIPT_LIST: "script-list",
   SCRIPT_DETAIL: "script-detail",
   SCRIPT_VALIDATE: "script-validate",
   DEVICE_LIST: "device-list",
+  DEVICE_SEARCH_LIST: "device-search-list",
   DEVICE_TYPE_LIST: "device-type-list",
   DEVICE_REPORT_GROUP_LIST: "device-report-group-list",
   DEVICE_GROUPS: "device-groups",
   DEVICE_GROUP_AGGREGATED_SEARCH: "device-group-aggregated-search",
+  DEVICE_CONFIGS: "device:configs",
+  DEVICE_INFINITE_CONFIGS: "device:configs:infinite",
   DEVICE_CONFIG_COMPARE: "device-config-compare",
   DEVICE_DETAIL: "device-detail",
-  POLICY_LIST: "policy-list",
-};
-
-export const REDIRECT_SEARCH_PARAM = "target";
-
-export const HIDDEN_PASWORD = "******";
-
-export const ANY_OPTION = {
-  label: i18n.t("[Any]"),
-  value: null,
-};
-
-export const USER_LEVEL_OPTIONS = [
-  {
-    label: i18n.t("Admin"),
-    value: Level.Admin,
-  },
-  {
-    label: i18n.t("Read-write, plus execute scripts"),
-    value: Level.ExecureReadWrite,
-  },
-  {
-    label: i18n.t("Read-write"),
-    value: Level.ReadWrite,
-  },
-  {
-    label: i18n.t("Operator"),
-    value: Level.Operator,
-  },
-  {
-    label: i18n.t("Visitor"),
-    value: Level.Visitor,
-  },
-];
-
-export function getUserLevelOption(key: Level) {
-  return USER_LEVEL_OPTIONS.find((option) => option.value === key);
+  POLICY_LIST: "policy:list",
+  POLICY_SEARCH_LIST: "policy:search:list",
+  POLICY_OPTION_LIST: "policy:option:list",
+  RULE_LIST: "rule:list",
+  RULE_OPTION_LIST: "rule:option:list",
 }
 
-export function getUserLevelLabel(key: Level) {
-  return getUserLevelOption(key)?.label;
+export const MUTATIONS = {
+  EXPORT_DATA: ["mutation:export:data"],
+  GROUP_REMOVE: ["mutation:group:remove"],
+  ADMIN_DRIVER_RELOAD: ["mutation:admin:driver:reload"],
+  ADMIN_API_TOKEN_CREATE: ["mutation:admin:apitoken:create"],
+  ADMIN_API_TOKEN_REMOVE: ["mutation:admin:apitoken:remove"],
+  ADMIN_CREDENTIAL_SET_CREATE: ["mutation:admin:credentialset:create"],
+  ADMIN_CREDENTIAL_SET_REMOVE: ["mutation:admin:credentialset:remove"],
+  ADMIN_CREDENTIAL_SET_UPDATE: ["mutation:admin:credentialset:update"],
+  ADMIN_DOMAIN_CREATE: ["mutation:admin:domain:create"],
+  ADMIN_DOMAIN_REMOVE: ["mutation:admin:domain:remove"],
+  ADMIN_DOMAIN_UPDATE: ["mutation:admin:domain:update"],
+  ADMIN_USER_CREATE: ["mutation:admin:user:create"],
+  ADMIN_USER_REMOVE: ["mutation:admin:user:remove"],
+  ADMIN_USER_UPDATE: ["mutation:admin:user:update"],
+  ADMIN_HOOK_CREATE: ["mutation:admin:hook:create"],
+  ADMIN_HOOK_REMOVE: ["mutation:admin:hook:remove"],
+  ADMIN_HOOK_UPDATE: ["mutation:admin:hook:update"],
+  RULE_DISABLE: ["mutation:rule:disable"],
+  RULE_ENABLE: ["mutation:rule:enable"],
+  RULE_REMOVE: ["mutation:rule:remove"],
+  RULE_CREATE: ["mutation:rule:create"],
+  RULE_UPDATE: ["mutation:rule:update"],
+  RULE_EXEMPTED_DEVICE_UPDATE: ["mutation:rule:exempted:device:update"],
+  HARDWARE_RULE_REMOVE: ["mutation:hardwarerule:remove"],
+  HARDWARE_RULE_CREATE: ["mutation:hardwarerule:create"],
+  HARDWARE_RULE_UPDATE: ["mutation:hardwarerule:update"],
+  SOFTWARE_RULE_REMOVE: ["mutation:softwarerule:remove"],
+  SOFTWARE_RULE_CREATE: ["mutation:softwarerule:create"],
+  SOFTWARE_RULE_UPDATE: ["mutation:softwarerule:update"],
+  SOFTWARE_RULE_REORDER: ["mutation:softwarerule:reorder"],
+  POLICY_REMOVE: ["mutation:policy:remove"],
+  POLICY_CREATE: ["mutation:policy:create"],
+  POLICY_UPDATE: ["mutation:policy:update"],
+  DEVICE_UPDATE: ["mutation:device:update"],
+  DEVICE_REMOVE: ["mutation:device:remove"],
+  DEVICE_CREATE: ["mutation:device:create"],
+  SCRIPT_REMOVE: ["mutation:script:remove"],
+  SCRIPT_CREATE: ["mutation:script:create"],
+  SCRIPT_UPDATE: ["mutation:script:update"],
+  DIAGNOSTIC_DISABLE: ["mutation:diagnostic:disable"],
+  DIAGNOSTIC_ENABLE: ["mutation:diagnostic:enable"],
+  DIAGNOSTIC_REMOVE: ["mutation:diagnostic:remove"],
+  DIAGNOSTIC_UPDATE: ["mutation:diagnostic:update"],
+  TASK_CREATE: ["mutation:task:create"],
 }
 
-export const DEVICE_LEVEL_OPTIONS = [
-  {
-    label: i18n.t("Gold"),
-    value: DeviceSoftwareLevel.GOLD,
-  },
-  {
-    label: i18n.t("Silver"),
-    value: DeviceSoftwareLevel.SILVER,
-  },
-  {
-    label: i18n.t("Bronze"),
-    value: DeviceSoftwareLevel.BRONZE,
-  },
-  {
-    label: i18n.t("Non compliant"),
-    value: DeviceSoftwareLevel.NON_COMPLIANT,
-  },
-  {
-    label: i18n.t("Unknown"),
-    value: DeviceSoftwareLevel.UNKNOWN,
-  },
-];
+export const REDIRECT_SEARCH_PARAM = "target"
+export const HIDDEN_PASWORD = "******"
 
-export function getDeviceLevelOption(key: DeviceSoftwareLevel) {
-  return DEVICE_LEVEL_OPTIONS.find((option) => option.value === key);
-}
+export const NETSHOT_APP_LIBRARIES = [
+  "Hibernate",
+  "Quartz",
+  "Jsch",
+  "Apache Commons",
+  "Grizzly",
+  "Jersey",
+  "Jackson",
+  "Java DiffUtils",
+  "SLF4j",
+  "React",
+  "ChakraUI",
+  "framer-motion",
+  "@tanstack/react-query",
+  "Chart.js",
+  "JRadius",
+  "Apache PO",
+  "Swagger",
+]
+
+export const PAGINATION_LIMIT = 40

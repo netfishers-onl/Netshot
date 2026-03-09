@@ -1,88 +1,105 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import QueryBuilderButton from "@/components/QueryBuilderButton";
-import { QueryBuilderValue } from "@/components/QueryBuilderControl";
-import { QUERIES } from "@/constants";
-import { useToast } from "@/hooks";
-import { DeviceType, Option } from "@/types";
-import {
-  Button,
-  Center,
-  Heading,
-  Spinner,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import GroupDeviceBox from "./GroupDeviceBox";
+import api from "@/api"
+import { QueryBuilderButton, QueryBuilderValue } from "@/components"
+import { QUERIES } from "@/constants"
+import { DeviceType } from "@/types"
+import { Button, Center, Heading, Spinner, Stack, Text } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { useVirtualizer } from "@tanstack/react-virtual"
+import { useRef } from "react"
+import { useTranslation } from "react-i18next"
+import GroupDeviceBox from "./GroupDeviceBox"
 
 export type DynamicGroupDeviceListProps = {
-  driver: Option<DeviceType>;
-  query: string;
-  onUpdateQuery(values: QueryBuilderValue): void;
-};
+  driver: DeviceType["name"]
+  query: string
+  onUpdateQuery(values: QueryBuilderValue): void
+}
 
-export default function DynamicGroupDeviceList(
-  props: DynamicGroupDeviceListProps
-) {
-  const { query, driver, onUpdateQuery } = props;
+export default function DynamicGroupDeviceList(props: DynamicGroupDeviceListProps) {
+  const { query, driver, onUpdateQuery } = props
 
-  const { t } = useTranslation();
-  const toast = useToast();
+  const { t } = useTranslation()
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const { data, isPending } = useQuery({
-    queryKey: [QUERIES.DEVICE_GROUP_AGGREGATED_SEARCH,
-        query, driver?.value?.name],
+    queryKey: [QUERIES.DEVICE_GROUP_AGGREGATED_SEARCH, query, driver],
     queryFn: async () => {
       return api.device.search({
-        driver: driver?.value?.name,
+        driver,
         query,
-      });
+      })
     },
-  });
+  })
 
-  const isEmptyOrUndefined = useMemo(
-    () => data === undefined || data?.devices?.length === 0,
-    [data]
-  );
+  const virtualizer = useVirtualizer({
+    count: data?.devices?.length ?? 0,
+    getScrollElement: () => contentRef.current,
+    estimateSize: () => 100,
+    gap: 8,
+  })
 
-  if (isEmptyOrUndefined) {
-    return (
-      <Center flex="1">
-        <Stack alignItems="center" spacing="4">
-          <Stack alignItems="center" spacing="1">
-            <Heading size="md">{t("No results")}</Heading>
-            <Text color="grey.400">{t("No device matching her criteria")}</Text>
-          </Stack>
-
-          <QueryBuilderButton
-            renderItem={(open) => (
-              <Button onClick={open}>{t("Edit query")}</Button>
-            )}
-            onSubmit={onUpdateQuery}
-          />
-        </Stack>
-      </Center>
-    );
-  }
+  const isEmptyOrUndefined = data === undefined || data?.devices?.length === 0
 
   if (isPending) {
     return (
       <Center flex="1">
-        <Stack alignItems="center" spacing="4">
+        <Stack alignItems="center" gap="4">
           <Spinner size="lg" />
-          <Stack alignItems="center" spacing="1">
+          <Stack alignItems="center" gap="1">
             <Heading size="md">{t("Loading")}</Heading>
             <Text color="grey.400">{t("Aggregating device in progress")}</Text>
           </Stack>
         </Stack>
       </Center>
-    );
+    )
   }
 
-  return data?.devices?.map((device, index) => (
-    <GroupDeviceBox device={device} key={device?.id} />
-  ));
+  if (isEmptyOrUndefined) {
+    return (
+      <Center flex="1">
+        <Stack alignItems="center" gap="4">
+          <Stack alignItems="center" gap="1">
+            <Heading size="md">{t("No results")}</Heading>
+            <Text color="grey.400">{t("No device matching her criteria")}</Text>
+          </Stack>
+
+          <QueryBuilderButton
+            renderItem={(open) => <Button onClick={open}>{t("Edit query")}</Button>}
+            onSubmit={onUpdateQuery}
+          />
+        </Stack>
+      </Center>
+    )
+  }
+
+  return (
+    <Stack ref={contentRef} overflow="auto" flex="1">
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const device = data?.devices?.[virtualItem.index]
+
+          return (
+            <div
+              key={virtualItem.key}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+            >
+              <GroupDeviceBox device={device} />
+            </div>
+          )
+        })}
+      </div>
+    </Stack>
+  )
 }

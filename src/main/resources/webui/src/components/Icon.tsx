@@ -1,4 +1,4 @@
-import { chakra, ChakraComponent, HTMLChakraProps } from "@chakra-ui/react";
+import { Steps, chakra, ChakraComponent, HTMLChakraProps } from "@chakra-ui/react";
 import { createElement } from "react";
 import * as icons from "react-feather";
 import { Javascript, Python } from "./icons";

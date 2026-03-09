@@ -1,13 +1,13 @@
-import { DeviceType, DiagnosticResultType, Group, Option } from "@/types";
+import { DeviceType, DiagnosticResultType } from "@/types"
 
 export type Form = {
-  name: string;
-  resultType: Option<DiagnosticResultType>;
-  targetGroup: Group;
-  deviceDriver: Option<DeviceType>;
-  cliMode: Option<string>;
-  command: string;
-  modifierPattern: string;
-  modifierReplacement: string;
-  script: string;
-};
+  name: string
+  resultType: DiagnosticResultType
+  targetGroup: number
+  deviceDriver: DeviceType["name"]
+  cliMode: string
+  command: string
+  modifierPattern: string
+  modifierReplacement: string
+  script: string
+}

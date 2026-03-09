@@ -1,8 +1,8 @@
-import { LegacyRef, forwardRef } from "react";
-import { IconProps } from "react-feather";
+import { Ref, forwardRef } from "react"
+import { IconProps } from "react-feather"
 
-function Python(props: IconProps, ref: LegacyRef<SVGSVGElement>) {
-  const { size = 24, color = "currentColor", ...rest } = props;
+function Python(props: IconProps, ref: Ref<SVGSVGElement>) {
+  const { size = 24, color = "currentColor", ...rest } = props
 
   return (
     <svg
@@ -19,7 +19,7 @@ function Python(props: IconProps, ref: LegacyRef<SVGSVGElement>) {
         fill={color}
       />
     </svg>
-  );
+  )
 }
 
-export default forwardRef(Python);
+export default forwardRef(Python)

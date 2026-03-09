@@ -1,38 +1,38 @@
-import { DeviceSoftwareLevel, DeviceType, Group, Option } from "@/types";
+import { DeviceSoftwareLevel, DeviceType } from "@/types"
 
 export type RuleForm = {
-  name: string;
-  script: string;
-  text: string;
-  regExp: boolean;
-  context: string;
-  driver: Option<DeviceType>;
-  field: Option<string>;
-  anyBlock: Option<boolean>;
-  matchAll: boolean;
-  invert: Option<boolean>;
-  normalize: boolean;
-};
+  name: string
+  script: string
+  text: string
+  regExp: boolean
+  context: string
+  driver: DeviceType["name"]
+  field: string
+  anyBlock: string
+  matchAll: boolean
+  invert: string
+  normalize: boolean
+}
 
 export type SoftwareRuleFormValues = {
-  driver: Option<DeviceType>;
-  family: string;
-  familyRegExp: boolean;
-  group: Group;
-  level: Option<DeviceSoftwareLevel>;
-  partNumber: string;
-  partNumberRegExp: boolean;
-  version: string;
-  versionRegExp: boolean;
-};
+  driver: DeviceType["name"]
+  family: string
+  familyRegExp: boolean
+  group: number
+  level: DeviceSoftwareLevel
+  partNumber: string
+  partNumberRegExp: boolean
+  version: string
+  versionRegExp: boolean
+}
 
 export type HardwareRuleFormValues = {
-  driver: Option<DeviceType>;
-  endOfLife: string;
-  endOfSale: string;
-  family: string;
-  familyRegExp: boolean;
-  partNumber: string;
-  partNumberRegExp: boolean;
-  group: Group;
-};
+  driver: DeviceType["name"]
+  endOfLife: string
+  endOfSale: string
+  family: string
+  familyRegExp: boolean
+  partNumber: string
+  partNumberRegExp: boolean
+  group: number
+}

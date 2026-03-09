@@ -1,127 +1,114 @@
-import { Button, Heading, Stack, Tag, Text } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { createColumnHelper } from "@tanstack/react-table";
-import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { useParams } from "react-router";
+import { Button, Heading, Stack, Tag, Text } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { createColumnHelper } from "@tanstack/react-table"
+import { useMemo } from "react"
+import { useTranslation } from "react-i18next"
+import { useParams } from "react-router"
 
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { AlertBox, DataTable, Protected } from "@/components";
-import Icon from "@/components/Icon";
-import { useToast } from "@/hooks";
+import api from "@/api"
+import { AlertBox, DataTable, Protected } from "@/components"
+import Icon from "@/components/Icon"
 import {
   DeviceComplianceResult,
   DeviceComplianceResultType,
   DeviceSoftwareLevel,
   Level,
-} from "@/types";
-import { formatDate, getSoftwareLevelColor } from "@/utils";
+} from "@/types"
+import { formatDate, getSoftwareLevelColor } from "@/utils"
 
-import DeviceComplianceButton from "../components/DeviceComplianceButton";
-import { QUERIES } from "../constants";
-import { useDevice } from "../contexts/device";
+import DeviceComplianceButton from "../components/DeviceComplianceButton"
+import { QUERIES } from "../constants"
+import { useDevice } from "../contexts/device"
 
-const columnHelper = createColumnHelper<DeviceComplianceResult>();
+const columnHelper = createColumnHelper<DeviceComplianceResult>()
 
 export default function DeviceComplianceScreen() {
-  const { t } = useTranslation();
-  const { device } = useDevice();
-  const toast = useToast();
-  const params = useParams<{ id: string }>();
+  const { t } = useTranslation()
+  const { device } = useDevice()
+  const params = useParams<{ id: string }>()
 
   const { data = [], isPending } = useQuery({
     queryKey: [QUERIES.DEVICE_COMPLIANCE, params?.id],
     queryFn: async () => api.device.getComplianceResultById(+params?.id),
-  });
+  })
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("policyName", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Policy"),
         enableSorting: true,
       }),
       columnHelper.accessor("ruleName", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Rule"),
         enableSorting: true,
       }),
       columnHelper.accessor("result", {
         cell: (info) => {
-          const value = info.getValue();
+          const value = info.getValue()
           return (
             <>
               {value === DeviceComplianceResultType.Conforming && (
-                <Tag>{t("Compliant")}</Tag>
+                <Tag.Root>{t("Compliant")}</Tag.Root>
               )}
               {value === DeviceComplianceResultType.NonConfirming && (
-                <Tag colorScheme="red">{t("Non-compliant")}</Tag>
+                <Tag.Root colorPalette="red">{t("Non-compliant")}</Tag.Root>
               )}
               {value === DeviceComplianceResultType.Disabled && (
-                <Tag colorScheme="grey">{t("Disabled")}</Tag>
+                <Tag.Root colorPalette="grey">{t("Disabled")}</Tag.Root>
               )}
             </>
-          );
+          )
         },
         header: t("Result"),
         enableSorting: true,
       }),
       columnHelper.accessor("comment", {
-        cell: (info) => info.getValue(),
+        cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("Details"),
         enableSorting: true,
       }),
       columnHelper.accessor("checkDate", {
-        cell: (info) =>
-          info.getValue() ? formatDate(info.getValue()) : t("N/A"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
         header: t("Last check"),
         enableSorting: true,
       }),
     ],
     [t]
-  );
+  )
 
   const softwareLevelColor = useMemo(() => {
-    return getSoftwareLevelColor(device?.softwareLevel);
-  }, [device?.softwareLevel]);
+    return getSoftwareLevelColor(device?.softwareLevel)
+  }, [device?.softwareLevel])
 
   return (
-    <Stack spacing="6" flex="1">
-      <Stack spacing="12">
-        <Stack spacing="4">
+    <Stack gap="6" flex="1">
+      <Stack gap="12">
+        <Stack gap="4">
           <Heading size="md">{t("Software")}</Heading>
           <AlertBox
-            type={
-              device?.softwareLevel === DeviceSoftwareLevel.UNKNOWN
-                ? "error"
-                : "success"
-            }
+            type={device?.softwareLevel === DeviceSoftwareLevel.UNKNOWN ? "error" : "success"}
           >
             {device?.softwareLevel === DeviceSoftwareLevel.UNKNOWN ? (
               <Text>
-                {t(
-                  "The software version {{version}} does not conform to the software rules",
-                  {
-                    version: device?.softwareVersion || t("N/A"),
-                  }
-                )}
+                {t("The software version {{version}} does not conform to the software rules", {
+                  version: device?.softwareVersion || t("N/A"),
+                })}
               </Text>
             ) : (
               <Text>
-                {t(
-                  "The conformance level of the software version for this device is"
-                )}{" "}
-                <Tag colorScheme={softwareLevelColor}>
+                {t("The conformance level of the software version for this device is")}{" "}
+                <Tag.Root as="span" colorPalette={softwareLevelColor}>
                   {device?.softwareLevel}
-                </Tag>
+                </Tag.Root>
               </Text>
             )}
           </AlertBox>
         </Stack>
-        <Stack spacing="4">
+        <Stack gap="4">
           <Heading size="md">{t("Hardware")}</Heading>
-          <Stack spacing="3" direction="row">
+          <Stack gap="3" direction="row">
             <AlertBox type={device?.endOfSale ? "warning" : "success"}>
               {device?.endOfSale ? (
                 <Text>
@@ -162,7 +149,7 @@ export default function DeviceComplianceScreen() {
             </AlertBox>
           </Stack>
         </Stack>
-        <Stack spacing="4">
+        <Stack gap="4">
           <Heading size="md">{t("Configuration")}</Heading>
           {data?.length > 0 ? (
             <>
@@ -170,9 +157,7 @@ export default function DeviceComplianceScreen() {
                 {device?.compliant ? (
                   <Text>{t("The device is compliant with all policies")}</Text>
                 ) : (
-                  <Text>
-                    {t("The device is not in compliance with some policies")}
-                  </Text>
+                  <Text>{t("The device is not in compliance with some policies")}</Text>
                 )}
               </AlertBox>
               <DataTable columns={columns} data={data} loading={isPending} />
@@ -185,12 +170,8 @@ export default function DeviceComplianceScreen() {
           <DeviceComplianceButton
             devices={[device]}
             renderItem={(open) => (
-              <Button
-                alignSelf="start"
-                leftIcon={<Icon name="checkCircle" />}
-                variant="primary"
-                onClick={open}
-              >
+              <Button alignSelf="start" variant="primary" onClick={open}>
+                <Icon name="checkCircle" />
                 {t("Check compliance")}
               </Button>
             )}
@@ -198,5 +179,5 @@ export default function DeviceComplianceScreen() {
         </Protected>
       </Stack>
     </Stack>
-  );
+  )
 }

@@ -1,66 +1,54 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import Search from "@/components/Search";
-import { QUERIES } from "@/constants";
-import { useToast } from "@/hooks";
-import { Device, Script, SimpleDevice } from "@/types";
-import { sortAlphabetical } from "@/utils";
-import { Center, Spinner, Stack } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { CreateDeviceScriptButton } from "./CreateDeviceScriptButton";
-import DeviceScriptEditor from "./DeviceScriptEditor";
-import DeviceScriptItem from "./DeviceScriptItem";
+import api from "@/api"
+import Search from "@/components/Search"
+import { QUERIES } from "@/constants"
+import { Device, Script, SimpleDevice } from "@/types"
+import { sortAlphabetical } from "@/utils"
+import { Center, Spinner, Stack } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { useState } from "react"
+import { useTranslation } from "react-i18next"
+import { CreateDeviceScriptButton } from "./CreateDeviceScriptButton"
+import DeviceScriptEditor from "./DeviceScriptEditor"
+import DeviceScriptItem from "./DeviceScriptItem"
 
 export type DeviceScriptViewProps = {
-  devices: SimpleDevice[] | Device[];
-};
+  devices: SimpleDevice[] | Device[]
+}
 
 export default function DeviceScriptView(props: DeviceScriptViewProps) {
-  const { devices } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-  const [query, setQuery] = useState<string>("");
-  const [selected, setSelected] = useState<Script>(null);
-  const [pagination, setPagination] = useState({
+  const { devices } = props
+  const { t } = useTranslation()
+  const [query, setQuery] = useState<string>("")
+  const [selected, setSelected] = useState<Script>(null)
+  const [pagination] = useState({
     limit: 40,
     offset: 0,
-  });
-  
-  const { data: scripts, isPending, isSuccess } = useQuery({
+  })
+
+  const { data: scripts, isPending } = useQuery({
     queryKey: [QUERIES.SCRIPT_LIST, query, pagination.offset],
     queryFn: async () => api.script.getAll(pagination),
-    select: useCallback((data: Script[]): Script[] => {
-      return sortAlphabetical(data, "name").filter((item) =>
-        item.name?.startsWith(query)
-      );
-    }, [query]),
-  });
+    select(data: Script[]) {
+      return sortAlphabetical(data, "name").filter((item) => item.name?.startsWith(query))
+    },
+  })
 
-  const onQuery = useCallback((value: string) => {
-    setQuery(value);
-  }, []);
+  const onQuery = (value: string) => {
+    setQuery(value)
+  }
 
-  const onQueryClear = useCallback(() => {
-    setQuery("");
-  }, []);
+  const onQueryClear = () => {
+    setQuery("")
+  }
 
   return (
-    <Stack direction="row" spacing="7" overflow="auto" flex="1">
+    <Stack direction="row" gap="7" overflow="auto" flex="1">
       <Stack w="340px" overflow="auto">
         <Stack direction="row">
-          <Search
-            onQuery={onQuery}
-            onClear={onQueryClear}
-            placeholder={t("Search...")}
-          />
-          <CreateDeviceScriptButton
-            devices={devices}
-            onCreated={(script) => setSelected(script)}
-          />
+          <Search onQuery={onQuery} onClear={onQueryClear} placeholder={t("Search...")} />
+          <CreateDeviceScriptButton devices={devices} onCreated={(script) => setSelected(script)} />
         </Stack>
-        <Stack spacing="2" overflow="auto" flex="1">
+        <Stack gap="2" overflow="auto" flex="1">
           {isPending ? (
             <Center flex="1">
               <Spinner />
@@ -79,14 +67,9 @@ export default function DeviceScriptView(props: DeviceScriptViewProps) {
           )}
         </Stack>
       </Stack>
-
       {selected && (
-        <DeviceScriptEditor
-          key={selected?.id}
-          devices={devices}
-          scriptId={selected?.id}
-        />
+        <DeviceScriptEditor key={selected?.id} devices={devices} scriptId={selected?.id} />
       )}
     </Stack>
-  );
+  )
 }

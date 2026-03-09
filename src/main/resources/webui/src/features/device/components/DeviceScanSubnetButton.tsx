@@ -1,64 +1,51 @@
-import api, { CreateOrUpdateTaskPayload } from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { DomainSelect } from "@/components";
-import FormControl from "@/components/FormControl";
-import Icon from "@/components/Icon";
-import TaskDialog from "@/components/TaskDialog";
-import { Dialog } from "@/dialog";
-import { useToast } from "@/hooks";
-import { Option, TaskType } from "@/types";
-import {
-  Button,
-  Heading,
-  IconButton,
-  Stack,
-  useDisclosure,
-} from "@chakra-ui/react";
-import { useMutation } from "@tanstack/react-query";
-import {
-  MouseEvent,
-  ReactElement,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-import { useFieldArray, useForm, useFormContext } from "react-hook-form";
-import { useTranslation } from "react-i18next";
+import api, { CreateOrUpdateTaskPayload } from "@/api"
+import { NetshotError } from "@/api/httpClient"
+import { DomainSelect } from "@/components"
+import FormControl from "@/components/FormControl"
+import Icon from "@/components/Icon"
+import TaskDialog from "@/components/TaskDialog"
+import { MUTATIONS } from "@/constants"
+import { useCustomDialog, useFormDialogWithMutation } from "@/dialog"
+import { useToast } from "@/hooks"
+import { PropsWithRenderItem, TaskType } from "@/types"
+import { Button, Heading, IconButton, Stack } from "@chakra-ui/react"
+import { useMutation } from "@tanstack/react-query"
+import { useEffect } from "react"
+import { useFieldArray, useForm, useFormContext } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 
 type Form = {
-  domainId: Option<number>;
-  subnets: string[];
-};
+  domainId: string
+  subnets: string[]
+}
 
-export type DeviceScanSubnetButtonProps = {
-  renderItem(open: (evt: MouseEvent<HTMLButtonElement>) => void): ReactElement;
-};
+export type DeviceScanSubnetButtonProps = PropsWithRenderItem
 
 function DeviceCreateForm() {
-  const form = useFormContext();
-  const { t } = useTranslation();
+  const form = useFormContext()
+  const { t } = useTranslation()
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "subnets",
-  });
+  })
 
   useEffect(() => {
-    append("");
-  }, []);
+    append("")
+  }, [])
 
   return (
-    <Stack spacing="6">
-      <DomainSelect isRequired control={form.control} name="domainId" />
-      <Stack spacing="6">
+    <Stack gap="6">
+      <DomainSelect required control={form.control} name="domainId" />
+      <Stack gap="6">
         <Heading as="h5" size="sm">
           {t("Subnets or IP addresses")}
         </Heading>
         {fields.length > 0 && (
-          <Stack spacing="3">
+          <Stack gap="3">
             {fields.map((field, index) => (
-              <Stack direction="row" spacing="4" key={field.id}>
+              <Stack direction="row" gap="4" key={field.id}>
                 <FormControl
-                  isRequired
+                  required
                   control={form.control}
                   name={`subnets.${index}`}
                   placeholder={t("Enter an IP address (e.g. 10.100.2.8)")}
@@ -73,34 +60,34 @@ function DeviceCreateForm() {
                 {fields.length > 1 && (
                   <IconButton
                     onClick={() => remove(index)}
-                    icon={<Icon name="trash" />}
                     variant="ghost"
-                    colorScheme="green"
+                    colorPalette="green"
                     aria-label={t("Remove this subnet")}
-                  />
+                  >
+                    <Icon name="trash" />
+                  </IconButton>
                 )}
               </Stack>
             ))}
           </Stack>
         )}
         <Stack direction="row">
-          <Button leftIcon={<Icon name="plus" />} onClick={() => append("")}>
+          <Button onClick={() => append("")}>
+            <Icon name="plus" />
             {t("Add entry")}
           </Button>
         </Stack>
       </Stack>
     </Stack>
-  );
+  )
 }
 
-export default function DeviceScanSubnetButton(
-  props: DeviceScanSubnetButtonProps
-) {
-  const { renderItem } = props;
-  const { t } = useTranslation();
-  const toast = useToast();
-  const disclosure = useDisclosure();
-  const [taskId, setTaskId] = useState<number>(null);
+export default function DeviceScanSubnetButton(props: DeviceScanSubnetButtonProps) {
+  const { renderItem } = props
+  const { t } = useTranslation()
+  const toast = useToast()
+  const dialog = useFormDialogWithMutation()
+  const taskDialog = useCustomDialog()
 
   const form = useForm<Form>({
     mode: "onChange",
@@ -109,47 +96,38 @@ export default function DeviceScanSubnetButton(
       domainId: null,
       subnets: [],
     },
-  });
+  })
 
   const mutation = useMutation({
-    mutationFn: async (payload: CreateOrUpdateTaskPayload) =>
-      api.task.create(payload),
+    mutationKey: MUTATIONS.TASK_CREATE,
+    mutationFn: async (payload: CreateOrUpdateTaskPayload) => api.task.create(payload),
     onError(err: NetshotError) {
-      toast.error(err);
+      toast.error(err)
     },
-  });
+  })
 
-  const onSubmit = useCallback(
-    async (values: Form) => {
-      const task = await mutation.mutateAsync({
-        type: TaskType.ScanSubnets,
-        subnets: values.subnets.join("\n"),
-        domain: values.domainId.value,
-      });
+  const open = () => {
+    const dialogRef = dialog.open(MUTATIONS.TASK_CREATE, {
+      title: t("Scan subnets for devices"),
+      description: <DeviceCreateForm />,
+      form,
+      async onSubmit(values: Form) {
+        const task = await mutation.mutateAsync({
+          type: TaskType.ScanSubnets,
+          subnets: values.subnets.join("\n"),
+          domain: +values.domainId,
+        })
 
-      dialog.close();
-      setTaskId(task?.id);
-      disclosure.onOpen();
-    },
-    [mutation, disclosure]
-  );
+        dialogRef.close()
 
-  const dialog = Dialog.useForm({
-    title: t("Scan subnets for devices"),
-    description: <DeviceCreateForm />,
-    form,
-    isLoading: mutation.isPending,
-    onSubmit,
-    size: "xl",
-    submitButton: {
-      label: t("Add"),
-    },
-  });
+        taskDialog.open(<TaskDialog id={task.id} />)
+      },
+      size: "xl",
+      submitButton: {
+        label: t("Add"),
+      },
+    })
+  }
 
-  return (
-    <>
-      {renderItem(dialog.open)}
-      {taskId && <TaskDialog id={taskId} {...disclosure} />}
-    </>
-  );
+  return renderItem(open)
 }

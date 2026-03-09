@@ -1,23 +1,16 @@
-import { Icon } from "@/components";
-import { transparentize } from "@/theme";
-import {
-  Flex,
-  Stack,
-  StackProps,
-  SystemStyleInterpolation,
-  Text,
-} from "@chakra-ui/react";
-import { useMemo } from "react";
+import { Icon } from "@/components"
+import { Flex, Stack, StackProps, Text } from "@chakra-ui/react"
+import { useMemo } from "react"
 
 export type BoxButtonProps = {
-  icon: string;
-  title: string;
-  description: string;
-  isActive: boolean;
-} & StackProps;
+  icon: string
+  title: string
+  description: string
+  isActive: boolean
+} & StackProps
 
 export default function BoxButton(props: BoxButtonProps) {
-  const { icon, title, description, isActive, ...other } = props;
+  const { icon, title, description, isActive, ...other } = props
 
   const styles = useMemo(() => {
     const styles = {
@@ -36,21 +29,21 @@ export default function BoxButton(props: BoxButtonProps) {
       _active: {
         transform: "translate3d(0, 0, 0)",
       },
-    } as SystemStyleInterpolation;
+    }
 
     if (!isActive) {
-      return styles;
+      return styles
     }
 
     return {
       ...styles,
       borderColor: "green.400",
-      outlineColor: transparentize("green.400", 0.1),
-    } as Partial<SystemStyleInterpolation>;
-  }, [isActive]);
+      outlineColor: "green.400/10",
+    }
+  }, [isActive])
 
   return (
-    <Stack spacing="5" {...styles} {...other}>
+    <Stack gap="5" {...styles} {...other}>
       <Flex
         w="48px"
         h="48px"
@@ -61,10 +54,10 @@ export default function BoxButton(props: BoxButtonProps) {
       >
         <Icon size={24} name={icon} color="green.800" />
       </Flex>
-      <Stack spacing="1">
+      <Stack gap="1">
         <Text fontWeight="semibold">{title}</Text>
         <Text color="grey.400">{description}</Text>
       </Stack>
     </Stack>
-  );
+  )
 }

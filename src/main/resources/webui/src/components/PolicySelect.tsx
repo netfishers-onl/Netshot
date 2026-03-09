@@ -1,59 +1,34 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { QUERIES } from "@/constants";
-import useToast from "@/hooks/useToast";
-import { Option, Policy } from "@/types";
-import { Text } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import Select, { SelectProps } from "./Select";
-import { useCallback } from "react";
+import { usePoliciesWithOptions } from "@/features/compliance/api"
+import { Text } from "@chakra-ui/react"
+import { FieldPath, FieldValues } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { Select, SelectProps } from "./Select"
 
-export type PolicySelectProps<T> = {} & SelectProps<T>;
+export type PolicySelectProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+> = Omit<SelectProps<TFieldValues, TName, string | number>, "options">
 
 export default function PolicySelect<T>(props: PolicySelectProps<T>) {
-  const {
-    control,
-    name,
-    defaultValue,
-    isRequired,
-    isReadOnly,
-    isMulti,
-    ...other
-  } = props;
+  const { control, name, required, readOnly, multiple, ...other } = props
 
-  const { t } = useTranslation();
-  const toast = useToast();
+  const { t } = useTranslation()
 
-  const { isPending, data: options } = useQuery({
-    queryKey: [QUERIES.POLICY_LIST],
-    queryFn: async () => {
-      return api.policy.getAll();
-    },
-    select: useCallback((policies: Policy[]): Option<number>[] => {
-      const options = policies.map((policy) => ({
-        label: policy?.name,
-        value: policy?.id,
-      }));
-
-      return options;
-    }, []),
-  });
+  const { isPending, data: options = [] } = usePoliciesWithOptions()
 
   return (
     <Select
       label={t("Policy")}
-      placeholder={isMulti ? t("Select policies") : t("Select a policy")}
+      placeholder={multiple ? t("Select policies") : t("Select a policy")}
       name={name}
-      defaultValue={defaultValue}
       control={control}
-      isReadOnly={isReadOnly}
-      isRequired={isRequired}
-      isPending={isPending}
-      noOptionsMessage={() => <Text>{t("No policy found")}</Text>}
+      readOnly={readOnly}
+      required={required}
+      isLoading={isPending}
+      noOptionsMessage={<Text>{t("No policy found")}</Text>}
       options={options}
-      isMulti={isMulti}
+      multiple={multiple}
       {...other}
     />
-  );
+  )
 }

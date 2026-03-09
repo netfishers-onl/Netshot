@@ -1,126 +1,105 @@
-import { genericMemo } from "@/utils";
-import {
-  Button,
-  ButtonProps,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
-import { isValidElement, useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { ModalConfigContext } from "./ModalConfigContext";
-import { BaseDialogProps, PromiseOrVoid } from "./types";
+import { Button, ButtonProps, CloseButton, Dialog, Portal, Stack, Text } from "@chakra-ui/react"
+import mergeWith from "lodash.mergewith"
+import { isValidElement } from "react"
+import { useDialogConfig } from "./dialogConfigContext"
+import { useDialogProviderConfig } from "./DialogProvider"
+import { useDialogStore } from "./store"
+import { BaseDialogProps, PromiseOrVoid } from "./types"
 
 export type ConfirmDialogProps = {
-  onConfirm(): PromiseOrVoid;
+  onConfirm(): PromiseOrVoid
   confirmButton?: {
-    label?: string;
-    props?: ButtonProps;
-  };
+    label?: string
+    props?: ButtonProps
+  }
   cancelButton?: {
-    label?: string;
-    props?: ButtonProps;
-  };
-} & BaseDialogProps;
+    label?: string
+    props?: ButtonProps
+  }
+} & BaseDialogProps
 
-function ConfirmDialog(props: ConfirmDialogProps) {
-  const { t } = useTranslation();
-  const {
-    isOpen,
-    title,
-    description,
-    isLoading,
-    onCancel,
-    onConfirm,
-    confirmButton,
-    cancelButton,
-    size = "lg",
-  } = props;
-  const isTitleComponent = useMemo(() => isValidElement(title), [title]);
-  const isDescriptionComponent = useMemo(
-    () => isValidElement(description),
-    [description]
-  );
-  const confirmButtonConfig: ConfirmDialogProps["confirmButton"] = useMemo(
-    () => ({
-      label: confirmButton?.label || t("Confirm"),
-      props: {
-        variant: "primary",
-        isLoading,
-        onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
-          evt.stopPropagation();
-          if (onConfirm) onConfirm();
-        },
-        ...confirmButton?.props,
-      },
-    }),
-    [confirmButton, isLoading, onConfirm]
-  );
+export default function ConfirmDialog() {
+  const providerConfig = useDialogProviderConfig()
+  const config = useDialogConfig<ConfirmDialogProps>()
+  const currentConfig = useDialogStore((state) => state.configs.find((c) => c.id === config.id))
+  const isTitleComponent = isValidElement(config?.props?.title)
+  const isDescriptionComponent = isValidElement(config?.props?.description)
+  const { confirmButton, cancelButton } = mergeWith({}, providerConfig.confirm, config.props)
 
-  const cancelButtonConfig: ConfirmDialogProps["cancelButton"] = useMemo(
-    () => ({
-      label: cancelButton?.label || t("Cancel"),
-      props: {
-        variant: "default",
-        disabled: isLoading,
-        onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
-          evt.stopPropagation();
-          onCancel();
-        },
-        ...cancelButton?.props,
+  const confirmButtonConfig: ConfirmDialogProps["confirmButton"] = {
+    label: confirmButton?.label,
+    props: {
+      variant: "primary",
+      loading: currentConfig.props.isLoading,
+      onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
+        evt?.stopPropagation()
+        if (config.props.onConfirm) config.props.onConfirm()
       },
-    }),
-    [cancelButton, isLoading, onCancel]
-  );
+      ...confirmButton?.props,
+    },
+  }
+
+  const cancelButtonConfig: ConfirmDialogProps["cancelButton"] = {
+    label: cancelButton?.label,
+    props: {
+      variant: "default",
+      disabled: currentConfig.props.isLoading,
+      onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
+        evt?.stopPropagation()
+        if (config.props.onCancel) config.props.onCancel()
+        config.close()
+      },
+      ...cancelButton?.props,
+    },
+  }
 
   return (
-    <ModalConfigContext.Provider
-      value={{
-        close: onCancel,
+    <Dialog.Root
+      open={config.props.isOpen}
+      placement="center"
+      motionPreset="slide-in-bottom"
+      size={config.props.size}
+      closeOnInteractOutside={false}
+      onOpenChange={(e) => {
+        if (!e.open) {
+          config.close()
+        }
+      }}
+      onExitComplete={() => {
+        if (config.props.onCancel) config.props.onCancel()
+        config.remove()
       }}
     >
-      <Modal
-        isOpen={isOpen}
-        isCentered
-        onClose={onCancel}
-        motionPreset="slideInBottom"
-        size={size}
-      >
-        <ModalOverlay />
-        <ModalContent>
-          {isTitleComponent ? (
-            <>{title}</>
-          ) : (
-            <ModalHeader as="h3" fontSize="2xl" fontWeight="semibold">
-              {title}
-            </ModalHeader>
-          )}
-          <ModalBody>
-            {isDescriptionComponent ? (
-              <>{description}</>
+      <Portal>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            {isTitleComponent ? (
+              <>{config.props.title}</>
             ) : (
-              <Text>{description}</Text>
+              <Dialog.Header as="h3" fontSize="2xl" fontWeight="semibold">
+                {config.props.title}
+              </Dialog.Header>
             )}
-          </ModalBody>
-          <ModalFooter>
-            <Stack direction="row" spacing="3">
-              <Button {...cancelButtonConfig?.props}>
-                {cancelButtonConfig?.label}
-              </Button>
-              <Button {...confirmButtonConfig?.props}>
-                {confirmButtonConfig?.label}
-              </Button>
-            </Stack>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </ModalConfigContext.Provider>
-  );
+            <Dialog.Body>
+              {isDescriptionComponent ? (
+                <>{config.props.description}</>
+              ) : (
+                <Text>{config.props.description as string}</Text>
+              )}
+            </Dialog.Body>
+            <Dialog.Footer>
+              <Stack direction="row" gap="3">
+                <Button {...cancelButtonConfig?.props}>{cancelButtonConfig?.label}</Button>
+                <Button {...confirmButtonConfig?.props}>{confirmButtonConfig?.label}</Button>
+              </Stack>
+            </Dialog.Footer>
+            <Dialog.CloseTrigger asChild>
+              <CloseButton size="sm" variant="outline" />
+            </Dialog.CloseTrigger>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Portal>
+    </Dialog.Root>
+  )
 }
-
-export default genericMemo(ConfirmDialog);

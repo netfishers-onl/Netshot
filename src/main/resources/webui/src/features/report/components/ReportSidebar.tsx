@@ -1,5 +1,5 @@
 import { Icon, Sidebar, SidebarLink } from "@/components";
-import { Button, Divider, Stack } from "@chakra-ui/react";
+import { Steps, Button, Stack, Separator } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import ExportDataButton from "./ExportDataButton";
 
@@ -8,7 +8,7 @@ export default function ReportSidebar() {
 
   return (
     <Sidebar>
-      <Stack spacing="0" py="4" px="5" flex="1">
+      <Stack gap="0" py="4" px="5" flex="1">
         <SidebarLink
           to="./configuration-change"
           label={t("Configuration changes")}
@@ -35,13 +35,11 @@ export default function ReportSidebar() {
           description={t("End of sale / life milestones")}
         />
       </Stack>
-      <Divider />
+      <Separator />
       <Stack py="4" px="5">
         <ExportDataButton
           renderItem={(open) => (
-            <Button leftIcon={<Icon name="download" />} onClick={open}>
-              {t("Export data")}
-            </Button>
+            <Button onClick={open}><Icon name="download" />{t("Export data")}</Button>
           )}
         />
       </Stack>

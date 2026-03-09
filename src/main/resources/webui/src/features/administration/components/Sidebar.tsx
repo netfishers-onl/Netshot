@@ -1,13 +1,13 @@
 import { SidebarLink } from "@/components";
-import { Stack } from "@chakra-ui/react";
+import { Steps, Stack } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 
 export default function Sidebar() {
   const { t } = useTranslation();
 
   return (
-    <Stack w="300px" overflow="auto" spacing="0">
-      <Stack spacing="0" py="4" px="5" flex="1">
+    <Stack w="300px" overflow="auto" gap="0">
+      <Stack gap="0" py="4" px="5" flex="1">
         <SidebarLink
           to="./user"
           label={t("Users")}

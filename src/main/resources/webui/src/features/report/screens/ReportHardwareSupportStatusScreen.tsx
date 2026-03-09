@@ -1,28 +1,24 @@
-import api from "@/api";
-import { NetshotError } from "@/api/httpClient";
-import { Chart, DataTable, Icon } from "@/components";
-import { useToast } from "@/hooks";
-import { useColor } from "@/theme";
-import { GroupedHardwareSupportStat, HardwareSupportStatType } from "@/types";
-import { formatDate, getDateFromUnix, groupStatByDate } from "@/utils";
-import { Button, Heading, Skeleton, Spacer, Stack } from "@chakra-ui/react";
-import { useQuery } from "@tanstack/react-query";
-import { CellContext, createColumnHelper } from "@tanstack/react-table";
-import { ChartConfiguration } from "chart.js/auto";
-import { endOfMonth } from "date-fns";
-import { useCallback, useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { HardwareDeviceListButton } from "../components";
-import { QUERIES } from "../constants";
+import api from "@/api"
+import { Chart, DataTable, Icon } from "@/components"
+import { GroupedHardwareSupportStat, HardwareSupportStatType } from "@/types"
+import { formatDate, getDateFromUnix, groupStatByDate } from "@/utils"
+import { Button, Heading, Skeleton, Spacer, Stack, Text, useToken } from "@chakra-ui/react"
+import { useQuery } from "@tanstack/react-query"
+import { CellContext, createColumnHelper } from "@tanstack/react-table"
+import { ChartConfiguration } from "chart.js/auto"
+import { endOfMonth } from "date-fns"
+import { useCallback, useMemo } from "react"
+import { useTranslation } from "react-i18next"
+import { HardwareDeviceListButton } from "../components"
+import { QUERIES } from "../constants"
 
-const columnHelper = createColumnHelper<GroupedHardwareSupportStat>();
+const columnHelper = createColumnHelper<GroupedHardwareSupportStat>()
 
 export default function ReportHardwareSupportStatusScreen() {
-  const { t } = useTranslation();
-  const green500 = useColor("green.500");
-  const bronze500 = useColor("bronze.500");
-  const grey500 = useColor("grey.500");
-  const toast = useToast();
+  const { t } = useTranslation()
+  const [green500] = useToken("colors", "green.500")
+  const [bronze500] = useToken("colors", "bronze.500")
+  const [grey500] = useToken("colors", "grey.500")
   const {
     data: stats,
     isPending,
@@ -30,76 +26,71 @@ export default function ReportHardwareSupportStatusScreen() {
   } = useQuery({
     queryKey: [QUERIES.CONFIG_CHANGE],
     queryFn: api.report.getAllHardwareSupportStats,
-  });
+  })
 
   const config = useMemo(() => {
     if (!Array.isArray(stats)) {
-      return null;
+      return null
     }
 
-    const labels = [];
+    const labels = []
     const datas: {
-      eol: number[];
-      eos: number[];
-      max: number[];
+      eol: number[]
+      eos: number[]
+      max: number[]
     } = {
       eol: [],
       eos: [],
       max: [],
-    };
+    }
 
     const counts = {
       eos: 0,
       eol: 0,
-    };
+    }
 
     const max = {
       eos: 0,
       eol: 0,
       eox: 0,
-    };
-    const currentDate = new Date();
+    }
+    const currentDate = new Date()
 
-    currentDate.setMilliseconds(0);
-    currentDate.setSeconds(0);
-    currentDate.setMinutes(0);
-    currentDate.setHours(0);
-    currentDate.setDate(1);
+    currentDate.setMilliseconds(0)
+    currentDate.setSeconds(0)
+    currentDate.setMinutes(0)
+    currentDate.setHours(0)
+    currentDate.setDate(1)
 
     for (const stat of stats) {
       if (stat.type === HardwareSupportStatType.Eos) {
-        max.eos += stat.deviceCount;
+        max.eos += stat.deviceCount
       } else if (stat.type === HardwareSupportStatType.Eol) {
-        max.eol += stat.deviceCount;
+        max.eol += stat.deviceCount
       }
     }
 
-    max.eox = max.eos > max.eol ? max.eos : max.eol;
+    max.eox = max.eos > max.eol ? max.eos : max.eol
 
     for (let m = -4 * 12; m < 8 * 12; m++) {
-      const month = new Date(currentDate.valueOf());
-      month.setMonth(m);
-      const endMonth = endOfMonth(month);
+      const month = new Date(currentDate.valueOf())
+      month.setMonth(m)
+      const endMonth = endOfMonth(month)
 
       for (const stat of stats) {
-        if (
-          stat.eoxDate >= month.getTime() &&
-          stat.eoxDate < endMonth.getTime()
-        ) {
+        if (stat.eoxDate >= month.getTime() && stat.eoxDate < endMonth.getTime()) {
           if (stat.type === HardwareSupportStatType.Eos) {
-            counts.eos += stat.deviceCount;
+            counts.eos += stat.deviceCount
           } else if (stat.type === HardwareSupportStatType.Eol) {
-            counts.eol += stat.deviceCount;
+            counts.eol += stat.deviceCount
           }
         }
       }
 
-      labels.push(
-        month.getMonth() === 0 ? formatDate(month.getTime(), "yyyy-MM") : ""
-      );
-      datas.eos.push(counts.eos);
-      datas.eol.push(counts.eol);
-      datas.max.push(max.eox);
+      labels.push(month.getMonth() === 0 ? formatDate(month.getTime(), "yyyy-MM") : "")
+      datas.eos.push(counts.eos)
+      datas.eol.push(counts.eol)
+      datas.max.push(max.eox)
     }
 
     return {
@@ -150,39 +141,42 @@ export default function ReportHardwareSupportStatusScreen() {
           },
         },
       },
-    } as ChartConfiguration;
-  }, [isPending, stats, t, green500, bronze500, grey500]);
+    } as ChartConfiguration
+  }, [isPending, stats, t, green500, bronze500, grey500])
 
   const getFormattedCount = useCallback(
     (info: CellContext<GroupedHardwareSupportStat, number>) => {
-      const count = info.getValue();
+      const count = info.getValue()
 
       if (count > 1) {
-        return t("{{count}} devices", {
+        return t("{{count}} device", {
           count,
-        });
+        })
       }
 
       return t("{{count}} device", {
         count,
-      });
+      })
     },
     [t]
-  );
+  )
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("date", {
-        cell: (info) =>
-          info.getValue()
-            ? formatDate(getDateFromUnix(info.getValue()), "yyyy-MM-dd")
-            : t("Never"),
+        cell: (info) => (
+          <Text>
+            {info.getValue()
+              ? formatDate(getDateFromUnix(info.getValue()), "yyyy-MM-dd")
+              : t("Never")}
+          </Text>
+        ),
         header: t("Date"),
       }),
       columnHelper.accessor("eos", {
         cell: (info) => {
           if (info.getValue() === 0) {
-            return null;
+            return null
           }
 
           return (
@@ -190,23 +184,19 @@ export default function ReportHardwareSupportStatusScreen() {
               type="eos"
               date={info.row.original.date || 0}
               renderItem={(open) => (
-                <Button
-                  variant="link"
-                  onClick={open}
-                  textDecoration="underline"
-                >
+                <Button variant="plain" onClick={open} textDecoration="underline">
                   +{getFormattedCount(info)}
                 </Button>
               )}
             />
-          );
+          )
         },
         header: t("End of sale"),
       }),
       columnHelper.accessor("eol", {
         cell: (info) => {
           if (info.getValue() === 0) {
-            return null;
+            return null
           }
 
           return (
@@ -214,38 +204,35 @@ export default function ReportHardwareSupportStatusScreen() {
               type="eol"
               date={info.row.original.date || 0}
               renderItem={(open) => (
-                <Button
-                  variant="link"
-                  onClick={open}
-                  textDecoration="underline"
-                >
+                <Button variant="plain" onClick={open} textDecoration="underline">
                   +{getFormattedCount(info)}
                 </Button>
               )}
             />
-          );
+          )
         },
         header: t("End of life"),
       }),
     ],
     [t]
-  );
+  )
 
-  const data = useMemo(() => groupStatByDate(stats), [stats]);
+  const data = useMemo(() => groupStatByDate(stats), [stats])
 
   return (
-    <Stack spacing="8" p="9" flex="1" overflowY="auto">
+    <Stack gap="8" p="9" flex="1" overflowY="auto">
       <Stack direction="row">
         <Heading as="h1" fontSize="4xl">
           {t("Hardware support status")}
         </Heading>
         <Spacer />
 
-        <Button onClick={() => refetch()} leftIcon={<Icon name="refreshCcw" />}>
+        <Button onClick={() => refetch()}>
+          <Icon name="refreshCcw" />
           {t("Refresh")}
         </Button>
       </Stack>
-      <Stack spacing="5">
+      <Stack gap="5">
         <Heading as="h4" fontSize="2xl">
           {t("Overview")}
         </Heading>
@@ -258,12 +245,12 @@ export default function ReportHardwareSupportStatusScreen() {
           </Stack>
         )}
       </Stack>
-      <Stack spacing="5" flex="1" overflowY="auto">
+      <Stack gap="5" flex="1" overflowY="auto">
         <Heading as="h4" fontSize="2xl">
           {t("Milestone")}
         </Heading>
         {isPending ? (
-          <Stack spacing="3">
+          <Stack gap="3">
             <Skeleton h="60px" />
             <Skeleton h="60px" />
             <Skeleton h="60px" />
@@ -274,5 +261,5 @@ export default function ReportHardwareSupportStatusScreen() {
         )}
       </Stack>
     </Stack>
-  );
+  )
 }

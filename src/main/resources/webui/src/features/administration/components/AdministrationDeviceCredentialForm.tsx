@@ -1,115 +1,114 @@
-import { DomainSelect, FormControl, Select } from "@/components";
-import { FormControlType } from "@/components/FormControl";
-import { CredentialSetType, HashingAlgorithm, Option } from "@/types";
-import { Stack } from "@chakra-ui/react";
-import { useFormContext, useWatch } from "react-hook-form";
-import { useTranslation } from "react-i18next";
+import { FormControl } from "@/components"
+import { FormControlType } from "@/components/FormControl"
+import { Select } from "@/components/Select"
+import { CredentialSetType, HashingAlgorithm } from "@/types"
+import { Stack } from "@chakra-ui/react"
+import { useFormContext, useWatch } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import {
-  DEVICE_CREDENTIAL_AUTH_TYPE_OPTIONS,
-  DEVICE_CREDENTIAL_PRIVATE_KEY_TYPE_OPTIONS,
-  DEVICE_CREDENTIAL_TYPE_OPTIONS,
-} from "../constants";
+  useDeviceCredentialAuthTypeOptions,
+  useDeviceCredentialPrivateKeyTypeOptions,
+  useDeviceCredentialTypeOptions,
+} from "../hooks"
 
 export type DeviceCredentialForm = {
-  name: string;
-  mgmtDomain: Option<number>;
-  community: string;
-  type: Option<CredentialSetType>;
-  authKey?: string;
-  authType?: Option<HashingAlgorithm>;
-  privKey?: string;
-  privType?: Option<HashingAlgorithm>;
-  username?: string;
-  password?: string;
-  superPassword?: string;
-  publicKey?: string;
-  privateKey?: string;
-};
+  name: string
+  mgmtDomain: number
+  community: string
+  type: CredentialSetType
+  authKey?: string
+  authType?: HashingAlgorithm
+  privKey?: string
+  privType?: HashingAlgorithm
+  username?: string
+  password?: string
+  superPassword?: string
+  publicKey?: string
+  privateKey?: string
+}
 
 export default function AdministrationDeviceCredentialForm() {
-  const form = useFormContext<DeviceCredentialForm>();
-  const { t } = useTranslation();
+  const form = useFormContext<DeviceCredentialForm>()
+  const { t } = useTranslation()
+  const deviceCredentialTypeOptions = useDeviceCredentialTypeOptions()
+  const deviceCredentialAuthTypeOptions = useDeviceCredentialAuthTypeOptions()
+  const deviceCredentialPrivateKeyTypeOptions = useDeviceCredentialPrivateKeyTypeOptions()
 
   const type = useWatch({
     control: form.control,
-    name: "type.value",
-  });
+    name: "type",
+  })
 
   return (
-    <Stack spacing="6">
+    <Stack gap="6">
       <FormControl
         label={t("Name")}
         placeholder={t("e.g. credential name")}
-        isRequired
+        required
         control={form.control}
         name="name"
       />
-      <DomainSelect
-        isRequired
-        control={form.control}
-        name="mgmtDomain"
-        label={t("Domain")}
-        withAny
-      />
+      {/* <DomainSelect required control={form.control} name="mgmtDomain" label={t("Domain")} withAny /> */}
       <Select
-        isRequired
+        required
         control={form.control}
         name="type"
-        options={DEVICE_CREDENTIAL_TYPE_OPTIONS}
+        options={deviceCredentialTypeOptions.options}
         label={t("Protocol")}
+        placeholder={t("Select a protocol")}
       />
-
       {type === CredentialSetType.SNMP_V3 && (
         <>
           <FormControl
             label={t("Username")}
             placeholder={t("e.g. admin")}
-            isRequired
+            required
             control={form.control}
             name="username"
           />
           <Select
             control={form.control}
             name="authType"
-            options={DEVICE_CREDENTIAL_AUTH_TYPE_OPTIONS}
+            options={deviceCredentialAuthTypeOptions.options}
             label={t("Auth type")}
+            placeholder={t("Select an auth type")}
           />
           <FormControl
             type={FormControlType.Password}
             label={t("Auth key")}
             placeholder={t("e.g. secret key")}
-            isRequired
+            required
             control={form.control}
             name="authKey"
           />
           <Select
             control={form.control}
             name="privType"
-            options={DEVICE_CREDENTIAL_PRIVATE_KEY_TYPE_OPTIONS}
+            options={deviceCredentialPrivateKeyTypeOptions.options}
             label={t("Priv type")}
+            placeholder={t("Select a priv type")}
           />
           <FormControl
             type={FormControlType.Password}
             label={t("Key")}
             placeholder={t("e.g. secret key")}
-            isRequired
+            required
             control={form.control}
             name="privKey"
           />
         </>
       )}
-
       {[CredentialSetType.SSH, CredentialSetType.Telnet].includes(type) && (
         <>
           <FormControl
-            isRequired
+            required
             label={t("Username")}
             placeholder={t("e.g. admin")}
             control={form.control}
             name="username"
           />
           <FormControl
-            isRequired
+            required
             type={FormControlType.Password}
             label={t("Password")}
             placeholder={t("Type your password")}
@@ -117,7 +116,7 @@ export default function AdministrationDeviceCredentialForm() {
             name="password"
           />
           <FormControl
-            isRequired
+            required
             type={FormControlType.Password}
             label={t("Super password")}
             placeholder={t("Type your super password")}
@@ -126,18 +125,17 @@ export default function AdministrationDeviceCredentialForm() {
           />
         </>
       )}
-
       {type === CredentialSetType.SSHKey && (
         <>
           <FormControl
-            isRequired
+            required
             label={t("Username")}
             placeholder={t("e.g. admin")}
             control={form.control}
             name="username"
           />
           <FormControl
-            isRequired
+            required
             type={FormControlType.LongText}
             label={t("RSA Public Key")}
             placeholder={t("Type your public key")}
@@ -145,7 +143,7 @@ export default function AdministrationDeviceCredentialForm() {
             name="publicKey"
           />
           <FormControl
-            isRequired
+            required
             type={FormControlType.LongText}
             label={t("SSH Private Key")}
             placeholder={t("Type your private key")}
@@ -153,7 +151,7 @@ export default function AdministrationDeviceCredentialForm() {
             name="privateKey"
           />
           <FormControl
-            isRequired
+            required
             type={FormControlType.Password}
             label={t("Passphrase")}
             placeholder={t("Type your passphrase")}
@@ -161,7 +159,7 @@ export default function AdministrationDeviceCredentialForm() {
             name="password"
           />
           <FormControl
-            isRequired
+            required
             type={FormControlType.Password}
             label={t("Super password")}
             placeholder={t("Type your super password")}
@@ -170,20 +168,17 @@ export default function AdministrationDeviceCredentialForm() {
           />
         </>
       )}
-
-      {[
-        CredentialSetType.SNMP_V1,
-        CredentialSetType.SNMP_V2,
-        CredentialSetType.SNMP_V2C,
-      ].includes(type) && (
+      {[CredentialSetType.SNMP_V1, CredentialSetType.SNMP_V2, CredentialSetType.SNMP_V2C].includes(
+        type
+      ) && (
         <FormControl
           label={t("Community")}
           placeholder={t("e.g. public")}
-          isRequired
+          required
           control={form.control}
           name="community"
         />
       )}
     </Stack>
-  );
+  )
 }

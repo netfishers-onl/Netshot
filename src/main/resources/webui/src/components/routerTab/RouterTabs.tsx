@@ -1,15 +1,15 @@
-import { Box, Divider, Stack } from "@chakra-ui/react";
-import { PropsWithChildren } from "react";
+import { Box, Separator, Stack } from "@chakra-ui/react"
+import { PropsWithChildren } from "react"
 
-export default function RouterTabs(props: PropsWithChildren<{}>) {
-  const { children } = props;
+export default function RouterTabs(props: PropsWithChildren) {
+  const { children } = props
 
   return (
     <Box>
-      <Stack direction="row" spacing="8">
+      <Stack direction="row" gap="8">
         {children}
       </Stack>
-      <Divider bg="grey.100" />
+      <Separator bg="grey.100" />
     </Box>
-  );
+  )
 }

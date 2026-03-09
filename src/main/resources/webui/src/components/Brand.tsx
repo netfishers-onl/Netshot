@@ -1,21 +1,15 @@
-import { useColor } from "@/theme";
-import { SystemStyleObject, chakra } from "@chakra-ui/react";
+import { SystemStyleObject, chakra } from "@chakra-ui/react"
 
 type BrandProps = {
-  mode?: "dark" | "light";
-  sx?: SystemStyleObject;
-};
+  mode?: "dark" | "light"
+  css?: SystemStyleObject
+}
 
 export default function Brand(props: BrandProps) {
-  const { mode = "light", ...other } = props;
+  const { mode = "light", ...other } = props
 
   return (
-    <chakra.svg
-      viewBox="0 0 132 37"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      {...other}
-    >
+    <chakra.svg viewBox="0 0 132 37" fill="none" xmlns="http://www.w3.org/2000/svg" {...other}>
       <chakra.path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -27,5 +21,5 @@ export default function Brand(props: BrandProps) {
         fill={mode === "light" ? "black" : "white"}
       />
     </chakra.svg>
-  );
+  )
 }

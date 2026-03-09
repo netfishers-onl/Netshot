@@ -1,52 +1,46 @@
 import {
   Switch as ChakraSwitch,
-  FormControl,
-  FormControlProps,
-  FormLabel,
+  Field,
   Stack,
+  SwitchCheckedChangeDetails,
   Text,
-} from "@chakra-ui/react";
-import { ChangeEvent, useCallback } from "react";
-import { Control, FieldPath, useController } from "react-hook-form";
+} from "@chakra-ui/react"
+import { Control, FieldPath, useController } from "react-hook-form"
+import { FormControlProps } from "./FormControl"
 
 export type SwitchProps<T> = {
-  control: Control<T>;
-  name: FieldPath<T>;
-  defaultValue?: any;
-  label?: string;
-  description?: string;
-} & FormControlProps;
+  control: Control<T>
+  name: FieldPath<T>
+  defaultValue?: boolean
+  label?: string
+  description?: string
+} & FormControlProps<T>
 
 export default function Switch<T>(props: SwitchProps<T>) {
-  const { label, description, control, name, defaultValue, ...other } = props;
+  const { label, description, control, name, defaultValue, ...other } = props
 
   const { field } = useController({
     name,
     control,
     defaultValue,
-  });
+  })
 
-  const onChange = useCallback((evt: ChangeEvent<HTMLInputElement>) => {
-    field.onChange(evt?.target.checked);
-  }, []);
+  const onChange = (details: SwitchCheckedChangeDetails) => {
+    field.onChange(details.checked)
+  }
 
   return (
-    <FormControl
-      display="flex"
-      alignItems="center"
-      justifyContent="space-between"
-      {...other}
-    >
-      <Stack spacing="0">
-        <FormLabel mb="0">{label}</FormLabel>
-
+    <Field.Root flexDirection="row" alignItems="start" justifyContent="space-between" {...other}>
+      <Stack gap="0">
+        <Field.Label mb="0">{label}</Field.Label>
         <Text color="grey.400">{description}</Text>
       </Stack>
-      <ChakraSwitch
-        size="md"
-        isChecked={field.value as boolean}
-        onChange={onChange}
-      />
-    </FormControl>
-  );
+      <ChakraSwitch.Root size="lg" checked={field.value as boolean} onCheckedChange={onChange}>
+        <ChakraSwitch.HiddenInput />
+        <ChakraSwitch.Control>
+          <ChakraSwitch.Thumb />
+        </ChakraSwitch.Control>
+      </ChakraSwitch.Root>
+    </Field.Root>
+  )
 }

@@ -1,38 +1,39 @@
-import { Icon, QueryBuilderButton } from "@/components";
-import Search from "@/components/Search";
-import { useThrottle } from "@/hooks";
-import { IconButton, Stack, Tooltip } from "@chakra-ui/react";
-import { useCallback, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useDeviceSidebar } from "../../contexts/device-sidebar";
+import { Icon, QueryBuilderButton } from "@/components"
+import Search from "@/components/Search"
+import { Tooltip } from "@/components/ui/tooltip"
+import { IconButton, Stack } from "@chakra-ui/react"
+import debounce from "lodash.debounce"
+import { useTranslation } from "react-i18next"
+import { useShallow } from "zustand/react/shallow"
+import { useDeviceSidebarStore } from "../../stores"
 
 export default function DeviceSidebarSearch() {
-  const { t } = useTranslation();
-  const ctx = useDeviceSidebar();
-  const [query, setQuery] = useState<string>("");
-  const throttledValue = useThrottle(query);
+  const { t } = useTranslation()
+  const { query, driver, setQuery, deselectAll, updateQueryAndDriver } = useDeviceSidebarStore(
+    useShallow((state) => ({
+      deselectAll: state.deselectAll,
+      updateQueryAndDriver: state.updateQueryAndDriver,
+      query: state.query,
+      driver: state.driver,
+      setQuery: state.setQuery,
+    }))
+  )
 
-  const onQuery = useCallback((query: string) => {
-    ctx.deselectAll();
-    setQuery(`[Name] CONTAINSNOCASE \"${query}\"`);
-  }, []);
+  const onQuery = debounce((query: string) => {
+    deselectAll()
+    setQuery(`[Name] CONTAINSNOCASE "${query}"`)
+  }, 400)
 
-  const onClear = useCallback(() => {
-    ctx.deselectAll();
-    ctx.updateQueryAndDriver({
-      query: "",
-      driver: null,
-    });
-  }, [ctx]);
-
-  useEffect(() => {
-    ctx.setQuery(throttledValue);
-  }, [throttledValue]);
+  function onClear() {
+    deselectAll()
+    updateQueryAndDriver("", null)
+    setQuery("")
+  }
 
   return (
-    <Stack p="6" spacing="5">
+    <Stack p="6" gap="5">
       <Search
-        clear={Boolean(ctx.query)}
+        clear={Boolean(query)}
         placeholder={t("Search...")}
         onQuery={onQuery}
         onClear={onClear}
@@ -40,23 +41,20 @@ export default function DeviceSidebarSearch() {
         <QueryBuilderButton
           value={{
             query,
-            driver: ctx.driver,
+            driver,
           }}
           renderItem={(open) => (
-            <Tooltip label={t("Query builder")}>
-              <IconButton
-                variant="ghost"
-                aria-label={t("Open query builder")}
-                icon={<Icon name="compass" />}
-                onClick={open}
-              />
+            <Tooltip content={t("Query builder")}>
+              <IconButton variant="ghost" aria-label={t("Open query builder")} onClick={open}>
+                <Icon name="compass" />
+              </IconButton>
             </Tooltip>
           )}
           onSubmit={(res) => {
-            ctx.updateQueryAndDriver(res);
+            updateQueryAndDriver(res.query, res.driver)
           }}
         />
       </Search>
     </Stack>
-  );
+  )
 }

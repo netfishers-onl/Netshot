@@ -1,30 +1,41 @@
-import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
-import { ServerInfoResponse, SigninPayload, SigninResponse } from "./types";
-
+import { User } from "@/types"
+import httpClient from "./httpClient"
+import { ServerInfoResponse, SigninPayload, SigninResponse } from "./types"
 
 /**
  * Netshot server info (version, etc.)
  */
 async function serverInfo() {
-  return await httpClient.get<ServerInfoResponse>("/serverinfo");
+  return await httpClient.get<ServerInfoResponse>("/serverinfo")
 }
 
 /**
  * Sign in user
  */
 async function signin(payload: SigninPayload) {
-  return await httpClient.post<SigninResponse, SigninPayload>("/user", payload);
+  return await httpClient.post<SigninResponse, SigninPayload>("/user", payload)
+}
+
+/**
+ * Sign in with oidc
+ */
+async function signinWithOidc(authorizationCode: string, redirectUri: string) {
+  return await httpClient.post<User, { authorizationCode: string; redirectUri: string }>("/user", {
+    authorizationCode,
+    redirectUri,
+  })
 }
 
 /**
  * Sign out current user
  */
 async function signout(id: number) {
-  return httpClient.delete(`/user/${id}`);
+  return httpClient.delete(`/user/${id}`)
 }
 
 export default {
   serverInfo,
   signin,
+  signinWithOidc,
   signout,
-};
+}

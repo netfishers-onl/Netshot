@@ -1,6 +1,6 @@
 import { Icon, Protected, SidebarLink } from "@/components";
 import { Level } from "@/types";
-import { Button, Divider, Stack } from "@chakra-ui/react";
+import { Steps, Button, Stack, Separator } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import AddTaskButton from "./AddTaskButton";
 
@@ -8,8 +8,8 @@ export default function TaskSidebar() {
   const { t } = useTranslation();
 
   return (
-    <Stack w="300px" overflow="auto" spacing="0">
-      <Stack spacing="0" py="4" px="5" flex="1">
+    <Stack w="300px" overflow="auto" gap="0">
+      <Stack gap="0" py="4" px="5" flex="1">
         <SidebarLink
           to="./all"
           label={t("All")}
@@ -42,13 +42,11 @@ export default function TaskSidebar() {
         />
       </Stack>
       <Protected minLevel={Level.Operator}>
-        <Divider />
+        <Separator />
         <Stack py="4" px="5">
           <AddTaskButton
             renderItem={(open) => (
-              <Button leftIcon={<Icon name="plus" />} onClick={open}>
-                {t("Add task")}
-              </Button>
+              <Button onClick={open}><Icon name="plus" />{t("Add task")}</Button>
             )}
           />
         </Stack>

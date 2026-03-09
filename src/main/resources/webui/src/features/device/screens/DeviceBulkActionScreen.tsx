@@ -1,8 +1,8 @@
-import { Button, ButtonGroup, Heading, Stack, Text } from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
+import { Button, ButtonGroup, Heading, Stack, Text } from "@chakra-ui/react"
+import { useTranslation } from "react-i18next"
 
-import { Icon, Protected } from "@/components";
-import { Level } from "@/types";
+import { Icon, Protected } from "@/components"
+import { Level } from "@/types"
 
 import {
   DeviceBulkEditButton,
@@ -12,41 +12,38 @@ import {
   DeviceEnableButton,
   DeviceRemoveButton,
   DeviceSnapshotButton,
-} from "../components";
-import DeviceRunScriptButton from "../components/DeviceRunScriptButton";
-import { useDeviceSidebar } from "../contexts/device-sidebar";
+} from "../components"
+import DeviceRunScriptButton from "../components/DeviceRunScriptButton"
+import { useDeviceSidebarStore } from "../stores"
 
 export default function DeviceBulkActionScreen() {
-  const ctx = useDeviceSidebar();
-  const { t } = useTranslation();
+  const selected = useDeviceSidebarStore((state) => state.selected)
+  const { t } = useTranslation()
 
   return (
     <Stack alignItems="center" justifyContent="center" flex="1">
-      <Stack spacing="8" w="20%">
-        <Stack spacing="3">
+      <Stack gap="8" w="20%">
+        <Stack gap="3">
           <Heading as="h1" fontSize="4xl">
             {t("Bulk actions")}
           </Heading>
           <Text color="grey.500">
             {t(
-              "You've selected {{length}} devices, the following actions apply to all of the selected devices",
+              "You've selected {{count}} devices, the following actions apply to all of the selected devices",
               {
-                length: ctx.selected.length,
+                count: selected.length,
               }
             )}
           </Text>
         </Stack>
 
-        <Stack spacing="2">
+        <Stack gap="2">
           <Protected minLevel={Level.ExecureReadWrite}>
             <DeviceRunScriptButton
-              devices={ctx.selected}
+              devices={selected}
               renderItem={(open) => (
-                <Button
-                  justifyContent="start"
-                  leftIcon={<Icon name="play" />}
-                  onClick={open}
-                >
+                <Button justifyContent="start" onClick={open}>
+                  <Icon name="play" />
                   {t("Run script")}
                 </Button>
               )}
@@ -54,13 +51,10 @@ export default function DeviceBulkActionScreen() {
           </Protected>
           <Protected minLevel={Level.Operator}>
             <DeviceSnapshotButton
-              devices={ctx.selected}
+              devices={selected}
               renderItem={(open) => (
-                <Button
-                  justifyContent="start"
-                  leftIcon={<Icon name="camera" />}
-                  onClick={open}
-                >
+                <Button justifyContent="start" onClick={open}>
+                  <Icon name="camera" />
                   {t("Take snapshot")}
                 </Button>
               )}
@@ -68,13 +62,10 @@ export default function DeviceBulkActionScreen() {
           </Protected>
           <Protected minLevel={Level.Operator}>
             <DeviceComplianceButton
-              devices={ctx.selected}
+              devices={selected}
               renderItem={(open) => (
-                <Button
-                  justifyContent="start"
-                  leftIcon={<Icon name="checkCircle" />}
-                  onClick={open}
-                >
+                <Button justifyContent="start" onClick={open}>
+                  <Icon name="checkCircle" />
                   {t("Check compliance")}
                 </Button>
               )}
@@ -82,13 +73,10 @@ export default function DeviceBulkActionScreen() {
           </Protected>
           <Protected minLevel={Level.Operator}>
             <DeviceDiagnosticButton
-              devices={ctx.selected}
+              devices={selected}
               renderItem={(open) => (
-                <Button
-                  justifyContent="start"
-                  leftIcon={<Icon name="activity" />}
-                  onClick={open}
-                >
+                <Button justifyContent="start" onClick={open}>
+                  <Icon name="activity" />
                   {t("Run diagnostics")}
                 </Button>
               )}
@@ -96,58 +84,43 @@ export default function DeviceBulkActionScreen() {
           </Protected>
           <Protected minLevel={Level.Operator}>
             <DeviceBulkEditButton
-              devices={ctx.selected}
+              devices={selected}
               renderItem={(open) => (
-                <Button
-                  justifyContent="start"
-                  leftIcon={<Icon name="edit" />}
-                  onClick={open}
-                >
+                <Button justifyContent="start" onClick={open}>
+                  <Icon name="edit" />
                   {t("Edit")}
                 </Button>
               )}
             />
 
-            <ButtonGroup isAttached>
+            <ButtonGroup attached>
               <DeviceEnableButton
-                devices={ctx.selected}
+                devices={selected}
                 renderItem={(open) => (
-                  <Button
-                    justifyContent="start"
-                    leftIcon={<Icon name="zap" />}
-                    onClick={open}
-                    flex="1"
-                  >
+                  <Button justifyContent="start" onClick={open} flex="1">
+                    <Icon name="zap" />
                     {t("Enable")}
                   </Button>
                 )}
               />
 
               <DeviceDisableButton
-                devices={ctx.selected}
+                devices={selected}
                 renderItem={(open) => (
-                  <Button
-                    justifyContent="start"
-                    leftIcon={<Icon name="zapOff" />}
-                    onClick={open}
-                    flex="1"
-                  >
+                  <Button justifyContent="start" onClick={open} flex="1">
+                    <Icon name="zapOff" />
                     {t("Disable")}
                   </Button>
                 )}
               />
             </ButtonGroup>
-
           </Protected>
           <Protected minLevel={Level.Operator}>
             <DeviceRemoveButton
-              devices={ctx.selected}
+              devices={selected}
               renderItem={(open) => (
-                <Button
-                  justifyContent="start"
-                  leftIcon={<Icon name="trash" />}
-                  onClick={open}
-                >
+                <Button justifyContent="start" onClick={open}>
+                  <Icon name="trash" />
                   {t("Remove")}
                 </Button>
               )}
@@ -156,5 +129,5 @@ export default function DeviceBulkActionScreen() {
         </Stack>
       </Stack>
     </Stack>
-  );
+  )
 }

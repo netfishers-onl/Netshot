@@ -1,123 +1,106 @@
-import {
-  DataTable,
-  EmptyResult,
-  FormControl,
-  Icon,
-  Search,
-} from "@/components";
-import { FormControlType } from "@/components/FormControl";
-import TaskDialog from "@/components/TaskDialog";
-import { TaskStatus } from "@/types";
+import { DataTable, EmptyResult, FormControl, Icon, Search } from "@/components"
+import { FormControlType } from "@/components/FormControl"
+import { TaskStatus } from "@/types"
 import {
   Button,
   Heading,
   IconButton,
   Menu,
-  MenuButton,
-  MenuList,
+  Portal,
   Skeleton,
   Spacer,
   Stack,
-} from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
-import { useTask } from "../hooks";
+} from "@chakra-ui/react"
+import { useTranslation } from "react-i18next"
+import { useTask } from "../hooks"
 
 export default function AllTaskScreen() {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   const {
     data,
-    isLoading,
+    isPending,
+    isFetching,
     refetch,
     onBottomReached,
     pagination,
     form,
     applyFilter,
     clearFilter,
-    taskId,
-    disclosure,
-    onClose,
     columns,
-  } = useTask(TaskStatus.Success);
+  } = useTask(TaskStatus.Success)
 
   return (
-    <>
-      <Stack spacing="6" p="9" flex="1" overflow="auto">
-        <Heading as="h1" fontSize="4xl">
-          {t("Succeeded tasks")}
-        </Heading>
-        <Stack direction="row" spacing="3">
-          <Search
-            placeholder={t("Search...")}
-            onQuery={pagination.onQuery}
-            onClear={pagination.onQueryClear}
-            w="30%"
-          />
-          <Spacer />
-          <Menu>
-            <MenuButton
-              as={Button}
-              variant="primary"
-              leftIcon={<Icon name="filter" />}
-            >
+    <Stack gap="6" p="9" flex="1" overflow="auto">
+      <Heading as="h1" fontSize="4xl">
+        {t("Succeeded tasks")}
+      </Heading>
+      <Stack direction="row" gap="3">
+        <Search
+          placeholder={t("Search...")}
+          onQuery={pagination.onQuery}
+          onClear={pagination.onQueryClear}
+          w="30%"
+        />
+        <Spacer />
+        <Menu.Root>
+          <Menu.Trigger asChild>
+            <Button variant="primary">
+              <Icon name="filter" />
               {t("Filters")}
-            </MenuButton>
-            <MenuList minWidth="280px">
-              <Stack
-                spacing="6"
-                p="3"
-                as="form"
-                onSubmit={form.handleSubmit(applyFilter)}
-              >
-                <FormControl
-                  control={form.control}
-                  name="executionDate"
-                  type={FormControlType.Date}
-                  label={t("Execution date")}
-                />
-                <Stack spacing="2">
-                  <Button variant="primary" type="submit">
-                    {t("Apply filters")}
-                  </Button>
-                  <Button onClick={clearFilter}>{t("Clear all")}</Button>
+            </Button>
+          </Menu.Trigger>
+          <Portal>
+            <Menu.Positioner>
+              <Menu.Content>
+                <Stack gap="6" p="3" asChild>
+                  <form onSubmit={form.handleSubmit(applyFilter)}>
+                    <FormControl
+                      control={form.control}
+                      name="executionDate"
+                      type={FormControlType.Date}
+                      label={t("Execution date")}
+                    />
+                    <Stack gap="2">
+                      <Button variant="primary" type="submit">
+                        {t("Apply filters")}
+                      </Button>
+                      <Button onClick={clearFilter}>{t("Clear all")}</Button>
+                    </Stack>
+                  </form>
                 </Stack>
-              </Stack>
-            </MenuList>
-          </Menu>
-          <IconButton
-            icon={<Icon name="refreshCcw" />}
-            aria-label={t("Reload")}
-            onClick={() => refetch()}
-          />
-        </Stack>
-        {isLoading ? (
-          <Stack spacing="3">
-            <Skeleton h="60px"></Skeleton>
-            <Skeleton h="60px"></Skeleton>
-            <Skeleton h="60px"></Skeleton>
-            <Skeleton h="60px"></Skeleton>
-          </Stack>
-        ) : (
-          <>
-            {data?.length > 0 ? (
-              <DataTable
-                columns={columns}
-                data={data}
-                loading={isLoading}
-                onBottomReached={onBottomReached}
-              />
-            ) : (
-              <EmptyResult
-                title={t("There is no succeeded task")}
-                description={t(
-                  "Tasks will appear when diagnostics are performed"
-                )}
-              />
-            )}
-          </>
-        )}
+              </Menu.Content>
+            </Menu.Positioner>
+          </Portal>
+        </Menu.Root>
+        <IconButton aria-label={t("Reload")} onClick={() => refetch()} loading={isFetching}>
+          <Icon name="refreshCcw" />
+        </IconButton>
       </Stack>
-      <TaskDialog id={taskId} {...disclosure} onClose={onClose} />
-    </>
-  );
+      {isPending ? (
+        <Stack gap="3">
+          <Skeleton h="60px"></Skeleton>
+          <Skeleton h="60px"></Skeleton>
+          <Skeleton h="60px"></Skeleton>
+          <Skeleton h="60px"></Skeleton>
+        </Stack>
+      ) : (
+        <>
+          {data?.length > 0 ? (
+            <DataTable
+              columns={columns}
+              data={data}
+              loading={isPending}
+              onBottomReached={onBottomReached}
+            />
+          ) : (
+            <EmptyResult
+              title={t("There is no succeeded task")}
+              description={t("Tasks will appear when diagnostics are performed")}
+            />
+          )}
+        </>
+      )}
+    </Stack>
+  )
 }

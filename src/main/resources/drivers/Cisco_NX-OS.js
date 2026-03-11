@@ -21,7 +21,7 @@ var Info = {
 	name: "CiscoNXOS",
 	description: "Cisco NX-OS 5+",
 	author: "Netshot Team",
-	version: "1.9.2"
+	version: "1.9.3"
 };
 
 var Config = {

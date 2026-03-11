@@ -274,6 +274,9 @@ function snapshot(cli, device, config) {
 		if (runningConfig.match(/vdc_is_active failed/)) {
 			throw "Nexus 4000 error";
 		}
+		if (runningConfig.match(/Cmd exec error/)) {
+			throw "Nexus vdc error";
+		}
 	}
 	catch (error) {
 		runningConfig = cli.command("show running-config");

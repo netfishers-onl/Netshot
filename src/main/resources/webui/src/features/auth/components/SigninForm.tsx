@@ -55,10 +55,10 @@ export function SigninForm() {
       <Stack gap="2" asChild>
         <form onSubmit={submit}>
           <Button variant="primary" type="submit">
-            {t("Signin with SSO")}
+            {t("Sign in with SSO")}
           </Button>
           <Button variant="default" onClick={toggleOidcForm}>
-            {t("Signin with username")}
+            {t("Sign in with username")}
           </Button>
         </form>
         {signinWithOidcMutation.isError && (
@@ -119,7 +119,7 @@ export function SigninForm() {
           </Button>
           {isOidcConnection && (
             <Button onClick={toggleOidcForm} variant="default">
-              {t("Signin with SSO")}
+              {t("Sign in with SSO")}
             </Button>
           )}
         </Stack>

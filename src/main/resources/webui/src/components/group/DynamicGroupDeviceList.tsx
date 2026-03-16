@@ -60,7 +60,7 @@ export default function DynamicGroupDeviceList(props: DynamicGroupDeviceListProp
         <Stack alignItems="center" gap="4">
           <Stack alignItems="center" gap="1">
             <Heading size="md">{t("No results")}</Heading>
-            <Text color="grey.400">{t("No device matching her criteria")}</Text>
+            <Text color="grey.400">{t("No device matching the criteria")}</Text>
           </Stack>
 
           <QueryBuilderButton

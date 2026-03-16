@@ -148,7 +148,7 @@ export default function DeviceBulkEditButton(props: DeviceBulkEditButtonProps) {
 
         toast.success({
           title: t("Success"),
-          description: t("{{count}} device has been successfully modified", {
+          description: t("{{count}} devices have been successfully modified", {
             count: devices?.length,
           }),
         })

@@ -100,7 +100,7 @@ export default function CancelledTaskScreen() {
           ) : (
             <EmptyResult
               title={t("There is no cancelled task")}
-              description={t("Tasks will appear when diagnostics are performed")}
+              description={t("No matching task was found")}
             />
           )}
         </>

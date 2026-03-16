@@ -154,7 +154,7 @@ export default function DeviceInterfaceScreen() {
             <EmptyResult
               title={t("There is no interface")}
               description={t(
-                "This device does not have any interface, please check his configuration"
+                "This device does not have any interface, please check its configuration"
               )}
             />
           )}

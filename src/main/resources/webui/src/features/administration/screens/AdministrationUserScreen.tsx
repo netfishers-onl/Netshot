@@ -169,7 +169,7 @@ export default function AdministrationUserScreen() {
             ) : (
               <EmptyResult
                 title={t("There is no user")}
-                description={t("You can create user with different role to manage netshot")}
+                description={t("You can create users with different roles to manage Netshot")}
               >
                 <AddUserButton
                   renderItem={(open) => (

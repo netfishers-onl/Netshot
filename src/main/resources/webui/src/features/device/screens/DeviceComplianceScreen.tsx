@@ -119,12 +119,12 @@ export default function DeviceComplianceScreen() {
                 </Text>
               ) : (
                 <Text>
-                  {t("Not end of sale yet")}
-                  {device?.eosDate &&
-                    t(", planned on {{date}} (module {{module}})", {
-                      date: formatDate(device?.eosDate, "PPP"),
-                      module: device?.eosModule?.partNumber,
-                    })}
+                  {device?.eosDate
+                    ? t("Not end of sale yet, planned on {{date}} (module {{module}})", {
+                        date: formatDate(device?.eosDate, "PPP"),
+                        module: device?.eosModule?.partNumber,
+                      })
+                    : t("Not end of sale yet")}
                 </Text>
               )}
             </AlertBox>
@@ -138,12 +138,12 @@ export default function DeviceComplianceScreen() {
                 </Text>
               ) : (
                 <Text>
-                  {t("Not end of life yet")}
-                  {device?.eosDate &&
-                    t(", planned on {{date}} (module {{module}})", {
-                      date: formatDate(device?.eolDate, "PPP"),
-                      module: device?.eolModule?.partNumber,
-                    })}
+                  {device?.eolDate
+                    ? t("Not end of life yet, planned on {{date}} (module {{module}})", {
+                        date: formatDate(device?.eolDate, "PPP"),
+                        module: device?.eolModule?.partNumber,
+                      })
+                    : t("Not end of life yet")}
                 </Text>
               )}
             </AlertBox>

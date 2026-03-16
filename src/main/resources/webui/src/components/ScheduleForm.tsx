@@ -1,8 +1,8 @@
 import i18n from "@/i18n"
-import { Option, SchedulePriority, TaskScheduleType } from "@/types"
+import { SchedulePriority, TaskScheduleType } from "@/types"
 import { Stack } from "@chakra-ui/react"
 import { addMinutes, format, setHours, setMinutes } from "date-fns"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import FormControl, { FormControlType } from "./FormControl"
@@ -43,90 +43,12 @@ export const SCHEDULE_TYPE_OPTIONS = [
   },
 ]
 
-export const REPEAT_FREQUENCY_OPTIONS = [
-  {
-    label: i18n.t("Hour(s)"),
-    value: "hourly",
-  },
-  {
-    label: i18n.t("Day(s)"),
-    value: "daily",
-  },
-  {
-    label: i18n.t("Week(s)"),
-    value: "weekly",
-  },
-  {
-    label: i18n.t("Month(s)"),
-    value: "monthly",
-  },
-] as Option<"hourly" | "daily" | "weekly" | "monthly">[]
 
-export const MINUTE_OPTIONS = [
-  {
-    label: i18n.t("5 min"),
-    value: 5,
-  },
-  {
-    label: i18n.t("10 min"),
-    value: 10,
-  },
-  {
-    label: i18n.t("15 min"),
-    value: 15,
-  },
-  {
-    label: i18n.t("20 min"),
-    value: 20,
-  },
-  {
-    label: i18n.t("25 min"),
-    value: 25,
-  },
-  {
-    label: i18n.t("30 min"),
-    value: 30,
-  },
-  {
-    label: i18n.t("35 min"),
-    value: 35,
-  },
-  {
-    label: i18n.t("40 min"),
-    value: 40,
-  },
-  {
-    label: i18n.t("45 min"),
-    value: 45,
-  },
-  {
-    label: i18n.t("50 min"),
-    value: 50,
-  },
-  {
-    label: i18n.t("55 min"),
-    value: 55,
-  },
-]
+export const MINUTE_OPTIONS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(n => ({
+  label: i18n.t("{{count}} min", { count: n }),
+  value: n,
+}))
 
-export const FREQUENCY_OPTIONS = [
-  {
-    label: i18n.t("Hour(s)"),
-    value: "hourly",
-  },
-  {
-    label: i18n.t("Day(s)"),
-    value: "daily",
-  },
-  {
-    label: i18n.t("Week(s)"),
-    value: "weekly",
-  },
-  {
-    label: i18n.t("Month(s)"),
-    value: "monthly",
-  },
-]
 
 export const SCHEDULE_PRIORITY_OPTIONS = [
   {
@@ -164,7 +86,7 @@ export default function ScheduleForm() {
       date: format(new Date(), "yyyy-MM-dd"),
       time: format(new Date(), "HH:mm"),
       minute: MINUTE_OPTIONS[0].value,
-      frequency: REPEAT_FREQUENCY_OPTIONS[0].value,
+      frequency: "hourly",
       priority: SCHEDULE_PRIORITY_OPTIONS[1].value.toString(),
     },
   })
@@ -173,6 +95,18 @@ export default function ScheduleForm() {
     control: scheduleForm.control,
     name: "type",
   })
+
+  const every = useWatch({ control: scheduleForm.control, name: "every" })
+  const everyCount = Number(every) || 1
+  const frequencyOptions = useMemo(
+    () => [
+      { label: t("hour", { count: everyCount }), value: "hourly" as const },
+      { label: t("day", { count: everyCount }), value: "daily" as const },
+      { label: t("week", { count: everyCount }), value: "weekly" as const },
+      { label: t("month", { count: everyCount }), value: "monthly" as const },
+    ],
+    [everyCount, t]
+  )
 
   useEffect(() => {
     // Set outer default values
@@ -269,7 +203,7 @@ export default function ScheduleForm() {
             name="every"
             type={FormControlType.Number}
           />
-          <Select options={FREQUENCY_OPTIONS} control={scheduleForm.control} name="frequency" />
+          <Select options={frequencyOptions} control={scheduleForm.control} name="frequency" />
         </Stack>
       )}
       <Select

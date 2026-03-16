@@ -117,7 +117,7 @@ export default function DeviceModuleScreen() {
             <EmptyResult
               title={t("There is no module")}
               description={t(
-                "This device does not have any module, please check his configuration"
+                "This device does not have any module, please check its configuration"
               )}
             />
           )}

@@ -29,7 +29,7 @@ export default function NavbarUser() {
       // @note: The request doesn't return JSON
       toast.error({
         title: t("Error"),
-        description: t("An error occured"),
+        description: t("An error occurred"),
       })
     },
     onSuccess() {

@@ -137,7 +137,7 @@ export default function ReportConfigurationChangeList() {
           ) : (
             <EmptyResult
               title={t("There is no configuration change")}
-              description={t("Here you can view the configuration changed list")}
+              description={t("Here you can view the configuration change list")}
             ></EmptyResult>
           )}
         </>

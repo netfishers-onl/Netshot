@@ -214,7 +214,7 @@ export default function ComplianceSoftwareRuleScreen() {
             ) : (
               <EmptyResult
                 title={t("There is no software rule")}
-                description={t("You can add rule to check device software compliance")}
+                description={t("You can add a rule to check device software compliance")}
               >
                 <AddSoftwareRuleButton
                   renderItem={(open) => (

@@ -160,7 +160,7 @@ export default function ComplianceHardwareRuleScreen() {
           ) : (
             <EmptyResult
               title={t("There is no hardware rule")}
-              description={t("You can add rule to check device hardware compliance")}
+              description={t("You can add a rule to check device hardware compliance")}
             >
               <AddHardwareRuleButton
                 renderItem={(open) => (

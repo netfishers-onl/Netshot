@@ -158,7 +158,7 @@ export default function AdministrationApiTokenScreen() {
               <EmptyResult
                 title={t("There is no webhook")}
                 description={t(
-                  "You can create webhook to launch external code linked to Netshot event"
+                  "You can create a webhook to launch external code linked to Netshot event"
                 )}
               >
                 <AddWebhookButton

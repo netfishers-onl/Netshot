@@ -96,7 +96,7 @@ export default function AllTaskScreen() {
           ) : (
             <EmptyResult
               title={t("There is no scheduled task")}
-              description={t("Tasks will appear when diagnostics are performed")}
+              description={t("No matching task was found")}
             />
           )}
         </>

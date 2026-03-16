@@ -165,7 +165,7 @@ export default function AddGroupDialog() {
                   <Stack direction="row" gap="5">
                     <BoxWithIconButton
                       title={t("Static")}
-                      description={t("Create simple static group of devices")}
+                      description={t("Create a simple static group of devices")}
                       icon="server"
                       isActive={groupType === GroupType.Static}
                       onClick={() => setGroupType(GroupType.Static)}
@@ -185,7 +185,7 @@ export default function AddGroupDialog() {
                     <Stack gap="9" w="340px">
                       <Stack gap="5">
                         <Heading as="h4" size="md">
-                          {t("Informations")}
+                          {t("Information")}
                         </Heading>
                         <FormControl
                           required

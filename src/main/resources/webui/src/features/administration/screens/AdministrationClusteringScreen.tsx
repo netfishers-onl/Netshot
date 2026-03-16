@@ -132,7 +132,7 @@ export default function AdministrationClusteringScreen() {
               <EmptyResult
                 title={t("There is no member")}
                 description={t(
-                  "You may activate clustering in the main configuration file, please check documentation"
+                  "You may activate clustering in the main configuration file, please check the documentation"
                 )}
               />
             )}

@@ -2,3 +2,30 @@ services:
   netshot:
     pull_policy: never
     build: .
+  
+  webui:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM node:24
+        VOLUME [ "/app" ]
+        WORKDIR /app
+        ENV PATH /app/node_modules/.bin:$PATH
+        EXPOSE 3000
+        CMD [ "/bin/bash", "-c", "npm i; npm run dev" ]
+    environment:
+      PROXY_URL: http://netshot:8080
+      VITE_API_URL: http://netshot:8080
+    labels:
+      traefik.docker.network: ${COMPOSE_PROJECT_NAME}_front
+      traefik.http.routers.webui-https.rule: "PathPrefix(`/`)"
+      traefik.http.routers.webui-https.tls: true
+      traefik.http.routers.webui-https.entrypoints: "web-secure"
+      traefik.http.routers.webui-https.priority: 10000
+      traefik.http.services.webui.loadbalancer.server.port: "3000"
+    expose:
+      - 8080
+    volumes:
+      - "./src/main/resources/webui:/app"
+    networks:
+      - front

@@ -1,5 +1,5 @@
 import { Box, Heading, Spacer, Stack } from "@chakra-ui/react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import { Brand } from "@/components"
 import { SigninForm } from "@/features/auth"
@@ -13,7 +13,6 @@ export function SigninScreen() {
         <Stack mx="auto" width="40%" gap="12">
           <Stack gap="6">
             <Stack gap="10">
-              <Brand css={{ w: 140 }} />
               <Heading as="h4" fontWeight="semibold" fontSize="2xl">
                 {t("Please sign in")}
               </Heading>
@@ -30,12 +29,13 @@ export function SigninScreen() {
         gap="5"
         justifyContent="center"
       >
+        <Brand mode="dark" css={{ w: 140 }} />
         <Spacer />
         <Heading fontSize="8xl" color="white" fontWeight="medium" maxW="400px" lineHeight="100%">
-          {t("Network orchestration ")}
-          <Box as="span" color="green.500">
-            {t("made easy.")}
-          </Box>
+          <Trans
+            i18nKey="Network orchestration <green>made easy.</green>"
+            components={{ green: <Box as="span" color="green.500" /> }}
+          />
         </Heading>
       </Stack>
     </Stack>

@@ -7,7 +7,7 @@ import { Hook, PropsWithRenderItem } from "@/types"
 import { Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { MouseEvent, useCallback } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 
 export type RemoveWebhookButtonProps = PropsWithRenderItem<{
@@ -35,17 +35,11 @@ export default function RemoveWebhookButton(props: RemoveWebhookButtonProps) {
       const dialogRef = dialog.open(MUTATIONS.ADMIN_HOOK_REMOVE, {
         title: t("Remove webhook"),
         description: (
-          <Text>
-            {t("You are about to remove the webhook ")}
-
-            <Text as="span" fontWeight="semibold">
-              {t("{{name}}", {
-                name: webhook.name,
-              })}
-            </Text>
-
-            {t(", are you sure?")}
-          </Text>
+          <Trans
+            i18nKey="You are about to remove the webhook <bold>{{name}}</bold>, are you sure?"
+            values={{ name: webhook.name }}
+            components={{ bold: <Text as="span" fontWeight="semibold" /> }}
+          />
         ),
         async onConfirm() {
           await mutation.mutateAsync()

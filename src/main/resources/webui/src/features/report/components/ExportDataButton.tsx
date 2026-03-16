@@ -69,7 +69,7 @@ function ExportDataForm() {
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
           <Text fontWeight="medium">{t("Device group details")}</Text>
-          <Text color="grey.400">{t("Export device group informations")}</Text>
+          <Text color="grey.400">{t("Export device group information")}</Text>
         </Stack>
         <Switch w="initial" control={form.control} name="hasGroups" />
       </Stack>

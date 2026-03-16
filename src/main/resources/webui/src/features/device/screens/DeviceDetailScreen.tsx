@@ -29,7 +29,7 @@ export default function DeviceDetailScreen() {
   const refresh = useCallback(async () => {
     const toastId = toast.loading({
       title: t("Loading"),
-      description: t("Please wait, refresh device data"),
+      description: t("Please wait, refreshing device data"),
     })
     await refetch()
     toast.close(toastId)

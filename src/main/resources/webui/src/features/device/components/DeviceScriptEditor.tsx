@@ -74,7 +74,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
       queryClient.invalidateQueries({ queryKey: [QUERIES.SCRIPT_LIST] })
       toast.success({
         title: t("Success"),
-        description: t("Script successfully saved for later usage"),
+        description: t("Script successfully saved for later use"),
       })
     },
     onError() {

@@ -40,13 +40,13 @@ export default function DiagnosticAddDialog() {
       icon: "javascript",
       type: DiagnosticType.Javascript,
       label: t("Javascript"),
-      description: t("Create a diagnostic using a javascript language"),
+      description: t("Create a diagnostic using JavaScript"),
     },
     {
       icon: "python",
       type: DiagnosticType.Python,
       label: t("Python"),
-      description: t("Create a diagnostic using a python language"),
+      description: t("Create a diagnostic using Python"),
     },
   ]
 

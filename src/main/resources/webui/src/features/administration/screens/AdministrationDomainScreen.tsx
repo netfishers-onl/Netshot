@@ -141,7 +141,7 @@ export default function AdministrationDomainScreen() {
             ) : (
               <EmptyResult
                 title={t("There is no domain")}
-                description={t("You can create domain for multiple device")}
+                description={t("You should create at least one domain before adding devices")}
               >
                 <AddDomainButton
                   renderItem={(open) => (

@@ -69,7 +69,7 @@ function AboutContent() {
       <Stack>
         <Text>
           {t(
-            'Netshot is distributed "as is", without warranty. Netshot SASU can\'t be held responsible for any damage caused to your devices or you network by the usage of Netshot. Netshot has no relationship with the network device vendors.'
+            'Netshot is distributed "as is", without warranty. Netshot SASU can\'t be held responsible for any damage caused to your devices or your network by the usage of Netshot. Netshot has no relationship with the network device vendors.'
           )}
         </Text>
       </Stack>

@@ -95,7 +95,7 @@ export default function FailedTaskScreen() {
           ) : (
             <EmptyResult
               title={t("There is no failed task")}
-              description={t("Tasks will appear when diagnostics are performed")}
+              description={t("No matching task was found")}
             />
           )}
         </>

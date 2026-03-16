@@ -96,7 +96,7 @@ export default function RunningTaskScreen() {
           ) : (
             <EmptyResult
               title={t("There is no running task")}
-              description={t("Tasks will appear when diagnostics are performed")}
+              description={t("No matching task was found")}
             />
           )}
         </>

@@ -147,13 +147,13 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
       icon: "javascript",
       type: RuleType.Javascript,
       label: t("Javascript"),
-      description: t("Create a rule using a javascript language"),
+      description: t("Create a rule using JavaScript"),
     },
     {
       icon: "python",
       type: RuleType.Python,
       label: t("Python"),
-      description: t("Create a rule using a python language"),
+      description: t("Create a rule using Python"),
     },
   ]
 

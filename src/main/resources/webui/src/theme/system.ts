@@ -4,6 +4,7 @@ import { semanticColors } from "./semantic-tokens/colors"
 import slotRecipes from "./slotRecipes"
 import { textStyles } from "./textStyles"
 import { colors } from "./tokens/colors"
+import { cursor } from "./tokens/cursor"
 import { fonts } from "./tokens/fonts"
 import { fontSizes } from "./tokens/fontSizes"
 import { fontWeights } from "./tokens/fontWeights"
@@ -15,6 +16,7 @@ import { spacing } from "./tokens/spacing"
 
 export const tokens = {
   colors,
+  cursor,
   radii,
   spacing,
   sizes,

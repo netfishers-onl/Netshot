@@ -260,7 +260,7 @@ function DeviceEditForm() {
       <FormControl
         type={FormControlType.LongText}
         label={t("Comments")}
-        placeholder={t("Add description about the device")}
+        placeholder={t("Add a description about the device")}
         control={form.control}
         name="comments"
       />

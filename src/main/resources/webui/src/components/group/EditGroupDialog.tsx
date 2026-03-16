@@ -149,7 +149,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
                   <Stack gap="9" w="340px" overflowY="auto">
                     <Stack gap="5">
                       <Heading as="h4" size="md">
-                        {t("Informations")}
+                        {t("Information")}
                       </Heading>
                       <FormControl
                         required

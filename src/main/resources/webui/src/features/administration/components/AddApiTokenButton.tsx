@@ -61,7 +61,7 @@ export default function AddApiTokenButton(props: AddApiTokenButtonProps) {
 
         toast.success({
           title: t("Success"),
-          description: t("Api token has been successfully created"),
+          description: t("API token has been successfully created"),
         })
 
         queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_API_TOKENS] })

@@ -201,7 +201,7 @@ export default function AddTaskDialog() {
         icon: "camera",
         type: TaskType.TakeGroupSnapshot,
         label: t("Snapshot"),
-        description: t("Take a snapshot of group of devices"),
+        description: t("Take a snapshot of a group of devices"),
       },
       {
         icon: "play",

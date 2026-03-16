@@ -7,7 +7,7 @@ import { ApiToken, PropsWithRenderItem } from "@/types"
 import { Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { MouseEvent } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 
 export type RemoveApiTokenButtonProps = PropsWithRenderItem<{
@@ -34,17 +34,11 @@ export default function RemoveApiTokenButton(props: RemoveApiTokenButtonProps) {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_API_TOKEN_REMOVE, {
       title: t("Remove API token"),
       description: (
-        <Text>
-          {t("You are about to remove the API token ")}
-
-          <Text as="span" fontWeight="semibold">
-            {t("{{description}}", {
-              description: apiToken.description,
-            })}
-          </Text>
-
-          {t(", are you sure?")}
-        </Text>
+        <Trans
+          i18nKey="You are about to remove the API token <bold>{{description}}</bold>, are you sure?"
+          values={{ description: apiToken.description }}
+          components={{ bold: <Text as="span" fontWeight="semibold" /> }}
+        />
       ),
       async onConfirm() {
         await mutation.mutateAsync()
@@ -54,7 +48,7 @@ export default function RemoveApiTokenButton(props: RemoveApiTokenButtonProps) {
 
         toast.success({
           title: t("Success"),
-          description: t("Api token has been successfully removed"),
+          description: t("API token has been successfully removed"),
         })
       },
       confirmButton: {

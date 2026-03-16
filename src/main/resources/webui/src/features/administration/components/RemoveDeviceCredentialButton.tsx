@@ -7,7 +7,7 @@ import { CredentialSet, PropsWithRenderItem } from "@/types"
 import { Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { MouseEvent } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 
 export type RemoveDeviceCredentialButtonProps = PropsWithRenderItem<{
@@ -34,17 +34,11 @@ export default function RemoveDeviceCredentialButton(props: RemoveDeviceCredenti
     const dialogRef = dialog.open(MUTATIONS.ADMIN_CREDENTIAL_SET_REMOVE, {
       title: t("Remove credential"),
       description: (
-        <Text>
-          {t("You are about to remove the credential ")}
-
-          <Text as="span" fontWeight="semibold">
-            {t("{{name}}", {
-              name: credential.name,
-            })}
-          </Text>
-
-          {t(", are you sure?")}
-        </Text>
+        <Trans
+          i18nKey="You are about to remove the credential <bold>{{name}}</bold>, are you sure?"
+          values={{ name: credential.name }}
+          components={{ bold: <Text as="span" fontWeight="semibold" /> }}
+        />
       ),
       async onConfirm() {
         await mutation.mutateAsync()
@@ -53,7 +47,7 @@ export default function RemoveDeviceCredentialButton(props: RemoveDeviceCredenti
 
         toast.success({
           title: t("Success"),
-          description: t("Device creddential {{name}} has been successfully removed", {
+          description: t("Device credential {{name}} has been successfully removed", {
             name: credential?.name,
           }),
         })

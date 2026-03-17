@@ -199,7 +199,7 @@ export default function AddGroupDialog() {
                           control={form.control}
                           name="folder"
                           label={t("Folder")}
-                          placeholder={t("e.g. folder A / Subfolder A / ...")}
+                          placeholder={t("E.g. {{example}}", { example: t("Folder A/Subfolder B/ ...") })}
                           helperText={t("Use slashes to give a folder path")}
                         />
                         <Separator />

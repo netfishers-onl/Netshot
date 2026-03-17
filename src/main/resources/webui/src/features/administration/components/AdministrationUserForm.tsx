@@ -52,7 +52,7 @@ export default function AdministrationUserForm(props: AdministrationUserFormProp
     <Stack gap="6">
       <FormControl
         label={t("Username")}
-        placeholder={t("e.g. admin")}
+        placeholder={t("E.g. {{example}}", { example: "admin" })}
         required
         control={form.control}
         name="username"

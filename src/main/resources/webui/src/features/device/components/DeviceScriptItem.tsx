@@ -8,7 +8,7 @@ import { Script } from "@/types"
 import { IconButton, Stack, StackProps, Tag, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { MouseEvent } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 export type DeviceScriptItemProps = {
   isSelected?: boolean
@@ -40,10 +40,12 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
       title: t("Remove device script"),
       description: (
         <Text>
-          {t("You are about to remove the script ")}{" "}
-          <Text fontWeight="semibold" as="span">
-            {script.name}?
-          </Text>
+          <Trans
+            t={t}
+            i18nKey="You are about to remove the script <bold>{{name}}</bold>?"
+            values={{ name: script.name }}
+            components={{ bold: <Text as="span" fontWeight="semibold" /> }}
+          />
         </Text>
       ),
       isLoading,

@@ -46,14 +46,10 @@ export default function DeviceRemoveButton(props: DeviceRemoveButtonProps) {
           ) : (
             <>
               <Text>
-                {t("You are about to remove the device {{deviceName}}", {
+                {t("You are about to remove the device {{deviceName}} ({{deviceIp}})", {
                   deviceName: devices?.[0]?.name,
-                })}{" "}
-                <Text as="span">
-                  {t("({{deviceIp}})", {
-                    deviceIp: devices?.[0]?.mgmtAddress || t("N/A"),
-                  })}
-                </Text>
+                  deviceIp: devices?.[0]?.mgmtAddress || t("N/A"),
+                })}
               </Text>
             </>
           )}

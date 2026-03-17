@@ -75,7 +75,7 @@ function AboutContent() {
       </Stack>
       <Stack>
         <Text>{t("Netshot makes use of the following libraries:")}</Text>
-        <List.Root as="ul">
+        <List.Root as="ul" display="block">
           {NETSHOT_APP_LIBRARIES.map((lib) => (
             <List.Item key={lib} display="inline-list-item" marginRight="2">
               {lib}

@@ -47,14 +47,10 @@ export default function DeviceDisableButton(props: DeviceDisableButtonProps) {
           ) : (
             <>
               <Text>
-                {t("You are about to disable the device {{deviceName}}", {
+                {t("You are about to disable the device {{deviceName}} ({{deviceIp}})", {
                   deviceName: devices?.[0]?.name,
-                })}{" "}
-                <Text as="span">
-                  {t("({{deviceIp}})", {
-                    deviceIp: devices?.[0]?.mgmtAddress || t("N/A"),
-                  })}
-                </Text>
+                  deviceIp: devices?.[0]?.mgmtAddress || t("N/A"),
+                })}
               </Text>
             </>
           )}

@@ -7,7 +7,7 @@ import { Group, PropsWithRenderItem } from "@/types"
 import { Alert, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { MouseEvent } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 export type RemoveGroupButtonProps = PropsWithRenderItem<{
   group: Group
@@ -35,10 +35,12 @@ export default function RemoveGroupButton(props: RemoveGroupButtonProps) {
       description: (
         <Stack gap="5">
           <Text>
-            {t(`You are about to remove the group`)}{" "}
-            <Text as="span" fontWeight="semibold">
-              {group.name}
-            </Text>
+            <Trans
+              t={t}
+              i18nKey="You are about to remove the group <bold>{{name}}</bold>"
+              values={{ name: group.name }}
+              components={{ bold: <Text as="span" fontWeight="semibold" /> }}
+            />
           </Text>
           <Alert.Root color="yellow.900" status="warning">
             {t(

@@ -127,7 +127,7 @@ function DeviceCreateForm() {
               <FormControl
                 required
                 label={t("Connect IP")}
-                placeholder={t("e.g. 10.216.5.3")}
+                placeholder={t("E.g. {{example}}", { example: "10.216.5.3" })}
                 control={form.control}
                 name="connectIpAddress"
                 rules={{
@@ -141,13 +141,13 @@ function DeviceCreateForm() {
               <Stack direction="row" gap="4">
                 <FormControl
                   label={t("SSH port")}
-                  placeholder={t("e.g. 22")}
+                  placeholder={t("E.g. {{example}}", { example: "22" })}
                   control={form.control}
                   name="sshPort"
                 />
                 <FormControl
                   label={t("Telnet port")}
-                  placeholder={t("e.g. 23")}
+                  placeholder={t("E.g. {{example}}", { example: "23" })}
                   control={form.control}
                   name="telnetPort"
                 />
@@ -168,7 +168,7 @@ function DeviceCreateForm() {
               <FormControl
                 required
                 label={t("Username")}
-                placeholder={t("e.g. admin")}
+                placeholder={t("E.g. {{example}}", { example: "admin" })}
                 control={form.control}
                 name="specificCredentialSet.username"
               />
@@ -196,7 +196,7 @@ function DeviceCreateForm() {
               <FormControl
                 required
                 label={t("Username")}
-                placeholder={t("e.g. admin")}
+                placeholder={t("E.g. {{example}}", { example: "admin" })}
                 control={form.control}
                 name="specificCredentialSet.username"
               />

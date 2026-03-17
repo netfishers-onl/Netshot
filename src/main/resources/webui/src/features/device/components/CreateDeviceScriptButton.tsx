@@ -51,7 +51,7 @@ export function CreateDeviceScriptButton(props: CreateDeviceScriptButtonProps) {
             label={t("Name")}
             control={form.control}
             name="name"
-            placeholder={t("e.g. my script")}
+            placeholder={t("E.g. {{example}}", { example: t("my script") })}
           />
           <FormControl label={t("Driver")} control={form.control} name="driver" readOnly />
         </Stack>

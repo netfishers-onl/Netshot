@@ -74,7 +74,7 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
         control={form.control}
         name="family"
         label={t("Device family")}
-        placeholder={t("e.g. Cisco ASR9000 Series")}
+        placeholder={t("E.g. {{example}}", { example: "Cisco ASR9000 Series" })}
         suffix={
           <IconButton
             aria-label={t(familyRegExp ? "Switch to text" : "Switch to RegExp")}
@@ -92,7 +92,7 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
         control={form.control}
         name="partNumber"
         label={t("Part number")}
-        placeholder={t("e.g. FK-X0012")}
+        placeholder={t("E.g. {{example}}", { example: "FK-X0012" })}
         suffix={
           <IconButton
             aria-label={t(partNumberRegExp ? "Switch to text" : "Switch to RegExp")}

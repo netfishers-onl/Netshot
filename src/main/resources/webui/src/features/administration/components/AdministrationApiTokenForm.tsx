@@ -69,7 +69,7 @@ export default function AdministrationApiTokenForm() {
       <FormControl
         type={FormControlType.LongText}
         label={t("Description")}
-        placeholder={t("e.g. describe the token")}
+        placeholder={t("E.g. {{example}}", { example: t("describe the token") })}
         required
         control={form.control}
         name="description"

@@ -1,6 +1,5 @@
 {
   "translation": {
-    "({{deviceIp}})": "({{deviceIp}})",
     "[Any]": "[Any]",
     "{{count}} device_one": "{{count}} device",
     "{{count}} device_other": "{{count}} devices",
@@ -203,64 +202,17 @@
     "Drivers": "Drivers",
     "dynamic": "dynamic",
     "Dynamic": "Dynamic",
-    "e": {
-      "g": {
-        " (?s)": {
-          "*Last reload: (": {
-            "+?)[\r\n]+": {
-              "*": "e.g. (?s).*Last reload: (.+?)[\r\n]+.*"
-            }
-          }
-        },
-        " $1": "e.g. $1",
-        " 0": {
-          "10": "e.g. 0.10"
-        },
-        " 10": {
-          "4": {
-            "3": {
-              "8": "e.g. 10.4.3.8"
-            }
-          },
-          "216": {
-            "5": {
-              "3": "e.g. 10.216.5.3"
-            }
-          }
-        },
-        " 22": "e.g. 22",
-        " 23": "e.g. 23",
-        " 6753": "e.g. 6753",
-        " admin": "e.g. admin",
-        " Cisco ASR9000 Series": "e.g. Cisco ASR9000 Series",
-        " credential name": "e.g. credential name",
-        " describe the domain": "e.g. describe the domain",
-        " describe the token": "e.g. describe the token",
-        " FK-X0012": "e.g. FK-X0012",
-        " folder A / Subfolder A / ": {
-          "": {
-            "": {
-              "": "e.g. folder A / Subfolder A / ..."
-            }
-          }
-        },
-        " Folder A/Subfolder B/ ": {
-          "": {
-            "": {
-              "": "e.g. Folder A/Subfolder B/ ..."
-            }
-          }
-        },
-        " my domain name": "e.g. my domain name",
-        " My policy": "e.g. My policy",
-        " my script": "e.g. my script",
-        " my webhook": "e.g. my webhook",
-        " public": "e.g. public",
-        " secret key": "e.g. secret key",
-        " show version | include reason": "e.g. show version | include reason",
-        " unknown reason": "e.g. unknown reason"
-      }
-    },
+    "E.g. {{example}}": "E.g. {{example}}",
+    "credential name": "credential name",
+    "describe the domain": "describe the domain",
+    "describe the token": "describe the token",
+    "Folder A/Subfolder B/ ...": "Folder A/Subfolder B/ ...",
+    "my domain name": "my domain name",
+    "My policy": "My policy",
+    "my script": "my script",
+    "my webhook": "my webhook",
+    "unknown reason": "unknown reason",
+    "secret key": "secret key",
     "Edit": "Edit",
     "Edit {{type}} group": "Edit {{type}} group",
     "Edit credential": "Edit credential",
@@ -674,7 +626,7 @@
     "Text": "Text",
     "Text or pattern": "Text or pattern",
     "Thank you for using Netshot. Netshot is free open-source software.": "Thank you for using Netshot. Netshot is free open-source software.",
-    "The conformance level of the software version for this device is": "The conformance level of the software version for this device is",
+    "The conformance level of the software version for this device is <tag>{{level}}</tag>": "The conformance level of the software version for this device is <tag>{{level}}</tag>",
     "The device is compliant with all policies": "The device is compliant with all policies",
     "The device is not in compliance with some policies": "The device is not in compliance with some policies",
     "The drivers have been reloaded.": "The drivers have been reloaded.",
@@ -765,25 +717,24 @@
     "week_one": "week",
     "week_other": "weeks",
     "Wireless controller": "Wireless controller",
-    "xls": "xls",
-    "You are about to disable the device {{deviceName}}": "You are about to disable the device {{deviceName}}",
+    "You are about to disable the device {{deviceName}} ({{deviceIp}})": "You are about to disable the device {{deviceName}} ({{deviceIp}})",
     "You are about to disable the devices {{names}}": "You are about to disable the devices {{names}}",
     "You are about to disable the diagnostic {{diagnosticName}}": "You are about to disable the diagnostic {{diagnosticName}}",
     "You are about to disable the rule {{name}}": "You are about to disable the rule {{name}}",
-    "You are about to enable the device {{deviceName}}": "You are about to enable the device {{deviceName}}",
+    "You are about to enable the device {{deviceName}} ({{deviceIp}})": "You are about to enable the device {{deviceName}} ({{deviceIp}})",
     "You are about to enable the devices {{names}}": "You are about to enable the devices {{names}}",
     "You are about to enable the diagnostic {{diagnosticName}}": "You are about to enable the diagnostic {{diagnosticName}}",
     "You are about to enable the rule {{name}}": "You are about to enable the rule {{name}}",
     "You are about to remove the API token <bold>{{description}}</bold>, are you sure?": "You are about to remove the API token <bold>{{description}}</bold>, are you sure?",
     "You are about to remove the credential <bold>{{name}}</bold>, are you sure?": "You are about to remove the credential <bold>{{name}}</bold>, are you sure?",
-    "You are about to remove the device {{deviceName}}": "You are about to remove the device {{deviceName}}",
+    "You are about to remove the device {{deviceName}} ({{deviceIp}})": "You are about to remove the device {{deviceName}} ({{deviceIp}})",
     "You are about to remove the devices {{names}}": "You are about to remove the devices {{names}}",
     "You are about to remove the diagnostic {{diagnosticName}}": "You are about to remove the diagnostic {{diagnosticName}}",
     "You are about to remove the domain {{name}}": "You are about to remove the domain {{name}}",
-    "You are about to remove the group": "You are about to remove the group",
+    "You are about to remove the group <bold>{{name}}</bold>": "You are about to remove the group <bold>{{name}}</bold>",
     "You are about to remove the policy {{policyName}}": "You are about to remove the policy {{policyName}}",
     "You are about to remove the rule {{ruleName}}": "You are about to remove the rule {{ruleName}}",
-    "You are about to remove the script ": "You are about to remove the script ",
+    "You are about to remove the script <bold>{{name}}</bold>?": "You are about to remove the script <bold>{{name}}</bold>?",
     "You are about to remove the user {{username}}": "You are about to remove the user {{username}}",
     "You are about to remove the webhook <bold>{{name}}</bold>, are you sure?": "You are about to remove the webhook <bold>{{name}}</bold>, are you sure?",
     "You are about to remove this hardware rule": "You are about to remove this hardware rule",

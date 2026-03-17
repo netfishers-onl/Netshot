@@ -2,7 +2,7 @@ import { Button, Heading, Stack, Tag, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useMemo } from "react"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 import { useParams } from "react-router"
 
 import api from "@/api"
@@ -98,10 +98,12 @@ export default function DeviceComplianceScreen() {
               </Text>
             ) : (
               <Text>
-                {t("The conformance level of the software version for this device is")}{" "}
-                <Tag.Root as="span" colorPalette={softwareLevelColor}>
-                  {device?.softwareLevel}
-                </Tag.Root>
+                <Trans
+                  t={t}
+                  i18nKey="The conformance level of the software version for this device is <tag>{{level}}</tag>"
+                  values={{ level: device?.softwareLevel }}
+                  components={{ tag: <Tag.Root as="span" colorPalette={softwareLevelColor} /> }}
+                />
               </Text>
             )}
           </AlertBox>

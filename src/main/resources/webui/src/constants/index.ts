@@ -79,7 +79,7 @@ export const HIDDEN_PASWORD = "******"
 export const NETSHOT_APP_LIBRARIES = [
   "Hibernate",
   "Quartz",
-  "Jsch",
+  "Apache Mina SSHD",
   "Apache Commons",
   "Grizzly",
   "Jersey",
@@ -93,7 +93,6 @@ export const NETSHOT_APP_LIBRARIES = [
   "Chart.js",
   "JRadius",
   "Apache PO",
-  "Swagger",
 ]
 
 export const PAGINATION_LIMIT = 40

@@ -119,7 +119,7 @@ export function RuleEditForm(props: RuleEditFormProps) {
           <FormControl
             type={FormControlType.LongText}
             label={t("Context")}
-            placeholder={t("e.g. show version | include reason")}
+            placeholder={t("E.g. {{example}}", { example: "show version | include reason" })}
             control={form.control}
             name="context"
           />
@@ -155,7 +155,7 @@ export function RuleEditForm(props: RuleEditFormProps) {
           <FormControl
             type={FormControlType.LongText}
             label={t("Text or pattern")}
-            placeholder={t("e.g. unknown reason")}
+            placeholder={t("E.g. {{example}}", { example: t("unknown reason") })}
             control={form.control}
             name="text"
           />

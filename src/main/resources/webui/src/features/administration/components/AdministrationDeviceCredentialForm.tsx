@@ -43,7 +43,7 @@ export default function AdministrationDeviceCredentialForm() {
     <Stack gap="6">
       <FormControl
         label={t("Name")}
-        placeholder={t("e.g. credential name")}
+        placeholder={t("E.g. {{example}}", { example: t("credential name") })}
         required
         control={form.control}
         name="name"
@@ -61,7 +61,7 @@ export default function AdministrationDeviceCredentialForm() {
         <>
           <FormControl
             label={t("Username")}
-            placeholder={t("e.g. admin")}
+            placeholder={t("E.g. {{example}}", { example: "admin" })}
             required
             control={form.control}
             name="username"
@@ -76,7 +76,7 @@ export default function AdministrationDeviceCredentialForm() {
           <FormControl
             type={FormControlType.Password}
             label={t("Auth key")}
-            placeholder={t("e.g. secret key")}
+            placeholder={t("E.g. {{example}}", { example: t("secret key") })}
             required
             control={form.control}
             name="authKey"
@@ -91,7 +91,7 @@ export default function AdministrationDeviceCredentialForm() {
           <FormControl
             type={FormControlType.Password}
             label={t("Key")}
-            placeholder={t("e.g. secret key")}
+            placeholder={t("E.g. {{example}}", { example: t("secret key") })}
             required
             control={form.control}
             name="privKey"
@@ -103,7 +103,7 @@ export default function AdministrationDeviceCredentialForm() {
           <FormControl
             required
             label={t("Username")}
-            placeholder={t("e.g. admin")}
+            placeholder={t("E.g. {{example}}", { example: "admin" })}
             control={form.control}
             name="username"
           />
@@ -130,7 +130,7 @@ export default function AdministrationDeviceCredentialForm() {
           <FormControl
             required
             label={t("Username")}
-            placeholder={t("e.g. admin")}
+            placeholder={t("E.g. {{example}}", { example: "admin" })}
             control={form.control}
             name="username"
           />
@@ -173,7 +173,7 @@ export default function AdministrationDeviceCredentialForm() {
       ) && (
         <FormControl
           label={t("Community")}
-          placeholder={t("e.g. public")}
+          placeholder={t("E.g. {{example}}", { example: "public" })}
           required
           control={form.control}
           name="community"

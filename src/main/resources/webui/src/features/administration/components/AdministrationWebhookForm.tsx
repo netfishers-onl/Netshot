@@ -59,7 +59,7 @@ export default function AdministrationWebhookForm() {
       <Stack gap="6">
         <FormControl
           label={t("Name")}
-          placeholder={t("e.g. my webhook")}
+          placeholder={t("E.g. {{example}}", { example: t("my webhook") })}
           required
           control={form.control}
           name="name"

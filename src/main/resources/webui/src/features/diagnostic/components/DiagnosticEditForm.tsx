@@ -77,19 +77,19 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
           <FormControl
             required
             label={t("CLI command")}
-            placeholder={t("e.g. show version | include reason")}
+            placeholder={t("E.g. {{example}}", { example: "show version | include reason" })}
             control={form.control}
             name="command"
           />
           <FormControl
             label={t("RegEx pattern")}
-            placeholder={t("e.g. (?s).*Last reload: (.+?)[\r\n]+.*")}
+            placeholder={t("E.g. {{example}}", { example: "(?s).*Last reload: (.+?)[\\r\\n]+.*" })}
             control={form.control}
             name="modifierPattern"
           />
           <FormControl
             label={t("Replace with")}
-            placeholder={t("e.g. $1")}
+            placeholder={t("E.g. {{example}}", { example: "$1" })}
             control={form.control}
             name="modifierReplacement"
           />

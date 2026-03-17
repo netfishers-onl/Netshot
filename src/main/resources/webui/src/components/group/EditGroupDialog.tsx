@@ -163,7 +163,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
                         control={form.control}
                         name="folder"
                         label={t("Folder")}
-                        placeholder={t("e.g. Folder A/Subfolder B/ ...")}
+                        placeholder={t("E.g. {{example}}", { example: t("Folder A/Subfolder B/ ...") })}
                         helperText={t("Use slashes to give a folder path")}
                       />
                       <Separator />

@@ -21,7 +21,7 @@ export default function PolicyForm() {
     <Stack gap="6">
       <FormControl
         label={t("Name")}
-        placeholder={t("e.g. My policy")}
+        placeholder={t("E.g. {{example}}", { example: t("My policy") })}
         required
         control={form.control}
         name="name"

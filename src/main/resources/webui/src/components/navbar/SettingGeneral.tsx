@@ -74,7 +74,7 @@ export function SettingGeneral() {
         <Stack gap="6" flex="1" overflow="auto">
           <FormControl
             label={t("Username")}
-            placeholder={t("e.g. admin")}
+            placeholder={t("E.g. {{example}}", { example: "admin" })}
             control={form.control}
             readOnly
             name="username"

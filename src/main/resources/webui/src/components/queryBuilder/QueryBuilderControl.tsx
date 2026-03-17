@@ -200,7 +200,7 @@ export function QueryBuilderControl<T>(props: QueryBuilderControlProps<T>) {
         type={FormControlType.LongText}
         rows={8}
         ref={inputRef}
-        placeholder={t("e.g. [IP] is 16.16.16.16")}
+        placeholder={t("E.g. {{example}}", { example: "[IP] is 16.16.16.16" })}
       />
       <Stack direction="row" gap="3">
         <Button onClick={() => setCondition(ConditionType.Not)}>{t("not")}</Button>

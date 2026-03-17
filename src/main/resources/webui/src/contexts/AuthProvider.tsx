@@ -13,7 +13,7 @@ export type AuthProviderProps = {
 export function AuthProvider({ children }: AuthProviderProps) {
   const { t } = useTranslation()
 
-  const { data: user, isPending } = useQuery({
+  const { data, isPending, isError } = useQuery({
     queryKey: [QUERIES.USER],
     queryFn: api.user.me,
     refetchOnWindowFocus: false,
@@ -31,5 +31,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     )
   }
 
-  return <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user: data?.user, oidcInfo: data?.oidcInfo, serverError: isError }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }

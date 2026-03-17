@@ -1,9 +1,9 @@
 import httpClient, { HttpEventType } from "@/api/httpClient"
+import { MeResult } from "@/api/user"
 import { Navbar } from "@/components"
 import { QUERIES, REDIRECT_SEARCH_PARAM } from "@/constants"
 import { useAuth } from "@/contexts"
 import { useAlertDialog } from "@/dialog"
-import { User } from "@/types"
 import { Stack } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useRef } from "react"
@@ -22,7 +22,7 @@ export function MainScreen() {
   const dialog = useAlertDialog()
   const { user } = useAuth()
   const navigate = useNavigate()
-  // Whether there has alreawy been a successfully authentication
+  // Whether there has already been a successfully authentication
   const authState = useRef<AuthState>(AuthState.AUTH_REQUIRED)
   const queryClient = useQueryClient()
 
@@ -55,7 +55,7 @@ export function MainScreen() {
       })
       authState.current = AuthState.REAUTH_REQUIRED
     }
-    queryClient.setQueryData<User>([QUERIES.USER], null)
+    queryClient.setQueryData<MeResult>([QUERIES.USER], (prev) => prev ? { ...prev, user: null } : prev)
   }
 
   useEffect(() => {

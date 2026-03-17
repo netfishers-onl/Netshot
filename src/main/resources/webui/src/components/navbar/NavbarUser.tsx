@@ -4,10 +4,10 @@ import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
 import api from "@/api"
+import { MeResult } from "@/api/user"
 import { QUERIES } from "@/constants"
 import { useAuth } from "@/contexts"
 import useToast from "@/hooks/useToast"
-import { User } from "@/types"
 
 import { useUserLevelOptions } from "@/hooks"
 import Icon from "../Icon"
@@ -37,7 +37,7 @@ export default function NavbarUser() {
         title: t("Logout"),
         description: t("You have successfully logged out from Netshot."),
       })
-      queryClient.setQueryData<User>([QUERIES.USER], null)
+      queryClient.setQueryData<MeResult>([QUERIES.USER], (prev) => prev ? { ...prev, user: null } : prev)
     },
   })
 

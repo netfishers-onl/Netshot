@@ -1,7 +1,6 @@
 import withQuery, { WithQueryOptions } from "with-query"
 
 import i18n from "@/i18n"
-import oidc from "./oidc"
 
 export enum HttpMethod {
   GET = "GET",
@@ -105,13 +104,6 @@ function createHttpClient(opts: HttpClientOptions = {}) {
     }
 
     const response = await fetch(requestUrl, requestOptions)
-
-    const oidcData = oidc.extracDataFromHeaders(response.headers)
-
-    if (oidcData.endpoint && oidcData.clientId) {
-      oidc.setEndpoint(oidcData.endpoint)
-      oidc.setClientId(oidcData.clientId)
-    }
 
     if (!response.ok) {
       const callbackConfig = {

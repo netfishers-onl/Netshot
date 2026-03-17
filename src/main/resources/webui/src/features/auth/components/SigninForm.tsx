@@ -1,5 +1,6 @@
 import api from "@/api"
 import FormControl, { FormControlType } from "@/components/FormControl"
+import { useAuth } from "@/contexts"
 import { useSigninForm } from "@/hooks"
 import { Button, Center, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
@@ -13,14 +14,15 @@ export function SigninForm() {
   const form = useSigninForm()
   const { mutation, changePass } = useSigninMutation()
   const signinWithOidcMutation = useSigninWithOidcMutation()
-  const isOidcConnection = api.oidc.isOidcConnection()
+  const { oidcInfo } = useAuth()
+  const isOidcConnection = Boolean(oidcInfo?.endpoint && oidcInfo?.clientId)
   const [isOidcForm, setIsOidcForm] = useState<boolean>(isOidcConnection)
   const state = searchParams.get("state")
   const code = searchParams.get("code")
 
   const submit = form.handleSubmit((values) => {
     if (isOidcForm) {
-      window.location.href = api.oidc.generateUrl()
+      window.location.href = api.oidc.generateUrl(oidcInfo!.endpoint!, oidcInfo!.clientId!)
       return
     }
     mutation.mutate(values)

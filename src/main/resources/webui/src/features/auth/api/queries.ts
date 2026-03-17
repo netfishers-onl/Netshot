@@ -1,8 +1,8 @@
 import api from "@/api"
 import { HttpStatus, NetshotError, NetshotErrorCode } from "@/api/httpClient"
+import { MeResult } from "@/api/user"
 import { QUERIES, REDIRECT_SEARCH_PARAM } from "@/constants"
 import { useToast } from "@/hooks"
-import { User } from "@/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -20,7 +20,7 @@ export function useSigninMutation() {
   const mutation = useMutation({
     mutationFn: api.auth.signin,
     onSuccess(data) {
-      queryClient.setQueryData<User>([QUERIES.USER], data)
+      queryClient.setQueryData<MeResult>([QUERIES.USER], (prev) => ({ oidcInfo: prev?.oidcInfo ?? { endpoint: null, clientId: null }, user: data }))
       navigate(searchParams.get(REDIRECT_SEARCH_PARAM) || "/app", { replace: true })
     },
     onError(err: NetshotError) {
@@ -94,7 +94,7 @@ export function useSigninWithOidcMutation() {
       })
     },
     onSuccess(data) {
-      queryClient.setQueryData<User>([QUERIES.USER], data)
+      queryClient.setQueryData<MeResult>([QUERIES.USER], (prev) => ({ oidcInfo: prev?.oidcInfo ?? { endpoint: null, clientId: null }, user: data }))
       navigate(searchParams.get(REDIRECT_SEARCH_PARAM) || "/app", { replace: true })
     },
   })

@@ -1,11 +1,14 @@
+import { Alert } from "@chakra-ui/react"
 import { Box, Heading, Spacer, Stack } from "@chakra-ui/react"
 import { Trans, useTranslation } from "react-i18next"
 
 import { Brand } from "@/components"
+import { useAuth } from "@/contexts"
 import { SigninForm } from "@/features/auth"
 
 export function SigninScreen() {
   const { t } = useTranslation()
+  const { serverError } = useAuth()
 
   return (
     <Stack direction="row" gap="0" h="100vh">
@@ -17,7 +20,17 @@ export function SigninScreen() {
                 {t("Please sign in")}
               </Heading>
             </Stack>
-            <SigninForm />
+            {serverError ? (
+              <Alert.Root bg="grey.50" border="1px solid {colors.grey.100}">
+                <Alert.Indicator />
+                <Alert.Content>
+                  <Alert.Title>{t("Unable to contact the server.")}</Alert.Title>
+                  <Alert.Description>{t("Please check the Netshot server status. Refresh the page to try again.")}</Alert.Description>
+                </Alert.Content>
+              </Alert.Root>
+            ) : (
+              <SigninForm />
+            )}
           </Stack>
         </Stack>
       </Stack>

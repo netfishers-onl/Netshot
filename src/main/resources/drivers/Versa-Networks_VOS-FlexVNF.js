@@ -259,7 +259,7 @@ function snapshot(cli, device, config) {
 
 	// Retrieve the author and the protocol used for the current configuration
 	const latestCommit = cli.command("show commit list 1");
-	const latestCommitMatch = latestCommit.match(/^0\s*[0-9]*\s*(\S*)\s*(\S*)\s*([0-9\-\s\:]{19})/m);
+	const latestCommitMatch = latestCommit.match(/^0\s*[0-9]*\s*(\S+)\s+(\S+)\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/m);
 	if (latestCommitMatch != null) {
 		const authorUser = latestCommitMatch[1];
 		const authorProtocol = latestCommitMatch[2];

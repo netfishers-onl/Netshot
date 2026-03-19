@@ -24,7 +24,7 @@ const Info = {
 	name: "FortinetFortiOS", /* Unique identifier of the driver within Netshot. */
 	description: "Fortinet FortiOS", /* Description to be used in the UI. */
 	author: "Netshot Team",
-	version: "7.1" /* Version will appear in the Admin tab. */
+	version: "7.2" /* Version will appear in the Admin tab. */
 };
 
 /**
@@ -273,7 +273,7 @@ function snapshot(cli, device, config) {
 	}
 
 	// Read HA Peers from the unit directly.
-	const peerPattern = /^(Master|Slave|Primary|Secondary) *: (.+?) *, +([A-Z0-9]+)(, HA cluster index = [0-9]|, cluster index = [0-9])*$/gm;
+	const peerPattern = /^(?:(Master|Slave|Primary|Secondary) *: *)?(.+?) *, +([A-Z0-9]+)(, HA cluster index = [0-9]|, cluster index = [0-9])*$/gm;
 	while (true) {
 		const match = peerPattern.exec(getHa);
 		if (!match) break;

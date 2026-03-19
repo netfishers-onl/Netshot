@@ -259,14 +259,15 @@ function snapshot(cli, device, config) {
 
 	// Retrieve the author and the protocol used for the current configuration
 	const latestCommit = cli.command("show commit list 1");
-	const latestCommitMatch = latestCommit.match(/^0\s*[0-9]*\s*(\S+)\s+(\S+)\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/m);
-	if (latestCommitMatch != null) {
-		const authorUser = latestCommitMatch[1];
-		const authorProtocol = latestCommitMatch[2];
-		const author = authorProtocol != null
-			? authorUser + ' via ' + authorProtocol
-			: authorUser;
-		if (author != null) {
+	const latestCommitLine = latestCommit.split('\n').find(line => line.trimStart().startsWith('0'));
+	if (latestCommitLine != null) {
+		const tokens = latestCommitLine.trim().split(/\s+/);
+		if (tokens.length >= 4) {
+			const authorUser = tokens[2];
+			const authorProtocol = tokens[3];
+			const author = authorProtocol != null
+				? authorUser + ' via ' + authorProtocol
+				: authorUser;
 			config.set("author", author);
 		}
 	}

@@ -17,7 +17,7 @@
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var Info = {
+const Info = {
 	name: "VersaNetworksFlexVNF",
 	description: "Versa Networks FlexVNF (VOS)",
 	author: "Najihel",
@@ -26,7 +26,7 @@ var Info = {
 
 // --------------------------------------------------------------------------------------------------
 
-var Config = {
+const Config = {
 	"vosVersion": {
 		type: "Text",
 		title: "Versa FlexVNF Version",
@@ -59,7 +59,7 @@ var Config = {
 
 // --------------------------------------------------------------------------------------------------
 
-var Device = {
+const Device = {
 	"vosOSPackage": { /* This stores VOS OS Package information. */
 		type: "Text",
 		title: "Versa FlexVNF OS Package Version",
@@ -88,7 +88,7 @@ var Device = {
 
 // --------------------------------------------------------------------------------------------------
 
-var CLI = {
+const CLI = {
 	ssh: {
 		macros: {
 			bash: {
@@ -181,24 +181,16 @@ var CLI = {
 
 function snapshot(cli, device, config) {
 
-	var configCleanup = function(config) {
+	const configCleanup = function(text) {
 		// Remove [ok] and empty lines
-		config = config
-			.replace(/^\[ok\].*$/gm, '')  // lignes [ok]
-			.replace(/^\s*$/gm, '');	  // lignes vides
-
-		var p = config.search(/^[a-z]/m);
-		if (p > 0) {
-			config = config.slice(p);
-		}
-
-		return config;
+		return text
+			.replace(/^\[ok\].*$/gm, '')
+			.replace(/^\s*$/gm, '');
 	};
 
 	// --------------------------------------------------------------------------------------------------
 
 	// CleanUp JSON (no thanks Versa...)
-
 	function parseJsonSafe(jsonString) {
 		const lastBraceIndex = jsonString.lastIndexOf('}');
 		let cleanJson = jsonString;
@@ -228,14 +220,14 @@ function snapshot(cli, device, config) {
 	// --------------------------------------------------------------------------------------------------
 
 	// Retreive OS version
-	var showOSVersion = cli.command("/usr/bin/lsb_release -a");
-	var OSVersionLines = showOSVersion.split('\n').filter(line => line.includes(':'));
-	var OSVersionInfos ={};
+	const showOSVersion = cli.command("/usr/bin/lsb_release -a");
+	const OSVersionLines = showOSVersion.split('\n').filter(line => line.includes(':'));
+	const OSVersionInfos ={};
 	OSVersionLines.forEach(line => {
 		const [key, value] = line.split(':').map(s => s.trim());
 		OSVersionInfos[key] = value;
 	});
-	var hostVersion = `${OSVersionInfos['Description']} (${OSVersionInfos['Codename']})`;
+	const hostVersion = `${OSVersionInfos['Description']} (${OSVersionInfos['Codename']})`;
 
 	if (hostVersion) {
 		device.set("hostVersion", hostVersion);
@@ -252,33 +244,28 @@ function snapshot(cli, device, config) {
 	// --------------------------------------------------------------------------------------------------
 
 	// Retreive + cleanup configuration in curly output
-	var configuration = cli.command("show configuration | nomore");
+	let configuration = cli.command("show configuration | nomore");
 	configuration = configCleanup(configuration);
-	//configuration = configuration.replace(/^\[ok\].*$/m, '').trim();
 	config.set("configuration", configuration);
 
 	// --------------------------------------------------------------------------------------------------
 
 	// Retreive + cleanup configuration in set output
-	var configurationAsSet = cli.command("show configuration | display set | nomore");
+	let configurationAsSet = cli.command("show configuration | display set | nomore");
 	configurationAsSet = configCleanup(configurationAsSet);
-	//configurationAsSet = configurationAsSet.replace(/^\[ok\].*$/m, '').trim();
 	config.set("configurationAsSet", configurationAsSet);
 
 	// --------------------------------------------------------------------------------------------------
 
 	// Retrieve the author and the protocol used for the current configuration
-	var latestCommit = cli.command("show commit list 1");
-	var latestCommitMatch = latestCommit.match(/^0\s*[0-9]*\s*(\S*)\s*(\S*)\s*([0-9\-\s\:]{19})/m);
+	const latestCommit = cli.command("show commit list 1");
+	const latestCommitMatch = latestCommit.match(/^0\s*[0-9]*\s*(\S*)\s*(\S*)\s*([0-9\-\s\:]{19})/m);
 	if (latestCommitMatch != null) {
-		var authorUser = latestCommitMatch[1];
-		var authorProtocol = latestCommitMatch[2];
-		if (authorProtocol != null) {
-			var author = authorUser + ' via ' + authorProtocol;
-		}
-		else {
-			var author = authorUser;
-		}
+		const authorUser = latestCommitMatch[1];
+		const authorProtocol = latestCommitMatch[2];
+		const author = authorProtocol != null
+			? authorUser + ' via ' + authorProtocol
+			: authorUser;
 		if (author != null) {
 			config.set("author", author);
 		}
@@ -287,8 +274,8 @@ function snapshot(cli, device, config) {
 	// --------------------------------------------------------------------------------------------------
 
 	// Retrieve HostName
-	var showHostname = cli.command("show configuration system identification name | display set");
-	var hostname = showHostname.match(/^set system identification name (\S*)$/m);
+	const showHostname = cli.command("show configuration system identification name | display set");
+	const hostname = showHostname.match(/^set system identification name (\S*)$/m);
 	if (hostname != null) {
 		device.set("name", hostname[1]);
 	}
@@ -299,7 +286,7 @@ function snapshot(cli, device, config) {
 	// --------------------------------------------------------------------------------------------------
 
 	// Retrieve vosVersion, vosOSPackage
-	var showPackageInfoJSON = cli.command("show system package-info | display json | nomore");	
+	const showPackageInfoJSON = cli.command("show system package-info | display json | nomore");	
 	const jsonPackageInfo = parseJsonSafe(showPackageInfoJSON);
 
 	if (jsonPackageInfo) {
@@ -309,16 +296,10 @@ function snapshot(cli, device, config) {
 		const packageRelType = packageInfo["reltype"] || "";
 		const packageId = packageInfo["package-id"] || "Unknown";
 		const packageDate = packageInfo["date"] || "";
-		//const packageName = packageInfo["package-name"] || "Unknown";
-		//const packageMajor = packageInfo["major"] ?? "";
-		//const packageMinor = packageInfo["minor"] ?? "";
-		//const packageService = packageInfo["service"] ?? "";
-		//const osVersion = packageInfo["os_version"] || "";
 
 		// --------------------------------------------------------------------------------------------------
 
 		// vosVersion
-
 		const vosVersion = `Versa FlexVNF software ${packageBranch} ${packageRelType}`.trim();
 
 		if (vosVersion && !vosVersion.includes("undefined")) {
@@ -328,12 +309,10 @@ function snapshot(cli, device, config) {
 			config.set("vosVersion", "Unknown version");
 			device.set("softwareVersion", "Unknown version");
 		}
-		// cli.debug(`vosVersion: ${vosVersion}`);
 
 		// --------------------------------------------------------------------------------------------------
 
-		// vosVersion
-
+		// vosOSPackage
 		const vosOSPackage = `ID ${packageId} - Date ${packageDate}`.trim();
 
 		if (vosOSPackage && !vosOSPackage.includes("undefined")) {
@@ -341,7 +320,6 @@ function snapshot(cli, device, config) {
 		} else {
 			device.set("vosOSPackage", "Unknown package version");
 		}
-		// cli.debug(`vosOSPackage: ${vosOSPackage}`);
 
 	} else {
 		config.set("vosVersion", "Unknown version");
@@ -352,8 +330,7 @@ function snapshot(cli, device, config) {
 // --------------------------------------------------------------------------------------------------
 
 	// Retrieve Manufacturer, SKU, SerialNumber, vosOSSecurityPackage, vosOSSecurityPackage, etc. of the Device
-
-	var showSystemDetailsJSON = cli.command("show system details | display json | nomore");
+	const showSystemDetailsJSON = cli.command("show system details | display json | nomore");
 	const jsonSystemDetails = parseJsonSafe(showSystemDetailsJSON);
 
 	if (jsonSystemDetails) {
@@ -362,10 +339,7 @@ function snapshot(cli, device, config) {
 		// --------------------------------------------------------------------------------------------------
 
 		// Device Family
-
 		const systemHypervisorType = systemDetails["hypervisor"] || "unknown";
-		// cli.debug(`systemHypervisorType: ${systemHypervisorType}`);
-
 		let family;
 
 		if (systemHypervisorType === "baremetal") {
@@ -377,20 +351,18 @@ function snapshot(cli, device, config) {
 		}
 
 		device.set("family", family);
-		// cli.debug(`family: ${family}`);
 
 		// --------------------------------------------------------------------------------------------------
 
 		// vosOSSecurityPackage and vosOSSecurityPackage
-
 		const spackArray = Array.isArray(systemDetails["spack-info"]) ? systemDetails["spack-info"] : [];
 		const ossArray = Array.isArray(systemDetails["osspack-info"]) ? systemDetails["osspack-info"] : [];
 
-		var vosSecurityPackage = spackArray
+		const vosSecurityPackage = spackArray
 			.map(s => `Version ${s.version} - API ${s["api-version"]} - Flavour ${s.flavor} - Update type ${s["update-type"]}`)
 			.join(", ");
 
-		var vosOSSecurityPackage = "";
+		let vosOSSecurityPackage = "";
 
 		if (ossArray.length > 0) {
 			const notInstalled = ossArray.some(o => o.version === "OSSPACK Not Installed");
@@ -406,8 +378,6 @@ function snapshot(cli, device, config) {
 
 		device.set("vosSecurityPackage", vosSecurityPackage || "Unknown");
 		device.set("vosOSSecurityPackage", vosOSSecurityPackage || "Unknown");
-		// cli.debug(`vosSecurityPackage: ${vosSecurityPackage}`);
-		// cli.debug(`vosOSSecurityPackage: ${vosOSSecurityPackage}`);
 
 		// --------------------------------------------------------------------------------------------------
 
@@ -435,16 +405,16 @@ function snapshot(cli, device, config) {
 	// --------------------------------------------------------------------------------------------------
 
 	// Retrieve SNMP Information
-	var snmpConfig = cli.findSections(configuration, /^snmp /m);
+	const snmpConfig = cli.findSections(configuration, /^snmp /m);
 	if (snmpConfig.length > 0) {
-		var location = snmpConfig[0].config.match(/^ *location ("(.+)"|(.+));/m);
+		const location = snmpConfig[0].config.match(/^ *location ("(.+)"|(.+));/m);
 		if (location) {
 			device.set("location", location[2] || location[3]);
 		}
 		else {
 			device.set("location", "");
 		}
-		var contact = snmpConfig[0].config.match(/^ *contact ("(.+)"|(.+));/m);
+		const contact = snmpConfig[0].config.match(/^ *contact ("(.+)"|(.+));/m);
 		if (contact) {
 			device.set("contact", contact[2] || contact[3]);
 		}
@@ -456,8 +426,8 @@ function snapshot(cli, device, config) {
 	// --------------------------------------------------------------------------------------------------
 
 	// Retrieve Interfaces
-	var showInterfacesBrief = cli.command("show interfaces brief | display json | nomore");
-	var showInterfacesDetail = cli.command("show interfaces detail | display json | nomore");
+	const showInterfacesBrief = cli.command("show interfaces brief | display json | nomore");
+	const showInterfacesDetail = cli.command("show interfaces detail | display json | nomore");
 
 	const jsonDataBrief = parseJsonSafe(showInterfacesBrief);
 	const jsonDataDetail = parseJsonSafe(showInterfacesDetail);
@@ -478,7 +448,6 @@ function snapshot(cli, device, config) {
 			// --------------------------------------------------------------------------------------------------
 
 			// Interface Name
-
 			if (iface.name) {
 				ifaceObj.name = iface.name;
 				ifaceObj.level3 = false;
@@ -487,7 +456,6 @@ function snapshot(cli, device, config) {
 			// --------------------------------------------------------------------------------------------------
 
 			// Interface Administrative Status
-
 			if (typeof iface["if-admin-status"] !== "undefined") {
 				ifaceObj.enabled = iface["if-admin-status"] === "up";
 			}
@@ -495,7 +463,6 @@ function snapshot(cli, device, config) {
 			// --------------------------------------------------------------------------------------------------
 
 			// Interface MAC Address
-
 			if (typeof iface.mac === "string") {
 				const macClean = iface.mac.trim().toLowerCase();
 				if (macClean && macClean !== "n/a") {
@@ -505,7 +472,6 @@ function snapshot(cli, device, config) {
 			// --------------------------------------------------------------------------------------------------
 
 			// Interface VRF
-
 			if (iface.vrf) {
 				ifaceObj.vrf = iface.vrf;
 			}
@@ -513,7 +479,6 @@ function snapshot(cli, device, config) {
 			// --------------------------------------------------------------------------------------------------
 
 			// Interface Description and Host Interface mapping
-
 			const detail = detailMap[iface.name];
 			if (detail) {
 				if (detail["host-inf"] && detail["host-inf"].toLowerCase() !== "n/a") {

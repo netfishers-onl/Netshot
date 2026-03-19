@@ -195,14 +195,6 @@ function snapshot(cli, device, config) {
 		return config;
 	};
 
-	//var configCleanup = function(config) {
-	//	var p = config.search(/^[a-z]/m);
-	//	if (p > 0) {
-	//		config = config.slice(p);
-	//	}
-	//	return config;
-	//};
-
 	// --------------------------------------------------------------------------------------------------
 
 	// CleanUp JSON (no thanks Versa...)
@@ -226,22 +218,16 @@ function snapshot(cli, device, config) {
 	// --------------------------------------------------------------------------------------------------
 
 	// Set networkClass of the Device
-
-	//cli.debug(`Set networkClass of the Device`);
 	device.set("networkClass", "ROUTER");
 
 	// --------------------------------------------------------------------------------------------------
 
 	// Initiate bash state
-
-	//cli.debug(`Initiate bash state`);
 	cli.macro("bash");
 
 	// --------------------------------------------------------------------------------------------------
 
 	// Retreive OS version
-
-	//cli.debug(`Retreive OS version via bash`);
 	var showOSVersion = cli.command("/usr/bin/lsb_release -a");
 	var OSVersionLines = showOSVersion.split('\n').filter(line => line.includes(':'));
 	var OSVersionInfos ={};
@@ -257,20 +243,15 @@ function snapshot(cli, device, config) {
 	else {
 		device.set("Unknown Host version", hostVersion);
 	}
-	//cli.debug(`hostVersion: ${hostVersion}`);
 
 	// --------------------------------------------------------------------------------------------------
 
 	// Initiate operate state
-
-	//cli.debug(`Initiate operate state`);
 	cli.macro("operate");
 
 	// --------------------------------------------------------------------------------------------------
 
 	// Retreive + cleanup configuration in curly output
-
-	//cli.debug(`Retreive + cleanup configuration in curly output`);
 	var configuration = cli.command("show configuration | nomore");
 	configuration = configCleanup(configuration);
 	//configuration = configuration.replace(/^\[ok\].*$/m, '').trim();
@@ -279,8 +260,6 @@ function snapshot(cli, device, config) {
 	// --------------------------------------------------------------------------------------------------
 
 	// Retreive + cleanup configuration in set output
-
-	//cli.debug(`Retreive + cleanup configuration in set output`);
 	var configurationAsSet = cli.command("show configuration | display set | nomore");
 	configurationAsSet = configCleanup(configurationAsSet);
 	//configurationAsSet = configurationAsSet.replace(/^\[ok\].*$/m, '').trim();
@@ -289,8 +268,6 @@ function snapshot(cli, device, config) {
 	// --------------------------------------------------------------------------------------------------
 
 	// Retrieve the author and the protocol used for the current configuration
-
-	//cli.debug(`Retrieve the author and the protocol used for the current configuration`);
 	var latestCommit = cli.command("show commit list 1");
 	var latestCommitMatch = latestCommit.match(/^0\s*[0-9]*\s*(\S*)\s*(\S*)\s*([0-9\-\s\:]{19})/m);
 	if (latestCommitMatch != null) {
@@ -306,28 +283,22 @@ function snapshot(cli, device, config) {
 			config.set("author", author);
 		}
 	}
-	//cli.debug(`author: ${author}`);
 
 	// --------------------------------------------------------------------------------------------------
 
 	// Retrieve HostName
-
-	//cli.debug(`Retrieve HostName`);
 	var showHostname = cli.command("show configuration system identification name | display set");
 	var hostname = showHostname.match(/^set system identification name (\S*)$/m);
 	if (hostname != null) {
 		device.set("name", hostname[1]);
-		//cli.debug(`hostname: ${hostname[1]}`);
 	}
 	else {
 		device.set("name", "versa-flexvnf");
-		//cli.debug(`hostname: Not Defined !`);
 	}
 
 	// --------------------------------------------------------------------------------------------------
 
 	// Retrieve vosVersion, vosOSPackage
-
 	var showPackageInfoJSON = cli.command("show system package-info | display json | nomore");	
 	const jsonPackageInfo = parseJsonSafe(showPackageInfoJSON);
 
@@ -441,7 +412,6 @@ function snapshot(cli, device, config) {
 		// --------------------------------------------------------------------------------------------------
 
 		// Serial number, Manufacturer, SKU
-
 		const serialNumber = systemDetails["hw-serial"] || "";
 		const systemDetailsManufacturer = systemDetails["manufacturer"] || "";
 		const systemDetailsSKU = systemDetails["sku"] || "";
@@ -451,9 +421,6 @@ function snapshot(cli, device, config) {
 		} else {
 			device.set("serialNumber", "Unknown");
 		}
-		//cli.debug(`serialNumber: ${serialNumber}`);
-		//cli.debug(`systemDetailsManufacturer: ${systemDetailsManufacturer}`);
-		//cli.debug(`systemDetailsSKU: ${systemDetailsSKU}`);
 
 		if (systemDetailsManufacturer && systemDetailsSKU && serialNumber) {
 			const module = {
@@ -468,8 +435,6 @@ function snapshot(cli, device, config) {
 	// --------------------------------------------------------------------------------------------------
 
 	// Retrieve SNMP Information
-
-	//cli.debug(`Retrieve SNMP Information`);
 	var snmpConfig = cli.findSections(configuration, /^snmp /m);
 	if (snmpConfig.length > 0) {
 		var location = snmpConfig[0].config.match(/^ *location ("(.+)"|(.+));/m);
@@ -479,7 +444,6 @@ function snapshot(cli, device, config) {
 		else {
 			device.set("location", "");
 		}
-		//cli.debug(`location: ${location}`);
 		var contact = snmpConfig[0].config.match(/^ *contact ("(.+)"|(.+));/m);
 		if (contact) {
 			device.set("contact", contact[2] || contact[3]);
@@ -487,14 +451,11 @@ function snapshot(cli, device, config) {
 		else {
 			device.set("contact", "");
 		}
-		//cli.debug(`contact: ${contact}`);
 	}
 
 	// --------------------------------------------------------------------------------------------------
 
 	// Retrieve Interfaces
-
-	//cli.debug(`Retrieve Interfaces`);
 	var showInterfacesBrief = cli.command("show interfaces brief | display json | nomore");
 	var showInterfacesDetail = cli.command("show interfaces detail | display json | nomore");
 
@@ -521,7 +482,6 @@ function snapshot(cli, device, config) {
 			if (iface.name) {
 				ifaceObj.name = iface.name;
 				ifaceObj.level3 = false;
-				//cli.debug(`Parsing networkInterfaces ${ifaceObj.name}`);
 			}
 
 			// --------------------------------------------------------------------------------------------------
@@ -530,7 +490,6 @@ function snapshot(cli, device, config) {
 
 			if (typeof iface["if-admin-status"] !== "undefined") {
 				ifaceObj.enabled = iface["if-admin-status"] === "up";
-				//cli.debug(`Parsing networkInterfaces ${ifaceObj.name} enabled: ${ifaceObj.enabled}`);
 			}
 
 			// --------------------------------------------------------------------------------------------------
@@ -541,7 +500,6 @@ function snapshot(cli, device, config) {
 				const macClean = iface.mac.trim().toLowerCase();
 				if (macClean && macClean !== "n/a") {
 					ifaceObj.mac = iface.mac.trim();
-					//cli.debug(`Parsing networkInterfaces ${ifaceObj.name} mac: ${ifaceObj.mac}`);
 				}
 			}
 			// --------------------------------------------------------------------------------------------------
@@ -550,7 +508,6 @@ function snapshot(cli, device, config) {
 
 			if (iface.vrf) {
 				ifaceObj.vrf = iface.vrf;
-				//cli.debug(`Parsing networkInterfaces ${ifaceObj.name} vrf: ${ifaceObj.vrf}`);
 			}
 
 			// --------------------------------------------------------------------------------------------------
@@ -561,18 +518,15 @@ function snapshot(cli, device, config) {
 			if (detail) {
 				if (detail["host-inf"] && detail["host-inf"].toLowerCase() !== "n/a") {
 					ifaceObj.virtualDevice = detail["host-inf"];
-					//cli.debug(`Parsing networkInterfaces ${ifaceObj.name} virtualDevice: ${ifaceObj.virtualDevice}`);
 				}
 				if (detail["intf-descr"]) {
 					ifaceObj.description = detail["intf-descr"];
-					//cli.debug(`Parsing networkInterfaces ${ifaceObj.name} description: ${ifaceObj.description}`);
 				}
 			}
 		
 			// Interface IP / IPv6
 			if (Array.isArray(iface.address) && iface.address.length > 0) {
 				ifaceObj.level3 = true;
-				//cli.debug(`Parsing networkInterfaces ${ifaceObj.name} level3: ${ifaceObj.level3}`);
 			
 				ifaceObj.ip = [];
 			
@@ -604,7 +558,6 @@ function snapshot(cli, device, config) {
 					});
 			}
 		
-			//cli.debug(`Sending interface ${ifaceObj.name} JSON:\n${JSON.stringify(ifaceObj, null, 2)}`);
 			return ifaceObj;
 		});
 	

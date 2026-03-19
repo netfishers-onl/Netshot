@@ -273,7 +273,7 @@ function snapshot(cli, device, config) {
 	}
 
 	// Read HA Peers from the unit directly.
-	const peerPattern = /^(Master|Slave|Primary|Secondary) *: (.+?) *, +([A-Z0-9]+)(, HA cluster index = [0-9]|, cluster index = [0-9])*$/gm;
+	const peerPattern = /^(?:(Master|Slave|Primary|Secondary) *: *)?(.+?) *, +([A-Z0-9]+)(, HA cluster index = [0-9]|, cluster index = [0-9])*$/gm;
 	while (true) {
 		const match = peerPattern.exec(getHa);
 		if (!match) break;

@@ -21,7 +21,7 @@ var Info = {
 	name: "HPEArubaOSSwitch",
 	description: "HPE ArubaOS-Switch",
 	author: "Netshot Team",
-	version: "1.3"
+	version: "1.4"
 };
 
 var Config = {
@@ -224,48 +224,78 @@ function snapshot(cli, device, config) {
 	device.set("secondaryVersion", secondaryMatch ? secondaryMatch[3] : "");
 
 	device.set("family", "Avaya switch");
-	let foundSerial = false;
+
+	const chassis = {
+		partNumber: null,
+		serialNumber: null,
+		family: null,
+	};
+
 	try {
 		const showModules = cli.command("show modules");
 		// Chassis: 3800-24G-PoE+-2SFP+ J9573A Serial Number: xxxxxxxxxx
 		const chassisMatch = showModules.match(/Chassis: (.+) +(J.+) +Serial Number: +(.+)/);
 		if (chassisMatch) {
 			const model = chassisMatch[1];
-			const partNumber = chassisMatch[2];
-			const serialNumber = chassisMatch[3];
 			const platform = model.replace(/-.*/, "");
-			device.set("family", `Avaya ${platform}`);
-			device.set("serialNumber", serialNumber);
-			foundSerial = true;
-			device.add("module", {
-				slot: "Chassis",
-				partNumber: `${partNumber} ${model}`,
-				serialNumber,
-			});
+			chassis.family = `Avaya ${platform}`;
+			chassis.partNumber = chassisMatch[2];
+			chassis.serialNumber = chassisMatch[3];
 		}
 	}
 	catch (err) {
 		cli.debug("show modules doesn't seem to be supported");
 	}
 
-	if (!foundSerial) {
-		const showDhcpClient = cli.command("show dhcp client vendor-specific");
-		// Vendor Class Id = HP J9773A 2530-24G-PoEP Switch
-		// Vendor Class Id = Aruba JL075A 3810M-16SFP+-2-slot Switch
-		const classMatch = showDhcpClient.match(/Vendor Class Id = (HP|Aruba) (J[A-Z0-9]+) (.+?)-/m);
+	if (!chassis.serialNumber) {
 		const serialMatch = showSystem.match(/Serial Number +: +([A-Z0-9]+)/);
-		if (classMatch && serialMatch) {
-			const partNumber = classMatch[2];
-			const model = classMatch[3];
-			const platform = model.replace(/-.*/, "");
-			const serialNumber = serialMatch[1];
-			device.set("family", `Avaya ${platform}`);
-			device.set("serialNumber", serialNumber);
-			foundSerial = true;
+		if (serialMatch) {
+			chassis.serialNumber = serialMatch[1];
+		}
+	}
+
+	if (!chassis.serialNumber) {
+		try {
+			// On older firmwares (e.g. Q.11.x), this field may be absent; fall back to
+			// 'show system-information' which exposes it on those platforms.
+			const showSystemInformation = cli.command("show system-information");
+			const serialMatch = showSystemInformation.match(/Serial Number +: +([A-Z0-9]+)/);
+			if (serialMatch) {
+				chassis.serialNumber = serialMatch[1];
+			}
+		}
+		catch (err) {
+			cli.debug("show system-information doesn't seem to be supported");
+		}
+	}
+
+	if (!chassis.partNumber) {
+		try {
+			const showDhcpClient = cli.command("show dhcp client vendor-specific");
+			// Vendor Class Id = HP J9773A 2530-24G-PoEP Switch
+			// Vendor Class Id = Aruba JL075A 3810M-16SFP+-2-slot Switch
+			const classMatch = showDhcpClient.match(/Vendor Class Id = (HP|Aruba) (J[A-Z0-9]+) (.+?)-/m);
+			if (classMatch) {
+				chassis.partNumber = classMatch[2];
+				const model = classMatch[3];
+				const platform = model.replace(/-.*/, "");
+				chassis.family = `Avaya ${platform}`;
+			}
+		}
+		catch (err) {
+			cli.debug("show dhcp client vendor-specific doesn't seem to be supported");
+		}
+	}
+
+	device.set("family", chassis.family || "Unknown Avaya switch");
+
+	if (chassis.serialNumber) {
+		device.set("serialNumber", chassis.serialNumber);
+		if (chassis.partNumber) {
 			device.add("module", {
 				slot: "Chassis",
-				partNumber: `${partNumber} ${model}`,
-				serialNumber,
+				partNumber: chassis.partNumber,
+				serialNumber: chassis.serialNumber,
 			});
 		}
 	}

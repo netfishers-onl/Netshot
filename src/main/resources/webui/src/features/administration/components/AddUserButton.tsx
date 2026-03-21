@@ -41,7 +41,7 @@ export default function AddUserButton(props: AddUserButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_USER_CREATE, {
-      title: t("Create User"),
+      title: t("createUser"),
       description: <AdministrationUserForm />,
       form,
       size: "lg",
@@ -56,8 +56,8 @@ export default function AddUserButton(props: AddUserButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("User {{username}} has been successfully created", {
+          title: t("success"),
+          description: t("userHasBeenSuccessfullyCreated", {
             username: values.username,
           }),
         })
@@ -69,7 +69,7 @@ export default function AddUserButton(props: AddUserButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("Create"),
+        label: t("create"),
       },
     })
   }

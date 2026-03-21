@@ -103,56 +103,56 @@ function DeviceEditForm() {
     <Stack gap="6">
       <FormControl
         readOnly
-        label={t("Name")}
-        placeholder={t("Device name")}
+        label={t("name")}
+        placeholder={t("deviceName")}
         control={form.control}
         name="name"
       />
       <FormControl
         required
-        label={t("IP Address")}
-        placeholder={t("Device IP address")}
+        label={t("ipAddress")}
+        placeholder={t("deviceIpAddress")}
         control={form.control}
         name="ipAddress"
         rules={{
           pattern: {
             value: /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
-            message: t("This is not a valid IP address"),
+            message: t("thisIsNotAValidIpAddress"),
           },
         }}
       />
       <DomainSelect control={form.control} name="mgmtDomain" />
       <Checkbox control={form.control} name="overrideConnectionSetting">
-        {t("Override connection settings")}
+        {t("overrideConnectionSettings")}
       </Checkbox>
       {overrideConnectionSetting && (
         <>
           <FormControl
             required
-            label={t("Connect IP")}
-            placeholder={t("E.g. {{example}}", { example: "10.216.5.3" })}
+            label={t("connectIp")}
+            placeholder={t("eG", { example: "10.216.5.3" })}
             control={form.control}
             name="connectIpAddress"
             rules={{
               pattern: {
                 value:
                   /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
-                message: t("This is not a valid IP address"),
+                message: t("thisIsNotAValidIpAddress"),
               },
             }}
           />
           <Stack direction="row" gap="4">
             <FormControl
               required
-              label={t("SSH port")}
-              placeholder={t("E.g. {{example}}", { example: "22" })}
+              label={t("sshPort")}
+              placeholder={t("eG", { example: "22" })}
               control={form.control}
               name="sshPort"
             />
             <FormControl
               required
-              label={t("Telnet port")}
-              placeholder={t("E.g. {{example}}", { example: "6753" })}
+              label={t("telnetPort")}
+              placeholder={t("eG", { example: "6753" })}
               control={form.control}
               name="telnetPort"
             />
@@ -163,8 +163,8 @@ function DeviceEditForm() {
         control={form.control}
         name="credentialType"
         options={deviceCredentialOptions.options}
-        label={t("Credential")}
-        placeholder={t("Select a credential")}
+        label={t("credential")}
+        placeholder={t("selectACredential")}
         onSelectItem={onCredentialTypeChange}
       />
       {credentialType === null && !isPending && (
@@ -185,7 +185,7 @@ function DeviceEditForm() {
               </NativeCheckbox.Root>
             ))}
             <Checkbox control={form.control} name="autoTryCredentials">
-              {t("In case of failure, also try all known credentials")}
+              {t("inCaseOfFailureAlsoTryAllKnownCredentials")}
             </Checkbox>
           </Stack>
         </>
@@ -194,8 +194,8 @@ function DeviceEditForm() {
         <>
           <FormControl
             required
-            label={t("Username")}
-            placeholder={t("E.g. {{example}}", { example: "admin" })}
+            label={t("username")}
+            placeholder={t("eG", { example: "admin" })}
             control={form.control}
             name="specificCredentialSet.username"
             autoComplete="nope"
@@ -203,16 +203,16 @@ function DeviceEditForm() {
           <FormControl
             required
             type={FormControlType.Password}
-            label={t("Password")}
-            placeholder={t("Type your password")}
+            label={t("password")}
+            placeholder={t("typeYourPassword")}
             control={form.control}
             name="specificCredentialSet.password"
             autoComplete="nope"
           />
           <FormControl
             type={FormControlType.Password}
-            label={t("Super password")}
-            placeholder={t("Type your super password")}
+            label={t("superPassword")}
+            placeholder={t("typeYourSuperPassword")}
             control={form.control}
             name="specificCredentialSet.superPassword"
             autoComplete="nope"
@@ -223,8 +223,8 @@ function DeviceEditForm() {
         <>
           <FormControl
             required
-            label={t("Username")}
-            placeholder={t("E.g. {{example}}", { example: "admin" })}
+            label={t("username")}
+            placeholder={t("eG", { example: "admin" })}
             control={form.control}
             name="specificCredentialSet.username"
             autoComplete="nope"
@@ -232,8 +232,8 @@ function DeviceEditForm() {
           <FormControl
             required
             type={FormControlType.LongText}
-            label={t("SSH Private Key")}
-            placeholder={t("Type your private key")}
+            label={t("sshPrivateKey")}
+            placeholder={t("typeYourPrivateKey")}
             control={form.control}
             name="specificCredentialSet.privateKey"
             autoComplete="nope"
@@ -241,16 +241,16 @@ function DeviceEditForm() {
           <FormControl
             required
             type={FormControlType.Password}
-            label={t("Passphrase")}
-            placeholder={t("Type your passphrase")}
+            label={t("passphrase")}
+            placeholder={t("typeYourPassphrase")}
             control={form.control}
             name="specificCredentialSet.password"
             autoComplete="nope"
           />
           <FormControl
             type={FormControlType.Password}
-            label={t("Super password")}
-            placeholder={t("Type your super password")}
+            label={t("superPassword")}
+            placeholder={t("typeYourSuperPassword")}
             control={form.control}
             name="specificCredentialSet.superPassword"
             autoComplete="nope"
@@ -259,8 +259,8 @@ function DeviceEditForm() {
       )}
       <FormControl
         type={FormControlType.LongText}
-        label={t("Comments")}
-        placeholder={t("Add a description about the device")}
+        label={t("comments")}
+        placeholder={t("addADescriptionAboutTheDevice")}
         control={form.control}
         name="comments"
       />
@@ -331,7 +331,7 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DEVICE_UPDATE, {
-      title: t("Edit device"),
+      title: t("editDevice"),
       description: <DeviceEditForm />,
       form,
       size: "lg",
@@ -376,8 +376,8 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("Device {{device}} has been successfully modified", {
+          title: t("success"),
+          description: t("deviceHasBeenSuccessfullyModified", {
             device: device?.name,
           }),
         })
@@ -386,7 +386,7 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
         })
       },
       submitButton: {
-        label: t("Apply changes"),
+        label: t("applyChanges"),
       },
     })
   }

@@ -34,10 +34,10 @@ export default function RemoveDomainButton(props: RemoveDomainButtonProps) {
     (evt: MouseEvent) => {
       evt?.stopPropagation()
       const dialogRef = dialog.open(MUTATIONS.ADMIN_DOMAIN_REMOVE, {
-        title: t("Remove domain"),
+        title: t("removeDomain"),
         description: (
           <Text>
-            {t("You are about to remove the domain {{name}}", {
+            {t("youAreAboutToRemoveTheDomain", {
               name: domain?.name,
             })}
           </Text>
@@ -48,7 +48,7 @@ export default function RemoveDomainButton(props: RemoveDomainButtonProps) {
           dialogRef.close()
         },
         confirmButton: {
-          label: t("Remove"),
+          label: t("remove2"),
           props: {
             colorPalette: "red",
           },

@@ -111,7 +111,7 @@ export function useTask(status?: TaskStatus) {
   const columns = [
     columnHelper.accessor("taskDescription", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("Type"),
+      header: t("type"),
     }),
     columnHelper.accessor("target", {
       cell: (info) => {
@@ -128,29 +128,29 @@ export function useTask(status?: TaskStatus) {
           </EntityLink>
         )
       },
-      header: t("Target"),
+      header: t("target"),
     }),
     columnHelper.accessor("author", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("Creator"),
+      header: t("creator"),
     }),
     columnHelper.accessor("status", {
       cell: (info) => <TaskStatusTag status={info.getValue()} />,
-      header: t("Status"),
+      header: t("status"),
     }),
     columnHelper.accessor("executionDate", {
-      cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
-      header: t("Execution time"),
+      cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
+      header: t("executionTime"),
     }),
     columnHelper.accessor("comments", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("Comments"),
+      header: t("comments"),
     }),
     columnHelper.display({
       id: "actions",
       cell: (info) => (
         <Button variant="ghost" colorPalette="green" onClick={() => openTask(info.row.original.id)}>
-          {t("See details")}
+          {t("seeDetails")}
         </Button>
       ),
       header: "",

@@ -85,7 +85,7 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_CREDENTIAL_SET_UPDATE, {
-      title: t("Edit credential"),
+      title: t("editCredential"),
       description: <AdministrationDeviceCredentialForm />,
       form,
       size: "lg",
@@ -143,8 +143,8 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("Device credential {{name}} has been successfully updated", {
+          title: t("success"),
+          description: t("deviceCredentialHasBeenSuccessfullyUpdated", {
             name: values.name,
           }),
         })
@@ -157,7 +157,7 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
         form.reset()
       },
       submitButton: {
-        label: t("Apply changes"),
+        label: t("applyChanges"),
       },
     })
   }

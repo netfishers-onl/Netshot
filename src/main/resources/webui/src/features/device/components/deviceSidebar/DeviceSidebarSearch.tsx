@@ -34,7 +34,7 @@ export default function DeviceSidebarSearch() {
     <Stack p="6" gap="5">
       <Search
         clear={Boolean(query)}
-        placeholder={t("Search...")}
+        placeholder={t("search2")}
         onQuery={onQuery}
         onClear={onClear}
       >
@@ -44,8 +44,8 @@ export default function DeviceSidebarSearch() {
             driver,
           }}
           renderItem={(open) => (
-            <Tooltip content={t("Query builder")}>
-              <IconButton variant="ghost" aria-label={t("Open query builder")} onClick={open}>
+            <Tooltip content={t("queryBuilder")}>
+              <IconButton variant="ghost" aria-label={t("openQueryBuilder")} onClick={open}>
                 <Icon name="compass" />
               </IconButton>
             </Tooltip>

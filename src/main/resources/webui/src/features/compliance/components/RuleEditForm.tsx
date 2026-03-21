@@ -52,9 +52,9 @@ export function RuleEditForm(props: RuleEditFormProps) {
   function getAnyFields() {
     return [
       ...[
-        { label: t("Contact"), value: "contact" },
-        { label: t("Location"), value: "location" },
-        { label: t("Name"), value: "name" },
+        { label: t("contact"), value: "contact" },
+        { label: t("location"), value: "location" },
+        { label: t("name"), value: "name" },
       ],
       ...diagnosticQuery.data.map((diagnostic) => ({
         label: `Diagnostic "${diagnostic.name}"`,
@@ -96,8 +96,8 @@ export function RuleEditForm(props: RuleEditFormProps) {
     <Stack gap="6" {...stackProps}>
       <FormControl
         required
-        label={t("Name")}
-        placeholder={t("Name")}
+        label={t("name")}
+        placeholder={t("name")}
         control={form.control}
         name="name"
       />
@@ -106,20 +106,20 @@ export function RuleEditForm(props: RuleEditFormProps) {
           <DeviceTypeSelect
             control={form.control}
             name="driver"
-            placeholder={t("[Any]")}
+            placeholder={t("any")}
             isClearable
           />
           <Select
             options={fieldOptions}
             control={form.control}
             name="field"
-            label={t("Field")}
-            placeholder={t("Select a field")}
+            label={t("field")}
+            placeholder={t("selectAField")}
           />
           <FormControl
             type={FormControlType.LongText}
-            label={t("Context")}
-            placeholder={t("E.g. {{example}}", { example: "show version | include reason" })}
+            label={t("context")}
+            placeholder={t("eG", { example: "show version | include reason" })}
             control={form.control}
             name="context"
           />
@@ -128,34 +128,34 @@ export function RuleEditForm(props: RuleEditFormProps) {
             options={ruleBlockOptions.options}
             control={form.control}
             name="anyBlock"
-            label={t("Block validation")}
-            placeholder={t("Select a block validation")}
+            label={t("blockValidation")}
+            placeholder={t("selectABlockValidation")}
           />
           <Select
             required
             options={ruleTextOptions.options}
             control={form.control}
             name="invert"
-            label={t("Existing text")}
-            placeholder={t("Select an existing text")}
+            label={t("existingText")}
+            placeholder={t("selectAnExistingText")}
           />
 
           <Stack gap="6" flex="1">
             <Checkbox control={form.control} name="regExp">
-              {t("The provided text is a regular expression")}
+              {t("theProvidedTextIsARegularExpression")}
             </Checkbox>
             <Checkbox control={form.control} name="matchAll">
-              {t("Compare the text to the whole section")}
+              {t("compareTheTextToTheWholeSection")}
             </Checkbox>
             <Checkbox control={form.control} name="normalize">
-              {t("Normalize the field text")}
+              {t("normalizeTheFieldText")}
             </Checkbox>
           </Stack>
 
           <FormControl
             type={FormControlType.LongText}
-            label={t("Text or pattern")}
-            placeholder={t("E.g. {{example}}", { example: t("unknown reason") })}
+            label={t("textOrPattern")}
+            placeholder={t("eG", { example: t("unknownReason") })}
             control={form.control}
             name="text"
           />
@@ -163,7 +163,7 @@ export function RuleEditForm(props: RuleEditFormProps) {
           <Separator />
           <Stack gap="5" mb="6">
             <Heading as="h4" size="md">
-              {t("Test on device")}
+              {t("testOnDevice")}
             </Heading>
             <TestRuleTextOnDevice rule={testRule} />
           </Stack>

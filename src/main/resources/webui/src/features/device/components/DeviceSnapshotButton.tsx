@@ -49,7 +49,7 @@ export default function DeviceSnapshotButton(props: DeviceSnapshotButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.TASK_CREATE, {
-      title: t("Take device snapshot"),
+      title: t("takeDeviceSnapshot"),
       description: (
         <Stack gap="6">
           <Stack gap="3">
@@ -57,7 +57,7 @@ export default function DeviceSnapshotButton(props: DeviceSnapshotButtonProps) {
               <>
                 <Flex>
                   <Box flex="0 0 80px">
-                    <Text color="grey.400">{t("Devices")}</Text>
+                    <Text color="grey.400">{t("devices")}</Text>
                   </Box>
                   <Text>
                     {devices.map((device: SimpleDevice | Device) => device.name).join(", ")}
@@ -68,28 +68,28 @@ export default function DeviceSnapshotButton(props: DeviceSnapshotButtonProps) {
               <>
                 <Flex alignItems="center">
                   <Box flex="0 0 80px">
-                    <Text color="grey.400">{t("Name")}</Text>
+                    <Text color="grey.400">{t("name")}</Text>
                   </Box>
-                  <Text>{devices?.[0]?.name ?? "N/A"}</Text>
+                  <Text>{devices?.[0]?.name ?? "nA"}</Text>
                 </Flex>
                 <Flex alignItems="center">
                   <Box flex="0 0 80px">
-                    <Text color="grey.400">{t("IP Address")}</Text>
+                    <Text color="grey.400">{t("ipAddress")}</Text>
                   </Box>
-                  <Text>{devices?.[0]?.mgmtAddress ?? "N/A"}</Text>
+                  <Text>{devices?.[0]?.mgmtAddress ?? "nA"}</Text>
                 </Flex>
               </>
             )}
           </Stack>
           <Stack gap="3">
             <Checkbox control={form.control} name="runDiagnostic">
-              {t("Run the device diagnostics after the snapshot")}
+              {t("runTheDeviceDiagnosticsAfterTheSnapshot")}
             </Checkbox>
             <Checkbox control={form.control} name="checkCompliance">
-              {t("Check device compliance after the snapshot")}
+              {t("checkDeviceComplianceAfterTheSnapshot")}
             </Checkbox>
             <Checkbox control={form.control} name="debugEnabled">
-              {t("Enable full trace of the CLI session (only for troubleshooting)")}
+              {t("enableFullTraceOfTheCliSessionOnlyForTroubleshooting")}
             </Checkbox>
           </Stack>
           <ScheduleForm />
@@ -121,7 +121,7 @@ export default function DeviceSnapshotButton(props: DeviceSnapshotButtonProps) {
         }
       },
       submitButton: {
-        label: t("Take snapshot"),
+        label: t("takeSnapshot"),
       },
     })
   }

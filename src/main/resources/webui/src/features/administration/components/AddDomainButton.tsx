@@ -38,7 +38,7 @@ export default function AddDomainButton(props: AddDomainButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_DOMAIN_CREATE, {
-      title: t("Create domain"),
+      title: t("createDomain"),
       description: <AdministrationDomainForm />,
       form,
       size: "lg",
@@ -52,8 +52,8 @@ export default function AddDomainButton(props: AddDomainButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("Domain {{name}} has been successfully created", {
+          title: t("success"),
+          description: t("domainHasBeenSuccessfullyCreated", {
             name: values.name,
           }),
         })
@@ -66,7 +66,7 @@ export default function AddDomainButton(props: AddDomainButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("Create"),
+        label: t("create"),
       },
     })
   }

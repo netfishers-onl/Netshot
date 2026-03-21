@@ -76,13 +76,13 @@ export default function DeviceSidebarGroup() {
     <Stack gap="0">
       <Flex justifyContent="space-between" alignItems="center" px="6" pt="3" pb="1">
         <Heading fontSize="md" fontWeight="medium">
-          {t("Groups")}
+          {t("groups")}
         </Heading>
         <Protected minLevel={Level.ReadWrite}>
           <AddGroupButton
             renderItem={(open) => (
-              <Tooltip content={t("Add group")}>
-                <IconButton variant="ghost" onClick={open} aria-label={t("Add group")}>
+              <Tooltip content={t("addGroup")}>
+                <IconButton variant="ghost" onClick={open} aria-label={t("addGroup")}>
                   <Icon name="plus" />
                 </IconButton>
               </Tooltip>

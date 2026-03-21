@@ -20,7 +20,7 @@ function Header(props: PropsWithChildren) {
 
   return (
     <Stack direction="row" gap="3" alignItems="center" p="3" onClick={ctx.toggle} cursor="pointer">
-      <IconButton variant="ghost" colorPalette="green" aria-label={t("Open")} transform={transform}>
+      <IconButton variant="ghost" colorPalette="green" aria-label={t("open")} transform={transform}>
         <Icon name="chevronDown" />
       </IconButton>
       {children}

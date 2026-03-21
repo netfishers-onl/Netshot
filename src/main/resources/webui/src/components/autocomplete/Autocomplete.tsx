@@ -18,7 +18,7 @@ export type AutocompleteProps<T> = {
 export function Autocomplete<T>(props: AutocompleteProps<T>) {
   const {
     label,
-    placeholder = "Search...",
+    placeholder = "search2",
     helperText,
     collection,
     notFoundMessage = "No result found",

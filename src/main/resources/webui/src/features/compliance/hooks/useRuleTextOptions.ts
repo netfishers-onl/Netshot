@@ -2,11 +2,11 @@ import { createOptionHook } from "@/hooks"
 
 export const useRuleTextOptions = createOptionHook([
   {
-    label: "The text must exist",
+    label: "theTextMustExist",
     value: true,
   },
   {
-    label: "The text must not exist",
+    label: "theTextMustNotExist",
     value: false,
   },
 ])

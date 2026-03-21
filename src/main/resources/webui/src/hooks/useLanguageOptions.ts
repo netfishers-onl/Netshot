@@ -2,11 +2,11 @@ import { createOptionHook } from "./createOptionHook"
 
 export const useLanguageOptions = createOptionHook([
   {
-    label: "French",
+    label: "french",
     value: "fr",
   },
   {
-    label: "English",
+    label: "english",
     value: "en",
   },
 ])

@@ -49,7 +49,7 @@ export default function EditUserButton(props: EditUserButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_USER_UPDATE, {
-      title: t("Edit User"),
+      title: t("editUser2"),
       description: <AdministrationUserForm showChangePassword />,
       form,
       size: "lg",
@@ -68,8 +68,8 @@ export default function EditUserButton(props: EditUserButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("User {{username}} has been successfully updated", {
+          title: t("success"),
+          description: t("userHasBeenSuccessfullyUpdated", {
             username: values.username,
           }),
         })
@@ -80,7 +80,7 @@ export default function EditUserButton(props: EditUserButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("Apply changes"),
+        label: t("applyChanges"),
       },
     })
   }

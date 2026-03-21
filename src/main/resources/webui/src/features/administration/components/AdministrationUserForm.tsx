@@ -51,8 +51,8 @@ export default function AdministrationUserForm(props: AdministrationUserFormProp
   return (
     <Stack gap="6">
       <FormControl
-        label={t("Username")}
-        placeholder={t("E.g. {{example}}", { example: "admin" })}
+        label={t("username")}
+        placeholder={t("eG", { example: "admin" })}
         required
         control={form.control}
         name="username"
@@ -62,14 +62,14 @@ export default function AdministrationUserForm(props: AdministrationUserFormProp
         options={userLevelOptions.options}
         control={form.control}
         name="level"
-        label={t("Role")}
-        placeholder={t("Select role")}
+        label={t("role")}
+        placeholder={t("selectRole")}
       />
       <Stack direction="row" gap="6">
         <Stack gap="0" flex="1">
-          <Text fontWeight="medium">{t("Remote user")}</Text>
+          <Text fontWeight="medium">{t("remoteUser")}</Text>
           <Text color="grey.400">
-            {t("User will be authenticated by a remote server (e.g. RADIUS)")}
+            {t("userWillBeAuthenticatedByARemoteServerEGRadius")}
           </Text>
         </Stack>
         <Switch w="initial" control={form.control} name="isRemote" />
@@ -77,7 +77,7 @@ export default function AdministrationUserForm(props: AdministrationUserFormProp
       {!isRemote && showChangePassword && (
         <Stack direction="row" gap="6">
           <Stack gap="0" flex="1">
-            <Text fontWeight="medium">{t("Change password")}</Text>
+            <Text fontWeight="medium">{t("changePassword")}</Text>
           </Stack>
           <Switch w="initial" control={form.control} name="changePassword" />
         </Stack>
@@ -89,19 +89,19 @@ export default function AdministrationUserForm(props: AdministrationUserFormProp
             type={FormControlType.Password}
             control={form.control}
             name="password"
-            label={t("Password")}
-            placeholder={t("Enter password")}
+            label={t("password")}
+            placeholder={t("enterPassword")}
           />
           <FormControl
             required
             type={FormControlType.Password}
             control={form.control}
             name="confirmPassword"
-            label={t("Confirm password")}
-            placeholder={t("Confirm password")}
+            label={t("confirmPassword")}
+            placeholder={t("confirmPassword")}
             rules={{
               validate(value) {
-                return value === password || t("Password doesn't match")
+                return value === password || t("passwordDoesnTMatch")
               },
             }}
           />

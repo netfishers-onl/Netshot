@@ -18,14 +18,14 @@ export default function PolicySelect<T>(props: PolicySelectProps<T>) {
 
   return (
     <Select
-      label={t("Policy")}
-      placeholder={multiple ? t("Select policies") : t("Select a policy")}
+      label={t("policy")}
+      placeholder={multiple ? t("selectPolicies") : t("selectAPolicy")}
       name={name}
       control={control}
       readOnly={readOnly}
       required={required}
       isLoading={isPending}
-      noOptionsMessage={<Text>{t("No policy found")}</Text>}
+      noOptionsMessage={<Text>{t("noPolicyFound")}</Text>}
       options={options}
       multiple={multiple}
       {...other}

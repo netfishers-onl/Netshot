@@ -106,7 +106,7 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
     return true
   }, [device])
 
-  const family = device?.family === "" ? t("Unknown") : device?.family
+  const family = device?.family === "" ? t("unknown3") : device?.family
 
   return (
     <Stack
@@ -162,29 +162,29 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
           <HoverCard.Positioner>
             <HoverCard.Content w="340px">
               <Text fontSize="md" fontWeight="bold" mb="3">
-                {t("Status summary")}
+                {t("statusSummary")}
               </Text>
               <Stack gap="2">
                 <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Text>{t("Software compliance")}</Text>
+                  <Text>{t("softwareCompliance")}</Text>
                   <Tag.Root colorPalette={getSoftwareLevelColor(level?.value)}>
                     {level?.label}
                   </Tag.Root>
                 </Stack>
                 <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Text>{t("Configuration compliance")}</Text>
+                  <Text>{t("configurationCompliance")}</Text>
                   <Tag.Root colorPalette={device.configCompliant ? "green" : "red"}>
-                    {t(device.configCompliant ? "Compliant" : "Non compliant")}
+                    {t(device.configCompliant ? "compliant" : "nonCompliant")}
                   </Tag.Root>
                 </Stack>
                 <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Text>{t("Hardware compliance")}</Text>
+                  <Text>{t("hardwareCompliance")}</Text>
                   <Tag.Root colorPalette={device.eos || device.eol ? "red" : "green"}>
                     {device.eol
-                      ? t("End of life")
+                      ? t("endOfLife")
                       : device.eos
-                        ? t("End of sale")
-                        : t("Up to date")}
+                        ? t("endOfSale")
+                        : t("upToDate")}
                   </Tag.Root>
                 </Stack>
               </Stack>

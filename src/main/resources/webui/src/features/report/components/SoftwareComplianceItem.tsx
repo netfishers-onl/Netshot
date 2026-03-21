@@ -38,7 +38,7 @@ export default function SoftwareComplianceItem(props: SoftwareComplianceItemProp
   )
 
   const config = useMemo(() => {
-    const labels = [t("Gold"), t("Silver"), t("Bronze"), t("Non compliant")]
+    const labels = [t("gold"), t("silver"), t("bronze"), t("nonCompliant")]
     const data = [
       item.goldDeviceCount,
       item.silverDeviceCount,
@@ -78,7 +78,7 @@ export default function SoftwareComplianceItem(props: SoftwareComplianceItemProp
       title: (
         <Dialog.Header as={Stack} display="flex" direction="row" alignItems="center" gap="4">
           <Heading as="h3" fontSize="2xl" fontWeight="semibold">
-            {t("Software compliance")}
+            {t("softwareCompliance")}
           </Heading>
 
           <Tag.Root colorScheme="grey">
@@ -103,28 +103,28 @@ export default function SoftwareComplianceItem(props: SoftwareComplianceItemProp
         <Stack gap="2" onClick={openDetail} cursor="pointer">
           <Stack direction="row" alignItems="center" gap="3">
             <Box w="14px" h="14px" borderRadius="4px" bg={gold} />
-            <Text>{t("Gold")}</Text>
+            <Text>{t("gold")}</Text>
             <Spacer />
             <Text>{item.goldDeviceCount}</Text>
           </Stack>
           <Separator />
           <Stack direction="row" alignItems="center" gap="3">
             <Box w="14px" h="14px" borderRadius="4px" bg={silver} />
-            <Text>{t("Silver")}</Text>
+            <Text>{t("silver")}</Text>
             <Spacer />
             <Text>{item.silverDeviceCount}</Text>
           </Stack>
           <Separator />
           <Stack direction="row" alignItems="center" gap="3">
             <Box w="14px" h="14px" borderRadius="4px" bg={bronze} />
-            <Text>{t("Bronze")}</Text>
+            <Text>{t("bronze")}</Text>
             <Spacer />
             <Text>{item.bronzeDeviceCount}</Text>
           </Stack>
           <Separator />
           <Stack direction="row" alignItems="center" gap="3">
             <Box w="14px" h="14px" borderRadius="4px" bg={nonCompliant} />
-            <Text>{t("Non compliant")}</Text>
+            <Text>{t("nonCompliant")}</Text>
             <Spacer />
             <Text>{nonCompliantDeviceCount}</Text>
           </Stack>

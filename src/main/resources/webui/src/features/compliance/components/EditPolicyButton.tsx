@@ -40,7 +40,7 @@ export default function EditPolicyButton(props: EditPolicyButtonProps) {
   const open = (evt: MouseEvent) => {
     evt?.stopPropagation()
     const dialogRef = dialog.open(MUTATIONS.POLICY_UPDATE, {
-      title: t("Edit policy"),
+      title: t("editPolicy"),
       description: <PolicyForm />,
       form,
       size: "lg",
@@ -53,8 +53,8 @@ export default function EditPolicyButton(props: EditPolicyButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("Policy {{policyName}} has been successfully updated", {
+          title: t("success"),
+          description: t("policyHasBeenSuccessfullyUpdated", {
             policyName: values.name,
           }),
         })
@@ -65,7 +65,7 @@ export default function EditPolicyButton(props: EditPolicyButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("Apply changes"),
+        label: t("applyChanges"),
       },
     })
   }

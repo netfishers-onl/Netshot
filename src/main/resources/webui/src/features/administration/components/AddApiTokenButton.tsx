@@ -46,7 +46,7 @@ export default function AddApiTokenButton(props: AddApiTokenButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_API_TOKEN_CREATE, {
-      title: t("Create API token"),
+      title: t("createApiToken"),
       description: <AdministrationApiTokenForm />,
       form,
       size: "xl",
@@ -60,8 +60,8 @@ export default function AddApiTokenButton(props: AddApiTokenButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("API token has been successfully created"),
+          title: t("success"),
+          description: t("apiTokenHasBeenSuccessfullyCreated"),
         })
 
         queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_API_TOKENS] })
@@ -72,7 +72,7 @@ export default function AddApiTokenButton(props: AddApiTokenButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("Create"),
+        label: t("create"),
       },
     })
   }

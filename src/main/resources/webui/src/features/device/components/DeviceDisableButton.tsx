@@ -33,13 +33,13 @@ export default function DeviceDisableButton(props: DeviceDisableButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DEVICE_UPDATE, {
-      title: t(isMultiple ? "Disable devices" : "Disable device"),
+      title: t(isMultiple ? "disableDevices" : "disableDevice"),
       description: (
         <>
           {isMultiple ? (
             <>
               <Text>
-                {t("You are about to disable the devices {{names}}", {
+                {t("youAreAboutToDisableTheDevices", {
                   names: devices.map((device) => device.name).join(", "),
                 })}
               </Text>
@@ -47,9 +47,9 @@ export default function DeviceDisableButton(props: DeviceDisableButtonProps) {
           ) : (
             <>
               <Text>
-                {t("You are about to disable the device {{deviceName}} ({{deviceIp}})", {
+                {t("youAreAboutToDisableTheDevice", {
                   deviceName: devices?.[0]?.name,
-                  deviceIp: devices?.[0]?.mgmtAddress || t("N/A"),
+                  deviceIp: devices?.[0]?.mgmtAddress || t("nA"),
                 })}
               </Text>
             </>
@@ -72,7 +72,7 @@ export default function DeviceDisableButton(props: DeviceDisableButtonProps) {
         dialogRef.close()
       },
       confirmButton: {
-        label: t(isMultiple ? "Disable all" : "Disable"),
+        label: t(isMultiple ? "disableAll" : "disable"),
         props: {
           colorPalette: "red",
         },

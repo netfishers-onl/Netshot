@@ -39,7 +39,7 @@ export default function ConfigurationCompareEditor(props: CompareEditorProps) {
       <Center flex="1">
         <Stack gap="3" alignItems="center">
           <Spinner size="lg" />
-          <Text>{t("Loading configuration")}</Text>
+          <Text>{t("loadingConfiguration")}</Text>
         </Stack>
       </Center>
     )
@@ -59,7 +59,7 @@ export default function ConfigurationCompareEditor(props: CompareEditorProps) {
           >
             <Icon name="x" color="red.800" />
           </Flex>
-          <Text>{t("Unable to load configuration")}</Text>
+          <Text>{t("unableToLoadConfiguration")}</Text>
         </Stack>
       </Center>
     )

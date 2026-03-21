@@ -83,7 +83,7 @@ export default function PolicyItem(props: PolicyItemProps) {
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="add-rule">
                         <Icon name="plus" />
-                        {t("Add rule")}
+                        {t("addRule")}
                       </Menu.Item>
                     )}
                   />
@@ -92,7 +92,7 @@ export default function PolicyItem(props: PolicyItemProps) {
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="edit-rule">
                         <Icon name="edit" />
-                        {t("Edit")}
+                        {t("edit")}
                       </Menu.Item>
                     )}
                   />
@@ -101,7 +101,7 @@ export default function PolicyItem(props: PolicyItemProps) {
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="remove-rule">
                         <Icon name="trash" />
-                        {t("Remove")}
+                        {t("remove2")}
                       </Menu.Item>
                     )}
                   />

@@ -85,7 +85,7 @@ function RunScriptForm(props: RunScriptFormProps) {
       <Stack gap="3">
         <Flex alignItems="center">
           <Box w="140px">
-            <Text color="grey.400">{t(devices.length > 1 ? "Devices" : "Device")}</Text>
+            <Text color="grey.400">{t(devices.length > 1 ? "devices" : "device2")}</Text>
           </Box>
           <Text>
             {devices.length > 1
@@ -95,7 +95,7 @@ function RunScriptForm(props: RunScriptFormProps) {
         </Flex>
         <Flex alignItems="center">
           <Box w="140px">
-            <Text color="grey.400">{t("Script")}</Text>
+            <Text color="grey.400">{t("script")}</Text>
           </Box>
           <Text>{script?.name}</Text>
         </Flex>
@@ -105,7 +105,7 @@ function RunScriptForm(props: RunScriptFormProps) {
           <Separator />
           <Stack gap="4">
             <Heading as="h5" size="md">
-              {t("Parameters")}
+              {t("parameters")}
             </Heading>
             {inputs?.map((input) => (
               <FormControl
@@ -121,7 +121,7 @@ function RunScriptForm(props: RunScriptFormProps) {
         </>
       )}
       <Checkbox control={form.control} name="debugEnabled">
-        {t("Enable full trace of the CLI session (only for troubleshooting)")}
+        {t("enableFullTraceOfTheCliSessionOnlyForTroubleshooting")}
       </Checkbox>
       <ScheduleForm />
     </Stack>
@@ -158,7 +158,7 @@ export default function RunScriptButton(props: RunScriptButtonProps) {
     mutationFn: api.task.create,
     onError(err: NetshotError) {
       toast.error({
-        title: t("Error"),
+        title: t("error"),
         description: err?.description,
       })
     },
@@ -166,7 +166,7 @@ export default function RunScriptButton(props: RunScriptButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.TASK_CREATE, {
-      title: t("Run script"),
+      title: t("runScript"),
       description: <RunScriptForm devices={devices} script={script} driver={driver} />,
       form,
       async onSubmit(data: Form) {
@@ -195,13 +195,13 @@ export default function RunScriptButton(props: RunScriptButtonProps) {
       },
       size: "lg",
       submitButton: {
-        label: t("Run"),
+        label: t("run"),
       },
     })
   }
 
   return (
-    <IconButton aria-label={t("Run script")} variant="primary" onClick={open}>
+    <IconButton aria-label={t("runScript")} variant="primary" onClick={open}>
       <Icon name="play" />
     </IconButton>
   )

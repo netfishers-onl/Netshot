@@ -17,15 +17,15 @@ export function SigninScreen() {
           <Stack gap="6">
             <Stack gap="10">
               <Heading as="h4" fontWeight="semibold" fontSize="2xl">
-                {t("Please sign in")}
+                {t("pleaseSignIn")}
               </Heading>
             </Stack>
             {serverError ? (
               <Alert.Root bg="grey.50" border="1px solid {colors.grey.100}">
                 <Alert.Indicator />
                 <Alert.Content>
-                  <Alert.Title>{t("Unable to contact the server.")}</Alert.Title>
-                  <Alert.Description>{t("Please check the Netshot server status. Refresh the page to try again.")}</Alert.Description>
+                  <Alert.Title>{t("unableToContactTheServer")}</Alert.Title>
+                  <Alert.Description>{t("pleaseCheckTheNetshotServerStatusRefreshThePageToTryAgain")}</Alert.Description>
                 </Alert.Content>
               </Alert.Root>
             ) : (
@@ -46,7 +46,7 @@ export function SigninScreen() {
         <Spacer />
         <Heading fontSize="8xl" color="white" fontWeight="medium" maxW="400px" lineHeight="100%">
           <Trans
-            i18nKey="Network orchestration <green>made easy.</green>"
+            i18nKey="networkOrchestrationMadeEasy"
             components={{ green: <Box as="span" color="green.500" /> }}
           />
         </Heading>

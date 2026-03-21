@@ -3,11 +3,11 @@ import { HookActionType } from "@/types"
 
 export const useWebhookDataTypeOptions = createOptionHook([
   {
-    label: "POST JSON",
+    label: "postJson",
     value: HookActionType.PostJSON,
   },
   {
-    label: "POST XML",
+    label: "postXml",
     value: HookActionType.PostXML,
   },
 ])

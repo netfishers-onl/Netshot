@@ -10,5 +10,5 @@ export function DeviceTextAttributeValue(props: DeviceTextAttributeValueProps) {
   const { attribute } = props
   const { t } = useTranslation()
 
-  return <Text>{attribute?.text ?? t("N/A")}</Text>
+  return <Text>{attribute?.text ?? t("nA")}</Text>
 }

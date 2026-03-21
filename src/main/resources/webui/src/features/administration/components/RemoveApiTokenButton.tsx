@@ -32,10 +32,10 @@ export default function RemoveApiTokenButton(props: RemoveApiTokenButtonProps) {
   const open = (evt: MouseEvent) => {
     evt?.stopPropagation()
     const dialogRef = dialog.open(MUTATIONS.ADMIN_API_TOKEN_REMOVE, {
-      title: t("Remove API token"),
+      title: t("removeApiToken"),
       description: (
         <Trans
-          i18nKey="You are about to remove the API token <bold>{{description}}</bold>, are you sure?"
+          i18nKey="youAreAboutToRemoveTheApiTokenAreYouSure"
           values={{ description: apiToken.description }}
           components={{ bold: <Text as="span" fontWeight="semibold" /> }}
         />
@@ -47,12 +47,12 @@ export default function RemoveApiTokenButton(props: RemoveApiTokenButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("API token has been successfully removed"),
+          title: t("success"),
+          description: t("apiTokenHasBeenSuccessfullyRemoved"),
         })
       },
       confirmButton: {
-        label: t("Remove"),
+        label: t("remove2"),
         props: {
           colorPalette: "red",
         },

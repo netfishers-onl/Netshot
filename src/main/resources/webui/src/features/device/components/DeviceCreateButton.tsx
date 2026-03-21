@@ -94,21 +94,21 @@ function DeviceCreateForm() {
       <DomainSelect required control={form.control} name="domain" />
       <FormControl
         required
-        label={t("IP Address")}
-        placeholder={t("Device IP address")}
+        label={t("ipAddress")}
+        placeholder={t("deviceIpAddress")}
         control={form.control}
         name="ipAddress"
         rules={{
           pattern: {
             value: /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
-            message: t("This is not a valid IP address"),
+            message: t("thisIsNotAValidIpAddress"),
           },
         }}
       />
       <Separator />
       <Switch
-        label={t("Autodiscover")}
-        description={t("Automatically discover device type")}
+        label={t("autodiscover")}
+        description={t("automaticallyDiscoverDeviceType")}
         control={form.control}
         name="autoDiscover"
       />
@@ -117,8 +117,8 @@ function DeviceCreateForm() {
           <DeviceTypeSelect required control={form.control} name="deviceType" />
           <Separator />
           <Switch
-            label={t("Override connection")}
-            description={t("Replace default connection settings")}
+            label={t("overrideConnection")}
+            description={t("replaceDefaultConnectionSettings")}
             control={form.control}
             name="overrideConnectionSetting"
           />
@@ -126,28 +126,28 @@ function DeviceCreateForm() {
             <>
               <FormControl
                 required
-                label={t("Connect IP")}
-                placeholder={t("E.g. {{example}}", { example: "10.216.5.3" })}
+                label={t("connectIp")}
+                placeholder={t("eG", { example: "10.216.5.3" })}
                 control={form.control}
                 name="connectIpAddress"
                 rules={{
                   pattern: {
                     value:
                       /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
-                    message: t("This is not a valid IP address"),
+                    message: t("thisIsNotAValidIpAddress"),
                   },
                 }}
               />
               <Stack direction="row" gap="4">
                 <FormControl
-                  label={t("SSH port")}
-                  placeholder={t("E.g. {{example}}", { example: "22" })}
+                  label={t("sshPort")}
+                  placeholder={t("eG", { example: "22" })}
                   control={form.control}
                   name="sshPort"
                 />
                 <FormControl
-                  label={t("Telnet port")}
-                  placeholder={t("E.g. {{example}}", { example: "23" })}
+                  label={t("telnetPort")}
+                  placeholder={t("eG", { example: "23" })}
                   control={form.control}
                   name="telnetPort"
                 />
@@ -159,32 +159,32 @@ function DeviceCreateForm() {
             control={form.control}
             name="credentialType"
             options={deviceCredentialOptions.options}
-            label={t("Credentials")}
-            placeholder={t("Select a credential")}
+            label={t("credentials")}
+            placeholder={t("selectACredential")}
             required
           />
           {[CredentialSetType.SSH, CredentialSetType.Telnet].includes(credentialType) && (
             <>
               <FormControl
                 required
-                label={t("Username")}
-                placeholder={t("E.g. {{example}}", { example: "admin" })}
+                label={t("username")}
+                placeholder={t("eG", { example: "admin" })}
                 control={form.control}
                 name="specificCredentialSet.username"
               />
               <FormControl
                 required
                 type={FormControlType.Password}
-                label={t("Password")}
-                placeholder={t("Type your password")}
+                label={t("password")}
+                placeholder={t("typeYourPassword")}
                 control={form.control}
                 name="specificCredentialSet.password"
               />
               <FormControl
                 required
                 type={FormControlType.Password}
-                label={t("Super password")}
-                placeholder={t("Type your super password")}
+                label={t("superPassword")}
+                placeholder={t("typeYourSuperPassword")}
                 control={form.control}
                 name="specificCredentialSet.superPassword"
               />
@@ -195,32 +195,32 @@ function DeviceCreateForm() {
             <>
               <FormControl
                 required
-                label={t("Username")}
-                placeholder={t("E.g. {{example}}", { example: "admin" })}
+                label={t("username")}
+                placeholder={t("eG", { example: "admin" })}
                 control={form.control}
                 name="specificCredentialSet.username"
               />
               <FormControl
                 required
                 type={FormControlType.LongText}
-                label={t("SSH Private Key")}
-                placeholder={t("Type your private key")}
+                label={t("sshPrivateKey")}
+                placeholder={t("typeYourPrivateKey")}
                 control={form.control}
                 name="specificCredentialSet.privateKey"
               />
               <FormControl
                 required
                 type={FormControlType.Password}
-                label={t("Passphrase")}
-                placeholder={t("Type your passphrase")}
+                label={t("passphrase")}
+                placeholder={t("typeYourPassphrase")}
                 control={form.control}
                 name="specificCredentialSet.password"
               />
               <FormControl
                 required
                 type={FormControlType.Password}
-                label={t("Super password")}
-                placeholder={t("Type your super password")}
+                label={t("superPassword")}
+                placeholder={t("typeYourSuperPassword")}
                 control={form.control}
                 name="specificCredentialSet.superPassword"
               />
@@ -266,7 +266,7 @@ export default function DeviceCreateButton(props: DeviceCreateButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DEVICE_CREATE, {
-      title: t("Add device"),
+      title: t("addDevice"),
       description: <DeviceCreateForm />,
       form,
       async onSubmit(values: Form) {
@@ -313,7 +313,7 @@ export default function DeviceCreateButton(props: DeviceCreateButtonProps) {
       },
       size: "lg",
       submitButton: {
-        label: t("Add"),
+        label: t("add"),
       },
     })
   }

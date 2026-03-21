@@ -60,7 +60,7 @@ export default function ComplianceDetailScreen() {
                   rule={rule}
                   renderItem={(open) => (
                     <Button variant="primary" onClick={open}>
-                      {t("Edit")}
+                      {t("edit")}
                     </Button>
                   )}
                 />
@@ -71,7 +71,7 @@ export default function ComplianceDetailScreen() {
               <Skeleton loading={isPending}>
                 <Menu.Trigger asChild>
                   <Button>
-                    {t("Actions")}
+                    {t("actions")}
                     <Icon name="moreHorizontal" />
                   </Button>
                 </Menu.Trigger>
@@ -88,7 +88,7 @@ export default function ComplianceDetailScreen() {
                           renderItem={(open) => (
                             <Menu.Item onSelect={open} value="exempted-device">
                               <Icon name="server" />
-                              {t("Exempted devices")}
+                              {t("exemptedDevices")}
                             </Menu.Item>
                           )}
                         />
@@ -99,7 +99,7 @@ export default function ComplianceDetailScreen() {
                             renderItem={(open) => (
                               <Menu.Item onSelect={open} value="disable">
                                 <Icon name="power" />
-                                {t("Disable")}
+                                {t("disable")}
                               </Menu.Item>
                             )}
                           />
@@ -110,7 +110,7 @@ export default function ComplianceDetailScreen() {
                             renderItem={(open) => (
                               <Menu.Item onSelect={open} value="enable">
                                 <Icon name="power" />
-                                {t("Enable")}
+                                {t("enable")}
                               </Menu.Item>
                             )}
                           />
@@ -122,7 +122,7 @@ export default function ComplianceDetailScreen() {
                           renderItem={(open) => (
                             <Menu.Item onSelect={open} value="remove">
                               <Icon name="trash" />
-                              {t("Remove")}
+                              {t("remove2")}
                             </Menu.Item>
                           )}
                         />
@@ -138,34 +138,34 @@ export default function ComplianceDetailScreen() {
           <Stack gap="3">
             <Flex>
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("Device type")}</Text>
+                <Text color="grey.400">{t("deviceType")}</Text>
               </Box>
               <Skeleton loading={isPending}>
-                <Text>{rule?.deviceDriverDescription ?? "N/A"}</Text>
+                <Text>{rule?.deviceDriverDescription ?? "nA"}</Text>
               </Skeleton>
             </Flex>
             <Flex>
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("Field to check")}</Text>
+                <Text color="grey.400">{t("fieldToCheck")}</Text>
               </Box>
               <Skeleton loading={isPending}>
-                <Text>{rule?.field ?? "N/A"}</Text>
+                <Text>{rule?.field ?? "nA"}</Text>
               </Skeleton>
             </Flex>
             <Flex>
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("Context")}</Text>
+                <Text color="grey.400">{t("context")}</Text>
               </Box>
               <Skeleton loading={isPending}>
-                <Text fontFamily="mono">{rule?.context ?? "N/A"}</Text>
+                <Text fontFamily="mono">{rule?.context ?? "nA"}</Text>
               </Skeleton>
             </Flex>
             <Flex>
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("Must not contain")}</Text>
+                <Text color="grey.400">{t("mustNotContain")}</Text>
               </Box>
               <Skeleton loading={isPending}>
-                <Text fontFamily="mono">{rule?.text ?? "N/A"}</Text>
+                <Text fontFamily="mono">{rule?.text ?? "nA"}</Text>
               </Skeleton>
             </Flex>
           </Stack>

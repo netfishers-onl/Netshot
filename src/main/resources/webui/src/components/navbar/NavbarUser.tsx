@@ -28,14 +28,14 @@ export default function NavbarUser() {
     onError() {
       // @note: The request doesn't return JSON
       toast.error({
-        title: t("Error"),
-        description: t("An error occurred"),
+        title: t("error"),
+        description: t("anErrorOccurred"),
       })
     },
     onSuccess() {
       toast.success({
-        title: t("Logout"),
-        description: t("You have successfully logged out from Netshot."),
+        title: t("logout"),
+        description: t("youHaveSuccessfullyLoggedOutFromNetshot"),
       })
       queryClient.setQueryData<MeResult>([QUERIES.USER], (prev) => prev ? { ...prev, user: null } : prev)
     },
@@ -104,7 +104,7 @@ export default function NavbarUser() {
               renderItem={(open) => (
                 <Menu.Item onSelect={open} value="settings">
                   <Icon name="settings" />
-                  {t("Settings")}
+                  {t("settings")}
                 </Menu.Item>
               )}
             />
@@ -115,7 +115,7 @@ export default function NavbarUser() {
                 rel="noreferrer"
               >
                 <Icon name="helpCircle" />
-                {t("User guide")}
+                {t("userGuide")}
               </a>
             </Menu.Item>
             <Menu.Item value="api-doc" asChild>
@@ -125,20 +125,20 @@ export default function NavbarUser() {
                 rel="noreferrer"
               >
                 <Icon name="cloud" />
-                {t("API Documentation")}
+                {t("apiDocumentation")}
               </a>
             </Menu.Item>
             <AboutNetshotModal
               renderItem={(open) => (
                 <Menu.Item onSelect={open} value="about">
                   <Icon name="info" />
-                  {t("About")}
+                  {t("about")}
                 </Menu.Item>
               )}
             />
             <Menu.Item onSelect={logout} value="logout">
               <Icon name="logOut" />
-              {t("Logout")}
+              {t("logout")}
             </Menu.Item>
           </Menu.Content>
         </Menu.Positioner>

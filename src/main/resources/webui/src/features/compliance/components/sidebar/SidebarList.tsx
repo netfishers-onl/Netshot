@@ -21,7 +21,7 @@ export default function SidebarList() {
   if (policies?.length === 0) {
     return (
       <Center flex="1">
-        <Text>{t("No policy found")}</Text>
+        <Text>{t("noPolicyFound")}</Text>
       </Center>
     )
   }

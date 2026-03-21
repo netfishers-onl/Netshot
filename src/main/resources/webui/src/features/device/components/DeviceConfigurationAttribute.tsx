@@ -25,7 +25,7 @@ function ConfigNumericAttributeValue(props: ConfigNumericAttributeValueType) {
   const { attribute } = props
   const { t } = useTranslation()
 
-  return <Text>{attribute?.number ?? t("N/A")}</Text>
+  return <Text>{attribute?.number ?? t("nA")}</Text>
 }
 
 type ConfigTextAttributeValueType = {
@@ -36,7 +36,7 @@ function ConfigTextAttributeValue(props: ConfigTextAttributeValueType) {
   const { attribute } = props
   const { t } = useTranslation()
 
-  return <Text>{attribute?.text ?? t("N/A")}</Text>
+  return <Text>{attribute?.text ?? t("nA")}</Text>
 }
 
 type ConfigLongTextAttributeValueType = {
@@ -59,7 +59,7 @@ function ConfigLongTextAttributeValue(props: ConfigLongTextAttributeValueType) {
         renderItem={(open) => (
           <Button onClick={open} size="sm" variant="default">
             <Icon name="eye" />
-            {t("View")}
+            {t("view")}
           </Button>
         )}
       />
@@ -70,7 +70,7 @@ function ConfigLongTextAttributeValue(props: ConfigLongTextAttributeValueType) {
         loading={download.isPending}
       >
         <Icon name="download" />
-        {t("Download")}
+        {t("download")}
       </Button>
     </Stack>
   )
@@ -85,11 +85,11 @@ function ConfigBinaryAttributeValue(props: ConfigBinaryAttributeValueType) {
   const { t } = useTranslation()
 
   if (attribute?.assumption === true) {
-    return <Text>{t("True")}</Text>
+    return <Text>{t("true2")}</Text>
   } else if (attribute?.assumption === false) {
-    return <Text>{t("False")}</Text>
+    return <Text>{t("false2")}</Text>
   }
-  return <Text>{t("N/A")}</Text>
+  return <Text>{t("nA")}</Text>
 }
 
 type ConfigBinaryFileAttributeValueType = {
@@ -111,7 +111,7 @@ function ConfigBinaryFileAttributeValue(props: ConfigBinaryFileAttributeValueTyp
         loading={download.isPending}
       >
         <Icon name="download" />
-        {t("Download")}
+        {t("download")}
       </Button>
     </Stack>
   )
@@ -150,7 +150,7 @@ function ConfigAttributeValue(props: ConfigAttributeValueType) {
         />
       )
     default:
-      return <Text>{t("Unsupported attribute")}</Text>
+      return <Text>{t("unsupportedAttribute")}</Text>
   }
 }
 
@@ -174,7 +174,7 @@ export default function DeviceConfigurationAttribute(props: DeviceConfigurationA
       {attribute ? (
         <ConfigAttributeValue config={config} attribute={attribute} definition={definition} />
       ) : (
-        <Text>{t("N/A")}</Text>
+        <Text>{t("nA")}</Text>
       )}
     </Flex>
   )

@@ -49,7 +49,7 @@ export default function SidebarList() {
   if (data?.pages?.[0]?.length === 0) {
     return (
       <Center flex="1">
-        <Text>{t("No diagnostic found")}</Text>
+        <Text>{t("noDiagnosticFound")}</Text>
       </Center>
     )
   }

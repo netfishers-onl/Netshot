@@ -23,16 +23,16 @@ function AboutContent() {
   return (
     <Stack gap="4">
       <Alert.Root status="info" bg="blue.50">
-        {t("Connected to Netshot version {{ version }}", {
+        {t("connectedToNetshotVersion", {
           version: serverVersion,
         })}
       </Alert.Root>
       <Stack>
         <Text asChild>
-          <b>{t("Thank you for using Netshot. Netshot is free open-source software.")}</b>
+          <b>{t("thankYouForUsingNetshotNetshotIsFreeOpenSourceSoftware")}</b>
         </Text>
         <Text>
-          {t("Copyright 2014-{{ year }}, Netshot SASU, All Rights Reserved", {
+          {t("copyright2014NetshotSasuAllRightsReserved", {
             year: new Date().getFullYear(),
           })}
         </Text>
@@ -42,19 +42,19 @@ function AboutContent() {
           <Button asChild>
             <a target="_blank" href="https://www.netshot.net" rel="noreferrer">
               <Icon name="home" />
-              {t("Home page")}
+              {t("homePage")}
             </a>
           </Button>
           <Button asChild>
             <a target="_blank" href="mailto:contact@netshot.net" rel="noreferrer">
               <Icon name="atSign" />
-              {t("Contact")}
+              {t("contact")}
             </a>
           </Button>
           <Button asChild>
             <a target="_blank" href="https://github.com/netfishers-onl/Netshot" rel="noreferrer">
               <Icon name="gitHub" />
-              {t("Source code")}
+              {t("sourceCode")}
             </a>
           </Button>
         </ButtonGroup>
@@ -62,7 +62,7 @@ function AboutContent() {
       <Stack>
         <Text fontWeight="medium">
           {t(
-            "Feel free to contact us, we offer services including support and specific development for Netshot."
+            "feelFreeToContactUsWeOfferServicesIncludingSupportAndSpecifi"
           )}
         </Text>
       </Stack>
@@ -74,7 +74,7 @@ function AboutContent() {
         </Text>
       </Stack>
       <Stack>
-        <Text>{t("Netshot makes use of the following libraries:")}</Text>
+        <Text>{t("netshotMakesUseOfTheFollowingLibraries")}</Text>
         <List.Root as="ul" display="block">
           {NETSHOT_APP_LIBRARIES.map((lib) => (
             <List.Item key={lib} display="inline-list-item" marginRight="2">
@@ -98,7 +98,7 @@ export function AboutNetshotModal(props: AboutModalProps) {
     evt?.stopPropagation()
 
     dialog.open({
-      title: t("About Netshot"),
+      title: t("aboutNetshot"),
       description: <AboutContent />,
       size: "xl",
     })

@@ -51,28 +51,28 @@ export default function ComplianceSoftwareRuleScreen() {
 
   const columns = [
     columnHelper.accessor("targetGroup", {
-      cell: (info) => <Text>{info.getValue()?.name || t("[Any]")}</Text>,
-      header: t("Group"),
+      cell: (info) => <Text>{info.getValue()?.name || t("any")}</Text>,
+      header: t("group"),
       size: 10000,
     }),
     columnHelper.accessor("deviceType", {
-      cell: (info) => <Text>{info.getValue() || t("[Any]")}</Text>,
-      header: t("Device"),
+      cell: (info) => <Text>{info.getValue() || t("any")}</Text>,
+      header: t("device2"),
       size: 10000,
     }),
     columnHelper.accessor("family", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("Device family"),
+      header: t("deviceFamily"),
       size: 10000,
     }),
     columnHelper.accessor("partNumber", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("Part number"),
+      header: t("partNumber"),
       size: 10000,
     }),
     columnHelper.accessor("version", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("Version"),
+      header: t("version"),
       size: 10000,
     }),
     columnHelper.accessor("level", {
@@ -81,7 +81,7 @@ export default function ComplianceSoftwareRuleScreen() {
 
         return <Tag.Root colorPalette={getSoftwareLevelColor(level)}>{level}</Tag.Root>
       },
-      header: t("Level"),
+      header: t("level"),
       size: 10000,
     }),
     columnHelper.display({
@@ -95,11 +95,11 @@ export default function ComplianceSoftwareRuleScreen() {
               <EditSoftwareRuleButton
                 rule={rule}
                 renderItem={(open) => (
-                  <Tooltip content={t("Edit")}>
+                  <Tooltip content={t("edit")}>
                     <IconButton
                       variant="ghost"
                       colorPalette="green"
-                      aria-label={t("Edit the rule")}
+                      aria-label={t("editTheRule")}
                       onClick={open}
                     >
                       <Icon name="edit" />
@@ -111,11 +111,11 @@ export default function ComplianceSoftwareRuleScreen() {
               <RemoveSoftwareRuleButton
                 rule={rule}
                 renderItem={(open) => (
-                  <Tooltip content={t("Remove")}>
+                  <Tooltip content={t("remove2")}>
                     <IconButton
                       variant="ghost"
                       colorPalette="green"
-                      aria-label={t("Remove the rule")}
+                      aria-label={t("removeTheRule")}
                       onClick={open}
                     >
                       <Icon name="trash" />
@@ -152,8 +152,8 @@ export default function ComplianceSoftwareRuleScreen() {
     const nextItem = getNextItemInArray(row, reorderedData, "id")
 
     const dialogRef = dialog.open(MUTATIONS.SOFTWARE_RULE_REORDER, {
-      title: t("Change priority"),
-      description: t("Are you sure to change rules priorities?"),
+      title: t("changePriority"),
+      description: t("areYouSureToChangeRulesPriorities"),
       async onConfirm() {
         await reorderMutation.mutateAsync({ id: id, nextId: nextItem?.id })
 
@@ -170,11 +170,11 @@ export default function ComplianceSoftwareRuleScreen() {
     <>
       <Stack gap="6" p="9" flex="1" overflow="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("Software version compliance")}
+          {t("softwareVersionCompliance")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("Search...")}
+            placeholder={t("search2")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -186,7 +186,7 @@ export default function ComplianceSoftwareRuleScreen() {
                 renderItem={(open) => (
                   <Button onClick={open} variant="primary">
                     <Icon name="plus" />
-                    {t("Add rule")}
+                    {t("addRule")}
                   </Button>
                 )}
               />
@@ -213,14 +213,14 @@ export default function ComplianceSoftwareRuleScreen() {
               />
             ) : (
               <EmptyResult
-                title={t("There is no software rule")}
-                description={t("You can add a rule to check device software compliance")}
+                title={t("thereIsNoSoftwareRule")}
+                description={t("youCanAddARuleToCheckDeviceSoftwareCompliance")}
               >
                 <AddSoftwareRuleButton
                   renderItem={(open) => (
                     <Button onClick={open} variant="primary">
                       <Icon name="plus" />
-                      {t("Add rule")}
+                      {t("addRule")}
                     </Button>
                   )}
                 />

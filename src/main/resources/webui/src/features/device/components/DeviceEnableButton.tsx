@@ -33,13 +33,13 @@ export default function DeviceEnableButton(props: DeviceEnableButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DEVICE_UPDATE, {
-      title: t(isMultiple ? "Enable devices" : "Enable device"),
+      title: t(isMultiple ? "enableDevices" : "enableDevice"),
       description: (
         <>
           {isMultiple ? (
             <>
               <Text>
-                {t("You are about to enable the devices {{names}}", {
+                {t("youAreAboutToEnableTheDevices", {
                   names: devices.map((device) => device.name).join(", "),
                 })}
               </Text>
@@ -47,9 +47,9 @@ export default function DeviceEnableButton(props: DeviceEnableButtonProps) {
           ) : (
             <>
               <Text>
-                {t("You are about to enable the device {{deviceName}} ({{deviceIp}})", {
+                {t("youAreAboutToEnableTheDevice", {
                   deviceName: devices?.[0]?.name,
-                  deviceIp: devices?.[0]?.mgmtAddress || t("N/A"),
+                  deviceIp: devices?.[0]?.mgmtAddress || t("nA"),
                 })}
               </Text>
             </>
@@ -74,7 +74,7 @@ export default function DeviceEnableButton(props: DeviceEnableButtonProps) {
         dialogRef.close()
       },
       confirmButton: {
-        label: t(isMultiple ? "Enable all" : "Enable"),
+        label: t(isMultiple ? "enableAll" : "enable"),
       },
     })
   }

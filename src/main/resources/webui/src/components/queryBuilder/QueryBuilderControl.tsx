@@ -64,13 +64,13 @@ export function QueryBuilderControl<T>(props: QueryBuilderControlProps<T>) {
 
   function getPlaceholder() {
     if (attributeGroup === AttributeGroupType.TypeSpecific) {
-      return t("Select device attribute")
+      return t("selectDeviceAttribute")
     } else if (attributeGroup === AttributeGroupType.DiagnosticResult) {
-      return t("Select diagnostic")
+      return t("selectDiagnostic")
     } else if (attributeGroup === AttributeGroupType.ComplianceRuleResult) {
-      return t("Select rule")
+      return t("selectRule")
     } else {
-      return t("Select attribute")
+      return t("selectAttributeEllipsis")
     }
   }
 
@@ -184,8 +184,8 @@ export function QueryBuilderControl<T>(props: QueryBuilderControlProps<T>) {
         <Stack alignItems="center" gap="4">
           <Spinner size="lg" />
           <Stack alignItems="center" gap="1">
-            <Heading size="md">{t("Loading")}</Heading>
-            <Text color="grey.400">{t("Query builder is being initialized")}</Text>
+            <Heading size="md">{t("loading")}</Heading>
+            <Text color="grey.400">{t("queryBuilderIsBeingInitialized")}</Text>
           </Stack>
         </Stack>
       </Center>
@@ -200,7 +200,7 @@ export function QueryBuilderControl<T>(props: QueryBuilderControlProps<T>) {
         type={FormControlType.LongText}
         rows={8}
         ref={inputRef}
-        placeholder={t("E.g. {{example}}", { example: "[IP] is 16.16.16.16" })}
+        placeholder={t("eG", { example: "[IP] is 16.16.16.16" })}
       />
       <Stack direction="row" gap="3">
         <Button onClick={() => setCondition(ConditionType.Not)}>{t("not")}</Button>
@@ -208,14 +208,14 @@ export function QueryBuilderControl<T>(props: QueryBuilderControlProps<T>) {
         <Button onClick={() => setCondition(ConditionType.Or)}>{t("or")}</Button>
         <Button onClick={() => setCondition()}>
           <Icon name="x" />
-          {t("Clear")}
+          {t("clear")}
         </Button>
       </Stack>
       <Select
         control={form.control}
         name="attributeGroup"
         options={attributeGroupOptions.options}
-        placeholder={t("Select specific attribute...")}
+        placeholder={t("selectSpecificAttribute")}
       />
       {attributeGroup === AttributeGroupType.TypeSpecific && (
         <DeviceTypeSelect control={form.control} name="deviceType" />

@@ -11,35 +11,35 @@ export default function ReportSidebar() {
       <Stack gap="0" py="4" px="5" flex="1">
         <SidebarLink
           to="./configuration-change"
-          label={t("Configuration changes")}
-          description={t("Track last configuration changes or over a period")}
+          label={t("configurationChanges")}
+          description={t("trackLastConfigurationChangesOrOverAPeriod")}
         />
         <SidebarLink
           to="./device-access-failure"
-          label={t("Device access failures")}
-          description={t("Devices unreachable for a few days")}
+          label={t("deviceAccessFailures")}
+          description={t("devicesUnreachableForAFewDays")}
         />
         <SidebarLink
           to="./configuration-compliance"
-          label={t("Configuration compliance")}
-          description={t("Compliance status of the device configurations")}
+          label={t("configurationCompliance")}
+          description={t("complianceStatusOfTheDeviceConfigurations")}
         />
         <SidebarLink
           to="./software-compliance"
-          label={t("Software compliance")}
-          description={t("Compliance status of the device software versions")}
+          label={t("softwareCompliance")}
+          description={t("complianceStatusOfTheDeviceSoftwareVersions")}
         />
         <SidebarLink
           to="./hardware-support-status"
-          label={t("Hardware support status")}
-          description={t("End of sale / life milestones")}
+          label={t("hardwareSupportStatus")}
+          description={t("endOfSaleLifeMilestones")}
         />
       </Stack>
       <Separator />
       <Stack py="4" px="5">
         <ExportDataButton
           renderItem={(open) => (
-            <Button onClick={open}><Icon name="download" />{t("Export data")}</Button>
+            <Button onClick={open}><Icon name="download" />{t("exportData")}</Button>
           )}
         />
       </Stack>

@@ -49,8 +49,8 @@ export default function ReportConfigurationChangeList() {
   const columns = useMemo(
     () => [
       columnHelper.accessor("changeDate", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
-        header: t("Date/time"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
+        header: t("dateTime"),
       }),
       columnHelper.accessor("deviceName", {
         cell: (info) => (
@@ -58,11 +58,11 @@ export default function ReportConfigurationChangeList() {
             {info.getValue()}
           </EntityLink>
         ),
-        header: t("Device"),
+        header: t("device2"),
       }),
       columnHelper.accessor("author", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Author"),
+        header: t("author"),
       }),
       columnHelper.display({
         id: "actions",
@@ -70,11 +70,11 @@ export default function ReportConfigurationChangeList() {
           <ReportConfigurationCompareModal
             config={info.row.original}
             renderItem={(open) => (
-              <Tooltip content={t("Show difference")}>
+              <Tooltip content={t("showDifference")}>
                 <IconButton
                   variant="ghost"
                   colorPalette="green"
-                  aria-label={t("Show difference")}
+                  aria-label={t("showDifference")}
                   onClick={open}
                 >
                   <Icon name="gitBranch" />
@@ -136,8 +136,8 @@ export default function ReportConfigurationChangeList() {
             <DataTable zIndex={0} columns={columns} data={data} loading={isPending} />
           ) : (
             <EmptyResult
-              title={t("There is no configuration change")}
-              description={t("Here you can view the configuration change list")}
+              title={t("thereIsNoConfigurationChange")}
+              description={t("hereYouCanViewTheConfigurationChangeList")}
             ></EmptyResult>
           )}
         </>

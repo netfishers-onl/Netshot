@@ -32,10 +32,10 @@ export default function RemoveDeviceCredentialButton(props: RemoveDeviceCredenti
   const open = (evt: MouseEvent) => {
     evt?.stopPropagation()
     const dialogRef = dialog.open(MUTATIONS.ADMIN_CREDENTIAL_SET_REMOVE, {
-      title: t("Remove credential"),
+      title: t("removeCredential"),
       description: (
         <Trans
-          i18nKey="You are about to remove the credential <bold>{{name}}</bold>, are you sure?"
+          i18nKey="youAreAboutToRemoveTheCredentialAreYouSure"
           values={{ name: credential.name }}
           components={{ bold: <Text as="span" fontWeight="semibold" /> }}
         />
@@ -46,14 +46,14 @@ export default function RemoveDeviceCredentialButton(props: RemoveDeviceCredenti
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("Device credential {{name}} has been successfully removed", {
+          title: t("success"),
+          description: t("deviceCredentialHasBeenSuccessfullyRemoved", {
             name: credential?.name,
           }),
         })
       },
       confirmButton: {
-        label: t("Remove"),
+        label: t("remove2"),
         props: {
           colorPalette: "red",
         },

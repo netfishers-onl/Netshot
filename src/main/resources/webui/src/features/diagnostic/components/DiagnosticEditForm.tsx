@@ -36,8 +36,8 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
     <Stack gap="6" {...other}>
       <FormControl
         required
-        label={t("Name")}
-        placeholder={t("Name")}
+        label={t("name")}
+        placeholder={t("name")}
         control={form.control}
         name="name"
       />
@@ -46,8 +46,8 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
         options={resultTypeOptions.options}
         control={form.control}
         name="resultType"
-        label={t("Result type")}
-        placeholder={t("Select a result type")}
+        label={t("resultType")}
+        placeholder={t("selectAResultType")}
       />
       <TreeGroupSelector
         value={targetGroup ? [targetGroup] : []}
@@ -56,12 +56,12 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
       {!hasScript && (
         <>
           <Select
-            label={t("Device type")}
-            placeholder={t("Select a device type")}
+            label={t("deviceType")}
+            placeholder={t("selectADeviceType")}
             control={form.control}
             name="deviceDriver"
             isLoading={isPending}
-            noOptionsMessage={<Text>{t("No device type found")}</Text>}
+            noOptionsMessage={<Text>{t("noDeviceTypeFound")}</Text>}
             options={options}
             itemToString={(item) => item?.label}
             itemToValue={(item) => item.value?.name}
@@ -71,25 +71,25 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
             options={cliModeOptions.options}
             control={form.control}
             name="cliMode"
-            label={t("CLI mode")}
-            placeholder={t("Select CLI mode")}
+            label={t("cliMode")}
+            placeholder={t("selectCliMode")}
           />
           <FormControl
             required
-            label={t("CLI command")}
-            placeholder={t("E.g. {{example}}", { example: "show version | include reason" })}
+            label={t("cliCommand")}
+            placeholder={t("eG", { example: "show version | include reason" })}
             control={form.control}
             name="command"
           />
           <FormControl
-            label={t("RegEx pattern")}
-            placeholder={t("E.g. {{example}}", { example: "(?s).*Last reload: (.+?)[\\r\\n]+.*" })}
+            label={t("regexPattern")}
+            placeholder={t("eG", { example: "(?s).*Last reload: (.+?)[\\r\\n]+.*" })}
             control={form.control}
             name="modifierPattern"
           />
           <FormControl
-            label={t("Replace with")}
-            placeholder={t("E.g. {{example}}", { example: "$1" })}
+            label={t("replaceWith")}
+            placeholder={t("eG", { example: "$1" })}
             control={form.control}
             name="modifierReplacement"
           />

@@ -40,15 +40,15 @@ function LevelTag(props: LevelTagProps) {
 
   const label = useMemo(() => {
     if (level === DeviceSoftwareLevel.GOLD) {
-      return t("Gold")
+      return t("gold")
     } else if (level === DeviceSoftwareLevel.SILVER) {
-      return t("Silver")
+      return t("silver")
     } else if (level === DeviceSoftwareLevel.BRONZE) {
-      return t("Bronze")
+      return t("bronze")
     } else if (level === DeviceSoftwareLevel.NON_COMPLIANT) {
-      return t("Non compliant")
+      return t("nonCompliant")
     } else {
-      return t("Unknown")
+      return t("unknown3")
     }
   }, [level])
 
@@ -91,7 +91,7 @@ function ReportSoftwareComplianceGroupItem({ item }: { item: GroupSoftwareCompli
       title: (
         <Dialog.Header as={Stack} display="flex" direction="row" alignItems="center" gap="4">
           <Heading as="h3" fontSize="2xl" fontWeight="semibold">
-            {t("Software compliance")}
+            {t("softwareCompliance")}
           </Heading>
 
           <Tag.Root colorScheme="grey">
@@ -177,11 +177,11 @@ export default function ReportSoftwareComplianceScreen() {
   return (
     <Stack gap="8" p="9" flex="1" overflow="auto">
       <Heading as="h1" fontSize="4xl">
-        {t("Software compliance")}
+        {t("softwareCompliance")}
       </Heading>
       <Stack direction="row" gap="3">
         <Search
-          placeholder={t("Search...")}
+          placeholder={t("search2")}
           onQuery={pagination.onQuery}
           onClear={pagination.onQueryClear}
           w="30%"
@@ -191,7 +191,7 @@ export default function ReportSoftwareComplianceScreen() {
           <Menu.Trigger asChild>
             <Button variant="primary">
               <Icon name="filter" />
-              {t("Filters")}
+              {t("filters")}
             </Button>
           </Menu.Trigger>
           <Portal>
@@ -200,7 +200,7 @@ export default function ReportSoftwareComplianceScreen() {
                 <Stack gap="6" p="3" as="form">
                   <DomainSelect control={form.control} name="domain" />
                   <Stack gap="2">
-                    <Button onClick={clearFilter}>{t("Clear all")}</Button>
+                    <Button onClick={clearFilter}>{t("clearAll")}</Button>
                   </Stack>
                 </Stack>
               </Menu.Content>
@@ -209,7 +209,7 @@ export default function ReportSoftwareComplianceScreen() {
         </Menu.Root>
         <Button onClick={() => refetch()}>
           <Icon name="refreshCcw" />
-          {t("Refresh")}
+          {t("refresh")}
         </Button>
       </Stack>
       <Stack flex="1" overflow="auto">

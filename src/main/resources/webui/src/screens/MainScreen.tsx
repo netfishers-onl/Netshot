@@ -47,8 +47,8 @@ export function MainScreen() {
   const onForbidden = () => {
     if (authState.current === AuthState.AUTHENTICATED) {
       dialog.open({
-        title: t("Your session has expired"),
-        description: t("Please re-authenticate to continue."),
+        title: t("yourSessionHasExpired"),
+        description: t("pleaseReAuthenticateToContinue"),
         onCancel() {
           doRedirect()
         },

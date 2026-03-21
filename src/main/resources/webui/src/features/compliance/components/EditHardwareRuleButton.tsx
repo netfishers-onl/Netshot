@@ -53,7 +53,7 @@ export default function EditHardwareRuleButton(props: EditHardwareRuleButtonProp
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.HARDWARE_RULE_UPDATE, {
-      title: t("Edit hardware rule"),
+      title: t("editHardwareRule"),
       description: <HardwareRuleForm rule={rule} />,
       form,
       size: "lg",
@@ -73,8 +73,8 @@ export default function EditHardwareRuleButton(props: EditHardwareRuleButtonProp
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("Hardware rule has been successfully modified"),
+          title: t("success"),
+          description: t("hardwareRuleHasBeenSuccessfullyModified"),
         })
 
         queryClient.invalidateQueries({ queryKey: [QUERIES.HARDWARE_RULE_LIST] })
@@ -83,7 +83,7 @@ export default function EditHardwareRuleButton(props: EditHardwareRuleButtonProp
         form.reset()
       },
       submitButton: {
-        label: t("Apply changes"),
+        label: t("applyChanges"),
       },
     })
   }

@@ -46,8 +46,8 @@ export default function DynamicGroupDeviceList(props: DynamicGroupDeviceListProp
         <Stack alignItems="center" gap="4">
           <Spinner size="lg" />
           <Stack alignItems="center" gap="1">
-            <Heading size="md">{t("Loading")}</Heading>
-            <Text color="grey.400">{t("Aggregating device in progress")}</Text>
+            <Heading size="md">{t("loading")}</Heading>
+            <Text color="grey.400">{t("aggregatingDeviceInProgress")}</Text>
           </Stack>
         </Stack>
       </Center>
@@ -59,12 +59,12 @@ export default function DynamicGroupDeviceList(props: DynamicGroupDeviceListProp
       <Center flex="1">
         <Stack alignItems="center" gap="4">
           <Stack alignItems="center" gap="1">
-            <Heading size="md">{t("No results")}</Heading>
-            <Text color="grey.400">{t("No device matching the criteria")}</Text>
+            <Heading size="md">{t("noResults")}</Heading>
+            <Text color="grey.400">{t("noDeviceMatchingTheCriteria")}</Text>
           </Stack>
 
           <QueryBuilderButton
-            renderItem={(open) => <Button onClick={open}>{t("Edit query")}</Button>}
+            renderItem={(open) => <Button onClick={open}>{t("editQuery")}</Button>}
             onSubmit={onUpdateQuery}
           />
         </Stack>

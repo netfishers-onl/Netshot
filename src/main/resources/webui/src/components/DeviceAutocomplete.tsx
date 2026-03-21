@@ -42,7 +42,7 @@ export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
   })
 
   const notFoundMessage = (
-    <Text>{t(query?.length > 0 ? "No device found" : "Start typing to find device by name")} </Text>
+    <Text>{t(query?.length > 0 ? "noDeviceFound" : "startTypingToFindDeviceByName")} </Text>
   )
 
   return (
@@ -57,7 +57,7 @@ export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
         onSelectItem(device)
       }}
       {...autocompleteConfig}
-      placeholder={placeholder || t("Search device...")}
+      placeholder={placeholder || t("searchDevice")}
       notFoundMessage={notFoundMessage}
       openOnClick={true}
       selectionBehavior={selectionBehavior}

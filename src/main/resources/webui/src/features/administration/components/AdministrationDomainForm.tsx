@@ -18,23 +18,23 @@ export default function AdministrationDomainForm() {
   return (
     <Stack gap="6">
       <FormControl
-        label={t("Name")}
-        placeholder={t("E.g. {{example}}", { example: t("my domain name") })}
+        label={t("name")}
+        placeholder={t("eG", { example: t("myDomainName") })}
         required
         control={form.control}
         name="name"
       />
       <FormControl
         type={FormControlType.LongText}
-        label={t("Description")}
-        placeholder={t("E.g. {{example}}", { example: t("describe the domain") })}
+        label={t("description")}
+        placeholder={t("eG", { example: t("describeTheDomain") })}
         required
         control={form.control}
         name="description"
       />
       <FormControl
-        label={t("Server IP address")}
-        placeholder={t("E.g. {{example}}", { example: "10.4.3.8" })}
+        label={t("serverIpAddress")}
+        placeholder={t("eG", { example: "10.4.3.8" })}
         required
         control={form.control}
         name="ipAddress"

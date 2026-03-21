@@ -9,27 +9,27 @@ export type DeviceComplianceTagProps = {
 const mapping = {
   [DeviceComplianceResultType.Conforming]: {
     colorPalette: "green",
-    label: "Compliant",
+    label: "compliant",
   },
   [DeviceComplianceResultType.NonConfirming]: {
     colorPalette: "red",
-    label: "Non-compliant",
+    label: "nonCompliant2",
   },
   [DeviceComplianceResultType.Disabled]: {
     colorPalette: "grey",
-    label: "Disabled",
+    label: "disabled",
   },
   [DeviceComplianceResultType.Exempted]: {
     colorPalette: "blue",
-    label: "Exempted",
+    label: "exempted",
   },
   [DeviceComplianceResultType.InvalidRule]: {
     colorPalette: "yellow",
-    label: "Invalid rule",
+    label: "invalidRule",
   },
   [DeviceComplianceResultType.NotApplication]: {
     colorPalette: "grey",
-    label: "Not applicable",
+    label: "notApplicable",
   },
 }
 

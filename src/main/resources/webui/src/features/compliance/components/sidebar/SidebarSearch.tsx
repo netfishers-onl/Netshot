@@ -25,7 +25,7 @@ export default function SidebarSearch() {
 
   return (
     <Stack p="6" gap="5">
-      <Search placeholder={t("Search...")} onQuery={onQuery} onClear={onClear} />
+      <Search placeholder={t("search2")} onQuery={onQuery} onClear={onClear} />
     </Stack>
   )
 }

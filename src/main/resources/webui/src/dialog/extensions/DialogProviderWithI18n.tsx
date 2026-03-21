@@ -8,23 +8,23 @@ export function DialogProviderWithI18n({ children }: PropsWithChildren) {
   const dialogProviderConfig: DialogProviderConfig = {
     form: {
       submitButton: {
-        label: t("Submit"),
+        label: t("submit"),
       },
       cancelButton: {
-        label: t("Cancel"),
+        label: t("cancel"),
       },
     },
     confirm: {
       confirmButton: {
-        label: t("Confirm"),
+        label: t("confirm"),
       },
       cancelButton: {
-        label: t("Cancel"),
+        label: t("cancel"),
       },
     },
     alert: {
       closeButton: {
-        label: t("OK"),
+        label: t("ok"),
       },
     },
   }

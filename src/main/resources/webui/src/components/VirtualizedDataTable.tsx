@@ -117,7 +117,7 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
     >
       <Table.Cell px="4" overflow="hidden" textOverflow="ellipsis" py="3" borderWidth="0">
         <IconButton
-          aria-label={t("Drag the row")}
+          aria-label={t("dragTheRow")}
           ref={(node) => {
             dragRef(node)
           }}
@@ -377,7 +377,7 @@ export function VirtualizedDataTableHeader<T>({
                     transition="all .2s ease"
                     opacity={isSorted ? "1 !important" : 0}
                     aria-label={
-                      isSorted === "desc" ? t("sorted descending") : t("sorted ascending")
+                      isSorted === "desc" ? t("sortedDescending") : t("sortedAscending")
                     }
                   >
                     <Icon name={isSorted === "desc" ? "arrowDown" : "arrowUp"} />

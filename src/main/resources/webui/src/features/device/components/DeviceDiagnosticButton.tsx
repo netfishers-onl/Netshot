@@ -44,7 +44,7 @@ export default function DeviceDiagnosticButton(props: DeviceDiagnosticButtonProp
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.TASK_CREATE, {
-      title: t("Run device diagnostics"),
+      title: t("runDeviceDiagnostics"),
       description: (
         <FormProvider {...form}>
           <Stack gap="6">
@@ -53,7 +53,7 @@ export default function DeviceDiagnosticButton(props: DeviceDiagnosticButtonProp
                 <>
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("Devices")}</Text>
+                      <Text color="grey.400">{t("devices")}</Text>
                     </Box>
                     <Text>{devices.map((device) => device.name).join(", ")}</Text>
                   </Flex>
@@ -62,15 +62,15 @@ export default function DeviceDiagnosticButton(props: DeviceDiagnosticButtonProp
                 <>
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("Name")}</Text>
+                      <Text color="grey.400">{t("name")}</Text>
                     </Box>
-                    <Text>{devices?.[0]?.name ?? "N/A"}</Text>
+                    <Text>{devices?.[0]?.name ?? "nA"}</Text>
                   </Flex>
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("IP Address")}</Text>
+                      <Text color="grey.400">{t("ipAddress")}</Text>
                     </Box>
-                    <Text>{devices?.[0]?.mgmtAddress ?? "N/A"}</Text>
+                    <Text>{devices?.[0]?.mgmtAddress ?? "nA"}</Text>
                   </Flex>
                 </>
               )}
@@ -78,7 +78,7 @@ export default function DeviceDiagnosticButton(props: DeviceDiagnosticButtonProp
             <Separator />
             <Stack gap="3">
               <Checkbox control={form.control} name="checkCompliance">
-                {t("Check device compliance after the snapshot")}
+                {t("checkDeviceComplianceAfterTheSnapshot")}
               </Checkbox>
             </Stack>
             <ScheduleForm />
@@ -111,7 +111,7 @@ export default function DeviceDiagnosticButton(props: DeviceDiagnosticButtonProp
         }
       },
       submitButton: {
-        label: t("Run"),
+        label: t("run"),
       },
     })
   }

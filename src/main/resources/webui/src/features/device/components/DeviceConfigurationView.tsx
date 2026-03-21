@@ -34,7 +34,7 @@ export default function DeviceConfigurationView(
       <Center h="500px">
         <Stack alignItems="center" gap="3">
           <Spinner />
-          <Text>{t("Loading configuration")}</Text>
+          <Text>{t("loadingConfiguration")}</Text>
         </Stack>
       </Center>
     );
@@ -54,7 +54,7 @@ export default function DeviceConfigurationView(
           >
             <Icon name="x" color="red.800" />
           </Flex>
-          <Text>{t("Unable to load configuration")}</Text>
+          <Text>{t("unableToLoadConfiguration")}</Text>
         </Stack>
       </Center>
     );

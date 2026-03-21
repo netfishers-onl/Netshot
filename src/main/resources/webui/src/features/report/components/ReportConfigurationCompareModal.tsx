@@ -16,7 +16,7 @@ export default function ReportConfigurationCompareModal(
   const open = (evt: MouseEvent) => {
     evt?.stopPropagation()
     dialog.open({
-      title: "Compare changes",
+      title: "compareChanges",
       description: <ReportConfigurationCompareEditor config={config} />,
       hideFooter: true,
       variant: "full-floating",

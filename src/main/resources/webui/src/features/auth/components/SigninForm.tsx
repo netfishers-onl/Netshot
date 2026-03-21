@@ -46,7 +46,7 @@ export function SigninForm() {
       <Center h="100vh">
         <Stack gap="3" alignItems="center">
           <Spinner size="lg" />
-          <Text>{t("connecting via SSO...")}</Text>
+          <Text>{t("connectingViaSso")}</Text>
         </Stack>
       </Center>
     )
@@ -57,10 +57,10 @@ export function SigninForm() {
       <Stack gap="2" asChild>
         <form onSubmit={submit}>
           <Button variant="primary" type="submit">
-            {t("Sign in with SSO")}
+            {t("signInWithSso")}
           </Button>
           <Button variant="default" onClick={toggleOidcForm}>
-            {t("Sign in with username")}
+            {t("signInWithUsername")}
           </Button>
         </form>
         {signinWithOidcMutation.isError && (
@@ -77,8 +77,8 @@ export function SigninForm() {
           required
           control={form.control}
           name="username"
-          label="Username"
-          placeholder={t("Enter your username")}
+          label="username"
+          placeholder={t("enterYourUsername")}
           rules={{
             required: true,
           }}
@@ -89,8 +89,8 @@ export function SigninForm() {
           type={FormControlType.Password}
           control={form.control}
           name="password"
-          label="Password"
-          placeholder={t("Enter password")}
+          label="password"
+          placeholder={t("enterPassword")}
           rules={{
             required: true,
           }}
@@ -103,7 +103,7 @@ export function SigninForm() {
             control={form.control}
             name="newPassword"
             label="New password"
-            placeholder={t("Enter new password")}
+            placeholder={t("enterNewPassword")}
             rules={{
               required: true,
             }}
@@ -117,11 +117,11 @@ export function SigninForm() {
             disabled={!form.formState.isValid}
             variant="primary"
           >
-            {changePass ? t("Change password and Sign in") : t("Sign in")}
+            {changePass ? t("changePasswordAndSignIn") : t("signIn")}
           </Button>
           {isOidcConnection && (
             <Button onClick={toggleOidcForm} variant="default">
-              {t("Sign in with SSO")}
+              {t("signInWithSso")}
             </Button>
           )}
         </Stack>

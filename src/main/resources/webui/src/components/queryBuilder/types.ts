@@ -23,7 +23,7 @@ export enum AttributeType {
   Numeric = "NUMERIC",
   IpAddress = "IPADDRESS",
   MacAddress = "MACADDRESS",
-  Id = "ID",
+  Id = "id",
   Binary = "BINARY",
 }
 

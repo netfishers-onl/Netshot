@@ -73,13 +73,13 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
     onSuccess() {
       queryClient.invalidateQueries({ queryKey: [QUERIES.SCRIPT_LIST] })
       toast.success({
-        title: t("Success"),
-        description: t("Script successfully saved for later use"),
+        title: t("success"),
+        description: t("scriptSuccessfullySavedForLaterUse"),
       })
     },
     onError() {
       toast.error({
-        title: t("Error"),
+        title: t("error"),
         description: "An error occurred during the save",
       })
     },
@@ -110,7 +110,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
       <Center flex="1">
         <Stack alignItems="center" gap="3">
           <Spinner />
-          <Text>{t("Loading script")}</Text>
+          <Text>{t("loadingScript")}</Text>
         </Stack>
       </Center>
     )
@@ -128,7 +128,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
         />
         <Button onClick={save}>
           <Icon name="database" />
-          {t("Save")}
+          {t("save")}
         </Button>
         <RunDeviceScriptButton
           devices={devices}

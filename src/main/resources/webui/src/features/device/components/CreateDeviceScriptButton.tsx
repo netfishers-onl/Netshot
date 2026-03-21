@@ -36,24 +36,24 @@ export function CreateDeviceScriptButton(props: CreateDeviceScriptButtonProps) {
     mutationFn: api.script.create,
     onError() {
       toast.error({
-        title: t("Error"),
-        description: t("An error occurred during the script creation"),
+        title: t("error"),
+        description: t("anErrorOccurredDuringTheScriptCreation"),
       })
     },
   })
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.SCRIPT_CREATE, {
-      title: t("Create device script"),
+      title: t("createDeviceScript"),
       description: (
         <Stack>
           <FormControl
-            label={t("Name")}
+            label={t("name")}
             control={form.control}
             name="name"
-            placeholder={t("E.g. {{example}}", { example: t("my script") })}
+            placeholder={t("eG", { example: t("myScript") })}
           />
-          <FormControl label={t("Driver")} control={form.control} name="driver" readOnly />
+          <FormControl label={t("driver")} control={form.control} name="driver" readOnly />
         </Stack>
       ),
       form,
@@ -78,7 +78,7 @@ export function CreateDeviceScriptButton(props: CreateDeviceScriptButtonProps) {
       },
       isLoading: isPending,
       submitButton: {
-        label: t("Create"),
+        label: t("create"),
       },
     })
   }
@@ -86,7 +86,7 @@ export function CreateDeviceScriptButton(props: CreateDeviceScriptButtonProps) {
   return (
     <Button onClick={open}>
       <Icon name="plus" />
-      {t("Create")}
+      {t("create")}
     </Button>
   )
 }

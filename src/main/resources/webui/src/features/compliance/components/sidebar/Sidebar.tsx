@@ -25,13 +25,13 @@ export default function Sidebar() {
                   <Stack gap="0" py="4" px="5">
                     <SidebarLink
                       to="./hardware"
-                      label={t("Hardware")}
-                      description={t("Hardware support status")}
+                      label={t("hardware")}
+                      description={t("hardwareSupportStatus")}
                     />
                     <SidebarLink
                       to="./software"
-                      label={t("Software")}
-                      description={t("Software version compliance")}
+                      label={t("software")}
+                      description={t("softwareVersionCompliance")}
                     />
                   </Stack>
                   <Separator />
@@ -39,7 +39,7 @@ export default function Sidebar() {
               )}
 
               <Stack px="6" pt="6">
-                <Text fontWeight="medium">{t("Configuration compliance")}</Text>
+                <Text fontWeight="medium">{t("configurationCompliance")}</Text>
               </Stack>
               {query ? <SidebarSearchList /> : <SidebarList />}
               <Protected minLevel={Level.Operator}>
@@ -49,7 +49,7 @@ export default function Sidebar() {
                     renderItem={(open) => (
                       <Button onClick={open}>
                         <Icon name="plus" />
-                        {t("Add policy")}
+                        {t("addPolicy")}
                       </Button>
                     )}
                   />

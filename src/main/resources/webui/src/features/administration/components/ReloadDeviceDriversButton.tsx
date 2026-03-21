@@ -30,13 +30,13 @@ export default function ReloadDeviceDriversButton(props: ReloadDeviceDriversButt
   const open = (evt: MouseEvent) => {
     evt?.stopPropagation()
     const dialogRef = dialog.open(MUTATIONS.ADMIN_DRIVER_RELOAD, {
-      title: t("Reload drivers"),
+      title: t("reloadDrivers"),
       description: (
         <>
-          <Text>{t("This will dynamically reload all device drivers from source files.")}</Text>
+          <Text>{t("thisWillDynamicallyReloadAllDeviceDriversFromSourceFiles")}</Text>
           <Text>
             {t(
-              "Use this if you have updated a driver file on Netshot server and want to apply the new code."
+              "useThisIfYouHaveUpdatedADriverFileOnNetshotServerAndWantToAp"
             )}
           </Text>
         </>
@@ -45,15 +45,15 @@ export default function ReloadDeviceDriversButton(props: ReloadDeviceDriversButt
         await mutation.mutateAsync()
 
         toast.success({
-          title: t("Success"),
-          description: t("The drivers have been reloaded."),
+          title: t("success"),
+          description: t("theDriversHaveBeenReloaded"),
         })
 
         queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_DRIVERS] })
         dialogRef.close()
       },
       confirmButton: {
-        label: t("Reload"),
+        label: t("reload"),
         props: {
           colorScheme: "green",
         },

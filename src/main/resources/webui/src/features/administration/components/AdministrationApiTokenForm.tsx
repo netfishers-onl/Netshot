@@ -32,8 +32,8 @@ export default function AdministrationApiTokenForm() {
     navigator.clipboard.writeText(values.token)
 
     toast.info({
-      title: t("Token copied"),
-      description: t("Please don't share and save it securely"),
+      title: t("tokenCopied"),
+      description: t("pleaseDonTShareAndSaveItSecurely"),
     })
   }, [form, toast])
 
@@ -41,13 +41,13 @@ export default function AdministrationApiTokenForm() {
     <Stack gap="6">
       <Stack direction="row" gap="5" alignItems="flex-end">
         <FormControl
-          label={t("Token")}
+          label={t("token")}
           control={form.control}
           name="token"
           suffix={
-            <Tooltip content={t("Copy")}>
+            <Tooltip content={t("copy")}>
               <IconButton
-                aria-label={t("Copy token")}
+                aria-label={t("copyToken")}
                 onClick={copy}
                 variant="ghost"
                 colorPalette="grey"
@@ -57,19 +57,19 @@ export default function AdministrationApiTokenForm() {
             </Tooltip>
           }
         />
-        <IconButton aria-label={t("Refresh token")} onClick={generate}>
+        <IconButton aria-label={t("refreshToken")} onClick={generate}>
           <Icon name="refreshCcw" />
         </IconButton>
       </Stack>
       <Alert.Root bg="yellow.50" color="yellow.800">
         {t(
-          "Please copy the token before closing this dialog as it won’t be readable anymore afterwards"
+          "pleaseCopyTheTokenBeforeClosingThisDialogAsItWonTBeReadableA"
         )}
       </Alert.Root>
       <FormControl
         type={FormControlType.LongText}
-        label={t("Description")}
-        placeholder={t("E.g. {{example}}", { example: t("describe the token") })}
+        label={t("description")}
+        placeholder={t("eG", { example: t("describeTheToken") })}
         required
         control={form.control}
         name="description"
@@ -79,7 +79,7 @@ export default function AdministrationApiTokenForm() {
         options={apiTokenLevelOptions.options}
         control={form.control}
         name="level"
-        label={t("Permission level")}
+        label={t("permissionLevel")}
       />
     </Stack>
   )

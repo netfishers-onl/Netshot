@@ -1,7 +1,7 @@
 export async function downloadFromUrl(url: string) {
   const req = await fetch(url)
   const blob = await req.blob()
-  const filename = req.headers.get("Content-Disposition").split("filename=")[1]
+  const filename = req.headers.get("Content-Disposition").split("filename")[1]
 
   return download(blob, filename)
 }

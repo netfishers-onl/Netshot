@@ -34,37 +34,37 @@ export default function ComplianceHardwareRuleScreen() {
   const columns = useMemo(
     () => [
       columnHelper.accessor("targetGroup", {
-        cell: (info) => <Text>{info.getValue()?.name || t("[Any]")}</Text>,
-        header: t("Group"),
+        cell: (info) => <Text>{info.getValue()?.name || t("any")}</Text>,
+        header: t("group"),
         size: 20000,
       }),
       columnHelper.accessor("deviceType", {
-        cell: (info) => <Text>{info.getValue() || t("[Any]")}</Text>,
-        header: t("Device type"),
+        cell: (info) => <Text>{info.getValue() || t("any")}</Text>,
+        header: t("deviceType"),
         size: 20000,
       }),
       columnHelper.accessor("family", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Device family"),
+        header: t("deviceFamily"),
         size: 20000,
       }),
       columnHelper.accessor("partNumber", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Part number"),
+        header: t("partNumber"),
         size: 20000,
       }),
       columnHelper.accessor("endOfSale", {
         cell: (info) => (
-          <Text>{info.getValue() ? formatDate(info.getValue(), "yyyy-MM-dd") : t("N/A")}</Text>
+          <Text>{info.getValue() ? formatDate(info.getValue(), "yyyy-MM-dd") : t("nA")}</Text>
         ),
-        header: t("End of sale"),
+        header: t("endOfSale"),
         size: 10000,
       }),
       columnHelper.accessor("endOfLife", {
         cell: (info) => (
-          <Text>{info.getValue() ? formatDate(info.getValue(), "yyyy-MM-dd") : t("N/A")}</Text>
+          <Text>{info.getValue() ? formatDate(info.getValue(), "yyyy-MM-dd") : t("nA")}</Text>
         ),
-        header: t("End of life"),
+        header: t("endOfLife"),
         size: 10000,
       }),
       columnHelper.accessor((rule) => rule, {
@@ -76,11 +76,11 @@ export default function ComplianceHardwareRuleScreen() {
                 <EditHardwareRuleButton
                   rule={rule}
                   renderItem={(open) => (
-                    <Tooltip content={t("Edit")}>
+                    <Tooltip content={t("edit")}>
                       <IconButton
                         variant="ghost"
                         colorPalette="green"
-                        aria-label={t("Edit the rule")}
+                        aria-label={t("editTheRule")}
                         onClick={open}
                       >
                         <Icon name="edit" />
@@ -91,11 +91,11 @@ export default function ComplianceHardwareRuleScreen() {
                 <RemoveHardwareRuleButton
                   rule={rule}
                   renderItem={(open) => (
-                    <Tooltip content={t("Remove")}>
+                    <Tooltip content={t("remove2")}>
                       <IconButton
                         variant="ghost"
                         colorPalette="green"
-                        aria-label={t("Remove the rule")}
+                        aria-label={t("removeTheRule")}
                         onClick={open}
                       >
                         <Icon name="trash" />
@@ -123,11 +123,11 @@ export default function ComplianceHardwareRuleScreen() {
   return (
     <Stack gap="6" p="9" flex="1" overflow="auto">
       <Heading as="h1" fontSize="4xl">
-        {t("Hardware support status")}
+        {t("hardwareSupportStatus")}
       </Heading>
       <Stack direction="row" gap="3">
         <Search
-          placeholder={t("Search...")}
+          placeholder={t("search2")}
           onQuery={pagination.onQuery}
           onClear={pagination.onQueryClear}
           w="30%"
@@ -139,7 +139,7 @@ export default function ComplianceHardwareRuleScreen() {
               renderItem={(open) => (
                 <Button onClick={open} variant="primary">
                   <Icon name="plus" />
-                  {t("Add rule")}
+                  {t("addRule")}
                 </Button>
               )}
             />
@@ -159,14 +159,14 @@ export default function ComplianceHardwareRuleScreen() {
             <DataTable columns={columns} data={rules} loading={isPending} />
           ) : (
             <EmptyResult
-              title={t("There is no hardware rule")}
-              description={t("You can add a rule to check device hardware compliance")}
+              title={t("thereIsNoHardwareRule")}
+              description={t("youCanAddARuleToCheckDeviceHardwareCompliance")}
             >
               <AddHardwareRuleButton
                 renderItem={(open) => (
                   <Button onClick={open} variant="primary">
                     <Icon name="plus" />
-                    {t("Add rule")}
+                    {t("addRule")}
                   </Button>
                 )}
               />

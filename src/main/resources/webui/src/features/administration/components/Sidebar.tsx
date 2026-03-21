@@ -10,38 +10,38 @@ export default function Sidebar() {
       <Stack gap="0" py="4" px="5" flex="1">
         <SidebarLink
           to="./user"
-          label={t("Users")}
-          description={t("Manage user permissions")}
+          label={t("users")}
+          description={t("manageUserPermissions")}
         />
         <SidebarLink
           to="./device-domain"
-          label={t("Device domains")}
-          description={t("Manage IP address for devices")}
+          label={t("deviceDomains")}
+          description={t("manageIpAddressForDevices")}
         />
         <SidebarLink
           to="./device-credential"
-          label={t("Device credentials")}
-          description={t("Manage credentials for devices")}
+          label={t("deviceCredentials")}
+          description={t("manageCredentialsForDevices")}
         />
         <SidebarLink
           to="./driver"
-          label={t("Drivers")}
-          description={t("Manage device type")}
+          label={t("drivers")}
+          description={t("manageDeviceType")}
         />
         <SidebarLink
           to="./api-token"
-          label={t("API tokens")}
-          description={t("Connect with an external app")}
+          label={t("apiTokens")}
+          description={t("connectWithAnExternalApp")}
         />
         <SidebarLink
           to="./webhook"
-          label={t("Webhooks")}
-          description={t("Execute an external function")}
+          label={t("webhooks")}
+          description={t("executeAnExternalFunction")}
         />
         <SidebarLink
           to="./clustering"
-          label={t("Clustering")}
-          description={t("Manage a clustered server architecture")}
+          label={t("clustering")}
+          description={t("manageAClusteredServerArchitecture")}
         />
       </Stack>
     </Stack>

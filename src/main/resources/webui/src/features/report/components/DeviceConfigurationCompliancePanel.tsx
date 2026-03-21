@@ -36,30 +36,30 @@ export default function DeviceConfigurationCompliancePanel(props: DeviceConfigur
           if (value) {
             return (
               <Tag.Root bg="green.50" color="green.900">
-                {t("Compliant")}
+                {t("compliant")}
               </Tag.Root>
             )
           }
 
           return (
             <Tag.Root bg="green.900" color="green.50">
-              {t("Non compliant")}
+              {t("nonCompliant")}
             </Tag.Root>
           )
         },
-        header: t("Status"),
+        header: t("status"),
       }),
       columnHelper.accessor("policyName", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Policy"),
+        header: t("policy"),
       }),
       columnHelper.accessor("ruleName", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Rule"),
+        header: t("rule"),
       }),
       columnHelper.accessor("checkDate", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
-        header: t("Test date/time"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
+        header: t("testDateTime"),
       }),
     ],
     [t]
@@ -78,7 +78,7 @@ export default function DeviceConfigurationCompliancePanel(props: DeviceConfigur
         <IconButton
           variant="ghost"
           colorPalette="green"
-          aria-label={t("Open")}
+          aria-label={t("open")}
           css={{
             transform: isCollapsed ? "rotate(-90deg)" : "",
           }}
@@ -91,7 +91,7 @@ export default function DeviceConfigurationCompliancePanel(props: DeviceConfigur
 
         <Spacer />
         <Button colorPalette="green" variant="ghost" asChild>
-          <Link to={`/app/devices/${configs?.[0]?.id}/compliance`}>{t("See details")}</Link>
+          <Link to={`/app/devices/${configs?.[0]?.id}/compliance`}>{t("seeDetails")}</Link>
         </Button>
       </Stack>
       <motion.div

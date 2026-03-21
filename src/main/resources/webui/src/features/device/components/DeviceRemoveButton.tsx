@@ -34,21 +34,21 @@ export default function DeviceRemoveButton(props: DeviceRemoveButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DEVICE_REMOVE, {
-      title: t(isMultiple ? "Remove selected devices" : "Remove device"),
+      title: t(isMultiple ? "removeSelectedDevices" : "removeDevice"),
       description: (
         <>
           {isMultiple ? (
             <>
-              {t("You are about to remove the devices {{names}}", {
+              {t("youAreAboutToRemoveTheDevices", {
                 names: devices.map((device) => device.name).join(", "),
               })}
             </>
           ) : (
             <>
               <Text>
-                {t("You are about to remove the device {{deviceName}} ({{deviceIp}})", {
+                {t("youAreAboutToRemoveTheDevice", {
                   deviceName: devices?.[0]?.name,
-                  deviceIp: devices?.[0]?.mgmtAddress || t("N/A"),
+                  deviceIp: devices?.[0]?.mgmtAddress || t("nA"),
                 })}
               </Text>
             </>
@@ -68,7 +68,7 @@ export default function DeviceRemoveButton(props: DeviceRemoveButtonProps) {
         dialogRef.close()
       },
       confirmButton: {
-        label: t(isMultiple ? "Remove all" : "remove"),
+        label: t(isMultiple ? "removeAll" : "remove"),
         props: {
           colorPalette: "red",
         },

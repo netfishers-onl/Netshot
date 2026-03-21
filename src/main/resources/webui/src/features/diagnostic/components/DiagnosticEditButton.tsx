@@ -76,7 +76,7 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
   form.watch((values) => {
     if (values.script?.length === 0) {
       form.setError("script", {
-        message: t("This field is required"),
+        message: t("thisFieldIsRequired"),
       })
     }
   })
@@ -87,7 +87,7 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DIAGNOSTIC_UPDATE, {
-      title: t("Edit device"),
+      title: t("editDevice"),
       description: hasScript ? (
         <DiagnosticEditScript type={diagnostic?.type} />
       ) : (
@@ -113,8 +113,8 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
         })
 
         toast.success({
-          title: t("Success"),
-          description: t("Diagnostic {{diagnosticName}} has been successfully modified", {
+          title: t("success"),
+          description: t("diagnosticHasBeenSuccessfullyModified", {
             diagnosticName: diagnostic?.name,
           }),
         })
@@ -131,7 +131,7 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("Apply changes"),
+        label: t("applyChanges"),
       },
     })
   }

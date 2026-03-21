@@ -45,7 +45,7 @@ export default function AdministrationApiTokenScreen() {
     () => [
       columnHelper.accessor("name", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Name"),
+        header: t("name"),
         enableSorting: true,
       }),
       columnHelper.accessor("enabled", {
@@ -60,7 +60,7 @@ export default function AdministrationApiTokenScreen() {
             </Checkbox.Root>
           )
         },
-        header: t("Enabled"),
+        header: t("enabled"),
         enableSorting: true,
         meta: {
           align: "center",
@@ -68,7 +68,7 @@ export default function AdministrationApiTokenScreen() {
       }),
       columnHelper.accessor("url", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("URL"),
+        header: t("url"),
         enableSorting: true,
       }),
       columnHelper.display({
@@ -81,9 +81,9 @@ export default function AdministrationApiTokenScreen() {
               <EditWebhookButton
                 webhook={webhook}
                 renderItem={(open) => (
-                  <Tooltip content={t("Edit")}>
+                  <Tooltip content={t("edit")}>
                     <IconButton
-                      aria-label={t("Edit webhook")}
+                      aria-label={t("editWebhook")}
                       variant="ghost"
                       colorPalette="green"
                       onClick={open}
@@ -96,9 +96,9 @@ export default function AdministrationApiTokenScreen() {
               <RemoveWebhookButton
                 webhook={webhook}
                 renderItem={(open) => (
-                  <Tooltip content={t("Remove")}>
+                  <Tooltip content={t("remove2")}>
                     <IconButton
-                      aria-label={t("Remove webhook")}
+                      aria-label={t("removeWebhook")}
                       variant="ghost"
                       colorPalette="green"
                       onClick={open}
@@ -124,11 +124,11 @@ export default function AdministrationApiTokenScreen() {
     <>
       <Stack gap="6" p="9" flex="1" overflow="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("Webhooks")}
+          {t("webhooks")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("Search...")}
+            placeholder={t("search2")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -138,7 +138,7 @@ export default function AdministrationApiTokenScreen() {
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
                 <Plus />
-                {t("Create")}
+                {t("create")}
               </Button>
             )}
           />
@@ -156,16 +156,16 @@ export default function AdministrationApiTokenScreen() {
               <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
-                title={t("There is no webhook")}
+                title={t("thereIsNoWebhook")}
                 description={t(
-                  "You can create a webhook to launch external code linked to Netshot event"
+                  "youCanCreateAWebhookToLaunchExternalCodeLinkedToNetshotEvent"
                 )}
               >
                 <AddWebhookButton
                   renderItem={(open) => (
                     <Button variant="primary" onClick={open}>
                       <Plus />
-                      {t("Create")}
+                      {t("create")}
                     </Button>
                   )}
                 />

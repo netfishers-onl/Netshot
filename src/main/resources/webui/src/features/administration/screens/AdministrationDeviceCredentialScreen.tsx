@@ -41,13 +41,13 @@ export default function AdministrationDeviceCredentialScreen() {
     () => [
       columnHelper.accessor("name", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Name"),
+        header: t("name"),
         enableSorting: true,
         size: 20000,
       }),
       columnHelper.accessor("type", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Protocol"),
+        header: t("protocol"),
         enableSorting: true,
         size: 10000,
       }),
@@ -56,7 +56,7 @@ export default function AdministrationDeviceCredentialScreen() {
           const value = info.getValue()
           return <Text>{value ? value.name : anyOption.label}</Text>
         },
-        header: t("Domain"),
+        header: t("domain"),
         enableSorting: true,
         size: 10000,
       }),
@@ -70,9 +70,9 @@ export default function AdministrationDeviceCredentialScreen() {
               <EditDeviceCredentialButton
                 credential={credential}
                 renderItem={(open) => (
-                  <Tooltip content={t("Edit")}>
+                  <Tooltip content={t("edit")}>
                     <IconButton
-                      aria-label={t("Edit domain")}
+                      aria-label={t("editDomain")}
                       variant="ghost"
                       colorPalette="green"
                       onClick={open}
@@ -85,9 +85,9 @@ export default function AdministrationDeviceCredentialScreen() {
               <RemoveDeviceCredentialButton
                 credential={credential}
                 renderItem={(open) => (
-                  <Tooltip content={t("Remove")}>
+                  <Tooltip content={t("remove2")}>
                     <IconButton
-                      aria-label={t("Remove domain")}
+                      aria-label={t("removeDomain")}
                       variant="ghost"
                       colorPalette="green"
                       onClick={open}
@@ -116,11 +116,11 @@ export default function AdministrationDeviceCredentialScreen() {
     <>
       <Stack gap="6" p="9" flex="1" overflow="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("Device credentials")}
+          {t("deviceCredentials")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("Search...")}
+            placeholder={t("search2")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -130,7 +130,7 @@ export default function AdministrationDeviceCredentialScreen() {
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
                 <Icon name="plus" />
-                {t("Create")}
+                {t("create")}
               </Button>
             )}
           />
@@ -148,16 +148,16 @@ export default function AdministrationDeviceCredentialScreen() {
               <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
-                title={t("There is no device credential")}
+                title={t("thereIsNoDeviceCredential")}
                 description={t(
-                  "You can create a credential set to centralize authentication management for a device"
+                  "youCanCreateACredentialSetToCentralizeAuthenticationManageme"
                 )}
               >
                 <AddDeviceCredentialButton
                   renderItem={(open) => (
                     <Button variant="primary" onClick={open}>
                       <Icon name="plus" />
-                      {t("Create")}
+                      {t("create")}
                     </Button>
                   )}
                 />

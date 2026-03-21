@@ -48,7 +48,7 @@ export default function DeviceSidebarList() {
     return (
       <Center flex="1">
         <Text>
-          {group ? t("No device in group {{group}}", { group: group?.name }) : t("No device found")}
+          {group ? t("noDeviceInGroup", { group: group?.name }) : t("noDeviceFound")}
         </Text>
       </Center>
     )

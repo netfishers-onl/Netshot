@@ -32,7 +32,7 @@ export default function DeviceTypeSelect<
   return (
     <Select
       label={label}
-      placeholder={placeholder ?? t("Select a device type")}
+      placeholder={placeholder ?? t("selectADeviceType")}
       control={control}
       name={name}
       defaultValue={defaultValue}
@@ -41,7 +41,7 @@ export default function DeviceTypeSelect<
       isLoading={isPending}
       helperText={helperText}
       isClearable={isClearable}
-      noOptionsMessage={<Text>{t("No device type found")}</Text>}
+      noOptionsMessage={<Text>{t("noDeviceTypeFound")}</Text>}
       options={options}
       itemToString={(item) => item?.label}
       itemToValue={(item) => item.value?.name}

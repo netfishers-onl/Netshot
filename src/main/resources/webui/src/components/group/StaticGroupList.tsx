@@ -34,9 +34,9 @@ export default function StaticGroupList() {
           <>
             {fields.map((device, index) => (
               <GroupDeviceBox device={device} key={device?.id}>
-                <Tooltip content={t("Remove device")}>
+                <Tooltip content={t("removeDevice")}>
                   <IconButton
-                    aria-label={t("Remove device")}
+                    aria-label={t("removeDevice")}
                     position="absolute"
                     top="2"
                     right="2"
@@ -54,9 +54,9 @@ export default function StaticGroupList() {
           <Center flex="1">
             <Stack alignItems="center" gap="4">
               <Stack alignItems="center" gap="1">
-                <Heading size="md">{t("No devices selected")}</Heading>
+                <Heading size="md">{t("noDevicesSelected")}</Heading>
                 <Text color="grey.400">
-                  {t("Please add equipment using the auto-complete above")}
+                  {t("pleaseAddEquipmentUsingTheAutoCompleteAbove")}
                 </Text>
               </Stack>
             </Stack>

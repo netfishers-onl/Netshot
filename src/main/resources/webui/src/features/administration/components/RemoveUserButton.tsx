@@ -32,10 +32,10 @@ export default function RemoveUserButton(props: RemoveUserButtonProps) {
   const open = (evt: MouseEvent) => {
     evt?.stopPropagation()
     const dialogRef = dialog.open(MUTATIONS.ADMIN_USER_REMOVE, {
-      title: t("Remove user"),
+      title: t("removeUser"),
       description: (
         <Text>
-          {t("You are about to remove the user {{username}}", {
+          {t("youAreAboutToRemoveTheUser", {
             username: user?.username,
           })}
         </Text>
@@ -46,7 +46,7 @@ export default function RemoveUserButton(props: RemoveUserButtonProps) {
         dialogRef.close()
       },
       confirmButton: {
-        label: t("Remove"),
+        label: t("remove2"),
         props: {
           colorPalette: "red",
         },

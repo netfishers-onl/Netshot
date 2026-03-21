@@ -32,7 +32,7 @@ export default function ReportConfigurationComplianceDetailScreen() {
           <Skeleton loading={!isSuccess}>
             <Text color="grey.500">
               {t(
-                "Here is a list of non-compliant devices. You can check why a device is not compliant by clicking on it."
+                "hereIsAListOfNonCompliantDevicesYouCanCheckWhyADeviceIsNotCo"
               )}
             </Text>
           </Skeleton>

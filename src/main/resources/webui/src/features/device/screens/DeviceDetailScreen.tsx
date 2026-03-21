@@ -28,8 +28,8 @@ export default function DeviceDetailScreen() {
 
   const refresh = useCallback(async () => {
     const toastId = toast.loading({
-      title: t("Loading"),
-      description: t("Please wait, refreshing device data"),
+      title: t("loading"),
+      description: t("pleaseWaitRefreshingDeviceData"),
     })
     await refetch()
     toast.close(toastId)
@@ -61,7 +61,7 @@ export default function DeviceDetailScreen() {
                     renderItem={(open) => (
                       <Button variant="primary" onClick={open}>
                         <Icon name="camera" />
-                        {t("Take snapshot")}
+                        {t("takeSnapshot")}
                       </Button>
                     )}
                   />
@@ -72,7 +72,7 @@ export default function DeviceDetailScreen() {
                 <Skeleton loading={isPending}>
                   <Menu.Trigger asChild>
                     <Button>
-                      {t("Actions")}
+                      {t("actions")}
                       <Icon name="moreHorizontal" />
                     </Button>
                   </Menu.Trigger>
@@ -89,7 +89,7 @@ export default function DeviceDetailScreen() {
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="run-script">
                                   <Icon name="play" />
-                                  {t("Run script")}
+                                  {t("runScript")}
                                 </Menu.Item>
                               )}
                             />
@@ -100,7 +100,7 @@ export default function DeviceDetailScreen() {
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="edit">
                                   <Icon name="edit" />
-                                  {t("Edit")}
+                                  {t("edit")}
                                 </Menu.Item>
                               )}
                             />
@@ -111,7 +111,7 @@ export default function DeviceDetailScreen() {
                                   renderItem={(open) => (
                                     <Menu.Item onSelect={open} value="enable">
                                       <Icon name="zap" />
-                                      {t("Enable")}
+                                      {t("enable")}
                                     </Menu.Item>
                                   )}
                                 />
@@ -122,7 +122,7 @@ export default function DeviceDetailScreen() {
                                 renderItem={(open) => (
                                   <Menu.Item onSelect={open} value="disable">
                                     <Icon name="zapOff" />
-                                    {t("Disable")}
+                                    {t("disable")}
                                   </Menu.Item>
                                 )}
                               />
@@ -131,7 +131,7 @@ export default function DeviceDetailScreen() {
 
                           <Menu.Item onSelect={refresh} value="resfresh">
                             <Icon name="refreshCcw" />
-                            {t("Refresh")}
+                            {t("refresh")}
                           </Menu.Item>
 
                           <Protected minLevel={Level.ReadWrite}>
@@ -140,7 +140,7 @@ export default function DeviceDetailScreen() {
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="remove">
                                   <Icon name="trash" />
-                                  {t("Remove")}
+                                  {t("remove2")}
                                 </Menu.Item>
                               )}
                             />
@@ -155,13 +155,13 @@ export default function DeviceDetailScreen() {
           </Flex>
 
           <RouterTabs>
-            <RouterTab to="general">{t("General")}</RouterTab>
-            <RouterTab to="configurations">{t("Configuration")}</RouterTab>
-            <RouterTab to="interfaces">{t("Interfaces")}</RouterTab>
-            <RouterTab to="modules">{t("Modules")}</RouterTab>
-            <RouterTab to="diagnostics">{t("Diagnostics")}</RouterTab>
-            <RouterTab to="compliance">{t("Compliance")}</RouterTab>
-            <RouterTab to="tasks">{t("Tasks")}</RouterTab>
+            <RouterTab to="general">{t("general")}</RouterTab>
+            <RouterTab to="configurations">{t("configuration")}</RouterTab>
+            <RouterTab to="interfaces">{t("interfaces")}</RouterTab>
+            <RouterTab to="modules">{t("modules")}</RouterTab>
+            <RouterTab to="diagnostics">{t("diagnostics")}</RouterTab>
+            <RouterTab to="compliance">{t("compliance")}</RouterTab>
+            <RouterTab to="tasks">{t("tasks")}</RouterTab>
           </RouterTabs>
         </Stack>
         <Stack flex="1" overflow="auto" p="9">

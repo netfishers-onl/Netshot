@@ -3,19 +3,19 @@ import { ApiTokenPermissionLevel } from "@/types"
 
 export const useApiTokenLevelOptions = createOptionHook([
   {
-    label: "Read only",
+    label: "readOnly",
     value: ApiTokenPermissionLevel.ReadOnly,
   },
   {
-    label: "Read-write",
+    label: "readWrite",
     value: ApiTokenPermissionLevel.ReadWrite,
   },
   {
-    label: "Read-write & commands on devices",
+    label: "readWriteCommandsOnDevices",
     value: ApiTokenPermissionLevel.ReadWriteCommandOnDevice,
   },
   {
-    label: "Admin",
+    label: "admin",
     value: ApiTokenPermissionLevel.Admin,
   },
 ])

@@ -38,7 +38,7 @@ function DeviceCreateForm() {
       <DomainSelect required control={form.control} name="domainId" />
       <Stack gap="6">
         <Heading as="h5" size="sm">
-          {t("Subnets or IP addresses")}
+          {t("subnetsOrIpAddresses")}
         </Heading>
         {fields.length > 0 && (
           <Stack gap="3">
@@ -48,12 +48,12 @@ function DeviceCreateForm() {
                   required
                   control={form.control}
                   name={`subnets.${index}`}
-                  placeholder={t("Enter an IP address (e.g. 10.100.2.8)")}
+                  placeholder={t("enterAnIpAddressEG1010028")}
                   rules={{
                     pattern: {
                       value:
                         /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
-                      message: t("This is not a valid IP address"),
+                      message: t("thisIsNotAValidIpAddress"),
                     },
                   }}
                 />
@@ -62,7 +62,7 @@ function DeviceCreateForm() {
                     onClick={() => remove(index)}
                     variant="ghost"
                     colorPalette="green"
-                    aria-label={t("Remove this subnet")}
+                    aria-label={t("removeThisSubnet")}
                   >
                     <Icon name="trash" />
                   </IconButton>
@@ -74,7 +74,7 @@ function DeviceCreateForm() {
         <Stack direction="row">
           <Button onClick={() => append("")}>
             <Icon name="plus" />
-            {t("Add entry")}
+            {t("addEntry")}
           </Button>
         </Stack>
       </Stack>
@@ -108,7 +108,7 @@ export default function DeviceScanSubnetButton(props: DeviceScanSubnetButtonProp
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.TASK_CREATE, {
-      title: t("Scan subnets for devices"),
+      title: t("scanSubnetsForDevices"),
       description: <DeviceCreateForm />,
       form,
       async onSubmit(values: Form) {
@@ -124,7 +124,7 @@ export default function DeviceScanSubnetButton(props: DeviceScanSubnetButtonProp
       },
       size: "xl",
       submitButton: {
-        label: t("Add"),
+        label: t("add"),
       },
     })
   }

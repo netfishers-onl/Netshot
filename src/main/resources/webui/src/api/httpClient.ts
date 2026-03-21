@@ -121,7 +121,7 @@ function createHttpClient(opts: HttpClientOptions = {}) {
 
         if (result.errorMsg) {
           throw {
-            title: i18n.t("Error"),
+            title: i18n.t("error"),
             description: i18n.t(result.errorMsg),
             code: result.errorCode,
             response,
@@ -132,8 +132,8 @@ function createHttpClient(opts: HttpClientOptions = {}) {
           throw jsonErr
         }
         throw {
-          title: i18n.t("Error"),
-          description: i18n.t("Netshot server error"),
+          title: i18n.t("error"),
+          description: i18n.t("netshotServerError"),
           code: NetshotErrorCode.GenericServer,
           response,
         } as NetshotError

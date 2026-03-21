@@ -58,7 +58,7 @@ function DeviceBulkEditForm() {
     <Stack gap="6" px="6">
       <DomainSelect control={form.control} name="mgmtDomain" />
       <Stack gap="3">
-        <Field.Label>{t("Use the following credential set")}</Field.Label>
+        <Field.Label>{t("useTheFollowingCredentialSet")}</Field.Label>
         {isPending ? (
           <Stack gap="2">
             <Skeleton w="100%" h="36px" />
@@ -83,7 +83,7 @@ function DeviceBulkEditForm() {
               </NativeCheckbox.Root>
             ))}
             <Checkbox control={form.control} name="autoTryCredentials">
-              {t("In case of failure, also try all known credentials")}
+              {t("inCaseOfFailureAlsoTryAllKnownCredentials")}
             </Checkbox>
           </Stack>
         )}
@@ -116,13 +116,13 @@ export default function DeviceBulkEditButton(props: DeviceBulkEditButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DEVICE_UPDATE, {
-      title: t("Edit devices"),
+      title: t("editDevices"),
       description: (
         <>
           <Stack px="6" mb="6">
             <Alert.Root status="info" bg="blue.50">
               <Alert.Description color="blue.900">
-                {t("The modifications will be applied to {{count}} devices", {
+                {t("theModificationsWillBeAppliedToDevices", {
                   count: devices?.length,
                 })}
               </Alert.Description>
@@ -147,8 +147,8 @@ export default function DeviceBulkEditButton(props: DeviceBulkEditButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("{{count}} devices have been successfully modified", {
+          title: t("success"),
+          description: t("devicesHaveBeenSuccessfullyModified", {
             count: devices?.length,
           }),
         })
@@ -156,7 +156,7 @@ export default function DeviceBulkEditButton(props: DeviceBulkEditButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("Apply changes"),
+        label: t("applyChanges"),
       },
     })
   }

@@ -58,8 +58,8 @@ export default function AdministrationWebhookForm() {
     <Stack gap="12">
       <Stack gap="6">
         <FormControl
-          label={t("Name")}
-          placeholder={t("E.g. {{example}}", { example: t("my webhook") })}
+          label={t("name")}
+          placeholder={t("eG", { example: t("myWebhook") })}
           required
           control={form.control}
           name="name"
@@ -69,10 +69,10 @@ export default function AdministrationWebhookForm() {
           options={webhookDataTypeOptions.options}
           control={form.control}
           name="action"
-          label={t("Data type")}
+          label={t("dataType")}
         />
         <FormControl
-          label={t("URL")}
+          label={t("url")}
           placeholder={"https://api.example.com/callback"}
           type={FormControlType.Url}
           required
@@ -82,27 +82,27 @@ export default function AdministrationWebhookForm() {
         <Stack direction="row" gap="6">
           <Stack gap="0" flex="1">
             <Stack direction="row" gap="2">
-              <Text fontWeight="medium">{t("Status")}</Text>
+              <Text fontWeight="medium">{t("status")}</Text>
               <Badge colorPalette={enabled ? "green" : "red"}>
-                {t(enabled ? "Enabled" : "Disabled")}
+                {t(enabled ? "enabled" : "disabled")}
               </Badge>
             </Stack>
-            <Text color="grey.400">{t("You can activate or deactivate this webhook")}</Text>
+            <Text color="grey.400">{t("youCanActivateOrDeactivateThisWebhook")}</Text>
           </Stack>
           <Switch w="initial" control={form.control} name="enabled" />
         </Stack>
         <Separator />
         <Stack direction="row" gap="6">
           <Stack gap="0" flex="1">
-            <Text fontWeight="medium">{t("SSL validation")}</Text>
-            <Text color="grey.400">{t("Disabling SSL validation is not secure")}</Text>
+            <Text fontWeight="medium">{t("sslValidation")}</Text>
+            <Text color="grey.400">{t("disablingSslValidationIsNotSecure")}</Text>
           </Stack>
           <Switch w="initial" control={form.control} name="sslValidation" />
         </Stack>
       </Stack>
       <Stack gap="6">
         <Heading as="h5" size="md">
-          {t("Triggers")}
+          {t("triggers")}
         </Heading>
         {webhookTriggerOptions.options.map((option, index) => (
           <Fragment key={option.label}>

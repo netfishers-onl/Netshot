@@ -32,11 +32,11 @@ export default function FailedTaskScreen() {
   return (
     <Stack gap="6" p="9" flex="1" overflow="auto">
       <Heading as="h1" fontSize="4xl">
-        {t("Failed tasks")}
+        {t("failedTasks")}
       </Heading>
       <Stack direction="row" gap="3">
         <Search
-          placeholder={t("Search...")}
+          placeholder={t("search2")}
           onQuery={pagination.onQuery}
           onClear={pagination.onQueryClear}
           w="30%"
@@ -46,7 +46,7 @@ export default function FailedTaskScreen() {
           <Menu.Trigger asChild>
             <Button variant="primary">
               <Icon name="filter" />
-              {t("Filters")}
+              {t("filters")}
             </Button>
           </Menu.Trigger>
           <Portal>
@@ -58,13 +58,13 @@ export default function FailedTaskScreen() {
                       control={form.control}
                       name="executionDate"
                       type={FormControlType.Date}
-                      label={t("Execution date")}
+                      label={t("executionDate")}
                     />
                     <Stack gap="2">
                       <Button variant="primary" type="submit">
-                        {t("Apply filters")}
+                        {t("applyFilters")}
                       </Button>
-                      <Button onClick={clearFilter}>{t("Clear all")}</Button>
+                      <Button onClick={clearFilter}>{t("clearAll")}</Button>
                     </Stack>
                   </form>
                 </Stack>
@@ -72,7 +72,7 @@ export default function FailedTaskScreen() {
             </Menu.Positioner>
           </Portal>
         </Menu.Root>
-        <IconButton aria-label={t("Reload")} onClick={() => refetch()} loading={isFetching}>
+        <IconButton aria-label={t("reload")} onClick={() => refetch()} loading={isFetching}>
           <Icon name="refreshCcw" />
         </IconButton>
       </Stack>
@@ -94,8 +94,8 @@ export default function FailedTaskScreen() {
             />
           ) : (
             <EmptyResult
-              title={t("There is no failed task")}
-              description={t("No matching task was found")}
+              title={t("thereIsNoFailedTask")}
+              description={t("noMatchingTaskWasFound")}
             />
           )}
         </>

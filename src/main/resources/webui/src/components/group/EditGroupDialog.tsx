@@ -34,7 +34,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
   const dialogConfig = useDialogConfig()
 
   const title = useMemo(() => {
-    return t("Edit {{type}} group", {
+    return t("editGroup", {
       type: group.type === GroupType.Static ? t("static") : t("dynamic"),
     })
   }, [t, group])
@@ -149,27 +149,27 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
                   <Stack gap="9" w="340px" overflowY="auto">
                     <Stack gap="5">
                       <Heading as="h4" size="md">
-                        {t("Information")}
+                        {t("information")}
                       </Heading>
                       <FormControl
                         required
                         control={form.control}
                         name="name"
-                        label={t("Name")}
-                        placeholder={t("Enter the group name")}
+                        label={t("name")}
+                        placeholder={t("enterTheGroupName")}
                       />
                       <FormControl
                         required
                         control={form.control}
                         name="folder"
-                        label={t("Folder")}
-                        placeholder={t("E.g. {{example}}", { example: t("Folder A/Subfolder B/ ...") })}
-                        helperText={t("Use slashes to give a folder path")}
+                        label={t("folder")}
+                        placeholder={t("eG", { example: t("folderASubfolderB") })}
+                        helperText={t("useSlashesToGiveAFolderPath")}
                       />
                       <Separator />
                       <Switch
-                        label={t("Reports")}
-                        description={t("Show this group in reports")}
+                        label={t("reports")}
+                        description={t("showThisGroupInReports")}
                         control={form.control}
                         name="visibleInReports"
                       />
@@ -180,15 +180,15 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
                         <Stack gap="5">
                           <Stack gap="2">
                             <Heading as="h4" size="md">
-                              {t("Populate")}
+                              {t("populate")}
                             </Heading>
                             <Text color="grey.400">
-                              {t("Define the search criteria to dynamically populate the group")}
+                              {t("defineTheSearchCriteriaToDynamicallyPopulateTheGroup")}
                             </Text>
                           </Stack>
                           {driver && (
                             <Tag.Root colorPalette="grey" alignSelf="start">
-                              {t("Device type: ")} {driver}
+                              {t("deviceType")} {driver}
                             </Tag.Root>
                           )}
                           {query?.length > 0 && (
@@ -203,7 +203,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
                             }}
                             renderItem={(open) => (
                               <Button alignSelf="start" onClick={open}>
-                                {t("Edit query")}
+                                {t("editQuery")}
                               </Button>
                             )}
                             onSubmit={updateQuery}
@@ -215,7 +215,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
                   <Stack flex="1" gap="5" overflow="auto">
                     <Heading as="h4" size="md">
                       {t(
-                        group.type === GroupType.Static ? "Selected devices" : "Device list preview"
+                        group.type === GroupType.Static ? "selectedDevices" : "deviceListPreview"
                       )}
                     </Heading>
                     {group.type === GroupType.Static && <StaticGroupDeviceList />}
@@ -231,14 +231,14 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
               </Dialog.Body>
               <Dialog.Footer>
                 <Stack direction="row" gap="3">
-                  <Button onClick={dialogConfig.close}>{t("Cancel")}</Button>
+                  <Button onClick={dialogConfig.close}>{t("cancel")}</Button>
                   <Button
                     type="submit"
                     disabled={!form.formState.isValid}
                     loading={mutation.isPending}
                     variant="primary"
                   >
-                    {t("Apply changes")}
+                    {t("applyChanges")}
                   </Button>
                 </Stack>
               </Dialog.Footer>

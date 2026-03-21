@@ -18,15 +18,15 @@ export function useOperatorMapping() {
       value: OperatorType.Contains,
     },
     [OperatorType.ContainsNoCase]: {
-      label: t("contains (no case)"),
+      label: t("containsNoCase"),
       value: OperatorType.ContainsNoCase,
     },
     [OperatorType.StartsWith]: {
-      label: t("starts with"),
+      label: t("startsWith"),
       value: OperatorType.StartsWith,
     },
     [OperatorType.EndsWith]: {
-      label: t("ends with"),
+      label: t("endsWith"),
       value: OperatorType.EndsWith,
     },
     [OperatorType.Matches]: {
@@ -34,11 +34,11 @@ export function useOperatorMapping() {
       value: OperatorType.Matches,
     },
     [OperatorType.LessThan]: {
-      label: t("less than"),
+      label: t("lessThan"),
       value: OperatorType.LessThan,
     },
     [OperatorType.GreaterThan]: {
-      label: t("greater than"),
+      label: t("greaterThan"),
       value: OperatorType.GreaterThan,
     },
     [OperatorType.Before]: {
@@ -50,7 +50,7 @@ export function useOperatorMapping() {
       value: OperatorType.After,
     },
     [OperatorType.BeforeRelative]: {
-      label: t("before (relative)"),
+      label: t("beforeRelative"),
       value: OperatorType.BeforeRelative,
     },
     [OperatorType.True]: {

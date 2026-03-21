@@ -23,14 +23,14 @@ export default function DomainSelect<T>(props: DomainSelectProps<T>) {
 
   return (
     <Select
-      label={t("Domain")}
-      placeholder={t("Select a domain")}
+      label={t("domain")}
+      placeholder={t("selectADomain")}
       control={control}
       name={name}
       readOnly={readOnly}
       required={required}
       isLoading={isPending}
-      noOptionsMessage={<Text>{t("No domain found")}</Text>}
+      noOptionsMessage={<Text>{t("noDomainFound")}</Text>}
       options={options}
       multiple={multiple}
       itemToString={(item) => item?.label}

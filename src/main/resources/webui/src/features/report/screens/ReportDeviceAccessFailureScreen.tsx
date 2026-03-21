@@ -99,29 +99,29 @@ export default function ReportDeviceAccessFailure() {
             {info.getValue()}
           </EntityLink>
         ),
-        header: t("Device"),
+        header: t("device2"),
       }),
       columnHelper.accessor("mgmtAddress", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Management IP"),
+        header: t("managementIp"),
       }),
       columnHelper.accessor("family", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Family"),
+        header: t("family"),
       }),
       columnHelper.accessor("lastSuccess", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
-        header: t("Last successful snapshot"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
+        header: t("lastSuccessfulSnapshot"),
       }),
       columnHelper.accessor("lastFailure", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
-        header: t("Last failed snapshot"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
+        header: t("lastFailedSnapshot"),
       }),
       columnHelper.display({
         id: "actions",
         cell: (info) => (
-          <Tooltip content={t("Go to device")}>
-            <IconButton variant="ghost" colorPalette="green" aria-label={t("Go to device")} asChild>
+          <Tooltip content={t("goToDevice")}>
+            <IconButton variant="ghost" colorPalette="green" aria-label={t("goToDevice")} asChild>
               <Link to={`/app/devices/${info.getValue()}/general`}>
                 <Icon name="arrowRight" />
               </Link>
@@ -150,11 +150,11 @@ export default function ReportDeviceAccessFailure() {
     <>
       <Stack gap="6" p="9" flex="1" overflowY="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("Device access failures")}
+          {t("deviceAccessFailures")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("Search...")}
+            placeholder={t("search2")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -164,7 +164,7 @@ export default function ReportDeviceAccessFailure() {
             <Menu.Trigger asChild>
               <Button variant="primary">
                 <Icon name="filter" />
-                {t("Filters")}
+                {t("filters")}
               </Button>
             </Menu.Trigger>
             <Portal>
@@ -174,18 +174,18 @@ export default function ReportDeviceAccessFailure() {
                     <form>
                       <DomainSelect control={form.control} name="domain" />
                       <FormControl
-                        label={t("Device without successful snapshot for")}
+                        label={t("deviceWithoutSuccessfulSnapshotFor")}
                         type={FormControlType.Number}
                         control={form.control}
                         name="days"
                         suffix={
                           <Text color="grey.500" pr="4">
-                            {t("Days")}
+                            {t("days")}
                           </Text>
                         }
                       />
                       <Stack gap="2">
-                        <Button onClick={clearFilter}>{t("Clear all")}</Button>
+                        <Button onClick={clearFilter}>{t("clearAll")}</Button>
                       </Stack>
                     </form>
                   </Stack>
@@ -195,7 +195,7 @@ export default function ReportDeviceAccessFailure() {
           </Menu.Root>
           <Button onClick={() => refetch()}>
             <Icon name="refreshCcw" />
-            {t("Refresh")}
+            {t("refresh")}
           </Button>
         </Stack>
         {isPending ? (
@@ -217,8 +217,8 @@ export default function ReportDeviceAccessFailure() {
               />
             ) : (
               <EmptyResult
-                title={t("There is no access failure")}
-                description={t("Here you can view the access failure date for a device")}
+                title={t("thereIsNoAccessFailure")}
+                description={t("hereYouCanViewTheAccessFailureDateForADevice")}
               ></EmptyResult>
             )}
           </>

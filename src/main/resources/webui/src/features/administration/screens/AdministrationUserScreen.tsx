@@ -50,7 +50,7 @@ export default function AdministrationUserScreen() {
     () => [
       columnHelper.accessor("username", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Username"),
+        header: t("username"),
         enableSorting: true,
       }),
       columnHelper.accessor("local", {
@@ -60,11 +60,11 @@ export default function AdministrationUserScreen() {
           return (
             <Badge size="lg" variant="outline">
               {value ? <LuHardDrive /> : <LuCloud />}
-              {t(value ? "Local" : "Remote")}
+              {t(value ? "local2" : "remote")}
             </Badge>
           )
         },
-        header: t("Type"),
+        header: t("type"),
         minSize: 90,
       }),
       columnHelper.accessor("level", {
@@ -72,9 +72,9 @@ export default function AdministrationUserScreen() {
           const value = info.getValue()
           const label = userLevelOptions.getLabelByValue(value)
 
-          return <Text>{label ? label : t("Unknown")}</Text>
+          return <Text>{label ? label : t("unknown3")}</Text>
         },
-        header: t("Permission level"),
+        header: t("permissionLevel"),
         enableSorting: true,
       }),
       columnHelper.display({
@@ -92,9 +92,9 @@ export default function AdministrationUserScreen() {
               <EditUserButton
                 user={user}
                 renderItem={(open) => (
-                  <Tooltip content={t("Edit")}>
+                  <Tooltip content={t("edit")}>
                     <IconButton
-                      aria-label={t("Edit user")}
+                      aria-label={t("editUser")}
                       variant="ghost"
                       colorPalette="green"
                       onClick={open}
@@ -107,9 +107,9 @@ export default function AdministrationUserScreen() {
               <RemoveUserButton
                 user={user}
                 renderItem={(open) => (
-                  <Tooltip content={t("Remove")}>
+                  <Tooltip content={t("remove2")}>
                     <IconButton
-                      aria-label={t("Remove user")}
+                      aria-label={t("removeUser")}
                       variant="ghost"
                       colorPalette="green"
                       onClick={open}
@@ -136,11 +136,11 @@ export default function AdministrationUserScreen() {
     <>
       <Stack gap="6" p="9" flex="1" overflow="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("Users")}
+          {t("users")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("Search...")}
+            placeholder={t("search2")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -150,7 +150,7 @@ export default function AdministrationUserScreen() {
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
                 <Plus />
-                {t("Create")}
+                {t("create")}
               </Button>
             )}
           />
@@ -168,14 +168,14 @@ export default function AdministrationUserScreen() {
               <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
-                title={t("There is no user")}
-                description={t("You can create users with different roles to manage Netshot")}
+                title={t("thereIsNoUser")}
+                description={t("youCanCreateUsersWithDifferentRolesToManageNetshot")}
               >
                 <AddUserButton
                   renderItem={(open) => (
                     <Button variant="primary" onClick={open}>
                       <Plus />
-                      {t("Create")}
+                      {t("create")}
                     </Button>
                   )}
                 />

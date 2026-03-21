@@ -33,11 +33,11 @@ export default function AdministrationClusteringScreen() {
     <>
       <Stack gap="6" p="9" flex="1" overflow="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("Clustering")}
+          {t("clustering")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("Search...")}
+            placeholder={t("search2")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -45,7 +45,7 @@ export default function AdministrationClusteringScreen() {
           <Spacer />
           <Button onClick={() => refetch()}>
             <Icon name="refreshCcw" />
-            {t("Refresh")}
+            {t("refresh")}
           </Button>
         </Stack>
         {isPending ? (
@@ -67,14 +67,14 @@ export default function AdministrationClusteringScreen() {
                           <Text fontWeight="semibold" fontSize="lg">
                             {item?.hostname}
                           </Text>
-                          <Tag.Root colorPalette="green">{t("Master")}</Tag.Root>
+                          <Tag.Root colorPalette="green">{t("master")}</Tag.Root>
                         </Stack>
                         <Stack direction="row" gap="3">
                           <Tag.Root colorPalette="grey">
                             {item?.local ? t("local") : t("external")}
                           </Tag.Root>
                           <Tag.Root colorPalette="grey">
-                            {t("driver checksum: ")} {item?.driverHash}
+                            {t("driverChecksum")} {item?.driverHash}
                           </Tag.Root>
                         </Stack>
                       </Stack>
@@ -85,35 +85,35 @@ export default function AdministrationClusteringScreen() {
                           <Text fontWeight="semibold" fontSize="lg">
                             {item?.appVersion}
                           </Text>
-                          <Text color="grey.400">{t("Netshot version")}</Text>
+                          <Text color="grey.400">{t("netshotVersion")}</Text>
                         </Stack>
                         <Separator orientation="vertical" />
                         <Stack gap="0">
                           <Text fontWeight="semibold" fontSize="lg">
                             {item?.masterPriority}
                           </Text>
-                          <Text color="grey.400">{t("Master priority")}</Text>
+                          <Text color="grey.400">{t("masterPriority")}</Text>
                         </Stack>
                         <Separator orientation="vertical" />
                         <Stack gap="0">
                           <Text fontWeight="semibold" fontSize="lg">
                             {item?.runnerPriority}
                           </Text>
-                          <Text color="grey.400">{t("Runner priority")}</Text>
+                          <Text color="grey.400">{t("runnerPriority")}</Text>
                         </Stack>
                         <Separator orientation="vertical" />
                         <Stack gap="0">
                           <Text fontWeight="semibold" fontSize="lg">
                             {item?.runnerWeight}
                           </Text>
-                          <Text color="grey.400">{t("Runner weight")}</Text>
+                          <Text color="grey.400">{t("runnerWeight")}</Text>
                         </Stack>
                         <Separator orientation="vertical" />
                         <Stack gap="0">
                           <Text fontWeight="semibold" fontSize="lg">
                             {formatDate(item?.lastSeenTime)}
                           </Text>
-                          <Text color="grey.400">{t("Last seen")}</Text>
+                          <Text color="grey.400">{t("lastSeen")}</Text>
                         </Stack>
                         <Separator orientation="vertical" />
                         <Stack gap="0">
@@ -121,7 +121,7 @@ export default function AdministrationClusteringScreen() {
                             {formatDistanceStrict(new Date(), new Date(item?.lastStatusChangeTime))}{" "}
                             {t("ago")}
                           </Text>
-                          <Text color="grey.400">{t("Last status change")}</Text>
+                          <Text color="grey.400">{t("lastStatusChange")}</Text>
                         </Stack>
                       </Stack>
                     </ExpandablePanel.Content>
@@ -130,9 +130,9 @@ export default function AdministrationClusteringScreen() {
               </Stack>
             ) : (
               <EmptyResult
-                title={t("There is no member")}
+                title={t("thereIsNoMember")}
                 description={t(
-                  "You may activate clustering in the main configuration file, please check the documentation"
+                  "youMayActivateClusteringInTheMainConfigurationFilePleaseChec"
                 )}
               />
             )}

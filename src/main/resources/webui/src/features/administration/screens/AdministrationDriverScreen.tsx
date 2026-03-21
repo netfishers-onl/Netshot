@@ -45,20 +45,20 @@ export default function AdministrationDriverScreen() {
     () => [
       columnHelper.accessor("name", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Name"),
+        header: t("name"),
         enableSorting: true,
         size: 20000,
       }),
       columnHelper.accessor("description", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Description"),
+        header: t("description"),
         enableSorting: true,
         size: 50000,
       }),
       columnHelper.accessor("protocols", {
         id: "protocol.ssh",
         cell: (info) => getProtocolCheckbox(info, DeviceTypeProtocol.Ssh),
-        header: t("SSH"),
+        header: t("ssh"),
         size: 50,
         minSize: 70,
         meta: {
@@ -68,7 +68,7 @@ export default function AdministrationDriverScreen() {
       columnHelper.accessor("protocols", {
         id: "protocol.telnet",
         cell: (info) => getProtocolCheckbox(info, DeviceTypeProtocol.Telnet),
-        header: t("Telnet"),
+        header: t("telnet"),
         size: 50,
         minSize: 70,
         meta: {
@@ -78,7 +78,7 @@ export default function AdministrationDriverScreen() {
       columnHelper.accessor("protocols", {
         id: "protocol.snmp",
         cell: (info) => getProtocolCheckbox(info, DeviceTypeProtocol.Snmp),
-        header: t("SNMP"),
+        header: t("snmp"),
         size: 50,
         minSize: 70,
         meta: {
@@ -87,19 +87,19 @@ export default function AdministrationDriverScreen() {
       }),
       columnHelper.accessor("version", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Version"),
+        header: t("version"),
         enableSorting: true,
         size: 10000,
       }),
       columnHelper.accessor("sourceHash", {
         cell: (info) => <Text>{info.getValue()?.substring(0, 8)}</Text>,
-        header: t("Hash"),
+        header: t("hash"),
         enableSorting: true,
         size: 10000,
       }),
       columnHelper.accessor("author", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Author"),
+        header: t("author"),
         enableSorting: true,
         size: 10000,
       }),
@@ -111,11 +111,11 @@ export default function AdministrationDriverScreen() {
     <>
       <Stack gap="6" p="9" flex="1" overflow="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("Drivers")}
+          {t("drivers")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("Search...")}
+            placeholder={t("search2")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -125,7 +125,7 @@ export default function AdministrationDriverScreen() {
             renderItem={(open) => (
               <Button onClick={open}>
                 <LuRefreshCcw />
-                {t("Reload drivers")}
+                {t("reloadDrivers")}
               </Button>
             )}
           />
@@ -143,9 +143,9 @@ export default function AdministrationDriverScreen() {
               <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
-                title={t("There is no driver")}
+                title={t("thereIsNoDriver")}
                 description={t(
-                  "Something must be wrong, here should be the list of device drivers"
+                  "somethingMustBeWrongHereShouldBeTheListOfDeviceDrivers"
                 )}
               />
             )}

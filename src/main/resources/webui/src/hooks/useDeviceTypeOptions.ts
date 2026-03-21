@@ -30,7 +30,7 @@ export function useDeviceTypeOptions() {
     const option = getOptionByDriver(driver)
 
     if (!option) {
-      return t("Unknown")
+      return t("unknown3")
     }
 
     return option.value.description

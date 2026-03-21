@@ -56,7 +56,7 @@ export default function DeviceDetailScreen() {
                   diagnostic={diagnostic}
                   renderItem={(open) => (
                     <Button variant="primary" onClick={open}>
-                      {t("Edit")}
+                      {t("edit")}
                     </Button>
                   )}
                 />
@@ -66,7 +66,7 @@ export default function DeviceDetailScreen() {
                 <Skeleton loading={isPending}>
                   <Menu.Trigger asChild>
                     <Button>
-                      {t("Actions")}
+                      {t("actions")}
                       <Icon name="moreHorizontal" />
                     </Button>
                   </Menu.Trigger>
@@ -83,7 +83,7 @@ export default function DeviceDetailScreen() {
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="disable">
                                   <Icon name="power" />
-                                  {t("Disable")}
+                                  {t("disable")}
                                 </Menu.Item>
                               )}
                             />
@@ -93,7 +93,7 @@ export default function DeviceDetailScreen() {
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="enable">
                                   <Icon name="power" />
-                                  {t("Enable")}
+                                  {t("enable")}
                                 </Menu.Item>
                               )}
                             />
@@ -104,7 +104,7 @@ export default function DeviceDetailScreen() {
                             renderItem={(open) => (
                               <Menu.Item onSelect={open} value="remove">
                                 <Icon name="trash" />
-                                {t("Remove")}
+                                {t("remove2")}
                               </Menu.Item>
                             )}
                           />
@@ -122,51 +122,51 @@ export default function DeviceDetailScreen() {
           <Stack gap="3">
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("Device type")}</Text>
+                <Text color="grey.400">{t("deviceType")}</Text>
               </Box>
               <Skeleton loading={isPending}>
-                <Text>{diagnostic?.deviceDriverDescription ?? "N/A"}</Text>
+                <Text>{diagnostic?.deviceDriverDescription ?? "nA"}</Text>
               </Skeleton>
             </Flex>
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("CLI mode")}</Text>
+                <Text color="grey.400">{t("cliMode")}</Text>
               </Box>
               <Skeleton loading={isPending}>{diagnostic?.cliMode}</Skeleton>
             </Flex>
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("CLI command")}</Text>
+                <Text color="grey.400">{t("cliCommand")}</Text>
               </Box>
               <Skeleton loading={isPending}>
-                <Text fontFamily="mono">{diagnostic?.command ?? "N/A"}</Text>
+                <Text fontFamily="mono">{diagnostic?.command ?? "nA"}</Text>
               </Skeleton>
             </Flex>
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("RegEx pattern")}</Text>
+                <Text color="grey.400">{t("regexPattern")}</Text>
               </Box>
               <Skeleton loading={isPending}>
-                <Text fontFamily="mono">{diagnostic?.modifierPattern ?? "N/A"}</Text>
+                <Text fontFamily="mono">{diagnostic?.modifierPattern ?? "nA"}</Text>
               </Skeleton>
             </Flex>
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("Replace with")}</Text>
+                <Text color="grey.400">{t("replaceWith")}</Text>
               </Box>
               <Skeleton loading={isPending}>
-                <Text fontFamily="mono">{diagnostic?.modifierReplacement ?? "N/A"}</Text>
+                <Text fontFamily="mono">{diagnostic?.modifierReplacement ?? "nA"}</Text>
               </Skeleton>
             </Flex>
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("Enabled")}</Text>
+                <Text color="grey.400">{t("enabled")}</Text>
               </Box>
               <Skeleton loading={isPending}>
                 {diagnostic?.enabled ? (
-                  <Badge colorPalette="green">{t("Enabled")}</Badge>
+                  <Badge colorPalette="green">{t("enabled")}</Badge>
                 ) : (
-                  <Badge colorPalette="red">{t("Disabled")}</Badge>
+                  <Badge colorPalette="red">{t("disabled")}</Badge>
                 )}
               </Skeleton>
             </Flex>

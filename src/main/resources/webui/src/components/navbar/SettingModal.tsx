@@ -17,8 +17,8 @@ export function SettingModal() {
         overflow="auto"
       >
         <Tabs.List>
-          <Tabs.Trigger value="general">{t("General")}</Tabs.Trigger>
-          <Tabs.Trigger value="ui">{t("Interface")}</Tabs.Trigger>
+          <Tabs.Trigger value="general">{t("general")}</Tabs.Trigger>
+          <Tabs.Trigger value="ui">{t("interface")}</Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content
           value="general"

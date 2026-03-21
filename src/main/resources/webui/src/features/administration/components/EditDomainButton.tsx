@@ -46,7 +46,7 @@ export default function EditDomainButton(props: EditDomainButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_DOMAIN_UPDATE, {
-      title: t("Edit domain"),
+      title: t("editDomain"),
       description: <AdministrationDomainForm />,
       form,
       size: "lg",
@@ -60,8 +60,8 @@ export default function EditDomainButton(props: EditDomainButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("Domain {{name}} has been successfully updated", {
+          title: t("success"),
+          description: t("domainHasBeenSuccessfullyUpdated", {
             name: values.name,
           }),
         })
@@ -72,7 +72,7 @@ export default function EditDomainButton(props: EditDomainButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("Apply changes"),
+        label: t("applyChanges"),
       },
     })
   }

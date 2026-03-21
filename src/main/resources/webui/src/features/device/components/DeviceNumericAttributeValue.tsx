@@ -12,5 +12,5 @@ export function DeviceNumericAttributeValue(
   const { attribute } = props
   const { t } = useTranslation()
 
-  return <Text>{attribute?.number ?? t("N/A")}</Text>
+  return <Text>{attribute?.number ?? t("nA")}</Text>
 }

@@ -37,13 +37,13 @@ export default function AdministrationApiTokenScreen() {
     () => [
       columnHelper.accessor("description", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Description"),
+        header: t("description"),
         enableSorting: true,
         size: 20000,
       }),
       columnHelper.accessor("level", {
         cell: (info) => <Text>{apiTokenLevelOptions.getByValue(info.getValue())?.label}</Text>,
-        header: t("Permission level"),
+        header: t("permissionLevel"),
         enableSorting: true,
         size: 10000,
         minSize: 200,
@@ -58,9 +58,9 @@ export default function AdministrationApiTokenScreen() {
               <RemoveApiTokenButton
                 apiToken={apiToken}
                 renderItem={(open) => (
-                  <Tooltip content={t("Remove")}>
+                  <Tooltip content={t("remove2")}>
                     <IconButton
-                      aria-label={t("Remove token")}
+                      aria-label={t("removeToken")}
                       variant="ghost"
                       colorPalette="green"
                       onClick={open}
@@ -88,11 +88,11 @@ export default function AdministrationApiTokenScreen() {
     <>
       <Stack gap="6" p="9" flex="1" overflow="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("API tokens")}
+          {t("apiTokens")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("Search...")}
+            placeholder={t("search2")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -102,7 +102,7 @@ export default function AdministrationApiTokenScreen() {
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
                 <Plus />
-                {t("Create")}
+                {t("create")}
               </Button>
             )}
           />
@@ -120,14 +120,14 @@ export default function AdministrationApiTokenScreen() {
               <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
-                title={t("There is no API token")}
-                description={t("You can create tokens to use Netshot embedded REST API")}
+                title={t("thereIsNoApiToken")}
+                description={t("youCanCreateTokensToUseNetshotEmbeddedRestApi")}
               >
                 <AddApiTokenButton
                   renderItem={(open) => (
                     <Button variant="primary" onClick={open}>
                       <Plus />
-                      {t("Create")}
+                      {t("create")}
                     </Button>
                   )}
                 />

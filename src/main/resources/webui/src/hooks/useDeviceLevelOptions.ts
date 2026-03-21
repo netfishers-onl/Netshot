@@ -3,23 +3,23 @@ import { createOptionHook } from "./createOptionHook"
 
 export const useDeviceLevelOptions = createOptionHook([
   {
-    label: "Gold",
+    label: "gold",
     value: DeviceSoftwareLevel.GOLD,
   },
   {
-    label: "Silver",
+    label: "silver",
     value: DeviceSoftwareLevel.SILVER,
   },
   {
-    label: "Bronze",
+    label: "bronze",
     value: DeviceSoftwareLevel.BRONZE,
   },
   {
-    label: "Non compliant",
+    label: "nonCompliant",
     value: DeviceSoftwareLevel.NON_COMPLIANT,
   },
   {
-    label: "Unknown",
+    label: "unknown3",
     value: DeviceSoftwareLevel.UNKNOWN,
   },
 ])

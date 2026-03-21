@@ -32,15 +32,15 @@ export default function RemoveHardwareRuleButton(props: RemoveHardwareRuleButton
   const open = (evt: MouseEvent) => {
     evt?.stopPropagation()
     const dialogRef = dialog.open(MUTATIONS.HARDWARE_RULE_REMOVE, {
-      title: t("Remove hardware rule"),
-      description: <Text>{t("You are about to remove this hardware rule")}</Text>,
+      title: t("removeHardwareRule"),
+      description: <Text>{t("youAreAboutToRemoveThisHardwareRule")}</Text>,
       async onConfirm() {
         await mutation.mutateAsync()
         queryClient.invalidateQueries({ queryKey: [QUERIES.HARDWARE_RULE_LIST] })
         dialogRef.close()
       },
       confirmButton: {
-        label: t("Remove"),
+        label: t("remove2"),
         props: {
           colorPalette: "red",
         },

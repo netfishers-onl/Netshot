@@ -46,7 +46,7 @@ export default function AddSoftwareRuleButton(props: AddSoftwareRuleButtonProps)
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.SOFTWARE_RULE_CREATE, {
-      title: t("Add software rule"),
+      title: t("addSoftwareRule"),
       description: <SoftwareRuleForm />,
       form,
       size: "lg",
@@ -66,8 +66,8 @@ export default function AddSoftwareRuleButton(props: AddSoftwareRuleButtonProps)
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("Software rule has been successfully created"),
+          title: t("success"),
+          description: t("softwareRuleHasBeenSuccessfullyCreated"),
         })
 
         queryClient.invalidateQueries({ queryKey: [QUERIES.SOFTWARE_RULE_LIST] })
@@ -76,7 +76,7 @@ export default function AddSoftwareRuleButton(props: AddSoftwareRuleButtonProps)
         form.reset()
       },
       submitButton: {
-        label: t("Add rule"),
+        label: t("addRule"),
       },
     })
   }

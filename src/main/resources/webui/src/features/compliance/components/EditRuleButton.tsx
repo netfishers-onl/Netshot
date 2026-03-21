@@ -55,7 +55,7 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
   const open = (evt: MouseEvent) => {
     evt?.stopPropagation()
     const dialogRef = dialog.open(MUTATIONS.RULE_UPDATE, {
-      title: t("Edit rule"),
+      title: t("editRule"),
       description: hasScript ? (
         <RuleEditScript type={rule?.type} />
       ) : (
@@ -87,8 +87,8 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("Rule {{name}} has been successfully updated", {
+          title: t("success"),
+          description: t("ruleHasBeenSuccessfullyUpdated", {
             name: values.name,
           }),
         })
@@ -97,7 +97,7 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("Apply changes"),
+        label: t("applyChanges"),
       },
     })
   }

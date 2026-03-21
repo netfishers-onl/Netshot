@@ -37,29 +37,29 @@ export type DialogProviderConfig = {
 const DEFAULT_PROVDER_CONFIG: DialogProviderConfig = {
   form: {
     submitButton: {
-      label: "Submit",
+      label: "submit",
       props: {
         colorPalette: "green",
       },
     },
     cancelButton: {
-      label: "Cancel",
+      label: "cancel",
     },
   },
   confirm: {
     confirmButton: {
-      label: "Confirm",
+      label: "confirm",
       props: {
         colorPalette: "green",
       },
     },
     cancelButton: {
-      label: "Cancel",
+      label: "cancel",
     },
   },
   alert: {
     closeButton: {
-      label: "OK",
+      label: "ok",
       props: {
         colorPalette: "green",
       },

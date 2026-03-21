@@ -58,7 +58,7 @@ export default function Search(props: SearchProps) {
               <IconButton
                 variant="ghost"
                 colorPalette="gray"
-                aria-label="Clear"
+                aria-label="clear"
                 onClick={clearValue}
               >
                 <X />

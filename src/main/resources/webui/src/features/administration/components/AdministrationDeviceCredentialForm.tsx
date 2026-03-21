@@ -42,26 +42,26 @@ export default function AdministrationDeviceCredentialForm() {
   return (
     <Stack gap="6">
       <FormControl
-        label={t("Name")}
-        placeholder={t("E.g. {{example}}", { example: t("credential name") })}
+        label={t("name")}
+        placeholder={t("eG", { example: t("credentialName") })}
         required
         control={form.control}
         name="name"
       />
-      {/* <DomainSelect required control={form.control} name="mgmtDomain" label={t("Domain")} withAny /> */}
+      {/* <DomainSelect required control={form.control} name="mgmtDomain" label={t("domain")} withAny /> */}
       <Select
         required
         control={form.control}
         name="type"
         options={deviceCredentialTypeOptions.options}
-        label={t("Protocol")}
-        placeholder={t("Select a protocol")}
+        label={t("protocol")}
+        placeholder={t("selectAProtocol")}
       />
       {type === CredentialSetType.SNMP_V3 && (
         <>
           <FormControl
-            label={t("Username")}
-            placeholder={t("E.g. {{example}}", { example: "admin" })}
+            label={t("username")}
+            placeholder={t("eG", { example: "admin" })}
             required
             control={form.control}
             name="username"
@@ -70,13 +70,13 @@ export default function AdministrationDeviceCredentialForm() {
             control={form.control}
             name="authType"
             options={deviceCredentialAuthTypeOptions.options}
-            label={t("Auth type")}
-            placeholder={t("Select an auth type")}
+            label={t("authType")}
+            placeholder={t("selectAnAuthType")}
           />
           <FormControl
             type={FormControlType.Password}
-            label={t("Auth key")}
-            placeholder={t("E.g. {{example}}", { example: t("secret key") })}
+            label={t("authKey")}
+            placeholder={t("eG", { example: t("secretKey") })}
             required
             control={form.control}
             name="authKey"
@@ -85,13 +85,13 @@ export default function AdministrationDeviceCredentialForm() {
             control={form.control}
             name="privType"
             options={deviceCredentialPrivateKeyTypeOptions.options}
-            label={t("Priv type")}
-            placeholder={t("Select a priv type")}
+            label={t("privType")}
+            placeholder={t("selectAPrivType")}
           />
           <FormControl
             type={FormControlType.Password}
-            label={t("Key")}
-            placeholder={t("E.g. {{example}}", { example: t("secret key") })}
+            label={t("key")}
+            placeholder={t("eG", { example: t("secretKey") })}
             required
             control={form.control}
             name="privKey"
@@ -102,24 +102,24 @@ export default function AdministrationDeviceCredentialForm() {
         <>
           <FormControl
             required
-            label={t("Username")}
-            placeholder={t("E.g. {{example}}", { example: "admin" })}
+            label={t("username")}
+            placeholder={t("eG", { example: "admin" })}
             control={form.control}
             name="username"
           />
           <FormControl
             required
             type={FormControlType.Password}
-            label={t("Password")}
-            placeholder={t("Type your password")}
+            label={t("password")}
+            placeholder={t("typeYourPassword")}
             control={form.control}
             name="password"
           />
           <FormControl
             required
             type={FormControlType.Password}
-            label={t("Super password")}
-            placeholder={t("Type your super password")}
+            label={t("superPassword")}
+            placeholder={t("typeYourSuperPassword")}
             control={form.control}
             name="superPassword"
           />
@@ -129,40 +129,40 @@ export default function AdministrationDeviceCredentialForm() {
         <>
           <FormControl
             required
-            label={t("Username")}
-            placeholder={t("E.g. {{example}}", { example: "admin" })}
+            label={t("username")}
+            placeholder={t("eG", { example: "admin" })}
             control={form.control}
             name="username"
           />
           <FormControl
             required
             type={FormControlType.LongText}
-            label={t("RSA Public Key")}
-            placeholder={t("Type your public key")}
+            label={t("rsaPublicKey")}
+            placeholder={t("typeYourPublicKey")}
             control={form.control}
             name="publicKey"
           />
           <FormControl
             required
             type={FormControlType.LongText}
-            label={t("SSH Private Key")}
-            placeholder={t("Type your private key")}
+            label={t("sshPrivateKey")}
+            placeholder={t("typeYourPrivateKey")}
             control={form.control}
             name="privateKey"
           />
           <FormControl
             required
             type={FormControlType.Password}
-            label={t("Passphrase")}
-            placeholder={t("Type your passphrase")}
+            label={t("passphrase")}
+            placeholder={t("typeYourPassphrase")}
             control={form.control}
             name="password"
           />
           <FormControl
             required
             type={FormControlType.Password}
-            label={t("Super password")}
-            placeholder={t("Type your super password")}
+            label={t("superPassword")}
+            placeholder={t("typeYourSuperPassword")}
             control={form.control}
             name="superPassword"
           />
@@ -172,8 +172,8 @@ export default function AdministrationDeviceCredentialForm() {
         type
       ) && (
         <FormControl
-          label={t("Community")}
-          placeholder={t("E.g. {{example}}", { example: "public" })}
+          label={t("community")}
+          placeholder={t("eG", { example: "public" })}
           required
           control={form.control}
           name="community"

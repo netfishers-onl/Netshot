@@ -63,29 +63,29 @@ export default function DeviceInterfaceScreen() {
         data.find((i) => !!i.virtualDevice) &&
           columnHelper.accessor("virtualDevice", {
             cell: (info) => <Text>{info.getValue()}</Text>,
-            header: t("Virtual device"),
+            header: t("virtualDevice"),
             enableSorting: true,
           }),
         columnHelper.accessor("interfaceName", {
           cell: (info) => <Text>{info.getValue()}</Text>,
-          header: t("Name"),
+          header: t("name"),
           enableSorting: true,
         }),
         columnHelper.accessor("enabled", {
           cell: (info) =>
             info.getValue() === false ? (
-              <Tag.Root colorPalette="red">{t("Disabled")}</Tag.Root>
+              <Tag.Root colorPalette="red">{t("disabled")}</Tag.Root>
             ) : null,
           header: "",
         }),
         columnHelper.accessor("level3", {
           cell: (info) =>
-            info.getValue() === false ? <Tag.Root colorPalette="grey">{t("L2")}</Tag.Root> : null,
+            info.getValue() === false ? <Tag.Root colorPalette="grey">{t("l2")}</Tag.Root> : null,
           header: "",
         }),
         columnHelper.accessor("description", {
           cell: (info) => <Text>{info.getValue()}</Text>,
-          header: t("Description"),
+          header: t("description"),
           enableSorting: true,
         }),
         columnHelper.accessor("macAddress", {
@@ -95,13 +95,13 @@ export default function DeviceInterfaceScreen() {
             }
             return ""
           },
-          header: t("MAC Address"),
+          header: t("macAddress"),
           enableSorting: true,
         }),
         data.find((i) => !!i.vrfInstance) &&
           columnHelper.accessor("vrfInstance", {
             cell: (info) => <Text>{info.getValue()}</Text>,
-            header: t("VRF"),
+            header: t("vrf"),
             enableSorting: true,
           }),
         columnHelper.accessor("ip4Addresses", {
@@ -123,7 +123,7 @@ export default function DeviceInterfaceScreen() {
             }
             return ""
           },
-          header: t("IP Address"),
+          header: t("ipAddress"),
           enableSorting: true,
         }),
       ].filter((c) => !!c),
@@ -134,7 +134,7 @@ export default function DeviceInterfaceScreen() {
     <Stack gap="6" overflow="auto">
       <Stack direction="row" gap="3">
         <Search
-          placeholder={t("Search by virtual device, name, description, mac address, ip...")}
+          placeholder={t("searchByVirtualDeviceNameDescriptionMacAddressIp")}
           onQuery={pagination.onQuery}
           w="30%"
         />
@@ -152,9 +152,9 @@ export default function DeviceInterfaceScreen() {
             <DataTable columns={columns} data={data} loading={isPending} />
           ) : (
             <EmptyResult
-              title={t("There is no interface")}
+              title={t("thereIsNoInterface")}
               description={t(
-                "This device does not have any interface, please check its configuration"
+                "thisDeviceDoesNotHaveAnyInterfacePleaseCheckItsConfiguration"
               )}
             />
           )}

@@ -67,7 +67,7 @@ function ConfigurationComplianceSidebarSearchFilter(
 
   const open = () => {
     const dialogRef = dialog.open({
-      title: t("Advanced filters"),
+      title: t("advancedFilters"),
       description: <ConfigurationComplianceSidebarSearchFilterForm />,
       form,
       onSubmit(values: FilterForm) {
@@ -81,10 +81,10 @@ function ConfigurationComplianceSidebarSearchFilter(
         dialogRef.close()
       },
       submitButton: {
-        label: t("Apply filters"),
+        label: t("applyFilters"),
       },
       cancelButton: {
-        label: t("Clear all"),
+        label: t("clearAll"),
       },
     })
   }
@@ -113,13 +113,13 @@ export default function ConfigurationComplianceSidebarSearch() {
     <Stack p="6" gap="5">
       <Search
         clear={Boolean(query)}
-        placeholder={t("Search...")}
+        placeholder={t("search2")}
         onQuery={onQuery}
         onClear={onClear}
       >
         <ConfigurationComplianceSidebarSearchFilter
           renderItem={(open) => (
-            <IconButton onClick={open} variant="ghost" aria-label={t("Open filter")}>
+            <IconButton onClick={open} variant="ghost" aria-label={t("openFilter")}>
               <Icon name="filter" />
             </IconButton>
           )}

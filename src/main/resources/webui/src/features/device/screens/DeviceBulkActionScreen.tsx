@@ -25,11 +25,11 @@ export default function DeviceBulkActionScreen() {
       <Stack gap="8" w="20%">
         <Stack gap="3">
           <Heading as="h1" fontSize="4xl">
-            {t("Bulk actions")}
+            {t("bulkActions")}
           </Heading>
           <Text color="grey.500">
             {t(
-              "You've selected {{count}} devices, the following actions apply to all of the selected devices",
+              "youVeSelectedDevicesTheFollowingActionsApplyToAllOfTheSelect",
               {
                 count: selected.length,
               }
@@ -44,7 +44,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="play" />
-                  {t("Run script")}
+                  {t("runScript")}
                 </Button>
               )}
             />
@@ -55,7 +55,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="camera" />
-                  {t("Take snapshot")}
+                  {t("takeSnapshot")}
                 </Button>
               )}
             />
@@ -66,7 +66,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="checkCircle" />
-                  {t("Check compliance")}
+                  {t("checkCompliance")}
                 </Button>
               )}
             />
@@ -77,7 +77,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="activity" />
-                  {t("Run diagnostics")}
+                  {t("runDiagnostics")}
                 </Button>
               )}
             />
@@ -88,7 +88,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="edit" />
-                  {t("Edit")}
+                  {t("edit")}
                 </Button>
               )}
             />
@@ -99,7 +99,7 @@ export default function DeviceBulkActionScreen() {
                 renderItem={(open) => (
                   <Button justifyContent="start" onClick={open} flex="1">
                     <Icon name="zap" />
-                    {t("Enable")}
+                    {t("enable")}
                   </Button>
                 )}
               />
@@ -109,7 +109,7 @@ export default function DeviceBulkActionScreen() {
                 renderItem={(open) => (
                   <Button justifyContent="start" onClick={open} flex="1">
                     <Icon name="zapOff" />
-                    {t("Disable")}
+                    {t("disable")}
                   </Button>
                 )}
               />
@@ -121,7 +121,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="trash" />
-                  {t("Remove")}
+                  {t("remove2")}
                 </Button>
               )}
             />

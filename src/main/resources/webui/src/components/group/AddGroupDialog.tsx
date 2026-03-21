@@ -43,10 +43,10 @@ export default function AddGroupDialog() {
 
   const title = useMemo(() => {
     if (formStep === FormStep.Type) {
-      return t("Choose group type")
+      return t("chooseGroupType")
     }
 
-    return t("Create {{type}} group", {
+    return t("createGroup", {
       type: groupType === GroupType.Static ? t("static") : t("dynamic"),
     })
   }, [t, formStep, groupType])
@@ -164,15 +164,15 @@ export default function AddGroupDialog() {
                 {formStep === FormStep.Type && (
                   <Stack direction="row" gap="5">
                     <BoxWithIconButton
-                      title={t("Static")}
-                      description={t("Create a simple static group of devices")}
+                      title={t("static2")}
+                      description={t("createASimpleStaticGroupOfDevices")}
                       icon="server"
                       isActive={groupType === GroupType.Static}
                       onClick={() => setGroupType(GroupType.Static)}
                     />
                     <BoxWithIconButton
-                      title={t("Dynamic")}
-                      description={t("Create a dynamically populated group of devices")}
+                      title={t("dynamic2")}
+                      description={t("createADynamicallyPopulatedGroupOfDevices")}
                       icon="code"
                       isActive={groupType === GroupType.Dynamic}
                       onClick={() => setGroupType(GroupType.Dynamic)}
@@ -185,27 +185,27 @@ export default function AddGroupDialog() {
                     <Stack gap="9" w="340px">
                       <Stack gap="5">
                         <Heading as="h4" size="md">
-                          {t("Information")}
+                          {t("information")}
                         </Heading>
                         <FormControl
                           required
                           control={form.control}
                           name="name"
-                          label={t("Name")}
-                          placeholder={t("Enter the group name")}
+                          label={t("name")}
+                          placeholder={t("enterTheGroupName")}
                         />
                         <FormControl
                           required
                           control={form.control}
                           name="folder"
-                          label={t("Folder")}
-                          placeholder={t("E.g. {{example}}", { example: t("Folder A/Subfolder B/ ...") })}
-                          helperText={t("Use slashes to give a folder path")}
+                          label={t("folder")}
+                          placeholder={t("eG", { example: t("folderASubfolderB") })}
+                          helperText={t("useSlashesToGiveAFolderPath")}
                         />
                         <Separator />
                         <Switch
-                          label={t("Reports")}
-                          description={t("Show this group in reports")}
+                          label={t("reports")}
+                          description={t("showThisGroupInReports")}
                           control={form.control}
                           name="visibleInReports"
                         />
@@ -216,15 +216,15 @@ export default function AddGroupDialog() {
                           <Stack gap="5">
                             <Stack gap="2">
                               <Heading as="h4" size="md">
-                                {t("Populate")}
+                                {t("populate")}
                               </Heading>
                               <Text color="grey.400">
-                                {t("Define the search criteria to dynamically populate the group")}
+                                {t("defineTheSearchCriteriaToDynamicallyPopulateTheGroup")}
                               </Text>
                             </Stack>
                             {driver && (
                               <Tag.Root colorPalette="grey" alignSelf="start">
-                                {t("Device type: ")} {driver}
+                                {t("deviceType")} {driver}
                               </Tag.Root>
                             )}
                             {query?.length > 0 && (
@@ -239,7 +239,7 @@ export default function AddGroupDialog() {
                               }}
                               renderItem={(open) => (
                                 <Button alignSelf="start" onClick={open}>
-                                  {t("Edit query")}
+                                  {t("editQuery")}
                                 </Button>
                               )}
                               onSubmit={updateQuery}
@@ -252,8 +252,8 @@ export default function AddGroupDialog() {
                       <Heading as="h4" size="md">
                         {t(
                           groupType === GroupType.Static
-                            ? "Selected devices"
-                            : "Device list preview"
+                            ? "selectedDevices"
+                            : "deviceListPreview"
                         )}
                       </Heading>
                       {groupType === GroupType.Static && <StaticGroupDeviceList />}
@@ -270,10 +270,10 @@ export default function AddGroupDialog() {
               </Dialog.Body>
               <Dialog.Footer>
                 <Stack direction="row" gap="3">
-                  <Button onClick={close}>{t("Cancel")}</Button>
+                  <Button onClick={close}>{t("cancel")}</Button>
                   {formStep === FormStep.Type ? (
                     <Button variant="primary" onClick={next}>
-                      {t("Next")}
+                      {t("next")}
                     </Button>
                   ) : (
                     <Button
@@ -282,7 +282,7 @@ export default function AddGroupDialog() {
                       loading={createMutation.isPending}
                       variant="primary"
                     >
-                      {t("Create")}
+                      {t("create")}
                     </Button>
                   )}
                 </Stack>

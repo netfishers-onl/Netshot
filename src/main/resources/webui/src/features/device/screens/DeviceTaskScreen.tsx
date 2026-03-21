@@ -45,19 +45,19 @@ export default function DeviceTaskScreen() {
     () => [
       columnHelper.accessor("taskDescription", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Type"),
+        header: t("type"),
       }),
       columnHelper.accessor("status", {
         cell: (info) => <TaskStatusTag status={info.getValue()} />,
-        header: t("Status"),
+        header: t("status"),
       }),
       columnHelper.accessor("executionDate", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("N/A")}</Text>,
-        header: t("Execution time"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
+        header: t("executionTime"),
       }),
       columnHelper.accessor("comments", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("Comments"),
+        header: t("comments"),
       }),
       columnHelper.display({
         id: "actions",
@@ -67,7 +67,7 @@ export default function DeviceTaskScreen() {
             colorPalette="green"
             onClick={() => openTask(info.row.original.id)}
           >
-            {t("See details")}
+            {t("seeDetails")}
           </Button>
         ),
         header: "",
@@ -92,13 +92,13 @@ export default function DeviceTaskScreen() {
           </Stack>
         ) : (
           <>
-            <Heading size="md">{t("Last 20 tasks on this device")}</Heading>
+            <Heading size="md">{t("last20TasksOnThisDevice")}</Heading>
             {data?.length > 0 ? (
               <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
-                title={t("There is no task")}
-                description={t("This device does not have any task")}
+                title={t("thereIsNoTask")}
+                description={t("thisDeviceDoesNotHaveAnyTask")}
               />
             )}
           </>

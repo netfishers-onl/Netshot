@@ -100,7 +100,7 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
             <Stack direction="row" flex="1">
               <Button onClick={() => navigate("previous")} disabled={isFirst}>
                 <LuArrowLeft />
-                {t("Previous")}
+                {t("previous")}
               </Button>
               <Box w="280px">
                 <DeviceConfigurationSelect
@@ -113,7 +113,7 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
 
             <Stack>
               <Select
-                placeholder={t("Select an attribute")}
+                placeholder={t("selectAnAttribute")}
                 control={form.control}
                 name="attribute"
                 options={attributeOptions}
@@ -130,7 +130,7 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
                 />
               </Box>
               <Button onClick={() => navigate("next")} disabled={isLast}>
-                {t("Next")}
+                {t("next")}
                 <LuArrowRight />
               </Button>
             </Stack>

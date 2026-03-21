@@ -41,6 +41,6 @@ export function DeviceAttributeValue(props: DeviceAttributeValueProps) {
         />
       )
     default:
-      return <Text>{t("Unsupported attribute")}</Text>
+      return <Text>{t("unsupportedAttribute")}</Text>
   }
 }

@@ -44,7 +44,7 @@ export default function DeviceSidebarSearchList() {
   if (data?.length === 0) {
     return (
       <Center flex="1">
-        <Text>{t("No diagnostic found")}</Text>
+        <Text>{t("noDiagnosticFound")}</Text>
       </Center>
     )
   }

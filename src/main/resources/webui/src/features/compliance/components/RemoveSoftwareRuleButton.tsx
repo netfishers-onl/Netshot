@@ -32,15 +32,15 @@ export default function RemoveSoftwareRuleButton(props: RemoveSoftwareRuleButton
   const open = (evt: MouseEvent) => {
     evt?.stopPropagation()
     const dialogRef = dialog.open(MUTATIONS.SOFTWARE_RULE_REMOVE, {
-      title: t("Remove software rule"),
-      description: <Text>{t("You are about to remove this software rule")}</Text>,
+      title: t("removeSoftwareRule"),
+      description: <Text>{t("youAreAboutToRemoveThisSoftwareRule")}</Text>,
       async onConfirm() {
         await mutation.mutateAsync()
         queryClient.invalidateQueries({ queryKey: [QUERIES.SOFTWARE_RULE_LIST] })
         dialogRef.close()
       },
       confirmButton: {
-        label: t("Remove"),
+        label: t("remove2"),
         props: {
           colorPalette: "red",
         },

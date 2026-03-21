@@ -68,17 +68,17 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
   return (
     <Stack gap="5">
       <TreeGroupSelector value={group ? [group] : []} onChange={onGroupSelect} withAny />
-      <DeviceTypeSelect control={form.control} name="driver" placeholder={t("[Any]")} isClearable />
+      <DeviceTypeSelect control={form.control} name="driver" placeholder={t("any")} isClearable />
       <FormControl
         required
         control={form.control}
         name="family"
-        label={t("Device family")}
-        placeholder={t("E.g. {{example}}", { example: "Cisco ASR9000 Series" })}
+        label={t("deviceFamily")}
+        placeholder={t("eG", { example: "Cisco ASR9000 Series" })}
         suffix={
           <IconButton
-            aria-label={t(familyRegExp ? "Switch to text" : "Switch to RegExp")}
-            title={t(familyRegExp ? "Switch to text" : "Switch to RegExp")}
+            aria-label={t(familyRegExp ? "switchToText" : "switchToRegexp")}
+            title={t(familyRegExp ? "switchToText" : "switchToRegexp")}
             variant="ghost"
             colorPalette="green"
             onClick={toggleFamilyRegExp}
@@ -91,12 +91,12 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
         required
         control={form.control}
         name="partNumber"
-        label={t("Part number")}
-        placeholder={t("E.g. {{example}}", { example: "FK-X0012" })}
+        label={t("partNumber")}
+        placeholder={t("eG", { example: "FK-X0012" })}
         suffix={
           <IconButton
-            aria-label={t(partNumberRegExp ? "Switch to text" : "Switch to RegExp")}
-            title={t(partNumberRegExp ? "Switch to text" : "Switch to RegExp")}
+            aria-label={t(partNumberRegExp ? "switchToText" : "switchToRegexp")}
+            title={t(partNumberRegExp ? "switchToText" : "switchToRegexp")}
             variant="ghost"
             colorPalette="green"
             onClick={togglePartNumberRegExp}
@@ -108,14 +108,14 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
       <FormControl
         control={form.control}
         name="endOfLife"
-        label={t("End of life")}
+        label={t("endOfLife")}
         type={FormControlType.Date}
         required
       />
       <FormControl
         control={form.control}
         name="endOfSale"
-        label={t("End of sale")}
+        label={t("endOfSale")}
         type={FormControlType.Date}
         required
       />

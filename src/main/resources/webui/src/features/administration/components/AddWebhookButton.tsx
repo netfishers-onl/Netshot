@@ -48,7 +48,7 @@ export default function AddWebhookButton(props: AddWebhookButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_HOOK_CREATE, {
-      title: t("Create webhook"),
+      title: t("createWebhook"),
       description: <AdministrationWebhookForm />,
       form,
       size: "lg",
@@ -66,8 +66,8 @@ export default function AddWebhookButton(props: AddWebhookButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("Webhook {{name}} has been successfully created", {
+          title: t("success"),
+          description: t("webhookHasBeenSuccessfullyCreated", {
             name: values.name,
           }),
         })
@@ -80,7 +80,7 @@ export default function AddWebhookButton(props: AddWebhookButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("Create"),
+        label: t("create"),
       },
     })
   }

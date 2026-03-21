@@ -52,7 +52,7 @@ export default function EditWebhookButton(props: EditWebhookButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_HOOK_UPDATE, {
-      title: t("Update webhook"),
+      title: t("updateWebhook"),
       description: <AdministrationWebhookForm />,
       form,
       size: "lg",
@@ -70,8 +70,8 @@ export default function EditWebhookButton(props: EditWebhookButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("Success"),
-          description: t("Webhook {{name}} has been successfully updated", {
+          title: t("success"),
+          description: t("webhookHasBeenSuccessfullyUpdated", {
             name: values.name,
           }),
         })
@@ -82,7 +82,7 @@ export default function EditWebhookButton(props: EditWebhookButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("Apply changes"),
+        label: t("applyChanges"),
       },
     })
   }

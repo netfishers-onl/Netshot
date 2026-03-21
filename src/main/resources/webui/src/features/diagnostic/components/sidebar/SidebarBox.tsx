@@ -15,13 +15,13 @@ const SidebarBox = forwardRef((props: DiagnosticBoxProps, ref: LegacyRef<HTMLDiv
 
   const type = useMemo(() => {
     if (diagnostic.type === DiagnosticType.Simple) {
-      return t("Simple")
+      return t("simple")
     } else if (diagnostic.type === DiagnosticType.Javascript) {
-      return t("Javascript")
+      return t("javascript")
     } else if (diagnostic.type === DiagnosticType.Python) {
-      return t("Python")
+      return t("python")
     } else {
-      return t("Unknown")
+      return t("unknown3")
     }
   }, [diagnostic])
 
@@ -54,7 +54,7 @@ const SidebarBox = forwardRef((props: DiagnosticBoxProps, ref: LegacyRef<HTMLDiv
               </Badge>
             )}
             <Badge colorPalette={diagnostic?.enabled ? "green" : "red"}>
-              {diagnostic?.enabled ? t("Enabled") : t("Disabled")}
+              {diagnostic?.enabled ? t("enabled") : t("disabled")}
             </Badge>
           </Stack>
         </Stack>

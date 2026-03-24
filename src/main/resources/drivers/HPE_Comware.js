@@ -21,7 +21,7 @@ const Info = {
 	name: "HPEComware",
 	description: "HPE Comware OS",
 	author: "Netshot Team",
-	version: "0.3"
+	version: "0.4"
 };
 
 const Config = {
@@ -204,8 +204,9 @@ function snapshot(cli, device, config) {
 	config.set("bootVersion", bootVersion);
 
 	device.set("networkClass", "SWITCHROUTER");
-	
-	const platformMatch = displayVersion.match(/^HPE? (.+?)(-| ).*uptime is [0-9]+ weeks/m);
+
+	// Fix: use "weeks?" to match both singular ("1 week") and plural ("2 weeks")
+	const platformMatch = displayVersion.match(/^HPE? (.+?)(-| ).*uptime is [0-9]+ weeks?/m);
 	const platform = platformMatch ? platformMatch[1] : "Unknown Comware switch";
 	device.set("family", platform);
 
@@ -215,20 +216,54 @@ function snapshot(cli, device, config) {
 	device.set("contact", contactMatch ? contactMatch[1] : "");
 
 	const displayDeviceManuinfo = cli.command("display device manuinfo");
-	const partPattern = /(^Chassis [0-9+]:)?\n+\s*(.+):\n\s*DEVICE_NAME\s*:\s*(.+)\n\s*DEVICE_SERIAL_NUMBER\s*:\s*(.+)/mg;
-	let chassis = null;
-	while (true) {
-		const partMatch = partPattern.exec(displayDeviceManuinfo);
-		if (!partMatch) break;
-		if (partMatch[1]) {
-			chassis = partMatch[1];
+
+	// Parse "display device manuinfo" line by line to handle the following observed variants:
+	//   - "Slot X:"          Comware 5 (e.g. 3600, A5500): no leading space, colon after number
+	//   - " Slot X CPU 0:"   Comware 7 IRF (e.g. 5130 EI): leading space, CPU suffix, colon
+	//   - " Slot X"          Some Comware 7 builds (e.g. 5900 old firmware): no trailing colon
+	// Additional considerations:
+	//   - First slot header may not be preceded by a blank line (single-slot devices)
+	//   - Line endings may be "\r\n" depending on SSH/Telnet session settings
+	//   - Sub-components (Fan, Power) may expose their own DEVICE_NAME / DEVICE_SERIAL_NUMBER
+	//     fields and must not be captured as module serial numbers
+	// Slot names are normalized to "Slot X" (CPU suffix stripped) for consistency
+	// across Comware versions and IRF/standalone topologies.
+	let currentSlot = null;
+	let currentDeviceName = null;
+	let inSubComponent = false;
+	for (const line of displayDeviceManuinfo.split(/\r?\n/)) {
+		// Slot or Chassis header — normalize to "Slot X" / "Chassis X"
+		const slotMatch = line.match(/^\s*(Slot|Chassis)\s+(\d+)(?:\s+CPU\s+\d+)?\s*:?\s*$/);
+		if (slotMatch) {
+			currentSlot = `${slotMatch[1]} ${slotMatch[2]}`;
+			currentDeviceName = null;
+			inSubComponent = false;
+			continue;
 		}
-		const slot = chassis ? `${chassis} / ${partMatch[2]}` : partMatch[2];
-		device.add("module", {
-			slot,
-			partNumber: partMatch[3],
-			serialNumber: partMatch[4],
-		});
+		// Fan or Power sub-component header — skip their DEVICE_NAME / DEVICE_SERIAL_NUMBER
+		if (line.match(/^\s*(Fan|Power)\s+\d+\s*:?\s*$/)) {
+			inSubComponent = true;
+			continue;
+		}
+		if (inSubComponent) continue;
+		const deviceNameMatch = line.match(/^\s*DEVICE_NAME\s*:\s*(.+?)\s*$/);
+		if (deviceNameMatch) {
+			currentDeviceName = deviceNameMatch[1];
+			continue;
+		}
+		const serialMatch = line.match(/^\s*DEVICE_SERIAL_NUMBER\s*:\s*(.+?)\s*$/);
+		if (serialMatch && currentSlot) {
+			device.add("module", {
+				slot: currentSlot,
+				partNumber: currentDeviceName || "",
+				serialNumber: serialMatch[1],
+			});
+			// Use the first captured slot serial as the device-level serial number
+			// (Slot 1 / lowest member in an IRF stack)
+			if (!device.get("serialNumber")) {
+				device.set("serialNumber", serialMatch[1]);
+			}
+		}
 	}
 	
 	const vrfPattern = /^ip vpn-instance (.+)/mg;

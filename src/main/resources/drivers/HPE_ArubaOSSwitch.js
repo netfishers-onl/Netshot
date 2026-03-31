@@ -21,7 +21,7 @@ var Info = {
 	name: "HPEArubaOSSwitch",
 	description: "HPE ArubaOS-Switch",
 	author: "Netshot Team",
-	version: "1.4"
+	version: "1.6"
 };
 
 var Config = {
@@ -229,6 +229,7 @@ function snapshot(cli, device, config) {
 		partNumber: null,
 		serialNumber: null,
 		family: null,
+		model: null,
 	};
 
 	try {
@@ -236,11 +237,57 @@ function snapshot(cli, device, config) {
 		// Chassis: 3800-24G-PoE+-2SFP+ J9573A Serial Number: xxxxxxxxxx
 		const chassisMatch = showModules.match(/Chassis: (.+) +(J.+) +Serial Number: +(.+)/);
 		if (chassisMatch) {
-			const model = chassisMatch[1];
+			const model = chassisMatch[1].trim();
 			const platform = model.replace(/-.*/, "");
 			chassis.family = `Avaya ${platform}`;
-			chassis.partNumber = chassisMatch[2];
-			chassis.serialNumber = chassisMatch[3];
+			chassis.partNumber = chassisMatch[2].trim();
+			chassis.serialNumber = chassisMatch[3].trim();
+			chassis.model = model;
+		}
+
+		// [v1.5] Parse management module (5400zl, E5412zl)
+		// e.g. "  Management Module: J8726A      Serial Number:  xxxxxxxxxx   Core Dump: YES"
+		const mgmtMatch = showModules.match(
+			/Management Module:\s+(J[A-Z0-9]+)\s+Serial Number:\s+([A-Z0-9]+)/
+		);
+		if (mgmtMatch) {
+			device.add("module", {
+				slot: "Management",
+				partNumber: mgmtMatch[1],
+				serialNumber: mgmtMatch[2],
+			});
+		}
+
+		// [v1.5] Parse slot/member module lines.
+		// Covers all known output formats:
+		//   "  A     HP J8706A 24p SFP zl Module            xxxxxxxxxx     Up"
+		//   "  MM1   HP J9827A Management Module 5400Rzl2   xxxxxxxxxx     Active"
+		//   "  STK   Aruba JL084A 4-port Stacking Module    xxxxxxxxxx     Up"
+		//   "  St... Aruba JL084A 4-port Stacking Module    xxxxxxxxxx     Up"
+		//   "  1      STK      HP J9733A 2-port Stacking... xxxxxxxxxx     Up"
+		//   "  1     Stacking ... HP J9577A 4-port ...       xxxxxxxxxx"
+		const moduleLinePattern = /^\s+(.+?)\s+(?:HP|Aruba)\s+(J[A-Z0-9]+)\s+\S.+?\s+([A-Z][A-Z0-9]{7,})(?:\s|$)/mg;
+		while (true) {
+			const moduleLineMatch = moduleLinePattern.exec(showModules);
+			if (!moduleLineMatch) break;
+			const prefix = moduleLineMatch[1].trim();
+			const partNumber = moduleLineMatch[2];
+			const serialNumber = moduleLineMatch[3];
+
+			let slotLabel;
+			const prefixParts = prefix.match(/^(\d+)\s+(.+)$/);
+			if (prefixParts) {
+				slotLabel = `Member ${prefixParts[1]} / ${prefixParts[2].trim()}`;
+			}
+			else {
+				slotLabel = prefix;
+			}
+
+			device.add("module", {
+				slot: slotLabel,
+				partNumber,
+				serialNumber,
+			});
 		}
 	}
 	catch (err) {
@@ -292,53 +339,27 @@ function snapshot(cli, device, config) {
 	if (chassis.serialNumber) {
 		device.set("serialNumber", chassis.serialNumber);
 		if (chassis.partNumber) {
+			const chassisPN = chassis.model
+				? `${chassis.partNumber} ${chassis.model}`
+				: chassis.partNumber;
 			device.add("module", {
 				slot: "Chassis",
-				partNumber: chassis.partNumber,
+				partNumber: chassisPN,
 				serialNumber: chassis.serialNumber,
 			});
 		}
 	}
 
+	// [v1.5] Track member serials found by show stacking detail, to avoid
+	// duplicates when show system information is parsed later.
+	const stackingMemberSerials = {};
+
 	try {
 		const showStackingDetail = cli.command("show stacking detail");
 
-		// Switch(config)# show stacking detail                              
-
-		// Stack ID         : 00013863-bbc40700                                           
-																																									
-		// MAC Address      : 3863bb-c40745                                               
-		// Stack Topology   : Mesh                                                        
-		// Stack Status     : Active                                                      
-		// Split Policy     : One-Fragment-Up                                             
-		// Uptime           : 0d 1h 9m                                                    
-		// Software Version : KB.16.02.0000x                                              
-
-		// Name             : Aruba-Stack-3810M
-		// Contact          :                  
-		// Location         :                  
-
-		// Member ID        : 1 
-		// Mac Address      : 3863bb-c40700
-		// Type             : JL076A       
-		// Model            : JL076A 3810M-40G-8SR-PoE+-1-slot Switch               
-		// Priority         : 128                                                         
-		// Status           : Commander                                                   
-		// ROM Version      : KB.16.01.0005                                               
-		// Serial Number    : SG4ZGYZ092                                                   
-		// Uptime           : 0d 1h 10m                                                    
-		// CPU Utilization  : 2%                                                           
-		// Memory - Total   : 699,207,680 bytes                                            
-		// Free             : 516,210,096 bytes                                            
-		// Stack Ports -                                                                   
-		// #1 : Active, Peer member 2                                                      
-		// #2 : Active, Peer member 3                                                      
-		// #3 : Active, Peer member 2                                                      
-		// #4 : Active, Peer member 3                                                      
-
-		// Member ID        : 2 
-		// ...
-
+		// [v1.5] FIX: v1.4 used undeclared 'foundSerial' and 'serial' variables,
+		// causing a ReferenceError that silently aborted this entire try block.
+		let stackFoundSerial = false;
 		const memberPattern = /^Member ID *: *([0-9]+)\s*\n(.*\s*\n)*?Type *: *(J[A-Z0-9]+)\s*\n(.*\s*\n)*?Model *: *((Aruba|HP) )?(J[A-Z0-9]+) +(.+?)\s*\n(.*\s*\n)*?Serial Number *: *(.+?)\s*\n/mg;
 		while (true) {
 			const memberMatch = memberPattern.exec(showStackingDetail);
@@ -348,9 +369,10 @@ function snapshot(cli, device, config) {
 			const model = memberMatch[8];
 			const serialNumber = memberMatch[10];
 			const platform = model.replace(/-.*/, "");
-			if (!foundSerial) {
-				foundSerial = true;
-				device.set("serialNumber", serial);
+			stackingMemberSerials[id] = serialNumber;
+			if (!stackFoundSerial) {
+				stackFoundSerial = true;
+				device.set("serialNumber", serialNumber);
 				device.set("family", `Avaya ${platform}`);
 			}
 			device.add("module", {
@@ -362,6 +384,61 @@ function snapshot(cli, device, config) {
 	}
 	catch (err) {
 		cli.debug("show stacking doesn't seem to be supported");
+	}
+
+	// [v1.5] Parse 'show system information' (without dash) for per-member serial numbers.
+	// This is the ONLY source of chassis serials for 2930F VSF stacks (where show stacking
+	// detail is not supported). Also serves as fallback for 3810M/2920/2930M/3800 stacks
+	// if show stacking detail didn't capture them.
+	// Parses sections like:
+	//   " Member :1"       (3810M, 2920, 2930M, 3800)
+	//   " VSF-Member :1"   (2930F)
+	// followed by:
+	//   "  Serial Number      : xxxxxxxxxx"
+	try {
+		const showSysInfo = cli.command("show system information");
+		const sysInfoLines = showSysInfo.split("\n");
+		let currentMemberId = null;
+		let currentMemberSerial = null;
+		const sysInfoMembers = [];
+
+		for (const line of sysInfoLines) {
+			const memberHeaderMatch = line.match(/^\s*(?:VSF-)?Member\s*:(\d+)/);
+			if (memberHeaderMatch) {
+				if (currentMemberId !== null && currentMemberSerial !== null) {
+					sysInfoMembers.push({ id: currentMemberId, serial: currentMemberSerial });
+				}
+				currentMemberId = memberHeaderMatch[1];
+				currentMemberSerial = null;
+			}
+			else if (currentMemberId !== null) {
+				const serialLineMatch = line.match(/Serial Number\s+:\s+([A-Z0-9]+)/);
+				if (serialLineMatch) {
+					currentMemberSerial = serialLineMatch[1];
+				}
+			}
+		}
+		if (currentMemberId !== null && currentMemberSerial !== null) {
+			sysInfoMembers.push({ id: currentMemberId, serial: currentMemberSerial });
+		}
+
+		for (const mem of sysInfoMembers) {
+			// Skip if already captured by show stacking detail
+			if (!Object.values(stackingMemberSerials).includes(mem.serial)) {
+				device.add("module", {
+					slot: `Switch ${mem.id}`,
+					partNumber: chassis.partNumber || "",
+					serialNumber: mem.serial,
+				});
+			}
+			// Set device serial to first member if not already set
+			if (mem.id === "1" && !chassis.serialNumber) {
+				device.set("serialNumber", mem.serial);
+			}
+		}
+	}
+	catch (err) {
+		cli.debug("show system information doesn't seem to be supported");
 	}
 
 	// Switch ports

@@ -238,11 +238,12 @@ public abstract class Task implements Cloneable {
 	protected TaskContext logger = new TaskContext() {
 		@Override
 		public void log(Level level, String message, Object... params) {
+			String noNullMessage = message.replace('\0', '\u2400');
 			if (fullLogs != null) {
 				fullLogs
 					.append(Instant.now())
 					.append(" [").append(level).append("] ")
-					.append(MessageFormatter.arrayFormat(message, params).getMessage())
+					.append(MessageFormatter.arrayFormat(noNullMessage, params).getMessage())
 					.append("\n");
 			}
 			if (level.toInt() <= Level.TRACE.toInt()) {
@@ -252,7 +253,7 @@ public abstract class Task implements Cloneable {
 			logs
 				.append(Instant.now())
 				.append(" [").append(level).append("] ")
-				.append(MessageFormatter.arrayFormat(message, params).getMessage())
+				.append(MessageFormatter.arrayFormat(noNullMessage, params).getMessage())
 				.append("\n");
 		}
 

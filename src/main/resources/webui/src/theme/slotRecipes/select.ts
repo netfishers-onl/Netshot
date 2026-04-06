@@ -94,6 +94,14 @@ export const selectSlotRecipe = defineSlotRecipe({
           },
         },
       },
+      prefix: {
+        trigger: {
+        },
+        indicator: {
+          color: "green.500",
+        },
+        
+      },
     },
     size: {
       lg: {

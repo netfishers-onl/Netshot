@@ -21,11 +21,14 @@ function AboutContent() {
   const serverVersion = useMemo(() => serverInfo?.serverVersion, [serverInfo])
 
   return (
-    <Stack gap="4">
+    <Stack gap="6">
       <Alert.Root status="info" bg="blue.50">
-        {t("connectedToNetshotVersion", {
-          version: serverVersion,
-        })}
+        <Alert.Indicator />
+        <Alert.Title>
+          {t("connectedToNetshotVersion", {
+            version: serverVersion,
+          })}
+        </Alert.Title>
       </Alert.Root>
       <Stack>
         <Text asChild>

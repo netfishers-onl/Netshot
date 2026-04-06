@@ -25,9 +25,8 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
   const dialog = useFormDialogWithMutation()
 
   const defaultValues = useMemo(() => {
-    let values: Partial<DeviceCredentialForm> = {
+    const values: Partial<DeviceCredentialForm> = {
       name: credential?.name,
-      community: credential.community,
       mgmtDomain: null,
       type: credential.type,
     }
@@ -36,34 +35,37 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
       values.mgmtDomain = credential.mgmtDomain.id
     }
 
-    if (credential.type === CredentialSetType.SNMP_V3) {
-      values = {
-        ...values,
+    if (
+      credential.type === CredentialSetType.SNMP_V1 ||
+      credential.type === CredentialSetType.SNMP_V2C
+    ) {
+      Object.assign(values, {
+        community: credential.community,
+      })
+    } else if (credential.type === CredentialSetType.SNMP_V3) {
+      Object.assign(values, {
         username: credential.username,
         authType: credential.authType,
         authKey: credential.authKey,
         privType: credential.privType,
         privKey: credential.privKey,
-      }
+      })
     } else if (
       credential.type === CredentialSetType.SSH ||
       credential.type === CredentialSetType.Telnet
     ) {
-      values = {
-        ...values,
+      Object.assign(values, {
         username: credential.username,
         password: credential.password,
         superPassword: credential.superPassword,
-      }
+      })
     } else if (credential.type === CredentialSetType.SSHKey) {
-      values = {
-        ...values,
+      Object.assign(values, {
         username: credential.username,
-        publicKey: credential.publicKey,
         privateKey: credential.privateKey,
         password: credential.password,
         superPassword: credential.superPassword,
-      }
+      })
     }
 
     return values
@@ -86,7 +88,7 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_CREDENTIAL_SET_UPDATE, {
       title: t("editCredential"),
-      description: <AdministrationDeviceCredentialForm />,
+      description: <AdministrationDeviceCredentialForm freezeType />,
       form,
       size: "lg",
       async onSubmit(values: DeviceCredentialForm) {
@@ -102,7 +104,6 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
 
         if (
           type === CredentialSetType.SNMP_V1 ||
-          type === CredentialSetType.SNMP_V2 ||
           type === CredentialSetType.SNMP_V2C
         ) {
           payload = {
@@ -120,7 +121,10 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
             privType: values.privType,
             privKey: values.privKey,
           }
-        } else if (type === CredentialSetType.SSH || type === CredentialSetType.Telnet) {
+        } else if (
+          type === CredentialSetType.SSH ||
+          type === CredentialSetType.Telnet
+        ) {
           payload = {
             ...payload,
             username: values.username,
@@ -131,7 +135,6 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
           payload = {
             ...payload,
             username: values.username,
-            publicKey: values.publicKey,
             privateKey: values.privateKey,
             password: values.password,
             superPassword: values.superPassword,

@@ -61,7 +61,7 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
         queryClient.invalidateQueries({ queryKey: [QUERIES.SCRIPT_LIST] })
       },
       confirmButton: {
-        label: t("remove2"),
+        label: t("remove"),
         props: {
           colorPalette: "red",
         },

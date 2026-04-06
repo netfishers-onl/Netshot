@@ -14,6 +14,7 @@ import AddApiTokenButton from "../components/AddApiTokenButton"
 import RemoveApiTokenButton from "../components/RemoveApiTokenButton"
 import { QUERIES } from "../constants"
 import { useApiTokenLevelOptions } from "../hooks"
+import TableButtonStack from "../components/TableButtonStack"
 
 const columnHelper = createColumnHelper<ApiToken>()
 
@@ -54,11 +55,11 @@ export default function AdministrationApiTokenScreen() {
           const apiToken = info.row.original
 
           return (
-            <Stack direction="row" gap="0" justifyContent="end">
+            <TableButtonStack>
               <RemoveApiTokenButton
                 apiToken={apiToken}
                 renderItem={(open) => (
-                  <Tooltip content={t("remove2")}>
+                  <Tooltip content={t("remove")}>
                     <IconButton
                       aria-label={t("removeToken")}
                       variant="ghost"
@@ -70,7 +71,7 @@ export default function AdministrationApiTokenScreen() {
                   </Tooltip>
                 )}
               />
-            </Stack>
+            </TableButtonStack>
           )
         },
         header: "",
@@ -101,7 +102,7 @@ export default function AdministrationApiTokenScreen() {
           <AddApiTokenButton
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
-                <Plus />
+                <Icon name="plus" />
                 {t("create")}
               </Button>
             )}
@@ -125,7 +126,7 @@ export default function AdministrationApiTokenScreen() {
               >
                 <AddApiTokenButton
                   renderItem={(open) => (
-                    <Button variant="primary" onClick={open}>
+                    <Button variant="outline" onClick={open}>
                       <Plus />
                       {t("create")}
                     </Button>

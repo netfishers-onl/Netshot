@@ -6,9 +6,6 @@ export function useDiagnostics() {
   return useQuery({
     queryKey: [QUERIES.DIAGNOSTIC_LIST],
     queryFn: () =>
-      api.diagnostic.getAll({
-        limit: 999,
-        offset: 0,
-      }),
+      api.diagnostic.getAll({}),
   })
 }

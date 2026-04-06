@@ -140,7 +140,7 @@ export function useTask(status?: TaskStatus) {
     }),
     columnHelper.accessor("executionDate", {
       cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
-      header: t("executionTime"),
+      header: t("executionDate"),
     }),
     columnHelper.accessor("comments", {
       cell: (info) => <Text>{info.getValue()}</Text>,

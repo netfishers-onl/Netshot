@@ -97,7 +97,7 @@ export default function DeviceDiagnosticScreen() {
               <DeviceDiagnosticButton
                 devices={[device]}
                 renderItem={(open) => (
-                  <Button alignSelf="center" variant="primary" onClick={open}>
+                  <Button alignSelf="center" variant="outline" onClick={open}>
                     <Icon name="activity" />
                     {t("runDiagnostics")}
                   </Button>

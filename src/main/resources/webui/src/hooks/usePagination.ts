@@ -34,18 +34,15 @@ export type UsePaginationConfig = {
 export function usePagination(config?: UsePaginationConfig) {
   const baseConfig = useMemo(
     () => ({
-      limit: 9999, // 40
-      offset: 0,
-      query: "",
-      ...config,
+      ...config
     }),
     [config]
   );
 
-  const [limit, setLimit] = useState<number>(baseConfig.limit);
-  const [offset, setOffset] = useState<number>(baseConfig.offset);
-  const [query, setQuery] = useState<string>(baseConfig.query);
-  const [innerQuery, setInnerQuery] = useState<string>(baseConfig.query);
+  const [limit, setLimit] = useState<number | undefined>(baseConfig.limit);
+  const [offset, setOffset] = useState<number | undefined>(baseConfig.offset);
+  const [query, setQuery] = useState<string | undefined>(baseConfig.query);
+  const [innerQuery, setInnerQuery] = useState<string | undefined>(baseConfig.query);
   const throttledValue = useThrottle(innerQuery);
 
   const onQuery = useCallback((value: string) => {

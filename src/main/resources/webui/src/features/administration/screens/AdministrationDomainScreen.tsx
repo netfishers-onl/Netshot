@@ -14,6 +14,7 @@ import AddDomainButton from "../components/AddDomainButton"
 import EditDomainButton from "../components/EditDomainButton"
 import RemoveDomainButton from "../components/RemoveDomainButton"
 import { QUERIES } from "../constants"
+import TableButtonStack from "../components/TableButtonStack"
 
 const columnHelper = createColumnHelper<Domain>()
 
@@ -58,7 +59,7 @@ export default function AdministrationDomainScreen() {
           const domain = info.row.original
 
           return (
-            <Stack direction="row" gap="0" justifyContent="end">
+            <TableButtonStack>
               <EditDomainButton
                 domain={domain}
                 renderItem={(open) => (
@@ -77,7 +78,7 @@ export default function AdministrationDomainScreen() {
               <RemoveDomainButton
                 domain={domain}
                 renderItem={(open) => (
-                  <Tooltip content={t("remove2")}>
+                  <Tooltip content={t("remove")}>
                     <IconButton
                       aria-label={t("removeDomain")}
                       variant="ghost"
@@ -89,7 +90,7 @@ export default function AdministrationDomainScreen() {
                   </Tooltip>
                 )}
               />
-            </Stack>
+            </TableButtonStack>
           )
         },
         header: "",
@@ -145,7 +146,7 @@ export default function AdministrationDomainScreen() {
               >
                 <AddDomainButton
                   renderItem={(open) => (
-                    <Button variant="primary" onClick={open}>
+                    <Button variant="outline" onClick={open}>
                       <Plus />
                       {t("create")}
                     </Button>

@@ -91,7 +91,7 @@ export default function ComplianceHardwareRuleScreen() {
                 <RemoveHardwareRuleButton
                   rule={rule}
                   renderItem={(open) => (
-                    <Tooltip content={t("remove2")}>
+                    <Tooltip content={t("remove")}>
                       <IconButton
                         variant="ghost"
                         colorPalette="green"
@@ -164,7 +164,7 @@ export default function ComplianceHardwareRuleScreen() {
             >
               <AddHardwareRuleButton
                 renderItem={(open) => (
-                  <Button onClick={open} variant="primary">
+                  <Button onClick={open} variant="outline">
                     <Icon name="plus" />
                     {t("addRule")}
                   </Button>

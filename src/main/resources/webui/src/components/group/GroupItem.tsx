@@ -91,7 +91,7 @@ export default function GroupItem(props: GroupItemProps) {
                       renderItem={(open) => (
                         <Menu.Item onSelect={() => open(null)} value="item-1">
                           <Icon name="trash" />
-                          {t("remove2")}
+                          {t("remove")}
                         </Menu.Item>
                       )}
                     />

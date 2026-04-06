@@ -108,7 +108,7 @@ export default function RuleItem(props: RuleItemProps) {
                   renderItem={(open) => (
                     <Menu.Item onSelect={open} value="rule-remove">
                       <Icon name="trash" />
-                      {t("remove2")}
+                      {t("remove")}
                     </Menu.Item>
                   )}
                 />

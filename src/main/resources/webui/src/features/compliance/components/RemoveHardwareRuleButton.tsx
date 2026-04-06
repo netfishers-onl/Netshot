@@ -40,7 +40,7 @@ export default function RemoveHardwareRuleButton(props: RemoveHardwareRuleButton
         dialogRef.close()
       },
       confirmButton: {
-        label: t("remove2"),
+        label: t("remove"),
         props: {
           colorPalette: "red",
         },

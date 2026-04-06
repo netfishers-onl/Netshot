@@ -46,7 +46,7 @@ export default function RemoveUserButton(props: RemoveUserButtonProps) {
         dialogRef.close()
       },
       confirmButton: {
-        label: t("remove2"),
+        label: t("remove"),
         props: {
           colorPalette: "red",
         },

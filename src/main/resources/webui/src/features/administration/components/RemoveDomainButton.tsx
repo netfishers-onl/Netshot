@@ -48,7 +48,7 @@ export default function RemoveDomainButton(props: RemoveDomainButtonProps) {
           dialogRef.close()
         },
         confirmButton: {
-          label: t("remove2"),
+          label: t("remove"),
           props: {
             colorPalette: "red",
           },

@@ -27,10 +27,7 @@ function DeviceBulkEditForm() {
   const { data: credentialSets, isPending } = useQuery({
     queryKey: [QUERIES.CREDENTIAL_SET_LIST],
     queryFn: async () =>
-      api.admin.getAllCredentialSets({
-        offset: 0,
-        limit: 999,
-      }),
+      api.admin.getAllCredentialSets({}),
   })
 
   const credentialSetIds = useWatch({

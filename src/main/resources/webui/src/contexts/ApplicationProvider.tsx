@@ -18,20 +18,14 @@ export function ApplicationProvider(props: PropsWithChildren) {
       {
         queryKey: [QUERIES.DIAGNOSTIC_LIST],
         queryFn: async () => {
-          return api.diagnostic.getAll({
-            limit: 999,
-            offset: 0,
-          })
+          return api.diagnostic.getAll({})
         },
         enabled: !!auth.user,
       },
       {
         queryKey: [QUERIES.DOMAIN_LIST],
         queryFn: async () => {
-          return api.admin.getAllDomains({
-            limit: 999,
-            offset: 0,
-          })
+          return api.admin.getAllDomains({})
         },
         enabled: !!auth.user,
       },
@@ -45,10 +39,7 @@ export function ApplicationProvider(props: PropsWithChildren) {
       {
         queryKey: [QUERIES.CREDENTIAL_SET_LIST],
         queryFn: async () =>
-          api.admin.getAllCredentialSets({
-            offset: 0,
-            limit: 999,
-          }),
+          api.admin.getAllCredentialSets({}),
         enabled: !!auth.user,
       },
     ],

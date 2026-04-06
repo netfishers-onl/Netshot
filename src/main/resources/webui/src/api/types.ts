@@ -47,7 +47,6 @@ export type DeviceCredentialPayload = {
   username?: string
   password?: string
   superPassword?: string
-  publicKey?: string
   privateKey?: string
 }
 
@@ -84,7 +83,6 @@ export type CreateDevicePayload = {
   specificCredentialSet?: {
     password: string
     privateKey?: string
-    publicKey?: string
     superPassword: string
     type: string
     username: string
@@ -106,7 +104,6 @@ export type UpdateDevicePayload = {
   specificCredentialSet: {
     password: string
     privateKey?: string
-    publicKey?: string
     superPassword: string
     type?: string
     username: string

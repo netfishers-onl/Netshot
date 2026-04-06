@@ -120,7 +120,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
       const selectedOption = optionsMap.get(details.value[0])
 
       if (selectedOption) {
-        field.onChange(getItemValue(selectedOption))
+        field.onChange(selectedOption.value === null ? null : getItemValue(selectedOption))
         onSelectItem?.(selectedOption.value, options)
       }
     }
@@ -144,7 +144,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
       return field.value ? field.value : []
     }
 
-    return field.value ? [field.value] : []
+    return field.value !== null && field.value !== undefined ? [String(field.value)] : [""]
   }, [field, isLoading, multiple])
 
   return (

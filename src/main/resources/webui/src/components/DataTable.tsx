@@ -92,7 +92,7 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
       borderRadius="xl"
       transition="all .2s ease"
       _hover={{
-        bg: isDragging ? "white" : "green.50",
+        bg: isDragging ? "white" : "gray.50",
       }}
       ref={ref}
       css={{
@@ -150,7 +150,7 @@ function SimpleRow<T>(props: RowProps<T>) {
       borderRadius="xl"
       transition="all .2s ease"
       _hover={{
-        bg: "green.50",
+        bg: "grey.50",
       }}
       lineHeight="3"
       borderColor="grey.100"

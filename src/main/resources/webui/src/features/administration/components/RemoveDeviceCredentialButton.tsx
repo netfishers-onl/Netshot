@@ -53,7 +53,7 @@ export default function RemoveDeviceCredentialButton(props: RemoveDeviceCredenti
         })
       },
       confirmButton: {
-        label: t("remove2"),
+        label: t("remove"),
         props: {
           colorPalette: "red",
         },

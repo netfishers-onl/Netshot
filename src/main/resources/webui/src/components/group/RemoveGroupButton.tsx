@@ -55,7 +55,7 @@ export default function RemoveGroupButton(props: RemoveGroupButtonProps) {
         dialogRef.close()
       },
       confirmButton: {
-        label: t("remove2"),
+        label: t("remove"),
         props: {
           colorPalette: "red",
         },

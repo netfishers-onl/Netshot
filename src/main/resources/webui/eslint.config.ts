@@ -18,6 +18,11 @@ export default defineConfig([
   pluginReact.configs.flat.recommended,
   eslintConfigPrettier,
   {
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
     rules: {
       "react/react-in-jsx-scope": "off",
       "react/display-name": "off",

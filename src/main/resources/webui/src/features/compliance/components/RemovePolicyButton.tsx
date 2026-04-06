@@ -45,7 +45,7 @@ export default function RemovePolicyButton(props: RemovePolicyButtonProps) {
         dialogRef.close()
       },
       confirmButton: {
-        label: t("remove2"),
+        label: t("remove"),
         props: {
           colorPalette: "red",
         },

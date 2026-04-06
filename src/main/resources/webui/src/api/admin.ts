@@ -110,10 +110,10 @@ async function removeUser(id: number) {
   await httpClient.delete(`/users/${id}`);
 }
 
-async function getAllDrivers(queryParams: PaginationQueryParams, refresh: boolean = false) {
+async function getAllDrivers(pageParams: PaginationQueryParams, refresh: boolean = false) {
   return httpClient.get<DeviceType[]>(`/devicetypes`, {
     queryParams: {
-      ...queryParams,
+      ...pageParams,
       refresh,
     },
   });

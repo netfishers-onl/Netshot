@@ -40,7 +40,7 @@ export default function RemoveSoftwareRuleButton(props: RemoveSoftwareRuleButton
         dialogRef.close()
       },
       confirmButton: {
-        label: t("remove2"),
+        label: t("remove"),
         props: {
           colorPalette: "red",
         },

@@ -54,7 +54,7 @@ export default function RemoveWebhookButton(props: RemoveWebhookButtonProps) {
           })
         },
         confirmButton: {
-          label: t("remove2"),
+          label: t("remove"),
           props: {
             colorPalette: "red",
           },

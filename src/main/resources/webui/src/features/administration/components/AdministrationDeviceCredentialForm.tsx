@@ -1,8 +1,8 @@
-import { FormControl } from "@/components"
+import { DomainSelect, FormControl } from "@/components"
 import { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { CredentialSetType, HashingAlgorithm } from "@/types"
-import { Stack } from "@chakra-ui/react"
+import { Field, Group, Stack } from "@chakra-ui/react"
 import { useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import {
@@ -13,7 +13,7 @@ import {
 
 export type DeviceCredentialForm = {
   name: string
-  mgmtDomain: number
+  mgmtDomain: number | null
   community: string
   type: CredentialSetType
   authKey?: string
@@ -23,11 +23,15 @@ export type DeviceCredentialForm = {
   username?: string
   password?: string
   superPassword?: string
-  publicKey?: string
   privateKey?: string
 }
 
-export default function AdministrationDeviceCredentialForm() {
+export type AdministrationDeviceCredentialFormProps = {
+  freezeType?: boolean
+}
+
+export default function AdministrationDeviceCredentialForm(props: AdministrationDeviceCredentialFormProps) {
+  const { freezeType = false } = props
   const form = useFormContext<DeviceCredentialForm>()
   const { t } = useTranslation()
   const deviceCredentialTypeOptions = useDeviceCredentialTypeOptions()
@@ -48,9 +52,15 @@ export default function AdministrationDeviceCredentialForm() {
         control={form.control}
         name="name"
       />
-      {/* <DomainSelect required control={form.control} name="mgmtDomain" label={t("domain")} withAny /> */}
+      <DomainSelect
+        control={form.control}
+        name="mgmtDomain"
+        label={t("domain")}
+        withAny
+      />
       <Select
         required
+        disabled={freezeType}
         control={form.control}
         name="type"
         options={deviceCredentialTypeOptions.options}
@@ -66,36 +76,50 @@ export default function AdministrationDeviceCredentialForm() {
             control={form.control}
             name="username"
           />
-          <Select
-            control={form.control}
-            name="authType"
-            options={deviceCredentialAuthTypeOptions.options}
-            label={t("authType")}
-            placeholder={t("selectAnAuthType")}
-          />
-          <FormControl
-            type={FormControlType.Password}
-            label={t("authKey")}
-            placeholder={t("eG", { example: t("secretKey") })}
-            required
-            control={form.control}
-            name="authKey"
-          />
-          <Select
-            control={form.control}
-            name="privType"
-            options={deviceCredentialPrivateKeyTypeOptions.options}
-            label={t("privType")}
-            placeholder={t("selectAPrivType")}
-          />
-          <FormControl
-            type={FormControlType.Password}
-            label={t("key")}
-            placeholder={t("eG", { example: t("secretKey") })}
-            required
-            control={form.control}
-            name="privKey"
-          />
+          <Field.Root required>
+            <Field.Label>
+              {t("authKey")}
+              <Field.RequiredIndicator />
+            </Field.Label>
+            <Group w="full">
+              <Select
+                required
+                fieldProps={{ flex: "1", w: "auto" }}
+                control={form.control}
+                name="authType"
+                options={deviceCredentialAuthTypeOptions.options}
+              />
+              <FormControl
+                flex="2"
+                type={FormControlType.Password}
+                placeholder={t("eG", { example: t("secretKey") })}
+                control={form.control}
+                name="authKey"
+              />
+            </Group>
+          </Field.Root>
+          <Field.Root required>
+            <Field.Label>
+              {t("privKey")}
+              <Field.RequiredIndicator />
+            </Field.Label>
+            <Group w="full">
+              <Select
+                required
+                fieldProps={{ flex: "1", w: "auto" }}
+                control={form.control}
+                name="privType"
+                options={deviceCredentialPrivateKeyTypeOptions.options}
+              />
+              <FormControl
+                flex="2"
+                type={FormControlType.Password}
+                placeholder={t("eG", { example: t("secretKey") })}
+                control={form.control}
+                name="privKey"
+              />
+            </Group>
+          </Field.Root>
         </>
       )}
       {[CredentialSetType.SSH, CredentialSetType.Telnet].includes(type) && (
@@ -137,14 +161,6 @@ export default function AdministrationDeviceCredentialForm() {
           <FormControl
             required
             type={FormControlType.LongText}
-            label={t("rsaPublicKey")}
-            placeholder={t("typeYourPublicKey")}
-            control={form.control}
-            name="publicKey"
-          />
-          <FormControl
-            required
-            type={FormControlType.LongText}
             label={t("sshPrivateKey")}
             placeholder={t("typeYourPrivateKey")}
             control={form.control}
@@ -168,7 +184,7 @@ export default function AdministrationDeviceCredentialForm() {
           />
         </>
       )}
-      {[CredentialSetType.SNMP_V1, CredentialSetType.SNMP_V2, CredentialSetType.SNMP_V2C].includes(
+      {[CredentialSetType.SNMP_V1, CredentialSetType.SNMP_V2C].includes(
         type
       ) && (
         <FormControl

@@ -26,6 +26,7 @@ import AddUserButton from "../components/AddUserButton"
 import EditUserButton from "../components/EditUserButton"
 import RemoveUserButton from "../components/RemoveUserButton"
 import { QUERIES } from "../constants"
+import TableButtonStack from "../components/TableButtonStack"
 
 const columnHelper = createColumnHelper<User>()
 
@@ -88,7 +89,7 @@ export default function AdministrationUserScreen() {
           }
 
           return (
-            <Stack direction="row" gap="0" justifyContent="end">
+            <TableButtonStack>
               <EditUserButton
                 user={user}
                 renderItem={(open) => (
@@ -107,7 +108,7 @@ export default function AdministrationUserScreen() {
               <RemoveUserButton
                 user={user}
                 renderItem={(open) => (
-                  <Tooltip content={t("remove2")}>
+                  <Tooltip content={t("remove")}>
                     <IconButton
                       aria-label={t("removeUser")}
                       variant="ghost"
@@ -119,7 +120,7 @@ export default function AdministrationUserScreen() {
                   </Tooltip>
                 )}
               />
-            </Stack>
+            </TableButtonStack>
           )
         },
         header: "",
@@ -173,7 +174,7 @@ export default function AdministrationUserScreen() {
               >
                 <AddUserButton
                   renderItem={(open) => (
-                    <Button variant="primary" onClick={open}>
+                    <Button variant="outline" onClick={open}>
                       <Plus />
                       {t("create")}
                     </Button>

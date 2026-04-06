@@ -121,7 +121,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="trash" />
-                  {t("remove2")}
+                  {t("remove")}
                 </Button>
               )}
             />

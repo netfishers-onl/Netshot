@@ -50,7 +50,7 @@ export default function DiagnosticRemoveButton(props: DiagnosticRemoveButtonProp
         dialogRef.close()
       },
       confirmButton: {
-        label: t("remove2"),
+        label: t("remove"),
         props: {
           colorPalette: "red",
         },

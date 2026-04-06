@@ -13,6 +13,7 @@ import AddDeviceCredentialButton from "../components/AddDeviceCredentialButton"
 import EditDeviceCredentialButton from "../components/EditDeviceCredentialButton"
 import RemoveDeviceCredentialButton from "../components/RemoveDeviceCredentialButton"
 import { QUERIES } from "../constants"
+import TableButtonStack from "../components/TableButtonStack"
 
 const columnHelper = createColumnHelper<CredentialSet>()
 
@@ -66,7 +67,7 @@ export default function AdministrationDeviceCredentialScreen() {
           const credential = info.row.original
 
           return (
-            <Stack direction="row" gap="0" justifyContent="end">
+            <TableButtonStack>
               <EditDeviceCredentialButton
                 credential={credential}
                 renderItem={(open) => (
@@ -85,7 +86,7 @@ export default function AdministrationDeviceCredentialScreen() {
               <RemoveDeviceCredentialButton
                 credential={credential}
                 renderItem={(open) => (
-                  <Tooltip content={t("remove2")}>
+                  <Tooltip content={t("remove")}>
                     <IconButton
                       aria-label={t("removeDomain")}
                       variant="ghost"
@@ -97,7 +98,7 @@ export default function AdministrationDeviceCredentialScreen() {
                   </Tooltip>
                 )}
               />
-            </Stack>
+            </TableButtonStack>
           )
         },
         header: "",
@@ -155,7 +156,7 @@ export default function AdministrationDeviceCredentialScreen() {
               >
                 <AddDeviceCredentialButton
                   renderItem={(open) => (
-                    <Button variant="primary" onClick={open}>
+                    <Button variant="outline" onClick={open}>
                       <Icon name="plus" />
                       {t("create")}
                     </Button>

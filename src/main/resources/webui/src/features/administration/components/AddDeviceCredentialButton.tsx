@@ -31,13 +31,12 @@ export default function AddDeviceCredentialButton(props: AddDeviceCredentialButt
       name: "",
       username: "",
       mgmtDomain: null,
-      community: "public",
+      community: "",
       type: deviceCredentialTypeOptions.getFirst()?.value,
       authKey: "",
       privKey: "",
       password: "",
       superPassword: "",
-      publicKey: "",
       privateKey: "",
     },
   })
@@ -67,7 +66,6 @@ export default function AddDeviceCredentialButton(props: AddDeviceCredentialButt
 
         if (
           type === CredentialSetType.SNMP_V1 ||
-          type === CredentialSetType.SNMP_V2 ||
           type === CredentialSetType.SNMP_V2C
         ) {
           payload = {
@@ -102,7 +100,6 @@ export default function AddDeviceCredentialButton(props: AddDeviceCredentialButt
           payload = {
             ...payload,
             username: values.username,
-            publicKey: values.publicKey,
             privateKey: values.privateKey,
             password: values.password,
             superPassword: values.superPassword,

@@ -8,8 +8,9 @@ import {
   SystemStyleObject,
   Textarea,
 } from "@chakra-ui/react"
-import { forwardRef, ReactElement, RefObject, useCallback, useState } from "react"
+import { forwardRef, ReactElement, ReactNode, RefObject, useCallback, useState } from "react"
 import { useController, UseControllerProps } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 
 import Icon from "./Icon"
 
@@ -32,10 +33,10 @@ export type FormControlProps<T> = {
   uppercase?: boolean
   rows?: number
   onFocus?(): void
-  suffix?: ReactElement
-  prefix?: ReactElement
-} & InputProps &
-  SystemStyleObject &
+  suffix?: ReactNode
+  prefix?: ReactNode
+} & Omit<InputProps, "recipe"> &
+  Omit<SystemStyleObject, "recipe"> &
   UseControllerProps<T>
 
 declare module "react" {
@@ -70,6 +71,7 @@ function FormControl<T>(
     ...other
   } = props
 
+  const { t } = useTranslation()
   const [showPassword, setShowPassword] = useState(false)
 
   const {
@@ -86,7 +88,7 @@ function FormControl<T>(
   })
 
   const inputProps = {
-    onChange(e) {
+    onChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
       field.onChange(uppercase ? e.target.value.toUpperCase() : e)
     },
     onBlur() {
@@ -139,9 +141,10 @@ function FormControl<T>(
       )}
       {type === FormControlType.Password && (
         <InputGroup
+          startAddon={prefix}
           endElement={
             <Tooltip
-              content={showPassword ? "Hide password" : "Show password"}
+              content={showPassword ? t("hidePassword") : t("showPassword")}
               positioning={{
                 placement: "top",
               }}
@@ -150,7 +153,7 @@ function FormControl<T>(
                 <IconButton
                   variant="ghost"
                   bg="transparent!important"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t("hidePassword") : t("showPassword")}
                   onClick={togglePassword}
                 >
                   {showPassword ? <Icon name="eye" /> : <Icon name="eyeOff" />}

@@ -51,7 +51,7 @@ export default function RemoveRuleButton(props: RemoveRuleButtonProps) {
         dialogRef.close()
       },
       confirmButton: {
-        label: t("remove2"),
+        label: t("remove"),
         props: {
           colorPalette: "red",
         },

@@ -140,7 +140,7 @@ export default function DeviceDetailScreen() {
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="remove">
                                   <Icon name="trash" />
-                                  {t("remove2")}
+                                  {t("remove")}
                                 </Menu.Item>
                               )}
                             />

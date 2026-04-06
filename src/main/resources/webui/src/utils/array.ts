@@ -59,7 +59,10 @@ export function merge<A>(a: A[], b: A[], p: keyof A) {
  */
 export function search<T>(arr: T[], ...keys: Array<keyof T>) {
   return {
-    with(query: string) {
+    with(query?: string) {
+      if (!query) {
+        return arr;
+      }
       query = query.toLowerCase()
 
       return arr.filter((item) => {

@@ -52,7 +52,7 @@ export default function RemoveApiTokenButton(props: RemoveApiTokenButtonProps) {
         })
       },
       confirmButton: {
-        label: t("remove2"),
+        label: t("remove"),
         props: {
           colorPalette: "red",
         },

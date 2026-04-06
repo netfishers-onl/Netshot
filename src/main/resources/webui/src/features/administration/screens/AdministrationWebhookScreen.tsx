@@ -23,6 +23,7 @@ import AddWebhookButton from "../components/AddWebhookButton"
 import EditWebhookButton from "../components/EditWebhookButton"
 import RemoveWebhookButton from "../components/RemoveWebhookButton"
 import { QUERIES } from "../constants"
+import TableButtonStack from "../components/TableButtonStack"
 
 const columnHelper = createColumnHelper<Hook>()
 
@@ -77,7 +78,7 @@ export default function AdministrationApiTokenScreen() {
           const webhook = info.row.original
 
           return (
-            <Stack direction="row" gap="0" justifyContent="end">
+            <TableButtonStack>
               <EditWebhookButton
                 webhook={webhook}
                 renderItem={(open) => (
@@ -96,7 +97,7 @@ export default function AdministrationApiTokenScreen() {
               <RemoveWebhookButton
                 webhook={webhook}
                 renderItem={(open) => (
-                  <Tooltip content={t("remove2")}>
+                  <Tooltip content={t("remove")}>
                     <IconButton
                       aria-label={t("removeWebhook")}
                       variant="ghost"
@@ -108,7 +109,7 @@ export default function AdministrationApiTokenScreen() {
                   </Tooltip>
                 )}
               />
-            </Stack>
+            </TableButtonStack>
           )
         },
         header: "",
@@ -163,7 +164,7 @@ export default function AdministrationApiTokenScreen() {
               >
                 <AddWebhookButton
                   renderItem={(open) => (
-                    <Button variant="primary" onClick={open}>
+                    <Button variant="outline" onClick={open}>
                       <Plus />
                       {t("create")}
                     </Button>

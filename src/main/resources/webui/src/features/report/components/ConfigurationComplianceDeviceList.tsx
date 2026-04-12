@@ -43,7 +43,7 @@ export default function ConfigurationComplianceDeviceList(
     <>
       <Stack direction="row">
         <Search
-          placeholder={t("search2")}
+          placeholder={t("searchPlaceholder")}
           onQuery={pagination.onQuery}
           onClear={pagination.onQueryClear}
           w="30%"

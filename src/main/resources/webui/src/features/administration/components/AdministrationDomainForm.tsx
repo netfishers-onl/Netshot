@@ -25,7 +25,6 @@ export default function AdministrationDomainForm() {
         name="name"
       />
       <FormControl
-        type={FormControlType.LongText}
         label={t("description")}
         placeholder={t("eG", { example: t("describeTheDomain") })}
         required

@@ -57,7 +57,7 @@ export default function ComplianceSoftwareRuleScreen() {
     }),
     columnHelper.accessor("deviceType", {
       cell: (info) => <Text>{info.getValue() || t("any")}</Text>,
-      header: t("device2"),
+      header: t("device"),
       size: 10000,
     }),
     columnHelper.accessor("family", {
@@ -174,7 +174,7 @@ export default function ComplianceSoftwareRuleScreen() {
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("search2")}
+            placeholder={t("searchPlaceholder")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"

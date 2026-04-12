@@ -7,6 +7,9 @@ export const alertSlotRecipe = defineSlotRecipe({
     root: {
       borderRadius: "xl",
     },
+    title: {
+      fontSize: "md",
+    },
   },
   variants: {
     variant: {

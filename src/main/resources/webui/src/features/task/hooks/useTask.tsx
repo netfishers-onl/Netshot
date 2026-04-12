@@ -6,7 +6,7 @@ import { QUERIES } from "@/constants"
 import { useCustomDialog } from "@/dialog"
 import { usePagination } from "@/hooks"
 import { Task, TaskStatus } from "@/types"
-import { formatDate } from "@/utils"
+import { useI18nUtil } from "@/i18n"
 import { Button, Text } from "@chakra-ui/react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
@@ -23,6 +23,7 @@ const columnHelper = createColumnHelper<Task>()
 
 export function useTask(status?: TaskStatus) {
   const { t } = useTranslation()
+  const { formatDate } = useI18nUtil()
   const dialog = useCustomDialog()
 
   const pagination = usePagination({

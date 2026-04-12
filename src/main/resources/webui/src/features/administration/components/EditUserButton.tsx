@@ -49,7 +49,7 @@ export default function EditUserButton(props: EditUserButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_USER_UPDATE, {
-      title: t("editUser2"),
+      title: t("editUser"),
       description: <AdministrationUserForm showChangePassword />,
       form,
       size: "lg",

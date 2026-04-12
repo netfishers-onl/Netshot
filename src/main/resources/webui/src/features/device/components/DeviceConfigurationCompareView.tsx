@@ -7,8 +7,8 @@ import { Box, Button, Separator, Stack } from "@chakra-ui/react"
 import { useMemo } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { LuArrowLeft, LuArrowRight } from "react-icons/lu"
 import { useDeviceConfigs } from "../api"
+import { Icon } from "@/components"
 
 type FormData = {
   current: string
@@ -99,7 +99,7 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
           <Stack direction="row">
             <Stack direction="row" flex="1">
               <Button onClick={() => navigate("previous")} disabled={isFirst}>
-                <LuArrowLeft />
+                <Icon name="arrowLeft" />
                 {t("previous")}
               </Button>
               <Box w="280px">
@@ -131,7 +131,7 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
               </Box>
               <Button onClick={() => navigate("next")} disabled={isLast}>
                 {t("next")}
-                <LuArrowRight />
+                <Icon name="arrowRight" />
               </Button>
             </Stack>
           </Stack>

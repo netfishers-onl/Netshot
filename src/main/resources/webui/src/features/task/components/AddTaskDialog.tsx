@@ -206,7 +206,7 @@ export default function AddTaskDialog() {
       {
         icon: "play",
         type: TaskType.RunGroupDiagnostic,
-        label: t("diagnostic2"),
+        label: t("diagnostic"),
         description: t("runDiagnosticsOnAGroupOfDevices"),
       },
       {

@@ -2,6 +2,7 @@ import api from "@/api"
 import { DataTable, EmptyResult, EntityLink, Icon } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { LightConfig } from "@/types"
+import { useI18nUtil } from "@/i18n"
 import { formatDate, sortByDateAsc } from "@/utils"
 import { Button, IconButton, Input, Skeleton, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
@@ -17,6 +18,7 @@ const columnHelper = createColumnHelper<LightConfig>()
 
 export default function ReportConfigurationChangeList() {
   const { t } = useTranslation()
+  const { formatDate: formatLocalDate } = useI18nUtil()
   const periodOptions = usePeriodOptions()
 
   const [day, setDay] = useState<string>(formatDate(new Date().toISOString(), "yyyy-MM-dd"))
@@ -49,7 +51,7 @@ export default function ReportConfigurationChangeList() {
   const columns = useMemo(
     () => [
       columnHelper.accessor("changeDate", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
+        cell: (info) => <Text>{info.getValue() ? formatLocalDate(info.getValue()) : t("nA")}</Text>,
         header: t("dateTime"),
       }),
       columnHelper.accessor("deviceName", {
@@ -58,7 +60,7 @@ export default function ReportConfigurationChangeList() {
             {info.getValue()}
           </EntityLink>
         ),
-        header: t("device2"),
+        header: t("device"),
       }),
       columnHelper.accessor("author", {
         cell: (info) => <Text>{info.getValue()}</Text>,
@@ -90,7 +92,7 @@ export default function ReportConfigurationChangeList() {
         },
       }),
     ],
-    [t]
+    [t, formatLocalDate]
   )
 
   return (

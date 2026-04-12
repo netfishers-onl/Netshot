@@ -32,7 +32,9 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
     }
 
     if (credential.mgmtDomain) {
-      values.mgmtDomain = credential.mgmtDomain.id
+      Object.assign(values, {
+        mgmtDomain: credential.mgmtDomain.id,
+      })
     }
 
     if (
@@ -94,51 +96,53 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
       async onSubmit(values: DeviceCredentialForm) {
         const type = values.type
 
-        let payload: Partial<DeviceCredentialPayload> = {
+        const payload: Partial<DeviceCredentialPayload> = {
           name: values.name,
-          mgmtDomain: {
-            id: values.mgmtDomain,
-          },
+          mgmtDomain: null,
           type,
+        }
+
+        if (values.mgmtDomain) {
+          Object.assign(payload, {
+            mgmtDomain: {
+              id: values.mgmtDomain,
+            },
+          })
         }
 
         if (
           type === CredentialSetType.SNMP_V1 ||
           type === CredentialSetType.SNMP_V2C
         ) {
-          payload = {
-            ...payload,
+          Object.assign(payload, {
             community: values.community,
-          }
+          })
         }
 
         if (type === CredentialSetType.SNMP_V3) {
-          payload = {
-            ...payload,
+          Object.assign(payload, {
             username: values.username,
             authType: values.authType,
             authKey: values.authKey,
             privType: values.privType,
             privKey: values.privKey,
-          }
+          })
         } else if (
           type === CredentialSetType.SSH ||
           type === CredentialSetType.Telnet
         ) {
-          payload = {
-            ...payload,
+          Object.assign(payload, {
             username: values.username,
             password: values.password,
             superPassword: values.superPassword,
-          }
+          })
         } else if (type === CredentialSetType.SSHKey) {
-          payload = {
-            ...payload,
+          Object.assign(payload, {
             username: values.username,
             privateKey: values.privateKey,
             password: values.password,
             superPassword: values.superPassword,
-          }
+          })
         }
 
         await mutation.mutateAsync(payload)

@@ -113,7 +113,7 @@ export default function AdministrationDomainScreen() {
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("search2")}
+            placeholder={t("searchPlaceholder")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"

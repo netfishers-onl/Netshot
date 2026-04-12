@@ -10,6 +10,7 @@ export const dialogSlotRecipe = defineSlotRecipe({
     },
     content: {
       borderRadius: "3xl",
+      fontSize: "md",
     },
     header: {
       p: 7,
@@ -21,6 +22,7 @@ export const dialogSlotRecipe = defineSlotRecipe({
       top: 6,
       insetInlineEnd: 6,
     },
+
   },
   variants: {
     variant: {

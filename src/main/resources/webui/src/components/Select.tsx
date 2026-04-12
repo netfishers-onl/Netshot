@@ -67,7 +67,6 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
     "shouldUnregister",
     "defaultValue",
     "control",
-    "disabled",
     "exact",
   ])
 

@@ -14,7 +14,8 @@ import {
   DeviceSoftwareLevel,
   Level,
 } from "@/types"
-import { formatDate, getSoftwareLevelColor } from "@/utils"
+import { useI18nUtil } from "@/i18n"
+import { getSoftwareLevelColor } from "@/utils"
 
 import DeviceComplianceButton from "../components/DeviceComplianceButton"
 import { QUERIES } from "../constants"
@@ -24,6 +25,7 @@ const columnHelper = createColumnHelper<DeviceComplianceResult>()
 
 export default function DeviceComplianceScreen() {
   const { t } = useTranslation()
+  const { formatDate: formatLocalDate } = useI18nUtil()
   const { device } = useDevice()
   const params = useParams<{ id: string }>()
 
@@ -53,7 +55,7 @@ export default function DeviceComplianceScreen() {
                 <Tag.Root>{t("compliant")}</Tag.Root>
               )}
               {value === DeviceComplianceResultType.NonConfirming && (
-                <Tag.Root colorPalette="red">{t("nonCompliant2")}</Tag.Root>
+                <Tag.Root colorPalette="red">{t("nonCompliant")}</Tag.Root>
               )}
               {value === DeviceComplianceResultType.Disabled && (
                 <Tag.Root colorPalette="grey">{t("disabled")}</Tag.Root>
@@ -70,7 +72,7 @@ export default function DeviceComplianceScreen() {
         enableSorting: true,
       }),
       columnHelper.accessor("checkDate", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
+        cell: (info) => <Text>{info.getValue() ? formatLocalDate(info.getValue()) : t("nA")}</Text>,
         header: t("lastCheck"),
         enableSorting: true,
       }),
@@ -115,7 +117,7 @@ export default function DeviceComplianceScreen() {
               {device?.endOfSale ? (
                 <Text>
                   {t("endOfSaleSinceModule", {
-                    date: formatDate(device?.eosDate, "PPP"),
+                    date: formatLocalDate(device?.eosDate, { dateStyle: "long" }),
                     module: device?.eosModule?.partNumber,
                   })}
                 </Text>
@@ -123,7 +125,7 @@ export default function DeviceComplianceScreen() {
                 <Text>
                   {device?.eosDate
                     ? t("notEndOfSaleYetPlannedOnModule", {
-                        date: formatDate(device?.eosDate, "PPP"),
+                        date: formatLocalDate(device?.eosDate, { dateStyle: "long" }),
                         module: device?.eosModule?.partNumber,
                       })
                     : t("notEndOfSaleYet")}
@@ -134,7 +136,7 @@ export default function DeviceComplianceScreen() {
               {device?.endOfLife ? (
                 <Text>
                   {t("endOfLifeSinceModule", {
-                    date: formatDate(device?.eolDate, "PPP"),
+                    date: formatLocalDate(device?.eolDate, { dateStyle: "long" }),
                     module: device?.eolModule?.partNumber,
                   })}
                 </Text>
@@ -142,7 +144,7 @@ export default function DeviceComplianceScreen() {
                 <Text>
                   {device?.eolDate
                     ? t("notEndOfLifeYetPlannedOnModule", {
-                        date: formatDate(device?.eolDate, "PPP"),
+                        date: formatLocalDate(device?.eolDate, { dateStyle: "long" }),
                         module: device?.eolModule?.partNumber,
                       })
                     : t("notEndOfLifeYet")}

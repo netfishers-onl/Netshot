@@ -2,7 +2,8 @@ import api from "@/api"
 import { EmptyResult, ExpandablePanel, Icon, Search } from "@/components"
 import { usePagination } from "@/hooks"
 import { ClusterMember } from "@/types"
-import { formatDate, search } from "@/utils"
+import { useI18nUtil } from "@/i18n"
+import { search } from "@/utils"
 import { Button, Heading, Separator, Skeleton, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { formatDistanceStrict } from "date-fns"
@@ -12,6 +13,7 @@ import { QUERIES } from "../constants"
 
 export default function AdministrationClusteringScreen() {
   const { t } = useTranslation()
+  const { formatDate } = useI18nUtil()
   const pagination = usePagination()
 
   const {
@@ -37,7 +39,7 @@ export default function AdministrationClusteringScreen() {
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("search2")}
+            placeholder={t("searchPlaceholder")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"

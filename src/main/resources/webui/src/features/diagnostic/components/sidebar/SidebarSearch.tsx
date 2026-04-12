@@ -27,7 +27,7 @@ export default function SidebarSearch() {
     <Stack p="6" gap="5">
       <Search
         clear={Boolean(ctx.query)}
-        placeholder={t("search2")}
+        placeholder={t("searchPlaceholder")}
         onQuery={onQuery}
         onClear={onClear}
       />

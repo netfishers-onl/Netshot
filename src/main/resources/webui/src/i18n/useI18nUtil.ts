@@ -10,7 +10,18 @@ export function useI18nUtil() {
     [i18n]
   )
 
+  const formatDate = useCallback(
+    (
+      date: string | number | Date,
+      options: Intl.DateTimeFormatOptions = { dateStyle: "short", timeStyle: "medium" }
+    ) => {
+      return new Intl.DateTimeFormat(i18n.language, options).format(new Date(date))
+    },
+    [i18n.language]
+  )
+
   return {
     format,
+    formatDate,
   }
 }

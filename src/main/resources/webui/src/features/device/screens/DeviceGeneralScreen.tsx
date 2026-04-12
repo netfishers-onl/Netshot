@@ -2,7 +2,7 @@ import { Box, Flex, Heading, Skeleton, Stack, Tag, Text } from "@chakra-ui/react
 import { useTranslation } from "react-i18next"
 
 import { DeviceAttributeDefinition, DeviceAttributeLevel, DeviceStatus } from "@/types"
-import { formatDate } from "@/utils"
+import { useI18nUtil } from "@/i18n"
 
 import { useMemo } from "react"
 import { DeviceAttributeValue } from "../components"
@@ -10,6 +10,7 @@ import { useDevice } from "../contexts/device"
 
 export default function DeviceGeneralScreen() {
   const { t } = useTranslation()
+  const { formatDate } = useI18nUtil()
   const { device, type, isLoading } = useDevice()
   const attributeDefinitions = useMemo<DeviceAttributeDefinition[]>(() => {
     return type?.attributes.filter((a) => a.level === DeviceAttributeLevel.Device)
@@ -123,7 +124,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("creationDate")}</Text>
             </Box>
             <Skeleton loading={!!isLoading}>
-              <Text>{device?.createdDate ? formatDate(device?.createdDate) : "nA"}</Text>
+              <Text>{device?.createdDate ? formatDate(device?.createdDate) : t("nA")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -131,7 +132,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("lastChange")}</Text>
             </Box>
             <Skeleton loading={!!isLoading}>
-              <Text>{device?.changeDate ? formatDate(device?.changeDate) : "nA"}</Text>
+              <Text>{device?.changeDate ? formatDate(device?.changeDate) : t("nA")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">

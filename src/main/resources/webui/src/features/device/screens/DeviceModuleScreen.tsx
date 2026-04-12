@@ -10,7 +10,8 @@ import { DataTable, EmptyResult } from "@/components"
 import Search from "@/components/Search"
 import { usePagination } from "@/hooks"
 import { DeviceModule } from "@/types"
-import { formatDate, search } from "@/utils"
+import { useI18nUtil } from "@/i18n"
+import { search } from "@/utils"
 
 import { QUERIES } from "../constants"
 
@@ -22,6 +23,7 @@ const columnHelper = createColumnHelper<DeviceModule>()
 export default function DeviceModuleScreen() {
   const params = useParams<{ id: string }>()
   const { t } = useTranslation()
+  const { formatDate } = useI18nUtil()
   const pagination = usePagination()
   const [history, setHistory] = useState(false)
 
@@ -84,13 +86,13 @@ export default function DeviceModuleScreen() {
     }
 
     return columns
-  }, [t, history])
+  }, [t, history, formatDate])
 
   return (
     <Stack gap="6" flex="1" overflow="auto">
       <Stack direction="row" alignItems="center">
         <Search
-          placeholder={t("search2")}
+          placeholder={t("searchPlaceholder")}
           onQuery={pagination.onQuery}
           onClear={pagination.onQueryClear}
           w="25%"

@@ -34,7 +34,7 @@ export default function DeviceSidebarSearch() {
     <Stack p="6" gap="5">
       <Search
         clear={Boolean(query)}
-        placeholder={t("search2")}
+        placeholder={t("searchPlaceholder")}
         onQuery={onQuery}
         onClear={onClear}
       >

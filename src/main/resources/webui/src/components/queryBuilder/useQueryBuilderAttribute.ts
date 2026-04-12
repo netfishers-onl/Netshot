@@ -154,7 +154,7 @@ export function useQueryBuilderAttribute() {
         },
       },
       {
-        label: t("softwareLevel2"),
+        label: t("softwareLevel"),
         value: {
           name: Attribute.SoftwareLevel,
           type: AttributeType.Enum,

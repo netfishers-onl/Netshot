@@ -21,7 +21,6 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
 import { Plus } from "react-feather"
 import { useTranslation } from "react-i18next"
-import { LuCloud, LuHardDrive } from "react-icons/lu"
 import AddUserButton from "../components/AddUserButton"
 import EditUserButton from "../components/EditUserButton"
 import RemoveUserButton from "../components/RemoveUserButton"
@@ -59,9 +58,9 @@ export default function AdministrationUserScreen() {
           const value = info.getValue()
 
           return (
-            <Badge size="lg" variant="outline">
-              {value ? <LuHardDrive /> : <LuCloud />}
-              {t(value ? "local2" : "remote")}
+            <Badge size="lg" variant="outline" marginTop="-3px" marginBottom="-3px">
+              {value ? <Icon name="database" /> : <Icon name="cloud" />}
+              {t(value ? "localType" : "remoteType")}
             </Badge>
           )
         },
@@ -85,7 +84,7 @@ export default function AdministrationUserScreen() {
           const isCurrentUser = user.username === currentUser.username
 
           if (isCurrentUser) {
-            return <Box w="40px" h="40px" />
+            return <TableButtonStack />
           }
 
           return (
@@ -141,7 +140,7 @@ export default function AdministrationUserScreen() {
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("search2")}
+            placeholder={t("searchPlaceholder")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"

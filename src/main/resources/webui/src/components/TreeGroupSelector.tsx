@@ -125,7 +125,7 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
 
   const selectedGroups = useMemo(() => {
     if (withAny && groupField.length === 0) {
-      return [t("any2")]
+      return [t("anyLabel")]
     }
 
     if (items?.length === 0) {
@@ -223,7 +223,7 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
                 render
               ) : (
                 <Tag.Root colorPalette="grey" size="md">
-                  <Tag.Label>{t("any2")}</Tag.Label>
+                  <Tag.Label>{t("anyLabel")}</Tag.Label>
                 </Tag.Root>
               )}
             </>

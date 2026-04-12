@@ -4,7 +4,7 @@ import Icon from "@/components/Icon"
 import Search from "@/components/Search"
 import { usePagination } from "@/hooks"
 import { DeviceDiagnosticResult, Level } from "@/types"
-import { formatDate } from "@/utils"
+import { useI18nUtil } from "@/i18n"
 import { Button, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
@@ -23,6 +23,7 @@ const columnHelper = createColumnHelper<DeviceDiagnosticResult>()
 export default function DeviceDiagnosticScreen() {
   const params = useParams<{ id: string }>()
   const { t } = useTranslation()
+  const { formatDate } = useI18nUtil()
   const pagination = usePagination()
   const { device } = useDevice()
 
@@ -66,7 +67,7 @@ export default function DeviceDiagnosticScreen() {
         <>
           <Stack direction="row">
             <Search
-              placeholder={t("search2")}
+              placeholder={t("searchPlaceholder")}
               onQuery={pagination.onQuery}
               onClear={pagination.onQueryClear}
               w="25%"

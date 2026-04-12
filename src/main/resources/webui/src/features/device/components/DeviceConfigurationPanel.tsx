@@ -1,6 +1,7 @@
 import Icon from "@/components/Icon"
 import { Config } from "@/types"
-import { formatDate, getConfigDeviceAttributeDefinitions } from "@/utils"
+import { useI18nUtil } from "@/i18n"
+import { getConfigDeviceAttributeDefinitions } from "@/utils"
 import { Button, IconButton, Separator, Skeleton, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
 import { motion, useAnimationControls } from "framer-motion"
 import { useCallback, useMemo, useState } from "react"
@@ -16,6 +17,7 @@ export type DeviceConfigurationPanelProps = {
 export default function DeviceConfigurationPanel(props: DeviceConfigurationPanelProps) {
   const { config } = props
   const { t } = useTranslation()
+  const { formatDate } = useI18nUtil()
   const controls = useAnimationControls()
   const { type, isLoading } = useDevice()
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true)
@@ -24,7 +26,7 @@ export default function DeviceConfigurationPanel(props: DeviceConfigurationPanel
 
   const changeDate = useMemo(() => {
     return formatDate(config?.changeDate)
-  }, [config])
+  }, [config, formatDate])
 
   const toggleCollapse = useCallback(async () => {
     setIsCollapsed((prev) => !prev)

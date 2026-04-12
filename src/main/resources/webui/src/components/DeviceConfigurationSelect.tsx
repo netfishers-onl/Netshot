@@ -1,6 +1,6 @@
 import { useDeviceConfigs } from "@/features/device/api"
 import { Config } from "@/types"
-import { formatDate } from "@/utils"
+import { useI18nUtil } from "@/i18n"
 import { Text } from "@chakra-ui/react"
 import { FieldPath, FieldValues } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -17,6 +17,7 @@ export default function DeviceConfigurationSelect<T>(props: DeviceConfigurationS
   const { deviceId, control, name, defaultValue, required, readOnly, label, ...selectProps } = props
 
   const { t } = useTranslation()
+  const { formatDate } = useI18nUtil()
 
   const { isPending, data } = useDeviceConfigs(deviceId)
 

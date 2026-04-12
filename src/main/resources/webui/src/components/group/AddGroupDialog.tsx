@@ -164,14 +164,14 @@ export default function AddGroupDialog() {
                 {formStep === FormStep.Type && (
                   <Stack direction="row" gap="5">
                     <BoxWithIconButton
-                      title={t("static2")}
+                      title={t("staticLabel")}
                       description={t("createASimpleStaticGroupOfDevices")}
                       icon="server"
                       isActive={groupType === GroupType.Static}
                       onClick={() => setGroupType(GroupType.Static)}
                     />
                     <BoxWithIconButton
-                      title={t("dynamic2")}
+                      title={t("dynamicLabel")}
                       description={t("createADynamicallyPopulatedGroupOfDevices")}
                       icon="code"
                       isActive={groupType === GroupType.Dynamic}

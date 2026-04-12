@@ -44,6 +44,8 @@ export default function AdministrationApiTokenForm() {
           label={t("token")}
           control={form.control}
           name="token"
+          fontFamily="mono"
+          required
           suffix={
             <Tooltip content={t("copy")}>
               <IconButton
@@ -61,13 +63,15 @@ export default function AdministrationApiTokenForm() {
           <Icon name="refreshCcw" />
         </IconButton>
       </Stack>
-      <Alert.Root bg="yellow.50" color="yellow.800">
-        {t(
-          "pleaseCopyTheTokenBeforeClosingThisDialogAsItWonTBeReadableA"
-        )}
+      <Alert.Root variant="warning">
+        <Alert.Indicator />
+        <Alert.Title>
+          {t(
+            "pleaseCopyTheTokenBeforeClosingThisDialogAsItWonTBeReadableA"
+          )}
+        </Alert.Title>
       </Alert.Root>
       <FormControl
-        type={FormControlType.LongText}
         label={t("description")}
         placeholder={t("eG", { example: t("describeTheToken") })}
         required

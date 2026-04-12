@@ -1,7 +1,7 @@
 import { DataTable } from "@/components"
 import Icon from "@/components/Icon"
 import { ConfigComplianceDeviceStatus } from "@/types"
-import { formatDate } from "@/utils"
+import { useI18nUtil } from "@/i18n"
 import { Button, IconButton, Separator, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
 import { createColumnHelper } from "@tanstack/react-table"
 import { motion, useAnimationControls } from "framer-motion"
@@ -19,6 +19,7 @@ const columnHelper = createColumnHelper<ConfigComplianceDeviceStatus>()
 export default function DeviceConfigurationCompliancePanel(props: DeviceConfigurationPanelProps) {
   const { name, configs } = props
   const { t } = useTranslation()
+  const { formatDate } = useI18nUtil()
   const controls = useAnimationControls()
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true)
 
@@ -62,7 +63,7 @@ export default function DeviceConfigurationCompliancePanel(props: DeviceConfigur
         header: t("testDateTime"),
       }),
     ],
-    [t]
+    [t, formatDate]
   )
 
   return (

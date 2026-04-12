@@ -11,7 +11,7 @@ import TaskDialog from "@/components/TaskDialog"
 import TaskStatusTag from "@/components/TaskStatusTag"
 import { usePagination } from "@/hooks"
 import { Task } from "@/types"
-import { formatDate } from "@/utils"
+import { useI18nUtil } from "@/i18n"
 
 import { useCustomDialog } from "@/dialog"
 import { QUERIES } from "../constants"
@@ -24,6 +24,7 @@ const columnHelper = createColumnHelper<Task>()
 export default function DeviceTaskScreen() {
   const params = useParams<{ id: string }>()
   const { t } = useTranslation()
+  const { formatDate } = useI18nUtil()
   const taskDialog = useCustomDialog()
   const pagination = usePagination({
     limit: 20,

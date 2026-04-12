@@ -39,7 +39,7 @@ export default function DeviceConfigurationScreen() {
   return (
     <Stack gap="6">
       <Stack direction="row" gap="3">
-        <Search placeholder={t("search2")} onQuery={onQuery} onClear={onQueryClear} w="50%" />
+        <Search placeholder={t("searchPlaceholder")} onQuery={onQuery} onClear={onQueryClear} w="50%" />
       </Stack>
       <Stack gap="3">
         {isPending ? (

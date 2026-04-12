@@ -1,5 +1,5 @@
 import api from "@/api"
-import { DataTable, EmptyResult, Search } from "@/components"
+import { DataTable, EmptyResult, Icon, Search } from "@/components"
 import { usePagination } from "@/hooks"
 import { DeviceType, DeviceTypeProtocol } from "@/types"
 import { search } from "@/utils"
@@ -8,7 +8,6 @@ import { useQuery } from "@tanstack/react-query"
 import { CellContext, createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { LuRefreshCcw } from "react-icons/lu"
 import ReloadDeviceDriversButton from "../components/ReloadDeviceDriversButton"
 import { QUERIES } from "../constants"
 
@@ -115,7 +114,7 @@ export default function AdministrationDriverScreen() {
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("search2")}
+            placeholder={t("searchPlaceholder")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -124,7 +123,7 @@ export default function AdministrationDriverScreen() {
           <ReloadDeviceDriversButton
             renderItem={(open) => (
               <Button onClick={open}>
-                <LuRefreshCcw />
+                <Icon name="refreshCcw" />
                 {t("reloadDrivers")}
               </Button>
             )}

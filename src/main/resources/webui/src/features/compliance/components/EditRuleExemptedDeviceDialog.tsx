@@ -6,7 +6,8 @@ import { MUTATIONS } from "@/constants"
 import { useDialogConfig, useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { ExemptedDevice, Rule, SimpleDevice } from "@/types"
-import { formatDate, search } from "@/utils"
+import { useI18nUtil } from "@/i18n"
+import { search } from "@/utils"
 import { Button, Dialog, Flex, IconButton, Portal, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { addDays } from "date-fns"
@@ -152,6 +153,7 @@ export type EditRuleExemptedDeviceDialogProps = {
 export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDeviceDialogProps) {
   const { policyId, rule } = props
   const { t } = useTranslation()
+  const { formatDate: formatLocalDate } = useI18nUtil()
   const toast = useToast()
   const dialogConfig = useDialogConfig()
   const queryClient = useQueryClient()
@@ -270,8 +272,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
                             <Stack gap="1">
                               <Text fontWeight="medium">{device?.name}</Text>
                               <Text color="grey.400">
-                                {t("expiresIn")}
-                                {formatDate(device?.expirationDate, "dd/MM/yyyy")}
+                                {t("expiresOn", { date: formatLocalDate(device?.expirationDate, { dateStyle: "medium" }) })}
                               </Text>
                             </Stack>
                             <IconButton

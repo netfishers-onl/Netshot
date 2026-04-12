@@ -2,7 +2,7 @@ import api from "@/api"
 import { EmptyResult, EntityLink, VirtualizedDataTable } from "@/components"
 import { useDialogConfig } from "@/dialog"
 import { HardwareSupportDevice } from "@/types"
-import { formatDate } from "@/utils"
+import { useI18nUtil } from "@/i18n"
 import { CloseButton, Dialog, Heading, Portal, Skeleton, Stack, Tag, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
@@ -19,8 +19,9 @@ const columnHelper = createColumnHelper<HardwareSupportDevice>()
 export default function HardwareDeviceListDialog(props: HardwareDeviceListButtonProps) {
   const { type, date } = props
   const { t } = useTranslation()
+  const { formatDate } = useI18nUtil()
   const dialogConfig = useDialogConfig()
-  const formattedDate = formatDate(new Date(date).toISOString())
+  const formattedDate = formatDate(date, { dateStyle: "medium" })
 
   const { data, isPending } = useQuery({
     queryKey: [QUERIES.DEVICE_HARDWARE_STATUS, type, date],
@@ -39,7 +40,7 @@ export default function HardwareDeviceListDialog(props: HardwareDeviceListButton
           {info.getValue()}
         </EntityLink>
       ),
-      header: t("device2"),
+      header: t("device"),
     }),
     columnHelper.accessor("mgmtAddress", {
       cell: (info) => <Text>{info.getValue()}</Text>,

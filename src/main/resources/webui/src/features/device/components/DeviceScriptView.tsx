@@ -45,7 +45,7 @@ export default function DeviceScriptView(props: DeviceScriptViewProps) {
     <Stack direction="row" gap="7" overflow="auto" flex="1">
       <Stack w="340px" overflow="auto">
         <Stack direction="row">
-          <Search onQuery={onQuery} onClear={onQueryClear} placeholder={t("search2")} />
+          <Search onQuery={onQuery} onClear={onQueryClear} placeholder={t("searchPlaceholder")} />
           <CreateDeviceScriptButton devices={devices} onCreated={(script) => setSelected(script)} />
         </Stack>
         <Stack gap="2" overflow="auto" flex="1">

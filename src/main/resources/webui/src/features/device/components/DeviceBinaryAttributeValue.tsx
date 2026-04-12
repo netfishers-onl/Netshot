@@ -13,9 +13,9 @@ export function DeviceBinaryAttributeValue(
   const { t } = useTranslation()
 
   if (attribute?.assumption === true) {
-    return <Text>{t("true2")}</Text>
+    return <Text>{t("trueLabel")}</Text>
   } else if (attribute?.assumption === false) {
-    return <Text>{t("false2")}</Text>
+    return <Text>{t("falseLabel")}</Text>
   }
 
   return <Text>{t("nA")}</Text>

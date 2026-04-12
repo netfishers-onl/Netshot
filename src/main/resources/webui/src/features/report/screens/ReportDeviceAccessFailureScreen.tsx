@@ -12,7 +12,8 @@ import { FormControlType } from "@/components/FormControl"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
 import { DeviceAccessFailure } from "@/types"
-import { formatDate, search } from "@/utils"
+import { useI18nUtil } from "@/i18n"
+import { search } from "@/utils"
 import {
   Button,
   Heading,
@@ -41,6 +42,7 @@ const columnHelper = createColumnHelper<DeviceAccessFailure>()
 
 export default function ReportDeviceAccessFailure() {
   const { t } = useTranslation()
+  const { formatDate } = useI18nUtil()
   const pagination = usePagination({
     limit: 50,
   })
@@ -99,7 +101,7 @@ export default function ReportDeviceAccessFailure() {
             {info.getValue()}
           </EntityLink>
         ),
-        header: t("device2"),
+        header: t("device"),
       }),
       columnHelper.accessor("mgmtAddress", {
         cell: (info) => <Text>{info.getValue()}</Text>,
@@ -154,7 +156,7 @@ export default function ReportDeviceAccessFailure() {
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("search2")}
+            placeholder={t("searchPlaceholder")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"

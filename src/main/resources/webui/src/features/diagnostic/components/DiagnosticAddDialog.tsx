@@ -182,7 +182,7 @@ export default function DiagnosticAddDialog() {
                 </Heading>
 
                 <Text fontSize="md" color="grey.400">
-                  {t(formStep === FormStep.Type ? "step12" : "step22")}
+                  {t("stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
                 </Text>
               </Dialog.Header>
               <Dialog.Body flex="1" display="flex">

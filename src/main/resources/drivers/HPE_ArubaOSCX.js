@@ -21,7 +21,7 @@ const Info = {
 	name: "HPEArubaOSCX",
 	description: "HPE ArubaOS CX",
 	author: "Netshot Team",
-	version: "1.2"
+	version: "1.3"
 };
 
 const Config = {
@@ -225,9 +225,9 @@ function snapshot(cli, device, config) {
 	const showSystem = cli.command("show system");
 	const serialMatch = showSystem.match(/^Chassis Serial.*: ([0-9A-Z]+)/m);
 	device.set("serialNumber", serialMatch ? serialMatch[1] : "");
-	const locationMatch = showSystem.match(/^System Contact\s+: (.*?)\s*$/m);
+	const locationMatch = showSystem.match(/^System Location\s+: (.*?)\s*$/m);
 	device.set("location", locationMatch ? locationMatch[1] : "");
-	const contactMatch = showSystem.match(/^System Location\s+: (.*?)\s*$/m);
+	const contactMatch = showSystem.match(/^System Contact\s+: (.*?)\s*$/m);
 	device.set("contact", contactMatch ? contactMatch[1] : "");
 	const baseMacMatch = showSystem.match(
 		/^Base MAC Address\s+: ([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})-([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/m);

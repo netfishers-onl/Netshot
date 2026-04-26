@@ -6,7 +6,7 @@ import { useToast } from "@/hooks"
 import { HardwareRule, PropsWithRenderItem } from "@/types"
 import { getDateFromUnix } from "@/utils"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
@@ -42,6 +42,10 @@ export default function EditHardwareRuleButton(props: EditHardwareRuleButtonProp
     defaultValues,
   })
 
+  useEffect(() => {
+    form.reset(defaultValues)
+  }, [defaultValues])
+
   const mutation = useMutation({
     mutationKey: MUTATIONS.HARDWARE_RULE_UPDATE,
     mutationFn: async (payload: CreateOrUpdateHardwareRule) =>
@@ -71,6 +75,7 @@ export default function EditHardwareRuleButton(props: EditHardwareRuleButtonProp
         })
 
         dialogRef.close()
+        form.reset()
 
         toast.success({
           title: t("success"),

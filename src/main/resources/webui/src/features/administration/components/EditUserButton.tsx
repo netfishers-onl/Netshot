@@ -1,11 +1,12 @@
 import api from "@/api"
+import { PASSWORD_UNCHANGED } from "@/components/FormControl"
 import { NetshotError } from "@/api/httpClient"
 import { MUTATIONS } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { PropsWithRenderItem, User } from "@/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
@@ -27,9 +28,8 @@ export default function EditUserButton(props: EditUserButtonProps) {
       username: user?.username,
       level: user?.level?.toString(),
       isRemote: !user.local,
-      password: "",
+      password: PASSWORD_UNCHANGED,
       confirmPassword: "",
-      changePassword: false,
     }),
     [user]
   )
@@ -38,6 +38,10 @@ export default function EditUserButton(props: EditUserButtonProps) {
     mode: "onChange",
     defaultValues,
   })
+
+  useEffect(() => {
+    form.reset(defaultValues)
+  }, [defaultValues])
 
   const mutation = useMutation({
     mutationKey: MUTATIONS.ADMIN_USER_UPDATE,
@@ -50,7 +54,7 @@ export default function EditUserButton(props: EditUserButtonProps) {
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_USER_UPDATE, {
       title: t("editUser"),
-      description: <AdministrationUserForm showChangePassword />,
+      description: <AdministrationUserForm freezePasswords />,
       form,
       size: "lg",
       async onSubmit(values: UserForm) {
@@ -59,13 +63,14 @@ export default function EditUserButton(props: EditUserButtonProps) {
           level: +values.level,
           local: !values.isRemote,
         }
-        if (values.changePassword) {
-          change.password = values.password
+        if (values.password !== PASSWORD_UNCHANGED) {
+          change.password = values.password ?? undefined
         }
 
         await mutation.mutateAsync(change)
 
         dialogRef.close()
+        form.reset()
 
         toast.success({
           title: t("success"),

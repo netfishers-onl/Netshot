@@ -126,6 +126,7 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
         queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_LIST] })
 
         dialogRef.close()
+        form.reset()
       },
       onCancel() {
         form.reset()

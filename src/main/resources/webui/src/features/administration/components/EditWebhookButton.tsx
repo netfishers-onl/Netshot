@@ -68,6 +68,7 @@ export default function EditWebhookButton(props: EditWebhookButtonProps) {
         })
 
         dialogRef.close()
+        form.reset()
 
         toast.success({
           title: t("success"),

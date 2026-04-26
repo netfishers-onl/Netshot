@@ -5,7 +5,7 @@ import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { Domain, PropsWithRenderItem } from "@/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
@@ -36,6 +36,10 @@ export default function EditDomainButton(props: EditDomainButtonProps) {
     defaultValues,
   })
 
+  useEffect(() => {
+    form.reset(defaultValues)
+  }, [defaultValues])
+
   const mutation = useMutation({
     mutationKey: MUTATIONS.ADMIN_DOMAIN_UPDATE,
     mutationFn: async (payload: Partial<Domain>) => api.admin.updateDomain(domain?.id, payload),
@@ -58,6 +62,7 @@ export default function EditDomainButton(props: EditDomainButtonProps) {
         })
 
         dialogRef.close()
+        form.reset()
 
         toast.success({
           title: t("success"),

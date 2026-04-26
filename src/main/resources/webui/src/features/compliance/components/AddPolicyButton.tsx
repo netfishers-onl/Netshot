@@ -47,6 +47,7 @@ export default function AddPolicyButton(props: AddPolicyButtonProps) {
         })
 
         dialogRef.close()
+        form.reset()
 
         toast.success({
           title: t("success"),

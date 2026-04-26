@@ -16,22 +16,23 @@ export type DeviceCredentialForm = {
   mgmtDomain: number | null
   community: string
   type: CredentialSetType
-  authKey?: string
+  authKey?: string | null
   authType?: HashingAlgorithm
-  privKey?: string
+  privKey?: string | null
   privType?: HashingAlgorithm
   username?: string
-  password?: string
-  superPassword?: string
+  password?: string | null
+  superPassword?: string | null
   privateKey?: string
 }
 
 export type AdministrationDeviceCredentialFormProps = {
   freezeType?: boolean
+  freezePasswords?: boolean
 }
 
 export default function AdministrationDeviceCredentialForm(props: AdministrationDeviceCredentialFormProps) {
-  const { freezeType = false } = props
+  const { freezeType = false, freezePasswords = false } = props
   const form = useFormContext<DeviceCredentialForm>()
   const { t } = useTranslation()
   const deviceCredentialTypeOptions = useDeviceCredentialTypeOptions()
@@ -76,10 +77,10 @@ export default function AdministrationDeviceCredentialForm(props: Administration
             control={form.control}
             name="username"
           />
-          <Field.Root required>
+          <Field.Root required={!freezePasswords}>
             <Field.Label>
               {t("authKey")}
-              <Field.RequiredIndicator />
+              {!freezePasswords && <Field.RequiredIndicator />}
             </Field.Label>
             <Group w="full">
               <Select
@@ -93,15 +94,17 @@ export default function AdministrationDeviceCredentialForm(props: Administration
                 flex="2"
                 type={FormControlType.Password}
                 placeholder={t("eG", { example: t("secretKey") })}
+                required={!freezePasswords}
+                allowUnchanged={freezePasswords}
                 control={form.control}
                 name="authKey"
               />
             </Group>
           </Field.Root>
-          <Field.Root required>
+          <Field.Root required={!freezePasswords}>
             <Field.Label>
               {t("privKey")}
-              <Field.RequiredIndicator />
+              {!freezePasswords && <Field.RequiredIndicator />}
             </Field.Label>
             <Group w="full">
               <Select
@@ -115,6 +118,8 @@ export default function AdministrationDeviceCredentialForm(props: Administration
                 flex="2"
                 type={FormControlType.Password}
                 placeholder={t("eG", { example: t("secretKey") })}
+                required={!freezePasswords}
+                allowUnchanged={freezePasswords}
                 control={form.control}
                 name="privKey"
               />
@@ -132,7 +137,8 @@ export default function AdministrationDeviceCredentialForm(props: Administration
             name="username"
           />
           <FormControl
-            required
+            required={!freezePasswords}
+            allowUnchanged={freezePasswords}
             type={FormControlType.Password}
             label={t("password")}
             placeholder={t("typeYourPassword")}
@@ -140,7 +146,8 @@ export default function AdministrationDeviceCredentialForm(props: Administration
             name="password"
           />
           <FormControl
-            required
+            required={!freezePasswords}
+            allowUnchanged={freezePasswords}
             type={FormControlType.Password}
             label={t("superPassword")}
             placeholder={t("typeYourSuperPassword")}
@@ -167,7 +174,8 @@ export default function AdministrationDeviceCredentialForm(props: Administration
             name="privateKey"
           />
           <FormControl
-            required
+            required={!freezePasswords}
+            allowUnchanged={freezePasswords}
             type={FormControlType.Password}
             label={t("passphrase")}
             placeholder={t("typeYourPassphrase")}
@@ -175,7 +183,8 @@ export default function AdministrationDeviceCredentialForm(props: Administration
             name="password"
           />
           <FormControl
-            required
+            required={!freezePasswords}
+            allowUnchanged={freezePasswords}
             type={FormControlType.Password}
             label={t("superPassword")}
             placeholder={t("typeYourSuperPassword")}

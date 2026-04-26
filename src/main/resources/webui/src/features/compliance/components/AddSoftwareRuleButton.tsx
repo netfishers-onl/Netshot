@@ -64,6 +64,7 @@ export default function AddSoftwareRuleButton(props: AddSoftwareRuleButtonProps)
         })
 
         dialogRef.close()
+        form.reset()
 
         toast.success({
           title: t("success"),

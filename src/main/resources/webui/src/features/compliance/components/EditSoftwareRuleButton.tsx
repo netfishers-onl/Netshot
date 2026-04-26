@@ -5,7 +5,7 @@ import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { PropsWithRenderItem, SoftwareRule } from "@/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
@@ -42,6 +42,10 @@ export default function EditSoftwareRuleButton(props: EditSoftwareRuleButtonProp
     defaultValues,
   })
 
+  useEffect(() => {
+    form.reset(defaultValues)
+  }, [defaultValues])
+
   const mutation = useMutation({
     mutationKey: MUTATIONS.SOFTWARE_RULE_UPDATE,
     mutationFn: async (payload: CreateOrUpdateSoftwareRule) =>
@@ -72,6 +76,7 @@ export default function EditSoftwareRuleButton(props: EditSoftwareRuleButtonProp
         })
 
         dialogRef.close()
+        form.reset()
 
         toast.success({
           title: t("success"),

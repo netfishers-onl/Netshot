@@ -8,11 +8,13 @@ import {
   SystemStyleObject,
   Textarea,
 } from "@chakra-ui/react"
-import { forwardRef, ReactElement, ReactNode, RefObject, useCallback, useState } from "react"
+import { forwardRef, ReactElement, ReactNode, RefObject, useCallback, useEffect, useRef, useState } from "react"
 import { useController, UseControllerProps } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
 import Icon from "./Icon"
+
+export const PASSWORD_UNCHANGED = null
 
 export enum FormControlType {
   Text = "text",
@@ -35,6 +37,7 @@ export type FormControlProps<T> = {
   onFocus?(): void
   suffix?: ReactNode
   prefix?: ReactNode
+  allowUnchanged?: boolean
 } & Omit<InputProps, "recipe"> &
   Omit<SystemStyleObject, "recipe"> &
   UseControllerProps<T>
@@ -68,11 +71,20 @@ function FormControl<T>(
     prefix,
     autoComplete,
     variant,
+    allowUnchanged = false,
     ...other
   } = props
 
   const { t } = useTranslation()
   const [showPassword, setShowPassword] = useState(false)
+  const [isUnchanged, setIsUnchanged] = useState(allowUnchanged)
+  const passwordInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!isUnchanged && allowUnchanged) {
+      passwordInputRef.current?.focus()
+    }
+  }, [isUnchanged])
 
   const {
     field,
@@ -111,8 +123,19 @@ function FormControl<T>(
   }
 
   const togglePassword = useCallback(() => {
-    setShowPassword((prev) => !prev)
-  }, [])
+    if (isUnchanged) {
+      setIsUnchanged(false)
+      field.onChange("")
+    } else {
+      setShowPassword((prev) => !prev)
+    }
+  }, [isUnchanged, field])
+
+  const lockPassword = useCallback(() => {
+    setIsUnchanged(true)
+    setShowPassword(false)
+    field.onChange(PASSWORD_UNCHANGED)
+  }, [field])
 
   return (
     <Field.Root required={required} disabled={disabled} {...other}>
@@ -143,29 +166,48 @@ function FormControl<T>(
         <InputGroup
           startAddon={prefix}
           endElement={
-            <Tooltip
-              content={showPassword ? t("hidePassword") : t("showPassword")}
-              positioning={{
-                placement: "top",
-              }}
-            >
-              <span>
-                <IconButton
-                  variant="ghost"
-                  bg="transparent!important"
-                  aria-label={showPassword ? t("hidePassword") : t("showPassword")}
-                  onClick={togglePassword}
-                >
-                  {showPassword ? <Icon name="eye" /> : <Icon name="eyeOff" />}
-                </IconButton>
-              </span>
-            </Tooltip>
+            <>
+              {allowUnchanged && !isUnchanged && (
+                <Tooltip content={t("passwordUnchanged")} positioning={{ placement: "top" }}>
+                  <span>
+                    <IconButton
+                      variant="ghost"
+                      bg="transparent!important"
+                      aria-label={t("passwordUnchanged")}
+                      onClick={lockPassword}
+                    >
+                      <Icon name="unlock" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              )}
+              <Tooltip
+                content={isUnchanged ? t("passwordUnchanged") : showPassword ? t("hidePassword") : t("showPassword")}
+                positioning={{ placement: "top" }}
+              >
+                <span>
+                  <IconButton
+                    variant="ghost"
+                    bg="transparent!important"
+                    aria-label={isUnchanged ? t("passwordUnchanged") : showPassword ? t("hidePassword") : t("showPassword")}
+                    onClick={togglePassword}
+                  >
+                    {isUnchanged ? <Icon name="lock" /> : showPassword ? <Icon name="eye" /> : <Icon name="eyeOff" />}
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </>
           }
         >
           <Input
             type={showPassword ? "text" : "password"}
-            value={String(field.value as string)}
+            value={isUnchanged ? "••••••••" : String(field.value as string)}
+            disabled={isUnchanged}
             {...inputProps}
+            ref={(inputRef) => {
+              inputProps.ref(inputRef)
+              passwordInputRef.current = inputRef
+            }}
           />
         </InputGroup>
       )}

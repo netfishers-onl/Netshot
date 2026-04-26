@@ -1,11 +1,12 @@
 import api, { DeviceCredentialPayload } from "@/api"
+import { PASSWORD_UNCHANGED } from "@/components/FormControl"
 import { NetshotError } from "@/api/httpClient"
 import { MUTATIONS } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { CredentialSet, CredentialSetType, PropsWithRenderItem } from "@/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
@@ -48,9 +49,9 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
       Object.assign(values, {
         username: credential.username,
         authType: credential.authType,
-        authKey: credential.authKey,
+        authKey: PASSWORD_UNCHANGED,
         privType: credential.privType,
-        privKey: credential.privKey,
+        privKey: PASSWORD_UNCHANGED,
       })
     } else if (
       credential.type === CredentialSetType.SSH ||
@@ -58,15 +59,15 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
     ) {
       Object.assign(values, {
         username: credential.username,
-        password: credential.password,
-        superPassword: credential.superPassword,
+        password: PASSWORD_UNCHANGED,
+        superPassword: PASSWORD_UNCHANGED,
       })
     } else if (credential.type === CredentialSetType.SSHKey) {
       Object.assign(values, {
         username: credential.username,
         privateKey: credential.privateKey,
-        password: credential.password,
-        superPassword: credential.superPassword,
+        password: PASSWORD_UNCHANGED,
+        superPassword: PASSWORD_UNCHANGED,
       })
     }
 
@@ -77,6 +78,10 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
     mode: "onChange",
     defaultValues,
   })
+
+  useEffect(() => {
+    form.reset(defaultValues)
+  }, [defaultValues])
 
   const mutation = useMutation({
     mutationKey: MUTATIONS.ADMIN_CREDENTIAL_SET_UPDATE,
@@ -90,7 +95,7 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_CREDENTIAL_SET_UPDATE, {
       title: t("editCredential"),
-      description: <AdministrationDeviceCredentialForm freezeType />,
+      description: <AdministrationDeviceCredentialForm freezeType freezePasswords />,
       form,
       size: "lg",
       async onSubmit(values: DeviceCredentialForm) {
@@ -120,34 +125,36 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
         }
 
         if (type === CredentialSetType.SNMP_V3) {
-          Object.assign(payload, {
+          const snmpPayload: Partial<DeviceCredentialPayload> = {
             username: values.username,
             authType: values.authType,
-            authKey: values.authKey,
             privType: values.privType,
-            privKey: values.privKey,
-          })
+          }
+          if (values.authKey !== PASSWORD_UNCHANGED) snmpPayload.authKey = values.authKey ?? undefined
+          if (values.privKey !== PASSWORD_UNCHANGED) snmpPayload.privKey = values.privKey ?? undefined
+          Object.assign(payload, snmpPayload)
         } else if (
           type === CredentialSetType.SSH ||
           type === CredentialSetType.Telnet
         ) {
-          Object.assign(payload, {
-            username: values.username,
-            password: values.password,
-            superPassword: values.superPassword,
-          })
+          const sshPayload: Partial<DeviceCredentialPayload> = { username: values.username }
+          if (values.password !== PASSWORD_UNCHANGED) sshPayload.password = values.password ?? undefined
+          if (values.superPassword !== PASSWORD_UNCHANGED) sshPayload.superPassword = values.superPassword ?? undefined
+          Object.assign(payload, sshPayload)
         } else if (type === CredentialSetType.SSHKey) {
-          Object.assign(payload, {
+          const sshKeyPayload: Partial<DeviceCredentialPayload> = {
             username: values.username,
             privateKey: values.privateKey,
-            password: values.password,
-            superPassword: values.superPassword,
-          })
+          }
+          if (values.password !== PASSWORD_UNCHANGED) sshKeyPayload.password = values.password ?? undefined
+          if (values.superPassword !== PASSWORD_UNCHANGED) sshKeyPayload.superPassword = values.superPassword ?? undefined
+          Object.assign(payload, sshKeyPayload)
         }
 
         await mutation.mutateAsync(payload)
 
         dialogRef.close()
+        form.reset()
 
         toast.success({
           title: t("success"),

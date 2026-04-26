@@ -5,7 +5,7 @@ import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { Policy, PropsWithRenderItem } from "@/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { MouseEvent } from "react"
+import { MouseEvent, useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import PolicyForm, { Form } from "./PolicyForm"
@@ -21,13 +21,19 @@ export default function EditPolicyButton(props: EditPolicyButtonProps) {
   const queryClient = useQueryClient()
   const dialog = useFormDialogWithMutation()
 
+  const defaultValues = useMemo(() => ({
+    name: policy?.name,
+    targetGroups: policy?.targetGroups?.map((group) => group.id),
+  }), [policy])
+
   const form = useForm<Form>({
     mode: "onChange",
-    defaultValues: {
-      name: policy?.name,
-      targetGroups: policy?.targetGroups?.map((group) => group.id),
-    },
+    defaultValues,
   })
+
+  useEffect(() => {
+    form.reset(defaultValues)
+  }, [defaultValues])
 
   const mutation = useMutation({
     mutationKey: MUTATIONS.POLICY_UPDATE,
@@ -51,6 +57,7 @@ export default function EditPolicyButton(props: EditPolicyButtonProps) {
         })
 
         dialogRef.close()
+        form.reset()
 
         toast.success({
           title: t("success"),

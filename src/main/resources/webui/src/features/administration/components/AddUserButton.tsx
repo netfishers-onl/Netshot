@@ -27,7 +27,6 @@ export default function AddUserButton(props: AddUserButtonProps) {
       isRemote: false,
       password: "",
       confirmPassword: "",
-      changePassword: true,
     },
   })
 

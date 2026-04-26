@@ -189,6 +189,7 @@ export default function ExportDataButton(props: ExportDataButtonProps) {
         })
 
         dialogRef.close()
+        form.reset()
         download(res.blob, res.filename)
       },
       onCancel() {

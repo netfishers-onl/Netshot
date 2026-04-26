@@ -1,5 +1,5 @@
 import { FormControl, Switch } from "@/components"
-import { FormControlType } from "@/components/FormControl"
+import { FormControlType, PASSWORD_UNCHANGED } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { useUserLevelOptions } from "@/hooks"
 import { Stack, Text } from "@chakra-ui/react"
@@ -11,17 +11,16 @@ export type UserForm = {
   username: string
   level: string
   isRemote: boolean
-  password?: string
+  password?: string | null
   confirmPassword?: string
-  changePassword: boolean
 }
 
 export type AdministrationUserFormProps = {
-  showChangePassword?: boolean
+  freezePasswords?: boolean
 }
 
 export default function AdministrationUserForm(props: AdministrationUserFormProps) {
-  const { showChangePassword = false } = props
+  const { freezePasswords = false } = props
   const form = useFormContext<UserForm>()
   const { t } = useTranslation()
   const userLevelOptions = useUserLevelOptions()
@@ -31,11 +30,6 @@ export default function AdministrationUserForm(props: AdministrationUserFormProp
     name: "isRemote",
   })
 
-  const changePassword = useWatch({
-    control: form.control,
-    name: "changePassword",
-  })
-
   const password = useWatch({
     control: form.control,
     name: "password",
@@ -43,10 +37,15 @@ export default function AdministrationUserForm(props: AdministrationUserFormProp
 
   useEffect(() => {
     if (!isRemote) return
-
     form.setValue("password", "")
     form.setValue("confirmPassword", "")
   }, [isRemote])
+
+  useEffect(() => {
+    if (password == PASSWORD_UNCHANGED) {
+      form.setValue("confirmPassword", "")
+    }
+  }, [password])
 
   return (
     <Stack gap="6">
@@ -74,37 +73,32 @@ export default function AdministrationUserForm(props: AdministrationUserFormProp
         </Stack>
         <Switch w="initial" control={form.control} name="isRemote" />
       </Stack>
-      {!isRemote && showChangePassword && (
-        <Stack direction="row" gap="6">
-          <Stack gap="0" flex="1">
-            <Text fontWeight="medium">{t("changePassword")}</Text>
-          </Stack>
-          <Switch w="initial" control={form.control} name="changePassword" />
-        </Stack>
-      )}
-      {!isRemote && changePassword && (
+      {!isRemote && (
         <>
           <FormControl
-            required
+            required={!freezePasswords}
+            allowUnchanged={freezePasswords}
             type={FormControlType.Password}
             control={form.control}
             name="password"
             label={t("password")}
             placeholder={t("enterPassword")}
           />
-          <FormControl
-            required
-            type={FormControlType.Password}
-            control={form.control}
-            name="confirmPassword"
-            label={t("confirmPassword")}
-            placeholder={t("confirmPassword")}
-            rules={{
-              validate(value) {
-                return value === password || t("passwordDoesnTMatch")
-              },
-            }}
-          />
+          {password != PASSWORD_UNCHANGED && (
+            <FormControl
+              required={!freezePasswords}
+              type={FormControlType.Password}
+              control={form.control}
+              name="confirmPassword"
+              label={t("confirmPassword")}
+              placeholder={t("confirmPassword")}
+              rules={{
+                validate(value) {
+                  return value === password || t("passwordsDonTMatch")
+                },
+              }}
+            />
+          )}
         </>
       )}
     </Stack>

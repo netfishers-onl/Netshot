@@ -61,6 +61,7 @@ export default function AddHardwareRuleButton(props: AddHardwareRuleButtonProps)
         })
 
         dialogRef.close()
+        form.reset()
 
         toast.success({
           title: t("success"),

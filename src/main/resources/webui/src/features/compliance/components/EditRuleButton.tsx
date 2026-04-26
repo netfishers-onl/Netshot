@@ -85,6 +85,7 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
         })
 
         dialogRef.close()
+        form.reset()
 
         toast.success({
           title: t("success"),

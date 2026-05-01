@@ -21,7 +21,7 @@ const Info = {
 	name: "F5TMOS",
 	description: "F5 TM-OS, 11.x and newer",
 	author: "Netshot Team",
-	version: "3.0"
+	version: "3.1"
 };
 
 const Config = {
@@ -138,8 +138,8 @@ function snapshot(cli, device, config) {
 		}
 	}
 	
-	const showCmDevice = cli.command("tmsh -q show /cm device");
-	const hostname = showCmDevice.match(/^Hostname +(.+)/m);
+	const listSysGlobalHostname = cli.command("tmsh -q list sys global-settings hostname");
+	const hostname = listSysGlobalHostname.match(/^\s*hostname +(.+)/m);
 	if (hostname) {
 		device.set("name", hostname[1]);
 	}

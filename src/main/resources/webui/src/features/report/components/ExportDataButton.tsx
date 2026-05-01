@@ -17,15 +17,15 @@ import { ExportMimeType } from "../types"
 
 type Form = {
   format: ExportMimeType
-  domain: number
+  domain: string
   groups: number[]
-  hasGroups: boolean
-  hasInterfaces: boolean
-  hasInventory: boolean
-  hasInventoryHistory: boolean
-  hasLocations: boolean
-  hasCompliance: boolean
-  hasDeviceDriverAttributes: boolean
+  withGroups: boolean
+  withInterfaces: boolean
+  withInventory: boolean
+  withInventoryHistory: boolean
+  withLocations: boolean
+  withCompliance: boolean
+  withDeviceDriverAttributes: boolean
 }
 
 function ExportDataForm() {
@@ -33,9 +33,9 @@ function ExportDataForm() {
   const form = useFormContext()
   const exportMimesTypesOptions = useExportMimesTypesOptions()
 
-  const hasInventory = useWatch({
+  const withInventory = useWatch({
     control: form.control,
-    name: "hasInventory",
+    name: "withInventory",
   })
 
   const groups = useWatch({
@@ -44,10 +44,10 @@ function ExportDataForm() {
   })
 
   useEffect(() => {
-    if (!hasInventory) {
-      form.setValue("hasInventoryHistory", false)
+    if (!withInventory) {
+      form.setValue("withInventoryHistory", false)
     }
-  }, [form, hasInventory])
+  }, [form, withInventory])
 
   return (
     <Stack gap="6">
@@ -59,7 +59,7 @@ function ExportDataForm() {
         label={t("outputFormat")}
         placeholder={t("selectAnOutputFormat")}
       />
-      <DomainSelect control={form.control} name="domain" />
+      <DomainSelect control={form.control} name="domain" withAny />
       <TreeGroupSelector
         value={groups}
         onChange={(groups) => form.setValue("groups", groups)}
@@ -71,7 +71,7 @@ function ExportDataForm() {
           <Text fontWeight="medium">{t("deviceGroupDetails")}</Text>
           <Text color="grey.400">{t("exportDeviceGroupInformation")}</Text>
         </Stack>
-        <Switch w="initial" control={form.control} name="hasGroups" />
+        <Switch w="initial" control={form.control} name="withGroups" />
       </Stack>
       <Separator />
       <Stack direction="row" gap="6" alignItems="start">
@@ -79,7 +79,7 @@ function ExportDataForm() {
           <Text fontWeight="medium">{t("driverSpecificDeviceAttributes")}</Text>
           <Text color="grey.400">{t("exportAttributesOfDriverDevice")}</Text>
         </Stack>
-        <Switch w="initial" control={form.control} name="hasDeviceDriverAttributes" />
+        <Switch w="initial" control={form.control} name="withDeviceDriverAttributes" />
       </Stack>
       <Separator />
       <Stack direction="row" gap="6" alignItems="start">
@@ -89,7 +89,7 @@ function ExportDataForm() {
             {t("exportDeviceInterfacesIncludingMacAndIpAddresses")}
           </Text>
         </Stack>
-        <Switch w="initial" control={form.control} name="hasInterfaces" />
+        <Switch w="initial" control={form.control} name="withInterfaces" />
       </Stack>
       <Separator />
       <Stack direction="row" gap="6" alignItems="start">
@@ -99,7 +99,7 @@ function ExportDataForm() {
             {t("exportInventoryModulesWithPartAndSerialNumbers")}
           </Text>
         </Stack>
-        <Switch w="initial" control={form.control} name="hasInventory" />
+        <Switch w="initial" control={form.control} name="withInventory" />
       </Stack>
       <Separator />
       <Stack direction="row" gap="6" alignItems="start">
@@ -110,8 +110,8 @@ function ExportDataForm() {
         <Switch
           w="initial"
           control={form.control}
-          name="hasInventoryHistory"
-          disabled={!hasInventory}
+          name="withInventoryHistory"
+          disabled={!withInventory}
         />
       </Stack>
       <Separator />
@@ -120,7 +120,7 @@ function ExportDataForm() {
           <Text fontWeight="medium">{t("locationsAndContacts")}</Text>
           <Text color="grey.400">{t("exportDeviceLocationsAndContactsInformation")}</Text>
         </Stack>
-        <Switch w="initial" control={form.control} name="hasLocations" />
+        <Switch w="initial" control={form.control} name="withLocations" />
       </Stack>
       <Separator />
       <Stack direction="row" gap="6" alignItems="start">
@@ -128,7 +128,7 @@ function ExportDataForm() {
           <Text fontWeight="medium">{t("complianceInformation")}</Text>
           <Text color="grey.400">{t("exportComplianceReportAndInformation")}</Text>
         </Stack>
-        <Switch w="initial" control={form.control} name="hasCompliance" />
+        <Switch w="initial" control={form.control} name="withCompliance" />
       </Stack>
     </Stack>
   )
@@ -147,15 +147,15 @@ export default function ExportDataButton(props: ExportDataButtonProps) {
     mode: "onChange",
     defaultValues: {
       format: exportMimesTypesOptions.getFirst().value,
-      domain: null,
+      domain: "",
       groups: [],
-      hasGroups: false,
-      hasInterfaces: false,
-      hasInventory: false,
-      hasInventoryHistory: false,
-      hasLocations: false,
-      hasCompliance: false,
-      hasDeviceDriverAttributes: false,
+      withGroups: false,
+      withInterfaces: false,
+      withInventory: false,
+      withInventoryHistory: false,
+      withLocations: false,
+      withCompliance: false,
+      withDeviceDriverAttributes: false,
     },
   })
 
@@ -175,18 +175,53 @@ export default function ExportDataButton(props: ExportDataButtonProps) {
       form,
       size: "lg",
       async onSubmit(values: Form) {
-        const res = await mutation.mutateAsync({
-          format: values.format,
-          domain: values.domain,
-          group: values.groups,
-          groups: values.hasGroups,
-          interfaces: values.hasInterfaces,
-          inventory: values.hasInventory,
-          inventoryhistory: values.hasInventoryHistory,
-          locations: values.hasLocations,
-          compliance: values.hasCompliance,
-          devicedriverattributes: values.hasDeviceDriverAttributes,
-        })
+        const params: ReportExportDataQueryParams = {};
+        if (values.domain) {
+          Object.assign(params, {
+            domain: [+values.domain],
+          });
+        }
+        if (values.groups?.length) {
+          Object.assign(params, {
+            group: values.groups,
+          });
+        }
+        if (values.withGroups) {
+          Object.assign(params, {
+            groups: true,
+          });
+        }
+        if (values.withInterfaces) {
+          Object.assign(params, {
+            interfaces: true,
+          });
+        }
+        if (values.withInventory) {
+          Object.assign(params, {
+            inventory: true,
+          });
+        }
+        if (values.withInventoryHistory) {
+          Object.assign(params, {
+            inventoryhistory: true,
+          });
+        }
+        if (values.withLocations) {
+          Object.assign(params, {
+            locations: true,
+          });
+        }
+        if (values.withCompliance) {
+          Object.assign(params, {
+            compliance: true,
+          });
+        }
+        if (values.withDeviceDriverAttributes) {
+          Object.assign(params, {
+            devicedriverattributes: true,
+          });
+        }
+        const res = await mutation.mutateAsync(params)
 
         dialogRef.close()
         form.reset()

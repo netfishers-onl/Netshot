@@ -28,7 +28,7 @@ export function QueryBuilderButton(props: QueryBuilderButtonProps) {
     form.setValue("queryBuilder.query", value?.query)
 
     const dialogRef = dialog.open({
-      title: "queryBuilder",
+      title: t("queryBuilder"),
       description: <QueryBuilderControl control={form.control} name="queryBuilder" />,
       form,
       submitButton: {

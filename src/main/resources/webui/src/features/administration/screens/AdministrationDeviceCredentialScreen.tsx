@@ -48,7 +48,7 @@ export default function AdministrationDeviceCredentialScreen() {
       }),
       columnHelper.accessor("type", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("protocol"),
+        header: t("type"),
         enableSorting: true,
         size: 10000,
       }),

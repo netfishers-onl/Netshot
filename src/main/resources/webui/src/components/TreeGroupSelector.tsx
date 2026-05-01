@@ -52,7 +52,7 @@ function SelectGroupDialog({ items }: { items: (Group | Folder)[] }) {
   )
 
   return (
-    <Stack pl="2">
+    <Stack gap="0" py="4" px="5">
       <TreeGroup items={items} onGroupSelect={onGroupSelect} isSelected={isSelected} />
     </Stack>
   )

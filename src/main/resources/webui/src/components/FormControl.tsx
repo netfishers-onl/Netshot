@@ -80,12 +80,6 @@ function FormControl<T>(
   const [isUnchanged, setIsUnchanged] = useState(allowUnchanged)
   const passwordInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (!isUnchanged && allowUnchanged) {
-      passwordInputRef.current?.focus()
-    }
-  }, [isUnchanged])
-
   const {
     field,
     fieldState: { error },
@@ -98,6 +92,23 @@ function FormControl<T>(
     },
     defaultValue,
   })
+
+  useEffect(() => {
+    if (!allowUnchanged) return
+    if (isUnchanged && field.value != PASSWORD_UNCHANGED) {
+      setIsUnchanged(false)
+      setShowPassword(false)
+    } else if (!isUnchanged && field.value == PASSWORD_UNCHANGED) {
+      setIsUnchanged(true)
+      setShowPassword(false)
+    }
+  }, [field.value])
+
+  useEffect(() => {
+    if (!isUnchanged && allowUnchanged) {
+      passwordInputRef.current?.focus()
+    }
+  }, [isUnchanged])
 
   const inputProps = {
     onChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -212,7 +223,7 @@ function FormControl<T>(
         </InputGroup>
       )}
       {type === FormControlType.LongText && (
-        <Textarea rows={rows} value={String(field.value as string)} {...inputProps} />
+        <Textarea rows={rows} value={field.value == null ? "" : String(field.value as string)} {...inputProps} />
       )}
       {helperText && <Field.HelperText>{helperText}</Field.HelperText>}
       {error && <Field.HelperText color="red.500">{error?.message}</Field.HelperText>}

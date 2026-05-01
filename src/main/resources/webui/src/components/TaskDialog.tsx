@@ -202,7 +202,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                     <Separator />
                     <Stack gap="4">
                       <Heading size="md" fontWeight="semibold">
-                        {t("debugLogs")}
+                        {t("infoLogs")}
                       </Heading>
                       <Box
                         p="6"
@@ -221,7 +221,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                           download={`task-${task?.id}-debug.log`}
                         >
                           <Download />
-                          {t("downloadLogs")}
+                          {t("debugLogs")}
                         </a>
                       </Button>
                     </Stack>

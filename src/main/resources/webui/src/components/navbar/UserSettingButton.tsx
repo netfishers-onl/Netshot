@@ -1,6 +1,7 @@
 import { useAlertDialog } from "@/dialog"
 import { PropsWithRenderItem } from "@/types"
 import { SettingModal } from "./SettingModal"
+import { t } from "i18next"
 
 export type UserSettingButtonProps = PropsWithRenderItem
 
@@ -10,7 +11,7 @@ export default function UserSettingButton(props: UserSettingButtonProps) {
 
   return renderItem(() =>
     dialog.open({
-      title: "settings",
+      title: t("settings"),
       description: <SettingModal />,
       hideFooter: true,
     })

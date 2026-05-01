@@ -13,6 +13,7 @@ import AddHardwareRuleButton from "../components/AddHardwareRuleButton"
 import EditHardwareRuleButton from "../components/EditHardwareRuleButton"
 import RemoveHardwareRuleButton from "../components/RemoveHardwareRuleButton"
 import { QUERIES } from "../constants"
+import TableButtonStack from "@/features/administration/components/TableButtonStack"
 
 const columnHelper = createColumnHelper<HardwareRule>()
 
@@ -72,7 +73,7 @@ export default function ComplianceHardwareRuleScreen() {
           const rule = info.getValue()
           return (
             <Protected minLevel={Level.ReadWrite}>
-              <Stack direction="row" gap="2">
+              <TableButtonStack>
                 <EditHardwareRuleButton
                   rule={rule}
                   renderItem={(open) => (
@@ -103,7 +104,7 @@ export default function ComplianceHardwareRuleScreen() {
                     </Tooltip>
                   )}
                 />
-              </Stack>
+              </TableButtonStack>
             </Protected>
           )
         },

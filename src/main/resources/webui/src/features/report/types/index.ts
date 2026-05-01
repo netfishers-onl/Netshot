@@ -1,7 +1,7 @@
 import { Option } from "@/types"
 
 export enum ExportMimeType {
-  Xls = "xlsx",
+  Xlsx = "xlsx",
 }
 
 export type PeriodRange = {

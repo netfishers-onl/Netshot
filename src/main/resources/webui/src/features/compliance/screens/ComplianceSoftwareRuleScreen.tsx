@@ -17,6 +17,7 @@ import AddSoftwareRuleButton from "../components/AddSoftwareRuleButton"
 import EditSoftwareRuleButton from "../components/EditSoftwareRuleButton"
 import RemoveSoftwareRuleButton from "../components/RemoveSoftwareRuleButton"
 import { QUERIES } from "../constants"
+import TableButtonStack from "@/features/administration/components/TableButtonStack"
 
 const columnHelper = createColumnHelper<SoftwareRule>()
 
@@ -91,7 +92,7 @@ export default function ComplianceSoftwareRuleScreen() {
 
         return (
           <Protected minLevel={Level.ReadWrite}>
-            <Stack direction="row" gap="2">
+            <TableButtonStack>
               <EditSoftwareRuleButton
                 rule={rule}
                 renderItem={(open) => (
@@ -123,7 +124,7 @@ export default function ComplianceSoftwareRuleScreen() {
                   </Tooltip>
                 )}
               />
-            </Stack>
+            </TableButtonStack>
           </Protected>
         )
       },

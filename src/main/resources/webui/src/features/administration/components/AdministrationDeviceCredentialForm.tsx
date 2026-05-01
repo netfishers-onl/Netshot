@@ -23,7 +23,7 @@ export type DeviceCredentialForm = {
   username?: string
   password?: string | null
   superPassword?: string | null
-  privateKey?: string
+  privateKey?: string | null
 }
 
 export type AdministrationDeviceCredentialFormProps = {
@@ -65,7 +65,7 @@ export default function AdministrationDeviceCredentialForm(props: Administration
         control={form.control}
         name="type"
         options={deviceCredentialTypeOptions.options}
-        label={t("protocol")}
+        label={t("type")}
         placeholder={t("selectAProtocol")}
       />
       {type === CredentialSetType.SNMP_V3 && (
@@ -166,15 +166,15 @@ export default function AdministrationDeviceCredentialForm(props: Administration
             name="username"
           />
           <FormControl
-            required
+            required={!freezePasswords}
             type={FormControlType.LongText}
             label={t("sshPrivateKey")}
             placeholder={t("typeYourPrivateKey")}
             control={form.control}
             name="privateKey"
+            helperText={freezePasswords ? t("leaveEmptyToKeepCurrentKey") : undefined}
           />
           <FormControl
-            required={!freezePasswords}
             allowUnchanged={freezePasswords}
             type={FormControlType.Password}
             label={t("passphrase")}

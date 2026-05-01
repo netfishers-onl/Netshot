@@ -14,6 +14,7 @@ import { endOfDay, startOfDay } from "date-fns"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
+import TableButtonStack from "@/features/administration/components/TableButtonStack"
 
 export type FilterForm = {
   executionDate: string
@@ -150,9 +151,11 @@ export function useTask(status?: TaskStatus) {
     columnHelper.display({
       id: "actions",
       cell: (info) => (
-        <Button variant="ghost" colorPalette="green" onClick={() => openTask(info.row.original.id)}>
-          {t("seeDetails")}
-        </Button>
+        <TableButtonStack>
+          <Button variant="ghost" colorPalette="green" onClick={() => openTask(info.row.original.id)}>
+            {t("seeDetails")}
+          </Button>
+        </TableButtonStack>
       ),
       header: "",
       enableSorting: false,

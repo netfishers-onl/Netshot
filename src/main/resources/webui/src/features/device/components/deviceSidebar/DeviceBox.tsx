@@ -112,8 +112,8 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
     <Stack
       onClick={onSelected}
       gap="2"
-      px="2"
-      py="2"
+      px="3"
+      py="1"
       bg={isSelected ? "green.50" : "white"}
       transition="all .2s ease"
       _hover={{
@@ -147,50 +147,52 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
         </Badge>
         <Spacer />
 
-        <HoverCard.Root>
-          <HoverCard.Trigger asChild>
-            {compliant ? (
-              <Tag.Root gap="1" colorPalette="green">
-                <Icon size={14} name="checkCircle" />
-              </Tag.Root>
-            ) : (
-              <Tag.Root gap="1" colorPalette="red">
-                <Icon size={14} name="alertTriangle" />
-              </Tag.Root>
-            )}
-          </HoverCard.Trigger>
-          <HoverCard.Positioner>
-            <HoverCard.Content w="340px">
-              <Text fontSize="md" fontWeight="bold" mb="3">
-                {t("statusSummary")}
-              </Text>
-              <Stack gap="2">
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Text>{t("softwareCompliance")}</Text>
-                  <Tag.Root colorPalette={getSoftwareLevelColor(level?.value)}>
-                    {level?.label}
-                  </Tag.Root>
+        {!isDisabled && (
+          <HoverCard.Root>
+            <HoverCard.Trigger asChild>
+              {compliant ? (
+                <Tag.Root gap="1" colorPalette="green">
+                  <Icon size={14} name="checkCircle" />
+                </Tag.Root>
+              ) : (
+                <Tag.Root gap="1" colorPalette="red">
+                  <Icon size={14} name="alertTriangle" />
+                </Tag.Root>
+              )}
+            </HoverCard.Trigger>
+            <HoverCard.Positioner>
+              <HoverCard.Content w="360px">
+                <Text fontSize="md" fontWeight="bold" mb="3">
+                  {t("statusSummary")}
+                </Text>
+                <Stack gap="2">
+                  <Stack direction="row" alignItems="center" justifyContent="space-between">
+                    <Text>{t("softwareCompliance")}</Text>
+                    <Tag.Root colorPalette={getSoftwareLevelColor(level?.value)}>
+                      {level?.label}
+                    </Tag.Root>
+                  </Stack>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between">
+                    <Text>{t("configurationCompliance")}</Text>
+                    <Tag.Root colorPalette={device.configCompliant ? "green" : "red"}>
+                      {t(device.configCompliant ? "compliant" : "nonCompliant")}
+                    </Tag.Root>
+                  </Stack>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between">
+                    <Text>{t("hardwareCompliance")}</Text>
+                    <Tag.Root colorPalette={device.eos || device.eol ? "red" : "green"}>
+                      {device.eol
+                        ? t("endOfLife")
+                        : device.eos
+                          ? t("endOfSale")
+                          : t("upToDate")}
+                    </Tag.Root>
+                  </Stack>
                 </Stack>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Text>{t("configurationCompliance")}</Text>
-                  <Tag.Root colorPalette={device.configCompliant ? "green" : "red"}>
-                    {t(device.configCompliant ? "compliant" : "nonCompliant")}
-                  </Tag.Root>
-                </Stack>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Text>{t("hardwareCompliance")}</Text>
-                  <Tag.Root colorPalette={device.eos || device.eol ? "red" : "green"}>
-                    {device.eol
-                      ? t("endOfLife")
-                      : device.eos
-                        ? t("endOfSale")
-                        : t("upToDate")}
-                  </Tag.Root>
-                </Stack>
-              </Stack>
-            </HoverCard.Content>
-          </HoverCard.Positioner>
-        </HoverCard.Root>
+              </HoverCard.Content>
+            </HoverCard.Positioner>
+          </HoverCard.Root>
+        )}
       </Stack>
     </Stack>
   )

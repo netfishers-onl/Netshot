@@ -95,6 +95,9 @@ async function getConfigChangeOverLastDay() {
 
 async function exportData(queryParams: ReportExportDataQueryParams) {
   const req = await httpClient.request(HttpMethod.GET, "/reports/export", {
+    headers: {
+      "Accept": "*/*",
+    },
     queryParams,
     queryParamsOptions: {
       stringifyOpt: {

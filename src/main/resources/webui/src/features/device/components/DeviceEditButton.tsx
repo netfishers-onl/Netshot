@@ -1,7 +1,7 @@
 import api, { UpdateDevicePayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { Checkbox, DomainSelect } from "@/components"
-import FormControl, { FormControlType } from "@/components/FormControl"
+import FormControl, { FormControlType, PASSWORD_UNCHANGED } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { MUTATIONS, QUERIES } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
@@ -37,7 +37,11 @@ type Form = {
   comments: string
 }
 
-function DeviceEditForm() {
+type DeviceEditFormProps = {
+  freezePasswords?: boolean
+}
+
+function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
   const form = useFormContext()
   const { t } = useTranslation()
   const deviceCredentialOptions = useDeviceCredentialOptions()
@@ -201,7 +205,8 @@ function DeviceEditForm() {
             autoComplete="nope"
           />
           <FormControl
-            required
+            required={!freezePasswords}
+            allowUnchanged={freezePasswords}
             type={FormControlType.Password}
             label={t("password")}
             placeholder={t("typeYourPassword")}
@@ -210,6 +215,7 @@ function DeviceEditForm() {
             autoComplete="nope"
           />
           <FormControl
+            allowUnchanged={freezePasswords}
             type={FormControlType.Password}
             label={t("superPassword")}
             placeholder={t("typeYourSuperPassword")}
@@ -230,16 +236,18 @@ function DeviceEditForm() {
             autoComplete="nope"
           />
           <FormControl
-            required
+            required={!freezePasswords}
             type={FormControlType.LongText}
             label={t("sshPrivateKey")}
             placeholder={t("typeYourPrivateKey")}
             control={form.control}
             name="specificCredentialSet.privateKey"
             autoComplete="nope"
+            helperText={freezePasswords ? t("leaveEmptyToKeepCurrentKey") : undefined}
           />
           <FormControl
-            required
+            required={!freezePasswords}
+            allowUnchanged={freezePasswords}
             type={FormControlType.Password}
             label={t("passphrase")}
             placeholder={t("typeYourPassphrase")}
@@ -248,6 +256,7 @@ function DeviceEditForm() {
             autoComplete="nope"
           />
           <FormControl
+            allowUnchanged={freezePasswords}
             type={FormControlType.Password}
             label={t("superPassword")}
             placeholder={t("typeYourSuperPassword")}
@@ -305,9 +314,9 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
         ...values,
         specificCredentialSet: {
           username: device.specificCredentialSet.username,
-          privateKey: device.specificCredentialSet.privateKey,
-          password: device.specificCredentialSet.password,
-          superPassword: device.specificCredentialSet.superPassword,
+          privateKey: PASSWORD_UNCHANGED,
+          password: PASSWORD_UNCHANGED,
+          superPassword: PASSWORD_UNCHANGED,
         },
       }
     }
@@ -319,6 +328,10 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
     mode: "onChange",
     defaultValues,
   })
+
+  useEffect(() => {
+    form.reset(defaultValues)
+  }, [defaultValues])
 
   const mutation = useMutation({
     mutationKey: MUTATIONS.DEVICE_UPDATE,
@@ -332,7 +345,7 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DEVICE_UPDATE, {
       title: t("editDevice"),
-      description: <DeviceEditForm />,
+      description: <DeviceEditForm freezePasswords={Boolean(device?.specificCredentialSet)} />,
       form,
       size: "lg",
       async onSubmit(values: Form) {
@@ -356,17 +369,18 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
         if (values.credentialType !== CredentialSetType.GLOBAL) {
           const { username, password, superPassword } = values.specificCredentialSet
 
-          updatedDevice.specificCredentialSet = {
-            type: values.credentialType,
-            username,
-            password,
-            superPassword,
-          }
+          updatedDevice.specificCredentialSet = { type: values.credentialType, username }
 
+          if (password !== PASSWORD_UNCHANGED) {
+            updatedDevice.specificCredentialSet.password = password ?? undefined
+          }
+          if (superPassword !== PASSWORD_UNCHANGED) {
+            updatedDevice.specificCredentialSet.superPassword = superPassword ?? undefined
+          }
           if (values.credentialType === CredentialSetType.SSHKey) {
-            updatedDevice.specificCredentialSet = {
-              ...updatedDevice.specificCredentialSet,
-              privateKey: values.specificCredentialSet.privateKey,
+            const privateKey = values.specificCredentialSet.privateKey
+            if (privateKey !== PASSWORD_UNCHANGED && privateKey !== "") {
+              updatedDevice.specificCredentialSet.privateKey = privateKey ?? undefined
             }
           }
         }
@@ -374,6 +388,7 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
         await mutation.mutateAsync(updatedDevice)
 
         dialogRef.close()
+        form.reset()
 
         toast.success({
           title: t("success"),
@@ -384,6 +399,9 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
         queryClient.invalidateQueries({
           queryKey: [QUERIES.DEVICE_DETAIL, +device?.id],
         })
+      },
+      onCancel() {
+        form.reset()
       },
       submitButton: {
         label: t("applyChanges"),

@@ -55,7 +55,7 @@ export default function SidebarList() {
   }
 
   return (
-    <Stack p="6" gap="1" overflow="auto" flex="1">
+    <Stack gap="0" py="4" px="5" overflow="auto" flex="1">
       {isSuccess &&
         data?.pages?.map((page) =>
           page.map((diagnostic, i) => {

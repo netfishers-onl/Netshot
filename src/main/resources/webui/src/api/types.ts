@@ -102,9 +102,9 @@ export type UpdateDevicePayload = {
   credentialSetIds: number[]
   clearCredentialSetIds: number[]
   specificCredentialSet: {
-    password: string
-    privateKey?: string
-    superPassword: string
+    password?: string | null
+    privateKey?: string | null
+    superPassword?: string | null
     type?: string
     username: string
   }
@@ -191,16 +191,15 @@ export type ReportQueryParams = Partial<{
 }>
 
 export type ReportExportDataQueryParams = {
-  format: ExportMimeType
-  domain: number
-  group: number[]
-  groups: boolean
-  interfaces: boolean
-  inventory: boolean
-  inventoryhistory: boolean
-  locations: boolean
-  compliance: boolean
-  devicedriverattributes: boolean
+  domain?: number[]
+  group?: number[]
+  groups?: boolean
+  interfaces?: boolean
+  inventory?: boolean
+  inventoryhistory?: boolean
+  locations?: boolean
+  compliance?: boolean
+  devicedriverattributes?: boolean
 }
 
 export type ReportDeviceAccessFailureQueryParams = {

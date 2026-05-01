@@ -65,7 +65,7 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
     } else if (credential.type === CredentialSetType.SSHKey) {
       Object.assign(values, {
         username: credential.username,
-        privateKey: credential.privateKey,
+        privateKey: PASSWORD_UNCHANGED,
         password: PASSWORD_UNCHANGED,
         superPassword: PASSWORD_UNCHANGED,
       })
@@ -144,8 +144,8 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
         } else if (type === CredentialSetType.SSHKey) {
           const sshKeyPayload: Partial<DeviceCredentialPayload> = {
             username: values.username,
-            privateKey: values.privateKey,
           }
+          if (values.privateKey !== PASSWORD_UNCHANGED && values.privateKey !== "") sshKeyPayload.privateKey = values.privateKey ?? undefined
           if (values.password !== PASSWORD_UNCHANGED) sshKeyPayload.password = values.password ?? undefined
           if (values.superPassword !== PASSWORD_UNCHANGED) sshKeyPayload.superPassword = values.superPassword ?? undefined
           Object.assign(payload, sshKeyPayload)

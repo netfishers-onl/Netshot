@@ -15,6 +15,7 @@ import { useI18nUtil } from "@/i18n"
 
 import { useCustomDialog } from "@/dialog"
 import { QUERIES } from "../constants"
+import TableButtonStack from "@/features/administration/components/TableButtonStack"
 
 const columnHelper = createColumnHelper<Task>()
 
@@ -63,13 +64,15 @@ export default function DeviceTaskScreen() {
       columnHelper.display({
         id: "actions",
         cell: (info) => (
-          <Button
-            variant="ghost"
-            colorPalette="green"
-            onClick={() => openTask(info.row.original.id)}
-          >
-            {t("seeDetails")}
-          </Button>
+          <TableButtonStack>
+            <Button
+              variant="ghost"
+              colorPalette="green"
+              onClick={() => openTask(info.row.original.id)}
+            >
+              {t("seeDetails")}
+            </Button>
+          </TableButtonStack>
         ),
         header: "",
         enableSorting: false,

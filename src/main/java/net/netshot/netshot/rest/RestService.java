@@ -2873,7 +2873,7 @@ public class RestService extends Thread {
 					((DeviceSnmpv3Community) credentialSet).setAuthKey(rsSnmp3.getAuthKey());
 				}
 				((DeviceSnmpv3Community) credentialSet).setPrivType(rsSnmp3.getPrivType());
-				if (rsSnmp3.getAuthKey() != null) {
+				if (rsSnmp3.getPrivKey() != null) {
 					((DeviceSnmpv3Community) credentialSet).setPrivKey(rsSnmp3.getPrivKey());
 				}
 

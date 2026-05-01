@@ -3,7 +3,7 @@ import { ExportMimeType } from "../types"
 
 export const useExportMimesTypesOptions = createOptionHook([
   {
-    label: "xls",
-    value: ExportMimeType.Xls,
+    label: "Microsoft Excel (xlsx)",
+    value: ExportMimeType.Xlsx,
   },
 ])

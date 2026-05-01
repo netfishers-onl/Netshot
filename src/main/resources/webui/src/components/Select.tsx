@@ -10,6 +10,8 @@ import {
   SelectRootProps,
   SelectValueChangeDetails,
   Skeleton,
+  Text,
+  VStack,
   useListCollection,
 } from "@chakra-ui/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
@@ -89,10 +91,12 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
     itemToValue: getItemValue,
   })
 
+  const hasDescriptions = options.some((opt) => opt.description)
+
   const virtualizer = useVirtualizer({
     count: collection.size,
     getScrollElement: () => contentRef.current,
-    estimateSize: () => 40,
+    estimateSize: () => (hasDescriptions ? 56 : 40),
     overscan: 10,
     scrollPaddingEnd: 32,
   })
@@ -223,12 +227,31 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
                           width: "100%",
                           height: `${virtualItem.size}px`,
                           transform: `translateY(${virtualItem.start}px)`,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
                         }}
+                        alignItems="center"
                       >
-                        <ChakraSelect.ItemText>{item.label}</ChakraSelect.ItemText>
+                        <VStack gap="0" align="start" overflow="hidden" flex="1">
+                          <ChakraSelect.ItemText
+                            whiteSpace="nowrap"
+                            overflow="hidden"
+                            textOverflow="ellipsis"
+                            maxW="100%"
+                          >
+                            {item.label}
+                          </ChakraSelect.ItemText>
+                          {item.description && (
+                            <Text
+                              fontSize="xs"
+                              color="fg.muted"
+                              whiteSpace="nowrap"
+                              overflow="hidden"
+                              textOverflow="ellipsis"
+                              maxW="100%"
+                            >
+                              {item.description}
+                            </Text>
+                          )}
+                        </VStack>
                         <ChakraSelect.ItemIndicator />
                       </ChakraSelect.Item>
                     )

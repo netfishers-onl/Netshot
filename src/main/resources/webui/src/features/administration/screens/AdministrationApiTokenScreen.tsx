@@ -1,7 +1,7 @@
 import api from "@/api"
 import { DataTable, EmptyResult, Icon, Search } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
-import { usePagination } from "@/hooks"
+import { usePagination, useUserLevelOptions } from "@/hooks"
 import { ApiToken } from "@/types"
 import { search } from "@/utils"
 import { Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
@@ -13,7 +13,6 @@ import { useTranslation } from "react-i18next"
 import AddApiTokenButton from "../components/AddApiTokenButton"
 import RemoveApiTokenButton from "../components/RemoveApiTokenButton"
 import { QUERIES } from "../constants"
-import { useApiTokenLevelOptions } from "../hooks"
 import TableButtonStack from "../components/TableButtonStack"
 
 const columnHelper = createColumnHelper<ApiToken>()
@@ -21,7 +20,7 @@ const columnHelper = createColumnHelper<ApiToken>()
 export default function AdministrationApiTokenScreen() {
   const { t } = useTranslation()
   const pagination = usePagination()
-  const apiTokenLevelOptions = useApiTokenLevelOptions()
+  const userLevelOptions = useUserLevelOptions()
 
   const { data = [], isPending } = useQuery({
     queryKey: [QUERIES.ADMIN_API_TOKENS, pagination.query, pagination.offset, pagination.limit],
@@ -43,7 +42,7 @@ export default function AdministrationApiTokenScreen() {
         size: 20000,
       }),
       columnHelper.accessor("level", {
-        cell: (info) => <Text>{apiTokenLevelOptions.getByValue(info.getValue())?.label}</Text>,
+        cell: (info) => <Text>{userLevelOptions.getByValue(info.getValue())?.label}</Text>,
         header: t("permissionLevel"),
         enableSorting: true,
         size: 10000,

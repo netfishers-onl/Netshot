@@ -29,6 +29,7 @@ export function createOptionHook<T extends Option<unknown, unknown>>(
         return {
           ...opt,
           label: t(opt.label as string),
+          ...(opt.description ? { description: t(opt.description) } : {}),
         }
       })
     }, [t])

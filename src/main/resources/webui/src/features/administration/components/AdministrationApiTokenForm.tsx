@@ -2,13 +2,12 @@ import { FormControl, Icon } from "@/components"
 import { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { Tooltip } from "@/components/ui/tooltip"
-import { useToast } from "@/hooks"
+import { useToast, useUserLevelOptions } from "@/hooks"
 import { generateToken } from "@/utils"
 import { Alert, IconButton, Stack } from "@chakra-ui/react"
 import { useCallback } from "react"
 import { useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { useApiTokenLevelOptions } from "../hooks"
 
 export type ApiTokenForm = {
   description: string
@@ -20,7 +19,7 @@ export default function AdministrationApiTokenForm() {
   const form = useFormContext<ApiTokenForm>()
   const { t } = useTranslation()
   const toast = useToast()
-  const apiTokenLevelOptions = useApiTokenLevelOptions()
+  const userLevelOptions = useUserLevelOptions()
 
   const generate = useCallback(() => {
     form.setValue("token", generateToken())
@@ -80,7 +79,7 @@ export default function AdministrationApiTokenForm() {
       />
       <Select
         required
-        options={apiTokenLevelOptions.options}
+        options={userLevelOptions.options}
         control={form.control}
         name="level"
         label={t("permissionLevel")}

@@ -2,7 +2,7 @@ import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { MUTATIONS } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
-import { useToast } from "@/hooks"
+import { useToast, useUserLevelOptions } from "@/hooks"
 import { ApiToken, PropsWithRenderItem } from "@/types"
 import { generateToken } from "@/utils"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -10,7 +10,6 @@ import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
-import { useApiTokenLevelOptions } from "../hooks"
 import AdministrationApiTokenForm, { ApiTokenForm } from "./AdministrationApiTokenForm"
 
 export type AddApiTokenButtonProps = PropsWithRenderItem
@@ -20,14 +19,14 @@ export default function AddApiTokenButton(props: AddApiTokenButtonProps) {
   const { t } = useTranslation()
   const toast = useToast()
   const queryClient = useQueryClient()
-  const apiTokenLevelOptions = useApiTokenLevelOptions()
+  const userLevelOptions = useUserLevelOptions()
   const dialog = useFormDialogWithMutation()
 
   const form = useForm<ApiTokenForm>({
     mode: "onChange",
     defaultValues: {
       description: "",
-      level: apiTokenLevelOptions.getFirst().value?.toString(),
+      level: userLevelOptions.getFirst().value?.toString(),
       token: generateToken(),
     },
   })
@@ -49,7 +48,7 @@ export default function AddApiTokenButton(props: AddApiTokenButtonProps) {
       title: t("createApiToken"),
       description: <AdministrationApiTokenForm />,
       form,
-      size: "xl",
+      size: "lg",
       async onSubmit(values) {
         await mutation.mutateAsync({
           description: values.description,

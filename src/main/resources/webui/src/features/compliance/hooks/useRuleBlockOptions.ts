@@ -2,11 +2,11 @@ import { createOptionHook } from "@/hooks"
 
 export const useRuleBlockOptions = createOptionHook([
   {
-    label: "allFoundBlocksMustBeValid",
+    label: "policy.rule.allFoundBlocksMustBeValid",
     value: true,
   },
   {
-    label: "atLeastOneBlockMustBeValid",
+    label: "policy.rule.atLeastOneBlockMustBeValid",
     value: false,
   },
 ])

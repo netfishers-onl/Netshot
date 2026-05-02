@@ -44,7 +44,7 @@ export default function AddHardwareRuleButton(props: AddHardwareRuleButtonProps)
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.HARDWARE_RULE_CREATE, {
-      title: t("addHardwareRule"),
+      title: t("compliance.hardware.addRule"),
       description: <HardwareRuleForm />,
       form,
       size: "lg",
@@ -64,8 +64,8 @@ export default function AddHardwareRuleButton(props: AddHardwareRuleButtonProps)
         form.reset()
 
         toast.success({
-          title: t("success"),
-          description: t("hardwareRuleHasBeenSuccessfullyCreated"),
+          title: t("common.success"),
+          description: t("compliance.hardware.ruleCreated"),
         })
 
         queryClient.invalidateQueries({ queryKey: [QUERIES.HARDWARE_RULE_LIST] })
@@ -74,7 +74,7 @@ export default function AddHardwareRuleButton(props: AddHardwareRuleButtonProps)
         form.reset()
       },
       submitButton: {
-        label: t("addRule"),
+        label: t("policy.rule.add"),
       },
     })
   }

@@ -118,8 +118,8 @@ export default function AddTaskDialog() {
     },
     onError() {
       toast.error({
-        title: t("error"),
-        description: t("anErrorOccurredDuringTheTaskCreation"),
+        title: t("common.error"),
+        description: t("common.anErrorOccurredDuringTheTaskCreation"),
       })
     },
   })
@@ -200,40 +200,38 @@ export default function AddTaskDialog() {
       {
         icon: "camera",
         type: TaskType.TakeGroupSnapshot,
-        label: t("snapshot"),
-        description: t("takeASnapshotOfAGroupOfDevices"),
+        label: t("device.snapshot.label"),
+        description: t("device.snapshot.takeOfGroup"),
       },
       {
         icon: "play",
         type: TaskType.RunGroupDiagnostic,
-        label: t("diagnostic"),
-        description: t("runDiagnosticsOnAGroupOfDevices"),
+        label: t("diagnostic.label"),
+        description: t("diagnostic.runOnGroup"),
       },
       {
         icon: "check",
         type: TaskType.CheckGroupCompliance,
-        label: t("configurationCompliance"),
-        description: t("checkTheConfigurationComplianceOfAGroupOfDevices"),
+        label: t("device.config.compliance"),
+        description: t("compliance.checkConfigOfGroup"),
       },
       {
         icon: "server",
         type: TaskType.CheckGroupSoftware,
-        label: t("softwareHardwareCompliance"),
-        description: t(
-          "checkTheSoftwareComplianceAndHardwareSupportStatusOfAGroupOf"
-        ),
+        label: t("compliance.softwareAndHardware"),
+        description: t("compliance.checkSoftwareHardwareOfGroup"),
       },
       {
         icon: "search",
         type: TaskType.ScanSubnets,
-        label: t("discoverDevices"),
-        description: t("scanSubnetsToDiscoverDevices"),
+        label: t("device.discover"),
+        description: t("task.scanSubnetsDesc"),
       },
       {
         icon: "database",
         type: TaskType.PurgeDatabase,
-        label: t("purgeDatabase"),
-        description: t("purgeOldEntriesFromTheDatabase"),
+        label: t("admin.purge.database"),
+        description: t("admin.purge.desc"),
       },
     ],
     [t]
@@ -294,11 +292,11 @@ export default function AddTaskDialog() {
             <Dialog.Content as="form" onSubmit={form.handleSubmit(submit)}>
               <Dialog.Header display="flex" justifyContent="space-between">
                 <Heading as="h3" fontSize="2xl" fontWeight="semibold">
-                  {t("addTask")}
+                  {t("task.add")}
                 </Heading>
 
                 <Text fontSize="md" color="grey.400">
-                  {t("stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
+                  {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
                 </Text>
               </Dialog.Header>
               <Dialog.Body>
@@ -321,7 +319,7 @@ export default function AddTaskDialog() {
 
                     {hasGroup && (
                       <TreeGroupSelector
-                        label={t("groupToProcess")}
+                        label={t("group.toProcess")}
                         value={group ? [group] : []}
                         onChange={(groups) => form.setValue("group", groups?.[0])}
                       />
@@ -330,7 +328,7 @@ export default function AddTaskDialog() {
                     {taskType === TaskType.TakeGroupSnapshot && (
                       <>
                         <Checkbox control={form.control} name="limitToOutofdateDevice">
-                          {t("limitToDevicesUnchangedFor")}
+                          {t("device.limitToUnchangedFor")}
                         </Checkbox>
 
                         <FormControl
@@ -341,7 +339,7 @@ export default function AddTaskDialog() {
                           required={limitToOutofdateDevice}
                         />
                         <Checkbox control={form.control} name="runDiagnostic">
-                          {t("runTheDeviceDiagnosticsAfterSnapshot")}
+                          {t("device.runDiagnosticsAfterSnapshot")}
                         </Checkbox>
                       </>
                     )}
@@ -350,7 +348,7 @@ export default function AddTaskDialog() {
                       taskType
                     ) && (
                       <Checkbox control={form.control} name="checkCompliance">
-                        {t("checkDeviceComplianceAfterTheSnapshot")}
+                        {t("device.checkComplianceAfterSnapshot")}
                       </Checkbox>
                     )}
 
@@ -359,7 +357,7 @@ export default function AddTaskDialog() {
                         <DomainSelect required control={form.control} name="domain" />
                         <Stack gap="6">
                           <Heading as="h5" size="sm">
-                            {t("subnetsOrIpAddresses")}
+                            {t("task.subnetsOrIpAddresses")}
                           </Heading>
                           {fields.length > 0 && (
                             <Stack gap="3">
@@ -369,12 +367,12 @@ export default function AddTaskDialog() {
                                     required
                                     control={form.control}
                                     name={`subnets.${index}`}
-                                    placeholder={t("enterAnIpAddressEG1010028")}
+                                    placeholder={t("network.enterIpAddress")}
                                     rules={{
                                       pattern: {
                                         value:
                                           /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
-                                        message: t("thisIsNotAValidIpAddress"),
+                                        message: t("common.thisIsNotAValidIpAddress"),
                                       },
                                     }}
                                   />
@@ -383,7 +381,7 @@ export default function AddTaskDialog() {
                                       onClick={() => remove(index)}
                                       variant="ghost"
                                       colorPalette="green"
-                                      aria-label={t("removeThisSubnet")}
+                                      aria-label={t("network.removeSubnet")}
                                     >
                                       <Icon name="trash" />
                                     </IconButton>
@@ -395,7 +393,7 @@ export default function AddTaskDialog() {
                           <Stack direction="row">
                             <Button onClick={() => append("")}>
                               <Icon name="plus" />
-                              {t("addEntry")}
+                              {t("common.addEntry")}
                             </Button>
                           </Stack>
                         </Stack>
@@ -406,8 +404,8 @@ export default function AddTaskDialog() {
                       <Stack gap="5">
                         <Stack gap="3">
                           <Stack gap="0">
-                            <Text fontWeight="medium">{t("purgeTasks")}</Text>
-                            <Text color="grey.400">{t("purgeTasksFinishedMoreThan")}</Text>
+                            <Text fontWeight="medium">{t("task.purge")}</Text>
+                            <Text color="grey.400">{t("task.purgeFinishedMoreThan")}</Text>
                           </Stack>
                           <FormControl
                             control={form.control}
@@ -415,7 +413,7 @@ export default function AddTaskDialog() {
                             type={FormControlType.Number}
                             suffix={
                               <Text color="grey.400" pr="5">
-                                {t("days")}
+                                {t("time.days")}
                               </Text>
                             }
                           />
@@ -424,9 +422,9 @@ export default function AddTaskDialog() {
                         <Stack gap="3">
                           <Stack direction="row" gap="6">
                             <Stack gap="0" flex="1">
-                              <Text fontWeight="medium">{t("purgeConfiguration")}</Text>
+                              <Text fontWeight="medium">{t("device.config.purge")}</Text>
                               <Text color="grey.400">
-                                {t("deleteOldConfigurationsPriorTo")}
+                                {t("device.config.deleteOldPriorTo")}
                               </Text>
                             </Stack>
                             <Switch
@@ -442,7 +440,7 @@ export default function AddTaskDialog() {
                             type={FormControlType.Number}
                             suffix={
                               <Text color="grey.400" pr="5">
-                                {t("days")}
+                                {t("time.days")}
                               </Text>
                             }
                           />
@@ -450,8 +448,8 @@ export default function AddTaskDialog() {
                         <Stack gap="3">
                           <Stack direction="row" gap="6">
                             <Stack gap="0" flex="1">
-                              <Text fontWeight="medium">{t("configurationSize")}</Text>
-                              <Text color="grey.400">{t("onlyConfigurationsBiggerThan")}</Text>
+                              <Text fontWeight="medium">{t("device.config.size")}</Text>
+                              <Text color="grey.400">{t("device.config.onlyBiggerThan")}</Text>
                             </Stack>
                             <Switch
                               w="initial"
@@ -466,7 +464,7 @@ export default function AddTaskDialog() {
                             type={FormControlType.Number}
                             suffix={
                               <Text color="grey.400" pr="5">
-                                {t("kb")}
+                                {t("common.kb")}
                               </Text>
                             }
                           />
@@ -474,9 +472,9 @@ export default function AddTaskDialog() {
                         <Stack gap="3">
                           <Stack direction="row" gap="6">
                             <Stack gap="0" flex="1">
-                              <Text fontWeight="medium">{t("keepConfiguration")}</Text>
+                              <Text fontWeight="medium">{t("device.config.keep")}</Text>
                               <Text color="grey.400">
-                                {t("keepForEachDeviceOneConfigEvery")}
+                                {t("device.config.keepOneEvery")}
                               </Text>
                             </Stack>
                             <Switch w="initial" control={form.control} name="hasConfigKeepDays" />
@@ -488,7 +486,7 @@ export default function AddTaskDialog() {
                             type={FormControlType.Number}
                             suffix={
                               <Text color="grey.400" pr="5">
-                                {t("days")}
+                                {t("time.days")}
                               </Text>
                             }
                           />
@@ -496,8 +494,8 @@ export default function AddTaskDialog() {
                         <Stack gap="3">
                           <Stack direction="row" gap="6">
                             <Stack gap="0" flex="1">
-                              <Text fontWeight="medium">{t("deleteModules")}</Text>
-                              <Text color="grey.400">{t("deleteModulesRemovedMoreThan")}</Text>
+                              <Text fontWeight="medium">{t("device.module.delete")}</Text>
+                              <Text color="grey.400">{t("device.module.deleteRemovedMoreThan")}</Text>
                             </Stack>
                             <Switch
                               w="initial"
@@ -512,14 +510,14 @@ export default function AddTaskDialog() {
                             type={FormControlType.Number}
                             suffix={
                               <Text color="grey.400" pr="5">
-                                {t("daysAgo")}
+                                {t("time.daysAgo")}
                               </Text>
                             }
                           />
                         </Stack>
                         <Separator />
                         <TreeGroupSelector
-                          label={t("limitTo")}
+                          label={t("common.limitTo")}
                           value={group ? [group] : []}
                           onChange={(groups) => form.setValue("group", groups?.[0])}
                         />
@@ -532,13 +530,13 @@ export default function AddTaskDialog() {
               </Dialog.Body>
               <Dialog.Footer justifyContent="space-between">
                 {formStep === FormStep.Details && (
-                  <Button onClick={previous}>{t("previous")}</Button>
+                  <Button onClick={previous}>{t("common.previous")}</Button>
                 )}
                 <Stack direction="row" gap="3" flex="1" justifyContent="end">
-                  <Button onClick={close}>{t("cancel")}</Button>
+                  <Button onClick={close}>{t("common.cancel")}</Button>
                   {formStep === FormStep.Type && (
                     <Button variant="primary" disabled={taskType === null} onClick={next}>
-                      {t("next")}
+                      {t("common.next")}
                     </Button>
                   )}
 
@@ -549,7 +547,7 @@ export default function AddTaskDialog() {
                       loading={createMutation.isPending}
                       variant="primary"
                     >
-                      {t("create")}
+                      {t("common.create")}
                     </Button>
                   )}
                 </Stack>

@@ -27,13 +27,13 @@ export default function SidebarSearch() {
     <Stack p="6" gap="5">
       <Search
         clear={Boolean(ctx.query)}
-        placeholder={t("searchPlaceholder")}
+        placeholder={t("common.searchPlaceholder")}
         onQuery={onQuery}
         onClear={onClear}
       />
       {ctx.query && (
         <Flex>
-          <Text>{t("diagnostic", { count: ctx.total })}</Text>
+          <Text>{t("diagnostic.label", { count: ctx.total })}</Text>
         </Flex>
       )}
     </Stack>

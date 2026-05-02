@@ -53,17 +53,17 @@ export default function DeviceModuleScreen() {
     const columns = [
       columnHelper.accessor("slot", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("slot"),
+        header: t("common.slot"),
         enableSorting: true,
       }),
       columnHelper.accessor("partNumber", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("partNumber"),
+        header: t("device.module.partNumber"),
         enableSorting: true,
       }),
       columnHelper.accessor("serialNumber", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("serialNumber"),
+        header: t("device.module.serialNumber"),
         enableSorting: true,
       }),
     ]
@@ -72,14 +72,14 @@ export default function DeviceModuleScreen() {
       columns.push(
         {
           accessorKey: "firstSeenDate",
-          cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
-          header: t("firstSeen"),
+          cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+          header: t("device.firstSeen"),
           enableSorting: true,
         },
         {
           accessorKey: "lastSeenDate",
-          cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
-          header: t("lastSeen"),
+          cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+          header: t("device.lastSeen"),
           enableSorting: true,
         }
       )
@@ -92,13 +92,13 @@ export default function DeviceModuleScreen() {
     <Stack gap="6" flex="1" overflow="auto">
       <Stack direction="row" alignItems="center">
         <Search
-          placeholder={t("searchPlaceholder")}
+          placeholder={t("common.searchPlaceholder")}
           onQuery={pagination.onQuery}
           onClear={pagination.onQueryClear}
           w="25%"
         />
         <Spacer />
-        <Text>{t("showHistory")}</Text>
+        <Text>{t("common.showHistory")}</Text>
         <Switch.Root checked={history} size="md" onCheckedChange={(evt) => setHistory(evt.checked)}>
           <Switch.HiddenInput />
           <Switch.Control />
@@ -117,10 +117,8 @@ export default function DeviceModuleScreen() {
             <DataTable columns={columns} data={data} loading={isPending} />
           ) : (
             <EmptyResult
-              title={t("thereIsNoModule")}
-              description={t(
-                "thisDeviceDoesNotHaveAnyModulePleaseCheckItsConfiguration"
-              )}
+              title={t("device.module.none")}
+              description={t("device.module.noModule")}
             />
           )}
         </>

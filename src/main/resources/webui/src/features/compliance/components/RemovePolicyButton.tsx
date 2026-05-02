@@ -31,10 +31,10 @@ export default function RemovePolicyButton(props: RemovePolicyButtonProps) {
   const open = (evt: MouseEvent<HTMLButtonElement>) => {
     evt?.stopPropagation()
     const dialogRef = dialog.open(MUTATIONS.POLICY_REMOVE, {
-      title: t("removePolicy"),
+      title: t("policy.remove"),
       description: (
         <Text>
-          {t("youAreAboutToRemoveThePolicy", {
+          {t("policy.aboutToRemove", {
             policyName: policy?.name,
           })}
         </Text>
@@ -45,7 +45,7 @@ export default function RemovePolicyButton(props: RemovePolicyButtonProps) {
         dialogRef.close()
       },
       confirmButton: {
-        label: t("remove"),
+        label: t("common.remove"),
         props: {
           colorPalette: "red",
         },

@@ -48,7 +48,7 @@ export default function DeviceSidebarSearchList() {
   if (devices?.length === 0) {
     return (
       <Center flex="1">
-        <Text>{t("noDeviceFound")}</Text>
+        <Text>{t("device.noDeviceFound")}</Text>
       </Center>
     )
   }

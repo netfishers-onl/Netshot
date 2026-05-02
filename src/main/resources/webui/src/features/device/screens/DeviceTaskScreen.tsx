@@ -47,19 +47,19 @@ export default function DeviceTaskScreen() {
     () => [
       columnHelper.accessor("taskDescription", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("type"),
+        header: t("common.type"),
       }),
       columnHelper.accessor("status", {
         cell: (info) => <TaskStatusTag status={info.getValue()} />,
-        header: t("status"),
+        header: t("common.status"),
       }),
       columnHelper.accessor("executionDate", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
-        header: t("executionDate"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+        header: t("time.executionDate"),
       }),
       columnHelper.accessor("comments", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("comments"),
+        header: t("common.comments"),
       }),
       columnHelper.display({
         id: "actions",
@@ -70,7 +70,7 @@ export default function DeviceTaskScreen() {
               colorPalette="green"
               onClick={() => openTask(info.row.original.id)}
             >
-              {t("seeDetails")}
+              {t("common.seeDetails")}
             </Button>
           </TableButtonStack>
         ),
@@ -96,13 +96,13 @@ export default function DeviceTaskScreen() {
           </Stack>
         ) : (
           <>
-            <Heading size="md">{t("last20TasksOnThisDevice")}</Heading>
+            <Heading size="md">{t("device.lastTasks", { count: pagination.limit })}</Heading>
             {data?.length > 0 ? (
               <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
-                title={t("thereIsNoTask")}
-                description={t("thisDeviceDoesNotHaveAnyTask")}
+                title={t("task.none")}
+                description={t("device.noTask")}
               />
             )}
           </>

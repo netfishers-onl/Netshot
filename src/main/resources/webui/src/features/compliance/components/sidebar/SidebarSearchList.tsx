@@ -29,7 +29,7 @@ export default function SidebarSearchList() {
   if (policies?.length === 0) {
     return (
       <Center flex="1">
-        <Text>{t("noPolicyFound")}</Text>
+        <Text>{t("policy.notFound")}</Text>
       </Center>
     )
   }

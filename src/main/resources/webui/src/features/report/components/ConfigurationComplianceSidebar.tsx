@@ -80,7 +80,7 @@ function ConfigurationComplianceGlobalChart() {
   }, [stats])
 
   const config = useMemo(() => {
-    const labels = [t("compliant"), t("nonCompliant")]
+    const labels = [t("compliance.compliant"), t("compliance.nonCompliant")]
     const data = [count.compliant, count.nonCompliant]
     const backgroundColor = [compliantColor, nonCompliantColor]
 
@@ -124,7 +124,7 @@ function ConfigurationComplianceGlobalChart() {
             <Box w="14px" h="14px" borderRadius="4px" bg={nonCompliantColor} />
           </Skeleton>
           <Skeleton loading={!!isPending}>
-            <Text>{t("nonCompliant")}</Text>
+            <Text>{t("compliance.nonCompliant")}</Text>
           </Skeleton>
 
           <Spacer />
@@ -140,7 +140,7 @@ function ConfigurationComplianceGlobalChart() {
             <Box w="14px" h="14px" borderRadius="4px" bg={compliantColor} />
           </Skeleton>
           <Skeleton loading={!!isPending}>
-            <Text>{t("compliant")}</Text>
+            <Text>{t("compliance.compliant")}</Text>
           </Skeleton>
 
           <Spacer />

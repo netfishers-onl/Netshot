@@ -40,15 +40,15 @@ export default function HardwareDeviceListDialog(props: HardwareDeviceListButton
           {info.getValue()}
         </EntityLink>
       ),
-      header: t("device"),
+      header: t("device.label"),
     }),
     columnHelper.accessor("mgmtAddress", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("managementIp"),
+      header: t("device.managementIp"),
     }),
     columnHelper.accessor("family", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("family"),
+      header: t("common.family"),
     }),
   ]
 
@@ -93,8 +93,8 @@ export default function HardwareDeviceListDialog(props: HardwareDeviceListButton
                     <VirtualizedDataTable data={data} columns={columns} />
                   ) : (
                     <EmptyResult
-                      title={t("noDevice")}
-                      description={t("thereIsNoDeviceWithEndOfLifeStatusAtThisDate")}
+                      title={t("device.noDevice")}
+                      description={t("compliance.hardware.noDeviceWithEolStatus")}
                     />
                   )}
                 </>

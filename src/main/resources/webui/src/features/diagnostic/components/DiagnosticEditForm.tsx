@@ -36,8 +36,8 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
     <Stack gap="6" {...other}>
       <FormControl
         required
-        label={t("name")}
-        placeholder={t("name")}
+        label={t("common.name")}
+        placeholder={t("common.name")}
         control={form.control}
         name="name"
       />
@@ -46,8 +46,8 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
         options={resultTypeOptions.options}
         control={form.control}
         name="resultType"
-        label={t("resultType")}
-        placeholder={t("selectAResultType")}
+        label={t("common.resultType")}
+        placeholder={t("diagnostic.selectResultType")}
       />
       <TreeGroupSelector
         value={targetGroup ? [targetGroup] : []}
@@ -56,12 +56,12 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
       {!hasScript && (
         <>
           <Select
-            label={t("deviceType")}
-            placeholder={t("selectADeviceType")}
+            label={t("device.type")}
+            placeholder={t("device.selectType")}
             control={form.control}
             name="deviceDriver"
             isLoading={isPending}
-            noOptionsMessage={<Text>{t("noDeviceTypeFound")}</Text>}
+            noOptionsMessage={<Text>{t("device.noDeviceTypeFound")}</Text>}
             options={options}
             itemToString={(item) => item?.label}
             itemToValue={(item) => item.value?.name}
@@ -71,25 +71,25 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
             options={cliModeOptions.options}
             control={form.control}
             name="cliMode"
-            label={t("cliMode")}
-            placeholder={t("selectCliMode")}
+            label={t("network.cliMode")}
+            placeholder={t("network.selectCliMode")}
           />
           <FormControl
             required
-            label={t("cliCommand")}
-            placeholder={t("eG", { example: "show version | include reason" })}
+            label={t("network.cliCommand")}
+            placeholder={t("common.eG", { example: "show version | include reason" })}
             control={form.control}
             name="command"
           />
           <FormControl
-            label={t("regexPattern")}
-            placeholder={t("eG", { example: "(?s).*Last reload: (.+?)[\\r\\n]+.*" })}
+            label={t("policy.rule.regexPattern")}
+            placeholder={t("common.eG", { example: "(?s).*Last reload: (.+?)[\\r\\n]+.*" })}
             control={form.control}
             name="modifierPattern"
           />
           <FormControl
-            label={t("replaceWith")}
-            placeholder={t("eG", { example: "$1" })}
+            label={t("policy.rule.replaceWith")}
+            placeholder={t("common.eG", { example: "$1" })}
             control={form.control}
             name="modifierReplacement"
           />

@@ -30,10 +30,10 @@ export default function DiagnosticEnableButton(props: DiagnosticEnableButtonProp
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DIAGNOSTIC_ENABLE, {
-      title: t("enableDiagnostic"),
+      title: t("diagnostic.enable"),
       description: (
         <Text>
-          {t("youAreAboutToEnableTheDiagnostic", {
+          {t("diagnostic.aboutToEnable", {
             diagnosticName: diagnostic?.name,
           })}
         </Text>
@@ -51,14 +51,14 @@ export default function DiagnosticEnableButton(props: DiagnosticEnableButtonProp
         dialogRef.close()
 
         toast.success({
-          title: t("success"),
-          description: t("diagnosticHasBeenSuccessfullyEnabled", {
+          title: t("common.success"),
+          description: t("diagnostic.successfullyEnabled", {
             diagnosticName: diagnostic?.name,
           }),
         })
       },
       confirmButton: {
-        label: t("enable"),
+        label: t("common.enable"),
       },
     })
   }

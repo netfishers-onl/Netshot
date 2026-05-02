@@ -21,7 +21,7 @@ export default function DeviceSidebarGroup() {
   const { t } = useTranslation()
   const pagination = usePagination()
   const [searchParams] = useSearchParams()
-  const selectedGroupId = +searchParams.get("group")
+  const selectedGroupId = +searchParams.get("group.label")
 
   const { data: items, isPending } = useQuery({
     queryKey: [QUERIES.DEVICE_GROUPS],
@@ -76,13 +76,13 @@ export default function DeviceSidebarGroup() {
     <Stack gap="0">
       <Flex justifyContent="space-between" alignItems="center" px="6" pt="3" pb="1">
         <Heading fontSize="md" fontWeight="medium">
-          {t("groups")}
+          {t("group.list")}
         </Heading>
         <Protected minLevel={Level.ReadWrite}>
           <AddGroupButton
             renderItem={(open) => (
-              <Tooltip content={t("addGroup")}>
-                <IconButton variant="ghost" onClick={open} aria-label={t("addGroup")}>
+              <Tooltip content={t("group.add")}>
+                <IconButton variant="ghost" onClick={open} aria-label={t("group.add")}>
                   <Icon name="plus" />
                 </IconButton>
               </Tooltip>

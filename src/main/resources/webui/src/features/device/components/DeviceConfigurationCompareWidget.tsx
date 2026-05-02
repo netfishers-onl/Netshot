@@ -45,7 +45,7 @@ export function DeviceConfigurationCompareWidget() {
 
   function open() {
     dialog.open({
-      title: t("compareChanges"),
+      title: t("common.compareChanges"),
       description: (
         <DeviceConfigurationCompareView
           current={current}
@@ -117,7 +117,7 @@ export function DeviceConfigurationCompareWidget() {
             variant="subtle"
           />
           <Text color="white" fontWeight="medium" flex="0 0 auto">
-            {t("compareTo")}
+            {t("common.compareTo")}
           </Text>
           <DeviceConfigurationSelect
             control={form.control}
@@ -129,10 +129,10 @@ export function DeviceConfigurationCompareWidget() {
         </HStack>
         <HStack gap="3">
           <Button variant="subtle" onClick={cancel}>
-            {t("cancel")}
+            {t("common.cancel")}
           </Button>
           <Button variant="primary" onClick={open} disabled={!current || !compare}>
-            {t("compare")}
+            {t("common.compare")}
           </Button>
         </HStack>
       </motion.div>

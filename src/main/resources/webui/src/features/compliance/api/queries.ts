@@ -87,7 +87,7 @@ export function useTestRuleText() {
     mutationFn: async (payload: TestRuleTextOnDevicePayload) => api.rule.testText(payload),
     onSuccess(res) {
       toast.script({
-        title: t("testResult"),
+        title: t("policy.rule.testResult"),
         description: res.comment,
         meta: {
           result: res.result,
@@ -109,7 +109,7 @@ export function useTestRuleScript() {
     mutationFn: async (payload: TestRuleScriptOnDevicePayload) => api.rule.testScript(payload),
     onSuccess(res) {
       toast.script({
-        title: t("testResult"),
+        title: t("policy.rule.testResult"),
         description: res.comment,
         meta: {
           result: res.result,

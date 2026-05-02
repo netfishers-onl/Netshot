@@ -75,7 +75,7 @@ export default function RuleItem(props: RuleItemProps) {
                   renderItem={(open) => (
                     <Menu.Item onSelect={open} value="edit-rule">
                       <Icon name="edit" />
-                      {t("edit")}
+                      {t("common.edit")}
                     </Menu.Item>
                   )}
                 />
@@ -86,7 +86,7 @@ export default function RuleItem(props: RuleItemProps) {
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="rule-disable">
                         <Icon name="power" />
-                        {t("disable")}
+                        {t("common.disable")}
                       </Menu.Item>
                     )}
                   />
@@ -97,7 +97,7 @@ export default function RuleItem(props: RuleItemProps) {
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="rule-enable">
                         <Icon name="power" />
-                        {t("enable")}
+                        {t("common.enable")}
                       </Menu.Item>
                     )}
                   />
@@ -108,7 +108,7 @@ export default function RuleItem(props: RuleItemProps) {
                   renderItem={(open) => (
                     <Menu.Item onSelect={open} value="rule-remove">
                       <Icon name="trash" />
-                      {t("remove")}
+                      {t("common.remove")}
                     </Menu.Item>
                   )}
                 />

@@ -179,12 +179,12 @@ function FormControl<T>(
           endElement={
             <>
               {allowUnchanged && !isUnchanged && (
-                <Tooltip content={t("passwordUnchanged")} positioning={{ placement: "top" }}>
+                <Tooltip content={t("auth.passwordUnchanged")} positioning={{ placement: "top" }}>
                   <span>
                     <IconButton
                       variant="ghost"
                       bg="transparent!important"
-                      aria-label={t("passwordUnchanged")}
+                      aria-label={t("auth.passwordUnchanged")}
                       onClick={lockPassword}
                     >
                       <Icon name="unlock" />
@@ -193,14 +193,14 @@ function FormControl<T>(
                 </Tooltip>
               )}
               <Tooltip
-                content={isUnchanged ? t("passwordUnchanged") : showPassword ? t("hidePassword") : t("showPassword")}
+                content={isUnchanged ? t("auth.passwordUnchanged") : showPassword ? t("common.hidePassword") : t("common.showPassword")}
                 positioning={{ placement: "top" }}
               >
                 <span>
                   <IconButton
                     variant="ghost"
                     bg="transparent!important"
-                    aria-label={isUnchanged ? t("passwordUnchanged") : showPassword ? t("hidePassword") : t("showPassword")}
+                    aria-label={isUnchanged ? t("auth.passwordUnchanged") : showPassword ? t("common.hidePassword") : t("common.showPassword")}
                     onClick={togglePassword}
                   >
                     {isUnchanged ? <Icon name="lock" /> : showPassword ? <Icon name="eye" /> : <Icon name="eyeOff" />}

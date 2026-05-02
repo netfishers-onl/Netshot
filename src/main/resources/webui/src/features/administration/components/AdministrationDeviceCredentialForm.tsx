@@ -47,8 +47,8 @@ export default function AdministrationDeviceCredentialForm(props: Administration
   return (
     <Stack gap="6">
       <FormControl
-        label={t("name")}
-        placeholder={t("eG", { example: t("credentialName") })}
+        label={t("common.name")}
+        placeholder={t("common.eG", { example: t("credential.namePlaceholder") })}
         required
         control={form.control}
         name="name"
@@ -56,7 +56,7 @@ export default function AdministrationDeviceCredentialForm(props: Administration
       <DomainSelect
         control={form.control}
         name="mgmtDomain"
-        label={t("domain")}
+        label={t("domain.label")}
         withAny
       />
       <Select
@@ -65,21 +65,21 @@ export default function AdministrationDeviceCredentialForm(props: Administration
         control={form.control}
         name="type"
         options={deviceCredentialTypeOptions.options}
-        label={t("type")}
-        placeholder={t("selectAProtocol")}
+        label={t("common.type")}
+        placeholder={t("network.selectProtocol")}
       />
       {type === CredentialSetType.SNMP_V3 && (
         <>
           <FormControl
-            label={t("username")}
-            placeholder={t("eG", { example: "admin" })}
+            label={t("user.username")}
+            placeholder={t("common.eG", { example: "admin" })}
             required
             control={form.control}
             name="username"
           />
           <Field.Root required={!freezePasswords}>
             <Field.Label>
-              {t("authKey")}
+              {t("network.authKey")}
               {!freezePasswords && <Field.RequiredIndicator />}
             </Field.Label>
             <Group w="full">
@@ -93,7 +93,7 @@ export default function AdministrationDeviceCredentialForm(props: Administration
               <FormControl
                 flex="2"
                 type={FormControlType.Password}
-                placeholder={t("eG", { example: t("secretKey") })}
+                placeholder={t("common.eG", { example: t("credential.secretKey") })}
                 required={!freezePasswords}
                 allowUnchanged={freezePasswords}
                 control={form.control}
@@ -103,7 +103,7 @@ export default function AdministrationDeviceCredentialForm(props: Administration
           </Field.Root>
           <Field.Root required={!freezePasswords}>
             <Field.Label>
-              {t("privKey")}
+              {t("network.privKey")}
               {!freezePasswords && <Field.RequiredIndicator />}
             </Field.Label>
             <Group w="full">
@@ -117,7 +117,7 @@ export default function AdministrationDeviceCredentialForm(props: Administration
               <FormControl
                 flex="2"
                 type={FormControlType.Password}
-                placeholder={t("eG", { example: t("secretKey") })}
+                placeholder={t("common.eG", { example: t("credential.secretKey") })}
                 required={!freezePasswords}
                 allowUnchanged={freezePasswords}
                 control={form.control}
@@ -131,8 +131,8 @@ export default function AdministrationDeviceCredentialForm(props: Administration
         <>
           <FormControl
             required
-            label={t("username")}
-            placeholder={t("eG", { example: "admin" })}
+            label={t("user.username")}
+            placeholder={t("common.eG", { example: "admin" })}
             control={form.control}
             name="username"
           />
@@ -140,8 +140,8 @@ export default function AdministrationDeviceCredentialForm(props: Administration
             required={!freezePasswords}
             allowUnchanged={freezePasswords}
             type={FormControlType.Password}
-            label={t("password")}
-            placeholder={t("typeYourPassword")}
+            label={t("auth.password")}
+            placeholder={t("auth.typeYourPassword")}
             control={form.control}
             name="password"
           />
@@ -149,8 +149,8 @@ export default function AdministrationDeviceCredentialForm(props: Administration
             required={!freezePasswords}
             allowUnchanged={freezePasswords}
             type={FormControlType.Password}
-            label={t("superPassword")}
-            placeholder={t("typeYourSuperPassword")}
+            label={t("network.superPassword")}
+            placeholder={t("network.typeSuperPassword")}
             control={form.control}
             name="superPassword"
           />
@@ -160,25 +160,25 @@ export default function AdministrationDeviceCredentialForm(props: Administration
         <>
           <FormControl
             required
-            label={t("username")}
-            placeholder={t("eG", { example: "admin" })}
+            label={t("user.username")}
+            placeholder={t("common.eG", { example: "admin" })}
             control={form.control}
             name="username"
           />
           <FormControl
             required={!freezePasswords}
             type={FormControlType.LongText}
-            label={t("sshPrivateKey")}
-            placeholder={t("typeYourPrivateKey")}
+            label={t("network.sshPrivateKey")}
+            placeholder={t("network.typePrivateKey")}
             control={form.control}
             name="privateKey"
-            helperText={freezePasswords ? t("leaveEmptyToKeepCurrentKey") : undefined}
+            helperText={freezePasswords ? t("auth.leaveEmptyToKeepCurrentKey") : undefined}
           />
           <FormControl
             allowUnchanged={freezePasswords}
             type={FormControlType.Password}
-            label={t("passphrase")}
-            placeholder={t("typeYourPassphrase")}
+            label={t("network.passphrase")}
+            placeholder={t("network.typePassphrase")}
             control={form.control}
             name="password"
           />
@@ -186,8 +186,8 @@ export default function AdministrationDeviceCredentialForm(props: Administration
             required={!freezePasswords}
             allowUnchanged={freezePasswords}
             type={FormControlType.Password}
-            label={t("superPassword")}
-            placeholder={t("typeYourSuperPassword")}
+            label={t("network.superPassword")}
+            placeholder={t("network.typeSuperPassword")}
             control={form.control}
             name="superPassword"
           />
@@ -197,8 +197,8 @@ export default function AdministrationDeviceCredentialForm(props: Administration
         type
       ) && (
         <FormControl
-          label={t("community")}
-          placeholder={t("eG", { example: "public" })}
+          label={t("common.community")}
+          placeholder={t("common.eG", { example: "public" })}
           required
           control={form.control}
           name="community"

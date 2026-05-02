@@ -74,16 +74,16 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         onChange={(groups) => form.setValue("group", groups?.[0])}
         withAny
       />
-      <DeviceTypeSelect control={form.control} name="driver" placeholder={t("any")} isClearable />
+      <DeviceTypeSelect control={form.control} name="driver" placeholder={t("common.any")} isClearable />
       <FormControl
         control={form.control}
         name="family"
-        label={t("deviceFamily")}
-        placeholder={t("eG", { example: "Cisco ASR9000 Series" })}
+        label={t("device.family")}
+        placeholder={t("common.eG", { example: "Cisco ASR9000 Series" })}
         suffix={
           <IconButton
-            aria-label={t(familyRegExp ? "switchToText" : "switchToRegexp")}
-            title={t(familyRegExp ? "switchToText" : "switchToRegexp")}
+            aria-label={t(familyRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
+            title={t(familyRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
             variant="ghost"
             colorPalette="green"
             onClick={toggleFamilyRegExp}
@@ -95,12 +95,12 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
       <FormControl
         control={form.control}
         name="partNumber"
-        label={t("partNumber")}
-        placeholder={t("eG", { example: "FK-X0012" })}
+        label={t("device.module.partNumber")}
+        placeholder={t("common.eG", { example: "FK-X0012" })}
         suffix={
           <IconButton
-            aria-label={t(partNumberRegExp ? "switchToText" : "switchToRegexp")}
-            title={t(partNumberRegExp ? "switchToText" : "switchToRegexp")}
+            aria-label={t(partNumberRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
+            title={t(partNumberRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
             variant="ghost"
             colorPalette="green"
             onClick={togglePartNumberRegExp}
@@ -112,12 +112,12 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
       <FormControl
         control={form.control}
         name="version"
-        label={t("version")}
-        placeholder={t("eG", { example: "0.10" })}
+        label={t("common.version")}
+        placeholder={t("common.eG", { example: "0.10" })}
         suffix={
           <IconButton
-            aria-label={t(versionRegExp ? "switchToText" : "switchToRegexp")}
-            title={t(versionRegExp ? "switchToText" : "switchToRegexp")}
+            aria-label={t(versionRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
+            title={t(versionRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
             variant="ghost"
             colorPalette="green"
             onClick={toggleVersionRegExp}
@@ -127,7 +127,7 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         }
       />
       <Select
-        label={t("result")}
+        label={t("common.result")}
         control={form.control}
         name="level"
         options={deviceLevelOptions.options}

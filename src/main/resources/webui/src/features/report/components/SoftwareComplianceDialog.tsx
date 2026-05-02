@@ -42,11 +42,11 @@ function SoftwareComplianceDeviceList(props: SoftwareComplianceDeviceListProps) 
             {info.getValue()}
           </EntityLink>
         ),
-        header: t("deviceName"),
+        header: t("device.name"),
       }),
       columnHelper.accessor("mgmtAddress", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("managementIp"),
+        header: t("device.managementIp"),
       }),
       columnHelper.accessor("softwareLevel", {
         cell: (info) => {
@@ -54,7 +54,7 @@ function SoftwareComplianceDeviceList(props: SoftwareComplianceDeviceListProps) 
 
           return <Tag.Root colorPalette={getSoftwareLevelColor(level)}>{level}</Tag.Root>
         },
-        header: t("softwareLevel"),
+        header: t("compliance.software.level"),
       }),
     ],
     [t]
@@ -73,8 +73,8 @@ function SoftwareComplianceDeviceList(props: SoftwareComplianceDeviceListProps) 
         <DataTable columns={columns} data={data} loading={isPending} />
       ) : (
         <EmptyResult
-          title={t("thereIsNoDevice")}
-          description={t("deviceWithLevelAppearsWhenSoftwareRuleIsValidated", {
+          title={t("device.none")}
+          description={t("device.withLevelAppearsWhenSoftwareRuleValidated", {
             level: t(level),
           })}
         />
@@ -120,7 +120,7 @@ function SoftwareComplianteDeviceBox(props: SoftwareComplianteDeviceBoxProps) {
       <Box w="14px" h="14px" borderRadius="4px" bg={bg} />
       {children}
       <Spacer />
-      <Text>{t("device", { count })}</Text>
+      <Text>{t("device.label", { count })}</Text>
     </Stack>
   )
 }
@@ -142,22 +142,22 @@ export default function SoftwareComplianceDialog(props: SoftwareComplianceDialog
   const triggers = useMemo(
     () => [
       {
-        label: t("gold"),
+        label: t("compliance.software.gold"),
         level: DeviceSoftwareLevel.GOLD,
         count: item.goldDeviceCount,
       },
       {
-        label: t("silver"),
+        label: t("compliance.software.silver"),
         level: DeviceSoftwareLevel.SILVER,
         count: item.silverDeviceCount,
       },
       {
-        label: t("bronze"),
+        label: t("compliance.software.bronze"),
         level: DeviceSoftwareLevel.BRONZE,
         count: item.bronzeDeviceCount,
       },
       {
-        label: t("nonCompliant"),
+        label: t("compliance.nonCompliant"),
         level: DeviceSoftwareLevel.NON_COMPLIANT,
         count: nonCompliantDeviceCount,
       },

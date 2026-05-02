@@ -50,7 +50,7 @@ export default function AdministrationUserScreen() {
     () => [
       columnHelper.accessor("username", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("username"),
+        header: t("user.username"),
         enableSorting: true,
       }),
       columnHelper.accessor("local", {
@@ -60,11 +60,11 @@ export default function AdministrationUserScreen() {
           return (
             <Badge size="lg" variant="outline" marginTop="-3px" marginBottom="-3px">
               {value ? <Icon name="database" /> : <Icon name="cloud" />}
-              {t(value ? "localType" : "remoteType")}
+              {t(value ? "user.localType" : "user.remoteType")}
             </Badge>
           )
         },
-        header: t("type"),
+        header: t("common.type"),
         minSize: 90,
       }),
       columnHelper.accessor("level", {
@@ -72,9 +72,9 @@ export default function AdministrationUserScreen() {
           const value = info.getValue()
           const label = userLevelOptions.getLabelByValue(value)
 
-          return <Text>{label ? label : t("unknown3")}</Text>
+          return <Text>{label ? label : t("common.unknownLabel")}</Text>
         },
-        header: t("permissionLevel"),
+        header: t("user.permissionLevel"),
         enableSorting: true,
       }),
       columnHelper.display({
@@ -92,9 +92,9 @@ export default function AdministrationUserScreen() {
               <EditUserButton
                 user={user}
                 renderItem={(open) => (
-                  <Tooltip content={t("edit")}>
+                  <Tooltip content={t("common.edit")}>
                     <IconButton
-                      aria-label={t("editUser")}
+                      aria-label={t("user.edit")}
                       variant="ghost"
                       colorPalette="green"
                       onClick={open}
@@ -107,9 +107,9 @@ export default function AdministrationUserScreen() {
               <RemoveUserButton
                 user={user}
                 renderItem={(open) => (
-                  <Tooltip content={t("remove")}>
+                  <Tooltip content={t("common.remove")}>
                     <IconButton
-                      aria-label={t("removeUser")}
+                      aria-label={t("user.remove")}
                       variant="ghost"
                       colorPalette="green"
                       onClick={open}
@@ -136,11 +136,11 @@ export default function AdministrationUserScreen() {
     <>
       <Stack gap="6" p="9" flex="1" overflow="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("users")}
+          {t("user.list")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("searchPlaceholder")}
+            placeholder={t("common.searchPlaceholder")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -150,7 +150,7 @@ export default function AdministrationUserScreen() {
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
                 <Plus />
-                {t("create")}
+                {t("common.create")}
               </Button>
             )}
           />
@@ -168,14 +168,14 @@ export default function AdministrationUserScreen() {
               <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
-                title={t("thereIsNoUser")}
-                description={t("youCanCreateUsersWithDifferentRolesToManageNetshot")}
+                title={t("user.none")}
+                description={t("user.canCreate")}
               >
                 <AddUserButton
                   renderItem={(open) => (
                     <Button variant="outline" onClick={open}>
                       <Plus />
-                      {t("create")}
+                      {t("common.create")}
                     </Button>
                   )}
                 />

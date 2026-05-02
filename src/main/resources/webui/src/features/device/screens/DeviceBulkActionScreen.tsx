@@ -25,15 +25,10 @@ export default function DeviceBulkActionScreen() {
       <Stack gap="8" w="20%">
         <Stack gap="3">
           <Heading as="h1" fontSize="4xl">
-            {t("bulkActions")}
+            {t("common.bulkActions")}
           </Heading>
           <Text color="grey.500">
-            {t(
-              "youVeSelectedDevicesTheFollowingActionsApplyToAllOfTheSelect",
-              {
-                count: selected.length,
-              }
-            )}
+            {t("device.youVeSelected", { count: selected.length })}
           </Text>
         </Stack>
 
@@ -44,7 +39,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="play" />
-                  {t("runScript")}
+                  {t("script.run")}
                 </Button>
               )}
             />
@@ -55,7 +50,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="camera" />
-                  {t("takeSnapshot")}
+                  {t("device.snapshot.take")}
                 </Button>
               )}
             />
@@ -66,7 +61,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="checkCircle" />
-                  {t("checkCompliance")}
+                  {t("compliance.check")}
                 </Button>
               )}
             />
@@ -77,7 +72,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="activity" />
-                  {t("runDiagnostics")}
+                  {t("diagnostic.run")}
                 </Button>
               )}
             />
@@ -88,7 +83,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="edit" />
-                  {t("edit")}
+                  {t("common.edit")}
                 </Button>
               )}
             />
@@ -99,7 +94,7 @@ export default function DeviceBulkActionScreen() {
                 renderItem={(open) => (
                   <Button justifyContent="start" onClick={open} flex="1">
                     <Icon name="zap" />
-                    {t("enable")}
+                    {t("common.enable")}
                   </Button>
                 )}
               />
@@ -109,7 +104,7 @@ export default function DeviceBulkActionScreen() {
                 renderItem={(open) => (
                   <Button justifyContent="start" onClick={open} flex="1">
                     <Icon name="zapOff" />
-                    {t("disable")}
+                    {t("common.disable")}
                   </Button>
                 )}
               />
@@ -121,7 +116,7 @@ export default function DeviceBulkActionScreen() {
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
                   <Icon name="trash" />
-                  {t("remove")}
+                  {t("common.remove")}
                 </Button>
               )}
             />

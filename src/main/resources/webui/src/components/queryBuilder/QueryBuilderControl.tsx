@@ -64,13 +64,13 @@ export function QueryBuilderControl<T>(props: QueryBuilderControlProps<T>) {
 
   function getPlaceholder() {
     if (attributeGroup === AttributeGroupType.TypeSpecific) {
-      return t("selectDeviceAttribute")
+      return t("common.selectDeviceAttribute")
     } else if (attributeGroup === AttributeGroupType.DiagnosticResult) {
-      return t("selectDiagnostic")
+      return t("diagnostic.select")
     } else if (attributeGroup === AttributeGroupType.ComplianceRuleResult) {
-      return t("selectRule")
+      return t("policy.rule.selectLabel")
     } else {
-      return t("selectAttributeEllipsis")
+      return t("common.selectAttributeEllipsis")
     }
   }
 
@@ -184,8 +184,8 @@ export function QueryBuilderControl<T>(props: QueryBuilderControlProps<T>) {
         <Stack alignItems="center" gap="4">
           <Spinner size="lg" />
           <Stack alignItems="center" gap="1">
-            <Heading size="md">{t("loading")}</Heading>
-            <Text color="grey.400">{t("queryBuilderIsBeingInitialized")}</Text>
+            <Heading size="md">{t("common.loading")}</Heading>
+            <Text color="grey.400">{t("common.queryBuilderIsBeingInitialized")}</Text>
           </Stack>
         </Stack>
       </Center>
@@ -200,22 +200,22 @@ export function QueryBuilderControl<T>(props: QueryBuilderControlProps<T>) {
         type={FormControlType.LongText}
         rows={8}
         ref={inputRef}
-        placeholder={t("eG", { example: "[IP] is 16.16.16.16" })}
+        placeholder={t("common.eG", { example: "[IP] is 16.16.16.16" })}
       />
       <Stack direction="row" gap="3">
-        <Button onClick={() => setCondition(ConditionType.Not)}>{t("not")}</Button>
-        <Button onClick={() => setCondition(ConditionType.And)}>{t("and")}</Button>
-        <Button onClick={() => setCondition(ConditionType.Or)}>{t("or")}</Button>
+        <Button onClick={() => setCondition(ConditionType.Not)}>{t("common.not")}</Button>
+        <Button onClick={() => setCondition(ConditionType.And)}>{t("common.and")}</Button>
+        <Button onClick={() => setCondition(ConditionType.Or)}>{t("common.or")}</Button>
         <Button onClick={() => setCondition()}>
           <Icon name="x" />
-          {t("clear")}
+          {t("common.clear")}
         </Button>
       </Stack>
       <Select
         control={form.control}
         name="attributeGroup"
         options={attributeGroupOptions.options}
-        placeholder={t("selectSpecificAttribute")}
+        placeholder={t("common.selectSpecificAttribute")}
       />
       {attributeGroup === AttributeGroupType.TypeSpecific && (
         <DeviceTypeSelect control={form.control} name="deviceType" />

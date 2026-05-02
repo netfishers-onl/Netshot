@@ -107,56 +107,56 @@ function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
     <Stack gap="6">
       <FormControl
         readOnly
-        label={t("name")}
-        placeholder={t("deviceName")}
+        label={t("common.name")}
+        placeholder={t("device.name")}
         control={form.control}
         name="name"
       />
       <FormControl
         required
-        label={t("ipAddress")}
-        placeholder={t("deviceIpAddress")}
+        label={t("device.interface.ipAddress")}
+        placeholder={t("device.ipAddress")}
         control={form.control}
         name="ipAddress"
         rules={{
           pattern: {
             value: /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
-            message: t("thisIsNotAValidIpAddress"),
+            message: t("common.thisIsNotAValidIpAddress"),
           },
         }}
       />
       <DomainSelect control={form.control} name="mgmtDomain" />
       <Checkbox control={form.control} name="overrideConnectionSetting">
-        {t("overrideConnectionSettings")}
+        {t("device.overrideConnectionSettings")}
       </Checkbox>
       {overrideConnectionSetting && (
         <>
           <FormControl
             required
-            label={t("connectIp")}
-            placeholder={t("eG", { example: "10.216.5.3" })}
+            label={t("device.connectIp")}
+            placeholder={t("common.eG", { example: "10.216.5.3" })}
             control={form.control}
             name="connectIpAddress"
             rules={{
               pattern: {
                 value:
                   /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
-                message: t("thisIsNotAValidIpAddress"),
+                message: t("common.thisIsNotAValidIpAddress"),
               },
             }}
           />
           <Stack direction="row" gap="4">
             <FormControl
               required
-              label={t("sshPort")}
-              placeholder={t("eG", { example: "22" })}
+              label={t("network.sshPort")}
+              placeholder={t("common.eG", { example: "22" })}
               control={form.control}
               name="sshPort"
             />
             <FormControl
               required
-              label={t("telnetPort")}
-              placeholder={t("eG", { example: "6753" })}
+              label={t("network.telnetPort")}
+              placeholder={t("common.eG", { example: "6753" })}
               control={form.control}
               name="telnetPort"
             />
@@ -167,8 +167,8 @@ function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
         control={form.control}
         name="credentialType"
         options={deviceCredentialOptions.options}
-        label={t("credential")}
-        placeholder={t("selectACredential")}
+        label={t("credential.label")}
+        placeholder={t("credential.select")}
         onSelectItem={onCredentialTypeChange}
       />
       {credentialType === null && !isPending && (
@@ -189,7 +189,7 @@ function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
               </NativeCheckbox.Root>
             ))}
             <Checkbox control={form.control} name="autoTryCredentials">
-              {t("inCaseOfFailureAlsoTryAllKnownCredentials")}
+              {t("device.inCaseOfFailureTryAllCredentials")}
             </Checkbox>
           </Stack>
         </>
@@ -198,8 +198,8 @@ function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
         <>
           <FormControl
             required
-            label={t("username")}
-            placeholder={t("eG", { example: "admin" })}
+            label={t("user.username")}
+            placeholder={t("common.eG", { example: "admin" })}
             control={form.control}
             name="specificCredentialSet.username"
             autoComplete="nope"
@@ -208,8 +208,8 @@ function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
             required={!freezePasswords}
             allowUnchanged={freezePasswords}
             type={FormControlType.Password}
-            label={t("password")}
-            placeholder={t("typeYourPassword")}
+            label={t("auth.password")}
+            placeholder={t("auth.typeYourPassword")}
             control={form.control}
             name="specificCredentialSet.password"
             autoComplete="nope"
@@ -217,8 +217,8 @@ function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
           <FormControl
             allowUnchanged={freezePasswords}
             type={FormControlType.Password}
-            label={t("superPassword")}
-            placeholder={t("typeYourSuperPassword")}
+            label={t("network.superPassword")}
+            placeholder={t("network.typeSuperPassword")}
             control={form.control}
             name="specificCredentialSet.superPassword"
             autoComplete="nope"
@@ -229,8 +229,8 @@ function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
         <>
           <FormControl
             required
-            label={t("username")}
-            placeholder={t("eG", { example: "admin" })}
+            label={t("user.username")}
+            placeholder={t("common.eG", { example: "admin" })}
             control={form.control}
             name="specificCredentialSet.username"
             autoComplete="nope"
@@ -238,19 +238,19 @@ function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
           <FormControl
             required={!freezePasswords}
             type={FormControlType.LongText}
-            label={t("sshPrivateKey")}
-            placeholder={t("typeYourPrivateKey")}
+            label={t("network.sshPrivateKey")}
+            placeholder={t("network.typePrivateKey")}
             control={form.control}
             name="specificCredentialSet.privateKey"
             autoComplete="nope"
-            helperText={freezePasswords ? t("leaveEmptyToKeepCurrentKey") : undefined}
+            helperText={freezePasswords ? t("auth.leaveEmptyToKeepCurrentKey") : undefined}
           />
           <FormControl
             required={!freezePasswords}
             allowUnchanged={freezePasswords}
             type={FormControlType.Password}
-            label={t("passphrase")}
-            placeholder={t("typeYourPassphrase")}
+            label={t("network.passphrase")}
+            placeholder={t("network.typePassphrase")}
             control={form.control}
             name="specificCredentialSet.password"
             autoComplete="nope"
@@ -258,8 +258,8 @@ function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
           <FormControl
             allowUnchanged={freezePasswords}
             type={FormControlType.Password}
-            label={t("superPassword")}
-            placeholder={t("typeYourSuperPassword")}
+            label={t("network.superPassword")}
+            placeholder={t("network.typeSuperPassword")}
             control={form.control}
             name="specificCredentialSet.superPassword"
             autoComplete="nope"
@@ -268,8 +268,8 @@ function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
       )}
       <FormControl
         type={FormControlType.LongText}
-        label={t("comments")}
-        placeholder={t("addADescriptionAboutTheDevice")}
+        label={t("common.comments")}
+        placeholder={t("device.addDescription")}
         control={form.control}
         name="comments"
       />
@@ -344,7 +344,7 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DEVICE_UPDATE, {
-      title: t("editDevice"),
+      title: t("device.edit"),
       description: <DeviceEditForm freezePasswords={Boolean(device?.specificCredentialSet)} />,
       form,
       size: "lg",
@@ -391,8 +391,8 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
         form.reset()
 
         toast.success({
-          title: t("success"),
-          description: t("deviceHasBeenSuccessfullyModified", {
+          title: t("common.success"),
+          description: t("device.successfullyModified", {
             device: device?.name,
           }),
         })
@@ -404,7 +404,7 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("applyChanges"),
+        label: t("common.applyChanges"),
       },
     })
   }

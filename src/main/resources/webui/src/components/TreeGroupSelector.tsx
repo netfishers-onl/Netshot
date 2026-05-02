@@ -125,7 +125,7 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
 
   const selectedGroups = useMemo(() => {
     if (withAny && groupField.length === 0) {
-      return [t("anyLabel")]
+      return [t("common.anyLabel")]
     }
 
     if (items?.length === 0) {
@@ -141,7 +141,7 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
 
   const open = () => {
     const dialogRef = dialog.open({
-      title: t("selectGroups"),
+      title: t("common.selectGroups"),
       description: <SelectGroupDialog items={items} />,
       form,
       onSubmit() {
@@ -162,7 +162,7 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
   /* return (
     <Field.Root required={required} readOnly={readOnly} disabled={isDisabled} onClick={open}>
       <TagsInput.Root max={1}>
-        <TagsInput.Label>{label ? label : t("targetGroups")}</TagsInput.Label>
+        <TagsInput.Label>{label ? label : t("common.targetGroups")}</TagsInput.Label>
         <TagsInput.Control>
           {selectedGroups.map((tag, index) => (
             <TagsInput.Item key={index} index={index} value={tag}>
@@ -174,7 +174,7 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
             </TagsInput.Item>
           ))}
 
-          <TagsInput.Input placeholder={t("selectGroups")} />
+          <TagsInput.Input placeholder={t("common.selectGroups")} />
         </TagsInput.Control>
       </TagsInput.Root>
     </Field.Root>
@@ -195,7 +195,7 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
     <Stack gap="1">
       <Field.Root required={required} readOnly={readOnly} disabled={isDisabled}>
         <Field.Label>
-          {label ? label : t("targetGroups")}
+          {label ? label : t("common.targetGroups")}
           <Field.RequiredIndicator />
         </Field.Label>
         <Box
@@ -223,13 +223,13 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
                 render
               ) : (
                 <Tag.Root colorPalette="grey" size="md">
-                  <Tag.Label>{t("anyLabel")}</Tag.Label>
+                  <Tag.Label>{t("common.anyLabel")}</Tag.Label>
                 </Tag.Root>
               )}
             </>
           ) : (
             <>
-              {groupField?.length > 0 ? render : <Text color="grey.400">{t("selectGroups")}</Text>}
+              {groupField?.length > 0 ? render : <Text color="grey.400">{t("common.selectGroups")}</Text>}
             </>
           )}
         </Box>

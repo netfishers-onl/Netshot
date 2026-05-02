@@ -63,29 +63,29 @@ export default function DeviceInterfaceScreen() {
         data.find((i) => !!i.virtualDevice) &&
           columnHelper.accessor("virtualDevice", {
             cell: (info) => <Text>{info.getValue()}</Text>,
-            header: t("virtualDevice"),
+            header: t("device.virtualDevice"),
             enableSorting: true,
           }),
         columnHelper.accessor("interfaceName", {
           cell: (info) => <Text>{info.getValue()}</Text>,
-          header: t("name"),
+          header: t("common.name"),
           enableSorting: true,
         }),
         columnHelper.accessor("enabled", {
           cell: (info) =>
             info.getValue() === false ? (
-              <Tag.Root colorPalette="red">{t("disabled")}</Tag.Root>
+              <Tag.Root colorPalette="red">{t("common.disabled")}</Tag.Root>
             ) : null,
           header: "",
         }),
         columnHelper.accessor("level3", {
           cell: (info) =>
-            info.getValue() === false ? <Tag.Root colorPalette="grey">{t("l2")}</Tag.Root> : null,
+            info.getValue() === false ? <Tag.Root colorPalette="grey">{t("device.class.l2")}</Tag.Root> : null,
           header: "",
         }),
         columnHelper.accessor("description", {
           cell: (info) => <Text>{info.getValue()}</Text>,
-          header: t("description"),
+          header: t("common.description"),
           enableSorting: true,
         }),
         columnHelper.accessor("macAddress", {
@@ -95,13 +95,13 @@ export default function DeviceInterfaceScreen() {
             }
             return ""
           },
-          header: t("macAddress"),
+          header: t("device.interface.macAddress"),
           enableSorting: true,
         }),
         data.find((i) => !!i.vrfInstance) &&
           columnHelper.accessor("vrfInstance", {
             cell: (info) => <Text>{info.getValue()}</Text>,
-            header: t("vrf"),
+            header: t("common.vrf"),
             enableSorting: true,
           }),
         columnHelper.accessor("ip4Addresses", {
@@ -123,7 +123,7 @@ export default function DeviceInterfaceScreen() {
             }
             return ""
           },
-          header: t("ipAddress"),
+          header: t("device.interface.ipAddress"),
           enableSorting: true,
         }),
       ].filter((c) => !!c),
@@ -134,7 +134,7 @@ export default function DeviceInterfaceScreen() {
     <Stack gap="6" overflow="auto">
       <Stack direction="row" gap="3">
         <Search
-          placeholder={t("searchByVirtualDeviceNameDescriptionMacAddressIp")}
+          placeholder={t("device.searchBy")}
           onQuery={pagination.onQuery}
           w="30%"
         />
@@ -152,10 +152,8 @@ export default function DeviceInterfaceScreen() {
             <DataTable columns={columns} data={data} loading={isPending} />
           ) : (
             <EmptyResult
-              title={t("thereIsNoInterface")}
-              description={t(
-                "thisDeviceDoesNotHaveAnyInterfacePleaseCheckItsConfiguration"
-              )}
+              title={t("device.interface.none")}
+              description={t("device.interface.noInterface")}
             />
           )}
         </>

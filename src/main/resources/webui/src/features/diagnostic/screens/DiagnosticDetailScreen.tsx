@@ -56,7 +56,7 @@ export default function DeviceDetailScreen() {
                   diagnostic={diagnostic}
                   renderItem={(open) => (
                     <Button variant="primary" onClick={open}>
-                      {t("edit")}
+                      {t("common.edit")}
                     </Button>
                   )}
                 />
@@ -66,7 +66,7 @@ export default function DeviceDetailScreen() {
                 <Skeleton loading={isPending}>
                   <Menu.Trigger asChild>
                     <Button>
-                      {t("actions")}
+                      {t("common.actions")}
                       <Icon name="moreHorizontal" />
                     </Button>
                   </Menu.Trigger>
@@ -83,7 +83,7 @@ export default function DeviceDetailScreen() {
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="disable">
                                   <Icon name="power" />
-                                  {t("disable")}
+                                  {t("common.disable")}
                                 </Menu.Item>
                               )}
                             />
@@ -93,7 +93,7 @@ export default function DeviceDetailScreen() {
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="enable">
                                   <Icon name="power" />
-                                  {t("enable")}
+                                  {t("common.enable")}
                                 </Menu.Item>
                               )}
                             />
@@ -104,7 +104,7 @@ export default function DeviceDetailScreen() {
                             renderItem={(open) => (
                               <Menu.Item onSelect={open} value="remove">
                                 <Icon name="trash" />
-                                {t("remove")}
+                                {t("common.remove")}
                               </Menu.Item>
                             )}
                           />
@@ -122,7 +122,7 @@ export default function DeviceDetailScreen() {
           <Stack gap="3">
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("deviceType")}</Text>
+                <Text color="grey.400">{t("device.type")}</Text>
               </Box>
               <Skeleton loading={isPending}>
                 <Text>{diagnostic?.deviceDriverDescription ?? "nA"}</Text>
@@ -130,13 +130,13 @@ export default function DeviceDetailScreen() {
             </Flex>
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("cliMode")}</Text>
+                <Text color="grey.400">{t("network.cliMode")}</Text>
               </Box>
               <Skeleton loading={isPending}>{diagnostic?.cliMode}</Skeleton>
             </Flex>
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("cliCommand")}</Text>
+                <Text color="grey.400">{t("network.cliCommand")}</Text>
               </Box>
               <Skeleton loading={isPending}>
                 <Text fontFamily="mono">{diagnostic?.command ?? "nA"}</Text>
@@ -144,7 +144,7 @@ export default function DeviceDetailScreen() {
             </Flex>
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("regexPattern")}</Text>
+                <Text color="grey.400">{t("policy.rule.regexPattern")}</Text>
               </Box>
               <Skeleton loading={isPending}>
                 <Text fontFamily="mono">{diagnostic?.modifierPattern ?? "nA"}</Text>
@@ -152,7 +152,7 @@ export default function DeviceDetailScreen() {
             </Flex>
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("replaceWith")}</Text>
+                <Text color="grey.400">{t("policy.rule.replaceWith")}</Text>
               </Box>
               <Skeleton loading={isPending}>
                 <Text fontFamily="mono">{diagnostic?.modifierReplacement ?? "nA"}</Text>
@@ -160,13 +160,13 @@ export default function DeviceDetailScreen() {
             </Flex>
             <Flex alignItems="center">
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("enabled")}</Text>
+                <Text color="grey.400">{t("common.enabled")}</Text>
               </Box>
               <Skeleton loading={isPending}>
                 {diagnostic?.enabled ? (
-                  <Badge colorPalette="green">{t("enabled")}</Badge>
+                  <Badge colorPalette="green">{t("common.enabled")}</Badge>
                 ) : (
-                  <Badge colorPalette="red">{t("disabled")}</Badge>
+                  <Badge colorPalette="red">{t("common.disabled")}</Badge>
                 )}
               </Skeleton>
             </Flex>

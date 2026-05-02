@@ -33,11 +33,11 @@ export default function RunningTaskScreen() {
   return (
     <Stack gap="6" p="9" flex="1" overflow="auto">
       <Heading as="h1" fontSize="4xl">
-        {t("runningTasks")}
+        {t("task.running")}
       </Heading>
       <Stack direction="row" gap="3">
         <Search
-          placeholder={t("searchPlaceholder")}
+          placeholder={t("common.searchPlaceholder")}
           onQuery={pagination.onQuery}
           onClear={pagination.onQueryClear}
           w="30%"
@@ -47,7 +47,7 @@ export default function RunningTaskScreen() {
           <Menu.Trigger asChild>
             <Button variant="primary">
               <Icon name="filter" />
-              {t("filters")}
+              {t("common.filters")}
             </Button>
           </Menu.Trigger>
           <Portal>
@@ -59,13 +59,13 @@ export default function RunningTaskScreen() {
                       control={form.control}
                       name="executionDate"
                       type={FormControlType.Date}
-                      label={t("executionDate")}
+                      label={t("time.executionDate")}
                     />
                     <Stack gap="2">
                       <Button variant="primary" type="submit">
-                        {t("applyFilters")}
+                        {t("common.applyFilters")}
                       </Button>
-                      <Button onClick={clearFilter}>{t("clearAll")}</Button>
+                      <Button onClick={clearFilter}>{t("common.clearAll")}</Button>
                     </Stack>
                   </form>
                 </Stack>
@@ -73,7 +73,7 @@ export default function RunningTaskScreen() {
             </Menu.Positioner>
           </Portal>
         </Menu.Root>
-        <IconButton aria-label={t("reload")} onClick={() => refetch()} loading={isFetching}>
+        <IconButton aria-label={t("common.reload")} onClick={() => refetch()} loading={isFetching}>
           <Icon name="refreshCcw" />
         </IconButton>
       </Stack>
@@ -95,8 +95,8 @@ export default function RunningTaskScreen() {
             />
           ) : (
             <EmptyResult
-              title={t("thereIsNoRunningTask")}
-              description={t("noMatchingTaskWasFound")}
+              title={t("task.noRunning")}
+              description={t("task.noMatchingFound")}
             />
           )}
         </>

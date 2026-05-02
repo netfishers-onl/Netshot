@@ -31,7 +31,7 @@ export function SettingInterface() {
   return (
     <Stack gap="5" pt="7" flex="1" overflow="auto">
       <Stack gap="6">
-        <Select control={form.control} name="language" options={options} label={t("language")} />
+        <Select control={form.control} name="language" options={options} label={t("common.language")} />
       </Stack>
     </Stack>
   )

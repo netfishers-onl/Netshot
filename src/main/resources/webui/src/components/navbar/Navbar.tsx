@@ -23,13 +23,13 @@ export default function Navbar() {
         </Link>
 
         <Stack direction="row" alignItems="center">
-          <NavbarLink to="reports">{t("reports")}</NavbarLink>
-          <NavbarLink to="devices">{t("devices")}</NavbarLink>
-          <NavbarLink to="diagnostics">{t("diagnostics")}</NavbarLink>
-          <NavbarLink to="compliance">{t("compliance")}</NavbarLink>
-          <NavbarLink to="tasks">{t("tasks")}</NavbarLink>
+          <NavbarLink to="reports">{t("report.list")}</NavbarLink>
+          <NavbarLink to="devices">{t("device.devices")}</NavbarLink>
+          <NavbarLink to="diagnostics">{t("diagnostic.list")}</NavbarLink>
+          <NavbarLink to="compliance">{t("compliance.label")}</NavbarLink>
+          <NavbarLink to="tasks">{t("task.list")}</NavbarLink>
           <Protected minLevel={Level.Admin}>
-            <NavbarLink to="administration">{t("administration")}</NavbarLink>
+            <NavbarLink to="administration">{t("admin.title")}</NavbarLink>
           </Protected>
         </Stack>
       </Stack>

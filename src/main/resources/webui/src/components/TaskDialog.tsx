@@ -83,14 +83,14 @@ export default function TaskDialog(props: TaskDialogProps) {
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header as="h3" fontSize="xl" lineHeight="120%" fontWeight="bold">
-              {t("taskDetails")}
+              {t("task.details")}
             </Dialog.Header>
             <Dialog.Body>
               <Stack gap="6">
                 <Stack gap="3">
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("id")}</Text>
+                      <Text color="grey.400">{t("common.id")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
                       <Text>{task?.id ?? "nA"}</Text>
@@ -98,7 +98,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                   </Flex>
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("description")}</Text>
+                      <Text color="grey.400">{t("common.description")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
                       <Text>{task?.taskDescription ?? "nA"}</Text>
@@ -106,7 +106,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                   </Flex>
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("comments")}</Text>
+                      <Text color="grey.400">{t("common.comments")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
                       <Text>{task?.comments ?? "nA"}</Text>
@@ -114,7 +114,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                   </Flex>
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("creation")}</Text>
+                      <Text color="grey.400">{t("common.creation")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
                       <Text>{creationDate ?? "nA"}</Text>
@@ -122,7 +122,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                   </Flex>
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("execution")}</Text>
+                      <Text color="grey.400">{t("common.execution")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
                       <Text>{executionDate ?? "nA"}</Text>
@@ -130,40 +130,40 @@ export default function TaskDialog(props: TaskDialogProps) {
                   </Flex>
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("priority")}</Text>
+                      <Text color="grey.400">{t("common.priority")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
-                      <Text>{t(priorityLabel ?? "nA")}</Text>
+                      <Text>{t(priorityLabel ?? "common.nA")}</Text>
                     </Skeleton>
                   </Flex>
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("status")}</Text>
+                      <Text color="grey.400">{t("common.status")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
                       {task?.status === TaskStatus.Scheduled && (
-                        <Tag.Root colorPalette="yellow">{t("scheduled")}</Tag.Root>
+                        <Tag.Root colorPalette="yellow">{t("common.scheduled")}</Tag.Root>
                       )}
                       {task?.status === TaskStatus.Running && (
                         <Stack direction="row" alignItems="center" gap="3">
                           <Spinner size="sm" />
-                          <Text>{t("running")}</Text>
+                          <Text>{t("common.running")}</Text>
                         </Stack>
                       )}
                       {task?.status === TaskStatus.Failure && (
-                        <Tag.Root colorPalette="red">{t("failure")}</Tag.Root>
+                        <Tag.Root colorPalette="red">{t("common.failure")}</Tag.Root>
                       )}
                       {task?.status === TaskStatus.Cancelled && (
-                        <Tag.Root colorPalette="grey">{t("cancelled")}</Tag.Root>
+                        <Tag.Root colorPalette="grey">{t("common.cancelled")}</Tag.Root>
                       )}
                       {task?.status === TaskStatus.Success && (
-                        <Tag.Root colorPalette="green">{t("success")}</Tag.Root>
+                        <Tag.Root colorPalette="green">{t("common.success")}</Tag.Root>
                       )}
                       {task?.status === TaskStatus.Waiting && (
-                        <Tag.Root colorPalette="grey">{t("waiting")}</Tag.Root>
+                        <Tag.Root colorPalette="grey">{t("common.waiting")}</Tag.Root>
                       )}
                       {task?.status === TaskStatus.New && (
-                        <Tag.Root colorPalette="grey">{t("new")}</Tag.Root>
+                        <Tag.Root colorPalette="grey">{t("common.new")}</Tag.Root>
                       )}
                     </Skeleton>
                   </Flex>
@@ -174,7 +174,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                     <Separator />
                     <Stack gap="4">
                       <Heading size="md" fontWeight="semibold">
-                        {t("script")}
+                        {t("script.label")}
                       </Heading>
                       <Stack gap="4">
                         <Box p="6" borderWidth="1px" borderColor="grey.100" borderRadius="xl">
@@ -202,7 +202,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                     <Separator />
                     <Stack gap="4">
                       <Heading size="md" fontWeight="semibold">
-                        {t("infoLogs")}
+                        {t("admin.logs.info")}
                       </Heading>
                       <Box
                         p="6"
@@ -221,7 +221,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                           download={`task-${task?.id}-debug.log`}
                         >
                           <Download />
-                          {t("debugLogs")}
+                          {t("admin.logs.debug")}
                         </a>
                       </Button>
                     </Stack>
@@ -232,10 +232,10 @@ export default function TaskDialog(props: TaskDialogProps) {
             <Dialog.Footer>
               <Stack direction="row" gap="3">
                 <Button onClick={toggleLog} disabled={task?.log === ""}>
-                  {t(showLog ? "hideLogs" : "showLogs")}
+                  {t(showLog ? "common.hideLogs" : "common.showLogs")}
                 </Button>
                 <Button variant="primary" onClick={() => dialogConfig.close()}>
-                  {t("ok")}
+                  {t("common.ok")}
                 </Button>
               </Stack>
             </Dialog.Footer>

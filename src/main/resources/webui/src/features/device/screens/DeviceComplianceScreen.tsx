@@ -38,12 +38,12 @@ export default function DeviceComplianceScreen() {
     () => [
       columnHelper.accessor("policyName", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("policy"),
+        header: t("policy.label"),
         enableSorting: true,
       }),
       columnHelper.accessor("ruleName", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("rule"),
+        header: t("policy.rule.label"),
         enableSorting: true,
       }),
       columnHelper.accessor("result", {
@@ -52,28 +52,28 @@ export default function DeviceComplianceScreen() {
           return (
             <>
               {value === DeviceComplianceResultType.Conforming && (
-                <Tag.Root>{t("compliant")}</Tag.Root>
+                <Tag.Root>{t("compliance.compliant")}</Tag.Root>
               )}
               {value === DeviceComplianceResultType.NonConfirming && (
-                <Tag.Root colorPalette="red">{t("nonCompliant")}</Tag.Root>
+                <Tag.Root colorPalette="red">{t("compliance.nonCompliant")}</Tag.Root>
               )}
               {value === DeviceComplianceResultType.Disabled && (
-                <Tag.Root colorPalette="grey">{t("disabled")}</Tag.Root>
+                <Tag.Root colorPalette="grey">{t("common.disabled")}</Tag.Root>
               )}
             </>
           )
         },
-        header: t("result"),
+        header: t("common.result"),
         enableSorting: true,
       }),
       columnHelper.accessor("comment", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("details"),
+        header: t("common.details"),
         enableSorting: true,
       }),
       columnHelper.accessor("checkDate", {
-        cell: (info) => <Text>{info.getValue() ? formatLocalDate(info.getValue()) : t("nA")}</Text>,
-        header: t("lastCheck"),
+        cell: (info) => <Text>{info.getValue() ? formatLocalDate(info.getValue()) : t("common.nA")}</Text>,
+        header: t("compliance.lastCheck"),
         enableSorting: true,
       }),
     ],
@@ -88,21 +88,21 @@ export default function DeviceComplianceScreen() {
     <Stack gap="6" flex="1">
       <Stack gap="12">
         <Stack gap="4">
-          <Heading size="md">{t("software")}</Heading>
+          <Heading size="md">{t("common.software")}</Heading>
           <AlertBox
             type={device?.softwareLevel === DeviceSoftwareLevel.UNKNOWN ? "error" : "success"}
           >
             {device?.softwareLevel === DeviceSoftwareLevel.UNKNOWN ? (
               <Text>
-                {t("theSoftwareVersionDoesNotConformToTheSoftwareRules", {
-                  version: device?.softwareVersion || t("nA"),
+                {t("compliance.software.versionDoesNotConform", {
+                  version: device?.softwareVersion || t("common.nA"),
                 })}
               </Text>
             ) : (
               <Text>
                 <Trans
                   t={t}
-                  i18nKey="theConformanceLevelOfTheSoftwareVersionForThisDeviceIs"
+                  i18nKey="compliance.software.conformanceLevel"
                   values={{ level: device?.softwareLevel }}
                   components={{ tag: <Tag.Root as="span" colorPalette={softwareLevelColor} /> }}
                 />
@@ -111,12 +111,12 @@ export default function DeviceComplianceScreen() {
           </AlertBox>
         </Stack>
         <Stack gap="4">
-          <Heading size="md">{t("hardware")}</Heading>
+          <Heading size="md">{t("common.hardware")}</Heading>
           <Stack gap="3" direction="row">
             <AlertBox type={device?.endOfSale ? "warning" : "success"}>
               {device?.endOfSale ? (
                 <Text>
-                  {t("endOfSaleSinceModule", {
+                  {t("compliance.hardware.endOfSaleSince", {
                     date: formatLocalDate(device?.eosDate, { dateStyle: "long" }),
                     module: device?.eosModule?.partNumber,
                   })}
@@ -124,18 +124,18 @@ export default function DeviceComplianceScreen() {
               ) : (
                 <Text>
                   {device?.eosDate
-                    ? t("notEndOfSaleYetPlannedOnModule", {
+                    ? t("compliance.hardware.notEndOfSaleYetPlanned", {
                         date: formatLocalDate(device?.eosDate, { dateStyle: "long" }),
                         module: device?.eosModule?.partNumber,
                       })
-                    : t("notEndOfSaleYet")}
+                    : t("compliance.hardware.notEndOfSaleYet")}
                 </Text>
               )}
             </AlertBox>
             <AlertBox type={device?.endOfLife ? "warning" : "success"}>
               {device?.endOfLife ? (
                 <Text>
-                  {t("endOfLifeSinceModule", {
+                  {t("compliance.hardware.endOfLifeSince", {
                     date: formatLocalDate(device?.eolDate, { dateStyle: "long" }),
                     module: device?.eolModule?.partNumber,
                   })}
@@ -143,31 +143,31 @@ export default function DeviceComplianceScreen() {
               ) : (
                 <Text>
                   {device?.eolDate
-                    ? t("notEndOfLifeYetPlannedOnModule", {
+                    ? t("compliance.hardware.notEndOfLifeYetPlanned", {
                         date: formatLocalDate(device?.eolDate, { dateStyle: "long" }),
                         module: device?.eolModule?.partNumber,
                       })
-                    : t("notEndOfLifeYet")}
+                    : t("compliance.hardware.notEndOfLifeYet")}
                 </Text>
               )}
             </AlertBox>
           </Stack>
         </Stack>
         <Stack gap="4">
-          <Heading size="md">{t("configuration")}</Heading>
+          <Heading size="md">{t("device.config.label")}</Heading>
           {data?.length > 0 ? (
             <>
               <AlertBox type={device?.compliant ? "success" : "error"}>
                 {device?.compliant ? (
-                  <Text>{t("theDeviceIsCompliantWithAllPolicies")}</Text>
+                  <Text>{t("compliance.deviceCompliantWithAll")}</Text>
                 ) : (
-                  <Text>{t("theDeviceIsNotInComplianceWithSomePolicies")}</Text>
+                  <Text>{t("compliance.deviceNotCompliantWithSome")}</Text>
                 )}
               </AlertBox>
               <DataTable columns={columns} data={data} loading={isPending} />
             </>
           ) : (
-            <Text>{t("thereIsNoComplianceResultForThisDevice")}</Text>
+            <Text>{t("compliance.noResultForDevice")}</Text>
           )}
         </Stack>
         <Protected minLevel={Level.Operator}>
@@ -176,7 +176,7 @@ export default function DeviceComplianceScreen() {
             renderItem={(open) => (
               <Button alignSelf="start" variant="primary" onClick={open}>
                 <Icon name="checkCircle" />
-                {t("checkCompliance")}
+                {t("compliance.check")}
               </Button>
             )}
           />

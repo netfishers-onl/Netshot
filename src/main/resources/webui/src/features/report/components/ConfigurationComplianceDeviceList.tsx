@@ -43,7 +43,7 @@ export default function ConfigurationComplianceDeviceList(
     <>
       <Stack direction="row">
         <Search
-          placeholder={t("searchPlaceholder")}
+          placeholder={t("common.searchPlaceholder")}
           onQuery={pagination.onQuery}
           onClear={pagination.onQueryClear}
           w="30%"
@@ -67,8 +67,8 @@ export default function ConfigurationComplianceDeviceList(
             </>
           ) : (
             <EmptyResult
-              title={t("noDevice")}
-              description={t("thereIsNoDeviceInThisGroup")}
+              title={t("device.noDevice")}
+              description={t("group.noDevice")}
             />
           )}
         </>

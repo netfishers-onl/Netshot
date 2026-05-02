@@ -63,7 +63,7 @@ export default function ReportConfigurationCompareEditor(
       <Center flex="1">
         <Stack gap="3" alignItems="center">
           <Spinner size="lg" />
-          <Text>{t("loadingDeviceConfiguration")}</Text>
+          <Text>{t("device.config.loadingDevice")}</Text>
         </Stack>
       </Center>
     )
@@ -72,7 +72,7 @@ export default function ReportConfigurationCompareEditor(
   return (
     <Stack gap="6">
       <Select
-        placeholder={t("selectAnAttribute")}
+        placeholder={t("common.selectAnAttribute")}
         control={form.control}
         name="attribute"
         options={attributeOptions}

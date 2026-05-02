@@ -2,7 +2,7 @@ import { createOptionHook } from "@/hooks"
 
 export const useCliModeOptions = createOptionHook([
   {
-    label: "enable",
+    label: "common.enable",
     value: "enable",
   },
   {

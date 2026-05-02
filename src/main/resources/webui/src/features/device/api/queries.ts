@@ -84,7 +84,7 @@ export function useInfiniteDevices(groupId: number) {
       const queryParams = new URLSearchParams(location.search)
 
       if (queryParams.has("group")) {
-        params.group = parseInt(queryParams.get("group"))
+        params.group = parseInt(queryParams.get("group.label"))
       }
 
       return api.device.getAll(params)

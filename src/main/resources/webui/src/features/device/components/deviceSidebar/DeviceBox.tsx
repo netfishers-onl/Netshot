@@ -106,7 +106,7 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
     return true
   }, [device])
 
-  const family = device?.family === "" ? t("unknown3") : device?.family
+  const family = device?.family === "" ? t("common.unknownLabel") : device?.family
 
   return (
     <Stack
@@ -163,29 +163,29 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
             <HoverCard.Positioner>
               <HoverCard.Content w="360px">
                 <Text fontSize="md" fontWeight="bold" mb="3">
-                  {t("statusSummary")}
+                  {t("common.statusSummary")}
                 </Text>
                 <Stack gap="2">
                   <Stack direction="row" alignItems="center" justifyContent="space-between">
-                    <Text>{t("softwareCompliance")}</Text>
+                    <Text>{t("compliance.software.label")}</Text>
                     <Tag.Root colorPalette={getSoftwareLevelColor(level?.value)}>
                       {level?.label}
                     </Tag.Root>
                   </Stack>
                   <Stack direction="row" alignItems="center" justifyContent="space-between">
-                    <Text>{t("configurationCompliance")}</Text>
+                    <Text>{t("device.config.compliance")}</Text>
                     <Tag.Root colorPalette={device.configCompliant ? "green" : "red"}>
-                      {t(device.configCompliant ? "compliant" : "nonCompliant")}
+                      {t(device.configCompliant ? "compliance.compliant" : "compliance.nonCompliant")}
                     </Tag.Root>
                   </Stack>
                   <Stack direction="row" alignItems="center" justifyContent="space-between">
-                    <Text>{t("hardwareCompliance")}</Text>
+                    <Text>{t("compliance.hardware.label")}</Text>
                     <Tag.Root colorPalette={device.eos || device.eol ? "red" : "green"}>
                       {device.eol
-                        ? t("endOfLife")
+                        ? t("compliance.hardware.endOfLife")
                         : device.eos
-                          ? t("endOfSale")
-                          : t("upToDate")}
+                          ? t("compliance.hardware.endOfSale")
+                          : t("common.upToDate")}
                     </Tag.Root>
                   </Stack>
                 </Stack>

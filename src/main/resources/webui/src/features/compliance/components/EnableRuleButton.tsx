@@ -31,10 +31,10 @@ export default function EnableRuleButton(props: EnableRuleButtonProps) {
 
   function open() {
     const dialogRef = dialog.open(MUTATIONS.RULE_ENABLE, {
-      title: t("enableRule"),
+      title: t("policy.rule.enable"),
       description: (
         <Text>
-          {t("youAreAboutToEnableTheRule", {
+          {t("policy.rule.aboutToEnable", {
             name: rule?.name,
           })}
         </Text>
@@ -47,14 +47,14 @@ export default function EnableRuleButton(props: EnableRuleButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("success"),
-          description: t("ruleHasBeenSuccessfullyEnabled", {
+          title: t("common.success"),
+          description: t("policy.rule.successfullyEnabled", {
             name: rule?.name,
           }),
         })
       },
       confirmButton: {
-        label: t("enable"),
+        label: t("common.enable"),
       },
     })
   }

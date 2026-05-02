@@ -38,7 +38,7 @@ export default function DeviceSidebar() {
             <Menu.Trigger asChild>
               <Button>
                 <Icon name="plus" />
-                {t("addDevice")}
+                {t("device.add")}
               </Button>
             </Menu.Trigger>
             <Portal>
@@ -48,7 +48,7 @@ export default function DeviceSidebar() {
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="add-simple-device">
                         <Icon name="plus" />
-                        {t("addSimpleDevice")}
+                        {t("device.addSimple")}
                       </Menu.Item>
                     )}
                   />
@@ -56,7 +56,7 @@ export default function DeviceSidebar() {
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="scan-subnets-for-device">
                         <Icon name="crosshair" />
-                        {t("scanSubnetsForDevices")}
+                        {t("task.scanSubnets")}
                       </Menu.Item>
                     )}
                   />

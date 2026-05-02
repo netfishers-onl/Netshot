@@ -33,10 +33,10 @@ export default function RemoveWebhookButton(props: RemoveWebhookButtonProps) {
     (evt: MouseEvent) => {
       evt?.stopPropagation()
       const dialogRef = dialog.open(MUTATIONS.ADMIN_HOOK_REMOVE, {
-        title: t("removeWebhook"),
+        title: t("webhook.remove"),
         description: (
           <Trans
-            i18nKey="youAreAboutToRemoveTheWebhookAreYouSure"
+            i18nKey="webhook.aboutToRemove"
             values={{ name: webhook.name }}
             components={{ bold: <Text as="span" fontWeight="semibold" /> }}
           />
@@ -47,14 +47,14 @@ export default function RemoveWebhookButton(props: RemoveWebhookButtonProps) {
           dialogRef.close()
 
           toast.success({
-            title: t("success"),
-            description: t("webhookHasBeenSuccessfullyRemoved", {
+            title: t("common.success"),
+            description: t("webhook.successfullyRemoved", {
               name: webhook.name,
             }),
           })
         },
         confirmButton: {
-          label: t("remove"),
+          label: t("common.remove"),
           props: {
             colorPalette: "red",
           },

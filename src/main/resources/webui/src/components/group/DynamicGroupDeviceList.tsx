@@ -46,8 +46,8 @@ export default function DynamicGroupDeviceList(props: DynamicGroupDeviceListProp
         <Stack alignItems="center" gap="4">
           <Spinner size="lg" />
           <Stack alignItems="center" gap="1">
-            <Heading size="md">{t("loading")}</Heading>
-            <Text color="grey.400">{t("aggregatingDeviceInProgress")}</Text>
+            <Heading size="md">{t("common.loading")}</Heading>
+            <Text color="grey.400">{t("device.aggregatingInProgress")}</Text>
           </Stack>
         </Stack>
       </Center>
@@ -59,12 +59,12 @@ export default function DynamicGroupDeviceList(props: DynamicGroupDeviceListProp
       <Center flex="1">
         <Stack alignItems="center" gap="4">
           <Stack alignItems="center" gap="1">
-            <Heading size="md">{t("noResults")}</Heading>
-            <Text color="grey.400">{t("noDeviceMatchingTheCriteria")}</Text>
+            <Heading size="md">{t("common.noResults")}</Heading>
+            <Text color="grey.400">{t("device.noDeviceMatchingCriteria")}</Text>
           </Stack>
 
           <QueryBuilderButton
-            renderItem={(open) => <Button onClick={open}>{t("editQuery")}</Button>}
+            renderItem={(open) => <Button onClick={open}>{t("policy.editQuery")}</Button>}
             onSubmit={onUpdateQuery}
           />
         </Stack>

@@ -8,8 +8,8 @@ export default function ReportConfigurationComplianceEmptyScreen() {
   return (
     <Stack flex="1" alignItems="center" justifyContent="center">
       <EmptyResult
-        title={t("selectGroupToBegin")}
-        description={t("hereYouCanVisualizeDeviceComplianceStatusPerGroup")}
+        title={t("common.selectGroupToBegin")}
+        description={t("group.complianceStatusDesc")}
       />
     </Stack>
   )

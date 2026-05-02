@@ -54,7 +54,7 @@ function AddRuleExemptedDeviceForm(props: AddRuleExemptedDeviceFormProps) {
       />
       <FormControl
         type={FormControlType.Date}
-        label={t("endDate")}
+        label={t("time.endDate")}
         control={form.control}
         name="expirationDate"
       />
@@ -95,7 +95,7 @@ function AddRuleExemptedDeviceButton(props: AddRuleExemptedDeviceButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.RULE_EXEMPTED_DEVICE_UPDATE, {
-      title: t("addExemptedDevice"),
+      title: t("policy.rule.addExemptedDevice"),
       description: <AddRuleExemptedDeviceForm exemptedDevices={exemptedDevices} />,
       form,
       size: "lg",
@@ -116,8 +116,8 @@ function AddRuleExemptedDeviceButton(props: AddRuleExemptedDeviceButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("success"),
-          description: t("ruleExemptedDevicesHasBeenSuccessfullyUpdated", {
+          title: t("common.success"),
+          description: t("policy.rule.exemptedDevicesUpdated", {
             name: rule.name,
           }),
         })
@@ -132,7 +132,7 @@ function AddRuleExemptedDeviceButton(props: AddRuleExemptedDeviceButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("add"),
+        label: t("common.add"),
       },
     })
   }
@@ -140,7 +140,7 @@ function AddRuleExemptedDeviceButton(props: AddRuleExemptedDeviceButtonProps) {
   return (
     <Button variant="outline" onClick={open}>
       <Icon name="plus" />
-      {t("add")}
+      {t("common.add")}
     </Button>
   )
 }
@@ -227,7 +227,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header as="h3" fontSize="2xl" fontWeight="semibold">
-              {t("exemptedDevices")}
+              {t("policy.rule.exemptedDevices")}
               <Dialog.CloseTrigger />
             </Dialog.Header>
             <Dialog.Body pb="7">
@@ -235,7 +235,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
                 <Stack direction="row" gap="3">
                   <Search
                     onQuery={onQuery}
-                    placeholder={t("searchWithDeviceNameOrIp")}
+                    placeholder={t("device.searchByNameOrIp")}
                     flex="1"
                   />
 
@@ -272,13 +272,13 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
                             <Stack gap="1">
                               <Text fontWeight="medium">{device?.name}</Text>
                               <Text color="grey.400">
-                                {t("expiresOn", { date: formatLocalDate(device?.expirationDate, { dateStyle: "medium" }) })}
+                                {t("time.expiresOn", { date: formatLocalDate(device?.expirationDate, { dateStyle: "medium" }) })}
                               </Text>
                             </Stack>
                             <IconButton
                               variant="ghost"
                               colorScheme="green"
-                              aria-label={t("removeDevice")}
+                              aria-label={t("device.remove")}
                               onClick={() => remove(device)}
                             >
                               <Icon name="trash" />
@@ -294,7 +294,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
                         justifyContent="center"
                         alignContent="center"
                       >
-                        <Text color="grey.500">{t("noExemptedDeviceSelected")}</Text>
+                        <Text color="grey.500">{t("policy.rule.noExemptedDeviceSelected")}</Text>
                       </Flex>
                     )}
                   </>
@@ -303,7 +303,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
             </Dialog.Body>
             <Dialog.Footer>
               <Button variant="primary" onClick={() => dialogConfig.close()}>
-                {t("close")}
+                {t("common.close")}
               </Button>
             </Dialog.Footer>
           </Dialog.Content>

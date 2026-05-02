@@ -31,28 +31,28 @@ export function useQueryBuilderAttribute() {
 
     const options = [
       {
-        label: t("comments"),
+        label: t("common.comments"),
         value: {
           name: Attribute.Comments,
           type: AttributeType.Text,
         },
       },
       {
-        label: t("contact"),
+        label: t("common.contact"),
         value: {
           name: Attribute.Contact,
           type: AttributeType.Text,
         },
       },
       {
-        label: t("creationDate"),
+        label: t("time.creationDate"),
         value: {
           name: Attribute.CreationDate,
           type: AttributeType.Date,
         },
       },
       {
-        label: t("domain"),
+        label: t("domain.label"),
         value: {
           name: Attribute.Domain,
           type: AttributeType.Enum,
@@ -60,133 +60,133 @@ export function useQueryBuilderAttribute() {
         },
       },
       {
-        label: t("family"),
+        label: t("common.family"),
         value: {
           name: Attribute.Family,
           type: AttributeType.Text,
         },
       },
       {
-        label: t("id"),
+        label: t("common.id"),
         value: {
           name: Attribute.Id,
           type: AttributeType.Id,
         },
       },
       {
-        label: t("interface"),
+        label: t("device.interface.label"),
         value: {
           name: Attribute.Interface,
           type: AttributeType.Text,
         },
       },
       {
-        label: t("ip"),
+        label: t("device.interface.ip"),
         value: {
           name: Attribute.Ip,
           type: AttributeType.IpAddress,
         },
       },
       {
-        label: t("lastChangeDate"),
+        label: t("device.lastChangeDate"),
         value: {
           name: Attribute.LastChangeDate,
           type: AttributeType.Date,
         },
       },
       {
-        label: t("location"),
+        label: t("common.location"),
         value: {
           name: Attribute.Location,
           type: AttributeType.Text,
         },
       },
       {
-        label: t("mac"),
+        label: t("device.interface.mac"),
         value: {
           name: Attribute.Mac,
           type: AttributeType.MacAddress,
         },
       },
       {
-        label: t("module"),
+        label: t("device.module.label"),
         value: {
           name: Attribute.Module,
           type: AttributeType.Text,
         },
       },
       {
-        label: t("name"),
+        label: t("common.name"),
         value: {
           name: Attribute.Name,
           type: AttributeType.Text,
         },
       },
       {
-        label: t("networkClass"),
+        label: t("device.networkClass"),
         value: {
           name: Attribute.NetworkClass,
           type: AttributeType.Enum,
           choices: [
-            { label: t("firewall"), value: DeviceNetworkClass.Firewall },
+            { label: t("device.class.firewall"), value: DeviceNetworkClass.Firewall },
             {
-              label: t("loadBalancer"),
+              label: t("device.class.loadBalancer"),
               value: DeviceNetworkClass.LoadBalancer,
             },
-            { label: t("router"), value: DeviceNetworkClass.Router },
-            { label: t("server"), value: DeviceNetworkClass.Server },
-            { label: t("switch"), value: DeviceNetworkClass.Switch },
+            { label: t("device.class.router"), value: DeviceNetworkClass.Router },
+            { label: t("common.server"), value: DeviceNetworkClass.Server },
+            { label: t("device.class.switch"), value: DeviceNetworkClass.Switch },
             {
-              label: t("switchRouter"),
+              label: t("device.class.switchRouter"),
               value: DeviceNetworkClass.SwitchRouter,
             },
-            { label: t("accessPoint"), value: DeviceNetworkClass.AccessPoint },
+            { label: t("device.class.accessPoint"), value: DeviceNetworkClass.AccessPoint },
             {
-              label: t("wirelessController"),
+              label: t("device.class.wirelessController"),
               value: DeviceNetworkClass.WirelessController,
             },
             {
-              label: t("consoleServer"),
+              label: t("device.class.consoleServer"),
               value: DeviceNetworkClass.ConsoleServer,
             },
-            { label: t("unknown3"), value: DeviceNetworkClass.Unknown },
+            { label: t("common.unknownLabel"), value: DeviceNetworkClass.Unknown },
           ],
         },
       },
       {
-        label: t("softwareLevel"),
+        label: t("compliance.software.level"),
         value: {
           name: Attribute.SoftwareLevel,
           type: AttributeType.Enum,
           choices: [
-            { label: t("gold"), value: DeviceSoftwareLevel.GOLD },
-            { label: t("silver"), value: DeviceSoftwareLevel.SILVER },
-            { label: t("bronze"), value: DeviceSoftwareLevel.BRONZE },
-            { label: t("unknown3"), value: DeviceSoftwareLevel.UNKNOWN },
+            { label: t("compliance.software.gold"), value: DeviceSoftwareLevel.GOLD },
+            { label: t("compliance.software.silver"), value: DeviceSoftwareLevel.SILVER },
+            { label: t("compliance.software.bronze"), value: DeviceSoftwareLevel.BRONZE },
+            { label: t("common.unknownLabel"), value: DeviceSoftwareLevel.UNKNOWN },
           ],
         },
       },
       {
-        label: t("softwareVersion"),
+        label: t("compliance.software.version"),
         value: {
           name: Attribute.SoftwareVersion,
           type: AttributeType.Text,
         },
       },
       {
-        label: t("status"),
+        label: t("common.status"),
         value: {
           name: Attribute.Status,
           type: AttributeType.Enum,
           choices: [
-            { label: t("production"), value: DeviceStatus.Production },
-            { label: t("disabled"), value: DeviceStatus.Disabled },
-            { label: t("preproduction"), value: DeviceStatus.PreProduction },
+            { label: t("device.status.production"), value: DeviceStatus.Production },
+            { label: t("common.disabled"), value: DeviceStatus.Disabled },
+            { label: t("device.status.preproduction"), value: DeviceStatus.PreProduction },
           ],
         },
       },
       {
-        label: t("type"),
+        label: t("common.type"),
         value: {
           name: Attribute.Type,
           type: AttributeType.Enum,
@@ -194,14 +194,14 @@ export function useQueryBuilderAttribute() {
         },
       },
       {
-        label: t("virtualName"),
+        label: t("device.virtualName"),
         value: {
           name: Attribute.VirtualName,
           type: AttributeType.Text,
         },
       },
       {
-        label: t("vrf"),
+        label: t("common.vrf"),
         value: {
           name: Attribute.Vrf,
           type: AttributeType.Text,
@@ -268,21 +268,21 @@ export function useQueryBuilderAttribute() {
         type: AttributeType.Enum,
         choices: [
           {
-            label: t("confirming"),
+            label: t("auth.confirming"),
             value: DeviceComplianceResultType.Conforming,
           },
           {
-            label: t("nonConforming"),
+            label: t("compliance.nonConforming"),
             value: DeviceComplianceResultType.NonConfirming,
           },
           {
-            label: t("notApplicable"),
+            label: t("compliance.notApplicable"),
             value: DeviceComplianceResultType.NotApplication,
           },
-          { label: t("exempted"), value: DeviceComplianceResultType.Exempted },
-          { label: t("disabled"), value: DeviceComplianceResultType.Disabled },
+          { label: t("policy.rule.exempted"), value: DeviceComplianceResultType.Exempted },
+          { label: t("common.disabled"), value: DeviceComplianceResultType.Disabled },
           {
-            label: t("invalidRule"),
+            label: t("policy.rule.invalid"),
             value: DeviceComplianceResultType.InvalidRule,
           },
         ],

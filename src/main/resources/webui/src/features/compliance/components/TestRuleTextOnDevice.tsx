@@ -33,7 +33,7 @@ export default function TestRuleTextOnDevice(props: TestRuleOnDevice) {
         }}
       />
       <IconButton
-        aria-label={t("testOnDevice")}
+        aria-label={t("policy.rule.testOnDevice")}
         disabled={device === null}
         onClick={() => runTest()}
         loading={mutation.isPending}

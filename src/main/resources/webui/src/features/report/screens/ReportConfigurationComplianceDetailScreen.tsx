@@ -31,9 +31,7 @@ export default function ReportConfigurationComplianceDetailScreen() {
           </Skeleton>
           <Skeleton loading={!isSuccess}>
             <Text color="grey.500">
-              {t(
-                "hereIsAListOfNonCompliantDevicesYouCanCheckWhyADeviceIsNotCo"
-              )}
+              {t("compliance.nonCompliantDeviceListDesc")}
             </Text>
           </Skeleton>
         </Stack>

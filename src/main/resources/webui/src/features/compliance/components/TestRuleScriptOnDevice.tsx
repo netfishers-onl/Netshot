@@ -30,14 +30,14 @@ export default function TestRuleScriptOnDevice(props: TestRuleOnDevice) {
       <DeviceAutocomplete
         selectionBehavior="replace"
         value={device ? [device.id.toString()] : []}
-        placeholder={t("searchDeviceAndTestRule")}
+        placeholder={t("device.searchAndTestRule")}
         onSelectItem={(device) => {
           setDevice(device)
         }}
       />
       <IconButton
         variant="primary"
-        aria-label={t("testOnDevice")}
+        aria-label={t("policy.rule.testOnDevice")}
         disabled={!device}
         onClick={runTest}
         loading={mutation.isPending}

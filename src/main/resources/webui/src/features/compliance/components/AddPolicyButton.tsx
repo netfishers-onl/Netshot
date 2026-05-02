@@ -36,7 +36,7 @@ export default function AddPolicyButton(props: AddPolicyButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.POLICY_CREATE, {
-      title: t("addPolicy"),
+      title: t("policy.add"),
       description: <PolicyForm />,
       form,
       size: "lg",
@@ -50,8 +50,8 @@ export default function AddPolicyButton(props: AddPolicyButtonProps) {
         form.reset()
 
         toast.success({
-          title: t("success"),
-          description: t("policyHasBeenSuccessfullyCreated", {
+          title: t("common.success"),
+          description: t("policy.successfullyCreated", {
             policyName: values.name,
           }),
         })
@@ -62,7 +62,7 @@ export default function AddPolicyButton(props: AddPolicyButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("addPolicy"),
+        label: t("policy.add"),
       },
     })
   }

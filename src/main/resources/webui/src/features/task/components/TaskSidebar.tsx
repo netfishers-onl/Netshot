@@ -12,33 +12,33 @@ export default function TaskSidebar() {
       <Stack gap="0" py="4" px="5" flex="1">
         <SidebarLink
           to="./all"
-          label={t("all")}
-          description={t("allTaskStatus")}
+          label={t("common.all")}
+          description={t("task.allStatus")}
         />
         <SidebarLink
           to="./running"
-          label={t("running")}
-          description={t("tasksInProgress")}
+          label={t("common.running")}
+          description={t("task.inProgress")}
         />
         <SidebarLink
           to="./scheduled"
-          label={t("scheduled")}
-          description={t("tasksScheduledForLater")}
+          label={t("common.scheduled")}
+          description={t("task.scheduledForLater")}
         />
         <SidebarLink
           to="./succeeded"
-          label={t("succeeded")}
-          description={t("tasksWithSuccessResult")}
+          label={t("common.succeeded")}
+          description={t("task.withSuccessResult")}
         />
         <SidebarLink
           to="./failed"
-          label={t("failed")}
-          description={t("tasksWithFailedResult")}
+          label={t("common.failed")}
+          description={t("task.withFailedResult")}
         />
         <SidebarLink
           to="./cancelled"
-          label={t("cancelled")}
-          description={t("tasksCancelledByUserOrSoftware")}
+          label={t("common.cancelled")}
+          description={t("task.cancelledBySoftwareOrUser")}
         />
       </Stack>
       <Protected minLevel={Level.Operator}>
@@ -46,7 +46,7 @@ export default function TaskSidebar() {
         <Stack py="4" px="5">
           <AddTaskButton
             renderItem={(open) => (
-              <Button onClick={open}><Icon name="plus" />{t("addTask")}</Button>
+              <Button onClick={open}><Icon name="plus" />{t("task.add")}</Button>
             )}
           />
         </Stack>

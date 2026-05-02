@@ -37,30 +37,30 @@ export default function DeviceConfigurationCompliancePanel(props: DeviceConfigur
           if (value) {
             return (
               <Tag.Root bg="green.50" color="green.900">
-                {t("compliant")}
+                {t("compliance.compliant")}
               </Tag.Root>
             )
           }
 
           return (
             <Tag.Root bg="green.900" color="green.50">
-              {t("nonCompliant")}
+              {t("compliance.nonCompliant")}
             </Tag.Root>
           )
         },
-        header: t("status"),
+        header: t("common.status"),
       }),
       columnHelper.accessor("policyName", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("policy"),
+        header: t("policy.label"),
       }),
       columnHelper.accessor("ruleName", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("rule"),
+        header: t("policy.rule.label"),
       }),
       columnHelper.accessor("checkDate", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
-        header: t("testDateTime"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+        header: t("time.testDateTime"),
       }),
     ],
     [t, formatDate]
@@ -79,7 +79,7 @@ export default function DeviceConfigurationCompliancePanel(props: DeviceConfigur
         <IconButton
           variant="ghost"
           colorPalette="green"
-          aria-label={t("open")}
+          aria-label={t("common.open")}
           css={{
             transform: isCollapsed ? "rotate(-90deg)" : "",
           }}
@@ -92,7 +92,7 @@ export default function DeviceConfigurationCompliancePanel(props: DeviceConfigur
 
         <Spacer />
         <Button colorPalette="green" variant="ghost" asChild>
-          <Link to={`/app/devices/${configs?.[0]?.id}/compliance`}>{t("seeDetails")}</Link>
+          <Link to={`/app/devices/${configs?.[0]?.id}/compliance`}>{t("common.seeDetails")}</Link>
         </Button>
       </Stack>
       <motion.div

@@ -49,8 +49,8 @@ export function SettingGeneral() {
     mutationFn: async (payload: UpdateUserPayload) => api.user.update(user?.id, payload),
     onSuccess() {
       toast.success({
-        title: t("success"),
-        description: t("yourSettingsHaveBeenSuccessfullyUpdated"),
+        title: t("common.success"),
+        description: t("user.settingsUpdated"),
       })
 
       queryClient.invalidateQueries({ queryKey: [QUERIES.USER] })
@@ -73,8 +73,8 @@ export function SettingGeneral() {
       <form onSubmit={submit}>
         <Stack gap="6" flex="1" overflow="auto">
           <FormControl
-            label={t("username")}
-            placeholder={t("eG", { example: "admin" })}
+            label={t("user.username")}
+            placeholder={t("common.eG", { example: "admin" })}
             control={form.control}
             readOnly
             name="username"
@@ -84,40 +84,40 @@ export function SettingGeneral() {
             readOnly
             name="level"
             options={userLevelOptions.options}
-            label={t("role")}
+            label={t("common.role")}
           />
           {isRemoteUser ? (
             <Alert.Root variant="subtle" colorPalette="green">
-              <Alert.Description>{t("youAreRemotelyAuthenticated")}</Alert.Description>
+              <Alert.Description>{t("auth.remotelyAuthenticated")}</Alert.Description>
             </Alert.Root>
           ) : (
             <>
               <FormControl
                 type={FormControlType.Password}
-                label={t("currentPassword")}
-                placeholder={t("enterYourPassword")}
+                label={t("auth.currentPassword")}
+                placeholder={t("auth.enterYourPassword")}
                 required
                 control={form.control}
                 name="password"
               />
               <FormControl
                 type={FormControlType.Password}
-                label={t("password")}
-                placeholder={t("enterYourNewPassword")}
+                label={t("auth.password")}
+                placeholder={t("auth.enterYourNewPassword")}
                 required
                 control={form.control}
                 name="newPassword"
               />
               <FormControl
                 type={FormControlType.Password}
-                label={t("confirmPassword")}
-                placeholder={t("confirmYourNewPassword")}
+                label={t("auth.confirmPassword")}
+                placeholder={t("auth.confirmNewPassword")}
                 required
                 control={form.control}
                 name="confirmNewPassword"
                 rules={{
                   validate(value, values) {
-                    return value === values.confirmNewPassword || t("passwordsDonTMatch")
+                    return value === values.confirmNewPassword || t("auth.passwordsDontMatch")
                   },
                 }}
               />
@@ -125,7 +125,7 @@ export function SettingGeneral() {
           )}
         </Stack>
         <Button type="submit" loading={mutation.isPending} disabled={!form.formState.isValid}>
-          {t("applyChanges")}
+          {t("common.applyChanges")}
         </Button>
       </form>
     </Stack>

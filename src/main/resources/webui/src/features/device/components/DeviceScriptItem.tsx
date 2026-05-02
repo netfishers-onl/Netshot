@@ -28,8 +28,8 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
     mutationFn: api.script.remove,
     onError() {
       toast.error({
-        title: t("error"),
-        description: t("anErrorOccurredDuringRemove"),
+        title: t("common.error"),
+        description: t("common.anErrorOccurredDuringRemove"),
       })
     },
   })
@@ -37,12 +37,12 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
   const open = (evt: MouseEvent<HTMLButtonElement>) => {
     evt?.stopPropagation()
     const dialogRef = dialog.open(MUTATIONS.SCRIPT_REMOVE, {
-      title: t("removeDeviceScript"),
+      title: t("script.removeDevice"),
       description: (
         <Text>
           <Trans
             t={t}
-            i18nKey="youAreAboutToRemoveTheScript"
+            i18nKey="script.aboutToRemove"
             values={{ name: script.name }}
             components={{ bold: <Text as="span" fontWeight="semibold" /> }}
           />
@@ -52,8 +52,8 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
       async onConfirm() {
         await mutateAsync(script?.id)
         toast.success({
-          title: t("success"),
-          description: t("deviceScriptWasSuccessfullyRemoved"),
+          title: t("common.success"),
+          description: t("script.deviceSuccessfullyRemoved"),
         })
 
         dialogRef.close()
@@ -61,7 +61,7 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
         queryClient.invalidateQueries({ queryKey: [QUERIES.SCRIPT_LIST] })
       },
       confirmButton: {
-        label: t("remove"),
+        label: t("common.remove"),
         props: {
           colorPalette: "red",
         },
@@ -92,7 +92,7 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
         <Tag.Root colorPalette="grey">{script?.deviceDriver}</Tag.Root>
         <Tag.Root colorPalette="green">{script?.author}</Tag.Root>
       </Stack>
-      <Tooltip content={t("removeScript")}>
+      <Tooltip content={t("script.remove")}>
         <IconButton
           position="absolute"
           top="4"
@@ -100,7 +100,7 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
           opacity="0"
           transition="all .2s ease"
           size="sm"
-          aria-label={t("removeDeviceScript")}
+          aria-label={t("script.removeDevice")}
           onClick={open}
           variant="ghost"
           colorPalette="green"

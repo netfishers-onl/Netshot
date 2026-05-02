@@ -31,21 +31,19 @@ export default function RemoveGroupButton(props: RemoveGroupButtonProps) {
   const open = (e: MouseEvent) => {
     e.stopPropagation()
     const dialogRef = dialog.open(MUTATIONS.GROUP_REMOVE, {
-      title: t("removeGroup"),
+      title: t("group.remove"),
       description: (
         <Stack gap="5">
           <Text>
             <Trans
               t={t}
-              i18nKey="youAreAboutToRemoveTheGroup"
+              i18nKey="group.aboutToRemove"
               values={{ name: group.name }}
               components={{ bold: <Text as="span" fontWeight="semibold" /> }}
             />
           </Text>
           <Alert.Root color="yellow.900" status="warning">
-            {t(
-              "theRelatedSoftwareAndHardwareComplianceRulesAndTheGroupSpeci"
-            )}
+            {t("group.removeWarning")}
           </Alert.Root>
         </Stack>
       ),
@@ -55,7 +53,7 @@ export default function RemoveGroupButton(props: RemoveGroupButtonProps) {
         dialogRef.close()
       },
       confirmButton: {
-        label: t("remove"),
+        label: t("common.remove"),
         props: {
           colorPalette: "red",
         },

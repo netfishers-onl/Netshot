@@ -56,8 +56,8 @@ function ExportDataForm() {
         options={exportMimesTypesOptions.options}
         control={form.control}
         name="format"
-        label={t("outputFormat")}
-        placeholder={t("selectAnOutputFormat")}
+        label={t("common.outputFormat")}
+        placeholder={t("common.selectOutputFormat")}
       />
       <DomainSelect control={form.control} name="domain" withAny />
       <TreeGroupSelector
@@ -68,25 +68,25 @@ function ExportDataForm() {
       />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
-          <Text fontWeight="medium">{t("deviceGroupDetails")}</Text>
-          <Text color="grey.400">{t("exportDeviceGroupInformation")}</Text>
+          <Text fontWeight="medium">{t("group.details")}</Text>
+          <Text color="grey.400">{t("group.exportInfo")}</Text>
         </Stack>
         <Switch w="initial" control={form.control} name="withGroups" />
       </Stack>
       <Separator />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
-          <Text fontWeight="medium">{t("driverSpecificDeviceAttributes")}</Text>
-          <Text color="grey.400">{t("exportAttributesOfDriverDevice")}</Text>
+          <Text fontWeight="medium">{t("device.driverSpecificAttributes")}</Text>
+          <Text color="grey.400">{t("report.exportDriverAttributes")}</Text>
         </Stack>
         <Switch w="initial" control={form.control} name="withDeviceDriverAttributes" />
       </Stack>
       <Separator />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
-          <Text fontWeight="medium">{t("interfaces")}</Text>
+          <Text fontWeight="medium">{t("device.interface.list")}</Text>
           <Text color="grey.400">
-            {t("exportDeviceInterfacesIncludingMacAndIpAddresses")}
+            {t("device.interface.export")}
           </Text>
         </Stack>
         <Switch w="initial" control={form.control} name="withInterfaces" />
@@ -94,9 +94,9 @@ function ExportDataForm() {
       <Separator />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
-          <Text fontWeight="medium">{t("inventory")}</Text>
+          <Text fontWeight="medium">{t("common.inventory")}</Text>
           <Text color="grey.400">
-            {t("exportInventoryModulesWithPartAndSerialNumbers")}
+            {t("device.module.export")}
           </Text>
         </Stack>
         <Switch w="initial" control={form.control} name="withInventory" />
@@ -104,8 +104,8 @@ function ExportDataForm() {
       <Separator />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
-          <Text fontWeight="medium">{t("moduleHistory")}</Text>
-          <Text color="grey.400">{t("exportTheDeviceModuleHistory")}</Text>
+          <Text fontWeight="medium">{t("device.module.history")}</Text>
+          <Text color="grey.400">{t("device.module.exportHistory")}</Text>
         </Stack>
         <Switch
           w="initial"
@@ -117,16 +117,16 @@ function ExportDataForm() {
       <Separator />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
-          <Text fontWeight="medium">{t("locationsAndContacts")}</Text>
-          <Text color="grey.400">{t("exportDeviceLocationsAndContactsInformation")}</Text>
+          <Text fontWeight="medium">{t("common.locationsAndContacts")}</Text>
+          <Text color="grey.400">{t("report.exportLocationsAndContacts")}</Text>
         </Stack>
         <Switch w="initial" control={form.control} name="withLocations" />
       </Stack>
       <Separator />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
-          <Text fontWeight="medium">{t("complianceInformation")}</Text>
-          <Text color="grey.400">{t("exportComplianceReportAndInformation")}</Text>
+          <Text fontWeight="medium">{t("compliance.information")}</Text>
+          <Text color="grey.400">{t("report.exportCompliance")}</Text>
         </Stack>
         <Switch w="initial" control={form.control} name="withCompliance" />
       </Stack>
@@ -170,7 +170,7 @@ export default function ExportDataButton(props: ExportDataButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.EXPORT_DATA, {
-      title: t("exportData"),
+      title: t("common.exportData"),
       description: <ExportDataForm />,
       form,
       size: "lg",
@@ -231,7 +231,7 @@ export default function ExportDataButton(props: ExportDataButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("export"),
+        label: t("common.export"),
       },
     })
   }

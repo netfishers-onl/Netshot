@@ -33,20 +33,20 @@ export default function DiagnosticAddDialog() {
     {
       icon: "alignLeft",
       type: DiagnosticType.Simple,
-      label: t("simple"),
-      description: t("createADiagnosticUsingStringAndRegex"),
+      label: t("common.simple"),
+      description: t("diagnostic.createWithStringAndRegex"),
     },
     {
       icon: "javascript",
       type: DiagnosticType.Javascript,
-      label: t("javascript"),
-      description: t("createADiagnosticUsingJavascript"),
+      label: t("policy.rule.javascript"),
+      description: t("diagnostic.createWithJavascript"),
     },
     {
       icon: "python",
       type: DiagnosticType.Python,
-      label: t("python"),
-      description: t("createADiagnosticUsingPython"),
+      label: t("policy.rule.python"),
+      description: t("diagnostic.createWithPython"),
     },
   ]
 
@@ -76,8 +76,8 @@ export default function DiagnosticAddDialog() {
       navigate(`/app/diagnostics/${diagnostic.id}`)
 
       toast.success({
-        title: t("success"),
-        description: t("diagnosticHasBeenSuccessfullyCreated", {
+        title: t("common.success"),
+        description: t("diagnostic.successfullyCreated", {
           diagnosticName: diagnostic?.name,
         }),
       })
@@ -148,7 +148,7 @@ export default function DiagnosticAddDialog() {
 
     if (values.script?.length === 0) {
       form.setError("script", {
-        message: t("thisFieldIsRequired"),
+        message: t("common.thisFieldIsRequired"),
       })
     }
   })
@@ -178,11 +178,11 @@ export default function DiagnosticAddDialog() {
             <Dialog.Content as="form" onSubmit={form.handleSubmit(submit)}>
               <Dialog.Header display="flex" justifyContent="space-between">
                 <Heading as="h3" fontSize="2xl" fontWeight="semibold">
-                  {formStep === FormStep.Type ? t("chooseDiagnosticType") : t("addDiagnostic")}
+                  {formStep === FormStep.Type ? t("diagnostic.chooseType") : t("diagnostic.add")}
                 </Heading>
 
                 <Text fontSize="md" color="grey.400">
-                  {t("stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
+                  {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
                 </Text>
               </Dialog.Header>
               <Dialog.Body flex="1" display="flex">
@@ -211,13 +211,13 @@ export default function DiagnosticAddDialog() {
               </Dialog.Body>
               <Dialog.Footer justifyContent="space-between">
                 {formStep === FormStep.Details && (
-                  <Button onClick={previous}>{t("previous")}</Button>
+                  <Button onClick={previous}>{t("common.previous")}</Button>
                 )}
                 <Stack direction="row" gap="3" flex="1" justifyContent="end">
-                  <Button onClick={close}>{t("cancel")}</Button>
+                  <Button onClick={close}>{t("common.cancel")}</Button>
                   {formStep === FormStep.Type && (
                     <Button variant="primary" disabled={type === null} onClick={next}>
-                      {t("next")}
+                      {t("common.next")}
                     </Button>
                   )}
 
@@ -228,7 +228,7 @@ export default function DiagnosticAddDialog() {
                       loading={createMutation.isPending}
                       variant="primary"
                     >
-                      {t("create")}
+                      {t("common.create")}
                     </Button>
                   )}
                 </Stack>

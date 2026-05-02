@@ -3,27 +3,27 @@ import { CredentialSetType } from "@/types"
 
 export const useDeviceCredentialTypeOptions = createOptionHook([
   {
-    label: "snmpV1",
+    label: "network.snmpV1",
     value: CredentialSetType.SNMP_V1,
   },
   {
-    label: "snmpV2c",
+    label: "network.snmpV2c",
     value: CredentialSetType.SNMP_V2C,
   },
   {
-    label: "snmpV3",
+    label: "network.snmpV3",
     value: CredentialSetType.SNMP_V3,
   },
   {
-    label: "ssh",
+    label: "network.ssh",
     value: CredentialSetType.SSH,
   },
   {
-    label: "sshKey",
+    label: "network.sshKey",
     value: CredentialSetType.SSHKey,
   },
   {
-    label: "telnet",
+    label: "network.telnet",
     value: CredentialSetType.Telnet,
   },
 ])

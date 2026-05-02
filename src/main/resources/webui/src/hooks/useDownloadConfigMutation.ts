@@ -13,8 +13,8 @@ export function useDownloadConfigMutation(configId: number, attributeName: strin
     },
     onError() {
       toast.error({
-        title: t("downloadError"),
-        description: t("anErrorOccurredDuringTheFileDownload"),
+        title: t("common.downloadError"),
+        description: t("common.anErrorOccurredDuringTheFileDownload"),
       })
     },
   })

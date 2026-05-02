@@ -37,19 +37,19 @@ export default function AdministrationDomainScreen() {
     () => [
       columnHelper.accessor("name", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("name"),
+        header: t("common.name"),
         enableSorting: true,
         size: 10000,
       }),
       columnHelper.accessor("description", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("description"),
+        header: t("common.description"),
         enableSorting: true,
         size: 20000,
       }),
       columnHelper.accessor("ipAddress", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("serverAddress"),
+        header: t("network.serverAddress"),
         enableSorting: true,
         size: 10000,
       }),
@@ -63,9 +63,9 @@ export default function AdministrationDomainScreen() {
               <EditDomainButton
                 domain={domain}
                 renderItem={(open) => (
-                  <Tooltip content={t("edit")}>
+                  <Tooltip content={t("common.edit")}>
                     <IconButton
-                      aria-label={t("editDomain")}
+                      aria-label={t("domain.edit")}
                       variant="ghost"
                       colorPalette="green"
                       onClick={open}
@@ -78,9 +78,9 @@ export default function AdministrationDomainScreen() {
               <RemoveDomainButton
                 domain={domain}
                 renderItem={(open) => (
-                  <Tooltip content={t("remove")}>
+                  <Tooltip content={t("common.remove")}>
                     <IconButton
-                      aria-label={t("removeDomain")}
+                      aria-label={t("domain.remove")}
                       variant="ghost"
                       colorPalette="green"
                       onClick={open}
@@ -109,11 +109,11 @@ export default function AdministrationDomainScreen() {
     <>
       <Stack gap="6" p="9" flex="1" overflow="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("deviceDomains")}
+          {t("domain.deviceDomains")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("searchPlaceholder")}
+            placeholder={t("common.searchPlaceholder")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -123,7 +123,7 @@ export default function AdministrationDomainScreen() {
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
                 <Plus />
-                {t("create")}
+                {t("common.create")}
               </Button>
             )}
           />
@@ -141,14 +141,14 @@ export default function AdministrationDomainScreen() {
               <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
-                title={t("thereIsNoDomain")}
-                description={t("youShouldCreateAtLeastOneDomainBeforeAddingDevices")}
+                title={t("domain.none")}
+                description={t("device.createDomainFirst")}
               >
                 <AddDomainButton
                   renderItem={(open) => (
                     <Button variant="outline" onClick={open}>
                       <Plus />
-                      {t("create")}
+                      {t("common.create")}
                     </Button>
                   )}
                 />

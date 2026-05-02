@@ -16,7 +16,7 @@ export default function DeviceRunScriptButton(props: DeviceRunScriptButtonProps)
   const open = (evt: MouseEvent) => {
     evt?.stopPropagation()
     dialog.open({
-      title: t("runDeviceScript"),
+      title: t("device.runScript"),
       description: <DeviceScriptView devices={devices} />,
       hideFooter: true,
       variant: "full-floating",

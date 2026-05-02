@@ -44,7 +44,7 @@ export default function DeviceDiagnosticButton(props: DeviceDiagnosticButtonProp
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.TASK_CREATE, {
-      title: t("runDeviceDiagnostics"),
+      title: t("device.runDiagnostics"),
       description: (
         <FormProvider {...form}>
           <Stack gap="6">
@@ -53,7 +53,7 @@ export default function DeviceDiagnosticButton(props: DeviceDiagnosticButtonProp
                 <>
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("devices")}</Text>
+                      <Text color="grey.400">{t("device.devices")}</Text>
                     </Box>
                     <Text>{devices.map((device) => device.name).join(", ")}</Text>
                   </Flex>
@@ -62,13 +62,13 @@ export default function DeviceDiagnosticButton(props: DeviceDiagnosticButtonProp
                 <>
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("name")}</Text>
+                      <Text color="grey.400">{t("common.name")}</Text>
                     </Box>
                     <Text>{devices?.[0]?.name ?? "nA"}</Text>
                   </Flex>
                   <Flex alignItems="center">
                     <Box w="140px">
-                      <Text color="grey.400">{t("ipAddress")}</Text>
+                      <Text color="grey.400">{t("device.interface.ipAddress")}</Text>
                     </Box>
                     <Text>{devices?.[0]?.mgmtAddress ?? "nA"}</Text>
                   </Flex>
@@ -78,7 +78,7 @@ export default function DeviceDiagnosticButton(props: DeviceDiagnosticButtonProp
             <Separator />
             <Stack gap="3">
               <Checkbox control={form.control} name="checkCompliance">
-                {t("checkDeviceComplianceAfterTheSnapshot")}
+                {t("device.checkComplianceAfterSnapshot")}
               </Checkbox>
             </Stack>
             <ScheduleForm />
@@ -111,7 +111,7 @@ export default function DeviceDiagnosticButton(props: DeviceDiagnosticButtonProp
         }
       },
       submitButton: {
-        label: t("run"),
+        label: t("common.run"),
       },
     })
   }

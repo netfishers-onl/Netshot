@@ -99,7 +99,7 @@ export default function ReportHardwareSupportStatusScreen() {
         labels,
         datasets: [
           {
-            label: t("endOfLifeDevices"),
+            label: t("compliance.hardware.endOfLifeDevices"),
             backgroundColor: bronze500,
             data: datas.eol,
             borderWidth: 1,
@@ -107,7 +107,7 @@ export default function ReportHardwareSupportStatusScreen() {
             tension: 0.3,
           },
           {
-            label: t("endOfSaleDevices"),
+            label: t("compliance.hardware.endOfSaleDevices"),
             backgroundColor: grey500,
             data: datas.eos,
             borderWidth: 1,
@@ -115,7 +115,7 @@ export default function ReportHardwareSupportStatusScreen() {
             tension: 0.3,
           },
           {
-            label: t("totalDevices"),
+            label: t("report.totalDevices"),
             backgroundColor: green500,
             data: datas.max,
             borderWidth: 1,
@@ -149,12 +149,12 @@ export default function ReportHardwareSupportStatusScreen() {
       const count = info.getValue()
 
       if (count > 1) {
-        return t("device", {
+        return t("device.label", {
           count,
         })
       }
 
-      return t("device", {
+      return t("device.label", {
         count,
       })
     },
@@ -168,10 +168,10 @@ export default function ReportHardwareSupportStatusScreen() {
           <Text>
             {info.getValue()
               ? formatDate(getDateFromUnix(info.getValue()), "yyyy-MM-dd")
-              : t("never")}
+              : t("common.never")}
           </Text>
         ),
-        header: t("date"),
+        header: t("time.date"),
       }),
       columnHelper.accessor("eos", {
         cell: (info) => {
@@ -191,7 +191,7 @@ export default function ReportHardwareSupportStatusScreen() {
             />
           )
         },
-        header: t("endOfSale"),
+        header: t("compliance.hardware.endOfSale"),
       }),
       columnHelper.accessor("eol", {
         cell: (info) => {
@@ -211,7 +211,7 @@ export default function ReportHardwareSupportStatusScreen() {
             />
           )
         },
-        header: t("endOfLife"),
+        header: t("compliance.hardware.endOfLife"),
       }),
     ],
     [t]
@@ -223,18 +223,18 @@ export default function ReportHardwareSupportStatusScreen() {
     <Stack gap="8" p="9" flex="1" overflowY="auto">
       <Stack direction="row">
         <Heading as="h1" fontSize="4xl">
-          {t("hardwareSupportStatus")}
+          {t("compliance.hardware.supportStatus")}
         </Heading>
         <Spacer />
 
         <Button onClick={() => refetch()}>
           <Icon name="refreshCcw" />
-          {t("refresh")}
+          {t("common.refresh")}
         </Button>
       </Stack>
       <Stack gap="5">
         <Heading as="h4" fontSize="2xl">
-          {t("overview")}
+          {t("common.overview")}
         </Heading>
 
         {isPending ? (
@@ -247,7 +247,7 @@ export default function ReportHardwareSupportStatusScreen() {
       </Stack>
       <Stack gap="5" flex="1" overflowY="auto">
         <Heading as="h4" fontSize="2xl">
-          {t("milestone")}
+          {t("compliance.hardware.milestone")}
         </Heading>
         {isPending ? (
           <Stack gap="3">

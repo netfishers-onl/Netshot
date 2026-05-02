@@ -55,7 +55,7 @@ function DeviceBulkEditForm() {
     <Stack gap="6" px="6">
       <DomainSelect control={form.control} name="mgmtDomain" />
       <Stack gap="3">
-        <Field.Label>{t("useTheFollowingCredentialSet")}</Field.Label>
+        <Field.Label>{t("device.useFollowingCredentialSet")}</Field.Label>
         {isPending ? (
           <Stack gap="2">
             <Skeleton w="100%" h="36px" />
@@ -80,7 +80,7 @@ function DeviceBulkEditForm() {
               </NativeCheckbox.Root>
             ))}
             <Checkbox control={form.control} name="autoTryCredentials">
-              {t("inCaseOfFailureAlsoTryAllKnownCredentials")}
+              {t("device.inCaseOfFailureTryAllCredentials")}
             </Checkbox>
           </Stack>
         )}
@@ -113,7 +113,7 @@ export default function DeviceBulkEditButton(props: DeviceBulkEditButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DEVICE_UPDATE, {
-      title: t("editDevices"),
+      title: t("device.editMultiple"),
       description: (
         <>
           <Stack px="6" mb="6">
@@ -144,7 +144,7 @@ export default function DeviceBulkEditButton(props: DeviceBulkEditButtonProps) {
         dialogRef.close()
 
         toast.success({
-          title: t("success"),
+          title: t("common.success"),
           description: t("devicesHaveBeenSuccessfullyModified", {
             count: devices?.length,
           }),
@@ -153,7 +153,7 @@ export default function DeviceBulkEditButton(props: DeviceBulkEditButtonProps) {
         form.reset()
       },
       submitButton: {
-        label: t("applyChanges"),
+        label: t("common.applyChanges"),
       },
     })
   }

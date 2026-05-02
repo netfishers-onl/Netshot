@@ -26,16 +26,16 @@ export function useSigninMutation() {
     onError(err: NetshotError) {
       if (err.response.status === HttpStatus.Unauthorized) {
         toast.error({
-          title: t("authenticationFailed"),
-          description: t("usernameOrPasswordIsIncorrect"),
+          title: t("auth.failed"),
+          description: t("auth.incorrectCredentials"),
         })
       } else if (
         err.response.status === HttpStatus.PreconditionFailed &&
         err.code === NetshotErrorCode.ExpiredPassword
       ) {
         toast.error({
-          title: t("passwordExpired"),
-          description: t("youNeedToChangeYourPassword"),
+          title: t("auth.passwordExpired"),
+          description: t("auth.needToChangePassword"),
         })
         setChangePass(true)
       } else if (
@@ -43,14 +43,14 @@ export function useSigninMutation() {
         err.code === NetshotErrorCode.FailedPasswordPolicy
       ) {
         toast.error({
-          title: t("passwordPolicyFailed"),
+          title: t("auth.passwordPolicyFailed"),
           description: err.description,
         })
         setChangePass(true)
       } else {
         toast.error({
-          title: t("serverError"),
-          description: t("theNetshotServerDidnTReplyProperly"),
+          title: t("common.serverError"),
+          description: t("common.theNetshotServerDidnTReplyProperly"),
         })
       }
     },
@@ -83,7 +83,7 @@ export function useSigninWithOidcMutation() {
     onError() {
       toast.error({
         title: t("SSO error"),
-        description: t("anErrorHasOccurredWhileConnectingViaSso"),
+        description: t("auth.ssoError"),
       })
 
       setSearchParams((prev) => {

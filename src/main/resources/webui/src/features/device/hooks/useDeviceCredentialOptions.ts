@@ -3,19 +3,19 @@ import { CredentialSetType } from "@/types"
 
 export const useDeviceCredentialOptions = createOptionHook([
   {
-    label: "useGlobalCredentialSetsForAuthentication",
+    label: "device.useGlobalCredentials",
     value: CredentialSetType.GLOBAL,
   },
   {
-    label: "specificSshAccount",
+    label: "credential.specificSshAccount",
     value: CredentialSetType.SSH,
   },
   {
-    label: "specificSshKey",
+    label: "credential.specificSshKey",
     value: CredentialSetType.SSHKey,
   },
   {
-    label: "specificTelnetAccount",
+    label: "credential.specificTelnetAccount",
     value: CredentialSetType.Telnet,
   },
 ])

@@ -25,17 +25,17 @@ function AboutContent() {
       <Alert.Root status="info" bg="blue.50">
         <Alert.Indicator />
         <Alert.Title>
-          {t("connectedToNetshotVersion", {
+          {t("about.connectedToVersion", {
             version: serverVersion,
           })}
         </Alert.Title>
       </Alert.Root>
       <Stack>
         <Text asChild>
-          <b>{t("thankYouForUsingNetshotNetshotIsFreeOpenSourceSoftware")}</b>
+          <b>{t("about.thankYou")}</b>
         </Text>
         <Text>
-          {t("copyright2014NetshotSasuAllRightsReserved", {
+          {t("about.copyright", {
             year: new Date().getFullYear(),
           })}
         </Text>
@@ -45,39 +45,35 @@ function AboutContent() {
           <Button asChild>
             <a target="_blank" href="https://www.netshot.net" rel="noreferrer">
               <Icon name="home" />
-              {t("homePage")}
+              {t("admin.homePage")}
             </a>
           </Button>
           <Button asChild>
             <a target="_blank" href="mailto:contact@netshot.net" rel="noreferrer">
               <Icon name="atSign" />
-              {t("contact")}
+              {t("common.contact")}
             </a>
           </Button>
           <Button asChild>
             <a target="_blank" href="https://github.com/netfishers-onl/Netshot" rel="noreferrer">
               <Icon name="gitHub" />
-              {t("sourceCode")}
+              {t("policy.rule.sourceCode")}
             </a>
           </Button>
         </ButtonGroup>
       </Stack>
       <Stack>
         <Text fontWeight="medium">
-          {t(
-            "feelFreeToContactUsWeOfferServicesIncludingSupportAndSpecifi"
-          )}
+          {t("about.contactUs")}
         </Text>
       </Stack>
       <Stack>
         <Text>
-          {t(
-            'Netshot is distributed "as is", without warranty. Netshot SASU can\'t be held responsible for any damage caused to your devices or your network by the usage of Netshot. Netshot has no relationship with the network device vendors.'
-          )}
+          {t("about.warranty")}
         </Text>
       </Stack>
       <Stack>
-        <Text>{t("netshotMakesUseOfTheFollowingLibraries")}</Text>
+        <Text>{t("about.libraries")}</Text>
         <List.Root as="ul" display="block">
           {NETSHOT_APP_LIBRARIES.map((lib) => (
             <List.Item key={lib} display="inline-list-item" marginRight="2">
@@ -101,7 +97,7 @@ export function AboutNetshotModal(props: AboutModalProps) {
     evt?.stopPropagation()
 
     dialog.open({
-      title: t("aboutNetshot"),
+      title: t("about.netshot"),
       description: <AboutContent />,
       size: "xl",
     })

@@ -113,7 +113,7 @@ export function useTask(status?: TaskStatus) {
   const columns = [
     columnHelper.accessor("taskDescription", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("type"),
+      header: t("common.type"),
     }),
     columnHelper.accessor("target", {
       cell: (info) => {
@@ -130,30 +130,30 @@ export function useTask(status?: TaskStatus) {
           </EntityLink>
         )
       },
-      header: t("target"),
+      header: t("common.target"),
     }),
     columnHelper.accessor("author", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("creator"),
+      header: t("common.creator"),
     }),
     columnHelper.accessor("status", {
       cell: (info) => <TaskStatusTag status={info.getValue()} />,
-      header: t("status"),
+      header: t("common.status"),
     }),
     columnHelper.accessor("executionDate", {
-      cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
-      header: t("executionDate"),
+      cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+      header: t("time.executionDate"),
     }),
     columnHelper.accessor("comments", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("comments"),
+      header: t("common.comments"),
     }),
     columnHelper.display({
       id: "actions",
       cell: (info) => (
         <TableButtonStack>
           <Button variant="ghost" colorPalette="green" onClick={() => openTask(info.row.original.id)}>
-            {t("seeDetails")}
+            {t("common.seeDetails")}
           </Button>
         </TableButtonStack>
       ),

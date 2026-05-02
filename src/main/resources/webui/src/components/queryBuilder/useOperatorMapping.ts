@@ -6,63 +6,63 @@ export function useOperatorMapping() {
 
   return {
     [OperatorType.Is]: {
-      label: t("is"),
+      label: t("common.is"),
       value: OperatorType.Is,
     },
     [OperatorType.In]: {
-      label: t("in"),
+      label: t("common.in"),
       value: OperatorType.In,
     },
     [OperatorType.Contains]: {
-      label: t("contains"),
+      label: t("common.contains"),
       value: OperatorType.Contains,
     },
     [OperatorType.ContainsNoCase]: {
-      label: t("containsNoCase"),
+      label: t("common.containsNoCase"),
       value: OperatorType.ContainsNoCase,
     },
     [OperatorType.StartsWith]: {
-      label: t("startsWith"),
+      label: t("common.startsWith"),
       value: OperatorType.StartsWith,
     },
     [OperatorType.EndsWith]: {
-      label: t("endsWith"),
+      label: t("common.endsWith"),
       value: OperatorType.EndsWith,
     },
     [OperatorType.Matches]: {
-      label: t("matches"),
+      label: t("common.matches"),
       value: OperatorType.Matches,
     },
     [OperatorType.LessThan]: {
-      label: t("lessThan"),
+      label: t("common.lessThan"),
       value: OperatorType.LessThan,
     },
     [OperatorType.GreaterThan]: {
-      label: t("greaterThan"),
+      label: t("common.greaterThan"),
       value: OperatorType.GreaterThan,
     },
     [OperatorType.Before]: {
-      label: t("before"),
+      label: t("time.before"),
       value: OperatorType.Before,
     },
     [OperatorType.After]: {
-      label: t("after"),
+      label: t("time.after"),
       value: OperatorType.After,
     },
     [OperatorType.BeforeRelative]: {
-      label: t("beforeRelative"),
+      label: t("time.beforeRelative"),
       value: OperatorType.BeforeRelative,
     },
     [OperatorType.True]: {
-      label: t("true"),
+      label: t("common.true"),
       value: OperatorType.True,
     },
     [OperatorType.False]: {
-      label: t("false"),
+      label: t("common.false"),
       value: OperatorType.False,
     },
     [OperatorType.Enum]: {
-      label: t("enum"),
+      label: t("common.enum"),
       value: OperatorType.Enum,
     },
   }

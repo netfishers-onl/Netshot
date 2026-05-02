@@ -3,24 +3,24 @@ import { HookTriggerType, TaskType } from "@/types"
 
 const options = [
   {
-    label: "afterSnapshot",
-    description: "executedAfterDeviceSnapshot",
+    label: "device.snapshot.after",
+    description: "policy.rule.executedAfterSnapshot",
     value: {
       type: HookTriggerType.PostTask,
       item: TaskType.TakeSnapshot,
     },
   },
   {
-    label: "afterScript",
-    description: "executedAfterJsScriptOnDevice",
+    label: "task.afterScript",
+    description: "policy.rule.executedAfterJsScript",
     value: {
       type: HookTriggerType.PostTask,
       item: TaskType.RunDeviceScript,
     },
   },
   {
-    label: "afterDiagnostics",
-    description: "executedAfterDiagnosticsPerformedOnDevice",
+    label: "task.afterDiagnostics",
+    description: "policy.rule.executedAfterDiagnostics",
     value: {
       type: HookTriggerType.PostTask,
       item: TaskType.RunDiagnostic,

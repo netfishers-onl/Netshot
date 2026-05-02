@@ -51,20 +51,20 @@ export default function ReportConfigurationChangeList() {
   const columns = useMemo(
     () => [
       columnHelper.accessor("changeDate", {
-        cell: (info) => <Text>{info.getValue() ? formatLocalDate(info.getValue()) : t("nA")}</Text>,
-        header: t("dateTime"),
+        cell: (info) => <Text>{info.getValue() ? formatLocalDate(info.getValue()) : t("common.nA")}</Text>,
+        header: t("time.dateTime"),
       }),
-      columnHelper.accessor("deviceName", {
+      columnHelper.accessor("name", {
         cell: (info) => (
           <EntityLink to={`/app/devices/${info.row.original.deviceId}/configuration`}>
             {info.getValue()}
           </EntityLink>
         ),
-        header: t("device"),
+        header: t("device.label"),
       }),
       columnHelper.accessor("author", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("author"),
+        header: t("common.author"),
       }),
       columnHelper.display({
         id: "actions",
@@ -72,11 +72,11 @@ export default function ReportConfigurationChangeList() {
           <ReportConfigurationCompareModal
             config={info.row.original}
             renderItem={(open) => (
-              <Tooltip content={t("showDifference")}>
+              <Tooltip content={t("common.showDifference")}>
                 <IconButton
                   variant="ghost"
                   colorPalette="green"
-                  aria-label={t("showDifference")}
+                  aria-label={t("common.showDifference")}
                   onClick={open}
                 >
                   <Icon name="gitBranch" />
@@ -138,8 +138,8 @@ export default function ReportConfigurationChangeList() {
             <DataTable zIndex={0} columns={columns} data={data} loading={isPending} />
           ) : (
             <EmptyResult
-              title={t("thereIsNoConfigurationChange")}
-              description={t("hereYouCanViewTheConfigurationChangeList")}
+              title={t("device.config.noChange")}
+              description={t("device.hereYouCanViewConfigChangeList")}
             ></EmptyResult>
           )}
         </>

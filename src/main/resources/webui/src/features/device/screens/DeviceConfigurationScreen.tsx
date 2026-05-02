@@ -30,8 +30,8 @@ export default function DeviceConfigurationScreen() {
   if (data?.length === 0) {
     return (
       <EmptyResult
-        title={t("thereIsNoConfigurationForThisDevice")}
-        description={t("thisDeviceDoesNotHaveAnyConfigurationPleaseRunASnapshot")}
+        title={t("device.config.noneForDevice")}
+        description={t("device.config.noConfiguration")}
       />
     )
   }
@@ -39,7 +39,7 @@ export default function DeviceConfigurationScreen() {
   return (
     <Stack gap="6">
       <Stack direction="row" gap="3">
-        <Search placeholder={t("searchPlaceholder")} onQuery={onQuery} onClear={onQueryClear} w="50%" />
+        <Search placeholder={t("common.searchPlaceholder")} onQuery={onQuery} onClear={onQueryClear} w="50%" />
       </Stack>
       <Stack gap="3">
         {isPending ? (
@@ -59,7 +59,7 @@ export default function DeviceConfigurationScreen() {
       </Stack>
       {hasNextPage && (
         <Button onClick={() => fetchNextPage()} loading={isFetchingNextPage}>
-          {t("loadMore")}
+          {t("common.loadMore")}
         </Button>
       )}
     </Stack>

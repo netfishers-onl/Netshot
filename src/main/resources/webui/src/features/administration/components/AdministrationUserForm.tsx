@@ -50,8 +50,8 @@ export default function AdministrationUserForm(props: AdministrationUserFormProp
   return (
     <Stack gap="6">
       <FormControl
-        label={t("username")}
-        placeholder={t("eG", { example: "admin" })}
+        label={t("user.username")}
+        placeholder={t("common.eG", { example: "admin" })}
         required
         control={form.control}
         name="username"
@@ -61,14 +61,14 @@ export default function AdministrationUserForm(props: AdministrationUserFormProp
         options={userLevelOptions.options}
         control={form.control}
         name="level"
-        label={t("role")}
-        placeholder={t("selectRole")}
+        label={t("common.role")}
+        placeholder={t("user.selectRole")}
       />
       <Stack direction="row" gap="6">
         <Stack gap="0" flex="1">
-          <Text fontWeight="medium">{t("remoteUser")}</Text>
+          <Text fontWeight="medium">{t("user.remoteUser")}</Text>
           <Text color="grey.400">
-            {t("userWillBeAuthenticatedByARemoteServerEGRadius")}
+            {t("user.remoteAuthDescription")}
           </Text>
         </Stack>
         <Switch w="initial" control={form.control} name="isRemote" />
@@ -81,8 +81,8 @@ export default function AdministrationUserForm(props: AdministrationUserFormProp
             type={FormControlType.Password}
             control={form.control}
             name="password"
-            label={t("password")}
-            placeholder={t("enterPassword")}
+            label={t("auth.password")}
+            placeholder={t("auth.enterPassword")}
           />
           {password != PASSWORD_UNCHANGED && (
             <FormControl
@@ -90,11 +90,11 @@ export default function AdministrationUserForm(props: AdministrationUserFormProp
               type={FormControlType.Password}
               control={form.control}
               name="confirmPassword"
-              label={t("confirmPassword")}
-              placeholder={t("confirmPassword")}
+              label={t("auth.confirmPassword")}
+              placeholder={t("auth.confirmPassword")}
               rules={{
                 validate(value) {
-                  return value === password || t("passwordsDonTMatch")
+                  return value === password || t("auth.passwordsDontMatch")
                 },
               }}
             />

@@ -51,7 +51,7 @@ export default function DeviceConfigurationPanel(props: DeviceConfigurationPanel
         <IconButton
           variant="ghost"
           colorPalette="green"
-          aria-label={t("open")}
+          aria-label={t("common.open")}
           css={{
             transform: isCollapsed ? "rotate(-90deg)" : "",
           }}
@@ -74,7 +74,7 @@ export default function DeviceConfigurationPanel(props: DeviceConfigurationPanel
             setCurrent(config)
           }}
         >
-          {t("compare")}
+          {t("common.compare")}
         </Button>
       </Stack>
       <motion.div

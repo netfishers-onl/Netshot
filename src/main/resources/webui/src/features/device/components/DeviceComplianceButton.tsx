@@ -36,7 +36,7 @@ export default function DeviceComplianceButton(props: DeviceComplianceButtonProp
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.TASK_CREATE, {
-      title: t("runDeviceCompliance"),
+      title: t("device.runCompliance"),
       description: (
         <Stack gap="6">
           <Stack gap="3">
@@ -44,7 +44,7 @@ export default function DeviceComplianceButton(props: DeviceComplianceButtonProp
               <>
                 <Flex alignItems="center">
                   <Box w="140px">
-                    <Text color="grey.400">{t("devices")}</Text>
+                    <Text color="grey.400">{t("device.devices")}</Text>
                   </Box>
                   <Text>{devices.map((device) => device.name).join(", ")}</Text>
                 </Flex>
@@ -53,13 +53,13 @@ export default function DeviceComplianceButton(props: DeviceComplianceButtonProp
               <>
                 <Flex alignItems="center">
                   <Box w="140px">
-                    <Text color="grey.400">{t("name")}</Text>
+                    <Text color="grey.400">{t("common.name")}</Text>
                   </Box>
                   <Text>{devices?.[0]?.name ?? "nA"}</Text>
                 </Flex>
                 <Flex alignItems="center">
                   <Box w="140px">
-                    <Text color="grey.400">{t("ipAddress")}</Text>
+                    <Text color="grey.400">{t("device.interface.ipAddress")}</Text>
                   </Box>
                   <Text>{devices?.[0]?.mgmtAddress ?? "nA"}</Text>
                 </Flex>
@@ -95,7 +95,7 @@ export default function DeviceComplianceButton(props: DeviceComplianceButtonProp
         }
       },
       submitButton: {
-        label: t("run"),
+        label: t("common.run"),
       },
     })
   }

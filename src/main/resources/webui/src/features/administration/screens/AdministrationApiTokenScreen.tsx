@@ -37,13 +37,13 @@ export default function AdministrationApiTokenScreen() {
     () => [
       columnHelper.accessor("description", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("description"),
+        header: t("common.description"),
         enableSorting: true,
         size: 20000,
       }),
       columnHelper.accessor("level", {
         cell: (info) => <Text>{userLevelOptions.getByValue(info.getValue())?.label}</Text>,
-        header: t("permissionLevel"),
+        header: t("user.permissionLevel"),
         enableSorting: true,
         size: 10000,
         minSize: 200,
@@ -58,9 +58,9 @@ export default function AdministrationApiTokenScreen() {
               <RemoveApiTokenButton
                 apiToken={apiToken}
                 renderItem={(open) => (
-                  <Tooltip content={t("remove")}>
+                  <Tooltip content={t("common.remove")}>
                     <IconButton
-                      aria-label={t("removeToken")}
+                      aria-label={t("api.removeToken")}
                       variant="ghost"
                       colorPalette="green"
                       onClick={open}
@@ -88,11 +88,11 @@ export default function AdministrationApiTokenScreen() {
     <>
       <Stack gap="6" p="9" flex="1" overflow="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("apiTokens")}
+          {t("api.tokens")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("searchPlaceholder")}
+            placeholder={t("common.searchPlaceholder")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -102,7 +102,7 @@ export default function AdministrationApiTokenScreen() {
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
                 <Icon name="plus" />
-                {t("create")}
+                {t("common.create")}
               </Button>
             )}
           />
@@ -120,14 +120,14 @@ export default function AdministrationApiTokenScreen() {
               <DataTable columns={columns} data={data} loading={isPending} />
             ) : (
               <EmptyResult
-                title={t("thereIsNoApiToken")}
-                description={t("youCanCreateTokensToUseNetshotEmbeddedRestApi")}
+                title={t("api.none")}
+                description={t("api.canCreate")}
               >
                 <AddApiTokenButton
                   renderItem={(open) => (
                     <Button variant="outline" onClick={open}>
                       <Plus />
-                      {t("create")}
+                      {t("common.create")}
                     </Button>
                   )}
                 />

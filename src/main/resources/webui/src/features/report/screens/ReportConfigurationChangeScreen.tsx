@@ -9,7 +9,7 @@ export default function ReportConfigurationChangeScreen() {
     <Stack gap="8" p="9" flex="1" overflow="auto">
       <Stack direction="row">
         <Heading as="h1" fontSize="4xl">
-          {t("configurationChanges")}
+          {t("device.config.changes")}
         </Heading>
       </Stack>
       <ReportConfigurationChart />

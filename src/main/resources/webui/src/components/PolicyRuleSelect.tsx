@@ -17,15 +17,15 @@ export function PolicyRuleSelect<T>(props: PolicyRuleSelectProps<T>) {
 
   return (
     <Select
-      label={t("rule")}
-      placeholder={multiple ? t("selectRules") : t("selectARule")}
+      label={t("policy.rule.label")}
+      placeholder={multiple ? t("common.selectRules") : t("policy.rule.select")}
       name={name}
       defaultValue={defaultValue}
       control={control}
       readOnly={readOnly}
       required={required}
       isLoading={isPending}
-      noOptionsMessage={<Text>{t("noRuleFound")}</Text>}
+      noOptionsMessage={<Text>{t("common.noRuleFound")}</Text>}
       options={options}
       multiple={multiple}
       {...other}

@@ -57,7 +57,7 @@ export default function EditSoftwareRuleButton(props: EditSoftwareRuleButtonProp
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.SOFTWARE_RULE_UPDATE, {
-      title: t("editSoftwareRule"),
+      title: t("compliance.software.editRule"),
       description: <SoftwareRuleForm rule={rule} />,
       form,
       size: "lg",
@@ -79,8 +79,8 @@ export default function EditSoftwareRuleButton(props: EditSoftwareRuleButtonProp
         form.reset()
 
         toast.success({
-          title: t("success"),
-          description: t("softwareRuleHasBeenSuccessfullyModified"),
+          title: t("common.success"),
+          description: t("compliance.software.ruleModified"),
         })
 
         queryClient.invalidateQueries({ queryKey: [QUERIES.SOFTWARE_RULE_LIST] })
@@ -89,7 +89,7 @@ export default function EditSoftwareRuleButton(props: EditSoftwareRuleButtonProp
         form.reset()
       },
       submitButton: {
-        label: t("applyChanges"),
+        label: t("common.applyChanges"),
       },
     })
   }

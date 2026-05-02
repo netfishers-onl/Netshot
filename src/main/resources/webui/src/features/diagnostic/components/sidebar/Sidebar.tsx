@@ -30,7 +30,7 @@ export default function Sidebar() {
                     renderItem={(open) => (
                       <Button onClick={open}>
                         <Icon name="plus" />
-                        {t("addDiagnostic")}
+                        {t("diagnostic.add")}
                       </Button>
                     )}
                   />

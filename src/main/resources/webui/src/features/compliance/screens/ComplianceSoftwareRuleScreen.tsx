@@ -52,28 +52,28 @@ export default function ComplianceSoftwareRuleScreen() {
 
   const columns = [
     columnHelper.accessor("targetGroup", {
-      cell: (info) => <Text>{info.getValue()?.name || t("any")}</Text>,
-      header: t("group"),
+      cell: (info) => <Text>{info.getValue()?.name || t("common.any")}</Text>,
+      header: t("group.label"),
       size: 10000,
     }),
-    columnHelper.accessor("deviceType", {
-      cell: (info) => <Text>{info.getValue() || t("any")}</Text>,
-      header: t("device"),
+    columnHelper.accessor("type", {
+      cell: (info) => <Text>{info.getValue() || t("common.any")}</Text>,
+      header: t("device.label"),
       size: 10000,
     }),
     columnHelper.accessor("family", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("deviceFamily"),
+      header: t("device.family"),
       size: 10000,
     }),
     columnHelper.accessor("partNumber", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("partNumber"),
+      header: t("device.module.partNumber"),
       size: 10000,
     }),
     columnHelper.accessor("version", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("version"),
+      header: t("common.version"),
       size: 10000,
     }),
     columnHelper.accessor("level", {
@@ -82,7 +82,7 @@ export default function ComplianceSoftwareRuleScreen() {
 
         return <Tag.Root colorPalette={getSoftwareLevelColor(level)}>{level}</Tag.Root>
       },
-      header: t("level"),
+      header: t("common.level"),
       size: 10000,
     }),
     columnHelper.display({
@@ -96,11 +96,11 @@ export default function ComplianceSoftwareRuleScreen() {
               <EditSoftwareRuleButton
                 rule={rule}
                 renderItem={(open) => (
-                  <Tooltip content={t("edit")}>
+                  <Tooltip content={t("common.edit")}>
                     <IconButton
                       variant="ghost"
                       colorPalette="green"
-                      aria-label={t("editTheRule")}
+                      aria-label={t("policy.rule.editThe")}
                       onClick={open}
                     >
                       <Icon name="edit" />
@@ -112,11 +112,11 @@ export default function ComplianceSoftwareRuleScreen() {
               <RemoveSoftwareRuleButton
                 rule={rule}
                 renderItem={(open) => (
-                  <Tooltip content={t("remove")}>
+                  <Tooltip content={t("common.remove")}>
                     <IconButton
                       variant="ghost"
                       colorPalette="green"
-                      aria-label={t("removeTheRule")}
+                      aria-label={t("policy.rule.removeThe")}
                       onClick={open}
                     >
                       <Icon name="trash" />
@@ -153,8 +153,8 @@ export default function ComplianceSoftwareRuleScreen() {
     const nextItem = getNextItemInArray(row, reorderedData, "id")
 
     const dialogRef = dialog.open(MUTATIONS.SOFTWARE_RULE_REORDER, {
-      title: t("changePriority"),
-      description: t("areYouSureToChangeRulesPriorities"),
+      title: t("common.changePriority"),
+      description: t("policy.rule.confirmChangePriorities"),
       async onConfirm() {
         await reorderMutation.mutateAsync({ id: id, nextId: nextItem?.id })
 
@@ -171,11 +171,11 @@ export default function ComplianceSoftwareRuleScreen() {
     <>
       <Stack gap="6" p="9" flex="1" overflow="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("softwareVersionCompliance")}
+          {t("compliance.software.versionLabel")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("searchPlaceholder")}
+            placeholder={t("common.searchPlaceholder")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -187,7 +187,7 @@ export default function ComplianceSoftwareRuleScreen() {
                 renderItem={(open) => (
                   <Button onClick={open} variant="primary">
                     <Icon name="plus" />
-                    {t("addRule")}
+                    {t("policy.rule.add")}
                   </Button>
                 )}
               />
@@ -214,14 +214,14 @@ export default function ComplianceSoftwareRuleScreen() {
               />
             ) : (
               <EmptyResult
-                title={t("thereIsNoSoftwareRule")}
-                description={t("youCanAddARuleToCheckDeviceSoftwareCompliance")}
+                title={t("compliance.software.noRule")}
+                description={t("compliance.software.canAddRule")}
               >
                 <AddSoftwareRuleButton
                   renderItem={(open) => (
                     <Button onClick={open} variant="outline">
                       <Icon name="plus" />
-                      {t("addRule")}
+                      {t("policy.rule.add")}
                     </Button>
                   )}
                 />

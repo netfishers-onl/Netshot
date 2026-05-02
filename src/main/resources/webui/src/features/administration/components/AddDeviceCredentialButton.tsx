@@ -52,7 +52,7 @@ export default function AddDeviceCredentialButton(props: AddDeviceCredentialButt
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_CREDENTIAL_SET_CREATE, {
-      title: t("createCredential"),
+      title: t("credential.create"),
       description: <AdministrationDeviceCredentialForm />,
       form,
       size: "lg",
@@ -111,8 +111,8 @@ export default function AddDeviceCredentialButton(props: AddDeviceCredentialButt
         dialogRef.close()
 
         toast.success({
-          title: t("success"),
-          description: t("deviceCredentialHasBeenSuccessfullyCreated", {
+          title: t("common.success"),
+          description: t("credential.successfullyCreated", {
             name: values.name,
           }),
         })
@@ -127,7 +127,7 @@ export default function AddDeviceCredentialButton(props: AddDeviceCredentialButt
         form.reset()
       },
       submitButton: {
-        label: t("create"),
+        label: t("common.create"),
       },
     })
   }

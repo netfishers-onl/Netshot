@@ -54,7 +54,7 @@ export default function ReportConfigurationChart() {
   return (
     <Stack gap="5">
       <Heading as="h4" fontSize="2xl">
-        {t("changesOverTheLastDays")}
+        {t("device.changesOverLastDays")}
       </Heading>
       {isPending ? (
         <Skeleton height="250px" />

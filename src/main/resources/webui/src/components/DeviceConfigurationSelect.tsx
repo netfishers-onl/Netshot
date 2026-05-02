@@ -31,14 +31,14 @@ export default function DeviceConfigurationSelect<T>(props: DeviceConfigurationS
   return (
     <Select
       label={label}
-      placeholder={t("selectAConfiguration")}
+      placeholder={t("device.config.select")}
       control={control}
       name={name}
       defaultValue={defaultValue}
       readOnly={readOnly}
       required={required}
       isLoading={isPending}
-      noOptionsMessage={<Text>{t("noConfigurationFound")}</Text>}
+      noOptionsMessage={<Text>{t("common.noConfigurationFound")}</Text>}
       options={options}
       itemToValue={(item) => item.value.id?.toString()}
       {...selectProps}

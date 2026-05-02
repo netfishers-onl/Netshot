@@ -28,11 +28,11 @@ export function QueryBuilderButton(props: QueryBuilderButtonProps) {
     form.setValue("queryBuilder.query", value?.query)
 
     const dialogRef = dialog.open({
-      title: t("queryBuilder"),
+      title: t("common.queryBuilder"),
       description: <QueryBuilderControl control={form.control} name="queryBuilder" />,
       form,
       submitButton: {
-        label: t("search"),
+        label: t("common.search"),
       },
       onSubmit(values) {
         dialogRef.close()

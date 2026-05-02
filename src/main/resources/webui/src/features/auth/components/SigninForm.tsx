@@ -46,7 +46,7 @@ export function SigninForm() {
       <Center h="100vh">
         <Stack gap="3" alignItems="center">
           <Spinner size="lg" />
-          <Text>{t("connectingViaSso")}</Text>
+          <Text>{t("auth.connectingViaSso")}</Text>
         </Stack>
       </Center>
     )
@@ -57,10 +57,10 @@ export function SigninForm() {
       <Stack gap="2" asChild>
         <form onSubmit={submit}>
           <Button variant="primary" type="submit">
-            {t("signInWithSso")}
+            {t("auth.signInWithSso")}
           </Button>
           <Button variant="default" onClick={toggleOidcForm}>
-            {t("signInWithUsername")}
+            {t("auth.signInWithUsername")}
           </Button>
         </form>
         {signinWithOidcMutation.isError && (
@@ -78,7 +78,7 @@ export function SigninForm() {
           control={form.control}
           name="username"
           label="username"
-          placeholder={t("enterYourUsername")}
+          placeholder={t("auth.enterYourUsername")}
           rules={{
             required: true,
           }}
@@ -90,7 +90,7 @@ export function SigninForm() {
           control={form.control}
           name="password"
           label="password"
-          placeholder={t("enterPassword")}
+          placeholder={t("auth.enterPassword")}
           rules={{
             required: true,
           }}
@@ -103,7 +103,7 @@ export function SigninForm() {
             control={form.control}
             name="newPassword"
             label="New password"
-            placeholder={t("enterNewPassword")}
+            placeholder={t("auth.enterNewPassword")}
             rules={{
               required: true,
             }}
@@ -117,11 +117,11 @@ export function SigninForm() {
             disabled={!form.formState.isValid}
             variant="primary"
           >
-            {changePass ? t("changePasswordAndSignIn") : t("signIn")}
+            {changePass ? t("auth.changePasswordAndSignIn") : t("auth.signIn")}
           </Button>
           {isOidcConnection && (
             <Button onClick={toggleOidcForm} variant="default">
-              {t("signInWithSso")}
+              {t("auth.signInWithSso")}
             </Button>
           )}
         </Stack>

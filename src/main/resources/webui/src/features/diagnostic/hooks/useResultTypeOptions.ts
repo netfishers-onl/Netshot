@@ -3,15 +3,15 @@ import { DiagnosticResultType } from "@/types"
 
 export const useResultTypeOptions = createOptionHook([
   {
-    label: "text",
+    label: "common.text",
     value: DiagnosticResultType.Text,
   },
   {
-    label: "numeric",
+    label: "common.numeric",
     value: DiagnosticResultType.Numeric,
   },
   {
-    label: "binary",
+    label: "common.binary",
     value: DiagnosticResultType.Binary,
   },
 ])

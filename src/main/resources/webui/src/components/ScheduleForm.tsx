@@ -26,41 +26,41 @@ export type ScheduleFormType = {
 
 export const SCHEDULE_TYPE_OPTIONS = [
   {
-    label: i18n.t("runOnceAsSoonAsPossible"),
+    label: i18n.t("task.runOnce"),
     value: ScheduleType.Asap,
   },
   {
-    label: i18n.t("runOnceIn"),
+    label: i18n.t("task.runOnceIn"),
     value: ScheduleType.AtTime,
   },
   {
-    label: i18n.t("runOnceAt"),
+    label: i18n.t("task.runOnceAt"),
     value: ScheduleType.AtDateTime,
   },
   {
-    label: i18n.t("scheduleAsRepeatingEvent"),
+    label: i18n.t("task.scheduleRepeating"),
     value: ScheduleType.Repeat,
   },
 ]
 
 
 export const MINUTE_OPTIONS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(n => ({
-  label: i18n.t("min", { count: n }),
+  label: i18n.t("time.min", { count: n }),
   value: n,
 }))
 
 
 export const SCHEDULE_PRIORITY_OPTIONS = [
   {
-    label: i18n.t("low"),
+    label: i18n.t("common.low"),
     value: SchedulePriority.Low,
   },
   {
-    label: i18n.t("normal"),
+    label: i18n.t("common.normal"),
     value: SchedulePriority.Normal,
   },
   {
-    label: i18n.t("high"),
+    label: i18n.t("common.high"),
     value: SchedulePriority.High,
   },
 ]
@@ -182,13 +182,13 @@ export default function ScheduleForm() {
         selectedScheduleType === ScheduleType.Repeat) && (
         <Stack direction="row" gap="4">
           <FormControl
-            label={t("date")}
+            label={t("time.date")}
             control={scheduleForm.control}
             name="date"
             type={FormControlType.Date}
           />
           <FormControl
-            label={t("time")}
+            label={t("time.time")}
             control={scheduleForm.control}
             name="time"
             type={FormControlType.Time}
@@ -198,7 +198,7 @@ export default function ScheduleForm() {
       {selectedScheduleType === ScheduleType.Repeat && (
         <Stack direction="row" gap="4" alignItems="flex-end">
           <FormControl
-            label={t("every")}
+            label={t("time.every")}
             control={scheduleForm.control}
             name="every"
             type={FormControlType.Number}
@@ -207,7 +207,7 @@ export default function ScheduleForm() {
         </Stack>
       )}
       <Select
-        label={t("priority")}
+        label={t("common.priority")}
         options={SCHEDULE_PRIORITY_OPTIONS}
         control={scheduleForm.control}
         name="priority"

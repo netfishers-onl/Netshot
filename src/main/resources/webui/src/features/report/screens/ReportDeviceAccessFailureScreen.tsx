@@ -101,29 +101,29 @@ export default function ReportDeviceAccessFailure() {
             {info.getValue()}
           </EntityLink>
         ),
-        header: t("device"),
+        header: t("device.label"),
       }),
       columnHelper.accessor("mgmtAddress", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("managementIp"),
+        header: t("device.managementIp"),
       }),
       columnHelper.accessor("family", {
         cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("family"),
+        header: t("common.family"),
       }),
       columnHelper.accessor("lastSuccess", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
-        header: t("lastSuccessfulSnapshot"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+        header: t("device.lastSuccessfulSnapshot"),
       }),
       columnHelper.accessor("lastFailure", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
-        header: t("lastFailedSnapshot"),
+        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+        header: t("device.lastFailedSnapshot"),
       }),
       columnHelper.display({
         id: "actions",
         cell: (info) => (
-          <Tooltip content={t("goToDevice")}>
-            <IconButton variant="ghost" colorPalette="green" aria-label={t("goToDevice")} asChild>
+          <Tooltip content={t("common.goToDevice")}>
+            <IconButton variant="ghost" colorPalette="green" aria-label={t("common.goToDevice")} asChild>
               <Link to={`/app/devices/${info.getValue()}/general`}>
                 <Icon name="arrowRight" />
               </Link>
@@ -152,11 +152,11 @@ export default function ReportDeviceAccessFailure() {
     <>
       <Stack gap="6" p="9" flex="1" overflowY="auto">
         <Heading as="h1" fontSize="4xl">
-          {t("deviceAccessFailures")}
+          {t("device.accessFailures")}
         </Heading>
         <Stack direction="row" gap="3">
           <Search
-            placeholder={t("searchPlaceholder")}
+            placeholder={t("common.searchPlaceholder")}
             onQuery={pagination.onQuery}
             onClear={pagination.onQueryClear}
             w="30%"
@@ -166,7 +166,7 @@ export default function ReportDeviceAccessFailure() {
             <Menu.Trigger asChild>
               <Button variant="primary">
                 <Icon name="filter" />
-                {t("filters")}
+                {t("common.filters")}
               </Button>
             </Menu.Trigger>
             <Portal>
@@ -176,18 +176,18 @@ export default function ReportDeviceAccessFailure() {
                     <form>
                       <DomainSelect control={form.control} name="domain" />
                       <FormControl
-                        label={t("deviceWithoutSuccessfulSnapshotFor")}
+                        label={t("device.withoutSuccessfulSnapshotFor")}
                         type={FormControlType.Number}
                         control={form.control}
                         name="days"
                         suffix={
                           <Text color="grey.500" pr="4">
-                            {t("days")}
+                            {t("time.days")}
                           </Text>
                         }
                       />
                       <Stack gap="2">
-                        <Button onClick={clearFilter}>{t("clearAll")}</Button>
+                        <Button onClick={clearFilter}>{t("common.clearAll")}</Button>
                       </Stack>
                     </form>
                   </Stack>
@@ -197,7 +197,7 @@ export default function ReportDeviceAccessFailure() {
           </Menu.Root>
           <Button onClick={() => refetch()}>
             <Icon name="refreshCcw" />
-            {t("refresh")}
+            {t("common.refresh")}
           </Button>
         </Stack>
         {isPending ? (
@@ -219,8 +219,8 @@ export default function ReportDeviceAccessFailure() {
               />
             ) : (
               <EmptyResult
-                title={t("thereIsNoAccessFailure")}
-                description={t("hereYouCanViewTheAccessFailureDateForADevice")}
+                title={t("device.noAccessFailure")}
+                description={t("device.hereYouCanViewAccessFailureDate")}
               ></EmptyResult>
             )}
           </>

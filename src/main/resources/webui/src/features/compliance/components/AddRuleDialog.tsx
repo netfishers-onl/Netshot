@@ -58,8 +58,8 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
       close()
 
       toast.success({
-        title: t("success"),
-        description: t("ruleHasBeenSuccessfullyCreated", {
+        title: t("common.success"),
+        description: t("policy.rule.successfullyCreated", {
           ruleName: rule?.name,
         }),
       })
@@ -71,7 +71,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
     },
   })
 
-  const title = formStep === FormStep.Type ? t("chooseRuleType") : t("addRule")
+  const title = formStep === FormStep.Type ? t("policy.rule.chooseType") : t("policy.rule.add")
 
   function submit(values: RuleForm) {
     console.log(values)
@@ -140,20 +140,20 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
     {
       icon: "alignLeft",
       type: RuleType.Text,
-      label: t("text"),
-      description: t("createARuleUsingStringAndRegexp"),
+      label: t("common.text"),
+      description: t("policy.rule.createWithStringAndRegexp"),
     },
     {
       icon: "javascript",
       type: RuleType.Javascript,
-      label: t("javascript"),
-      description: t("createARuleUsingJavascript"),
+      label: t("policy.rule.javascript"),
+      description: t("policy.rule.createWithJavascript"),
     },
     {
       icon: "python",
       type: RuleType.Python,
-      label: t("python"),
-      description: t("createARuleUsingPython"),
+      label: t("policy.rule.python"),
+      description: t("policy.rule.createWithPython"),
     },
   ]
 
@@ -162,7 +162,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
 
     if (values.script?.length === 0) {
       form.setError("script", {
-        message: t("thisFieldIsRequired"),
+        message: t("common.thisFieldIsRequired"),
       })
     }
   })
@@ -197,7 +197,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
                 </Heading>
 
                 <Text fontSize="md" color="grey.400">
-                  {t("stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
+                  {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
                 </Text>
               </Dialog.Header>
               <Dialog.Body flex="1" display="flex">
@@ -226,13 +226,13 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
               </Dialog.Body>
               <Dialog.Footer justifyContent="space-between">
                 {formStep === FormStep.Details && (
-                  <Button onClick={previous}>{t("previous")}</Button>
+                  <Button onClick={previous}>{t("common.previous")}</Button>
                 )}
                 <Stack direction="row" gap="3" flex="1" justifyContent="end">
-                  <Button onClick={close}>{t("cancel")}</Button>
+                  <Button onClick={close}>{t("common.cancel")}</Button>
                   {formStep === FormStep.Type && (
                     <Button variant="primary" disabled={type === null} onClick={next}>
-                      {t("next")}
+                      {t("common.next")}
                     </Button>
                   )}
 
@@ -243,7 +243,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
                       loading={createMutation.isPending}
                       variant="primary"
                     >
-                      {t("create")}
+                      {t("common.create")}
                     </Button>
                   )}
                 </Stack>

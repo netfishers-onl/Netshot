@@ -32,10 +32,10 @@ export default function DiagnosticRemoveButton(props: DiagnosticRemoveButtonProp
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DIAGNOSTIC_REMOVE, {
-      title: t("removeDiagnostic"),
+      title: t("diagnostic.remove"),
       description: (
         <Text>
-          {t("youAreAboutToRemoveTheDiagnostic", {
+          {t("diagnostic.aboutToRemove", {
             diagnosticName: diagnostic?.name,
           })}
         </Text>
@@ -50,7 +50,7 @@ export default function DiagnosticRemoveButton(props: DiagnosticRemoveButtonProp
         dialogRef.close()
       },
       confirmButton: {
-        label: t("remove"),
+        label: t("common.remove"),
         props: {
           colorPalette: "red",
         },

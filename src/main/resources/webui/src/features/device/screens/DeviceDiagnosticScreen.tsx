@@ -45,19 +45,19 @@ export default function DeviceDiagnosticScreen() {
           {info.getValue()}
         </EntityLink>
       ),
-      header: t("name"),
+      header: t("common.name"),
     }),
     columnHelper.accessor("type", {
       cell: (info) => <Text>{info.getValue()}</Text>,
-      header: t("type"),
+      header: t("common.type"),
     }),
     columnHelper.accessor("creationDate", {
-      cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
-      header: t("creationDate"),
+      cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+      header: t("time.creationDate"),
     }),
     columnHelper.accessor("lastCheckDate", {
-      cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("nA")}</Text>,
-      header: t("lastCheck"),
+      cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+      header: t("compliance.lastCheck"),
     }),
   ]
 
@@ -67,7 +67,7 @@ export default function DeviceDiagnosticScreen() {
         <>
           <Stack direction="row">
             <Search
-              placeholder={t("searchPlaceholder")}
+              placeholder={t("common.searchPlaceholder")}
               onQuery={pagination.onQuery}
               onClear={pagination.onQueryClear}
               w="25%"
@@ -79,7 +79,7 @@ export default function DeviceDiagnosticScreen() {
                 renderItem={(open) => (
                   <Button alignSelf="center" onClick={open}>
                     <Icon name="activity" />
-                    {t("runDiagnostics")}
+                    {t("diagnostic.run")}
                   </Button>
                 )}
               />
@@ -90,8 +90,8 @@ export default function DeviceDiagnosticScreen() {
         </>
       ) : (
         <EmptyResult
-          title={t("thereIsNoDiagnosticResult")}
-          description={t("youCanCreateDiagnosticsThenExecuteThemOnThisDevice")}
+          title={t("diagnostic.noResult")}
+          description={t("diagnostic.canCreate")}
         >
           <Stack direction="row" gap="3">
             <Protected minLevel={Level.Operator}>
@@ -100,13 +100,13 @@ export default function DeviceDiagnosticScreen() {
                 renderItem={(open) => (
                   <Button alignSelf="center" variant="outline" onClick={open}>
                     <Icon name="activity" />
-                    {t("runDiagnostics")}
+                    {t("diagnostic.run")}
                   </Button>
                 )}
               />
             </Protected>
             <Button asChild>
-              <Link to="/app/diagnostics">{t("goToDiagnostics")}</Link>
+              <Link to="/app/diagnostics">{t("common.goToDiagnostics")}</Link>
             </Button>
           </Stack>
         </EmptyResult>

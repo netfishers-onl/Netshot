@@ -4,7 +4,7 @@ import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
 import { CredentialSet } from "@/types"
 import { getAnyOption, search } from "@/utils"
-import { Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
+import { Badge, Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
@@ -55,7 +55,15 @@ export default function AdministrationDeviceCredentialScreen() {
       columnHelper.accessor("mgmtDomain", {
         cell: (info) => {
           const value = info.getValue()
-          return <Text>{value ? value.name : anyOption.label}</Text>
+          if (!value) {
+            return (
+              <Badge size="lg" variant="outline" marginTop="-3px" marginBottom="-3px">
+                <Icon name="hash" />
+                {t("common.any")}
+              </Badge>
+            )
+          }
+          return <Text>{value.name}</Text>
         },
         header: t("domain.label"),
         enableSorting: true,

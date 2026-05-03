@@ -221,7 +221,7 @@
       "compareDate": "comparée: {{date}}"
     },
     "common": {
-      "any": "[Tous]",
+      "any": "Tous",
       "unknown": "{{description}}",
       "unknownName": "{{name}}",
       "actions": "Actions",

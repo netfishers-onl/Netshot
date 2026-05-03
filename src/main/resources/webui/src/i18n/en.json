@@ -221,7 +221,7 @@
       "compareDate": "compare: {{date}}"
     },
     "common": {
-      "any": "[Any]",
+      "any": "Any",
       "unknown": "{{description}}",
       "unknownName": "{{name}}",
       "actions": "Actions",

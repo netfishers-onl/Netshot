@@ -1,4 +1,5 @@
-import { DeviceAutocomplete, Icon } from "@/components"
+import { DeviceAutocomplete } from "@/components"
+import { FiTrash } from "react-icons/fi"
 import { Tooltip } from "@/components/ui/tooltip"
 import { SimpleDevice } from "@/types"
 import { Center, Heading, IconButton, Stack, Text } from "@chakra-ui/react"
@@ -44,7 +45,7 @@ export default function StaticGroupList() {
                     colorPalette="green"
                     onClick={() => removeDevice(index)}
                   >
-                    <Icon name="trash" />
+                    <FiTrash />
                   </IconButton>
                 </Tooltip>
               </GroupDeviceBox>

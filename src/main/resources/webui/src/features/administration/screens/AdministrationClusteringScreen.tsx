@@ -1,5 +1,5 @@
 import api from "@/api"
-import { EmptyResult, ExpandablePanel, Icon, Search } from "@/components"
+import { EmptyResult, ExpandablePanel, Search } from "@/components"
 import { usePagination } from "@/hooks"
 import { ClusterMember } from "@/types"
 import { useI18nUtil } from "@/i18n"
@@ -8,6 +8,7 @@ import { Button, Heading, Separator, Skeleton, Spacer, Stack, Tag, Text } from "
 import { useQuery } from "@tanstack/react-query"
 import { formatDistanceStrict } from "date-fns"
 import { useCallback } from "react"
+import { FiRefreshCcw } from "react-icons/fi"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 
@@ -46,7 +47,7 @@ export default function AdministrationClusteringScreen() {
           />
           <Spacer />
           <Button onClick={() => refetch()}>
-            <Icon name="refreshCcw" />
+            <FiRefreshCcw />
             {t("common.refresh")}
           </Button>
         </Stack>

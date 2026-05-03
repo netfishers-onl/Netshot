@@ -1,4 +1,5 @@
-import { Icon, Protected, SidebarLink } from "@/components"
+import { Protected, SidebarLink } from "@/components"
+import { FiPlus } from "react-icons/fi"
 import { Level } from "@/types"
 import { Button, Separator, Stack, Text } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
@@ -48,7 +49,7 @@ export default function Sidebar() {
                   <AddPolicyButton
                     renderItem={(open) => (
                       <Button onClick={open}>
-                        <Icon name="plus" />
+                        <FiPlus />
                         {t("policy.add")}
                       </Button>
                     )}

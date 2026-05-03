@@ -1,5 +1,6 @@
 import api from "@/api"
-import { DeviceTypeSelect, Icon, MonacoEditor } from "@/components"
+import { DeviceTypeSelect, MonacoEditor } from "@/components"
+import { FiDatabase } from "react-icons/fi"
 import { QUERIES } from "@/constants"
 import { useDeviceTypeOptions, useToast } from "@/hooks"
 import { Device, DeviceType, SimpleDevice } from "@/types"
@@ -127,7 +128,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
           }}
         />
         <Button onClick={save}>
-          <Icon name="database" />
+          <FiDatabase />
           {t("common.save")}
         </Button>
         <RunDeviceScriptButton

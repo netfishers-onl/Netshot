@@ -8,7 +8,7 @@ import { NETSHOT_APP_LIBRARIES, QUERIES } from "@/constants"
 import { useAlertDialog } from "@/dialog"
 import { PropsWithRenderItem } from "@/types"
 
-import Icon from "../Icon"
+import { FiAtSign, FiGithub, FiHome } from "react-icons/fi"
 
 function AboutContent() {
   const { t } = useTranslation()
@@ -44,19 +44,19 @@ function AboutContent() {
         <ButtonGroup justifyContent="center" variant="outline" attached>
           <Button asChild>
             <a target="_blank" href="https://www.netshot.net" rel="noreferrer">
-              <Icon name="home" />
+              <FiHome />
               {t("admin.homePage")}
             </a>
           </Button>
           <Button asChild>
             <a target="_blank" href="mailto:contact@netshot.net" rel="noreferrer">
-              <Icon name="atSign" />
+              <FiAtSign />
               {t("common.contact")}
             </a>
           </Button>
           <Button asChild>
             <a target="_blank" href="https://github.com/netfishers-onl/Netshot" rel="noreferrer">
-              <Icon name="gitHub" />
+              <FiGithub />
               {t("policy.rule.sourceCode")}
             </a>
           </Button>

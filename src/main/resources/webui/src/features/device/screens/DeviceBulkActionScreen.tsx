@@ -1,7 +1,8 @@
 import { Button, ButtonGroup, Heading, Stack, Text } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
 
-import { Icon, Protected } from "@/components"
+import { Protected } from "@/components"
+import { FiActivity, FiCamera, FiCheckCircle, FiEdit, FiPlay, FiTrash, FiZap, FiZapOff } from "react-icons/fi"
 import { Level } from "@/types"
 
 import {
@@ -38,7 +39,7 @@ export default function DeviceBulkActionScreen() {
               devices={selected}
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
-                  <Icon name="play" />
+                  <FiPlay />
                   {t("script.run")}
                 </Button>
               )}
@@ -49,7 +50,7 @@ export default function DeviceBulkActionScreen() {
               devices={selected}
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
-                  <Icon name="camera" />
+                  <FiCamera />
                   {t("device.snapshot.take")}
                 </Button>
               )}
@@ -60,7 +61,7 @@ export default function DeviceBulkActionScreen() {
               devices={selected}
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
-                  <Icon name="checkCircle" />
+                  <FiCheckCircle />
                   {t("compliance.check")}
                 </Button>
               )}
@@ -71,7 +72,7 @@ export default function DeviceBulkActionScreen() {
               devices={selected}
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
-                  <Icon name="activity" />
+                  <FiActivity />
                   {t("diagnostic.run")}
                 </Button>
               )}
@@ -82,7 +83,7 @@ export default function DeviceBulkActionScreen() {
               devices={selected}
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
-                  <Icon name="edit" />
+                  <FiEdit />
                   {t("common.edit")}
                 </Button>
               )}
@@ -93,7 +94,7 @@ export default function DeviceBulkActionScreen() {
                 devices={selected}
                 renderItem={(open) => (
                   <Button justifyContent="start" onClick={open} flex="1">
-                    <Icon name="zap" />
+                    <FiZap />
                     {t("common.enable")}
                   </Button>
                 )}
@@ -103,7 +104,7 @@ export default function DeviceBulkActionScreen() {
                 devices={selected}
                 renderItem={(open) => (
                   <Button justifyContent="start" onClick={open} flex="1">
-                    <Icon name="zapOff" />
+                    <FiZapOff />
                     {t("common.disable")}
                   </Button>
                 )}
@@ -115,7 +116,7 @@ export default function DeviceBulkActionScreen() {
               devices={selected}
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
-                  <Icon name="trash" />
+                  <FiTrash />
                   {t("common.remove")}
                 </Button>
               )}

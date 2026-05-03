@@ -5,7 +5,7 @@ import { UseControllerProps } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import DeviceTypeSelect from "../DeviceTypeSelect"
 import FormControl, { FormControlType } from "../FormControl"
-import Icon from "../Icon"
+import { FiX } from "react-icons/fi"
 import PolicySelect from "../PolicySelect"
 import { Select } from "../Select"
 import { Attribute } from "./constants"
@@ -207,7 +207,7 @@ export function QueryBuilderControl<T>(props: QueryBuilderControlProps<T>) {
         <Button onClick={() => setCondition(ConditionType.And)}>{t("common.and")}</Button>
         <Button onClick={() => setCondition(ConditionType.Or)}>{t("common.or")}</Button>
         <Button onClick={() => setCondition()}>
-          <Icon name="x" />
+          <FiX />
           {t("common.clear")}
         </Button>
       </Stack>

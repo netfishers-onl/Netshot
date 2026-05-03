@@ -10,7 +10,8 @@ import { useAuth } from "@/contexts"
 import useToast from "@/hooks/useToast"
 
 import { useUserLevelOptions } from "@/hooks"
-import Icon from "../Icon"
+import { Icon } from "@chakra-ui/react"
+import { FiChevronDown, FiCloud, FiHelpCircle, FiInfo, FiLogOut, FiSettings } from "react-icons/fi"
 import { AboutNetshotModal } from "./AboutNetshotModal"
 import UserSettingButton from "./UserSettingButton"
 
@@ -93,7 +94,7 @@ export default function NavbarUser() {
               </Text>
             </Stack>
             <Spacer />
-            <Icon color="white" name="chevronDown" />
+            <Icon color="white"><FiChevronDown /></Icon>
           </Stack>
         </Button>
       </Menu.Trigger>
@@ -103,7 +104,7 @@ export default function NavbarUser() {
             <UserSettingButton
               renderItem={(open) => (
                 <Menu.Item onSelect={open} value="settings">
-                  <Icon name="settings" />
+                  <FiSettings />
                   {t("common.settings")}
                 </Menu.Item>
               )}
@@ -114,7 +115,7 @@ export default function NavbarUser() {
                 target="_blank"
                 rel="noreferrer"
               >
-                <Icon name="helpCircle" />
+                <FiHelpCircle />
                 {t("admin.userGuide")}
               </a>
             </Menu.Item>
@@ -124,20 +125,20 @@ export default function NavbarUser() {
                 target="_blank"
                 rel="noreferrer"
               >
-                <Icon name="cloud" />
+                <FiCloud />
                 {t("api.documentation")}
               </a>
             </Menu.Item>
             <AboutNetshotModal
               renderItem={(open) => (
                 <Menu.Item onSelect={open} value="about">
-                  <Icon name="info" />
+                  <FiInfo />
                   {t("about.label")}
                 </Menu.Item>
               )}
             />
             <Menu.Item onSelect={logout} value="logout">
-              <Icon name="logOut" />
+              <FiLogOut />
               {t("auth.logout")}
             </Menu.Item>
           </Menu.Content>

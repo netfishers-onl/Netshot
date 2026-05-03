@@ -1,5 +1,5 @@
 import api from "@/api"
-import { DataTable, EmptyResult, Icon, Search } from "@/components"
+import { DataTable, EmptyResult, Search } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { useAuth } from "@/contexts"
 import { usePagination, useUserLevelOptions } from "@/hooks"
@@ -19,7 +19,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { Plus } from "react-feather"
+import { FiCloud, FiDatabase, FiEdit, FiPlus, FiTrash } from "react-icons/fi"
 import { useTranslation } from "react-i18next"
 import AddUserButton from "../components/AddUserButton"
 import EditUserButton from "../components/EditUserButton"
@@ -59,7 +59,7 @@ export default function AdministrationUserScreen() {
 
           return (
             <Badge size="lg" variant="outline" marginTop="-3px" marginBottom="-3px">
-              {value ? <Icon name="database" /> : <Icon name="cloud" />}
+              {value ? <FiDatabase /> : <FiCloud />}
               {t(value ? "user.localType" : "user.remoteType")}
             </Badge>
           )
@@ -99,7 +99,7 @@ export default function AdministrationUserScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <Icon name="edit" />
+                      <FiEdit />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -114,7 +114,7 @@ export default function AdministrationUserScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <Icon name="trash" />
+                      <FiTrash />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -149,7 +149,7 @@ export default function AdministrationUserScreen() {
           <AddUserButton
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
-                <Plus />
+                <FiPlus />
                 {t("common.create")}
               </Button>
             )}
@@ -174,7 +174,7 @@ export default function AdministrationUserScreen() {
                 <AddUserButton
                   renderItem={(open) => (
                     <Button variant="outline" onClick={open}>
-                      <Plus />
+                      <FiPlus />
                       {t("common.create")}
                     </Button>
                   )}

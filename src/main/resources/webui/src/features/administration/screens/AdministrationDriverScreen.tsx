@@ -1,5 +1,5 @@
 import api from "@/api"
-import { DataTable, EmptyResult, Icon, Search } from "@/components"
+import { DataTable, EmptyResult, Search } from "@/components"
 import { usePagination } from "@/hooks"
 import { DeviceType, DeviceTypeProtocol } from "@/types"
 import { search } from "@/utils"
@@ -7,6 +7,7 @@ import { Button, Checkbox, Heading, Skeleton, Spacer, Stack, Text } from "@chakr
 import { useQuery } from "@tanstack/react-query"
 import { CellContext, createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
+import { FiRefreshCcw } from "react-icons/fi"
 import { useTranslation } from "react-i18next"
 import ReloadDeviceDriversButton from "../components/ReloadDeviceDriversButton"
 import { QUERIES } from "../constants"
@@ -123,7 +124,7 @@ export default function AdministrationDriverScreen() {
           <ReloadDeviceDriversButton
             renderItem={(open) => (
               <Button onClick={open}>
-                <Icon name="refreshCcw" />
+                <FiRefreshCcw />
                 {t("admin.driver.reload")}
               </Button>
             )}

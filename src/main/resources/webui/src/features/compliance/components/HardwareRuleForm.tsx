@@ -1,4 +1,5 @@
-import { DeviceTypeSelect, FormControl, Icon, TreeGroupSelector } from "@/components"
+import { DeviceTypeSelect, FormControl, TreeGroupSelector } from "@/components"
+import { FiHash, FiType } from "react-icons/fi"
 import { FormControlType } from "@/components/FormControl"
 import { useDeviceTypeOptions } from "@/hooks"
 import { HardwareRule } from "@/types"
@@ -83,7 +84,7 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
             colorPalette="green"
             onClick={toggleFamilyRegExp}
           >
-            {familyRegExp ? <Icon name="type" /> : <Icon name="hash" />}
+            {familyRegExp ? <FiType /> : <FiHash />}
           </IconButton>
         }
       />
@@ -101,7 +102,7 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
             colorPalette="green"
             onClick={togglePartNumberRegExp}
           >
-            {partNumberRegExp ? <Icon name="type" /> : <Icon name="hash" />}
+            {partNumberRegExp ? <FiType /> : <FiHash />}
           </IconButton>
         }
       />

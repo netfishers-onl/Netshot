@@ -18,7 +18,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { ReactElement, useEffect, useMemo, useRef } from "react"
 import { flushSync } from "react-dom"
 import { FieldPath, FieldValues, useController, UseControllerProps } from "react-hook-form"
-import Icon from "./Icon"
+import { FiX } from "react-icons/fi"
 
 export type SelectProps<
   TFieldValues extends FieldValues,
@@ -189,7 +189,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
             {isClearable && value?.length > 0 && (
               <ChakraSelect.ClearTrigger asChild>
                 <IconButton size="sm" variant="ghost">
-                  <Icon name="x" />
+                  <FiX />
                 </IconButton>
               </ChakraSelect.ClearTrigger>
             )}

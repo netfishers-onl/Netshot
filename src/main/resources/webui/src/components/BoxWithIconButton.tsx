@@ -1,9 +1,8 @@
-import { Icon } from "@/components"
-import { Flex, Stack, StackProps, Text } from "@chakra-ui/react"
-import { useMemo } from "react"
+import { Box, Flex, Stack, StackProps, Text } from "@chakra-ui/react"
+import { ReactElement, useMemo } from "react"
 
 export type BoxButtonProps = {
-  icon: string
+  icon: ReactElement
   title: string
   description: string
   isActive: boolean
@@ -52,7 +51,7 @@ export default function BoxButton(props: BoxButtonProps) {
         bg="green.50"
         borderRadius="xl"
       >
-        <Icon size={24} name={icon} color="green.800" />
+        <Box color="green.800" display="flex">{icon}</Box>
       </Flex>
       <Stack gap="1">
         <Text fontWeight="semibold">{title}</Text>

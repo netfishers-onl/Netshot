@@ -1,5 +1,5 @@
 import api from "@/api"
-import { DataTable, EmptyResult, Icon, Search } from "@/components"
+import { DataTable, EmptyResult, Search } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
 import { CredentialSet } from "@/types"
@@ -8,6 +8,7 @@ import { Badge, Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } fro
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
+import { FiEdit, FiHash, FiPlus, FiTrash } from "react-icons/fi"
 import { useTranslation } from "react-i18next"
 import AddDeviceCredentialButton from "../components/AddDeviceCredentialButton"
 import EditDeviceCredentialButton from "../components/EditDeviceCredentialButton"
@@ -58,7 +59,7 @@ export default function AdministrationDeviceCredentialScreen() {
           if (!value) {
             return (
               <Badge size="lg" variant="outline" marginTop="-3px" marginBottom="-3px">
-                <Icon name="hash" />
+                <FiHash />
                 {t("common.any")}
               </Badge>
             )
@@ -86,7 +87,7 @@ export default function AdministrationDeviceCredentialScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <Icon name="edit" />
+                      <FiEdit />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -101,7 +102,7 @@ export default function AdministrationDeviceCredentialScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <Icon name="trash" />
+                      <FiTrash />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -138,7 +139,7 @@ export default function AdministrationDeviceCredentialScreen() {
           <AddDeviceCredentialButton
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
-                <Icon name="plus" />
+                <FiPlus />
                 {t("common.create")}
               </Button>
             )}
@@ -163,7 +164,7 @@ export default function AdministrationDeviceCredentialScreen() {
                 <AddDeviceCredentialButton
                   renderItem={(open) => (
                     <Button variant="outline" onClick={open}>
-                      <Icon name="plus" />
+                      <FiPlus />
                       {t("common.create")}
                     </Button>
                   )}

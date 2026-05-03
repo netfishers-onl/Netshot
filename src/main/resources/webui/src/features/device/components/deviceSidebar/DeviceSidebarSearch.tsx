@@ -1,4 +1,5 @@
-import { Icon, QueryBuilderButton } from "@/components"
+import { QueryBuilderButton } from "@/components"
+import { FiCompass } from "react-icons/fi"
 import Search from "@/components/Search"
 import { Tooltip } from "@/components/ui/tooltip"
 import { IconButton, Stack } from "@chakra-ui/react"
@@ -46,7 +47,7 @@ export default function DeviceSidebarSearch() {
           renderItem={(open) => (
             <Tooltip content={t("common.queryBuilder")}>
               <IconButton variant="ghost" aria-label={t("common.openQueryBuilder")} onClick={open}>
-                <Icon name="compass" />
+                <FiCompass />
               </IconButton>
             </Tooltip>
           )}

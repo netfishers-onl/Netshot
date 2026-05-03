@@ -1,8 +1,8 @@
-import { Icon } from "@/components"
 import { Flex, Stack, StackProps, Text } from "@chakra-ui/react"
+import { ReactElement } from "react"
 
 export type DiagnosticBoxButtonProps = {
-  icon: string
+  icon: ReactElement
   label: string
   description: string
   isActive: boolean
@@ -37,8 +37,9 @@ export default function DiagnosticBoxButton(props: DiagnosticBoxButtonProps) {
         w="32px"
         h="32px"
         borderRadius="md"
+        color="green.800"
       >
-        <Icon name={icon} color="green.800" />
+        {icon}
       </Flex>
       <Stack gap="0">
         <Text fontWeight="semibold">{label}</Text>

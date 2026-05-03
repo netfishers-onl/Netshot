@@ -1,5 +1,5 @@
 import api from "@/api"
-import { DataTable, EmptyResult, Icon, Search } from "@/components"
+import { DataTable, EmptyResult, Search } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination, useUserLevelOptions } from "@/hooks"
 import { ApiToken } from "@/types"
@@ -8,7 +8,7 @@ import { Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@cha
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { Plus } from "react-feather"
+import { FiPlus, FiTrash } from "react-icons/fi"
 import { useTranslation } from "react-i18next"
 import AddApiTokenButton from "../components/AddApiTokenButton"
 import RemoveApiTokenButton from "../components/RemoveApiTokenButton"
@@ -65,7 +65,7 @@ export default function AdministrationApiTokenScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <Icon name="trash" />
+                      <FiTrash />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -101,7 +101,7 @@ export default function AdministrationApiTokenScreen() {
           <AddApiTokenButton
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
-                <Icon name="plus" />
+                <FiPlus />
                 {t("common.create")}
               </Button>
             )}
@@ -126,7 +126,7 @@ export default function AdministrationApiTokenScreen() {
                 <AddApiTokenButton
                   renderItem={(open) => (
                     <Button variant="outline" onClick={open}>
-                      <Plus />
+                      <FiPlus />
                       {t("common.create")}
                     </Button>
                   )}

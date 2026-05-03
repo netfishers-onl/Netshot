@@ -1,4 +1,3 @@
-import { Icon } from "@/components"
 import { DeviceComplianceTag } from "@/features/device/components/DeviceComplianceTag"
 import { DeviceComplianceResultType } from "@/types"
 import {
@@ -7,6 +6,7 @@ import {
   createToaster,
   Flex,
   HStack,
+  Icon,
   IconButton,
   Portal,
   Spinner,
@@ -17,6 +17,8 @@ import {
   Toaster,
   ToastOptions,
 } from "@chakra-ui/react"
+import { ReactElement } from "react"
+import { FiAlertTriangle, FiCheck, FiInfo, FiX } from "react-icons/fi"
 
 export const toaster = createToaster({
   placement: "bottom-end",
@@ -35,28 +37,28 @@ export enum ToastType {
 const iconMapping: {
   [K in ToastType]: {
     bg: SystemStyleObject["bg"]
-    icon: string
+    icon: ReactElement | null
     color: SystemStyleObject["color"]
   }
 } = {
   [ToastType.Error]: {
     bg: "red.50",
-    icon: "x",
+    icon: <Icon color="red.800"><FiX /></Icon>,
     color: "red.800",
   },
   [ToastType.Success]: {
     bg: "green.50",
-    icon: "check",
+    icon: <Icon color="green.800"><FiCheck /></Icon>,
     color: "green.800",
   },
   [ToastType.Warning]: {
     bg: "yellow.50",
-    icon: "alertTriangle",
+    icon: <Icon color="yellow.800"><FiAlertTriangle /></Icon>,
     color: "yellow.800",
   },
   [ToastType.Info]: {
     bg: "blue.50",
-    icon: "info",
+    icon: <Icon color="blue.800"><FiInfo /></Icon>,
     color: "blue.800",
   },
   [ToastType.Loading]: {
@@ -96,7 +98,7 @@ export function ToastProvider() {
                     onClick={() => toaster.dismiss(id)}
                     aria-label="Close toast"
                   >
-                    <Icon name="x" />
+                    <FiX />
                   </IconButton>
 
                   {description && (
@@ -133,7 +135,7 @@ export function ToastProvider() {
                     bg={iconConfig.bg}
                     borderRadius="full"
                   >
-                    <Icon name={iconConfig.icon} color={iconConfig.color} />
+                    {iconConfig.icon}
                   </Flex>
                 )}
                 <Stack gap="1">
@@ -157,7 +159,7 @@ export function ToastProvider() {
                 onClick={() => toaster.dismiss(id)}
                 aria-label="Close toast"
               >
-                <Icon name="x" />
+                <FiX />
               </IconButton>
             </Toast.Root>
           )

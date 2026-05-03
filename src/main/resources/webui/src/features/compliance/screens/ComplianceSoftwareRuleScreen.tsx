@@ -1,6 +1,6 @@
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { DataTable, EmptyResult, Icon, Protected, Search } from "@/components"
+import { DataTable, EmptyResult, Protected, Search } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { MUTATIONS } from "@/constants"
 import { useAuth } from "@/contexts"
@@ -12,6 +12,7 @@ import { Button, Heading, IconButton, Skeleton, Spacer, Stack, Tag, Text } from 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useEffect, useState } from "react"
+import { FiEdit, FiPlus, FiTrash } from "react-icons/fi"
 import { useTranslation } from "react-i18next"
 import AddSoftwareRuleButton from "../components/AddSoftwareRuleButton"
 import EditSoftwareRuleButton from "../components/EditSoftwareRuleButton"
@@ -103,7 +104,7 @@ export default function ComplianceSoftwareRuleScreen() {
                       aria-label={t("policy.rule.editThe")}
                       onClick={open}
                     >
-                      <Icon name="edit" />
+                      <FiEdit />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -119,7 +120,7 @@ export default function ComplianceSoftwareRuleScreen() {
                       aria-label={t("policy.rule.removeThe")}
                       onClick={open}
                     >
-                      <Icon name="trash" />
+                      <FiTrash />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -186,7 +187,7 @@ export default function ComplianceSoftwareRuleScreen() {
               <AddSoftwareRuleButton
                 renderItem={(open) => (
                   <Button onClick={open} variant="primary">
-                    <Icon name="plus" />
+                    <FiPlus />
                     {t("policy.rule.add")}
                   </Button>
                 )}
@@ -220,7 +221,7 @@ export default function ComplianceSoftwareRuleScreen() {
                 <AddSoftwareRuleButton
                   renderItem={(open) => (
                     <Button onClick={open} variant="outline">
-                      <Icon name="plus" />
+                      <FiPlus />
                       {t("policy.rule.add")}
                     </Button>
                   )}

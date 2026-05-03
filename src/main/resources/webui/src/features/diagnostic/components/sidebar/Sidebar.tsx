@@ -1,5 +1,5 @@
 import { Protected } from "@/components"
-import Icon from "@/components/Icon"
+import { FiPlus } from "react-icons/fi"
 import { Level } from "@/types"
 import { Button, Separator, Stack } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
@@ -29,7 +29,7 @@ export default function Sidebar() {
                   <DiagnosticAddButton
                     renderItem={(open) => (
                       <Button onClick={open}>
-                        <Icon name="plus" />
+                        <FiPlus />
                         {t("diagnostic.add")}
                       </Button>
                     )}

@@ -1,6 +1,7 @@
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { Checkbox, FormControl, Icon, ScheduleForm } from "@/components"
+import { Checkbox, FormControl, ScheduleForm } from "@/components"
+import { FiPlay } from "react-icons/fi"
 import { ScheduleFormType } from "@/components/ScheduleForm"
 import TaskDialog from "@/components/TaskDialog"
 import { MUTATIONS, QUERIES } from "@/constants"
@@ -202,7 +203,7 @@ export default function RunScriptButton(props: RunScriptButtonProps) {
 
   return (
     <IconButton aria-label={t("script.run")} variant="primary" onClick={open}>
-      <Icon name="play" />
+      <FiPlay />
     </IconButton>
   )
 }

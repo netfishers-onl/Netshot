@@ -1,11 +1,13 @@
-import { IconButton, Menu, Portal, Stack, Text } from "@chakra-ui/react"
+import { Icon, IconButton, Menu, Portal, Stack, Text } from "@chakra-ui/react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router"
 
-import { Icon, Protected } from "@/components"
+import { Protected } from "@/components"
+import { Javascript, Python } from "@/components/icons"
 import { Level, Policy, Rule, RuleType } from "@/types"
 
+import { FiAlignLeft, FiEdit, FiMoreHorizontal, FiPower, FiTrash } from "react-icons/fi"
 import DisableRuleButton from "./DisableRuleButton"
 import EditRuleButton from "./EditRuleButton"
 import EnableRuleButton from "./EnableRuleButton"
@@ -22,13 +24,19 @@ export default function RuleItem(props: RuleItemProps) {
   const { policyId, ruleId } = useParams()
   const navigate = useNavigate()
 
-  const iconName = useMemo(() => {
+  const iconEl = useMemo(() => {
     if (rule.type === RuleType.Javascript) {
-      return "javascript"
+      return (
+        <Javascript />
+      );
     } else if (rule.type === RuleType.Python) {
-      return "python"
+      return (
+        <Python />
+      );
     } else {
-      return "alignLeft"
+      return (
+        <FiAlignLeft />
+      );
     }
   }, [rule])
 
@@ -56,14 +64,16 @@ export default function RuleItem(props: RuleItemProps) {
       onClick={() => navigate(`./config/${policy?.id}/${rule?.id}`)}
     >
       <Stack direction="row" gap="3" alignItems="center">
-        <Icon name={iconName} color="green.600" />
+        <Icon color="green.600" size="md">
+          {iconEl}
+        </Icon>
         <Text lineClamp={1}>{rule?.name}</Text>
       </Stack>
       <Protected minLevel={Level.Operator}>
         <Menu.Root>
           <Menu.Trigger asChild>
             <IconButton variant="ghost" size="sm">
-              <Icon name="moreHorizontal" />
+              <FiMoreHorizontal />
             </IconButton>
           </Menu.Trigger>
           <Portal>
@@ -74,7 +84,7 @@ export default function RuleItem(props: RuleItemProps) {
                   rule={rule}
                   renderItem={(open) => (
                     <Menu.Item onSelect={open} value="edit-rule">
-                      <Icon name="edit" />
+                      <FiEdit />
                       {t("common.edit")}
                     </Menu.Item>
                   )}
@@ -85,7 +95,7 @@ export default function RuleItem(props: RuleItemProps) {
                     rule={rule}
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="rule-disable">
-                        <Icon name="power" />
+                        <FiPower />
                         {t("common.disable")}
                       </Menu.Item>
                     )}
@@ -96,7 +106,7 @@ export default function RuleItem(props: RuleItemProps) {
                     rule={rule}
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="rule-enable">
-                        <Icon name="power" />
+                        <FiPower />
                         {t("common.enable")}
                       </Menu.Item>
                     )}
@@ -107,7 +117,7 @@ export default function RuleItem(props: RuleItemProps) {
                   rule={rule}
                   renderItem={(open) => (
                     <Menu.Item onSelect={open} value="rule-remove">
-                      <Icon name="trash" />
+                      <FiTrash />
                       {t("common.remove")}
                     </Menu.Item>
                   )}

@@ -1,4 +1,4 @@
-import Icon from "@/components/Icon"
+import { FiChevronDown } from "react-icons/fi"
 import { IconButton, Separator, Stack, StackProps } from "@chakra-ui/react"
 import { LegacyAnimationControls, Variants, motion, useAnimationControls } from "framer-motion"
 import { PropsWithChildren, createContext, useCallback, useContext, useMemo, useState } from "react"
@@ -21,7 +21,7 @@ function Header(props: PropsWithChildren) {
   return (
     <Stack direction="row" gap="3" alignItems="center" p="3" onClick={ctx.toggle} cursor="pointer">
       <IconButton variant="ghost" colorPalette="green" aria-label={t("common.open")} transform={transform}>
-        <Icon name="chevronDown" />
+        <FiChevronDown />
       </IconButton>
       {children}
     </Stack>

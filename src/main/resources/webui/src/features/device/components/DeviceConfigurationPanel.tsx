@@ -1,4 +1,4 @@
-import Icon from "@/components/Icon"
+import { FiChevronDown } from "react-icons/fi"
 import { Config } from "@/types"
 import { useI18nUtil } from "@/i18n"
 import { getConfigDeviceAttributeDefinitions } from "@/utils"
@@ -56,7 +56,7 @@ export default function DeviceConfigurationPanel(props: DeviceConfigurationPanel
             transform: isCollapsed ? "rotate(-90deg)" : "",
           }}
         >
-          <Icon name="chevronDown" />
+          <FiChevronDown />
         </IconButton>
         <Text fontSize="md" fontWeight="semibold">
           {changeDate}

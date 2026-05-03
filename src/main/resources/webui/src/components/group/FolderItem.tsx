@@ -1,4 +1,5 @@
-import Icon from "@/components/Icon"
+import { Icon } from "@chakra-ui/react"
+import { FiChevronDown, FiFolder } from "react-icons/fi"
 import { Folder, isGroup } from "@/utils"
 import { Box, BoxProps, Flex, Stack, Text } from "@chakra-ui/react"
 import { motion, useAnimationControls } from "framer-motion"
@@ -48,14 +49,15 @@ export default function FolderItem(props: FolderItemProps) {
         >
           <Stack direction="row" gap="3" alignItems="center">
             <Icon
-              name="chevronDown"
               color="grey.500"
               css={{
                 transform: isOpen ? "" : "rotate(-90deg)",
               }}
-            />
+            >
+              <FiChevronDown />
+            </Icon>
             <Stack direction="row" gap="3" alignItems="center">
-              <Icon name="folder" color="green.600" />
+              <Icon color="green.600"><FiFolder /></Icon>
               <Text>{folder?.name}</Text>
             </Stack>
           </Stack>

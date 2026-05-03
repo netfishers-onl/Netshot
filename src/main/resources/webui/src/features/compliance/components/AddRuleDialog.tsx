@@ -1,6 +1,7 @@
 import api, { CreateOrUpdateRule } from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { BoxWithIconButton } from "@/components"
+import { Javascript, Python } from "@/components/icons"
 import { QUERIES as GLOBAL_QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
@@ -10,6 +11,7 @@ import { Button, Dialog, Heading, Portal, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
+import { FiAlignLeft } from "react-icons/fi"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
 import { QUERIES, RULE_SCRIPT_TEMPLATE } from "../constants"
@@ -138,19 +140,19 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
 
   const typeOptions = [
     {
-      icon: "alignLeft",
+      icon: <FiAlignLeft />,
       type: RuleType.Text,
       label: t("common.text"),
       description: t("policy.rule.createWithStringAndRegexp"),
     },
     {
-      icon: "javascript",
+      icon: <Javascript />,
       type: RuleType.Javascript,
       label: t("policy.rule.javascript"),
       description: t("policy.rule.createWithJavascript"),
     },
     {
-      icon: "python",
+      icon: <Python />,
       type: RuleType.Python,
       label: t("policy.rule.python"),
       description: t("policy.rule.createWithPython"),

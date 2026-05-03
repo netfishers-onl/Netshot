@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 
 import api from "@/api";
 import { MonacoEditor } from "@/components";
-import Icon from "@/components/Icon";
+import { Icon } from "@chakra-ui/react"
+import { FiX } from "react-icons/fi"
 import { ConfigLongTextAttribute } from "@/types";
 
 import { QUERIES } from "../constants";
@@ -52,7 +53,7 @@ export default function DeviceConfigurationView(
             bg="red.50"
             borderRadius="full"
           >
-            <Icon name="x" color="red.800" />
+            <Icon color="red.800"><FiX /></Icon>
           </Flex>
           <Text>{t("device.config.unableToLoad")}</Text>
         </Stack>

@@ -1,5 +1,5 @@
 import api, { CreateOrUpdateTaskPayload } from "@/api"
-import { Checkbox, DomainSelect, FormControl, Icon, Switch, TreeGroupSelector } from "@/components"
+import { Checkbox, DomainSelect, FormControl, Switch, TreeGroupSelector } from "@/components"
 import { FormControlType } from "@/components/FormControl"
 import ScheduleForm, { ScheduleFormType } from "@/components/ScheduleForm"
 import TaskDialog from "@/components/TaskDialog"
@@ -19,6 +19,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import { FormProvider, useFieldArray, useForm, useWatch } from "react-hook-form"
+import { FiCamera, FiCheck, FiDatabase, FiPlay, FiPlus, FiSearch, FiServer, FiTrash } from "react-icons/fi"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 import TaskBoxButton from "./TaskBoxButton"
@@ -198,37 +199,37 @@ export default function AddTaskDialog() {
   const taskTypeOptions = useMemo(
     () => [
       {
-        icon: "camera",
+        icon: <FiCamera />,
         type: TaskType.TakeGroupSnapshot,
         label: t("device.snapshot.label"),
         description: t("device.snapshot.takeOfGroup"),
       },
       {
-        icon: "play",
+        icon: <FiPlay />,
         type: TaskType.RunGroupDiagnostic,
         label: t("diagnostic.label"),
         description: t("diagnostic.runOnGroup"),
       },
       {
-        icon: "check",
+        icon: <FiCheck />,
         type: TaskType.CheckGroupCompliance,
         label: t("device.config.compliance"),
         description: t("compliance.checkConfigOfGroup"),
       },
       {
-        icon: "server",
+        icon: <FiServer />,
         type: TaskType.CheckGroupSoftware,
         label: t("compliance.softwareAndHardware"),
         description: t("compliance.checkSoftwareHardwareOfGroup"),
       },
       {
-        icon: "search",
+        icon: <FiSearch />,
         type: TaskType.ScanSubnets,
         label: t("device.discover"),
         description: t("task.scanSubnetsDesc"),
       },
       {
-        icon: "database",
+        icon: <FiDatabase />,
         type: TaskType.PurgeDatabase,
         label: t("admin.purge.database"),
         description: t("admin.purge.desc"),
@@ -383,7 +384,7 @@ export default function AddTaskDialog() {
                                       colorPalette="green"
                                       aria-label={t("network.removeSubnet")}
                                     >
-                                      <Icon name="trash" />
+                                      <FiTrash />
                                     </IconButton>
                                   )}
                                 </Stack>
@@ -392,7 +393,7 @@ export default function AddTaskDialog() {
                           )}
                           <Stack direction="row">
                             <Button onClick={() => append("")}>
-                              <Icon name="plus" />
+                              <FiPlus />
                               {t("common.addEntry")}
                             </Button>
                           </Stack>

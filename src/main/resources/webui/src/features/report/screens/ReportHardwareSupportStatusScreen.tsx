@@ -1,5 +1,6 @@
 import api from "@/api"
-import { Chart, DataTable, Icon } from "@/components"
+import { Chart, DataTable } from "@/components"
+import { FiRefreshCcw } from "react-icons/fi"
 import { GroupedHardwareSupportStat, HardwareSupportStatType } from "@/types"
 import { formatDate, getDateFromUnix, groupStatByDate } from "@/utils"
 import { Button, Heading, Skeleton, Spacer, Stack, Text, useToken } from "@chakra-ui/react"
@@ -228,7 +229,7 @@ export default function ReportHardwareSupportStatusScreen() {
         <Spacer />
 
         <Button onClick={() => refetch()}>
-          <Icon name="refreshCcw" />
+          <FiRefreshCcw />
           {t("common.refresh")}
         </Button>
       </Stack>

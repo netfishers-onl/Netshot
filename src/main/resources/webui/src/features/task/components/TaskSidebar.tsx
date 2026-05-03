@@ -1,4 +1,5 @@
-import { Icon, Protected, SidebarLink } from "@/components";
+import { Protected, SidebarLink } from "@/components";
+import { FiPlus } from "react-icons/fi";
 import { Level } from "@/types";
 import { Steps, Button, Stack, Separator } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
@@ -46,7 +47,7 @@ export default function TaskSidebar() {
         <Stack py="4" px="5">
           <AddTaskButton
             renderItem={(open) => (
-              <Button onClick={open}><Icon name="plus" />{t("task.add")}</Button>
+              <Button onClick={open}><FiPlus />{t("task.add")}</Button>
             )}
           />
         </Stack>

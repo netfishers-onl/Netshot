@@ -1,5 +1,5 @@
 import api from "@/api"
-import { DataTable, EmptyResult, Icon, Search } from "@/components"
+import { DataTable, EmptyResult, Search } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
 import { Hook } from "@/types"
@@ -17,7 +17,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { Plus } from "react-feather"
+import { FiEdit, FiPlus, FiTrash } from "react-icons/fi"
 import { useTranslation } from "react-i18next"
 import AddWebhookButton from "../components/AddWebhookButton"
 import EditWebhookButton from "../components/EditWebhookButton"
@@ -89,7 +89,7 @@ export default function AdministrationApiTokenScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <Icon name="edit" />
+                      <FiEdit />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -104,7 +104,7 @@ export default function AdministrationApiTokenScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <Icon name="trash" />
+                      <FiTrash />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -138,7 +138,7 @@ export default function AdministrationApiTokenScreen() {
           <AddWebhookButton
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
-                <Plus />
+                <FiPlus />
                 {t("common.create")}
               </Button>
             )}
@@ -163,7 +163,7 @@ export default function AdministrationApiTokenScreen() {
                 <AddWebhookButton
                   renderItem={(open) => (
                     <Button variant="outline" onClick={open}>
-                      <Plus />
+                      <FiPlus />
                       {t("common.create")}
                     </Button>
                   )}

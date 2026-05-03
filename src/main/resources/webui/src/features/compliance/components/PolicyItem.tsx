@@ -1,6 +1,7 @@
-import { Icon, Protected } from "@/components"
+import { Protected } from "@/components"
 import { Level, Policy } from "@/types"
-import { Box, IconButton, Menu, Portal, Stack, Text } from "@chakra-ui/react"
+import { Box, Icon, IconButton, Menu, Portal, Stack, Text } from "@chakra-ui/react"
+import { FiChevronDown, FiEdit, FiFolder, FiMoreHorizontal, FiPlus, FiTrash } from "react-icons/fi"
 import { motion, useAnimationControls } from "framer-motion"
 import { MouseEvent, useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -54,17 +55,18 @@ export default function PolicyItem(props: PolicyItemProps) {
         <Stack direction="row" gap="3" alignItems="center" title={policy?.name}>
           <Box flex="0 0 16px">
             <Icon
-              name="chevronDown"
               color="grey.500"
               css={{
                 transform: isCollapsed ? "rotate(-90deg)" : "",
               }}
               opacity={hasRules ? 1 : 0}
-            />
+            >
+              <FiChevronDown />
+            </Icon>
           </Box>
 
           <Box flex="0 0 16px">
-            <Icon name="folder" color="green.600" />
+            <Icon color="green.600"><FiFolder /></Icon>
           </Box>
           <Text lineClamp={1}>{policy?.name}</Text>
         </Stack>
@@ -72,7 +74,7 @@ export default function PolicyItem(props: PolicyItemProps) {
           <Menu.Root>
             <Menu.Trigger asChild>
               <IconButton variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
-                <Icon name="moreHorizontal" />
+                <FiMoreHorizontal />
               </IconButton>
             </Menu.Trigger>
             <Portal>
@@ -82,7 +84,7 @@ export default function PolicyItem(props: PolicyItemProps) {
                     policy={policy}
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="add-rule">
-                        <Icon name="plus" />
+                        <FiPlus />
                         {t("policy.rule.add")}
                       </Menu.Item>
                     )}
@@ -91,7 +93,7 @@ export default function PolicyItem(props: PolicyItemProps) {
                     policy={policy}
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="edit-rule">
-                        <Icon name="edit" />
+                        <FiEdit />
                         {t("common.edit")}
                       </Menu.Item>
                     )}
@@ -100,7 +102,7 @@ export default function PolicyItem(props: PolicyItemProps) {
                     policy={policy}
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="remove-rule">
-                        <Icon name="trash" />
+                        <FiTrash />
                         {t("common.remove")}
                       </Menu.Item>
                     )}

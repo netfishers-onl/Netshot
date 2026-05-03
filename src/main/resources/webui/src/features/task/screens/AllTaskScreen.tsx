@@ -1,4 +1,5 @@
-import { DataTable, EmptyResult, FormControl, Icon, Search } from "@/components"
+import { DataTable, EmptyResult, FormControl, Search } from "@/components"
+import { FiFilter, FiRefreshCcw } from "react-icons/fi"
 import { FormControlType } from "@/components/FormControl"
 import {
   Button,
@@ -46,7 +47,7 @@ export default function AllTaskScreen() {
           <Menu.Root>
             <Menu.Trigger asChild>
               <Button variant="primary">
-                <Icon name="filter" />
+                <FiFilter />
                 {t("common.filters")}
               </Button>
             </Menu.Trigger>
@@ -74,7 +75,7 @@ export default function AllTaskScreen() {
             </Portal>
           </Menu.Root>
           <IconButton aria-label={t("common.reload")} onClick={() => refetch()} loading={isFetching}>
-            <Icon name="refreshCcw" />
+            <FiRefreshCcw />
           </IconButton>
         </Stack>
         {isPending ? (

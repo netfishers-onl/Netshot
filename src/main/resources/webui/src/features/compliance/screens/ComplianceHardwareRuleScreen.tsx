@@ -1,5 +1,5 @@
 import api from "@/api"
-import { DataTable, EmptyResult, Icon, Protected, Search } from "@/components"
+import { DataTable, EmptyResult, Protected, Search } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
 import { HardwareRule, Level } from "@/types"
@@ -8,6 +8,7 @@ import { Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@cha
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
+import { FiEdit, FiPlus, FiTrash } from "react-icons/fi"
 import { useTranslation } from "react-i18next"
 import AddHardwareRuleButton from "../components/AddHardwareRuleButton"
 import EditHardwareRuleButton from "../components/EditHardwareRuleButton"
@@ -84,7 +85,7 @@ export default function ComplianceHardwareRuleScreen() {
                         aria-label={t("policy.rule.editThe")}
                         onClick={open}
                       >
-                        <Icon name="edit" />
+                        <FiEdit />
                       </IconButton>
                     </Tooltip>
                   )}
@@ -99,7 +100,7 @@ export default function ComplianceHardwareRuleScreen() {
                         aria-label={t("policy.rule.removeThe")}
                         onClick={open}
                       >
-                        <Icon name="trash" />
+                        <FiTrash />
                       </IconButton>
                     </Tooltip>
                   )}
@@ -139,7 +140,7 @@ export default function ComplianceHardwareRuleScreen() {
             <AddHardwareRuleButton
               renderItem={(open) => (
                 <Button onClick={open} variant="primary">
-                  <Icon name="plus" />
+                  <FiPlus />
                   {t("policy.rule.add")}
                 </Button>
               )}
@@ -166,7 +167,7 @@ export default function ComplianceHardwareRuleScreen() {
               <AddHardwareRuleButton
                 renderItem={(open) => (
                   <Button onClick={open} variant="outline">
-                    <Icon name="plus" />
+                    <FiPlus />
                     {t("policy.rule.add")}
                   </Button>
                 )}

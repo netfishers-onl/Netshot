@@ -1,6 +1,7 @@
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { BoxWithIconButton } from "@/components"
+import { Javascript, Python } from "@/components/icons"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
 import { DiagnosticType } from "@/types"
@@ -8,6 +9,7 @@ import { Button, CloseButton, Dialog, Heading, Portal, Stack, Text } from "@chak
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
+import { FiAlignLeft } from "react-icons/fi"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
 import { QUERIES, SCRIPT_TEMPLATES } from "../constants"
@@ -31,19 +33,19 @@ export default function DiagnosticAddDialog() {
 
   const typeOptions = [
     {
-      icon: "alignLeft",
+      icon: <FiAlignLeft />,
       type: DiagnosticType.Simple,
       label: t("common.simple"),
       description: t("diagnostic.createWithStringAndRegex"),
     },
     {
-      icon: "javascript",
+      icon: <Javascript />,
       type: DiagnosticType.Javascript,
       label: t("policy.rule.javascript"),
       description: t("diagnostic.createWithJavascript"),
     },
     {
-      icon: "python",
+      icon: <Python />,
       type: DiagnosticType.Python,
       label: t("policy.rule.python"),
       description: t("diagnostic.createWithPython"),

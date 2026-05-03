@@ -1,4 +1,5 @@
-import { FormControl, Icon } from "@/components"
+import { FormControl } from "@/components"
+import { FiCopy, FiRefreshCcw } from "react-icons/fi"
 import { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { Tooltip } from "@/components/ui/tooltip"
@@ -53,13 +54,13 @@ export default function AdministrationApiTokenForm() {
                 variant="ghost"
                 colorPalette="grey"
               >
-                <Icon name="copy" />
+                <FiCopy />
               </IconButton>
             </Tooltip>
           }
         />
         <IconButton aria-label={t("api.refreshToken")} onClick={generate}>
-          <Icon name="refreshCcw" />
+          <FiRefreshCcw />
         </IconButton>
       </Stack>
       <Alert.Root variant="warning">

@@ -1,6 +1,6 @@
 import api from "@/api"
 import { MonacoEditor, Protected } from "@/components"
-import Icon from "@/components/Icon"
+import { FiMoreHorizontal, FiPower, FiTrash } from "react-icons/fi"
 import { DiagnosticType, Level } from "@/types"
 import {
   Badge,
@@ -67,7 +67,7 @@ export default function DeviceDetailScreen() {
                   <Menu.Trigger asChild>
                     <Button>
                       {t("common.actions")}
-                      <Icon name="moreHorizontal" />
+                      <FiMoreHorizontal />
                     </Button>
                   </Menu.Trigger>
                 </Skeleton>
@@ -82,7 +82,7 @@ export default function DeviceDetailScreen() {
                               diagnostic={diagnostic}
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="disable">
-                                  <Icon name="power" />
+                                  <FiPower />
                                   {t("common.disable")}
                                 </Menu.Item>
                               )}
@@ -92,7 +92,7 @@ export default function DeviceDetailScreen() {
                               diagnostic={diagnostic}
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="enable">
-                                  <Icon name="power" />
+                                  <FiPower />
                                   {t("common.enable")}
                                 </Menu.Item>
                               )}
@@ -103,7 +103,7 @@ export default function DeviceDetailScreen() {
                             diagnostic={diagnostic}
                             renderItem={(open) => (
                               <Menu.Item onSelect={open} value="remove">
-                                <Icon name="trash" />
+                                <FiTrash />
                                 {t("common.remove")}
                               </Menu.Item>
                             )}

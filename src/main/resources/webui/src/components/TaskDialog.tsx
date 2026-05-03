@@ -20,7 +20,7 @@ import {
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
-import { Download } from "react-feather"
+import { FiDownload } from "react-icons/fi"
 import { useTranslation } from "react-i18next"
 
 export type TaskDialogProps = {
@@ -220,7 +220,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                           href={`/api/tasks/${task.id}/debuglog`}
                           download={`task-${task?.id}-debug.log`}
                         >
-                          <Download />
+                          <FiDownload />
                           {t("admin.logs.debug")}
                         </a>
                       </Button>

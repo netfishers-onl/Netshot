@@ -23,7 +23,7 @@ import { RefObject, useCallback, useEffect, useRef, useState } from "react"
 import { DndProvider, XYCoord, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { useTranslation } from "react-i18next"
-import Icon from "./Icon"
+import { FiArrowDown, FiArrowUp, FiMenu } from "react-icons/fi"
 
 type DataTableColumnMeta = {
   isNumeric?: boolean
@@ -125,7 +125,7 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
           colorPalette="grey"
           cursor="move"
         >
-          <Icon name="menu" />
+          <FiMenu />
         </IconButton>
       </Table.Cell>
       {cells.map((cell) => {
@@ -380,7 +380,7 @@ export function VirtualizedDataTableHeader<T>({
                       isSorted === "desc" ? t("common.sortedDescending") : t("common.sortedAscending")
                     }
                   >
-                    <Icon name={isSorted === "desc" ? "arrowDown" : "arrowUp"} />
+                    {isSorted === "desc" ? <FiArrowDown /> : <FiArrowUp />}
                   </IconButton>
                 )}
               </Table.ColumnHeader>

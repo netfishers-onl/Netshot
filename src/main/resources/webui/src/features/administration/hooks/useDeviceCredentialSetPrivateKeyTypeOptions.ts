@@ -1,7 +1,7 @@
 import { createOptionHook } from "@/hooks"
 import { HashingAlgorithm } from "@/types"
 
-export const useDeviceCredentialPrivateKeyTypeOptions = createOptionHook([
+export const useDeviceCredentialSetPrivateKeyTypeOptions = createOptionHook([
   {
     label: HashingAlgorithm.DES,
     value: HashingAlgorithm.DES,

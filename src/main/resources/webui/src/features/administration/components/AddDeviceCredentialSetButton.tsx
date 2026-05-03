@@ -9,30 +9,30 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
-import { useDeviceCredentialTypeOptions } from "../hooks"
-import AdministrationDeviceCredentialForm, {
-  DeviceCredentialForm,
-} from "./AdministrationDeviceCredentialForm"
+import { useDeviceCredentialSetTypeOptions } from "../hooks"
+import AdministrationDeviceCredentialSetForm, {
+  DeviceCredentialSetForm,
+} from "./AdministrationDeviceCredentialSetForm"
 
-export type AddDeviceCredentialButtonProps = PropsWithRenderItem
+export type AddDeviceCredentialSetButtonProps = PropsWithRenderItem
 
-export default function AddDeviceCredentialButton(props: AddDeviceCredentialButtonProps) {
+export default function AddDeviceCredentialSetButton(props: AddDeviceCredentialSetButtonProps) {
   const { renderItem } = props
   const { t } = useTranslation()
   const toast = useToast()
   const queryClient = useQueryClient()
   const anyOption = getAnyOption(t)
-  const deviceCredentialTypeOptions = useDeviceCredentialTypeOptions()
+  const deviceCredentialSetTypeOptions = useDeviceCredentialSetTypeOptions()
   const dialog = useFormDialogWithMutation()
 
-  const form = useForm<DeviceCredentialForm>({
+  const form = useForm<DeviceCredentialSetForm>({
     mode: "onChange",
     defaultValues: {
       name: "",
       username: "",
       mgmtDomain: null,
       community: "",
-      type: deviceCredentialTypeOptions.getFirst()?.value,
+      type: deviceCredentialSetTypeOptions.getFirst()?.value,
       authKey: "",
       privKey: "",
       password: "",
@@ -53,7 +53,7 @@ export default function AddDeviceCredentialButton(props: AddDeviceCredentialButt
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_CREDENTIAL_SET_CREATE, {
       title: t("credential.create"),
-      description: <AdministrationDeviceCredentialForm />,
+      description: <AdministrationDeviceCredentialSetForm />,
       form,
       size: "lg",
       async onSubmit(values) {

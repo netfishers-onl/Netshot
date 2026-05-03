@@ -10,23 +10,23 @@ import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
-import AdministrationDeviceCredentialForm, {
-  DeviceCredentialForm,
-} from "./AdministrationDeviceCredentialForm"
+import AdministrationDeviceCredentialSetForm, {
+  DeviceCredentialSetForm,
+} from "./AdministrationDeviceCredentialSetForm"
 
-export type EditDeviceCredentialButtonProps = PropsWithRenderItem<{
-  credential: CredentialSet
+export type EditDeviceCredentialSetButtonProps = PropsWithRenderItem<{
+  credentialSet: CredentialSet
 }>
 
-export default function EditDeviceCredentialButton(props: EditDeviceCredentialButtonProps) {
-  const { credential, renderItem } = props
+export default function EditDeviceCredentialSetButton(props: EditDeviceCredentialSetButtonProps) {
+  const { credentialSet: credential, renderItem } = props
   const { t } = useTranslation()
   const toast = useToast()
   const queryClient = useQueryClient()
   const dialog = useFormDialogWithMutation()
 
   const defaultValues = useMemo(() => {
-    const values: Partial<DeviceCredentialForm> = {
+    const values: Partial<DeviceCredentialSetForm> = {
       name: credential?.name,
       mgmtDomain: null,
       type: credential.type,
@@ -74,7 +74,7 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
     return values
   }, [credential])
 
-  const form = useForm<DeviceCredentialForm>({
+  const form = useForm<DeviceCredentialSetForm>({
     mode: "onChange",
     defaultValues,
   })
@@ -95,10 +95,10 @@ export default function EditDeviceCredentialButton(props: EditDeviceCredentialBu
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_CREDENTIAL_SET_UPDATE, {
       title: t("credential.edit"),
-      description: <AdministrationDeviceCredentialForm freezeType freezePasswords />,
+      description: <AdministrationDeviceCredentialSetForm freezeType freezePasswords />,
       form,
       size: "lg",
-      async onSubmit(values: DeviceCredentialForm) {
+      async onSubmit(values: DeviceCredentialSetForm) {
         const type = values.type
 
         const payload: Partial<DeviceCredentialPayload> = {

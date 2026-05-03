@@ -10,15 +10,15 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
 import { LuSquarePen, LuHash, LuPlus, LuTrash, LuAsterisk } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import AddDeviceCredentialButton from "../components/AddDeviceCredentialButton"
-import EditDeviceCredentialButton from "../components/EditDeviceCredentialButton"
-import RemoveDeviceCredentialButton from "../components/RemoveDeviceCredentialButton"
+import AddDeviceCredentialSetButton from "../components/AddDeviceCredentialSetButton"
+import EditDeviceCredentialSetButton from "../components/EditDeviceCredentialSetButton"
+import RemoveDeviceCredentialSetButton from "../components/RemoveDeviceCredentialSetButton"
 import { QUERIES } from "../constants"
 import TableButtonStack from "../components/TableButtonStack"
 
 const columnHelper = createColumnHelper<CredentialSet>()
 
-export default function AdministrationDeviceCredentialScreen() {
+export default function AdministrationDeviceCredentialSetScreen() {
   const { t } = useTranslation()
   const pagination = usePagination()
   const anyOption = getAnyOption(t)
@@ -73,12 +73,12 @@ export default function AdministrationDeviceCredentialScreen() {
       columnHelper.display({
         id: "actions",
         cell: (info) => {
-          const credential = info.row.original
+          const credentialSet = info.row.original
 
           return (
             <TableButtonStack>
-              <EditDeviceCredentialButton
-                credential={credential}
+              <EditDeviceCredentialSetButton
+                credentialSet={credentialSet}
                 renderItem={(open) => (
                   <Tooltip content={t("common.edit")}>
                     <IconButton
@@ -92,8 +92,8 @@ export default function AdministrationDeviceCredentialScreen() {
                   </Tooltip>
                 )}
               />
-              <RemoveDeviceCredentialButton
-                credential={credential}
+              <RemoveDeviceCredentialSetButton
+                credentialSet={credentialSet}
                 renderItem={(open) => (
                   <Tooltip content={t("common.remove")}>
                     <IconButton
@@ -136,7 +136,7 @@ export default function AdministrationDeviceCredentialScreen() {
             w="30%"
           />
           <Spacer />
-          <AddDeviceCredentialButton
+          <AddDeviceCredentialSetButton
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
                 <LuPlus />
@@ -161,7 +161,7 @@ export default function AdministrationDeviceCredentialScreen() {
                 title={t("credential.noneForDevice")}
                 description={t("credential.canCreate")}
               >
-                <AddDeviceCredentialButton
+                <AddDeviceCredentialSetButton
                   renderItem={(open) => (
                     <Button variant="outline" onClick={open}>
                       <LuPlus />

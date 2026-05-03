@@ -1,7 +1,7 @@
 import { createOptionHook } from "@/hooks"
 import { CredentialSetType } from "@/types"
 
-export const useDeviceCredentialTypeOptions = createOptionHook([
+export const useDeviceCredentialSetTypeOptions = createOptionHook([
   {
     label: "network.snmpV1",
     value: CredentialSetType.SNMP_V1,

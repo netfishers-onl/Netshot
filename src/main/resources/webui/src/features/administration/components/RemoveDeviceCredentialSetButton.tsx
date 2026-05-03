@@ -10,12 +10,12 @@ import { MouseEvent } from "react"
 import { Trans, useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 
-export type RemoveDeviceCredentialButtonProps = PropsWithRenderItem<{
-  credential: CredentialSet
+export type RemoveDeviceCredentialSetButtonProps = PropsWithRenderItem<{
+  credentialSet: CredentialSet
 }>
 
-export default function RemoveDeviceCredentialButton(props: RemoveDeviceCredentialButtonProps) {
-  const { credential, renderItem } = props
+export default function RemoveDeviceCredentialSetButton(props: RemoveDeviceCredentialSetButtonProps) {
+  const { credentialSet: credential, renderItem } = props
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const toast = useToast()

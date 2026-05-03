@@ -3,7 +3,7 @@ import { AuthProvider } from "@/contexts"
 import {
   AdministrationApiTokenScreen,
   AdministrationClusteringScreen,
-  AdministrationDeviceCredentialScreen,
+  AdministrationDeviceCredentialSetScreen,
   AdministrationDomainScreen,
   AdministrationDriverScreen,
   AdministrationScreen,
@@ -151,7 +151,7 @@ function App() {
                           <Route path="device-domain" element={<AdministrationDomainScreen />} />
                           <Route
                             path="device-credential"
-                            element={<AdministrationDeviceCredentialScreen />}
+                            element={<AdministrationDeviceCredentialSetScreen />}
                           />
                           <Route path="driver" element={<AdministrationDriverScreen />} />
                           <Route path="api-token" element={<AdministrationApiTokenScreen />} />

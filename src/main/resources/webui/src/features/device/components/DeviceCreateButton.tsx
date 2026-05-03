@@ -13,7 +13,7 @@ import { useMutation } from "@tanstack/react-query"
 import { useEffect } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { useDeviceCredentialOptions } from "../hooks"
+import { useDeviceCredentialSetOptions } from "../hooks"
 
 type Form = {
   ipAddress: string
@@ -33,7 +33,7 @@ export type DeviceCreateButtonProps = PropsWithRenderItem
 function DeviceCreateForm() {
   const form = useFormContext()
   const { t } = useTranslation()
-  const deviceCredentialOptions = useDeviceCredentialOptions()
+  const deviceCredentialSetOptions = useDeviceCredentialSetOptions()
 
   const autoDiscover = useWatch({
     control: form.control,
@@ -60,7 +60,7 @@ function DeviceCreateForm() {
 
   // When autodiscover changes reset fields
   useEffect(() => {
-    form.setValue("credentialType", autoDiscover ? null : deviceCredentialOptions.options[0].value)
+    form.setValue("credentialType", autoDiscover ? null : deviceCredentialSetOptions.options[0].value)
     form.setValue("overrideConnectionSetting", false)
     form.setValue("deviceType", null)
   }, [autoDiscover])
@@ -158,7 +158,7 @@ function DeviceCreateForm() {
           <Select
             control={form.control}
             name="credentialType"
-            options={deviceCredentialOptions.options}
+            options={deviceCredentialSetOptions.options}
             label={t("credential.list")}
             placeholder={t("credential.select")}
             required

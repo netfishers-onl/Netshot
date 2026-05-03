@@ -13,7 +13,7 @@ import { useEffect, useMemo } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useCredentialSets } from "../api"
-import { useDeviceCredentialOptions } from "../hooks"
+import { useDeviceCredentialSetOptions } from "../hooks"
 
 export type DeviceEditButtonProps = PropsWithRenderItem<{
   device: Device
@@ -44,7 +44,7 @@ type DeviceEditFormProps = {
 function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
   const form = useFormContext()
   const { t } = useTranslation()
-  const deviceCredentialOptions = useDeviceCredentialOptions()
+  const deviceCredentialSetOptions = useDeviceCredentialSetOptions()
   const { data: credentialSets, isPending } = useCredentialSets()
 
   const overrideConnectionSetting = useWatch({
@@ -166,7 +166,7 @@ function DeviceEditForm({ freezePasswords = false }: DeviceEditFormProps) {
       <Select
         control={form.control}
         name="credentialType"
-        options={deviceCredentialOptions.options}
+        options={deviceCredentialSetOptions.options}
         label={t("credential.label")}
         placeholder={t("credential.select")}
         onSelectItem={onCredentialTypeChange}
@@ -282,13 +282,13 @@ export default function DeviceEditButton(props: DeviceEditButtonProps) {
   const { t } = useTranslation()
   const toast = useToast()
   const queryClient = useQueryClient()
-  const deviceCredentialOptions = useDeviceCredentialOptions()
+  const deviceCredentialSetOptions = useDeviceCredentialSetOptions()
   const dialog = useFormDialogWithMutation()
 
   const defaultValues = useMemo(() => {
     const credentialType = device?.specificCredentialSet
       ? device?.specificCredentialSet?.type
-      : deviceCredentialOptions.getFirst().value
+      : deviceCredentialSetOptions.getFirst().value
 
     const overrideConnectionSetting = Boolean(
       device?.connectAddress && device?.sshPort && device?.telnetPort

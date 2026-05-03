@@ -1,1 +1,1 @@
-export * from "./useDeviceCredentialOptions"
+export * from "./useDeviceCredentialSetOptions"

@@ -6,12 +6,12 @@ import { Field, Group, Stack } from "@chakra-ui/react"
 import { useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import {
-  useDeviceCredentialAuthTypeOptions,
-  useDeviceCredentialPrivateKeyTypeOptions,
-  useDeviceCredentialTypeOptions,
+  useDeviceCredentialSetAuthTypeOptions,
+  useDeviceCredentialSetPrivateKeyTypeOptions,
+  useDeviceCredentialSetTypeOptions,
 } from "../hooks"
 
-export type DeviceCredentialForm = {
+export type DeviceCredentialSetForm = {
   name: string
   mgmtDomain: number | null
   community: string
@@ -26,18 +26,18 @@ export type DeviceCredentialForm = {
   privateKey?: string | null
 }
 
-export type AdministrationDeviceCredentialFormProps = {
+export type AdministrationDeviceCredentialSetFormProps = {
   freezeType?: boolean
   freezePasswords?: boolean
 }
 
-export default function AdministrationDeviceCredentialForm(props: AdministrationDeviceCredentialFormProps) {
+export default function AdministrationDeviceCredentialSetForm(props: AdministrationDeviceCredentialSetFormProps) {
   const { freezeType = false, freezePasswords = false } = props
-  const form = useFormContext<DeviceCredentialForm>()
+  const form = useFormContext<DeviceCredentialSetForm>()
   const { t } = useTranslation()
-  const deviceCredentialTypeOptions = useDeviceCredentialTypeOptions()
-  const deviceCredentialAuthTypeOptions = useDeviceCredentialAuthTypeOptions()
-  const deviceCredentialPrivateKeyTypeOptions = useDeviceCredentialPrivateKeyTypeOptions()
+  const deviceCredentialSetTypeOptions = useDeviceCredentialSetTypeOptions()
+  const deviceCredentialSetAuthTypeOptions = useDeviceCredentialSetAuthTypeOptions()
+  const deviceCredentialSetPrivateKeyTypeOptions = useDeviceCredentialSetPrivateKeyTypeOptions()
 
   const type = useWatch({
     control: form.control,
@@ -64,7 +64,7 @@ export default function AdministrationDeviceCredentialForm(props: Administration
         disabled={freezeType}
         control={form.control}
         name="type"
-        options={deviceCredentialTypeOptions.options}
+        options={deviceCredentialSetTypeOptions.options}
         label={t("common.type")}
         placeholder={t("network.selectProtocol")}
       />
@@ -88,7 +88,7 @@ export default function AdministrationDeviceCredentialForm(props: Administration
                 fieldProps={{ flex: "1", w: "auto" }}
                 control={form.control}
                 name="authType"
-                options={deviceCredentialAuthTypeOptions.options}
+                options={deviceCredentialSetAuthTypeOptions.options}
               />
               <FormControl
                 flex="2"
@@ -112,7 +112,7 @@ export default function AdministrationDeviceCredentialForm(props: Administration
                 fieldProps={{ flex: "1", w: "auto" }}
                 control={form.control}
                 name="privType"
-                options={deviceCredentialPrivateKeyTypeOptions.options}
+                options={deviceCredentialSetPrivateKeyTypeOptions.options}
               />
               <FormControl
                 flex="2"

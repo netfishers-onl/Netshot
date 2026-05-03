@@ -1,7 +1,7 @@
 import { createOptionHook } from "@/hooks"
 import { CredentialSetType } from "@/types"
 
-export const useDeviceCredentialOptions = createOptionHook([
+export const useDeviceCredentialSetOptions = createOptionHook([
   {
     label: "device.useGlobalCredentials",
     value: CredentialSetType.GLOBAL,

@@ -19,7 +19,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { FiCloud, FiDatabase, FiEdit, FiPlus, FiTrash } from "react-icons/fi"
+import { LuCloud, LuDatabase, LuSquarePen, LuPlus, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddUserButton from "../components/AddUserButton"
 import EditUserButton from "../components/EditUserButton"
@@ -59,7 +59,7 @@ export default function AdministrationUserScreen() {
 
           return (
             <Badge size="lg" variant="outline" marginTop="-3px" marginBottom="-3px">
-              {value ? <FiDatabase /> : <FiCloud />}
+              {value ? <LuDatabase /> : <LuCloud />}
               {t(value ? "user.localType" : "user.remoteType")}
             </Badge>
           )
@@ -99,7 +99,7 @@ export default function AdministrationUserScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <FiEdit />
+                      <LuSquarePen />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -114,7 +114,7 @@ export default function AdministrationUserScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <FiTrash />
+                      <LuTrash />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -149,7 +149,7 @@ export default function AdministrationUserScreen() {
           <AddUserButton
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
-                <FiPlus />
+                <LuPlus />
                 {t("common.create")}
               </Button>
             )}
@@ -174,7 +174,7 @@ export default function AdministrationUserScreen() {
                 <AddUserButton
                   renderItem={(open) => (
                     <Button variant="outline" onClick={open}>
-                      <FiPlus />
+                      <LuPlus />
                       {t("common.create")}
                     </Button>
                   )}

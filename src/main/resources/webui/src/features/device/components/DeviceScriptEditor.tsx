@@ -1,6 +1,6 @@
 import api from "@/api"
 import { DeviceTypeSelect, MonacoEditor } from "@/components"
-import { FiDatabase } from "react-icons/fi"
+import { LuDatabase } from "react-icons/lu"
 import { QUERIES } from "@/constants"
 import { useDeviceTypeOptions, useToast } from "@/hooks"
 import { Device, DeviceType, SimpleDevice } from "@/types"
@@ -128,7 +128,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
           }}
         />
         <Button onClick={save}>
-          <FiDatabase />
+          <LuDatabase />
           {t("common.save")}
         </Button>
         <RunDeviceScriptButton

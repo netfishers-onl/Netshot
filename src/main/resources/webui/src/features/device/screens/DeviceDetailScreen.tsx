@@ -1,5 +1,5 @@
 import { Protected } from "@/components"
-import { FiCamera, FiEdit, FiMoreHorizontal, FiPlay, FiRefreshCcw, FiTrash, FiZap, FiZapOff } from "react-icons/fi"
+import { LuCamera, LuSquarePen, LuEllipsis, LuPlay, LuRefreshCcw, LuTrash, LuZap, LuZapOff } from "react-icons/lu"
 import { RouterTab, RouterTabs } from "@/components/routerTab"
 import { useToast } from "@/hooks"
 import { DeviceStatus, DeviceType, Level } from "@/types"
@@ -60,7 +60,7 @@ export default function DeviceDetailScreen() {
                     devices={[device]}
                     renderItem={(open) => (
                       <Button variant="primary" onClick={open}>
-                        <FiCamera />
+                        <LuCamera />
                         {t("device.snapshot.take")}
                       </Button>
                     )}
@@ -73,7 +73,7 @@ export default function DeviceDetailScreen() {
                   <Menu.Trigger asChild>
                     <Button>
                       {t("common.actions")}
-                      <FiMoreHorizontal />
+                      <LuEllipsis />
                     </Button>
                   </Menu.Trigger>
                 </Skeleton>
@@ -88,7 +88,7 @@ export default function DeviceDetailScreen() {
                               devices={[device]}
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="run-script">
-                                  <FiPlay />
+                                  <LuPlay />
                                   {t("script.run")}
                                 </Menu.Item>
                               )}
@@ -99,7 +99,7 @@ export default function DeviceDetailScreen() {
                               device={device}
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="edit">
-                                  <FiEdit />
+                                  <LuSquarePen />
                                   {t("common.edit")}
                                 </Menu.Item>
                               )}
@@ -110,7 +110,7 @@ export default function DeviceDetailScreen() {
                                   devices={[device]}
                                   renderItem={(open) => (
                                     <Menu.Item onSelect={open} value="enable">
-                                      <FiZap />
+                                      <LuZap />
                                       {t("common.enable")}
                                     </Menu.Item>
                                   )}
@@ -121,7 +121,7 @@ export default function DeviceDetailScreen() {
                                 devices={[device]}
                                 renderItem={(open) => (
                                   <Menu.Item onSelect={open} value="disable">
-                                    <FiZapOff />
+                                    <LuZapOff />
                                     {t("common.disable")}
                                   </Menu.Item>
                                 )}
@@ -130,7 +130,7 @@ export default function DeviceDetailScreen() {
                           </Protected>
 
                           <Menu.Item onSelect={refresh} value="resfresh">
-                            <FiRefreshCcw />
+                            <LuRefreshCcw />
                             {t("common.refresh")}
                           </Menu.Item>
 
@@ -139,7 +139,7 @@ export default function DeviceDetailScreen() {
                               devices={[device]}
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="remove">
-                                  <FiTrash />
+                                  <LuTrash />
                                   {t("common.remove")}
                                 </Menu.Item>
                               )}

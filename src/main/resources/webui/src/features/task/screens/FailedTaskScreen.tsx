@@ -1,5 +1,5 @@
 import { DataTable, EmptyResult, FormControl, Search } from "@/components"
-import { FiFilter, FiRefreshCcw } from "react-icons/fi"
+import { LuFilter, LuRefreshCcw } from "react-icons/lu"
 import { FormControlType } from "@/components/FormControl"
 import { TaskStatus } from "@/types"
 import {
@@ -46,7 +46,7 @@ export default function FailedTaskScreen() {
         <Menu.Root>
           <Menu.Trigger asChild>
             <Button variant="primary">
-              <FiFilter />
+              <LuFilter />
               {t("common.filters")}
             </Button>
           </Menu.Trigger>
@@ -74,7 +74,7 @@ export default function FailedTaskScreen() {
           </Portal>
         </Menu.Root>
         <IconButton aria-label={t("common.reload")} onClick={() => refetch()} loading={isFetching}>
-          <FiRefreshCcw />
+          <LuRefreshCcw />
         </IconButton>
       </Stack>
       {isLoading ? (

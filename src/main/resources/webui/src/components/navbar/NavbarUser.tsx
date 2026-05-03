@@ -11,7 +11,7 @@ import useToast from "@/hooks/useToast"
 
 import { useUserLevelOptions } from "@/hooks"
 import { Icon } from "@chakra-ui/react"
-import { FiChevronDown, FiCloud, FiHelpCircle, FiInfo, FiLogOut, FiSettings } from "react-icons/fi"
+import { LuChevronDown, LuCloud, LuCircleHelp, LuInfo, LuLogOut, LuSettings } from "react-icons/lu"
 import { AboutNetshotModal } from "./AboutNetshotModal"
 import UserSettingButton from "./UserSettingButton"
 
@@ -94,7 +94,7 @@ export default function NavbarUser() {
               </Text>
             </Stack>
             <Spacer />
-            <Icon color="white"><FiChevronDown /></Icon>
+            <Icon color="white"><LuChevronDown /></Icon>
           </Stack>
         </Button>
       </Menu.Trigger>
@@ -104,7 +104,7 @@ export default function NavbarUser() {
             <UserSettingButton
               renderItem={(open) => (
                 <Menu.Item onSelect={open} value="settings">
-                  <FiSettings />
+                  <LuSettings />
                   {t("common.settings")}
                 </Menu.Item>
               )}
@@ -115,7 +115,7 @@ export default function NavbarUser() {
                 target="_blank"
                 rel="noreferrer"
               >
-                <FiHelpCircle />
+                <LuCircleHelp />
                 {t("admin.userGuide")}
               </a>
             </Menu.Item>
@@ -125,20 +125,20 @@ export default function NavbarUser() {
                 target="_blank"
                 rel="noreferrer"
               >
-                <FiCloud />
+                <LuCloud />
                 {t("api.documentation")}
               </a>
             </Menu.Item>
             <AboutNetshotModal
               renderItem={(open) => (
                 <Menu.Item onSelect={open} value="about">
-                  <FiInfo />
+                  <LuInfo />
                   {t("about.label")}
                 </Menu.Item>
               )}
             />
             <Menu.Item onSelect={logout} value="logout">
-              <FiLogOut />
+              <LuLogOut />
               {t("auth.logout")}
             </Menu.Item>
           </Menu.Content>

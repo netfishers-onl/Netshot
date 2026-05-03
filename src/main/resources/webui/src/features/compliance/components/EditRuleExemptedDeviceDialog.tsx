@@ -1,7 +1,7 @@
 import api, { RuleStateChangePayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { DeviceAutocomplete, FormControl, Search } from "@/components"
-import { FiPlus, FiTrash } from "react-icons/fi"
+import { LuPlus, LuTrash } from "react-icons/lu"
 import { FormControlType } from "@/components/FormControl"
 import { MUTATIONS } from "@/constants"
 import { useDialogConfig, useFormDialogWithMutation } from "@/dialog"
@@ -140,7 +140,7 @@ function AddRuleExemptedDeviceButton(props: AddRuleExemptedDeviceButtonProps) {
 
   return (
     <Button variant="outline" onClick={open}>
-      <FiPlus />
+      <LuPlus />
       {t("common.add")}
     </Button>
   )
@@ -282,7 +282,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
                               aria-label={t("device.remove")}
                               onClick={() => remove(device)}
                             >
-                              <FiTrash />
+                              <LuTrash />
                             </IconButton>
                           </Stack>
                         ))}

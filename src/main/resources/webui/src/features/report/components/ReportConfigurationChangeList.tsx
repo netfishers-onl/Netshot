@@ -1,6 +1,6 @@
 import api from "@/api"
 import { DataTable, EmptyResult, EntityLink } from "@/components"
-import { FiGitBranch } from "react-icons/fi"
+import { LuGitBranch } from "react-icons/lu"
 import { Tooltip } from "@/components/ui/tooltip"
 import { LightConfig } from "@/types"
 import { useI18nUtil } from "@/i18n"
@@ -80,7 +80,7 @@ export default function ReportConfigurationChangeList() {
                   aria-label={t("common.showDifference")}
                   onClick={open}
                 >
-                  <FiGitBranch />
+                  <LuGitBranch />
                 </IconButton>
               </Tooltip>
             )}

@@ -8,7 +8,7 @@ import { Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@cha
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { FiPlus, FiTrash } from "react-icons/fi"
+import { LuPlus, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddApiTokenButton from "../components/AddApiTokenButton"
 import RemoveApiTokenButton from "../components/RemoveApiTokenButton"
@@ -65,7 +65,7 @@ export default function AdministrationApiTokenScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <FiTrash />
+                      <LuTrash />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -101,7 +101,7 @@ export default function AdministrationApiTokenScreen() {
           <AddApiTokenButton
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
-                <FiPlus />
+                <LuPlus />
                 {t("common.create")}
               </Button>
             )}
@@ -126,7 +126,7 @@ export default function AdministrationApiTokenScreen() {
                 <AddApiTokenButton
                   renderItem={(open) => (
                     <Button variant="outline" onClick={open}>
-                      <FiPlus />
+                      <LuPlus />
                       {t("common.create")}
                     </Button>
                   )}

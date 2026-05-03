@@ -1,7 +1,7 @@
 import api from "@/api"
 import { MonacoDiffEditor } from "@/components"
 import { Icon } from "@chakra-ui/react"
-import { FiX } from "react-icons/fi"
+import { LuX } from "react-icons/lu"
 import { QUERIES } from "@/constants"
 import { Config, DeviceAttributeDefinition } from "@/types"
 import { Center, Flex, Spinner, Stack, Text } from "@chakra-ui/react"
@@ -58,7 +58,7 @@ export default function ConfigurationCompareEditor(props: CompareEditorProps) {
             bg="red.50"
             borderRadius="full"
           >
-            <Icon color="red.800"><FiX /></Icon>
+            <Icon color="red.800"><LuX /></Icon>
           </Flex>
           <Text>{t("device.config.unableToLoad")}</Text>
         </Stack>

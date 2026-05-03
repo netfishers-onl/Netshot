@@ -1,6 +1,6 @@
 import api from "@/api"
 import { AddGroupButton, getExpandedKeys, Protected, TreeGroup } from "@/components"
-import { FiPlus } from "react-icons/fi"
+import { LuPlus } from "react-icons/lu"
 import { Tooltip } from "@/components/ui/tooltip"
 import { QUERIES } from "@/constants"
 import { usePagination } from "@/hooks"
@@ -84,7 +84,7 @@ export default function DeviceSidebarGroup() {
             renderItem={(open) => (
               <Tooltip content={t("group.add")}>
                 <IconButton variant="ghost" onClick={open} aria-label={t("group.add")}>
-                  <FiPlus />
+                  <LuPlus />
                 </IconButton>
               </Tooltip>
             )}

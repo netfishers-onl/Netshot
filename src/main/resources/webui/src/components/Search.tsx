@@ -1,6 +1,6 @@
 import { Box, BoxProps, IconButton, Input, InputGroup } from "@chakra-ui/react"
 import { ChangeEvent, PropsWithChildren, useRef, useState } from "react"
-import { FiSearch, FiX } from "react-icons/fi"
+import { LuSearch, LuX } from "react-icons/lu"
 
 /**
  * @todo: Add useThrottle
@@ -50,7 +50,7 @@ export default function Search(props: SearchProps) {
   return (
     <Box {...other}>
       <InputGroup
-        startElement={<FiSearch size={18} />}
+        startElement={<LuSearch size={18} />}
         endElement={
           <>
             {children}
@@ -61,7 +61,7 @@ export default function Search(props: SearchProps) {
                 aria-label="clear"
                 onClick={clearValue}
               >
-                <FiX />
+                <LuX />
               </IconButton>
             )}
           </>

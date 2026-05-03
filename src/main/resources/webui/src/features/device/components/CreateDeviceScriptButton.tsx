@@ -1,6 +1,6 @@
 import api from "@/api"
 import { FormControl } from "@/components"
-import { FiPlus } from "react-icons/fi"
+import { LuPlus } from "react-icons/lu"
 import { MUTATIONS, QUERIES } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
@@ -86,7 +86,7 @@ export function CreateDeviceScriptButton(props: CreateDeviceScriptButtonProps) {
 
   return (
     <Button onClick={open}>
-      <FiPlus />
+      <LuPlus />
       {t("common.create")}
     </Button>
   )

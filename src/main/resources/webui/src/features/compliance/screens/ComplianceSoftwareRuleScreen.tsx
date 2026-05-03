@@ -12,7 +12,7 @@ import { Button, Heading, IconButton, Skeleton, Spacer, Stack, Tag, Text } from 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useEffect, useState } from "react"
-import { FiEdit, FiPlus, FiTrash } from "react-icons/fi"
+import { LuSquarePen, LuPlus, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddSoftwareRuleButton from "../components/AddSoftwareRuleButton"
 import EditSoftwareRuleButton from "../components/EditSoftwareRuleButton"
@@ -104,7 +104,7 @@ export default function ComplianceSoftwareRuleScreen() {
                       aria-label={t("policy.rule.editThe")}
                       onClick={open}
                     >
-                      <FiEdit />
+                      <LuSquarePen />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -120,7 +120,7 @@ export default function ComplianceSoftwareRuleScreen() {
                       aria-label={t("policy.rule.removeThe")}
                       onClick={open}
                     >
-                      <FiTrash />
+                      <LuTrash />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -187,7 +187,7 @@ export default function ComplianceSoftwareRuleScreen() {
               <AddSoftwareRuleButton
                 renderItem={(open) => (
                   <Button onClick={open} variant="primary">
-                    <FiPlus />
+                    <LuPlus />
                     {t("policy.rule.add")}
                   </Button>
                 )}
@@ -221,7 +221,7 @@ export default function ComplianceSoftwareRuleScreen() {
                 <AddSoftwareRuleButton
                   renderItem={(open) => (
                     <Button onClick={open} variant="outline">
-                      <FiPlus />
+                      <LuPlus />
                       {t("policy.rule.add")}
                     </Button>
                   )}

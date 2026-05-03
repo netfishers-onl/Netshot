@@ -1,7 +1,7 @@
 import { Icon } from "@chakra-ui/react"
 import { Flex, Stack } from "@chakra-ui/react"
 import { PropsWithChildren, useMemo } from "react"
-import { FiAlertTriangle, FiCheck, FiX } from "react-icons/fi"
+import { LuTriangleAlert, LuCheck, LuX } from "react-icons/lu"
 
 type AlertBoxProps = {
   type: "success" | "error" | "warning"
@@ -30,9 +30,9 @@ export default function AlertBox(props: PropsWithChildren<AlertBoxProps>) {
         bg={bg}
         borderRadius="full"
       >
-        {type === "error" && <Icon color="red.800"><FiX /></Icon>}
-        {type === "success" && <Icon color="green.800"><FiCheck /></Icon>}
-        {type === "warning" && <Icon color="yellow.800"><FiAlertTriangle /></Icon>}
+        {type === "error" && <Icon color="red.800"><LuX /></Icon>}
+        {type === "success" && <Icon color="green.800"><LuCheck /></Icon>}
+        {type === "warning" && <Icon color="yellow.800"><LuTriangleAlert /></Icon>}
       </Flex>
     )
   }, [type])

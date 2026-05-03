@@ -7,7 +7,7 @@ import {
   FormControl,
   Search,
 } from "@/components"
-import { FiArrowRight, FiFilter, FiRefreshCcw } from "react-icons/fi"
+import { LuArrowRight, LuFilter, LuRefreshCcw } from "react-icons/lu"
 import { FormControlType } from "@/components/FormControl"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
@@ -125,7 +125,7 @@ export default function ReportDeviceAccessFailure() {
           <Tooltip content={t("common.goToDevice")}>
             <IconButton variant="ghost" colorPalette="green" aria-label={t("common.goToDevice")} asChild>
               <Link to={`/app/devices/${info.getValue()}/general`}>
-                <FiArrowRight />
+                <LuArrowRight />
               </Link>
             </IconButton>
           </Tooltip>
@@ -165,7 +165,7 @@ export default function ReportDeviceAccessFailure() {
           <Menu.Root>
             <Menu.Trigger asChild>
               <Button variant="primary">
-                <FiFilter />
+                <LuFilter />
                 {t("common.filters")}
               </Button>
             </Menu.Trigger>
@@ -196,7 +196,7 @@ export default function ReportDeviceAccessFailure() {
             </Portal>
           </Menu.Root>
           <Button onClick={() => refetch()}>
-            <FiRefreshCcw />
+            <LuRefreshCcw />
             {t("common.refresh")}
           </Button>
         </Stack>

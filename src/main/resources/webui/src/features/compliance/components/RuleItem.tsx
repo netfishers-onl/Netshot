@@ -7,7 +7,7 @@ import { Protected } from "@/components"
 import { Javascript, Python } from "@/components/icons"
 import { Level, Policy, Rule, RuleType } from "@/types"
 
-import { FiAlignLeft, FiEdit, FiMoreHorizontal, FiPower, FiTrash } from "react-icons/fi"
+import { LuAlignLeft, LuSquarePen, LuEllipsis, LuPower, LuTrash } from "react-icons/lu"
 import DisableRuleButton from "./DisableRuleButton"
 import EditRuleButton from "./EditRuleButton"
 import EnableRuleButton from "./EnableRuleButton"
@@ -35,7 +35,7 @@ export default function RuleItem(props: RuleItemProps) {
       );
     } else {
       return (
-        <FiAlignLeft />
+        <LuAlignLeft />
       );
     }
   }, [rule])
@@ -73,7 +73,7 @@ export default function RuleItem(props: RuleItemProps) {
         <Menu.Root>
           <Menu.Trigger asChild>
             <IconButton variant="ghost" size="sm">
-              <FiMoreHorizontal />
+              <LuEllipsis />
             </IconButton>
           </Menu.Trigger>
           <Portal>
@@ -84,7 +84,7 @@ export default function RuleItem(props: RuleItemProps) {
                   rule={rule}
                   renderItem={(open) => (
                     <Menu.Item onSelect={open} value="edit-rule">
-                      <FiEdit />
+                      <LuSquarePen />
                       {t("common.edit")}
                     </Menu.Item>
                   )}
@@ -95,7 +95,7 @@ export default function RuleItem(props: RuleItemProps) {
                     rule={rule}
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="rule-disable">
-                        <FiPower />
+                        <LuPower />
                         {t("common.disable")}
                       </Menu.Item>
                     )}
@@ -106,7 +106,7 @@ export default function RuleItem(props: RuleItemProps) {
                     rule={rule}
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="rule-enable">
-                        <FiPower />
+                        <LuPower />
                         {t("common.enable")}
                       </Menu.Item>
                     )}
@@ -117,7 +117,7 @@ export default function RuleItem(props: RuleItemProps) {
                   rule={rule}
                   renderItem={(open) => (
                     <Menu.Item onSelect={open} value="rule-remove">
-                      <FiTrash />
+                      <LuTrash />
                       {t("common.remove")}
                     </Menu.Item>
                   )}

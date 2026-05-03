@@ -1,6 +1,6 @@
 import api from "@/api"
 import { DataTable, EmptyResult, EntityLink, Protected } from "@/components"
-import { FiActivity } from "react-icons/fi"
+import { LuActivity } from "react-icons/lu"
 import Search from "@/components/Search"
 import { usePagination } from "@/hooks"
 import { DeviceDiagnosticResult, Level } from "@/types"
@@ -78,7 +78,7 @@ export default function DeviceDiagnosticScreen() {
                 devices={[device]}
                 renderItem={(open) => (
                   <Button alignSelf="center" onClick={open}>
-                    <FiActivity />
+                    <LuActivity />
                     {t("diagnostic.run")}
                   </Button>
                 )}
@@ -99,7 +99,7 @@ export default function DeviceDiagnosticScreen() {
                 devices={[device]}
                 renderItem={(open) => (
                   <Button alignSelf="center" variant="outline" onClick={open}>
-                    <FiActivity />
+                    <LuActivity />
                     {t("diagnostic.run")}
                   </Button>
                 )}

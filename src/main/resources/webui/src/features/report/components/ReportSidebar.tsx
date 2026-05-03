@@ -1,5 +1,5 @@
 import { Sidebar, SidebarLink } from "@/components";
-import { FiDownload } from "react-icons/fi";
+import { LuDownload } from "react-icons/lu";
 import { Steps, Button, Stack, Separator } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import ExportDataButton from "./ExportDataButton";
@@ -40,7 +40,7 @@ export default function ReportSidebar() {
       <Stack py="4" px="5">
         <ExportDataButton
           renderItem={(open) => (
-            <Button onClick={open}><FiDownload />{t("common.exportData")}</Button>
+            <Button onClick={open}><LuDownload />{t("common.exportData")}</Button>
           )}
         />
       </Stack>

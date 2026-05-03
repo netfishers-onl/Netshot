@@ -2,7 +2,7 @@ import api, { CreateOrUpdateTaskPayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { DomainSelect } from "@/components"
 import FormControl from "@/components/FormControl"
-import { FiPlus, FiTrash } from "react-icons/fi"
+import { LuPlus, LuTrash } from "react-icons/lu"
 import TaskDialog from "@/components/TaskDialog"
 import { MUTATIONS } from "@/constants"
 import { useCustomDialog, useFormDialogWithMutation } from "@/dialog"
@@ -64,7 +64,7 @@ function DeviceCreateForm() {
                     colorPalette="green"
                     aria-label={t("network.removeSubnet")}
                   >
-                    <FiTrash />
+                    <LuTrash />
                   </IconButton>
                 )}
               </Stack>
@@ -73,7 +73,7 @@ function DeviceCreateForm() {
         )}
         <Stack direction="row">
           <Button onClick={() => append("")}>
-            <FiPlus />
+            <LuPlus />
             {t("common.addEntry")}
           </Button>
         </Stack>

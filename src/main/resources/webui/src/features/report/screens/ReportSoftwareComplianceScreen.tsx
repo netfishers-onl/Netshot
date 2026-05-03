@@ -1,6 +1,6 @@
 import api from "@/api"
 import { DomainSelect, Search, TreeGroup } from "@/components"
-import { FiFilter, FiRefreshCcw } from "react-icons/fi"
+import { LuFilter, LuRefreshCcw } from "react-icons/lu"
 import { QUERIES as GLOBAL_QUERIES } from "@/constants"
 import { useAlertDialog } from "@/dialog"
 import { usePagination } from "@/hooks"
@@ -191,7 +191,7 @@ export default function ReportSoftwareComplianceScreen() {
         <Menu.Root>
           <Menu.Trigger asChild>
             <Button variant="primary">
-              <FiFilter />
+              <LuFilter />
               {t("common.filters")}
             </Button>
           </Menu.Trigger>
@@ -209,7 +209,7 @@ export default function ReportSoftwareComplianceScreen() {
           </Portal>
         </Menu.Root>
         <Button onClick={() => refetch()}>
-          <FiRefreshCcw />
+          <LuRefreshCcw />
           {t("common.refresh")}
         </Button>
       </Stack>

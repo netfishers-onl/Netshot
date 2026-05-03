@@ -1,6 +1,6 @@
 import api from "@/api"
 import { MonacoEditor } from "@/components"
-import { FiMoreHorizontal, FiPower, FiServer, FiTrash } from "react-icons/fi"
+import { LuEllipsis, LuMessageSquareDot, LuPower, LuServer, LuTrash } from "react-icons/lu"
 import { RuleType } from "@/types"
 import {
   Box,
@@ -72,7 +72,7 @@ export default function ComplianceDetailScreen() {
                 <Menu.Trigger asChild>
                   <Button>
                     {t("common.actions")}
-                    <FiMoreHorizontal />
+                    <LuEllipsis />
                   </Button>
                 </Menu.Trigger>
               </Skeleton>
@@ -87,7 +87,7 @@ export default function ComplianceDetailScreen() {
                           rule={rule}
                           renderItem={(open) => (
                             <Menu.Item onSelect={open} value="exempted-device">
-                              <FiServer />
+                              <LuMessageSquareDot />
                               {t("policy.rule.exemptedDevices")}
                             </Menu.Item>
                           )}
@@ -98,7 +98,7 @@ export default function ComplianceDetailScreen() {
                             rule={rule}
                             renderItem={(open) => (
                               <Menu.Item onSelect={open} value="disable">
-                                <FiPower />
+                                <LuPower />
                                 {t("common.disable")}
                               </Menu.Item>
                             )}
@@ -109,7 +109,7 @@ export default function ComplianceDetailScreen() {
                             rule={rule}
                             renderItem={(open) => (
                               <Menu.Item onSelect={open} value="enable">
-                                <FiPower />
+                                <LuPower />
                                 {t("common.enable")}
                               </Menu.Item>
                             )}
@@ -121,7 +121,7 @@ export default function ComplianceDetailScreen() {
                           rule={rule}
                           renderItem={(open) => (
                             <Menu.Item onSelect={open} value="remove">
-                              <FiTrash />
+                              <LuTrash />
                               {t("common.remove")}
                             </Menu.Item>
                           )}

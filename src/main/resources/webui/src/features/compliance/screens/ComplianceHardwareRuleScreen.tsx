@@ -8,7 +8,7 @@ import { Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@cha
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { FiEdit, FiPlus, FiTrash } from "react-icons/fi"
+import { LuSquarePen, LuPlus, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddHardwareRuleButton from "../components/AddHardwareRuleButton"
 import EditHardwareRuleButton from "../components/EditHardwareRuleButton"
@@ -85,7 +85,7 @@ export default function ComplianceHardwareRuleScreen() {
                         aria-label={t("policy.rule.editThe")}
                         onClick={open}
                       >
-                        <FiEdit />
+                        <LuSquarePen />
                       </IconButton>
                     </Tooltip>
                   )}
@@ -100,7 +100,7 @@ export default function ComplianceHardwareRuleScreen() {
                         aria-label={t("policy.rule.removeThe")}
                         onClick={open}
                       >
-                        <FiTrash />
+                        <LuTrash />
                       </IconButton>
                     </Tooltip>
                   )}
@@ -140,7 +140,7 @@ export default function ComplianceHardwareRuleScreen() {
             <AddHardwareRuleButton
               renderItem={(open) => (
                 <Button onClick={open} variant="primary">
-                  <FiPlus />
+                  <LuPlus />
                   {t("policy.rule.add")}
                 </Button>
               )}
@@ -167,7 +167,7 @@ export default function ComplianceHardwareRuleScreen() {
               <AddHardwareRuleButton
                 renderItem={(open) => (
                   <Button onClick={open} variant="outline">
-                    <FiPlus />
+                    <LuPlus />
                     {t("policy.rule.add")}
                   </Button>
                 )}

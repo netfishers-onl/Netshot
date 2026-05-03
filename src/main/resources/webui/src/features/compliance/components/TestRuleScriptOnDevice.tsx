@@ -1,5 +1,5 @@
 import { DeviceAutocomplete } from "@/components"
-import { FiPlay } from "react-icons/fi"
+import { LuPlay } from "react-icons/lu"
 import { RuleType, SimpleDevice } from "@/types"
 import { IconButton, Stack } from "@chakra-ui/react"
 import { useCallback, useState } from "react"
@@ -43,7 +43,7 @@ export default function TestRuleScriptOnDevice(props: TestRuleOnDevice) {
         onClick={runTest}
         loading={mutation.isPending}
       >
-        <FiPlay />
+        <LuPlay />
       </IconButton>
     </Stack>
   )

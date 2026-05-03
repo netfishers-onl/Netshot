@@ -12,7 +12,7 @@ import { forwardRef, ReactElement, ReactNode, RefObject, useCallback, useEffect,
 import { useController, UseControllerProps } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
-import { FiEye, FiEyeOff, FiLock, FiUnlock } from "react-icons/fi"
+import { LuEye, LuEyeOff, LuLock, LuLockOpen } from "react-icons/lu"
 
 export const PASSWORD_UNCHANGED = null
 
@@ -187,7 +187,7 @@ function FormControl<T>(
                       aria-label={t("auth.passwordUnchanged")}
                       onClick={lockPassword}
                     >
-                      <FiUnlock />
+                      <LuLockOpen />
                     </IconButton>
                   </span>
                 </Tooltip>
@@ -203,7 +203,7 @@ function FormControl<T>(
                     aria-label={isUnchanged ? t("auth.passwordUnchanged") : showPassword ? t("common.hidePassword") : t("common.showPassword")}
                     onClick={togglePassword}
                   >
-                    {isUnchanged ? <FiLock /> : showPassword ? <FiEye /> : <FiEyeOff />}
+                    {isUnchanged ? <LuLock /> : showPassword ? <LuEye /> : <LuEyeOff />}
                   </IconButton>
                 </span>
               </Tooltip>

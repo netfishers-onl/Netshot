@@ -8,7 +8,7 @@ import { useMemo } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useDeviceConfigs } from "../api"
-import { FiArrowLeft, FiArrowRight } from "react-icons/fi"
+import { LuArrowLeft, LuArrowRight } from "react-icons/lu"
 
 type FormData = {
   current: string
@@ -99,7 +99,7 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
           <Stack direction="row">
             <Stack direction="row" flex="1">
               <Button onClick={() => navigate("previous")} disabled={isFirst}>
-                <FiArrowLeft />
+                <LuArrowLeft />
                 {t("common.previous")}
               </Button>
               <Box w="280px">
@@ -131,7 +131,7 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
               </Box>
               <Button onClick={() => navigate("next")} disabled={isLast}>
                 {t("common.next")}
-                <FiArrowRight />
+                <LuArrowRight />
               </Button>
             </Stack>
           </Stack>

@@ -19,7 +19,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import { FormProvider, useFieldArray, useForm, useWatch } from "react-hook-form"
-import { FiCamera, FiCheck, FiDatabase, FiPlay, FiPlus, FiSearch, FiServer, FiTrash } from "react-icons/fi"
+import { LuCamera, LuCheck, LuDatabase, LuPlay, LuPlus, LuSearch, LuServer, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 import TaskBoxButton from "./TaskBoxButton"
@@ -199,37 +199,37 @@ export default function AddTaskDialog() {
   const taskTypeOptions = useMemo(
     () => [
       {
-        icon: <FiCamera />,
+        icon: <LuCamera />,
         type: TaskType.TakeGroupSnapshot,
         label: t("device.snapshot.label"),
         description: t("device.snapshot.takeOfGroup"),
       },
       {
-        icon: <FiPlay />,
+        icon: <LuPlay />,
         type: TaskType.RunGroupDiagnostic,
         label: t("diagnostic.label"),
         description: t("diagnostic.runOnGroup"),
       },
       {
-        icon: <FiCheck />,
+        icon: <LuCheck />,
         type: TaskType.CheckGroupCompliance,
         label: t("device.config.compliance"),
         description: t("compliance.checkConfigOfGroup"),
       },
       {
-        icon: <FiServer />,
+        icon: <LuServer />,
         type: TaskType.CheckGroupSoftware,
         label: t("compliance.softwareAndHardware"),
         description: t("compliance.checkSoftwareHardwareOfGroup"),
       },
       {
-        icon: <FiSearch />,
+        icon: <LuSearch />,
         type: TaskType.ScanSubnets,
         label: t("device.discover"),
         description: t("task.scanSubnetsDesc"),
       },
       {
-        icon: <FiDatabase />,
+        icon: <LuDatabase />,
         type: TaskType.PurgeDatabase,
         label: t("admin.purge.database"),
         description: t("admin.purge.desc"),
@@ -384,7 +384,7 @@ export default function AddTaskDialog() {
                                       colorPalette="green"
                                       aria-label={t("network.removeSubnet")}
                                     >
-                                      <FiTrash />
+                                      <LuTrash />
                                     </IconButton>
                                   )}
                                 </Stack>
@@ -393,7 +393,7 @@ export default function AddTaskDialog() {
                           )}
                           <Stack direction="row">
                             <Button onClick={() => append("")}>
-                              <FiPlus />
+                              <LuPlus />
                               {t("common.addEntry")}
                             </Button>
                           </Stack>

@@ -1,5 +1,5 @@
 import { DomainSelect, PolicySelect, TreeGroupSelector } from "@/components"
-import { FiFilter } from "react-icons/fi"
+import { LuFilter } from "react-icons/lu"
 import Search from "@/components/Search"
 import { useFormDialog } from "@/dialog"
 import { PropsWithRenderItem } from "@/types"
@@ -121,7 +121,7 @@ export default function ConfigurationComplianceSidebarSearch() {
         <ConfigurationComplianceSidebarSearchFilter
           renderItem={(open) => (
             <IconButton onClick={open} variant="ghost" aria-label={t("common.openFilter")}>
-              <FiFilter />
+              <LuFilter />
             </IconButton>
           )}
         />

@@ -22,7 +22,7 @@ import { Fragment, useCallback, useRef, useState } from "react"
 import { DndProvider, XYCoord, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { useTranslation } from "react-i18next"
-import { FiArrowDown, FiArrowUp, FiMenu } from "react-icons/fi"
+import { LuArrowDown, LuArrowUp, LuMenu } from "react-icons/lu"
 
 type DataTableColumnMeta = {
   isNumeric?: boolean
@@ -114,7 +114,7 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
           colorPalette="grey"
           cursor="move"
         >
-          <FiMenu />
+          <LuMenu />
         </IconButton>
       </Table.Cell>
       {cells.map((cell) => {
@@ -355,7 +355,7 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
                             isSorted === "desc" ? t("common.sortedDescending") : t("common.sortedAscending")
                           }
                         >
-                          {isSorted === "desc" ? <FiArrowDown /> : <FiArrowUp />}
+                          {isSorted === "desc" ? <LuArrowDown /> : <LuArrowUp />}
                         </IconButton>
                       )}
                     </Table.ColumnHeader>

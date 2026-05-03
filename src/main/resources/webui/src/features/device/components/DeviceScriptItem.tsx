@@ -1,5 +1,5 @@
 import api from "@/api"
-import { FiTrash } from "react-icons/fi"
+import { LuTrash } from "react-icons/lu"
 import { Tooltip } from "@/components/ui/tooltip"
 import { MUTATIONS, QUERIES } from "@/constants"
 import { useConfirmDialogWithMutation } from "@/dialog"
@@ -105,7 +105,7 @@ export default function DeviceScriptItem(props: DeviceScriptItemProps) {
           variant="ghost"
           colorPalette="green"
         >
-          <FiTrash />
+          <LuTrash />
         </IconButton>
       </Tooltip>
     </Stack>

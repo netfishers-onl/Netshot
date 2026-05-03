@@ -1,5 +1,5 @@
 import { DataTable } from "@/components"
-import { FiChevronDown } from "react-icons/fi"
+import { LuChevronDown } from "react-icons/lu"
 import { ConfigComplianceDeviceStatus } from "@/types"
 import { useI18nUtil } from "@/i18n"
 import { Button, IconButton, Separator, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
@@ -84,7 +84,7 @@ export default function DeviceConfigurationCompliancePanel(props: DeviceConfigur
             transform: isCollapsed ? "rotate(-90deg)" : "",
           }}
         >
-          <FiChevronDown />
+          <LuChevronDown />
         </IconButton>
         <Text fontSize="md" fontWeight="semibold">
           {name}

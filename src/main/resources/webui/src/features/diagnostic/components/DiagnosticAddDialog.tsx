@@ -9,7 +9,7 @@ import { Button, CloseButton, Dialog, Heading, Portal, Stack, Text } from "@chak
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
-import { FiAlignLeft } from "react-icons/fi"
+import { LuAlignLeft } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
 import { QUERIES, SCRIPT_TEMPLATES } from "../constants"
@@ -33,7 +33,7 @@ export default function DiagnosticAddDialog() {
 
   const typeOptions = [
     {
-      icon: <FiAlignLeft />,
+      icon: <LuAlignLeft />,
       type: DiagnosticType.Simple,
       label: t("common.simple"),
       description: t("diagnostic.createWithStringAndRegex"),

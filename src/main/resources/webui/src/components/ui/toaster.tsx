@@ -18,7 +18,7 @@ import {
   ToastOptions,
 } from "@chakra-ui/react"
 import { ReactElement } from "react"
-import { FiAlertTriangle, FiCheck, FiInfo, FiX } from "react-icons/fi"
+import { LuTriangleAlert, LuCheck, LuInfo, LuX } from "react-icons/lu"
 
 export const toaster = createToaster({
   placement: "bottom-end",
@@ -43,22 +43,22 @@ const iconMapping: {
 } = {
   [ToastType.Error]: {
     bg: "red.50",
-    icon: <Icon color="red.800"><FiX /></Icon>,
+    icon: <Icon color="red.800"><LuX /></Icon>,
     color: "red.800",
   },
   [ToastType.Success]: {
     bg: "green.50",
-    icon: <Icon color="green.800"><FiCheck /></Icon>,
+    icon: <Icon color="green.800"><LuCheck /></Icon>,
     color: "green.800",
   },
   [ToastType.Warning]: {
     bg: "yellow.50",
-    icon: <Icon color="yellow.800"><FiAlertTriangle /></Icon>,
+    icon: <Icon color="yellow.800"><LuTriangleAlert /></Icon>,
     color: "yellow.800",
   },
   [ToastType.Info]: {
     bg: "blue.50",
-    icon: <Icon color="blue.800"><FiInfo /></Icon>,
+    icon: <Icon color="blue.800"><LuInfo /></Icon>,
     color: "blue.800",
   },
   [ToastType.Loading]: {
@@ -98,7 +98,7 @@ export function ToastProvider() {
                     onClick={() => toaster.dismiss(id)}
                     aria-label="Close toast"
                   >
-                    <FiX />
+                    <LuX />
                   </IconButton>
 
                   {description && (
@@ -159,7 +159,7 @@ export function ToastProvider() {
                 onClick={() => toaster.dismiss(id)}
                 aria-label="Close toast"
               >
-                <FiX />
+                <LuX />
               </IconButton>
             </Toast.Root>
           )

@@ -1,6 +1,6 @@
 import { TestRuleTextOnDevicePayload } from "@/api"
 import { DeviceAutocomplete } from "@/components"
-import { FiPlay } from "react-icons/fi"
+import { LuPlay } from "react-icons/lu"
 import { SimpleDevice } from "@/types"
 import { IconButton, Stack } from "@chakra-ui/react"
 import { useState } from "react"
@@ -39,7 +39,7 @@ export default function TestRuleTextOnDevice(props: TestRuleOnDevice) {
         onClick={() => runTest()}
         loading={mutation.isPending}
       >
-        <FiPlay />
+        <LuPlay />
       </IconButton>
     </Stack>
   )

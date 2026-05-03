@@ -1,6 +1,6 @@
 import { Protected } from "@/components"
 import { Icon } from "@chakra-ui/react"
-import { FiCode, FiEdit, FiMoreHorizontal, FiTrash } from "react-icons/fi"
+import { LuCode, LuSquarePen, LuEllipsis, LuTrash } from "react-icons/lu"
 import { Group, Level } from "@/types"
 import {
   Box,
@@ -57,7 +57,7 @@ export default function GroupItem(props: GroupItemProps) {
       >
         <Stack direction="row" gap="3" alignItems="center">
           <Stack direction="row" gap="3" alignItems="center">
-            <Icon color="green.600"><FiCode /></Icon>
+            <Icon color="green.600"><LuCode /></Icon>
             <Text>{group?.name}</Text>
           </Stack>
         </Stack>
@@ -72,7 +72,7 @@ export default function GroupItem(props: GroupItemProps) {
                   aria-label="Open group options"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <FiMoreHorizontal />
+                  <LuEllipsis />
                 </IconButton>
               </Menu.Trigger>
               <Portal>
@@ -82,7 +82,7 @@ export default function GroupItem(props: GroupItemProps) {
                       group={group}
                       renderItem={(open) => (
                         <Menu.Item onSelect={() => open(null)} value="item-0">
-                          <FiEdit />
+                          <LuSquarePen />
                           {t("common.edit")}
                         </Menu.Item>
                       )}
@@ -91,7 +91,7 @@ export default function GroupItem(props: GroupItemProps) {
                       group={group}
                       renderItem={(open) => (
                         <Menu.Item onSelect={() => open(null)} value="item-1">
-                          <FiTrash />
+                          <LuTrash />
                           {t("common.remove")}
                         </Menu.Item>
                       )}

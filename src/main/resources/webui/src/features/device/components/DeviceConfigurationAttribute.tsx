@@ -2,7 +2,7 @@ import { Box, Button, Flex, Stack, Text } from "@chakra-ui/react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
-import { FiDownload, FiEye } from "react-icons/fi"
+import { LuDownload, LuEye } from "react-icons/lu"
 import { useDownloadConfigMutation } from "@/hooks"
 import {
   Config,
@@ -58,7 +58,7 @@ function ConfigLongTextAttributeValue(props: ConfigLongTextAttributeValueType) {
         attribute={attribute}
         renderItem={(open) => (
           <Button onClick={open} size="sm" variant="default">
-            <FiEye />
+            <LuEye />
             {t("common.view")}
           </Button>
         )}
@@ -69,7 +69,7 @@ function ConfigLongTextAttributeValue(props: ConfigLongTextAttributeValueType) {
         onClick={() => download.mutate()}
         loading={download.isPending}
       >
-        <FiDownload />
+        <LuDownload />
         {t("common.download")}
       </Button>
     </Stack>
@@ -110,7 +110,7 @@ function ConfigBinaryFileAttributeValue(props: ConfigBinaryFileAttributeValueTyp
         onClick={() => download.mutate()}
         loading={download.isPending}
       >
-        <FiDownload />
+        <LuDownload />
         {t("common.download")}
       </Button>
     </Stack>

@@ -1,7 +1,7 @@
 import { Protected } from "@/components"
 import { Level, Policy } from "@/types"
-import { Box, Icon, IconButton, Menu, Portal, Stack, Text } from "@chakra-ui/react"
-import { FiChevronDown, FiEdit, FiFolder, FiMoreHorizontal, FiPlus, FiTrash } from "react-icons/fi"
+import { Icon, IconButton, Menu, Portal, Stack, Text } from "@chakra-ui/react"
+import { LuChevronDown, LuEllipsis, LuFolder, LuFolderOpen, LuPlus, LuSquarePen, LuTrash } from "react-icons/lu"
 import { motion, useAnimationControls } from "framer-motion"
 import { MouseEvent, useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -53,28 +53,26 @@ export default function PolicyItem(props: PolicyItemProps) {
         px="3"
       >
         <Stack direction="row" gap="3" alignItems="center" title={policy?.name}>
-          <Box flex="0 0 16px">
-            <Icon
-              color="grey.500"
-              css={{
-                transform: isCollapsed ? "rotate(-90deg)" : "",
-              }}
-              opacity={hasRules ? 1 : 0}
-            >
-              <FiChevronDown />
-            </Icon>
-          </Box>
-
-          <Box flex="0 0 16px">
-            <Icon color="green.600"><FiFolder /></Icon>
-          </Box>
+          <Icon
+            size="sm"
+            color="grey.500"
+            css={{
+              transform: isCollapsed ? "rotate(-90deg)" : "",
+            }}
+            opacity={hasRules ? 1 : 0}
+          >
+            <LuChevronDown />
+          </Icon>
+          <Icon color="green.600" size="md">
+            {isCollapsed ? <LuFolder /> : <LuFolderOpen />}
+          </Icon>
           <Text lineClamp={1}>{policy?.name}</Text>
         </Stack>
         <Protected minLevel={Level.Operator}>
           <Menu.Root>
             <Menu.Trigger asChild>
               <IconButton variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
-                <FiMoreHorizontal />
+                <LuEllipsis />
               </IconButton>
             </Menu.Trigger>
             <Portal>
@@ -84,7 +82,7 @@ export default function PolicyItem(props: PolicyItemProps) {
                     policy={policy}
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="add-rule">
-                        <FiPlus />
+                        <LuPlus />
                         {t("policy.rule.add")}
                       </Menu.Item>
                     )}
@@ -93,7 +91,7 @@ export default function PolicyItem(props: PolicyItemProps) {
                     policy={policy}
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="edit-rule">
-                        <FiEdit />
+                        <LuSquarePen />
                         {t("common.edit")}
                       </Menu.Item>
                     )}
@@ -102,7 +100,7 @@ export default function PolicyItem(props: PolicyItemProps) {
                     policy={policy}
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="remove-rule">
-                        <FiTrash />
+                        <LuTrash />
                         {t("common.remove")}
                       </Menu.Item>
                     )}

@@ -7,7 +7,7 @@ import { useParams } from "react-router"
 
 import api from "@/api"
 import { AlertBox, DataTable, Protected } from "@/components"
-import { FiCheckCircle } from "react-icons/fi"
+import { LuCircleCheck } from "react-icons/lu"
 import {
   DeviceComplianceResult,
   DeviceComplianceResultType,
@@ -175,7 +175,7 @@ export default function DeviceComplianceScreen() {
             devices={[device]}
             renderItem={(open) => (
               <Button alignSelf="start" variant="primary" onClick={open}>
-                <FiCheckCircle />
+                <LuCircleCheck />
                 {t("compliance.check")}
               </Button>
             )}

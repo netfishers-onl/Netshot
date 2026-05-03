@@ -8,7 +8,7 @@ import { Button, Heading, Separator, Skeleton, Spacer, Stack, Tag, Text } from "
 import { useQuery } from "@tanstack/react-query"
 import { formatDistanceStrict } from "date-fns"
 import { useCallback } from "react"
-import { FiRefreshCcw } from "react-icons/fi"
+import { LuRefreshCcw } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 
@@ -47,7 +47,7 @@ export default function AdministrationClusteringScreen() {
           />
           <Spacer />
           <Button onClick={() => refetch()}>
-            <FiRefreshCcw />
+            <LuRefreshCcw />
             {t("common.refresh")}
           </Button>
         </Stack>

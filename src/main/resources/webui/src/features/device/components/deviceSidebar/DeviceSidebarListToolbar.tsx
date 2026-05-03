@@ -1,4 +1,4 @@
-import { FiRefreshCcw } from "react-icons/fi"
+import { LuRefreshCcw } from "react-icons/lu"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Button, IconButton, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
@@ -28,7 +28,7 @@ export default function DeviceSidebarListToolbar() {
         )}
         <Tooltip content={t("device.refreshList")}>
           <IconButton aria-label={t("device.refreshList")} size="sm" onClick={refresh}>
-            <FiRefreshCcw />
+            <LuRefreshCcw />
           </IconButton>
         </Tooltip>
       </Stack>

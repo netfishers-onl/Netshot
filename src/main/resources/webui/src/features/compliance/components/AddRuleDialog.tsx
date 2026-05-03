@@ -11,7 +11,7 @@ import { Button, Dialog, Heading, Portal, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
-import { FiAlignLeft } from "react-icons/fi"
+import { LuAlignLeft } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
 import { QUERIES, RULE_SCRIPT_TEMPLATE } from "../constants"
@@ -140,7 +140,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
 
   const typeOptions = [
     {
-      icon: <FiAlignLeft />,
+      icon: <LuAlignLeft />,
       type: RuleType.Text,
       label: t("common.text"),
       description: t("policy.rule.createWithStringAndRegexp"),

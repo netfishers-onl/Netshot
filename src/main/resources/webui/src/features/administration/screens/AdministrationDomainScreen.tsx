@@ -8,7 +8,7 @@ import { Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@cha
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { FiEdit, FiPlus, FiTrash } from "react-icons/fi"
+import { LuSquarePen, LuPlus, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddDomainButton from "../components/AddDomainButton"
 import EditDomainButton from "../components/EditDomainButton"
@@ -70,7 +70,7 @@ export default function AdministrationDomainScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <FiEdit />
+                      <LuSquarePen />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -85,7 +85,7 @@ export default function AdministrationDomainScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <FiTrash />
+                      <LuTrash />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -122,7 +122,7 @@ export default function AdministrationDomainScreen() {
           <AddDomainButton
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
-                <FiPlus />
+                <LuPlus />
                 {t("common.create")}
               </Button>
             )}
@@ -147,7 +147,7 @@ export default function AdministrationDomainScreen() {
                 <AddDomainButton
                   renderItem={(open) => (
                     <Button variant="outline" onClick={open}>
-                      <FiPlus />
+                      <LuPlus />
                       {t("common.create")}
                     </Button>
                   )}

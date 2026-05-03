@@ -1,5 +1,5 @@
 import { Protected } from "@/components"
-import { FiCrosshair, FiPlus } from "react-icons/fi"
+import { LuCrosshair, LuPlus } from "react-icons/lu"
 import { Level } from "@/types"
 import { Button, Menu, Portal, Separator, Stack } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
@@ -37,7 +37,7 @@ export default function DeviceSidebar() {
           <Menu.Root positioning={{ sameWidth: true }}>
             <Menu.Trigger asChild>
               <Button>
-                <FiPlus />
+                <LuPlus />
                 {t("device.add")}
               </Button>
             </Menu.Trigger>
@@ -47,7 +47,7 @@ export default function DeviceSidebar() {
                   <DeviceCreateButton
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="add-simple-device">
-                        <FiPlus />
+                        <LuPlus />
                         {t("device.addSimple")}
                       </Menu.Item>
                     )}
@@ -55,7 +55,7 @@ export default function DeviceSidebar() {
                   <DeviceScanSubnetButton
                     renderItem={(open) => (
                       <Menu.Item onSelect={open} value="scan-subnets-for-device">
-                        <FiCrosshair />
+                        <LuCrosshair />
                         {t("task.scanSubnets")}
                       </Menu.Item>
                     )}

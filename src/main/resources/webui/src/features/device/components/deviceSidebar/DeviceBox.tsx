@@ -3,7 +3,7 @@ import { forwardRef, MouseEvent, Ref, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useMatch, useNavigate, useParams } from "react-router"
 
-import { FiAlertTriangle, FiCheckCircle } from "react-icons/fi"
+import { LuTriangleAlert, LuCircleCheck } from "react-icons/lu"
 import { DeviceSoftwareLevel, DeviceStatus, SimpleDevice } from "@/types"
 import { getSoftwareLevelColor } from "@/utils"
 
@@ -152,11 +152,11 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
             <HoverCard.Trigger asChild>
               {compliant ? (
                 <Tag.Root gap="1" colorPalette="green">
-                  <FiCheckCircle size={14} />
+                  <LuCircleCheck size={14} />
                 </Tag.Root>
               ) : (
                 <Tag.Root gap="1" colorPalette="red">
-                  <FiAlertTriangle size={14} />
+                  <LuTriangleAlert size={14} />
                 </Tag.Root>
               )}
             </HoverCard.Trigger>

@@ -7,7 +7,7 @@ import { Button, Checkbox, Heading, Skeleton, Spacer, Stack, Text } from "@chakr
 import { useQuery } from "@tanstack/react-query"
 import { CellContext, createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { FiRefreshCcw } from "react-icons/fi"
+import { LuRefreshCcw } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import ReloadDeviceDriversButton from "../components/ReloadDeviceDriversButton"
 import { QUERIES } from "../constants"
@@ -124,7 +124,7 @@ export default function AdministrationDriverScreen() {
           <ReloadDeviceDriversButton
             renderItem={(open) => (
               <Button onClick={open}>
-                <FiRefreshCcw />
+                <LuRefreshCcw />
                 {t("admin.driver.reload")}
               </Button>
             )}

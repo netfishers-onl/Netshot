@@ -7,7 +7,7 @@ import {
   QueryBuilderValue,
   Switch,
 } from "@/components"
-import { FiCode, FiServer } from "react-icons/fi"
+import { LuCode, LuServer } from "react-icons/lu"
 import { QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
@@ -167,14 +167,14 @@ export default function AddGroupDialog() {
                     <BoxWithIconButton
                       title={t("group.type.staticLabel")}
                       description={t("group.type.createStatic")}
-                      icon={<FiServer />}
+                      icon={<LuServer />}
                       isActive={groupType === GroupType.Static}
                       onClick={() => setGroupType(GroupType.Static)}
                     />
                     <BoxWithIconButton
                       title={t("group.type.dynamicLabel")}
                       description={t("group.type.createDynamic")}
-                      icon={<FiCode />}
+                      icon={<LuCode />}
                       isActive={groupType === GroupType.Dynamic}
                       onClick={() => setGroupType(GroupType.Dynamic)}
                     />

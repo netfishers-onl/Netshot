@@ -8,7 +8,7 @@ import { Badge, Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } fro
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { FiEdit, FiHash, FiPlus, FiTrash } from "react-icons/fi"
+import { LuSquarePen, LuHash, LuPlus, LuTrash, LuAsterisk } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddDeviceCredentialButton from "../components/AddDeviceCredentialButton"
 import EditDeviceCredentialButton from "../components/EditDeviceCredentialButton"
@@ -59,7 +59,7 @@ export default function AdministrationDeviceCredentialScreen() {
           if (!value) {
             return (
               <Badge size="lg" variant="outline" marginTop="-3px" marginBottom="-3px">
-                <FiHash />
+                <LuAsterisk />
                 {t("common.any")}
               </Badge>
             )
@@ -87,7 +87,7 @@ export default function AdministrationDeviceCredentialScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <FiEdit />
+                      <LuSquarePen />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -102,7 +102,7 @@ export default function AdministrationDeviceCredentialScreen() {
                       colorPalette="green"
                       onClick={open}
                     >
-                      <FiTrash />
+                      <LuTrash />
                     </IconButton>
                   </Tooltip>
                 )}
@@ -139,7 +139,7 @@ export default function AdministrationDeviceCredentialScreen() {
           <AddDeviceCredentialButton
             renderItem={(open) => (
               <Button variant="primary" onClick={open}>
-                <FiPlus />
+                <LuPlus />
                 {t("common.create")}
               </Button>
             )}
@@ -164,7 +164,7 @@ export default function AdministrationDeviceCredentialScreen() {
                 <AddDeviceCredentialButton
                   renderItem={(open) => (
                     <Button variant="outline" onClick={open}>
-                      <FiPlus />
+                      <LuPlus />
                       {t("common.create")}
                     </Button>
                   )}

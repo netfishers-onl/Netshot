@@ -1,5 +1,5 @@
 import { DeviceTypeSelect, FormControl, TreeGroupSelector } from "@/components"
-import { LuHash, LuType } from "react-icons/lu"
+import { LuRegex, LuType } from "react-icons/lu"
 import { Select } from "@/components/Select"
 import { useDeviceLevelOptions, useDeviceTypeOptions } from "@/hooks"
 import { SoftwareRule } from "@/types"
@@ -83,13 +83,13 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         placeholder={t("common.eG", { example: "Cisco ASR9000 Series" })}
         suffix={
           <IconButton
-            aria-label={t(familyRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
-            title={t(familyRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
+            aria-label={t(familyRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
+            title={t(familyRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
             variant="ghost"
             colorPalette="green"
             onClick={toggleFamilyRegExp}
           >
-            {familyRegExp ? <LuType /> : <LuHash />}
+            {familyRegExp ? <LuRegex /> : <LuType />}
           </IconButton>
         }
       />
@@ -100,13 +100,13 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         placeholder={t("common.eG", { example: "FK-X0012" })}
         suffix={
           <IconButton
-            aria-label={t(partNumberRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
-            title={t(partNumberRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
+            aria-label={t(partNumberRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
+            title={t(partNumberRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
             variant="ghost"
             colorPalette="green"
             onClick={togglePartNumberRegExp}
           >
-            {partNumberRegExp ? <LuType /> : <LuHash />}
+            {partNumberRegExp ? <LuRegex /> : <LuType />}
           </IconButton>
         }
       />
@@ -117,13 +117,13 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         placeholder={t("common.eG", { example: "0.10" })}
         suffix={
           <IconButton
-            aria-label={t(versionRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
-            title={t(versionRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
+            aria-label={t(versionRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
+            title={t(versionRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
             variant="ghost"
             colorPalette="green"
             onClick={toggleVersionRegExp}
           >
-            {versionRegExp ? <LuType /> : <LuHash />}
+            {versionRegExp ? <LuRegex /> : <LuType />}
           </IconButton>
         }
       />

@@ -25,14 +25,14 @@ export default function Sidebar() {
                 <>
                   <Stack gap="0" py="4" px="5">
                     <SidebarLink
-                      to="./hardware"
-                      label={t("common.hardware")}
-                      description={t("compliance.hardware.supportStatus")}
-                    />
-                    <SidebarLink
                       to="./software"
                       label={t("common.software")}
                       description={t("compliance.software.versionLabel")}
+                    />
+                    <SidebarLink
+                      to="./hardware"
+                      label={t("common.hardware")}
+                      description={t("compliance.hardware.supportStatus")}
                     />
                   </Stack>
                   <Separator />

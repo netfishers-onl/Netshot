@@ -4,11 +4,11 @@ import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
 import { HardwareRule, Level } from "@/types"
 import { formatDate, search } from "@/utils"
-import { Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
+import { Badge, Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { LuSquarePen, LuPlus, LuTrash } from "react-icons/lu"
+import { LuSquarePen, LuPlus, LuTrash, LuAsterisk } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddHardwareRuleButton from "../components/AddHardwareRuleButton"
 import EditHardwareRuleButton from "../components/EditHardwareRuleButton"
@@ -36,22 +36,66 @@ export default function ComplianceHardwareRuleScreen() {
   const columns = useMemo(
     () => [
       columnHelper.accessor("targetGroup", {
-        cell: (info) => <Text>{info.getValue()?.name || t("common.any")}</Text>,
+        cell: (info) => {
+          const value = info.getValue()
+          if (!value) {
+            return (
+              <Badge size="lg" variant="outline" marginTop="-3px" marginBottom="-3px">
+                <LuAsterisk />
+                {t("common.any")}
+              </Badge>
+            )
+          }
+          return <Text>{value.name}</Text>
+        },
         header: t("group.label"),
         size: 20000,
       }),
-      columnHelper.accessor("type", {
-        cell: (info) => <Text>{info.getValue() || t("common.any")}</Text>,
+      columnHelper.accessor("deviceType", {
+        cell: (info) => {
+          const value = info.getValue()
+          if (!value) {
+            return (
+              <Badge size="lg" variant="outline" marginTop="-3px" marginBottom="-3px">
+                <LuAsterisk />
+                {t("common.any")}
+              </Badge>
+            )
+          }
+          return <Text>{value}</Text>
+        },
         header: t("device.type"),
         size: 20000,
       }),
       columnHelper.accessor("family", {
-        cell: (info) => <Text>{info.getValue()}</Text>,
+        cell: (info) => {
+          const value = info.getValue()
+          if (!value) {
+            return (
+              <Badge size="lg" variant="outline" marginTop="-3px" marginBottom="-3px">
+                <LuAsterisk />
+                {t("common.any")}
+              </Badge>
+            )
+          }
+          return <Text>{value}</Text>
+        },
         header: t("device.family"),
         size: 20000,
       }),
       columnHelper.accessor("partNumber", {
-        cell: (info) => <Text>{info.getValue()}</Text>,
+        cell: (info) => {
+          const value = info.getValue()
+          if (!value) {
+            return (
+              <Badge size="lg" variant="outline" marginTop="-3px" marginBottom="-3px">
+                <LuAsterisk />
+                {t("common.any")}
+              </Badge>
+            )
+          }
+          return <Text>{value}</Text>
+        },
         header: t("device.module.partNumber"),
         size: 20000,
       }),

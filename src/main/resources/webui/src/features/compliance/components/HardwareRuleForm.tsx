@@ -1,5 +1,5 @@
 import { DeviceTypeSelect, FormControl, TreeGroupSelector } from "@/components"
-import { LuHash, LuType } from "react-icons/lu"
+import { LuRegex, LuType } from "react-icons/lu"
 import { FormControlType } from "@/components/FormControl"
 import { useDeviceTypeOptions } from "@/hooks"
 import { HardwareRule } from "@/types"
@@ -68,41 +68,49 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
 
   return (
     <Stack gap="5">
-      <TreeGroupSelector value={group ? [group] : []} onChange={onGroupSelect} withAny />
-      <DeviceTypeSelect control={form.control} name="driver" placeholder={t("common.any")} isClearable />
+      <TreeGroupSelector
+        value={group ? [group] : []}
+        onChange={onGroupSelect}
+        withAny
+      />
+      <DeviceTypeSelect
+        control={form.control}
+        name="driver"
+        placeholder={t("common.any")}
+        label={t("device.type")}
+        isClearable
+      />
       <FormControl
-        required
         control={form.control}
         name="family"
         label={t("device.family")}
         placeholder={t("common.eG", { example: "Cisco ASR9000 Series" })}
         suffix={
           <IconButton
-            aria-label={t(familyRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
-            title={t(familyRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
+            aria-label={t(familyRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
+            title={t(familyRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
             variant="ghost"
-            colorPalette="green"
+            size="xs"
             onClick={toggleFamilyRegExp}
           >
-            {familyRegExp ? <LuType /> : <LuHash />}
+            {familyRegExp ? <LuRegex /> : <LuType />}
           </IconButton>
         }
       />
       <FormControl
-        required
         control={form.control}
         name="partNumber"
         label={t("device.module.partNumber")}
         placeholder={t("common.eG", { example: "FK-X0012" })}
         suffix={
           <IconButton
-            aria-label={t(partNumberRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
-            title={t(partNumberRegExp ? "policy.rule.switchToText" : "policy.rule.switchToRegexp")}
+            aria-label={t(partNumberRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
+            title={t(partNumberRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
             variant="ghost"
-            colorPalette="green"
+            size="xs"
             onClick={togglePartNumberRegExp}
           >
-            {partNumberRegExp ? <LuType /> : <LuHash />}
+            {partNumberRegExp ? <LuRegex /> : <LuType />}
           </IconButton>
         }
       />
@@ -111,14 +119,12 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
         name="endOfLife"
         label={t("compliance.hardware.endOfLife")}
         type={FormControlType.Date}
-        required
       />
       <FormControl
         control={form.control}
         name="endOfSale"
         label={t("compliance.hardware.endOfSale")}
         type={FormControlType.Date}
-        required
       />
     </Stack>
   )

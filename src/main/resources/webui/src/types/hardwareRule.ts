@@ -2,13 +2,13 @@ import { Group } from "./group";
 
 export type HardwareRule = {
   id: number;
-  targetGroup: Group;
-  driver: string;
-  family: string;
+  targetGroup?: Group;
+  deviceType?: string;
+  driver?: string;
+  family?: string;
   familyRegExp: boolean;
-  partNumber: string;
+  partNumber?: string;
   partNumberRegExp: boolean;
-  endOfSale: number;
-  endOfLife: number;
-  deviceType: string;
+  endOfSale?: number;
+  endOfLife?: number;
 };

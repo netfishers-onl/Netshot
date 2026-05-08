@@ -1,6 +1,7 @@
 import { alertSlotRecipe } from "./alert"
 import { checkboxSlotRecipe } from "./checkbox"
 import { comboboxSlotRecipe } from "./combobox"
+import { datePickerSlotRecipe } from "./date-picker"
 import { dialogSlotRecipe } from "./dialog"
 import { fieldSlotRecipe } from "./field"
 import { menuSlotRecipe } from "./menu"
@@ -16,6 +17,7 @@ import { tooltipSlotRecipe } from "./tooltip"
 export default {
   alert: alertSlotRecipe,
   checkbox: checkboxSlotRecipe,
+  datePicker: datePickerSlotRecipe,
   dialog: dialogSlotRecipe,
   menu: menuSlotRecipe,
   progress: progressSlotRecipe,

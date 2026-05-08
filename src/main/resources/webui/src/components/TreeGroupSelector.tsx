@@ -141,7 +141,7 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
 
   const open = () => {
     const dialogRef = dialog.open({
-      title: t("common.selectGroups"),
+      title: isMulti ? t("common.selectGroups") : t("common.selectGroup"),
       description: <SelectGroupDialog items={items} />,
       form,
       onSubmit() {
@@ -195,7 +195,7 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
     <Stack gap="1">
       <Field.Root required={required} readOnly={readOnly} disabled={isDisabled}>
         <Field.Label>
-          {label ? label : t("common.targetGroups")}
+          {label ? label : isMulti ? t("common.targetGroups") : t("common.targetGroup")}
           <Field.RequiredIndicator />
         </Field.Label>
         <Box
@@ -229,7 +229,7 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
             </>
           ) : (
             <>
-              {groupField?.length > 0 ? render : <Text color="grey.400">{t("common.selectGroups")}</Text>}
+              {groupField?.length > 0 ? render : <Text color="grey.400">{isMulti ? t("common.selectGroups") : t("common.selectGroup")}</Text>}
             </>
           )}
         </Box>

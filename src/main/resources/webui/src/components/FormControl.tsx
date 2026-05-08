@@ -1,18 +1,22 @@
 import { Tooltip } from "@/components/ui/tooltip"
 import {
+  DatePicker,
+  type DatePickerValueChangeDetails,
   Field,
   IconButton,
   Input,
   InputGroup,
   type InputProps,
+  Portal,
   SystemStyleObject,
   Textarea,
 } from "@chakra-ui/react"
-import { forwardRef, ReactElement, ReactNode, RefObject, useCallback, useEffect, useRef, useState } from "react"
+import { CalendarDate, type DateValue } from "@internationalized/date"
+import { forwardRef, ReactElement, ReactNode, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useController, UseControllerProps } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
-import { LuEye, LuEyeOff, LuLock, LuLockOpen } from "react-icons/lu"
+import { LuCalendar, LuEye, LuEyeOff, LuLock, LuLockOpen, LuX } from "react-icons/lu"
 
 export const PASSWORD_UNCHANGED = null
 
@@ -38,6 +42,7 @@ export type FormControlProps<T> = {
   suffix?: ReactNode
   prefix?: ReactNode
   allowUnchanged?: boolean
+  clearable?: boolean
 } & Omit<InputProps, "recipe"> &
   Omit<SystemStyleObject, "recipe"> &
   UseControllerProps<T>
@@ -72,10 +77,11 @@ function FormControl<T>(
     autoComplete,
     variant,
     allowUnchanged = false,
+    clearable = false,
     ...other
   } = props
 
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [showPassword, setShowPassword] = useState(false)
   const [isUnchanged, setIsUnchanged] = useState(allowUnchanged)
   const passwordInputRef = useRef<HTMLInputElement>(null)
@@ -148,6 +154,33 @@ function FormControl<T>(
     field.onChange(PASSWORD_UNCHANGED)
   }, [field])
 
+  const dateValue = useMemo<DateValue[]>(() => {
+    const v = field.value as string
+    if (!v) return []
+    const parts = v.split("-")
+    if (parts.length < 3) return []
+    const year = parseInt(parts[0])
+    const month = parseInt(parts[1])
+    const day = parseInt(parts[2])
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return []
+    return [new CalendarDate(year, month, day)]
+  }, [field.value])
+
+  const handleDateChange = useCallback(
+    ({ value }: DatePickerValueChangeDetails) => {
+      if (value.length === 0) {
+        field.onChange("")
+      } else {
+        const d = value[0] as CalendarDate
+        field.onChange(
+          `${d.year}-${String(d.month).padStart(2, "0")}-${String(d.day).padStart(2, "0")}`
+        )
+      }
+      field.onBlur()
+    },
+    [field]
+  )
+
   return (
     <Field.Root required={required} disabled={disabled} {...other}>
       {label && (
@@ -159,7 +192,6 @@ function FormControl<T>(
       {[
         FormControlType.Text,
         FormControlType.Number,
-        FormControlType.Date,
         FormControlType.DateTime,
         FormControlType.Time,
         FormControlType.Url,
@@ -172,6 +204,51 @@ function FormControl<T>(
             {...inputProps}
           />
         </InputGroup>
+      )}
+      {type === FormControlType.Date && (
+        <DatePicker.Root
+          value={dateValue}
+          onValueChange={handleDateChange}
+          locale={i18n.language}
+          disabled={disabled}
+          closeOnSelect
+        >
+          <DatePicker.Control>
+            <DatePicker.Input />
+            <DatePicker.IndicatorGroup>
+              {clearable && dateValue.length > 0 && (
+                <DatePicker.ClearTrigger asChild>
+                  <IconButton variant="ghost" size="xs" aria-label={t("common.clear")}>
+                    <LuX />
+                  </IconButton>
+                </DatePicker.ClearTrigger>
+              )}
+              <DatePicker.Trigger asChild>
+                <IconButton variant="ghost" aria-label={t("common.openCalendar")}>
+                  <LuCalendar />
+                </IconButton>
+              </DatePicker.Trigger>
+            </DatePicker.IndicatorGroup>
+          </DatePicker.Control>
+          <Portal>
+            <DatePicker.Positioner>
+              <DatePicker.Content>
+                <DatePicker.View view="day">
+                  <DatePicker.Header />
+                  <DatePicker.DayTable />
+                </DatePicker.View>
+                <DatePicker.View view="month">
+                  <DatePicker.Header />
+                  <DatePicker.MonthTable />
+                </DatePicker.View>
+                <DatePicker.View view="year">
+                  <DatePicker.Header />
+                  <DatePicker.YearTable />
+                </DatePicker.View>
+              </DatePicker.Content>
+            </DatePicker.Positioner>
+          </Portal>
+        </DatePicker.Root>
       )}
       {type === FormControlType.Password && (
         <InputGroup

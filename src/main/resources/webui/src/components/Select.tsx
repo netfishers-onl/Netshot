@@ -188,7 +188,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
           <ChakraSelect.IndicatorGroup>
             {isClearable && value?.length > 0 && (
               <ChakraSelect.ClearTrigger asChild>
-                <IconButton size="sm" variant="ghost">
+                <IconButton size="xs" variant="ghost">
                   <LuX />
                 </IconButton>
               </ChakraSelect.ClearTrigger>

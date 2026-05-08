@@ -218,13 +218,13 @@ function FormControl<T>(
             <DatePicker.IndicatorGroup>
               {clearable && dateValue.length > 0 && (
                 <DatePicker.ClearTrigger asChild>
-                  <IconButton variant="ghost" size="xs" aria-label={t("common.clear")}>
+                  <IconButton size="xs" variant="ghost" aria-label={t("common.clear")}>
                     <LuX />
                   </IconButton>
                 </DatePicker.ClearTrigger>
               )}
               <DatePicker.Trigger asChild>
-                <IconButton variant="ghost" aria-label={t("common.openCalendar")}>
+                <IconButton size="xs" variant="ghost" aria-label={t("common.openCalendar")}>
                   <LuCalendar />
                 </IconButton>
               </DatePicker.Trigger>
@@ -259,8 +259,9 @@ function FormControl<T>(
                 <Tooltip content={t("auth.passwordUnchanged")} positioning={{ placement: "top" }}>
                   <span>
                     <IconButton
+                      size="xs"
                       variant="ghost"
-                      bg="transparent!important"
+                      rounded="l1"
                       aria-label={t("auth.passwordUnchanged")}
                       onClick={lockPassword}
                     >
@@ -275,8 +276,8 @@ function FormControl<T>(
               >
                 <span>
                   <IconButton
+                    size="xs"
                     variant="ghost"
-                    bg="transparent!important"
                     aria-label={isUnchanged ? t("auth.passwordUnchanged") : showPassword ? t("common.hidePassword") : t("common.showPassword")}
                     onClick={togglePassword}
                   >

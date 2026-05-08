@@ -5,10 +5,16 @@ export const datePickerSlotRecipe = defineSlotRecipe({
   slots: datePickerAnatomy.keys(),
   base: {
     trigger: {
-      borderRadius: "xl",
+      w: "8",
+      h: "8",
+      borderRadius: "l1",
       transition: "all .2s ease",
       cursor: "pointer",
-      minWidth: "auto",
+    },
+    clearTrigger: {
+      w: "8",
+      h: "8",
+      borderRadius: "l1",
     },
     content: {
       borderRadius: "xl",

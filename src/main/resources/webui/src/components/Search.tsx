@@ -56,8 +56,9 @@ export default function Search(props: SearchProps) {
             {children}
             {hasClear && (
               <IconButton
+                size="xs"
                 variant="ghost"
-                colorPalette="gray"
+                rounded="l1"
                 aria-label="clear"
                 onClick={clearValue}
               >

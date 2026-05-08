@@ -85,8 +85,9 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
           <IconButton
             aria-label={t(familyRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
             title={t(familyRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
+            size="xs"
             variant="ghost"
-            colorPalette="green"
+            rounded="l1"
             onClick={toggleFamilyRegExp}
           >
             {familyRegExp ? <LuRegex /> : <LuType />}
@@ -102,8 +103,9 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
           <IconButton
             aria-label={t(partNumberRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
             title={t(partNumberRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
+            size="xs"
             variant="ghost"
-            colorPalette="green"
+            rounded="l1"
             onClick={togglePartNumberRegExp}
           >
             {partNumberRegExp ? <LuRegex /> : <LuType />}
@@ -119,8 +121,9 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
           <IconButton
             aria-label={t(versionRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
             title={t(versionRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
+            size="xs"
             variant="ghost"
-            colorPalette="green"
+            rounded="l1"
             onClick={toggleVersionRegExp}
           >
             {versionRegExp ? <LuRegex /> : <LuType />}

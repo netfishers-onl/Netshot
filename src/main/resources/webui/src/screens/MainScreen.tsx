@@ -3,7 +3,7 @@ import { MeResult } from "@/api/user"
 import { Navbar } from "@/components"
 import { QUERIES, REDIRECT_SEARCH_PARAM } from "@/constants"
 import { useAuth } from "@/contexts"
-import { useAlertDialog } from "@/dialog"
+import { useAlertDialog, useDialogStore } from "@/dialog"
 import { Stack } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useRef } from "react"
@@ -20,6 +20,7 @@ enum AuthState {
 export function MainScreen() {
   const { t } = useTranslation()
   const dialog = useAlertDialog()
+  const removeAllDialogs = useDialogStore((state) => state.removeAll)
   const { user } = useAuth()
   const navigate = useNavigate()
   // Whether there has already been a successfully authentication
@@ -46,6 +47,7 @@ export function MainScreen() {
 
   const onForbidden = () => {
     if (authState.current === AuthState.AUTHENTICATED) {
+      removeAllDialogs()
       dialog.open({
         title: t("auth.sessionExpired"),
         description: t("auth.pleaseReAuthenticate"),

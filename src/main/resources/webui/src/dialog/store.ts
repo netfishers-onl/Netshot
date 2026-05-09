@@ -10,6 +10,7 @@ export type DialogStoreState = {
     props: ComponentProps<C>
   ): DialogConfig<BaseDialogProps>
   remove(id: string): void
+  removeAll(): void
   update<P extends BaseDialogProps, C extends FunctionComponent<P>>(
     id: string,
     props: ComponentProps<C>
@@ -46,6 +47,10 @@ export const useDialogStore = create<DialogStoreState>((set, get) => ({
     set((state) => ({
       configs: state.configs.filter((config) => config.id !== id),
     }))
+  },
+
+  removeAll: () => {
+    set({ configs: [] })
   },
 
   open: <P extends BaseDialogProps, C extends FunctionComponent<P>>(

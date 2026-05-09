@@ -1,8 +1,8 @@
 /**
- * Formate une valeur en byte
- * @param value valeur à formatter
- * @param units unité de formattage
- * @param digits nombre de décimal
+ * Format a byte value
+ * @param value value to format
+ * @param units formatting unit
+ * @param digits number of decimal places
  */
 export function convertByte(
 	value: number,

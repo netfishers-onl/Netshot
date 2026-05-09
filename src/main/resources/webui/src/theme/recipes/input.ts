@@ -1,6 +1,6 @@
 import { defineRecipe } from "@chakra-ui/react"
 /**
- * Permet de surcharger le style du composant "Input"
+ * Allows overriding the style of the "Input" component
  */
 export const inputRecipe = defineRecipe({
   variants: {

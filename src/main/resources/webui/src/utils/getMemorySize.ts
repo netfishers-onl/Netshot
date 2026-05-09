@@ -1,5 +1,5 @@
 /**
- * Convertie la donnée en gigabyte avec deux flottants
+ * Convert data to gigabytes with two decimal places
  */
 export function getMemorySize(
 	size: number,

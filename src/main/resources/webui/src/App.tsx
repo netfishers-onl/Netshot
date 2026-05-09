@@ -81,7 +81,7 @@ function App() {
                   <Routes>
                     <Route path="signin" element={<SigninScreen />} />
                     <Route path="app" element={<MainScreen />}>
-                      <Route index element={<Navigate to="reports" />} />
+                      <Route index element={<Navigate to="devices" />} />
                       <Route path="reports" element={<ReportScreen />}>
                         <Route index element={<Navigate to="configuration-change" />} />
                         <Route

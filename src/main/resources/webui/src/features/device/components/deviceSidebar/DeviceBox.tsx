@@ -3,11 +3,10 @@ import { forwardRef, MouseEvent, Ref, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useMatch, useNavigate, useParams } from "react-router"
 
-import { LuTriangleAlert, LuCircleCheck } from "react-icons/lu"
+import { LuTriangleAlert, LuCircleCheck, LuTrophy } from "react-icons/lu"
 import { DeviceSoftwareLevel, DeviceStatus, SimpleDevice } from "@/types"
-import { getSoftwareLevelColor } from "@/utils"
 
-import { useDeviceLevelOptions } from "@/hooks"
+import { useSoftwareLevels } from "@/hooks"
 import { useShallow } from "zustand/react/shallow"
 import { useDeviceSidebarStore } from "../../stores"
 
@@ -30,7 +29,7 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
 
   const navigate = useNavigate()
   const params = useParams<{ id: string }>()
-  const deviceLevelOptions = useDeviceLevelOptions()
+  const { getInfo: getSoftwareLevelInfo } = useSoftwareLevels()
   const sectionMatch = useMatch("/app/devices/:id/:section")
   const currentSection = sectionMatch?.params.section ?? "general"
   const isSelected = deviceSidebarStore.isSelected(device?.id) || +params?.id === device?.id
@@ -80,14 +79,10 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
     }
   }
 
-  const level = useMemo(() => deviceLevelOptions.getByValue(device?.softwareLevel), [device])
+  const levelInfo = useMemo(() => getSoftwareLevelInfo(device?.softwareLevel), [device])
 
   const compliant = useMemo<boolean>(() => {
-    if (
-      [DeviceSoftwareLevel.NON_COMPLIANT, DeviceSoftwareLevel.UNKNOWN].includes(
-        device.softwareLevel
-      )
-    ) {
+    if (!levelInfo.isCompliant) {
       return false
     }
 
@@ -168,8 +163,9 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
                 <Stack gap="2">
                   <Stack direction="row" alignItems="center" justifyContent="space-between">
                     <Text>{t("compliance.software.label")}</Text>
-                    <Tag.Root colorPalette={getSoftwareLevelColor(level?.value)}>
-                      {level?.label}
+                    <Tag.Root colorPalette={levelInfo.color}>
+                      {levelInfo.isCompliant && <LuTrophy size={12} />}
+                      {t(levelInfo.label)}
                     </Tag.Root>
                   </Stack>
                   <Stack direction="row" alignItems="center" justifyContent="space-between">

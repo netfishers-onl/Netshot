@@ -5,14 +5,14 @@ import { Tooltip } from "@/components/ui/tooltip"
 import { MUTATIONS } from "@/constants"
 import { useAuth } from "@/contexts"
 import { useConfirmDialogWithMutation } from "@/dialog"
-import { usePagination, useToast } from "@/hooks"
-import { Level, SoftwareRule } from "@/types"
-import { getNextItemInArray, getSoftwareLevelColor, search } from "@/utils"
+import { usePagination, useSoftwareLevels, useToast } from "@/hooks"
+import { DeviceSoftwareLevel, Level, SoftwareRule } from "@/types"
+import { getNextItemInArray, search } from "@/utils"
 import { Badge, Button, Heading, IconButton, Skeleton, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useEffect, useState } from "react"
-import { LuSquarePen, LuPlus, LuTrash, LuAsterisk } from "react-icons/lu"
+import { LuSquarePen, LuPlus, LuTrash, LuAsterisk, LuTrophy } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddSoftwareRuleButton from "../components/AddSoftwareRuleButton"
 import EditSoftwareRuleButton from "../components/EditSoftwareRuleButton"
@@ -30,6 +30,7 @@ export default function ComplianceSoftwareRuleScreen() {
   const dialog = useConfirmDialogWithMutation()
   const toast = useToast()
   const queryClient = useQueryClient()
+  const { getColor } = useSoftwareLevels()
 
   const {
     data: rules,
@@ -136,7 +137,12 @@ export default function ComplianceSoftwareRuleScreen() {
       cell: (info) => {
         const level = info.getValue()
 
-        return <Tag.Root colorPalette={getSoftwareLevelColor(level)}>{level}</Tag.Root>
+        return (
+          <Badge colorPalette={getColor(level)}>
+            <LuTrophy size={12} />
+            {level}
+          </Badge>
+        )
       },
       header: t("common.level"),
       size: 10000,

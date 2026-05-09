@@ -15,7 +15,8 @@ import {
   useListCollection,
 } from "@chakra-ui/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { ReactElement, useEffect, useMemo, useRef } from "react"
+import { ReactElement, ReactNode, useEffect, useMemo, useRef } from "react"
+
 import { flushSync } from "react-dom"
 import { FieldPath, FieldValues, useController, UseControllerProps } from "react-hook-form"
 import { LuX } from "react-icons/lu"
@@ -36,6 +37,7 @@ export type SelectProps<
   itemToString?(item: Option<T>): string
   itemToValue?(item: Option<T>): string
   onSelectItem?(item: T | T[], options: Option<T>[]): void
+  renderIcon?(item: Option<T>): ReactNode
 } & Omit<SelectRootProps, "collection" | "name" | "value" | "onValueChange"> &
   UseControllerProps<TFieldValues, TName>
 
@@ -60,6 +62,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
     itemToString,
     itemToValue,
     onSelectItem,
+    renderIcon,
     ...selectRootProps
   } = props
 
@@ -150,6 +153,12 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
     return field.value !== null && field.value !== undefined ? [String(field.value)] : [""]
   }, [field, isLoading, multiple])
 
+  const selectedIcon = useMemo((): ReactNode => {
+    if (!renderIcon || multiple || !value?.[0] || value[0] === "") return undefined
+    const selectedItem = optionsMap.get(value[0])
+    return selectedItem ? renderIcon(selectedItem) : undefined
+  }, [value, optionsMap, multiple, renderIcon])
+
   return (
     <Field.Root
       required={required}
@@ -183,7 +192,10 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
         <ChakraSelect.HiddenSelect />
         <ChakraSelect.Control>
           <ChakraSelect.Trigger>
-            <ChakraSelect.ValueText placeholder={placeholder} />
+            <HStack flex="1" gap="2" overflow="hidden">
+              {selectedIcon}
+              <ChakraSelect.ValueText placeholder={placeholder} />
+            </HStack>
           </ChakraSelect.Trigger>
           <ChakraSelect.IndicatorGroup>
             {isClearable && value?.length > 0 && (
@@ -230,6 +242,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
                         }}
                         alignItems="center"
                       >
+                        {renderIcon?.(item)}
                         <VStack gap="0" align="start" overflow="hidden" flex="1">
                           <ChakraSelect.ItemText
                             whiteSpace="nowrap"

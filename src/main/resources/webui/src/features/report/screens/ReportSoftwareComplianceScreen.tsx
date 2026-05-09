@@ -5,7 +5,8 @@ import { QUERIES as GLOBAL_QUERIES } from "@/constants"
 import { useAlertDialog } from "@/dialog"
 import { usePagination } from "@/hooks"
 import { DeviceSoftwareLevel, Group, GroupSoftwareComplianceStat } from "@/types"
-import { createFoldersFromGroups, getSoftwareLevelColor, search } from "@/utils"
+import { createFoldersFromGroups, search } from "@/utils"
+import { useSoftwareLevels } from "@/hooks"
 import {
   Box,
   Button,
@@ -38,6 +39,7 @@ type LevelTagProps = {
 function LevelTag(props: LevelTagProps) {
   const { level, count } = props
   const { t } = useTranslation()
+  const { getColor } = useSoftwareLevels()
 
   const label = useMemo(() => {
     if (level === DeviceSoftwareLevel.GOLD) {
@@ -54,7 +56,7 @@ function LevelTag(props: LevelTagProps) {
   }, [level])
 
   const bg = useMemo(() => {
-    return getSoftwareLevelColor(level)
+    return `${getColor(level)}.400`
   }, [level])
 
   return (

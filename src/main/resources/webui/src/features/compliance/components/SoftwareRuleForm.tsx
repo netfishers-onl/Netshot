@@ -1,9 +1,9 @@
 import { DeviceTypeSelect, FormControl, TreeGroupSelector } from "@/components"
-import { LuRegex, LuType } from "react-icons/lu"
+import { LuRegex, LuTrophy, LuType } from "react-icons/lu"
 import { Select } from "@/components/Select"
-import { useDeviceLevelOptions, useDeviceTypeOptions } from "@/hooks"
-import { SoftwareRule } from "@/types"
-import { IconButton, Stack } from "@chakra-ui/react"
+import { useSoftwareLevels, useDeviceTypeOptions } from "@/hooks"
+import { DeviceSoftwareLevel, SoftwareRule } from "@/types"
+import { Icon, IconButton, Stack } from "@chakra-ui/react"
 import { useCallback, useEffect } from "react"
 import { useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -17,7 +17,7 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
   const { rule } = props
   const form = useFormContext<SoftwareRuleFormValues>()
   const { t } = useTranslation()
-  const deviceLevelOptions = useDeviceLevelOptions()
+  const { options: levelOptions, getInfo: getLevelInfo } = useSoftwareLevels()
 
   const { isPending } = useDeviceTypeOptions()
 
@@ -134,7 +134,15 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         label={t("common.result")}
         control={form.control}
         name="level"
-        options={deviceLevelOptions.options}
+        options={levelOptions}
+        renderIcon={(item) => {
+          const info = getLevelInfo(item.value as DeviceSoftwareLevel)
+          return (
+            <Icon color={info?.color}>
+              <LuTrophy />
+            </Icon>
+          )
+        }}
       />
     </Stack>
   )

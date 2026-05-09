@@ -6,12 +6,13 @@ import {
   GroupDeviceBySoftwareLevel,
   GroupSoftwareComplianceStat,
 } from "@/types"
-import { getSoftwareLevelColor } from "@/utils"
+import { useSoftwareLevels } from "@/hooks"
 import { Box, Skeleton, Spacer, Stack, StackProps, Tag, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { PropsWithChildren, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { LuTrophy } from "react-icons/lu"
 import { QUERIES } from "../constants"
 
 const columnHelper = createColumnHelper<GroupDeviceBySoftwareLevel>()
@@ -25,6 +26,7 @@ function SoftwareComplianceDeviceList(props: SoftwareComplianceDeviceListProps) 
   const { level, groupId } = props
   const { t } = useTranslation()
   const dialogConfig = useDialogConfig()
+  const { getColor } = useSoftwareLevels()
 
   const { data, isPending } = useQuery({
     queryKey: [QUERIES.SOFTWARE_COMPLIANCE_DEVICES, level],
@@ -52,7 +54,13 @@ function SoftwareComplianceDeviceList(props: SoftwareComplianceDeviceListProps) 
         cell: (info) => {
           const level = info.getValue()
 
-          return <Tag.Root colorPalette={getSoftwareLevelColor(level)}>{level}</Tag.Root>
+          const isMedalLevel = [DeviceSoftwareLevel.GOLD, DeviceSoftwareLevel.SILVER, DeviceSoftwareLevel.BRONZE].includes(level)
+          return (
+            <Tag.Root colorPalette={getColor(level)}>
+              {isMedalLevel && <LuTrophy size={12} />}
+              {level}
+            </Tag.Root>
+          )
         },
         header: t("compliance.software.level"),
       }),
@@ -95,9 +103,10 @@ function SoftwareComplianteDeviceBox(props: SoftwareComplianteDeviceBoxProps) {
   const { children, level, count, isActive, ...other } = props
 
   const { t } = useTranslation()
+  const { getColor } = useSoftwareLevels()
 
   const bg = useMemo(() => {
-    return getSoftwareLevelColor(level)
+    return getColor(level)
   }, [level])
 
   return (

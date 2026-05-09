@@ -2,7 +2,7 @@ import api, { CreateOrUpdateSoftwareRule } from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { MUTATIONS } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
-import { useDeviceLevelOptions, useToast } from "@/hooks"
+import { useSoftwareLevels, useToast } from "@/hooks"
 import { PropsWithRenderItem } from "@/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
@@ -18,7 +18,7 @@ export default function AddSoftwareRuleButton(props: AddSoftwareRuleButtonProps)
   const { t } = useTranslation()
   const toast = useToast()
   const queryClient = useQueryClient()
-  const deviceLevelOptions = useDeviceLevelOptions()
+  const { getDefault: getDefaultLevel } = useSoftwareLevels()
   const dialog = useFormDialogWithMutation()
 
   const form = useForm<SoftwareRuleFormValues>({
@@ -28,7 +28,7 @@ export default function AddSoftwareRuleButton(props: AddSoftwareRuleButtonProps)
       family: "",
       familyRegExp: false,
       group: null,
-      level: deviceLevelOptions.options[0].value,
+      level: getDefaultLevel(),
       partNumber: "",
       partNumberRegExp: false,
       version: "",

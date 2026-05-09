@@ -7,7 +7,7 @@ import { useParams } from "react-router"
 
 import api from "@/api"
 import { AlertBox, DataTable, Protected } from "@/components"
-import { LuCircleCheck } from "react-icons/lu"
+import { LuCircleCheck, LuTrophy } from "react-icons/lu"
 import {
   DeviceComplianceResult,
   DeviceComplianceResultType,
@@ -15,7 +15,7 @@ import {
   Level,
 } from "@/types"
 import { useI18nUtil } from "@/i18n"
-import { getSoftwareLevelColor } from "@/utils"
+import { useSoftwareLevels } from "@/hooks"
 
 import DeviceComplianceButton from "../components/DeviceComplianceButton"
 import { QUERIES } from "../constants"
@@ -23,11 +23,21 @@ import { useDevice } from "../contexts/device"
 
 const columnHelper = createColumnHelper<DeviceComplianceResult>()
 
+function SoftwareLevelTag({ colorPalette, children }: { colorPalette?: string; children?: React.ReactNode }) {
+  return (
+    <Tag.Root as="span" colorPalette={colorPalette} ml={2} mr={2}>
+      <LuTrophy size={12} />
+      {children}
+    </Tag.Root>
+  )
+}
+
 export default function DeviceComplianceScreen() {
   const { t } = useTranslation()
   const { formatDate: formatLocalDate } = useI18nUtil()
   const { device } = useDevice()
   const params = useParams<{ id: string }>()
+  const { getColor: getLevelColor } = useSoftwareLevels()
 
   const { data = [], isPending } = useQuery({
     queryKey: [QUERIES.DEVICE_COMPLIANCE, params?.id],
@@ -81,7 +91,7 @@ export default function DeviceComplianceScreen() {
   )
 
   const softwareLevelColor = useMemo(() => {
-    return getSoftwareLevelColor(device?.softwareLevel)
+    return getLevelColor(device?.softwareLevel)
   }, [device?.softwareLevel])
 
   return (
@@ -104,7 +114,7 @@ export default function DeviceComplianceScreen() {
                   t={t}
                   i18nKey="compliance.software.conformanceLevel"
                   values={{ level: device?.softwareLevel }}
-                  components={{ tag: <Tag.Root as="span" colorPalette={softwareLevelColor} /> }}
+                  components={{ tag: <SoftwareLevelTag colorPalette={softwareLevelColor} /> }}
                 />
               </Text>
             )}

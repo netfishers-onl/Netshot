@@ -6,7 +6,7 @@ export { default as useToast } from "./useToast"
 
 export * from "./createOptionHook"
 export * from "./useDebounce"
-export * from "./useDeviceLevelOptions"
+export * from "./useSoftwareLevels"
 export * from "./useDownloadConfigMutation"
 export * from "./useLanguageOptions"
 export * from "./useNoMemo"

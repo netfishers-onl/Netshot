@@ -216,18 +216,19 @@ function FormControl<T>(
           <DatePicker.Control>
             <DatePicker.Input />
             <DatePicker.IndicatorGroup>
-              {clearable && dateValue.length > 0 && (
+              {(clearable && dateValue.length > 0) ? (
                 <DatePicker.ClearTrigger asChild>
                   <IconButton size="xs" variant="ghost" aria-label={t("common.clear")}>
                     <LuX />
                   </IconButton>
                 </DatePicker.ClearTrigger>
+              ) : (
+                <DatePicker.Trigger asChild>
+                  <IconButton size="xs" variant="ghost" aria-label={t("common.openCalendar")}>
+                    <LuCalendar />
+                  </IconButton>
+                </DatePicker.Trigger>
               )}
-              <DatePicker.Trigger asChild>
-                <IconButton size="xs" variant="ghost" aria-label={t("common.openCalendar")}>
-                  <LuCalendar />
-                </IconButton>
-              </DatePicker.Trigger>
             </DatePicker.IndicatorGroup>
           </DatePicker.Control>
           <Portal>

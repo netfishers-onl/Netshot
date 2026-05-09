@@ -119,12 +119,14 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
         name="endOfLife"
         label={t("compliance.hardware.endOfLife")}
         type={FormControlType.Date}
+        clearable
       />
       <FormControl
         control={form.control}
         name="endOfSale"
         label={t("compliance.hardware.endOfSale")}
         type={FormControlType.Date}
+        clearable
       />
     </Stack>
   )

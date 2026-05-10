@@ -65,6 +65,7 @@ export default function AdministrationUserScreen() {
           )
         },
         header: t("common.type"),
+        enableSorting: true,
         minSize: 90,
       }),
       columnHelper.accessor("level", {

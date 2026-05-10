@@ -194,7 +194,7 @@ export type DataTableProps<Data extends object> = {
   onClickRow?(row: Data, data?: Data[]): void
   onBottomReached?(): void
   primaryKey?: keyof Data
-} & TableRootProps
+} & Omit<TableRootProps, "columns">
 
 export default function DataTable<Data extends object>(props: DataTableProps<Data>) {
   const {

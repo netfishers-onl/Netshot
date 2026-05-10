@@ -6,11 +6,11 @@ import { MUTATIONS } from "@/constants"
 import { useAuth } from "@/contexts"
 import { useConfirmDialogWithMutation } from "@/dialog"
 import { usePagination, useSoftwareLevels, useToast } from "@/hooks"
-import { DeviceSoftwareLevel, Level, SoftwareRule } from "@/types"
+import { Level, SoftwareRule } from "@/types"
 import { getNextItemInArray, search } from "@/utils"
-import { Badge, Button, Heading, IconButton, Skeleton, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
+import { Badge, Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { createColumnHelper } from "@tanstack/react-table"
+import { createColumnHelper, Row } from "@tanstack/react-table"
 import { useEffect, useState } from "react"
 import { LuSquarePen, LuPlus, LuTrash, LuAsterisk, LuTrophy } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
@@ -50,7 +50,7 @@ export default function ComplianceSoftwareRuleScreen() {
     }
   }, [isSuccess, rules])
 
-  const isDraggable = user?.level || 0 >= Level.ReadWrite
+  const isDraggable = (user?.level || 0) >= Level.ReadWrite
 
   const columns = [
     columnHelper.accessor("targetGroup", {
@@ -210,9 +210,9 @@ export default function ComplianceSoftwareRuleScreen() {
     },
   })
 
-  function onDrop(row: SoftwareRule, reorderedData: SoftwareRule[]) {
-    const id = row.id
-    const nextItem = getNextItemInArray(row, reorderedData, "id")
+  function onDrop(row: Row<SoftwareRule>, reorderedData: SoftwareRule[]) {
+    const id = row.original.id
+    const nextItem = getNextItemInArray(row.original, reorderedData, "id")
 
     const dialogRef = dialog.open(MUTATIONS.SOFTWARE_RULE_REORDER, {
       title: t("common.changePriority"),

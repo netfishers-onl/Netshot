@@ -1,4 +1,5 @@
 import {
+  Icon,
   IconButton,
   Skeleton,
   Stack,
@@ -105,17 +106,16 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
       {...other}
     >
       <Table.Cell px="4" overflow="hidden" textOverflow="ellipsis" py="3" borderWidth="0">
-        <IconButton
+        <Icon
           aria-label={t("common.dragTheRow")}
           ref={(node) => {
             dragRef(node)
           }}
-          variant="ghost"
           colorPalette="grey"
           cursor="move"
         >
           <LuMenu />
-        </IconButton>
+        </Icon>
       </Table.Cell>
       {cells.map((cell) => {
         const meta = cell.column.columnDef.meta as DataTableColumnMeta

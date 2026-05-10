@@ -547,7 +547,7 @@
         "label": "Hardware compliance",
         "ruleCreated": "Hardware rule has been successfully created",
         "ruleModified": "Hardware rule has been successfully modified",
-        "supportStatus": "Hardware support status",
+        "supportStatus": "Hardware support compliance",
         "milestone": "Milestone",
         "notEndOfLifeYet": "Not end of life yet",
         "notEndOfLifeYetPlanned": "Not end of life yet, planned on {{date}} (module {{module}})",
@@ -558,7 +558,8 @@
         "noRule": "There is no hardware rule",
         "noMember": "There is no member",
         "aboutToRemoveRule": "You are about to remove this hardware rule",
-        "canAddRule": "You can add a rule to check device hardware compliance"
+        "canAddRule": "You can add a rule to check device hardware compliance",
+        "howItWorks": "All matching rules are evaluated for each device. The earliest end-of-sale and end-of-life dates among all matches are applied to the device."
       },
       "software": {
         "addRule": "Add software rule",
@@ -578,11 +579,12 @@
         "versionDoesNotConform": "The software version {{version}} does not conform to the software rules",
         "noRule": "There is no software rule",
         "aboutToRemoveRule": "You are about to remove this software rule",
-        "canAddRule": "You can add a rule to check device software compliance"
+        "canAddRule": "You can add a rule to check device software compliance",
+        "howItWorks": "Rules are evaluated in order until one matches the device. If no rule matches, the device is considered non-compliant."
       },
       "check": "Check compliance",
       "checkConfigOfGroup": "Check the configuration compliance of a group of devices",
-      "checkSoftwareHardwareOfGroup": "Check the software compliance and hardware support status of a group of devices",
+      "checkSoftwareHardwareOfGroup": "Check the software compliance and hardware support compliance of a group of devices",
       "label": "Compliance",
       "information": "Compliance information",
       "compliant": "Compliant",

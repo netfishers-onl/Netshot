@@ -13,9 +13,9 @@ import {
 import { SigninScreen } from "@/features/auth"
 import {
   ComplianceDetailScreen,
-  ComplianceHardwareRuleScreen,
+  HardwareComplianceRuleScreen,
   ComplianceScreen,
-  ComplianceSoftwareRuleScreen,
+  SoftwareComplianceRuleScreen,
 } from "@/features/compliance"
 import {
   DeviceComplianceScreen,
@@ -127,8 +127,8 @@ function App() {
                         <Route path=":id" element={<DiagnosticDetailScreen />} />
                       </Route>
                       <Route path="compliance" element={<ComplianceScreen />}>
-                        <Route path="hardware" element={<ComplianceHardwareRuleScreen />} />
-                        <Route path="software" element={<ComplianceSoftwareRuleScreen />} />
+                        <Route path="hardware" element={<HardwareComplianceRuleScreen />} />
+                        <Route path="software" element={<SoftwareComplianceRuleScreen />} />
                         <Route
                           path="config/:policyId/:ruleId"
                           element={<ComplianceDetailScreen />}

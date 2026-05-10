@@ -22,7 +22,7 @@ import TableButtonStack from "@/features/administration/components/TableButtonSt
 
 const columnHelper = createColumnHelper<SoftwareRule>()
 
-export default function ComplianceSoftwareRuleScreen() {
+export default function SoftwareComplianceRuleScreen() {
   const { t } = useTranslation()
   const pagination = usePagination()
   const { user } = useAuth()
@@ -235,6 +235,7 @@ export default function ComplianceSoftwareRuleScreen() {
         <Heading as="h1" fontSize="4xl">
           {t("compliance.software.versionLabel")}
         </Heading>
+        <Text color="fg.muted">{t("compliance.software.howItWorks")}</Text>
         <Stack direction="row" gap="3">
           <Search
             placeholder={t("common.searchPlaceholder")}

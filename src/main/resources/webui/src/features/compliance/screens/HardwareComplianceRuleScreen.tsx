@@ -18,7 +18,7 @@ import TableButtonStack from "@/features/administration/components/TableButtonSt
 
 const columnHelper = createColumnHelper<HardwareRule>()
 
-export default function ComplianceHardwareRuleScreen() {
+export default function HardwareComplianceRuleScreen() {
   const { t } = useTranslation()
   const pagination = usePagination()
 
@@ -171,6 +171,7 @@ export default function ComplianceHardwareRuleScreen() {
       <Heading as="h1" fontSize="4xl">
         {t("compliance.hardware.supportStatus")}
       </Heading>
+      <Text color="fg.muted">{t("compliance.hardware.howItWorks")}</Text>
       <Stack direction="row" gap="3">
         <Search
           placeholder={t("common.searchPlaceholder")}

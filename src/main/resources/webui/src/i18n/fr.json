@@ -547,7 +547,7 @@
         "label": "Conformité matérielle",
         "ruleCreated": "La règle matérielle a été créée avec succès",
         "ruleModified": "La règle matérielle a été modifiée avec succès",
-        "supportStatus": "État du support matériel",
+        "supportStatus": "Conformité du support matériel",
         "milestone": "Jalon",
         "notEndOfLifeYet": "Pas encore en fin de vie",
         "notEndOfLifeYetPlanned": "Pas encore en fin de vie, prévu le {{date}} (module {{module}})",
@@ -558,7 +558,8 @@
         "noRule": "Il n'y a pas de règle matérielle",
         "noMember": "Il n'y a pas de membre",
         "aboutToRemoveRule": "Vous êtes sur le point de supprimer cette règle matérielle",
-        "canAddRule": "Vous pouvez ajouter une règle pour vérifier la conformité matérielle de l'équipement"
+        "canAddRule": "Vous pouvez ajouter une règle pour vérifier la conformité matérielle de l'équipement",
+        "howItWorks": "Toutes les règles correspondantes sont évaluées pour chaque équipement. Les dates de fin de vente et de fin de vie les plus proches parmi toutes les correspondances sont retenues."
       },
       "software": {
         "addRule": "Ajouter une règle logicielle",
@@ -578,11 +579,12 @@
         "versionDoesNotConform": "La version logicielle {{version}} n'est pas conforme aux règles logicielles",
         "noRule": "Il n'y a pas de règle logicielle",
         "aboutToRemoveRule": "Vous êtes sur le point de supprimer cette règle logicielle",
-        "canAddRule": "Vous pouvez ajouter une règle pour vérifier la conformité logicielle de l'équipement"
+        "canAddRule": "Vous pouvez ajouter une règle pour vérifier la conformité logicielle de l'équipement",
+        "howItWorks": "Les règles sont évaluées dans l'ordre jusqu'à ce qu'une corresponde à l'équipement. Si aucune règle ne correspond, l'équipement est considéré comme non conforme."
       },
       "check": "Vérifier la conformité",
       "checkConfigOfGroup": "Vérifier la conformité de la configuration d'un groupe d'équipements",
-      "checkSoftwareHardwareOfGroup": "Vérifier la conformité logicielle et l'état du support matériel d'un groupe d'équipements",
+      "checkSoftwareHardwareOfGroup": "Vérifier la conformité logicielle et la conformité du support matériel d'un groupe d'équipements",
       "label": "Conformité",
       "information": "Informations de conformité",
       "compliant": "Conforme",

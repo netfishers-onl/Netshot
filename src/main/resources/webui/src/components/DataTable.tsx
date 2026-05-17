@@ -19,7 +19,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { Fragment, useCallback, useRef, useState } from "react"
+import { Fragment, useCallback, useEffect, useRef, useState } from "react"
 import { DndProvider, XYCoord, useDrag, useDrop } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
 import { useTranslation } from "react-i18next"
@@ -36,17 +36,37 @@ type RowProps<T> = {
 } & TableRowProps
 
 type DraggableRowProps<T> = {
-  dropped: (draggedRowIndex: number, targetRowIndex: number) => void
+  displayIndex: number
+  dropped: (draggedRow: Row<T>, targetRowIndex: number) => void
   dragged: (draggedRowIndex: number, targetRowIndex: number) => void
+  onDropHover: (targetIndex: number) => void
+  onDragStateChange: (isDragging: boolean, displayIndex: number) => void
 } & RowProps<T>
+
+function DropIndicatorRow() {
+  return (
+    <tr>
+      <td
+        colSpan={999}
+        style={{
+          padding: 0,
+          height: "2px",
+          backgroundColor: "var(--chakra-colors-green-500)",
+          border: "none",
+        }}
+      />
+    </tr>
+  )
+}
 
 function DraggableRow<T>(props: DraggableRowProps<T>) {
   const { t } = useTranslation()
-  const { row, dropped, dragged, ...other } = props
+  const { row, rowModel: _rowModel, displayIndex, dropped, dragged, onDropHover, onDragStateChange, ...other } = props
   const ref = useRef<HTMLTableRowElement>(null)
+
   const [, drop] = useDrop({
     accept: "row",
-    drop: (draggedRow: Row<T>) => dropped(draggedRow.index, row.index),
+    drop: (draggedRow: Row<T>) => dropped(draggedRow, row.index),
     hover(item, monitor) {
       if (!ref.current) {
         return
@@ -54,14 +74,16 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
       const dragIndex = item.index
       const hoverIndex = row.index
 
-      if (dragIndex === hoverIndex) {
-        return
-      }
-
-      const hoverBoundingRect = ref.current?.getBoundingClientRect()
+      const hoverBoundingRect = ref.current.getBoundingClientRect()
       const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
       const clientOffset = monitor.getClientOffset()
       const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top
+
+      onDropHover(hoverClientY < hoverMiddleY ? displayIndex : displayIndex + 1)
+
+      if (dragIndex === hoverIndex) {
+        return
+      }
 
       if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
         return
@@ -76,7 +98,7 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
     },
   })
 
-  const [{ isDragging }, dragRef, drag] = useDrag({
+  const [{ isDragging }, drag, dragPreview] = useDrag({
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -84,19 +106,23 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
     type: "row",
   })
 
+  useEffect(() => {
+    onDragStateChange(isDragging, displayIndex)
+  }, [isDragging, onDragStateChange])
+
   const cells = row.getVisibleCells()
 
-  drag(drop(ref))
+  dragPreview(drop(ref))
 
   return (
     <Table.Row
-      borderRadius="xl"
       transition="all .2s ease"
       _hover={{
         bg: isDragging ? "white" : "gray.50",
       }}
       ref={ref}
       css={{
+        userSelect: "none",
         opacity: isDragging ? 0.5 : 1,
       }}
       borderColor="grey.100"
@@ -107,14 +133,13 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
     >
       <Table.Cell px="4" overflow="hidden" textOverflow="ellipsis" py="3" borderWidth="0">
         <Icon
+          as="span"
+          ref={(node) => { drag(node) }}
           aria-label={t("common.dragTheRow")}
-          ref={(node) => {
-            dragRef(node)
-          }}
-          colorPalette="grey"
           cursor="move"
+          color="green.500"
         >
-          <LuMenu />
+          <LuMenu size={16} />
         </Icon>
       </Table.Cell>
       {cells.map((cell) => {
@@ -142,7 +167,7 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
 }
 
 function SimpleRow<T>(props: RowProps<T>) {
-  const { row, ...other } = props
+  const { row, rowModel: _rowModel, ...other } = props
   const cells = row.getVisibleCells()
 
   return (
@@ -211,6 +236,14 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
   } = props
   const containerRef = useRef<HTMLDivElement>(null)
   const [sorting, setSorting] = useState<SortingState>([])
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null)
+  const [isAnyDragging, setIsAnyDragging] = useState(false)
+  const [draggedDisplayIndex, setDraggedDisplayIndex] = useState<number | null>(null)
+
+  const handleDragStateChange = useCallback((isDragging: boolean, displayIndex: number) => {
+    setIsAnyDragging(isDragging)
+    setDraggedDisplayIndex(isDragging ? displayIndex : null)
+  }, [])
   const { t } = useTranslation()
 
   const table = useReactTable({
@@ -249,16 +282,18 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
   )
 
   const handleDrop = useCallback(
-    (draggedRowIndex: number, targetRowIndex: number) => {
-      const { row, reorderedData } = getReorderedData(draggedRowIndex, targetRowIndex)
+    (draggedRow: Row<Data>, targetRowIndex: number) => {
+      data.splice(targetRowIndex, 0, data.splice(draggedRow.index, 1)[0] as Data)
+      const reorderedData = [...data]
 
-      if (onDropRow) onDropRow(row, reorderedData)
+      if (onDropRow) onDropRow(draggedRow, reorderedData)
     },
-    [getReorderedData, onDropRow]
+    [data, onDropRow]
   )
 
   const handleDrag = useCallback(
     (draggedRowIndex: number, targetRowIndex: number) => {
+      setDraggedDisplayIndex(targetRowIndex)
       const { row, reorderedData } = getReorderedData(draggedRowIndex, targetRowIndex)
 
       if (onDragRow) onDragRow(row, reorderedData)
@@ -365,14 +400,18 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
             ))}
           </Table.Header>
           <Table.Body>
-            {rowModel.rows.map((row) => (
+            {rowModel.rows.map((row, i) => (
               <Fragment key={row.id}>
+                {isAnyDragging && dropTargetIndex === i && draggedDisplayIndex !== null && dropTargetIndex !== draggedDisplayIndex && dropTargetIndex !== draggedDisplayIndex + 1 && <DropIndicatorRow />}
                 {draggable ? (
                   <DraggableRow
                     rowModel={rowModel}
                     row={row}
+                    displayIndex={i}
                     dropped={handleDrop}
                     dragged={handleDrag}
+                    onDropHover={setDropTargetIndex}
+                    onDragStateChange={handleDragStateChange}
                   />
                 ) : (
                   <SimpleRow
@@ -384,6 +423,7 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
                 )}
               </Fragment>
             ))}
+            {isAnyDragging && dropTargetIndex === rowModel.rows.length && draggedDisplayIndex !== null && dropTargetIndex !== draggedDisplayIndex && dropTargetIndex !== draggedDisplayIndex + 1 && <DropIndicatorRow />}
           </Table.Body>
         </Table.Root>
         {loading && (

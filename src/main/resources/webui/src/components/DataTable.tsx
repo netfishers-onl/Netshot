@@ -1,4 +1,5 @@
 import {
+  chakra,
   Icon,
   IconButton,
   Skeleton,
@@ -19,11 +20,26 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { Fragment, useCallback, useEffect, useRef, useState } from "react"
-import { DndProvider, XYCoord, useDrag, useDrop } from "react-dnd"
-import { HTML5Backend } from "react-dnd-html5-backend"
+import {
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { Fragment, useCallback, useEffect, useRef, useState, useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { LuArrowDown, LuArrowUp, LuMenu } from "react-icons/lu"
+import { LuArrowDown, LuArrowUp, LuGripVertical } from "react-icons/lu"
 
 type DataTableColumnMeta = {
   isNumeric?: boolean
@@ -35,92 +51,26 @@ type RowProps<T> = {
   rowModel: RowModel<T>
 } & TableRowProps
 
-type DraggableRowProps<T> = {
-  displayIndex: number
-  dropped: (draggedRow: Row<T>, targetRowIndex: number) => void
-  dragged: (draggedRowIndex: number, targetRowIndex: number) => void
-  onDropHover: (targetIndex: number) => void
-  onDragStateChange: (isDragging: boolean, displayIndex: number) => void
-} & RowProps<T>
-
-function DropIndicatorRow() {
-  return (
-    <tr>
-      <td
-        colSpan={999}
-        style={{
-          padding: 0,
-          height: "2px",
-          backgroundColor: "var(--chakra-colors-green-500)",
-          border: "none",
-        }}
-      />
-    </tr>
-  )
-}
+type DraggableRowProps<T> = RowProps<T>
 
 function DraggableRow<T>(props: DraggableRowProps<T>) {
   const { t } = useTranslation()
-  const { row, rowModel: _rowModel, displayIndex, dropped, dragged, onDropHover, onDragStateChange, ...other } = props
-  const ref = useRef<HTMLTableRowElement>(null)
+  const { row, rowModel: _rowModel, ...other } = props
 
-  const [, drop] = useDrop({
-    accept: "row",
-    drop: (draggedRow: Row<T>) => dropped(draggedRow, row.index),
-    hover(item, monitor) {
-      if (!ref.current) {
-        return
-      }
-      const dragIndex = item.index
-      const hoverIndex = row.index
-
-      const hoverBoundingRect = ref.current.getBoundingClientRect()
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
-      const clientOffset = monitor.getClientOffset()
-      const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top
-
-      onDropHover(hoverClientY < hoverMiddleY ? displayIndex : displayIndex + 1)
-
-      if (dragIndex === hoverIndex) {
-        return
-      }
-
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return
-      }
-
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-        return
-      }
-
-      dragged(dragIndex, hoverIndex)
-      item.index = hoverIndex
-    },
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
+    id: row.id,
   })
-
-  const [{ isDragging }, drag, dragPreview] = useDrag({
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-    item: () => row,
-    type: "row",
-  })
-
-  useEffect(() => {
-    onDragStateChange(isDragging, displayIndex)
-  }, [isDragging, onDragStateChange])
 
   const cells = row.getVisibleCells()
 
-  dragPreview(drop(ref))
-
   return (
     <Table.Row
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
       transition="all .2s ease"
       _hover={{
-        bg: isDragging ? "white" : "gray.50",
+        bg: isDragging ? undefined : "gray.50",
       }}
-      ref={ref}
       css={{
         userSelect: "none",
         opacity: isDragging ? 0.5 : 1,
@@ -131,16 +81,17 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
       }}
       {...other}
     >
-      <Table.Cell px="4" overflow="hidden" textOverflow="ellipsis" py="3" borderWidth="0">
-        <Icon
-          as="span"
-          ref={(node) => { drag(node) }}
+      <Table.Cell overflow="hidden" textOverflow="ellipsis" py="3" borderWidth="0">
+        <chakra.span
+          ref={setActivatorNodeRef}
           aria-label={t("common.dragTheRow")}
           cursor="move"
           color="green.500"
+          {...listeners}
+          {...attributes}
         >
-          <LuMenu size={16} />
-        </Icon>
+          <LuGripVertical size={16} />
+        </chakra.span>
       </Table.Cell>
       {cells.map((cell) => {
         const meta = cell.column.columnDef.meta as DataTableColumnMeta
@@ -236,19 +187,21 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
   } = props
   const containerRef = useRef<HTMLDivElement>(null)
   const [sorting, setSorting] = useState<SortingState>([])
-  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null)
-  const [isAnyDragging, setIsAnyDragging] = useState(false)
-  const [draggedDisplayIndex, setDraggedDisplayIndex] = useState<number | null>(null)
-
-  const handleDragStateChange = useCallback((isDragging: boolean, displayIndex: number) => {
-    setIsAnyDragging(isDragging)
-    setDraggedDisplayIndex(isDragging ? displayIndex : null)
-  }, [])
+  const [internalData, setInternalData] = useState<Data[]>(() => [...data])
   const { t } = useTranslation()
+
+  useEffect(() => {
+    setInternalData([...data])
+  }, [data])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
 
   const table = useReactTable({
     columns,
-    data,
+    data: internalData,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
@@ -257,7 +210,7 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
     },
     getRowId: (row, index) => {
       if (primaryKey) {
-        return row[primaryKey] as string
+        return String(row[primaryKey])
       }
 
       return index.toString()
@@ -269,36 +222,29 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
 
   const rowModel = table.getRowModel()
 
-  const getReorderedData = useCallback(
-    (draggedRowIndex: number, targetRowIndex: number) => {
-      data.splice(targetRowIndex, 0, data.splice(draggedRowIndex, 1)[0] as Data)
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent): void => {
+      const { active, over } = event
+      if (!over || active.id === over.id) return
 
-      return {
-        row: data[draggedRowIndex] as Row<Data>,
-        reorderedData: [...data],
-      }
+      const rows = rowModel.rows
+      const activeRow = rows.find((r) => String(r.id) === String(active.id))
+      const overRow = rows.find((r) => String(r.id) === String(over.id))
+
+      if (!activeRow || !overRow) return
+
+      const activeIndex = activeRow.index
+      const overIndex = overRow.index
+
+      const reorderedData = [...internalData]
+      reorderedData.splice(overIndex, 0, reorderedData.splice(activeIndex, 1)[0] as Data)
+
+      setInternalData(reorderedData)
+
+      if (onDragRow) onDragRow(activeRow, reorderedData)
+      if (onDropRow) onDropRow(activeRow, reorderedData)
     },
-    [data]
-  )
-
-  const handleDrop = useCallback(
-    (draggedRow: Row<Data>, targetRowIndex: number) => {
-      data.splice(targetRowIndex, 0, data.splice(draggedRow.index, 1)[0] as Data)
-      const reorderedData = [...data]
-
-      if (onDropRow) onDropRow(draggedRow, reorderedData)
-    },
-    [data, onDropRow]
-  )
-
-  const handleDrag = useCallback(
-    (draggedRowIndex: number, targetRowIndex: number) => {
-      setDraggedDisplayIndex(targetRowIndex)
-      const { row, reorderedData } = getReorderedData(draggedRowIndex, targetRowIndex)
-
-      if (onDragRow) onDragRow(row, reorderedData)
-    },
-    [getReorderedData, onDragRow]
+    [internalData, rowModel, onDragRow, onDropRow]
   )
 
   const onScroll = useCallback(
@@ -319,9 +265,10 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
   )
 
   const headerGroups = table.getHeaderGroups()
+  const rowIds = rowModel.rows.map((row) => row.id)
 
   return (
-    <DndProvider backend={HTML5Backend}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
       <Table.ScrollArea
         position="relative"
         overflowY="auto"
@@ -378,6 +325,7 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
                       {flexRender(header?.column?.columnDef?.header, header?.getContext())}
                       {isSortable && (
                         <IconButton
+                          variant="ghost"
                           position="absolute"
                           top="0"
                           bottom="0"
@@ -400,30 +348,22 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
             ))}
           </Table.Header>
           <Table.Body>
-            {rowModel.rows.map((row, i) => (
-              <Fragment key={row.id}>
-                {isAnyDragging && dropTargetIndex === i && draggedDisplayIndex !== null && dropTargetIndex !== draggedDisplayIndex && dropTargetIndex !== draggedDisplayIndex + 1 && <DropIndicatorRow />}
-                {draggable ? (
-                  <DraggableRow
-                    rowModel={rowModel}
-                    row={row}
-                    displayIndex={i}
-                    dropped={handleDrop}
-                    dragged={handleDrag}
-                    onDropHover={setDropTargetIndex}
-                    onDragStateChange={handleDragStateChange}
-                  />
-                ) : (
-                  <SimpleRow
-                    rowModel={rowModel}
-                    row={row}
-                    onClick={() => onClickRow?.(row.original, data)}
-                    cursor="pointer"
-                  />
-                )}
-              </Fragment>
-            ))}
-            {isAnyDragging && dropTargetIndex === rowModel.rows.length && draggedDisplayIndex !== null && dropTargetIndex !== draggedDisplayIndex && dropTargetIndex !== draggedDisplayIndex + 1 && <DropIndicatorRow />}
+            <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
+              {rowModel.rows.map((row) => (
+                <Fragment key={row.id}>
+                  {draggable ? (
+                    <DraggableRow rowModel={rowModel} row={row} />
+                  ) : (
+                    <SimpleRow
+                      rowModel={rowModel}
+                      row={row}
+                      onClick={() => onClickRow?.(row.original, data)}
+                      cursor="pointer"
+                    />
+                  )}
+                </Fragment>
+              ))}
+            </SortableContext>
           </Table.Body>
         </Table.Root>
         {loading && (
@@ -434,6 +374,6 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
           </Stack>
         )}
       </Table.ScrollArea>
-    </DndProvider>
+    </DndContext>
   )
 }

@@ -27,6 +27,7 @@ export default function SoftwareComplianceRuleScreen() {
   const pagination = usePagination()
   const { user } = useAuth()
   const [data, setData] = useState<SoftwareRule[]>([])
+  const [reorderPending, setReorderPending] = useState(false)
   const dialog = useConfirmDialogWithMutation()
   const toast = useToast()
   const queryClient = useQueryClient()
@@ -45,10 +46,10 @@ export default function SoftwareComplianceRuleScreen() {
   })
 
   useEffect(() => {
-    if (isSuccess) {
+    if (isSuccess && !reorderPending) {
       setData(rules)
     }
-  }, [isSuccess, rules])
+  }, [isSuccess, rules, reorderPending])
 
   const isDraggable = (user?.level || 0) >= Level.ReadWrite
 
@@ -213,6 +214,9 @@ export default function SoftwareComplianceRuleScreen() {
   function onDrop(row: Row<SoftwareRule>, reorderedData: SoftwareRule[]) {
     const id = row.original.id
     const nextItem = getNextItemInArray(row.original, reorderedData, "id")
+    const originalData = [...data]
+
+    setReorderPending(true)
 
     const dialogRef = dialog.open(MUTATIONS.SOFTWARE_RULE_REORDER, {
       title: t("common.changePriority"),
@@ -220,11 +224,16 @@ export default function SoftwareComplianceRuleScreen() {
       async onConfirm() {
         await reorderMutation.mutateAsync({ id: id, nextId: nextItem?.id })
 
-        queryClient.invalidateQueries({ queryKey: [QUERIES.SOFTWARE_RULE_LIST] })
-
         setData(reorderedData)
-
         dialogRef.close()
+
+        await queryClient.invalidateQueries({ queryKey: [QUERIES.SOFTWARE_RULE_LIST] })
+
+        setReorderPending(false)
+      },
+      onCancel() {
+        setReorderPending(false)
+        setData(originalData)
       },
     })
   }

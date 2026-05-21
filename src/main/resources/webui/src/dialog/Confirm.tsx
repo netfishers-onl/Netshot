@@ -1,6 +1,6 @@
 import { Button, ButtonProps, CloseButton, Dialog, Portal, Stack, Text } from "@chakra-ui/react"
 import mergeWith from "lodash.mergewith"
-import { isValidElement } from "react"
+import { isValidElement, useRef } from "react"
 import { useDialogConfig } from "./dialogConfigContext"
 import { useDialogProviderConfig } from "./DialogProvider"
 import { useDialogStore } from "./store"
@@ -25,6 +25,9 @@ export default function ConfirmDialog() {
   const isTitleComponent = isValidElement(config?.props?.title)
   const isDescriptionComponent = isValidElement(config?.props?.description)
   const { confirmButton, cancelButton } = mergeWith({}, providerConfig.confirm, config.props)
+  // Track whether a button was explicitly clicked to avoid double-calling onCancel
+  // in onExitComplete (which fires for all close paths including after confirm).
+  const wasActed = useRef(false)
 
   const confirmButtonConfig: ConfirmDialogProps["confirmButton"] = {
     label: confirmButton?.label,
@@ -33,6 +36,7 @@ export default function ConfirmDialog() {
       loading: currentConfig.props.isLoading,
       onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
         evt?.stopPropagation()
+        wasActed.current = true
         if (config.props.onConfirm) config.props.onConfirm()
       },
       ...confirmButton?.props,
@@ -46,6 +50,7 @@ export default function ConfirmDialog() {
       disabled: currentConfig.props.isLoading,
       onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
         evt?.stopPropagation()
+        wasActed.current = true
         if (config.props.onCancel) config.props.onCancel()
         config.close()
       },
@@ -66,7 +71,7 @@ export default function ConfirmDialog() {
         }
       }}
       onExitComplete={() => {
-        if (config.props.onCancel) config.props.onCancel()
+        if (!wasActed.current && config.props.onCancel) config.props.onCancel()
         config.remove()
       }}
     >

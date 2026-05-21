@@ -19,9 +19,22 @@ import {
   useReactTable,
 } from "@tanstack/react-table"
 import { VirtualItem, Virtualizer, useVirtualizer } from "@tanstack/react-virtual"
+import {
+  DndContext,
+  DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
 import { RefObject, useCallback, useEffect, useRef, useState } from "react"
-import { DndProvider, XYCoord, useDrag, useDrop } from "react-dnd"
-import { HTML5Backend } from "react-dnd-html5-backend"
 import { useTranslation } from "react-i18next"
 import { LuArrowDown, LuArrowUp, LuMenu } from "react-icons/lu"
 
@@ -36,61 +49,24 @@ type RowProps<T> = {
   rowVirtualizer: Virtualizer<HTMLDivElement, HTMLTableRowElement>
 } & TableRowProps
 
-type DraggableRowProps<T> = {
-  dropped: (draggedRowIndex: number, targetRowIndex: number) => void
-  dragged: (draggedRowIndex: number, targetRowIndex: number) => void
-} & RowProps<T>
+type DraggableRowProps<T> = RowProps<T>
 
 function DraggableRow<T>(props: DraggableRowProps<T>) {
   const { t } = useTranslation()
-  const { row, dropped, dragged, virtualRow, rowVirtualizer, ...other } = props
-  const ref = useRef<HTMLTableRowElement>(null)
-  const [, drop] = useDrop({
-    accept: "row",
-    drop: (draggedRow: Row<T>) => dropped(draggedRow.index, row.index),
-    hover(item, monitor) {
-      if (!ref.current) {
-        return
-      }
-      const dragIndex = item.index
-      const hoverIndex = row.index
+  const { row, virtualRow, rowVirtualizer, ...other } = props
 
-      if (dragIndex === hoverIndex) {
-        return
-      }
-
-      const hoverBoundingRect = ref.current?.getBoundingClientRect()
-      const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2
-      const clientOffset = monitor.getClientOffset()
-      const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top
-
-      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
-        return
-      }
-
-      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
-        return
-      }
-
-      dragged(dragIndex, hoverIndex)
-      item.index = hoverIndex
-    },
-  })
-
-  const [{ isDragging }, dragRef, drag] = useDrag({
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-    item: () => row,
-    type: "row",
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, isDragging } = useSortable({
+    id: row.id,
   })
 
   const cells = row.getVisibleCells()
 
-  drag(drop(ref))
-
   return (
     <Table.Row
+      ref={(node) => {
+        setNodeRef(node)
+        rowVirtualizer.measureElement(node)
+      }}
       transition="all .2s ease"
       _hover={{
         bg: isDragging ? "white" : "green.50",
@@ -103,27 +79,23 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
         borderBottomWidth: "1px",
       }}
       data-index={virtualRow.index}
-      ref={(node) => {
-        rowVirtualizer.measureElement(node)
-        ref.current = node
-      }}
       display="flex"
       position="absolute"
       w="100%"
       style={{
-        transform: `translateY(${virtualRow.start}px)`,
+        transform: `translateY(${virtualRow.start + (transform?.y ?? 0)}px)`,
       }}
       {...other}
     >
       <Table.Cell px="4" overflow="hidden" textOverflow="ellipsis" py="3" borderWidth="0">
         <IconButton
           aria-label={t("common.dragTheRow")}
-          ref={(node) => {
-            dragRef(node)
-          }}
+          ref={setActivatorNodeRef}
           variant="ghost"
           colorPalette="grey"
           cursor="move"
+          {...listeners}
+          {...attributes}
         >
           <LuMenu />
         </IconButton>
@@ -249,7 +221,7 @@ export function VirtualizedDataTable<Data extends object>(props: VirtualizedData
     },
     getRowId: (row, index) => {
       if (primaryKey) {
-        return row[primaryKey] as string
+        return String(row[primaryKey])
       }
 
       return index.toString()
@@ -277,41 +249,39 @@ export function VirtualizedDataTable<Data extends object>(props: VirtualizedData
   )
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <Table.ScrollArea
-        position="relative"
-        overflowY="auto"
-        width="100%"
-        borderRadius="xl"
-        display="flex"
-        flexDirection="column"
-        borderColor="grey.100"
-        borderWidth="1px"
-        onScroll={(e) => onScroll(e.target as HTMLDivElement)}
-        ref={containerRef}
-        {...other}
-      >
-        <Table.Root flex="1" display="grid">
-          <VirtualizedDataTableHeader table={table} draggable={draggable} />
-          <VirtualizedDataTableBody
-            table={table}
-            containerRef={containerRef}
-            draggable={draggable}
-            data={data}
-            onDropRow={onDropRow}
-            onDragRow={onDragRow}
-            onClickRow={onClickRow}
-          />
-        </Table.Root>
-        {loading && (
-          <Stack mt="2">
-            <Skeleton height="40px" />
-            <Skeleton height="40px" />
-            <Skeleton height="40px" />
-          </Stack>
-        )}
-      </Table.ScrollArea>
-    </DndProvider>
+    <Table.ScrollArea
+      position="relative"
+      overflowY="auto"
+      width="100%"
+      borderRadius="xl"
+      display="flex"
+      flexDirection="column"
+      borderColor="grey.100"
+      borderWidth="1px"
+      onScroll={(e) => onScroll(e.target as HTMLDivElement)}
+      ref={containerRef}
+      {...other}
+    >
+      <Table.Root flex="1" display="grid">
+        <VirtualizedDataTableHeader table={table} draggable={draggable} />
+        <VirtualizedDataTableBody
+          table={table}
+          containerRef={containerRef}
+          draggable={draggable}
+          data={data}
+          onDropRow={onDropRow}
+          onDragRow={onDragRow}
+          onClickRow={onClickRow}
+        />
+      </Table.Root>
+      {loading && (
+        <Stack mt="2">
+          <Skeleton height="40px" />
+          <Skeleton height="40px" />
+          <Skeleton height="40px" />
+        </Stack>
+      )}
+    </Table.ScrollArea>
   )
 }
 
@@ -411,6 +381,11 @@ export function VirtualizedDataTableBody<T>({
 }) {
   const { rows } = table.getRowModel()
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: rows.length,
     estimateSize: () => 43,
@@ -419,25 +394,23 @@ export function VirtualizedDataTableBody<T>({
     overscan: 10,
   })
 
-  const getReorderedData = (draggedRowIndex: number, targetRowIndex: number) => {
-    data.splice(targetRowIndex, 0, data.splice(draggedRowIndex, 1)[0] as T)
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
 
-    return {
-      row: data[draggedRowIndex] as Row<T>,
-      reorderedData: [...data],
-    }
-  }
+    const activeRow = rows.find((r) => String(r.id) === String(active.id))
+    const overRow = rows.find((r) => String(r.id) === String(over.id))
 
-  const handleDrop = (draggedRowIndex: number, targetRowIndex: number) => {
-    const { row, reorderedData } = getReorderedData(draggedRowIndex, targetRowIndex)
+    if (!activeRow || !overRow) return
 
-    if (onDropRow) onDropRow(row, reorderedData)
-  }
+    const activeIndex = activeRow.index
+    const overIndex = overRow.index
 
-  const handleDrag = (draggedRowIndex: number, targetRowIndex: number) => {
-    const { row, reorderedData } = getReorderedData(draggedRowIndex, targetRowIndex)
+    data.splice(overIndex, 0, data.splice(activeIndex, 1)[0] as T)
+    const reorderedData = [...data]
 
-    if (onDragRow) onDragRow(row, reorderedData)
+    if (onDragRow) onDragRow(activeRow as unknown as Row<T>, reorderedData)
+    if (onDropRow) onDropRow(activeRow as unknown as Row<T>, reorderedData)
   }
 
   useEffect(() => {
@@ -445,42 +418,45 @@ export function VirtualizedDataTableBody<T>({
   }, [rowVirtualizer])
 
   const virtualRows = rowVirtualizer.getVirtualItems()
+  const rowIds = rows.map((r) => r.id)
 
   return (
-    <Table.Body
-      display="grid"
-      position="relative"
-      style={{
-        height: `${rowVirtualizer.getTotalSize()}px`,
-      }}
-    >
-      {virtualRows.map((virtualRow) => {
-        const row = rows[virtualRow.index] as Row<T>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
+        <Table.Body
+          display="grid"
+          position="relative"
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+          }}
+        >
+          {virtualRows.map((virtualRow) => {
+            const row = rows[virtualRow.index] as Row<T>
 
-        if (draggable) {
-          return (
-            <DraggableRow
-              key={row.id}
-              row={row}
-              virtualRow={virtualRow}
-              rowVirtualizer={rowVirtualizer}
-              dropped={handleDrop}
-              dragged={handleDrag}
-            />
-          )
-        }
+            if (draggable) {
+              return (
+                <DraggableRow
+                  key={row.id}
+                  row={row}
+                  virtualRow={virtualRow}
+                  rowVirtualizer={rowVirtualizer}
+                />
+              )
+            }
 
-        return (
-          <SimpleRow
-            key={row.id}
-            row={row}
-            virtualRow={virtualRow}
-            rowVirtualizer={rowVirtualizer}
-            onClick={() => onClickRow?.(row.original, data)}
-            cursor="pointer"
-          />
-        )
-      })}
-    </Table.Body>
+            return (
+              <SimpleRow
+                key={row.id}
+                row={row}
+                virtualRow={virtualRow}
+                rowVirtualizer={rowVirtualizer}
+                onClick={() => onClickRow?.(row.original, data)}
+                cursor="pointer"
+              />
+            )
+          })}
+        </Table.Body>
+      </SortableContext>
+    </DndContext>
   )
 }

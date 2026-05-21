@@ -96,8 +96,7 @@ export default function AdministrationUserScreen() {
                   <Tooltip content={t("common.edit")}>
                     <IconButton
                       aria-label={t("user.edit")}
-                      variant="ghost"
-                      colorPalette="green"
+                      variant="frame"
                       onClick={open}
                     >
                       <LuSquarePen />
@@ -111,8 +110,7 @@ export default function AdministrationUserScreen() {
                   <Tooltip content={t("common.remove")}>
                     <IconButton
                       aria-label={t("user.remove")}
-                      variant="ghost"
-                      colorPalette="green"
+                      variant="frame"
                       onClick={open}
                     >
                       <LuTrash />

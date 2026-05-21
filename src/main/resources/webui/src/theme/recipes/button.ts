@@ -60,6 +60,17 @@ export const buttonRecipe = defineRecipe({
         },
         _disabled: disabledStyle,
       },
+      frame: {
+        bg: "transparent",
+        color: "green.400",
+        _hover: {
+          color: "green.600",
+        },
+        _active: {
+          color: "green.300",
+        },
+        _disabled: disabledStyle,
+      },
       plain: {
         bg: "transparent",
         padding: "0",

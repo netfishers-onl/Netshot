@@ -66,8 +66,7 @@ export default function AdministrationDomainScreen() {
                   <Tooltip content={t("common.edit")}>
                     <IconButton
                       aria-label={t("domain.edit")}
-                      variant="ghost"
-                      colorPalette="green"
+                      variant="frame"
                       onClick={open}
                     >
                       <LuSquarePen />
@@ -81,8 +80,7 @@ export default function AdministrationDomainScreen() {
                   <Tooltip content={t("common.remove")}>
                     <IconButton
                       aria-label={t("domain.remove")}
-                      variant="ghost"
-                      colorPalette="green"
+                      variant="frame"
                       onClick={open}
                     >
                       <LuTrash />

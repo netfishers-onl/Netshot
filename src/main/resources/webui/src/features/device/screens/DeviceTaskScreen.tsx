@@ -66,8 +66,7 @@ export default function DeviceTaskScreen() {
         cell: (info) => (
           <TableButtonStack>
             <Button
-              variant="ghost"
-              colorPalette="green"
+              variant="frame"
               onClick={() => openTask(info.row.original.id)}
             >
               {t("common.seeDetails")}

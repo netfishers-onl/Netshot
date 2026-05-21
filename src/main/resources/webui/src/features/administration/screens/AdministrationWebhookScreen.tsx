@@ -85,8 +85,7 @@ export default function AdministrationApiTokenScreen() {
                   <Tooltip content={t("common.edit")}>
                     <IconButton
                       aria-label={t("webhook.edit")}
-                      variant="ghost"
-                      colorPalette="green"
+                      variant="frame"
                       onClick={open}
                     >
                       <LuSquarePen />
@@ -100,8 +99,7 @@ export default function AdministrationApiTokenScreen() {
                   <Tooltip content={t("common.remove")}>
                     <IconButton
                       aria-label={t("webhook.remove")}
-                      variant="ghost"
-                      colorPalette="green"
+                      variant="frame"
                       onClick={open}
                     >
                       <LuTrash />

@@ -161,8 +161,7 @@ export default function SoftwareComplianceRuleScreen() {
                 renderItem={(open) => (
                   <Tooltip content={t("common.edit")}>
                     <IconButton
-                      variant="ghost"
-                      colorPalette="green"
+                      variant="frame"
                       aria-label={t("policy.rule.editThe")}
                       onClick={open}
                     >
@@ -177,8 +176,7 @@ export default function SoftwareComplianceRuleScreen() {
                 renderItem={(open) => (
                   <Tooltip content={t("common.remove")}>
                     <IconButton
-                      variant="ghost"
-                      colorPalette="green"
+                      variant="frame"
                       aria-label={t("policy.rule.removeThe")}
                       onClick={open}
                     >

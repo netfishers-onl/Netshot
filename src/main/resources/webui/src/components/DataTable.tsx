@@ -9,6 +9,7 @@ import {
   TableRootProps,
   TableRowProps,
 } from "@chakra-ui/react"
+import { Tooltip } from "@/components/ui/tooltip"
 import {
   ColumnDef,
   Header,
@@ -82,16 +83,18 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
       {...other}
     >
       <Table.Cell overflow="hidden" textOverflow="ellipsis" py="3" borderWidth="0">
-        <chakra.span
-          ref={setActivatorNodeRef}
-          aria-label={t("common.dragTheRow")}
-          cursor="move"
-          color="green.500"
-          {...listeners}
-          {...attributes}
-        >
-          <LuGripVertical size={16} />
-        </chakra.span>
+        <Tooltip content={t("common.dragTheRow")}>
+          <chakra.span
+            ref={setActivatorNodeRef}
+            aria-label={t("common.dragTheRow")}
+            cursor="move"
+            color="green.500"
+            {...listeners}
+            {...attributes}
+          >
+            <LuGripVertical size={16} />
+          </chakra.span>
+        </Tooltip>
       </Table.Cell>
       {cells.map((cell) => {
         const meta = cell.column.columnDef.meta as DataTableColumnMeta
@@ -306,7 +309,7 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
                       onClick={isSortable ? header?.column?.getToggleSortingHandler() : null}
                       borderColor="grey.100"
                       position="relative"
-                      cursor="pointer"
+                      cursor={isSortable ? "pointer" : undefined}
                       textTransform="initial"
                       fontSize="sm"
                       fontWeight="400"
@@ -325,7 +328,7 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
                       {flexRender(header?.column?.columnDef?.header, header?.getContext())}
                       {isSortable && (
                         <IconButton
-                          variant="ghost"
+                          variant="frame"
                           position="absolute"
                           top="0"
                           bottom="0"

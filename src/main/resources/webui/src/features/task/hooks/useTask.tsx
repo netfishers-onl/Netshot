@@ -152,7 +152,7 @@ export function useTask(status?: TaskStatus) {
       id: "actions",
       cell: (info) => (
         <TableButtonStack>
-          <Button variant="ghost" colorPalette="green" onClick={() => openTask(info.row.original.id)}>
+          <Button variant="frame" onClick={() => openTask(info.row.original.id)}>
             {t("common.seeDetails")}
           </Button>
         </TableButtonStack>

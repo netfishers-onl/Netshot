@@ -61,8 +61,7 @@ export default function AdministrationApiTokenScreen() {
                   <Tooltip content={t("common.remove")}>
                     <IconButton
                       aria-label={t("api.removeToken")}
-                      variant="ghost"
-                      colorPalette="green"
+                      variant="frame"
                       onClick={open}
                     >
                       <LuTrash />

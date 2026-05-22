@@ -8,11 +8,11 @@ import { useConfirmDialogWithMutation } from "@/dialog"
 import { usePagination, useSoftwareLevels, useToast } from "@/hooks"
 import { Level, SoftwareRule } from "@/types"
 import { getNextItemInArray, search } from "@/utils"
-import { Badge, Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
+import { Badge, Button, Heading, Icon, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper, Row } from "@tanstack/react-table"
 import { useEffect, useState } from "react"
-import { LuSquarePen, LuPlus, LuTrash, LuAsterisk, LuTrophy } from "react-icons/lu"
+import { LuSquarePen, LuPlus, LuTrash, LuAsterisk, LuTrophy, LuArrowRight, LuMoveRight, LuChevronRight, LuChevronsRight, LuArrowBigRightDash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddSoftwareRuleButton from "../components/AddSoftwareRuleButton"
 import EditSoftwareRuleButton from "../components/EditSoftwareRuleButton"
@@ -133,6 +133,17 @@ export default function SoftwareComplianceRuleScreen() {
       },
       header: t("common.version"),
       size: 10000,
+    }),
+    columnHelper.display({
+      id: "arrow",
+      cell: () => <Icon><LuMoveRight /></Icon>,
+      header: "",
+      enableSorting: false,
+      size: 30,
+      minSize: 30,
+      meta: {
+        align: "center",
+      },
     }),
     columnHelper.accessor("level", {
       cell: (info) => {

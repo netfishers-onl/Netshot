@@ -4,11 +4,11 @@ import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
 import { HardwareRule, Level } from "@/types"
 import { formatDate, search } from "@/utils"
-import { Badge, Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
+import { Badge, Button, Heading, Icon, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { LuSquarePen, LuPlus, LuTrash, LuAsterisk } from "react-icons/lu"
+import { LuSquarePen, LuPlus, LuTrash, LuAsterisk, LuMoveRight } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddHardwareRuleButton from "../components/AddHardwareRuleButton"
 import EditHardwareRuleButton from "../components/EditHardwareRuleButton"
@@ -98,6 +98,17 @@ export default function HardwareComplianceRuleScreen() {
         },
         header: t("device.module.partNumber"),
         size: 20000,
+      }),
+      columnHelper.display({
+        id: "arrow",
+        cell: () => <Icon><LuMoveRight /></Icon>,
+        header: "",
+        enableSorting: false,
+        size: 30,
+        minSize: 30,
+        meta: {
+          align: "center",
+        },
       }),
       columnHelper.accessor("endOfSale", {
         cell: (info) => (

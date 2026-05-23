@@ -1,5 +1,6 @@
 import { Tooltip } from "@/components/ui/tooltip"
 import {
+  Combobox,
   DatePicker,
   type DatePickerValueChangeDetails,
   Field,
@@ -10,6 +11,7 @@ import {
   Portal,
   SystemStyleObject,
   Textarea,
+  useListCollection,
 } from "@chakra-ui/react"
 import { CalendarDate, parseDate, type DateValue } from "@internationalized/date"
 import { forwardRef, ReactElement, ReactNode, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -19,6 +21,8 @@ import { useTranslation } from "react-i18next"
 import { LuCalendar, LuEye, LuEyeOff, LuLock, LuLockOpen, LuX } from "react-icons/lu"
 
 export const PASSWORD_UNCHANGED = null
+
+const MAX_SUGGESTIONS = 20
 
 export enum FormControlType {
   Text = "text",
@@ -43,6 +47,7 @@ export type FormControlProps<T> = {
   prefix?: ReactNode
   allowUnchanged?: boolean
   clearable?: boolean
+  suggestions?: string[]
 } & Omit<InputProps, "recipe"> &
   Omit<SystemStyleObject, "recipe"> &
   UseControllerProps<T>
@@ -78,6 +83,7 @@ function FormControl<T>(
     variant,
     allowUnchanged = false,
     clearable = false,
+    suggestions,
     ...other
   } = props
 
@@ -85,6 +91,19 @@ function FormControl<T>(
   const [showPassword, setShowPassword] = useState(false)
   const [isUnchanged, setIsUnchanged] = useState(allowUnchanged)
   const passwordInputRef = useRef<HTMLInputElement>(null)
+  const allSuggestionsRef = useRef<string[]>([])
+  const { collection: suggestionCollection, set: setSuggestionItems } = useListCollection({
+    initialItems: [] as { label: string; value: string }[],
+    itemToValue: (item) => item.value,
+    itemToString: (item) => item.label,
+  })
+
+  useEffect(() => {
+    allSuggestionsRef.current = suggestions ?? []
+    setSuggestionItems(
+      (suggestions ?? []).slice(0, MAX_SUGGESTIONS).map((s) => ({ label: s, value: s }))
+    )
+  }, [suggestions])
 
   const {
     field,
@@ -196,14 +215,71 @@ function FormControl<T>(
         FormControlType.Time,
         FormControlType.Url,
       ].includes(type) && (
-        <InputGroup startElement={prefix} endElement={suffix}>
-          <Input
-            type={type}
-            value={String(field.value as string)}
-            autoComplete={autoComplete}
-            {...inputProps}
-          />
-        </InputGroup>
+        suggestions !== undefined ? (
+          <Combobox.Root
+            collection={suggestionCollection}
+            inputValue={String(field.value ?? "")}
+            onInputValueChange={({ inputValue }) => {
+              const val = uppercase ? inputValue.toUpperCase() : inputValue
+              field.onChange(val)
+              const lower = inputValue.toLowerCase()
+              setSuggestionItems(
+                allSuggestionsRef.current
+                  .filter((s) => s.toLowerCase().includes(lower))
+                  .slice(0, MAX_SUGGESTIONS)
+                  .map((s) => ({ label: s, value: s }))
+              )
+            }}
+            onValueChange={({ value }) => {
+              if (value[0] !== undefined) field.onChange(value[0])
+            }}
+            onInteractOutside={field.onBlur}
+            onFocusOutside={field.onBlur}
+            onFocus={() => { if (onFocus) onFocus() }}
+            allowCustomValue
+            openOnChange
+            disabled={disabled}
+          >
+            <Combobox.Control>
+              <Combobox.Input
+                type={type}
+                placeholder={placeholder}
+                name={name}
+                autoComplete="off"
+                autoFocus={autoFocus}
+                ref={(inputRef) => {
+                  field.ref(inputRef)
+                  if (ref) ref.current = inputRef
+                }}
+              />
+              {suffix && (
+                <Combobox.IndicatorGroup>
+                  {suffix}
+                </Combobox.IndicatorGroup>
+              )}
+            </Combobox.Control>
+            <Portal>
+              <Combobox.Positioner>
+                <Combobox.Content>
+                  {suggestionCollection.items.map((item) => (
+                    <Combobox.Item key={item.value} item={item}>
+                      <Combobox.ItemText>{item.label}</Combobox.ItemText>
+                    </Combobox.Item>
+                  ))}
+                </Combobox.Content>
+              </Combobox.Positioner>
+            </Portal>
+          </Combobox.Root>
+        ) : (
+          <InputGroup startElement={prefix} endElement={suffix}>
+            <Input
+              type={type}
+              value={String(field.value as string)}
+              autoComplete={autoComplete}
+              {...inputProps}
+            />
+          </InputGroup>
+        )
       )}
       {type === FormControlType.Date && (
         <DatePicker.Root

@@ -96,6 +96,30 @@ export function useInfiniteDevices(groupId: number) {
   })
 }
 
+export function useDeviceFamilies() {
+  return useQuery({
+    queryKey: [QUERIES.DEVICE_FAMILY_LIST],
+    queryFn: () => api.device.getAllFamilies({ limit: 99999 }),
+    select: (data) => Array.from(new Set(data.map((f) => f.deviceFamily).filter(Boolean))).sort(),
+  })
+}
+
+export function useDevicePartNumbers() {
+  return useQuery({
+    queryKey: [QUERIES.DEVICE_PART_NUMBER_LIST],
+    queryFn: () => api.device.getAllPartNumbers({ limit: 99999 }),
+    select: (data) => Array.from(new Set(data.map((p) => p.partNumber).filter(Boolean))).sort(),
+  })
+}
+
+export function useDeviceSoftwareVersions() {
+  return useQuery({
+    queryKey: [QUERIES.DEVICE_SOFTWARE_VERSION_LIST],
+    queryFn: () => api.device.getAllSoftwareVersions({ limit: 99999 }),
+    select: (data) => Array.from(new Set(data.map((v) => v.version).filter(Boolean))).sort(),
+  })
+}
+
 export function useInfiniteSearchDevices(query: string) {
   return useInfiniteQuery({
     queryKey: [QUERIES.DEVICE_SEARCH_LIST, query],

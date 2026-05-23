@@ -2,6 +2,7 @@ import { DeviceTypeSelect, FormControl, TreeGroupSelector } from "@/components"
 import { LuRegex, LuType } from "react-icons/lu"
 import { FormControlType } from "@/components/FormControl"
 import { useDeviceTypeOptions } from "@/hooks"
+import { useDeviceFamilies, useDevicePartNumbers } from "@/features/device/api"
 import { HardwareRule } from "@/types"
 import { IconButton, Stack } from "@chakra-ui/react"
 import { useCallback, useEffect } from "react"
@@ -19,6 +20,8 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
   const { t } = useTranslation()
 
   const { isPending } = useDeviceTypeOptions()
+  const { data: familySuggestions } = useDeviceFamilies()
+  const { data: partNumberSuggestions } = useDevicePartNumbers()
 
   useEffect(() => {
     if (!rule) {
@@ -85,6 +88,7 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
         name="family"
         label={t("device.family")}
         placeholder={t("common.eG", { example: "Cisco ASR9000 Series" })}
+        suggestions={familySuggestions ?? []}
         suffix={
           <IconButton
             aria-label={t(familyRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
@@ -102,6 +106,7 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
         name="partNumber"
         label={t("device.module.partNumber")}
         placeholder={t("common.eG", { example: "FK-X0012" })}
+        suggestions={partNumberSuggestions ?? []}
         suffix={
           <IconButton
             aria-label={t(partNumberRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}

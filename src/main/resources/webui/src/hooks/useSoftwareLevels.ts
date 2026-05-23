@@ -36,7 +36,7 @@ const LEVELS: Record<DeviceSoftwareLevel, SoftwareLevelInfo> = {
 }
 
 const useLevelOptions = createOptionHook(
-  Object.entries(LEVELS).filter(([k, v]) => v.isCompliant).map(([key, value]) => ({
+  Object.entries(LEVELS).filter(([, v]) => v.isCompliant).map(([key, value]) => ({
     label: value.label,
     value: key,
   })))

@@ -151,6 +151,12 @@ async function getAllPartNumbers(queryParams: PaginationQueryParams = {}) {
   })
 }
 
+async function getAllSoftwareVersions(queryParams: PaginationQueryParams = {}) {
+  return httpClient.get<Array<{ version: string }>>("/softwareversions", {
+    queryParams,
+  })
+}
+
 async function getAllTypes() {
   return httpClient.get<DeviceType[]>(`/devicetypes`)
 }
@@ -173,5 +179,6 @@ export default {
   getAllTasksById,
   getAllFamilies,
   getAllPartNumbers,
+  getAllSoftwareVersions,
   getAllTypes,
 }

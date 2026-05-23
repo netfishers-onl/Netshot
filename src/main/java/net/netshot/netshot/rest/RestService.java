@@ -1773,6 +1773,48 @@ public class RestService extends Thread {
 		}
 	}
 
+	@XmlRootElement(name = "softwareVersion")
+	@XmlAccessorType(XmlAccessType.NONE)
+	@AllArgsConstructor
+	public static class RsSoftwareVersion {
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private String version;
+	}
+
+	@GET
+	@Path("/softwareversions")
+	@RolesAllowed(User.ROLE_READONLY)
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Get the known software versions",
+		description = "Returns the list of all known software versions currently existing in the device table."
+	)
+	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
+	public List<RsSoftwareVersion> getSoftwareVersions(@BeanParam PaginationParams paginationParams) throws WebApplicationException {
+		log.debug("REST request, software versions.");
+		Session session = Database.getSession(true);
+		try {
+			Query<RsSoftwareVersion> query = session
+				.createQuery(
+					"select new RsSoftwareVersion(d.softwareVersion as version) from Device d where d.softwareVersion is not null and d.softwareVersion != ''",
+					RsSoftwareVersion.class);
+			paginationParams.apply(query);
+			return query.list();
+		}
+		catch (HibernateException e) {
+			log.error("Error while loading software versions.", e);
+			throw new NetshotBadRequestException("Database error",
+				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
 	/**
 	 * The Class RsNewDevice.
 	 */

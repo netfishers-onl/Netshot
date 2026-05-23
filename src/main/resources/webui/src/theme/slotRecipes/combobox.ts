@@ -42,10 +42,12 @@ export const comboboxSlotRecipe = defineSlotRecipe({
           p: 2,
           border: "none",
           boxShadow: "0 2px 10px 0 rgba(140, 149, 159, .16)",
+          textStyle: "md",
         },
         item: {
-          fontSize: "md",
-          height: "42px",
+          cursor: "pointer",
+          py: "2",
+          px: "3",
           borderRadius: "lg",
           transition: "all .2s ease",
           bg: "white",
@@ -60,5 +62,12 @@ export const comboboxSlotRecipe = defineSlotRecipe({
         },
       },
     },
+    size: {
+      md: {
+        input: {
+          h: "42px",
+        }
+      }
+    }
   },
 })

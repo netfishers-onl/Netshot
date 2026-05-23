@@ -2,6 +2,7 @@ import { DeviceTypeSelect, FormControl, TreeGroupSelector } from "@/components"
 import { LuRegex, LuTrophy, LuType } from "react-icons/lu"
 import { Select } from "@/components/Select"
 import { useSoftwareLevels, useDeviceTypeOptions } from "@/hooks"
+import { useDeviceFamilies, useDevicePartNumbers, useDeviceSoftwareVersions } from "@/features/device/api"
 import { DeviceSoftwareLevel, SoftwareRule } from "@/types"
 import { Icon, IconButton, Stack } from "@chakra-ui/react"
 import { useCallback, useEffect } from "react"
@@ -18,6 +19,9 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
   const form = useFormContext<SoftwareRuleFormValues>()
   const { t } = useTranslation()
   const { options: levelOptions, getInfo: getLevelInfo } = useSoftwareLevels()
+  const { data: familySuggestions } = useDeviceFamilies()
+  const { data: partNumberSuggestions } = useDevicePartNumbers()
+  const { data: versionSuggestions } = useDeviceSoftwareVersions()
 
   const { isPending } = useDeviceTypeOptions()
 
@@ -81,6 +85,7 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         name="family"
         label={t("device.family")}
         placeholder={t("common.eG", { example: "Cisco ASR9000 Series" })}
+        suggestions={familySuggestions ?? []}
         suffix={
           <IconButton
             aria-label={t(familyRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
@@ -99,6 +104,7 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         name="partNumber"
         label={t("device.module.partNumber")}
         placeholder={t("common.eG", { example: "FK-X0012" })}
+        suggestions={partNumberSuggestions ?? []}
         suffix={
           <IconButton
             aria-label={t(partNumberRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
@@ -116,7 +122,8 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         control={form.control}
         name="version"
         label={t("common.version")}
-        placeholder={t("common.eG", { example: "0.10" })}
+        placeholder={t("common.eG", { example: "26.2.2" })}
+        suggestions={versionSuggestions ?? []}
         suffix={
           <IconButton
             aria-label={t(versionRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
@@ -138,7 +145,7 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         renderIcon={(item) => {
           const info = getLevelInfo(item.value as DeviceSoftwareLevel)
           return (
-            <Icon color={info?.color}>
+            <Icon color={`${info?.color}.500`}>
               <LuTrophy />
             </Icon>
           )

@@ -246,6 +246,7 @@
       "changePriority": "Change priority",
       "clear": "Clear",
       "openCalendar": "Open calendar",
+      "datePlaceholder": "yyyy-mm-dd",
       "clearAll": "Clear all",
       "comments": "Comments",
       "community": "Community",

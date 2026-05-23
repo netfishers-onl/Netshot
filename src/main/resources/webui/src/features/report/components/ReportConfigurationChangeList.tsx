@@ -1,14 +1,15 @@
 import api from "@/api"
 import { DataTable, EmptyResult, EntityLink } from "@/components"
-import { LuGitBranch } from "react-icons/lu"
+import { LuCalendar, LuGitBranch } from "react-icons/lu"
 import { Tooltip } from "@/components/ui/tooltip"
 import { LightConfig } from "@/types"
 import { useI18nUtil } from "@/i18n"
 import { formatDate, sortByDateAsc } from "@/utils"
-import { Button, IconButton, Input, Skeleton, Stack, Text } from "@chakra-ui/react"
+import { Button, DatePicker, type DatePickerValueChangeDetails, IconButton, Portal, Skeleton, Stack, Text } from "@chakra-ui/react"
+import { CalendarDate, parseDate } from "@internationalized/date"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
-import { ChangeEvent, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 import { usePeriodOptions } from "../hooks"
@@ -45,8 +46,14 @@ export default function ReportConfigurationChangeList() {
     },
   })
 
-  function onChangeDay(evt: ChangeEvent<HTMLInputElement>) {
-    setDay(formatDate(new Date(evt.target.value).toISOString(), "yyyy-MM-dd"))
+  const dayCalendarValue = useMemo(() => {
+    try { return [parseDate(day)] } catch { return [] }
+  }, [day])
+
+  function onChangeDay({ value }: DatePickerValueChangeDetails) {
+    if (value.length === 0) return
+    const d = value[0] as CalendarDate
+    setDay(`${d.year}-${String(d.month).padStart(2, "0")}-${String(d.day).padStart(2, "0")}`)
   }
 
   const columns = useMemo(
@@ -123,7 +130,43 @@ export default function ReportConfigurationChangeList() {
           ))}
         </Stack>
         {currentPeriod.label === PeriodType.SpecificDay && (
-          <Input type="date" value={String(day)} onChange={onChangeDay} />
+          <DatePicker.Root
+            value={dayCalendarValue}
+            onValueChange={onChangeDay}
+            closeOnSelect
+            format={(date) => `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`}
+            parse={(value) => { try { return parseDate(value) } catch { return undefined } }}
+            placeholder={t("common.datePlaceholder")}
+          >
+            <DatePicker.Control>
+              <DatePicker.Input />
+              <DatePicker.IndicatorGroup>
+                <DatePicker.Trigger asChild>
+                  <IconButton size="xs" variant="ghost" aria-label={t("common.openCalendar")}>
+                    <LuCalendar />
+                  </IconButton>
+                </DatePicker.Trigger>
+              </DatePicker.IndicatorGroup>
+            </DatePicker.Control>
+            <Portal>
+              <DatePicker.Positioner>
+                <DatePicker.Content>
+                  <DatePicker.View view="day">
+                    <DatePicker.Header />
+                    <DatePicker.DayTable />
+                  </DatePicker.View>
+                  <DatePicker.View view="month">
+                    <DatePicker.Header />
+                    <DatePicker.MonthTable />
+                  </DatePicker.View>
+                  <DatePicker.View view="year">
+                    <DatePicker.Header />
+                    <DatePicker.YearTable />
+                  </DatePicker.View>
+                </DatePicker.Content>
+              </DatePicker.Positioner>
+            </Portal>
+          </DatePicker.Root>
         )}
       </Stack>
       {isPending ? (

@@ -11,7 +11,7 @@ import {
   SystemStyleObject,
   Textarea,
 } from "@chakra-ui/react"
-import { CalendarDate, type DateValue } from "@internationalized/date"
+import { CalendarDate, parseDate, type DateValue } from "@internationalized/date"
 import { forwardRef, ReactElement, ReactNode, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useController, UseControllerProps } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -212,6 +212,9 @@ function FormControl<T>(
           locale={i18n.language}
           disabled={disabled}
           closeOnSelect
+          format={(date) => `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`}
+          parse={(value) => { try { return parseDate(value) } catch { return undefined } }}
+          placeholder={t("common.datePlaceholder")}
         >
           <DatePicker.Control>
             <DatePicker.Input />

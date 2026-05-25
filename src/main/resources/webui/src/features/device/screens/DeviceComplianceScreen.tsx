@@ -34,7 +34,7 @@ function SoftwareLevelTag({ colorPalette, children }: { colorPalette?: string; c
 
 export default function DeviceComplianceScreen() {
   const { t } = useTranslation()
-  const { formatDate: formatLocalDate } = useI18nUtil()
+  const { formatDate, formatDateTime } = useI18nUtil()
   const { device } = useDevice()
   const params = useParams<{ id: string }>()
   const { getColor: getLevelColor } = useSoftwareLevels()
@@ -82,7 +82,7 @@ export default function DeviceComplianceScreen() {
         enableSorting: true,
       }),
       columnHelper.accessor("checkDate", {
-        cell: (info) => <Text>{info.getValue() ? formatLocalDate(info.getValue()) : t("common.nA")}</Text>,
+        cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
         header: t("compliance.lastCheck"),
         enableSorting: true,
       }),
@@ -127,7 +127,7 @@ export default function DeviceComplianceScreen() {
               {device?.endOfSale ? (
                 <Text>
                   {t("compliance.hardware.endOfSaleSince", {
-                    date: formatLocalDate(device?.eosDate, { dateStyle: "long" }),
+                    date: formatDate(device?.eosDate, { dateStyle: "long" }),
                     module: device?.eosModule?.partNumber,
                   })}
                 </Text>
@@ -135,7 +135,7 @@ export default function DeviceComplianceScreen() {
                 <Text>
                   {device?.eosDate
                     ? t("compliance.hardware.notEndOfSaleYetPlanned", {
-                        date: formatLocalDate(device?.eosDate, { dateStyle: "long" }),
+                        date: formatDate(device?.eosDate, { dateStyle: "long" }),
                         module: device?.eosModule?.partNumber,
                       })
                     : t("compliance.hardware.notEndOfSaleYet")}
@@ -146,7 +146,7 @@ export default function DeviceComplianceScreen() {
               {device?.endOfLife ? (
                 <Text>
                   {t("compliance.hardware.endOfLifeSince", {
-                    date: formatLocalDate(device?.eolDate, { dateStyle: "long" }),
+                    date: formatDate(device?.eolDate, { dateStyle: "long" }),
                     module: device?.eolModule?.partNumber,
                   })}
                 </Text>
@@ -154,7 +154,7 @@ export default function DeviceComplianceScreen() {
                 <Text>
                   {device?.eolDate
                     ? t("compliance.hardware.notEndOfLifeYetPlanned", {
-                        date: formatLocalDate(device?.eolDate, { dateStyle: "long" }),
+                        date: formatDate(device?.eolDate, { dateStyle: "long" }),
                         module: device?.eolModule?.partNumber,
                       })
                     : t("compliance.hardware.notEndOfLifeYet")}

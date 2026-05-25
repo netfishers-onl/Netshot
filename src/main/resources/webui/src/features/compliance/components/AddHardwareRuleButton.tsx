@@ -29,8 +29,8 @@ export default function AddHardwareRuleButton(props: AddHardwareRuleButtonProps)
       group: null,
       partNumber: "",
       partNumberRegExp: false,
-      endOfLife: "",
-      endOfSale: "",
+      endOfLife: undefined,
+      endOfSale: undefined,
     },
   })
 

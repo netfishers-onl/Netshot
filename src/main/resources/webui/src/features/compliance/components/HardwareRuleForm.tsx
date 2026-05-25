@@ -32,10 +32,6 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
       return
     }
 
-    if (rule?.driver === null) {
-      return
-    }
-
     form.setValue("driver", rule.driver)
   }, [isPending, rule, form])
 
@@ -121,15 +117,15 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
       />
       <FormControl
         control={form.control}
-        name="endOfLife"
-        label={t("compliance.hardware.endOfLife")}
+        name="endOfSale"
+        label={t("compliance.hardware.endOfSale")}
         type={FormControlType.Date}
         clearable
       />
       <FormControl
         control={form.control}
-        name="endOfSale"
-        label={t("compliance.hardware.endOfSale")}
+        name="endOfLife"
+        label={t("compliance.hardware.endOfLife")}
         type={FormControlType.Date}
         clearable
       />

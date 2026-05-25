@@ -10,21 +10,21 @@ import { useI18nUtil } from "@/i18n"
 import { Button, Text } from "@chakra-ui/react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
-import { endOfDay, startOfDay } from "date-fns"
+import { endOfDay, startOfDay } from "@/utils"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import TableButtonStack from "@/features/administration/components/TableButtonStack"
 
 export type FilterForm = {
-  executionDate: string
+  executionDate: number | undefined
 }
 
 const columnHelper = createColumnHelper<Task>()
 
 export function useTask(status?: TaskStatus) {
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDateTime } = useI18nUtil()
   const dialog = useCustomDialog()
 
   const pagination = usePagination({
@@ -40,7 +40,7 @@ export function useTask(status?: TaskStatus) {
 
   const form = useForm<FilterForm>({
     defaultValues: {
-      executionDate: "",
+      executionDate: undefined,
     },
   })
 
@@ -79,19 +79,19 @@ export function useTask(status?: TaskStatus) {
   })
 
   function applyFilter(values: FilterForm) {
-    setFilters({
-      before: endOfDay(new Date(values.executionDate)).getTime(),
-      after: startOfDay(new Date(values.executionDate)).getTime(),
-    })
+    if (values.executionDate) {
+      setFilters({
+        before: endOfDay(values.executionDate),
+        after: startOfDay(values.executionDate),
+      })
+    } else {
+      setFilters({ before: null, after: null })
+    }
   }
 
   function clearFilter() {
-    setFilters({
-      before: null,
-      after: null,
-    })
-
-    form.setValue("executionDate", "")
+    setFilters({ before: null, after: null })
+    form.setValue("executionDate", undefined)
   }
 
   function openTask(id: number) {
@@ -141,7 +141,7 @@ export function useTask(status?: TaskStatus) {
       header: t("common.status"),
     }),
     columnHelper.accessor("executionDate", {
-      cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+      cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
       header: t("time.executionDate"),
     }),
     columnHelper.accessor("comments", {

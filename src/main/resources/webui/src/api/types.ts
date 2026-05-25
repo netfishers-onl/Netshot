@@ -116,8 +116,8 @@ export type DeviceSearchResult = {
 }
 
 export type DiagnosticResult = {
-  creationDate: string
-  lastCheckDate: string
+  creationDate: number
+  lastCheckDate: number
   diagnosticName: string
   type: string
 }
@@ -173,8 +173,8 @@ export type CreateOrUpdateHardwareRule = {
   partNumberRegExp: boolean
   family: string
   familyRegExp: boolean
-  endOfSale: string
-  endOfLife: string
+  endOfSale?: number
+  endOfLife?: number
 }
 
 export type CreateOrUpdatePolicy = {
@@ -279,7 +279,7 @@ export type CreateOrUpdateTaskPayload = {
   device?: number
   domain?: number
   subnets?: string
-  scheduleReference?: Date
+  scheduleReference?: number
   scheduleType?: TaskScheduleType
   scheduleFactor?: number
   comments?: string

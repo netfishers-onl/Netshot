@@ -42,7 +42,7 @@ const columnHelper = createColumnHelper<DeviceAccessFailure>()
 
 export default function ReportDeviceAccessFailure() {
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDateTime } = useI18nUtil()
   const pagination = usePagination({
     limit: 50,
   })
@@ -112,11 +112,11 @@ export default function ReportDeviceAccessFailure() {
         header: t("common.family"),
       }),
       columnHelper.accessor("lastSuccess", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+        cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
         header: t("device.lastSuccessfulSnapshot"),
       }),
       columnHelper.accessor("lastFailure", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+        cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
         header: t("device.lastFailedSnapshot"),
       }),
       columnHelper.display({

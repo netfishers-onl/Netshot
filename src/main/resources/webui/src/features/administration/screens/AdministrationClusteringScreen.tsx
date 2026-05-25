@@ -6,7 +6,6 @@ import { useI18nUtil } from "@/i18n"
 import { search } from "@/utils"
 import { Button, Heading, Separator, Skeleton, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { formatDistanceStrict } from "date-fns"
 import { useCallback } from "react"
 import { LuRefreshCcw } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
@@ -14,7 +13,7 @@ import { QUERIES } from "../constants"
 
 export default function AdministrationClusteringScreen() {
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDateTime } = useI18nUtil()
   const pagination = usePagination()
 
   const {
@@ -114,15 +113,14 @@ export default function AdministrationClusteringScreen() {
                         <Separator orientation="vertical" />
                         <Stack gap="0">
                           <Text fontWeight="semibold" fontSize="lg">
-                            {formatDate(item?.lastSeenTime)}
+                            {formatDateTime(item?.lastSeenTime)}
                           </Text>
                           <Text color="grey.400">{t("device.lastSeen")}</Text>
                         </Stack>
                         <Separator orientation="vertical" />
                         <Stack gap="0">
                           <Text fontWeight="semibold" fontSize="lg">
-                            {formatDistanceStrict(new Date(), new Date(item?.lastStatusChangeTime))}{" "}
-                            {t("time.ago")}
+                            {formatDateTime(item?.lastStatusChangeTime)}
                           </Text>
                           <Text color="grey.400">{t("compliance.lastStatusChange")}</Text>
                         </Stack>

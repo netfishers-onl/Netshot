@@ -19,7 +19,7 @@ const columnHelper = createColumnHelper<ConfigComplianceDeviceStatus>()
 export default function DeviceConfigurationCompliancePanel(props: DeviceConfigurationPanelProps) {
   const { name, configs } = props
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDateTime } = useI18nUtil()
   const controls = useAnimationControls()
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true)
 
@@ -59,11 +59,11 @@ export default function DeviceConfigurationCompliancePanel(props: DeviceConfigur
         header: t("policy.rule.label"),
       }),
       columnHelper.accessor("checkDate", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+        cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
         header: t("time.testDateTime"),
       }),
     ],
-    [t, formatDate]
+    [t, formatDateTime]
   )
 
   return (

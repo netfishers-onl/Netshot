@@ -4,9 +4,8 @@ import { MUTATIONS } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { HardwareRule, PropsWithRenderItem } from "@/types"
-import { getDateFromUnix } from "@/utils"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useEffect, useMemo } from "react"
+import { useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
@@ -32,8 +31,8 @@ export default function EditHardwareRuleButton(props: EditHardwareRuleButtonProp
       group: rule.targetGroup?.id,
       partNumber: rule?.partNumber,
       partNumberRegExp: rule?.partNumberRegExp,
-      endOfLife: getDateFromUnix(rule?.endOfLife),
-      endOfSale: getDateFromUnix(rule?.endOfSale),
+      endOfLife: rule?.endOfLife,
+      endOfSale: rule?.endOfSale,
     }
   }, [rule])
 
@@ -41,10 +40,6 @@ export default function EditHardwareRuleButton(props: EditHardwareRuleButtonProp
     mode: "onChange",
     defaultValues,
   })
-
-  useEffect(() => {
-    form.reset(defaultValues)
-  }, [defaultValues])
 
   const mutation = useMutation({
     mutationKey: MUTATIONS.HARDWARE_RULE_UPDATE,
@@ -56,6 +51,7 @@ export default function EditHardwareRuleButton(props: EditHardwareRuleButtonProp
   })
 
   const open = () => {
+    form.reset(defaultValues)
     const dialogRef = dialog.open(MUTATIONS.HARDWARE_RULE_UPDATE, {
       title: t("compliance.hardware.editRule"),
       description: <HardwareRuleForm rule={rule} />,

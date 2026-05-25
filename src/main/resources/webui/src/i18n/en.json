@@ -246,7 +246,14 @@
       "changePriority": "Change priority",
       "clear": "Clear",
       "openCalendar": "Open calendar",
-      "datePlaceholder": "yyyy-mm-dd",
+      "date": {
+        "yearLetter": "y",
+        "monthLetter": "m",
+        "dayLetter": "d",
+        "hourLetter": "h",
+        "minuteLetter": "m",
+        "secondLetter": "s"
+      },
       "clearAll": "Clear all",
       "comments": "Comments",
       "community": "Community",

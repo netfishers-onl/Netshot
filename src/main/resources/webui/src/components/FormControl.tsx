@@ -13,9 +13,11 @@ import {
   Textarea,
   useListCollection,
 } from "@chakra-ui/react"
-import { CalendarDate, parseDate, type DateValue } from "@internationalized/date"
+import { type DateValue } from "@internationalized/date"
+import { calendarDateToTimestamp, numberToCalendarDates } from "@/utils"
 import { forwardRef, ReactElement, ReactNode, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useController, UseControllerProps } from "react-hook-form"
+import { useI18nUtil } from "@/i18n"
 import { useTranslation } from "react-i18next"
 
 import { LuCalendar, LuEye, LuEyeOff, LuLock, LuLockOpen, LuX } from "react-icons/lu"
@@ -88,6 +90,7 @@ function FormControl<T>(
   } = props
 
   const { t, i18n } = useTranslation()
+  const { datePlaceholder } = useI18nUtil()
   const [showPassword, setShowPassword] = useState(false)
   const [isUnchanged, setIsUnchanged] = useState(allowUnchanged)
   const passwordInputRef = useRef<HTMLInputElement>(null)
@@ -173,28 +176,14 @@ function FormControl<T>(
     field.onChange(PASSWORD_UNCHANGED)
   }, [field])
 
-  const dateValue = useMemo<DateValue[]>(() => {
-    const v = field.value as string
-    if (!v) return []
-    const parts = v.split("-")
-    if (parts.length < 3) return []
-    const year = parseInt(parts[0])
-    const month = parseInt(parts[1])
-    const day = parseInt(parts[2])
-    if (isNaN(year) || isNaN(month) || isNaN(day)) return []
-    return [new CalendarDate(year, month, day)]
-  }, [field.value])
+  const dateValue = useMemo<DateValue[]>(
+    () => numberToCalendarDates(field.value as number | undefined),
+    [field.value]
+  )
 
   const handleDateChange = useCallback(
     ({ value }: DatePickerValueChangeDetails) => {
-      if (value.length === 0) {
-        field.onChange("")
-      } else {
-        const d = value[0] as CalendarDate
-        field.onChange(
-          `${d.year}-${String(d.month).padStart(2, "0")}-${String(d.day).padStart(2, "0")}`
-        )
-      }
+      field.onChange(value.length === 0 ? null : calendarDateToTimestamp(value[0]))
       field.onBlur()
     },
     [field]
@@ -288,9 +277,7 @@ function FormControl<T>(
           locale={i18n.language}
           disabled={disabled}
           closeOnSelect
-          format={(date) => `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`}
-          parse={(value) => { try { return parseDate(value) } catch { return undefined } }}
-          placeholder={t("common.datePlaceholder")}
+          placeholder={datePlaceholder}
         >
           <DatePicker.Control>
             <DatePicker.Input />

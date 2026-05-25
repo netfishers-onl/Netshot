@@ -4,9 +4,9 @@ import { LuCalendar, LuGitBranch } from "react-icons/lu"
 import { Tooltip } from "@/components/ui/tooltip"
 import { LightConfig } from "@/types"
 import { useI18nUtil } from "@/i18n"
-import { formatDate, sortByDateAsc } from "@/utils"
+import { calendarDateToTimestamp, numberToCalendarDates, sortByDateAsc } from "@/utils"
 import { Button, DatePicker, type DatePickerValueChangeDetails, IconButton, Portal, Skeleton, Stack, Text } from "@chakra-ui/react"
-import { CalendarDate, parseDate } from "@internationalized/date"
+import { fromAbsolute, getLocalTimeZone, today, toZoned } from "@internationalized/date"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useMemo, useState } from "react"
@@ -19,16 +19,17 @@ import ReportConfigurationCompareModal from "./ReportConfigurationCompareModal"
 const columnHelper = createColumnHelper<LightConfig>()
 
 export default function ReportConfigurationChangeList() {
-  const { t } = useTranslation()
-  const { formatDate: formatLocalDate } = useI18nUtil()
+  const { t, i18n } = useTranslation()
+  const { formatDateTime, datePlaceholder } = useI18nUtil()
   const periodOptions = usePeriodOptions()
 
-  const [day, setDay] = useState<string>(formatDate(new Date().toISOString(), "yyyy-MM-dd"))
+  const tz = getLocalTimeZone()
+  const [day, setDay] = useState<number>(() => toZoned(today(tz), tz).toDate().getTime())
   const [currentPeriod, setCurrentPeriod] = useState<Period>(periodOptions.getFirst())
 
   const range = useMemo(() => {
     if (currentPeriod.label === PeriodType.SpecificDay) {
-      return currentPeriod.value(new Date(day))
+      return currentPeriod.value(fromAbsolute(day, tz).toDate())
     }
 
     return currentPeriod.value()
@@ -46,23 +47,20 @@ export default function ReportConfigurationChangeList() {
     },
   })
 
-  const dayCalendarValue = useMemo(() => {
-    try { return [parseDate(day)] } catch { return [] }
-  }, [day])
+  const dayCalendarValue = useMemo(() => numberToCalendarDates(day), [day])
 
   function onChangeDay({ value }: DatePickerValueChangeDetails) {
     if (value.length === 0) return
-    const d = value[0] as CalendarDate
-    setDay(`${d.year}-${String(d.month).padStart(2, "0")}-${String(d.day).padStart(2, "0")}`)
+    setDay(calendarDateToTimestamp(value[0]))
   }
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("changeDate", {
-        cell: (info) => <Text>{info.getValue() ? formatLocalDate(info.getValue()) : t("common.nA")}</Text>,
+        cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
         header: t("time.dateTime"),
       }),
-      columnHelper.accessor("name", {
+      columnHelper.accessor("deviceName", {
         cell: (info) => (
           <EntityLink to={`/app/devices/${info.row.original.deviceId}/configuration`}>
             {info.getValue()}
@@ -100,7 +98,7 @@ export default function ReportConfigurationChangeList() {
         },
       }),
     ],
-    [t, formatLocalDate]
+    [t, formatDateTime]
   )
 
   return (
@@ -133,10 +131,9 @@ export default function ReportConfigurationChangeList() {
           <DatePicker.Root
             value={dayCalendarValue}
             onValueChange={onChangeDay}
+            locale={i18n.language}
             closeOnSelect
-            format={(date) => `${date.year}-${String(date.month).padStart(2, "0")}-${String(date.day).padStart(2, "0")}`}
-            parse={(value) => { try { return parseDate(value) } catch { return undefined } }}
-            placeholder={t("common.datePlaceholder")}
+            placeholder={datePlaceholder}
           >
             <DatePicker.Control>
               <DatePicker.Input />

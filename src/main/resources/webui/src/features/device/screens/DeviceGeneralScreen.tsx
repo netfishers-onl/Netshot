@@ -10,7 +10,7 @@ import { useDevice } from "../contexts/device"
 
 export default function DeviceGeneralScreen() {
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDateTime } = useI18nUtil()
   const { device, type, isLoading } = useDevice()
   const attributeDefinitions = useMemo<DeviceAttributeDefinition[]>(() => {
     return type?.attributes.filter((a) => a.level === DeviceAttributeLevel.Device)
@@ -124,7 +124,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("time.creationDate")}</Text>
             </Box>
             <Skeleton loading={!!isLoading}>
-              <Text>{device?.createdDate ? formatDate(device?.createdDate) : t("common.nA")}</Text>
+              <Text>{device?.createdDate ? formatDateTime(device?.createdDate) : t("common.nA")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -132,7 +132,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("device.lastChange")}</Text>
             </Box>
             <Skeleton loading={!!isLoading}>
-              <Text>{device?.changeDate ? formatDate(device?.changeDate) : t("common.nA")}</Text>
+              <Text>{device?.changeDate ? formatDateTime(device?.changeDate) : t("common.nA")}</Text>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">
@@ -141,7 +141,7 @@ export default function DeviceGeneralScreen() {
             </Box>
             <Skeleton loading={!!isLoading}>
               <Text>
-                {device?.lastConnectionDate ? formatDate(device?.lastConnectionDate) : t("common.never")}
+                {device?.lastConnectionDate ? formatDateTime(device?.lastConnectionDate) : t("common.never")}
               </Text>
             </Skeleton>
           </Flex>

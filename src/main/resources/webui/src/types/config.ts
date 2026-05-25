@@ -64,8 +64,8 @@ export type ConfigDiffProp = {
 }
 
 export type ConfigDiff = {
-  originalDate: string
-  revisedDate: string
+  originalDate: number
+  revisedDate: number
   deltas: {
     additionalProp1: ConfigDiffProp[]
     additionalProp2: ConfigDiffProp[]

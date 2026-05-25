@@ -2,7 +2,7 @@ import { Address } from "./address";
 
 export type MgmtDomain = {
   id: number;
-  changeDate: string;
+  changeDate: number;
   name: string;
   description: string;
   server4Address: Address;

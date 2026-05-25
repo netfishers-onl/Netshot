@@ -3,7 +3,8 @@ import { DataTable, EmptyResult, Protected, Search } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
 import { HardwareRule, Level } from "@/types"
-import { formatDate, search } from "@/utils"
+import { search } from "@/utils"
+import { useI18nUtil } from "@/i18n/useI18nUtil"
 import { Badge, Button, Heading, Icon, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
@@ -20,6 +21,7 @@ const columnHelper = createColumnHelper<HardwareRule>()
 
 export default function HardwareComplianceRuleScreen() {
   const { t } = useTranslation()
+  const { formatDate } = useI18nUtil()
   const pagination = usePagination()
 
   const { data: rules, isPending } = useQuery({
@@ -112,14 +114,14 @@ export default function HardwareComplianceRuleScreen() {
       }),
       columnHelper.accessor("endOfSale", {
         cell: (info) => (
-          <Text>{info.getValue() ? formatDate(info.getValue(), "yyyy-MM-dd") : t("common.nA")}</Text>
+          <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>
         ),
         header: t("compliance.hardware.endOfSale"),
         size: 10000,
       }),
       columnHelper.accessor("endOfLife", {
         cell: (info) => (
-          <Text>{info.getValue() ? formatDate(info.getValue(), "yyyy-MM-dd") : t("common.nA")}</Text>
+          <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>
         ),
         header: t("compliance.hardware.endOfLife"),
         size: 10000,

@@ -23,7 +23,7 @@ const columnHelper = createColumnHelper<DeviceDiagnosticResult>()
 export default function DeviceDiagnosticScreen() {
   const params = useParams<{ id: string }>()
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDateTime } = useI18nUtil()
   const pagination = usePagination()
   const { device } = useDevice()
 
@@ -52,11 +52,11 @@ export default function DeviceDiagnosticScreen() {
       header: t("common.type"),
     }),
     columnHelper.accessor("creationDate", {
-      cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+      cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
       header: t("time.creationDate"),
     }),
     columnHelper.accessor("lastCheckDate", {
-      cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+      cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
       header: t("compliance.lastCheck"),
     }),
   ]

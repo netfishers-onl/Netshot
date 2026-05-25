@@ -2,21 +2,23 @@ import api from "@/api"
 import { Chart, DataTable } from "@/components"
 import { LuRefreshCcw } from "react-icons/lu"
 import { GroupedHardwareSupportStat, HardwareSupportStatType } from "@/types"
-import { formatDate, getDateFromUnix, groupStatByDate } from "@/utils"
+import { groupStatByDate } from "@/utils"
 import { Button, Heading, Skeleton, Spacer, Stack, Text, useToken } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { CellContext, createColumnHelper } from "@tanstack/react-table"
 import { ChartConfiguration } from "chart.js/auto"
-import { endOfMonth } from "date-fns"
+import { endOfMonth, getLocalTimeZone, today, toZoned } from "@internationalized/date"
 import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { HardwareDeviceListButton } from "../components"
 import { QUERIES } from "../constants"
+import { useI18nUtil } from "@/i18n"
 
 const columnHelper = createColumnHelper<GroupedHardwareSupportStat>()
 
 export default function ReportHardwareSupportStatusScreen() {
   const { t } = useTranslation()
+  const { formatDate, formatMonthYear } = useI18nUtil()
   const [green500] = useToken("colors", "green.500")
   const [bronze500] = useToken("colors", "bronze.500")
   const [grey500] = useToken("colors", "grey.500")
@@ -55,13 +57,8 @@ export default function ReportHardwareSupportStatusScreen() {
       eol: 0,
       eox: 0,
     }
-    const currentDate = new Date()
-
-    currentDate.setMilliseconds(0)
-    currentDate.setSeconds(0)
-    currentDate.setMinutes(0)
-    currentDate.setHours(0)
-    currentDate.setDate(1)
+    const tz = getLocalTimeZone()
+    const baseMonth = today(tz).set({ day: 1 })
 
     for (const stat of stats) {
       if (stat.type === HardwareSupportStatType.Eos) {
@@ -74,12 +71,12 @@ export default function ReportHardwareSupportStatusScreen() {
     max.eox = max.eos > max.eol ? max.eos : max.eol
 
     for (let m = -4 * 12; m < 8 * 12; m++) {
-      const month = new Date(currentDate.valueOf())
-      month.setMonth(m)
-      const endMonth = endOfMonth(month)
+      const month = baseMonth.add({ months: m })
+      const monthStart = toZoned(month, tz).toDate().getTime()
+      const monthEnd = toZoned(endOfMonth(month), tz).set({ hour: 23, minute: 59, second: 59, millisecond: 999 }).toDate().getTime()
 
       for (const stat of stats) {
-        if (stat.eoxDate >= month.getTime() && stat.eoxDate < endMonth.getTime()) {
+        if (stat.eoxDate >= monthStart && stat.eoxDate < monthEnd) {
           if (stat.type === HardwareSupportStatType.Eos) {
             counts.eos += stat.deviceCount
           } else if (stat.type === HardwareSupportStatType.Eol) {
@@ -88,7 +85,7 @@ export default function ReportHardwareSupportStatusScreen() {
         }
       }
 
-      labels.push(month.getMonth() === 0 ? formatDate(month.getTime(), "yyyy-MM") : "")
+      labels.push(month.month === 1 ? formatMonthYear(toZoned(month, tz).toDate()) : "")
       datas.eos.push(counts.eos)
       datas.eol.push(counts.eol)
       datas.max.push(max.eox)
@@ -143,7 +140,7 @@ export default function ReportHardwareSupportStatusScreen() {
         },
       },
     } as ChartConfiguration
-  }, [isPending, stats, t, green500, bronze500, grey500])
+  }, [isPending, stats, t, green500, bronze500, grey500, formatMonthYear])
 
   const getFormattedCount = useCallback(
     (info: CellContext<GroupedHardwareSupportStat, number>) => {
@@ -168,7 +165,7 @@ export default function ReportHardwareSupportStatusScreen() {
         cell: (info) => (
           <Text>
             {info.getValue()
-              ? formatDate(getDateFromUnix(info.getValue()), "yyyy-MM-dd")
+              ? formatDate(info.getValue())
               : t("common.never")}
           </Text>
         ),

@@ -30,7 +30,7 @@ export type TaskDialogProps = {
 export default function TaskDialog(props: TaskDialogProps) {
   const { id } = props
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDateTime } = useI18nUtil()
   const dialogConfig = useDialogConfig()
   const [showLog, setShowLog] = useState<boolean>(false)
 
@@ -55,8 +55,8 @@ export default function TaskDialog(props: TaskDialogProps) {
     },
   })
 
-  const creationDate = task?.creationDate ? formatDate(task?.creationDate) : null
-  const executionDate = task?.executionDate ? formatDate(task?.executionDate) : null
+  const creationDate = task?.creationDate ? formatDateTime(task?.creationDate) : null
+  const executionDate = task?.executionDate ? formatDateTime(task?.executionDate) : null
   const priorityLabel = getSchedulePriorityLabel(task?.priority)
 
   function toggleLog() {

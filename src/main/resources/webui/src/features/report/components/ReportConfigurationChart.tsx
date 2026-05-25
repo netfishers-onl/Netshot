@@ -1,15 +1,16 @@
 import api from "@/api"
 import { Chart } from "@/components"
+import { useI18nUtil } from "@/i18n/useI18nUtil"
 import { Steps, Heading, Skeleton, Stack } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query"
 import { ChartConfiguration } from "chart.js/auto"
-import { format } from "date-fns"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 
 export default function ReportConfigurationChart() {
   const { t } = useTranslation()
+  const { formatDayMonth } = useI18nUtil()
 
   const { data: changes = [], isPending } = useQuery({
     queryKey: [QUERIES.REPORT_CONFIG_CHANGE_OVER_LAST_DAY],
@@ -23,7 +24,7 @@ export default function ReportConfigurationChart() {
 
     let changeMax = 1
 
-    const labels = changes.map((change) => format(change?.changeDay, "dd/MM"))
+    const labels = changes.map((change) => formatDayMonth(change?.changeDay))
     const data = changes.map((change) => {
       changeMax = Math.max(changeMax, change.changeCount)
       return change.changeCount
@@ -49,7 +50,7 @@ export default function ReportConfigurationChart() {
         },
       },
     } as ChartConfiguration
-  }, [changes])
+  }, [changes, formatDayMonth])
 
   return (
     <Stack gap="5">

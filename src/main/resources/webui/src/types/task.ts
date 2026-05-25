@@ -38,20 +38,20 @@ export enum TaskStatus {
 
 export type Task = {
   author: string
-  changeDate: string
+  changeDate: number
   comments: string
-  creationDate: string
+  creationDate: number
   debugEnabled: boolean
-  executionDate: string
+  executionDate: number
   id: number
-  scheduleReference: string
+  scheduleReference: number
   scheduleType: TaskScheduleType
   scheduleFactor: number
   status: TaskStatus
   target: string
   runnerId: string
   log: string
-  nextExecutionDate: string
+  nextExecutionDate: number
   taskDescription: string
   repeating: boolean
   type: string

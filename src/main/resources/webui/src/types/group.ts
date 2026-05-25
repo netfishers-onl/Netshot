@@ -4,7 +4,7 @@ export enum GroupType {
 }
 
 export type Group = {
-  changeDate: string;
+  changeDate: number;
   id: number;
   name: string;
   folder: string;

@@ -1,58 +1,56 @@
 import { createOptionHook } from "@/hooks"
-import { endOfDay, startOfDay, subHours } from "date-fns"
+import { fromDate, getLocalTimeZone, now } from "@internationalized/date"
 import { PeriodType } from "../types"
 
 export const usePeriodOptions = createOptionHook([
   {
     label: PeriodType.LastHour,
     value() {
-      const current = new Date()
-
+      const tz = getLocalTimeZone()
       return {
-        to: new Date(),
-        from: subHours(current, 1),
+        to: now(tz).toDate(),
+        from: now(tz).subtract({ hours: 1 }).toDate(),
       }
     },
   },
   {
     label: PeriodType.Last4Hours,
     value() {
-      const current = new Date()
-
+      const tz = getLocalTimeZone()
       return {
-        to: new Date(),
-        from: subHours(current, 4),
+        to: now(tz).toDate(),
+        from: now(tz).subtract({ hours: 4 }).toDate(),
       }
     },
   },
   {
     label: PeriodType.Last12Hours,
     value() {
-      const current = new Date()
-
+      const tz = getLocalTimeZone()
       return {
-        to: new Date(),
-        from: subHours(current, 12),
+        to: now(tz).toDate(),
+        from: now(tz).subtract({ hours: 12 }).toDate(),
       }
     },
   },
   {
     label: PeriodType.LastDay,
     value() {
-      const current = new Date()
-
+      const tz = getLocalTimeZone()
       return {
-        to: new Date(),
-        from: subHours(current, 24),
+        to: now(tz).toDate(),
+        from: now(tz).subtract({ hours: 24 }).toDate(),
       }
     },
   },
   {
     label: PeriodType.SpecificDay,
     value(from: Date) {
+      const tz = getLocalTimeZone()
+      const zdt = fromDate(from, tz)
       return {
-        to: endOfDay(from),
-        from: startOfDay(from),
+        from: zdt.set({ hour: 0, minute: 0, second: 0, millisecond: 0 }).toDate(),
+        to: zdt.set({ hour: 23, minute: 59, second: 59, millisecond: 999 }).toDate(),
       }
     },
   },

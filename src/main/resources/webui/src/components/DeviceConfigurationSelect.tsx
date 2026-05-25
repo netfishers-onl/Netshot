@@ -17,14 +17,14 @@ export default function DeviceConfigurationSelect<T>(props: DeviceConfigurationS
   const { deviceId, control, name, defaultValue, required, readOnly, label, ...selectProps } = props
 
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDateTime } = useI18nUtil()
 
   const { isPending, data } = useDeviceConfigs(deviceId)
 
   const options = isPending
     ? []
     : data.map((item) => ({
-        label: formatDate(item.changeDate),
+        label: formatDateTime(item.changeDate),
         value: item,
       }))
 

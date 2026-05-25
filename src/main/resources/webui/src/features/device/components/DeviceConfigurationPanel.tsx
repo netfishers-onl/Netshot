@@ -17,7 +17,7 @@ export type DeviceConfigurationPanelProps = {
 export default function DeviceConfigurationPanel(props: DeviceConfigurationPanelProps) {
   const { config } = props
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDateTime } = useI18nUtil()
   const controls = useAnimationControls()
   const { type, isLoading } = useDevice()
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true)
@@ -25,8 +25,8 @@ export default function DeviceConfigurationPanel(props: DeviceConfigurationPanel
   const setCurrent = useDeviceConfigurationCompareStore((state) => state.setCurrent)
 
   const changeDate = useMemo(() => {
-    return formatDate(config?.changeDate)
-  }, [config, formatDate])
+    return formatDateTime(config?.changeDate)
+  }, [config, formatDateTime])
 
   const toggleCollapse = useCallback(async () => {
     setIsCollapsed((prev) => !prev)

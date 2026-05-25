@@ -23,7 +23,7 @@ const columnHelper = createColumnHelper<DeviceModule>()
 export default function DeviceModuleScreen() {
   const params = useParams<{ id: string }>()
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDateTime } = useI18nUtil()
   const pagination = usePagination()
   const [history, setHistory] = useState(false)
 
@@ -72,13 +72,13 @@ export default function DeviceModuleScreen() {
       columns.push(
         {
           accessorKey: "firstSeenDate",
-          cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+          cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
           header: t("device.firstSeen"),
           enableSorting: true,
         },
         {
           accessorKey: "lastSeenDate",
-          cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+          cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
           header: t("device.lastSeen"),
           enableSorting: true,
         }
@@ -86,7 +86,7 @@ export default function DeviceModuleScreen() {
     }
 
     return columns
-  }, [t, history, formatDate])
+  }, [t, history, formatDateTime])
 
   return (
     <Stack gap="6" flex="1" overflow="auto">

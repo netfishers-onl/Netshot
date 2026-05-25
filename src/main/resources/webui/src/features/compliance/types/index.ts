@@ -28,8 +28,8 @@ export type SoftwareRuleFormValues = {
 
 export type HardwareRuleFormValues = {
   driver: DeviceType["name"]
-  endOfLife: string
-  endOfSale: string
+  endOfLife: number | undefined
+  endOfSale: number | undefined
   family: string
   familyRegExp: boolean
   partNumber: string

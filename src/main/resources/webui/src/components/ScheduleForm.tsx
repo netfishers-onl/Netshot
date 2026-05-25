@@ -1,7 +1,7 @@
 import i18n from "@/i18n"
 import { SchedulePriority, TaskScheduleType } from "@/types"
 import { Stack } from "@chakra-ui/react"
-import { addMinutes, format, setHours, setMinutes } from "date-fns"
+import { fromAbsolute, getLocalTimeZone, now, today, toZoned } from "@internationalized/date"
 import { useEffect, useMemo } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -18,7 +18,7 @@ enum ScheduleType {
 export type ScheduleFormType = {
   schedule: {
     scheduleType: TaskScheduleType
-    scheduleReference: Date
+    scheduleReference: number
     scheduleFactor: number
     schedulePriority: SchedulePriority
   }
@@ -67,7 +67,7 @@ export const SCHEDULE_PRIORITY_OPTIONS = [
 
 export type FormData = {
   type: ScheduleType
-  date: string
+  date: number | undefined
   time: string
   minute: number
   every: number
@@ -78,13 +78,14 @@ export type FormData = {
 export default function ScheduleForm() {
   const { t } = useTranslation()
 
+  const tz = getLocalTimeZone()
   const parentForm = useFormContext<ScheduleFormType>()
   const scheduleForm = useForm<FormData>({
     defaultValues: {
       type: SCHEDULE_TYPE_OPTIONS[0].value,
       every: 1,
-      date: format(new Date(), "yyyy-MM-dd"),
-      time: format(new Date(), "HH:mm"),
+      date: toZoned(today(tz), tz).toDate().getTime(),
+      time: `${String(now(tz).hour).padStart(2, "0")}:${String(now(tz).minute).padStart(2, "0")}`,
       minute: MINUTE_OPTIONS[0].value,
       frequency: "hourly",
       priority: SCHEDULE_PRIORITY_OPTIONS[1].value.toString(),
@@ -110,7 +111,7 @@ export default function ScheduleForm() {
 
   useEffect(() => {
     // Set outer default values
-    parentForm.setValue("schedule.scheduleReference", new Date())
+    parentForm.setValue("schedule.scheduleReference", now(tz).toDate().getTime())
     parentForm.setValue("schedule.scheduleFactor", 1)
     parentForm.setValue("schedule.scheduleType", TaskScheduleType.Asap)
     parentForm.setValue("schedule.schedulePriority", SchedulePriority.Normal)
@@ -119,25 +120,21 @@ export default function ScheduleForm() {
     const watcher = scheduleForm.watch(
       ({ type, date, time, every, frequency, minute, priority }) => {
         let scheduleType: TaskScheduleType = TaskScheduleType.Asap
-        let scheduleReference: Date = new Date()
+        let scheduleReference: number = now(tz).toDate().getTime()
 
         if (type === ScheduleType.AtTime) {
           scheduleType = TaskScheduleType.At
-          scheduleReference = addMinutes(new Date(), minute)
+          scheduleReference = now(tz).add({ minutes: minute }).toDate().getTime()
         } else if (type === ScheduleType.AtDateTime) {
           scheduleType = TaskScheduleType.At
 
           const [hours, minutes] = time.split(":")
 
-          scheduleReference = new Date(date)
-          scheduleReference = setHours(scheduleReference, +hours)
-          scheduleReference = setMinutes(scheduleReference, +minutes)
+          scheduleReference = fromAbsolute(date, tz).set({ hour: +hours, minute: +minutes, second: 0, millisecond: 0 }).toDate().getTime()
         } else if (type === ScheduleType.Repeat) {
           const [hours, minutes] = time.split(":")
 
-          scheduleReference = new Date(date)
-          scheduleReference = setHours(scheduleReference, +hours)
-          scheduleReference = setMinutes(scheduleReference, +minutes)
+          scheduleReference = fromAbsolute(date, tz).set({ hour: +hours, minute: +minutes, second: 0, millisecond: 0 }).toDate().getTime()
 
           if (frequency === "hourly") {
             scheduleType = TaskScheduleType.Hourly

@@ -25,7 +25,7 @@ const columnHelper = createColumnHelper<Task>()
 export default function DeviceTaskScreen() {
   const params = useParams<{ id: string }>()
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDateTime } = useI18nUtil()
   const taskDialog = useCustomDialog()
   const pagination = usePagination({
     limit: 20,
@@ -54,7 +54,7 @@ export default function DeviceTaskScreen() {
         header: t("common.status"),
       }),
       columnHelper.accessor("executionDate", {
-        cell: (info) => <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>,
+        cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
         header: t("time.executionDate"),
       }),
       columnHelper.accessor("comments", {

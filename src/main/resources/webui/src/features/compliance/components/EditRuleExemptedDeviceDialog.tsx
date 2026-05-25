@@ -11,7 +11,6 @@ import { useI18nUtil } from "@/i18n"
 import { search } from "@/utils"
 import { Button, Dialog, Flex, IconButton, Portal, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { addDays } from "date-fns"
 import { useCallback, useState } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -19,7 +18,7 @@ import { QUERIES } from "../constants"
 
 type Form = {
   device: SimpleDevice
-  expirationDate: string
+  expirationDate: number | undefined
 }
 
 type AddRuleExemptedDeviceFormProps = {
@@ -81,7 +80,7 @@ function AddRuleExemptedDeviceButton(props: AddRuleExemptedDeviceButtonProps) {
     mode: "onChange",
     defaultValues: {
       device: null,
-      expirationDate: addDays(new Date(), 7).toISOString().substring(0, 10),
+      expirationDate: Date.now() + 7 * 24 * 3_600_000,
     },
   })
 
@@ -154,7 +153,7 @@ export type EditRuleExemptedDeviceDialogProps = {
 export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDeviceDialogProps) {
   const { policyId, rule } = props
   const { t } = useTranslation()
-  const { formatDate: formatLocalDate } = useI18nUtil()
+  const { formatDate } = useI18nUtil()
   const toast = useToast()
   const dialogConfig = useDialogConfig()
   const queryClient = useQueryClient()
@@ -273,7 +272,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
                             <Stack gap="1">
                               <Text fontWeight="medium">{device?.name}</Text>
                               <Text color="grey.400">
-                                {t("time.expiresOn", { date: formatLocalDate(device?.expirationDate, { dateStyle: "medium" }) })}
+                                {t("time.expiresOn", { date: formatDate(device?.expirationDate, { dateStyle: "medium" }) })}
                               </Text>
                             </Stack>
                             <IconButton

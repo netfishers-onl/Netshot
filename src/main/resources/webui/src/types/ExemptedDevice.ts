@@ -8,5 +8,5 @@ export type ExemptedDevice = {
   mgmtAddress: Address;
   status: DeviceComplianceResultType;
   driver: string;
-  expirationDate: string;
+  expirationDate: number;
 };

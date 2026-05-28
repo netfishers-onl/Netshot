@@ -221,6 +221,7 @@
       "compareDate": "compare: {{date}}"
     },
     "common": {
+      "account": "Account",
       "any": "Any",
       "unknown": "{{description}}",
       "unknownName": "{{name}}",

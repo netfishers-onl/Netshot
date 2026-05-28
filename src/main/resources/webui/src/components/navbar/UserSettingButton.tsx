@@ -11,7 +11,7 @@ export default function UserSettingButton(props: UserSettingButtonProps) {
 
   return renderItem(() =>
     dialog.open({
-      title: t("common.settings"),
+      title: t("common.account"),
       description: <SettingModal />,
       hideFooter: true,
     })

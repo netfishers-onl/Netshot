@@ -9,7 +9,7 @@ import { QUERIES } from "@/constants"
 import { useAuth } from "@/contexts"
 import useToast from "@/hooks/useToast"
 
-import { useUserLevelOptions } from "@/hooks"
+import { useLanguageOptions, useUserLevelOptions } from "@/hooks"
 import { Icon } from "@chakra-ui/react"
 import { LuChevronDown, LuCloud, LuCircleHelp, LuInfo, LuLogOut, LuSettings } from "react-icons/lu"
 import { AboutNetshotModal } from "./AboutNetshotModal"
@@ -17,12 +17,14 @@ import UserSettingButton from "./UserSettingButton"
 
 export default function NavbarUser() {
   const { user } = useAuth()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const queryClient = useQueryClient()
   const toast = useToast()
   const userLevelOptions = useUserLevelOptions()
+  const { options: languageOptions } = useLanguageOptions()
 
   const levelLabel = useMemo(() => userLevelOptions.getLabelByValue(user?.level), [user])
+
 
   const logoutMutation = useMutation({
     mutationFn: api.auth.signout,
@@ -83,7 +85,6 @@ export default function NavbarUser() {
           >
             <Avatar.Root shape="rounded" size="md" bg="green.500">
               <Avatar.Fallback name={user?.username} />
-              {/* <Avatar.Image src="/favicon/android-chrome-512x512.png" /> */}
             </Avatar.Root>
             <Stack gap="1" alignItems="start">
               <Text fontWeight="600" color="white" lineHeight="normal">
@@ -103,12 +104,29 @@ export default function NavbarUser() {
           <Menu.Content>
             <UserSettingButton
               renderItem={(open) => (
-                <Menu.Item onSelect={open} value="settings">
+                <Menu.Item onSelect={open} value="account">
                   <LuSettings />
-                  {t("common.settings")}
+                  {t("common.account")}
                 </Menu.Item>
               )}
             />
+            <Menu.Separator />
+            <Menu.ItemGroup>
+              <Menu.ItemGroupLabel>{t("common.language")}</Menu.ItemGroupLabel>
+              {languageOptions.map((option) => (
+                <Menu.CheckboxItem
+                  key={option.value}
+                  value={option.value}
+                  checked={i18n.language === option.value}
+                  onCheckedChange={() => i18n.changeLanguage(option.value)}
+                >
+                  <Menu.ItemIndicator />
+                  <Text fontSize="xl">{option.flag}</Text>
+                  {option.label}
+                </Menu.CheckboxItem>
+              ))}
+            </Menu.ItemGroup>
+            <Menu.Separator />
             <Menu.Item value="user-guide" asChild>
               <a
                 href="https://github.com/netfishers-onl/Netshot/wiki/Netshot-User-Guide"
@@ -137,6 +155,7 @@ export default function NavbarUser() {
                 </Menu.Item>
               )}
             />
+            <Menu.Separator />
             <Menu.Item onSelect={logout} value="logout">
               <LuLogOut />
               {t("auth.logout")}

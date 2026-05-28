@@ -2,7 +2,7 @@ import { Box, Flex, Heading, Skeleton, Stack, Tag, Text } from "@chakra-ui/react
 import { useTranslation } from "react-i18next"
 
 import { DeviceAttributeDefinition, DeviceAttributeLevel, DeviceStatus } from "@/types"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 
 import { useMemo } from "react"
 import { DeviceAttributeValue } from "../components"
@@ -10,7 +10,7 @@ import { useDevice } from "../contexts/device"
 
 export default function DeviceGeneralScreen() {
   const { t } = useTranslation()
-  const { formatDateTime } = useI18nUtil()
+  const { formatDateTime } = useLocalization()
   const { device, type, isLoading } = useDevice()
   const attributeDefinitions = useMemo<DeviceAttributeDefinition[]>(() => {
     return type?.attributes.filter((a) => a.level === DeviceAttributeLevel.Device)

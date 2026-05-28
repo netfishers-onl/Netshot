@@ -48,7 +48,7 @@ import {
   SucceededTaskScreen,
   TaskScreen,
 } from "@/features/task"
-import i18n from "@/i18n"
+import i18n, { LocalizationProvider } from "@/i18n"
 import { MainScreen } from "@/screens"
 import { Level } from "@/types"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -72,6 +72,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nextProvider i18n={i18n}>
+        <LocalizationProvider>
         <ThemeProvider>
           <BrowserRouter>
             <AuthProvider>
@@ -167,6 +168,7 @@ function App() {
             </AuthProvider>
           </BrowserRouter>
         </ThemeProvider>
+        </LocalizationProvider>
       </I18nextProvider>
     </QueryClientProvider>
   )

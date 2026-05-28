@@ -14,7 +14,7 @@ import {
   DeviceSoftwareLevel,
   Level,
 } from "@/types"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 import { useSoftwareLevels } from "@/hooks"
 
 import DeviceComplianceButton from "../components/DeviceComplianceButton"
@@ -34,7 +34,7 @@ function SoftwareLevelTag({ colorPalette, children }: { colorPalette?: string; c
 
 export default function DeviceComplianceScreen() {
   const { t } = useTranslation()
-  const { formatDate, formatDateTime } = useI18nUtil()
+  const { formatDate, formatDateTime } = useLocalization()
   const { device } = useDevice()
   const params = useParams<{ id: string }>()
   const { getColor: getLevelColor } = useSoftwareLevels()

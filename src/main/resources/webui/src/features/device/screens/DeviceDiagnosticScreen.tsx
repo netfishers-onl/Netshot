@@ -4,7 +4,7 @@ import { LuActivity } from "react-icons/lu"
 import Search from "@/components/Search"
 import { usePagination } from "@/hooks"
 import { DeviceDiagnosticResult, Level } from "@/types"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 import { Button, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
@@ -23,7 +23,7 @@ const columnHelper = createColumnHelper<DeviceDiagnosticResult>()
 export default function DeviceDiagnosticScreen() {
   const params = useParams<{ id: string }>()
   const { t } = useTranslation()
-  const { formatDateTime } = useI18nUtil()
+  const { formatDateTime } = useLocalization()
   const pagination = usePagination()
   const { device } = useDevice()
 

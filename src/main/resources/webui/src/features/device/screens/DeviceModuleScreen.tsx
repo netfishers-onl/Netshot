@@ -10,7 +10,7 @@ import { DataTable, EmptyResult } from "@/components"
 import Search from "@/components/Search"
 import { usePagination } from "@/hooks"
 import { DeviceModule } from "@/types"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 import { search } from "@/utils"
 
 import { QUERIES } from "../constants"
@@ -23,7 +23,7 @@ const columnHelper = createColumnHelper<DeviceModule>()
 export default function DeviceModuleScreen() {
   const params = useParams<{ id: string }>()
   const { t } = useTranslation()
-  const { formatDateTime } = useI18nUtil()
+  const { formatDateTime } = useLocalization()
   const pagination = usePagination()
   const [history, setHistory] = useState(false)
 

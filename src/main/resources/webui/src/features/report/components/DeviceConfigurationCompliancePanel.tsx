@@ -1,7 +1,7 @@
 import { DataTable } from "@/components"
 import { LuChevronDown } from "react-icons/lu"
 import { ConfigComplianceDeviceStatus } from "@/types"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 import { Button, IconButton, Separator, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
 import { createColumnHelper } from "@tanstack/react-table"
 import { motion, useAnimationControls } from "framer-motion"
@@ -19,7 +19,7 @@ const columnHelper = createColumnHelper<ConfigComplianceDeviceStatus>()
 export default function DeviceConfigurationCompliancePanel(props: DeviceConfigurationPanelProps) {
   const { name, configs } = props
   const { t } = useTranslation()
-  const { formatDateTime } = useI18nUtil()
+  const { formatDateTime } = useLocalization()
   const controls = useAnimationControls()
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true)
 

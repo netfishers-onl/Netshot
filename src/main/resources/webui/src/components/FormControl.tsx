@@ -14,10 +14,9 @@ import {
   useListCollection,
 } from "@chakra-ui/react"
 import { type DateValue } from "@internationalized/date"
-import { calendarDateToTimestamp, numberToCalendarDates } from "@/utils"
 import { forwardRef, ReactElement, ReactNode, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useController, UseControllerProps } from "react-hook-form"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 import { useTranslation } from "react-i18next"
 
 import { LuCalendar, LuEye, LuEyeOff, LuLock, LuLockOpen, LuX } from "react-icons/lu"
@@ -90,7 +89,7 @@ function FormControl<T>(
   } = props
 
   const { t, i18n } = useTranslation()
-  const { datePlaceholder } = useI18nUtil()
+  const { datePlaceholder, numberToCalendarDate, calendarDateToTimestamp } = useLocalization()
   const [showPassword, setShowPassword] = useState(false)
   const [isUnchanged, setIsUnchanged] = useState(allowUnchanged)
   const passwordInputRef = useRef<HTMLInputElement>(null)
@@ -176,9 +175,9 @@ function FormControl<T>(
     field.onChange(PASSWORD_UNCHANGED)
   }, [field])
 
-  const dateValue = useMemo<DateValue[]>(
-    () => numberToCalendarDates(field.value as number | undefined),
-    [field.value]
+  const dateValue = useMemo<DateValue | null>(
+    () => numberToCalendarDate(field.value as number | undefined),
+    [field.value, numberToCalendarDate]
   )
 
   const handleDateChange = useCallback(
@@ -186,7 +185,7 @@ function FormControl<T>(
       field.onChange(value.length === 0 ? null : calendarDateToTimestamp(value[0]))
       field.onBlur()
     },
-    [field]
+    [field, calendarDateToTimestamp]
   )
 
   return (
@@ -272,7 +271,7 @@ function FormControl<T>(
       )}
       {type === FormControlType.Date && (
         <DatePicker.Root
-          value={dateValue}
+          value={dateValue ? [dateValue] : []}
           onValueChange={handleDateChange}
           locale={i18n.language}
           disabled={disabled}
@@ -282,7 +281,7 @@ function FormControl<T>(
           <DatePicker.Control>
             <DatePicker.Input />
             <DatePicker.IndicatorGroup>
-              {(clearable && dateValue.length > 0) ? (
+              {(clearable && dateValue != null) ? (
                 <DatePicker.ClearTrigger asChild>
                   <IconButton size="xs" variant="ghost" aria-label={t("common.clear")}>
                     <LuX />

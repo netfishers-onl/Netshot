@@ -12,7 +12,7 @@ import { FormControlType } from "@/components/FormControl"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
 import { DeviceAccessFailure } from "@/types"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 import { search } from "@/utils"
 import {
   Button,
@@ -42,7 +42,7 @@ const columnHelper = createColumnHelper<DeviceAccessFailure>()
 
 export default function ReportDeviceAccessFailure() {
   const { t } = useTranslation()
-  const { formatDateTime } = useI18nUtil()
+  const { formatDateTime } = useLocalization()
   const pagination = usePagination({
     limit: 50,
   })

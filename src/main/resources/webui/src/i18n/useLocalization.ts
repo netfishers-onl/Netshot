@@ -1,13 +1,15 @@
-import { DateFormatter } from "@internationalized/date"
+import { DateFormatter, fromAbsolute, fromDate, toCalendarDate, type DateValue } from "@internationalized/date"
 import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
+import { useTimezone } from "./LocalizationContext"
 
 const PLACEHOLDER_REF_DATE = new Date(2025, 10, 23, 15, 7, 8)
 
-export function useI18nUtil() {
+export function useLocalization() {
   const { i18n, t } = useTranslation()
+  const { timezone } = useTimezone()
 
-  const format = useCallback(
+  const formatNumber = useCallback(
     (value: string) => {
       return new Intl.NumberFormat(i18n.language).format(+value)
     },
@@ -19,8 +21,9 @@ export function useI18nUtil() {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
+      timeZone: timezone,
     })
-  }, [i18n.language])
+  }, [i18n.language, timezone])
 
   const formatDate = useCallback((date: number | Date) => {
     return dateFormatter.format(date instanceof Date ? date : new Date(date))
@@ -30,8 +33,9 @@ export function useI18nUtil() {
     return new DateFormatter(i18n.language, {
       day: "2-digit",
       month: "short",
+      timeZone: timezone,
     })
-  }, [i18n.language])
+  }, [i18n.language, timezone])
 
   const formatDayMonth = useCallback((date: number | Date) => {
     return dayMonthFormatter.format(date instanceof Date ? date : new Date(date))
@@ -41,8 +45,9 @@ export function useI18nUtil() {
     return new DateFormatter(i18n.language, {
       month: "short",
       year: "numeric",
+      timeZone: timezone,
     })
-  }, [i18n.language])
+  }, [i18n.language, timezone])
 
   const formatMonthYear = useCallback((date: number | Date) => {
     return monthYearFormatter.format(date instanceof Date ? date : new Date(date))
@@ -56,8 +61,9 @@ export function useI18nUtil() {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
+      timeZone: timezone,
     })
-  }, [i18n.language])
+  }, [i18n.language, timezone])
 
   const formatDateTime = useCallback((date: number | Date) => {
     return dateTimeFormatter.format(date instanceof Date ? date : new Date(date))
@@ -96,13 +102,37 @@ export function useI18nUtil() {
       .join("")
   }, [dateTimeFormatter, t])
 
+  const startOfDay = useCallback((date: number | Date): number => {
+    const zdt = date instanceof Date ? fromDate(date, timezone) : fromAbsolute(date, timezone)
+    return zdt.set({ hour: 0, minute: 0, second: 0, millisecond: 0 }).toDate().getTime()
+  }, [timezone])
+
+  const startOfNextDay = useCallback((date: number | Date): number => {
+    const zdt = date instanceof Date ? fromDate(date, timezone) : fromAbsolute(date, timezone)
+    return zdt.add({ days: 1 }).set({ hour: 0, minute: 0, second: 0, millisecond: 0 }).toDate().getTime()
+  }, [timezone])
+
+  const calendarDateToTimestamp = useCallback((date: DateValue): number => {
+    return date.toDate(timezone).getTime()
+  }, [timezone])
+
+  const numberToCalendarDate = useCallback((timestamp: number | undefined | null): DateValue | null => {
+    if (timestamp == null || !Number.isFinite(timestamp)) return null
+    return toCalendarDate(fromAbsolute(timestamp, timezone))
+  }, [timezone])
+
   return {
-    format,
+    timezone,
+    formatNumber,
     formatDate,
     formatDayMonth,
     formatMonthYear,
     formatDateTime,
     datePlaceholder,
     dateTimePlaceholder,
+    startOfDay,
+    startOfNextDay,
+    calendarDateToTimestamp,
+    numberToCalendarDate,
   }
 }

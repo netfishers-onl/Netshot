@@ -7,7 +7,7 @@ import { MUTATIONS } from "@/constants"
 import { useDialogConfig, useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { ExemptedDevice, Rule, SimpleDevice } from "@/types"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 import { search } from "@/utils"
 import { Button, Dialog, Flex, IconButton, Portal, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -153,7 +153,7 @@ export type EditRuleExemptedDeviceDialogProps = {
 export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDeviceDialogProps) {
   const { policyId, rule } = props
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDate } = useLocalization()
   const toast = useToast()
   const dialogConfig = useDialogConfig()
   const queryClient = useQueryClient()

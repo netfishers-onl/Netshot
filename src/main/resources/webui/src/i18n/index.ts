@@ -23,6 +23,7 @@ i18n
     },
   })
 
-export * from "./useI18nUtil"
+export * from "./useLocalization"
+export * from "./LocalizationContext"
 
 export default i18n

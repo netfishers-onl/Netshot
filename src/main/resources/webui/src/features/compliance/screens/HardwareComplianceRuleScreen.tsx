@@ -4,7 +4,7 @@ import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
 import { HardwareRule, Level } from "@/types"
 import { search } from "@/utils"
-import { useI18nUtil } from "@/i18n/useI18nUtil"
+import { useLocalization } from "@/i18n/useLocalization"
 import { Badge, Button, Heading, Icon, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
@@ -21,7 +21,7 @@ const columnHelper = createColumnHelper<HardwareRule>()
 
 export default function HardwareComplianceRuleScreen() {
   const { t } = useTranslation()
-  const { formatDate } = useI18nUtil()
+  const { formatDate } = useLocalization()
   const pagination = usePagination()
 
   const { data: rules, isPending } = useQuery({

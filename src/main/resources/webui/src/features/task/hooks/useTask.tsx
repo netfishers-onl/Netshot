@@ -6,11 +6,10 @@ import { QUERIES } from "@/constants"
 import { useCustomDialog } from "@/dialog"
 import { usePagination } from "@/hooks"
 import { Task, TaskStatus } from "@/types"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 import { Button, Text } from "@chakra-ui/react"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
-import { endOfDay, startOfDay } from "@/utils"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -24,7 +23,7 @@ const columnHelper = createColumnHelper<Task>()
 
 export function useTask(status?: TaskStatus) {
   const { t } = useTranslation()
-  const { formatDateTime } = useI18nUtil()
+  const { formatDateTime, startOfDay, startOfNextDay } = useLocalization()
   const dialog = useCustomDialog()
 
   const pagination = usePagination({
@@ -81,7 +80,7 @@ export function useTask(status?: TaskStatus) {
   function applyFilter(values: FilterForm) {
     if (values.executionDate) {
       setFilters({
-        before: endOfDay(values.executionDate),
+        before: startOfNextDay(values.executionDate),
         after: startOfDay(values.executionDate),
       })
     } else {

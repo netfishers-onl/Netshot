@@ -3,10 +3,10 @@ import { DataTable, EmptyResult, EntityLink } from "@/components"
 import { LuCalendar, LuGitBranch } from "react-icons/lu"
 import { Tooltip } from "@/components/ui/tooltip"
 import { LightConfig } from "@/types"
-import { useI18nUtil } from "@/i18n"
-import { calendarDateToTimestamp, numberToCalendarDates, sortByDateAsc } from "@/utils"
+import { useLocalization } from "@/i18n"
+import { sortByDateAsc } from "@/utils"
 import { Button, DatePicker, type DatePickerValueChangeDetails, IconButton, Portal, Skeleton, Stack, Text } from "@chakra-ui/react"
-import { fromAbsolute, getLocalTimeZone, today, toZoned } from "@internationalized/date"
+import { fromAbsolute, today, toZoned } from "@internationalized/date"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useMemo, useState } from "react"
@@ -20,16 +20,15 @@ const columnHelper = createColumnHelper<LightConfig>()
 
 export default function ReportConfigurationChangeList() {
   const { t, i18n } = useTranslation()
-  const { formatDateTime, datePlaceholder } = useI18nUtil()
+  const { formatDateTime, datePlaceholder, timezone, numberToCalendarDate, calendarDateToTimestamp } = useLocalization()
   const periodOptions = usePeriodOptions()
 
-  const tz = getLocalTimeZone()
-  const [day, setDay] = useState<number>(() => toZoned(today(tz), tz).toDate().getTime())
+  const [day, setDay] = useState<number>(() => toZoned(today(timezone), timezone).toDate().getTime())
   const [currentPeriod, setCurrentPeriod] = useState<Period>(periodOptions.getFirst())
 
   const range = useMemo(() => {
     if (currentPeriod.label === PeriodType.SpecificDay) {
-      return currentPeriod.value(fromAbsolute(day, tz).toDate())
+      return currentPeriod.value(fromAbsolute(day, timezone).toDate())
     }
 
     return currentPeriod.value()
@@ -47,7 +46,7 @@ export default function ReportConfigurationChangeList() {
     },
   })
 
-  const dayCalendarValue = useMemo(() => numberToCalendarDates(day), [day])
+  const dayCalendarValue = useMemo(() => numberToCalendarDate(day), [day, numberToCalendarDate])
 
   function onChangeDay({ value }: DatePickerValueChangeDetails) {
     if (value.length === 0) return
@@ -129,7 +128,7 @@ export default function ReportConfigurationChangeList() {
         </Stack>
         {currentPeriod.label === PeriodType.SpecificDay && (
           <DatePicker.Root
-            value={dayCalendarValue}
+            value={dayCalendarValue ? [dayCalendarValue] : []}
             onValueChange={onChangeDay}
             locale={i18n.language}
             closeOnSelect

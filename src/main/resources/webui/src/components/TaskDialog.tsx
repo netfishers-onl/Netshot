@@ -1,7 +1,7 @@
 import api from "@/api"
 import { QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 import { TaskStatus } from "@/types"
 import { getSchedulePriorityLabel } from "@/utils"
 import {
@@ -30,7 +30,7 @@ export type TaskDialogProps = {
 export default function TaskDialog(props: TaskDialogProps) {
   const { id } = props
   const { t } = useTranslation()
-  const { formatDateTime } = useI18nUtil()
+  const { formatDateTime } = useLocalization()
   const dialogConfig = useDialogConfig()
   const [showLog, setShowLog] = useState<boolean>(false)
 

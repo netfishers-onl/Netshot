@@ -1,6 +1,6 @@
 import api from "@/api"
 import { Chart } from "@/components"
-import { useI18nUtil } from "@/i18n/useI18nUtil"
+import { useLocalization } from "@/i18n/useLocalization"
 import { Steps, Heading, Skeleton, Stack } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query"
 import { ChartConfiguration } from "chart.js/auto"
@@ -10,7 +10,7 @@ import { QUERIES } from "../constants"
 
 export default function ReportConfigurationChart() {
   const { t } = useTranslation()
-  const { formatDayMonth } = useI18nUtil()
+  const { formatDayMonth } = useLocalization()
 
   const { data: changes = [], isPending } = useQuery({
     queryKey: [QUERIES.REPORT_CONFIG_CHANGE_OVER_LAST_DAY],

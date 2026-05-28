@@ -12,13 +12,13 @@ import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { HardwareDeviceListButton } from "../components"
 import { QUERIES } from "../constants"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 
 const columnHelper = createColumnHelper<GroupedHardwareSupportStat>()
 
 export default function ReportHardwareSupportStatusScreen() {
   const { t } = useTranslation()
-  const { formatDate, formatMonthYear } = useI18nUtil()
+  const { formatDate, formatMonthYear } = useLocalization()
   const [green500] = useToken("colors", "green.500")
   const [bronze500] = useToken("colors", "bronze.500")
   const [grey500] = useToken("colors", "grey.500")

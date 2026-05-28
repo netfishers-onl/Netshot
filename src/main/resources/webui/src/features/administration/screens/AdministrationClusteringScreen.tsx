@@ -2,7 +2,7 @@ import api from "@/api"
 import { EmptyResult, ExpandablePanel, Search } from "@/components"
 import { usePagination } from "@/hooks"
 import { ClusterMember } from "@/types"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 import { search } from "@/utils"
 import { Button, Heading, Separator, Skeleton, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
@@ -13,7 +13,7 @@ import { QUERIES } from "../constants"
 
 export default function AdministrationClusteringScreen() {
   const { t } = useTranslation()
-  const { formatDateTime } = useI18nUtil()
+  const { formatDateTime } = useLocalization()
   const pagination = usePagination()
 
   const {

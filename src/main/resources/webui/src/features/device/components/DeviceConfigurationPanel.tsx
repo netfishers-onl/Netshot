@@ -1,6 +1,6 @@
 import { LuChevronDown } from "react-icons/lu"
 import { Config } from "@/types"
-import { useI18nUtil } from "@/i18n"
+import { useLocalization } from "@/i18n"
 import { getConfigDeviceAttributeDefinitions } from "@/utils"
 import { Button, IconButton, Separator, Skeleton, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
 import { motion, useAnimationControls } from "framer-motion"
@@ -17,7 +17,7 @@ export type DeviceConfigurationPanelProps = {
 export default function DeviceConfigurationPanel(props: DeviceConfigurationPanelProps) {
   const { config } = props
   const { t } = useTranslation()
-  const { formatDateTime } = useI18nUtil()
+  const { formatDateTime } = useLocalization()
   const controls = useAnimationControls()
   const { type, isLoading } = useDevice()
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true)

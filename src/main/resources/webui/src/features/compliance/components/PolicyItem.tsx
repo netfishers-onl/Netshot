@@ -5,6 +5,7 @@ import { LuChevronDown, LuEllipsis, LuFolder, LuFolderOpen, LuPlus, LuSquarePen,
 import { motion, useAnimationControls } from "framer-motion"
 import { MouseEvent, useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useParams } from "react-router"
 import AddRuleButton from "./AddRuleButton"
 import EditPolicyButton from "./EditPolicyButton"
 import RemovePolicyButton from "./RemovePolicyButton"
@@ -17,9 +18,11 @@ export type PolicyItemProps = {
 export default function PolicyItem(props: PolicyItemProps) {
   const { policy } = props
   const { t } = useTranslation()
+  const { policyId } = useParams()
   const controls = useAnimationControls()
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(true)
   const hasRules = useMemo(() => policy.rules?.length > 0, [policy])
+  const isActive = useMemo(() => !!policyId && +policyId === policy.id, [policyId, policy])
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(!isActive || !hasRules)
 
   const toggleCollapse = useCallback(
     async (evt?: MouseEvent<HTMLDivElement>) => {
@@ -112,7 +115,7 @@ export default function PolicyItem(props: PolicyItemProps) {
         </Protected>
       </Stack>
       <motion.div
-        initial="hidden"
+        initial={isActive && hasRules ? "show" : "hidden"}
         animate={controls}
         variants={{
           hidden: { opacity: 0, height: 0, pointerEvents: "none" },

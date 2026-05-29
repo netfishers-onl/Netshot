@@ -1,6 +1,6 @@
 import api from "@/api"
 import { MonacoEditor, Protected } from "@/components"
-import { LuEllipsis, LuPower, LuPencil, LuTrash } from "react-icons/lu"
+import { LuChevronDown, LuPower, LuPencil, LuTrash } from "react-icons/lu"
 import { DiagnosticType, Level } from "@/types"
 import {
   Badge,
@@ -68,7 +68,7 @@ export default function DeviceDetailScreen() {
                   <Menu.Trigger asChild>
                     <Button>
                       {t("common.actions")}
-                      <LuEllipsis />
+                      <LuChevronDown />
                     </Button>
                   </Menu.Trigger>
                 </Skeleton>
@@ -103,7 +103,7 @@ export default function DeviceDetailScreen() {
                           <DiagnosticRemoveButton
                             diagnostic={diagnostic}
                             renderItem={(open) => (
-                              <Menu.Item onSelect={open} value="remove">
+                              <Menu.Item onSelect={open} value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
                                 <LuTrash />
                                 {t("common.remove")}
                               </Menu.Item>

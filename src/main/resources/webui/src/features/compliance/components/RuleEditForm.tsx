@@ -93,7 +93,7 @@ export function RuleEditForm(props: RuleEditFormProps) {
   }, [form, type])
 
   return (
-    <Stack gap="6" {...stackProps}>
+    <Stack gap="6" p="3" {...stackProps}>
       <FormControl
         required
         label={t("common.name")}

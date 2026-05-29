@@ -88,7 +88,9 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
             ref={setActivatorNodeRef}
             aria-label={t("common.dragTheRow")}
             cursor="move"
-            color="green.500"
+            color="green.400"
+            _hover={{ color: "green.600" }}
+            _active={{ color: "green.300" }}
             {...listeners}
             {...attributes}
           >

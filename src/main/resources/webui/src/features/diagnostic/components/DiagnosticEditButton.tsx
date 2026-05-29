@@ -87,7 +87,7 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DIAGNOSTIC_UPDATE, {
-      title: t("device.edit"),
+      title: t("diagnostic.edit"),
       description: hasScript ? (
         <DiagnosticEditScript type={diagnostic?.type} />
       ) : (

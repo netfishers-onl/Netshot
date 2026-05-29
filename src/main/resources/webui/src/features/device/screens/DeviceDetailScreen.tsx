@@ -1,5 +1,5 @@
 import { Protected } from "@/components"
-import { LuCamera, LuSquarePen, LuEllipsis, LuPlay, LuRefreshCcw, LuTrash, LuZap, LuZapOff } from "react-icons/lu"
+import { LuCamera, LuSquarePen, LuChevronDown, LuPlay, LuRefreshCcw, LuTrash, LuZap, LuZapOff } from "react-icons/lu"
 import { RouterTab, RouterTabs } from "@/components/routerTab"
 import { useToast } from "@/hooks"
 import { DeviceStatus, DeviceType, Level } from "@/types"
@@ -73,7 +73,7 @@ export default function DeviceDetailScreen() {
                   <Menu.Trigger asChild>
                     <Button>
                       {t("common.actions")}
-                      <LuEllipsis />
+                      <LuChevronDown />
                     </Button>
                   </Menu.Trigger>
                 </Skeleton>
@@ -138,7 +138,7 @@ export default function DeviceDetailScreen() {
                             <DeviceRemoveButton
                               devices={[device]}
                               renderItem={(open) => (
-                                <Menu.Item onSelect={open} value="remove">
+                                <Menu.Item onSelect={open} value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
                                   <LuTrash />
                                   {t("common.remove")}
                                 </Menu.Item>

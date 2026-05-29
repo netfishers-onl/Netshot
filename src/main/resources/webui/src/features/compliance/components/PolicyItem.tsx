@@ -92,7 +92,7 @@ export default function PolicyItem(props: PolicyItemProps) {
                   <RemovePolicyButton
                     policy={policy}
                     renderItem={(open) => (
-                      <Menu.Item onSelect={open} value="remove-rule">
+                      <Menu.Item onSelect={open} value="remove-rule" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
                         <LuTrash />
                         {t("common.remove")}
                       </Menu.Item>

@@ -7,7 +7,7 @@ import { Protected } from "@/components"
 import { Javascript, Python } from "@/components/icons"
 import { Level, Policy, Rule, RuleType } from "@/types"
 
-import { LuAlignLeft, LuSquarePen, LuEllipsis, LuPower, LuTrash } from "react-icons/lu"
+import { LuAlignLeft, LuSquarePen, LuChevronDown, LuPower, LuTrash } from "react-icons/lu"
 import DisableRuleButton from "./DisableRuleButton"
 import EditRuleButton from "./EditRuleButton"
 import EnableRuleButton from "./EnableRuleButton"

@@ -167,6 +167,7 @@
       "diagnostic_one": "{{count}} diagnostic",
       "diagnostic_other": "{{count}} diagnostics",
       "add": "Add diagnostic",
+      "edit": "Edit diagnostic",
       "chooseType": "Choose diagnostic type",
       "createWithJavascript": "Create a diagnostic using JavaScript",
       "createWithPython": "Create a diagnostic using Python",

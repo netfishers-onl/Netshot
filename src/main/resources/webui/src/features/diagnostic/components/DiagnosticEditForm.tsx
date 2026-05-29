@@ -33,7 +33,7 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
   })
 
   return (
-    <Stack gap="6" {...other}>
+    <Stack gap="6" p="3" {...other}>
       <FormControl
         required
         label={t("common.name")}

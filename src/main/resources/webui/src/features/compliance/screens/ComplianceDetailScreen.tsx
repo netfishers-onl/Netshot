@@ -1,6 +1,6 @@
 import api from "@/api"
 import { MonacoEditor } from "@/components"
-import { LuEllipsis, LuMessageSquareDot, LuPower, LuServer, LuPencil, LuTrash } from "react-icons/lu"
+import { LuMessageSquareDot, LuPower, LuPencil, LuTrash, LuChevronDown } from "react-icons/lu"
 import { RuleType } from "@/types"
 import {
   Box,
@@ -73,7 +73,7 @@ export default function ComplianceDetailScreen() {
                 <Menu.Trigger asChild>
                   <Button>
                     {t("common.actions")}
-                    <LuEllipsis />
+                    <LuChevronDown />
                   </Button>
                 </Menu.Trigger>
               </Skeleton>
@@ -121,7 +121,7 @@ export default function ComplianceDetailScreen() {
                           policyId={+policyId}
                           rule={rule}
                           renderItem={(open) => (
-                            <Menu.Item onSelect={open} value="remove">
+                            <Menu.Item onSelect={open} value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
                               <LuTrash />
                               {t("common.remove")}
                             </Menu.Item>

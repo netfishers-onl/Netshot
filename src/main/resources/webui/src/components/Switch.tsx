@@ -35,7 +35,7 @@ export default function Switch<T>(props: SwitchProps<T>) {
         <Field.Label mb="0">{label}</Field.Label>
         <Text color="grey.400">{description}</Text>
       </Stack>
-      <ChakraSwitch.Root size="lg" checked={field.value as boolean} onCheckedChange={onChange}>
+      <ChakraSwitch.Root size="lg" checked={field.value as boolean} onCheckedChange={onChange} mr="2">
         <ChakraSwitch.HiddenInput />
         <ChakraSwitch.Control>
           <ChakraSwitch.Thumb />

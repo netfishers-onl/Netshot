@@ -1,5 +1,5 @@
 import { TestRuleTextOnDevicePayload } from "@/api"
-import { Checkbox, DeviceTypeSelect } from "@/components"
+import { Checkbox, DeviceTypeSelect, Switch } from "@/components"
 import FormControl, { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { useDiagnostics } from "@/features/diagnostic/api"
@@ -100,6 +100,11 @@ export function RuleEditForm(props: RuleEditFormProps) {
         placeholder={t("common.name")}
         control={form.control}
         name="name"
+      />
+      <Switch
+        control={form.control}
+        name="enabled"
+        label={t("common.enabled")}
       />
       {!hasScript && (
         <>

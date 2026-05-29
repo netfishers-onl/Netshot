@@ -2,6 +2,7 @@ import { DeviceSoftwareLevel, DeviceType } from "@/types"
 
 export type RuleForm = {
   name: string
+  enabled: boolean
   script: string
   text: string
   regExp: boolean

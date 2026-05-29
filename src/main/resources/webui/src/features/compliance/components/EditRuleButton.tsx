@@ -25,6 +25,7 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
   const defaultValues = useMemo(() => {
     const values = {
       name: rule?.name,
+      enabled: rule?.enabled ?? true,
       script: rule?.script,
       text: rule?.text ?? "",
       regExp: rule?.regExp,
@@ -78,7 +79,7 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
           matchAll: values.matchAll,
           invert: stringToBoolean(values.invert),
           normalize: values.normalize,
-          enabled: rule.enabled,
+          enabled: values.enabled,
           policy: policyId,
           regExp: values.regExp,
           type: rule.type,

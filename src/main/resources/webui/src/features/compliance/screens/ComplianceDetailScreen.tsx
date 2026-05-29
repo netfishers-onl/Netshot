@@ -44,8 +44,8 @@ export default function ComplianceDetailScreen() {
               <Heading as="h1" fontSize="4xl">
                 {rule?.name}
               </Heading>
-              {rule?.deviceDriver && (
-                <Tag.Root variant="outline">{rule?.deviceDriverDescription}</Tag.Root>
+              {rule && !rule?.enabled && (
+                <Tag.Root colorPalette="grey" variant="surface">{t("common.disabled")}</Tag.Root>
               )}
             </Stack>
           </Skeleton>

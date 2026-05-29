@@ -45,6 +45,8 @@ export default function RuleItem(props: RuleItemProps) {
     [policyId, policy, ruleId, rule]
   )
 
+  const isDisabled = !rule?.enabled
+
   return (
     <Stack
       direction="row"
@@ -64,10 +66,10 @@ export default function RuleItem(props: RuleItemProps) {
       onClick={() => navigate(`./config/${policy?.id}/${rule?.id}`)}
     >
       <Stack direction="row" gap="3" alignItems="center">
-        <Icon color="green.600" size="md">
+        <Icon color="green.600" size="md" opacity={isDisabled ? 0.5 : 1}>
           {iconEl}
         </Icon>
-        <Text lineClamp={1}>{rule?.name}</Text>
+        <Text lineClamp={1} opacity={isDisabled ? 0.5 : 1}>{rule?.name}</Text>
       </Stack>
     </Stack>
   )

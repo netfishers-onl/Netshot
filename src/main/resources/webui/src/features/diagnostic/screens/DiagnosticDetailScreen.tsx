@@ -1,6 +1,6 @@
 import api from "@/api"
 import { MonacoEditor, Protected } from "@/components"
-import { LuEllipsis, LuPower, LuTrash } from "react-icons/lu"
+import { LuEllipsis, LuPower, LuPencil, LuTrash } from "react-icons/lu"
 import { DiagnosticType, Level } from "@/types"
 import {
   Badge,
@@ -56,6 +56,7 @@ export default function DeviceDetailScreen() {
                   diagnostic={diagnostic}
                   renderItem={(open) => (
                     <Button variant="primary" onClick={open}>
+                      <LuPencil />
                       {t("common.edit")}
                     </Button>
                   )}

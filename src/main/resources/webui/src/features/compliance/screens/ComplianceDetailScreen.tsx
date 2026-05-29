@@ -1,6 +1,6 @@
 import api from "@/api"
 import { MonacoEditor } from "@/components"
-import { LuEllipsis, LuMessageSquareDot, LuPower, LuServer, LuTrash } from "react-icons/lu"
+import { LuEllipsis, LuMessageSquareDot, LuPower, LuServer, LuPencil, LuTrash } from "react-icons/lu"
 import { RuleType } from "@/types"
 import {
   Box,
@@ -60,6 +60,7 @@ export default function ComplianceDetailScreen() {
                   rule={rule}
                   renderItem={(open) => (
                     <Button variant="primary" onClick={open}>
+                      <LuPencil />
                       {t("common.edit")}
                     </Button>
                   )}

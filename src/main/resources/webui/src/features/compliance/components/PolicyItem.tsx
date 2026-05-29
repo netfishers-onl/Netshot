@@ -1,7 +1,7 @@
 import { Protected } from "@/components"
 import { Level, Policy } from "@/types"
 import { Icon, IconButton, Menu, Portal, Stack, Text } from "@chakra-ui/react"
-import { LuChevronDown, LuEllipsis, LuFolder, LuFolderOpen, LuPlus, LuSquarePen, LuTrash } from "react-icons/lu"
+import { LuEllipsis, LuFolder, LuFolderOpen, LuPlus, LuSquarePen, LuTrash } from "react-icons/lu"
 import { motion, useAnimationControls } from "framer-motion"
 import { MouseEvent, useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -56,16 +56,6 @@ export default function PolicyItem(props: PolicyItemProps) {
         px="3"
       >
         <Stack direction="row" gap="3" alignItems="center" title={policy?.name}>
-          <Icon
-            size="sm"
-            color="grey.500"
-            css={{
-              transform: isCollapsed ? "rotate(-90deg)" : "",
-            }}
-            opacity={hasRules ? 1 : 0}
-          >
-            <LuChevronDown />
-          </Icon>
           <Icon color="green.600" size="md">
             {isCollapsed ? <LuFolder /> : <LuFolderOpen />}
           </Icon>
@@ -129,7 +119,7 @@ export default function PolicyItem(props: PolicyItemProps) {
           duration: 0.2,
         }}
       >
-        <Stack direction="column" gap="0">
+        <Stack direction="column" gap="0" pl="4">
           {policy.rules?.map((rule) => (
             <RuleItem key={rule?.id} policy={policy} rule={rule} />
           ))}

@@ -60,7 +60,7 @@ export default function RuleItem(props: RuleItemProps) {
       userSelect="none"
       cursor="pointer"
       pr="3"
-      pl="10"
+      pl="3"
       onClick={() => navigate(`./config/${policy?.id}/${rule?.id}`)}
     >
       <Stack direction="row" gap="3" alignItems="center">
@@ -69,64 +69,6 @@ export default function RuleItem(props: RuleItemProps) {
         </Icon>
         <Text lineClamp={1}>{rule?.name}</Text>
       </Stack>
-      <Protected minLevel={Level.Operator}>
-        <Menu.Root>
-          <Menu.Trigger asChild>
-            <IconButton variant="ghost" size="sm">
-              <LuEllipsis />
-            </IconButton>
-          </Menu.Trigger>
-          <Portal>
-            <Menu.Positioner>
-              <Menu.Content>
-                <EditRuleButton
-                  policyId={policy.id}
-                  rule={rule}
-                  renderItem={(open) => (
-                    <Menu.Item onSelect={open} value="edit-rule">
-                      <LuSquarePen />
-                      {t("common.edit")}
-                    </Menu.Item>
-                  )}
-                />
-                {rule?.enabled ? (
-                  <DisableRuleButton
-                    policyId={policy.id}
-                    rule={rule}
-                    renderItem={(open) => (
-                      <Menu.Item onSelect={open} value="rule-disable">
-                        <LuPower />
-                        {t("common.disable")}
-                      </Menu.Item>
-                    )}
-                  />
-                ) : (
-                  <EnableRuleButton
-                    policyId={policy.id}
-                    rule={rule}
-                    renderItem={(open) => (
-                      <Menu.Item onSelect={open} value="rule-enable">
-                        <LuPower />
-                        {t("common.enable")}
-                      </Menu.Item>
-                    )}
-                  />
-                )}
-                <RemoveRuleButton
-                  policyId={policy.id}
-                  rule={rule}
-                  renderItem={(open) => (
-                    <Menu.Item onSelect={open} value="rule-remove">
-                      <LuTrash />
-                      {t("common.remove")}
-                    </Menu.Item>
-                  )}
-                />
-              </Menu.Content>
-            </Menu.Positioner>
-          </Portal>
-        </Menu.Root>
-      </Protected>
     </Stack>
   )
 }

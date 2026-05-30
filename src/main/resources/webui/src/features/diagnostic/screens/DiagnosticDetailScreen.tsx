@@ -1,10 +1,8 @@
 import api from "@/api"
-import { MonacoEditor, Protected } from "@/components"
+import { Protected } from "@/components"
 import { LuChevronDown, LuPower, LuPencil, LuTrash } from "react-icons/lu"
 import { DiagnosticType, Level } from "@/types"
 import {
-  Badge,
-  Box,
   Button,
   Flex,
   Heading,
@@ -15,7 +13,6 @@ import {
   Spacer,
   Stack,
   Tag,
-  Text,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
@@ -24,6 +21,8 @@ import DiagnosticDisableButton from "../components/DiagnosticDisableButton"
 import DiagnosticEditButton from "../components/DiagnosticEditButton"
 import DiagnosticEnableButton from "../components/DiagnosticEnableButton"
 import DiagnosticRemoveButton from "../components/DiagnosticRemoveButton"
+import ScriptDiagnosticDetail from "../components/ScriptDiagnosticDetail"
+import TextDiagnosticDetail from "../components/TextDiagnosticDetail"
 import { QUERIES } from "../constants"
 import { DiagnosticProvider } from "../contexts"
 
@@ -123,67 +122,10 @@ export default function DeviceDetailScreen() {
           </Protected>
         </Flex>
         <Separator />
-        {diagnostic?.type === DiagnosticType.Simple && (
-          <Stack gap="3">
-            <Flex alignItems="center">
-              <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("device.type")}</Text>
-              </Box>
-              <Skeleton loading={isPending}>
-                <Text>{diagnostic?.deviceDriverDescription ?? "nA"}</Text>
-              </Skeleton>
-            </Flex>
-            <Flex alignItems="center">
-              <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("network.cliMode")}</Text>
-              </Box>
-              <Skeleton loading={isPending}>{diagnostic?.cliMode}</Skeleton>
-            </Flex>
-            <Flex alignItems="center">
-              <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("network.cliCommand")}</Text>
-              </Box>
-              <Skeleton loading={isPending}>
-                <Text fontFamily="mono">{diagnostic?.command ?? "nA"}</Text>
-              </Skeleton>
-            </Flex>
-            <Flex alignItems="center">
-              <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("policy.rule.regexPattern")}</Text>
-              </Box>
-              <Skeleton loading={isPending}>
-                <Text fontFamily="mono">{diagnostic?.modifierPattern ?? "nA"}</Text>
-              </Skeleton>
-            </Flex>
-            <Flex alignItems="center">
-              <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("policy.rule.replaceWith")}</Text>
-              </Box>
-              <Skeleton loading={isPending}>
-                <Text fontFamily="mono">{diagnostic?.modifierReplacement ?? "nA"}</Text>
-              </Skeleton>
-            </Flex>
-            <Flex alignItems="center">
-              <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("common.enabled")}</Text>
-              </Box>
-              <Skeleton loading={isPending}>
-                {diagnostic?.enabled ? (
-                  <Badge colorPalette="green">{t("common.enabled")}</Badge>
-                ) : (
-                  <Badge colorPalette="red">{t("common.disabled")}</Badge>
-                )}
-              </Skeleton>
-            </Flex>
-          </Stack>
-        )}
-
-        {diagnostic?.type === DiagnosticType.Javascript && (
-          <MonacoEditor value={diagnostic?.script} language="javascript" readOnly />
-        )}
-
-        {diagnostic?.type === DiagnosticType.Python && (
-          <MonacoEditor value={diagnostic?.script} language="python" readOnly />
+        {diagnostic?.type === DiagnosticType.Simple && <TextDiagnosticDetail />}
+        {(diagnostic?.type === DiagnosticType.Javascript ||
+          diagnostic?.type === DiagnosticType.Python) && (
+          <ScriptDiagnosticDetail />
         )}
       </Stack>
     </DiagnosticProvider>

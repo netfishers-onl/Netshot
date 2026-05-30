@@ -111,6 +111,7 @@ export function RuleEditForm(props: RuleEditFormProps) {
           <DeviceTypeSelect
             control={form.control}
             name="driver"
+            label={t("device.type")}
             placeholder={t("common.any")}
             isClearable
           />
@@ -124,9 +125,10 @@ export function RuleEditForm(props: RuleEditFormProps) {
           <FormControl
             type={FormControlType.LongText}
             label={t("common.context")}
-            placeholder={t("common.eG", { example: "show version | include reason" })}
+            placeholder={t("common.eG", { example: "router bgp \\d+" })}
             control={form.control}
             name="context"
+            rows={3}
           />
           <Select
             required
@@ -163,6 +165,7 @@ export function RuleEditForm(props: RuleEditFormProps) {
             placeholder={t("common.eG", { example: t("common.unknownReason") })}
             control={form.control}
             name="text"
+            rows={3}
           />
 
           <Separator />

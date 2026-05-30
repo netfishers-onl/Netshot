@@ -1,2 +1,2 @@
-export { default as DiagnosticProvider } from "./DiagnosticProvider";
+export { default as DiagnosticProvider, useDiagnostic } from "./DiagnosticProvider";
 export { default as DiagnosticSidebarProvider } from "./DiagnosticSidebarProvider";

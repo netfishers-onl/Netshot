@@ -15,7 +15,9 @@ import {
   Tag,
   Text,
 } from "@chakra-ui/react"
+import { useDeviceTypeOptions } from "@/hooks"
 import { useQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams } from "react-router"
 import DisableRuleButton from "../components/DisableRuleButton"
@@ -29,11 +31,35 @@ import { RuleProvider } from "../contexts"
 export default function ComplianceDetailScreen() {
   const { policyId, ruleId } = useParams()
   const { t } = useTranslation()
+  const { getOptionByDriver } = useDeviceTypeOptions()
 
   const { data: rule, isPending } = useQuery({
     queryKey: [QUERIES.RULE_DETAIL, +policyId, +ruleId],
     queryFn: async () => api.rule.getById(+policyId, +ruleId),
   })
+
+  const contextLabel = rule?.anyBlock
+    ? t("policy.rule.atLeastOneSuchBlock")
+    : t("policy.rule.allSuchBlocks")
+
+  const fieldDescription = useMemo(() => {
+    if (!rule?.field) return t("common.unknownLabel")
+    const attr = getOptionByDriver(rule.deviceDriver)?.value.attributes.find(
+      (a) => a.checkable && a.name === rule.field
+    )
+    return attr?.title ?? t("common.unknownLabel")
+  }, [rule, getOptionByDriver, t])
+
+  const textLabel = useMemo(() => {
+    if (!rule) return t("policy.rule.mustContain")
+    const { invert, regExp, matchAll, context } = rule
+    const prefix = context ? "" : "field"
+    const key = (k: string) => t(`policy.rule.${prefix}${prefix ? k.charAt(0).toUpperCase() + k.slice(1) : k}`)
+    if (regExp && matchAll) return invert ? key("mustNotFullyMatch") : key("mustFullyMatch")
+    if (regExp) return invert ? key("mustNotMatch") : key("mustMatch")
+    if (matchAll) return invert ? key("mustNotBe") : key("mustBe")
+    return invert ? key("mustNotContain") : key("mustContain")
+  }, [rule, t])
 
   return (
     <RuleProvider rule={rule} isLoading={isPending}>
@@ -150,20 +176,22 @@ export default function ComplianceDetailScreen() {
                 <Text color="grey.400">{t("policy.rule.fieldToCheck")}</Text>
               </Box>
               <Skeleton loading={isPending}>
-                <Text>{rule?.field ?? "nA"}</Text>
+                <Text>{fieldDescription}</Text>
               </Skeleton>
             </Flex>
+            {(rule?.context || isPending) && (
+              <Flex>
+                <Box flex="0 0 auto" w="200px">
+                  <Text color="grey.400">{contextLabel}</Text>
+                </Box>
+                <Skeleton loading={isPending}>
+                  <Text fontFamily="mono">{rule?.context}</Text>
+                </Skeleton>
+              </Flex>
+            )}
             <Flex>
               <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("common.context")}</Text>
-              </Box>
-              <Skeleton loading={isPending}>
-                <Text fontFamily="mono">{rule?.context ?? "nA"}</Text>
-              </Skeleton>
-            </Flex>
-            <Flex>
-              <Box flex="0 0 auto" w="200px">
-                <Text color="grey.400">{t("policy.rule.mustNotContain")}</Text>
+                <Text color="grey.400">{textLabel}</Text>
               </Box>
               <Skeleton loading={isPending}>
                 <Text fontFamily="mono">{rule?.text ?? "nA"}</Text>

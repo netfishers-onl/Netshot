@@ -22,7 +22,7 @@ export default function DeviceSidebarGroup() {
   const { t } = useTranslation()
   const pagination = usePagination()
   const [searchParams] = useSearchParams()
-  const selectedGroupId = +searchParams.get("group.label")
+  const selectedGroupId = +searchParams.get("group")
 
   const { data: items, isPending } = useQuery({
     queryKey: [QUERIES.DEVICE_GROUPS],
@@ -41,7 +41,7 @@ export default function DeviceSidebarGroup() {
   }, [scrollContainer])
 
   const onGroupSelect = (group: Group) => {
-    if (group?.id === group.id) {
+    if (group?.id === selectedGroupId) {
       navigate(
         {
           pathname: location.pathname,

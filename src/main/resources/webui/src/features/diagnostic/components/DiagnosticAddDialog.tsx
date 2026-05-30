@@ -55,6 +55,7 @@ export default function DiagnosticAddDialog() {
   const form = useForm<Form>({
     defaultValues: {
       name: "",
+      enabled: true,
       resultType: null,
       targetGroup: null,
       deviceDriver: null,
@@ -91,7 +92,7 @@ export default function DiagnosticAddDialog() {
 
   function submit(values: Form) {
     return createMutation.mutate({
-      enabled: true,
+      enabled: values.enabled,
       script: values.script,
       type,
       name: values.name,

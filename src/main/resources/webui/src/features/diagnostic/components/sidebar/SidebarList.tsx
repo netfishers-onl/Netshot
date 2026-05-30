@@ -5,7 +5,7 @@ import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
 import { QUERIES } from "../../constants"
-import SidebarBox from "./SidebarBox"
+import DiagnosticItem from "./DiagnosticItem"
 
 /**
  * @todo: Sort diagnostic by alphabetical order A-Z (backend)
@@ -60,10 +60,10 @@ export default function SidebarList() {
         data?.pages?.map((page) =>
           page.map((diagnostic, i) => {
             if (page.length === i + 1) {
-              return <SidebarBox ref={ref} diagnostic={diagnostic} key={diagnostic?.id} />
+              return <DiagnosticItem ref={ref} diagnostic={diagnostic} key={diagnostic?.id} />
             }
 
-            return <SidebarBox diagnostic={diagnostic} key={diagnostic?.id} />
+            return <DiagnosticItem diagnostic={diagnostic} key={diagnostic?.id} />
           })
         )}
       {isFetchingNextPage && (

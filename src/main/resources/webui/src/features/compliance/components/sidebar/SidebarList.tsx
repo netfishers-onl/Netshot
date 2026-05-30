@@ -2,7 +2,7 @@ import { Center, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
 import { usePoliciesWithSearch } from "../../api"
 import { useSidebar } from "../../contexts/SidebarProvider"
-import PolicyItem from "../PolicyItem"
+import PolicyItem from "./PolicyItem"
 
 export default function SidebarList() {
   const { t } = useTranslation()

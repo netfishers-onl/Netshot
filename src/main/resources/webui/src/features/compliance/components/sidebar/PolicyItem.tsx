@@ -6,9 +6,9 @@ import { motion, useAnimationControls } from "framer-motion"
 import { MouseEvent, useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams } from "react-router"
-import AddRuleButton from "./AddRuleButton"
-import EditPolicyButton from "./EditPolicyButton"
-import RemovePolicyButton from "./RemovePolicyButton"
+import AddRuleButton from "../AddRuleButton"
+import EditPolicyButton from "../EditPolicyButton"
+import RemovePolicyButton from "../RemovePolicyButton"
 import RuleItem from "./RuleItem"
 
 export type PolicyItemProps = {

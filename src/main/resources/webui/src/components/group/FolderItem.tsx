@@ -1,5 +1,5 @@
 import { Icon } from "@chakra-ui/react"
-import { LuFolder } from "react-icons/lu"
+import { LuFolder, LuFolderOpen } from "react-icons/lu"
 import { Folder, isGroup } from "@/utils"
 import { Box, BoxProps, Flex, Stack, Text } from "@chakra-ui/react"
 import { motion, useAnimationControls } from "framer-motion"
@@ -48,7 +48,9 @@ export default function FolderItem(props: FolderItemProps) {
           }}
         >
           <Stack direction="row" gap="3" alignItems="center">
-            <Icon color="green.600"><LuFolder /></Icon>
+            <Icon color="green.600" size="md">
+              {isOpen ? <LuFolderOpen /> : <LuFolder />}
+            </Icon>
             <Text>{folder?.name}</Text>
           </Stack>
         </Flex>

@@ -33,6 +33,7 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
   const defaultValues = useMemo(() => {
     const values = {
       name: diagnostic?.name,
+      enabled: diagnostic?.enabled ?? true,
       resultType: null,
       targetGroup: null,
       deviceDriver: diagnostic?.deviceDriver,
@@ -95,7 +96,7 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
       ),
       form,
       size: "lg",
-      variant: hasScript ? "full-floating" : "floating",
+      variant: hasScript ? "full-floating" : null,
       async onSubmit(values: Form) {
         const data = await mutation.mutateAsync({
           deviceDriver: values.deviceDriver,
@@ -104,7 +105,7 @@ export default function DiagnosticEditButton(props: DiagnosticEditButtonProps) {
           modifierPattern: values.modifierPattern,
           modifierReplacement: values.modifierReplacement,
           id: diagnostic.id,
-          enabled: diagnostic.enabled,
+          enabled: values.enabled,
           type: diagnostic.type,
           name: values.name,
           resultType: values.resultType,

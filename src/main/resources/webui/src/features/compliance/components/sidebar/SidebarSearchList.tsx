@@ -3,7 +3,7 @@ import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { usePoliciesWithSearch } from "../../api"
 import { useSidebar } from "../../contexts/SidebarProvider"
-import PolicyItem from "../PolicyItem"
+import PolicyItem from "./PolicyItem"
 
 export default function SidebarSearchList() {
   const ctx = useSidebar()

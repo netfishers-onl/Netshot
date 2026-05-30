@@ -46,6 +46,12 @@ export default function DiagnosticDisableButton(props: DiagnosticDisableButtonPr
         queryClient.invalidateQueries({
           queryKey: [QUERIES.DIAGNOSTIC_LIST],
         })
+        queryClient.invalidateQueries({
+          queryKey: [QUERIES.DIAGNOSTIC_INFINITE_LIST],
+        })
+        queryClient.invalidateQueries({
+          queryKey: [QUERIES.DIAGNOSTIC_SEARCH_LIST],
+        })
 
         dialogRef.close()
 

@@ -7,7 +7,7 @@ import { useCallback, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../../constants"
 import { useDiagnosticSidebar } from "../../contexts/DiagnosticSidebarProvider"
-import SidebarBox from "./SidebarBox"
+import DiagnosticItem from "./DiagnosticItem"
 
 export default function DeviceSidebarSearchList() {
   const ctx = useDiagnosticSidebar()
@@ -52,7 +52,7 @@ export default function DeviceSidebarSearchList() {
   return (
     <Stack p="6" gap="1" overflow="auto">
       {data?.map((diagnostic) => (
-        <SidebarBox diagnostic={diagnostic} key={diagnostic?.id} />
+        <DiagnosticItem diagnostic={diagnostic} key={diagnostic?.id} />
       ))}
     </Stack>
   )

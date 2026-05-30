@@ -1,17 +1,12 @@
-import { Icon, IconButton, Menu, Portal, Stack, Text } from "@chakra-ui/react"
+import { Icon, Stack, Text } from "@chakra-ui/react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router"
 
-import { Protected } from "@/components"
 import { Javascript, Python } from "@/components/icons"
 import { Level, Policy, Rule, RuleType } from "@/types"
 
-import { LuAlignLeft, LuSquarePen, LuChevronDown, LuPower, LuTrash } from "react-icons/lu"
-import DisableRuleButton from "./DisableRuleButton"
-import EditRuleButton from "./EditRuleButton"
-import EnableRuleButton from "./EnableRuleButton"
-import RemoveRuleButton from "./RemoveRuleButton"
+import { LuAlignLeft } from "react-icons/lu"
 
 export type RuleItemProps = {
   policy: Policy

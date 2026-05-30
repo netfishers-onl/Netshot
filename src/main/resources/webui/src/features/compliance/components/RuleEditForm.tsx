@@ -57,7 +57,7 @@ export function RuleEditForm(props: RuleEditFormProps) {
         { label: t("common.name"), value: "name" },
       ],
       ...diagnosticQuery.data.map((diagnostic) => ({
-        label: `Diagnostic "${diagnostic.name}"`,
+        label: `Diagnostic > ${diagnostic.name}`,
         value: diagnostic.name,
       })),
     ]

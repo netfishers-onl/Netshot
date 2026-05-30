@@ -1,4 +1,4 @@
-import { TreeGroupSelector } from "@/components"
+import { Switch, TreeGroupSelector } from "@/components"
 import FormControl from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { useDeviceTypeOptions } from "@/hooks"
@@ -40,6 +40,11 @@ export function DiagnosticEditForm(props: DiagnosticEditFormProps) {
         placeholder={t("common.name")}
         control={form.control}
         name="name"
+      />
+      <Switch
+        control={form.control}
+        name="enabled"
+        label={t("common.enabled")}
       />
       <Select
         required

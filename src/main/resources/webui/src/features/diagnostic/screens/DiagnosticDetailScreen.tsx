@@ -14,6 +14,7 @@ import {
   Skeleton,
   Spacer,
   Stack,
+  Tag,
   Text,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
@@ -44,6 +45,9 @@ export default function DeviceDetailScreen() {
               <Heading as="h1" fontSize="4xl">
                 {diagnostic?.name ?? "Network device title"}
               </Heading>
+              {diagnostic && !diagnostic?.enabled && (
+                <Tag.Root colorPalette="grey" variant="surface">{t("common.disabled")}</Tag.Root>
+              )}
             </Stack>
           </Skeleton>
 

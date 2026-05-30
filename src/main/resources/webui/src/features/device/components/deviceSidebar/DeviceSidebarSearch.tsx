@@ -46,7 +46,7 @@ export default function DeviceSidebarSearch() {
           }}
           renderItem={(open) => (
             <Tooltip content={t("common.queryBuilder")}>
-              <IconButton variant="ghost" aria-label={t("common.openQueryBuilder")} onClick={open}>
+              <IconButton size="xs" variant="ghost" rounded="l1" aria-label={t("common.openQueryBuilder")} onClick={open}>
                 <LuCompass />
               </IconButton>
             </Tooltip>

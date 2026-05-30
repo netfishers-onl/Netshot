@@ -57,7 +57,7 @@ export default function GroupItem(props: GroupItemProps) {
       >
         <Stack direction="row" gap="3" alignItems="center">
           <Stack direction="row" gap="3" alignItems="center">
-            <Icon color="green.600"><LuBoxes /></Icon>
+            <Icon color="green.600" size="md"><LuBoxes /></Icon>
             <Text>{group?.name}</Text>
           </Stack>
         </Stack>

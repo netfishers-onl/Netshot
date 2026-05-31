@@ -1,9 +1,6 @@
-import { DeviceType } from "@/types"
+import { useEffect } from "react"
 import { useController, UseControllerProps, useForm } from "react-hook-form"
-import { AttributeName } from "./constants"
-import { AttributeGroupType, QueryBuilderValue } from "./types"
-import { useAttributeGroupOptions } from "./useAttributeGroupOptions"
-import { useOperatorMapping } from "./useOperatorMapping"
+import { QueryBuilderValue } from "./types"
 
 export type UseQueryBuilderFormConfig<T> = {
   required?: boolean
@@ -11,8 +8,6 @@ export type UseQueryBuilderFormConfig<T> = {
 
 export function useQueryBuilder<T>(config: UseQueryBuilderFormConfig<T>) {
   const { name, control, defaultValue, required = false } = config
-  const attributeGroupOptions = useAttributeGroupOptions()
-  const operatorMapping = useOperatorMapping()
 
   const { field } = useController({
     name,
@@ -23,28 +18,18 @@ export function useQueryBuilder<T>(config: UseQueryBuilderFormConfig<T>) {
     },
   })
 
-  const form = useForm<{
-    query: string
-    deviceType: DeviceType["name"]
-    policy: string
-    rule: string
-    attributeGroup: AttributeGroupType
-    attribute: AttributeName
-  }>({
+  const form = useForm<{ query: string }>({
     defaultValues: {
       query: (field.value as QueryBuilderValue)?.query ?? "",
-      deviceType: (field.value as QueryBuilderValue)?.driver ?? null,
-      policy: null,
-      rule: null,
-      attributeGroup: attributeGroupOptions.getFirst().value,
-      attribute: null,
     },
   })
 
-  return {
-    form,
-    field,
-    attributeGroupOptions,
-    operatorMapping,
-  }
+  useEffect(() => {
+    const { unsubscribe } = form.watch((values) => {
+      field.onChange(values)
+    })
+    return () => unsubscribe()
+  }, [form])
+
+  return { form, field }
 }

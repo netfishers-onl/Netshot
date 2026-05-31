@@ -32,7 +32,7 @@ export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
     queryKey: ["autocomplete:device"],
     queryFn(query) {
       return api.device.search({
-        query: `[Name] CONTAINSNOCASE "${query}"`,
+        query: `[Name] containsnocase "${query}"`,
       })
     },
     select(data) {

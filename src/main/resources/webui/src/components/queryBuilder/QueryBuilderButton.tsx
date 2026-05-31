@@ -3,7 +3,7 @@ import { PropsWithRenderItem } from "@/types"
 import { MouseEvent } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { QueryBuilderControl } from "./QueryBuilderControl"
+import { QueryBuilderDialog } from "./QueryBuilderDialog"
 import { QueryBuilderValue } from "./types"
 
 export type QueryBuilderButtonProps = PropsWithRenderItem<{
@@ -29,7 +29,7 @@ export function QueryBuilderButton(props: QueryBuilderButtonProps) {
 
     const dialogRef = dialog.open({
       title: t("common.queryBuilder"),
-      description: <QueryBuilderControl control={form.control} name="queryBuilder" />,
+      description: <QueryBuilderDialog control={form.control} name="queryBuilder" />,
       form,
       submitButton: {
         label: t("common.search"),

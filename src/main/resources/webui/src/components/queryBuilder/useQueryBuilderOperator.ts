@@ -8,27 +8,27 @@ export function useQueryBuilderOperator() {
     return [
       {
         ...mapping[OperatorType.Is],
-        callback: () => `[${attributeName}] IS "text"`,
+        callback: () => `[${attributeName}] is "text"`,
       },
       {
         ...mapping[OperatorType.Contains],
-        callback: () => `[${attributeName}] CONTAINS "text"`,
+        callback: () => `[${attributeName}] contains "text"`,
       },
       {
         ...mapping[OperatorType.ContainsNoCase],
-        callback: () => `[${attributeName}] CONTAINSNOCASE "text"`,
+        callback: () => `[${attributeName}] containsnocase "text"`,
       },
       {
         ...mapping[OperatorType.StartsWith],
-        callback: () => `[${attributeName}] STARTSWITH "text"`,
+        callback: () => `[${attributeName}] startswith "text"`,
       },
       {
         ...mapping[OperatorType.EndsWith],
-        callback: () => `[${attributeName}] ENDSWITH "text"`,
+        callback: () => `[${attributeName}] endswith "text"`,
       },
       {
         ...mapping[OperatorType.Matches],
-        callback: () => `[${attributeName}] MATCHES "pattern"`,
+        callback: () => `[${attributeName}] matches "pattern"`,
       },
     ]
   }
@@ -37,15 +37,15 @@ export function useQueryBuilderOperator() {
     return [
       {
         ...mapping[OperatorType.Is],
-        callback: () => `[${attributeName}] IS 42`,
+        callback: () => `[${attributeName}] is 16`,
       },
       {
         ...mapping[OperatorType.LessThan],
-        callback: () => `[${attributeName}] LESSTHAN 42`,
+        callback: () => `[${attributeName}] lessthan 16`,
       },
       {
         ...mapping[OperatorType.GreaterThan],
-        callback: () => `[${attributeName}] GREATERTHAN 42`,
+        callback: () => `[${attributeName}] greaterthan 16`,
       },
     ]
   }
@@ -54,7 +54,7 @@ export function useQueryBuilderOperator() {
     return [
       {
         ...mapping[OperatorType.Is],
-        callback: () => `[${attributeName}] IS 42`,
+        callback: () => `[${attributeName}] is 42`,
       },
     ]
   }
@@ -63,32 +63,45 @@ export function useQueryBuilderOperator() {
     return [
       {
         ...mapping[OperatorType.Is],
-        callback: () => `[${attributeName}] IS "2023-01-01"`,
+        callback: () => `[${attributeName}] is "2023-01-01"`,
       },
       {
         ...mapping[OperatorType.Before],
-        callback: () => `[${attributeName}] BEFORE "2023-01-01"`,
+        callback: () => `[${attributeName}] before "2023-01-01"`,
       },
       {
         ...mapping[OperatorType.After],
-        callback: () => `[${attributeName}] AFTER "2023-01-01"`,
+        callback: () => `[${attributeName}] after "2023-01-01"`,
       },
       {
         ...mapping[OperatorType.BeforeRelative],
-        callback: () => `[${attributeName}] BEFORE "NOW -1d"`,
+        callback: () => `[${attributeName}] before "now -1d"`,
       },
     ]
   }
 
-  function getAllOptionForNetworkAddress(attributeName: string) {
+  function getAllOptionForIpAddress(attributeName: string) {
     return [
       {
         ...mapping[OperatorType.Is],
-        callback: () => `[${attributeName}] IS 16.16.16.16`,
+        callback: () => `[${attributeName}] is 16.16.16.16`,
       },
       {
         ...mapping[OperatorType.In],
-        callback: () => `[${attributeName}] IN 16.16.0.0/16`,
+        callback: () => `[${attributeName}] in 16.16.0.0/16`,
+      },
+    ]
+  }
+
+  function getAllOptionForMacAddress(attributeName: string) {
+    return [
+      {
+        ...mapping[OperatorType.Is],
+        callback: () => `[${attributeName}] is 1616.1616.1616`,
+      },
+      {
+        ...mapping[OperatorType.In],
+        callback: () => `[${attributeName}] in 1616.1616.1616/32`,
       },
     ]
   }
@@ -97,11 +110,11 @@ export function useQueryBuilderOperator() {
     return [
       {
         ...mapping[OperatorType.True],
-        callback: () => `[${attributeName}] IS TRUE`,
+        callback: () => `[${attributeName}] is true`,
       },
       {
         ...mapping[OperatorType.False],
-        callback: () => `[${attributeName}] IS FALSE`,
+        callback: () => `[${attributeName}] is false`,
       },
     ]
   }
@@ -119,11 +132,10 @@ export function useQueryBuilderOperator() {
       return getAllOptionForId(attribute.name)
     } else if (attribute.type === AttributeType.Date) {
       return getAllOptionForDate(attribute.name)
-    } else if (
-      attribute.type === AttributeType.MacAddress ||
-      attribute.type === AttributeType.IpAddress
-    ) {
-      return getAllOptionForNetworkAddress(attribute.name)
+    } else if (attribute.type === AttributeType.IpAddress) {
+      return getAllOptionForIpAddress(attribute.name)
+    } else if (attribute.type === AttributeType.MacAddress) {
+      return getAllOptionForMacAddress(attribute.name)
     } else if (attribute.type === AttributeType.Binary) {
       return getAllOptionForBinary(attribute.name)
     } else {

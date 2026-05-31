@@ -367,7 +367,25 @@ function FormControl<T>(
         </InputGroup>
       )}
       {type === FormControlType.LongText && (
-        <Textarea rows={rows} value={field.value == null ? "" : String(field.value as string)} {...inputProps} />
+        <InputGroup
+          endElement={
+            clearable && field.value ? (
+              <IconButton
+                size="xs"
+                variant="ghost"
+                aria-label={t("common.clear")}
+                alignSelf="flex-start"
+                mt="1"
+                mr="1"
+                onClick={() => field.onChange("")}
+              >
+                <LuX />
+              </IconButton>
+            ) : undefined
+          }
+        >
+          <Textarea rows={rows} value={field.value == null ? "" : String(field.value as string)} {...inputProps} />
+        </InputGroup>
       )}
       {helperText && <Field.HelperText>{helperText}</Field.HelperText>}
       {error && <Field.HelperText color="red.500">{error?.message}</Field.HelperText>}

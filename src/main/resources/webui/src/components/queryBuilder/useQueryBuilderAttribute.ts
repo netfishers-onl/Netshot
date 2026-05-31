@@ -1,9 +1,6 @@
 import { useDomains } from "@/features/administration/api/queries"
-import { usePolicies } from "@/features/compliance/api"
-import { useDiagnostics } from "@/features/diagnostic/api"
 import { useDeviceTypeOptions } from "@/hooks"
 import {
-  DeviceComplianceResultType,
   DeviceNetworkClass,
   DeviceSoftwareLevel,
   DeviceStatus,
@@ -11,15 +8,13 @@ import {
 } from "@/types"
 import { sortAlphabetical } from "@/utils"
 import { useTranslation } from "react-i18next"
-import { Attribute, AttributeName } from "./constants"
+import { Attribute } from "./constants"
 import { AttributeOption, AttributeType } from "./types"
 
 export function useQueryBuilderAttribute() {
   const { t } = useTranslation()
   const deviceTypeOptions = useDeviceTypeOptions()
   const domainQuery = useDomains()
-  const diagnosticQuery = useDiagnostics()
-  const policyQuery = usePolicies()
 
   function getAllGenericOption(): AttributeOption[] {
     const domaineChoices = Array.isArray(domainQuery.data)
@@ -129,26 +124,17 @@ export function useQueryBuilderAttribute() {
           type: AttributeType.Enum,
           choices: [
             { label: t("device.class.firewall"), value: DeviceNetworkClass.Firewall },
-            {
-              label: t("device.class.loadBalancer"),
-              value: DeviceNetworkClass.LoadBalancer,
-            },
+            { label: t("device.class.loadBalancer"), value: DeviceNetworkClass.LoadBalancer },
             { label: t("device.class.router"), value: DeviceNetworkClass.Router },
             { label: t("common.server"), value: DeviceNetworkClass.Server },
             { label: t("device.class.switch"), value: DeviceNetworkClass.Switch },
-            {
-              label: t("device.class.switchRouter"),
-              value: DeviceNetworkClass.SwitchRouter,
-            },
+            { label: t("device.class.switchRouter"), value: DeviceNetworkClass.SwitchRouter },
             { label: t("device.class.accessPoint"), value: DeviceNetworkClass.AccessPoint },
             {
               label: t("device.class.wirelessController"),
               value: DeviceNetworkClass.WirelessController,
             },
-            {
-              label: t("device.class.consoleServer"),
-              value: DeviceNetworkClass.ConsoleServer,
-            },
+            { label: t("device.class.consoleServer"), value: DeviceNetworkClass.ConsoleServer },
             { label: t("common.unknownLabel"), value: DeviceNetworkClass.Unknown },
           ],
         },
@@ -236,82 +222,11 @@ export function useQueryBuilderAttribute() {
     return sortAlphabetical(options, "label")
   }
 
-  function getAllDiagnosticResultOption() {
-    if (!Array.isArray(diagnosticQuery.data)) {
-      return []
-    }
-
-    return diagnosticQuery.data.map((diagnostic) => ({
-      label: `${diagnostic?.name}`,
-      value: {
-        name: `Diagnostic > ${diagnostic?.name}`,
-        type: diagnostic?.resultType,
-      },
-    }))
-  }
-
-  function getAllComplianceRuleResultOption(policyId: number) {
-    if (!policyId) {
-      return []
-    }
-
-    const policy = policyQuery.data.find((p) => p.id === policyId)
-
-    if (!policy) {
-      return []
-    }
-
-    const options = policy.rules.map((r) => ({
-      label: r.name,
-      value: {
-        name: `Rule > ${policy.name} > ${r.name}`,
-        type: AttributeType.Enum,
-        choices: [
-          {
-            label: t("auth.confirming"),
-            value: DeviceComplianceResultType.Conforming,
-          },
-          {
-            label: t("compliance.nonConforming"),
-            value: DeviceComplianceResultType.NonConfirming,
-          },
-          {
-            label: t("compliance.notApplicable"),
-            value: DeviceComplianceResultType.NotApplication,
-          },
-          { label: t("policy.rule.exempted"), value: DeviceComplianceResultType.Exempted },
-          { label: t("common.disabled"), value: DeviceComplianceResultType.Disabled },
-          {
-            label: t("policy.rule.invalid"),
-            value: DeviceComplianceResultType.InvalidRule,
-          },
-        ],
-      },
-    }))
-
-    return sortAlphabetical(options, "label")
-  }
-
-  function getAttributeByName(name: AttributeName, attributes: AttributeOption[]) {
-    if (attributes?.length === 0) {
-      return null
-    }
-
-    return attributes.find((attribute) => attribute.value?.name === name)?.value
-  }
-
-  const isLoading =
-    domainQuery.isPending &&
-    deviceTypeOptions.isPending &&
-    diagnosticQuery.isPending &&
-    policyQuery.isPending
+  const isLoading = domainQuery.isPending && deviceTypeOptions.isPending
 
   return {
     getAllGenericOption,
     getAllTypeSpecificOption,
-    getAllDiagnosticResultOption,
-    getAllComplianceRuleResultOption,
-    getAttributeByName,
     isLoading,
   }
 }

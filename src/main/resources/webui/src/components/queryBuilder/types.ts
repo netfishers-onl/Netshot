@@ -7,8 +7,6 @@ export enum AttributeGroupType {
   DiagnosticResult = "diagnostic-result",
 }
 
-export type AttributeGroupOption = Option<AttributeGroupType>
-
 export type AttributeOption = Option<{
   name: string
   type: string
@@ -46,9 +44,9 @@ export enum OperatorType {
 }
 
 export enum ConditionType {
-  And = "AND",
-  Or = "OR",
-  Not = "NOT",
+  And = "and",
+  Or = "or",
+  Not = "not",
 }
 
 export type QueryBuilderValue = {

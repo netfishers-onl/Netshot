@@ -28,7 +28,7 @@ import RuleRemoveButton from "../components/RemoveRuleButton"
 import { QUERIES } from "../constants"
 import { RuleProvider } from "../contexts"
 
-export default function ComplianceDetailScreen() {
+export default function ConfigurationComplianceRuleScreen() {
   const { policyId, ruleId } = useParams()
   const { t } = useTranslation()
   const { getOptionByDriver } = useDeviceTypeOptions()

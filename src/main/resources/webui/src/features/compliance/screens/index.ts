@@ -1,4 +1,4 @@
-export { default as ComplianceDetailScreen } from "./ComplianceDetailScreen";
-export { default as HardwareComplianceRuleScreen } from "./HardwareComplianceRuleScreen";
-export { default as ComplianceScreen } from "./ComplianceScreen";
-export { default as SoftwareComplianceRuleScreen } from "./SoftwareComplianceRuleScreen";
+export { default as ComplianceDetailScreen } from "./ConfigurationComplianceRuleScreen";
+export { default as HardwareComplianceScreen } from "./HardwareComplianceScreen";
+export { default as ConfigurationComplianceRuleScreen } from "./ComplianceScreen";
+export { default as SoftwareComplianceScreen } from "./SoftwareComplianceScreen";

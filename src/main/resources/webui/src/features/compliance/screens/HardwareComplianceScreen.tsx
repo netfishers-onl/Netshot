@@ -19,7 +19,7 @@ import TableButtonStack from "@/features/administration/components/TableButtonSt
 
 const columnHelper = createColumnHelper<HardwareRule>()
 
-export default function HardwareComplianceRuleScreen() {
+export default function HardwareComplianceScreen() {
   const { t } = useTranslation()
   const { formatDate } = useLocalization()
   const pagination = usePagination()

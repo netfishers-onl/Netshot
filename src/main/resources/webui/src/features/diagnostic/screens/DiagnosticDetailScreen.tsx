@@ -42,7 +42,7 @@ export default function DeviceDetailScreen() {
           <Skeleton loading={isPending}>
             <Stack direction="row" gap="3" alignItems="center">
               <Heading as="h1" fontSize="4xl">
-                {diagnostic?.name ?? "Network device title"}
+                {diagnostic?.name ?? t("common.networkDeviceTitle")}
               </Heading>
               {diagnostic && !diagnostic?.enabled && (
                 <Tag.Root colorPalette="grey" variant="surface">{t("common.disabled")}</Tag.Root>

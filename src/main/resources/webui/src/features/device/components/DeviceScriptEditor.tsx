@@ -81,7 +81,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
     onError() {
       toast.error({
         title: t("common.error"),
-        description: "An error occurred during the save",
+        description: t("common.anErrorOccurredDuringTheSave"),
       })
     },
   })

@@ -122,7 +122,7 @@ export default function ReportConfigurationChangeList() {
               bg={currentPeriod?.label === period.label ? "green.50!important" : null}
               onClick={() => setCurrentPeriod(period)}
             >
-              {period.label}
+              {t(period.label)}
             </Button>
           ))}
         </Stack>

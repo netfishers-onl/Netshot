@@ -48,7 +48,7 @@ export default function DeviceDetailScreen() {
           <Flex alignItems="center">
             <Skeleton loading={isPending}>
               <Heading as="h1" fontSize="4xl">
-                {device?.name ?? "Network device title"}
+                {device?.name ?? t("common.networkDeviceTitle")}
               </Heading>
             </Skeleton>
 

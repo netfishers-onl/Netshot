@@ -52,7 +52,7 @@ export default function HardwareDeviceListDialog(props: HardwareDeviceListButton
     }),
   ]
 
-  const title = type === "eol" ? "End of life devices" : "End of sale devices"
+  const title = type === "eol" ? "compliance.hardware.endOfLifeDevices" : "compliance.hardware.endOfSaleDevices"
 
   return (
     <Dialog.Root

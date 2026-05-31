@@ -19,6 +19,7 @@ import { ReactElement, ReactNode, useEffect, useMemo, useRef } from "react"
 
 import { flushSync } from "react-dom"
 import { FieldPath, FieldValues, useController, UseControllerProps } from "react-hook-form"
+import { useTranslation } from "react-i18next"
 import { LuX } from "react-icons/lu"
 
 export type SelectProps<
@@ -44,6 +45,7 @@ export type SelectProps<
 export function Select<TFieldValues extends FieldValues, TName extends FieldPath<TFieldValues>, T>(
   props: SelectProps<TFieldValues, TName, T>
 ) {
+  const { t } = useTranslation()
   const {
     options = [],
     label,
@@ -272,7 +274,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
                 </div>
               ) : (
                 <HStack justifyContent="center" h="42px">
-                  {noOptionsMessage || "No options available"}
+                  {noOptionsMessage || t("common.noOptionsAvailable")}
                 </HStack>
               )}
             </ChakraSelect.Content>

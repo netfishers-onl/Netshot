@@ -429,7 +429,12 @@
       "selectOutputFormat": "Sélectionner un format de sortie",
       "selectAttributeEllipsis": "Sélectionner un attribut",
       "selectDeviceAttribute": "Sélectionner un attribut de l'équipement",
-      "selectSpecificAttribute": "Sélectionner un attribut spécifique..."
+      "selectSpecificAttribute": "Sélectionner un attribut spécifique...",
+      "noOptionsAvailable": "Aucune option disponible",
+      "anErrorHasOccurred": "Une erreur s'est produite",
+      "openGroupOptions": "Ouvrir les options du groupe",
+      "anErrorOccurredDuringTheSave": "Une erreur s'est produite lors de la sauvegarde",
+      "networkDeviceTitle": "Titre de l'équipement réseau"
     },
     "about": {
       "label": "À propos",
@@ -898,7 +903,14 @@
       "exportCompliance": "Exporter le rapport et les informations de conformité",
       "exportLocationsAndContacts": "Exporter les emplacements et informations de contact des équipements",
       "list": "Rapports",
-      "totalDevices": "Total des équipements"
+      "totalDevices": "Total des équipements",
+      "period": {
+        "lastHour": "Dernière heure",
+        "last4Hours": "4 dernières heures",
+        "last12Hours": "12 dernières heures",
+        "lastDay": "Dernier jour",
+        "specificDay": "Jour spécifique"
+      }
     }
   }
 }

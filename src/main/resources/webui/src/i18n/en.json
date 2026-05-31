@@ -429,7 +429,12 @@
       "selectOutputFormat": "Select an output format",
       "selectAttributeEllipsis": "Select attribute",
       "selectDeviceAttribute": "Select device attribute",
-      "selectSpecificAttribute": "Select specific attribute..."
+      "selectSpecificAttribute": "Select specific attribute...",
+      "noOptionsAvailable": "No options available",
+      "anErrorHasOccurred": "An error has occurred",
+      "openGroupOptions": "Open group options",
+      "anErrorOccurredDuringTheSave": "An error occurred during the save",
+      "networkDeviceTitle": "Network device title"
     },
     "about": {
       "label": "About",
@@ -898,7 +903,14 @@
       "exportCompliance": "Export compliance report and information",
       "exportLocationsAndContacts": "Export device locations and contacts information",
       "list": "Reports",
-      "totalDevices": "Total Devices"
+      "totalDevices": "Total Devices",
+      "period": {
+        "lastHour": "Last hour",
+        "last4Hours": "Last 4 hours",
+        "last12Hours": "Last 12 hours",
+        "lastDay": "Last day",
+        "specificDay": "Specific day"
+      }
     }
   }
 }

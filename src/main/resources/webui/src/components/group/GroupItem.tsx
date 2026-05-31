@@ -69,7 +69,7 @@ export default function GroupItem(props: GroupItemProps) {
               <Menu.Trigger asChild>
                 <IconButton
                   variant="ghost"
-                  aria-label="Open group options"
+                  aria-label={t("common.openGroupOptions")}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <LuEllipsis />

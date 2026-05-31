@@ -1,5 +1,6 @@
 import { Combobox, ComboboxRootProps, Field, ListCollection, Portal, Text } from "@chakra-ui/react"
 import { ReactElement } from "react"
+import { useTranslation } from "react-i18next"
 
 export type AutocompleteProps<T> = {
   label?: string
@@ -16,14 +17,15 @@ export type AutocompleteProps<T> = {
 } & ComboboxRootProps
 
 export function Autocomplete<T>(props: AutocompleteProps<T>) {
+  const { t } = useTranslation()
   const {
     label,
     placeholder = "search2",
     helperText,
     collection,
-    notFoundMessage = "No result found",
-    loadingMessage = <Text>{"loading..."}</Text>,
-    errorMessage = <Text>{"An error has occurred"}</Text>,
+    notFoundMessage,
+    loadingMessage,
+    errorMessage,
     required = false,
     disabled = false,
     readOnly = false,
@@ -32,6 +34,10 @@ export function Autocomplete<T>(props: AutocompleteProps<T>) {
     renderItem,
     ...comboboxProps
   } = props
+
+  const resolvedNotFoundMessage = notFoundMessage ?? t("common.noResults")
+  const resolvedLoadingMessage = loadingMessage ?? <Text>{t("common.loading")}</Text>
+  const resolvedErrorMessage = errorMessage ?? <Text>{t("common.anErrorHasOccurred")}</Text>
 
   return (
     <Field.Root required={required} readOnly={readOnly} disabled={disabled}>
@@ -56,12 +62,12 @@ export function Autocomplete<T>(props: AutocompleteProps<T>) {
           <Combobox.Positioner>
             <Combobox.Content>
               {isLoading ? (
-                loadingMessage
+                resolvedLoadingMessage
               ) : isError ? (
-                errorMessage
+                resolvedErrorMessage
               ) : (
                 <>
-                  <Combobox.Empty>{notFoundMessage}</Combobox.Empty>
+                  <Combobox.Empty>{resolvedNotFoundMessage}</Combobox.Empty>
                   {collection.items.map((item) => renderItem(item))}
                 </>
               )}

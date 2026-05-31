@@ -12,11 +12,11 @@ export type PeriodRange = {
 export type PeriodValue = (from?: Date) => PeriodRange
 
 export enum PeriodType {
-  LastHour = "Last hour",
-  Last4Hours = "Last 4 hours",
-  Last12Hours = "Last 12 hours",
-  LastDay = "Last day",
-  SpecificDay = "Specific day",
+  LastHour = "report.period.lastHour",
+  Last4Hours = "report.period.last4Hours",
+  Last12Hours = "report.period.last12Hours",
+  LastDay = "report.period.lastDay",
+  SpecificDay = "report.period.specificDay",
 }
 
 export type Period = Option<PeriodValue, PeriodType>

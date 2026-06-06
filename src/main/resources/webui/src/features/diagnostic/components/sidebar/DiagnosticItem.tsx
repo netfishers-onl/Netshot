@@ -2,10 +2,10 @@ import { Badge, Icon, Stack, Text } from "@chakra-ui/react"
 import { forwardRef, Ref, useMemo } from "react"
 import { NavLink } from "react-router"
 
-import { Javascript, Python } from "@/components/icons"
 import { Diagnostic, DiagnosticType } from "@/types"
 
 import { LuRegex } from "react-icons/lu"
+import { SiJavascript, SiPython } from "react-icons/si"
 
 type DiagnosticBoxProps = {
   diagnostic: Diagnostic
@@ -16,9 +16,9 @@ const DiagnosticItem = forwardRef((props: DiagnosticBoxProps, ref: Ref<HTMLDivEl
 
   const iconEl = useMemo(() => {
     if (diagnostic.type === DiagnosticType.Javascript) {
-      return <Javascript />
+      return <SiJavascript />
     } else if (diagnostic.type === DiagnosticType.Python) {
-      return <Python />
+      return <SiPython />
     } else {
       return <LuRegex />
     }

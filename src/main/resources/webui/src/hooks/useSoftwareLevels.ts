@@ -25,7 +25,7 @@ const LEVELS: Record<DeviceSoftwareLevel, SoftwareLevelInfo> = {
   },
   [DeviceSoftwareLevel.NON_COMPLIANT]: {
     label: "compliance.nonCompliant",
-    color: "black",
+    color: "red",
     isCompliant: false,
   },
   [DeviceSoftwareLevel.UNKNOWN]: {

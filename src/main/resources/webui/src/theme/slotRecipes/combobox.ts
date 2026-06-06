@@ -60,14 +60,40 @@ export const comboboxSlotRecipe = defineSlotRecipe({
             color: "green.800",
           },
         },
+        clearTrigger: {
+          "& svg": {
+            width: "16px",
+            height: "16px",
+          },
+          bg: "transparent",
+          color: {
+            _light: "black",
+            _dark: "white",
+          },
+          _hover: {
+            bg: "grey.50",
+          },
+          _active: {
+            bg: "grey.100",
+          },
+        },
       },
     },
     size: {
       md: {
         input: {
           h: "42px",
+        },
+        clearTrigger: {
+          fontSize: "md",
+          height: "40px",
+          minWidth: "40px",
         }
       }
-    }
+    },
+  },
+  defaultVariants: {
+    variant: "outline",
+    size: "md",
   },
 })

@@ -73,6 +73,9 @@ export function useUpdateRule(rule: Rule) {
         queryKey: [QUERIES.POLICY_LIST],
       })
       queryClient.invalidateQueries({
+        queryKey: [QUERIES.POLICY_SEARCH_LIST],
+      })
+      queryClient.invalidateQueries({
         queryKey: [FEATURE_QUERIES.RULE_DETAIL],
       })
     },

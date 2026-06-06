@@ -8,8 +8,9 @@ import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useUpdateRule } from "../api"
 import { RuleForm } from "../types"
-import { RuleEditForm } from "./RuleEditForm"
-import RuleEditScript from "./RuleEditScript"
+import { TextRuleEditForm } from "./TextRuleEditForm"
+import ScriptRuleEditForm from "./ScriptRuleEditForm"
+import TestRuleOnDevice from "./TestRuleOnDevice"
 
 export type EditRuleButtonProps = PropsWithRenderItem<{
   policyId: number
@@ -23,7 +24,7 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
   const dialog = useFormDialogWithMutation()
 
   const defaultValues = useMemo(() => {
-    const values = {
+    return {
       name: rule?.name,
       enabled: rule?.enabled ?? true,
       script: rule?.script,
@@ -37,8 +38,6 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
       invert: booleanToString(rule?.invert),
       normalize: rule?.normalize,
     } as RuleForm
-
-    return values
   }, [rule])
 
   const form = useForm<RuleForm>({
@@ -58,15 +57,16 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
     const dialogRef = dialog.open(MUTATIONS.RULE_UPDATE, {
       title: t("policy.rule.edit"),
       description: hasScript ? (
-        <RuleEditScript type={rule?.type} />
+        <ScriptRuleEditForm type={rule?.type} />
       ) : (
-        <RuleEditForm type={rule?.type} />
+        <TextRuleEditForm type={rule?.type} />
       ),
+      footerStart: <TestRuleOnDevice type={rule?.type} />,
+      bodyProps: !hasScript ? { overflow: "hidden", display: "flex" } : undefined,
       form,
-      size: "lg",
+      size: "xl",
       variant: hasScript ? "full-floating" : null,
       async onSubmit(values: RuleForm) {
-        console.log(values)
         await mutation.mutateAsync({
           id: rule.id,
           name: values.name,

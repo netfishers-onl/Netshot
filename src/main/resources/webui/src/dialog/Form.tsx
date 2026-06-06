@@ -1,4 +1,5 @@
-import { Button, ButtonProps, CloseButton, Dialog, Portal, Stack } from "@chakra-ui/react"
+import { Button, ButtonProps, CloseButton, Dialog, DialogBodyProps, Portal, Stack } from "@chakra-ui/react"
+import React from "react"
 import mergeWith from "lodash.mergewith"
 import { FieldValues, FormProvider, UseFormReturn, useFormState } from "react-hook-form"
 import { useDialogConfig } from "./dialogConfigContext"
@@ -9,6 +10,8 @@ import { BaseDialogProps, PromiseOrVoid } from "./types"
 export type FormDialogProps<F extends FieldValues = FieldValues> = {
   onSubmit(data: F): PromiseOrVoid
   form: UseFormReturn<F>
+  footerStart?: React.ReactNode
+  bodyProps?: DialogBodyProps
   submitButton?: {
     label?: string
     props?: ButtonProps
@@ -83,12 +86,13 @@ export default function FormDialog<F extends FieldValues = FieldValues>() {
                 {config.props.title}
                 <Dialog.CloseTrigger />
               </Dialog.Header>
-              <Dialog.Body>
+              <Dialog.Body {...config.props.bodyProps}>
                 {typeof config.props.description === "function"
                   ? config.props.description()
                   : config.props.description}
               </Dialog.Body>
-              <Dialog.Footer>
+              <Dialog.Footer justifyContent="space-between">
+                <Stack>{config.props.footerStart}</Stack>
                 <Stack direction="row" gap="3">
                   <Button {...cancelButtonConfig.props}>{cancelButtonConfig?.label}</Button>
                   <Button {...submitButtonConfig.props}>{submitButtonConfig?.label}</Button>

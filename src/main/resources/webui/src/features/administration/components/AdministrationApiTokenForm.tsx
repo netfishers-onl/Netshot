@@ -52,7 +52,7 @@ export default function AdministrationApiTokenForm() {
                 aria-label={t("api.copyToken")}
                 onClick={copy}
                 variant="ghost"
-                colorPalette="grey"
+                size="xs"
               >
                 <LuCopy />
               </IconButton>

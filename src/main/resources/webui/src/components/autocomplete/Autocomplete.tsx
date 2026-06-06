@@ -1,6 +1,7 @@
-import { Combobox, ComboboxRootProps, Field, ListCollection, Portal, Text } from "@chakra-ui/react"
+import { Combobox, ComboboxRootProps, Field, IconButton, ListCollection, Portal, Text } from "@chakra-ui/react"
 import { ReactElement } from "react"
 import { useTranslation } from "react-i18next"
+import { LuX } from "react-icons/lu"
 
 export type AutocompleteProps<T> = {
   label?: string
@@ -10,6 +11,7 @@ export type AutocompleteProps<T> = {
   notFoundMessage?: string | ReactElement
   loadingMessage?: string | ReactElement
   errorMessage?: string | ReactElement
+  isClearable?: boolean
   isLoading?: boolean
   isError?: boolean
   onSelectItem?(item: T): void
@@ -20,12 +22,13 @@ export function Autocomplete<T>(props: AutocompleteProps<T>) {
   const { t } = useTranslation()
   const {
     label,
-    placeholder = "search2",
+    placeholder = t("search2"),
     helperText,
     collection,
     notFoundMessage,
     loadingMessage,
     errorMessage,
+    isClearable = true,
     required = false,
     disabled = false,
     readOnly = false,
@@ -51,7 +54,17 @@ export function Autocomplete<T>(props: AutocompleteProps<T>) {
         <Combobox.Control>
           <Combobox.Input placeholder={placeholder} />
           <Combobox.IndicatorGroup>
-            {/* <Combobox.ClearTrigger /> */}
+            <Combobox.Context>
+              {(api) =>
+                (isClearable && api.inputValue || api.value.length > 0) && (
+                  <Combobox.ClearTrigger asChild>
+                    <IconButton size="xs" variant="ghost" borderRadius="xl">
+                      <LuX />
+                    </IconButton>
+                  </Combobox.ClearTrigger>
+                )
+              }
+            </Combobox.Context>
             <Combobox.Trigger />
           </Combobox.IndicatorGroup>
         </Combobox.Control>

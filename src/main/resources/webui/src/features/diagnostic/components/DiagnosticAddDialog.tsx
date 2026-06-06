@@ -1,7 +1,6 @@
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { BoxWithIconButton } from "@/components"
-import { Javascript, Python } from "@/components/icons"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
 import { DiagnosticType } from "@/types"
@@ -9,7 +8,8 @@ import { Button, CloseButton, Dialog, Heading, Portal, Stack, Text } from "@chak
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
-import { LuAlignLeft } from "react-icons/lu"
+import { LuAlignLeft, LuRegex } from "react-icons/lu"
+import { SiJavascript, SiPython } from "react-icons/si"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
 import { QUERIES, SCRIPT_TEMPLATES } from "../constants"
@@ -33,19 +33,19 @@ export default function DiagnosticAddDialog() {
 
   const typeOptions = [
     {
-      icon: <LuAlignLeft />,
+      icon: LuRegex,
       type: DiagnosticType.Simple,
       label: t("common.simple"),
       description: t("diagnostic.createWithStringAndRegex"),
     },
     {
-      icon: <Javascript />,
+      icon: SiJavascript,
       type: DiagnosticType.Javascript,
       label: t("policy.rule.javascript"),
       description: t("diagnostic.createWithJavascript"),
     },
     {
-      icon: <Python />,
+      icon: SiPython,
       type: DiagnosticType.Python,
       label: t("policy.rule.python"),
       description: t("diagnostic.createWithPython"),
@@ -193,7 +193,7 @@ export default function DiagnosticAddDialog() {
                   <Stack direction="row" gap="5">
                     {typeOptions.map((option) => (
                       <BoxWithIconButton
-                        icon={option.icon}
+                        icon={<option.icon size="24" />}
                         title={option.label}
                         description={option.description}
                         isActive={option.type === type}

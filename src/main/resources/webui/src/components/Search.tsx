@@ -58,7 +58,6 @@ export default function Search(props: SearchProps) {
               <IconButton
                 size="xs"
                 variant="ghost"
-                rounded="l1"
                 aria-label="clear"
                 onClick={clearValue}
               >

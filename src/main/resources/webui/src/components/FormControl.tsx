@@ -283,13 +283,13 @@ function FormControl<T>(
             <DatePicker.IndicatorGroup>
               {(clearable && dateValue != null) ? (
                 <DatePicker.ClearTrigger asChild>
-                  <IconButton size="xs" variant="ghost" aria-label={t("common.clear")}>
+                  <IconButton size="xs" variant="ghost" borderRadius="xl" aria-label={t("common.clear")}>
                     <LuX />
                   </IconButton>
                 </DatePicker.ClearTrigger>
               ) : (
                 <DatePicker.Trigger asChild>
-                  <IconButton size="xs" variant="ghost" aria-label={t("common.openCalendar")}>
+                  <IconButton size="xs" variant="ghost" borderRadius="xl" aria-label={t("common.openCalendar")}>
                     <LuCalendar />
                   </IconButton>
                 </DatePicker.Trigger>
@@ -327,7 +327,6 @@ function FormControl<T>(
                     <IconButton
                       size="xs"
                       variant="ghost"
-                      rounded="l1"
                       aria-label={t("auth.passwordUnchanged")}
                       onClick={lockPassword}
                     >
@@ -384,7 +383,11 @@ function FormControl<T>(
             ) : undefined
           }
         >
-          <Textarea rows={rows} value={field.value == null ? "" : String(field.value as string)} {...inputProps} />
+          <Textarea
+            rows={rows}
+            value={field.value == null ? "" : String(field.value as string)}
+            {...inputProps}
+          />
         </InputGroup>
       )}
       {helperText && <Field.HelperText>{helperText}</Field.HelperText>}

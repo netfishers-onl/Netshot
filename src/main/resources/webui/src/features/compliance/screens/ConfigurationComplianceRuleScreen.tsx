@@ -44,10 +44,18 @@ export default function ConfigurationComplianceRuleScreen() {
 
   const fieldDescription = useMemo(() => {
     if (!rule?.field) return t("common.unknownLabel")
-    const attr = getOptionByDriver(rule.deviceDriver)?.value.attributes.find(
-      (a) => a.checkable && a.name === rule.field
-    )
-    return attr?.title ?? t("common.unknownLabel")
+    if (rule.deviceDriver) {
+      const attr = getOptionByDriver(rule.deviceDriver)?.value.attributes.find(
+        (a) => a.name === rule.field
+      )
+      if (attr) return attr.title
+    }
+    const genericLabels: Record<string, string> = {
+      contact: t("common.contact"),
+      location: t("common.location"),
+      name: t("common.name"),
+    }
+    return genericLabels[rule.field] ?? rule.field
   }, [rule, getOptionByDriver, t])
 
   const textLabel = useMemo(() => {

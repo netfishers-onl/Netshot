@@ -72,12 +72,12 @@ export function QueryBuilderDialog<T>(props: QueryBuilderDialogProps<T>) {
       </Stack>
       <Tabs.Root defaultValue={AttributeGroupType.Generic} variant="subtle" size="lg">
         <Tabs.List>
-          <Tabs.Trigger value={AttributeGroupType.Generic}>{t('genericAttributes', 'Generic attributes')}</Tabs.Trigger>
-          <Tabs.Trigger value={AttributeGroupType.TypeSpecific}>{t('typespecific', 'Type-specific')}</Tabs.Trigger>
+          <Tabs.Trigger value={AttributeGroupType.Generic}>{t('common.genericAttributes')}</Tabs.Trigger>
+          <Tabs.Trigger value={AttributeGroupType.TypeSpecific}>{t('common.typeSpecificAttributes')}</Tabs.Trigger>
           <Tabs.Trigger value={AttributeGroupType.ComplianceRuleResult}>
-            {t('complianceRules', 'Compliance rules')}
+            {t('common.complianceRules')}
           </Tabs.Trigger>
-          <Tabs.Trigger value={AttributeGroupType.DiagnosticResult}>{t('diagnostics', 'Diagnostics')}</Tabs.Trigger>
+          <Tabs.Trigger value={AttributeGroupType.DiagnosticResult}>{t('diagnostic.list')}</Tabs.Trigger>
         </Tabs.List>
         <Tabs.Content paddingX="6" value={AttributeGroupType.Generic}>
           <GenericAttributePanel onInsert={insertSnippet} />

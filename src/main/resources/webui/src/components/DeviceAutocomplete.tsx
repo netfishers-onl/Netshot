@@ -1,6 +1,6 @@
 import api, { DeviceSearchResult } from "@/api"
 import { SimpleDevice } from "@/types"
-import { Combobox, Text } from "@chakra-ui/react"
+import { Combobox, Span, Stack, Text } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
 import { useAutocomplete, WithFilterBy } from "./autocomplete"
 import { Autocomplete, AutocompleteProps } from "./autocomplete/Autocomplete"
@@ -33,6 +33,7 @@ export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
     queryFn(query) {
       return api.device.search({
         query: `[Name] containsnocase "${query}"`,
+        limit: 20,
       })
     },
     select(data) {
@@ -49,11 +50,9 @@ export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
     <Autocomplete
       onValueChange={(evt) => {
         const device = entities.find((item) => item.id === +evt.value[0])
-
         if (!device) {
           return
         }
-
         onSelectItem(device)
       }}
       {...autocompleteConfig}
@@ -65,7 +64,14 @@ export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
       isLoading={isPending}
       renderItem={(item) => (
         <Combobox.Item item={item} key={item.id}>
-          {item.name}
+          <Stack gap={0}>
+            <Span fontWeight="medium">
+              {item.name}
+            </Span>
+            <Span textStyle="xs" color="fg.muted">
+              {item.family}
+            </Span>
+          </Stack>
           <Combobox.ItemIndicator />
         </Combobox.Item>
       )}

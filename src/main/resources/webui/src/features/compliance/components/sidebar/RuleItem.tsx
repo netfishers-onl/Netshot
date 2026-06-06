@@ -3,10 +3,10 @@ import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router"
 
-import { Javascript, Python } from "@/components/icons"
 import { Level, Policy, Rule, RuleType } from "@/types"
 
 import { LuAlignLeft } from "react-icons/lu"
+import { SiJavascript, SiPython } from "react-icons/si"
 
 export type RuleItemProps = {
   policy: Policy
@@ -22,11 +22,11 @@ export default function RuleItem(props: RuleItemProps) {
   const iconEl = useMemo(() => {
     if (rule.type === RuleType.Javascript) {
       return (
-        <Javascript />
+        <SiJavascript />
       );
     } else if (rule.type === RuleType.Python) {
       return (
-        <Python />
+        <SiPython />
       );
     } else {
       return (

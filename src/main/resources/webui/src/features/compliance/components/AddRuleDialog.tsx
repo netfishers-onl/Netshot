@@ -1,7 +1,6 @@
 import api, { CreateOrUpdateRule } from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { BoxWithIconButton } from "@/components"
-import { Javascript, Python } from "@/components/icons"
 import { QUERIES as GLOBAL_QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
@@ -16,8 +15,10 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
 import { QUERIES, RULE_SCRIPT_TEMPLATE } from "../constants"
 import { RuleForm } from "../types"
-import { RuleEditForm } from "./RuleEditForm"
-import RuleEditScript from "./RuleEditScript"
+import { TextRuleEditForm } from "./TextRuleEditForm"
+import ScriptRuleEditForm from "./ScriptRuleEditForm"
+import TestRuleOnDevice from "./TestRuleOnDevice"
+import { SiJavascript, SiPython } from "react-icons/si"
 
 enum FormStep {
   Type,
@@ -75,8 +76,9 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
 
   const title = formStep === FormStep.Type ? t("policy.rule.chooseType") : t("policy.rule.add")
 
+  const hasScript = type === RuleType.Javascript || type === RuleType.Python
+
   function submit(values: RuleForm) {
-    console.log(values)
     const payload: CreateOrUpdateRule = {
       id: null,
       name: values.name,
@@ -102,11 +104,11 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
     setFormStep(FormStep.Details)
 
     dialogConfig.update({
-      variant: type === RuleType.Text ? null : "full-floating",
+      variant: hasScript ? "full-floating" : null,
       size: "lg",
     })
 
-    if (type === RuleType.Javascript || type === RuleType.Python) {
+    if (hasScript) {
       form.setValue("script", RULE_SCRIPT_TEMPLATE[type])
     }
   }
@@ -128,7 +130,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
       setFormStep(FormStep.Type)
 
       dialogConfig.update({
-        variant: type === RuleType.Text ? null : "full-floating",
+        variant: hasScript ? "full-floating" : null,
         size: "lg",
       })
     }, 500)
@@ -138,29 +140,8 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
     form.reset()
   }, [form])
 
-  const typeOptions = [
-    {
-      icon: <LuAlignLeft />,
-      type: RuleType.Text,
-      label: t("common.text"),
-      description: t("policy.rule.createWithStringAndRegexp"),
-    },
-    {
-      icon: <Javascript />,
-      type: RuleType.Javascript,
-      label: t("policy.rule.javascript"),
-      description: t("policy.rule.createWithJavascript"),
-    },
-    {
-      icon: <Python />,
-      type: RuleType.Python,
-      label: t("policy.rule.python"),
-      description: t("policy.rule.createWithPython"),
-    },
-  ]
-
   form.watch((values) => {
-    if (type === RuleType.Text) return
+    if (!hasScript) return
 
     if (values.script?.length === 0) {
       form.setError("script", {
@@ -168,6 +149,27 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
       })
     }
   })
+
+  const typeOptions = [
+    {
+      icon: LuAlignLeft,
+      type: RuleType.Text,
+      label: t("common.text"),
+      description: t("policy.rule.createWithStringAndRegexp"),
+    },
+    {
+      icon: SiJavascript,
+      type: RuleType.Javascript,
+      label: t("policy.rule.javascript"),
+      description: t("policy.rule.createWithJavascript"),
+    },
+    {
+      icon: SiPython,
+      type: RuleType.Python,
+      label: t("policy.rule.python"),
+      description: t("policy.rule.createWithPython"),
+    },
+  ]
 
   return (
     <FormProvider {...form}>
@@ -202,12 +204,12 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
                   {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
                 </Text>
               </Dialog.Header>
-              <Dialog.Body flex="1" display="flex">
+              <Dialog.Body flex="1" display="flex" overflow={formStep === FormStep.Details && !hasScript ? "hidden" : undefined}>
                 {formStep === FormStep.Type ? (
                   <Stack direction="row" gap="5">
                     {typeOptions.map((option) => (
                       <BoxWithIconButton
-                        icon={option.icon}
+                        icon={<option.icon size="24" />}
                         title={option.label}
                         description={option.description}
                         isActive={option.type === type}
@@ -218,26 +220,28 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
                   </Stack>
                 ) : (
                   <>
-                    {type === RuleType.Text ? (
-                      <RuleEditForm flex="1" type={type} />
+                    {hasScript ? (
+                      <ScriptRuleEditForm type={type} />
                     ) : (
-                      <RuleEditScript type={type} />
+                      <TextRuleEditForm type={type} />
                     )}
                   </>
                 )}
               </Dialog.Body>
               <Dialog.Footer justifyContent="space-between">
-                {formStep === FormStep.Details && (
-                  <Button onClick={previous}>{t("common.previous")}</Button>
-                )}
-                <Stack direction="row" gap="3" flex="1" justifyContent="end">
+                <Stack>
+                  {formStep === FormStep.Details && <TestRuleOnDevice type={type} />}
+                </Stack>
+                <Stack direction="row" gap="3" alignItems="center">
+                  {formStep === FormStep.Details && (
+                    <Button onClick={previous}>{t("common.previous")}</Button>
+                  )}
                   <Button onClick={close}>{t("common.cancel")}</Button>
                   {formStep === FormStep.Type && (
                     <Button variant="primary" disabled={type === null} onClick={next}>
                       {t("common.next")}
                     </Button>
                   )}
-
                   {formStep === FormStep.Details && (
                     <Button
                       type="submit"

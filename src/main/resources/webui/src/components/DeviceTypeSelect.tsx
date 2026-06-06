@@ -23,6 +23,7 @@ export default function DeviceTypeSelect<
     placeholder,
     helperText,
     isClearable,
+    rules,
   } = props
 
   const { t } = useTranslation()
@@ -38,6 +39,7 @@ export default function DeviceTypeSelect<
       defaultValue={defaultValue}
       readOnly={readOnly}
       required={required}
+      rules={rules}
       isLoading={isPending}
       helperText={helperText}
       isClearable={isClearable}

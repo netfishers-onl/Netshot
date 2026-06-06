@@ -1,14 +1,14 @@
 import { DeviceTypeSelect, FormControl, TreeGroupSelector } from "@/components"
 import { LuRegex, LuTrophy, LuType } from "react-icons/lu"
-import { Select } from "@/components/Select"
 import { useSoftwareLevels, useDeviceTypeOptions } from "@/hooks"
 import { useDeviceFamilies, useDevicePartNumbers, useDeviceSoftwareVersions } from "@/features/device/api"
 import { DeviceSoftwareLevel, SoftwareRule } from "@/types"
-import { Icon, IconButton, Stack } from "@chakra-ui/react"
+import { Field, HStack, Icon, IconButton, RadioCard, Stack, Text } from "@chakra-ui/react"
 import { useCallback, useEffect } from "react"
-import { useFormContext, useWatch } from "react-hook-form"
+import { Controller, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { SoftwareRuleFormValues } from "../types"
+
 
 export type SoftwareRuleFormProps = {
   rule?: SoftwareRule
@@ -79,7 +79,13 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         onChange={(groups) => form.setValue("group", groups?.[0])}
         withAny
       />
-      <DeviceTypeSelect control={form.control} name="driver" placeholder={t("common.any")} isClearable />
+      <DeviceTypeSelect
+        control={form.control}
+        name="driver"
+        placeholder={t("common.any")}
+        label={t("device.type")}
+        isClearable
+      />
       <FormControl
         control={form.control}
         name="family"
@@ -92,7 +98,6 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
             title={t(familyRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
             size="xs"
             variant="ghost"
-            rounded="l1"
             onClick={toggleFamilyRegExp}
           >
             {familyRegExp ? <LuRegex /> : <LuType />}
@@ -111,7 +116,6 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
             title={t(partNumberRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
             size="xs"
             variant="ghost"
-            rounded="l1"
             onClick={togglePartNumberRegExp}
           >
             {partNumberRegExp ? <LuRegex /> : <LuType />}
@@ -130,27 +134,47 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
             title={t(versionRegExp ? "policy.rule.modeRegexp" : "policy.rule.modeText")}
             size="xs"
             variant="ghost"
-            rounded="l1"
             onClick={toggleVersionRegExp}
           >
             {versionRegExp ? <LuRegex /> : <LuType />}
           </IconButton>
         }
       />
-      <Select
-        label={t("common.result")}
-        control={form.control}
-        name="level"
-        options={levelOptions}
-        renderIcon={(item) => {
-          const info = getLevelInfo(item.value as DeviceSoftwareLevel)
-          return (
-            <Icon color={`${info?.color}.500`}>
-              <LuTrophy />
-            </Icon>
-          )
-        }}
-      />
+      <Field.Root>
+        <Field.Label>{t("common.result")}</Field.Label>
+        <Controller
+          control={form.control}
+          name="level"
+          render={({ field }) => (
+            <RadioCard.Root
+              value={field.value}
+              onValueChange={({ value }) => field.onChange(value)}
+              orientation="horizontal"
+              size="sm"
+            >
+              <HStack wrap="wrap" gap="2">
+                {levelOptions.map((option) => {
+                  const info = getLevelInfo(option.value as DeviceSoftwareLevel)
+                  return (
+                    <RadioCard.Item key={option.value} value={option.value} minW="44">
+                      <RadioCard.ItemHiddenInput />
+                      <RadioCard.ItemControl>
+                        <RadioCard.ItemContent>
+                          <Icon color={`${info.color}.500`} fontSize="lg">
+                            <LuTrophy />
+                          </Icon>
+                          <Text fontWeight="medium">{t(option.label)}</Text>
+                        </RadioCard.ItemContent>
+                        <RadioCard.ItemIndicator />
+                      </RadioCard.ItemControl>
+                    </RadioCard.Item>
+                  )
+                })}
+              </HStack>
+            </RadioCard.Root>
+          )}
+        />
+      </Field.Root>
     </Stack>
   )
 }

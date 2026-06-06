@@ -27,7 +27,7 @@ export default function SidebarList() {
   }
 
   return (
-    <Stack p="6" gap="0" overflow="auto" flex="1">
+    <Stack px="6" gap="0" overflow="auto" flex="1">
       {policies.map((policy) => (
         <PolicyItem key={policy?.id} policy={policy} />
       ))}

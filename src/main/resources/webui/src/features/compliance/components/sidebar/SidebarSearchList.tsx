@@ -35,7 +35,7 @@ export default function SidebarSearchList() {
   }
 
   return (
-    <Stack p="6" gap="3" overflow="auto">
+    <Stack px="6" gap="3" overflow="auto">
       {policies?.map((policy) => (
         <PolicyItem key={policy?.id} policy={policy} />
       ))}

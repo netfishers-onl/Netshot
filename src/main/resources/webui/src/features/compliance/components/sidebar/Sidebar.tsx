@@ -39,7 +39,7 @@ export default function Sidebar() {
                 </>
               )}
 
-              <Stack px="6" pt="6">
+              <Stack p="6">
                 <Text fontWeight="medium">{t("device.config.compliance")}</Text>
               </Stack>
               {query ? <SidebarSearchList /> : <SidebarList />}

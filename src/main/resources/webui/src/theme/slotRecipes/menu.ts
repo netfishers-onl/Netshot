@@ -15,6 +15,7 @@ export const menuSlotRecipe = defineSlotRecipe({
       borderRadius: "lg",
       transition: "all .2s ease",
       bg: "white",
+      mr: "20px",
       _hover: {
         bg: "green.50",
         color: "green.800",

@@ -17,10 +17,10 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useParams } from "react-router"
-import DiagnosticDisableButton from "../components/DiagnosticDisableButton"
-import DiagnosticEditButton from "../components/DiagnosticEditButton"
-import DiagnosticEnableButton from "../components/DiagnosticEnableButton"
-import DiagnosticRemoveButton from "../components/DiagnosticRemoveButton"
+import DisableDiagnosticButton from "../components/DisableDiagnosticButton"
+import EditDiagnosticButton from "../components/EditDiagnosticButton"
+import EnableDiagnosticButton from "../components/EnableDiagnosticButton"
+import RemoveDiagnosticButton from "../components/RemoveDiagnosticButton"
 import ScriptDiagnosticDetail from "../components/ScriptDiagnosticDetail"
 import TextDiagnosticDetail from "../components/TextDiagnosticDetail"
 import { QUERIES } from "../constants"
@@ -55,7 +55,7 @@ export default function DeviceDetailScreen() {
           <Protected minLevel={Level.ReadWrite}>
             <Stack direction="row" gap="3">
               <Skeleton loading={isPending}>
-                <DiagnosticEditButton
+                <EditDiagnosticButton
                   diagnostic={diagnostic}
                   renderItem={(open) => (
                     <Button variant="primary" onClick={open}>
@@ -82,7 +82,7 @@ export default function DeviceDetailScreen() {
                       {diagnostic && (
                         <>
                           {diagnostic.enabled ? (
-                            <DiagnosticDisableButton
+                            <DisableDiagnosticButton
                               diagnostic={diagnostic}
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="disable">
@@ -92,7 +92,7 @@ export default function DeviceDetailScreen() {
                               )}
                             />
                           ) : (
-                            <DiagnosticEnableButton
+                            <EnableDiagnosticButton
                               diagnostic={diagnostic}
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="enable">
@@ -103,7 +103,7 @@ export default function DeviceDetailScreen() {
                             />
                           )}
 
-                          <DiagnosticRemoveButton
+                          <RemoveDiagnosticButton
                             diagnostic={diagnostic}
                             renderItem={(open) => (
                               <Menu.Item onSelect={open} value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>

@@ -9,7 +9,7 @@ import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
-import AdministrationWebhookForm, { WebhookForm } from "./AdministrationWebhookForm"
+import WebhookFormComponent, { WebhookForm } from "./WebhookForm"
 
 export type EditWebhookButtonProps = PropsWithRenderItem<{
   webhook: Hook
@@ -53,7 +53,7 @@ export default function EditWebhookButton(props: EditWebhookButtonProps) {
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_HOOK_UPDATE, {
       title: t("webhook.update"),
-      description: <AdministrationWebhookForm />,
+      description: <WebhookFormComponent />,
       form,
       size: "lg",
       async onSubmit(values: WebhookForm) {

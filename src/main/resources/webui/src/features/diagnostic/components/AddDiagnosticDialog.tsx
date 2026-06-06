@@ -1,115 +1,121 @@
-import api, { CreateOrUpdateRule } from "@/api"
+import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { BoxWithIconButton } from "@/components"
-import { QUERIES as GLOBAL_QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
-import { Policy, RuleType } from "@/types"
-import { stringToBoolean } from "@/utils"
-import { Button, Dialog, Heading, Portal, Stack, Text } from "@chakra-ui/react"
+import { DiagnosticType } from "@/types"
+import { Button, CloseButton, Dialog, Heading, Portal, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
-import { LuAlignLeft } from "react-icons/lu"
+import { LuAlignLeft, LuRegex } from "react-icons/lu"
+import { SiJavascript, SiPython } from "react-icons/si"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
-import { QUERIES, RULE_SCRIPT_TEMPLATE } from "../constants"
-import { RuleForm } from "../types"
-import { EditTextRuleForm } from "./EditTextRuleForm"
-import EditScriptRuleForm from "./EditScriptRuleForm"
-import TestRuleOnDeviceButton from "./TestRuleOnDeviceButton"
-import { SiJavascript, SiPython } from "react-icons/si"
+import { QUERIES, SCRIPT_TEMPLATES } from "../constants"
+import { Form } from "../types"
+import { EditDiagnosticForm } from "./EditDiagnosticForm"
+import EditDiagnosticScript from "./EditDiagnosticScript"
 
 enum FormStep {
   Type,
   Details,
 }
 
-export default function AddRuleDialog({ policy }: { policy: Policy }) {
+export default function AddDiagnosticDialog() {
   const { t } = useTranslation()
   const toast = useToast()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const dialogConfig = useDialogConfig()
-  const [type, setType] = useState(RuleType.Text)
+  const [type, setType] = useState(DiagnosticType.Simple)
   const [formStep, setFormStep] = useState(FormStep.Type)
+  const dialogConfig = useDialogConfig()
 
-  const form = useForm<RuleForm>({
+  const typeOptions = [
+    {
+      icon: LuRegex,
+      type: DiagnosticType.Simple,
+      label: t("common.simple"),
+      description: t("diagnostic.createWithStringAndRegex"),
+    },
+    {
+      icon: SiJavascript,
+      type: DiagnosticType.Javascript,
+      label: t("policy.rule.javascript"),
+      description: t("diagnostic.createWithJavascript"),
+    },
+    {
+      icon: SiPython,
+      type: DiagnosticType.Python,
+      label: t("policy.rule.python"),
+      description: t("diagnostic.createWithPython"),
+    },
+  ]
+
+  const form = useForm<Form>({
     defaultValues: {
       name: "",
+      enabled: true,
+      resultType: null,
+      targetGroup: null,
+      deviceDriver: null,
+      cliMode: null,
+      command: "",
+      modifierPattern: "",
+      modifierReplacement: "",
       script: "",
-      text: "",
-      regExp: false,
-      context: "",
-      driver: null,
-      field: null,
-      anyBlock: null,
-      matchAll: false,
-      invert: null,
-      normalize: false,
     },
   })
 
   const createMutation = useMutation({
-    mutationFn: api.rule.create,
-    onSuccess(rule) {
-      queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.POLICY_LIST] })
-      queryClient.invalidateQueries({ queryKey: [QUERIES.RULE_DETAIL, policy.id] })
+    mutationFn: api.diagnostic.create,
+    async onSuccess(diagnostic) {
+      close()
+
+      await queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_LIST] })
 
       form.reset()
 
-      close()
+      navigate(`/app/diagnostics/${diagnostic.id}`)
 
       toast.success({
         title: t("common.success"),
-        description: t("policy.rule.successfullyCreated", {
-          ruleName: rule?.name,
+        description: t("diagnostic.successfullyCreated", {
+          diagnosticName: diagnostic?.name,
         }),
       })
-
-      navigate(`/app/compliance/config/${policy.id}/${rule.id}`)
     },
     onError(err: NetshotError) {
       toast.error(err)
     },
   })
 
-  const title = formStep === FormStep.Type ? t("policy.rule.chooseType") : t("policy.rule.add")
-
-  const hasScript = type === RuleType.Javascript || type === RuleType.Python
-
-  function submit(values: RuleForm) {
-    const payload: CreateOrUpdateRule = {
-      id: null,
-      name: values.name,
-      type,
+  function submit(values: Form) {
+    return createMutation.mutate({
+      enabled: values.enabled,
       script: values.script,
-      policy: policy.id,
-      enabled: true,
-      text: values.text,
-      regExp: values.regExp,
-      context: values.context,
-      driver: values.driver,
-      field: values.field,
-      anyBlock: stringToBoolean(values.anyBlock),
-      matchAll: values.matchAll,
-      invert: stringToBoolean(values.invert),
-      normalize: values.normalize,
-    }
-
-    createMutation.mutate(payload)
+      type,
+      name: values.name,
+      resultType: values.resultType,
+      targetGroup: values.targetGroup ? values.targetGroup?.toString() : "-1",
+      deviceDriver: values.deviceDriver,
+      cliMode: values.cliMode,
+      command: values.command,
+      modifierPattern: values.modifierPattern,
+      modifierReplacement: values.modifierReplacement,
+    })
   }
 
   function next() {
     setFormStep(FormStep.Details)
 
     dialogConfig.update({
-      variant: hasScript ? "full-floating" : null,
+      variant: type === DiagnosticType.Simple ? null : "full-floating",
       size: "lg",
     })
 
-    if (hasScript) {
-      form.setValue("script", RULE_SCRIPT_TEMPLATE[type])
+    if ([DiagnosticType.Javascript, DiagnosticType.Python].includes(type)) {
+      form.setValue("script", SCRIPT_TEMPLATES[type])
     }
   }
 
@@ -120,28 +126,28 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
       variant: null,
       size: "xl",
     })
+
+    form.reset()
   }
 
   function close() {
     dialogConfig.close()
 
     setTimeout(() => {
-      setType(null)
+      setType(DiagnosticType.Simple)
       setFormStep(FormStep.Type)
 
       dialogConfig.update({
-        variant: hasScript ? "full-floating" : null,
-        size: "lg",
+        variant: null,
+        size: "xl",
       })
+
+      form.reset()
     }, 500)
   }
 
-  useEffect(() => {
-    form.reset()
-  }, [form])
-
   form.watch((values) => {
-    if (!hasScript) return
+    if (type === DiagnosticType.Simple) return
 
     if (values.script?.length === 0) {
       form.setError("script", {
@@ -150,44 +156,22 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
     }
   })
 
-  const typeOptions = [
-    {
-      icon: LuAlignLeft,
-      type: RuleType.Text,
-      label: t("common.text"),
-      description: t("policy.rule.createWithStringAndRegexp"),
-    },
-    {
-      icon: SiJavascript,
-      type: RuleType.Javascript,
-      label: t("policy.rule.javascript"),
-      description: t("policy.rule.createWithJavascript"),
-    },
-    {
-      icon: SiPython,
-      type: RuleType.Python,
-      label: t("policy.rule.python"),
-      description: t("policy.rule.createWithPython"),
-    },
-  ]
-
   return (
     <FormProvider {...form}>
       <Dialog.Root
-        open={dialogConfig.props.isOpen}
+        preventScroll={false}
         placement="center"
-        motionPreset="slide-in-bottom"
+        open={dialogConfig.props.isOpen}
         size={dialogConfig.props.size}
         variant={dialogConfig.props.variant}
         closeOnInteractOutside={false}
         scrollBehavior="inside"
         onOpenChange={(e) => {
           if (!e.open) {
-            dialogConfig.close()
+            close()
           }
         }}
         onExitComplete={() => {
-          if (dialogConfig.props?.onCancel) dialogConfig.props.onCancel()
           dialogConfig.remove()
         }}
       >
@@ -197,14 +181,14 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
             <Dialog.Content as="form" onSubmit={form.handleSubmit(submit)}>
               <Dialog.Header display="flex" justifyContent="space-between">
                 <Heading as="h3" fontSize="2xl" fontWeight="semibold">
-                  {title}
+                  {formStep === FormStep.Type ? t("diagnostic.chooseType") : t("diagnostic.add")}
                 </Heading>
 
                 <Text fontSize="md" color="grey.400">
                   {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
                 </Text>
               </Dialog.Header>
-              <Dialog.Body flex="1" display="flex" overflow={formStep === FormStep.Details && !hasScript ? "hidden" : undefined}>
+              <Dialog.Body flex="1" display="flex">
                 {formStep === FormStep.Type ? (
                   <Stack direction="row" gap="5">
                     {typeOptions.map((option) => (
@@ -220,28 +204,26 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
                   </Stack>
                 ) : (
                   <>
-                    {hasScript ? (
-                      <EditScriptRuleForm type={type} />
+                    {type === DiagnosticType.Simple ? (
+                      <EditDiagnosticForm flex="1" type={type} />
                     ) : (
-                      <EditTextRuleForm type={type} />
+                      <EditDiagnosticScript type={type} />
                     )}
                   </>
                 )}
               </Dialog.Body>
               <Dialog.Footer justifyContent="space-between">
-                <Stack>
-                  {formStep === FormStep.Details && <TestRuleOnDeviceButton type={type} />}
-                </Stack>
-                <Stack direction="row" gap="3" alignItems="center">
-                  {formStep === FormStep.Details && (
-                    <Button onClick={previous}>{t("common.previous")}</Button>
-                  )}
+                {formStep === FormStep.Details && (
+                  <Button onClick={previous}>{t("common.previous")}</Button>
+                )}
+                <Stack direction="row" gap="3" flex="1" justifyContent="end">
                   <Button onClick={close}>{t("common.cancel")}</Button>
                   {formStep === FormStep.Type && (
                     <Button variant="primary" disabled={type === null} onClick={next}>
                       {t("common.next")}
                     </Button>
                   )}
+
                   {formStep === FormStep.Details && (
                     <Button
                       type="submit"
@@ -256,6 +238,9 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
               </Dialog.Footer>
             </Dialog.Content>
           </Dialog.Positioner>
+          <Dialog.CloseTrigger asChild>
+            <CloseButton size="sm" variant="outline" />
+          </Dialog.CloseTrigger>
         </Portal>
       </Dialog.Root>
     </FormProvider>

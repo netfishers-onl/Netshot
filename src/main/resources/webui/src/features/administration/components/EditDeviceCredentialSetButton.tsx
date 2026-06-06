@@ -10,9 +10,9 @@ import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
-import AdministrationDeviceCredentialSetForm, {
+import DeviceCredentialSetFormComponent, {
   DeviceCredentialSetForm,
-} from "./AdministrationDeviceCredentialSetForm"
+} from "./DeviceCredentialSetForm"
 
 export type EditDeviceCredentialSetButtonProps = PropsWithRenderItem<{
   credentialSet: CredentialSet
@@ -95,7 +95,7 @@ export default function EditDeviceCredentialSetButton(props: EditDeviceCredentia
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_CREDENTIAL_SET_UPDATE, {
       title: t("credential.edit"),
-      description: <AdministrationDeviceCredentialSetForm freezeType freezePasswords />,
+      description: <DeviceCredentialSetFormComponent freezeType freezePasswords />,
       form,
       size: "lg",
       async onSubmit(values: DeviceCredentialSetForm) {

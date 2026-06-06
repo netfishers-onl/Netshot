@@ -10,7 +10,7 @@ import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
-import AdministrationUserForm, { UserForm } from "./AdministrationUserForm"
+import UserFormComponent, { UserForm } from "./UserForm"
 
 export type EditUserButtonProps = PropsWithRenderItem<{
   user: User
@@ -54,7 +54,7 @@ export default function EditUserButton(props: EditUserButtonProps) {
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_USER_UPDATE, {
       title: t("user.edit"),
-      description: <AdministrationUserForm freezePasswords />,
+      description: <UserFormComponent freezePasswords />,
       form,
       size: "lg",
       async onSubmit(values: UserForm) {

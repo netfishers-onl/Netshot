@@ -3,8 +3,8 @@ export { default as ConfigurationComplianceSidebar } from "./ConfigurationCompli
 export { default as ConfigurationComplianceSidebarList } from "./ConfigurationComplianceSidebarList";
 export { default as ConfigurationComplianceSidebarSearch } from "./ConfigurationComplianceSidebarSearch";
 export { default as HardwareDeviceListButton } from "./HardwareDeviceListButton";
-export { default as ReportConfigurationChangeList } from "./ReportConfigurationChangeList";
-export { default as ReportConfigurationChart } from "./ReportConfigurationChart";
-export { default as ReportConfigurationCompareModal } from "./ReportConfigurationCompareModal";
-export { default as ReportSidebar } from "./ReportSidebar";
+export { default as ConfigurationChangeList } from "./ConfigurationChangeList";
+export { default as ConfigurationChart } from "./ConfigurationChart";
+export { default as ConfigurationCompareModal } from "./ConfigurationCompareModal";
+export { default as Sidebar } from "./Sidebar";
 export { default as SoftwareComplianceItem } from "./SoftwareComplianceItem";

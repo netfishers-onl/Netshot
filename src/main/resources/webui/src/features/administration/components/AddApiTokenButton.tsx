@@ -10,7 +10,7 @@ import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
-import AdministrationApiTokenForm, { ApiTokenForm } from "./AdministrationApiTokenForm"
+import ApiTokenFormComponent, { ApiTokenForm } from "./ApiTokenForm"
 
 export type AddApiTokenButtonProps = PropsWithRenderItem
 
@@ -46,7 +46,7 @@ export default function AddApiTokenButton(props: AddApiTokenButtonProps) {
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_API_TOKEN_CREATE, {
       title: t("api.create"),
-      description: <AdministrationApiTokenForm />,
+      description: <ApiTokenFormComponent />,
       form,
       size: "lg",
       async onSubmit(values) {

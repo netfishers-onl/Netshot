@@ -9,12 +9,12 @@ import { useTranslation } from "react-i18next"
 import { Outlet, useParams } from "react-router"
 import { useDevice, useDeviceTypes } from "../api"
 import {
-  DeviceDisableButton,
-  DeviceEditButton,
-  DeviceEnableButton,
-  DeviceRemoveButton,
+  DisableDeviceButton,
+  EditDeviceButton,
+  EnableDeviceButton,
+  RemoveDeviceButton,
 } from "../components"
-import DeviceRunScriptButton from "../components/DeviceRunScriptButton"
+import OpenDeviceScriptButton from "../components/OpenDeviceScriptButton"
 import DeviceSnapshotButton from "../components/DeviceSnapshotButton"
 import DeviceProvider from "../contexts/DeviceProvider"
 
@@ -84,7 +84,7 @@ export default function DeviceDetailScreen() {
                       {device && (
                         <>
                           <Protected minLevel={Level.ExecureReadWrite}>
-                            <DeviceRunScriptButton
+                            <OpenDeviceScriptButton
                               devices={[device]}
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="run-script">
@@ -95,7 +95,7 @@ export default function DeviceDetailScreen() {
                             />
                           </Protected>
                           <Protected minLevel={Level.ReadWrite}>
-                            <DeviceEditButton
+                            <EditDeviceButton
                               device={device}
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="edit">
@@ -106,7 +106,7 @@ export default function DeviceDetailScreen() {
                             />
                             {isDisabled ? (
                               <Protected minLevel={Level.ReadWrite}>
-                                <DeviceEnableButton
+                                <EnableDeviceButton
                                   devices={[device]}
                                   renderItem={(open) => (
                                     <Menu.Item onSelect={open} value="enable">
@@ -117,7 +117,7 @@ export default function DeviceDetailScreen() {
                                 />
                               </Protected>
                             ) : (
-                              <DeviceDisableButton
+                              <DisableDeviceButton
                                 devices={[device]}
                                 renderItem={(open) => (
                                   <Menu.Item onSelect={open} value="disable">
@@ -135,7 +135,7 @@ export default function DeviceDetailScreen() {
                           </Menu.Item>
 
                           <Protected minLevel={Level.ReadWrite}>
-                            <DeviceRemoveButton
+                            <RemoveDeviceButton
                               devices={[device]}
                               renderItem={(open) => (
                                 <Menu.Item onSelect={open} value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>

@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
-import AdministrationDomainForm, { DomainForm } from "./AdministrationDomainForm"
+import DomainFormComponent, { DomainForm } from "./DomainForm"
 
 export type AddDomainButtonProps = PropsWithRenderItem
 
@@ -39,7 +39,7 @@ export default function AddDomainButton(props: AddDomainButtonProps) {
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_DOMAIN_CREATE, {
       title: t("domain.create"),
-      description: <AdministrationDomainForm />,
+      description: <DomainFormComponent />,
       form,
       size: "lg",
       async onSubmit(values: DomainForm) {

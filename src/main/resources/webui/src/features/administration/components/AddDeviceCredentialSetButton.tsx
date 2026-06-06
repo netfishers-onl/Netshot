@@ -10,9 +10,9 @@ import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 import { useDeviceCredentialSetTypeOptions } from "../hooks"
-import AdministrationDeviceCredentialSetForm, {
+import DeviceCredentialSetFormComponent, {
   DeviceCredentialSetForm,
-} from "./AdministrationDeviceCredentialSetForm"
+} from "./DeviceCredentialSetForm"
 
 export type AddDeviceCredentialSetButtonProps = PropsWithRenderItem
 
@@ -53,7 +53,7 @@ export default function AddDeviceCredentialSetButton(props: AddDeviceCredentialS
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_CREDENTIAL_SET_CREATE, {
       title: t("credential.create"),
-      description: <AdministrationDeviceCredentialSetForm />,
+      description: <DeviceCredentialSetFormComponent />,
       form,
       size: "lg",
       async onSubmit(values) {

@@ -6,15 +6,15 @@ import { LuActivity, LuCamera, LuCircleCheck, LuSquarePen, LuPlay, LuTrash, LuZa
 import { Level } from "@/types"
 
 import {
-  DeviceBulkEditButton,
+  BulkEditDeviceButton,
   DeviceComplianceButton,
   DeviceDiagnosticButton,
-  DeviceDisableButton,
-  DeviceEnableButton,
-  DeviceRemoveButton,
+  DisableDeviceButton,
+  EnableDeviceButton,
+  RemoveDeviceButton,
   DeviceSnapshotButton,
 } from "../components"
-import DeviceRunScriptButton from "../components/DeviceRunScriptButton"
+import OpenDeviceScriptButton from "../components/OpenDeviceScriptButton"
 import { useDeviceSidebarStore } from "../stores"
 
 export default function DeviceBulkActionScreen() {
@@ -35,7 +35,7 @@ export default function DeviceBulkActionScreen() {
 
         <Stack gap="2">
           <Protected minLevel={Level.ExecureReadWrite}>
-            <DeviceRunScriptButton
+            <OpenDeviceScriptButton
               devices={selected}
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
@@ -79,7 +79,7 @@ export default function DeviceBulkActionScreen() {
             />
           </Protected>
           <Protected minLevel={Level.Operator}>
-            <DeviceBulkEditButton
+            <BulkEditDeviceButton
               devices={selected}
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>
@@ -90,7 +90,7 @@ export default function DeviceBulkActionScreen() {
             />
 
             <ButtonGroup attached>
-              <DeviceEnableButton
+              <EnableDeviceButton
                 devices={selected}
                 renderItem={(open) => (
                   <Button justifyContent="start" onClick={open} flex="1">
@@ -100,7 +100,7 @@ export default function DeviceBulkActionScreen() {
                 )}
               />
 
-              <DeviceDisableButton
+              <DisableDeviceButton
                 devices={selected}
                 renderItem={(open) => (
                   <Button justifyContent="start" onClick={open} flex="1">
@@ -112,7 +112,7 @@ export default function DeviceBulkActionScreen() {
             </ButtonGroup>
           </Protected>
           <Protected minLevel={Level.Operator}>
-            <DeviceRemoveButton
+            <RemoveDeviceButton
               devices={selected}
               renderItem={(open) => (
                 <Button justifyContent="start" onClick={open}>

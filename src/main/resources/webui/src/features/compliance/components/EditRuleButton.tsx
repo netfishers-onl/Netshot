@@ -8,9 +8,9 @@ import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useUpdateRule } from "../api"
 import { RuleForm } from "../types"
-import { TextRuleEditForm } from "./TextRuleEditForm"
-import ScriptRuleEditForm from "./ScriptRuleEditForm"
-import TestRuleOnDevice from "./TestRuleOnDevice"
+import { EditTextRuleForm } from "./EditTextRuleForm"
+import EditScriptRuleForm from "./EditScriptRuleForm"
+import TestRuleOnDeviceButton from "./TestRuleOnDeviceButton"
 
 export type EditRuleButtonProps = PropsWithRenderItem<{
   policyId: number
@@ -57,11 +57,11 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
     const dialogRef = dialog.open(MUTATIONS.RULE_UPDATE, {
       title: t("policy.rule.edit"),
       description: hasScript ? (
-        <ScriptRuleEditForm type={rule?.type} />
+        <EditScriptRuleForm type={rule?.type} />
       ) : (
-        <TextRuleEditForm type={rule?.type} />
+        <EditTextRuleForm type={rule?.type} />
       ),
-      footerStart: <TestRuleOnDevice type={rule?.type} />,
+      footerStart: <TestRuleOnDeviceButton type={rule?.type} />,
       bodyProps: !hasScript ? { overflow: "hidden", display: "flex" } : undefined,
       form,
       size: "xl",

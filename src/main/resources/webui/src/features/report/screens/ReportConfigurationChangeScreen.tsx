@@ -1,6 +1,6 @@
 import { Heading, Stack } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
-import { ReportConfigurationChangeList, ReportConfigurationChart } from "../components"
+import { ConfigurationChangeList, ConfigurationChart } from "../components"
 
 export default function ReportConfigurationChangeScreen() {
   const { t } = useTranslation()
@@ -12,8 +12,8 @@ export default function ReportConfigurationChangeScreen() {
           {t("device.config.changes")}
         </Heading>
       </Stack>
-      <ReportConfigurationChart />
-      <ReportConfigurationChangeList />
+      <ConfigurationChart />
+      <ConfigurationChangeList />
     </Stack>
   )
 }

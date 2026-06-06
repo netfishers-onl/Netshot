@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 import { useWebhookDataTypeOptions } from "../hooks"
-import AdministrationWebhookForm, { WebhookForm } from "./AdministrationWebhookForm"
+import WebhookFormComponent, { WebhookForm } from "./WebhookForm"
 
 export type AddWebhookButtonProps = PropsWithRenderItem
 
@@ -49,7 +49,7 @@ export default function AddWebhookButton(props: AddWebhookButtonProps) {
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_HOOK_CREATE, {
       title: t("webhook.create"),
-      description: <AdministrationWebhookForm />,
+      description: <WebhookFormComponent />,
       form,
       size: "lg",
       async onSubmit(values: WebhookForm) {

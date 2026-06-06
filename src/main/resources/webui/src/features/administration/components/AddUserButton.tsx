@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
-import AdministrationUserForm, { UserForm } from "./AdministrationUserForm"
+import UserFormComponent, { UserForm } from "./UserForm"
 
 export type AddUserButtonProps = PropsWithRenderItem
 
@@ -41,7 +41,7 @@ export default function AddUserButton(props: AddUserButtonProps) {
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.ADMIN_USER_CREATE, {
       title: t("user.create"),
-      description: <AdministrationUserForm />,
+      description: <UserFormComponent />,
       form,
       size: "lg",
       async onSubmit(values: UserForm) {

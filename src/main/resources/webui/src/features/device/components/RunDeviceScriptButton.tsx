@@ -136,13 +136,13 @@ type Form = {
   debugEnabled: boolean
 } & ScheduleFormType
 
-type RunScriptButtonProps = {
+type RunDeviceScriptButtonProps = {
   devices: SimpleDevice[] | Device[]
   driver: string
   script: Script
 }
 
-export default function RunScriptButton(props: RunScriptButtonProps) {
+export default function RunDeviceScriptButton(props: RunDeviceScriptButtonProps) {
   const { devices, driver, script } = props
   const { t } = useTranslation()
   const toast = useToast()

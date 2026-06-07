@@ -1,14 +1,9 @@
-import { Protected } from "@/components"
-import { Level, Policy } from "@/types"
-import { Icon, IconButton, Menu, Portal, Stack, Text } from "@chakra-ui/react"
-import { LuEllipsis, LuFolder, LuFolderOpen, LuPlus, LuSquarePen, LuTrash } from "react-icons/lu"
+import { Policy } from "@/types"
+import { Icon, Stack, Text } from "@chakra-ui/react"
+import { LuFolder, LuFolderOpen } from "react-icons/lu"
 import { motion, useAnimationControls } from "framer-motion"
-import { MouseEvent, useCallback, useMemo, useState } from "react"
-import { useTranslation } from "react-i18next"
-import { useParams } from "react-router"
-import AddRuleButton from "../AddRuleButton"
-import EditPolicyButton from "../EditPolicyButton"
-import RemovePolicyButton from "../RemovePolicyButton"
+import { useCallback, useMemo, useState } from "react"
+import { useNavigate, useParams } from "react-router"
 import RuleItem from "./RuleItem"
 
 export type PolicyItemProps = {
@@ -17,25 +12,20 @@ export type PolicyItemProps = {
 
 export default function PolicyItem(props: PolicyItemProps) {
   const { policy } = props
-  const { t } = useTranslation()
-  const { policyId } = useParams()
+  const { policyId, ruleId } = useParams()
+  const navigate = useNavigate()
   const controls = useAnimationControls()
   const hasRules = useMemo(() => policy.rules?.length > 0, [policy])
   const isActive = useMemo(() => !!policyId && +policyId === policy.id, [policyId, policy])
+  const isPolicySelected = useMemo(() => isActive && !ruleId, [isActive, ruleId])
   const [isCollapsed, setIsCollapsed] = useState<boolean>(!isActive || !hasRules)
 
-  const toggleCollapse = useCallback(
-    async (evt?: MouseEvent<HTMLDivElement>) => {
-      if (!hasRules) {
-        return
-      }
-
-      evt?.stopPropagation()
-      setIsCollapsed((prev) => !prev)
-      await controls.start(isCollapsed ? "show" : "hidden")
-    },
-    [controls, isCollapsed, hasRules]
-  )
+  const handleClick = useCallback(async () => {
+    navigate(`./config/${policy.id}`)
+    if (!hasRules) return
+    setIsCollapsed((prev) => !prev)
+    await controls.start(isCollapsed ? "show" : "hidden")
+  }, [navigate, policy.id, hasRules, isCollapsed, controls])
 
   return (
     <Stack gap="0" mx="-3">
@@ -44,13 +34,13 @@ export default function PolicyItem(props: PolicyItemProps) {
         justifyContent="space-between"
         alignItems="center"
         borderRadius="lg"
-        bg="white"
+        bg={isPolicySelected ? "green.50" : "white"}
         height="36px"
         transition="all .2s ease"
         _hover={{
-          bg: "grey.50",
+          bg: isPolicySelected ? "green.50" : "grey.50",
         }}
-        onClick={toggleCollapse}
+        onClick={handleClick}
         userSelect="none"
         cursor="pointer"
         px="3"
@@ -61,48 +51,6 @@ export default function PolicyItem(props: PolicyItemProps) {
           </Icon>
           <Text lineClamp={1}>{policy?.name}</Text>
         </Stack>
-        <Protected minLevel={Level.Operator}>
-          <Menu.Root>
-            <Menu.Trigger asChild>
-              <IconButton variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
-                <LuEllipsis />
-              </IconButton>
-            </Menu.Trigger>
-            <Portal>
-              <Menu.Positioner>
-                <Menu.Content>
-                  <AddRuleButton
-                    policy={policy}
-                    renderItem={(open) => (
-                      <Menu.Item onSelect={open} value="add-rule">
-                        <LuPlus />
-                        {t("policy.rule.add")}
-                      </Menu.Item>
-                    )}
-                  />
-                  <EditPolicyButton
-                    policy={policy}
-                    renderItem={(open) => (
-                      <Menu.Item onSelect={open} value="edit-rule">
-                        <LuSquarePen />
-                        {t("common.edit")}
-                      </Menu.Item>
-                    )}
-                  />
-                  <RemovePolicyButton
-                    policy={policy}
-                    renderItem={(open) => (
-                      <Menu.Item onSelect={open} value="remove-rule" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
-                        <LuTrash />
-                        {t("common.remove")}
-                      </Menu.Item>
-                    )}
-                  />
-                </Menu.Content>
-              </Menu.Positioner>
-            </Portal>
-          </Menu.Root>
-        </Protected>
       </Stack>
       <motion.div
         initial={isActive && hasRules ? "show" : "hidden"}

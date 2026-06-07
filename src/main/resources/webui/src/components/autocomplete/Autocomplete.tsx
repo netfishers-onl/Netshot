@@ -22,7 +22,7 @@ export function Autocomplete<T>(props: AutocompleteProps<T>) {
   const { t } = useTranslation()
   const {
     label,
-    placeholder = t("search2"),
+    placeholder = t("common.search"),
     helperText,
     collection,
     notFoundMessage,

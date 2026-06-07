@@ -8,6 +8,7 @@ import { Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { MouseEvent } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router"
 
 export type RemovePolicyButtonProps = PropsWithRenderItem<{
   policy: Policy
@@ -18,6 +19,7 @@ export default function RemovePolicyButton(props: RemovePolicyButtonProps) {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
   const toast = useToast()
+  const navigate = useNavigate()
   const dialog = useConfirmDialogWithMutation()
 
   const mutation = useMutation({
@@ -42,6 +44,7 @@ export default function RemovePolicyButton(props: RemovePolicyButtonProps) {
       async onConfirm() {
         await mutation.mutateAsync()
         queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_LIST] })
+        navigate("/app/compliance")
         dialogRef.close()
       },
       confirmButton: {

@@ -6,7 +6,7 @@ import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
 import { Policy, RuleType } from "@/types"
 import { stringToBoolean } from "@/utils"
-import { Button, Dialog, Heading, Portal, Stack, Text } from "@chakra-ui/react"
+import { Button, CloseButton, Dialog, Heading, Portal, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
@@ -105,7 +105,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
 
     dialogConfig.update({
       variant: hasScript ? "full-floating" : null,
-      size: "lg",
+      size: hasScript ? "lg" : "xl",
     })
 
     if (hasScript) {
@@ -131,7 +131,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
 
       dialogConfig.update({
         variant: hasScript ? "full-floating" : null,
-        size: "lg",
+        size: hasScript ? "lg" : "xl",
       })
     }, 500)
   }
@@ -195,14 +195,17 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
           <Dialog.Backdrop />
           <Dialog.Positioner>
             <Dialog.Content as="form" onSubmit={form.handleSubmit(submit)}>
-              <Dialog.Header display="flex" justifyContent="space-between">
+              <Dialog.Header display="flex" justifyContent="space-between" alignItems="center">
                 <Heading as="h3" fontSize="2xl" fontWeight="semibold">
                   {title}
                 </Heading>
 
-                <Text fontSize="md" color="grey.400">
-                  {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
-                </Text>
+                <Stack direction="row" gap="3" alignItems="center">
+                  <Text fontSize="md" color="grey.400">
+                    {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
+                  </Text>
+                  <CloseButton size="sm" variant="outline" onClick={close} />
+                </Stack>
               </Dialog.Header>
               <Dialog.Body flex="1" display="flex" overflow={formStep === FormStep.Details && !hasScript ? "hidden" : undefined}>
                 {formStep === FormStep.Type ? (

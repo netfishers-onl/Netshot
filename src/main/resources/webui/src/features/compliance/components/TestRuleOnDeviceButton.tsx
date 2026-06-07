@@ -5,7 +5,7 @@ import { IconButton, Stack } from "@chakra-ui/react"
 import { useState } from "react"
 import { useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { LuPlay } from "react-icons/lu"
+import { LuBugPlay, LuPlay } from "react-icons/lu"
 import { useTestRuleScript, useTestRuleText } from "../api"
 import { RuleForm } from "../types"
 
@@ -52,7 +52,10 @@ export default function TestRuleOnDeviceButton(props: TestRuleOnDeviceButtonProp
         selectionBehavior="replace"
         value={device ? [device.id.toString()] : []}
         placeholder={t("device.searchAndTestRule")}
-        onSelectItem={(device) => setDevice(device)}
+        onSelectItem={(device) => {
+          console.log(`Device changed: ${device}`)
+          setDevice(device)
+        }}
       />
       <IconButton
         variant="primary"
@@ -61,7 +64,7 @@ export default function TestRuleOnDeviceButton(props: TestRuleOnDeviceButtonProp
         onClick={runTest}
         loading={mutation.isPending}
       >
-        <LuPlay />
+        <LuBugPlay />
       </IconButton>
     </Stack>
   )

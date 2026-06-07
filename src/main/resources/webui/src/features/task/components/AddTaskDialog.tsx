@@ -8,6 +8,7 @@ import { useToast } from "@/hooks"
 import { TaskType } from "@/types"
 import {
   Button,
+  CloseButton,
   Dialog,
   Heading,
   IconButton,
@@ -291,14 +292,17 @@ export default function AddTaskDialog() {
           <Dialog.Backdrop />
           <Dialog.Positioner>
             <Dialog.Content as="form" onSubmit={form.handleSubmit(submit)}>
-              <Dialog.Header display="flex" justifyContent="space-between">
+              <Dialog.Header display="flex" justifyContent="space-between" alignItems="center">
                 <Heading as="h3" fontSize="2xl" fontWeight="semibold">
                   {t("task.add")}
                 </Heading>
 
-                <Text fontSize="md" color="grey.400">
-                  {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
-                </Text>
+                <Stack direction="row" gap="3" alignItems="center">
+                  <Text fontSize="md" color="grey.400">
+                    {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
+                  </Text>
+                  <CloseButton size="sm" variant="outline" onClick={close} />
+                </Stack>
               </Dialog.Header>
               <Dialog.Body>
                 {formStep === FormStep.Type ? (

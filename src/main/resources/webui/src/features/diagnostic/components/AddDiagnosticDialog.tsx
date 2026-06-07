@@ -179,14 +179,17 @@ export default function AddDiagnosticDialog() {
           <Dialog.Backdrop />
           <Dialog.Positioner>
             <Dialog.Content as="form" onSubmit={form.handleSubmit(submit)}>
-              <Dialog.Header display="flex" justifyContent="space-between">
+              <Dialog.Header display="flex" justifyContent="space-between" alignItems="center">
                 <Heading as="h3" fontSize="2xl" fontWeight="semibold">
                   {formStep === FormStep.Type ? t("diagnostic.chooseType") : t("diagnostic.add")}
                 </Heading>
 
-                <Text fontSize="md" color="grey.400">
-                  {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
-                </Text>
+                <Stack direction="row" gap="3" alignItems="center">
+                  <Text fontSize="md" color="grey.400">
+                    {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
+                  </Text>
+                  <CloseButton size="sm" variant="outline" onClick={close} />
+                </Stack>
               </Dialog.Header>
               <Dialog.Body flex="1" display="flex">
                 {formStep === FormStep.Type ? (
@@ -238,9 +241,6 @@ export default function AddDiagnosticDialog() {
               </Dialog.Footer>
             </Dialog.Content>
           </Dialog.Positioner>
-          <Dialog.CloseTrigger asChild>
-            <CloseButton size="sm" variant="outline" />
-          </Dialog.CloseTrigger>
         </Portal>
       </Dialog.Root>
     </FormProvider>

@@ -7,6 +7,7 @@ import { getSchedulePriorityLabel } from "@/utils"
 import {
   Box,
   Button,
+  CloseButton,
   Dialog,
   Flex,
   Heading,
@@ -239,6 +240,9 @@ export default function TaskDialog(props: TaskDialogProps) {
                 </Button>
               </Stack>
             </Dialog.Footer>
+            <Dialog.CloseTrigger asChild>
+              <CloseButton size="sm" variant="outline" />
+            </Dialog.CloseTrigger>
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>

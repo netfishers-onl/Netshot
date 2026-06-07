@@ -13,6 +13,7 @@ import {
 import { SigninScreen } from "@/features/auth"
 import {
   ComplianceDetailScreen,
+  CompliancePolicyScreen,
   HardwareComplianceScreen,
   ConfigurationComplianceRuleScreen,
   SoftwareComplianceScreen,
@@ -130,6 +131,10 @@ function App() {
                       <Route path="compliance" element={<ConfigurationComplianceRuleScreen />}>
                         <Route path="hardware" element={<HardwareComplianceScreen />} />
                         <Route path="software" element={<SoftwareComplianceScreen />} />
+                        <Route
+                          path="config/:policyId"
+                          element={<CompliancePolicyScreen />}
+                        />
                         <Route
                           path="config/:policyId/:ruleId"
                           element={<ComplianceDetailScreen />}

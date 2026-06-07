@@ -1,5 +1,4 @@
 export { default as AlertBox } from "./AlertBox"
-export { default as BoxWithIconButton } from "./BoxWithIconButton"
 export { default as Brand } from "./Brand"
 export { default as Chart } from "./Chart"
 export { default as Checkbox } from "./Checkbox"

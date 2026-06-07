@@ -1,7 +1,6 @@
 import api, { CreateGroupPayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import {
-  BoxWithIconButton,
   FormControl,
   QueryBuilderButton,
   QueryBuilderValue,
@@ -19,7 +18,9 @@ import {
   Dialog,
   DialogRootProps,
   Heading,
+  Icon,
   Portal,
+  RadioCard,
   Separator,
   Stack,
   Tag,
@@ -163,22 +164,43 @@ export default function AddGroupDialog() {
               </Dialog.Header>
               <Dialog.Body flex="1" display="flex" overflow="auto">
                 {formStep === FormStep.Type && (
-                  <Stack direction="row" gap="5">
-                    <BoxWithIconButton
-                      title={t("group.type.staticLabel")}
-                      description={t("group.type.createStatic")}
-                      icon={<LuServer />}
-                      isActive={groupType === GroupType.Static}
-                      onClick={() => setGroupType(GroupType.Static)}
-                    />
-                    <BoxWithIconButton
-                      title={t("group.type.dynamicLabel")}
-                      description={t("group.type.createDynamic")}
-                      icon={<LuCode />}
-                      isActive={groupType === GroupType.Dynamic}
-                      onClick={() => setGroupType(GroupType.Dynamic)}
-                    />
-                  </Stack>
+                  <RadioCard.Root
+                    value={groupType}
+                    onValueChange={({ value }) => setGroupType(value as GroupType)}
+                    orientation="horizontal"
+                    width="full"
+                    display="flex"
+                    flexDirection="row"
+                    gap="5"
+                    size="lg"
+                  >
+                    <RadioCard.Item value={GroupType.Static} flex="1">
+                      <RadioCard.ItemHiddenInput />
+                      <RadioCard.ItemControl>
+                        <RadioCard.ItemContent>
+                          <Icon size="xl" mb="2">
+                            <LuServer />
+                          </Icon>
+                          <RadioCard.ItemText>{t("group.type.staticLabel")}</RadioCard.ItemText>
+                          <RadioCard.ItemDescription>{t("group.type.createStatic")}</RadioCard.ItemDescription>
+                        </RadioCard.ItemContent>
+                        <RadioCard.ItemIndicator />
+                      </RadioCard.ItemControl>
+                    </RadioCard.Item>
+                    <RadioCard.Item value={GroupType.Dynamic} flex="1">
+                      <RadioCard.ItemHiddenInput />
+                      <RadioCard.ItemControl>
+                        <RadioCard.ItemContent>
+                          <Icon size="xl" mb="2">
+                            <LuCode />
+                          </Icon>
+                          <RadioCard.ItemText>{t("group.type.dynamicLabel")}</RadioCard.ItemText>
+                          <RadioCard.ItemDescription>{t("group.type.createDynamic")}</RadioCard.ItemDescription>
+                        </RadioCard.ItemContent>
+                        <RadioCard.ItemIndicator />
+                      </RadioCard.ItemControl>
+                    </RadioCard.Item>
+                  </RadioCard.Root>
                 )}
 
                 {formStep === FormStep.Details && (

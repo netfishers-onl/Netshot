@@ -29,15 +29,22 @@ export const radioCardSlotRecipe = defineSlotRecipe({
     variant: {
       surface: {
         item: {
-          borderWidth: "1px",
+          borderWidth: "2px",
           _hover: {
-            bg: "green.50",
-            borderColor: "green.200",
+            borderColor: "colorPalette.muted",
           },
           _checked: {
-            bg: "colorPalette.subtle",
-            color: "colorPalette.fg",
-            borderColor: "colorPalette.muted",
+            bg: "transparent",
+            borderColor: "colorPalette.solid",
+            _hover: {
+              bg: "transparent",
+              borderColor: "colorPalette.solid",
+            },
+          },
+        },
+        itemControl: {
+          _checked: {
+            bg: "transparent",
           },
         },
       },
@@ -45,6 +52,5 @@ export const radioCardSlotRecipe = defineSlotRecipe({
   },
   defaultVariants: {
     variant: "surface",
-    size: "sm",
   },
 })

@@ -1,12 +1,11 @@
 import api, { CreateOrUpdateRule } from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { BoxWithIconButton } from "@/components"
 import { QUERIES as GLOBAL_QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
 import { Policy, RuleType } from "@/types"
 import { stringToBoolean } from "@/utils"
-import { Button, CloseButton, Dialog, Heading, Portal, Stack, Text } from "@chakra-ui/react"
+import { Box, Button, CloseButton, Dialog, Flex, Heading, Icon, Portal, RadioCard, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
@@ -209,18 +208,34 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
               </Dialog.Header>
               <Dialog.Body flex="1" display="flex" overflow={formStep === FormStep.Details && !hasScript ? "hidden" : undefined}>
                 {formStep === FormStep.Type ? (
-                  <Stack direction="row" gap="5">
+                  <RadioCard.Root
+                    value={type}
+                    onValueChange={({ value }) => setType(value as RuleType)}
+                    orientation="horizontal"
+                    width="full"
+                    display="flex"
+                    flexDirection="row"
+                    gap="5"
+                    size="lg"
+                  >
                     {typeOptions.map((option) => (
-                      <BoxWithIconButton
-                        icon={<option.icon size="24" />}
-                        title={option.label}
-                        description={option.description}
-                        isActive={option.type === type}
-                        onClick={() => setType(option.type)}
-                        key={option.label}
-                      />
+                      <RadioCard.Item key={option.type} value={option.type} flex="1">
+                        <RadioCard.ItemHiddenInput />
+                        <RadioCard.ItemControl>
+                          <RadioCard.ItemContent>
+                            <Icon size="xl" mb="2">
+                              {<option.icon />}
+                            </Icon>
+                            <RadioCard.ItemText>{option.label}</RadioCard.ItemText>
+                            <RadioCard.ItemDescription>
+                              {option.description}
+                            </RadioCard.ItemDescription>
+                          </RadioCard.ItemContent>
+                          <RadioCard.ItemIndicator />
+                        </RadioCard.ItemControl>
+                      </RadioCard.Item>
                     ))}
-                  </Stack>
+                  </RadioCard.Root>
                 ) : (
                   <>
                     {hasScript ? (

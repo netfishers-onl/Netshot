@@ -1,5 +1,5 @@
 import { DeviceTypeSelect, FormControl, TreeGroupSelector } from "@/components"
-import { LuRegex, LuTrophy, LuType } from "react-icons/lu"
+import { LuCircleArrowDown, LuMoveDown, LuRegex, LuTrophy, LuType } from "react-icons/lu"
 import { useSoftwareLevels, useDeviceTypeOptions } from "@/hooks"
 import { useDeviceFamilies, useDevicePartNumbers, useDeviceSoftwareVersions } from "@/features/device/api"
 import { DeviceSoftwareLevel, SoftwareRule } from "@/types"
@@ -140,6 +140,11 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
           </IconButton>
         }
       />
+      <HStack justifyContent="center">
+        <Icon size="lg" color="grey.400">
+          <LuCircleArrowDown />
+        </Icon>
+      </HStack>
       <Field.Root>
         <Field.Label>{t("common.result")}</Field.Label>
         <Controller
@@ -151,26 +156,28 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
               onValueChange={({ value }) => field.onChange(value)}
               orientation="horizontal"
               size="sm"
+              width="full"
+              display="flex"
+              flexDirection="row"
+              gap="2"
             >
-              <HStack wrap="wrap" gap="2">
-                {levelOptions.map((option) => {
-                  const info = getLevelInfo(option.value as DeviceSoftwareLevel)
-                  return (
-                    <RadioCard.Item key={option.value} value={option.value} minW="44">
-                      <RadioCard.ItemHiddenInput />
-                      <RadioCard.ItemControl>
-                        <RadioCard.ItemContent>
-                          <Icon color={`${info.color}.500`} fontSize="lg">
-                            <LuTrophy />
-                          </Icon>
-                          <Text fontWeight="medium">{t(option.label)}</Text>
-                        </RadioCard.ItemContent>
-                        <RadioCard.ItemIndicator />
-                      </RadioCard.ItemControl>
-                    </RadioCard.Item>
-                  )
-                })}
-              </HStack>
+              {levelOptions.map((option) => {
+                const info = getLevelInfo(option.value as DeviceSoftwareLevel)
+                return (
+                  <RadioCard.Item key={option.value} value={option.value} flex="1">
+                    <RadioCard.ItemHiddenInput />
+                    <RadioCard.ItemControl>
+                      <RadioCard.ItemContent>
+                        <Icon color={`${info.color}.500`} fontSize="lg">
+                          <LuTrophy />
+                        </Icon>
+                        <Text fontWeight="medium">{t(option.label)}</Text>
+                      </RadioCard.ItemContent>
+                      <RadioCard.ItemIndicator />
+                    </RadioCard.ItemControl>
+                  </RadioCard.Item>
+                )
+              })}
             </RadioCard.Root>
           )}
         />

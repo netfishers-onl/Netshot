@@ -1,10 +1,10 @@
 import { DeviceTypeSelect, FormControl, TreeGroupSelector } from "@/components"
-import { LuRegex, LuType } from "react-icons/lu"
+import { LuCircleArrowDown, LuRegex, LuType } from "react-icons/lu"
 import { FormControlType } from "@/components/FormControl"
 import { useDeviceTypeOptions } from "@/hooks"
 import { useDeviceFamilies, useDevicePartNumbers } from "@/features/device/api"
 import { HardwareRule } from "@/types"
-import { IconButton, Stack } from "@chakra-ui/react"
+import { HStack, Icon, IconButton, Stack } from "@chakra-ui/react"
 import { useCallback, useEffect } from "react"
 import { useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -115,6 +115,11 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
           </IconButton>
         }
       />
+      <HStack justifyContent="center">
+        <Icon size="lg" color="grey.400">
+          <LuCircleArrowDown />
+        </Icon>
+      </HStack>
       <FormControl
         control={form.control}
         name="endOfSale"

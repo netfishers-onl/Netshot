@@ -1,14 +1,13 @@
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { BoxWithIconButton } from "@/components"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
 import { DiagnosticType } from "@/types"
-import { Button, CloseButton, Dialog, Heading, Portal, Stack, Text } from "@chakra-ui/react"
+import { Button, CloseButton, Dialog, Heading, Icon, Portal, RadioCard, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
-import { LuAlignLeft, LuRegex } from "react-icons/lu"
+import { LuRegex } from "react-icons/lu"
 import { SiJavascript, SiPython } from "react-icons/si"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
@@ -193,18 +192,34 @@ export default function AddDiagnosticDialog() {
               </Dialog.Header>
               <Dialog.Body flex="1" display="flex">
                 {formStep === FormStep.Type ? (
-                  <Stack direction="row" gap="5">
+                  <RadioCard.Root
+                    value={type}
+                    onValueChange={({ value }) => setType(value as DiagnosticType)}
+                    orientation="horizontal"
+                    width="full"
+                    display="flex"
+                    flexDirection="row"
+                    gap="5"
+                    size="lg"
+                  >
                     {typeOptions.map((option) => (
-                      <BoxWithIconButton
-                        icon={<option.icon size="24" />}
-                        title={option.label}
-                        description={option.description}
-                        isActive={option.type === type}
-                        onClick={() => setType(option.type)}
-                        key={option.label}
-                      />
+                      <RadioCard.Item key={option.type} value={option.type} flex="1">
+                        <RadioCard.ItemHiddenInput />
+                        <RadioCard.ItemControl>
+                          <RadioCard.ItemContent>
+                            <Icon size="xl" mb="2">
+                              <option.icon />
+                            </Icon>
+                            <RadioCard.ItemText>{option.label}</RadioCard.ItemText>
+                            <RadioCard.ItemDescription>
+                              {option.description}
+                            </RadioCard.ItemDescription>
+                          </RadioCard.ItemContent>
+                          <RadioCard.ItemIndicator />
+                        </RadioCard.ItemControl>
+                      </RadioCard.Item>
                     ))}
-                  </Stack>
+                  </RadioCard.Root>
                 ) : (
                   <>
                     {type === DiagnosticType.Simple ? (

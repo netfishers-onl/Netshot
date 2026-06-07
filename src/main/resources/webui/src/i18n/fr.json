@@ -476,7 +476,7 @@
         "existingText": "Texte existant",
         "fieldToCheck": "Champ à vérifier",
         "checkSettings": "Paramètres de vérification",
-        "javascript": "Javascript",
+        "javascript": "JavaScript",
         "mustNotContain": "...ne doit pas contenir",
         "noExemptedDeviceSelected": "Aucun équipement exempté sélectionné",
         "normalizeFieldText": "Normaliser le texte du champ",

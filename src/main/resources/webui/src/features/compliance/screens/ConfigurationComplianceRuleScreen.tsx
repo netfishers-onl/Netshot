@@ -173,7 +173,7 @@ export default function ConfigurationComplianceRuleScreen() {
         {rule?.type === RuleType.Text && (
           <Stack gap="3">
             <Flex>
-              <Box flex="0 0 auto" w="200px">
+              <Box flex="0 0 auto" w="240px">
                 <Text color="grey.400">{t("device.type")}</Text>
               </Box>
               <Skeleton loading={isPending}>
@@ -184,7 +184,7 @@ export default function ConfigurationComplianceRuleScreen() {
               </Skeleton>
             </Flex>
             <Flex>
-              <Box flex="0 0 auto" w="200px">
+              <Box flex="0 0 auto" w="240px">
                 <Text color="grey.400">{t("policy.rule.fieldToCheck")}</Text>
               </Box>
               <Skeleton loading={isPending}>
@@ -193,7 +193,7 @@ export default function ConfigurationComplianceRuleScreen() {
             </Flex>
             {(rule?.context || isPending) && (
               <Flex>
-                <Box flex="0 0 auto" w="200px">
+                <Box flex="0 0 auto" w="240px">
                   <Text color="grey.400">{contextLabel}</Text>
                 </Box>
                 <Skeleton loading={isPending}>
@@ -202,7 +202,7 @@ export default function ConfigurationComplianceRuleScreen() {
               </Flex>
             )}
             <Flex>
-              <Box flex="0 0 auto" w="200px">
+              <Box flex="0 0 auto" w="240px">
                 <Text color="grey.400">{textLabel}</Text>
               </Box>
               <Skeleton loading={isPending}>

@@ -31,11 +31,6 @@ export default function SidebarSearch() {
         onQuery={onQuery}
         onClear={onClear}
       />
-      {ctx.query && (
-        <Flex>
-          <Text>{t("diagnostic.label", { count: ctx.total })}</Text>
-        </Flex>
-      )}
     </Stack>
   )
 }

@@ -37,7 +37,11 @@ export function usePoliciesWithSearch(query: string) {
     queryFn: () => api.policy.getAllWithRules(query),
     select(res) {
       const formatted = getUniqueBy(res, "name")
-      return sortAlphabetical(formatted, "name")
+      const sorted = sortAlphabetical(formatted, "name")
+      return sorted.map((policy) => ({
+        ...policy,
+        rules: policy.rules ? sortAlphabetical([...policy.rules], "name") : policy.rules,
+      }))
     },
   })
 }

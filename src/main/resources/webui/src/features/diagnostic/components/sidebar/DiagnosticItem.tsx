@@ -1,8 +1,9 @@
-import { Badge, Icon, Stack, Text } from "@chakra-ui/react"
+import { Icon, Stack, Status, Text } from "@chakra-ui/react"
 import { forwardRef, Ref, useMemo } from "react"
 import { NavLink } from "react-router"
 
 import { Diagnostic, DiagnosticType } from "@/types"
+import { Tooltip } from "@/components/ui/tooltip"
 
 import { LuRegex } from "react-icons/lu"
 import { SiJavascript, SiPython } from "react-icons/si"
@@ -25,6 +26,7 @@ const DiagnosticItem = forwardRef((props: DiagnosticBoxProps, ref: Ref<HTMLDivEl
   }, [diagnostic])
 
   const isDisabled = !diagnostic?.enabled
+  const isAssigned = !!diagnostic?.targetGroup
 
   return (
     <NavLink to={`./${diagnostic?.id}`}>
@@ -42,18 +44,20 @@ const DiagnosticItem = forwardRef((props: DiagnosticBoxProps, ref: Ref<HTMLDivEl
           borderRadius="md"
           ref={ref}
         >
-          <Stack direction="row" gap="3" alignItems="center">
-            <Icon color="green.600" size="md" opacity={isDisabled ? 0.5 : 1}>
-              {iconEl}
-            </Icon>
-            <Stack gap="0">
+          <Stack direction="row" gap="3" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" gap="3" alignItems="center" overflow="hidden">
+              <Icon color="green.600" size="md" opacity={isDisabled ? 0.5 : 1} flexShrink="0">
+                {iconEl}
+              </Icon>
               <Text lineClamp={1} opacity={isDisabled ? 0.5 : 1}>{diagnostic?.name}</Text>
-              {diagnostic?.targetGroup && (
-                <Badge colorPalette="grey" size="sm" w="fit-content">
-                  {diagnostic?.targetGroup?.name}
-                </Badge>
-              )}
             </Stack>
+            {isAssigned && (
+              <Tooltip content={diagnostic.targetGroup.name}>
+                <Status.Root size="sm" colorPalette="green">
+                  <Status.Indicator />
+                </Status.Root>
+              </Tooltip>
+            )}
           </Stack>
         </Stack>
       )}

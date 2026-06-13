@@ -3,6 +3,7 @@ import { Protected } from "@/components"
 import { LuChevronDown, LuPower, LuPencil, LuTrash } from "react-icons/lu"
 import { DiagnosticType, Level } from "@/types"
 import {
+  Box,
   Button,
   Flex,
   Heading,
@@ -13,6 +14,7 @@ import {
   Spacer,
   Stack,
   Tag,
+  Text,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
@@ -121,6 +123,23 @@ export default function DeviceDetailScreen() {
             </Stack>
           </Protected>
         </Flex>
+        <Separator />
+        <Stack gap="3">
+          <Flex>
+            <Box flex="0 0 auto" w="240px">
+              <Text color="grey.400">{t("common.targetGroup")}</Text>
+            </Box>
+            <Skeleton loading={isPending}>
+              {diagnostic?.targetGroup ? (
+                <Tag.Root variant="surface">
+                  <Tag.Label>{diagnostic.targetGroup.name}</Tag.Label>
+                </Tag.Root>
+              ) : (
+                <Text color="grey.400">—</Text>
+              )}
+            </Skeleton>
+          </Flex>
+        </Stack>
         <Separator />
         {diagnostic?.type === DiagnosticType.Simple && <TextDiagnosticDetail />}
         {(diagnostic?.type === DiagnosticType.Javascript ||

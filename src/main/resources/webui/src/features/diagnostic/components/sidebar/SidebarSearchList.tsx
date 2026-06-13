@@ -1,6 +1,6 @@
 import api from "@/api"
 import { Diagnostic } from "@/types"
-import { search } from "@/utils"
+import { search, sortAlphabetical } from "@/utils"
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useEffect } from "react"
@@ -20,7 +20,7 @@ export default function DeviceSidebarSearchList() {
     },
     select: useCallback(
       (res: Diagnostic[]): Diagnostic[] => {
-        return search(res, "name").with(ctx.query)
+        return sortAlphabetical(search(res, "name").with(ctx.query), "name")
       },
       [ctx.query]
     ),
@@ -35,7 +35,7 @@ export default function DeviceSidebarSearchList() {
 
   if (isPending) {
     return (
-      <Stack alignItems="center" justifyContent="center" py="6">
+      <Stack alignItems="center" justifyContent="center" py="6" flex="1">
         <Spinner />
       </Stack>
     )
@@ -50,7 +50,7 @@ export default function DeviceSidebarSearchList() {
   }
 
   return (
-    <Stack p="6" gap="1" overflow="auto">
+    <Stack p="6" gap="1" overflow="auto" flex="1">
       {data?.map((diagnostic) => (
         <DiagnosticItem diagnostic={diagnostic} key={diagnostic?.id} />
       ))}

@@ -1,6 +1,6 @@
 import { Protected } from "@/components"
 import { Icon } from "@chakra-ui/react"
-import { LuBoxes, LuSquarePen, LuTrash, LuEllipsis } from "react-icons/lu"
+import { LuBrackets, LuSquarePen, LuTrash, LuEllipsis } from "react-icons/lu"
 import { Group, Level } from "@/types"
 import {
   Box,
@@ -57,7 +57,7 @@ export default function GroupItem(props: GroupItemProps) {
       >
         <Stack direction="row" gap="3" alignItems="center">
           <Stack direction="row" gap="3" alignItems="center">
-            <Icon color="green.600" size="md"><LuBoxes /></Icon>
+            <Icon color="green.600" size="md"><LuBrackets /></Icon>
             <Text>{group?.name}</Text>
           </Stack>
         </Stack>

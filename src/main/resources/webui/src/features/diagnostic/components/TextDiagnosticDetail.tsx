@@ -1,4 +1,4 @@
-import { Skeleton, Table, Text } from "@chakra-ui/react"
+import { Box, Flex, Skeleton, Stack, Text } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
 import { useDiagnostic } from "../contexts"
 import { useResultTypeOptions } from "../hooks"
@@ -16,63 +16,59 @@ export default function TextDiagnosticDetail() {
     diagnostic?.modifierPattern && diagnostic?.modifierReplacement
 
   return (
-    <Table.Root variant="line" size="sm">
-      <Table.Body>
-        <Table.Row>
-          <Table.ColumnHeader w="220px" whiteSpace="nowrap">
-            {t("device.type")}
-          </Table.ColumnHeader>
-          <Table.Cell>
+    <Stack gap="3">
+      <Flex>
+        <Box flex="0 0 auto" w="240px">
+          <Text color="grey.400">{t("device.type")}</Text>
+        </Box>
+        <Skeleton loading={isLoading}>
+          <Text>{diagnostic?.deviceDriverDescription ?? t("common.any")}</Text>
+        </Skeleton>
+      </Flex>
+      <Flex>
+        <Box flex="0 0 auto" w="240px">
+          <Text color="grey.400">{t("network.cliMode")}</Text>
+        </Box>
+        <Skeleton loading={isLoading}>
+          <Text fontFamily="mono">{diagnostic?.cliMode}</Text>
+        </Skeleton>
+      </Flex>
+      <Flex>
+        <Box flex="0 0 auto" w="240px">
+          <Text color="grey.400">{t("network.cliCommand")}</Text>
+        </Box>
+        <Skeleton loading={isLoading}>
+          <Text fontFamily="mono">{diagnostic?.command}</Text>
+        </Skeleton>
+      </Flex>
+      <Flex>
+        <Box flex="0 0 auto" w="240px">
+          <Text color="grey.400">{t("common.resultType")}</Text>
+        </Box>
+        <Skeleton loading={isLoading}>
+          <Text>{resultTypeLabel}</Text>
+        </Skeleton>
+      </Flex>
+      {(hasModifier || isLoading) && (
+        <>
+          <Flex>
+            <Box flex="0 0 auto" w="240px">
+              <Text color="grey.400">{t("policy.rule.regexPattern")}</Text>
+            </Box>
             <Skeleton loading={isLoading}>
-              <Text>{diagnostic?.deviceDriverDescription ?? t("common.any")}</Text>
+              <Text fontFamily="mono">{diagnostic?.modifierPattern}</Text>
             </Skeleton>
-          </Table.Cell>
-        </Table.Row>
-        <Table.Row>
-          <Table.ColumnHeader>{t("network.cliMode")}</Table.ColumnHeader>
-          <Table.Cell>
+          </Flex>
+          <Flex>
+            <Box flex="0 0 auto" w="240px">
+              <Text color="grey.400">{t("policy.rule.replaceWith")}</Text>
+            </Box>
             <Skeleton loading={isLoading}>
-              <Text fontFamily="mono">{diagnostic?.cliMode}</Text>
+              <Text fontFamily="mono">{diagnostic?.modifierReplacement}</Text>
             </Skeleton>
-          </Table.Cell>
-        </Table.Row>
-        <Table.Row>
-          <Table.ColumnHeader>{t("network.cliCommand")}</Table.ColumnHeader>
-          <Table.Cell>
-            <Skeleton loading={isLoading}>
-              <Text fontFamily="mono">{diagnostic?.command}</Text>
-            </Skeleton>
-          </Table.Cell>
-        </Table.Row>
-        <Table.Row>
-          <Table.ColumnHeader>{t("common.resultType")}</Table.ColumnHeader>
-          <Table.Cell>
-            <Skeleton loading={isLoading}>
-              <Text>{resultTypeLabel}</Text>
-            </Skeleton>
-          </Table.Cell>
-        </Table.Row>
-        {(hasModifier || isLoading) && (
-          <>
-            <Table.Row>
-              <Table.ColumnHeader>{t("policy.rule.regexPattern")}</Table.ColumnHeader>
-              <Table.Cell>
-                <Skeleton loading={isLoading}>
-                  <Text fontFamily="mono">{diagnostic?.modifierPattern}</Text>
-                </Skeleton>
-              </Table.Cell>
-            </Table.Row>
-            <Table.Row>
-              <Table.ColumnHeader>{t("policy.rule.replaceWith")}</Table.ColumnHeader>
-              <Table.Cell>
-                <Skeleton loading={isLoading}>
-                  <Text fontFamily="mono">{diagnostic?.modifierReplacement}</Text>
-                </Skeleton>
-              </Table.Cell>
-            </Table.Row>
-          </>
-        )}
-      </Table.Body>
-    </Table.Root>
+          </Flex>
+        </>
+      )}
+    </Stack>
   )
 }

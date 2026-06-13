@@ -17,7 +17,7 @@ export default function DeviceSidebar() {
   const query = useDeviceSidebarStore((state) => state.query)
 
   return (
-    <Stack w="300px" overflow="auto" gap="0">
+    <Stack w="300px" overflow="hidden" gap="0">
       <DeviceSidebarSearch />
       <Separator />
       {query ? null : (

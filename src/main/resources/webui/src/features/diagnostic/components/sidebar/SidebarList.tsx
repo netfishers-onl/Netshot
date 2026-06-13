@@ -1,42 +1,20 @@
-import api, { PaginationQueryParams } from "@/api"
+import api from "@/api"
+import { Diagnostic } from "@/types"
+import { sortAlphabetical } from "@/utils"
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react"
-import { useInfiniteQuery } from "@tanstack/react-query"
-import { useEffect } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import { useInView } from "react-intersection-observer"
 import { QUERIES } from "../../constants"
 import DiagnosticItem from "./DiagnosticItem"
 
-/**
- * @todo: Sort diagnostic by alphabetical order A-Z (backend)
- */
 export default function SidebarList() {
-  const { ref, inView } = useInView()
-  const LIMIT = 40
   const { t } = useTranslation()
 
-  const { data, isPending, isSuccess, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useInfiniteQuery({
-      queryKey: [QUERIES.DIAGNOSTIC_INFINITE_LIST],
-      queryFn: async ({ pageParam }) => {
-        const params = {
-          limit: LIMIT,
-          offset: pageParam,
-        } as PaginationQueryParams
-
-        return api.diagnostic.getAll(params)
-      },
-      initialPageParam: 0,
-      getNextPageParam(lastPage, allPages) {
-        return lastPage?.length === LIMIT ? allPages.length + 1 : undefined
-      },
-    })
-
-  useEffect(() => {
-    if (inView && hasNextPage) {
-      fetchNextPage()
-    }
-  }, [inView, fetchNextPage, hasNextPage])
+  const { data, isPending } = useQuery({
+    queryKey: [QUERIES.DIAGNOSTIC_INFINITE_LIST],
+    queryFn: () => api.diagnostic.getAll(),
+    select: (res: Diagnostic[]) => sortAlphabetical(res, "name"),
+  })
 
   if (isPending) {
     return (
@@ -46,7 +24,7 @@ export default function SidebarList() {
     )
   }
 
-  if (data?.pages?.[0]?.length === 0) {
+  if (data?.length === 0) {
     return (
       <Center flex="1">
         <Text>{t("diagnostic.notFound")}</Text>
@@ -56,21 +34,9 @@ export default function SidebarList() {
 
   return (
     <Stack gap="0" py="4" px="5" overflow="auto" flex="1">
-      {isSuccess &&
-        data?.pages?.map((page) =>
-          page.map((diagnostic, i) => {
-            if (page.length === i + 1) {
-              return <DiagnosticItem ref={ref} diagnostic={diagnostic} key={diagnostic?.id} />
-            }
-
-            return <DiagnosticItem diagnostic={diagnostic} key={diagnostic?.id} />
-          })
-        )}
-      {isFetchingNextPage && (
-        <Stack alignItems="center" justifyContent="center" py="6">
-          <Spinner />
-        </Stack>
-      )}
+      {data?.map((diagnostic) => (
+        <DiagnosticItem diagnostic={diagnostic} key={diagnostic?.id} />
+      ))}
     </Stack>
   )
 }

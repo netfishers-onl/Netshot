@@ -3,10 +3,10 @@ import { createOptionHook } from "@/hooks"
 export const useRuleTextOptions = createOptionHook([
   {
     label: "policy.rule.textMustExist",
-    value: true,
+    value: false,
   },
   {
     label: "policy.rule.textMustNotExist",
-    value: false,
+    value: true,
   },
 ])

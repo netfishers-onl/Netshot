@@ -64,7 +64,7 @@ export default function DeviceComplianceScreen() {
               {value === DeviceComplianceResultType.Conforming && (
                 <Tag.Root>{t("compliance.compliant")}</Tag.Root>
               )}
-              {value === DeviceComplianceResultType.NonConfirming && (
+              {value === DeviceComplianceResultType.NonConforming && (
                 <Tag.Root colorPalette="red">{t("compliance.nonCompliant")}</Tag.Root>
               )}
               {value === DeviceComplianceResultType.Disabled && (

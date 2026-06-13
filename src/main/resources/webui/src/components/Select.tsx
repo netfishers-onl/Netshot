@@ -156,8 +156,8 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
   }, [field, isLoading, multiple])
 
   const selectedIcon = useMemo((): ReactNode => {
-    if (!renderIcon || multiple || !value?.[0] || value[0] === "") return undefined
-    const selectedItem = optionsMap.get(value[0])
+    if (!renderIcon || multiple) return undefined
+    const selectedItem = optionsMap.get(value?.[0] ?? "")
     return selectedItem ? renderIcon(selectedItem) : undefined
   }, [value, optionsMap, multiple, renderIcon])
 

@@ -5,7 +5,7 @@ import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
 import { Policy, RuleType } from "@/types"
 import { stringToBoolean } from "@/utils"
-import { Box, Button, CloseButton, Dialog, Flex, Heading, Icon, Portal, RadioCard, Stack, Text } from "@chakra-ui/react"
+import { Button, CloseButton, Dialog, Heading, Icon, Portal, RadioCard, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useState } from "react"
 import { FormProvider, useForm } from "react-hook-form"
@@ -16,7 +16,6 @@ import { QUERIES, RULE_SCRIPT_TEMPLATE } from "../constants"
 import { RuleForm } from "../types"
 import { EditTextRuleForm } from "./EditTextRuleForm"
 import EditScriptRuleForm from "./EditScriptRuleForm"
-import TestRuleOnDeviceButton from "./TestRuleOnDeviceButton"
 import { SiJavascript, SiPython } from "react-icons/si"
 
 enum FormStep {
@@ -246,10 +245,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
                   </>
                 )}
               </Dialog.Body>
-              <Dialog.Footer justifyContent="space-between">
-                <Stack>
-                  {formStep === FormStep.Details && <TestRuleOnDeviceButton type={type} />}
-                </Stack>
+              <Dialog.Footer justifyContent="flex-end">
                 <Stack direction="row" gap="3" alignItems="center">
                   {formStep === FormStep.Details && (
                     <Button onClick={previous}>{t("common.previous")}</Button>

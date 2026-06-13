@@ -1,19 +1,20 @@
-import { Checkbox, DeviceTypeSelect, Switch } from "@/components"
+import { Checkbox, Switch } from "@/components"
 import FormControl, { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { useDiagnostics } from "@/features/diagnostic/api"
 import { useDeviceTypeOptions } from "@/hooks"
 import { Rule } from "@/types"
-import { Separator, Stack, Tabs, Text } from "@chakra-ui/react"
+import { Icon, Separator, Spacer, Stack, Tabs, Text } from "@chakra-ui/react"
+import { LuAsterisk } from "react-icons/lu"
 import { useEffect, useState } from "react"
 import { useForm, useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useRuleBlockOptions, useRuleTextOptions } from "../hooks"
 import { RuleForm } from "../types"
+import TestRuleOnDeviceButton from "./TestRuleOnDeviceButton"
 
 enum FieldSource {
-  Generic = "generic",
-  TypeSpecific = "type-specific",
+  Attribute = "attribute",
   Diagnostic = "diagnostic",
 }
 
@@ -27,103 +28,9 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
   const { t } = useTranslation()
   const ruleBlockOptions = useRuleBlockOptions()
   const ruleTextOptions = useRuleTextOptions()
-  const { getOptionByDriver, isPending: isDeviceTypesPending } = useDeviceTypeOptions()
+  const { getOptionByDriver, getOptionsWithName, isPending: isDeviceTypesPending } = useDeviceTypeOptions()
   const diagnosticQuery = useDiagnostics()
   const diagnostics = diagnosticQuery.data ?? []
-
-  const genericForm = useForm<{ attribute: string | null }>({
-    defaultValues: { attribute: null },
-  })
-
-  const typeSpecificForm = useForm<{ deviceType: string | null; attribute: string | null }>({
-    defaultValues: { deviceType: null, attribute: null },
-  })
-
-  const diagnosticForm = useForm<{ diagnostic: string | null }>({
-    defaultValues: { diagnostic: null },
-  })
-
-  const [activeTab, setActiveTab] = useState<FieldSource>(FieldSource.Generic)
-  const [isInitialized, setIsInitialized] = useState(false)
-
-  const [genericAttr] = genericForm.watch(["attribute"])
-  const [typeDriver, typeAttr] = typeSpecificForm.watch(["deviceType", "attribute"])
-  const [diagId] = diagnosticForm.watch(["diagnostic"])
-
-  // Wait for both queries before reading parent form values and setting local state
-  useEffect(() => {
-    if (diagnosticQuery.isPending || isDeviceTypesPending || isInitialized) return
-
-    const currentDriver = form.getValues("driver")
-    const currentField = form.getValues("field")
-
-    if (currentDriver) {
-      setActiveTab(FieldSource.TypeSpecific)
-      typeSpecificForm.setValue("deviceType", currentDriver)
-      typeSpecificForm.setValue("attribute", currentField)
-    } else if (currentField) {
-      const matchingDiag = diagnostics.find((d) => d.name === currentField)
-      if (matchingDiag) {
-        setActiveTab(FieldSource.Diagnostic)
-        diagnosticForm.setValue("diagnostic", String(matchingDiag.id))
-      } else {
-        setActiveTab(FieldSource.Generic)
-        genericForm.setValue("attribute", currentField)
-      }
-    }
-
-    setIsInitialized(true)
-  }, [diagnosticQuery.isPending, isDeviceTypesPending, isInitialized])
-
-  // After initialization, reset attribute when device type changes if it's no longer valid
-  useEffect(() => {
-    if (!isInitialized || !typeDriver) return
-    const driverOption = getOptionByDriver(typeDriver)
-    const attrs = driverOption?.value.attributes ?? []
-    if (!attrs.some((a) => a.name === typeSpecificForm.getValues("attribute"))) {
-      typeSpecificForm.setValue("attribute", null)
-    }
-  }, [typeDriver, isInitialized])
-
-  // Sync active tab selections to parent form (only after initialization)
-  useEffect(() => {
-    if (!isInitialized || activeTab !== FieldSource.Generic) return
-    form.setValue("driver", null)
-    form.setValue("field", genericAttr)
-  }, [isInitialized, genericAttr, activeTab])
-
-  useEffect(() => {
-    if (!isInitialized || activeTab !== FieldSource.TypeSpecific) return
-    form.setValue("driver", typeDriver)
-    form.setValue("field", typeAttr)
-  }, [isInitialized, typeDriver, typeAttr, activeTab])
-
-  useEffect(() => {
-    if (!isInitialized || activeTab !== FieldSource.Diagnostic) return
-    const diag = diagnostics.find((d) => d.id === Number(diagId))
-    form.setValue("driver", null)
-    form.setValue("field", diag?.name ?? null)
-  }, [isInitialized, diagId, activeTab])
-
-  function handleTabChange(details: { value: string }) {
-    const newTab = details.value as FieldSource
-    setActiveTab(newTab)
-
-    if (newTab === FieldSource.TypeSpecific) {
-      const { deviceType, attribute } = typeSpecificForm.getValues()
-      form.setValue("driver", deviceType)
-      form.setValue("field", attribute)
-    } else if (newTab === FieldSource.Diagnostic) {
-      const { diagnostic } = diagnosticForm.getValues()
-      const diag = diagnostics.find((d) => d.id === Number(diagnostic))
-      form.setValue("driver", null)
-      form.setValue("field", diag?.name ?? null)
-    } else {
-      const { attribute } = genericForm.getValues()
-      form.setValue("driver", null)
-      form.setValue("field", attribute)
-    }
-  }
 
   const genericFieldOptions = [
     { label: t("common.contact"), value: "contact" },
@@ -131,13 +38,137 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
     { label: t("common.name"), value: "name" },
   ]
 
-  const typeSpecificAttrOptions = (() => {
-    const driverOption = getOptionByDriver(typeDriver)
-    if (!driverOption) return []
-    return driverOption.value.attributes.map((attr) => ({
-      label: t(attr.title),
-      value: attr.name,
-    }))
+  // "" = Any (no driver restriction); driver name string = specific driver
+  const attrForm = useForm<{ deviceType: string; attribute: string | null }>({
+    defaultValues: { deviceType: "", attribute: null },
+  })
+
+  const diagnosticForm = useForm<{ diagnostic: string | null }>({
+    defaultValues: { diagnostic: null },
+  })
+
+  const [activeTab, setActiveTab] = useState<FieldSource>(FieldSource.Attribute)
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  const [attrDriver, attrField] = attrForm.watch(["deviceType", "attribute"])
+  const [diagId] = diagnosticForm.watch(["diagnostic"])
+
+  // Wait for both queries before reading parent form values and setting local state.
+  // Resolution order mirrors JsDeviceHelper.getDeviceItem: generic fields first, then
+  // driver-specific attributes, then diagnostics.
+  useEffect(() => {
+    if (diagnosticQuery.isPending || isDeviceTypesPending || isInitialized) return
+
+    const currentDriver = form.getValues("driver")
+    const currentField = form.getValues("field")
+
+    if (currentField) {
+      const isGeneric = genericFieldOptions.some((o) => o.value === currentField)
+      if (isGeneric) {
+        attrForm.setValue("deviceType", "")
+        attrForm.setValue("attribute", currentField)
+      } else {
+        if (currentDriver) {
+          const driverOption = getOptionByDriver(currentDriver)
+          const attrs = driverOption?.value.attributes ?? []
+          if (attrs.some((a) => a.name === currentField)) {
+            attrForm.setValue("deviceType", currentDriver)
+            attrForm.setValue("attribute", currentField)
+            setIsInitialized(true)
+            return
+          }
+        }
+        const matchingDiag = diagnostics.find((d) => d.name === currentField)
+        if (matchingDiag) {
+          setActiveTab(FieldSource.Diagnostic)
+          diagnosticForm.setValue("diagnostic", String(matchingDiag.id))
+        } else {
+          attrForm.setValue("deviceType", "")
+          attrForm.setValue("attribute", currentField)
+        }
+      }
+    }
+
+    setIsInitialized(true)
+  }, [diagnosticQuery.isPending, isDeviceTypesPending, isInitialized])
+
+  // When driver changes, reset the attribute only if it is type-specific and no longer valid
+  useEffect(() => {
+    if (!isInitialized) return
+    const currentAttr = attrForm.getValues("attribute")
+    const isGenericAttr = genericFieldOptions.some((o) => o.value === currentAttr)
+    if (isGenericAttr) return
+    if (!attrDriver) {
+      attrForm.setValue("attribute", null)
+      return
+    }
+    const driverOption = getOptionByDriver(attrDriver)
+    const attrs = driverOption?.value.attributes ?? []
+    if (!attrs.some((a) => a.name === currentAttr)) {
+      attrForm.setValue("attribute", null)
+    }
+  }, [attrDriver, isInitialized])
+
+  // Register "field" with required validation so setValue(..., { shouldValidate: true })
+  // can drive isValid in both directions. clearErrors() alone does not update isValid.
+  useEffect(() => {
+    form.register("field", { required: true })
+    return () => form.unregister("field")
+  }, [])
+
+  // Trigger full validation once after initialization so isValid reflects reality.
+  // With mode:"onChange", isValid stays false until validation runs at least once.
+  useEffect(() => {
+    if (!isInitialized) return
+    form.trigger()
+  }, [isInitialized])
+
+  // Sync active tab selections to parent form (only after initialization)
+  useEffect(() => {
+    if (!isInitialized || activeTab !== FieldSource.Attribute) return
+    form.setValue("driver", attrDriver || "")
+    form.setValue("field", attrField, { shouldValidate: true })
+  }, [isInitialized, attrDriver, attrField, activeTab])
+
+  useEffect(() => {
+    if (!isInitialized || activeTab !== FieldSource.Diagnostic) return
+    const diag = diagnostics.find((d) => d.id === Number(diagId))
+    form.setValue("driver", "")
+    form.setValue("field", diag?.name ?? null, { shouldValidate: true })
+  }, [isInitialized, diagId, activeTab])
+
+  function handleTabChange(details: { value: string }) {
+    const newTab = details.value as FieldSource
+    setActiveTab(newTab)
+
+    if (newTab === FieldSource.Attribute) {
+      const { deviceType, attribute } = attrForm.getValues()
+      form.setValue("driver", deviceType || "")
+      form.setValue("field", attribute, { shouldValidate: true })
+    } else {
+      const { diagnostic } = diagnosticForm.getValues()
+      const diag = diagnostics.find((d) => d.id === Number(diagnostic))
+      form.setValue("driver", "")
+      form.setValue("field", diag?.name ?? null, { shouldValidate: true })
+    }
+  }
+
+  const deviceTypeOptions = [
+    { label: t("common.any"), value: "" },
+    ...getOptionsWithName(),
+  ]
+
+  const attrOptions = (() => {
+    const options = [...genericFieldOptions]
+    if (attrDriver) {
+      const driverOption = getOptionByDriver(attrDriver)
+      if (driverOption) {
+        driverOption.value.attributes.forEach((attr) => {
+          options.push({ label: t(attr.title), value: attr.name })
+        })
+      }
+    }
+    return options
   })()
 
   const diagnosticOptions = diagnostics.map((d) => ({ label: d.name, value: d.id }))
@@ -145,15 +176,19 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
   return (
     <Stack direction="row" gap="7" flex="1" minH="0" overflow="hidden">
       {/* Left — base fields */}
-      <Stack gap="6" p="3" w="280px" flexShrink={0} overflow="hidden">
-        <FormControl
-          required
-          label={t("common.name")}
-          placeholder={t("common.name")}
-          control={form.control}
-          name="name"
-        />
-        <Switch control={form.control} name="enabled" label={t("common.enabled")} />
+      <Stack p="3" w="280px" flexShrink={0} overflow="hidden" h="full">
+        <Stack gap="6">
+          <FormControl
+            required
+            label={t("common.name")}
+            placeholder={t("common.name")}
+            control={form.control}
+            name="name"
+          />
+          <Switch control={form.control} name="enabled" label={t("common.enabled")} />
+        </Stack>
+        <Spacer />
+        <TestRuleOnDeviceButton type={_type} />
       </Stack>
 
       {/* Right — text-rule fields */}
@@ -163,41 +198,30 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
         </Text>
         <Tabs.Root value={activeTab} onValueChange={handleTabChange} variant="subtle" size="lg">
           <Tabs.List>
-            <Tabs.Trigger value={FieldSource.Generic}>
-              {t("common.genericAttributes")}
-            </Tabs.Trigger>
-            <Tabs.Trigger value={FieldSource.TypeSpecific}>
-              {t("common.typeSpecificAttributes")}
+            <Tabs.Trigger value={FieldSource.Attribute}>
+              {t("common.attributes")}
             </Tabs.Trigger>
             <Tabs.Trigger value={FieldSource.Diagnostic}>
               {t("diagnostic.list")}
             </Tabs.Trigger>
           </Tabs.List>
-          <Tabs.Content value={FieldSource.Generic} pt="3">
-            <Select
-              control={genericForm.control}
-              name="attribute"
-              label={t("common.field")}
-              placeholder={t("common.selectField")}
-              options={genericFieldOptions}
-            />
-          </Tabs.Content>
-          <Tabs.Content value={FieldSource.TypeSpecific} pt="3">
+          <Tabs.Content value={FieldSource.Attribute} pt="3">
             <Stack gap="3">
-              <DeviceTypeSelect
-                control={typeSpecificForm.control}
+              <Select
+                control={attrForm.control}
                 name="deviceType"
                 label={t("device.type")}
+                options={deviceTypeOptions}
+                isLoading={isDeviceTypesPending}
+                renderIcon={(item) => item.value === "" ? <Icon as={LuAsterisk} /> : undefined}
               />
-              {typeDriver && (
-                <Select
-                  control={typeSpecificForm.control}
-                  name="attribute"
-                  label={t("common.attribute")}
-                  placeholder={t("common.selectDeviceAttribute")}
-                  options={typeSpecificAttrOptions}
-                />
-              )}
+              <Select
+                control={attrForm.control}
+                name="attribute"
+                label={t("common.field")}
+                placeholder={t("common.selectAttribute")}
+                options={attrOptions}
+              />
             </Stack>
           </Tabs.Content>
           <Tabs.Content value={FieldSource.Diagnostic} pt="3">

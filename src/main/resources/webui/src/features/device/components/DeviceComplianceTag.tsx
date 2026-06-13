@@ -11,7 +11,7 @@ const mapping = {
     colorPalette: "green",
     label: "compliant",
   },
-  [DeviceComplianceResultType.NonConfirming]: {
+  [DeviceComplianceResultType.NonConforming]: {
     colorPalette: "red",
     label: "nonCompliant2",
   },

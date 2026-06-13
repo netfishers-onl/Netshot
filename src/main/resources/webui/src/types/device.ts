@@ -125,7 +125,7 @@ export type Device = {
 
 export enum DeviceComplianceResultType {
   Conforming = "CONFORMING",
-  NonConfirming = "NONCONFORMING",
+  NonConforming = "NONCONFORMING",
   Disabled = "DISABLED",
   Exempted = "EXEMPTED",
   InvalidRule = "INVALIDRULE",

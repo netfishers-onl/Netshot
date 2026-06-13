@@ -1,11 +1,12 @@
 import { MonacoEditorControl, Switch } from "@/components"
 import FormControl from "@/components/FormControl"
 import { RuleType } from "@/types"
-import { Stack } from "@chakra-ui/react"
+import { Spacer, Stack } from "@chakra-ui/react"
 import { useMemo } from "react"
 import { useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { RuleForm } from "../types"
+import TestRuleOnDeviceButton from "./TestRuleOnDeviceButton"
 
 export type EditScriptRuleFormProps = {
   type: RuleType
@@ -20,15 +21,19 @@ export default function EditScriptRuleForm(props: EditScriptRuleFormProps) {
   return (
     <Stack direction="row" gap="7" overflow="auto" flex="1">
       {/* Left — base fields */}
-      <Stack gap="6" p="3" w="280px" flexShrink={0}>
-        <FormControl
-          required
-          label={t("common.name")}
-          placeholder={t("common.name")}
-          control={form.control}
-          name="name"
-        />
-        <Switch control={form.control} name="enabled" label={t("common.enabled")} />
+      <Stack p="3" w="280px" flexShrink={0} h="full">
+        <Stack gap="6">
+          <FormControl
+            required
+            label={t("common.name")}
+            placeholder={t("common.name")}
+            control={form.control}
+            name="name"
+          />
+          <Switch control={form.control} name="enabled" label={t("common.enabled")} />
+        </Stack>
+        <Spacer />
+        <TestRuleOnDeviceButton type={type} />
       </Stack>
 
       {/* Right — script editor */}

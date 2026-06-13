@@ -7,9 +7,10 @@ import { Autocomplete, AutocompleteProps } from "./autocomplete/Autocomplete"
 
 export type DeviceAutocompleteProps = Omit<
   AutocompleteProps<SimpleDevice>,
-  "collection" | "renderItem"
-> &
-  WithFilterBy<SimpleDevice>
+  "collection" | "renderItem" | "onSelectItem"
+> & {
+  onSelectItem?(item: SimpleDevice | null): void
+} & WithFilterBy<SimpleDevice>
 
 export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
   const {
@@ -51,9 +52,10 @@ export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
       onValueChange={(evt) => {
         const device = entities.find((item) => item.id === +evt.value[0])
         if (!device) {
+          onSelectItem?.(null)
           return
         }
-        onSelectItem(device)
+        onSelectItem?.(device)
       }}
       {...autocompleteConfig}
       placeholder={placeholder || t("device.search")}

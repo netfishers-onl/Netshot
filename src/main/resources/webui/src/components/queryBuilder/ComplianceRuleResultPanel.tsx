@@ -46,7 +46,7 @@ export function ComplianceRuleResultPanel({ onInsert }: Props) {
         type: AttributeType.Enum,
         choices: [
           { label: t("compliance.conforming"), value: DeviceComplianceResultType.Conforming },
-          { label: t("compliance.nonConforming"), value: DeviceComplianceResultType.NonConfirming },
+          { label: t("compliance.nonConforming"), value: DeviceComplianceResultType.NonConforming },
           {
             label: t("compliance.notApplicable"),
             value: DeviceComplianceResultType.NotApplication,

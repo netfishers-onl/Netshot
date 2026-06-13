@@ -1,13 +1,16 @@
 import { useDeviceTypeOptions } from "@/hooks"
-import { Text } from "@chakra-ui/react"
+import { Icon, Text } from "@chakra-ui/react"
 import { FieldPath, FieldValues } from "react-hook-form"
 import { useTranslation } from "react-i18next"
+import { LuAsterisk } from "react-icons/lu"
 import { Select, SelectProps } from "./Select"
 
 export type DeviceTypeSelectProps<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
-> = Omit<SelectProps<TFieldValues, TName, string | number>, "options">
+> = Omit<SelectProps<TFieldValues, TName, string | number>, "options"> & {
+  withAny?: boolean
+}
 
 export default function DeviceTypeSelect<
   TFieldValues extends FieldValues = FieldValues,
@@ -23,12 +26,17 @@ export default function DeviceTypeSelect<
     placeholder,
     helperText,
     isClearable,
+    withAny = false,
     rules,
   } = props
 
   const { t } = useTranslation()
 
   const { isPending, options } = useDeviceTypeOptions()
+
+  const allOptions = withAny
+    ? [{ label: t("common.any"), value: null }, ...options]
+    : options
 
   return (
     <Select
@@ -44,9 +52,10 @@ export default function DeviceTypeSelect<
       helperText={helperText}
       isClearable={isClearable}
       noOptionsMessage={<Text>{t("device.noDeviceTypeFound")}</Text>}
-      options={options}
+      options={allOptions}
       itemToString={(item) => item?.label}
-      itemToValue={(item) => item.value?.name}
+      itemToValue={(item) => item?.value?.name ?? ""}
+      renderIcon={(item) => item.value === null ? <Icon as={LuAsterisk} /> : undefined}
     />
   )
 }

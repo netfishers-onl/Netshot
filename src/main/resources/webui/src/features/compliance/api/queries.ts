@@ -9,7 +9,6 @@ import { useToast } from "@/hooks"
 import { Rule } from "@/types"
 import { getUniqueBy, sortAlphabetical } from "@/utils"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useTranslation } from "react-i18next"
 import { QUERIES as FEATURE_QUERIES } from "../constants"
 
 export function usePolicies() {
@@ -83,21 +82,10 @@ export function useUpdateRule(rule: Rule) {
 }
 
 export function useTestRuleText() {
-  const { t } = useTranslation()
   const toast = useToast()
 
   return useMutation({
     mutationFn: async (payload: TestRuleTextOnDevicePayload) => api.rule.testText(payload),
-    onSuccess(res) {
-      toast.script({
-        title: t("policy.rule.testResult"),
-        description: res.comment,
-        meta: {
-          result: res.result,
-          error: res.scriptError,
-        },
-      })
-    },
     onError(err: NetshotError) {
       toast.error(err)
     },
@@ -105,21 +93,10 @@ export function useTestRuleText() {
 }
 
 export function useTestRuleScript() {
-  const { t } = useTranslation()
   const toast = useToast()
 
   return useMutation({
     mutationFn: async (payload: TestRuleScriptOnDevicePayload) => api.rule.testScript(payload),
-    onSuccess(res) {
-      toast.script({
-        title: t("policy.rule.testResult"),
-        description: res.comment,
-        meta: {
-          result: res.result,
-          error: res.scriptError,
-        },
-      })
-    },
     onError(err: NetshotError) {
       toast.error(err)
     },

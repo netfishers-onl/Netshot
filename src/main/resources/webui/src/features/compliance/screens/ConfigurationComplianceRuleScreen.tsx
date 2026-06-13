@@ -1,8 +1,9 @@
 import api from "@/api"
 import { MonacoEditor } from "@/components"
-import { LuMessageSquareDot, LuPower, LuPencil, LuTrash, LuChevronDown } from "react-icons/lu"
+import { LuAsterisk, LuMessageSquareDot, LuPower, LuPencil, LuTrash, LuChevronDown } from "react-icons/lu"
 import { RuleType } from "@/types"
 import {
+  Badge,
   Box,
   Button,
   Flex,
@@ -176,7 +177,10 @@ export default function ConfigurationComplianceRuleScreen() {
                 <Text color="grey.400">{t("device.type")}</Text>
               </Box>
               <Skeleton loading={isPending}>
-                <Text>{rule?.deviceDriverDescription ?? "nA"}</Text>
+                {rule?.deviceDriverDescription
+                  ? <Text>{rule.deviceDriverDescription}</Text>
+                  : <Badge size="lg" variant="outline" marginTop="-3px" marginBottom="-3px"><LuAsterisk />{t("common.any")}</Badge>
+                }
               </Skeleton>
             </Flex>
             <Flex>

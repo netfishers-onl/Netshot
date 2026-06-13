@@ -10,7 +10,6 @@ import { useUpdateRule } from "../api"
 import { RuleForm } from "../types"
 import { EditTextRuleForm } from "./EditTextRuleForm"
 import EditScriptRuleForm from "./EditScriptRuleForm"
-import TestRuleOnDeviceButton from "./TestRuleOnDeviceButton"
 
 export type EditRuleButtonProps = PropsWithRenderItem<{
   policyId: number
@@ -61,7 +60,6 @@ export default function EditRuleButton(props: EditRuleButtonProps) {
       ) : (
         <EditTextRuleForm type={rule?.type} />
       ),
-      footerStart: <TestRuleOnDeviceButton type={rule?.type} />,
       bodyProps: !hasScript ? { overflow: "hidden", display: "flex" } : undefined,
       form,
       size: "xl",

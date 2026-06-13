@@ -370,6 +370,7 @@
       "seeDetails": "See details",
       "selectAll": "Select all",
       "attribute": "Attribute",
+      "attributes": "Attributes",
       "selectAttribute": "Select attribute...",
       "selectGroupToBegin": "Select group to begin",
       "selectGroup": "Select group",
@@ -637,7 +638,7 @@
       "deviceNotCompliantWithSome": "The device is not in compliance with some policies",
       "noResultForDevice": "There is no compliance result for this device",
       "conforming": "Conforming",
-      "nonConforming": "Non confirming",
+      "nonConforming": "Non conforming",
       "notApplicable": "Not applicable"
     },
     "task": {

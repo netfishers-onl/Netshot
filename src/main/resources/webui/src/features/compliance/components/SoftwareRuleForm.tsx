@@ -82,8 +82,8 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
       <DeviceTypeSelect
         control={form.control}
         name="driver"
-        placeholder={t("common.any")}
         label={t("device.type")}
+        withAny
         isClearable
       />
       <FormControl
@@ -141,7 +141,7 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
         }
       />
       <HStack justifyContent="center">
-        <Icon size="lg" color="grey.400">
+        <Icon size="lg" color="grey.200">
           <LuCircleArrowDown />
         </Icon>
       </HStack>

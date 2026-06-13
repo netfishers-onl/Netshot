@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 
 import { DeviceAttributeDefinition, DeviceAttributeLevel, DeviceStatus } from "@/types"
 import { useLocalization } from "@/i18n"
+import { DeviceGroupBadge } from "@/components"
 
 import { useMemo } from "react"
 import { DeviceAttributeValue } from "../components"
@@ -160,9 +161,7 @@ export default function DeviceGeneralScreen() {
             <Skeleton loading={!!isLoading}>
               <Stack direction="row" gap="2">
                 {device?.ownerGroups?.map((group) => (
-                  <Tag.Root key={group?.id} colorPalette="grey">
-                    {group?.name}
-                  </Tag.Root>
+                  <DeviceGroupBadge key={group?.id} id={group?.id} name={group?.name} />
                 ))}
               </Stack>
             </Skeleton>

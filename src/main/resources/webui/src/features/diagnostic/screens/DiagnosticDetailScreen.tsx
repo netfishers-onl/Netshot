@@ -1,5 +1,5 @@
 import api from "@/api"
-import { Protected } from "@/components"
+import { DeviceGroupBadge, Protected } from "@/components"
 import { LuChevronDown, LuPower, LuPencil, LuTrash } from "react-icons/lu"
 import { DiagnosticType, Level } from "@/types"
 import {
@@ -131,9 +131,7 @@ export default function DeviceDetailScreen() {
             </Box>
             <Skeleton loading={isPending}>
               {diagnostic?.targetGroup ? (
-                <Tag.Root variant="surface">
-                  <Tag.Label>{diagnostic.targetGroup.name}</Tag.Label>
-                </Tag.Root>
+                <DeviceGroupBadge id={diagnostic.targetGroup.id} name={diagnostic.targetGroup.name} />
               ) : (
                 <Text color="grey.400">—</Text>
               )}

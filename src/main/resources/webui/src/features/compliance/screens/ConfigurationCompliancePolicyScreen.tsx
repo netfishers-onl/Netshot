@@ -22,6 +22,7 @@ import AddRuleButton from "../components/AddRuleButton"
 import EditPolicyButton from "../components/EditPolicyButton"
 import RemovePolicyButton from "../components/RemovePolicyButton"
 import { usePolicies } from "../api"
+import { DeviceGroupBadge } from "@/components"
 
 function getRuleIcon(type: RuleType) {
   if (type === RuleType.Javascript) return <SiJavascript />
@@ -121,9 +122,7 @@ export default function ConfigurationCompliancePolicyScreen() {
             <Stack direction="row" gap="2" flexWrap="wrap">
               {policy?.targetGroups?.length ? (
                 policy.targetGroups.map((group) => (
-                  <Tag.Root key={group.id} variant="surface">
-                    <Tag.Label>{group.name}</Tag.Label>
-                  </Tag.Root>
+                  <DeviceGroupBadge key={group.id} id={group.id} name={group.name} />
                 ))
               ) : (
                 <Text color="grey.400">—</Text>

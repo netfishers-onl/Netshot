@@ -41,6 +41,10 @@ export function EditDiagnosticForm(props: EditDiagnosticFormProps) {
         control={form.control}
         name="name"
       />
+      <TreeGroupSelector
+        value={targetGroup ? [targetGroup] : []}
+        onChange={(groups) => form.setValue("targetGroup", groups?.[0])}
+      />
       <Switch
         control={form.control}
         name="enabled"
@@ -53,10 +57,6 @@ export function EditDiagnosticForm(props: EditDiagnosticFormProps) {
         name="resultType"
         label={t("common.resultType")}
         placeholder={t("diagnostic.selectResultType")}
-      />
-      <TreeGroupSelector
-        value={targetGroup ? [targetGroup] : []}
-        onChange={(groups) => form.setValue("targetGroup", groups?.[0])}
       />
       {!hasScript && (
         <>

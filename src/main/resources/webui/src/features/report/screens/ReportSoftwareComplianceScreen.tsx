@@ -1,5 +1,5 @@
 import api from "@/api"
-import { DomainSelect, Search, TreeGroup } from "@/components"
+import { DeviceGroupBadge, DomainSelect, Search, TreeGroup } from "@/components"
 import { LuFilter, LuRefreshCcw } from "react-icons/lu"
 import { QUERIES as GLOBAL_QUERIES } from "@/constants"
 import { useAlertDialog } from "@/dialog"
@@ -17,7 +17,6 @@ import {
   Skeleton,
   Spacer,
   Stack,
-  Tag,
   Text,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
@@ -97,9 +96,7 @@ function ReportSoftwareComplianceGroupItem({ item }: { item: GroupSoftwareCompli
             {t("compliance.software.label")}
           </Heading>
 
-          <Tag.Root colorScheme="grey">
-            <Tag.Label>{item.groupName}</Tag.Label>
-          </Tag.Root>
+          <DeviceGroupBadge id={item.groupId} name={item.groupName} />
           <Dialog.CloseTrigger />
         </Dialog.Header>
       ),

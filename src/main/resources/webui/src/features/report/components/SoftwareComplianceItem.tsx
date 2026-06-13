@@ -1,4 +1,4 @@
-import { Chart } from "@/components"
+import { Chart, DeviceGroupBadge } from "@/components"
 import { useAlertDialog } from "@/dialog"
 import { GroupSoftwareComplianceStat } from "@/types"
 import {
@@ -10,7 +10,6 @@ import {
   Separator,
   Spacer,
   Stack,
-  Tag,
   Text,
   useToken,
 } from "@chakra-ui/react"
@@ -81,9 +80,7 @@ export default function SoftwareComplianceItem(props: SoftwareComplianceItemProp
             {t("compliance.software.label")}
           </Heading>
 
-          <Tag.Root colorScheme="grey">
-            <Tag.Label>{item.groupName}</Tag.Label>
-          </Tag.Root>
+          <DeviceGroupBadge id={item.groupId} name={item.groupName} />
           <Dialog.CloseTrigger />
         </Dialog.Header>
       ),

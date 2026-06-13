@@ -8,18 +8,18 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<polyglot.version>24.1.2</polyglot.version>
-		<hibernate.version>6.6.40.Final</hibernate.version>
-		<c3p0.version>0.9.5.5</c3p0.version>
-		<undertow.version>2.3.22.Final</undertow.version>
-		<jackson.version>2.19.4</jackson.version>
-		<jersey.version>3.1.11</jersey.version>
-		<swagger.version>2.2.41</swagger.version>
-		<slf4j.version>2.0.17</slf4j.version>
-		<lombok.version>1.18.42</lombok.version>
-		<sshd.version>2.17.1</sshd.version>
-		<netty.version>4.2.10.Final</netty.version>
-		<checkstyle.version>11.0.0</checkstyle.version>
-		<bouncycastle.version>1.83</bouncycastle.version>
+		<hibernate.version>6.6.53.Final</hibernate.version>
+		<c3p0.version>0.14.1</c3p0.version>
+		<undertow.version>2.3.24.Final</undertow.version>
+		<jackson.version>2.22.0</jackson.version>
+		<jersey.version>4.0.2</jersey.version>
+		<swagger.version>2.2.51</swagger.version>
+		<slf4j.version>2.0.18</slf4j.version>
+		<lombok.version>1.18.46</lombok.version>
+		<sshd.version>2.18.0</sshd.version>
+		<netty.version>4.2.15.Final</netty.version>
+		<checkstyle.version>13.5.0</checkstyle.version>
+		<bouncycastle.version>1.84</bouncycastle.version>
 	</properties>
 	<build>
 		<finalName>netshot</finalName>
@@ -208,7 +208,7 @@
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
-			<version>8.4.0</version>
+			<version>9.7.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -218,17 +218,17 @@
 		<dependency>
 			<groupId>commons-net</groupId>
 			<artifactId>commons-net</artifactId>
-			<version>3.12.0</version>
+			<version>3.13.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.snmp4j</groupId>
 			<artifactId>snmp4j</artifactId>
-			<version>3.9.6</version>
+			<version>3.11.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.java-diff-utils</groupId>
 			<artifactId>java-diff-utils</artifactId>
-			<version>4.16</version>
+			<version>4.17</version>
 		</dependency>
 		<dependency>
 			<groupId>org.quartz-scheduler</groupId>
@@ -350,7 +350,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>
-			<version>${jackson.version}</version>
+			<version>2.22</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.module</groupId>
@@ -375,7 +375,7 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>1.5.23</version>
+			<version>1.5.34</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>slf4j-api</artifactId>
@@ -386,7 +386,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>42.7.8</version>
+			<version>42.7.11</version>
 		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
@@ -411,7 +411,7 @@
 		<dependency>
 			<groupId>org.liquibase</groupId>
 			<artifactId>liquibase-core</artifactId>
-			<version>4.33.0</version>
+			<version>5.0.3</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.apache.commons</groupId>
@@ -465,13 +465,13 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-engine</artifactId>
-			<version>5.14.1</version>
+			<version>6.1.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.platform</groupId>
 			<artifactId>junit-platform-runner</artifactId>
-			<version>1.14.1</version>
+			<version>1.14.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -494,7 +494,7 @@
 			<groupId>com.nimbusds</groupId>
 			<artifactId>oauth2-oidc-sdk</artifactId>
 			<classifier>jdk11</classifier>
-			<version>11.30.2</version>
+			<version>11.37.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.sshd</groupId>

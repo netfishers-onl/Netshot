@@ -1,5 +1,4 @@
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react"
-import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { usePoliciesWithSearch } from "../../api"
 import { useSidebar } from "../../contexts/SidebarProvider"
@@ -9,18 +8,11 @@ export default function SidebarSearchList() {
   const ctx = useSidebar()
   const { t } = useTranslation()
 
-  const { data: policies, isPending, isSuccess } = usePoliciesWithSearch(ctx.query)
-
-  useEffect(() => {
-    if (isSuccess) {
-      ctx.setTotal(policies?.length)
-      ctx.setData(policies)
-    }
-  }, [policies, isSuccess])
+  const { data: policies, isPending } = usePoliciesWithSearch(ctx.query)
 
   if (isPending) {
     return (
-      <Stack alignItems="center" justifyContent="center" py="6">
+      <Stack alignItems="center" justifyContent="center" py="6" flex="1">
         <Spinner />
       </Stack>
     )
@@ -35,9 +27,9 @@ export default function SidebarSearchList() {
   }
 
   return (
-    <Stack px="6" gap="3" overflow="auto">
+    <Stack px="6" gap="3" overflow="auto" flex="1">
       {policies?.map((policy) => (
-        <PolicyItem key={policy?.id} policy={policy} />
+        <PolicyItem key={policy?.id} policy={policy} forceExpand />
       ))}
     </Stack>
   )

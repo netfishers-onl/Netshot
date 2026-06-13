@@ -1,5 +1,6 @@
 import { Policy } from "@/types"
-import { Icon, Stack, Text } from "@chakra-ui/react"
+import { Icon, Stack, Status, Text } from "@chakra-ui/react"
+import { Tooltip } from "@/components/ui/tooltip"
 import { LuFolder, LuFolderOpen } from "react-icons/lu"
 import { motion, useAnimationControls } from "framer-motion"
 import { useCallback, useMemo, useState } from "react"
@@ -8,17 +9,20 @@ import RuleItem from "./RuleItem"
 
 export type PolicyItemProps = {
   policy: Policy
+  forceExpand?: boolean
 }
 
 export default function PolicyItem(props: PolicyItemProps) {
-  const { policy } = props
+  const { policy, forceExpand } = props
   const { policyId, ruleId } = useParams()
   const navigate = useNavigate()
   const controls = useAnimationControls()
   const hasRules = useMemo(() => policy.rules?.length > 0, [policy])
+  const isAssigned = useMemo(() => policy.targetGroups?.length > 0, [policy])
   const isActive = useMemo(() => !!policyId && +policyId === policy.id, [policyId, policy])
   const isPolicySelected = useMemo(() => isActive && !ruleId, [isActive, ruleId])
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(!isActive || !hasRules)
+  const startExpanded = (isActive || !!forceExpand) && hasRules
+  const [isCollapsed, setIsCollapsed] = useState<boolean>(!startExpanded)
 
   const handleClick = useCallback(async () => {
     navigate(`./config/${policy.id}`)
@@ -45,15 +49,22 @@ export default function PolicyItem(props: PolicyItemProps) {
         cursor="pointer"
         px="3"
       >
-        <Stack direction="row" gap="3" alignItems="center" title={policy?.name}>
-          <Icon color="green.600" size="md">
+        <Stack direction="row" gap="3" alignItems="center" title={policy?.name} overflow="hidden">
+          <Icon color="green.600" size="md" flexShrink="0">
             {isCollapsed ? <LuFolder /> : <LuFolderOpen />}
           </Icon>
           <Text lineClamp={1}>{policy?.name}</Text>
         </Stack>
+        {isAssigned && (
+          <Tooltip content={policy.targetGroups.map((g) => g.name).join(", ")}>
+            <Status.Root size="sm" colorPalette="green">
+              <Status.Indicator />
+            </Status.Root>
+          </Tooltip>
+        )}
       </Stack>
       <motion.div
-        initial={isActive && hasRules ? "show" : "hidden"}
+        initial={startExpanded ? "show" : "hidden"}
         animate={controls}
         variants={{
           hidden: { opacity: 0, height: 0, pointerEvents: "none" },

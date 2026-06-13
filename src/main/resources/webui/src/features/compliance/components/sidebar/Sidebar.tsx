@@ -15,7 +15,7 @@ export default function Sidebar() {
 
   return (
     <SidebarProvider>
-      <Stack w="300px" overflow="auto" gap="0">
+      <Stack w="300px" overflow="hidden" gap="0">
         <SidebarContext.Consumer>
           {({ query }) => (
             <>

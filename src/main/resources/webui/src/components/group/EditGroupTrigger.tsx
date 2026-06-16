@@ -13,5 +13,6 @@ export default function EditGroupTrigger({ group, children, ...rest }: EditGroup
     dialog.open(<EditGroupDialog group={group} />)
   }
 
-  return React.cloneElement(children, { onClick: open, onSelect: open, ...rest })
+  const isMenuItem = "value" in children.props
+  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
 }

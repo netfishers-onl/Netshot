@@ -17,5 +17,8 @@ export default function AddRuleTrigger({ policy, children, ...rest }: AddRuleTri
     })
   }
 
-  return React.cloneElement(children, { onClick: open, onSelect: open, ...rest })
+  // Menu.Item already triggers `onClick` internally to fire `onSelect`, so binding
+  // both to the same handler would call it twice; pick the one the child understands.
+  const isMenuItem = "value" in children.props
+  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
 }

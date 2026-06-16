@@ -139,5 +139,6 @@ export default function EditDiagnosticTrigger(props: EditDiagnosticTriggerProps)
     })
   }
 
-  return React.cloneElement(children, { onClick: open, ...rest })
+  const isMenuItem = "value" in children.props
+  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
 }

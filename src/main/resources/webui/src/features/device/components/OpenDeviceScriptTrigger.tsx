@@ -21,5 +21,6 @@ export default function OpenDeviceScriptTrigger({ devices, children, ...rest }: 
     })
   }
 
-  return React.cloneElement(children, { onClick: open, onSelect: open, ...rest })
+  const isMenuItem = "value" in children.props
+  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
 }

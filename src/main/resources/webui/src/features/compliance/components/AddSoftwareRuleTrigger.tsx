@@ -81,5 +81,6 @@ export default function AddSoftwareRuleTrigger({ children, ...rest }: AddSoftwar
     })
   }
 
-  return React.cloneElement(children, { onClick: open, onSelect: open, ...rest })
+  const isMenuItem = "value" in children.props
+  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
 }

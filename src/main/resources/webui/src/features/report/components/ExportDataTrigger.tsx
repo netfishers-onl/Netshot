@@ -217,5 +217,6 @@ export default function ExportDataTrigger({ children, ...rest }: ExportDataTrigg
     })
   }
 
-  return React.cloneElement(children, { onClick: open, onSelect: open, ...rest })
+  const isMenuItem = "value" in children.props
+  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
 }

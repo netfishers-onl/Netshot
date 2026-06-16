@@ -43,6 +43,7 @@ export default function RemoveRuleTrigger({ policyId, rule, children, ...rest }:
       async onConfirm() {
         await mutation.mutateAsync()
         queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.POLICY_LIST] })
+        queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.POLICY_SEARCH_LIST] })
         queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_RULE_LIST, policyId] })
         navigate("/app/compliance")
         dialogRef.close()
@@ -56,5 +57,8 @@ export default function RemoveRuleTrigger({ policyId, rule, children, ...rest }:
     })
   }
 
-  return React.cloneElement(children, { onClick: open, onSelect: open, ...rest })
+  // Menu.Item already triggers `onClick` internally to fire `onSelect`, so binding
+  // both to the same handler would call it twice; pick the one the child understands.
+  const isMenuItem = "value" in children.props
+  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
 }

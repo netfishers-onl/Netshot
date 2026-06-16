@@ -87,5 +87,6 @@ export default function EditHardwareRuleTrigger({ rule, children, ...rest }: Edi
     })
   }
 
-  return React.cloneElement(children, { onClick: open, onSelect: open, ...rest })
+  const isMenuItem = "value" in children.props
+  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
 }

@@ -1,6 +1,6 @@
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { MUTATIONS } from "@/constants"
+import { MUTATIONS, QUERIES as GLOBAL_QUERIES } from "@/constants"
 import { useConfirmDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { Rule } from "@/types"
@@ -40,6 +40,8 @@ export default function EnableRuleTrigger({ policyId, rule, children, ...rest }:
         await mutation.mutateAsync()
         queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_RULE_LIST, policyId] })
         queryClient.invalidateQueries({ queryKey: [QUERIES.RULE_DETAIL, +policyId, rule.id] })
+        queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.POLICY_LIST] })
+        queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.POLICY_SEARCH_LIST] })
 
         dialogRef.close()
 
@@ -56,5 +58,8 @@ export default function EnableRuleTrigger({ policyId, rule, children, ...rest }:
     })
   }
 
-  return React.cloneElement(children, { onClick: open, onSelect: open, ...rest })
+  // Menu.Item already triggers `onClick` internally to fire `onSelect`, so binding
+  // both to the same handler would call it twice; pick the one the child understands.
+  const isMenuItem = "value" in children.props
+  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
 }

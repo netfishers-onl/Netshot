@@ -52,6 +52,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
     mutationFn: api.rule.create,
     onSuccess(rule) {
       queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.POLICY_LIST] })
+      queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.POLICY_SEARCH_LIST] })
       queryClient.invalidateQueries({ queryKey: [QUERIES.RULE_DETAIL, policy.id] })
 
       form.reset()

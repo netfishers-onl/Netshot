@@ -113,7 +113,7 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
   // can drive isValid in both directions. clearErrors() alone does not update isValid.
   useEffect(() => {
     form.register("field", { required: true })
-    return () => form.unregister("field")
+    return () => form.unregister("field", { keepValue: true })
   }, [])
 
   // Trigger full validation once after initialization so isValid reflects reality.

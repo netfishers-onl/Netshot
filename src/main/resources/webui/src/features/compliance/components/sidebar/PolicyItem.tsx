@@ -3,7 +3,7 @@ import { Icon, Stack, Status, Text } from "@chakra-ui/react"
 import { Tooltip } from "@/components/ui/tooltip"
 import { LuFolder, LuFolderOpen } from "react-icons/lu"
 import { motion, useAnimationControls } from "framer-motion"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router"
 import RuleItem from "./RuleItem"
 
@@ -21,8 +21,23 @@ export default function PolicyItem(props: PolicyItemProps) {
   const isAssigned = useMemo(() => policy.targetGroups?.length > 0, [policy])
   const isActive = useMemo(() => !!policyId && +policyId === policy.id, [policyId, policy])
   const isPolicySelected = useMemo(() => isActive && !ruleId, [isActive, ruleId])
+  const isRuleSelected = useMemo(() => isActive && !!ruleId, [isActive, ruleId])
   const startExpanded = (isActive || !!forceExpand) && hasRules
   const [isCollapsed, setIsCollapsed] = useState<boolean>(!startExpanded)
+
+  useEffect(() => {
+    if (isRuleSelected && hasRules) {
+      setIsCollapsed(false)
+      controls.start("show")
+    }
+  }, [isRuleSelected, hasRules, controls])
+
+  useEffect(() => {
+    if (!hasRules) {
+      setIsCollapsed(true)
+      controls.start("hidden")
+    }
+  }, [hasRules, controls])
 
   const handleClick = useCallback(async () => {
     navigate(`./config/${policy.id}`)

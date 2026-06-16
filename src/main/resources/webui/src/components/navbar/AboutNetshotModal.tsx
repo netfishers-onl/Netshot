@@ -1,12 +1,11 @@
 import { Alert, Button, ButtonGroup, List, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { MouseEvent, useMemo } from "react"
+import React, { MouseEvent, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
 import api from "@/api"
 import { NETSHOT_APP_LIBRARIES, QUERIES } from "@/constants"
 import { useAlertDialog } from "@/dialog"
-import { PropsWithRenderItem } from "@/types"
 
 import { LuAtSign, LuGithub, LuHouse } from "react-icons/lu"
 
@@ -86,10 +85,9 @@ function AboutContent() {
   )
 }
 
-type AboutModalProps = PropsWithRenderItem<object>
+export type AboutNetshotModalProps = { children: React.ReactElement<any> } & Record<string, unknown>
 
-export function AboutNetshotModal(props: AboutModalProps) {
-  const { renderItem } = props
+export function AboutNetshotModal({ children, ...rest }: AboutNetshotModalProps) {
   const { t } = useTranslation()
   const dialog = useAlertDialog()
 
@@ -103,5 +101,5 @@ export function AboutNetshotModal(props: AboutModalProps) {
     })
   }
 
-  return renderItem(open)
+  return React.cloneElement(children, { onClick: open, onSelect: open, ...rest })
 }

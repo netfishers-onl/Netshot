@@ -4,10 +4,10 @@ import { Select } from "@/components/Select"
 import { useDeviceTypeOptions } from "@/hooks"
 import { DiagnosticType } from "@/types"
 import { Stack, StackProps, Text } from "@chakra-ui/react"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { useCliModeOptions, useResultTypeOptions } from "../hooks"
+import { useResultTypeOptions } from "../hooks"
 import { Form } from "../types"
 
 export type EditDiagnosticFormProps = {
@@ -19,7 +19,6 @@ export function EditDiagnosticForm(props: EditDiagnosticFormProps) {
   const form = useFormContext<Form>()
   const { t } = useTranslation()
   const resultTypeOptions = useResultTypeOptions()
-  const cliModeOptions = useCliModeOptions()
   const { isPending, options } = useDeviceTypeOptions()
 
   const hasScript = useMemo(
@@ -31,6 +30,28 @@ export function EditDiagnosticForm(props: EditDiagnosticFormProps) {
     control: form.control,
     name: "targetGroup",
   })
+
+  const deviceDriver = useWatch({
+    control: form.control,
+    name: "deviceDriver",
+  })
+
+  const cliModeOptions = useMemo(() => {
+    const selected = options.find((opt) => opt.value?.name === deviceDriver)
+    const modes = selected?.value?.cliMainModes ?? []
+    return modes.map((mode) => ({ label: mode, value: mode }))
+  }, [options, deviceDriver])
+
+  const cliMode = useWatch({
+    control: form.control,
+    name: "cliMode",
+  })
+
+  useEffect(() => {
+    if (cliMode && cliModeOptions.length > 0 && !cliModeOptions.some((opt) => opt.value === cliMode)) {
+      form.setValue("cliMode", "")
+    }
+  }, [cliModeOptions, cliMode, form])
 
   return (
     <Stack gap="6" p="3" {...other}>
@@ -61,6 +82,7 @@ export function EditDiagnosticForm(props: EditDiagnosticFormProps) {
       {!hasScript && (
         <>
           <Select
+            required
             label={t("device.type")}
             placeholder={t("device.selectType")}
             control={form.control}
@@ -73,7 +95,7 @@ export function EditDiagnosticForm(props: EditDiagnosticFormProps) {
           />
           <Select
             required
-            options={cliModeOptions.options}
+            options={cliModeOptions}
             control={form.control}
             name="cliMode"
             label={t("network.cliMode")}
@@ -81,18 +103,21 @@ export function EditDiagnosticForm(props: EditDiagnosticFormProps) {
           />
           <FormControl
             required
+            mono
             label={t("network.cliCommand")}
             placeholder={t("common.eG", { example: "show version | include reason" })}
             control={form.control}
             name="command"
           />
           <FormControl
+            mono
             label={t("policy.rule.regexPattern")}
             placeholder={t("common.eG", { example: "(?s).*Last reload: (.+?)[\\r\\n]+.*" })}
             control={form.control}
             name="modifierPattern"
           />
           <FormControl
+            mono
             label={t("policy.rule.replaceWith")}
             placeholder={t("common.eG", { example: "$1" })}
             control={form.control}

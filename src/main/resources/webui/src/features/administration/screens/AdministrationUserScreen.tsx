@@ -21,9 +21,9 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
 import { LuCloud, LuDatabase, LuSquarePen, LuPlus, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import AddUserButton from "../components/AddUserButton"
-import EditUserButton from "../components/EditUserButton"
-import RemoveUserButton from "../components/RemoveUserButton"
+import AddUserTrigger from "../components/AddUserTrigger"
+import EditUserTrigger from "../components/EditUserTrigger"
+import RemoveUserTrigger from "../components/RemoveUserTrigger"
 import { QUERIES } from "../constants"
 import TableButtonStack from "../components/TableButtonStack"
 
@@ -90,34 +90,20 @@ export default function AdministrationUserScreen() {
 
           return (
             <TableButtonStack>
-              <EditUserButton
-                user={user}
-                renderItem={(open) => (
-                  <Tooltip content={t("common.edit")}>
-                    <IconButton
-                      aria-label={t("user.edit")}
-                      variant="frame"
-                      onClick={open}
-                    >
-                      <LuSquarePen />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              />
-              <RemoveUserButton
-                user={user}
-                renderItem={(open) => (
-                  <Tooltip content={t("common.remove")}>
-                    <IconButton
-                      aria-label={t("user.remove")}
-                      variant="frame"
-                      onClick={open}
-                    >
-                      <LuTrash />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              />
+              <Tooltip content={t("common.edit")}>
+                <EditUserTrigger user={user}>
+                  <IconButton aria-label={t("user.edit")} variant="frame">
+                    <LuSquarePen />
+                  </IconButton>
+                </EditUserTrigger>
+              </Tooltip>
+              <Tooltip content={t("common.remove")}>
+                <RemoveUserTrigger user={user}>
+                  <IconButton aria-label={t("user.remove")} variant="frame">
+                    <LuTrash />
+                  </IconButton>
+                </RemoveUserTrigger>
+              </Tooltip>
             </TableButtonStack>
           )
         },
@@ -145,14 +131,12 @@ export default function AdministrationUserScreen() {
             w="30%"
           />
           <Spacer />
-          <AddUserButton
-            renderItem={(open) => (
-              <Button variant="primary" onClick={open}>
-                <LuPlus />
-                {t("common.create")}
-              </Button>
-            )}
-          />
+          <AddUserTrigger>
+            <Button variant="primary">
+              <LuPlus />
+              {t("common.create")}
+            </Button>
+          </AddUserTrigger>
         </Stack>
         {isPending ? (
           <Stack gap="3">
@@ -170,14 +154,12 @@ export default function AdministrationUserScreen() {
                 title={t("user.none")}
                 description={t("user.canCreate")}
               >
-                <AddUserButton
-                  renderItem={(open) => (
-                    <Button variant="outline" onClick={open}>
-                      <LuPlus />
-                      {t("common.create")}
-                    </Button>
-                  )}
-                />
+                <AddUserTrigger>
+                  <Button variant="outline">
+                    <LuPlus />
+                    {t("common.create")}
+                  </Button>
+                </AddUserTrigger>
               </EmptyResult>
             )}
           </>

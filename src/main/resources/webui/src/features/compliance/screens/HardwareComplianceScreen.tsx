@@ -11,9 +11,9 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
 import { LuSquarePen, LuPlus, LuTrash, LuAsterisk, LuMoveRight } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import AddHardwareRuleButton from "../components/AddHardwareRuleButton"
-import EditHardwareRuleButton from "../components/EditHardwareRuleButton"
-import RemoveHardwareRuleButton from "../components/RemoveHardwareRuleButton"
+import AddHardwareRuleTrigger from "../components/AddHardwareRuleTrigger"
+import EditHardwareRuleTrigger from "../components/EditHardwareRuleTrigger"
+import RemoveHardwareRuleTrigger from "../components/RemoveHardwareRuleTrigger"
 import { QUERIES } from "../constants"
 import TableButtonStack from "@/features/administration/components/TableButtonStack"
 
@@ -132,34 +132,20 @@ export default function HardwareComplianceScreen() {
           return (
             <Protected minLevel={Level.ReadWrite}>
               <TableButtonStack>
-                <EditHardwareRuleButton
-                  rule={rule}
-                  renderItem={(open) => (
-                    <Tooltip content={t("common.edit")}>
-                      <IconButton
-                        variant="frame"
-                        aria-label={t("policy.rule.editThe")}
-                        onClick={open}
-                      >
-                        <LuSquarePen />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                />
-                <RemoveHardwareRuleButton
-                  rule={rule}
-                  renderItem={(open) => (
-                    <Tooltip content={t("common.remove")}>
-                      <IconButton
-                        variant="frame"
-                        aria-label={t("policy.rule.removeThe")}
-                        onClick={open}
-                      >
-                        <LuTrash />
-                      </IconButton>
-                    </Tooltip>
-                  )}
-                />
+                <Tooltip content={t("common.edit")}>
+                  <EditHardwareRuleTrigger rule={rule}>
+                    <IconButton variant="frame" aria-label={t("policy.rule.editThe")}>
+                      <LuSquarePen />
+                    </IconButton>
+                  </EditHardwareRuleTrigger>
+                </Tooltip>
+                <Tooltip content={t("common.remove")}>
+                  <RemoveHardwareRuleTrigger rule={rule}>
+                    <IconButton variant="frame" aria-label={t("policy.rule.removeThe")}>
+                      <LuTrash />
+                    </IconButton>
+                  </RemoveHardwareRuleTrigger>
+                </Tooltip>
               </TableButtonStack>
             </Protected>
           )
@@ -193,14 +179,12 @@ export default function HardwareComplianceScreen() {
         <Spacer />
         <Protected minLevel={Level.ReadWrite}>
           <Skeleton loading={!!isPending}>
-            <AddHardwareRuleButton
-              renderItem={(open) => (
-                <Button onClick={open} variant="primary">
-                  <LuPlus />
-                  {t("policy.rule.add")}
-                </Button>
-              )}
-            />
+            <AddHardwareRuleTrigger>
+              <Button variant="primary">
+                <LuPlus />
+                {t("policy.rule.add")}
+              </Button>
+            </AddHardwareRuleTrigger>
           </Skeleton>
         </Protected>
       </Stack>
@@ -220,14 +204,12 @@ export default function HardwareComplianceScreen() {
               title={t("compliance.hardware.noRule")}
               description={t("compliance.hardware.canAddRule")}
             >
-              <AddHardwareRuleButton
-                renderItem={(open) => (
-                  <Button onClick={open} variant="outline">
-                    <LuPlus />
-                    {t("policy.rule.add")}
-                  </Button>
-                )}
-              />
+              <AddHardwareRuleTrigger>
+                <Button variant="outline">
+                  <LuPlus />
+                  {t("policy.rule.add")}
+                </Button>
+              </AddHardwareRuleTrigger>
             </EmptyResult>
           )}
         </>

@@ -2,9 +2,8 @@ import { DomainSelect, PolicySelect, TreeGroupSelector } from "@/components"
 import { LuFilter } from "react-icons/lu"
 import Search from "@/components/Search"
 import { useFormDialog } from "@/dialog"
-import { PropsWithRenderItem } from "@/types"
 import { IconButton, Stack } from "@chakra-ui/react"
-import { useCallback } from "react"
+import React, { useCallback } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useShallow } from "zustand/react/shallow"
@@ -40,13 +39,9 @@ function ConfigurationComplianceSidebarSearchFilterForm() {
   )
 }
 
-type ConfigurationComplianceSidebarSearchFilterProps = PropsWithRenderItem
+type ConfigurationComplianceSidebarSearchFilterProps = { children: React.ReactElement<any> } & Record<string, unknown>
 
-function ConfigurationComplianceSidebarSearchFilter(
-  props: ConfigurationComplianceSidebarSearchFilterProps
-) {
-  const { renderItem } = props
-
+function ConfigurationComplianceSidebarSearchFilter({ children, ...rest }: ConfigurationComplianceSidebarSearchFilterProps) {
   const { t } = useTranslation()
   const { domains, groups, policies, setFilters } = useConfigurationComplianceSidebarStore(
     useShallow((state) => ({
@@ -90,7 +85,7 @@ function ConfigurationComplianceSidebarSearchFilter(
     })
   }
 
-  return renderItem(open)
+  return React.cloneElement(children, { onClick: open, onSelect: open, ...rest })
 }
 
 export default function ConfigurationComplianceSidebarSearch() {
@@ -118,13 +113,11 @@ export default function ConfigurationComplianceSidebarSearch() {
         onQuery={onQuery}
         onClear={onClear}
       >
-        <ConfigurationComplianceSidebarSearchFilter
-          renderItem={(open) => (
-            <IconButton onClick={open} variant="ghost" aria-label={t("common.openFilter")}>
-              <LuFilter />
-            </IconButton>
-          )}
-        />
+        <ConfigurationComplianceSidebarSearchFilter>
+          <IconButton variant="ghost" aria-label={t("common.openFilter")}>
+            <LuFilter />
+          </IconButton>
+        </ConfigurationComplianceSidebarSearchFilter>
       </Search>
     </Stack>
   )

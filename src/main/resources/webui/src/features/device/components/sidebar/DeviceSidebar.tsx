@@ -4,8 +4,8 @@ import { Level } from "@/types"
 import { Button, Menu, Portal, Separator, Stack } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
 import { useDeviceSidebarStore } from "../../stores"
-import CreateDeviceButton from "../CreateDeviceButton"
-import DeviceScanSubnetButton from "../DeviceScanSubnetButton"
+import CreateDeviceTrigger from "../CreateDeviceTrigger"
+import DeviceScanSubnetTrigger from "../DeviceScanSubnetTrigger"
 import DeviceSidebarGroup from "./DeviceSidebarGroup"
 import DeviceSidebarList from "./DeviceSidebarList"
 import DeviceSidebarListToolbar from "./DeviceSidebarListToolbar"
@@ -44,22 +44,18 @@ export default function DeviceSidebar() {
             <Portal>
               <Menu.Positioner>
                 <Menu.Content>
-                  <CreateDeviceButton
-                    renderItem={(open) => (
-                      <Menu.Item onSelect={open} value="add-simple-device">
-                        <LuPlus />
-                        {t("device.addSimple")}
-                      </Menu.Item>
-                    )}
-                  />
-                  <DeviceScanSubnetButton
-                    renderItem={(open) => (
-                      <Menu.Item onSelect={open} value="scan-subnets-for-device">
-                        <LuCrosshair />
-                        {t("task.scanSubnets")}
-                      </Menu.Item>
-                    )}
-                  />
+                  <CreateDeviceTrigger>
+                    <Menu.Item value="add-simple-device">
+                      <LuPlus />
+                      {t("device.addSimple")}
+                    </Menu.Item>
+                  </CreateDeviceTrigger>
+                  <DeviceScanSubnetTrigger>
+                    <Menu.Item value="scan-subnets-for-device">
+                      <LuCrosshair />
+                      {t("task.scanSubnets")}
+                    </Menu.Item>
+                  </DeviceScanSubnetTrigger>
                 </Menu.Content>
               </Menu.Positioner>
             </Portal>

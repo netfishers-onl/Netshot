@@ -2,7 +2,7 @@ import { Sidebar as SidebarLayout, SidebarLink } from "@/components";
 import { LuDownload } from "react-icons/lu";
 import { Steps, Button, Stack, Separator } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import ExportDataButton from "./ExportDataButton";
+import ExportDataTrigger from "./ExportDataTrigger";
 
 export default function Sidebar() {
   const { t } = useTranslation();
@@ -38,11 +38,9 @@ export default function Sidebar() {
       </Stack>
       <Separator />
       <Stack py="4" px="5">
-        <ExportDataButton
-          renderItem={(open) => (
-            <Button onClick={open}><LuDownload />{t("common.exportData")}</Button>
-          )}
-        />
+        <ExportDataTrigger>
+          <Button><LuDownload />{t("common.exportData")}</Button>
+        </ExportDataTrigger>
       </Stack>
     </SidebarLayout>
   );

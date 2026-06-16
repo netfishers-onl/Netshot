@@ -13,7 +13,7 @@ import { useLanguageOptions, useUserLevelOptions } from "@/hooks"
 import { Icon } from "@chakra-ui/react"
 import { LuChevronDown, LuCloud, LuCircleHelp, LuInfo, LuLogOut, LuSettings } from "react-icons/lu"
 import { AboutNetshotModal } from "./AboutNetshotModal"
-import UserSettingButton from "./UserSettingButton"
+import UserSettingTrigger from "./UserSettingTrigger"
 
 export default function NavbarUser() {
   const { user } = useAuth()
@@ -102,14 +102,12 @@ export default function NavbarUser() {
       <Portal>
         <Menu.Positioner>
           <Menu.Content>
-            <UserSettingButton
-              renderItem={(open) => (
-                <Menu.Item onSelect={open} value="account">
-                  <LuSettings />
-                  {t("common.account")}
-                </Menu.Item>
-              )}
-            />
+            <UserSettingTrigger>
+              <Menu.Item value="account">
+                <LuSettings />
+                {t("common.account")}
+              </Menu.Item>
+            </UserSettingTrigger>
             <Menu.Separator />
             <Menu.ItemGroup>
               <Menu.ItemGroupLabel>{t("common.language")}</Menu.ItemGroupLabel>
@@ -147,14 +145,12 @@ export default function NavbarUser() {
                 {t("api.documentation")}
               </a>
             </Menu.Item>
-            <AboutNetshotModal
-              renderItem={(open) => (
-                <Menu.Item onSelect={open} value="about">
-                  <LuInfo />
-                  {t("about.label")}
-                </Menu.Item>
-              )}
-            />
+            <AboutNetshotModal>
+              <Menu.Item value="about">
+                <LuInfo />
+                {t("about.label")}
+              </Menu.Item>
+            </AboutNetshotModal>
             <Menu.Separator />
             <Menu.Item onSelect={logout} value="logout">
               <LuLogOut />

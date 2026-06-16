@@ -3,7 +3,7 @@ import { LuPlus } from "react-icons/lu";
 import { Level } from "@/types";
 import { Steps, Button, Stack, Separator } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
-import AddTaskButton from "./AddTaskButton";
+import AddTaskTrigger from "./AddTaskTrigger";
 
 export default function TaskSidebar() {
   const { t } = useTranslation();
@@ -45,11 +45,9 @@ export default function TaskSidebar() {
       <Protected minLevel={Level.Operator}>
         <Separator />
         <Stack py="4" px="5">
-          <AddTaskButton
-            renderItem={(open) => (
-              <Button onClick={open}><LuPlus />{t("task.add")}</Button>
-            )}
-          />
+          <AddTaskTrigger>
+            <Button><LuPlus />{t("task.add")}</Button>
+          </AddTaskTrigger>
         </Stack>
       </Protected>
     </Stack>

@@ -2,8 +2,10 @@ import {
   Box,
   Button,
   Flex,
+  Group,
   Heading,
   Icon,
+  IconButton,
   Menu,
   Portal,
   Skeleton,
@@ -18,9 +20,9 @@ import { SiJavascript, SiPython } from "react-icons/si"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router"
 import { RuleType } from "@/types"
-import AddRuleButton from "../components/AddRuleButton"
-import EditPolicyButton from "../components/EditPolicyButton"
-import RemovePolicyButton from "../components/RemovePolicyButton"
+import AddRuleTrigger from "../components/AddRuleTrigger"
+import EditPolicyTrigger from "../components/EditPolicyTrigger"
+import RemovePolicyTrigger from "../components/RemovePolicyTrigger"
 import { usePolicies } from "../api"
 import { DeviceGroupBadge } from "@/components"
 
@@ -52,65 +54,52 @@ export default function ConfigurationCompliancePolicyScreen() {
         </Skeleton>
 
         <Spacer />
-        <Stack direction="row" gap="3">
-          <Skeleton loading={isPending}>
-            {policy && (
-              <EditPolicyButton
-                policy={policy}
-                renderItem={(open) => (
-                  <Button variant="primary" onClick={open}>
+        <Skeleton loading={isPending}>
+          <Menu.Root positioning={{ placement: "bottom-end" }}>
+            <Group attached>
+              {policy && (
+                <EditPolicyTrigger policy={policy}>
+                  <Button variant="primary">
                     <LuPencil />
                     {t("common.edit")}
                   </Button>
-                )}
-              />
-            )}
-          </Skeleton>
-
-          <Menu.Root>
-            <Skeleton loading={isPending}>
+                </EditPolicyTrigger>
+              )}
               <Menu.Trigger asChild>
-                <Button>
-                  {t("common.actions")}
+                <IconButton variant="primary">
                   <LuChevronDown />
-                </Button>
+                </IconButton>
               </Menu.Trigger>
-            </Skeleton>
+            </Group>
+
             <Portal>
               <Menu.Positioner>
                 <Menu.Content>
                   {policy && (
                     <>
-                      <AddRuleButton
-                        policy={policy}
-                        renderItem={(open) => (
-                          <Menu.Item onSelect={open} value="add-rule">
-                            <LuPlus />
-                            {t("policy.rule.add")}
-                          </Menu.Item>
-                        )}
-                      />
-                      <RemovePolicyButton
-                        policy={policy}
-                        renderItem={(open) => (
-                          <Menu.Item
-                            onSelect={open}
-                            value="remove"
-                            color="fg.error"
-                            _hover={{ bg: "bg.error", color: "fg.error" }}
-                          >
-                            <LuTrash />
-                            {t("common.remove")}
-                          </Menu.Item>
-                        )}
-                      />
+                      <AddRuleTrigger policy={policy}>
+                        <Menu.Item value="add-rule">
+                          <LuPlus />
+                          {t("policy.rule.add")}
+                        </Menu.Item>
+                      </AddRuleTrigger>
+                      <RemovePolicyTrigger policy={policy}>
+                        <Menu.Item
+                          value="remove"
+                          color="fg.error"
+                          _hover={{ bg: "bg.error", color: "fg.error" }}
+                        >
+                          <LuTrash />
+                          {t("common.remove")}
+                        </Menu.Item>
+                      </RemovePolicyTrigger>
                     </>
                   )}
                 </Menu.Content>
               </Menu.Positioner>
             </Portal>
           </Menu.Root>
-        </Stack>
+        </Skeleton>
       </Flex>
 
       <Stack gap="3">
@@ -165,15 +154,12 @@ export default function ConfigurationCompliancePolicyScreen() {
           </Flex>
         ))}
         {policy && (
-          <AddRuleButton
-            policy={policy}
-            renderItem={(open) => (
-              <Button variant="outline" alignSelf="flex-start" onClick={open}>
-                <LuPlus />
-                {t("policy.rule.add")}
-              </Button>
-            )}
-          />
+          <AddRuleTrigger policy={policy}>
+            <Button variant="outline" alignSelf="flex-start">
+              <LuPlus />
+              {t("policy.rule.add")}
+            </Button>
+          </AddRuleTrigger>
         )}
       </Stack>
     </Stack>

@@ -19,9 +19,9 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
 import { LuSquarePen, LuPlus, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import AddWebhookButton from "../components/AddWebhookButton"
-import EditWebhookButton from "../components/EditWebhookButton"
-import RemoveWebhookButton from "../components/RemoveWebhookButton"
+import AddWebhookTrigger from "../components/AddWebhookTrigger"
+import EditWebhookTrigger from "../components/EditWebhookTrigger"
+import RemoveWebhookTrigger from "../components/RemoveWebhookTrigger"
 import { QUERIES } from "../constants"
 import TableButtonStack from "../components/TableButtonStack"
 
@@ -79,34 +79,20 @@ export default function AdministrationApiTokenScreen() {
 
           return (
             <TableButtonStack>
-              <EditWebhookButton
-                webhook={webhook}
-                renderItem={(open) => (
-                  <Tooltip content={t("common.edit")}>
-                    <IconButton
-                      aria-label={t("webhook.edit")}
-                      variant="frame"
-                      onClick={open}
-                    >
-                      <LuSquarePen />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              />
-              <RemoveWebhookButton
-                webhook={webhook}
-                renderItem={(open) => (
-                  <Tooltip content={t("common.remove")}>
-                    <IconButton
-                      aria-label={t("webhook.remove")}
-                      variant="frame"
-                      onClick={open}
-                    >
-                      <LuTrash />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              />
+              <Tooltip content={t("common.edit")}>
+                <EditWebhookTrigger webhook={webhook}>
+                  <IconButton aria-label={t("webhook.edit")} variant="frame">
+                    <LuSquarePen />
+                  </IconButton>
+                </EditWebhookTrigger>
+              </Tooltip>
+              <Tooltip content={t("common.remove")}>
+                <RemoveWebhookTrigger webhook={webhook}>
+                  <IconButton aria-label={t("webhook.remove")} variant="frame">
+                    <LuTrash />
+                  </IconButton>
+                </RemoveWebhookTrigger>
+              </Tooltip>
             </TableButtonStack>
           )
         },
@@ -133,14 +119,12 @@ export default function AdministrationApiTokenScreen() {
             w="30%"
           />
           <Spacer />
-          <AddWebhookButton
-            renderItem={(open) => (
-              <Button variant="primary" onClick={open}>
-                <LuPlus />
-                {t("common.create")}
-              </Button>
-            )}
-          />
+          <AddWebhookTrigger>
+            <Button variant="primary">
+              <LuPlus />
+              {t("common.create")}
+            </Button>
+          </AddWebhookTrigger>
         </Stack>
         {isPending ? (
           <Stack gap="3">
@@ -158,14 +142,12 @@ export default function AdministrationApiTokenScreen() {
                 title={t("webhook.none")}
                 description={t("webhook.canCreate")}
               >
-                <AddWebhookButton
-                  renderItem={(open) => (
-                    <Button variant="outline" onClick={open}>
-                      <LuPlus />
-                      {t("common.create")}
-                    </Button>
-                  )}
-                />
+                <AddWebhookTrigger>
+                  <Button variant="outline">
+                    <LuPlus />
+                    {t("common.create")}
+                  </Button>
+                </AddWebhookTrigger>
               </EmptyResult>
             )}
           </>

@@ -7,7 +7,9 @@ import {
   Box,
   Button,
   Flex,
+  Group,
   Heading,
+  IconButton,
   Menu,
   Portal,
   Skeleton,
@@ -21,11 +23,11 @@ import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams } from "react-router"
-import DisableRuleButton from "../components/DisableRuleButton"
-import EditRuleButton from "../components/EditRuleButton"
-import EditRuleExemptedDeviceButton from "../components/EditRuleExemptedDeviceButton"
-import EnableRuleButton from "../components/EnableRuleButton"
-import RuleRemoveButton from "../components/RemoveRuleButton"
+import DisableRuleTrigger from "../components/DisableRuleTrigger"
+import EditRuleTrigger from "../components/EditRuleTrigger"
+import EditRuleExemptedDeviceTrigger from "../components/EditRuleExemptedDeviceTrigger"
+import EnableRuleTrigger from "../components/EnableRuleTrigger"
+import RuleRemoveTrigger from "../components/RemoveRuleTrigger"
 import { QUERIES } from "../constants"
 import { RuleProvider } from "../contexts"
 
@@ -86,89 +88,64 @@ export default function ConfigurationComplianceRuleScreen() {
           </Skeleton>
 
           <Spacer />
-          <Stack direction="row" gap="3">
-            <Skeleton loading={isPending}>
-              {rule && (
-                <EditRuleButton
-                  key={rule?.id}
-                  policyId={+policyId}
-                  rule={rule}
-                  renderItem={(open) => (
-                    <Button variant="primary" onClick={open}>
+          <Skeleton loading={isPending}>
+            <Menu.Root positioning={{ placement: "bottom-end" }}>
+              <Group attached>
+                {rule && (
+                  <EditRuleTrigger key={rule?.id} policyId={+policyId} rule={rule}>
+                    <Button variant="primary">
                       <LuPencil />
                       {t("common.edit")}
                     </Button>
-                  )}
-                />
-              )}
-            </Skeleton>
-
-            <Menu.Root>
-              <Skeleton loading={isPending}>
+                  </EditRuleTrigger>
+                )}
                 <Menu.Trigger asChild>
-                  <Button>
-                    {t("common.actions")}
+                  <IconButton variant="primary">
                     <LuChevronDown />
-                  </Button>
+                  </IconButton>
                 </Menu.Trigger>
-              </Skeleton>
+              </Group>
 
               <Portal>
                 <Menu.Positioner>
                   <Menu.Content>
                     {rule && (
                       <>
-                        <EditRuleExemptedDeviceButton
-                          policyId={+policyId}
-                          rule={rule}
-                          renderItem={(open) => (
-                            <Menu.Item onSelect={open} value="exempted-device">
-                              <LuMessageSquareDot />
-                              {t("policy.rule.exemptedDevices")}
-                            </Menu.Item>
-                          )}
-                        />
+                        <EditRuleExemptedDeviceTrigger policyId={+policyId} rule={rule}>
+                          <Menu.Item value="exempted-device">
+                            <LuMessageSquareDot />
+                            {t("policy.rule.exemptedDevices")}
+                          </Menu.Item>
+                        </EditRuleExemptedDeviceTrigger>
                         {rule?.enabled ? (
-                          <DisableRuleButton
-                            policyId={+policyId}
-                            rule={rule}
-                            renderItem={(open) => (
-                              <Menu.Item onSelect={open} value="disable">
-                                <LuPower />
-                                {t("common.disable")}
-                              </Menu.Item>
-                            )}
-                          />
+                          <DisableRuleTrigger policyId={+policyId} rule={rule}>
+                            <Menu.Item value="disable">
+                              <LuPower />
+                              {t("common.disable")}
+                            </Menu.Item>
+                          </DisableRuleTrigger>
                         ) : (
-                          <EnableRuleButton
-                            policyId={+policyId}
-                            rule={rule}
-                            renderItem={(open) => (
-                              <Menu.Item onSelect={open} value="enable">
-                                <LuPower />
-                                {t("common.enable")}
-                              </Menu.Item>
-                            )}
-                          />
+                          <EnableRuleTrigger policyId={+policyId} rule={rule}>
+                            <Menu.Item value="enable">
+                              <LuPower />
+                              {t("common.enable")}
+                            </Menu.Item>
+                          </EnableRuleTrigger>
                         )}
 
-                        <RuleRemoveButton
-                          policyId={+policyId}
-                          rule={rule}
-                          renderItem={(open) => (
-                            <Menu.Item onSelect={open} value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
-                              <LuTrash />
-                              {t("common.remove")}
-                            </Menu.Item>
-                          )}
-                        />
+                        <RuleRemoveTrigger policyId={+policyId} rule={rule}>
+                          <Menu.Item value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
+                            <LuTrash />
+                            {t("common.remove")}
+                          </Menu.Item>
+                        </RuleRemoveTrigger>
                       </>
                     )}
                   </Menu.Content>
                 </Menu.Positioner>
               </Portal>
             </Menu.Root>
-          </Stack>
+          </Skeleton>
         </Flex>
         {rule?.type === RuleType.Text && (
           <Stack gap="3">

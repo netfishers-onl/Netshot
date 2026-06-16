@@ -9,7 +9,7 @@ import { CellContext, createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
 import { LuRefreshCcw } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import ReloadDeviceDriversButton from "../components/ReloadDeviceDriversButton"
+import ReloadDeviceDriversTrigger from "../components/ReloadDeviceDriversTrigger"
 import { QUERIES } from "../constants"
 
 const columnHelper = createColumnHelper<DeviceType>()
@@ -121,14 +121,12 @@ export default function AdministrationDriverScreen() {
             w="30%"
           />
           <Spacer />
-          <ReloadDeviceDriversButton
-            renderItem={(open) => (
-              <Button onClick={open}>
-                <LuRefreshCcw />
-                {t("admin.driver.reload")}
-              </Button>
-            )}
-          />
+          <ReloadDeviceDriversTrigger>
+            <Button>
+              <LuRefreshCcw />
+              {t("admin.driver.reload")}
+            </Button>
+          </ReloadDeviceDriversTrigger>
         </Stack>
         {isPending ? (
           <Stack gap="3">

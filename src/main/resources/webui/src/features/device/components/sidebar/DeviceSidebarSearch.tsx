@@ -1,4 +1,4 @@
-import { QueryBuilderButton } from "@/components"
+import { QueryBuilderTrigger } from "@/components"
 import { LuCompass } from "react-icons/lu"
 import Search from "@/components/Search"
 import { Tooltip } from "@/components/ui/tooltip"
@@ -39,22 +39,21 @@ export default function DeviceSidebarSearch() {
         onQuery={onQuery}
         onClear={onClear}
       >
-        <QueryBuilderButton
-          value={{
-            query,
-            driver,
-          }}
-          renderItem={(open) => (
-            <Tooltip content={t("common.queryBuilder")}>
-              <IconButton size="xs" variant="ghost" aria-label={t("common.openQueryBuilder")} onClick={open}>
-                <LuCompass />
-              </IconButton>
-            </Tooltip>
-          )}
-          onSubmit={(res) => {
-            updateQueryAndDriver(res.query, res.driver)
-          }}
-        />
+        <Tooltip content={t("common.queryBuilder")}>
+          <QueryBuilderTrigger
+            value={{
+              query,
+              driver,
+            }}
+            onSubmit={(res) => {
+              updateQueryAndDriver(res.query, res.driver)
+            }}
+          >
+            <IconButton size="xs" variant="ghost" aria-label={t("common.openQueryBuilder")}>
+              <LuCompass />
+            </IconButton>
+          </QueryBuilderTrigger>
+        </Tooltip>
       </Search>
     </Stack>
   )

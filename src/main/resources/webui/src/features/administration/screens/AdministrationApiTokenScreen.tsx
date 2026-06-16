@@ -10,8 +10,8 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
 import { LuPlus, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import AddApiTokenButton from "../components/AddApiTokenButton"
-import RemoveApiTokenButton from "../components/RemoveApiTokenButton"
+import AddApiTokenTrigger from "../components/AddApiTokenTrigger"
+import RemoveApiTokenTrigger from "../components/RemoveApiTokenTrigger"
 import { QUERIES } from "../constants"
 import TableButtonStack from "../components/TableButtonStack"
 
@@ -55,20 +55,13 @@ export default function AdministrationApiTokenScreen() {
 
           return (
             <TableButtonStack>
-              <RemoveApiTokenButton
-                apiToken={apiToken}
-                renderItem={(open) => (
-                  <Tooltip content={t("common.remove")}>
-                    <IconButton
-                      aria-label={t("api.removeToken")}
-                      variant="frame"
-                      onClick={open}
-                    >
-                      <LuTrash />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              />
+              <Tooltip content={t("common.remove")}>
+                <RemoveApiTokenTrigger apiToken={apiToken}>
+                  <IconButton aria-label={t("api.removeToken")} variant="frame">
+                    <LuTrash />
+                  </IconButton>
+                </RemoveApiTokenTrigger>
+              </Tooltip>
             </TableButtonStack>
           )
         },
@@ -97,14 +90,12 @@ export default function AdministrationApiTokenScreen() {
             w="30%"
           />
           <Spacer />
-          <AddApiTokenButton
-            renderItem={(open) => (
-              <Button variant="primary" onClick={open}>
-                <LuPlus />
-                {t("common.create")}
-              </Button>
-            )}
-          />
+          <AddApiTokenTrigger>
+            <Button variant="primary">
+              <LuPlus />
+              {t("common.create")}
+            </Button>
+          </AddApiTokenTrigger>
         </Stack>
         {isPending ? (
           <Stack gap="3">
@@ -122,14 +113,12 @@ export default function AdministrationApiTokenScreen() {
                 title={t("api.none")}
                 description={t("api.canCreate")}
               >
-                <AddApiTokenButton
-                  renderItem={(open) => (
-                    <Button variant="outline" onClick={open}>
-                      <LuPlus />
-                      {t("common.create")}
-                    </Button>
-                  )}
-                />
+                <AddApiTokenTrigger>
+                  <Button variant="outline">
+                    <LuPlus />
+                    {t("common.create")}
+                  </Button>
+                </AddApiTokenTrigger>
               </EmptyResult>
             )}
           </>

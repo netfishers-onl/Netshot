@@ -6,15 +6,15 @@ import { LuActivity, LuCamera, LuCircleCheck, LuSquarePen, LuPlay, LuTrash, LuZa
 import { Level } from "@/types"
 
 import {
-  BulkEditDeviceButton,
-  DeviceComplianceButton,
-  DeviceDiagnosticButton,
-  DisableDeviceButton,
-  EnableDeviceButton,
-  RemoveDeviceButton,
-  DeviceSnapshotButton,
+  BulkEditDeviceTrigger,
+  DeviceComplianceTrigger,
+  DeviceDiagnosticTrigger,
+  DisableDeviceTrigger,
+  EnableDeviceTrigger,
+  RemoveDeviceTrigger,
+  DeviceSnapshotTrigger,
 } from "../components"
-import OpenDeviceScriptButton from "../components/OpenDeviceScriptButton"
+import OpenDeviceScriptTrigger from "../components/OpenDeviceScriptTrigger"
 import { useDeviceSidebarStore } from "../stores"
 
 export default function DeviceBulkActionScreen() {
@@ -35,92 +35,68 @@ export default function DeviceBulkActionScreen() {
 
         <Stack gap="2">
           <Protected minLevel={Level.ExecureReadWrite}>
-            <OpenDeviceScriptButton
-              devices={selected}
-              renderItem={(open) => (
-                <Button justifyContent="start" onClick={open}>
-                  <LuPlay />
-                  {t("script.run")}
-                </Button>
-              )}
-            />
+            <OpenDeviceScriptTrigger devices={selected}>
+              <Button justifyContent="start">
+                <LuPlay />
+                {t("script.run")}
+              </Button>
+            </OpenDeviceScriptTrigger>
           </Protected>
           <Protected minLevel={Level.Operator}>
-            <DeviceSnapshotButton
-              devices={selected}
-              renderItem={(open) => (
-                <Button justifyContent="start" onClick={open}>
-                  <LuCamera />
-                  {t("device.snapshot.take")}
-                </Button>
-              )}
-            />
+            <DeviceSnapshotTrigger devices={selected}>
+              <Button justifyContent="start">
+                <LuCamera />
+                {t("device.snapshot.take")}
+              </Button>
+            </DeviceSnapshotTrigger>
           </Protected>
           <Protected minLevel={Level.Operator}>
-            <DeviceComplianceButton
-              devices={selected}
-              renderItem={(open) => (
-                <Button justifyContent="start" onClick={open}>
-                  <LuCircleCheck />
-                  {t("compliance.check")}
-                </Button>
-              )}
-            />
+            <DeviceComplianceTrigger devices={selected}>
+              <Button justifyContent="start">
+                <LuCircleCheck />
+                {t("compliance.check")}
+              </Button>
+            </DeviceComplianceTrigger>
           </Protected>
           <Protected minLevel={Level.Operator}>
-            <DeviceDiagnosticButton
-              devices={selected}
-              renderItem={(open) => (
-                <Button justifyContent="start" onClick={open}>
-                  <LuActivity />
-                  {t("diagnostic.run")}
-                </Button>
-              )}
-            />
+            <DeviceDiagnosticTrigger devices={selected}>
+              <Button justifyContent="start">
+                <LuActivity />
+                {t("diagnostic.run")}
+              </Button>
+            </DeviceDiagnosticTrigger>
           </Protected>
           <Protected minLevel={Level.Operator}>
-            <BulkEditDeviceButton
-              devices={selected}
-              renderItem={(open) => (
-                <Button justifyContent="start" onClick={open}>
-                  <LuSquarePen />
-                  {t("common.edit")}
-                </Button>
-              )}
-            />
+            <BulkEditDeviceTrigger devices={selected}>
+              <Button justifyContent="start">
+                <LuSquarePen />
+                {t("common.edit")}
+              </Button>
+            </BulkEditDeviceTrigger>
 
             <ButtonGroup attached>
-              <EnableDeviceButton
-                devices={selected}
-                renderItem={(open) => (
-                  <Button justifyContent="start" onClick={open} flex="1">
-                    <LuZap />
-                    {t("common.enable")}
-                  </Button>
-                )}
-              />
+              <EnableDeviceTrigger devices={selected}>
+                <Button justifyContent="start" flex="1">
+                  <LuZap />
+                  {t("common.enable")}
+                </Button>
+              </EnableDeviceTrigger>
 
-              <DisableDeviceButton
-                devices={selected}
-                renderItem={(open) => (
-                  <Button justifyContent="start" onClick={open} flex="1">
-                    <LuZapOff />
-                    {t("common.disable")}
-                  </Button>
-                )}
-              />
+              <DisableDeviceTrigger devices={selected}>
+                <Button justifyContent="start" flex="1">
+                  <LuZapOff />
+                  {t("common.disable")}
+                </Button>
+              </DisableDeviceTrigger>
             </ButtonGroup>
           </Protected>
           <Protected minLevel={Level.Operator}>
-            <RemoveDeviceButton
-              devices={selected}
-              renderItem={(open) => (
-                <Button justifyContent="start" onClick={open}>
-                  <LuTrash />
-                  {t("common.remove")}
-                </Button>
-              )}
-            />
+            <RemoveDeviceTrigger devices={selected}>
+              <Button justifyContent="start">
+                <LuTrash />
+                {t("common.remove")}
+              </Button>
+            </RemoveDeviceTrigger>
           </Protected>
         </Stack>
       </Stack>

@@ -10,9 +10,9 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
 import { LuSquarePen, LuPlus, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import AddDomainButton from "../components/AddDomainButton"
-import EditDomainButton from "../components/EditDomainButton"
-import RemoveDomainButton from "../components/RemoveDomainButton"
+import AddDomainTrigger from "../components/AddDomainTrigger"
+import EditDomainTrigger from "../components/EditDomainTrigger"
+import RemoveDomainTrigger from "../components/RemoveDomainTrigger"
 import { QUERIES } from "../constants"
 import TableButtonStack from "../components/TableButtonStack"
 
@@ -60,34 +60,20 @@ export default function AdministrationDomainScreen() {
 
           return (
             <TableButtonStack>
-              <EditDomainButton
-                domain={domain}
-                renderItem={(open) => (
-                  <Tooltip content={t("common.edit")}>
-                    <IconButton
-                      aria-label={t("domain.edit")}
-                      variant="frame"
-                      onClick={open}
-                    >
-                      <LuSquarePen />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              />
-              <RemoveDomainButton
-                domain={domain}
-                renderItem={(open) => (
-                  <Tooltip content={t("common.remove")}>
-                    <IconButton
-                      aria-label={t("domain.remove")}
-                      variant="frame"
-                      onClick={open}
-                    >
-                      <LuTrash />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              />
+              <Tooltip content={t("common.edit")}>
+                <EditDomainTrigger domain={domain}>
+                  <IconButton aria-label={t("domain.edit")} variant="frame">
+                    <LuSquarePen />
+                  </IconButton>
+                </EditDomainTrigger>
+              </Tooltip>
+              <Tooltip content={t("common.remove")}>
+                <RemoveDomainTrigger domain={domain}>
+                  <IconButton aria-label={t("domain.remove")} variant="frame">
+                    <LuTrash />
+                  </IconButton>
+                </RemoveDomainTrigger>
+              </Tooltip>
             </TableButtonStack>
           )
         },
@@ -117,14 +103,12 @@ export default function AdministrationDomainScreen() {
             w="30%"
           />
           <Spacer />
-          <AddDomainButton
-            renderItem={(open) => (
-              <Button variant="primary" onClick={open}>
-                <LuPlus />
-                {t("common.create")}
-              </Button>
-            )}
-          />
+          <AddDomainTrigger>
+            <Button variant="primary">
+              <LuPlus />
+              {t("common.create")}
+            </Button>
+          </AddDomainTrigger>
         </Stack>
         {isPending ? (
           <Stack gap="3">
@@ -142,14 +126,12 @@ export default function AdministrationDomainScreen() {
                 title={t("domain.none")}
                 description={t("device.createDomainFirst")}
               >
-                <AddDomainButton
-                  renderItem={(open) => (
-                    <Button variant="outline" onClick={open}>
-                      <LuPlus />
-                      {t("common.create")}
-                    </Button>
-                  )}
-                />
+                <AddDomainTrigger>
+                  <Button variant="outline">
+                    <LuPlus />
+                    {t("common.create")}
+                  </Button>
+                </AddDomainTrigger>
               </EmptyResult>
             )}
           </>

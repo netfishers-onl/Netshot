@@ -5,7 +5,7 @@ import { Button, Separator, Stack, Text } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
 import { SidebarProvider } from "../../contexts"
 import { SidebarContext } from "../../contexts/SidebarProvider"
-import AddPolicyButton from "../AddPolicyButton"
+import AddPolicyTrigger from "../AddPolicyTrigger"
 import SidebarList from "./SidebarList"
 import SidebarSearch from "./SidebarSearch"
 import SidebarSearchList from "./SidebarSearchList"
@@ -46,14 +46,12 @@ export default function Sidebar() {
               <Protected minLevel={Level.Operator}>
                 <Separator />
                 <Stack p="6">
-                  <AddPolicyButton
-                    renderItem={(open) => (
-                      <Button onClick={open}>
-                        <LuPlus />
-                        {t("policy.add")}
-                      </Button>
-                    )}
-                  />
+                  <AddPolicyTrigger>
+                    <Button>
+                      <LuPlus />
+                      {t("policy.add")}
+                    </Button>
+                  </AddPolicyTrigger>
                 </Stack>
               </Protected>
             </>

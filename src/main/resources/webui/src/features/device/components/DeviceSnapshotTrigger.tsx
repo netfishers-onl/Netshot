@@ -1,0 +1,98 @@
+import { Box, Flex, Stack, Text } from "@chakra-ui/react"
+import { useMutation } from "@tanstack/react-query"
+import { useForm } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import api from "@/api"
+import { NetshotError } from "@/api/httpClient"
+import { Checkbox } from "@/components"
+import ScheduleForm, { ScheduleFormType } from "@/components/ScheduleForm"
+import TaskDialog from "@/components/TaskDialog"
+import { MUTATIONS } from "@/constants"
+import { useCustomDialog, useFormDialogWithMutation } from "@/dialog"
+import { useToast } from "@/hooks"
+import { Device, SimpleDevice, Task, TaskType } from "@/types"
+import React from "react"
+
+export type DeviceSnapshotTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<any> } & Record<string, unknown>
+
+type SnapshotForm = { runDiagnostic: boolean; checkCompliance: boolean; debugEnabled: boolean } & ScheduleFormType
+
+export default function DeviceSnapshotTrigger({ devices, children, ...rest }: DeviceSnapshotTriggerProps) {
+  const { t } = useTranslation()
+  const toast = useToast()
+  const dialog = useFormDialogWithMutation()
+  const taskDialog = useCustomDialog()
+
+  const form = useForm<SnapshotForm>({
+    mode: "onChange",
+    defaultValues: { runDiagnostic: true, checkCompliance: true, debugEnabled: false },
+  })
+
+  const mutation = useMutation({
+    mutationKey: MUTATIONS.TASK_CREATE,
+    mutationFn: api.task.create,
+    onError(err: NetshotError) { toast.error(err) },
+  })
+
+  const open = () => {
+    const dialogRef = dialog.open(MUTATIONS.TASK_CREATE, {
+      title: t("device.takeSnapshot"),
+      description: (
+        <Stack gap="6">
+          <Stack gap="3">
+            {devices.length > 1 ? (
+              <Flex>
+                <Box flex="0 0 80px"><Text color="grey.400">{t("device.devices")}</Text></Box>
+                <Text>{devices.map((device: SimpleDevice | Device) => device.name).join(", ")}</Text>
+              </Flex>
+            ) : (
+              <>
+                <Flex alignItems="center">
+                  <Box flex="0 0 80px"><Text color="grey.400">{t("common.name")}</Text></Box>
+                  <Text>{devices?.[0]?.name ?? "nA"}</Text>
+                </Flex>
+                <Flex alignItems="center">
+                  <Box flex="0 0 80px"><Text color="grey.400">{t("device.interface.ipAddress")}</Text></Box>
+                  <Text>{devices?.[0]?.mgmtAddress ?? "nA"}</Text>
+                </Flex>
+              </>
+            )}
+          </Stack>
+          <Stack gap="3">
+            <Checkbox control={form.control} name="runDiagnostic">{t("device.runDiagnosticsAfterSnapshot")}</Checkbox>
+            <Checkbox control={form.control} name="checkCompliance">{t("device.checkComplianceAfterSnapshot")}</Checkbox>
+            <Checkbox control={form.control} name="debugEnabled">{t("device.enableFullTrace")}</Checkbox>
+          </Stack>
+          <ScheduleForm />
+        </Stack>
+      ),
+      form,
+      size: "lg",
+      async onSubmit(values: SnapshotForm) {
+        const { schedule } = values
+        const tasks: Task[] = []
+
+        for (const device of devices) {
+          const task = await mutation.mutateAsync({
+            type: TaskType.TakeSnapshot,
+            device: device?.id,
+            debugEnabled: values.debugEnabled,
+            dontRunDiagnostics: !values.runDiagnostic,
+            dontCheckCompliance: !values.checkCompliance,
+            ...schedule,
+          })
+          tasks.push(task)
+        }
+
+        dialogRef.close()
+
+        if (tasks.length === 1) {
+          taskDialog.open(<TaskDialog id={tasks[0].id} />)
+        }
+      },
+      submitButton: { label: t("device.snapshot.take") },
+    })
+  }
+
+  return React.cloneElement(children, { onClick: open, onSelect: open, ...rest })
+}

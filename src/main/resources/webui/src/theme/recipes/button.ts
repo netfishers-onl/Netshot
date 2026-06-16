@@ -18,6 +18,9 @@ export const buttonRecipe = defineRecipe({
     "& span:nth-of-type(2)": {
       flex: "initial",
     },
+    "&[data-first]": { borderEndRadius: 0 },
+    "&[data-between]": { borderRadius: 0 },
+    "&[data-last]": { borderStartRadius: 0 },
   },
   variants: {
     variant: {

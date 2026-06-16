@@ -15,7 +15,7 @@ import {
   DeviceAttributeType,
 } from "@/types"
 
-import DeviceConfigurationViewButton from "./DeviceConfigurationViewButton"
+import DeviceConfigurationViewTrigger from "./DeviceConfigurationViewTrigger"
 
 type ConfigNumericAttributeValueType = {
   attribute: ConfigNumericAttribute
@@ -52,17 +52,12 @@ function ConfigLongTextAttributeValue(props: ConfigLongTextAttributeValueType) {
 
   return (
     <Stack direction="row" gap="2">
-      <DeviceConfigurationViewButton
-        id={configId}
-        definition={definition}
-        attribute={attribute}
-        renderItem={(open) => (
-          <Button onClick={open} size="sm" variant="default">
-            <LuEye />
-            {t("common.view")}
-          </Button>
-        )}
-      />
+      <DeviceConfigurationViewTrigger id={configId} definition={definition} attribute={attribute}>
+        <Button size="sm" variant="default">
+          <LuEye />
+          {t("common.view")}
+        </Button>
+      </DeviceConfigurationViewTrigger>
       <Button
         size="sm"
         variant="default"

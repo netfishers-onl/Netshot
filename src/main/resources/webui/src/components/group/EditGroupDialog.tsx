@@ -1,6 +1,6 @@
 import api, { UpdateGroupPayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { FormControl, QueryBuilderButton, QueryBuilderValue, Switch } from "@/components"
+import { FormControl, QueryBuilderTrigger, QueryBuilderValue, Switch } from "@/components"
 import { QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
@@ -196,18 +196,17 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
                               <Text fontFamily="mono">{query}</Text>
                             </Box>
                           )}
-                          <QueryBuilderButton
+                          <QueryBuilderTrigger
                             value={{
                               query,
                               driver,
                             }}
-                            renderItem={(open) => (
-                              <Button alignSelf="start" onClick={open}>
-                                {t("policy.editQuery")}
-                              </Button>
-                            )}
                             onSubmit={updateQuery}
-                          />
+                          >
+                            <Button alignSelf="start">
+                              {t("policy.editQuery")}
+                            </Button>
+                          </QueryBuilderTrigger>
                         </Stack>
                       </>
                     )}

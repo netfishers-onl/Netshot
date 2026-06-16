@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useTranslation } from "react-i18next"
 import { Link, useParams } from "react-router"
-import DeviceDiagnosticButton from "../components/DeviceDiagnosticButton"
+import DeviceDiagnosticTrigger from "../components/DeviceDiagnosticTrigger"
 import { QUERIES } from "../constants"
 import { useDevice } from "../contexts/device"
 
@@ -74,15 +74,12 @@ export default function DeviceDiagnosticScreen() {
             />
             <Spacer />
             <Protected minLevel={Level.Operator}>
-              <DeviceDiagnosticButton
-                devices={[device]}
-                renderItem={(open) => (
-                  <Button alignSelf="center" onClick={open}>
-                    <LuActivity />
-                    {t("diagnostic.run")}
-                  </Button>
-                )}
-              />
+              <DeviceDiagnosticTrigger devices={[device]}>
+                <Button alignSelf="center">
+                  <LuActivity />
+                  {t("diagnostic.run")}
+                </Button>
+              </DeviceDiagnosticTrigger>
             </Protected>
           </Stack>
 
@@ -95,15 +92,12 @@ export default function DeviceDiagnosticScreen() {
         >
           <Stack direction="row" gap="3">
             <Protected minLevel={Level.Operator}>
-              <DeviceDiagnosticButton
-                devices={[device]}
-                renderItem={(open) => (
-                  <Button alignSelf="center" variant="outline" onClick={open}>
-                    <LuActivity />
-                    {t("diagnostic.run")}
-                  </Button>
-                )}
-              />
+              <DeviceDiagnosticTrigger devices={[device]}>
+                <Button alignSelf="center" variant="outline">
+                  <LuActivity />
+                  {t("diagnostic.run")}
+                </Button>
+              </DeviceDiagnosticTrigger>
             </Protected>
             <Button asChild>
               <Link to="/app/diagnostics">{t("common.goToDiagnostics")}</Link>

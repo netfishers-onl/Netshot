@@ -17,7 +17,7 @@ import {
 import { useLocalization } from "@/i18n"
 import { useSoftwareLevels } from "@/hooks"
 
-import DeviceComplianceButton from "../components/DeviceComplianceButton"
+import DeviceComplianceTrigger from "../components/DeviceComplianceTrigger"
 import { QUERIES } from "../constants"
 import { useDevice } from "../contexts/device"
 
@@ -181,15 +181,12 @@ export default function DeviceComplianceScreen() {
           )}
         </Stack>
         <Protected minLevel={Level.Operator}>
-          <DeviceComplianceButton
-            devices={[device]}
-            renderItem={(open) => (
-              <Button alignSelf="start" variant="primary" onClick={open}>
-                <LuCircleCheck />
-                {t("compliance.check")}
-              </Button>
-            )}
-          />
+          <DeviceComplianceTrigger devices={[device]}>
+            <Button alignSelf="start" variant="primary">
+              <LuCircleCheck />
+              {t("compliance.check")}
+            </Button>
+          </DeviceComplianceTrigger>
         </Protected>
       </Stack>
     </Stack>

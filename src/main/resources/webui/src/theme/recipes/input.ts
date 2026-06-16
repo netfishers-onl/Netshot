@@ -4,6 +4,11 @@ import { defineRecipe } from "@chakra-ui/react"
  */
 export const inputRecipe = defineRecipe({
   variants: {
+    mono: {
+      true: {
+        fontFamily: "mono",
+      },
+    },
     variant: {
       outline: {
         borderRadius: "xl",

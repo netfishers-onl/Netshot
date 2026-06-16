@@ -6,7 +6,9 @@ import {
   Box,
   Button,
   Flex,
+  Group,
   Heading,
+  IconButton,
   Menu,
   Portal,
   Separator,
@@ -19,10 +21,10 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useParams } from "react-router"
-import DisableDiagnosticButton from "../components/DisableDiagnosticButton"
-import EditDiagnosticButton from "../components/EditDiagnosticButton"
-import EnableDiagnosticButton from "../components/EnableDiagnosticButton"
-import RemoveDiagnosticButton from "../components/RemoveDiagnosticButton"
+import DisableDiagnosticTrigger from "../components/DisableDiagnosticTrigger"
+import EditDiagnosticTrigger from "../components/EditDiagnosticTrigger"
+import EnableDiagnosticTrigger from "../components/EnableDiagnosticTrigger"
+import RemoveDiagnosticTrigger from "../components/RemoveDiagnosticTrigger"
 import ScriptDiagnosticDetail from "../components/ScriptDiagnosticDetail"
 import TextDiagnosticDetail from "../components/TextDiagnosticDetail"
 import { QUERIES } from "../constants"
@@ -55,28 +57,21 @@ export default function DeviceDetailScreen() {
           <Spacer />
 
           <Protected minLevel={Level.ReadWrite}>
-            <Stack direction="row" gap="3">
-              <Skeleton loading={isPending}>
-                <EditDiagnosticButton
-                  diagnostic={diagnostic}
-                  renderItem={(open) => (
-                    <Button variant="primary" onClick={open}>
+            <Skeleton loading={isPending}>
+              <Menu.Root positioning={{ placement: "bottom-end" }}>
+                <Group attached>
+                  <EditDiagnosticTrigger diagnostic={diagnostic}>
+                    <Button variant="primary">
                       <LuPencil />
                       {t("common.edit")}
                     </Button>
-                  )}
-                />
-              </Skeleton>
-
-              <Menu.Root>
-                <Skeleton loading={isPending}>
+                  </EditDiagnosticTrigger>
                   <Menu.Trigger asChild>
-                    <Button>
-                      {t("common.actions")}
+                    <IconButton variant="primary">
                       <LuChevronDown />
-                    </Button>
+                    </IconButton>
                   </Menu.Trigger>
-                </Skeleton>
+                </Group>
 
                 <Portal>
                   <Menu.Positioner>
@@ -84,43 +79,34 @@ export default function DeviceDetailScreen() {
                       {diagnostic && (
                         <>
                           {diagnostic.enabled ? (
-                            <DisableDiagnosticButton
-                              diagnostic={diagnostic}
-                              renderItem={(open) => (
-                                <Menu.Item onSelect={open} value="disable">
-                                  <LuPower />
-                                  {t("common.disable")}
-                                </Menu.Item>
-                              )}
-                            />
+                            <DisableDiagnosticTrigger diagnostic={diagnostic}>
+                              <Menu.Item value="disable">
+                                <LuPower />
+                                {t("common.disable")}
+                              </Menu.Item>
+                            </DisableDiagnosticTrigger>
                           ) : (
-                            <EnableDiagnosticButton
-                              diagnostic={diagnostic}
-                              renderItem={(open) => (
-                                <Menu.Item onSelect={open} value="enable">
-                                  <LuPower />
-                                  {t("common.enable")}
-                                </Menu.Item>
-                              )}
-                            />
+                            <EnableDiagnosticTrigger diagnostic={diagnostic}>
+                              <Menu.Item value="enable">
+                                <LuPower />
+                                {t("common.enable")}
+                              </Menu.Item>
+                            </EnableDiagnosticTrigger>
                           )}
 
-                          <RemoveDiagnosticButton
-                            diagnostic={diagnostic}
-                            renderItem={(open) => (
-                              <Menu.Item onSelect={open} value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
-                                <LuTrash />
-                                {t("common.remove")}
-                              </Menu.Item>
-                            )}
-                          />
+                          <RemoveDiagnosticTrigger diagnostic={diagnostic}>
+                            <Menu.Item value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
+                              <LuTrash />
+                              {t("common.remove")}
+                            </Menu.Item>
+                          </RemoveDiagnosticTrigger>
                         </>
                       )}
                     </Menu.Content>
                   </Menu.Positioner>
                 </Portal>
               </Menu.Root>
-            </Stack>
+            </Skeleton>
           </Protected>
         </Flex>
         <Separator />

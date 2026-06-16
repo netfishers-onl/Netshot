@@ -5,7 +5,7 @@ import { Button, Separator, Stack } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
 import { DiagnosticSidebarProvider } from "../../contexts"
 import { DiagnosticSidebarContext } from "../../contexts/DiagnosticSidebarProvider"
-import AddDiagnosticButton from "../AddDiagnosticButton"
+import AddDiagnosticTrigger from "../AddDiagnosticTrigger"
 import SidebarList from "./SidebarList"
 import SidebarSearch from "./SidebarSearch"
 import DeviceSidebarSearchList from "./SidebarSearchList"
@@ -26,14 +26,12 @@ export default function Sidebar() {
               <Protected minLevel={Level.ReadWrite}>
                 <Separator />
                 <Stack p="6">
-                  <AddDiagnosticButton
-                    renderItem={(open) => (
-                      <Button onClick={open}>
-                        <LuPlus />
-                        {t("diagnostic.add")}
-                      </Button>
-                    )}
-                  />
+                  <AddDiagnosticTrigger>
+                    <Button>
+                      <LuPlus />
+                      {t("diagnostic.add")}
+                    </Button>
+                  </AddDiagnosticTrigger>
                 </Stack>
               </Protected>
             </>

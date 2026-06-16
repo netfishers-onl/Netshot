@@ -2,7 +2,7 @@ export { default as ConfigurationComplianceDeviceList } from "./ConfigurationCom
 export { default as ConfigurationComplianceSidebar } from "./ConfigurationComplianceSidebar";
 export { default as ConfigurationComplianceSidebarList } from "./ConfigurationComplianceSidebarList";
 export { default as ConfigurationComplianceSidebarSearch } from "./ConfigurationComplianceSidebarSearch";
-export { default as HardwareDeviceListButton } from "./HardwareDeviceListButton";
+export { default as HardwareDeviceListTrigger } from "./HardwareDeviceListTrigger";
 export { default as ConfigurationChangeList } from "./ConfigurationChangeList";
 export { default as ConfigurationChart } from "./ConfigurationChart";
 export { default as ConfigurationCompareModal } from "./ConfigurationCompareModal";

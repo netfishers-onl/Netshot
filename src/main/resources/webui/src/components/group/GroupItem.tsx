@@ -15,8 +15,8 @@ import {
 } from "@chakra-ui/react"
 import { MouseEvent } from "react"
 import { useTranslation } from "react-i18next"
-import EditGroupButton from "./EditGroupButton"
-import RemoveGroupButton from "./RemoveGroupButton"
+import EditGroupTrigger from "./EditGroupTrigger"
+import RemoveGroupTrigger from "./RemoveGroupTrigger"
 import { useTreeGroup } from "./TreeGroupProvider"
 
 export type GroupItemProps = {
@@ -78,24 +78,18 @@ export default function GroupItem(props: GroupItemProps) {
               <Portal>
                 <Menu.Positioner>
                   <Menu.Content>
-                    <EditGroupButton
-                      group={group}
-                      renderItem={(open) => (
-                        <Menu.Item onSelect={() => open(null)} value="item-0">
-                          <LuSquarePen />
-                          {t("common.edit")}
-                        </Menu.Item>
-                      )}
-                    />
-                    <RemoveGroupButton
-                      group={group}
-                      renderItem={(open) => (
-                        <Menu.Item onSelect={() => open(null)} value="item-1">
-                          <LuTrash />
-                          {t("common.remove")}
-                        </Menu.Item>
-                      )}
-                    />
+                    <EditGroupTrigger group={group}>
+                      <Menu.Item value="item-0">
+                        <LuSquarePen />
+                        {t("common.edit")}
+                      </Menu.Item>
+                    </EditGroupTrigger>
+                    <RemoveGroupTrigger group={group}>
+                      <Menu.Item value="item-1">
+                        <LuTrash />
+                        {t("common.remove")}
+                      </Menu.Item>
+                    </RemoveGroupTrigger>
                   </Menu.Content>
                 </Menu.Positioner>
               </Portal>

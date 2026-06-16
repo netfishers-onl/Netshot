@@ -1,16 +1,11 @@
 import { useAlertDialog } from "@/dialog"
-import { LightConfig, PropsWithRenderItem } from "@/types"
-import { MouseEvent } from "react"
+import { LightConfig } from "@/types"
+import React, { MouseEvent } from "react"
 import ConfigurationCompareEditor from "./ConfigurationCompareEditor"
 
-type ConfigurationCompareModalProps = PropsWithRenderItem<{
-  config: LightConfig
-}>
+export type ConfigurationCompareModalProps = { config: LightConfig; children: React.ReactElement<any> } & Record<string, unknown>
 
-export default function ConfigurationCompareModal(
-  props: ConfigurationCompareModalProps
-) {
-  const { renderItem, config } = props
+export default function ConfigurationCompareModal({ config, children, ...rest }: ConfigurationCompareModalProps) {
   const dialog = useAlertDialog()
 
   const open = (evt: MouseEvent) => {
@@ -23,5 +18,5 @@ export default function ConfigurationCompareModal(
     })
   }
 
-  return renderItem(open)
+  return React.cloneElement(children, { onClick: open, onSelect: open, ...rest })
 }

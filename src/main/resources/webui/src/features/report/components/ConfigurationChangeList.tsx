@@ -74,21 +74,17 @@ export default function ConfigurationChangeList() {
       columnHelper.display({
         id: "actions",
         cell: (info) => (
-          <ConfigurationCompareModal
-            config={info.row.original}
-            renderItem={(open) => (
-              <Tooltip content={t("common.showDifference")}>
-                <IconButton
-                  variant="ghost"
-                  colorPalette="green"
-                  aria-label={t("common.showDifference")}
-                  onClick={open}
-                >
-                  <LuGitBranch />
-                </IconButton>
-              </Tooltip>
-            )}
-          />
+          <Tooltip content={t("common.showDifference")}>
+            <ConfigurationCompareModal config={info.row.original}>
+              <IconButton
+                variant="ghost"
+                colorPalette="green"
+                aria-label={t("common.showDifference")}
+              >
+                <LuGitBranch />
+              </IconButton>
+            </ConfigurationCompareModal>
+          </Tooltip>
         ),
         header: "",
         enableSorting: false,

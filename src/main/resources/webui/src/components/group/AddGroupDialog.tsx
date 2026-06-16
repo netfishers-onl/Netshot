@@ -2,7 +2,7 @@ import api, { CreateGroupPayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import {
   FormControl,
-  QueryBuilderButton,
+  QueryBuilderTrigger,
   QueryBuilderValue,
   Switch,
 } from "@/components"
@@ -255,18 +255,17 @@ export default function AddGroupDialog() {
                                 <Text fontFamily="mono">{query}</Text>
                               </Box>
                             )}
-                            <QueryBuilderButton
+                            <QueryBuilderTrigger
                               value={{
                                 query,
                                 driver,
                               }}
-                              renderItem={(open) => (
-                                <Button alignSelf="start" onClick={open}>
-                                  {t("policy.editQuery")}
-                                </Button>
-                              )}
                               onSubmit={updateQuery}
-                            />
+                            >
+                              <Button alignSelf="start">
+                                {t("policy.editQuery")}
+                              </Button>
+                            </QueryBuilderTrigger>
                           </Stack>
                         </>
                       )}

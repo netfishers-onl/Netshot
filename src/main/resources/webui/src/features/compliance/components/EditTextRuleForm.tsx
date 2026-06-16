@@ -244,6 +244,7 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
 
         <FormControl
           type={FormControlType.LongText}
+          mono
           label={t("common.context")}
           placeholder={t("common.eG", { example: "router bgp \\d+" })}
           control={form.control}
@@ -279,6 +280,7 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
         </Stack>
         <FormControl
           type={FormControlType.LongText}
+          mono
           label={t("policy.rule.textOrPattern")}
           placeholder={t("common.eG", { example: t("common.unknownReason") })}
           control={form.control}

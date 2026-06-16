@@ -14,9 +14,9 @@ import { createColumnHelper, Row } from "@tanstack/react-table"
 import { useEffect, useState } from "react"
 import { LuSquarePen, LuPlus, LuTrash, LuAsterisk, LuTrophy, LuArrowRight, LuMoveRight, LuChevronRight, LuChevronsRight, LuArrowBigRightDash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import AddSoftwareRuleButton from "../components/AddSoftwareRuleButton"
-import EditSoftwareRuleButton from "../components/EditSoftwareRuleButton"
-import RemoveSoftwareRuleButton from "../components/RemoveSoftwareRuleButton"
+import AddSoftwareRuleTrigger from "../components/AddSoftwareRuleTrigger"
+import EditSoftwareRuleTrigger from "../components/EditSoftwareRuleTrigger"
+import RemoveSoftwareRuleTrigger from "../components/RemoveSoftwareRuleTrigger"
 import { QUERIES } from "../constants"
 import TableButtonStack from "@/features/administration/components/TableButtonStack"
 
@@ -167,35 +167,21 @@ export default function SoftwareComplianceRuleScreen() {
         return (
           <Protected minLevel={Level.ReadWrite}>
             <TableButtonStack>
-              <EditSoftwareRuleButton
-                rule={rule}
-                renderItem={(open) => (
-                  <Tooltip content={t("common.edit")}>
-                    <IconButton
-                      variant="frame"
-                      aria-label={t("policy.rule.editThe")}
-                      onClick={open}
-                    >
-                      <LuSquarePen />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              />
+              <Tooltip content={t("common.edit")}>
+                <EditSoftwareRuleTrigger rule={rule}>
+                  <IconButton variant="frame" aria-label={t("policy.rule.editThe")}>
+                    <LuSquarePen />
+                  </IconButton>
+                </EditSoftwareRuleTrigger>
+              </Tooltip>
 
-              <RemoveSoftwareRuleButton
-                rule={rule}
-                renderItem={(open) => (
-                  <Tooltip content={t("common.remove")}>
-                    <IconButton
-                      variant="frame"
-                      aria-label={t("policy.rule.removeThe")}
-                      onClick={open}
-                    >
-                      <LuTrash />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              />
+              <Tooltip content={t("common.remove")}>
+                <RemoveSoftwareRuleTrigger rule={rule}>
+                  <IconButton variant="frame" aria-label={t("policy.rule.removeThe")}>
+                    <LuTrash />
+                  </IconButton>
+                </RemoveSoftwareRuleTrigger>
+              </Tooltip>
             </TableButtonStack>
           </Protected>
         )
@@ -264,14 +250,12 @@ export default function SoftwareComplianceRuleScreen() {
           <Spacer />
           <Protected minLevel={Level.ReadWrite}>
             <Skeleton loading={!!isPending}>
-              <AddSoftwareRuleButton
-                renderItem={(open) => (
-                  <Button onClick={open} variant="primary">
-                    <LuPlus />
-                    {t("policy.rule.add")}
-                  </Button>
-                )}
-              />
+              <AddSoftwareRuleTrigger>
+                <Button variant="primary">
+                  <LuPlus />
+                  {t("policy.rule.add")}
+                </Button>
+              </AddSoftwareRuleTrigger>
             </Skeleton>
           </Protected>
         </Stack>
@@ -298,14 +282,12 @@ export default function SoftwareComplianceRuleScreen() {
                 title={t("compliance.software.noRule")}
                 description={t("compliance.software.canAddRule")}
               >
-                <AddSoftwareRuleButton
-                  renderItem={(open) => (
-                    <Button onClick={open} variant="outline">
-                      <LuPlus />
-                      {t("policy.rule.add")}
-                    </Button>
-                  )}
-                />
+                <AddSoftwareRuleTrigger>
+                  <Button variant="outline">
+                    <LuPlus />
+                    {t("policy.rule.add")}
+                  </Button>
+                </AddSoftwareRuleTrigger>
               </EmptyResult>
             )}
           </>

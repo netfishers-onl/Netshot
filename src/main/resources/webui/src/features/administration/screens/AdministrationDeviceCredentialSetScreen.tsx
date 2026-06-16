@@ -10,9 +10,9 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
 import { LuSquarePen, LuHash, LuPlus, LuTrash, LuAsterisk } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import AddDeviceCredentialSetButton from "../components/AddDeviceCredentialSetButton"
-import EditDeviceCredentialSetButton from "../components/EditDeviceCredentialSetButton"
-import RemoveDeviceCredentialSetButton from "../components/RemoveDeviceCredentialSetButton"
+import AddDeviceCredentialSetTrigger from "../components/AddDeviceCredentialSetTrigger"
+import EditDeviceCredentialSetTrigger from "../components/EditDeviceCredentialSetTrigger"
+import RemoveDeviceCredentialSetTrigger from "../components/RemoveDeviceCredentialSetTrigger"
 import { QUERIES } from "../constants"
 import TableButtonStack from "../components/TableButtonStack"
 
@@ -77,34 +77,20 @@ export default function AdministrationDeviceCredentialSetScreen() {
 
           return (
             <TableButtonStack>
-              <EditDeviceCredentialSetButton
-                credentialSet={credentialSet}
-                renderItem={(open) => (
-                  <Tooltip content={t("common.edit")}>
-                    <IconButton
-                      aria-label={t("domain.edit")}
-                      variant="frame"
-                      onClick={open}
-                    >
-                      <LuSquarePen />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              />
-              <RemoveDeviceCredentialSetButton
-                credentialSet={credentialSet}
-                renderItem={(open) => (
-                  <Tooltip content={t("common.remove")}>
-                    <IconButton
-                      aria-label={t("domain.remove")}
-                      variant="frame"
-                      onClick={open}
-                    >
-                      <LuTrash />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              />
+              <Tooltip content={t("common.edit")}>
+                <EditDeviceCredentialSetTrigger credentialSet={credentialSet}>
+                  <IconButton aria-label={t("domain.edit")} variant="frame">
+                    <LuSquarePen />
+                  </IconButton>
+                </EditDeviceCredentialSetTrigger>
+              </Tooltip>
+              <Tooltip content={t("common.remove")}>
+                <RemoveDeviceCredentialSetTrigger credentialSet={credentialSet}>
+                  <IconButton aria-label={t("domain.remove")} variant="frame">
+                    <LuTrash />
+                  </IconButton>
+                </RemoveDeviceCredentialSetTrigger>
+              </Tooltip>
             </TableButtonStack>
           )
         },
@@ -134,14 +120,12 @@ export default function AdministrationDeviceCredentialSetScreen() {
             w="30%"
           />
           <Spacer />
-          <AddDeviceCredentialSetButton
-            renderItem={(open) => (
-              <Button variant="primary" onClick={open}>
-                <LuPlus />
-                {t("common.create")}
-              </Button>
-            )}
-          />
+          <AddDeviceCredentialSetTrigger>
+            <Button variant="primary">
+              <LuPlus />
+              {t("common.create")}
+            </Button>
+          </AddDeviceCredentialSetTrigger>
         </Stack>
         {isPending ? (
           <Stack gap="3">
@@ -159,14 +143,12 @@ export default function AdministrationDeviceCredentialSetScreen() {
                 title={t("credential.noneForDevice")}
                 description={t("credential.canCreate")}
               >
-                <AddDeviceCredentialSetButton
-                  renderItem={(open) => (
-                    <Button variant="outline" onClick={open}>
-                      <LuPlus />
-                      {t("common.create")}
-                    </Button>
-                  )}
-                />
+                <AddDeviceCredentialSetTrigger>
+                  <Button variant="outline">
+                    <LuPlus />
+                    {t("common.create")}
+                  </Button>
+                </AddDeviceCredentialSetTrigger>
               </EmptyResult>
             )}
           </>

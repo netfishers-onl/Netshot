@@ -10,7 +10,7 @@ import { ChartConfiguration } from "chart.js/auto"
 import { endOfMonth, getLocalTimeZone, today, toZoned } from "@internationalized/date"
 import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { HardwareDeviceListButton } from "../components"
+import { HardwareDeviceListTrigger } from "../components"
 import { QUERIES } from "../constants"
 import { useLocalization } from "@/i18n"
 
@@ -178,15 +178,11 @@ export default function ReportHardwareSupportStatusScreen() {
           }
 
           return (
-            <HardwareDeviceListButton
-              type="eos"
-              date={info.row.original.date || 0}
-              renderItem={(open) => (
-                <Button variant="plain" onClick={open} textDecoration="underline">
-                  +{getFormattedCount(info)}
-                </Button>
-              )}
-            />
+            <HardwareDeviceListTrigger type="eos" date={info.row.original.date || 0}>
+              <Button variant="plain" textDecoration="underline">
+                +{getFormattedCount(info)}
+              </Button>
+            </HardwareDeviceListTrigger>
           )
         },
         header: t("compliance.hardware.endOfSale"),
@@ -198,15 +194,11 @@ export default function ReportHardwareSupportStatusScreen() {
           }
 
           return (
-            <HardwareDeviceListButton
-              type="eol"
-              date={info.row.original.date || 0}
-              renderItem={(open) => (
-                <Button variant="plain" onClick={open} textDecoration="underline">
-                  +{getFormattedCount(info)}
-                </Button>
-              )}
-            />
+            <HardwareDeviceListTrigger type="eol" date={info.row.original.date || 0}>
+              <Button variant="plain" textDecoration="underline">
+                +{getFormattedCount(info)}
+              </Button>
+            </HardwareDeviceListTrigger>
           )
         },
         header: t("compliance.hardware.endOfLife"),

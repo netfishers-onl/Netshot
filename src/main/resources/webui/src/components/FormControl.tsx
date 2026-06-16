@@ -49,6 +49,7 @@ export type FormControlProps<T> = {
   allowUnchanged?: boolean
   clearable?: boolean
   suggestions?: string[]
+  mono?: boolean
 } & Omit<InputProps, "recipe"> &
   Omit<SystemStyleObject, "recipe"> &
   UseControllerProps<T>
@@ -85,6 +86,7 @@ function FormControl<T>(
     allowUnchanged = false,
     clearable = false,
     suggestions,
+    mono,
     ...other
   } = props
 
@@ -158,6 +160,7 @@ function FormControl<T>(
     },
     autoFocus,
     variant,
+    mono,
   }
 
   const togglePassword = useCallback(() => {

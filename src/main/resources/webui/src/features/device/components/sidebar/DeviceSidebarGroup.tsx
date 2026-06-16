@@ -1,5 +1,5 @@
 import api from "@/api"
-import { AddGroupButton, getExpandedKeys, Protected, TreeGroup } from "@/components"
+import { AddGroupTrigger, getExpandedKeys, Protected, TreeGroup } from "@/components"
 import { LuPlus } from "react-icons/lu"
 import { Tooltip } from "@/components/ui/tooltip"
 import { QUERIES } from "@/constants"
@@ -80,15 +80,13 @@ export default function DeviceSidebarGroup() {
           {t("group.list")}
         </Heading>
         <Protected minLevel={Level.ReadWrite}>
-          <AddGroupButton
-            renderItem={(open) => (
-              <Tooltip content={t("group.add")}>
-                <IconButton variant="ghost" onClick={open} aria-label={t("group.add")}>
-                  <LuPlus />
-                </IconButton>
-              </Tooltip>
-            )}
-          />
+          <Tooltip content={t("group.add")}>
+            <AddGroupTrigger>
+              <IconButton variant="ghost" aria-label={t("group.add")}>
+                <LuPlus />
+              </IconButton>
+            </AddGroupTrigger>
+          </Tooltip>
         </Protected>
       </Flex>
       {scroll > 0 && <Separator />}

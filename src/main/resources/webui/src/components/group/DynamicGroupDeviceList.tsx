@@ -1,5 +1,5 @@
 import api from "@/api"
-import { QueryBuilderButton, QueryBuilderValue } from "@/components"
+import { QueryBuilderTrigger, QueryBuilderValue } from "@/components"
 import { QUERIES } from "@/constants"
 import { DeviceType } from "@/types"
 import { Button, Center, Heading, Spinner, Stack, Text } from "@chakra-ui/react"
@@ -63,10 +63,9 @@ export default function DynamicGroupDeviceList(props: DynamicGroupDeviceListProp
             <Text color="grey.400">{t("device.noDeviceMatchingCriteria")}</Text>
           </Stack>
 
-          <QueryBuilderButton
-            renderItem={(open) => <Button onClick={open}>{t("policy.editQuery")}</Button>}
-            onSubmit={onUpdateQuery}
-          />
+          <QueryBuilderTrigger onSubmit={onUpdateQuery}>
+            <Button>{t("policy.editQuery")}</Button>
+          </QueryBuilderTrigger>
         </Stack>
       </Center>
     )

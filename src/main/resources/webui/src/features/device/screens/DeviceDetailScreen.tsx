@@ -9,13 +9,13 @@ import { useTranslation } from "react-i18next"
 import { Outlet, useParams } from "react-router"
 import { useDevice, useDeviceTypes } from "../api"
 import {
-  DisableDeviceButton,
-  EditDeviceButton,
-  EnableDeviceButton,
-  RemoveDeviceButton,
+  DisableDeviceTrigger,
+  EditDeviceTrigger,
+  EnableDeviceTrigger,
+  RemoveDeviceTrigger,
 } from "../components"
-import OpenDeviceScriptButton from "../components/OpenDeviceScriptButton"
-import DeviceSnapshotButton from "../components/DeviceSnapshotButton"
+import OpenDeviceScriptTrigger from "../components/OpenDeviceScriptTrigger"
+import DeviceSnapshotTrigger from "../components/DeviceSnapshotTrigger"
 import DeviceProvider from "../contexts/DeviceProvider"
 
 export default function DeviceDetailScreen() {
@@ -56,15 +56,12 @@ export default function DeviceDetailScreen() {
             <Stack direction="row" gap="3">
               <Protected minLevel={Level.Operator}>
                 <Skeleton loading={isPending}>
-                  <DeviceSnapshotButton
-                    devices={[device]}
-                    renderItem={(open) => (
-                      <Button variant="primary" onClick={open}>
-                        <LuCamera />
-                        {t("device.snapshot.take")}
-                      </Button>
-                    )}
-                  />
+                  <DeviceSnapshotTrigger devices={[device]}>
+                    <Button variant="primary">
+                      <LuCamera />
+                      {t("device.snapshot.take")}
+                    </Button>
+                  </DeviceSnapshotTrigger>
                 </Skeleton>
               </Protected>
 
@@ -84,48 +81,36 @@ export default function DeviceDetailScreen() {
                       {device && (
                         <>
                           <Protected minLevel={Level.ExecureReadWrite}>
-                            <OpenDeviceScriptButton
-                              devices={[device]}
-                              renderItem={(open) => (
-                                <Menu.Item onSelect={open} value="run-script">
-                                  <LuPlay />
-                                  {t("script.run")}
-                                </Menu.Item>
-                              )}
-                            />
+                            <OpenDeviceScriptTrigger devices={[device]}>
+                              <Menu.Item value="run-script">
+                                <LuPlay />
+                                {t("script.run")}
+                              </Menu.Item>
+                            </OpenDeviceScriptTrigger>
                           </Protected>
                           <Protected minLevel={Level.ReadWrite}>
-                            <EditDeviceButton
-                              device={device}
-                              renderItem={(open) => (
-                                <Menu.Item onSelect={open} value="edit">
-                                  <LuSquarePen />
-                                  {t("common.edit")}
-                                </Menu.Item>
-                              )}
-                            />
+                            <EditDeviceTrigger device={device}>
+                              <Menu.Item value="edit">
+                                <LuSquarePen />
+                                {t("common.edit")}
+                              </Menu.Item>
+                            </EditDeviceTrigger>
                             {isDisabled ? (
                               <Protected minLevel={Level.ReadWrite}>
-                                <EnableDeviceButton
-                                  devices={[device]}
-                                  renderItem={(open) => (
-                                    <Menu.Item onSelect={open} value="enable">
-                                      <LuZap />
-                                      {t("common.enable")}
-                                    </Menu.Item>
-                                  )}
-                                />
+                                <EnableDeviceTrigger devices={[device]}>
+                                  <Menu.Item value="enable">
+                                    <LuZap />
+                                    {t("common.enable")}
+                                  </Menu.Item>
+                                </EnableDeviceTrigger>
                               </Protected>
                             ) : (
-                              <DisableDeviceButton
-                                devices={[device]}
-                                renderItem={(open) => (
-                                  <Menu.Item onSelect={open} value="disable">
-                                    <LuZapOff />
-                                    {t("common.disable")}
-                                  </Menu.Item>
-                                )}
-                              />
+                              <DisableDeviceTrigger devices={[device]}>
+                                <Menu.Item value="disable">
+                                  <LuZapOff />
+                                  {t("common.disable")}
+                                </Menu.Item>
+                              </DisableDeviceTrigger>
                             )}
                           </Protected>
 
@@ -135,15 +120,12 @@ export default function DeviceDetailScreen() {
                           </Menu.Item>
 
                           <Protected minLevel={Level.ReadWrite}>
-                            <RemoveDeviceButton
-                              devices={[device]}
-                              renderItem={(open) => (
-                                <Menu.Item onSelect={open} value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
-                                  <LuTrash />
-                                  {t("common.remove")}
-                                </Menu.Item>
-                              )}
-                            />
+                            <RemoveDeviceTrigger devices={[device]}>
+                              <Menu.Item value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
+                                <LuTrash />
+                                {t("common.remove")}
+                              </Menu.Item>
+                            </RemoveDeviceTrigger>
                           </Protected>
                         </>
                       )}

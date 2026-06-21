@@ -472,6 +472,7 @@
         "executedAfterSnapshot": "Exécuté après le snapshot de l'équipement",
         "executedAfterDiagnostics": "Exécuté après les diagnostics effectués sur l'équipement",
         "executedAfterJsScript": "Exécuté après le script JS sur l'équipement",
+        "currentExemptions": "Exemptions courantes",
         "exemptedDevices": "Équipements exemptés",
         "existingText": "Texte existant",
         "fieldToCheck": "Champ à vérifier",

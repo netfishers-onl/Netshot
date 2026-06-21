@@ -219,7 +219,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
             <Dialog.Body pb="7">
               <Stack direction="row" gap="4" alignItems="stretch">
                 {/* Left column: search + device pool */}
-                <Stack flex="1" gap="2">
+                <Stack flex="1" minW="0" gap="2">
                   <InputGroup startElement={<LuSearch />}>
                     <Input
                       placeholder="Search for a device to exempt"
@@ -245,31 +245,11 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
                   </Box>
                 </Stack>
 
-                {/* Transfer buttons */}
+                {/* Transfer buttons + date */}
                 <Stack gap="2" alignItems="center" justifyContent="center">
-                  <IconButton
-                    variant="outline"
-                    aria-label={t("common.add")}
-                    disabled={leftValues.length === 0}
-                    onClick={transferToRight}
-                  >
-                    <LuArrowRight />
-                  </IconButton>
-                  <IconButton
-                    variant="outline"
-                    aria-label={t("common.remove")}
-                    disabled={rightValues.length === 0}
-                    onClick={transferToLeft}
-                  >
-                    <LuArrowLeft />
-                  </IconButton>
-                </Stack>
-
-                {/* Right column: date selector + exempted devices */}
-                <Stack flex="1" gap="2">
                   <Field.Root>
-                    <Stack direction="row" alignItems="center" gap="3">
-                      <Field.Label mb="0" whiteSpace="nowrap">
+                    <Stack gap="1" alignItems="flex-start">
+                      <Field.Label>
                         {t("time.endDate")}
                       </Field.Label>
                       <DatePicker.Root
@@ -280,7 +260,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
                         locale={i18n.language}
                         closeOnSelect
                       >
-                        <DatePicker.Control>
+                        <DatePicker.Control w="44">
                           <DatePicker.Input placeholder={datePlaceholder} />
                           <DatePicker.IndicatorGroup>
                             <DatePicker.Trigger asChild>
@@ -310,6 +290,29 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
                         </Portal>
                       </DatePicker.Root>
                     </Stack>
+                  </Field.Root>
+                  <IconButton
+                    variant="outline"
+                    aria-label={t("common.add")}
+                    disabled={leftValues.length === 0}
+                    onClick={transferToRight}
+                  >
+                    <LuArrowRight />
+                  </IconButton>
+                  <IconButton
+                    variant="outline"
+                    aria-label={t("common.remove")}
+                    disabled={rightValues.length === 0}
+                    onClick={transferToLeft}
+                  >
+                    <LuArrowLeft />
+                  </IconButton>
+                </Stack>
+
+                {/* Right column: exempted devices */}
+                <Stack flex="1" minW="0" gap="2">
+                  <Field.Root>
+                    <Field.Label>{t("policy.rule.currentExemptions")}</Field.Label>
                   </Field.Root>
                   <Box borderWidth="1px" borderColor="grey.100" borderRadius="xl" overflow="hidden">
                     <ListboxRender

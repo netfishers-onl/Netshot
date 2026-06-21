@@ -473,6 +473,7 @@
         "executedAfterSnapshot": "Executed after device snapshot",
         "executedAfterDiagnostics": "Executed after diagnostics performed on device",
         "executedAfterJsScript": "Executed after JS script on device",
+        "currentExemptions": "Current exemptions",
         "exemptedDevices": "Exempted devices",
         "existingText": "Existing text",
         "fieldToCheck": "Field to check",

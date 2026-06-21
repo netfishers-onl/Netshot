@@ -1,5 +1,6 @@
 import api from "@/api"
 import { DataTable, EmptyResult, Protected, Search } from "@/components"
+import DeviceGroupBadge from "@/components/DeviceGroupBadge"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
 import { HardwareRule, Level } from "@/types"
@@ -48,7 +49,7 @@ export default function HardwareComplianceScreen() {
               </Badge>
             )
           }
-          return <Text>{value.name}</Text>
+          return <DeviceGroupBadge id={value.id} name={value.name} />
         },
         header: t("group.label"),
         size: 20000,

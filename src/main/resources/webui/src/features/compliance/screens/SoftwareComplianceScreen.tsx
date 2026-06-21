@@ -1,6 +1,7 @@
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { DataTable, EmptyResult, Protected, Search } from "@/components"
+import DeviceGroupBadge from "@/components/DeviceGroupBadge"
 import { Tooltip } from "@/components/ui/tooltip"
 import { MUTATIONS } from "@/constants"
 import { useAuth } from "@/contexts"
@@ -65,7 +66,7 @@ export default function SoftwareComplianceRuleScreen() {
             </Badge>
           )
         }
-        return <Text>{value.name}</Text>
+        return <DeviceGroupBadge id={value.id} name={value.name} />
       },
       header: t("group.label"),
       size: 10000,

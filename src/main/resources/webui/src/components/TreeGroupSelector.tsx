@@ -2,12 +2,13 @@ import api from "@/api"
 import { QUERIES } from "@/constants"
 import { useFormDialog } from "@/dialog"
 import { Group } from "@/types"
-import { createFoldersFromGroups, Folder } from "@/utils"
-import { Box, Field, Stack, Tag, Text } from "@chakra-ui/react"
+import { createFoldersFromGroups, findNodeWithPath, Folder } from "@/utils"
+import { Badge, Box, Field, Icon, Stack, Tag, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { MouseEvent, useCallback, useMemo } from "react"
 import { useFieldArray, useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
+import { LuAsterisk, LuBrackets } from "react-icons/lu"
 import { TreeGroup } from "./group"
 
 type SelectGroupForm = {
@@ -15,7 +16,13 @@ type SelectGroupForm = {
   isMulti: boolean
 }
 
-function SelectGroupDialog({ items }: { items: (Group | Folder)[] }) {
+function SelectGroupDialog({
+  items,
+  initialExpandedKeys,
+}: {
+  items: (Group | Folder)[]
+  initialExpandedKeys: string[]
+}) {
   const form = useFormContext<SelectGroupForm>()
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -48,12 +55,17 @@ function SelectGroupDialog({ items }: { items: (Group | Folder)[] }) {
         append(group)
       }
     },
-    [append, remove, fields, isSelected, isMulti]
+    [append, remove, fields, isSelected, isMulti, form]
   )
 
   return (
     <Stack gap="0" py="4" px="5">
-      <TreeGroup items={items} onGroupSelect={onGroupSelect} isSelected={isSelected} />
+      <TreeGroup
+        items={items}
+        onGroupSelect={onGroupSelect}
+        isSelected={isSelected}
+        expandedKeys={initialExpandedKeys}
+      />
     </Stack>
   )
 }
@@ -84,9 +96,9 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
   const { t } = useTranslation()
   const dialog = useFormDialog()
 
-  const form = useForm<SelectGroupForm>({
+  const dialogForm = useForm<SelectGroupForm>({
     defaultValues: {
-      groups: value.map((v) => ({ id: v })),
+      groups: [],
       isMulti,
     },
   })
@@ -98,54 +110,45 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
 
   const items = useMemo(() => createFoldersFromGroups(groups), [groups])
 
-  const { remove } = useFieldArray({
-    control: form.control,
-    name: "groups",
-    keyName: "fieldId",
-  })
-
-  const groupField = useWatch({
-    control: form.control,
-    name: "groups",
-  })
-
   const onRemove = useCallback(
     (evt: MouseEvent<HTMLButtonElement>, index: number) => {
       evt?.stopPropagation()
-
-      remove(index)
-
-      if (onChange) {
-        const values = form.getValues()
-        onChange(values.groups.map((g) => g.id))
-      }
+      onChange(value.filter((_, i) => i !== index))
     },
-    [remove, onChange, form]
+    [onChange, value]
   )
 
   const selectedGroups = useMemo(() => {
-    if (withAny && groupField.length === 0) {
-      return [t("common.anyLabel")]
-    }
-
-    if (items?.length === 0) {
+    if (!groups?.length || value.length === 0) {
       return []
     }
-
-    return groupField
-      .map((field) => {
-        return groups.find((group) => group.id === field.id)?.name
-      })
-      .filter(Boolean)
-  }, [groups, groupField, items, withAny])
+    return value
+      .map((id) => groups.find((group) => group.id === id)?.name)
+      .filter(Boolean) as string[]
+  }, [groups, value])
 
   const open = () => {
+    dialogForm.reset({
+      groups: value.map((v) => ({ id: v })),
+      isMulti,
+    })
+
+    const expandedKeys: string[] = []
+    for (const id of value) {
+      const result = findNodeWithPath(items, id)
+      if (result) {
+        result.path.forEach((f) => {
+          if (!expandedKeys.includes(f.name)) expandedKeys.push(f.name)
+        })
+      }
+    }
+
     const dialogRef = dialog.open({
       title: isMulti ? t("common.selectGroups") : t("common.selectGroup"),
-      description: <SelectGroupDialog items={items} />,
-      form,
+      description: <SelectGroupDialog items={items} initialExpandedKeys={expandedKeys} />,
+      form: dialogForm,
       onSubmit() {
-        const values = form.getValues()
+        const values = dialogForm.getValues()
 
         if (onChange) {
           onChange(values.groups.map((g) => g.id))
@@ -159,37 +162,15 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
 
   const isDisabled = disabled || isLoading
 
-  /* return (
-    <Field.Root required={required} readOnly={readOnly} disabled={isDisabled} onClick={open}>
-      <TagsInput.Root max={1}>
-        <TagsInput.Label>{label ? label : t("common.targetGroups")}</TagsInput.Label>
-        <TagsInput.Control>
-          {selectedGroups.map((tag, index) => (
-            <TagsInput.Item key={index} index={index} value={tag}>
-              <TagsInput.ItemPreview>
-                <TagsInput.ItemText>{tag}</TagsInput.ItemText>
-                <TagsInput.ItemDeleteTrigger onClick={(evt) => onRemove(evt, index)} />
-              </TagsInput.ItemPreview>
-              <TagsInput.ItemInput />
-            </TagsInput.Item>
-          ))}
-
-          <TagsInput.Input placeholder={t("common.selectGroups")} />
-        </TagsInput.Control>
-      </TagsInput.Root>
-    </Field.Root>
-  ) */
-
-  const render = useMemo(() => {
-    return selectedGroups.map((group, index) => (
-      <Tag.Root key={index} size="lg">
-        <Tag.Label>{group}</Tag.Label>
-        <Tag.EndElement>
-          <Tag.CloseTrigger type="button" onClick={(evt) => onRemove(evt, index)} />
-        </Tag.EndElement>
-      </Tag.Root>
-    ))
-  }, [selectedGroups])
+  const tags = selectedGroups.map((group, index) => (
+    <Tag.Root key={index} size="lg">
+      <Icon size="xs"><LuBrackets /></Icon>
+      <Tag.Label>{group}</Tag.Label>
+      <Tag.EndElement>
+        <Tag.CloseTrigger type="button" onClick={(evt) => onRemove(evt, index)} />
+      </Tag.EndElement>
+    </Tag.Root>
+  ))
 
   return (
     <Stack gap="1">
@@ -219,17 +200,18 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
         >
           {withAny ? (
             <>
-              {groupField?.length > 0 ? (
-                render
+              {value?.length > 0 ? (
+                tags
               ) : (
-                <Tag.Root colorPalette="grey" size="md">
-                  <Tag.Label>{t("common.anyLabel")}</Tag.Label>
-                </Tag.Root>
+                <Badge size="lg" variant="outline">
+                  <LuAsterisk />
+                  {t("common.any")}
+                </Badge>
               )}
             </>
           ) : (
             <>
-              {groupField?.length > 0 ? render : <Text color="grey.400">{isMulti ? t("common.selectGroups") : t("common.selectGroup")}</Text>}
+              {value?.length > 0 ? tags : <Text color="grey.400">{isMulti ? t("common.selectGroups") : t("common.selectGroup")}</Text>}
             </>
           )}
         </Box>

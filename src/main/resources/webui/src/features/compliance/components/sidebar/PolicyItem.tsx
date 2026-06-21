@@ -42,9 +42,14 @@ export default function PolicyItem(props: PolicyItemProps) {
   const handleClick = useCallback(async () => {
     navigate(`./config/${policy.id}`)
     if (!hasRules) return
-    setIsCollapsed((prev) => !prev)
-    await controls.start(isCollapsed ? "show" : "hidden")
-  }, [navigate, policy.id, hasRules, isCollapsed, controls])
+    if (isPolicySelected) {
+      setIsCollapsed((prev) => !prev)
+      await controls.start(isCollapsed ? "show" : "hidden")
+    } else if (isCollapsed) {
+      setIsCollapsed(false)
+      await controls.start("show")
+    }
+  }, [navigate, policy.id, hasRules, isCollapsed, isPolicySelected, controls])
 
   return (
     <Stack gap="0" mx="-3">

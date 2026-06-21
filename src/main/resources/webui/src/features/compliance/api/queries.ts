@@ -15,6 +15,12 @@ export function usePolicies() {
   return useQuery({
     queryKey: [QUERIES.POLICY_LIST],
     queryFn: () => api.policy.getAllWithRules(),
+    select(policies) {
+      return policies.map((policy) => ({
+        ...policy,
+        rules: policy.rules ? sortAlphabetical([...policy.rules], "name") : policy.rules,
+      }))
+    },
   })
 }
 

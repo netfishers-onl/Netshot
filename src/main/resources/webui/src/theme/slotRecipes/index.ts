@@ -4,6 +4,7 @@ import { comboboxSlotRecipe } from "./combobox"
 import { datePickerSlotRecipe } from "./date-picker"
 import { dialogSlotRecipe } from "./dialog"
 import { fieldSlotRecipe } from "./field"
+import { listboxSlotRecipe } from "./listbox"
 import { menuSlotRecipe } from "./menu"
 import { progressSlotRecipe } from "./progress"
 import { radioCardSlotRecipe } from "./radioCard"
@@ -20,6 +21,7 @@ export default {
   checkbox: checkboxSlotRecipe,
   datePicker: datePickerSlotRecipe,
   dialog: dialogSlotRecipe,
+  listbox: listboxSlotRecipe,
   menu: menuSlotRecipe,
   progress: progressSlotRecipe,
   radioCard: radioCardSlotRecipe,

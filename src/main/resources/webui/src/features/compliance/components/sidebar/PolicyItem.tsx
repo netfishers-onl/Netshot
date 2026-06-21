@@ -1,7 +1,7 @@
 import { Policy } from "@/types"
-import { Icon, Stack, Status, Text } from "@chakra-ui/react"
+import { Icon, Stack, Text } from "@chakra-ui/react"
 import { Tooltip } from "@/components/ui/tooltip"
-import { LuFolder, LuFolderOpen } from "react-icons/lu"
+import { LuCircleX, LuFolder, LuFolderOpen } from "react-icons/lu"
 import { motion, useAnimationControls } from "framer-motion"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router"
@@ -75,11 +75,11 @@ export default function PolicyItem(props: PolicyItemProps) {
           </Icon>
           <Text lineClamp={1}>{policy?.name}</Text>
         </Stack>
-        {isAssigned && (
-          <Tooltip content={policy.targetGroups.map((g) => g.name).join(", ")}>
-            <Status.Root size="sm" colorPalette="green">
-              <Status.Indicator />
-            </Status.Root>
+        {!isAssigned && (
+          <Tooltip content="Not assigned to any group">
+            <Icon color="red.500" size="sm" flexShrink="0">
+              <LuCircleX />
+            </Icon>
           </Tooltip>
         )}
       </Stack>

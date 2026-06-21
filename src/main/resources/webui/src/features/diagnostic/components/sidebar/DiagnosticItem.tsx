@@ -1,11 +1,11 @@
-import { Icon, Stack, Status, Text } from "@chakra-ui/react"
+import { Icon, Stack, Text } from "@chakra-ui/react"
 import { forwardRef, Ref, useMemo } from "react"
 import { NavLink } from "react-router"
 
 import { Diagnostic, DiagnosticType } from "@/types"
 import { Tooltip } from "@/components/ui/tooltip"
 
-import { LuRegex } from "react-icons/lu"
+import { LuCircleX, LuRegex } from "react-icons/lu"
 import { SiJavascript, SiPython } from "react-icons/si"
 
 type DiagnosticBoxProps = {
@@ -51,11 +51,11 @@ const DiagnosticItem = forwardRef((props: DiagnosticBoxProps, ref: Ref<HTMLDivEl
               </Icon>
               <Text lineClamp={1} opacity={isDisabled ? 0.5 : 1}>{diagnostic?.name}</Text>
             </Stack>
-            {isAssigned && (
-              <Tooltip content={diagnostic.targetGroup.name}>
-                <Status.Root size="sm" colorPalette="green">
-                  <Status.Indicator />
-                </Status.Root>
+            {!isAssigned && (
+              <Tooltip content="Not assigned to any group">
+                <Icon color="red.500" size="sm" flexShrink="0">
+                  <LuCircleX />
+                </Icon>
               </Tooltip>
             )}
           </Stack>

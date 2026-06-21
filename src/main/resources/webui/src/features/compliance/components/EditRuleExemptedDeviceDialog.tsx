@@ -76,6 +76,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
   const { policyId, rule } = props
   const { t, i18n } = useTranslation()
   const { formatDate, numberToCalendarDate, calendarDateToTimestamp, datePlaceholder } = useLocalization()
+  const now = Date.now()
   const toast = useToast()
   const dialogConfig = useDialogConfig()
   const queryClient = useQueryClient()
@@ -320,7 +321,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
                         <Listbox.ItemText>
                           <Stack gap="0">
                             <Text fontWeight="medium" textStyle="sm">{itemLabel}</Text>
-                            <Text textStyle="xs" color="fg.muted">
+                            <Text textStyle="xs" color={device.expirationDate < now ? "fg.error" : "fg.muted"}>
                               {t("time.expiresOn", { date: formatDate(device.expirationDate) })}
                             </Text>
                           </Stack>

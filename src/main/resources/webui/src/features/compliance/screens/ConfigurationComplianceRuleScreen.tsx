@@ -1,5 +1,7 @@
 import api from "@/api"
 import { MonacoEditor } from "@/components"
+import { Tooltip } from "@/components/ui/tooltip"
+import { useLocalization } from "@/i18n"
 import { LuAsterisk, LuMessageSquareDot, LuPower, LuPencil, LuTrash, LuChevronDown } from "react-icons/lu"
 import { RuleType } from "@/types"
 import {
@@ -22,7 +24,7 @@ import { useDeviceTypeOptions } from "@/hooks"
 import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { useParams } from "react-router"
+import { Link, useParams } from "react-router"
 import DisableRuleTrigger from "../components/DisableRuleTrigger"
 import EditRuleTrigger from "../components/EditRuleTrigger"
 import EditRuleExemptedDeviceTrigger from "../components/EditRuleExemptedDeviceTrigger"
@@ -34,11 +36,18 @@ import { RuleProvider } from "../contexts"
 export default function ConfigurationComplianceRuleScreen() {
   const { policyId, ruleId } = useParams()
   const { t } = useTranslation()
+  const { formatDate } = useLocalization()
   const { getOptionByDriver } = useDeviceTypeOptions()
 
   const { data: rule, isPending } = useQuery({
     queryKey: [QUERIES.RULE_DETAIL, +policyId, +ruleId],
     queryFn: async () => api.rule.getById(+policyId, +ruleId),
+  })
+
+  const { data: exemptedDevices } = useQuery({
+    queryKey: [QUERIES.RULE_EXEMPTED_DEVICES, +ruleId],
+    queryFn: () => api.rule.getAllExemptedDevices(+ruleId),
+    enabled: !!rule,
   })
 
   const contextLabel = rule?.anyBlock
@@ -71,6 +80,35 @@ export default function ConfigurationComplianceRuleScreen() {
     if (matchAll) return invert ? key("mustNotBe") : key("mustBe")
     return invert ? key("mustNotContain") : key("mustContain")
   }, [rule, t])
+
+  const now = Date.now()
+
+  const exemptionsRow = exemptedDevices?.length ? (
+    <Flex>
+      <Box flex="0 0 auto" w="240px">
+        <Text color="grey.400">{t("policy.rule.exemptedDevices")}</Text>
+      </Box>
+      <Stack direction="row" gap="2" flexWrap="wrap">
+        {exemptedDevices.map((device) => {
+          const expired = device.expirationDate < now
+          return (
+            <Tooltip key={device.id} content={t("time.expiresOn", { date: formatDate(device.expirationDate) })}>
+              <Badge
+                variant="surface"
+                size="md"
+                colorPalette={expired ? "red" : undefined}
+                display="inline-flex"
+                alignItems="center"
+                asChild
+              >
+                <Link to={`/app/devices/${device.id}/general`}>{device.name}</Link>
+              </Badge>
+            </Tooltip>
+          )
+        })}
+      </Stack>
+    </Flex>
+  ) : null
 
   return (
     <RuleProvider rule={rule} isLoading={isPending}>
@@ -186,15 +224,22 @@ export default function ConfigurationComplianceRuleScreen() {
                 <Text fontFamily="mono">{rule?.text ?? "nA"}</Text>
               </Skeleton>
             </Flex>
+            {exemptionsRow}
           </Stack>
         )}
 
         {rule?.type === RuleType.Javascript && (
-          <MonacoEditor key={rule?.script} value={rule?.script} language="javascript" readOnly />
+          <>
+            {exemptionsRow && <Stack gap="3">{exemptionsRow}</Stack>}
+            <MonacoEditor key={rule?.script} value={rule?.script} language="javascript" readOnly />
+          </>
         )}
 
         {rule?.type === RuleType.Python && (
-          <MonacoEditor key={rule?.script} value={rule?.script} language="python" readOnly />
+          <>
+            {exemptionsRow && <Stack gap="3">{exemptionsRow}</Stack>}
+            <MonacoEditor key={rule?.script} value={rule?.script} language="python" readOnly />
+          </>
         )}
       </Stack>
     </RuleProvider>

@@ -1,12 +1,12 @@
-import { Box, Flex, Heading, Skeleton, Stack, Tag, Text } from "@chakra-ui/react"
+import { Box, Flex, Heading, Skeleton, Stack, Text } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
 
-import { DeviceAttributeDefinition, DeviceAttributeLevel, DeviceStatus } from "@/types"
+import { DeviceAttributeDefinition, DeviceAttributeLevel } from "@/types"
 import { useLocalization } from "@/i18n"
 import { DeviceGroupBadge } from "@/components"
 
 import { useMemo } from "react"
-import { DeviceAttributeValue } from "../components"
+import { DeviceAttributeValue, DeviceStatusBadge } from "../components"
 import { useDevice } from "../contexts/device"
 
 export default function DeviceGeneralScreen() {
@@ -51,12 +51,7 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("common.status")}</Text>
             </Box>
             <Skeleton loading={!!isLoading}>
-              {device?.status === DeviceStatus.Production && (
-                <Tag.Root colorPalette="green">Production</Tag.Root>
-              )}
-              {device?.status === DeviceStatus.Disabled && (
-                <Tag.Root colorPalette="red">Disabled</Tag.Root>
-              )}
+              {device?.status && <DeviceStatusBadge status={device.status} />}
             </Skeleton>
           </Flex>
           <Flex alignItems="center">

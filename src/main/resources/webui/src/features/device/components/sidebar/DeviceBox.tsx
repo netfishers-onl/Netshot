@@ -1,10 +1,10 @@
-import { Badge, HoverCard, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
+import { Badge, HoverCard, Icon, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
 import { forwardRef, MouseEvent, Ref, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useMatch, useNavigate, useParams } from "react-router"
 
 import { LuTriangleAlert, LuCircleCheck, LuTrophy } from "react-icons/lu"
-import { DeviceSoftwareLevel, DeviceStatus, SimpleDevice } from "@/types"
+import { DeviceStatus, SimpleDevice } from "@/types"
 
 import { useSoftwareLevels } from "@/hooks"
 import { useShallow } from "zustand/react/shallow"
@@ -119,18 +119,9 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
       userSelect="none"
       cursor="pointer"
     >
-      <Stack gap="0">
-        <Text
-          opacity={isDisabled ? 0.5 : 1}
-          fontSize="xs"
-          color={isSelected ? "green.500" : "grey.400"}
-        >
-          {device?.mgmtAddress}
-        </Text>
-        <Text opacity={isDisabled ? 0.5 : 1} fontWeight="medium">
-          {device?.name}
-        </Text>
-      </Stack>
+      <Text opacity={isDisabled ? 0.5 : 1} fontWeight="medium">
+        {device?.name}
+      </Text>
       <Stack direction="row" gap="3">
         <Badge
           opacity={isDisabled ? 0.5 : 1}
@@ -145,15 +136,9 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
         {!isDisabled && (
           <HoverCard.Root>
             <HoverCard.Trigger asChild>
-              {compliant ? (
-                <Tag.Root gap="1" colorPalette="green">
-                  <LuCircleCheck size={14} />
-                </Tag.Root>
-              ) : (
-                <Tag.Root gap="1" colorPalette="red">
-                  <LuTriangleAlert size={14} />
-                </Tag.Root>
-              )}
+              <Icon color={compliant ? "green.500" : "red.500"} cursor="default">
+                {compliant ? <LuCircleCheck size={16} /> : <LuTriangleAlert size={16} />}
+              </Icon>
             </HoverCard.Trigger>
             <HoverCard.Positioner>
               <HoverCard.Content w="360px">

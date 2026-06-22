@@ -3,7 +3,7 @@ import { LuCamera, LuSquarePen, LuChevronDown, LuPlay, LuRefreshCcw, LuTrash, Lu
 import { RouterTab, RouterTabs } from "@/components/routerTab"
 import { useToast } from "@/hooks"
 import { DeviceStatus, DeviceType, Level } from "@/types"
-import { Button, Flex, Heading, Menu, Portal, Skeleton, Spacer, Stack } from "@chakra-ui/react"
+import { Button, Flex, Group, Heading, IconButton, Menu, Portal, Skeleton, Spacer, Stack } from "@chakra-ui/react"
 import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Outlet, useParams } from "react-router"
@@ -65,74 +65,71 @@ export default function DeviceDetailScreen() {
                 </Skeleton>
               </Protected>
 
-              <Menu.Root>
+              <Protected minLevel={Level.ReadWrite}>
                 <Skeleton loading={isPending}>
-                  <Menu.Trigger asChild>
-                    <Button>
-                      {t("common.actions")}
-                      <LuChevronDown />
-                    </Button>
-                  </Menu.Trigger>
-                </Skeleton>
+                  <Menu.Root positioning={{ placement: "bottom-end" }}>
+                    <Group attached>
+                      <EditDeviceTrigger device={device}>
+                        <Button>
+                          <LuSquarePen />
+                          {t("common.edit")}
+                        </Button>
+                      </EditDeviceTrigger>
+                      <Menu.Trigger asChild>
+                        <IconButton>
+                          <LuChevronDown />
+                        </IconButton>
+                      </Menu.Trigger>
+                    </Group>
 
-                <Portal>
-                  <Menu.Positioner>
-                    <Menu.Content>
-                      {device && (
-                        <>
-                          <Protected minLevel={Level.ExecureReadWrite}>
-                            <OpenDeviceScriptTrigger devices={[device]}>
-                              <Menu.Item value="run-script">
-                                <LuPlay />
-                                {t("script.run")}
-                              </Menu.Item>
-                            </OpenDeviceScriptTrigger>
-                          </Protected>
-                          <Protected minLevel={Level.ReadWrite}>
-                            <EditDeviceTrigger device={device}>
-                              <Menu.Item value="edit">
-                                <LuSquarePen />
-                                {t("common.edit")}
-                              </Menu.Item>
-                            </EditDeviceTrigger>
-                            {isDisabled ? (
-                              <Protected minLevel={Level.ReadWrite}>
+                    <Portal>
+                      <Menu.Positioner>
+                        <Menu.Content>
+                          {device && (
+                            <>
+                              <Protected minLevel={Level.ExecureReadWrite}>
+                                <OpenDeviceScriptTrigger devices={[device]}>
+                                  <Menu.Item value="run-script">
+                                    <LuPlay />
+                                    {t("script.run")}
+                                  </Menu.Item>
+                                </OpenDeviceScriptTrigger>
+                              </Protected>
+                              {isDisabled ? (
                                 <EnableDeviceTrigger devices={[device]}>
                                   <Menu.Item value="enable">
                                     <LuZap />
                                     {t("common.enable")}
                                   </Menu.Item>
                                 </EnableDeviceTrigger>
-                              </Protected>
-                            ) : (
-                              <DisableDeviceTrigger devices={[device]}>
-                                <Menu.Item value="disable">
-                                  <LuZapOff />
-                                  {t("common.disable")}
-                                </Menu.Item>
-                              </DisableDeviceTrigger>
-                            )}
-                          </Protected>
+                              ) : (
+                                <DisableDeviceTrigger devices={[device]}>
+                                  <Menu.Item value="disable">
+                                    <LuZapOff />
+                                    {t("common.disable")}
+                                  </Menu.Item>
+                                </DisableDeviceTrigger>
+                              )}
 
-                          <Menu.Item onSelect={refresh} value="resfresh">
-                            <LuRefreshCcw />
-                            {t("common.refresh")}
-                          </Menu.Item>
-
-                          <Protected minLevel={Level.ReadWrite}>
-                            <RemoveDeviceTrigger devices={[device]}>
-                              <Menu.Item value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
-                                <LuTrash />
-                                {t("common.remove")}
+                              <Menu.Item onSelect={refresh} value="refresh">
+                                <LuRefreshCcw />
+                                {t("common.refresh")}
                               </Menu.Item>
-                            </RemoveDeviceTrigger>
-                          </Protected>
-                        </>
-                      )}
-                    </Menu.Content>
-                  </Menu.Positioner>
-                </Portal>
-              </Menu.Root>
+
+                              <RemoveDeviceTrigger devices={[device]}>
+                                <Menu.Item value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
+                                  <LuTrash />
+                                  {t("common.remove")}
+                                </Menu.Item>
+                              </RemoveDeviceTrigger>
+                            </>
+                          )}
+                        </Menu.Content>
+                      </Menu.Positioner>
+                    </Portal>
+                  </Menu.Root>
+                </Skeleton>
+              </Protected>
             </Stack>
           </Flex>
 

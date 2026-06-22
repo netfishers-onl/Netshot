@@ -127,7 +127,7 @@ export default function DeviceComplianceScreen() {
               {device?.endOfSale ? (
                 <Text>
                   {t("compliance.hardware.endOfSaleSince", {
-                    date: formatDate(device?.eosDate, { dateStyle: "long" }),
+                    date: formatDate(device?.eosDate),
                     module: device?.eosModule?.partNumber,
                   })}
                 </Text>
@@ -135,7 +135,7 @@ export default function DeviceComplianceScreen() {
                 <Text>
                   {device?.eosDate
                     ? t("compliance.hardware.notEndOfSaleYetPlanned", {
-                        date: formatDate(device?.eosDate, { dateStyle: "long" }),
+                        date: formatDate(device?.eosDate),
                         module: device?.eosModule?.partNumber,
                       })
                     : t("compliance.hardware.notEndOfSaleYet")}
@@ -146,7 +146,7 @@ export default function DeviceComplianceScreen() {
               {device?.endOfLife ? (
                 <Text>
                   {t("compliance.hardware.endOfLifeSince", {
-                    date: formatDate(device?.eolDate, { dateStyle: "long" }),
+                    date: formatDate(device?.eolDate),
                     module: device?.eolModule?.partNumber,
                   })}
                 </Text>
@@ -154,7 +154,7 @@ export default function DeviceComplianceScreen() {
                 <Text>
                   {device?.eolDate
                     ? t("compliance.hardware.notEndOfLifeYetPlanned", {
-                        date: formatDate(device?.eolDate, { dateStyle: "long" }),
+                        date: formatDate(device?.eolDate),
                         module: device?.eolModule?.partNumber,
                       })
                     : t("compliance.hardware.notEndOfLifeYet")}

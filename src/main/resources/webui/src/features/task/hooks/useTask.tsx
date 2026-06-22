@@ -1,7 +1,6 @@
 import api, { TaskQueryParams } from "@/api"
-import { EntityLink } from "@/components"
+import { EntityLink, TaskStatusBadge } from "@/components"
 import TaskDialog from "@/components/TaskDialog"
-import TaskStatusTag from "@/components/TaskStatusTag"
 import { QUERIES } from "@/constants"
 import { useCustomDialog } from "@/dialog"
 import { usePagination } from "@/hooks"
@@ -136,7 +135,7 @@ export function useTask(status?: TaskStatus) {
       header: t("common.creator"),
     }),
     columnHelper.accessor("status", {
-      cell: (info) => <TaskStatusTag status={info.getValue()} />,
+      cell: (info) => <TaskStatusBadge status={info.getValue()} />,
       header: t("common.status"),
     }),
     columnHelper.accessor("executionDate", {

@@ -7,8 +7,8 @@ import { useParams } from "react-router"
 
 import api from "@/api"
 import { DataTable, EmptyResult } from "@/components"
+import { TaskStatusBadge } from "@/components"
 import TaskDialog from "@/components/TaskDialog"
-import TaskStatusTag from "@/components/TaskStatusTag"
 import { usePagination } from "@/hooks"
 import { Task } from "@/types"
 import { useLocalization } from "@/i18n"
@@ -50,7 +50,7 @@ export default function DeviceTaskScreen() {
         header: t("common.type"),
       }),
       columnHelper.accessor("status", {
-        cell: (info) => <TaskStatusTag status={info.getValue()} />,
+        cell: (info) => <TaskStatusBadge status={info.getValue()} />,
         header: t("common.status"),
       }),
       columnHelper.accessor("executionDate", {

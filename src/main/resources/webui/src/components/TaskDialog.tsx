@@ -1,4 +1,5 @@
 import api from "@/api"
+import { TaskStatusBadge } from "@/components"
 import { QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useLocalization } from "@/i18n"
@@ -14,9 +15,7 @@ import {
   Portal,
   Separator,
   Skeleton,
-  Spinner,
   Stack,
-  Tag,
   Text,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
@@ -142,30 +141,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                       <Text color="grey.400">{t("common.status")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
-                      {task?.status === TaskStatus.Scheduled && (
-                        <Tag.Root colorPalette="yellow">{t("common.scheduled")}</Tag.Root>
-                      )}
-                      {task?.status === TaskStatus.Running && (
-                        <Stack direction="row" alignItems="center" gap="3">
-                          <Spinner size="sm" />
-                          <Text>{t("common.running")}</Text>
-                        </Stack>
-                      )}
-                      {task?.status === TaskStatus.Failure && (
-                        <Tag.Root colorPalette="red">{t("common.failure")}</Tag.Root>
-                      )}
-                      {task?.status === TaskStatus.Cancelled && (
-                        <Tag.Root colorPalette="grey">{t("common.cancelled")}</Tag.Root>
-                      )}
-                      {task?.status === TaskStatus.Success && (
-                        <Tag.Root colorPalette="green">{t("common.success")}</Tag.Root>
-                      )}
-                      {task?.status === TaskStatus.Waiting && (
-                        <Tag.Root colorPalette="grey">{t("common.waiting")}</Tag.Root>
-                      )}
-                      {task?.status === TaskStatus.New && (
-                        <Tag.Root colorPalette="grey">{t("common.new")}</Tag.Root>
-                      )}
+                      {task?.status && <TaskStatusBadge status={task.status} />}
                     </Skeleton>
                   </Flex>
                 </Stack>

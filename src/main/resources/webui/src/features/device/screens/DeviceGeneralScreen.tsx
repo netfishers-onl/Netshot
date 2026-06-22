@@ -166,11 +166,11 @@ export default function DeviceGeneralScreen() {
       {type?.attributes?.length > 0 && attributeDefinitions?.length > 0 && (
         <Stack gap="5">
           <Heading fontSize="lg">{t("diagnostic.specificAttributes")}</Heading>
-          {attributeDefinitions.map((attrDef) => {
-            const attr = device?.attributes?.find((a) => a?.name === attrDef?.name)
-            return (
-              <Stack gap="3" key={attrDef?.name}>
-                <Flex alignItems="center">
+          <Stack gap="3">
+            {attributeDefinitions.map((attrDef) => {
+              const attr = device?.attributes?.find((a) => a?.name === attrDef?.name)
+              return (
+                <Flex alignItems="center" key={attrDef?.name}>
                   <Box flex="0 0 auto" w="200px">
                     <Text color="grey.400">{t(attrDef?.title)}</Text>
                   </Box>
@@ -178,9 +178,9 @@ export default function DeviceGeneralScreen() {
                     <DeviceAttributeValue definition={attrDef} attribute={attr} />
                   </Skeleton>
                 </Flex>
-              </Stack>
-            )
-          })}
+              )
+            })}
+          </Stack>
         </Stack>
       )}
     </Stack>

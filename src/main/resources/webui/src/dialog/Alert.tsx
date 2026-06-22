@@ -9,7 +9,7 @@ import {
   Text,
 } from "@chakra-ui/react"
 import mergeWith from "lodash.mergewith"
-import { isValidElement } from "react"
+import { isValidElement, ReactNode } from "react"
 import { useDialogConfig } from "./dialogConfigContext"
 import { useDialogProviderConfig } from "./DialogProvider"
 import { useDialogStore } from "./store"
@@ -20,6 +20,7 @@ export type AlertDialogProps = {
     label?: string
     props?: ButtonProps
   }
+  footerExtra?: ReactNode
 } & BaseDialogProps
 
 export default function AlertDialog() {
@@ -86,6 +87,7 @@ export default function AlertDialog() {
             {!config.props.hideFooter && (
               <Dialog.Footer>
                 <Stack direction="row" gap="3">
+                  {config.props.footerExtra}
                   <Button {...closeButtonConfig?.props}>{closeButtonConfig?.label}</Button>
                 </Stack>
               </Dialog.Footer>

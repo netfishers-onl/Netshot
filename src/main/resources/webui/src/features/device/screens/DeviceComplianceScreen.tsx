@@ -182,7 +182,7 @@ export default function DeviceComplianceScreen() {
         </Stack>
         <Protected minLevel={Level.Operator}>
           <DeviceComplianceTrigger devices={[device]}>
-            <Button alignSelf="start" variant="primary">
+            <Button alignSelf="start" variant="outline">
               <LuCircleCheck />
               {t("compliance.check")}
             </Button>

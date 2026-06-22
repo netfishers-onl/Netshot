@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Stack, Text } from "@chakra-ui/react"
+import { Box, Button, ButtonGroup, Flex, Group, Stack, Text } from "@chakra-ui/react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -15,7 +15,17 @@ import {
   DeviceAttributeType,
 } from "@/types"
 
+import { useDevice } from "../contexts/device"
 import DeviceConfigurationViewTrigger from "./DeviceConfigurationViewTrigger"
+
+function buildConfigFilename(deviceName: string | undefined, changeDate: number, attributeName: string): string | undefined {
+  if (!deviceName) return undefined
+  const d = new Date(changeDate)
+  const pad = (n: number) => String(n).padStart(2, "0")
+  const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`
+  const safeName = deviceName.replace(/[^a-zA-Z0-9-]/g, "_")
+  return `${safeName}_${dateStr}_${attributeName}.cfg`
+}
 
 type ConfigNumericAttributeValueType = {
   attribute: ConfigNumericAttribute
@@ -41,33 +51,37 @@ function ConfigTextAttributeValue(props: ConfigTextAttributeValueType) {
 
 type ConfigLongTextAttributeValueType = {
   configId: number
+  changeDate: number
   attribute: ConfigLongTextAttribute
   definition: DeviceAttributeDefinition
 }
 
 function ConfigLongTextAttributeValue(props: ConfigLongTextAttributeValueType) {
-  const { configId, attribute, definition } = props
+  const { configId, changeDate, attribute, definition } = props
   const { t } = useTranslation()
-  const download = useDownloadConfigMutation(configId, attribute?.name)
+  const { device } = useDevice()
+  const filename = useMemo(
+    () => buildConfigFilename(device?.name, changeDate, attribute?.name),
+    [device?.name, changeDate, attribute?.name]
+  )
+  const download = useDownloadConfigMutation(configId, attribute?.name, filename)
 
   return (
-    <Stack direction="row" gap="2">
-      <DeviceConfigurationViewTrigger id={configId} definition={definition} attribute={attribute}>
-        <Button size="sm" variant="default">
+    <ButtonGroup attached size="sm" variant="ghost">
+      <DeviceConfigurationViewTrigger id={configId} definition={definition} attribute={attribute} filename={filename}>
+        <Button>
           <LuEye />
           {t("common.view")}
         </Button>
       </DeviceConfigurationViewTrigger>
       <Button
-        size="sm"
-        variant="default"
         onClick={() => download.mutate()}
         loading={download.isPending}
       >
         <LuDownload />
         {t("common.download")}
       </Button>
-    </Stack>
+    </ButtonGroup>
   )
 }
 
@@ -89,13 +103,19 @@ function ConfigBinaryAttributeValue(props: ConfigBinaryAttributeValueType) {
 
 type ConfigBinaryFileAttributeValueType = {
   configId: number
+  changeDate: number
   attribute: ConfigLongTextAttribute
 }
 
 function ConfigBinaryFileAttributeValue(props: ConfigBinaryFileAttributeValueType) {
-  const { configId, attribute } = props
+  const { configId, changeDate, attribute } = props
   const { t } = useTranslation()
-  const download = useDownloadConfigMutation(configId, attribute?.name)
+  const { device } = useDevice()
+  const filename = useMemo(
+    () => buildConfigFilename(device?.name, changeDate, attribute?.name),
+    [device?.name, changeDate, attribute?.name]
+  )
+  const download = useDownloadConfigMutation(configId, attribute?.name, filename)
 
   return (
     <Stack direction="row" gap="2">
@@ -131,6 +151,7 @@ function ConfigAttributeValue(props: ConfigAttributeValueType) {
       return (
         <ConfigLongTextAttributeValue
           configId={config.id}
+          changeDate={config.changeDate}
           attribute={attribute as ConfigLongTextAttribute}
           definition={definition}
         />
@@ -141,6 +162,7 @@ function ConfigAttributeValue(props: ConfigAttributeValueType) {
       return (
         <ConfigBinaryFileAttributeValue
           configId={config.id}
+          changeDate={config.changeDate}
           attribute={attribute as ConfigBinaryAttribute}
         />
       )

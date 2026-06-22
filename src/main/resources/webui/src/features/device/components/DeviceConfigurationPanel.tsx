@@ -49,6 +49,7 @@ export default function DeviceConfigurationPanel(props: DeviceConfigurationPanel
         }}
       >
         <IconButton
+          size="sm"
           variant="ghost"
           colorPalette="green"
           aria-label={t("common.open")}
@@ -65,6 +66,7 @@ export default function DeviceConfigurationPanel(props: DeviceConfigurationPanel
 
         <Spacer />
         <Button
+          size="sm"
           variant="ghost"
           colorPalette="green"
           className="compare-button"

@@ -23,6 +23,7 @@ import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.graalvm.polyglot.HostAccess.Export;
 
 import lombok.extern.slf4j.Slf4j;
@@ -108,9 +109,9 @@ public class JsCliHelper {
 		}
 		log.debug("Command to be sent (secrets not inserted): '{}'.", command);
 		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_PASSWORD),
-			Matcher.quoteReplacement(account.getPassword()));
+			Matcher.quoteReplacement(StringUtils.defaultString(account.getPassword())));
 		command = command.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_SUPERPASSWORD),
-			Matcher.quoteReplacement(account.getSuperPassword()));
+			Matcher.quoteReplacement(StringUtils.defaultString(account.getSuperPassword())));
 
 		// Prepare CommandInput
 		Cli.CommandInput input = new Cli.CommandInput(command, expects);

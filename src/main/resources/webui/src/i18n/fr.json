@@ -18,6 +18,7 @@
         "router": "Routeur",
         "switch": "Switch",
         "switchRouter": "Switch routeur",
+        "voiceGateway": "Passerelle voix",
         "wirelessController": "Contrôleur Wi-Fi"
       },
       "addDescription": "Ajouter une description de l'équipement",

@@ -18,6 +18,7 @@
         "router": "Router",
         "switch": "Switch",
         "switchRouter": "Switch router",
+        "voiceGateway": "Voice gateway",
         "wirelessController": "Wireless controller"
       },
       "addDescription": "Add a description about the device",

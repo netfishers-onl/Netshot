@@ -10,4 +10,5 @@ export { default as DeviceSidebar } from "./sidebar/DeviceSidebar"
 export { default as DeviceSnapshotTrigger } from "./DeviceSnapshotTrigger"
 
 export * from "./DeviceAttributeValue"
+export { default as DeviceNetworkClassIcon } from "./DeviceNetworkClassIcon"
 export { default as DeviceStatusBadge } from "./DeviceStatusBadge"

@@ -5,6 +5,7 @@ import { useMatch, useNavigate, useParams } from "react-router"
 
 import { LuTriangleAlert, LuCircleCheck, LuTrophy } from "react-icons/lu"
 import { DeviceStatus, SimpleDevice } from "@/types"
+import { DeviceNetworkClassIcon } from ".."
 
 import { useSoftwareLevels } from "@/hooks"
 import { useShallow } from "zustand/react/shallow"
@@ -106,9 +107,9 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
   return (
     <Stack
       onClick={onSelected}
-      gap="2"
-      px="3"
-      py="1"
+      gap="1"
+      px="4"
+      py="2"
       bg={isSelected ? "green.50" : "white"}
       transition="all .2s ease"
       _hover={{
@@ -119,9 +120,10 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
       userSelect="none"
       cursor="pointer"
     >
-      <Text opacity={isDisabled ? 0.5 : 1} fontWeight="medium">
-        {device?.name}
-      </Text>
+      <Stack direction="row" alignItems="center" gap="2" opacity={isDisabled ? 0.5 : 1}>
+        <DeviceNetworkClassIcon networkClass={device?.networkClass} size="sm" />
+        <Text fontWeight="medium">{device?.name}</Text>
+      </Stack>
       <Stack direction="row" gap="3">
         <Badge
           opacity={isDisabled ? 0.5 : 1}

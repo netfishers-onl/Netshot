@@ -21,7 +21,7 @@ export function SigninScreen() {
               </Heading>
             </Stack>
             {serverError ? (
-              <Alert.Root bg="grey.50" border="1px solid {colors.grey.100}">
+              <Alert.Root status="error">
                 <Alert.Indicator />
                 <Alert.Content>
                   <Alert.Title>{t("common.unableToContactTheServer")}</Alert.Title>

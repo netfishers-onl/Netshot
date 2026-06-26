@@ -27,6 +27,7 @@ export enum DeviceNetworkClass {
   WirelessController = "WIRELESSCONTROLLER",
   ConsoleServer = "CONSOLESERVER",
   Unknown = "UNKNOWN",
+  VoiceGateway = "VOICEGATEWAY",
 }
 
 export enum DeviceAddressUsage {
@@ -63,6 +64,7 @@ export type SimpleDevice = {
   configCompliant: boolean
   eos: boolean
   eol: boolean
+  networkClass: DeviceNetworkClass
 }
 
 export type DeviceNumericAttribute = {

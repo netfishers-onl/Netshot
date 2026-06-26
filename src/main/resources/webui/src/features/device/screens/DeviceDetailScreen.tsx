@@ -3,12 +3,13 @@ import { LuCamera, LuSquarePen, LuChevronDown, LuPlay, LuRefreshCcw, LuTrash, Lu
 import { RouterTab, RouterTabs } from "@/components/routerTab"
 import { useToast } from "@/hooks"
 import { DeviceStatus, DeviceType, Level } from "@/types"
-import { Button, Flex, Group, Heading, IconButton, Menu, Portal, Skeleton, Spacer, Stack } from "@chakra-ui/react"
+import { Box, Button, Flex, Group, Heading, Icon, IconButton, Menu, Portal, Skeleton, Spacer, Stack } from "@chakra-ui/react"
 import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Outlet, useParams } from "react-router"
 import { useDevice, useDeviceTypes } from "../api"
 import {
+  DeviceNetworkClassIcon,
   DisableDeviceTrigger,
   EditDeviceTrigger,
   EnableDeviceTrigger,
@@ -47,9 +48,14 @@ export default function DeviceDetailScreen() {
         <Stack gap="5" px="9" pt="9">
           <Flex alignItems="center">
             <Skeleton loading={isPending}>
-              <Heading as="h1" fontSize="4xl">
-                {device?.name ?? t("common.networkDeviceTitle")}
-              </Heading>
+              <Stack direction="row" alignItems="center" gap="3">
+                {device?.networkClass && (
+                  <DeviceNetworkClassIcon networkClass={device.networkClass} size="2xl" />
+                )}
+                <Heading as="h1" fontSize="4xl">
+                  {device?.name ?? t("common.networkDeviceTitle")}
+                </Heading>
+              </Stack>
             </Skeleton>
 
             <Spacer />

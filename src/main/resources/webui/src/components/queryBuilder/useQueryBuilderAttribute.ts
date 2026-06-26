@@ -135,6 +135,7 @@ export function useQueryBuilderAttribute() {
               value: DeviceNetworkClass.WirelessController,
             },
             { label: t("device.class.consoleServer"), value: DeviceNetworkClass.ConsoleServer },
+            { label: t("device.class.voiceGateway"), value: DeviceNetworkClass.VoiceGateway },
             { label: t("common.unknownLabel"), value: DeviceNetworkClass.Unknown },
           ],
         },

@@ -1,11 +1,14 @@
-import { Badge, HoverCard, Icon, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
+import { Badge, HoverCard, Icon, Spacer, Stack, Text } from "@chakra-ui/react"
 import { forwardRef, MouseEvent, Ref, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useMatch, useNavigate, useParams } from "react-router"
 
-import { LuTriangleAlert, LuCircleCheck, LuTrophy } from "react-icons/lu"
+import { LuTriangleAlert, LuCircleCheck } from "react-icons/lu"
 import { DeviceStatus, SimpleDevice } from "@/types"
 import { DeviceNetworkClassIcon } from ".."
+import DeviceSoftwareLevelBadge from "../DeviceSoftwareLevelBadge"
+import DeviceConfigComplianceBadge from "../DeviceConfigComplianceBadge"
+import DeviceHardwareComplianceBadge from "../DeviceHardwareComplianceBadge"
 
 import { useSoftwareLevels } from "@/hooks"
 import { useShallow } from "zustand/react/shallow"
@@ -136,40 +139,30 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
         <Spacer />
 
         {!isDisabled && (
-          <HoverCard.Root>
+          <HoverCard.Root lazyMount>
             <HoverCard.Trigger asChild>
               <Icon color={compliant ? "green.500" : "red.500"} cursor="default">
                 {compliant ? <LuCircleCheck size={16} /> : <LuTriangleAlert size={16} />}
               </Icon>
             </HoverCard.Trigger>
             <HoverCard.Positioner>
-              <HoverCard.Content w="360px">
+              <HoverCard.Content>
+                <HoverCard.Arrow />
                 <Text fontSize="md" fontWeight="bold" mb="3">
-                  {t("common.statusSummary")}
+                  {t("common.complianceSummary")}
                 </Text>
                 <Stack gap="2">
-                  <Stack direction="row" alignItems="center" justifyContent="space-between">
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12">
                     <Text>{t("compliance.software.label")}</Text>
-                    <Tag.Root colorPalette={levelInfo.color}>
-                      {levelInfo.isCompliant && <LuTrophy size={12} />}
-                      {t(levelInfo.label)}
-                    </Tag.Root>
+                    <DeviceSoftwareLevelBadge level={device.softwareLevel} />
                   </Stack>
-                  <Stack direction="row" alignItems="center" justifyContent="space-between">
-                    <Text>{t("device.config.compliance")}</Text>
-                    <Tag.Root colorPalette={device.configCompliant ? "green" : "red"}>
-                      {t(device.configCompliant ? "compliance.compliant" : "compliance.nonCompliant")}
-                    </Tag.Root>
-                  </Stack>
-                  <Stack direction="row" alignItems="center" justifyContent="space-between">
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12">
                     <Text>{t("compliance.hardware.label")}</Text>
-                    <Tag.Root colorPalette={device.eos || device.eol ? "red" : "green"}>
-                      {device.eol
-                        ? t("compliance.hardware.endOfLife")
-                        : device.eos
-                          ? t("compliance.hardware.endOfSale")
-                          : t("common.upToDate")}
-                    </Tag.Root>
+                    <DeviceHardwareComplianceBadge eol={device.eol} eos={device.eos} />
+                  </Stack>
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12">
+                    <Text>{t("device.config.label")}</Text>
+                    <DeviceConfigComplianceBadge compliant={device.configCompliant} />
                   </Stack>
                 </Stack>
               </HoverCard.Content>

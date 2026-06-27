@@ -25,6 +25,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useParams } from "react-router"
+import { DeviceBadge } from "@/features/device/components"
 import DisableRuleTrigger from "../components/DisableRuleTrigger"
 import EditRuleTrigger from "../components/EditRuleTrigger"
 import EditRuleExemptedDeviceTrigger from "../components/EditRuleExemptedDeviceTrigger"
@@ -93,16 +94,9 @@ export default function ConfigurationComplianceRuleScreen() {
           const expired = device.expirationDate < now
           return (
             <Tooltip key={device.id} content={t("time.expiresOn", { date: formatDate(device.expirationDate) })}>
-              <Badge
-                variant="surface"
-                size="md"
-                colorPalette={expired ? "red" : undefined}
-                display="inline-flex"
-                alignItems="center"
-                asChild
-              >
+              <DeviceBadge networkClass={device.networkClass} colorPalette={expired ? "red" : undefined}>
                 <Link to={`/app/devices/${device.id}/general`}>{device.name}</Link>
-              </Badge>
+              </DeviceBadge>
             </Tooltip>
           )
         })}

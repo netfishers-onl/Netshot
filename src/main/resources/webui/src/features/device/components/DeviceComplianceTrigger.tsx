@@ -30,7 +30,7 @@ export default function DeviceComplianceTrigger({ devices, children, ...rest }: 
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.TASK_CREATE, {
-      title: t("device.runCompliance"),
+      title: t("device.checkCompliance"),
       description: (
         <Stack gap="6">
           <Stack gap="3">
@@ -63,11 +63,8 @@ export default function DeviceComplianceTrigger({ devices, children, ...rest }: 
 
         for await (const device of devices) {
           const task = await mutation.mutateAsync({
-            type: TaskType.RunDiagnostic,
+            type: TaskType.CheckCompliance,
             device: device?.id,
-            debugEnabled: false,
-            dontRunDiagnostics: true,
-            dontCheckCompliance: true,
             ...schedule,
           })
           tasks.push(task)

@@ -54,7 +54,7 @@ export default function DeviceSidebarSearchList() {
   }
 
   return (
-    <Stack p="6" gap="3" overflow="auto" flex="1">
+    <Stack gap="0" py="4" px="5" overflow="auto" flex="1">
       {isSuccess &&
         data?.pages?.map((page) =>
           page.devices.map((device, i) => {

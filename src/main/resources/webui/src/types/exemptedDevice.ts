@@ -1,5 +1,5 @@
 import { Address } from "./address";
-import { DeviceComplianceResultType } from "./device";
+import { DeviceComplianceResultType, DeviceNetworkClass } from "./device";
 
 export type ExemptedDevice = {
   id: number;
@@ -8,5 +8,6 @@ export type ExemptedDevice = {
   mgmtAddress: Address;
   status: DeviceComplianceResultType;
   driver: string;
+  networkClass: DeviceNetworkClass;
   expirationDate: number;
 };

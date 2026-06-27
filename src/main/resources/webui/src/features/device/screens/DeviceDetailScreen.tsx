@@ -1,13 +1,17 @@
 import { Protected } from "@/components"
+import { Tooltip } from "@/components/ui/tooltip"
 import { LuCamera, LuSquarePen, LuChevronDown, LuPlay, LuRefreshCcw, LuTrash, LuZap, LuZapOff } from "react-icons/lu"
 import { RouterTab, RouterTabs } from "@/components/routerTab"
 import { useToast } from "@/hooks"
 import { DeviceStatus, DeviceType, Level } from "@/types"
 import { Box, Button, Flex, Group, Heading, Icon, IconButton, Menu, Portal, Skeleton, Spacer, Stack } from "@chakra-ui/react"
+import { QUERIES as GLOBAL_QUERIES } from "@/constants"
+import { useQueryClient } from "@tanstack/react-query"
 import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Outlet, useParams } from "react-router"
 import { useDevice, useDeviceTypes } from "../api"
+import { QUERIES } from "../constants"
 import {
   DeviceNetworkClassIcon,
   DisableDeviceTrigger,
@@ -26,15 +30,20 @@ export default function DeviceDetailScreen() {
 
   const { data: device, isPending, refetch } = useDevice(+id)
   const { data: deviceTypes, isPending: isDeviceTypePending } = useDeviceTypes()
+  const queryClient = useQueryClient()
 
   const refresh = useCallback(async () => {
     const toastId = toast.loading({
       title: t("common.loading"),
       description: t("device.pleaseWaitRefreshing"),
     })
-    await refetch()
+    await Promise.all([
+      refetch(),
+      queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_COMPLIANCE, id], refetchType: "all" }),
+      queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.DEVICE_LIST], refetchType: "all" }),
+    ])
     toast.close(toastId)
-  }, [refetch, toast, t])
+  }, [refetch, queryClient, id, toast, t])
 
   const isDisabled = useMemo(() => device?.status === DeviceStatus.Disabled, [device?.status])
 
@@ -55,6 +64,17 @@ export default function DeviceDetailScreen() {
                 <Heading as="h1" fontSize="4xl">
                   {device?.name ?? t("common.networkDeviceTitle")}
                 </Heading>
+                <Tooltip content={t("common.refresh")}>
+                  <IconButton
+                    aria-label={t("common.refresh")}
+                    variant="ghost"
+                    size="sm"
+                    color="fg.muted"
+                    onClick={refresh}
+                  >
+                    <LuRefreshCcw />
+                  </IconButton>
+                </Tooltip>
               </Stack>
             </Skeleton>
 
@@ -116,11 +136,6 @@ export default function DeviceDetailScreen() {
                                   </Menu.Item>
                                 </DisableDeviceTrigger>
                               )}
-
-                              <Menu.Item onSelect={refresh} value="refresh">
-                                <LuRefreshCcw />
-                                {t("common.refresh")}
-                              </Menu.Item>
 
                               <RemoveDeviceTrigger devices={[device]}>
                                 <Menu.Item value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>

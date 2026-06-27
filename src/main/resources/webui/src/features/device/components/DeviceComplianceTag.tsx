@@ -1,50 +1,61 @@
 import { DeviceComplianceResultType } from "@/types"
-import { Tag } from "@chakra-ui/react"
+import { Badge, Icon } from "@chakra-ui/react"
+import { LuCircleCheck, LuCircleX, LuCircleMinus, LuBan, LuTriangleAlert, LuMinus } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 
 export type DeviceComplianceTagProps = {
   resultType: DeviceComplianceResultType
 }
 
-const mapping = {
+type Config = {
+  colorPalette: string
+  icon: React.ReactElement
+  labelKey: string
+}
+
+const mapping: Record<DeviceComplianceResultType, Config> = {
   [DeviceComplianceResultType.Conforming]: {
     colorPalette: "green",
-    label: "compliant",
+    icon: <LuCircleCheck />,
+    labelKey: "compliance.conforming",
   },
   [DeviceComplianceResultType.NonConforming]: {
     colorPalette: "red",
-    label: "nonCompliant2",
+    icon: <LuCircleX />,
+    labelKey: "compliance.nonConforming",
   },
   [DeviceComplianceResultType.Disabled]: {
     colorPalette: "grey",
-    label: "disabled",
+    icon: <LuCircleMinus />,
+    labelKey: "common.disabled",
   },
   [DeviceComplianceResultType.Exempted]: {
     colorPalette: "blue",
-    label: "exempted",
+    icon: <LuBan />,
+    labelKey: "policy.rule.exempted",
   },
   [DeviceComplianceResultType.InvalidRule]: {
     colorPalette: "yellow",
-    label: "invalidRule",
+    icon: <LuTriangleAlert />,
+    labelKey: "policy.rule.invalid",
   },
   [DeviceComplianceResultType.NotApplication]: {
     colorPalette: "grey",
-    label: "notApplicable",
+    icon: <LuMinus />,
+    labelKey: "compliance.notApplicable",
   },
 }
 
 export function DeviceComplianceTag({ resultType }: DeviceComplianceTagProps) {
   const { t } = useTranslation()
-
   const config = mapping[resultType]
 
-  if (!config) {
-    return null
-  }
+  if (!config) return null
 
   return (
-    <Tag.Root colorPalette={config.colorPalette} size="lg">
-      <Tag.Label>{t(config.label)}</Tag.Label>
-    </Tag.Root>
+    <Badge variant="surface" colorPalette={config.colorPalette} size="md" display="inline-flex" alignItems="center" gap="1">
+      <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
+      {t(config.labelKey)}
+    </Badge>
   )
 }

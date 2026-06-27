@@ -31,7 +31,7 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
   const attributeDefinitions = type ? getConfigDeviceAttributeDefinitions(type.attributes) : []
 
   const attributeOptions = attributeDefinitions.map((attr) => ({
-    label: attr.name,
+    label: attr.title,
     value: attr.name,
   }))
 

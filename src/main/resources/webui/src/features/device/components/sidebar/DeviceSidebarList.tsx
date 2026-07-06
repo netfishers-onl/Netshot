@@ -1,16 +1,16 @@
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react"
-import { useEffect } from "react"
+import { useVirtualizer } from "@tanstack/react-virtual"
+import { useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { useInView } from "react-intersection-observer"
 
 import { useShallow } from "zustand/react/shallow"
-import { useInfiniteDevices } from "../../api"
+import { useDevices } from "../../api"
 import { useDeviceSidebarStore } from "../../stores"
 import DeviceBox from "./DeviceBox"
 
 export default function DeviceSidebarList() {
-  const { ref, inView } = useInView()
   const { t } = useTranslation()
+  const containerRef = useRef<HTMLDivElement>(null)
   const { setTotal, setDevices, group } = useDeviceSidebarStore(
     useShallow((state) => ({
       setTotal: state.setTotal,
@@ -19,22 +19,22 @@ export default function DeviceSidebarList() {
     }))
   )
 
-  const { data, isPending, isSuccess, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useInfiniteDevices(group?.id)
+  const { data, isPending, isSuccess } = useDevices(group?.id)
 
   useEffect(() => {
     if (isSuccess) {
-      const devices = data.pages.flat()
-      setTotal(devices.length)
-      setDevices(devices)
+      setTotal(data.length)
+      setDevices(data)
     }
-  }, [isSuccess, data?.pages, setTotal, setDevices])
+  }, [isSuccess, data, setTotal, setDevices])
 
-  useEffect(() => {
-    if (inView && hasNextPage) {
-      fetchNextPage()
-    }
-  }, [inView, fetchNextPage, hasNextPage])
+  const virtualizer = useVirtualizer({
+    count: data?.length ?? 0,
+    getScrollElement: () => containerRef.current,
+    estimateSize: () => 76,
+    measureElement: (element) => element?.getBoundingClientRect().height,
+    overscan: 10,
+  })
 
   if (isPending) {
     return (
@@ -44,7 +44,7 @@ export default function DeviceSidebarList() {
     )
   }
 
-  if (data?.pages?.[0]?.length === 0) {
+  if (data?.length === 0) {
     return (
       <Center flex="1">
         <Text>
@@ -55,22 +55,36 @@ export default function DeviceSidebarList() {
   }
 
   return (
-    <Stack gap="0" py="4" px="5" overflow="auto" flex="1">
-      {isSuccess &&
-        data?.pages?.map((page) =>
-          page.map((device, i) => {
-            if (page.length === i + 1) {
-              return <DeviceBox ref={ref} device={device} key={device?.id} />
-            }
+    <Stack ref={containerRef} gap="0" py="4" px="5" overflow="auto" flex="1">
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: "100%",
+          position: "relative",
+          flexShrink: 0,
+        }}
+      >
+        {isSuccess &&
+          virtualizer.getVirtualItems().map((virtualItem) => {
+            const device = data?.[virtualItem.index]
 
-            return <DeviceBox device={device} key={device?.id} />
-          })
-        )}
-      {isFetchingNextPage && (
-        <Stack alignItems="center" justifyContent="center" py="6">
-          <Spinner />
-        </Stack>
-      )}
+            return (
+              <DeviceBox
+                ref={virtualizer.measureElement}
+                device={device}
+                key={device?.id}
+                data-index={virtualItem.index}
+                position="absolute"
+                top="0"
+                left="0"
+                w="100%"
+                style={{
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              />
+            )
+          })}
+      </div>
     </Stack>
   )
 }

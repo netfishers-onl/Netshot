@@ -1,4 +1,4 @@
-import { Badge, HoverCard, Icon, Spacer, Stack, Text } from "@chakra-ui/react"
+import { Badge, HoverCard, Icon, Spacer, Stack, StackProps, Text } from "@chakra-ui/react"
 import { forwardRef, MouseEvent, Ref, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useMatch, useNavigate, useParams } from "react-router"
@@ -16,10 +16,10 @@ import { useDeviceSidebarStore } from "../../stores"
 
 type DeviceBoxProps = {
   device: SimpleDevice
-}
+} & StackProps
 
 const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) => {
-  const { device } = props
+  const { device, ...stackProps } = props
 
   const { t } = useTranslation()
   const deviceSidebarStore = useDeviceSidebarStore(
@@ -122,6 +122,7 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
       ref={ref}
       userSelect="none"
       cursor="pointer"
+      {...stackProps}
     >
       <Stack direction="row" alignItems="center" gap="2" opacity={isDisabled ? 0.5 : 1}>
         <DeviceNetworkClassIcon networkClass={device?.networkClass} size="sm" />

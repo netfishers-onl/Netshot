@@ -1,5 +1,5 @@
 import api, { DeviceQueryParams, PaginationQueryParams } from "@/api"
-import { PAGINATION_LIMIT, QUERIES } from "@/constants"
+import { QUERIES } from "@/constants"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 
 export function useDevice(id: number) {
@@ -72,14 +72,11 @@ export function useDeviceConfigs(deviceId: number) {
   })
 }
 
-export function useInfiniteDevices(groupId: number) {
-  return useInfiniteQuery({
+export function useDevices(groupId: number) {
+  return useQuery({
     queryKey: [QUERIES.DEVICE_LIST, groupId],
-    queryFn: async ({ pageParam }) => {
-      const params = {
-        limit: PAGINATION_LIMIT,
-        offset: pageParam,
-      } as DeviceQueryParams
+    queryFn: async () => {
+      const params = {} as DeviceQueryParams
 
       const queryParams = new URLSearchParams(location.search)
 
@@ -88,10 +85,6 @@ export function useInfiniteDevices(groupId: number) {
       }
 
       return api.device.getAll(params)
-    },
-    initialPageParam: 0,
-    getNextPageParam(lastPage, allPages) {
-      return lastPage?.length === PAGINATION_LIMIT ? allPages.length * PAGINATION_LIMIT : undefined
     },
   })
 }
@@ -120,21 +113,9 @@ export function useDeviceSoftwareVersions() {
   })
 }
 
-export function useInfiniteSearchDevices(query: string) {
-  return useInfiniteQuery({
+export function useSearchDevices(query: string) {
+  return useQuery({
     queryKey: [QUERIES.DEVICE_SEARCH_LIST, query],
-    queryFn: async ({ pageParam }) => {
-      return api.device.search({
-        limit: PAGINATION_LIMIT,
-        offset: pageParam,
-        query,
-      })
-    },
-    initialPageParam: 0,
-    getNextPageParam(lastPage, allPages) {
-      return lastPage?.devices?.length === PAGINATION_LIMIT
-        ? allPages.length * PAGINATION_LIMIT
-        : undefined
-    },
+    queryFn: async () => api.device.search({ query }),
   })
 }

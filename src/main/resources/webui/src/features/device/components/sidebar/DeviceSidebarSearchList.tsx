@@ -1,9 +1,9 @@
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react"
-import { useEffect } from "react"
+import { useVirtualizer } from "@tanstack/react-virtual"
+import { useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { useInView } from "react-intersection-observer"
 import { useShallow } from "zustand/react/shallow"
-import { useInfiniteSearchDevices } from "../../api"
+import { useSearchDevices } from "../../api"
 import { useDeviceSidebarStore } from "../../stores"
 import DeviceBox from "./DeviceBox"
 
@@ -16,26 +16,27 @@ export default function DeviceSidebarSearchList() {
     }))
   )
 
-  const { ref, inView } = useInView()
   const { t } = useTranslation()
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  const { data, isPending, isSuccess, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useInfiniteSearchDevices(query)
+  const { data, isPending, isSuccess } = useSearchDevices(query)
 
-  const devices = isSuccess ? data?.pages?.flatMap((page) => page?.devices) : []
+  const devices = isSuccess ? (data?.devices ?? []) : []
 
   useEffect(() => {
-    if (isSuccess && data) {
-      setTotal(devices?.length ?? 0)
+    if (isSuccess) {
+      setTotal(devices.length)
       setDevices(devices)
     }
-  }, [isSuccess, data, setTotal, setDevices, devices])
+  }, [isSuccess, setTotal, setDevices, devices])
 
-  useEffect(() => {
-    if (inView && hasNextPage) {
-      fetchNextPage()
-    }
-  }, [inView, fetchNextPage, hasNextPage])
+  const virtualizer = useVirtualizer({
+    count: devices.length,
+    getScrollElement: () => containerRef.current,
+    estimateSize: () => 76,
+    measureElement: (element) => element?.getBoundingClientRect().height,
+    overscan: 10,
+  })
 
   if (isPending) {
     return (
@@ -54,22 +55,36 @@ export default function DeviceSidebarSearchList() {
   }
 
   return (
-    <Stack gap="0" py="4" px="5" overflow="auto" flex="1">
-      {isSuccess &&
-        data?.pages?.map((page) =>
-          page.devices.map((device, i) => {
-            if (page.devices.length === i + 1) {
-              return <DeviceBox ref={ref} device={device} key={device?.id} />
-            }
+    <Stack ref={containerRef} gap="0" py="4" px="5" overflow="auto" flex="1">
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: "100%",
+          position: "relative",
+          flexShrink: 0,
+        }}
+      >
+        {isSuccess &&
+          virtualizer.getVirtualItems().map((virtualItem) => {
+            const device = devices[virtualItem.index]
 
-            return <DeviceBox device={device} key={device?.id} />
-          })
-        )}
-      {isFetchingNextPage && (
-        <Stack alignItems="center" justifyContent="center" py="6">
-          <Spinner />
-        </Stack>
-      )}
+            return (
+              <DeviceBox
+                ref={virtualizer.measureElement}
+                device={device}
+                key={device?.id}
+                data-index={virtualItem.index}
+                position="absolute"
+                top="0"
+                left="0"
+                w="100%"
+                style={{
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              />
+            )
+          })}
+      </div>
     </Stack>
   )
 }

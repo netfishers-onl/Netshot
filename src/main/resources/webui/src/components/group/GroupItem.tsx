@@ -85,7 +85,7 @@ export default function GroupItem(props: GroupItemProps) {
               </Menu.Trigger>
               <Portal>
                 <Menu.Positioner>
-                  <Menu.Content>
+                  <Menu.Content onClick={(e) => e.stopPropagation()}>
                     <EditGroupTrigger group={group}>
                       <Menu.Item value="item-0">
                         <LuSquarePen />

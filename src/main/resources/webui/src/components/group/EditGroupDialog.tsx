@@ -1,17 +1,17 @@
 import api, { UpdateGroupPayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { FormControl, QueryBuilderTrigger, QueryBuilderValue, Switch } from "@/components"
+import { FormControl, Switch } from "@/components"
 import { QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
-import { DeviceType, Group, GroupType, SimpleDevice } from "@/types"
-import { Box, Button, Dialog, Heading, Portal, Separator, Stack, Tag, Text } from "@chakra-ui/react"
+import { Group, GroupType, SimpleDevice } from "@/types"
+import { Button, CloseButton, Dialog, Heading, Portal, Separator, Stack } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { FormProvider, useForm, useWatch } from "react-hook-form"
+import { useCallback, useEffect, useMemo } from "react"
+import { FormProvider, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import DynamicGroupDeviceList from "./DynamicGroupDeviceList"
-import StaticGroupDeviceList from "./StaticGroupList"
+import DynamicGroupForm from "./DynamicGroupForm"
+import StaticGroupForm from "./StaticGroupForm"
 
 type EditGroupForm = {
   name: string
@@ -31,7 +31,6 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
   const toast = useToast()
   const queryClient = useQueryClient()
   const dialogConfig = useDialogConfig()
-  const [driver, setDriver] = useState<DeviceType["name"]>(null)
 
   const title = useMemo(() => {
     return t("group.edit", {
@@ -50,7 +49,6 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
     },
   })
 
-  // Get static devices from group
   const { data: staticDevices } = useQuery({
     queryKey: [QUERIES.DEVICE_LIST, group.id, group.folder, group.name],
     queryFn: async () =>
@@ -64,11 +62,6 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
       form.setValue("staticDevices", staticDevices)
     }
   }, [staticDevices])
-
-  const query = useWatch({
-    control: form.control,
-    name: "query",
-  })
 
   const mutation = useMutation({
     mutationFn: async (values: EditGroupForm) => {
@@ -102,20 +95,11 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
     mutation.mutate(values)
   }, [])
 
-  const updateQuery = useCallback(
-    (values: QueryBuilderValue) => {
-      setDriver(values.driver)
-      form.setValue("query", values.query)
-    },
-    [form]
-  )
-
   return (
     <FormProvider {...form}>
       <Dialog.Root
         preventScroll={false}
         placement="center"
-        size="xl"
         open={dialogConfig.props.isOpen}
         onOpenChange={(e) => {
           if (!e.open) {
@@ -125,6 +109,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
         onExitComplete={() => {
           dialogConfig.remove()
         }}
+        size="6xl"
       >
         <Portal>
           <Dialog.Backdrop />
@@ -132,87 +117,41 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
             <Dialog.Content h="80vh" as="form" onSubmit={form.handleSubmit(submit)}>
               <Dialog.Header as="h3" fontSize="2xl" fontWeight="semibold">
                 {title}
-                <Dialog.CloseTrigger />
+                <Dialog.CloseTrigger asChild>
+                  <CloseButton size="sm" variant="outline" />
+                </Dialog.CloseTrigger>
               </Dialog.Header>
               <Dialog.Body flex="1" display="flex" overflowY="auto">
                 <Stack direction="row" gap="9" flex="1">
-                  <Stack gap="9" w="340px" overflowY="auto">
-                    <Stack gap="5">
-                      <Heading as="h4" size="md">
-                        {t("common.information")}
-                      </Heading>
-                      <FormControl
-                        required
-                        control={form.control}
-                        name="name"
-                        label={t("common.name")}
-                        placeholder={t("group.enterName")}
-                      />
-                      <FormControl
-                        required
-                        control={form.control}
-                        name="folder"
-                        label={t("common.folder")}
-                        placeholder={t("common.eG", { example: t("group.folderExample") })}
-                        helperText={t("group.useSlashesForFolder")}
-                      />
-                      <Separator />
-                      <Switch
-                        label={t("report.list")}
-                        description={t("group.showInReports")}
-                        control={form.control}
-                        name="visibleInReports"
-                      />
-                    </Stack>
-                    {group.type === GroupType.Dynamic && (
-                      <>
-                        <Separator />
-                        <Stack gap="5">
-                          <Stack gap="2">
-                            <Heading as="h4" size="md">
-                              {t("common.populate")}
-                            </Heading>
-                            <Text color="grey.400">
-                              {t("group.type.defineCriteria")}
-                            </Text>
-                          </Stack>
-                          {driver && (
-                            <Tag.Root colorPalette="grey" alignSelf="start">
-                              {t("device.type")} {driver}
-                            </Tag.Root>
-                          )}
-                          {query?.length > 0 && (
-                            <Box p="3" borderWidth="1px" borderColor="grey.100" borderRadius="xl">
-                              <Text fontFamily="mono">{query}</Text>
-                            </Box>
-                          )}
-                          <QueryBuilderTrigger
-                            value={{
-                              query,
-                              driver,
-                            }}
-                            onSubmit={updateQuery}
-                          >
-                            <Button alignSelf="start">
-                              {t("policy.editQuery")}
-                            </Button>
-                          </QueryBuilderTrigger>
-                        </Stack>
-                      </>
-                    )}
-                  </Stack>
-                  <Stack flex="1" gap="5" overflow="auto">
+                  <Stack gap="5" w="340px" overflowY="auto">
                     <Heading as="h4" size="md">
-                      {t(group.type === GroupType.Static ? "common.selectedDevices" : "device.listPreview")}
+                      {t("common.information")}
                     </Heading>
-                    {group.type === GroupType.Static && <StaticGroupDeviceList />}
-                    {group.type === GroupType.Dynamic && (
-                      <DynamicGroupDeviceList
-                        query={query}
-                        onUpdateQuery={updateQuery}
-                      />
-                    )}
+                    <FormControl
+                      required
+                      control={form.control}
+                      name="name"
+                      label={t("common.name")}
+                      placeholder={t("group.enterName")}
+                    />
+                    <FormControl
+                      required
+                      control={form.control}
+                      name="folder"
+                      label={t("common.folder")}
+                      placeholder={t("common.eG", { example: t("group.folderExample") })}
+                      helperText={t("group.useSlashesForFolder")}
+                    />
+                    <Separator />
+                    <Switch
+                      label={t("report.list")}
+                      description={t("group.showInReports")}
+                      control={form.control}
+                      name="visibleInReports"
+                    />
                   </Stack>
+                  {group.type === GroupType.Static && <StaticGroupForm />}
+                  {group.type === GroupType.Dynamic && <DynamicGroupForm />}
                 </Stack>
               </Dialog.Body>
               <Dialog.Footer>

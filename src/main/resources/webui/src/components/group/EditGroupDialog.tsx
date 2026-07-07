@@ -4,7 +4,7 @@ import { FormControl, QueryBuilderTrigger, QueryBuilderValue, Switch } from "@/c
 import { QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
-import { DeviceType, Group, GroupType } from "@/types"
+import { DeviceType, Group, GroupType, SimpleDevice } from "@/types"
 import { Box, Button, Dialog, Heading, Portal, Separator, Stack, Tag, Text } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -17,7 +17,7 @@ type EditGroupForm = {
   name: string
   folder: string
   visibleInReports: boolean
-  staticDevices: number[]
+  staticDevices: SimpleDevice[]
   query: string
 }
 
@@ -61,10 +61,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
 
   useEffect(() => {
     if (staticDevices) {
-      form.setValue(
-        "staticDevices",
-        staticDevices.map((device) => device.id)
-      )
+      form.setValue("staticDevices", staticDevices)
     }
   }, [staticDevices])
 
@@ -82,7 +79,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
       }
 
       if (group.type === GroupType.Static) {
-        payload.staticDevices = values.staticDevices
+        payload.staticDevices = values.staticDevices.map((d) => d.id)
       } else if (group.type === GroupType.Dynamic) {
         payload = {
           ...payload,

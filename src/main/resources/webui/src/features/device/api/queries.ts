@@ -78,10 +78,8 @@ export function useDevices(groupId: number) {
     queryFn: async () => {
       const params = {} as DeviceQueryParams
 
-      const queryParams = new URLSearchParams(location.search)
-
-      if (queryParams.has("group")) {
-        params.group = parseInt(queryParams.get("group"))
+      if (groupId) {
+        params.group = groupId
       }
 
       return api.device.getAll(params)

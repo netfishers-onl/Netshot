@@ -1,5 +1,5 @@
 import { Icon, Stack, Text } from "@chakra-ui/react"
-import { useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router"
 
@@ -42,8 +42,17 @@ export default function RuleItem(props: RuleItemProps) {
 
   const isDisabled = !rule?.enabled
 
+  const ruleRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (isActive && ruleRef.current) {
+      ruleRef.current.scrollIntoView({ block: "nearest" })
+    }
+  }, [isActive])
+
   return (
     <Stack
+      ref={ruleRef}
       direction="row"
       justifyContent="space-between"
       alignItems="center"

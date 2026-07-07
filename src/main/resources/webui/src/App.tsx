@@ -83,9 +83,9 @@ function App() {
                   <Routes>
                     <Route path="signin" element={<SigninScreen />} />
                     <Route path="app" element={<MainScreen />}>
-                      <Route index element={<Navigate to="devices" />} />
+                      <Route index element={<Navigate to="devices" replace />} />
                       <Route path="reports" element={<ReportScreen />}>
-                        <Route index element={<Navigate to="configuration-change" />} />
+                        <Route index element={<Navigate to="configuration-change" replace />} />
                         <Route
                           path="configuration-change"
                           element={<ReportConfigurationChangeScreen />}
@@ -115,7 +115,7 @@ function App() {
                       </Route>
                       <Route path="devices" element={<DeviceScreen />}>
                         <Route path=":id" element={<DeviceDetailScreen />}>
-                          <Route index element={<Navigate to="general" />} />
+                          <Route index element={<Navigate to="general" replace />} />
                           <Route path="general" element={<DeviceGeneralScreen />} />
                           <Route path="configurations" element={<DeviceConfigurationScreen />} />
                           <Route path="interfaces" element={<DeviceInterfaceScreen />} />
@@ -139,10 +139,10 @@ function App() {
                           path="config/:policyId/:ruleId"
                           element={<ConfigurationComplianceRuleScreen />}
                         />
-                        <Route index element={<Navigate to="software" />} />
+                        <Route index element={<Navigate to="software" replace />} />
                       </Route>
                       <Route path="tasks" element={<TaskScreen />}>
-                        <Route index element={<Navigate to="all" />} />
+                        <Route index element={<Navigate to="all" replace />} />
                         <Route path="all" element={<TaskAllScreen />} />
                         <Route path="running" element={<TaskRunningScreen />} />
                         <Route path="scheduled" element={<TaskScheduledScreen />} />
@@ -152,7 +152,7 @@ function App() {
                       </Route>
                       <Route element={<ProtectedRoute minLevel={Level.Admin} />}>
                         <Route path="administration" element={<AdministrationScreen />}>
-                          <Route index element={<Navigate to="user" />} />
+                          <Route index element={<Navigate to="user" replace />} />
                           <Route path="user" element={<AdministrationUserScreen />} />
                           <Route path="device-domain" element={<AdministrationDomainScreen />} />
                           <Route

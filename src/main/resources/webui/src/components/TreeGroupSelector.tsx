@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query"
 import { MouseEvent, useCallback, useMemo } from "react"
 import { useFieldArray, useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { LuAsterisk, LuBrackets } from "react-icons/lu"
+import { LuAsterisk, LuSquareStack } from "react-icons/lu"
 import { TreeGroup, useTreeOpenKeys } from "./group"
 
 type SelectGroupForm = {
@@ -167,7 +167,7 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
 
   const tags = selectedGroups.map((group, index) => (
     <Tag.Root key={index} size="lg">
-      <Icon size="xs"><LuBrackets /></Icon>
+      <Icon size="xs"><LuSquareStack /></Icon>
       <Tag.Label>{group}</Tag.Label>
       <Tag.EndElement>
         <Tag.CloseTrigger type="button" onClick={(evt) => onRemove(evt, index)} />

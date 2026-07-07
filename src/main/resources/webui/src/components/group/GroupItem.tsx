@@ -1,6 +1,6 @@
 import { Protected } from "@/components"
 import { Icon } from "@chakra-ui/react"
-import { LuBrackets, LuSquarePen, LuTrash, LuEllipsis } from "react-icons/lu"
+import { LuSquareStack, LuSquarePen, LuTrash, LuEllipsis } from "react-icons/lu"
 import { Group, Level } from "@/types"
 import {
   Box,
@@ -13,7 +13,7 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react"
-import { MouseEvent } from "react"
+import { MouseEvent, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import EditGroupTrigger from "./EditGroupTrigger"
 import RemoveGroupTrigger from "./RemoveGroupTrigger"
@@ -31,6 +31,14 @@ export default function GroupItem(props: GroupItemProps) {
 
   const selected = ctx.isSelected ? ctx.isSelected(group) : false
 
+  const itemRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (selected && itemRef.current) {
+      itemRef.current.scrollIntoView({ block: "nearest" })
+    }
+  }, [selected])
+
   function select(evt: MouseEvent<HTMLDivElement>) {
     if (!ctx.onGroupSelect) {
       return
@@ -41,7 +49,7 @@ export default function GroupItem(props: GroupItemProps) {
   }
 
   return (
-    <Box {...other}>
+    <Box ref={itemRef} {...other}>
       <Flex
         borderRadius="xl"
         transition="all .2s ease"
@@ -57,7 +65,7 @@ export default function GroupItem(props: GroupItemProps) {
       >
         <Stack direction="row" gap="3" alignItems="center">
           <Stack direction="row" gap="3" alignItems="center">
-            <Icon color="green.600" size="md"><LuBrackets /></Icon>
+            <Icon color="green.600" size="md"><LuSquareStack /></Icon>
             <Text>{group?.name}</Text>
           </Stack>
         </Stack>

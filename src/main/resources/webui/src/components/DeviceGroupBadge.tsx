@@ -1,5 +1,5 @@
 import { Badge, Icon } from "@chakra-ui/react"
-import { LuBrackets } from "react-icons/lu"
+import { LuSquareStack } from "react-icons/lu"
 import { Link } from "react-router"
 
 export type DeviceGroupBadgeProps = {
@@ -14,7 +14,7 @@ export default function DeviceGroupBadge(props: DeviceGroupBadgeProps) {
     <Badge variant="surface" size="md" display="inline-flex" alignItems="center" gap="1" asChild>
       <Link to={`/app/devices?group=${id}`}>
         <Icon size="sm" flexShrink={0}>
-          <LuBrackets />
+          <LuSquareStack />
         </Icon>
         {name}
       </Link>

@@ -1,7 +1,7 @@
 import { Badge, HoverCard, Icon, Spacer, Stack, StackProps, Text } from "@chakra-ui/react"
-import { forwardRef, MouseEvent, Ref, useMemo } from "react"
+import { forwardRef, MouseEvent, Ref, useCallback, useEffect, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { useMatch, useNavigate, useParams } from "react-router"
+import { useLocation, useMatch, useNavigate, useParams } from "react-router"
 
 import { LuTriangleAlert, LuCircleCheck } from "react-icons/lu"
 import { DeviceStatus, SimpleDevice } from "@/types"
@@ -32,12 +32,31 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
   )
 
   const navigate = useNavigate()
+  const location = useLocation()
   const params = useParams<{ id: string }>()
   const { getInfo: getSoftwareLevelInfo } = useSoftwareLevels()
   const sectionMatch = useMatch("/app/devices/:id/:section")
   const currentSection = sectionMatch?.params.section ?? "general"
-  const isSelected = deviceSidebarStore.isSelected(device?.id) || +params?.id === device?.id
+  const isCurrentDevice = +params?.id === device?.id
+  const isSelected = deviceSidebarStore.isSelected(device?.id) || isCurrentDevice
   const isDisabled = device?.status === DeviceStatus.Disabled
+
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const mergedRef = useCallback(
+    (el: HTMLDivElement) => {
+      containerRef.current = el
+      if (typeof ref === "function") ref(el)
+      else if (ref) (ref as { current: HTMLDivElement | null }).current = el
+    },
+    [ref]
+  )
+
+  useEffect(() => {
+    if (isCurrentDevice && containerRef.current) {
+      containerRef.current.scrollIntoView({ block: "nearest" })
+    }
+  }, [isCurrentDevice])
 
   /**
    * Device selection logic
@@ -78,7 +97,7 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
 
       deviceSidebarStore.select(range)
     } else {
-      navigate(`./${device?.id}/${currentSection}`)
+      navigate({ pathname: `./${device?.id}/${currentSection}`, search: location.search })
       deviceSidebarStore.select([device])
     }
   }
@@ -119,7 +138,7 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
         bg: isSelected ? "green.50" : "grey.50",
       }}
       borderRadius="xl"
-      ref={ref}
+      ref={mergedRef}
       userSelect="none"
       cursor="pointer"
       {...stackProps}

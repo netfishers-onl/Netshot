@@ -3,7 +3,7 @@ import { Icon, Stack, Text } from "@chakra-ui/react"
 import { Tooltip } from "@/components/ui/tooltip"
 import { LuCircleX, LuFolder, LuFolderOpen } from "react-icons/lu"
 import { motion, useAnimationControls } from "framer-motion"
-import { useCallback, useEffect, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { useNavigate, useParams } from "react-router"
 import { useComplianceSidebar } from "../../contexts/ComplianceSidebarProvider"
 import RuleItem from "./RuleItem"
@@ -24,6 +24,14 @@ export default function PolicyItem(props: PolicyItemProps) {
   const isActive = useMemo(() => !!policyId && +policyId === policy.id, [policyId, policy])
   const isPolicySelected = useMemo(() => isActive && !ruleId, [isActive, ruleId])
   const isCollapsed = forceExpand ? false : !ctx.isPolicyExpanded(policy.id)
+
+  const policyRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (isPolicySelected && policyRef.current) {
+      policyRef.current.scrollIntoView({ block: "nearest" })
+    }
+  }, [isPolicySelected])
 
   useEffect(() => {
     if (isActive && hasRules) {
@@ -48,7 +56,7 @@ export default function PolicyItem(props: PolicyItemProps) {
   }, [navigate, policy.id, hasRules, forceExpand, isCollapsed, isPolicySelected, ctx])
 
   return (
-    <Stack gap="0" mx="-3">
+    <Stack gap="0" mx="-3" ref={policyRef}>
       <Stack
         direction="row"
         justifyContent="space-between"

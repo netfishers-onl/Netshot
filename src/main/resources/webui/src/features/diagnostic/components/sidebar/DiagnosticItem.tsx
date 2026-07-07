@@ -1,6 +1,6 @@
 import { Icon, Stack, Text } from "@chakra-ui/react"
-import { forwardRef, Ref, useMemo } from "react"
-import { NavLink } from "react-router"
+import { useEffect, useRef, useMemo } from "react"
+import { NavLink, useParams } from "react-router"
 
 import { Diagnostic, DiagnosticType } from "@/types"
 import { Tooltip } from "@/components/ui/tooltip"
@@ -12,8 +12,18 @@ type DiagnosticBoxProps = {
   diagnostic: Diagnostic
 }
 
-const DiagnosticItem = forwardRef((props: DiagnosticBoxProps, ref: Ref<HTMLDivElement>) => {
+function DiagnosticItem(props: DiagnosticBoxProps) {
   const { diagnostic } = props
+
+  const params = useParams<{ id: string }>()
+  const isCurrentDiagnostic = +params?.id === diagnostic?.id
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (isCurrentDiagnostic && containerRef.current) {
+      containerRef.current.scrollIntoView({ block: "nearest" })
+    }
+  }, [isCurrentDiagnostic])
 
   const iconEl = useMemo(() => {
     if (diagnostic.type === DiagnosticType.Javascript) {
@@ -42,7 +52,7 @@ const DiagnosticItem = forwardRef((props: DiagnosticBoxProps, ref: Ref<HTMLDivEl
             bg: isActive ? "green.50" : "grey.50",
           }}
           borderRadius="md"
-          ref={ref}
+          ref={containerRef}
         >
           <Stack direction="row" gap="3" alignItems="center" justifyContent="space-between">
             <Stack direction="row" gap="3" alignItems="center" overflow="hidden">
@@ -63,6 +73,6 @@ const DiagnosticItem = forwardRef((props: DiagnosticBoxProps, ref: Ref<HTMLDivEl
       )}
     </NavLink>
   )
-})
+}
 
 export default DiagnosticItem

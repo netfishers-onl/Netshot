@@ -80,7 +80,7 @@ export default function AddGroupDialog() {
       }
 
       if (groupType === GroupType.Static) {
-        payload.staticDevices = values.staticDevices
+        payload.staticDevices = values.staticDevices.map((d) => d.id)
       } else if (groupType === GroupType.Dynamic) {
         payload = {
           ...payload,

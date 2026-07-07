@@ -86,12 +86,12 @@ export default function DeviceComplianceScreen() {
     <Stack gap="6" flex="1">
       <Accordion.Root multiple>
         <Accordion.Item value="software">
-          <Accordion.ItemTrigger>
-            <Stack direction="row" alignItems="center" gap="3" flex="1">
+          <Accordion.ItemTrigger cursor="pointer">
+            <Accordion.ItemIndicator rotate="-90deg" _open={{ rotate: "0deg" }} />
+            <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12" flex="1">
               <Heading size="md">{t("common.software")}</Heading>
               {device?.softwareLevel && <DeviceSoftwareLevelBadge level={device.softwareLevel} />}
             </Stack>
-            <Accordion.ItemIndicator />
           </Accordion.ItemTrigger>
           <Accordion.ItemContent>
             <Stack gap="4" p="4">
@@ -120,14 +120,14 @@ export default function DeviceComplianceScreen() {
         </Accordion.Item>
 
         <Accordion.Item value="hardware">
-          <Accordion.ItemTrigger>
-            <Stack direction="row" alignItems="center" gap="3" flex="1">
+          <Accordion.ItemTrigger cursor="pointer">
+            <Accordion.ItemIndicator rotate="-90deg" _open={{ rotate: "0deg" }} />
+            <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12" flex="1">
               <Heading size="md">{t("common.hardware")}</Heading>
               {device && (
                 <DeviceHardwareComplianceBadge eol={device.endOfLife} eos={device.endOfSale} />
               )}
             </Stack>
-            <Accordion.ItemIndicator />
           </Accordion.ItemTrigger>
           <Accordion.ItemContent>
             <Stack gap="3" direction="row" p="4">
@@ -174,12 +174,12 @@ export default function DeviceComplianceScreen() {
         </Accordion.Item>
 
         <Accordion.Item value="config">
-          <Accordion.ItemTrigger>
-            <Stack direction="row" alignItems="center" gap="3" flex="1">
+          <Accordion.ItemTrigger cursor="pointer">
+            <Accordion.ItemIndicator rotate="-90deg" _open={{ rotate: "0deg" }} />
+            <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12" flex="1">
               <Heading size="md">{t("device.config.label")}</Heading>
               {device && <DeviceConfigComplianceBadge compliant={!!device.compliant} />}
             </Stack>
-            <Accordion.ItemIndicator />
           </Accordion.ItemTrigger>
           <Accordion.ItemContent>
             <Stack gap="4" p="4">

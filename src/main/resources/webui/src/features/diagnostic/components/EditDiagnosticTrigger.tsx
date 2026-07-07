@@ -10,8 +10,8 @@ import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 import { Form } from "../types"
-import { EditDiagnosticForm } from "./EditDiagnosticForm"
 import EditDiagnosticScript from "./EditDiagnosticScript"
+import EditDiagnosticText from "./EditDiagnosticText"
 
 export type EditDiagnosticTriggerProps = {
   diagnostic: Diagnostic
@@ -93,11 +93,12 @@ export default function EditDiagnosticTrigger(props: EditDiagnosticTriggerProps)
       description: hasScript ? (
         <EditDiagnosticScript type={diagnostic?.type} />
       ) : (
-        <EditDiagnosticForm type={diagnostic?.type} />
+        <EditDiagnosticText type={diagnostic?.type} />
       ),
       form,
-      size: "lg",
+      size: hasScript ? "lg" : "4xl",
       variant: hasScript ? "full-floating" : null,
+      bodyProps: hasScript ? undefined : { display: "flex" },
       async onSubmit(values: Form) {
         const data = await mutation.mutateAsync({
           deviceDriver: values.deviceDriver,

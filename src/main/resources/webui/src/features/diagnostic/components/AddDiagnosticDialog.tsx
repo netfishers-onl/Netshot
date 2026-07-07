@@ -13,8 +13,8 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
 import { QUERIES, SCRIPT_TEMPLATES } from "../constants"
 import { Form } from "../types"
-import { EditDiagnosticForm } from "./EditDiagnosticForm"
 import EditDiagnosticScript from "./EditDiagnosticScript"
+import EditDiagnosticText from "./EditDiagnosticText"
 
 enum FormStep {
   Type,
@@ -110,7 +110,7 @@ export default function AddDiagnosticDialog() {
 
     dialogConfig.update({
       variant: type === DiagnosticType.Simple ? null : "full-floating",
-      size: "lg",
+      size: type === DiagnosticType.Simple ? "4xl" : "lg",
     })
 
     if ([DiagnosticType.Javascript, DiagnosticType.Python].includes(type)) {
@@ -223,7 +223,7 @@ export default function AddDiagnosticDialog() {
                 ) : (
                   <>
                     {type === DiagnosticType.Simple ? (
-                      <EditDiagnosticForm flex="1" type={type} />
+                      <EditDiagnosticText type={type} />
                     ) : (
                       <EditDiagnosticScript type={type} />
                     )}

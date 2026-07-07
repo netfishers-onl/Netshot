@@ -10,7 +10,7 @@ import { LuCode, LuServer } from "react-icons/lu"
 import { QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
-import { GroupType } from "@/types"
+import { DeviceType, GroupType } from "@/types"
 import {
   Box,
   Button,
@@ -42,6 +42,7 @@ export default function AddGroupDialog() {
   const [groupType, setGroupType] = useState<GroupType>(null)
   const [formStep, setFormStep] = useState(FormStep.Type)
   const [size, setSize] = useState<DialogRootProps["size"]>("2xl")
+  const [driver, setDriver] = useState<DeviceType["name"]>(null)
 
   const title = useMemo(() => {
     if (formStep === FormStep.Type) {
@@ -60,7 +61,6 @@ export default function AddGroupDialog() {
       folder: "",
       visibleInReports: true,
       staticDevices: [],
-      driver: null,
       query: "",
     },
   })
@@ -68,11 +68,6 @@ export default function AddGroupDialog() {
   const query = useWatch({
     control: form.control,
     name: "query",
-  })
-
-  const driver = useWatch({
-    control: form.control,
-    name: "driver",
   })
 
   const createMutation = useMutation({
@@ -89,7 +84,6 @@ export default function AddGroupDialog() {
       } else if (groupType === GroupType.Dynamic) {
         payload = {
           ...payload,
-          driver: values.driver,
           query: values.query,
         }
       }
@@ -113,6 +107,7 @@ export default function AddGroupDialog() {
       setFormStep(FormStep.Type)
       setGroupType(null)
       setSize("2xl")
+      setDriver(null)
       form.reset()
     }, 100)
   }
@@ -127,7 +122,7 @@ export default function AddGroupDialog() {
   }
 
   const updateQuery = (values: QueryBuilderValue) => {
-    form.setValue("driver", values.driver)
+    setDriver(values.driver)
     form.setValue("query", values.query)
   }
 
@@ -277,7 +272,6 @@ export default function AddGroupDialog() {
                       {groupType === GroupType.Static && <StaticGroupDeviceList />}
                       {groupType === GroupType.Dynamic && (
                         <DynamicGroupDeviceList
-                          driver={driver}
                           query={query}
                           onUpdateQuery={updateQuery}
                         />

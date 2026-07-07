@@ -7,7 +7,7 @@ import { useToast } from "@/hooks"
 import { DeviceType, Group, GroupType } from "@/types"
 import { Box, Button, Dialog, Heading, Portal, Separator, Stack, Tag, Text } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useCallback, useEffect, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { FormProvider, useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import DynamicGroupDeviceList from "./DynamicGroupDeviceList"
@@ -18,7 +18,6 @@ type EditGroupForm = {
   folder: string
   visibleInReports: boolean
   staticDevices: number[]
-  driver: DeviceType["name"]
   query: string
 }
 
@@ -32,6 +31,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
   const toast = useToast()
   const queryClient = useQueryClient()
   const dialogConfig = useDialogConfig()
+  const [driver, setDriver] = useState<DeviceType["name"]>(null)
 
   const title = useMemo(() => {
     return t("group.edit", {
@@ -46,7 +46,6 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
       folder: group.folder,
       visibleInReports: !group.hiddenFromReports,
       staticDevices: [],
-      driver: group.driver,
       query: group.query,
     },
   })
@@ -74,11 +73,6 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
     name: "query",
   })
 
-  const driver = useWatch({
-    control: form.control,
-    name: "driver",
-  })
-
   const mutation = useMutation({
     mutationFn: async (values: EditGroupForm) => {
       let payload: UpdateGroupPayload = {
@@ -92,7 +86,6 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
       } else if (group.type === GroupType.Dynamic) {
         payload = {
           ...payload,
-          driver: values.driver,
           query: values.query,
         }
       }
@@ -114,7 +107,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
 
   const updateQuery = useCallback(
     (values: QueryBuilderValue) => {
-      form.setValue("driver", values.driver)
+      setDriver(values.driver)
       form.setValue("query", values.query)
     },
     [form]
@@ -218,7 +211,6 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
                     {group.type === GroupType.Static && <StaticGroupDeviceList />}
                     {group.type === GroupType.Dynamic && (
                       <DynamicGroupDeviceList
-                        driver={driver}
                         query={query}
                         onUpdateQuery={updateQuery}
                       />

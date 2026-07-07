@@ -11,5 +11,4 @@ export type Group = {
   hiddenFromReports: boolean;
   type: GroupType;
   query?: string;
-  driver?: string;
 };

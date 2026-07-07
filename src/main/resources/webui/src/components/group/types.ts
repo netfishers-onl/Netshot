@@ -1,5 +1,3 @@
-import { DeviceType } from "@/types"
-
 export enum FormStep {
   Type,
   Details,
@@ -10,6 +8,5 @@ export type AddGroupForm = {
   folder: string
   visibleInReports: boolean
   staticDevices: number[]
-  driver: DeviceType["name"]
   query: string
 }

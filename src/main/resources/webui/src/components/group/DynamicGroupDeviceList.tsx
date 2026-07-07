@@ -1,7 +1,6 @@
 import api from "@/api"
 import { QueryBuilderTrigger, QueryBuilderValue } from "@/components"
 import { QUERIES } from "@/constants"
-import { DeviceType } from "@/types"
 import { Button, Center, Heading, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { useVirtualizer } from "@tanstack/react-virtual"
@@ -10,22 +9,20 @@ import { useTranslation } from "react-i18next"
 import GroupDeviceBox from "./GroupDeviceBox"
 
 export type DynamicGroupDeviceListProps = {
-  driver: DeviceType["name"]
   query: string
   onUpdateQuery(values: QueryBuilderValue): void
 }
 
 export default function DynamicGroupDeviceList(props: DynamicGroupDeviceListProps) {
-  const { query, driver, onUpdateQuery } = props
+  const { query, onUpdateQuery } = props
 
   const { t } = useTranslation()
   const contentRef = useRef<HTMLDivElement>(null)
 
   const { data, isPending } = useQuery({
-    queryKey: [QUERIES.DEVICE_GROUP_AGGREGATED_SEARCH, query, driver],
+    queryKey: [QUERIES.DEVICE_GROUP_AGGREGATED_SEARCH, query],
     queryFn: async () => {
       return api.device.search({
-        driver,
         query,
       })
     },

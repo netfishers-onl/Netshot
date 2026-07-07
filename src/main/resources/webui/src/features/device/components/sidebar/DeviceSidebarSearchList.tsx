@@ -33,7 +33,7 @@ export default function DeviceSidebarSearchList() {
   const virtualizer = useVirtualizer({
     count: devices.length,
     getScrollElement: () => containerRef.current,
-    estimateSize: () => 76,
+    estimateSize: () => 56,
     measureElement: (element) => element?.getBoundingClientRect().height,
     overscan: 10,
   })

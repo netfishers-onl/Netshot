@@ -31,7 +31,7 @@ export default function DeviceSidebarList() {
   const virtualizer = useVirtualizer({
     count: data?.length ?? 0,
     getScrollElement: () => containerRef.current,
-    estimateSize: () => 76,
+    estimateSize: () => 56,
     measureElement: (element) => element?.getBoundingClientRect().height,
     overscan: 10,
   })

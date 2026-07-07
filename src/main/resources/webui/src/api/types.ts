@@ -152,7 +152,6 @@ export type CreateGroupPayload = {
   type: GroupType
   hiddenFromReports: boolean
   staticDevices?: number[]
-  driver?: string
   query?: string
 }
 
@@ -161,7 +160,6 @@ export type UpdateGroupPayload = {
   folder: string
   hiddenFromReports: boolean
   staticDevices?: number[]
-  driver?: string
   query?: string
 }
 

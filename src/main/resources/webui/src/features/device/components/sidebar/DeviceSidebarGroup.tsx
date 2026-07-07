@@ -12,13 +12,25 @@ import { Tooltip } from "@/components/ui/tooltip"
 import { QUERIES } from "@/constants"
 import { useArrowKeyNavigation, usePagination } from "@/hooks"
 import { Group, Level } from "@/types"
-import { createFoldersFromGroups } from "@/utils"
+import { createFoldersFromGroups, Folder, isGroup } from "@/utils"
 import { Flex, Heading, IconButton, Separator, Skeleton, Stack } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate, useSearchParams } from "react-router"
 import { useDeviceSidebarStore } from "../../stores"
+
+function findGroupInTree(items: Array<Folder | Group>, id: number): Group | null {
+  for (const item of items) {
+    if (isGroup(item)) {
+      if (item.id === id) return item
+    } else {
+      const found = findGroupInTree(item.children, id)
+      if (found) return found
+    }
+  }
+  return null
+}
 
 export default function DeviceSidebarGroup() {
   const scrollContainer = useRef<HTMLDivElement>(null)
@@ -36,6 +48,15 @@ export default function DeviceSidebarGroup() {
     queryFn: async () => api.group.getAll(pagination),
     select: createFoldersFromGroups,
   })
+
+  useEffect(() => {
+    if (isPending) return
+    if (!selectedGroupId) {
+      setGroup(null)
+      return
+    }
+    setGroup(findGroupInTree(items ?? [], selectedGroupId))
+  }, [selectedGroupId, items, isPending])
 
   useLayoutEffect(() => {
     if (!scrollContainer?.current) return

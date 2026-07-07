@@ -31,7 +31,7 @@ export function MainScreen() {
     if (!location.pathname.startsWith("/signin")) {
       navigate(
         withQuery("/signin", {
-          [REDIRECT_SEARCH_PARAM]: location.pathname,
+          [REDIRECT_SEARCH_PARAM]: location.pathname + location.search,
         })
       )
     }

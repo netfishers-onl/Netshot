@@ -3,23 +3,23 @@ import { LuPlus } from "react-icons/lu"
 import { Level } from "@/types"
 import { Button, Separator, Stack, Text } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
-import { SidebarProvider } from "../../contexts"
-import { SidebarContext } from "../../contexts/SidebarProvider"
+import { ComplianceSidebarProvider } from "../../contexts"
+import { ComplianceSidebarContext } from "../../contexts/ComplianceSidebarProvider"
 import AddPolicyTrigger from "../AddPolicyTrigger"
-import SidebarList from "./SidebarList"
-import SidebarSearch from "./SidebarSearch"
-import SidebarSearchList from "./SidebarSearchList"
+import ComplianceSidebarList from "./ComplianceSidebarList"
+import ComplianceSidebarSearch from "./ComplianceSidebarSearch"
+import ComplianceSidebarSearchList from "./ComplianceSidebarSearchList"
 
-export default function Sidebar() {
+export default function ComplianceSidebar() {
   const { t } = useTranslation()
 
   return (
-    <SidebarProvider>
+    <ComplianceSidebarProvider>
       <Stack w="300px" overflow="hidden" gap="0">
-        <SidebarContext.Consumer>
+        <ComplianceSidebarContext.Consumer>
           {({ query }) => (
             <>
-              <SidebarSearch />
+              <ComplianceSidebarSearch />
               <Separator />
               {!query && (
                 <>
@@ -42,7 +42,7 @@ export default function Sidebar() {
               <Stack p="6">
                 <Text fontWeight="medium">{t("device.config.compliance")}</Text>
               </Stack>
-              {query ? <SidebarSearchList /> : <SidebarList />}
+              {query ? <ComplianceSidebarSearchList /> : <ComplianceSidebarList />}
               <Protected minLevel={Level.Operator}>
                 <Separator />
                 <Stack p="6">
@@ -56,8 +56,8 @@ export default function Sidebar() {
               </Protected>
             </>
           )}
-        </SidebarContext.Consumer>
+        </ComplianceSidebarContext.Consumer>
       </Stack>
-    </SidebarProvider>
+    </ComplianceSidebarProvider>
   )
 }

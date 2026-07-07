@@ -15,7 +15,7 @@ import {
 import { useTranslation } from "react-i18next"
 import { useTask } from "../hooks"
 
-export default function AllTaskScreen() {
+export default function TaskSucceededScreen() {
   const { t } = useTranslation()
 
   const {
@@ -29,12 +29,12 @@ export default function AllTaskScreen() {
     applyFilter,
     clearFilter,
     columns,
-  } = useTask(TaskStatus.Scheduled)
+  } = useTask(TaskStatus.Success)
 
   return (
     <Stack gap="6" p="9" flex="1" overflow="auto">
       <Heading as="h1" fontSize="4xl">
-        {t("task.scheduled")}
+        {t("task.succeeded")}
       </Heading>
       <Stack direction="row" gap="3">
         <Search
@@ -96,7 +96,7 @@ export default function AllTaskScreen() {
             />
           ) : (
             <EmptyResult
-              title={t("task.noScheduled")}
+              title={t("task.noSucceeded")}
               description={t("task.noMatchingFound")}
             />
           )}

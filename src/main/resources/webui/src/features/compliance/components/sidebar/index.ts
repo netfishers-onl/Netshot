@@ -1,4 +1,4 @@
-export { default as Sidebar } from "./Sidebar";
-export { default as SidebarList } from "./SidebarList";
-export { default as SidebarSearch } from "./SidebarSearch";
-export { default as SidebarSearchList } from "./SidebarSearchList";
+export { default as ComplianceSidebar } from "./ComplianceSidebar";
+export { default as ComplianceSidebarList } from "./ComplianceSidebarList";
+export { default as ComplianceSidebarSearch } from "./ComplianceSidebarSearch";
+export { default as ComplianceSidebarSearchList } from "./ComplianceSidebarSearchList";

@@ -1,11 +1,11 @@
 import { Separator, Stack } from "@chakra-ui/react"
 import { Outlet } from "react-router"
-import { Sidebar } from "../components/sidebar"
+import { ComplianceSidebar } from "../components/sidebar"
 
 export default function ComplianceScreen() {
   return (
     <Stack direction="row" flex="1" overflow="auto" gap="0">
-      <Sidebar />
+      <ComplianceSidebar />
       <Separator orientation="vertical" />
       <Stack flex="1" overflow="auto">
         <Outlet />

@@ -4,7 +4,7 @@ import { Steps, Button, Stack, Separator } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import ExportDataTrigger from "./ExportDataTrigger";
 
-export default function Sidebar() {
+export default function ReportSidebar() {
   const { t } = useTranslation();
 
   return (

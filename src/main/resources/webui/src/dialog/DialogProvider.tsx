@@ -3,7 +3,7 @@ import mergeWith from "lodash.mergewith"
 import { createContext, memo, PropsWithChildren, useContext } from "react"
 import { useShallow } from "zustand/react/shallow"
 import { DialogConfigContext } from "./dialogConfigContext"
-import { useDialogStore } from "./store"
+import { useDialogStore } from "./useDialogStore"
 
 export type DialogProviderConfig = {
   form?: {

@@ -1,5 +1,5 @@
-export { default as Sidebar } from "./Sidebar";
+export { default as DiagnosticSidebar } from "./DiagnosticSidebar";
 export { default as DiagnosticItem } from "./DiagnosticItem";
-export { default as SidebarList } from "./SidebarList";
-export { default as SidebarSearch } from "./SidebarSearch";
-export { default as SidebarSearchList } from "./SidebarSearchList";
+export { default as DiagnosticSidebarList } from "./DiagnosticSidebarList";
+export { default as DiagnosticSidebarSearch } from "./DiagnosticSidebarSearch";
+export { default as DiagnosticSidebarSearchList } from "./DiagnosticSidebarSearchList";

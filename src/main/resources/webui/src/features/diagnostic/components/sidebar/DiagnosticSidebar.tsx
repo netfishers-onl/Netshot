@@ -6,11 +6,11 @@ import { useTranslation } from "react-i18next"
 import { DiagnosticSidebarProvider } from "../../contexts"
 import { DiagnosticSidebarContext } from "../../contexts/DiagnosticSidebarProvider"
 import AddDiagnosticTrigger from "../AddDiagnosticTrigger"
-import SidebarList from "./SidebarList"
-import SidebarSearch from "./SidebarSearch"
-import DeviceSidebarSearchList from "./SidebarSearchList"
+import DiagnosticSidebarList from "./DiagnosticSidebarList"
+import DiagnosticSidebarSearch from "./DiagnosticSidebarSearch"
+import DiagnosticSidebarSearchList from "./DiagnosticSidebarSearchList"
 
-export default function Sidebar() {
+export default function DiagnosticSidebar() {
   const { t } = useTranslation()
 
   return (
@@ -19,10 +19,10 @@ export default function Sidebar() {
         <DiagnosticSidebarContext.Consumer>
           {({ query }) => (
             <>
-              <SidebarSearch />
+              <DiagnosticSidebarSearch />
               <Separator />
 
-              {query ? <DeviceSidebarSearchList /> : <SidebarList />}
+              {query ? <DiagnosticSidebarSearchList /> : <DiagnosticSidebarList />}
               <Protected minLevel={Level.ReadWrite}>
                 <Separator />
                 <Stack p="6">

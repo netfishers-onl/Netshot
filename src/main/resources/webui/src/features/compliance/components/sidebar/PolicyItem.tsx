@@ -5,7 +5,7 @@ import { LuCircleX, LuFolder, LuFolderOpen } from "react-icons/lu"
 import { motion, useAnimationControls } from "framer-motion"
 import { useCallback, useEffect, useMemo } from "react"
 import { useNavigate, useParams } from "react-router"
-import { useSidebar } from "../../contexts/SidebarProvider"
+import { useComplianceSidebar } from "../../contexts/ComplianceSidebarProvider"
 import RuleItem from "./RuleItem"
 
 export type PolicyItemProps = {
@@ -17,7 +17,7 @@ export default function PolicyItem(props: PolicyItemProps) {
   const { policy, forceExpand } = props
   const { policyId, ruleId } = useParams()
   const navigate = useNavigate()
-  const ctx = useSidebar()
+  const ctx = useComplianceSidebar()
   const controls = useAnimationControls()
   const hasRules = useMemo(() => policy.rules?.length > 0, [policy])
   const isAssigned = useMemo(() => policy.targetGroups?.length > 0, [policy])

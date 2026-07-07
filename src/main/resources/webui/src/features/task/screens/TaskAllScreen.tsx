@@ -14,7 +14,7 @@ import {
 import { useTranslation } from "react-i18next"
 import { useTask } from "../hooks"
 
-export default function AllTaskScreen() {
+export default function TaskAllScreen() {
   const { t } = useTranslation()
 
   const {

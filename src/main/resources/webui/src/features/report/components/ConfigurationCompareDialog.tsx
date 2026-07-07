@@ -3,9 +3,9 @@ import { LightConfig } from "@/types"
 import React, { MouseEvent } from "react"
 import ConfigurationCompareEditor from "./ConfigurationCompareEditor"
 
-export type ConfigurationCompareModalProps = { config: LightConfig; children: React.ReactElement<any> } & Record<string, unknown>
+export type ConfigurationCompareDialogProps = { config: LightConfig; children: React.ReactElement<any> } & Record<string, unknown>
 
-export default function ConfigurationCompareModal({ config, children, ...rest }: ConfigurationCompareModalProps) {
+export default function ConfigurationCompareDialog({ config, children, ...rest }: ConfigurationCompareDialogProps) {
   const dialog = useAlertDialog()
 
   const open = (evt: MouseEvent) => {

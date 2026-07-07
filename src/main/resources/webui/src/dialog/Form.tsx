@@ -4,7 +4,7 @@ import mergeWith from "lodash.mergewith"
 import { FieldValues, FormProvider, UseFormReturn, useFormState } from "react-hook-form"
 import { useDialogConfig } from "./dialogConfigContext"
 import { useDialogProviderConfig } from "./DialogProvider"
-import { useDialogStore } from "./store"
+import { useDialogStore } from "./useDialogStore"
 import { BaseDialogProps, PromiseOrVoid } from "./types"
 
 export type FormDialogProps<F extends FieldValues = FieldValues> = {

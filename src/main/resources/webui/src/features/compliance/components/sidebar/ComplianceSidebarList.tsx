@@ -5,14 +5,14 @@ import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router"
 import { usePoliciesWithSearch } from "../../api"
-import { useSidebar } from "../../contexts/SidebarProvider"
+import { useComplianceSidebar } from "../../contexts/ComplianceSidebarProvider"
 import PolicyItem from "./PolicyItem"
 
 type FlatItem = { policy: Policy; rule?: Rule }
 
-export default function SidebarSearchList() {
-  const ctx = useSidebar()
+export default function ComplianceSidebarList() {
   const { t } = useTranslation()
+  const ctx = useComplianceSidebar()
   const navigate = useNavigate()
   const { policyId, ruleId } = useParams()
 
@@ -22,10 +22,12 @@ export default function SidebarSearchList() {
     const result: FlatItem[] = []
     policies?.forEach((policy) => {
       result.push({ policy })
-      policy.rules?.forEach((rule) => result.push({ policy, rule }))
+      if (ctx.isPolicyExpanded(policy.id)) {
+        policy.rules?.forEach((rule) => result.push({ policy, rule }))
+      }
     })
     return result
-  }, [policies])
+  }, [policies, ctx])
 
   const activeIndex = items.findIndex(
     (item) =>
@@ -34,9 +36,16 @@ export default function SidebarSearchList() {
 
   const onNavigate = useCallback(
     (item: FlatItem) => {
-      navigate(item.rule ? `./config/${item.policy.id}/${item.rule.id}` : `./config/${item.policy.id}`)
+      if (item.rule) {
+        navigate(`./config/${item.policy.id}/${item.rule.id}`)
+      } else {
+        navigate(`./config/${item.policy.id}`)
+        if (item.policy.rules?.length > 0) {
+          ctx.setPolicyExpanded(item.policy.id, true)
+        }
+      }
     },
-    [navigate]
+    [navigate, ctx]
   )
 
   useArrowKeyNavigation({
@@ -62,9 +71,9 @@ export default function SidebarSearchList() {
   }
 
   return (
-    <Stack px="6" gap="3" overflow="auto" flex="1">
-      {policies?.map((policy) => (
-        <PolicyItem key={policy?.id} policy={policy} forceExpand />
+    <Stack px="6" gap="0" overflow="auto" flex="1">
+      {policies.map((policy) => (
+        <PolicyItem key={policy?.id} policy={policy} />
       ))}
     </Stack>
   )

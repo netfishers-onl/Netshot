@@ -6,7 +6,7 @@ import Alert, { AlertDialogProps } from "./Alert"
 import Confirm, { ConfirmDialogProps } from "./Confirm"
 import Form, { FormDialogProps } from "./Form"
 import Loading, { LoadingDialogProps } from "./Loading"
-import { useDialogStore } from "./store"
+import { useDialogStore } from "./useDialogStore"
 
 export function useConfirmDialog() {
   const open = useDialogStore((state) => state.open)

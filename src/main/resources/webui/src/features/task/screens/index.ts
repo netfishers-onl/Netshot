@@ -1,7 +1,7 @@
-export { default as AllTaskScreen } from "./AllTaskScreen";
-export { default as CancelledTaskScreen } from "./CancelledTaskScreen";
-export { default as FailedTaskScreen } from "./FailedTaskScreen";
-export { default as RunningTaskScreen } from "./RunningTaskScreen";
-export { default as ScheduledTaskScreen } from "./ScheduledTaskScreen";
-export { default as SucceededTaskScreen } from "./SucceededTaskScreen";
+export { default as TaskAllScreen } from "./TaskAllScreen";
+export { default as TaskCancelledScreen } from "./TaskCancelledScreen";
+export { default as TaskFailedScreen } from "./TaskFailedScreen";
+export { default as TaskRunningScreen } from "./TaskRunningScreen";
+export { default as TaskScheduledScreen } from "./TaskScheduledScreen";
+export { default as TaskSucceededScreen } from "./TaskSucceededScreen";
 export { default as TaskScreen } from "./TaskScreen";

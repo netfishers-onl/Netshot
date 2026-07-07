@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
 import { usePeriodOptions } from "../hooks"
 import { Period, PeriodType } from "../types"
-import ConfigurationCompareModal from "./ConfigurationCompareModal"
+import ConfigurationCompareDialog from "./ConfigurationCompareDialog"
 
 const columnHelper = createColumnHelper<LightConfig>()
 
@@ -75,7 +75,7 @@ export default function ConfigurationChangeList() {
         id: "actions",
         cell: (info) => (
           <Tooltip content={t("common.showDifference")}>
-            <ConfigurationCompareModal config={info.row.original}>
+            <ConfigurationCompareDialog config={info.row.original}>
               <IconButton
                 variant="ghost"
                 colorPalette="green"
@@ -83,7 +83,7 @@ export default function ConfigurationChangeList() {
               >
                 <LuGitBranch />
               </IconButton>
-            </ConfigurationCompareModal>
+            </ConfigurationCompareDialog>
           </Tooltip>
         ),
         header: "",

@@ -12,7 +12,7 @@ export function createOptionHook<T extends Option<unknown, unknown>>(
   options: T[],
   config?: CreateOptionHookConfig<T>
 ) {
-  return function useHook() {
+  return function useOptions() {
     const { t } = useTranslation()
     const { translate = true, translateFn } = config ?? {}
 

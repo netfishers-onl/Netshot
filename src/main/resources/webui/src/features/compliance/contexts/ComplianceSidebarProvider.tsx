@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 
-export type SidebarContextType = {
+export type ComplianceSidebarContextType = {
   query: string;
   setQuery: Dispatch<SetStateAction<string>>;
   expandedPolicyIds: number[];
@@ -17,8 +17,8 @@ export type SidebarContextType = {
   togglePolicyExpanded(policyId: number): void;
 };
 
-export const SidebarContext = createContext<SidebarContextType>(null);
-export const useSidebar = () => useContext(SidebarContext);
+export const ComplianceSidebarContext = createContext<ComplianceSidebarContextType>(null);
+export const useComplianceSidebar = () => useContext(ComplianceSidebarContext);
 
 function getInitiallyExpandedPolicyIds(): number[] {
   const match = window.location.pathname.match(/\/config\/(\d+)/);
@@ -55,7 +55,7 @@ export default function ComplianceSidebarProvider(
   }, []);
 
   return (
-    <SidebarContext.Provider
+    <ComplianceSidebarContext.Provider
       value={{
         query,
         setQuery,
@@ -66,6 +66,6 @@ export default function ComplianceSidebarProvider(
       }}
     >
       {children}
-    </SidebarContext.Provider>
+    </ComplianceSidebarContext.Provider>
   );
 }

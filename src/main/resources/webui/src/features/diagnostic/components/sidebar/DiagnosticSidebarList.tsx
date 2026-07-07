@@ -10,7 +10,7 @@ import { useNavigate, useParams } from "react-router"
 import { QUERIES } from "../../constants"
 import DiagnosticItem from "./DiagnosticItem"
 
-export default function SidebarList() {
+export default function DiagnosticSidebarList() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const params = useParams<{ id: string }>()

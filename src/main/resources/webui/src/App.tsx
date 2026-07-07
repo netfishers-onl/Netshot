@@ -12,10 +12,10 @@ import {
 } from "@/features/administration"
 import { SigninScreen } from "@/features/auth"
 import {
-  ComplianceDetailScreen,
-  CompliancePolicyScreen,
-  HardwareComplianceScreen,
+  ComplianceScreen,
+  ConfigurationCompliancePolicyScreen,
   ConfigurationComplianceRuleScreen,
+  HardwareComplianceScreen,
   SoftwareComplianceScreen,
 } from "@/features/compliance"
 import {
@@ -41,12 +41,12 @@ import {
   ReportSoftwareComplianceScreen,
 } from "@/features/report"
 import {
-  AllTaskScreen,
-  CancelledTaskScreen,
-  FailedTaskScreen,
-  RunningTaskScreen,
-  ScheduledTaskScreen,
-  SucceededTaskScreen,
+  TaskAllScreen,
+  TaskCancelledScreen,
+  TaskFailedScreen,
+  TaskRunningScreen,
+  TaskScheduledScreen,
+  TaskSucceededScreen,
   TaskScreen,
 } from "@/features/task"
 import i18n, { LocalizationProvider } from "@/i18n"
@@ -128,27 +128,27 @@ function App() {
                       <Route path="diagnostics" element={<DiagnosticScreen />}>
                         <Route path=":id" element={<DiagnosticDetailScreen />} />
                       </Route>
-                      <Route path="compliance" element={<ConfigurationComplianceRuleScreen />}>
+                      <Route path="compliance" element={<ComplianceScreen />}>
                         <Route path="hardware" element={<HardwareComplianceScreen />} />
                         <Route path="software" element={<SoftwareComplianceScreen />} />
                         <Route
                           path="config/:policyId"
-                          element={<CompliancePolicyScreen />}
+                          element={<ConfigurationCompliancePolicyScreen />}
                         />
                         <Route
                           path="config/:policyId/:ruleId"
-                          element={<ComplianceDetailScreen />}
+                          element={<ConfigurationComplianceRuleScreen />}
                         />
                         <Route index element={<Navigate to="software" />} />
                       </Route>
                       <Route path="tasks" element={<TaskScreen />}>
                         <Route index element={<Navigate to="all" />} />
-                        <Route path="all" element={<AllTaskScreen />} />
-                        <Route path="running" element={<RunningTaskScreen />} />
-                        <Route path="scheduled" element={<ScheduledTaskScreen />} />
-                        <Route path="succeeded" element={<SucceededTaskScreen />} />
-                        <Route path="failed" element={<FailedTaskScreen />} />
-                        <Route path="cancelled" element={<CancelledTaskScreen />} />
+                        <Route path="all" element={<TaskAllScreen />} />
+                        <Route path="running" element={<TaskRunningScreen />} />
+                        <Route path="scheduled" element={<TaskScheduledScreen />} />
+                        <Route path="succeeded" element={<TaskSucceededScreen />} />
+                        <Route path="failed" element={<TaskFailedScreen />} />
+                        <Route path="cancelled" element={<TaskCancelledScreen />} />
                       </Route>
                       <Route element={<ProtectedRoute minLevel={Level.Admin} />}>
                         <Route path="administration" element={<AdministrationScreen />}>

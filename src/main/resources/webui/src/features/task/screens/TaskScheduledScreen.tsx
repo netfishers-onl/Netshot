@@ -15,12 +15,12 @@ import {
 import { useTranslation } from "react-i18next"
 import { useTask } from "../hooks"
 
-export default function RunningTaskScreen() {
+export default function TaskScheduledScreen() {
   const { t } = useTranslation()
 
   const {
     data,
-    isLoading,
+    isPending,
     isFetching,
     refetch,
     onBottomReached,
@@ -29,12 +29,12 @@ export default function RunningTaskScreen() {
     applyFilter,
     clearFilter,
     columns,
-  } = useTask(TaskStatus.Running)
+  } = useTask(TaskStatus.Scheduled)
 
   return (
     <Stack gap="6" p="9" flex="1" overflow="auto">
       <Heading as="h1" fontSize="4xl">
-        {t("task.running")}
+        {t("task.scheduled")}
       </Heading>
       <Stack direction="row" gap="3">
         <Search
@@ -78,7 +78,7 @@ export default function RunningTaskScreen() {
           <LuRefreshCcw />
         </IconButton>
       </Stack>
-      {isLoading ? (
+      {isPending ? (
         <Stack gap="3">
           <Skeleton h="60px"></Skeleton>
           <Skeleton h="60px"></Skeleton>
@@ -91,12 +91,12 @@ export default function RunningTaskScreen() {
             <DataTable
               columns={columns}
               data={data}
-              loading={isLoading}
+              loading={isPending}
               onBottomReached={onBottomReached}
             />
           ) : (
             <EmptyResult
-              title={t("task.noRunning")}
+              title={t("task.noScheduled")}
               description={t("task.noMatchingFound")}
             />
           )}

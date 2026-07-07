@@ -5,6 +5,6 @@ export { default as ConfigurationComplianceSidebarSearch } from "./Configuration
 export { default as HardwareDeviceListTrigger } from "./HardwareDeviceListTrigger";
 export { default as ConfigurationChangeList } from "./ConfigurationChangeList";
 export { default as ConfigurationChart } from "./ConfigurationChart";
-export { default as ConfigurationCompareModal } from "./ConfigurationCompareModal";
-export { default as Sidebar } from "./Sidebar";
+export { default as ConfigurationCompareDialog } from "./ConfigurationCompareDialog";
+export { default as ReportSidebar } from "./ReportSidebar";
 export { default as SoftwareComplianceItem } from "./SoftwareComplianceItem";

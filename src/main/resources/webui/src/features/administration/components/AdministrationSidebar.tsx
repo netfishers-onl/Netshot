@@ -2,7 +2,7 @@ import { SidebarLink } from "@/components";
 import { Steps, Stack } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 
-export default function Sidebar() {
+export default function AdministrationSidebar() {
   const { t } = useTranslation();
 
   return (

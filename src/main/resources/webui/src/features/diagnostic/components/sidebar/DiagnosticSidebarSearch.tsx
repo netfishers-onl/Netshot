@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useDiagnosticSidebar } from "../../contexts/DiagnosticSidebarProvider"
 
-export default function SidebarSearch() {
+export default function DiagnosticSidebarSearch() {
   const { t } = useTranslation()
   const ctx = useDiagnosticSidebar()
   const [query, setQuery] = useState<string>("")

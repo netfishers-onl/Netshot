@@ -15,12 +15,11 @@ import {
 import { useTranslation } from "react-i18next"
 import { useTask } from "../hooks"
 
-export default function AllTaskScreen() {
+export default function TaskFailedScreen() {
   const { t } = useTranslation()
-
   const {
     data,
-    isPending,
+    isLoading,
     isFetching,
     refetch,
     onBottomReached,
@@ -29,12 +28,12 @@ export default function AllTaskScreen() {
     applyFilter,
     clearFilter,
     columns,
-  } = useTask(TaskStatus.Success)
+  } = useTask(TaskStatus.Failure)
 
   return (
     <Stack gap="6" p="9" flex="1" overflow="auto">
       <Heading as="h1" fontSize="4xl">
-        {t("task.succeeded")}
+        {t("task.failed")}
       </Heading>
       <Stack direction="row" gap="3">
         <Search
@@ -78,7 +77,7 @@ export default function AllTaskScreen() {
           <LuRefreshCcw />
         </IconButton>
       </Stack>
-      {isPending ? (
+      {isLoading ? (
         <Stack gap="3">
           <Skeleton h="60px"></Skeleton>
           <Skeleton h="60px"></Skeleton>
@@ -91,12 +90,12 @@ export default function AllTaskScreen() {
             <DataTable
               columns={columns}
               data={data}
-              loading={isPending}
+              loading={isLoading}
               onBottomReached={onBottomReached}
             />
           ) : (
             <EmptyResult
-              title={t("task.noSucceeded")}
+              title={t("task.noFailed")}
               description={t("task.noMatchingFound")}
             />
           )}

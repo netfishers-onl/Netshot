@@ -3,7 +3,7 @@ import mergeWith from "lodash.mergewith"
 import { isValidElement, useRef } from "react"
 import { useDialogConfig } from "./dialogConfigContext"
 import { useDialogProviderConfig } from "./DialogProvider"
-import { useDialogStore } from "./store"
+import { useDialogStore } from "./useDialogStore"
 import { BaseDialogProps, PromiseOrVoid } from "./types"
 
 export type ConfirmDialogProps = {

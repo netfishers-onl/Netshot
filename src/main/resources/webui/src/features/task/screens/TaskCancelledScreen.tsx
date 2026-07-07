@@ -15,11 +15,12 @@ import {
 import { useTranslation } from "react-i18next"
 import { useTask } from "../hooks"
 
-export default function FailedTaskScreen() {
+export default function TaskCancelledScreen() {
   const { t } = useTranslation()
+
   const {
     data,
-    isLoading,
+    isPending,
     isFetching,
     refetch,
     onBottomReached,
@@ -28,12 +29,12 @@ export default function FailedTaskScreen() {
     applyFilter,
     clearFilter,
     columns,
-  } = useTask(TaskStatus.Failure)
+  } = useTask(TaskStatus.Cancelled)
 
   return (
     <Stack gap="6" p="9" flex="1" overflow="auto">
       <Heading as="h1" fontSize="4xl">
-        {t("task.failed")}
+        {t("task.cancelled")}
       </Heading>
       <Stack direction="row" gap="3">
         <Search
@@ -43,7 +44,11 @@ export default function FailedTaskScreen() {
           w="30%"
         />
         <Spacer />
-        <Menu.Root>
+        <Menu.Root
+          positioning={{
+            strategy: "fixed",
+          }}
+        >
           <Menu.Trigger asChild>
             <Button variant="primary">
               <LuFilter />
@@ -77,7 +82,7 @@ export default function FailedTaskScreen() {
           <LuRefreshCcw />
         </IconButton>
       </Stack>
-      {isLoading ? (
+      {isPending ? (
         <Stack gap="3">
           <Skeleton h="60px"></Skeleton>
           <Skeleton h="60px"></Skeleton>
@@ -90,12 +95,12 @@ export default function FailedTaskScreen() {
             <DataTable
               columns={columns}
               data={data}
-              loading={isLoading}
+              loading={isPending}
               onBottomReached={onBottomReached}
             />
           ) : (
             <EmptyResult
-              title={t("task.noFailed")}
+              title={t("task.noCancelled")}
               description={t("task.noMatchingFound")}
             />
           )}

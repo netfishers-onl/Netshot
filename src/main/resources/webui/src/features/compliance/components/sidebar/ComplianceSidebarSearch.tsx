@@ -3,11 +3,11 @@ import { useDebounce } from "@/hooks"
 import { Stack } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { useSidebar } from "../../contexts/SidebarProvider"
+import { useComplianceSidebar } from "../../contexts/ComplianceSidebarProvider"
 
-export default function SidebarSearch() {
+export default function ComplianceSidebarSearch() {
   const { t } = useTranslation()
-  const ctx = useSidebar()
+  const ctx = useComplianceSidebar()
   const [query, setQuery] = useState<string>("")
   const debouncedValue = useDebounce(query)
 

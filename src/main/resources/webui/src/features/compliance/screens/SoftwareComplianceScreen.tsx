@@ -23,7 +23,7 @@ import TableButtonStack from "@/features/administration/components/TableButtonSt
 
 const columnHelper = createColumnHelper<SoftwareRule>()
 
-export default function SoftwareComplianceRuleScreen() {
+export default function SoftwareComplianceScreen() {
   const { t } = useTranslation()
   const pagination = usePagination()
   const { user } = useAuth()

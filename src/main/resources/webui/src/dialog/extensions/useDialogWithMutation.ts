@@ -3,7 +3,7 @@ import { FieldValues } from "react-hook-form"
 import { AlertDialogProps } from "../Alert"
 import { ConfirmDialogProps } from "../Confirm"
 import { FormDialogProps } from "../Form"
-import { useDialogStore } from "../store"
+import { useDialogStore } from "../useDialogStore"
 import { useAlertDialog, useConfirmDialog, useFormDialog } from "../useDialog"
 
 export function syncDialogWithMutation(

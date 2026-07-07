@@ -11,7 +11,7 @@ import { QUERIES } from "../../constants"
 import { useDiagnosticSidebar } from "../../contexts/DiagnosticSidebarProvider"
 import DiagnosticItem from "./DiagnosticItem"
 
-export default function DeviceSidebarSearchList() {
+export default function DiagnosticSidebarSearchList() {
   const ctx = useDiagnosticSidebar()
   const { t } = useTranslation()
   const navigate = useNavigate()

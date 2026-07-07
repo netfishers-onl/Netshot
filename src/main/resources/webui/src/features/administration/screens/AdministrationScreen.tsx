@@ -1,11 +1,11 @@
 import { Steps, Stack, Separator } from "@chakra-ui/react";
 import { Outlet } from "react-router";
-import { Sidebar } from "../components";
+import { AdministrationSidebar } from "../components";
 
 export default function AdministrationScreen() {
   return (
     <Stack direction="row" flex="1" overflow="auto" gap="0">
-      <Sidebar />
+      <AdministrationSidebar />
       <Separator orientation="vertical" />
       <Stack flex="1" overflow="auto">
         <Outlet />

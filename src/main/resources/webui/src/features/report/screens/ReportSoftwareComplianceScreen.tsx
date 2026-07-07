@@ -1,5 +1,5 @@
 import api from "@/api"
-import { DeviceGroupBadge, DomainSelect, Search, TreeGroup } from "@/components"
+import { DeviceGroupBadge, DomainSelect, Search, TreeGroup, useTreeOpenKeys } from "@/components"
 import { LuFilter, LuRefreshCcw } from "react-icons/lu"
 import { QUERIES as GLOBAL_QUERIES } from "@/constants"
 import { useAlertDialog } from "@/dialog"
@@ -154,6 +154,8 @@ export default function ReportSoftwareComplianceScreen() {
     form.setValue("domain", null)
   }, [form])
 
+  const { isOpen, toggle } = useTreeOpenKeys()
+
   const getGroupChildren = useCallback(
     (group: Group) => {
       let item = data?.find((stat) => stat.groupId === group.id)
@@ -221,7 +223,12 @@ export default function ReportSoftwareComplianceScreen() {
             <Skeleton height="36px" />
           </Stack>
         ) : (
-          <TreeGroup items={groups} renderGroupChildren={getGroupChildren} />
+          <TreeGroup
+            items={groups}
+            renderGroupChildren={getGroupChildren}
+            isFolderOpen={isOpen}
+            toggleFolderOpen={toggle}
+          />
         )}
       </Stack>
     </Stack>

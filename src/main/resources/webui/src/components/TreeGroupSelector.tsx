@@ -9,7 +9,7 @@ import { MouseEvent, useCallback, useMemo } from "react"
 import { useFieldArray, useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { LuAsterisk, LuBrackets } from "react-icons/lu"
-import { TreeGroup } from "./group"
+import { TreeGroup, useTreeOpenKeys } from "./group"
 
 type SelectGroupForm = {
   groups: Array<{ id: number }>
@@ -58,13 +58,16 @@ function SelectGroupDialog({
     [append, remove, fields, isSelected, isMulti, form]
   )
 
+  const { isOpen, toggle } = useTreeOpenKeys(initialExpandedKeys)
+
   return (
     <Stack gap="0" py="4" px="5">
       <TreeGroup
         items={items}
         onGroupSelect={onGroupSelect}
         isSelected={isSelected}
-        expandedKeys={initialExpandedKeys}
+        isFolderOpen={isOpen}
+        toggleFolderOpen={toggle}
       />
     </Stack>
   )

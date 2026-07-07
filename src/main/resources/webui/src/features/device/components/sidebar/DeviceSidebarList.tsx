@@ -1,8 +1,11 @@
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
+import { useMatch, useNavigate, useParams } from "react-router"
 
+import { useArrowKeyNavigation } from "@/hooks"
+import { SimpleDevice } from "@/types"
 import { useShallow } from "zustand/react/shallow"
 import { useDevices } from "../../api"
 import { useDeviceSidebarStore } from "../../stores"
@@ -11,11 +14,16 @@ import DeviceBox from "./DeviceBox"
 export default function DeviceSidebarList() {
   const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
-  const { setTotal, setDevices, group } = useDeviceSidebarStore(
+  const navigate = useNavigate()
+  const params = useParams<{ id: string }>()
+  const sectionMatch = useMatch("/app/devices/:id/:section")
+  const currentSection = sectionMatch?.params.section ?? "general"
+  const { setTotal, setDevices, group, select } = useDeviceSidebarStore(
     useShallow((state) => ({
       setTotal: state.setTotal,
       setDevices: state.setDevices,
       group: state.group,
+      select: state.select,
     }))
   )
 
@@ -34,6 +42,23 @@ export default function DeviceSidebarList() {
     estimateSize: () => 56,
     measureElement: (element) => element?.getBoundingClientRect().height,
     overscan: 10,
+  })
+
+  const activeIndex = data?.findIndex((device) => device.id === +params?.id) ?? -1
+
+  const onNavigate = useCallback(
+    (device: SimpleDevice, index: number) => {
+      navigate(`./${device.id}/${currentSection}`)
+      select([device])
+      virtualizer.scrollToIndex(index, { align: "auto" })
+    },
+    [navigate, currentSection, select, virtualizer]
+  )
+
+  useArrowKeyNavigation({
+    items: data ?? [],
+    activeIndex,
+    onNavigate,
   })
 
   if (isPending) {

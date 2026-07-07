@@ -1,14 +1,58 @@
+import { useArrowKeyNavigation } from "@/hooks"
+import { Policy, Rule } from "@/types"
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react"
+import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate, useParams } from "react-router"
 import { usePoliciesWithSearch } from "../../api"
 import { useSidebar } from "../../contexts/SidebarProvider"
 import PolicyItem from "./PolicyItem"
 
+type FlatItem = { policy: Policy; rule?: Rule }
+
 export default function SidebarList() {
   const { t } = useTranslation()
   const ctx = useSidebar()
+  const navigate = useNavigate()
+  const { policyId, ruleId } = useParams()
 
   const { data: policies, isPending } = usePoliciesWithSearch(ctx.query)
+
+  const items = useMemo(() => {
+    const result: FlatItem[] = []
+    policies?.forEach((policy) => {
+      result.push({ policy })
+      if (ctx.isPolicyExpanded(policy.id)) {
+        policy.rules?.forEach((rule) => result.push({ policy, rule }))
+      }
+    })
+    return result
+  }, [policies, ctx])
+
+  const activeIndex = items.findIndex(
+    (item) =>
+      +policyId === item.policy.id && (item.rule ? +ruleId === item.rule.id : !ruleId)
+  )
+
+  const onNavigate = useCallback(
+    (item: FlatItem) => {
+      if (item.rule) {
+        navigate(`./config/${item.policy.id}/${item.rule.id}`)
+      } else {
+        navigate(`./config/${item.policy.id}`)
+        if (item.policy.rules?.length > 0) {
+          ctx.setPolicyExpanded(item.policy.id, true)
+        }
+      }
+    },
+    [navigate, ctx]
+  )
+
+  useArrowKeyNavigation({
+    items,
+    activeIndex,
+    onNavigate,
+  })
 
   if (isPending) {
     return (

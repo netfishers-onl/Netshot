@@ -1,23 +1,31 @@
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
+import { useMatch, useNavigate, useParams } from "react-router"
 import { useShallow } from "zustand/react/shallow"
+import { useArrowKeyNavigation } from "@/hooks"
+import { SimpleDevice } from "@/types"
 import { useSearchDevices } from "../../api"
 import { useDeviceSidebarStore } from "../../stores"
 import DeviceBox from "./DeviceBox"
 
 export default function DeviceSidebarSearchList() {
-  const { query, setTotal, setDevices } = useDeviceSidebarStore(
+  const { query, setTotal, setDevices, select } = useDeviceSidebarStore(
     useShallow((state) => ({
       query: state.query,
       setTotal: state.setTotal,
       setDevices: state.setDevices,
+      select: state.select,
     }))
   )
 
   const { t } = useTranslation()
   const containerRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+  const params = useParams<{ id: string }>()
+  const sectionMatch = useMatch("/app/devices/:id/:section")
+  const currentSection = sectionMatch?.params.section ?? "general"
 
   const { data, isPending, isSuccess } = useSearchDevices(query)
 
@@ -36,6 +44,23 @@ export default function DeviceSidebarSearchList() {
     estimateSize: () => 56,
     measureElement: (element) => element?.getBoundingClientRect().height,
     overscan: 10,
+  })
+
+  const activeIndex = devices.findIndex((device) => device.id === +params?.id)
+
+  const onNavigate = useCallback(
+    (device: SimpleDevice, index: number) => {
+      navigate(`./${device.id}/${currentSection}`)
+      select([device])
+      virtualizer.scrollToIndex(index, { align: "auto" })
+    },
+    [navigate, currentSection, select, virtualizer]
+  )
+
+  useArrowKeyNavigation({
+    items: devices,
+    activeIndex,
+    onNavigate,
   })
 
   if (isPending) {

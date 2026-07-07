@@ -1,14 +1,21 @@
 import api from "@/api"
-import { AddGroupTrigger, getExpandedKeys, Protected, TreeGroup } from "@/components"
+import {
+  AddGroupTrigger,
+  getExpandedKeys,
+  getVisibleGroups,
+  Protected,
+  TreeGroup,
+  useTreeOpenKeys,
+} from "@/components"
 import { LuPlus } from "react-icons/lu"
 import { Tooltip } from "@/components/ui/tooltip"
 import { QUERIES } from "@/constants"
-import { usePagination } from "@/hooks"
+import { useArrowKeyNavigation, usePagination } from "@/hooks"
 import { Group, Level } from "@/types"
 import { createFoldersFromGroups } from "@/utils"
 import { Flex, Heading, IconButton, Separator, Skeleton, Stack } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { useLayoutEffect, useRef, useState } from "react"
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate, useSearchParams } from "react-router"
 import { useDeviceSidebarStore } from "../../stores"
@@ -40,38 +47,53 @@ export default function DeviceSidebarGroup() {
     }
   }, [scrollContainer])
 
-  const onGroupSelect = (group: Group) => {
-    if (group?.id === selectedGroupId) {
+  const onGroupSelect = useCallback(
+    (group: Group) => {
+      if (group?.id === selectedGroupId) {
+        navigate(
+          {
+            pathname: location.pathname,
+            search: null,
+          },
+          {
+            replace: true,
+          }
+        )
+
+        setGroup(null)
+        return
+      }
+
       navigate(
         {
           pathname: location.pathname,
-          search: null,
+          search: `?group=${group.id}`,
         },
-        {
-          replace: true,
-        }
+        { replace: true }
       )
 
-      setGroup(null)
-      return
+      setGroup(group)
+    },
+    [selectedGroupId, navigate, location.pathname, setGroup]
+  )
+
+  const expandedKeys = useMemo(() => {
+    if (items?.length > 0 && selectedGroupId) {
+      return getExpandedKeys(items, selectedGroupId)
     }
+    return []
+  }, [items, selectedGroupId])
 
-    navigate(
-      {
-        pathname: location.pathname,
-        search: `?group=${group.id}`,
-      },
-      { replace: true }
-    )
+  const { isOpen, toggle } = useTreeOpenKeys(expandedKeys)
 
-    setGroup(group)
-  }
+  const visibleGroups = useMemo(() => getVisibleGroups(items ?? [], isOpen), [items, isOpen])
+  const activeIndex = visibleGroups.findIndex((group) => group.id === selectedGroupId)
 
-  let expandedKeys: string[] = []
-
-  if (items?.length > 0 && selectedGroupId) {
-    expandedKeys = getExpandedKeys(items, selectedGroupId)
-  }
+  useArrowKeyNavigation({
+    items: visibleGroups,
+    activeIndex,
+    onNavigate: onGroupSelect,
+  })
 
   return (
     <Stack gap="0">
@@ -104,7 +126,8 @@ export default function DeviceSidebarGroup() {
             showMenu={true}
             onGroupSelect={onGroupSelect}
             isSelected={(group) => group.id === selectedGroupId}
-            expandedKeys={expandedKeys}
+            isFolderOpen={isOpen}
+            toggleFolderOpen={toggle}
           />
         )}
       </Stack>

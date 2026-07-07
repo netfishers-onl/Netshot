@@ -8,5 +8,6 @@ export { default as GroupOrFolderItem } from "./GroupOrFolderItem"
 export { default as RemoveGroupTrigger } from "./RemoveGroupTrigger"
 export { default as StaticGroupList } from "./StaticGroupList"
 export * from "./types"
+export * from "./useTreeOpenKeys"
 
 export * from "./TreeGroup"

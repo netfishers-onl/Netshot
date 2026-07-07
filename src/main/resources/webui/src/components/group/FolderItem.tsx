@@ -3,7 +3,7 @@ import { LuFolder, LuFolderOpen } from "react-icons/lu"
 import { Folder, isGroup } from "@/utils"
 import { Box, BoxProps, Flex, Stack, Text } from "@chakra-ui/react"
 import { motion, useAnimationControls } from "framer-motion"
-import { MouseEvent, useEffect, useState } from "react"
+import { MouseEvent, useEffect } from "react"
 import GroupOrFolderItem from "./GroupOrFolderItem"
 import { useTreeGroup } from "./TreeGroupProvider"
 
@@ -16,13 +16,11 @@ export default function FolderItem(props: FolderItemProps) {
 
   const ctx = useTreeGroup()
   const controls = useAnimationControls()
-  const [isOpen, setIsOpen] = useState<boolean>(
-    ctx.expandedKeys?.length > 0 ? ctx.expandedKeys.includes(folder.name) : false
-  )
+  const isOpen = ctx.isFolderOpen(folder.name)
 
-  async function toggleCollapse(evt?: MouseEvent) {
+  function toggleCollapse(evt?: MouseEvent) {
     evt?.stopPropagation()
-    setIsOpen((prev) => !prev)
+    ctx.toggleFolderOpen(folder.name)
   }
 
   async function runAnimation() {

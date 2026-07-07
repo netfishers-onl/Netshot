@@ -3,8 +3,9 @@ import { Icon, Stack, Text } from "@chakra-ui/react"
 import { Tooltip } from "@/components/ui/tooltip"
 import { LuCircleX, LuFolder, LuFolderOpen } from "react-icons/lu"
 import { motion, useAnimationControls } from "framer-motion"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo } from "react"
 import { useNavigate, useParams } from "react-router"
+import { useSidebar } from "../../contexts/SidebarProvider"
 import RuleItem from "./RuleItem"
 
 export type PolicyItemProps = {
@@ -16,40 +17,35 @@ export default function PolicyItem(props: PolicyItemProps) {
   const { policy, forceExpand } = props
   const { policyId, ruleId } = useParams()
   const navigate = useNavigate()
+  const ctx = useSidebar()
   const controls = useAnimationControls()
   const hasRules = useMemo(() => policy.rules?.length > 0, [policy])
   const isAssigned = useMemo(() => policy.targetGroups?.length > 0, [policy])
   const isActive = useMemo(() => !!policyId && +policyId === policy.id, [policyId, policy])
   const isPolicySelected = useMemo(() => isActive && !ruleId, [isActive, ruleId])
-  const isRuleSelected = useMemo(() => isActive && !!ruleId, [isActive, ruleId])
-  const startExpanded = (isActive || !!forceExpand) && hasRules
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(!startExpanded)
+  const isCollapsed = forceExpand ? false : !ctx.isPolicyExpanded(policy.id)
 
   useEffect(() => {
-    if (isRuleSelected && hasRules) {
-      setIsCollapsed(false)
-      controls.start("show")
+    if (isActive && hasRules) {
+      ctx.setPolicyExpanded(policy.id, true)
     }
-  }, [isRuleSelected, hasRules, controls])
+    // Only react to route/data changes, expansion is driven by user toggles otherwise.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive, hasRules, policy.id])
 
   useEffect(() => {
-    if (!hasRules) {
-      setIsCollapsed(true)
-      controls.start("hidden")
-    }
-  }, [hasRules, controls])
+    controls.start(isCollapsed ? "hidden" : "show")
+  }, [isCollapsed, controls])
 
   const handleClick = useCallback(async () => {
     navigate(`./config/${policy.id}`)
-    if (!hasRules) return
+    if (!hasRules || forceExpand) return
     if (isPolicySelected) {
-      setIsCollapsed((prev) => !prev)
-      await controls.start(isCollapsed ? "show" : "hidden")
+      ctx.togglePolicyExpanded(policy.id)
     } else if (isCollapsed) {
-      setIsCollapsed(false)
-      await controls.start("show")
+      ctx.setPolicyExpanded(policy.id, true)
     }
-  }, [navigate, policy.id, hasRules, isCollapsed, isPolicySelected, controls])
+  }, [navigate, policy.id, hasRules, forceExpand, isCollapsed, isPolicySelected, ctx])
 
   return (
     <Stack gap="0" mx="-3">
@@ -84,7 +80,7 @@ export default function PolicyItem(props: PolicyItemProps) {
         )}
       </Stack>
       <motion.div
-        initial={startExpanded ? "show" : "hidden"}
+        initial={!isCollapsed ? "show" : "hidden"}
         animate={controls}
         variants={{
           hidden: { opacity: 0, height: 0, pointerEvents: "none" },

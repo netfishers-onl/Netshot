@@ -1,19 +1,37 @@
 import api from "@/api"
+import { useArrowKeyNavigation } from "@/hooks"
 import { Diagnostic } from "@/types"
 import { sortAlphabetical } from "@/utils"
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
+import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
+import { useNavigate, useParams } from "react-router"
 import { QUERIES } from "../../constants"
 import DiagnosticItem from "./DiagnosticItem"
 
 export default function SidebarList() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const params = useParams<{ id: string }>()
 
   const { data, isPending } = useQuery({
     queryKey: [QUERIES.DIAGNOSTIC_INFINITE_LIST],
     queryFn: () => api.diagnostic.getAll(),
     select: (res: Diagnostic[]) => sortAlphabetical(res, "name"),
+  })
+
+  const activeIndex = data?.findIndex((diagnostic) => diagnostic.id === +params?.id) ?? -1
+
+  const onNavigate = useCallback(
+    (diagnostic: Diagnostic) => navigate(`./${diagnostic.id}`),
+    [navigate]
+  )
+
+  useArrowKeyNavigation({
+    items: data ?? [],
+    activeIndex,
+    onNavigate,
   })
 
   if (isPending) {

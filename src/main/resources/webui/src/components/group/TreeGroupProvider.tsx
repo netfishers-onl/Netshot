@@ -2,7 +2,8 @@ import { Group } from "@/types"
 import { createContext, JSX, PropsWithChildren, useContext } from "react"
 
 export type TreeGroupContextProps = {
-  expandedKeys: string[]
+  isFolderOpen(key: string): boolean
+  toggleFolderOpen(key: string): void
   showMenu?: boolean
   onGroupSelect?(group: Group): void
   isSelected(group: Group): boolean
@@ -15,7 +16,8 @@ export const useTreeGroup = () => useContext(TreeGroupContext)
 
 export function TreeGroupProvider({
   children,
-  expandedKeys = [],
+  isFolderOpen,
+  toggleFolderOpen,
   showMenu = false,
   onGroupSelect,
   isSelected,
@@ -24,7 +26,8 @@ export function TreeGroupProvider({
   return (
     <TreeGroupContext.Provider
       value={{
-        expandedKeys,
+        isFolderOpen,
+        toggleFolderOpen,
         showMenu,
         onGroupSelect,
         isSelected,

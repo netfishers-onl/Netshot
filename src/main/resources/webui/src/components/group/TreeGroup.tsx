@@ -16,7 +16,8 @@ export type TreeGroupProps = {
   onGroupSelect?(group: Group): void
   isSelected?(group: Group): boolean
   renderGroupChildren?(group: Group): JSX.Element
-  expandedKeys?: string[]
+  isFolderOpen(key: string): boolean
+  toggleFolderOpen(key: string): void
   showMenu?: boolean
 }
 
@@ -25,12 +26,14 @@ export function TreeGroup({
   onGroupSelect,
   isSelected,
   renderGroupChildren,
-  expandedKeys = [],
+  isFolderOpen,
+  toggleFolderOpen,
   showMenu = false,
 }: TreeGroupProps) {
   return (
     <TreeGroupProvider
-      expandedKeys={expandedKeys}
+      isFolderOpen={isFolderOpen}
+      toggleFolderOpen={toggleFolderOpen}
       onGroupSelect={onGroupSelect}
       isSelected={isSelected}
       renderGroupChildren={renderGroupChildren}
@@ -46,4 +49,25 @@ export function TreeGroup({
 export function getExpandedKeys(items: FolderOrGroup[], groupId: number) {
   const result = findNodeWithPath(items, groupId)
   return result.path.map((p) => p.name)
+}
+
+/**
+ * Flattens a folder/group tree into the groups currently visible (i.e. not
+ * hidden inside a collapsed folder), in the same top-to-bottom order they render.
+ */
+export function getVisibleGroups(
+  items: FolderOrGroup[],
+  isFolderOpen: (key: string) => boolean
+): Group[] {
+  const result: Group[] = []
+
+  for (const item of items ?? []) {
+    if (isGroup(item)) {
+      result.push(item)
+    } else if (isFolderOpen(item.name)) {
+      result.push(...getVisibleGroups(item.children, isFolderOpen))
+    }
+  }
+
+  return result
 }

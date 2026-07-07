@@ -5,6 +5,7 @@ export * from "./useThrottle"
 export { default as useToast } from "./useToast"
 
 export * from "./createOptionHook"
+export * from "./useArrowKeyNavigation"
 export * from "./useDebounce"
 export * from "./useSoftwareLevels"
 export * from "./useDownloadConfigMutation"

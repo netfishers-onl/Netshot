@@ -1,11 +1,12 @@
 import api from "@/api"
-import { getExpandedKeys, TreeGroup } from "@/components"
+import { getExpandedKeys, getVisibleGroups, TreeGroup, useTreeOpenKeys } from "@/components"
 import { QUERIES } from "@/constants"
-import { usePagination } from "@/hooks"
+import { useArrowKeyNavigation, usePagination } from "@/hooks"
 import { Group } from "@/types"
 import { createFoldersFromGroups, Folder, search } from "@/utils"
 import { Skeleton, Stack } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
+import { useCallback, useMemo } from "react"
 import { useNavigate, useParams } from "react-router"
 import { useConfigurationComplianceSidebarStore } from "../stores/useConfigurationComplianceSidebarStore"
 
@@ -25,17 +26,32 @@ export default function ConfigurationCompliantSidebarList() {
     },
   })
 
-  function onGroupSelect(group: Group) {
-    navigate(`./${group.id}`, {
-      replace: true,
-    })
-  }
+  const onGroupSelect = useCallback(
+    (group: Group) => {
+      navigate(`./${group.id}`, {
+        replace: true,
+      })
+    },
+    [navigate]
+  )
 
-  let expandedKeys: string[] = []
+  const expandedKeys = useMemo(() => {
+    if (items?.length > 0 && params.id) {
+      return getExpandedKeys(items, +params.id)
+    }
+    return []
+  }, [items, params.id])
 
-  if (items?.length > 0 && params.id) {
-    expandedKeys = getExpandedKeys(items, +params.id)
-  }
+  const { isOpen, toggle } = useTreeOpenKeys(expandedKeys)
+
+  const visibleGroups = useMemo(() => getVisibleGroups(items ?? [], isOpen), [items, isOpen])
+  const activeIndex = visibleGroups.findIndex((group) => group.id === +params.id)
+
+  useArrowKeyNavigation({
+    items: visibleGroups,
+    activeIndex,
+    onNavigate: onGroupSelect,
+  })
 
   return (
     <Stack px="6" pt="3" flex="1" overflow="auto">
@@ -49,7 +65,8 @@ export default function ConfigurationCompliantSidebarList() {
       ) : (
         <TreeGroup
           items={items}
-          expandedKeys={expandedKeys}
+          isFolderOpen={isOpen}
+          toggleFolderOpen={toggle}
           onGroupSelect={onGroupSelect}
           isSelected={(group) => group.id === +params.id}
         />

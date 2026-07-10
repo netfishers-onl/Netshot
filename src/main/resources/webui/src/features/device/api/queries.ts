@@ -63,12 +63,13 @@ export function useInfiniteDeviceConfigs(deviceId: number, query: string) {
   }
 }
 
-export function useDeviceConfigs(deviceId: number) {
+export function useDeviceConfigs(deviceId: number | undefined) {
   return useQuery({
     queryKey: [QUERIES.DEVICE_CONFIGS, deviceId],
     queryFn: async () => {
       return api.device.getAllConfigsById(deviceId)
     },
+    enabled: !!deviceId,
   })
 }
 

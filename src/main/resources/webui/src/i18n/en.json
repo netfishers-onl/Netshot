@@ -42,7 +42,9 @@
       "config": {
         "complianceStatusDesc": "Compliance status of the device configurations",
         "label": "Configuration",
+        "tabLabel": "Configurations",
         "changes": "Configuration changes",
+        "compareXToY": "Compare <first/> to <second/>",
         "compliance": "Configuration compliance",
         "size": "Configuration size",
         "deleteOldPriorTo": "Delete old configurations prior to",
@@ -56,8 +58,11 @@
         "noChange": "There is no configuration change",
         "noneForDevice": "There is no configuration for this device",
         "noConfiguration": "This device does not have any configuration, please run a snapshot",
+        "selectAsFirst": "Compare from",
+        "selectAsSecond": "Compare to",
         "trackChanges": "Track last configuration changes or over a period",
         "unableToLoad": "Unable to load configuration",
+        "binaryNotPreviewable": "This attribute contains binary data and cannot be previewed",
         "select": "Select a configuration"
       },
       "configListWillAppear": "Config list will appear here when device changes",

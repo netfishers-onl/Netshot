@@ -1,7 +1,7 @@
 import api from "@/api"
 import { MonacoDiffEditor } from "@/components"
 import { Icon } from "@chakra-ui/react"
-import { LuX } from "react-icons/lu"
+import { LuEyeOff, LuX } from "react-icons/lu"
 import { QUERIES } from "@/constants"
 import { Config, ConfigBinaryAttribute, ConfigNumericAttribute, ConfigTextAttribute, DeviceAttributeDefinition, DeviceAttributeType } from "@/types"
 import { Center, Flex, Spinner, Stack, Text } from "@chakra-ui/react"
@@ -28,6 +28,8 @@ export default function ConfigurationCompareEditor(props: CompareEditorProps) {
   const { t } = useTranslation()
 
   const isLongText = attribute.type === DeviceAttributeType.LongText
+  const isBinary =
+    attribute.type === DeviceAttributeType.Binary || attribute.type === DeviceAttributeType.BinaryFile
 
   const {
     data: original,
@@ -52,6 +54,26 @@ export default function ConfigurationCompareEditor(props: CompareEditorProps) {
       try { return await api.config.getItem(compare.id, attribute.name) } catch { return "" }
     },
   })
+
+  if (isBinary) {
+    return (
+      <Center flex="1">
+        <Stack alignItems="center" gap="3">
+          <Flex
+            alignItems="center"
+            justifyContent="center"
+            w="32px"
+            h="32px"
+            bg="grey.50"
+            borderRadius="full"
+          >
+            <Icon color="grey.500"><LuEyeOff /></Icon>
+          </Flex>
+          <Text>{t("device.config.binaryNotPreviewable")}</Text>
+        </Stack>
+      </Center>
+    )
+  }
 
   if (isOriginalPending || isModifiedPending) {
     return (

@@ -1,8 +1,6 @@
 import { EmptyResult } from "@/components"
-import Search from "@/components/Search"
 import { Button, Skeleton, Stack } from "@chakra-ui/react"
 import { AnimatePresence } from "framer-motion"
-import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams } from "react-router"
 import { useInfiniteDeviceConfigs } from "../api"
@@ -13,19 +11,10 @@ import { useDeviceConfigurationCompareStore } from "../stores"
 export default function DeviceConfigurationScreen() {
   const params = useParams<{ id: string }>()
   const { t } = useTranslation()
-  const [query, setQuery] = useState<string>("")
   const current = useDeviceConfigurationCompareStore((state) => state.current)
 
   const { data, isPending, isSuccess, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useInfiniteDeviceConfigs(+params.id, query)
-
-  function onQuery(value: string) {
-    setQuery(value)
-  }
-
-  function onQueryClear() {
-    setQuery("")
-  }
+    useInfiniteDeviceConfigs(+params.id, "")
 
   if (data?.length === 0) {
     return (
@@ -38,9 +27,6 @@ export default function DeviceConfigurationScreen() {
 
   return (
     <Stack gap="6">
-      <Stack direction="row" gap="3">
-        <Search placeholder={t("common.searchPlaceholder")} onQuery={onQuery} onClear={onQueryClear} w="50%" />
-      </Stack>
       <Stack gap="3">
         {isPending ? (
           <>

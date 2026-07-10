@@ -1,11 +1,14 @@
-import { LuChevronDown } from "react-icons/lu"
+import { LuArrowLeftToLine, LuArrowRightToLine, LuChevronDown } from "react-icons/lu"
 import { Config } from "@/types"
 import { useLocalization } from "@/i18n"
 import { getConfigDeviceAttributeDefinitions } from "@/utils"
-import { Button, IconButton, Separator, Skeleton, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
+import { Tooltip } from "@/components/ui/tooltip"
+import { HStack, IconButton, Separator, Skeleton, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
 import { motion, useAnimationControls } from "framer-motion"
 import { useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { useShallow } from "zustand/react/shallow"
+import { useDeviceConfigs } from "../api"
 import { useDevice } from "../contexts/device"
 import { useDeviceConfigurationCompareStore } from "../stores"
 import DeviceConfigurationAttribute from "./DeviceConfigurationAttribute"
@@ -19,10 +22,27 @@ export default function DeviceConfigurationPanel(props: DeviceConfigurationPanel
   const { t } = useTranslation()
   const { formatDateTime } = useLocalization()
   const controls = useAnimationControls()
-  const { type, isLoading } = useDevice()
+  const { device, type, isLoading } = useDevice()
   const [isCollapsed, setIsCollapsed] = useState<boolean>(true)
   const attributeDefinitions = type ? getConfigDeviceAttributeDefinitions(type.attributes) : []
-  const setCurrent = useDeviceConfigurationCompareStore((state) => state.setCurrent)
+  const { current, compare, setCurrent, setCompare } = useDeviceConfigurationCompareStore(
+    useShallow((state) => ({
+      current: state.current,
+      compare: state.compare,
+      setCurrent: state.setCurrent,
+      setCompare: state.setCompare,
+    }))
+  )
+  const { data: configs } = useDeviceConfigs(device?.id)
+  const isCurrentSelected = current?.id === config.id
+  const isCompareSelected = compare?.id === config.id
+
+  // configs is sorted newest-first: index 0 is the most recent config (can't
+  // sit on the older/left side), the last index is the oldest (can't sit on
+  // the newer/right side).
+  const configIndex = configs?.findIndex((c) => c.id === config.id) ?? -1
+  const isNewest = configIndex === 0
+  const isOldest = configIndex !== -1 && configIndex === configs.length - 1
 
   const changeDate = useMemo(() => {
     return formatDateTime(config?.changeDate)
@@ -65,19 +85,44 @@ export default function DeviceConfigurationPanel(props: DeviceConfigurationPanel
         {config?.author && <Tag.Root colorPalette="grey">{config?.author}</Tag.Root>}
 
         <Spacer />
-        <Button
-          size="sm"
-          variant="ghost"
-          colorPalette="green"
+        <HStack
+          gap="0"
           className="compare-button"
-          opacity="0"
-          onClick={(evt) => {
-            evt.stopPropagation()
-            setCurrent(config)
-          }}
+          opacity={isCurrentSelected || isCompareSelected ? 1 : 0}
         >
-          {t("common.compare")}
-        </Button>
+          <Tooltip content={t("device.config.selectAsFirst")}>
+            <IconButton
+              size="sm"
+              colorPalette="green"
+              borderEndRadius="0"
+              aria-label={t("device.config.selectAsFirst")}
+              variant={isCurrentSelected ? "solid" : "ghost"}
+              disabled={isNewest}
+              onClick={(evt) => {
+                evt.stopPropagation()
+                setCurrent(config)
+              }}
+            >
+              <LuArrowLeftToLine />
+            </IconButton>
+          </Tooltip>
+          <Tooltip content={t("device.config.selectAsSecond")}>
+            <IconButton
+              size="sm"
+              colorPalette="green"
+              borderStartRadius="0"
+              aria-label={t("device.config.selectAsSecond")}
+              variant={isCompareSelected ? "solid" : "ghost"}
+              disabled={isOldest}
+              onClick={(evt) => {
+                evt.stopPropagation()
+                setCompare(config, configs)
+              }}
+            >
+              <LuArrowRightToLine />
+            </IconButton>
+          </Tooltip>
+        </HStack>
       </Stack>
       <motion.div
         initial="hidden"

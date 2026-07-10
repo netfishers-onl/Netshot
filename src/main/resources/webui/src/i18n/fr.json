@@ -42,7 +42,9 @@
       "config": {
         "complianceStatusDesc": "État de conformité des configurations des équipements",
         "label": "Configuration",
+        "tabLabel": "Configurations",
         "changes": "Changements de configuration",
+        "compareXToY": "Comparer <first/> à <second/>",
         "compliance": "Conformité de la configuration",
         "size": "Taille de la configuration",
         "deleteOldPriorTo": "Supprimer les anciennes configurations antérieures à",
@@ -56,8 +58,11 @@
         "noChange": "Il n'y a pas de changement de configuration",
         "noneForDevice": "Il n'y a pas de configuration pour cet équipement",
         "noConfiguration": "Cet équipement n'a pas de configuration, veuillez exécuter un snapshot",
+        "selectAsFirst": "Comparer depuis",
+        "selectAsSecond": "Comparer à",
         "trackChanges": "Suivre les derniers changements de configuration ou sur une période",
         "unableToLoad": "Impossible de charger la configuration",
+        "binaryNotPreviewable": "Cet attribut contient des données binaires et ne peut pas être prévisualisé",
         "select": "Sélectionner une configuration"
       },
       "configListWillAppear": "La liste des configurations apparaîtra ici lorsque l'équipement change",

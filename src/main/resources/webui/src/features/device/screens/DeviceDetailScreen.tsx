@@ -156,7 +156,7 @@ export default function DeviceDetailScreen() {
 
           <RouterTabs>
             <RouterTab to="general">{t("common.general")}</RouterTab>
-            <RouterTab to="configurations">{t("device.config.label")}</RouterTab>
+            <RouterTab to="configurations">{t("device.config.tabLabel")}</RouterTab>
             <RouterTab to="interfaces">{t("device.interface.list")}</RouterTab>
             <RouterTab to="modules">{t("device.module.list")}</RouterTab>
             <RouterTab to="diagnostics">{t("diagnostic.list")}</RouterTab>

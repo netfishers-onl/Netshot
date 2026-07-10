@@ -1,23 +1,17 @@
-import DeviceConfigurationSelect from "@/components/DeviceConfigurationSelect"
 import { useAlertDialog } from "@/dialog"
-import { Button, HStack, Text } from "@chakra-ui/react"
+import { useLocalization } from "@/i18n"
+import { Button, CloseButton, HStack, Input } from "@chakra-ui/react"
 import { motion } from "framer-motion"
 import { useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { useTranslation } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 import { useShallow } from "zustand/react/shallow"
-import { useDeviceConfigs } from "../api"
 import { useDevice } from "../contexts/device"
 import { useDeviceConfigurationCompareStore } from "../stores"
 import DeviceConfigurationCompareView from "./DeviceConfigurationCompareView"
 
-type FormData = {
-  current: string
-  compare: string
-}
-
 export function DeviceConfigurationCompareWidget() {
   const { t } = useTranslation()
+  const { formatDateTime } = useLocalization()
   const { current, compare, setCurrent, setCompare } = useDeviceConfigurationCompareStore(
     useShallow((state) => ({
       setCurrent: state.setCurrent,
@@ -28,19 +22,10 @@ export function DeviceConfigurationCompareWidget() {
   )
   const dialog = useAlertDialog()
   const { device, type } = useDevice()
-  const { data: configs } = useDeviceConfigs(device.id)
-
-  const form = useForm<FormData>({
-    defaultValues: {
-      current: current?.id?.toString(),
-      compare: null,
-    },
-  })
 
   function cancel() {
     setCurrent(null)
     setCompare(null)
-    form.reset({ current: null, compare: null })
   }
 
   function open() {
@@ -58,27 +43,6 @@ export function DeviceConfigurationCompareWidget() {
       variant: "full-floating",
     })
   }
-
-  useEffect(() => {
-    const subscription = form.watch((values) => {
-      const currentConfig = configs?.find((c) => c.id.toString() === values.current)
-      const compareConfig = configs?.find((c) => c.id.toString() === values.compare)
-      setCurrent(currentConfig ?? null)
-      setCompare(compareConfig ?? null)
-    })
-    return () => subscription.unsubscribe()
-  }, [form, configs, setCurrent, setCompare])
-
-  useEffect(() => {
-    if (!configs?.length || !current) return
-
-    const currentIndex = configs.findIndex((c) => c.id === current.id)
-    const nextConfig = configs[currentIndex + 1]
-
-    if (nextConfig) {
-      form.setValue("compare", nextConfig.id.toString())
-    }
-  }, [configs, current])
 
   useEffect(() => {
     return () => {
@@ -108,32 +72,42 @@ export function DeviceConfigurationCompareWidget() {
         animate={{ opacity: 1, translateY: 0 }}
         exit={{ opacity: 0, translateY: 25 }}
       >
-        <HStack gap="5" flex="1">
-          <DeviceConfigurationSelect
-            control={form.control}
-            name="current"
-            deviceId={device.id}
-            w="240px"
-            variant="subtle"
-          />
-          <Text color="white" fontWeight="medium" flex="0 0 auto">
-            {t("common.compareTo")}
-          </Text>
-          <DeviceConfigurationSelect
-            control={form.control}
-            name="compare"
-            deviceId={device.id}
-            w="240px"
-            variant="subtle"
+        <HStack color="white" fontWeight="medium" flex="1" gap="3">
+          <Trans
+            t={t}
+            i18nKey="device.config.compareXToY"
+            components={{
+              first: (
+                <Input
+                  readOnly
+                  variant="subtle"
+                  w="200px"
+                  value={current ? formatDateTime(current.changeDate) : ""}
+                />
+              ),
+              second: (
+                <Input
+                  readOnly
+                  variant="subtle"
+                  w="200px"
+                  value={compare ? formatDateTime(compare.changeDate) : ""}
+                  placeholder={t("device.config.select")}
+                />
+              ),
+            }}
           />
         </HStack>
         <HStack gap="3">
-          <Button variant="subtle" onClick={cancel}>
-            {t("common.cancel")}
-          </Button>
           <Button variant="primary" onClick={open} disabled={!current || !compare}>
             {t("common.compare")}
           </Button>
+          <CloseButton
+            color="white"
+            variant="ghost"
+            _hover={{ bg: "green.1000" }}
+            onClick={cancel}
+            aria-label={t("common.cancel")}
+          />
         </HStack>
       </motion.div>
     </HStack>

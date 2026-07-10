@@ -21,7 +21,7 @@ export default function EditScriptRuleForm(props: EditScriptRuleFormProps) {
   return (
     <Stack direction="row" gap="7" overflow="auto" flex="1">
       {/* Left — base fields */}
-      <Stack p="3" w="280px" flexShrink={0} h="full">
+      <Stack p="3" pe="4" w="280px" flexShrink={0} h="full">
         <Stack gap="6">
           <FormControl
             required

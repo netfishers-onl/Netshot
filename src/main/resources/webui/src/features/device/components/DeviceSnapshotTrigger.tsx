@@ -42,17 +42,17 @@ export default function DeviceSnapshotTrigger({ devices, children, ...rest }: De
           <Stack gap="3">
             {devices.length > 1 ? (
               <Flex>
-                <Box flex="0 0 80px"><Text color="grey.400">{t("device.devices")}</Text></Box>
+                <Box w="140px"><Text color="grey.400">{t("device.devices")}</Text></Box>
                 <Text>{devices.map((device: SimpleDevice | Device) => device.name).join(", ")}</Text>
               </Flex>
             ) : (
               <>
                 <Flex alignItems="center">
-                  <Box flex="0 0 80px"><Text color="grey.400">{t("common.name")}</Text></Box>
+                  <Box w="140px"><Text color="grey.400">{t("common.name")}</Text></Box>
                   <Text>{devices?.[0]?.name ?? "nA"}</Text>
                 </Flex>
                 <Flex alignItems="center">
-                  <Box flex="0 0 80px"><Text color="grey.400">{t("device.interface.ipAddress")}</Text></Box>
+                  <Box w="140px"><Text color="grey.400">{t("device.interface.ipAddress")}</Text></Box>
                   <Text>{devices?.[0]?.mgmtAddress ?? "nA"}</Text>
                 </Flex>
               </>

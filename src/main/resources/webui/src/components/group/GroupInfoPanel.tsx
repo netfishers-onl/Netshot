@@ -21,7 +21,7 @@ export default function GroupInfoPanel(props: GroupInfoPanelProps) {
   })
 
   return (
-    <Stack gap="5" w="340px" h="full" overflowY="auto">
+    <Stack gap="5" w="340px" h="full" overflowY="auto" pe="1">
       <Heading as="h4" size="md">
         {t("common.information")}
       </Heading>

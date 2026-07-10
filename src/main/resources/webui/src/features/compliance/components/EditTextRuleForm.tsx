@@ -176,7 +176,7 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
   return (
     <Stack direction="row" gap="7" flex="1" minH="0" overflow="hidden">
       {/* Left — base fields */}
-      <Stack p="3" w="280px" flexShrink={0} overflow="hidden" h="full">
+      <Stack p="3" pe="4" w="280px" flexShrink={0} overflow="hidden" h="full">
         <Stack gap="6">
           <FormControl
             required

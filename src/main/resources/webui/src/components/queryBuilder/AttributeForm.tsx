@@ -1,7 +1,8 @@
-import { Box, Button, Stack } from "@chakra-ui/react"
+import { Box, Button, DatePicker, Field, IconButton, Portal, Stack } from "@chakra-ui/react"
+import { parseDate } from "@internationalized/date"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { LuCornerRightUp } from "react-icons/lu"
+import { LuCalendar, LuCornerRightUp } from "react-icons/lu"
 import FormControl, { FormControlType } from "../FormControl"
 import { Select } from "../Select"
 import { AttributeOption, AttributeType } from "./types"
@@ -29,17 +30,18 @@ function getDefaultValueForType(type: string): string {
     case AttributeType.MacAddress:
       return "1616.1616.1616"
     case AttributeType.Date:
-      return "2023-01-01"
+      return new Date().toISOString().split("T")[0]
     default:
       return ""
   }
 }
 
 export function AttributeForm({ attribute, onInsert }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const isBinary = attribute.type === AttributeType.Binary
   const isEnum = attribute.type === AttributeType.Enum
+  const isDate = attribute.type === AttributeType.Date
 
   const operatorOptions = getOperatorOptions()
 
@@ -56,7 +58,7 @@ export function AttributeForm({ attribute, onInsert }: Props) {
     },
   })
 
-  const [operator] = form.watch(["operator"])
+  const [operator, dateStringValue] = form.watch(["operator", "value"])
 
   function getOperatorOptions(): { label: string; value: string }[] {
     switch (attribute.type) {
@@ -99,8 +101,6 @@ export function AttributeForm({ attribute, onInsert }: Props) {
       case AttributeType.Numeric:
       case AttributeType.Id:
         return "16"
-      case AttributeType.Date:
-        return "2023-01-01"
       case AttributeType.IpAddress:
         return operator === "in" ? "16.16.0.0/16" : "16.16.16.16"
       case AttributeType.MacAddress:
@@ -113,7 +113,7 @@ export function AttributeForm({ attribute, onInsert }: Props) {
   function buildSnippet(): string | null {
     const { operator: op, value: val } = form.getValues()
 
-    if (val === null || val === undefined || val === "") return null
+    if (val === null || val === undefined) return null
 
     if (isBinary) {
       return t('nameIsVal', '[{{name}}] is {{val}}', { name: attribute.name, val })
@@ -155,6 +155,15 @@ export function AttributeForm({ attribute, onInsert }: Props) {
   const isNumericInput =
     attribute.type === AttributeType.Numeric || attribute.type === AttributeType.Id
 
+  function getDatePickerValue() {
+    if (!dateStringValue) return []
+    try {
+      return [parseDate(String(dateStringValue))]
+    } catch {
+      return []
+    }
+  }
+
   return (
     <Stack direction="row" alignItems="flex-end" gap="2">
       {!isBinary && !isEnum && (
@@ -175,6 +184,47 @@ export function AttributeForm({ attribute, onInsert }: Props) {
             label={t("common.operatorValue")}
             options={isBinary ? binaryOptions : enumOptions}
           />
+        ) : isDate ? (
+          <Field.Root>
+            <Field.Label>{t("common.operatorValue")}</Field.Label>
+            <DatePicker.Root
+              value={getDatePickerValue()}
+              onValueChange={({ value: dateValues }) => {
+                form.setValue("value", dateValues[0]?.toString() ?? "")
+              }}
+              locale={i18n.language}
+              closeOnSelect
+            >
+              <DatePicker.Control>
+                <DatePicker.Input />
+                <DatePicker.IndicatorGroup>
+                  <DatePicker.Trigger asChild>
+                    <IconButton size="xs" variant="ghost" borderRadius="xl" aria-label={t("common.openCalendar")}>
+                      <LuCalendar />
+                    </IconButton>
+                  </DatePicker.Trigger>
+                </DatePicker.IndicatorGroup>
+              </DatePicker.Control>
+              <Portal>
+                <DatePicker.Positioner>
+                  <DatePicker.Content>
+                    <DatePicker.View view="day">
+                      <DatePicker.Header />
+                      <DatePicker.DayTable />
+                    </DatePicker.View>
+                    <DatePicker.View view="month">
+                      <DatePicker.Header />
+                      <DatePicker.MonthTable />
+                    </DatePicker.View>
+                    <DatePicker.View view="year">
+                      <DatePicker.Header />
+                      <DatePicker.YearTable />
+                    </DatePicker.View>
+                  </DatePicker.Content>
+                </DatePicker.Positioner>
+              </Portal>
+            </DatePicker.Root>
+          </Field.Root>
         ) : (
           <FormControl
             control={form.control}

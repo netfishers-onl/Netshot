@@ -65,8 +65,7 @@ export default function RuleItem(props: RuleItemProps) {
       }}
       userSelect="none"
       cursor="pointer"
-      pr="3"
-      pl="3"
+      px="3"
       onClick={() => navigate(`./config/${policy?.id}/${rule?.id}`)}
     >
       <Stack direction="row" gap="3" alignItems="center">

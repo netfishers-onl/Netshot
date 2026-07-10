@@ -6,7 +6,7 @@ import { LuArrowLeft, LuArrowRight, LuCalendar, LuSearch } from "react-icons/lu"
 import { useDialogConfig } from "@/dialog"
 import { ExemptedDevice, Rule, SimpleDevice } from "@/types"
 import { useLocalization } from "@/i18n"
-import { DeviceNetworkClassIcon } from "@/features/device/components"
+import { DeviceListItem, DeviceNetworkClassIcon } from "@/features/device/components"
 import {
   Box,
   Button,
@@ -234,19 +234,14 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
                       value={leftValues}
                       onValueChange={(e: ListboxValueChangeDetails) => setLeftValues(e.value)}
                       emptyMessage={deviceQuery ? t("device.noDeviceFound") : t("device.startTypingToFind")}
-                      renderItem={(device, _, itemLabel) => (
+                      renderItem={(device) => (
                         <Listbox.ItemText>
-                          <Stack direction="row" gap="2" alignItems="center">
-                            <DeviceNetworkClassIcon networkClass={device.networkClass} size="md" color="fg.muted" flexShrink={0} />
-                            <Stack gap="0">
-                              <Text fontWeight="medium" textStyle="sm">{itemLabel}</Text>
-                              <Text textStyle="xs" color="fg.muted">{device.family}</Text>
-                            </Stack>
-                          </Stack>
+                          <DeviceListItem device={device} />
                         </Listbox.ItemText>
                       )}
                     />
                   </Box>
+                  <Text textStyle="xs" color="fg.muted" px="3">{t("device.searchLimitNotice", { count: 20 })}</Text>
                 </Stack>
 
                 {/* Transfer buttons + date */}

@@ -26,7 +26,7 @@ export default function RemoveGroupTrigger({ group, children, ...rest }: RemoveG
   })
 
   const open = (e: MouseEvent) => {
-    e.stopPropagation()
+    e?.stopPropagation()
     const dialogRef = dialog.open(MUTATIONS.GROUP_REMOVE, {
       title: t("group.remove"),
       description: (

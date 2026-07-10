@@ -1,48 +1,30 @@
 import api, { CreateGroupPayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import {
-  FormControl,
-  QueryBuilderTrigger,
-  QueryBuilderValue,
-  Switch,
-} from "@/components"
 import { LuCode, LuServer } from "react-icons/lu"
 import { QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
-import { DeviceType, GroupType } from "@/types"
-import {
-  Box,
-  Button,
-  CloseButton,
-  Dialog,
-  DialogRootProps,
-  Heading,
-  Icon,
-  Portal,
-  RadioCard,
-  Separator,
-  Stack,
-  Tag,
-  Text,
-} from "@chakra-ui/react"
+import { GroupType } from "@/types"
+import { Button, CloseButton, Dialog, Heading, Icon, Portal, RadioCard, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
-import { FormProvider, useForm, useWatch } from "react-hook-form"
+import { FormProvider, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import DynamicGroupDeviceList from "./DynamicGroupDeviceList"
-import StaticGroupDeviceList from "./StaticGroupList"
-import { AddGroupForm, FormStep } from "./types"
+import { useLocation, useNavigate } from "react-router"
+import DynamicGroupForm from "./DynamicGroupForm"
+import GroupInfoPanel from "./GroupInfoPanel"
+import StaticGroupForm from "./StaticGroupForm"
+import { FormStep, GroupForm } from "./types"
 
 export default function AddGroupDialog() {
   const { t } = useTranslation()
   const toast = useToast()
   const dialogConfig = useDialogConfig()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const location = useLocation()
   const [groupType, setGroupType] = useState<GroupType>(null)
   const [formStep, setFormStep] = useState(FormStep.Type)
-  const [size, setSize] = useState<DialogRootProps["size"]>("2xl")
-  const [driver, setDriver] = useState<DeviceType["name"]>(null)
 
   const title = useMemo(() => {
     if (formStep === FormStep.Type) {
@@ -54,7 +36,7 @@ export default function AddGroupDialog() {
     })
   }, [t, formStep, groupType])
 
-  const form = useForm<AddGroupForm>({
+  const form = useForm<GroupForm>({
     mode: "onChange",
     defaultValues: {
       name: "",
@@ -65,13 +47,8 @@ export default function AddGroupDialog() {
     },
   })
 
-  const query = useWatch({
-    control: form.control,
-    name: "query",
-  })
-
   const createMutation = useMutation({
-    mutationFn: async (values: AddGroupForm) => {
+    mutationFn: async (values: GroupForm) => {
       let payload: CreateGroupPayload = {
         folder: values.folder,
         name: values.name,
@@ -88,10 +65,17 @@ export default function AddGroupDialog() {
         }
       }
 
-      await api.group.create(payload)
+      return api.group.create(payload)
     },
-    onSuccess() {
-      queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_GROUPS] })
+    async onSuccess(group) {
+      await queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_GROUPS] })
+      navigate(
+        {
+          pathname: location.pathname,
+          search: `?group=${group.id}`,
+        },
+        { replace: true }
+      )
       close()
     },
     onError(err: NetshotError) {
@@ -102,28 +86,24 @@ export default function AddGroupDialog() {
   const close = () => {
     dialogConfig.close()
 
-    // Wait modal disppeared before re-init (blink effect)
+    // Wait modal disappeared before re-init (blink effect)
     setTimeout(() => {
       setFormStep(FormStep.Type)
       setGroupType(null)
-      setSize("2xl")
-      setDriver(null)
       form.reset()
     }, 100)
   }
 
   const next = () => {
     setFormStep(FormStep.Details)
-    setSize("5xl")
   }
 
-  const submit = (values: AddGroupForm) => {
+  const previous = () => {
+    setFormStep(FormStep.Type)
+  }
+
+  const submit = (values: GroupForm) => {
     createMutation.mutate(values)
-  }
-
-  const updateQuery = (values: QueryBuilderValue) => {
-    setDriver(values.driver)
-    form.setValue("query", values.query)
   }
 
   return (
@@ -132,7 +112,7 @@ export default function AddGroupDialog() {
         preventScroll={false}
         placement="center"
         closeOnInteractOutside={false}
-        size={size}
+        size={formStep === FormStep.Type ? "2xl" : "6xl"}
         open={dialogConfig.props.isOpen}
         onOpenChange={(e) => {
           if (!e.open) {
@@ -148,14 +128,20 @@ export default function AddGroupDialog() {
           <Dialog.Positioner>
             <Dialog.Content
               as="form"
-              h={formStep === FormStep.Details ? "80vh" : "initial"}
+              h={formStep === FormStep.Details ? "55vh" : "initial"}
               onSubmit={form.handleSubmit(submit)}
             >
-              <Dialog.CloseTrigger asChild>
-                <CloseButton size="sm" variant="outline" />
-              </Dialog.CloseTrigger>
-              <Dialog.Header as="h3" fontSize="2xl" fontWeight="semibold">
-                {title}
+              <Dialog.Header display="flex" justifyContent="space-between" alignItems="center">
+                <Heading as="h3" fontSize="2xl" fontWeight="semibold">
+                  {title}
+                </Heading>
+
+                <Stack direction="row" gap="3" alignItems="center">
+                  <Text fontSize="md" color="grey.400">
+                    {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
+                  </Text>
+                  <CloseButton size="sm" variant="outline" onClick={close} />
+                </Stack>
               </Dialog.Header>
               <Dialog.Body flex="1" display="flex" overflow="auto">
                 {formStep === FormStep.Type && (
@@ -200,94 +186,24 @@ export default function AddGroupDialog() {
 
                 {formStep === FormStep.Details && (
                   <Stack direction="row" gap="9" flex="1">
-                    <Stack gap="9" w="340px">
-                      <Stack gap="5">
-                        <Heading as="h4" size="md">
-                          {t("common.information")}
-                        </Heading>
-                        <FormControl
-                          required
-                          control={form.control}
-                          name="name"
-                          label={t("common.name")}
-                          placeholder={t("group.enterName")}
-                        />
-                        <FormControl
-                          required
-                          control={form.control}
-                          name="folder"
-                          label={t("common.folder")}
-                          placeholder={t("common.eG", { example: t("group.folderExample") })}
-                          helperText={t("group.useSlashesForFolder")}
-                        />
-                        <Separator />
-                        <Switch
-                          label={t("report.list")}
-                          description={t("group.showInReports")}
-                          control={form.control}
-                          name="visibleInReports"
-                        />
-                      </Stack>
-                      {groupType === GroupType.Dynamic && (
-                        <>
-                          <Separator />
-                          <Stack gap="5">
-                            <Stack gap="2">
-                              <Heading as="h4" size="md">
-                                {t("common.populate")}
-                              </Heading>
-                              <Text color="grey.400">
-                                {t("group.type.defineCriteria")}
-                              </Text>
-                            </Stack>
-                            {driver && (
-                              <Tag.Root colorPalette="grey" alignSelf="start">
-                                {t("device.type")} {driver}
-                              </Tag.Root>
-                            )}
-                            {query?.length > 0 && (
-                              <Box p="3" borderWidth="1px" borderColor="grey.100" borderRadius="xl">
-                                <Text fontFamily="mono">{query}</Text>
-                              </Box>
-                            )}
-                            <QueryBuilderTrigger
-                              value={{
-                                query,
-                                driver,
-                              }}
-                              onSubmit={updateQuery}
-                            >
-                              <Button alignSelf="start">
-                                {t("policy.editQuery")}
-                              </Button>
-                            </QueryBuilderTrigger>
-                          </Stack>
-                        </>
-                      )}
-                    </Stack>
-                    <Stack flex="1" gap="5" overflow="auto" px="1">
-                      <Heading as="h4" size="md">
-                        {t(groupType === GroupType.Static ? "common.selectedDevices" : "device.listPreview")}
-                      </Heading>
-                      {groupType === GroupType.Static && <StaticGroupDeviceList />}
-                      {groupType === GroupType.Dynamic && (
-                        <DynamicGroupDeviceList
-                          query={query}
-                          onUpdateQuery={updateQuery}
-                        />
-                      )}
-                    </Stack>
+                    <GroupInfoPanel groupType={groupType} />
+                    {groupType === GroupType.Static && <StaticGroupForm />}
+                    {groupType === GroupType.Dynamic && <DynamicGroupForm />}
                   </Stack>
                 )}
               </Dialog.Body>
-              <Dialog.Footer>
-                <Stack direction="row" gap="3">
+              <Dialog.Footer justifyContent="flex-end">
+                <Stack direction="row" gap="3" alignItems="center">
+                  {formStep === FormStep.Details && (
+                    <Button onClick={previous}>{t("common.previous")}</Button>
+                  )}
                   <Button onClick={close}>{t("common.cancel")}</Button>
-                  {formStep === FormStep.Type ? (
-                    <Button variant="primary" onClick={next}>
+                  {formStep === FormStep.Type && (
+                    <Button variant="primary" disabled={!groupType} onClick={next}>
                       {t("common.next")}
                     </Button>
-                  ) : (
+                  )}
+                  {formStep === FormStep.Details && (
                     <Button
                       type="submit"
                       disabled={!form.formState.isValid}

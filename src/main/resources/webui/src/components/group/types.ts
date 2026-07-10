@@ -5,7 +5,7 @@ export enum FormStep {
   Details,
 }
 
-export type AddGroupForm = {
+export type GroupForm = {
   name: string
   folder: string
   visibleInReports: boolean

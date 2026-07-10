@@ -1,25 +1,18 @@
 import api, { UpdateGroupPayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { FormControl, Switch } from "@/components"
 import { QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
-import { Group, GroupType, SimpleDevice } from "@/types"
-import { Button, CloseButton, Dialog, Heading, Portal, Separator, Stack } from "@chakra-ui/react"
+import { Group, GroupType } from "@/types"
+import { Button, CloseButton, Dialog, Portal, Stack } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useMemo } from "react"
-import { FormProvider, useForm } from "react-hook-form"
+import { FormProvider, useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import DynamicGroupForm from "./DynamicGroupForm"
+import GroupInfoPanel from "./GroupInfoPanel"
 import StaticGroupForm from "./StaticGroupForm"
-
-type EditGroupForm = {
-  name: string
-  folder: string
-  visibleInReports: boolean
-  staticDevices: SimpleDevice[]
-  query: string
-}
+import { GroupForm } from "./types"
 
 export type EditGroupDialogProps = {
   group: Group
@@ -38,7 +31,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
     })
   }, [t, group])
 
-  const form = useForm<EditGroupForm>({
+  const form = useForm<GroupForm>({
     mode: "onChange",
     defaultValues: {
       name: group.name,
@@ -48,6 +41,18 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
       query: group.query,
     },
   })
+
+  const name = useWatch({
+    control: form.control,
+    name: "name",
+  })
+
+  // Computed directly from the watched values rather than form.formState.isValid: with
+  // mode "onChange" and a form pre-filled from an existing (already valid) group, RHF
+  // never runs validation until a field changes, so isValid stays stuck at false.
+  // folder is not required: "" is a legitimate root-level folder (see DeviceGroup.folder
+  // default and createFoldersFromGroups.ts, which treats folder === "" as root).
+  const isValid = Boolean(name?.trim())
 
   const { data: staticDevices } = useQuery({
     queryKey: [QUERIES.DEVICE_LIST, group.id, group.folder, group.name],
@@ -64,7 +69,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
   }, [staticDevices])
 
   const mutation = useMutation({
-    mutationFn: async (values: EditGroupForm) => {
+    mutationFn: async (values: GroupForm) => {
       let payload: UpdateGroupPayload = {
         name: values.name,
         folder: values.folder,
@@ -85,13 +90,14 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
     onSuccess() {
       dialogConfig.close()
       queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_GROUPS] })
+      queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_LIST] })
     },
     onError(err: NetshotError) {
       toast.error(err)
     },
   })
 
-  const submit = useCallback((values: EditGroupForm) => {
+  const submit = useCallback((values: GroupForm) => {
     mutation.mutate(values)
   }, [])
 
@@ -114,7 +120,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
         <Portal>
           <Dialog.Backdrop />
           <Dialog.Positioner>
-            <Dialog.Content h="80vh" as="form" onSubmit={form.handleSubmit(submit)}>
+            <Dialog.Content h="55vh" as="form" onSubmit={form.handleSubmit(submit)}>
               <Dialog.Header as="h3" fontSize="2xl" fontWeight="semibold">
                 {title}
                 <Dialog.CloseTrigger asChild>
@@ -123,33 +129,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
               </Dialog.Header>
               <Dialog.Body flex="1" display="flex" overflowY="auto">
                 <Stack direction="row" gap="9" flex="1">
-                  <Stack gap="5" w="340px" overflowY="auto">
-                    <Heading as="h4" size="md">
-                      {t("common.information")}
-                    </Heading>
-                    <FormControl
-                      required
-                      control={form.control}
-                      name="name"
-                      label={t("common.name")}
-                      placeholder={t("group.enterName")}
-                    />
-                    <FormControl
-                      required
-                      control={form.control}
-                      name="folder"
-                      label={t("common.folder")}
-                      placeholder={t("common.eG", { example: t("group.folderExample") })}
-                      helperText={t("group.useSlashesForFolder")}
-                    />
-                    <Separator />
-                    <Switch
-                      label={t("report.list")}
-                      description={t("group.showInReports")}
-                      control={form.control}
-                      name="visibleInReports"
-                    />
-                  </Stack>
+                  <GroupInfoPanel groupType={group.type} />
                   {group.type === GroupType.Static && <StaticGroupForm />}
                   {group.type === GroupType.Dynamic && <DynamicGroupForm />}
                 </Stack>
@@ -159,7 +139,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
                   <Button onClick={dialogConfig.close}>{t("common.cancel")}</Button>
                   <Button
                     type="submit"
-                    disabled={!form.formState.isValid}
+                    disabled={!isValid}
                     loading={mutation.isPending}
                     variant="primary"
                   >

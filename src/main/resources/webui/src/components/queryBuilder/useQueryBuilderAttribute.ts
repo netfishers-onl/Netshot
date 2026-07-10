@@ -17,7 +17,7 @@ export function useQueryBuilderAttribute() {
   const domainQuery = useDomains()
 
   function getAllGenericOption(): AttributeOption[] {
-    const domaineChoices = Array.isArray(domainQuery.data)
+    const domainChoices = Array.isArray(domainQuery.data)
       ? domainQuery.data.map((domain) => ({
           label: domain?.name,
           value: domain?.id,
@@ -51,7 +51,7 @@ export function useQueryBuilderAttribute() {
         value: {
           name: Attribute.Domain,
           type: AttributeType.Enum,
-          choices: domaineChoices,
+          choices: domainChoices,
         },
       },
       {
@@ -177,7 +177,8 @@ export function useQueryBuilderAttribute() {
         value: {
           name: Attribute.Type,
           type: AttributeType.Enum,
-          choices: deviceTypeOptions.getOptionsWithName(),
+          choices: deviceTypeOptions.getOptionsWithName()
+            .map(o => ({ label: o.label, value: o.label })),
         },
       },
       {
@@ -191,6 +192,34 @@ export function useQueryBuilderAttribute() {
         label: t("common.vrf"),
         value: {
           name: Attribute.Vrf,
+          type: AttributeType.Text,
+        },
+      },
+      {
+        label: t("admin.driver.label"),
+        value: {
+          name: Attribute.Driver,
+          type: AttributeType.Text,
+        },
+      },
+      {
+        label: t("compliance.hardware.endOfSale"),
+        value: {
+          name: Attribute.EndOfSaleDate,
+          type: AttributeType.Date,
+        },
+      },
+      {
+        label: t("compliance.hardware.endOfLife"),
+        value: {
+          name: Attribute.EndOfLifeDate,
+          type: AttributeType.Date,
+        },
+      },
+      {
+        label: t("device.module.serialNumber"),
+        value: {
+          name: Attribute.SerialNumber,
           type: AttributeType.Text,
         },
       },

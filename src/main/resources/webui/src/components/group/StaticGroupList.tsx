@@ -6,11 +6,11 @@ import { Center, Heading, IconButton, Stack, Text } from "@chakra-ui/react"
 import { useFieldArray, useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import GroupDeviceBox from "./GroupDeviceBox"
-import { AddGroupForm } from "./types"
+import { GroupForm } from "./types"
 
 export default function StaticGroupList() {
   const { t } = useTranslation()
-  const form = useFormContext<AddGroupForm>()
+  const form = useFormContext<GroupForm>()
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,

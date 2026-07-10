@@ -67,7 +67,7 @@ export default function DiagnosticSidebarSearchList() {
   }
 
   return (
-    <Stack p="6" gap="1" overflow="auto" flex="1">
+    <Stack py="4" px="5" gap="0" overflow="auto" flex="1">
       {data?.map((diagnostic) => (
         <DiagnosticItem diagnostic={diagnostic} key={diagnostic?.id} />
       ))}

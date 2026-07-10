@@ -48,7 +48,7 @@ export function TreeGroup({
 
 export function getExpandedKeys(items: FolderOrGroup[], groupId: number) {
   const result = findNodeWithPath(items, groupId)
-  return result.path.map((p) => p.name)
+  return result ? result.path.map((p) => p.name) : []
 }
 
 /**

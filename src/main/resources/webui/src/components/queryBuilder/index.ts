@@ -1,4 +1,5 @@
 export * from "./constants"
+export * from "./QueryBuilderForm"
 export * from "./QueryBuilderTrigger"
 export * from "./QueryBuilderDialog"
 export * from "./types"

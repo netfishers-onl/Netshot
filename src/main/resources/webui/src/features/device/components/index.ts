@@ -11,6 +11,7 @@ export { default as DeviceSnapshotTrigger } from "./DeviceSnapshotTrigger"
 
 export * from "./DeviceAttributeValue"
 export { default as DeviceNetworkClassIcon } from "./DeviceNetworkClassIcon"
+export { default as DeviceListItem } from "./DeviceListItem"
 export { default as DeviceBadge } from "./DeviceBadge"
 export { default as DeviceStatusBadge } from "./DeviceStatusBadge"
 export { default as DeviceSoftwareLevelBadge } from "./DeviceSoftwareLevelBadge"

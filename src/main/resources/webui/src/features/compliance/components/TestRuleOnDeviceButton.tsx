@@ -104,30 +104,29 @@ export default function TestRuleOnDeviceButton(props: TestRuleOnDeviceButtonProp
 
   return (
     <Stack gap="3">
-      <Stack direction="row">
-        <DeviceAutocomplete
-          selectionBehavior="replace"
-          value={device ? [device.id.toString()] : []}
-          placeholder={t("policy.rule.testOnDevice")}
-          onSelectItem={(d) => {
-            setDevice(d)
-            if (!d) {
-              mutation.reset()
-              setTestedAt(null)
-            }
-          }}
-        />
-        <IconButton
-          variant="primary"
-          aria-label={t("policy.rule.testOnDevice")}
-          disabled={!device}
-          onClick={runTest}
-          loading={mutation.isPending}
-          flexShrink={0}
-        >
-          <LuBugPlay />
-        </IconButton>
-      </Stack>
+      <DeviceAutocomplete
+        selectionBehavior="replace"
+        value={device ? [device.id.toString()] : []}
+        placeholder={t("policy.rule.testOnDevice")}
+        onSelectItem={(d) => {
+          setDevice(d)
+          if (!d) {
+            mutation.reset()
+            setTestedAt(null)
+          }
+        }}
+        endAddon={
+          <IconButton
+            aria-label={t("policy.rule.testOnDevice")}
+            disabled={!device}
+            onClick={runTest}
+            loading={mutation.isPending}
+            flexShrink={0}
+          >
+            <LuBugPlay />
+          </IconButton>
+        }
+      />
 
       <Box minH="8">
       {resultConfig && result && (

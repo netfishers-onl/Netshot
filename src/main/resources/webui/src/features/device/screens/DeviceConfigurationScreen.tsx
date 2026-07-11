@@ -2,7 +2,7 @@ import { EmptyResult } from "@/components"
 import { Skeleton, Stack } from "@chakra-ui/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { AnimatePresence } from "framer-motion"
-import { useRef } from "react"
+import { useCallback, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams } from "react-router"
 import { useDeviceConfigs } from "../api"
@@ -15,8 +15,21 @@ export default function DeviceConfigurationScreen() {
   const { t } = useTranslation()
   const current = useDeviceConfigurationCompareStore((state) => state.current)
   const containerRef = useRef<HTMLDivElement>(null)
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(() => new Set())
 
   const { data, isPending } = useDeviceConfigs(+params.id)
+
+  const toggleExpand = useCallback((id: number) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }, [])
 
   const virtualizer = useVirtualizer({
     count: data?.length ?? 0,
@@ -75,7 +88,14 @@ export default function DeviceConfigurationScreen() {
                   transform: `translateY(${virtualItem.start}px)`,
                 }}
               >
-                <DeviceConfigurationPanel config={config} />
+                <DeviceConfigurationPanel
+                  config={config}
+                  configs={data}
+                  isNewest={virtualItem.index === 0}
+                  isOldest={virtualItem.index === data.length - 1}
+                  isExpanded={expandedIds.has(config?.id)}
+                  onToggleExpand={toggleExpand}
+                />
               </div>
             )
           })}

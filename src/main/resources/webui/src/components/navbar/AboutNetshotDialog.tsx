@@ -85,9 +85,9 @@ function AboutContent() {
   )
 }
 
-export type AboutNetshotModalProps = { children: React.ReactElement<any> } & Record<string, unknown>
+export type AboutNetshotDialogProps = { children: React.ReactElement<any> } & Record<string, unknown>
 
-export function AboutNetshotModal({ children, ...rest }: AboutNetshotModalProps) {
+export function AboutNetshotDialog({ children, ...rest }: AboutNetshotDialogProps) {
   const { t } = useTranslation()
   const dialog = useAlertDialog()
 

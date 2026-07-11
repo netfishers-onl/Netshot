@@ -854,6 +854,7 @@
       "password": "Mot de passe",
       "passwordExpired": "Mot de passe expiré",
       "passwordPolicyFailed": "Échec de la politique de mot de passe",
+      "passwordSuccessfullyUpdated": "Votre mot de passe a été mis à jour avec succès",
       "passwordsDontMatch": "Les mots de passe ne correspondent pas",
       "pleaseReAuthenticate": "Veuillez vous reconnecter pour continuer.",
       "pleaseSignIn": "Veuillez vous connecter",

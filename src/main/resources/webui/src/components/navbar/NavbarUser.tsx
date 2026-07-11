@@ -11,8 +11,8 @@ import useToast from "@/hooks/useToast"
 
 import { useLanguageOptions, useUserLevelOptions } from "@/hooks"
 import { Icon } from "@chakra-ui/react"
-import { LuChevronDown, LuCloud, LuCircleHelp, LuInfo, LuLogOut, LuSettings } from "react-icons/lu"
-import { AboutNetshotModal } from "./AboutNetshotModal"
+import { LuChevronDown, LuCloud, LuCircleHelp, LuInfo, LuLogOut, LuUser } from "react-icons/lu"
+import { AboutNetshotDialog } from "./AboutNetshotDialog"
 import UserSettingTrigger from "./UserSettingTrigger"
 
 export default function NavbarUser() {
@@ -104,7 +104,7 @@ export default function NavbarUser() {
           <Menu.Content>
             <UserSettingTrigger>
               <Menu.Item value="account">
-                <LuSettings />
+                <LuUser />
                 {t("common.account")}
               </Menu.Item>
             </UserSettingTrigger>
@@ -145,12 +145,12 @@ export default function NavbarUser() {
                 {t("api.documentation")}
               </a>
             </Menu.Item>
-            <AboutNetshotModal>
+            <AboutNetshotDialog>
               <Menu.Item value="about">
                 <LuInfo />
                 {t("about.label")}
               </Menu.Item>
-            </AboutNetshotModal>
+            </AboutNetshotDialog>
             <Menu.Separator />
             <Menu.Item onSelect={logout} value="logout">
               <LuLogOut />

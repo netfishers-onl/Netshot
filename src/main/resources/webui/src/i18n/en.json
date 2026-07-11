@@ -855,6 +855,7 @@
       "password": "Password",
       "passwordExpired": "Password expired",
       "passwordPolicyFailed": "Password policy failed",
+      "passwordSuccessfullyUpdated": "Your password has been successfully updated",
       "passwordsDontMatch": "Passwords don't match",
       "pleaseReAuthenticate": "Please re-authenticate to continue.",
       "pleaseSignIn": "Please sign in",

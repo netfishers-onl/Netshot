@@ -1,6 +1,6 @@
 import React from "react"
 import { useAlertDialog } from "@/dialog"
-import { SettingModal } from "./SettingModal"
+import { AccountDialog } from "./AccountDialog"
 import { t } from "i18next"
 
 export type UserSettingTriggerProps = { children: React.ReactElement<any> } & Record<string, unknown>
@@ -11,7 +11,7 @@ export default function UserSettingTrigger({ children, ...rest }: UserSettingTri
   const open = () =>
     dialog.open({
       title: t("common.account"),
-      description: <SettingModal />,
+      description: <AccountDialog />,
       hideFooter: true,
     })
 

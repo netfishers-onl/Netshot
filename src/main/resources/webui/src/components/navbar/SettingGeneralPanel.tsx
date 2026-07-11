@@ -2,12 +2,14 @@ import api, { UpdateUserPayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { QUERIES } from "@/constants"
 import { useAuth } from "@/contexts"
+import { useDialogConfig } from "@/dialog"
 import { useToast, useUserLevelOptions } from "@/hooks"
-import { Alert, Button, Stack } from "@chakra-ui/react"
+import { Alert, Button, Collapsible, Stack } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
+import { LuChevronRight } from "react-icons/lu"
 import FormControl, { FormControlType } from "../FormControl"
 import { Select } from "../Select"
 
@@ -25,6 +27,8 @@ export function SettingGeneralPanel() {
   const queryClient = useQueryClient()
   const { user } = useAuth()
   const userLevelOptions = useUserLevelOptions()
+  const dialogConfig = useDialogConfig()
+  const [isPasswordSectionOpen, setIsPasswordSectionOpen] = useState(false)
 
   const defaultValues = useMemo(
     () =>
@@ -50,10 +54,11 @@ export function SettingGeneralPanel() {
     onSuccess() {
       toast.success({
         title: t("common.success"),
-        description: t("user.settingsUpdated"),
+        description: t("auth.passwordSuccessfullyUpdated"),
       })
 
       queryClient.invalidateQueries({ queryKey: [QUERIES.USER] })
+      setIsPasswordSectionOpen(false)
     },
     onError(err: NetshotError) {
       toast.error(err)
@@ -68,8 +73,12 @@ export function SettingGeneralPanel() {
     })
   })
 
+  const close = () => {
+    dialogConfig.close()
+  }
+
   return (
-    <Stack gap="5" asChild flex="1" pt="7" overflow="auto">
+    <Stack gap="5" asChild flex="1" overflow="auto">
       <form onSubmit={submit}>
         <Stack gap="6" flex="1" overflow="auto">
           <FormControl
@@ -91,42 +100,77 @@ export function SettingGeneralPanel() {
               <Alert.Description>{t("auth.remotelyAuthenticated")}</Alert.Description>
             </Alert.Root>
           ) : (
-            <>
-              <FormControl
-                type={FormControlType.Password}
-                label={t("auth.currentPassword")}
-                placeholder={t("auth.enterYourPassword")}
-                required
-                control={form.control}
-                name="password"
-              />
-              <FormControl
-                type={FormControlType.Password}
-                label={t("auth.password")}
-                placeholder={t("auth.enterYourNewPassword")}
-                required
-                control={form.control}
-                name="newPassword"
-              />
-              <FormControl
-                type={FormControlType.Password}
-                label={t("auth.confirmPassword")}
-                placeholder={t("auth.confirmNewPassword")}
-                required
-                control={form.control}
-                name="confirmNewPassword"
-                rules={{
-                  validate(value, values) {
-                    return value === values.confirmNewPassword || t("auth.passwordsDontMatch")
-                  },
-                }}
-              />
-            </>
+            <Collapsible.Root
+              open={isPasswordSectionOpen}
+              onOpenChange={(details) => setIsPasswordSectionOpen(details.open)}
+            >
+              <Collapsible.Trigger
+                cursor="pointer"
+                paddingY="3"
+                display="flex"
+                gap="2"
+                alignItems="center"
+                fontWeight="medium"
+              >
+                <Collapsible.Indicator
+                  transition="transform 0.2s"
+                  _open={{ transform: "rotate(90deg)" }}
+                >
+                  <LuChevronRight />
+                </Collapsible.Indicator>
+                {t("auth.changePassword")}
+              </Collapsible.Trigger>
+              <Collapsible.Content>
+                <Stack gap="6" p="4">
+                  <FormControl
+                    type={FormControlType.Password}
+                    label={t("auth.currentPassword")}
+                    placeholder={t("auth.enterYourPassword")}
+                    required
+                    control={form.control}
+                    name="password"
+                  />
+                  <FormControl
+                    type={FormControlType.Password}
+                    label={t("auth.password")}
+                    placeholder={t("auth.enterYourNewPassword")}
+                    required
+                    control={form.control}
+                    name="newPassword"
+                  />
+                  <FormControl
+                    type={FormControlType.Password}
+                    label={t("auth.confirmPassword")}
+                    placeholder={t("auth.confirmNewPassword")}
+                    required
+                    control={form.control}
+                    name="confirmNewPassword"
+                    rules={{
+                      validate(value, values) {
+                        return value === values.confirmNewPassword || t("auth.passwordsDontMatch")
+                      },
+                    }}
+                  />
+                  <Stack direction="row" gap="3" justifyContent="flex-end">
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      loading={mutation.isPending}
+                      disabled={!form.formState.isValid}
+                    >
+                      {t("common.applyChanges")}
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Collapsible.Content>
+            </Collapsible.Root>
           )}
         </Stack>
-        <Button type="submit" loading={mutation.isPending} disabled={!form.formState.isValid}>
-          {t("common.applyChanges")}
-        </Button>
+        <Stack direction="row" gap="3" justifyContent="flex-end">
+          <Button type="button" onClick={close}>
+            {t("common.close")}
+          </Button>
+        </Stack>
       </form>
     </Stack>
   )

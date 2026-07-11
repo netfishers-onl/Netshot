@@ -92,10 +92,11 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
       if (firstIndex < lastIndex) {
         range = dataClone.slice(firstIndex, lastIndex + 1)
       } else {
-        range = dataClone.slice(lastIndex, firstIndex)
+        range = dataClone.slice(lastIndex, firstIndex + 1)
       }
 
       deviceSidebarStore.select(range)
+      navigate({ pathname: `./${device?.id}/${currentSection}`, search: location.search })
     } else {
       navigate({ pathname: `./${device?.id}/${currentSection}`, search: location.search })
       deviceSidebarStore.select([device])

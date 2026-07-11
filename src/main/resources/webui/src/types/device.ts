@@ -231,6 +231,8 @@ export type DeviceType = {
     usePty: boolean
   }
   telnetConfig: {
+    terminalCols: number
+    terminalRows: number
     terminalType: string
   }
   version: string

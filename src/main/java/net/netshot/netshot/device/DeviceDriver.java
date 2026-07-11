@@ -705,6 +705,19 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 									this.sshConfig.setCompressionAlgorithms(algos.toArray(new String[0]));
 								}
 							}
+							{
+								Value rekey = cliSshConfig.getMember("rekey");
+								if (rekey != null && rekey.hasMembers()) {
+									Value timeLimit = rekey.getMember("timeLimit");
+									if (timeLimit != null) {
+										this.sshConfig.setRekeyTimeLimit(timeLimit.asLong());
+									}
+									Value dataLimit = rekey.getMember("dataLimit");
+									if (dataLimit != null) {
+										this.sshConfig.setRekeyDataLimit(dataLimit.asLong());
+									}
+								}
+							}
 							Value auth = cliSshConfig.getMember("auth");
 							if (auth != null && auth.hasMembers()) {
 								Value interactive = auth.getMember("interactive");
@@ -753,6 +766,14 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 								Value vtType = terminal.getMember("type");
 								if (vtType != null) {
 									this.telnetConfig.setTerminalType(vtType.asString());
+								}
+								Value vtCols = terminal.getMember("cols");
+								if (vtCols != null) {
+									this.telnetConfig.setTerminalCols(vtCols.asInt());
+								}
+								Value vtRows = terminal.getMember("rows");
+								if (vtRows != null) {
+									this.telnetConfig.setTerminalRows(vtRows.asInt());
 								}
 							}
 						}

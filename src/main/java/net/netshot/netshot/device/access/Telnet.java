@@ -21,7 +21,9 @@ package net.netshot.netshot.device.access;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import org.apache.commons.net.telnet.InvalidTelnetOptionException;
 import org.apache.commons.net.telnet.TelnetClient;
+import org.apache.commons.net.telnet.WindowSizeOptionHandler;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -102,6 +104,20 @@ public class Telnet extends Cli {
 		@Setter
 		private String terminalType = "vt100";
 
+		/** Number of columns in the terminal (negotiated via the Telnet Window Size option). */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private int terminalCols = 80;
+
+		/** Number of rows in the terminal (negotiated via the Telnet Window Size option). */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private int terminalRows = 24;
+
 		/*
 		 * Default constructor.
 		 */
@@ -151,6 +167,13 @@ public class Telnet extends Cli {
 	public void connect() throws IOException {
 		this.telnet = new TelnetClient(this.telnetConfig.terminalType.toUpperCase());
 		telnet.setConnectTimeout(this.connectionTimeout);
+		try {
+			telnet.addOptionHandler(new WindowSizeOptionHandler(
+				this.telnetConfig.terminalCols, this.telnetConfig.terminalRows, true, false, false, false));
+		}
+		catch (InvalidTelnetOptionException e) {
+			log.warn("Unable to register the Telnet Window Size option handler.", e);
+		}
 		telnet.connect(this.host.getInetAddress(), this.port);
 		telnet.setSoTimeout(this.receiveTimeout);
 		this.inStream = telnet.getInputStream();

@@ -21,7 +21,7 @@ const Info = {
 	name: "CitrixNetscalerSDX",
 	description: "Citrix NetScaler SDX",
 	author: "Netshot Team",
-	version: "1.0"
+	version: "1.1"
 };
 
 const Config = {
@@ -65,6 +65,13 @@ var Device = {
 
 var CLI = {
 	ssh: {
+		config: {
+			// Netscaler 14.1 with RADIUS/TACACS+ doesn't like rekeying so disable it
+			rekey: {
+				timeLimit: 0,
+				dataLimit: 0,
+			},
+		},
 		macros: {
 			cli: {
 				options: [ "cli", "shell" ],

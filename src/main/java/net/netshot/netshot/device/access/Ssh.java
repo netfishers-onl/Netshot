@@ -161,6 +161,14 @@ public class Ssh extends Cli {
 		@Getter
 		private int commandTimeout;
 
+		/** SSH rekey time limit (ms), i.e. maximum session duration before a rekey is triggered. */
+		@Getter
+		private long rekeyTimeLimit;
+
+		/** SSH rekey data limit (bytes), i.e. maximum amount of data exchanged before a rekey is triggered. */
+		@Getter
+		private long rekeyDataLimit;
+
 		/** Key exchange algorithms. */
 		@Getter
 		private String[] kexAlgorithms;
@@ -189,6 +197,21 @@ public class Ssh extends Cli {
 			return value.split(", *");
 		}
 
+		private long readLong(String configKey, long defaultValue) {
+			String value = Netshot.getConfig("netshot.cli.ssh.%s".formatted(configKey));
+			if (value == null) {
+				return defaultValue;
+			}
+			try {
+				return Long.parseLong(value);
+			}
+			catch (NumberFormatException e) {
+				log.error("Unable to parse the long value of configuration item 'netshot.cli.ssh.{}', "
+					+ "using default value {}.", configKey, defaultValue);
+				return defaultValue;
+			}
+		}
+
 		/**
 		 * Load settings from config.
 		 */
@@ -201,6 +224,12 @@ public class Ssh extends Cli {
 
 			this.commandTimeout = Netshot.getConfig("netshot.cli.ssh.commandtimeout", 120000, 1, Integer.MAX_VALUE);
 			log.debug("The default command timeout value for SSH sessions is {}s", this.commandTimeout);
+
+			this.rekeyTimeLimit = this.readLong("rekeytimelimit", Duration.ofHours(1).toMillis());
+			log.debug("The default rekey time limit for SSH sessions is {}ms", this.rekeyTimeLimit);
+
+			this.rekeyDataLimit = this.readLong("rekeydatalimit", 1024L * 1024L * 1024L);
+			log.debug("The default rekey data limit for SSH sessions is {} bytes", this.rekeyDataLimit);
 
 			this.kexAlgorithms = this.readAlgorithms("kexalgorithms", DEFAULT_SSH_KEX_ALGORITHMS);
 			this.hostKeyAlgorithms = this.readAlgorithms("hostkeyalgorithms", DEFAULT_SSH_HOST_KEY_ALGORITHMS);
@@ -277,6 +306,14 @@ public class Ssh extends Cli {
 		/** Compression algorithms allowed for the session. */
 		private List<String> compressionAlgorithms = null;
 
+		/** Rekey time limit (ms), i.e. maximum session duration before a rekey is triggered. */
+		@Setter
+		private Long rekeyTimeLimit = null;
+
+		/** Rekey data limit (bytes), i.e. maximum amount of data exchanged before a rekey is triggered. */
+		@Setter
+		private Long rekeyDataLimit = null;
+
 		/** User interaction instructions. */
 		@Setter
 		@Getter
@@ -321,6 +358,8 @@ public class Ssh extends Cli {
 				this.ciphers = Arrays.asList(Ssh.SETTINGS.getCiphers());
 				this.macs = Arrays.asList(Ssh.SETTINGS.getMacs());
 				this.compressionAlgorithms = Arrays.asList(Ssh.SETTINGS.getCompressionAlgorithms());
+				this.rekeyTimeLimit = Ssh.SETTINGS.getRekeyTimeLimit();
+				this.rekeyDataLimit = Ssh.SETTINGS.getRekeyDataLimit();
 				this.usePty = true;
 				this.terminalType = "vt100";
 				this.terminalCols = 80;
@@ -360,6 +399,8 @@ public class Ssh extends Cli {
 	public static void loadConfig() {
 		Ssh.SETTINGS.load();
 		CoreModuleProperties.NIO2_READ_TIMEOUT.set(Ssh.client, Duration.ofMillis(Ssh.SETTINGS.receiveTimeout));
+		CoreModuleProperties.REKEY_TIME_LIMIT.set(Ssh.client, Duration.ofMillis(Ssh.SETTINGS.rekeyTimeLimit));
+		CoreModuleProperties.REKEY_BYTES_LIMIT.set(Ssh.client, Ssh.SETTINGS.rekeyDataLimit);
 	}
 
 	static {
@@ -524,6 +565,8 @@ public class Ssh extends Cli {
 			this.session.setCipherFactoriesNames(this.sshConfig.ciphers);
 			this.session.setMacFactoriesNames(this.sshConfig.macs);
 			this.session.setCompressionFactoriesNames(this.sshConfig.compressionAlgorithms);
+			CoreModuleProperties.REKEY_TIME_LIMIT.set(this.session, Duration.ofMillis(this.sshConfig.rekeyTimeLimit));
+			CoreModuleProperties.REKEY_BYTES_LIMIT.set(this.session, this.sshConfig.rekeyDataLimit);
 			if (privateKey == null) {
 				this.session.addPasswordIdentity(this.password);
 				if (Ssh.this.sshConfig.interactionInstructions != null) {
@@ -951,6 +994,12 @@ public class Ssh extends Cli {
 		}
 		if (other.compressionAlgorithms != null) {
 			this.sshConfig.compressionAlgorithms = other.compressionAlgorithms;
+		}
+		if (other.rekeyTimeLimit != null) {
+			this.sshConfig.rekeyTimeLimit = other.rekeyTimeLimit;
+		}
+		if (other.rekeyDataLimit != null) {
+			this.sshConfig.rekeyDataLimit = other.rekeyDataLimit;
 		}
 		if (other.usePty != null) {
 			this.sshConfig.usePty = other.usePty;

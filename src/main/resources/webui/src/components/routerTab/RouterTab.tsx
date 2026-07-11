@@ -1,6 +1,6 @@
 import { Box, Flex, Text } from "@chakra-ui/react"
 import { PropsWithChildren } from "react"
-import { NavLink } from "react-router"
+import { NavLink, useLocation } from "react-router"
 
 type RouterTabProps = {
   to: string
@@ -8,8 +8,9 @@ type RouterTabProps = {
 
 export default function RouterTab(props: PropsWithChildren<RouterTabProps>) {
   const { children, to } = props
+  const { search } = useLocation()
   return (
-    <NavLink to={to}>
+    <NavLink to={{ pathname: to, search }}>
       {({ isActive }) => (
         <Flex h="44px" alignItems="center" justifyContent="center" position="relative">
           <Text transition="all .2s ease" color={isActive ? "black" : "grey.400"}>

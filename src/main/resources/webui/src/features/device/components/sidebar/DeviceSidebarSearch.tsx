@@ -10,10 +10,27 @@ import { useDeviceSidebarStore } from "../../stores"
 import DeviceSidebarGroup from "./DeviceSidebarGroup"
 import { useDeviceGroupTree } from "./useDeviceGroupTree"
 
+const IPV4 =
+  "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+const MASK_V4 = "/([0-9]|1[0-9]|2[0-9]|3[0-2])"
+const IPV6 =
+  "((([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\\b((25[0-5])|(1\\d{2})|(2[0-4]\\d)|(\\d{1,2}))\\b)\\.){3}(\\b((25[0-5])|(1\\d{2})|(2[0-4]\\d)|(\\d{1,2}))\\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\\b((25[0-5])|(1\\d{2})|(2[0-4]\\d)|(\\d{1,2}))\\b)\\.){3}(\\b((25[0-5])|(1\\d{2})|(2[0-4]\\d)|(\\d{1,2}))\\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\\b((25[0-5])|(1\\d{2})|(2[0-4]\\d)|(\\d{1,2}))\\b)\\.){3}(\\b((25[0-5])|(1\\d{2})|(2[0-4]\\d)|(\\d{1,2}))\\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))"
+const MASK_V6 = "/([0-9]|[0-9][0-9]|1[01][0-9]|12[0-8])"
+
 function buildQuery(text: string): string {
   const trimmed = text.trim()
   if (trimmed.startsWith("[")) return trimmed
-  return `[Name] CONTAINSNOCASE "${trimmed}"`
+
+  if (
+    new RegExp(`^${IPV4}${MASK_V4}$`).test(trimmed) ||
+    new RegExp(`^${IPV6}${MASK_V6}$`).test(trimmed)
+  ) {
+    return `[IP] in ${trimmed}`
+  }
+  if (new RegExp(`^${IPV4}$`).test(trimmed) || new RegExp(`^${IPV6}$`).test(trimmed)) {
+    return `[IP] is ${trimmed}`
+  }
+  return `[Name] containsnocase "${trimmed.replace(/"/g, '\\"')}"`
 }
 
 export default function DeviceSidebarSearch() {
@@ -110,7 +127,11 @@ export default function DeviceSidebarSearch() {
         <Popover.Anchor>
           <InputGroup
             startElement={
-              group ? <DeviceGroupBadge id={group.id} name={group.name} /> : <LuSearch size={18} />
+              group ? (
+                <DeviceGroupBadge id={group.id} name={group.name} maxW="150px" />
+              ) : (
+                <LuSearch size={18} />
+              )
             }
             endElement={
               <>
@@ -153,13 +174,14 @@ export default function DeviceSidebarSearch() {
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               placeholder={group ? "" : t("device.searchOrGroupPlaceholder")}
+              pe="70px"
             />
           </InputGroup>
         </Popover.Anchor>
 
         <Portal>
           <Popover.Positioner>
-            <Popover.Content w="260px">
+            <Popover.Content w="260px" overflow="auto">
               <DeviceSidebarGroup
                 items={items}
                 isPending={isPending}

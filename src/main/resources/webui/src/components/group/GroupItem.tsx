@@ -57,6 +57,7 @@ export default function GroupItem(props: GroupItemProps) {
         pl="2"
         ml="-2"
         minHeight="40px"
+        alignItems="center"
         _hover={{
           bg: selected ? "green.50" : "grey.50",
         }}
@@ -76,7 +77,8 @@ export default function GroupItem(props: GroupItemProps) {
             <Menu.Root>
               <Menu.Trigger asChild>
                 <IconButton
-                  variant="ghost"
+                  variant="frame"
+                  size="sm"
                   aria-label={t("common.openGroupOptions")}
                   onClick={(e) => e.stopPropagation()}
                 >

@@ -2,7 +2,7 @@ import { AddGroupTrigger, Protected, TreeGroup } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Group, Level } from "@/types"
 import { Folder } from "@/utils"
-import { Flex, Heading, IconButton, Skeleton, Stack } from "@chakra-ui/react"
+import { Center, Flex, Heading, IconButton, Skeleton, Stack, Text } from "@chakra-ui/react"
 import { LuPlus } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 
@@ -35,7 +35,7 @@ export default function DeviceSidebarGroup(props: DeviceSidebarGroupProps) {
           </Tooltip>
         </Protected>
       </Flex>
-      <Stack px="4" pb="3" gap="0" overflow="auto" maxHeight="280px">
+      <Stack px="4" pb="3" gap="0">
         {isPending ? (
           <Stack gap="3" pb="4">
             <Skeleton height="36px" />
@@ -43,6 +43,10 @@ export default function DeviceSidebarGroup(props: DeviceSidebarGroupProps) {
             <Skeleton height="36px" />
             <Skeleton height="36px" />
           </Stack>
+        ) : items.length === 0 ? (
+          <Center pb="4">
+            <Text color="fg.muted">{t("group.notFound")}</Text>
+          </Center>
         ) : (
           <TreeGroup
             items={items}

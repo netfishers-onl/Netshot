@@ -6,6 +6,7 @@ import { dialogSlotRecipe } from "./dialog"
 import { fieldSlotRecipe } from "./field"
 import { listboxSlotRecipe } from "./listbox"
 import { menuSlotRecipe } from "./menu"
+import { popoverSlotRecipe } from "./popover"
 import { progressSlotRecipe } from "./progress"
 import { radioCardSlotRecipe } from "./radioCard"
 import { selectSlotRecipe } from "./select"
@@ -23,6 +24,7 @@ export default {
   dialog: dialogSlotRecipe,
   listbox: listboxSlotRecipe,
   menu: menuSlotRecipe,
+  popover: popoverSlotRecipe,
   progress: progressSlotRecipe,
   radioCard: radioCardSlotRecipe,
   select: selectSlotRecipe,

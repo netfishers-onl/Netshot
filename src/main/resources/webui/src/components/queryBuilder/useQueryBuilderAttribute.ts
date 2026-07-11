@@ -196,13 +196,6 @@ export function useQueryBuilderAttribute() {
         },
       },
       {
-        label: t("admin.driver.label"),
-        value: {
-          name: Attribute.Driver,
-          type: AttributeType.Text,
-        },
-      },
-      {
         label: t("compliance.hardware.endOfSale"),
         value: {
           name: Attribute.EndOfSaleDate,

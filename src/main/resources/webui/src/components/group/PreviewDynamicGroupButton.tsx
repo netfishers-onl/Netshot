@@ -96,7 +96,6 @@ export default function PreviewDynamicGroupButton(props: PreviewDynamicGroupButt
 
       <Button
         variant="outline"
-        disabled={!query}
         loading={mutation.isPending}
         onClick={() => mutation.mutate()}
       >

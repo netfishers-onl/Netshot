@@ -3,7 +3,6 @@ export const Attribute = {
   Contact: "Contact",
   CreationDate: "Creation Date",
   Domain: "Domain",
-  Driver: "Driver",
   EndOfSaleDate: "End of Sale Date",
   EndOfLifeDate: "End of Life Date",
   Family: "Family",

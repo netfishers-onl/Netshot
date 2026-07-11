@@ -1,5 +1,6 @@
 import api, { DeviceQueryParams, PaginationQueryParams } from "@/api"
 import { QUERIES } from "@/constants"
+import { sortAlphabetical } from "@/utils"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 
 export function useDevice(id: number) {
@@ -85,6 +86,7 @@ export function useDevices(groupId: number) {
 
       return api.device.getAll(params)
     },
+    select: (data) => sortAlphabetical(data, "name"),
   })
 }
 
@@ -116,5 +118,6 @@ export function useSearchDevices(query: string) {
   return useQuery({
     queryKey: [QUERIES.DEVICE_SEARCH_LIST, query],
     queryFn: async () => api.device.search({ query }),
+    select: (data) => ({ ...data, devices: sortAlphabetical(data.devices, "name") }),
   })
 }

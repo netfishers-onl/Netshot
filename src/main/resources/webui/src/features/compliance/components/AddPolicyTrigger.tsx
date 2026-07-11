@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import { useNavigate } from "react-router"
 import PolicyForm, { Form } from "./PolicyForm"
 
 export type AddPolicyTriggerProps = { children: React.ReactElement<any> } & Record<string, unknown>
@@ -15,6 +16,7 @@ export default function AddPolicyTrigger({ children, ...rest }: AddPolicyTrigger
   const { t } = useTranslation()
   const toast = useToast()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const dialog = useFormDialogWithMutation()
 
   const form = useForm<Form>({
@@ -40,7 +42,7 @@ export default function AddPolicyTrigger({ children, ...rest }: AddPolicyTrigger
       form,
       size: "lg",
       async onSubmit(values: Form) {
-        await mutation.mutateAsync({
+        const policy = await mutation.mutateAsync({
           name: values.name,
           targetGroups: values.targetGroups,
         })
@@ -57,6 +59,8 @@ export default function AddPolicyTrigger({ children, ...rest }: AddPolicyTrigger
 
         queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_LIST] })
         queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_SEARCH_LIST] })
+
+        navigate(`/app/compliance/config/${policy.id}`)
       },
       onCancel() {
         form.reset()

@@ -33,6 +33,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
   const [formStep, setFormStep] = useState(FormStep.Type)
 
   const form = useForm<RuleForm>({
+    mode: "onChange",
     defaultValues: {
       name: "",
       script: "",
@@ -41,9 +42,9 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
       context: "",
       driver: null,
       field: null,
-      anyBlock: null,
+      anyBlock: "false",
       matchAll: false,
-      invert: null,
+      invert: "false",
       normalize: false,
     },
   })

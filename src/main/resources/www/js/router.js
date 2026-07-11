@@ -30,7 +30,7 @@ define([
 				if (typeof window.reauth !== "undefined") {
 					clearTimeout(window.reauth);
 				}
-				var timeout = window.serverInfo.get("maxIdleTimout");
+				var timeout = window.serverInfo.get("maxIdleTimeout");
 				if (timeout) {
 					window.reauth = setTimeout(function() {
 						new ReAuthDialog();

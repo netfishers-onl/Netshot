@@ -1,3 +1,4 @@
+import api from "@/api"
 import httpClient, { HttpEventType } from "@/api/httpClient"
 import { MeResult } from "@/api/user"
 import { Navbar } from "@/components"
@@ -5,11 +6,14 @@ import { QUERIES, REDIRECT_SEARCH_PARAM } from "@/constants"
 import { useAuth } from "@/contexts"
 import { useAlertDialog, useDialogStore } from "@/dialog"
 import { Stack } from "@chakra-ui/react"
-import { useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { Outlet, useNavigate } from "react-router"
 import withQuery from "with-query"
+
+// Warn this many seconds before the server-side idle timeout actually kicks in
+const IDLE_WARNING_MARGIN_SECONDS = 5
 
 enum AuthState {
   AUTH_REQUIRED = 0,
@@ -26,6 +30,12 @@ export function MainScreen() {
   // Whether there has already been a successfully authentication
   const authState = useRef<AuthState>(AuthState.AUTH_REQUIRED)
   const queryClient = useQueryClient()
+  const idleTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  const { data: serverInfo } = useQuery({
+    queryKey: [QUERIES.SERVER_INFO],
+    queryFn: api.auth.serverInfo,
+  })
 
   const doRedirect = useCallback(() => {
     if (!location.pathname.startsWith("/signin")) {
@@ -45,7 +55,7 @@ export function MainScreen() {
     }
   }, [doRedirect, user])
 
-  const onForbidden = () => {
+  const requireReauth = useCallback(() => {
     if (authState.current === AuthState.AUTHENTICATED) {
       removeAllDialogs()
       dialog.open({
@@ -58,15 +68,39 @@ export function MainScreen() {
       authState.current = AuthState.REAUTH_REQUIRED
     }
     queryClient.setQueryData<MeResult>([QUERIES.USER], (prev) => prev ? { ...prev, user: null } : prev)
-  }
+  }, [dialog, doRedirect, queryClient, removeAllDialogs, t])
 
   useEffect(() => {
-    // Register callback on forbidden (403) responses
-    httpClient.on(HttpEventType.Forbidden, onForbidden)
+    // Register callback on forbidden (401/403) responses
+    httpClient.on(HttpEventType.Forbidden, requireReauth)
     return () => {
       httpClient.off(HttpEventType.Forbidden)
     }
-  }, [onForbidden])
+  }, [requireReauth])
+
+  useEffect(() => {
+    const maxIdleTimeout = serverInfo?.maxIdleTimeout
+    if (!maxIdleTimeout) {
+      return
+    }
+
+    const scheduleIdleWarning = () => {
+      clearTimeout(idleTimeout.current)
+      idleTimeout.current = setTimeout(
+        requireReauth,
+        Math.max(0, maxIdleTimeout - IDLE_WARNING_MARGIN_SECONDS) * 1000
+      )
+    }
+
+    // Any request to the backend counts as activity: reschedule the warning from there
+    httpClient.on(HttpEventType.Activity, scheduleIdleWarning)
+    scheduleIdleWarning()
+
+    return () => {
+      httpClient.off(HttpEventType.Activity)
+      clearTimeout(idleTimeout.current)
+    }
+  }, [requireReauth, serverInfo?.maxIdleTimeout])
 
   return (
     <Stack h="100vh" gap="0">

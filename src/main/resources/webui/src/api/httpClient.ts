@@ -55,6 +55,7 @@ export enum HttpStatus {
 export enum HttpEventType {
   Forbidden = "forbidden",
   GatewayError = "gatewayError",
+  Activity = "activity",
 }
 
 export type HttpEventCallback = (url: string, params: RequestInit, response: Response) => void
@@ -110,6 +111,14 @@ function createHttpClient(opts: HttpClientOptions = {}) {
 
     const response = await fetch(requestUrl, requestOptions)
 
+    const isAuthError =
+      response.status === HttpStatus.Forbidden || response.status === HttpStatus.Unauthorized
+
+    if (!isAuthError) {
+      // Any non-auth response counts as activity, used to (re)schedule the idle timeout warning
+      executeHttpEventCallback(HttpEventType.Activity, { requestUrl, requestOptions, response })
+    }
+
     if (!response.ok) {
       const callbackConfig = {
         requestUrl,
@@ -117,7 +126,7 @@ function createHttpClient(opts: HttpClientOptions = {}) {
         response,
       }
 
-      if (response.status === HttpStatus.Forbidden || response.status === HttpStatus.Unauthorized) {
+      if (isAuthError) {
         executeHttpEventCallback(HttpEventType.Forbidden, callbackConfig)
       }
 

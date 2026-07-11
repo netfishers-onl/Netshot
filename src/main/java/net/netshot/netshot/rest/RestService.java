@@ -9751,7 +9751,7 @@ public class RestService extends Thread {
 		 */
 		@XmlElement
 		@JsonView(DefaultView.class)
-		public int getMaxIdleTimout() {
+		public int getMaxIdleTimeout() {
 			return UiUser.SETTINGS.getMaxIdleTime();
 		}
 	}

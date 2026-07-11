@@ -21,7 +21,7 @@ export default function DeviceConfigurationScreen() {
   const virtualizer = useVirtualizer({
     count: data?.length ?? 0,
     getScrollElement: () => containerRef.current,
-    estimateSize: () => 60,
+    estimateSize: () => 67,
     measureElement: (element) => element?.getBoundingClientRect().height,
     overscan: 5,
   })
@@ -55,6 +55,7 @@ export default function DeviceConfigurationScreen() {
             height: `${virtualizer.getTotalSize()}px`,
             width: "100%",
             position: "relative",
+            flexShrink: 0,
           }}
         >
           {virtualizer.getVirtualItems().map((virtualItem) => {

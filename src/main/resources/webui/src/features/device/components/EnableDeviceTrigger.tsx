@@ -8,7 +8,7 @@ import { Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import React from "react"
-import { QUERIES } from "../constants"
+import { QUERIES as DEVICE_QUERIES } from "../constants"
 
 export type EnableDeviceTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<any> } & Record<string, unknown>
 
@@ -43,7 +43,8 @@ export default function EnableDeviceTrigger({ devices, children, ...rest }: Enab
           await mutation.mutateAsync({ id: device?.id, enabled: true })
         }
         queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.DEVICE_LIST], refetchType: "all" })
-        queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_DETAIL] })
+        queryClient.invalidateQueries({ queryKey: [DEVICE_QUERIES.DEVICE_SEARCH_LIST], refetchType: "all" })
+        queryClient.invalidateQueries({ queryKey: [DEVICE_QUERIES.DEVICE_DETAIL] })
         dialogRef.close()
       },
       confirmButton: { label: t(isMultiple ? "common.enableAll" : "common.enable") },

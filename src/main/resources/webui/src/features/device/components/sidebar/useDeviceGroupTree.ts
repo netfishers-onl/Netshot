@@ -60,23 +60,12 @@ export function useDeviceGroupTree(options: UseDeviceGroupTreeOptions) {
 
   const onGroupSelect = useCallback(
     (group: Group) => {
-      updateQueryAndDriver("", null)
-
       if (group?.id === selectedGroupId) {
-        navigate(
-          {
-            pathname: location.pathname,
-            search: null,
-          },
-          {
-            replace: true,
-          }
-        )
-
-        setGroup(null)
         onAfterSelect?.()
         return
       }
+
+      updateQueryAndDriver("", null)
 
       navigate(
         {

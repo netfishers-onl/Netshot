@@ -19,6 +19,27 @@ export function isFolder(x: any): x is Folder {
   return "children" in x
 }
 
+/**
+ * Sort folders before groups; folders by name, groups by name then by id.
+ */
+export function compareFolderOrGroup(a: Folder | Group, b: Folder | Group) {
+  const aIsFolder = isFolder(a)
+  const bIsFolder = isFolder(b)
+
+  if (aIsFolder !== bIsFolder) {
+    return aIsFolder ? -1 : 1
+  }
+
+  if (aIsFolder && bIsFolder) {
+    return a.name.localeCompare(b.name)
+  }
+
+  const group1 = a as Group
+  const group2 = b as Group
+
+  return group1.name.localeCompare(group2.name) || group1.id - group2.id
+}
+
 export function addFolder(
   paths: string[],
   group: Group,
@@ -38,13 +59,7 @@ export function addFolder(
     folder.children.push(group)
   }
 
-  return children.sort((a) => {
-    if (isFolder(a)) {
-      return -1
-    }
-
-    return 1
-  })
+  return children.sort(compareFolderOrGroup)
 }
 
 /**
@@ -64,13 +79,7 @@ export function createFoldersFromGroups(deviceGroups: Group[] = []) {
       },
       [] as Array<Folder | Group>
     )
-    .sort((a) => {
-      if (isFolder(a)) {
-        return -1
-      }
-
-      return 1
-    })
+    .sort(compareFolderOrGroup)
 }
 
 interface FindResult {

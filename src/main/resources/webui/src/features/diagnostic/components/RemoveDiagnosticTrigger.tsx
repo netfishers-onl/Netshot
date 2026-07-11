@@ -43,6 +43,7 @@ export default function RemoveDiagnosticTrigger({ diagnostic, children, ...rest 
         navigate("/app/diagnostics")
 
         queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_LIST] })
+        queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_INFINITE_LIST] })
         queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_SEARCH_LIST] })
 
         dialogRef.close()

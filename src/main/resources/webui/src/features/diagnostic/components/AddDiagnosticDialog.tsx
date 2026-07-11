@@ -2,7 +2,7 @@ import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
-import { DiagnosticType } from "@/types"
+import { DiagnosticResultType, DiagnosticType } from "@/types"
 import { Button, CloseButton, Dialog, Heading, Icon, Portal, RadioCard, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
@@ -55,7 +55,7 @@ export default function AddDiagnosticDialog() {
     defaultValues: {
       name: "",
       enabled: true,
-      resultType: null,
+      resultType: DiagnosticResultType.Text,
       targetGroup: null,
       deviceDriver: null,
       cliMode: null,
@@ -72,6 +72,8 @@ export default function AddDiagnosticDialog() {
       close()
 
       await queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_LIST] })
+      await queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_INFINITE_LIST] })
+      await queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_SEARCH_LIST] })
 
       form.reset()
 

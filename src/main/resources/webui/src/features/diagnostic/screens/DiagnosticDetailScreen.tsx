@@ -1,5 +1,6 @@
 import api from "@/api"
-import { DeviceGroupBadge, Protected } from "@/components"
+import { isNetshotError, NetshotErrorCode } from "@/api/httpClient"
+import { DeviceGroupBadge, EmptyResult, Protected } from "@/components"
 import { LuChevronDown, LuPower, LuPencil, LuTrash } from "react-icons/lu"
 import { DiagnosticType, Level } from "@/types"
 import {
@@ -34,10 +35,19 @@ export default function DeviceDetailScreen() {
   const { id } = useParams()
   const { t } = useTranslation()
 
-  const { data: diagnostic, isPending } = useQuery({
+  const { data: diagnostic, isPending, isError, error } = useQuery({
     queryKey: [QUERIES.DIAGNOSTIC_DETAIL, +id],
     queryFn: async () => api.diagnostic.getById(+id),
   })
+
+  const isDiagnosticNotFound =
+    isError && isNetshotError(error) && error.code === NetshotErrorCode.DiagnosticNotFound
+
+  if (isDiagnosticNotFound) {
+    return (
+      <EmptyResult title={t("diagnostic.notFound")} description={t("diagnostic.notFoundDescription")} />
+    )
+  }
 
   return (
     <DiagnosticProvider diagnostic={diagnostic} isLoading={isPending} key={id}>

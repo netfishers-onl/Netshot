@@ -31,7 +31,10 @@ export type NetshotError = {
 
 export enum NetshotErrorCode {
   GenericServer = -1,
-  DeviceNotFound = 142,
+  DeviceNotFound = 145,
+  DiagnosticNotFound = 235,
+  PolicyNotFound = 183,
+  RuleNotFound = 193,
   ExpiredPassword = 205,
   FailedPasswordPolicy = 206,
 }

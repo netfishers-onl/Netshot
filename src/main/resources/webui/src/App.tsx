@@ -50,7 +50,7 @@ import {
   TaskScreen,
 } from "@/features/task"
 import i18n, { LocalizationProvider } from "@/i18n"
-import { MainScreen } from "@/screens"
+import { MainScreen, NotFoundScreen } from "@/screens"
 import { Level } from "@/types"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { I18nextProvider } from "react-i18next"
@@ -165,8 +165,10 @@ function App() {
                           <Route path="clustering" element={<AdministrationClusteringScreen />} />
                         </Route>
                       </Route>
+                      <Route path="*" element={<NotFoundScreen fullPage={false} />} />
                     </Route>
                     <Route path="/" element={<Navigate to="app" />} />
+                    <Route path="*" element={<NotFoundScreen />} />
                   </Routes>
                 </DialogProviderWithI18n>
               </ApplicationProvider>

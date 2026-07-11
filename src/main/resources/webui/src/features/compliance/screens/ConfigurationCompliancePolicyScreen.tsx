@@ -24,7 +24,7 @@ import AddRuleTrigger from "../components/AddRuleTrigger"
 import EditPolicyTrigger from "../components/EditPolicyTrigger"
 import RemovePolicyTrigger from "../components/RemovePolicyTrigger"
 import { usePolicies } from "../api"
-import { DeviceGroupBadge } from "@/components"
+import { DeviceGroupBadge, EmptyResult } from "@/components"
 
 function getRuleIcon(type: RuleType) {
   if (type === RuleType.Javascript) return <SiJavascript />
@@ -43,6 +43,12 @@ export default function ConfigurationCompliancePolicyScreen() {
     () => policies?.find((p) => p.id === +policyId),
     [policies, policyId]
   )
+
+  if (!isPending && !policy) {
+    return (
+      <EmptyResult title={t("policy.notFound")} description={t("policy.notFoundDescription")} />
+    )
+  }
 
   return (
     <Stack p="9" gap="9" flex="1">

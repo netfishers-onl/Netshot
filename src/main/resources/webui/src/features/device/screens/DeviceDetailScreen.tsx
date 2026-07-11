@@ -1,8 +1,9 @@
-import { Protected } from "@/components"
+import { EmptyResult, Protected } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { LuCamera, LuSquarePen, LuChevronDown, LuPlay, LuRefreshCcw, LuTrash, LuZap, LuZapOff } from "react-icons/lu"
 import { RouterTab, RouterTabs } from "@/components/routerTab"
 import { useToast } from "@/hooks"
+import { isNetshotError, NetshotErrorCode } from "@/api/httpClient"
 import { DeviceStatus, DeviceType, Level } from "@/types"
 import { Box, Button, Flex, Group, Heading, Icon, IconButton, Menu, Portal, Skeleton, Spacer, Stack } from "@chakra-ui/react"
 import { QUERIES as GLOBAL_QUERIES } from "@/constants"
@@ -28,9 +29,11 @@ export default function DeviceDetailScreen() {
   const { t } = useTranslation()
   const toast = useToast()
 
-  const { data: device, isPending, refetch } = useDevice(+id)
+  const { data: device, isPending, isError, error, refetch } = useDevice(+id)
   const { data: deviceTypes, isPending: isDeviceTypePending } = useDeviceTypes()
   const queryClient = useQueryClient()
+
+  const isDeviceNotFound = isError && isNetshotError(error) && error.code === NetshotErrorCode.DeviceNotFound
 
   const refresh = useCallback(async () => {
     const toastId = toast.loading({
@@ -55,6 +58,12 @@ export default function DeviceDetailScreen() {
   const deviceType = useMemo<DeviceType>(() => {
     return deviceTypes?.find((t) => t.name === device?.driver)
   }, [device?.driver, deviceTypes])
+
+  if (isDeviceNotFound) {
+    return (
+      <EmptyResult title={t("device.notFound")} description={t("device.notFoundDescription")} />
+    )
+  }
 
   return (
     <DeviceProvider device={device} type={deviceType} isLoading={isPending || isDeviceTypePending}>

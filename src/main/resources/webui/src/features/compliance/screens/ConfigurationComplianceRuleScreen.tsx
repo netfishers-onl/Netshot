@@ -1,5 +1,6 @@
 import api from "@/api"
-import { MonacoEditor } from "@/components"
+import { isNetshotError, NetshotErrorCode } from "@/api/httpClient"
+import { EmptyResult, MonacoEditor } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { useLocalization } from "@/i18n"
 import { LuAsterisk, LuMessageSquareDot, LuPower, LuPencil, LuTrash, LuChevronDown } from "react-icons/lu"
@@ -40,7 +41,7 @@ export default function ConfigurationComplianceRuleScreen() {
   const { formatDate } = useLocalization()
   const { getOptionByDriver } = useDeviceTypeOptions()
 
-  const { data: rule, isPending } = useQuery({
+  const { data: rule, isPending, isError, error } = useQuery({
     queryKey: [QUERIES.RULE_DETAIL, +policyId, +ruleId],
     queryFn: async () => api.rule.getById(+policyId, +ruleId),
   })
@@ -81,6 +82,17 @@ export default function ConfigurationComplianceRuleScreen() {
     if (matchAll) return invert ? key("mustNotBe") : key("mustBe")
     return invert ? key("mustNotContain") : key("mustContain")
   }, [rule, t])
+
+  const isRuleNotFound =
+    isError &&
+    isNetshotError(error) &&
+    (error.code === NetshotErrorCode.RuleNotFound || error.code === NetshotErrorCode.PolicyNotFound)
+
+  if (isRuleNotFound) {
+    return (
+      <EmptyResult title={t("policy.rule.notFound")} description={t("policy.rule.notFoundDescription")} />
+    )
+  }
 
   const now = Date.now()
 

@@ -80,8 +80,8 @@ function DeviceEditForm({ freezePasswords = false }: { freezePasswords?: boolean
     <Stack gap="6">
       <FormControl readOnly label={t("common.name")} placeholder={t("device.name")} control={form.control} name="name" />
       <DeviceTypeSelect disabled label={t("device.type")} control={form.control} name="deviceType" />
-      <FormControl required label={t("device.interface.ipAddress")} placeholder={t("device.ipAddress")} control={form.control} name="ipAddress" rules={{ pattern: { value: /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g, message: t("common.thisIsNotAValidIpAddress") } }} />
       <DomainSelect control={form.control} name="mgmtDomain" />
+      <FormControl required label={t("device.interface.ipAddress")} placeholder={t("device.ipAddress")} control={form.control} name="ipAddress" rules={{ pattern: { value: /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g, message: t("common.thisIsNotAValidIpAddress") } }} />
       <Checkbox control={form.control} name="overrideConnectionSetting">{t("device.overrideConnectionSettings")}</Checkbox>
       {overrideConnectionSetting && (
         <>

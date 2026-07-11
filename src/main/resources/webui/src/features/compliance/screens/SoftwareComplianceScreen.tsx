@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next"
 import AddSoftwareRuleTrigger from "../components/AddSoftwareRuleTrigger"
 import EditSoftwareRuleTrigger from "../components/EditSoftwareRuleTrigger"
 import RemoveSoftwareRuleTrigger from "../components/RemoveSoftwareRuleTrigger"
+import RuleFieldValue from "../components/RuleFieldValue"
 import { QUERIES } from "../constants"
 import TableButtonStack from "@/features/administration/components/TableButtonStack"
 
@@ -98,7 +99,7 @@ export default function SoftwareComplianceScreen() {
             </Badge>
           )
         }
-        return <Text>{value}</Text>
+        return <RuleFieldValue value={value} isRegExp={info.row.original.familyRegExp} />
       },
       header: t("device.family"),
       size: 10000,
@@ -114,7 +115,7 @@ export default function SoftwareComplianceScreen() {
             </Badge>
           )
         }
-        return <Text>{value}</Text>
+        return <RuleFieldValue value={value} isRegExp={info.row.original.partNumberRegExp} />
       },
       header: t("device.module.partNumber"),
       size: 10000,
@@ -130,7 +131,7 @@ export default function SoftwareComplianceScreen() {
             </Badge>
           )
         }
-        return <Text>{value}</Text>
+        return <RuleFieldValue value={value} isRegExp={info.row.original.versionRegExp} />
       },
       header: t("common.version"),
       size: 10000,

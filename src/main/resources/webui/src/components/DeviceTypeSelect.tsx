@@ -21,6 +21,7 @@ export default function DeviceTypeSelect<
     name,
     required,
     readOnly,
+    disabled,
     defaultValue,
     label,
     placeholder,
@@ -46,6 +47,7 @@ export default function DeviceTypeSelect<
       name={name}
       defaultValue={defaultValue}
       readOnly={readOnly}
+      disabled={disabled}
       required={required}
       rules={rules}
       isLoading={isPending}

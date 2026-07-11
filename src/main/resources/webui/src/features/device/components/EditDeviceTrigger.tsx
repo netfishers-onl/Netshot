@@ -1,6 +1,6 @@
 import api, { UpdateDevicePayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { Checkbox, DomainSelect } from "@/components"
+import { Checkbox, DeviceTypeSelect, DomainSelect } from "@/components"
 import FormControl, { FormControlType, PASSWORD_UNCHANGED } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { MUTATIONS, QUERIES } from "@/constants"
@@ -20,6 +20,7 @@ export type EditDeviceTriggerProps = { device: Device; children: React.ReactElem
 
 type Form = {
   name: string
+  deviceType: string
   ipAddress: string
   mgmtDomain: string
   overrideConnectionSetting: boolean
@@ -78,6 +79,7 @@ function DeviceEditForm({ freezePasswords = false }: { freezePasswords?: boolean
   return (
     <Stack gap="6">
       <FormControl readOnly label={t("common.name")} placeholder={t("device.name")} control={form.control} name="name" />
+      <DeviceTypeSelect disabled label={t("device.type")} control={form.control} name="deviceType" />
       <FormControl required label={t("device.interface.ipAddress")} placeholder={t("device.ipAddress")} control={form.control} name="ipAddress" rules={{ pattern: { value: /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g, message: t("common.thisIsNotAValidIpAddress") } }} />
       <DomainSelect control={form.control} name="mgmtDomain" />
       <Checkbox control={form.control} name="overrideConnectionSetting">{t("device.overrideConnectionSettings")}</Checkbox>
@@ -118,7 +120,7 @@ function DeviceEditForm({ freezePasswords = false }: { freezePasswords?: boolean
           <FormControl allowUnchanged={freezePasswords} type={FormControlType.Password} label={t("network.superPassword")} placeholder={t("network.typeSuperPassword")} control={form.control} name="specificCredentialSet.superPassword" autoComplete="nope" />
         </>
       )}
-      <FormControl type={FormControlType.LongText} label={t("common.comments")} placeholder={t("device.addDescription")} control={form.control} name="comments" />
+      <FormControl type={FormControlType.LongText} rows={4} label={t("common.comments")} placeholder={t("device.addDescription")} control={form.control} name="comments" />
     </Stack>
   )
 }
@@ -139,6 +141,7 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
 
     let values = {
       name: device?.name,
+      deviceType: device?.driver,
       ipAddress: device?.mgmtAddress,
       mgmtDomain: device?.mgmtDomain?.id?.toString(),
       overrideConnectionSetting,

@@ -312,6 +312,7 @@
       "field": "Field",
       "filters": "Filters",
       "folder": "Folder",
+      "gatewayError": "The server is temporarily unreachable (bad gateway)",
       "general": "General",
       "goToDevice": "Go to device",
       "goToDiagnostics": "Go to diagnostics",

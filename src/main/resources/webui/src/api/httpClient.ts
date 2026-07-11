@@ -46,10 +46,12 @@ export enum HttpStatus {
   NotFound = 404,
   PreconditionFailed = 412,
   InternalServerError = 500,
+  BadGateway = 502,
 }
 
 export enum HttpEventType {
   Forbidden = "forbidden",
+  GatewayError = "gatewayError",
 }
 
 export type HttpEventCallback = (url: string, params: RequestInit, response: Response) => void
@@ -114,6 +116,10 @@ function createHttpClient(opts: HttpClientOptions = {}) {
 
       if (response.status === HttpStatus.Forbidden || response.status === HttpStatus.Unauthorized) {
         executeHttpEventCallback(HttpEventType.Forbidden, callbackConfig)
+      }
+
+      if (response.status === HttpStatus.BadGateway) {
+        executeHttpEventCallback(HttpEventType.GatewayError, callbackConfig)
       }
 
       try {

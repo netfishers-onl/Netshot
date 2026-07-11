@@ -1,8 +1,10 @@
 import api from "@/api"
+import httpClient, { HttpEventType } from "@/api/httpClient"
 import { QUERIES } from "@/constants"
+import { useToast } from "@/hooks"
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { ReactNode } from "react"
+import { ReactNode, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { AuthContext } from "./auth"
 
@@ -10,8 +12,11 @@ export type AuthProviderProps = {
   children: ReactNode
 }
 
+const GATEWAY_ERROR_TOAST_ID = "gateway-error"
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const { t } = useTranslation()
+  const toast = useToast()
 
   const { data, isPending, isError } = useQuery({
     queryKey: [QUERIES.USER],
@@ -19,6 +24,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   })
+
+  useEffect(() => {
+    const onGatewayError = () => {
+      // Fixed id: repeated 502s refresh the same toast instead of stacking new ones
+      toast.error({
+        id: GATEWAY_ERROR_TOAST_ID,
+        title: t("common.error"),
+        description: t("common.gatewayError"),
+      })
+    }
+
+    httpClient.on(HttpEventType.GatewayError, onGatewayError)
+    return () => {
+      httpClient.off(HttpEventType.GatewayError)
+    }
+  }, [t, toast])
 
   if (isPending) {
     return (

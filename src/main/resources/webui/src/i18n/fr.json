@@ -312,6 +312,7 @@
       "field": "Champ",
       "filters": "Filtres",
       "folder": "Dossier",
+      "gatewayError": "Le serveur est temporairement injoignable (erreur de passerelle)",
       "general": "Général",
       "goToDevice": "Aller à l'équipement",
       "goToDiagnostics": "Aller aux diagnostics",

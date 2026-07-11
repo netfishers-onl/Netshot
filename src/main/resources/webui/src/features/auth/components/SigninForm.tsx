@@ -83,6 +83,7 @@ export function SigninForm() {
             required: true,
           }}
           readOnly={changePass}
+          autoComplete="username"
         />
         <FormControl
           required
@@ -95,6 +96,7 @@ export function SigninForm() {
             required: true,
           }}
           readOnly={changePass}
+          autoComplete="current-password"
         />
         {changePass && (
           <FormControl
@@ -108,6 +110,7 @@ export function SigninForm() {
               required: true,
             }}
             autoFocus
+            autoComplete="new-password"
           />
         )}
         <Stack gap="2">

@@ -9,7 +9,7 @@ import { Stack } from "@chakra-ui/react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useCallback, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import { Outlet, useNavigate } from "react-router"
+import { Outlet } from "react-router"
 import withQuery from "with-query"
 
 // Warn this many seconds before the server-side idle timeout actually kicks in
@@ -26,7 +26,6 @@ export function MainScreen() {
   const dialog = useAlertDialog()
   const removeAllDialogs = useDialogStore((state) => state.removeAll)
   const { user } = useAuth()
-  const navigate = useNavigate()
   // Whether there has already been a successfully authentication
   const authState = useRef<AuthState>(AuthState.AUTH_REQUIRED)
   const queryClient = useQueryClient()
@@ -39,13 +38,16 @@ export function MainScreen() {
 
   const doRedirect = useCallback(() => {
     if (!location.pathname.startsWith("/signin")) {
-      navigate(
+      // Force a full page load (rather than a client-side route change) so that
+      // password manager browser extensions reliably re-scan the page and detect
+      // the sign-in form without requiring the user to manually redetect fields.
+      window.location.assign(
         withQuery("/signin", {
           [REDIRECT_SEARCH_PARAM]: location.pathname + location.search,
         })
       )
     }
-  }, [navigate])
+  }, [])
 
   useEffect(() => {
     if (user) {

@@ -360,6 +360,7 @@ function FormControl<T>(
             type={showPassword ? "text" : "password"}
             value={isUnchanged ? "••••••••" : String(field.value as string)}
             disabled={isUnchanged}
+            autoComplete={autoComplete}
             {...inputProps}
             ref={(inputRef) => {
               inputProps.ref(inputRef)

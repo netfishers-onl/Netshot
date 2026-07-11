@@ -152,6 +152,7 @@
       "searchBy": "Rechercher nom, description, etc.",
       "searchAndTestRule": "Rechercher un équipement et tester la règle...",
       "search": "Rechercher un équipement...",
+      "searchOrGroupPlaceholder": "Rechercher, groupe...",
       "searchByNameOrIp": "Rechercher par nom d'équipement ou IP",
       "selectType": "Sélectionner un type d'équipement",
       "searchLimitNotice": "Les résultats de recherche sont limités à {{count}} équipements",

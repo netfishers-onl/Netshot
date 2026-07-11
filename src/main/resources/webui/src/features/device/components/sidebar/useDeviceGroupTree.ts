@@ -1,0 +1,122 @@
+import api from "@/api"
+import { getExpandedKeys, getVisibleGroups, useTreeOpenKeys } from "@/components"
+import { QUERIES } from "@/constants"
+import { useArrowKeyNavigation, usePagination } from "@/hooks"
+import { Group } from "@/types"
+import { createFoldersFromGroups, Folder, isGroup } from "@/utils"
+import { useQuery } from "@tanstack/react-query"
+import { useCallback, useEffect, useMemo } from "react"
+import { useLocation, useNavigate, useSearchParams } from "react-router"
+import { useDeviceSidebarStore } from "../../stores"
+
+function findGroupInTree(items: Array<Folder | Group>, id: number): Group | null {
+  for (const item of items) {
+    if (isGroup(item)) {
+      if (item.id === id) return item
+    } else {
+      const found = findGroupInTree(item.children, id)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+export type UseDeviceGroupTreeOptions = {
+  /** Whether the popover displaying the tree is currently open; scopes arrow-key nav. */
+  enabled: boolean
+  onAfterSelect?(): void
+}
+
+/**
+ * Fetches the group list and keeps the sidebar store's selected group in sync with
+ * the "?group=" URL param. Runs regardless of whether the tree UI is actually
+ * shown, so a deep link (e.g. "?group=5") resolves to a group name for the
+ * search box badge even before the popover is ever opened.
+ */
+export function useDeviceGroupTree(options: UseDeviceGroupTreeOptions) {
+  const { enabled, onAfterSelect } = options
+  const location = useLocation()
+  const navigate = useNavigate()
+  const setGroup = useDeviceSidebarStore((state) => state.setGroup)
+  const updateQueryAndDriver = useDeviceSidebarStore((state) => state.updateQueryAndDriver)
+  const pagination = usePagination()
+  const [searchParams] = useSearchParams()
+  const selectedGroupId = +searchParams.get("group")
+
+  const { data: items, isPending } = useQuery({
+    queryKey: [QUERIES.DEVICE_GROUPS],
+    queryFn: async () => api.group.getAll(pagination),
+    select: createFoldersFromGroups,
+  })
+
+  useEffect(() => {
+    if (isPending) return
+    if (!selectedGroupId) {
+      setGroup(null)
+      return
+    }
+    setGroup(findGroupInTree(items ?? [], selectedGroupId))
+  }, [selectedGroupId, items, isPending])
+
+  const onGroupSelect = useCallback(
+    (group: Group) => {
+      updateQueryAndDriver("", null)
+
+      if (group?.id === selectedGroupId) {
+        navigate(
+          {
+            pathname: location.pathname,
+            search: null,
+          },
+          {
+            replace: true,
+          }
+        )
+
+        setGroup(null)
+        onAfterSelect?.()
+        return
+      }
+
+      navigate(
+        {
+          pathname: location.pathname,
+          search: `?group=${group.id}`,
+        },
+        { replace: true }
+      )
+
+      setGroup(group)
+      onAfterSelect?.()
+    },
+    [selectedGroupId, navigate, location.pathname, setGroup, updateQueryAndDriver, onAfterSelect]
+  )
+
+  const expandedKeys = useMemo(() => {
+    if (items?.length > 0 && selectedGroupId) {
+      return getExpandedKeys(items, selectedGroupId)
+    }
+    return []
+  }, [items, selectedGroupId])
+
+  const { isOpen, toggle } = useTreeOpenKeys(expandedKeys)
+
+  const visibleGroups = useMemo(() => getVisibleGroups(items ?? [], isOpen), [items, isOpen])
+  const activeIndex = visibleGroups.findIndex((group) => group.id === selectedGroupId)
+
+  useArrowKeyNavigation({
+    items: visibleGroups,
+    activeIndex,
+    onNavigate: onGroupSelect,
+    enabled,
+  })
+
+  return {
+    items: items ?? [],
+    isPending,
+    selectedGroupId,
+    onGroupSelect,
+    isFolderOpen: isOpen,
+    toggleFolderOpen: toggle,
+  }
+}

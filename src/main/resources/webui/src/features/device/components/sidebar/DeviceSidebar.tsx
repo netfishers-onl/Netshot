@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next"
 import { useDeviceSidebarStore } from "../../stores"
 import CreateDeviceTrigger from "../CreateDeviceTrigger"
 import DeviceScanSubnetTrigger from "../DeviceScanSubnetTrigger"
-import DeviceSidebarGroup from "./DeviceSidebarGroup"
 import DeviceSidebarList from "./DeviceSidebarList"
 import DeviceSidebarListToolbar from "./DeviceSidebarListToolbar"
 import DeviceSidebarSearch from "./DeviceSidebarSearch"
@@ -20,13 +19,6 @@ export default function DeviceSidebar() {
     <Stack w="300px" overflow="hidden" gap="0">
       <DeviceSidebarSearch />
       <Separator />
-      {query ? null : (
-        <>
-          <DeviceSidebarGroup />
-          <Separator />
-        </>
-      )}
-
       <DeviceSidebarListToolbar />
       <Separator />
       {query ? <DeviceSidebarSearchList /> : <DeviceSidebarList />}

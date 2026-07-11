@@ -152,6 +152,7 @@
       "searchBy": "Search by name, description...",
       "searchAndTestRule": "Search device and test rule...",
       "search": "Search device...",
+      "searchOrGroupPlaceholder": "Search, group...",
       "searchByNameOrIp": "Search with device name or IP",
       "selectType": "Select a device type",
       "searchLimitNotice": "Search results are limited to {{count}} devices",

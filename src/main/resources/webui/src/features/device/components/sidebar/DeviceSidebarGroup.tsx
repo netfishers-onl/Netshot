@@ -1,141 +1,43 @@
-import api from "@/api"
-import {
-  AddGroupTrigger,
-  getExpandedKeys,
-  getVisibleGroups,
-  Protected,
-  TreeGroup,
-  useTreeOpenKeys,
-} from "@/components"
-import { LuPlus } from "react-icons/lu"
+import { AddGroupTrigger, Protected, TreeGroup } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
-import { QUERIES } from "@/constants"
-import { useArrowKeyNavigation, usePagination } from "@/hooks"
 import { Group, Level } from "@/types"
-import { createFoldersFromGroups, Folder, isGroup } from "@/utils"
-import { Flex, Heading, IconButton, Separator, Skeleton, Stack } from "@chakra-ui/react"
-import { useQuery } from "@tanstack/react-query"
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { Folder } from "@/utils"
+import { Flex, Heading, IconButton, Skeleton, Stack } from "@chakra-ui/react"
+import { LuPlus } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import { useLocation, useNavigate, useSearchParams } from "react-router"
-import { useDeviceSidebarStore } from "../../stores"
 
-function findGroupInTree(items: Array<Folder | Group>, id: number): Group | null {
-  for (const item of items) {
-    if (isGroup(item)) {
-      if (item.id === id) return item
-    } else {
-      const found = findGroupInTree(item.children, id)
-      if (found) return found
-    }
-  }
-  return null
+export type DeviceSidebarGroupProps = {
+  items: Array<Folder | Group>
+  isPending: boolean
+  selectedGroupId: number
+  onGroupSelect(group: Group): void
+  isFolderOpen(key: string): boolean
+  toggleFolderOpen(key: string): void
 }
 
-export default function DeviceSidebarGroup() {
-  const scrollContainer = useRef<HTMLDivElement>(null)
-  const [scroll, setScroll] = useState<number>(0)
-  const location = useLocation()
-  const navigate = useNavigate()
-  const setGroup = useDeviceSidebarStore((state) => state.setGroup)
+export default function DeviceSidebarGroup(props: DeviceSidebarGroupProps) {
+  const { items, isPending, selectedGroupId, onGroupSelect, isFolderOpen, toggleFolderOpen } = props
   const { t } = useTranslation()
-  const pagination = usePagination()
-  const [searchParams] = useSearchParams()
-  const selectedGroupId = +searchParams.get("group")
-
-  const { data: items, isPending } = useQuery({
-    queryKey: [QUERIES.DEVICE_GROUPS],
-    queryFn: async () => api.group.getAll(pagination),
-    select: createFoldersFromGroups,
-  })
-
-  useEffect(() => {
-    if (isPending) return
-    if (!selectedGroupId) {
-      setGroup(null)
-      return
-    }
-    setGroup(findGroupInTree(items ?? [], selectedGroupId))
-  }, [selectedGroupId, items, isPending])
-
-  useLayoutEffect(() => {
-    if (!scrollContainer?.current) return
-
-    scrollContainer.current.onscroll = (evt) => {
-      const target = evt.target as HTMLDivElement
-
-      setScroll(target.scrollTop)
-    }
-  }, [scrollContainer])
-
-  const onGroupSelect = useCallback(
-    (group: Group) => {
-      if (group?.id === selectedGroupId) {
-        navigate(
-          {
-            pathname: location.pathname,
-            search: null,
-          },
-          {
-            replace: true,
-          }
-        )
-
-        setGroup(null)
-        return
-      }
-
-      navigate(
-        {
-          pathname: location.pathname,
-          search: `?group=${group.id}`,
-        },
-        { replace: true }
-      )
-
-      setGroup(group)
-    },
-    [selectedGroupId, navigate, location.pathname, setGroup]
-  )
-
-  const expandedKeys = useMemo(() => {
-    if (items?.length > 0 && selectedGroupId) {
-      return getExpandedKeys(items, selectedGroupId)
-    }
-    return []
-  }, [items, selectedGroupId])
-
-  const { isOpen, toggle } = useTreeOpenKeys(expandedKeys)
-
-  const visibleGroups = useMemo(() => getVisibleGroups(items ?? [], isOpen), [items, isOpen])
-  const activeIndex = visibleGroups.findIndex((group) => group.id === selectedGroupId)
-
-  useArrowKeyNavigation({
-    items: visibleGroups,
-    activeIndex,
-    onNavigate: onGroupSelect,
-  })
 
   return (
     <Stack gap="0">
-      <Flex justifyContent="space-between" alignItems="center" px="6" pt="3" pb="1">
+      <Flex justifyContent="space-between" alignItems="center" px="4" pt="3" pb="1">
         <Heading fontSize="md" fontWeight="medium">
           {t("group.list")}
         </Heading>
         <Protected minLevel={Level.ReadWrite}>
           <Tooltip content={t("group.add")}>
             <AddGroupTrigger>
-              <IconButton variant="ghost" aria-label={t("group.add")}>
+              <IconButton variant="ghost" size="sm" aria-label={t("group.add")}>
                 <LuPlus />
               </IconButton>
             </AddGroupTrigger>
           </Tooltip>
         </Protected>
       </Flex>
-      {scroll > 0 && <Separator />}
-      <Stack px="6" gap="0" overflow="auto" height="200px" ref={scrollContainer}>
+      <Stack px="4" pb="3" gap="0" overflow="auto" maxHeight="280px">
         {isPending ? (
-          <Stack gap="3" pb="6">
+          <Stack gap="3" pb="4">
             <Skeleton height="36px" />
             <Skeleton height="36px" />
             <Skeleton height="36px" />
@@ -147,8 +49,8 @@ export default function DeviceSidebarGroup() {
             showMenu={true}
             onGroupSelect={onGroupSelect}
             isSelected={(group) => group.id === selectedGroupId}
-            isFolderOpen={isOpen}
-            toggleFolderOpen={toggle}
+            isFolderOpen={isFolderOpen}
+            toggleFolderOpen={toggleFolderOpen}
           />
         )}
       </Stack>

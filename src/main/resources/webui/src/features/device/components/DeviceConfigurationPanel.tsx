@@ -54,7 +54,7 @@ export default function DeviceConfigurationPanel(props: DeviceConfigurationPanel
   }, [controls, isCollapsed])
 
   return (
-    <Stack borderWidth="1px" borderColor="grey.100" borderRadius="2xl" key={config.id} gap="0">
+    <Stack borderWidth="1px" borderColor="grey.100" borderRadius="2xl" bg="white" gap="0">
       <Stack
         direction="row"
         gap="3"

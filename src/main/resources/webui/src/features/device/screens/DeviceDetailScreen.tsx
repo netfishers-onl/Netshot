@@ -42,7 +42,6 @@ export default function DeviceDetailScreen() {
       queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_COMPLIANCE, id], refetchType: "all" }),
       queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.DEVICE_LIST], refetchType: "all" }),
       queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.DEVICE_CONFIGS, id] }),
-      queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.DEVICE_INFINITE_CONFIGS, id] }),
       queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_INTERFACES, id] }),
       queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_MODULES, id] }),
       queryClient.invalidateQueries({ queryKey: [QUERIES.DEVICE_DIAGNOSTIC, id] }),

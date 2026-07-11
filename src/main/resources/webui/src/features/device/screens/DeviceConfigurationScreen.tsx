@@ -1,9 +1,11 @@
 import { EmptyResult } from "@/components"
-import { Button, Skeleton, Stack } from "@chakra-ui/react"
+import { Skeleton, Stack } from "@chakra-ui/react"
+import { useVirtualizer } from "@tanstack/react-virtual"
 import { AnimatePresence } from "framer-motion"
+import { useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams } from "react-router"
-import { useInfiniteDeviceConfigs } from "../api"
+import { useDeviceConfigs } from "../api"
 import { DeviceConfigurationCompareWidget } from "../components/DeviceConfigurationCompareWidget"
 import DeviceConfigurationPanel from "../components/DeviceConfigurationPanel"
 import { useDeviceConfigurationCompareStore } from "../stores"
@@ -12,9 +14,17 @@ export default function DeviceConfigurationScreen() {
   const params = useParams<{ id: string }>()
   const { t } = useTranslation()
   const current = useDeviceConfigurationCompareStore((state) => state.current)
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  const { data, isPending, isSuccess, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useInfiniteDeviceConfigs(+params.id, "")
+  const { data, isPending } = useDeviceConfigs(+params.id)
+
+  const virtualizer = useVirtualizer({
+    count: data?.length ?? 0,
+    getScrollElement: () => containerRef.current,
+    estimateSize: () => 60,
+    measureElement: (element) => element?.getBoundingClientRect().height,
+    overscan: 5,
+  })
 
   if (data?.length === 0) {
     return (
@@ -25,29 +35,51 @@ export default function DeviceConfigurationScreen() {
     )
   }
 
-  return (
-    <Stack gap="6">
+  if (isPending) {
+    return (
       <Stack gap="3">
-        {isPending ? (
-          <>
-            <Skeleton h="60px"></Skeleton>
-            <Skeleton h="60px"></Skeleton>
-            <Skeleton h="60px"></Skeleton>
-            <Skeleton h="60px"></Skeleton>
-          </>
-        ) : (
-          <>
-            <AnimatePresence>{current && <DeviceConfigurationCompareWidget />}</AnimatePresence>
-            {isSuccess &&
-              data?.map((config) => <DeviceConfigurationPanel config={config} key={config?.id} />)}
-          </>
-        )}
+        <Skeleton h="60px"></Skeleton>
+        <Skeleton h="60px"></Skeleton>
+        <Skeleton h="60px"></Skeleton>
+        <Skeleton h="60px"></Skeleton>
       </Stack>
-      {hasNextPage && (
-        <Button onClick={() => fetchNextPage()} loading={isFetchingNextPage}>
-          {t("common.loadMore")}
-        </Button>
-      )}
+    )
+  }
+
+  return (
+    <Stack gap="3" flex="1" minH="0">
+      <AnimatePresence>{current && <DeviceConfigurationCompareWidget />}</AnimatePresence>
+      <Stack ref={containerRef} flex="1" minH="0" overflow="auto" gap="0">
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: "100%",
+            position: "relative",
+          }}
+        >
+          {virtualizer.getVirtualItems().map((virtualItem) => {
+            const config = data[virtualItem.index]
+
+            return (
+              <div
+                key={config?.id}
+                ref={virtualizer.measureElement}
+                data-index={virtualItem.index}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  paddingBottom: "12px",
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                <DeviceConfigurationPanel config={config} />
+              </div>
+            )
+          })}
+        </div>
+      </Stack>
     </Stack>
   )
 }

@@ -1,7 +1,7 @@
-import api, { DeviceQueryParams, PaginationQueryParams } from "@/api"
+import api, { DeviceQueryParams } from "@/api"
 import { QUERIES } from "@/constants"
 import { sortAlphabetical } from "@/utils"
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 
 export function useDevice(id: number) {
   return useQuery({
@@ -38,30 +38,6 @@ export function useCredentialSets() {
     queryFn: async () =>
       api.admin.getAllCredentialSets({}),
   })
-}
-
-export function useInfiniteDeviceConfigs(deviceId: number, query: string) {
-  const LIMIT = 50
-  const result = useInfiniteQuery({
-    queryKey: [QUERIES.DEVICE_INFINITE_CONFIGS, deviceId, query],
-    queryFn: async ({ pageParam }) => {
-      const pagination = {
-        limit: LIMIT,
-        offset: pageParam,
-      } as PaginationQueryParams
-
-      return api.device.getAllConfigsById(deviceId, pagination)
-    },
-    initialPageParam: 0,
-    getNextPageParam(lastPage, allPages) {
-      return lastPage?.length === LIMIT ? allPages.length * LIMIT : undefined
-    },
-  })
-
-  return {
-    ...result,
-    data: result.data?.pages?.flatMap((page) => page),
-  }
 }
 
 export function useDeviceConfigs(deviceId: number | undefined) {

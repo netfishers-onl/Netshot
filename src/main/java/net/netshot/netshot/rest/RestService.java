@@ -2617,10 +2617,28 @@ public class RestService extends Thread {
 	}
 
 	/**
+	 * Resolves task type simple class names (as used in the JSON "type" discriminator)
+	 * to the corresponding task classes, ignoring names that don't match any known type.
+	 *
+	 * @param types the simple class names
+	 * @return the matching task classes
+	 */
+	private static Set<Class<? extends Task>> resolveTaskClasses(Set<String> types) {
+		Set<Class<? extends Task>> classes = new HashSet<>();
+		for (Class<? extends Task> taskClass : Task.getTaskClasses()) {
+			if (types.contains(taskClass.getSimpleName())) {
+				classes.add(taskClass);
+			}
+		}
+		return classes;
+	}
+
+	/**
 	 * Gets the tasks.
 	 *
 	 * @param paginationParams = the pagination parameters
 	 * @param statuses = the statuses to include
+	 * @param types = the task type(s) to include
 	 * @param startDate = the start date
 	 * @param endDate = the end date
 	 * @return the tasks
@@ -2637,6 +2655,7 @@ public class RestService extends Thread {
 	@Tag(name = "Tasks", description = "Task management")
 	public List<Task> getTasks(@BeanParam PaginationParams paginationParams,
 		@QueryParam("status") @Parameter(description = "Include tasks of given status(es)") Set<Task.Status> statuses,
+		@QueryParam("type") @Parameter(description = "Include tasks of given type(s)") Set<String> types,
 		@QueryParam("after") @Parameter(description = "Tasks executed or changed after this date (as milliseconds since 1970)") Long startDate,
 		@QueryParam("before") @Parameter(description = "Tasks executed or changed before this date (as milliseconds since 1970)") Long endDate) {
 
@@ -2653,6 +2672,10 @@ public class RestService extends Thread {
 			if (!statuses.isEmpty()) {
 				hqlQuery.append(" and t.status in :statuses");
 				hqlParams.put("statuses", statuses);
+			}
+			if (!types.isEmpty()) {
+				hqlQuery.append(" and type(t) in :classes");
+				hqlParams.put("classes", resolveTaskClasses(types));
 			}
 			if (startDate != null) {
 				hqlQuery.append(" and (((t.executionDate is not null) and (t.executionDate >= :startDate)) "
@@ -3771,6 +3794,156 @@ public class RestService extends Thread {
 		catch (HibernateException e) {
 			log.error("Unable to fetch the task counts", e);
 			throw new NetshotBadRequestException("Unable to fetch the task counts",
+				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	/** The final (completed) task statuses, i.e. the ones shown on the tasks time-based statistics. */
+	private static final Set<Task.Status> FINAL_TASK_STATUSES =
+		Set.of(Task.Status.SUCCESS, Task.Status.FAILURE, Task.Status.CANCELLED);
+
+	/**
+	 * One bucket of the task time-based statistics.
+	 */
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.NONE)
+	public static class RsTaskStatsBin {
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Date from;
+
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Date to;
+
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Map<Task.Status, Long> countByStatus = new HashMap<>();
+	}
+
+	/**
+	 * Time-based statistics (histogram) about completed tasks over a given date range.
+	 */
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.NONE)
+	public static class RsTaskStats {
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private List<RsTaskStatsBin> bins = new ArrayList<>();
+
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Map<Task.Status, Long> statusCounts = new HashMap<>();
+
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Map<String, Long> typeCounts = new HashMap<>();
+	}
+
+	/**
+	 * Gets time-based statistics (histogram) of completed tasks over a date range.
+	 *
+	 * @param startDate the start date (defaults to epoch if not provided)
+	 * @param endDate the end date (defaults to now if not provided)
+	 * @param buckets the number of time buckets to split the range into
+	 * @return the task stats
+	 */
+	@GET
+	@Path("/tasks/stats")
+	@RolesAllowed(User.ROLE_READONLY)
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	@JsonView(RestApiView.class)
+	@Operation(
+		summary = "Get time-based statistics about completed tasks",
+		description = "Returns, for the given date range, the number of completed tasks (success, failure, cancelled) "
+			+ "bucketed over time, plus totals by status and by task type over the whole range."
+	)
+	@Tag(name = "Tasks", description = "Task management")
+	public RsTaskStats getTaskStats(
+		@QueryParam("after") @Parameter(description = "Start of the range (as milliseconds since 1970)") Long startDate,
+		@QueryParam("before") @Parameter(description = "End of the range (as milliseconds since 1970)") Long endDate,
+		@QueryParam("buckets") @Parameter(description = "Number of time buckets to split the range into") Integer buckets)
+		throws WebApplicationException {
+
+		log.debug("REST request, get task stats.");
+		long from = startDate == null ? 0L : startDate;
+		long to = endDate == null ? System.currentTimeMillis() : endDate;
+		int binCount = buckets == null ? 48 : Math.max(1, Math.min(366, buckets));
+		long span = Math.max(1L, to - from);
+		double step = ((double) span) / binCount;
+
+		Session session = Database.getSession(true);
+		try {
+			RsTaskStats stats = new RsTaskStats();
+			for (Task.Status status : FINAL_TASK_STATUSES) {
+				stats.getStatusCounts().put(status, 0L);
+			}
+
+			for (int i = 0; i < binCount; i++) {
+				Date bucketStart = new Date(from + Math.round(i * step));
+				Date bucketEnd = new Date(i == binCount - 1 ? to : from + Math.round((i + 1) * step));
+				RsTaskStatsBin bin = new RsTaskStatsBin();
+				bin.setFrom(bucketStart);
+				bin.setTo(bucketEnd);
+				for (Task.Status status : FINAL_TASK_STATUSES) {
+					bin.getCountByStatus().put(status, 0L);
+				}
+				List<RsTaskStatusCount> counts = session
+					.createQuery(
+						"select new RsTaskStatusCount(t.status, count(t.id)) from Task t "
+							+ "where t.status in :statuses and ("
+							+ "((t.executionDate is not null) and (t.executionDate >= :bucketStart) and (t.executionDate < :bucketEnd)) "
+							+ "or ((t.executionDate is null) and (t.changeDate >= :bucketStart) and (t.changeDate < :bucketEnd))) "
+							+ "group by t.status",
+						RsTaskStatusCount.class)
+					.setParameter("statuses", FINAL_TASK_STATUSES)
+					.setParameter("bucketStart", bucketStart)
+					.setParameter("bucketEnd", bucketEnd)
+					.list();
+				for (RsTaskStatusCount count : counts) {
+					bin.getCountByStatus().put(count.getStatus(), count.getCount());
+					stats.getStatusCounts().merge(count.getStatus(), count.getCount(), Long::sum);
+				}
+				stats.getBins().add(bin);
+			}
+
+			Date rangeStart = new Date(from);
+			Date rangeEnd = new Date(to);
+			for (Class<? extends Task> taskClass : Task.getTaskClasses()) {
+				Long count = session
+					.createQuery(
+						"select count(t.id) from Task t where type(t) = :class and t.status in :statuses and ("
+							+ "((t.executionDate is not null) and (t.executionDate >= :rangeStart) and (t.executionDate < :rangeEnd)) "
+							+ "or ((t.executionDate is null) and (t.changeDate >= :rangeStart) and (t.changeDate < :rangeEnd)))",
+						Long.class)
+					.setParameter("class", taskClass)
+					.setParameter("statuses", FINAL_TASK_STATUSES)
+					.setParameter("rangeStart", rangeStart)
+					.setParameter("rangeEnd", rangeEnd)
+					.uniqueResult();
+				stats.getTypeCounts().put(taskClass.getSimpleName(), count == null ? 0L : count);
+			}
+
+			return stats;
+		}
+		catch (HibernateException e) {
+			log.error("Unable to fetch the task stats", e);
+			throw new NetshotBadRequestException("Unable to fetch the task stats",
 				NetshotBadRequestException.Reason.NETSHOT_DATABASE_ACCESS_ERROR);
 		}
 		finally {

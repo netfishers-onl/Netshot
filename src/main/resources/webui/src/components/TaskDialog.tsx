@@ -1,9 +1,12 @@
 import api from "@/api"
-import { TaskStatusBadge } from "@/components"
-import { QUERIES } from "@/constants"
-import { useDialogConfig } from "@/dialog"
+import { NetshotError } from "@/api/httpClient"
+import { DeviceGroupBadge, TaskStatusBadge } from "@/components"
+import { MUTATIONS, QUERIES } from "@/constants"
+import { useConfirmDialogWithMutation, useDialogConfig } from "@/dialog"
+import { DeviceBadge } from "@/features/device/components"
+import { useToast } from "@/hooks"
 import { useLocalization } from "@/i18n"
-import { TaskStatus } from "@/types"
+import { DeviceNetworkClass, TaskScheduleType, TaskStatus } from "@/types"
 import { getSchedulePriorityLabel } from "@/utils"
 import {
   Box,
@@ -18,10 +21,18 @@ import {
   Stack,
   Text,
 } from "@chakra-ui/react"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { LuDownload } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
+import { Link } from "react-router"
+
+const SCHEDULE_UNIT_KEY: Partial<Record<TaskScheduleType, string>> = {
+  [TaskScheduleType.Hourly]: "time.hour",
+  [TaskScheduleType.Daily]: "time.day",
+  [TaskScheduleType.Weekly]: "time.week",
+  [TaskScheduleType.Monthly]: "time.month",
+}
 
 export type TaskDialogProps = {
   id: number
@@ -32,6 +43,9 @@ export default function TaskDialog(props: TaskDialogProps) {
   const { t } = useTranslation()
   const { formatDateTime } = useLocalization()
   const dialogConfig = useDialogConfig()
+  const queryClient = useQueryClient()
+  const toast = useToast()
+  const confirmDialog = useConfirmDialogWithMutation()
   const [showLog, setShowLog] = useState<boolean>(false)
 
   const { data: task, isPending } = useQuery({
@@ -59,8 +73,51 @@ export default function TaskDialog(props: TaskDialogProps) {
   const executionDate = task?.executionDate ? formatDateTime(task?.executionDate) : null
   const priorityLabel = getSchedulePriorityLabel(task?.priority)
 
+  const scheduleLabel = task?.repeating
+    ? `${t("time.every")} ${task.scheduleFactor} ${t(
+        SCHEDULE_UNIT_KEY[task.scheduleType] ?? "time.day",
+        { count: task.scheduleFactor }
+      )}`
+    : t("task.once")
+
   function toggleLog() {
     setShowLog((prev) => !prev)
+  }
+
+  const cancelMutation = useMutation({
+    mutationKey: MUTATIONS.TASK_CANCEL,
+    mutationFn: async () => api.task.update(id, { cancelled: true }),
+    onSuccess() {
+      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK, id] })
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          typeof query.queryKey[0] === "string" && query.queryKey[0].startsWith("task:"),
+      })
+    },
+    onError(err: NetshotError) {
+      toast.error(err)
+    },
+  })
+
+  function openCancelConfirm() {
+    const dialogRef = confirmDialog.open(MUTATIONS.TASK_CANCEL, {
+      title: t("task.cancelTask"),
+      description: t("task.aboutToCancelTask"),
+      async onConfirm() {
+        await cancelMutation.mutateAsync()
+        dialogRef.close()
+        toast.success({
+          title: t("common.success"),
+          description: t("task.taskCancelled"),
+        })
+      },
+      confirmButton: {
+        label: t("common.cancel"),
+        props: {
+          colorPalette: "red",
+        },
+      },
+    })
   }
 
   return (
@@ -114,6 +171,31 @@ export default function TaskDialog(props: TaskDialogProps) {
                   </Flex>
                   <Flex alignItems="center">
                     <Box w="140px">
+                      <Text color="grey.400">{t("common.target")}</Text>
+                    </Box>
+                    <Skeleton loading={isPending}>
+                      {task?.deviceId ? (
+                        <DeviceBadge networkClass={DeviceNetworkClass.Unknown}>
+                          <Link
+                            to={`/app/devices/${task.deviceId}/tasks`}
+                            onClick={() => dialogConfig.close()}
+                          >
+                            {task.target}
+                          </Link>
+                        </DeviceBadge>
+                      ) : task?.deviceGroupId ? (
+                        <DeviceGroupBadge
+                          id={task.deviceGroupId}
+                          name={task.target}
+                          onClick={() => dialogConfig.close()}
+                        />
+                      ) : (
+                        <Text>{task?.target ?? "nA"}</Text>
+                      )}
+                    </Skeleton>
+                  </Flex>
+                  <Flex alignItems="center">
+                    <Box w="140px">
                       <Text color="grey.400">{t("common.creation")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
@@ -130,10 +212,28 @@ export default function TaskDialog(props: TaskDialogProps) {
                   </Flex>
                   <Flex alignItems="center">
                     <Box w="140px">
+                      <Text color="grey.400">{t("task.schedule")}</Text>
+                    </Box>
+                    <Skeleton loading={isPending}>
+                      <Text>{scheduleLabel}</Text>
+                    </Skeleton>
+                  </Flex>
+                  {task?.runnerId && (
+                    <Flex alignItems="center">
+                      <Box w="140px">
+                        <Text color="grey.400">{t("task.runner")}</Text>
+                      </Box>
+                      <Skeleton loading={isPending}>
+                        <Text>{task.runnerId}</Text>
+                      </Skeleton>
+                    </Flex>
+                  )}
+                  <Flex alignItems="center">
+                    <Box w="140px">
                       <Text color="grey.400">{t("common.priority")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
-                      <Text>{t(priorityLabel ?? "common.nA")}</Text>
+                      <Text>{t(priorityLabel)}</Text>
                     </Skeleton>
                   </Flex>
                   <Flex alignItems="center">
@@ -208,6 +308,16 @@ export default function TaskDialog(props: TaskDialogProps) {
             </Dialog.Body>
             <Dialog.Footer>
               <Stack direction="row" gap="3">
+                {task?.status === TaskStatus.Scheduled && (
+                  <Button
+                    colorPalette="red"
+                    variant="ghost"
+                    onClick={openCancelConfirm}
+                    loading={cancelMutation.isPending}
+                  >
+                    {t("task.cancelTask")}
+                  </Button>
+                )}
                 <Button onClick={toggleLog} disabled={task?.log === ""}>
                   {t(showLog ? "common.hideLogs" : "common.showLogs")}
                 </Button>

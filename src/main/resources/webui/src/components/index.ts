@@ -23,7 +23,7 @@ export { default as Sidebar } from "./Sidebar"
 export { default as SidebarLink } from "./SidebarLink"
 export { default as SigninIllustration } from "./SigninIllustration"
 export { default as Switch } from "./Switch"
-export { default as TaskStatusBadge } from "./TaskStatusBadge"
+export { default as TaskStatusBadge, TASK_STATUS_CONFIG } from "./TaskStatusBadge"
 export { default as TreeGroupSelector } from "./TreeGroupSelector"
 
 export * from "./autocomplete"

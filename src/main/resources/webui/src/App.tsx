@@ -40,15 +40,7 @@ import {
   ReportScreen,
   ReportSoftwareComplianceScreen,
 } from "@/features/report"
-import {
-  TaskAllScreen,
-  TaskCancelledScreen,
-  TaskFailedScreen,
-  TaskRunningScreen,
-  TaskScheduledScreen,
-  TaskSucceededScreen,
-  TaskScreen,
-} from "@/features/task"
+import { TaskScreen } from "@/features/task"
 import i18n, { LocalizationProvider } from "@/i18n"
 import { MainScreen, NotFoundScreen } from "@/screens"
 import { Level } from "@/types"
@@ -141,15 +133,7 @@ function App() {
                         />
                         <Route index element={<Navigate to="software" replace />} />
                       </Route>
-                      <Route path="tasks" element={<TaskScreen />}>
-                        <Route index element={<Navigate to="all" replace />} />
-                        <Route path="all" element={<TaskAllScreen />} />
-                        <Route path="running" element={<TaskRunningScreen />} />
-                        <Route path="scheduled" element={<TaskScheduledScreen />} />
-                        <Route path="succeeded" element={<TaskSucceededScreen />} />
-                        <Route path="failed" element={<TaskFailedScreen />} />
-                        <Route path="cancelled" element={<TaskCancelledScreen />} />
-                      </Route>
+                      <Route path="tasks" element={<TaskScreen />} />
                       <Route element={<ProtectedRoute minLevel={Level.Admin} />}>
                         <Route path="administration" element={<AdministrationScreen />}>
                           <Route index element={<Navigate to="user" replace />} />

@@ -22,7 +22,6 @@ import { useEffect, useMemo, useState } from "react"
 import { FormProvider, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { LuCamera, LuCheck, LuDatabase, LuPlay, LuPlus, LuSearch, LuServer, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import { QUERIES } from "../constants"
 import TaskBoxButton from "./TaskBoxButton"
 
 enum FormStep {
@@ -111,12 +110,10 @@ export default function AddTaskDialog() {
 
       taskDialog.open(<TaskDialog id={newTask.id} />)
 
-      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK_ALL] })
-      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK_CANCELLED] })
-      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK_FAILED] })
-      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK_RUNNING] })
-      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK_SCHEDULED] })
-      queryClient.invalidateQueries({ queryKey: [QUERIES.TASK_SUCCEEDED] })
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          typeof query.queryKey[0] === "string" && query.queryKey[0].startsWith("task:"),
+      })
     },
     onError() {
       toast.error({

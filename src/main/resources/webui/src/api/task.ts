@@ -3,6 +3,8 @@ import httpClient, { HttpMethod } from "./httpClient";
 import {
   CreateOrUpdateTaskPayload,
   TaskQueryParams,
+  TaskStatsQueryParams,
+  TaskStatsResponse,
   TaskSummaryResponse,
 } from "./types";
 
@@ -39,6 +41,12 @@ async function getSummary() {
   return httpClient.get<TaskSummaryResponse>(`/tasks/summary`);
 }
 
+async function getStats(queryParams: TaskStatsQueryParams) {
+  return httpClient.get<TaskStatsResponse>("/tasks/stats", {
+    queryParams,
+  });
+}
+
 export default {
   getAll,
   getById,
@@ -46,4 +54,5 @@ export default {
   update,
   getDebugById,
   getSummary,
+  getStats,
 };

@@ -73,6 +73,7 @@ export const MUTATIONS = {
   DIAGNOSTIC_REMOVE: ["mutation:diagnostic:remove"],
   DIAGNOSTIC_UPDATE: ["mutation:diagnostic:update"],
   TASK_CREATE: ["mutation:task:create"],
+  TASK_CANCEL: ["mutation:task:cancel"],
 }
 
 export const REDIRECT_SEARCH_PARAM = "target"

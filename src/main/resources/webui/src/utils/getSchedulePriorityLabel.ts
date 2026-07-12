@@ -3,12 +3,12 @@ import { SchedulePriority } from "@/types"
 export function getSchedulePriorityLabel(priority: SchedulePriority) {
   switch (priority) {
     case SchedulePriority.Low:
-      return "low"
+      return "common.low"
     case SchedulePriority.Normal:
-      return "normal"
+      return "common.normal"
     case SchedulePriority.High:
-      return "high"
+      return "common.high"
     default:
-      return "unknown3"
+      return "common.nA"
   }
 }

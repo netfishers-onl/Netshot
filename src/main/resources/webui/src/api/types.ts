@@ -264,10 +264,29 @@ export type CreateOrUpdateSoftwareRule = {
 }
 
 export type TaskQueryParams = {
-  status?: TaskStatus
+  status?: TaskStatus | TaskStatus[]
+  type?: string | string[]
   after?: number
   before?: number
 } & PaginationQueryParams
+
+export type TaskStatsQueryParams = {
+  after?: number
+  before?: number
+  buckets?: number
+}
+
+export type TaskStatsBin = {
+  from: number
+  to: number
+  countByStatus: Partial<Record<TaskStatus, number>>
+}
+
+export type TaskStatsResponse = {
+  bins: TaskStatsBin[]
+  statusCounts: Partial<Record<TaskStatus, number>>
+  typeCounts: Record<string, number>
+}
 
 export type CreateOrUpdateTaskPayload = {
   id?: number
@@ -300,11 +319,7 @@ export type CreateOrUpdateTaskPayload = {
 }
 
 export type TaskSummaryResponse = {
-  countByStatus: {
-    additionalProp1: number
-    additionalProp2: number
-    additionalProp3: number
-  }
+  countByStatus: Partial<Record<TaskStatus, number>>
   threadCount: number
 }
 

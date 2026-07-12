@@ -17,7 +17,7 @@ type Config = {
   labelKey: string
 }
 
-const STATUS_CONFIG: Record<TaskStatus, Config> = {
+export const TASK_STATUS_CONFIG: Record<TaskStatus, Config> = {
   [TaskStatus.New]: {
     colorPalette: "gray",
     icon: <LuCircleDot />,
@@ -61,7 +61,7 @@ type TaskStatusBadgeProps = {
 
 export default function TaskStatusBadge({ status }: TaskStatusBadgeProps) {
   const { t } = useTranslation()
-  const config = STATUS_CONFIG[status]
+  const config = TASK_STATUS_CONFIG[status]
 
   if (!config) return null
 

@@ -23,7 +23,9 @@ export enum TaskType {
   CheckGroupSoftware = "CheckGroupSoftwareTask",
   ScanSubnets = "ScanSubnetsTask",
   RunDeviceScript = "RunDeviceScriptTask",
+  RunDeviceGroupScript = "RunDeviceGroupScriptTask",
   PurgeDatabase = "PurgeDatabaseTask",
+  DiscoverDeviceType = "DiscoverDeviceTypeTask",
 }
 
 export enum TaskStatus {
@@ -58,5 +60,6 @@ export type Task = {
   script?: string
   userInputValues?: Record<string, string>
   deviceId?: number
+  deviceGroupId?: number
   priority: SchedulePriority
 }

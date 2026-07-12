@@ -11,6 +11,13 @@ import {
 async function getAll(queryParams: TaskQueryParams) {
   return httpClient.get<Task[]>("/tasks", {
     queryParams,
+    // The backend's `status`/`type` params are repeated (?status=A&status=B), not
+    // indexed (?status[0]=A&status[1]=B), which is `qs`'s (and so with-query's) default.
+    queryParamsOptions: {
+      stringifyOpt: {
+        arrayFormat: "repeat",
+      },
+    },
   });
 }
 

@@ -1,4 +1,12 @@
-import { DateFormatter, fromAbsolute, fromDate, toCalendarDate, type DateValue } from "@internationalized/date"
+import {
+  type CalendarDateTime,
+  DateFormatter,
+  fromAbsolute,
+  fromDate,
+  toCalendarDate,
+  toCalendarDateTime,
+  type DateValue,
+} from "@internationalized/date"
 import { useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { useTimezone } from "./LocalizationContext"
@@ -52,6 +60,32 @@ export function useLocalization() {
   const formatMonthYear = useCallback((date: number | Date) => {
     return monthYearFormatter.format(date instanceof Date ? date : new Date(date))
   }, [monthYearFormatter])
+
+  const hourMinuteFormatter = useMemo(() => {
+    return new DateFormatter(i18n.language, {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: timezone,
+    })
+  }, [i18n.language, timezone])
+
+  const formatHourMinute = useCallback((date: number | Date) => {
+    return hourMinuteFormatter.format(date instanceof Date ? date : new Date(date))
+  }, [hourMinuteFormatter])
+
+  const dayMonthHourMinuteFormatter = useMemo(() => {
+    return new DateFormatter(i18n.language, {
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: timezone,
+    })
+  }, [i18n.language, timezone])
+
+  const formatDayMonthHourMinute = useCallback((date: number | Date) => {
+    return dayMonthHourMinuteFormatter.format(date instanceof Date ? date : new Date(date))
+  }, [dayMonthHourMinuteFormatter])
 
   const dateTimeFormatter = useMemo(() => {
     return new DateFormatter(i18n.language, {
@@ -121,6 +155,18 @@ export function useLocalization() {
     return toCalendarDate(fromAbsolute(timestamp, timezone))
   }, [timezone])
 
+  const calendarDateTimeToTimestamp = useCallback((value: CalendarDateTime): number => {
+    return value.toDate(timezone).getTime()
+  }, [timezone])
+
+  const numberToCalendarDateTime = useCallback(
+    (timestamp: number | undefined | null): CalendarDateTime | null => {
+      if (timestamp == null || !Number.isFinite(timestamp)) return null
+      return toCalendarDateTime(fromAbsolute(timestamp, timezone))
+    },
+    [timezone]
+  )
+
   return {
     timezone,
     formatNumber,
@@ -128,11 +174,15 @@ export function useLocalization() {
     formatDayMonth,
     formatMonthYear,
     formatDateTime,
+    formatHourMinute,
+    formatDayMonthHourMinute,
     datePlaceholder,
     dateTimePlaceholder,
     startOfDay,
     startOfNextDay,
     calendarDateToTimestamp,
     numberToCalendarDate,
+    calendarDateTimeToTimestamp,
+    numberToCalendarDateTime,
   }
 }

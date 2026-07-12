@@ -6,7 +6,7 @@ import { useConfirmDialogWithMutation, useDialogConfig } from "@/dialog"
 import { DeviceBadge } from "@/features/device/components"
 import { useToast } from "@/hooks"
 import { useLocalization } from "@/i18n"
-import { DeviceNetworkClass, TaskScheduleType, TaskStatus } from "@/types"
+import { TaskScheduleType, TaskStatus } from "@/types"
 import { getSchedulePriorityLabel } from "@/utils"
 import {
   Box,
@@ -175,7 +175,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                     </Box>
                     <Skeleton loading={isPending}>
                       {task?.deviceId ? (
-                        <DeviceBadge networkClass={DeviceNetworkClass.Unknown}>
+                        <DeviceBadge>
                           <Link
                             to={`/app/devices/${task.deviceId}/tasks`}
                             onClick={() => dialogConfig.close()}

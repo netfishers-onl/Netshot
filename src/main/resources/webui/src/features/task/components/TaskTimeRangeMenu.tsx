@@ -1,101 +1,118 @@
-import { FormControl } from "@/components"
-import { FormControlType } from "@/components/FormControl"
-import { useLocalization } from "@/i18n"
-import { Button, Menu, Portal, Separator, SimpleGrid, Stack, Text } from "@chakra-ui/react"
-import { useState } from "react"
+import { TaskStatus, TaskType } from "@/types"
+import { Button, Menu, Portal, SimpleGrid, Stack } from "@chakra-ui/react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { LuChevronDown, LuClock } from "react-icons/lu"
+import { LuFilter } from "react-icons/lu"
+import { useState } from "react"
 import { TIME_RANGE_PRESETS } from "../constants"
-import { useTaskFilterStore } from "../stores/useTaskFilterStore"
+import { useTaskHistoryFilterStore } from "../stores/useTaskHistoryFilterStore"
+import TaskDateTimeField from "./TaskDateTimeField"
+import TaskStatusSelect from "./TaskStatusSelect"
+import TaskTypeSelect from "./TaskTypeSelect"
 
-type AbsoluteRangeForm = {
-  from?: number
-  to?: number
+type TaskTimeRangeFormValues = {
+  fromDate: number
+  toDate: number
+  types: TaskType[]
+  statuses: TaskStatus[]
 }
 
-export default function TaskTimeRangeMenu() {
+export type TaskTimeRangeMenuProps = {
+  statuses: TaskStatus[]
+}
+
+export default function TaskTimeRangeMenu(props: TaskTimeRangeMenuProps) {
+  const { statuses } = props
   const { t } = useTranslation()
-  const { formatDayMonth, startOfNextDay } = useLocalization()
   const [open, setOpen] = useState(false)
 
-  const preset = useTaskFilterStore((s) => s.preset)
-  const customFrom = useTaskFilterStore((s) => s.customFrom)
-  const customTo = useTaskFilterStore((s) => s.customTo)
-  const setPreset = useTaskFilterStore((s) => s.setPreset)
-  const setCustomRange = useTaskFilterStore((s) => s.setCustomRange)
+  const from = useTaskHistoryFilterStore((s) => s.from)
+  const to = useTaskHistoryFilterStore((s) => s.to)
+  const typeSel = useTaskHistoryFilterStore((s) => s.typeSel)
+  const statusSel = useTaskHistoryFilterStore((s) => s.statusSel)
+  const setRange = useTaskHistoryFilterStore((s) => s.setRange)
+  const setTypeSel = useTaskHistoryFilterStore((s) => s.setTypeSel)
+  const setStatusSel = useTaskHistoryFilterStore((s) => s.setStatusSel)
+  const resetFilters = useTaskHistoryFilterStore((s) => s.resetFilters)
 
-  const form = useForm<AbsoluteRangeForm>({
-    values: { from: customFrom ?? undefined, to: customTo ?? undefined },
+  const form = useForm<TaskTimeRangeFormValues>({
+    values: { fromDate: from, toDate: to, types: typeSel, statuses: statusSel },
   })
 
-  function applyAbsoluteRange(values: AbsoluteRangeForm) {
-    if (values.from && values.to) {
-      setCustomRange(values.from, startOfNextDay(values.to) - 1)
-      setOpen(false)
-    }
+  function selectPreset(ms: number) {
+    const now = Date.now()
+    form.setValue("fromDate", now - ms, { shouldDirty: true })
+    form.setValue("toDate", now, { shouldDirty: true })
   }
 
-  function applyPreset(label: string) {
-    setPreset(label)
+  function onApply(values: TaskTimeRangeFormValues) {
+    setRange(values.fromDate, values.toDate)
+    setTypeSel(values.types)
+    setStatusSel(values.statuses)
     setOpen(false)
   }
 
-  const hasCustomRange = customFrom != null && customTo != null
-  const label = hasCustomRange
-    ? `${formatDayMonth(customFrom)} – ${formatDayMonth(customTo)}`
-    : t(preset)
+  function onReset() {
+    resetFilters()
+    setOpen(false)
+  }
 
   return (
     <Menu.Root open={open} onOpenChange={(e) => setOpen(e.open)}>
       <Menu.Trigger asChild>
-        <Button>
-          <LuClock />
-          {t("task.timeRangeLabel", { label })}
-          <LuChevronDown />
+        <Button variant="primary">
+          <LuFilter />
+          {t("common.filters")}
         </Button>
       </Menu.Trigger>
       <Portal>
         <Menu.Positioner>
-          <Menu.Content w="320px" p="3">
-            <Stack gap="3">
-              <Text fontSize="xs" fontWeight="semibold" color="grey.400" textTransform="uppercase" letterSpacing="wide">
-                {t("task.quickRanges")}
-              </Text>
-              <SimpleGrid columns={2} gap="2">
-                {TIME_RANGE_PRESETS.map((p) => {
-                  const selected = preset === p.label && !hasCustomRange
-                  return (
+          <Menu.Content w="560px" p="4">
+            <Stack gap="3" asChild>
+              <form onSubmit={form.handleSubmit(onApply)}>
+                <Stack direction="row" gap="2">
+                  <TaskDateTimeField
+                    control={form.control}
+                    name="fromDate"
+                    label={t("task.from")}
+                    placeholder={t("task.from")}
+                  />
+                  <TaskDateTimeField
+                    control={form.control}
+                    name="toDate"
+                    label={t("task.to")}
+                    placeholder={t("task.to")}
+                  />
+                </Stack>
+                <SimpleGrid columns={3} gap="2">
+                  {TIME_RANGE_PRESETS.map((p) => (
                     <Button
                       key={p.label}
+                      variant="ghost"
                       size="sm"
                       justifyContent="start"
-                      fontWeight={selected ? "semibold" : "normal"}
-                      bg={selected ? "green.50" : undefined}
-                      color={selected ? "green.700" : undefined}
-                      borderColor={selected ? "green.100" : undefined}
-                      onClick={() => applyPreset(p.label)}
+                      onClick={() => selectPreset(p.ms)}
                     >
                       {t(p.label)}
                     </Button>
-                  )
-                })}
-              </SimpleGrid>
-              <Separator />
-              <Text fontSize="xs" fontWeight="semibold" color="grey.400" textTransform="uppercase" letterSpacing="wide">
-                {t("task.absoluteRange")}
-              </Text>
-              <Stack gap="2" asChild>
-                <form onSubmit={form.handleSubmit(applyAbsoluteRange)}>
-                  <Stack direction="row" gap="2">
-                    <FormControl control={form.control} name="from" type={FormControlType.Date} label={t("task.from")} flex="1" />
-                    <FormControl control={form.control} name="to" type={FormControlType.Date} label={t("task.to")} flex="1" />
-                  </Stack>
-                  <Button type="submit" size="sm" variant="primary">
+                  ))}
+                </SimpleGrid>
+                <TaskTypeSelect control={form.control} name="types" label={t("common.type")} />
+                <TaskStatusSelect
+                  control={form.control}
+                  name="statuses"
+                  statuses={statuses}
+                  label={t("common.status")}
+                />
+                <Stack direction="row" gap="2">
+                  <Button type="button" flex="1" onClick={onReset}>
+                    {t("common.reset")}
+                  </Button>
+                  <Button type="submit" variant="primary" flex="1">
                     {t("common.applyFilters")}
                   </Button>
-                </form>
-              </Stack>
+                </Stack>
+              </form>
             </Stack>
           </Menu.Content>
         </Menu.Positioner>

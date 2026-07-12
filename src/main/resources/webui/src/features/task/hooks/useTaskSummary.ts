@@ -8,7 +8,7 @@ import { QUERIES } from "../constants"
  * unaffected by the selected time range.
  */
 export function useTaskSummary() {
-  const { data, isPending } = useQuery({
+  const { data, isPending, isFetching } = useQuery({
     queryKey: [QUERIES.TASK_SUMMARY],
     queryFn: api.task.getSummary,
   })
@@ -17,5 +17,6 @@ export function useTaskSummary() {
     countByStatus: data?.countByStatus ?? {},
     threadCount: data?.threadCount ?? 0,
     isPending,
+    isFetching,
   }
 }

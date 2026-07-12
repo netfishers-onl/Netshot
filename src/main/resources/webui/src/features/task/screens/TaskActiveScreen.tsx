@@ -1,0 +1,75 @@
+import { Protected } from "@/components"
+import { Level } from "@/types"
+import { Button, Heading, IconButton, Stack, Text } from "@chakra-ui/react"
+import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
+import { LuPlus, LuRefreshCcw } from "react-icons/lu"
+import AddTaskTrigger from "../components/AddTaskTrigger"
+import TaskFilterMenu from "../components/TaskFilterMenu"
+import TaskLiveStats from "../components/TaskLiveStats"
+import TaskTable from "../components/TaskTable"
+import { ALL_STATUS_KEYS } from "../constants"
+import { useActiveTasks, useTaskSummary } from "../hooks"
+
+export default function TaskActiveScreen() {
+  const { t } = useTranslation()
+  const queryClient = useQueryClient()
+
+  const { rows, isPending, isFetching: isFetchingTasks } = useActiveTasks()
+  const { isFetching: isFetchingSummary } = useTaskSummary()
+
+  function onRefresh() {
+    queryClient.invalidateQueries({
+      predicate: (query) =>
+        typeof query.queryKey[0] === "string" && query.queryKey[0].startsWith("task:"),
+    })
+  }
+
+  return (
+    <Stack gap="6" p="9" flex="1" overflow="auto">
+      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap="3">
+        <Stack gap="1">
+          <Heading as="h1" fontSize="4xl">
+            {t("task.active")}
+          </Heading>
+          <Text fontSize="sm" color="grey.400">
+            {t("task.activeDescription")}
+          </Text>
+        </Stack>
+        <Stack direction="row" gap="2" flexShrink={0}>
+          <IconButton
+            aria-label={t("common.reload")}
+            onClick={onRefresh}
+            loading={isFetchingTasks || isFetchingSummary}
+          >
+            <LuRefreshCcw />
+          </IconButton>
+          <Protected minLevel={Level.Operator}>
+            <AddTaskTrigger>
+              <Button>
+                <LuPlus />
+                {t("task.add")}
+              </Button>
+            </AddTaskTrigger>
+          </Protected>
+        </Stack>
+      </Stack>
+
+      <TaskLiveStats />
+
+      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap="3">
+        <Stack gap="1">
+          <Heading as="h2" fontSize="2xl" fontWeight="semibold">
+            {t("task.taskList")}
+          </Heading>
+          <Text fontSize="sm" color="grey.400">
+            {t("task.shownCount", { count: rows.length })}
+          </Text>
+        </Stack>
+        <TaskFilterMenu statuses={ALL_STATUS_KEYS} />
+      </Stack>
+
+      <TaskTable rows={rows} isPending={isPending} />
+    </Stack>
+  )
+}

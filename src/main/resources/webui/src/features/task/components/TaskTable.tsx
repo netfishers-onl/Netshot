@@ -3,21 +3,26 @@ import TaskDialog from "@/components/TaskDialog"
 import { useCustomDialog } from "@/dialog"
 import { DeviceBadge } from "@/features/device/components"
 import { useLocalization } from "@/i18n"
-import { DeviceNetworkClass, Task } from "@/types"
+import { Task } from "@/types"
 import { Skeleton, Stack, Text } from "@chakra-ui/react"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
-import { useTaskRows } from "../hooks"
 
 const columnHelper = createColumnHelper<Task>()
 
-export default function TaskTable() {
+export type TaskTableProps = {
+  rows: Task[]
+  isPending: boolean
+  onBottomReached?(): void
+}
+
+export default function TaskTable(props: TaskTableProps) {
+  const { rows, isPending, onBottomReached } = props
   const { t } = useTranslation()
   const { formatDateTime } = useLocalization()
   const dialog = useCustomDialog()
-  const { rows, isPending, onBottomReached } = useTaskRows()
 
   function openTask(id: number) {
     dialog.open(<TaskDialog id={id} />)
@@ -28,17 +33,16 @@ export default function TaskTable() {
       columnHelper.accessor("type", {
         cell: (info) => <Text>{t(`task.type.${info.getValue()}`)}</Text>,
         header: t("common.type"),
+        enableSorting: true,
+        size: 20000,
       }),
       columnHelper.accessor("target", {
         cell: (info) => {
           const { deviceId, deviceGroupId } = info.row.original
           if (deviceId) {
             return (
-              <DeviceBadge networkClass={DeviceNetworkClass.Unknown}>
-                <Link
-                  to={`/app/devices/${deviceId}/tasks`}
-                  onClick={(e) => e.stopPropagation()}
-                >
+              <DeviceBadge>
+                <Link to={`/app/devices/${deviceId}/tasks`} onClick={(e) => e.stopPropagation()}>
                   {info.getValue()}
                 </Link>
               </DeviceBadge>
@@ -56,20 +60,28 @@ export default function TaskTable() {
           return <Text>{info.getValue()}</Text>
         },
         header: t("common.target"),
+        enableSorting: true,
+        size: 10000,
       }),
       columnHelper.accessor("author", {
         cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("common.creator"),
+        enableSorting: true,
+        size: 10000,
       }),
       columnHelper.accessor("status", {
         cell: (info) => <TaskStatusBadge status={info.getValue()} />,
         header: t("common.status"),
+        enableSorting: true,
+        size: 10000,
       }),
       columnHelper.accessor("executionDate", {
         cell: (info) => (
           <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>
         ),
         header: t("time.executionDate"),
+        enableSorting: true,
+        size: 15000,
       }),
     ],
     [t, formatDateTime]

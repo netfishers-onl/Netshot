@@ -15,7 +15,7 @@ import {
   useListCollection,
 } from "@chakra-ui/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { ReactElement, ReactNode, useEffect, useMemo, useRef } from "react"
+import { Fragment, ReactElement, ReactNode, useEffect, useMemo, useRef } from "react"
 
 import { flushSync } from "react-dom"
 import { FieldPath, FieldValues, useController, UseControllerProps } from "react-hook-form"
@@ -39,6 +39,8 @@ export type SelectProps<
   itemToValue?(item: Option<T>): string
   onSelectItem?(item: T | T[], options: Option<T>[]): void
   renderIcon?(item: Option<T>): ReactNode
+  /** When set (with `multiple`), renders each selected option via this instead of the default comma-joined value text. */
+  renderSelectedValue?(item: Option<T>): ReactNode
 } & Omit<SelectRootProps, "collection" | "name" | "value" | "onValueChange"> &
   UseControllerProps<TFieldValues, TName>
 
@@ -65,6 +67,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
     itemToValue,
     onSelectItem,
     renderIcon,
+    renderSelectedValue,
     ...selectRootProps
   } = props
 
@@ -161,6 +164,11 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
     return selectedItem ? renderIcon(selectedItem) : undefined
   }, [value, optionsMap, multiple, renderIcon])
 
+  const selectedValueItems = useMemo(() => {
+    if (!multiple || !renderSelectedValue) return []
+    return value.map((v) => optionsMap.get(v)).filter((item): item is Option<T> => Boolean(item))
+  }, [multiple, renderSelectedValue, value, optionsMap])
+
   return (
     <Field.Root
       required={required}
@@ -193,10 +201,18 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
       >
         <ChakraSelect.HiddenSelect />
         <ChakraSelect.Control>
-          <ChakraSelect.Trigger>
-            <HStack flex="1" gap="2" overflow="hidden">
+          <ChakraSelect.Trigger
+            {...(selectedValueItems.length > 0 && { h: "auto", minH: "10", py: "1.5" })}
+          >
+            <HStack flex="1" gap="2" overflow="hidden" flexWrap={selectedValueItems.length > 0 ? "wrap" : undefined}>
               {selectedIcon}
-              <ChakraSelect.ValueText placeholder={placeholder} />
+              {selectedValueItems.length > 0 ? (
+                selectedValueItems.map((item) => (
+                  <Fragment key={getItemValue(item)}>{renderSelectedValue(item)}</Fragment>
+                ))
+              ) : (
+                <ChakraSelect.ValueText placeholder={placeholder} />
+              )}
             </HStack>
           </ChakraSelect.Trigger>
           <ChakraSelect.IndicatorGroup>

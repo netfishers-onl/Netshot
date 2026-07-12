@@ -14,6 +14,7 @@ export default function Chart<T extends keyof ChartTypeRegistry = "line">(props:
   const [green500] = useToken("colors", "green.500")
   const [greyColor] = useToken("colors", "grey.400")
   const [grey100] = useToken("colors", "grey.100")
+  const [bodyFont] = useToken("fonts", "body")
 
   const defaultConfig = useMemo(() => {
     return {
@@ -46,7 +47,7 @@ export default function Chart<T extends keyof ChartTypeRegistry = "line">(props:
               color: greyColor,
               align: "inner",
               font: {
-                family: "SF Pro",
+                family: bodyFont,
                 weight: 500,
                 size: 12,
               },
@@ -83,7 +84,7 @@ export default function Chart<T extends keyof ChartTypeRegistry = "line">(props:
         },
       },
     } as ChartConfiguration
-  }, [green500, grey100, greyColor])
+  }, [green500, grey100, greyColor, bodyFont])
 
   useLayoutEffect(() => {
     chart.current = new NativeChart(ctx.current, mergeWith({}, defaultConfig, config))

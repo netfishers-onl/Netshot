@@ -116,9 +116,7 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
             py="3"
             borderWidth="0"
             display="flex"
-            style={{
-              width: cell.column.getSize(),
-            }}
+            flex={`${cell.column.getSize()} ${cell.column.getSize()} 0`}
           >
             {render}
           </Table.Cell>
@@ -170,9 +168,7 @@ function SimpleRow<T>(props: RowProps<T>) {
             py="3"
             borderWidth="0"
             display="flex"
-            style={{
-              width: cell.column.getSize(),
-            }}
+            flex={`${cell.column.getSize()} ${cell.column.getSize()} 0`}
           >
             {render}
           </Table.Cell>
@@ -231,6 +227,33 @@ export function VirtualizedDataTable<Data extends object>(props: VirtualizedData
     },
   })
 
+  const { rows } = table.getRowModel()
+  const rowIds = rows.map((r) => r.id)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const activeRow = rows.find((r) => String(r.id) === String(active.id))
+    const overRow = rows.find((r) => String(r.id) === String(over.id))
+
+    if (!activeRow || !overRow) return
+
+    const activeIndex = activeRow.index
+    const overIndex = overRow.index
+
+    data.splice(overIndex, 0, data.splice(activeIndex, 1)[0] as Data)
+    const reorderedData = [...data]
+
+    if (onDragRow) onDragRow(activeRow, reorderedData)
+    if (onDropRow) onDropRow(activeRow, reorderedData)
+  }
+
   const onScroll = useCallback(
     (el?: HTMLDivElement | null) => {
       if (!onBottomReached) {
@@ -262,18 +285,20 @@ export function VirtualizedDataTable<Data extends object>(props: VirtualizedData
       ref={containerRef}
       {...other}
     >
-      <Table.Root flex="1" display="grid">
-        <VirtualizedDataTableHeader table={table} draggable={draggable} />
-        <VirtualizedDataTableBody
-          table={table}
-          containerRef={containerRef}
-          draggable={draggable}
-          data={data}
-          onDropRow={onDropRow}
-          onDragRow={onDragRow}
-          onClickRow={onClickRow}
-        />
-      </Table.Root>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
+          <Table.Root flex="1" display="grid">
+            <VirtualizedDataTableHeader table={table} draggable={draggable} />
+            <VirtualizedDataTableBody
+              table={table}
+              containerRef={containerRef}
+              draggable={draggable}
+              data={data}
+              onClickRow={onClickRow}
+            />
+          </Table.Root>
+        </SortableContext>
+      </DndContext>
       {loading && (
         <Stack mt="2">
           <Skeleton height="40px" />
@@ -305,7 +330,7 @@ export function VirtualizedDataTableHeader<T>({
       boxShadow="inset 0 -1px 0 #EAEEF2"
     >
       {headerGroups?.map((headerGroup) => (
-        <Table.Row key={headerGroup.id}>
+        <Table.Row key={headerGroup.id} display="flex">
           {draggable && <Table.ColumnHeader borderColor="grey.100"></Table.ColumnHeader>}
           {headerGroup?.headers.map((header: Header<T, unknown>) => {
             const columnDef = header?.column?.columnDef
@@ -330,10 +355,10 @@ export function VirtualizedDataTableHeader<T>({
                 h="40px"
                 px="4"
                 py="0"
+                display="flex"
+                alignItems="center"
                 textAlign={meta?.align}
-                width={columnDef?.size && `${columnDef?.size}px`}
-                maxWidth={columnDef?.maxSize && `${columnDef?.maxSize}px`}
-                minWidth={columnDef?.minSize && `${columnDef?.minSize}px`}
+                flex={`${header.column.getSize()} ${header.column.getSize()} 0`}
               >
                 {flexRender(header?.column?.columnDef?.header, header?.getContext())}
                 {isSortable && (
@@ -367,24 +392,15 @@ export function VirtualizedDataTableBody<T>({
   containerRef,
   draggable,
   data,
-  onDropRow,
-  onDragRow,
   onClickRow,
 }: {
   table: TanstackTable<T>
   containerRef: RefObject<HTMLDivElement>
   draggable: boolean
   data: T[]
-  onDropRow?(row: Row<T>, data: T[]): void
-  onDragRow?(row: Row<T>, data: T[]): void
   onClickRow?(row: T, data?: T[]): void
 }) {
   const { rows } = table.getRowModel()
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  )
 
   const rowVirtualizer = useVirtualizer<HTMLDivElement, HTMLTableRowElement>({
     count: rows.length,
@@ -394,69 +410,40 @@ export function VirtualizedDataTableBody<T>({
     overscan: 10,
   })
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    if (!over || active.id === over.id) return
-
-    const activeRow = rows.find((r) => String(r.id) === String(active.id))
-    const overRow = rows.find((r) => String(r.id) === String(over.id))
-
-    if (!activeRow || !overRow) return
-
-    const activeIndex = activeRow.index
-    const overIndex = overRow.index
-
-    data.splice(overIndex, 0, data.splice(activeIndex, 1)[0] as T)
-    const reorderedData = [...data]
-
-    if (onDragRow) onDragRow(activeRow as unknown as Row<T>, reorderedData)
-    if (onDropRow) onDropRow(activeRow as unknown as Row<T>, reorderedData)
-  }
-
   useEffect(() => {
     rowVirtualizer.measure()
   }, [rowVirtualizer])
 
   const virtualRows = rowVirtualizer.getVirtualItems()
-  const rowIds = rows.map((r) => r.id)
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
-        <Table.Body
-          display="grid"
-          position="relative"
-          style={{
-            height: `${rowVirtualizer.getTotalSize()}px`,
-          }}
-        >
-          {virtualRows.map((virtualRow) => {
-            const row = rows[virtualRow.index] as Row<T>
+    <Table.Body
+      display="grid"
+      position="relative"
+      style={{
+        height: `${rowVirtualizer.getTotalSize()}px`,
+      }}
+    >
+      {virtualRows.map((virtualRow) => {
+        const row = rows[virtualRow.index] as Row<T>
 
-            if (draggable) {
-              return (
-                <DraggableRow
-                  key={row.id}
-                  row={row}
-                  virtualRow={virtualRow}
-                  rowVirtualizer={rowVirtualizer}
-                />
-              )
-            }
+        if (draggable) {
+          return (
+            <DraggableRow key={row.id} row={row} virtualRow={virtualRow} rowVirtualizer={rowVirtualizer} />
+          )
+        }
 
-            return (
-              <SimpleRow
-                key={row.id}
-                row={row}
-                virtualRow={virtualRow}
-                rowVirtualizer={rowVirtualizer}
-                onClick={() => onClickRow?.(row.original, data)}
-                cursor="pointer"
-              />
-            )
-          })}
-        </Table.Body>
-      </SortableContext>
-    </DndContext>
+        return (
+          <SimpleRow
+            key={row.id}
+            row={row}
+            virtualRow={virtualRow}
+            rowVirtualizer={rowVirtualizer}
+            onClick={() => onClickRow?.(row.original, data)}
+            cursor="pointer"
+          />
+        )
+      })}
+    </Table.Body>
   )
 }

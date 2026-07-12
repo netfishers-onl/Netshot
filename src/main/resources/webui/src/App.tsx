@@ -40,7 +40,7 @@ import {
   ReportScreen,
   ReportSoftwareComplianceScreen,
 } from "@/features/report"
-import { TaskScreen } from "@/features/task"
+import { TaskActiveScreen, TaskHistoryScreen, TaskScreen } from "@/features/task"
 import i18n, { LocalizationProvider } from "@/i18n"
 import { MainScreen, NotFoundScreen } from "@/screens"
 import { Level } from "@/types"
@@ -133,7 +133,11 @@ function App() {
                         />
                         <Route index element={<Navigate to="software" replace />} />
                       </Route>
-                      <Route path="tasks" element={<TaskScreen />} />
+                      <Route path="tasks" element={<TaskScreen />}>
+                        <Route index element={<Navigate to="active" replace />} />
+                        <Route path="active" element={<TaskActiveScreen />} />
+                        <Route path="history" element={<TaskHistoryScreen />} />
+                      </Route>
                       <Route element={<ProtectedRoute minLevel={Level.Admin} />}>
                         <Route path="administration" element={<AdministrationScreen />}>
                           <Route index element={<Navigate to="user" replace />} />

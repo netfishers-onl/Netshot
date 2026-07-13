@@ -39,12 +39,14 @@ export function MainScreen() {
 
   const doRedirect = useCallback((hard: boolean = false) => {
     if (!location.pathname.startsWith("/signin")) {
-      const method = hard ? window.location.assign : navigate
-      method(
-        withQuery("/signin", {
-          [REDIRECT_SEARCH_PARAM]: location.pathname + location.search,
-        })
-      )
+      const url = withQuery("/signin", {
+        [REDIRECT_SEARCH_PARAM]: location.pathname + location.search,
+      })
+      if (hard) {
+        window.location.assign(url)
+      } else {
+        navigate(url)
+      }
     }
   }, [])
 

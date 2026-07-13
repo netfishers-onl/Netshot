@@ -1,4 +1,4 @@
-import { Badge, HoverCard, Icon, Spacer, Stack, StackProps, Text } from "@chakra-ui/react"
+import { Badge, HoverCard, Icon, Portal, Spacer, Stack, StackProps, Text } from "@chakra-ui/react"
 import { forwardRef, MouseEvent, Ref, useCallback, useEffect, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useMatch, useNavigate, useParams } from "react-router"
@@ -166,28 +166,30 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
                 {compliant ? <LuCircleCheck size={16} /> : <LuTriangleAlert size={16} />}
               </Icon>
             </HoverCard.Trigger>
-            <HoverCard.Positioner>
-              <HoverCard.Content>
-                <HoverCard.Arrow />
-                <Text fontSize="md" fontWeight="bold" mb="3">
-                  {t("common.complianceSummary")}
-                </Text>
-                <Stack gap="2">
-                  <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12">
-                    <Text>{t("compliance.software.label")}</Text>
-                    <DeviceSoftwareLevelBadge level={device.softwareLevel} />
+            <Portal>
+              <HoverCard.Positioner>
+                <HoverCard.Content>
+                  <HoverCard.Arrow />
+                  <Text fontSize="md" fontWeight="bold" mb="3">
+                    {t("common.complianceSummary")}
+                  </Text>
+                  <Stack gap="2">
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12">
+                      <Text>{t("compliance.software.label")}</Text>
+                      <DeviceSoftwareLevelBadge level={device.softwareLevel} />
+                    </Stack>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12">
+                      <Text>{t("compliance.hardware.label")}</Text>
+                      <DeviceHardwareComplianceBadge eol={device.eol} eos={device.eos} />
+                    </Stack>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12">
+                      <Text>{t("device.config.label")}</Text>
+                      <DeviceConfigComplianceBadge compliant={device.configCompliant} />
+                    </Stack>
                   </Stack>
-                  <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12">
-                    <Text>{t("compliance.hardware.label")}</Text>
-                    <DeviceHardwareComplianceBadge eol={device.eol} eos={device.eos} />
-                  </Stack>
-                  <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12">
-                    <Text>{t("device.config.label")}</Text>
-                    <DeviceConfigComplianceBadge compliant={device.configCompliant} />
-                  </Stack>
-                </Stack>
-              </HoverCard.Content>
-            </HoverCard.Positioner>
+                </HoverCard.Content>
+              </HoverCard.Positioner>
+            </Portal>
           </HoverCard.Root>
         )}
       </Stack>

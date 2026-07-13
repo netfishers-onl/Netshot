@@ -406,7 +406,7 @@ export function VirtualizedDataTableBody<T>({
     count: rows.length,
     estimateSize: () => 43,
     getScrollElement: () => containerRef.current,
-    measureElement: (element) => element?.getBoundingClientRect().height + 2,
+    measureElement: (element) => element?.getBoundingClientRect().height,
     overscan: 10,
   })
 

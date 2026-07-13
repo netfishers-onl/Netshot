@@ -16,10 +16,12 @@ export type TaskTableProps = {
   rows: Task[]
   isPending: boolean
   onBottomReached?(): void
+  showTarget?: boolean
+  emptyDescription?: string
 }
 
 export default function TaskTable(props: TaskTableProps) {
-  const { rows, isPending, onBottomReached } = props
+  const { rows, isPending, onBottomReached, showTarget = true, emptyDescription } = props
   const { t } = useTranslation()
   const { formatDateTime } = useLocalization()
   const dialog = useCustomDialog()
@@ -34,35 +36,39 @@ export default function TaskTable(props: TaskTableProps) {
         cell: (info) => <Text>{t(`task.type.${info.getValue()}`)}</Text>,
         header: t("common.type"),
         enableSorting: true,
-        size: 20000,
+        size: 15000,
       }),
-      columnHelper.accessor("target", {
-        cell: (info) => {
-          const { deviceId, deviceGroupId } = info.row.original
-          if (deviceId) {
-            return (
-              <DeviceBadge>
-                <Link to={`/app/devices/${deviceId}/tasks`} onClick={(e) => e.stopPropagation()}>
-                  {info.getValue()}
-                </Link>
-              </DeviceBadge>
-            )
-          }
-          if (deviceGroupId) {
-            return (
-              <DeviceGroupBadge
-                id={deviceGroupId}
-                name={info.getValue()}
-                onClick={(e) => e.stopPropagation()}
-              />
-            )
-          }
-          return <Text>{info.getValue()}</Text>
-        },
-        header: t("common.target"),
-        enableSorting: true,
-        size: 10000,
-      }),
+      ...(showTarget
+        ? [
+            columnHelper.accessor("target", {
+              cell: (info) => {
+                const { deviceId, deviceGroupId } = info.row.original
+                if (deviceId) {
+                  return (
+                    <DeviceBadge>
+                      <Link to={`/app/devices/${deviceId}/tasks`} onClick={(e) => e.stopPropagation()}>
+                        {info.getValue()}
+                      </Link>
+                    </DeviceBadge>
+                  )
+                }
+                if (deviceGroupId) {
+                  return (
+                    <DeviceGroupBadge
+                      id={deviceGroupId}
+                      name={info.getValue()}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )
+                }
+                return <Text>{info.getValue()}</Text>
+              },
+              header: t("common.target"),
+              enableSorting: true,
+              size: 10000,
+            }),
+          ]
+        : []),
       columnHelper.accessor("author", {
         cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("common.creator"),
@@ -83,8 +89,14 @@ export default function TaskTable(props: TaskTableProps) {
         enableSorting: true,
         size: 15000,
       }),
+      columnHelper.accessor("comments", {
+        cell: (info) => <Text truncate>{info.getValue()}</Text>,
+        header: t("common.comments"),
+        enableSorting: true,
+        size: 25000,
+      }),
     ],
-    [t, formatDateTime]
+    [t, formatDateTime, showTarget]
   )
 
   if (isPending) {
@@ -99,7 +111,7 @@ export default function TaskTable(props: TaskTableProps) {
   }
 
   if (rows.length === 0) {
-    return <EmptyResult title={t("task.none")} description={t("task.noMatchingFound")} />
+    return <EmptyResult title={t("task.none")} description={emptyDescription ?? t("task.noMatchingFound")} />
   }
 
   return (

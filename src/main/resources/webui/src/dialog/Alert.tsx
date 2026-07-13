@@ -86,8 +86,10 @@ export default function AlertDialog() {
             </Dialog.Body>
             {!config.props.hideFooter && (
               <Dialog.Footer>
-                <Stack direction="row" gap="3">
-                  {config.props.footerExtra}
+                <Stack direction="row" gap="3" justify="space-between" w="full">
+                  <Stack direction="row" gap="3">
+                    {config.props.footerExtra}
+                  </Stack>
                   <Button {...closeButtonConfig?.props}>{closeButtonConfig?.label}</Button>
                 </Stack>
               </Dialog.Footer>

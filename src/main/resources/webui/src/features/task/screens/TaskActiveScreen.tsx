@@ -58,14 +58,9 @@ export default function TaskActiveScreen() {
       <TaskLiveStats />
 
       <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap="3">
-        <Stack gap="1">
-          <Heading as="h2" fontSize="2xl" fontWeight="semibold">
-            {t("task.taskList")}
-          </Heading>
-          <Text fontSize="sm" color="grey.400">
-            {t("task.shownCount", { count: rows.length })}
-          </Text>
-        </Stack>
+        <Heading as="h2" fontSize="2xl" fontWeight="semibold">
+          {t("task.taskList")}
+        </Heading>
         <TaskFilterMenu statuses={ALL_STATUS_KEYS} />
       </Stack>
 

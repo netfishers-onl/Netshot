@@ -15,10 +15,11 @@ export default function TaskHistogramCard() {
   const statusSel = useTaskHistoryFilterStore((s) => s.statusSel)
   const toggleStatus = useTaskHistoryFilterStore((s) => s.toggleStatus)
 
-  const colorTokens = useToken(
-    "colors",
-    FINAL_STATUS_KEYS.map((status) => `${TASK_STATUS_CONFIG[status].colorPalette}.500`)
+  const statusColorTokenNames = useMemo(
+    () => FINAL_STATUS_KEYS.map((status) => `${TASK_STATUS_CONFIG[status].colorPalette}.500`),
+    []
   )
+  const colorTokens = useToken("colors", statusColorTokenNames)
 
   const formatBinLabel = useMemo(() => {
     if (unit.labelPrecision === "day") return formatDayMonth

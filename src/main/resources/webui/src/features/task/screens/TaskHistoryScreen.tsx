@@ -47,14 +47,9 @@ export default function TaskHistoryScreen() {
 
       <TaskHistogramCard />
 
-      <Stack gap="1">
-        <Heading as="h2" fontSize="2xl" fontWeight="semibold">
-          {t("task.taskList")}
-        </Heading>
-        <Text fontSize="sm" color="grey.400">
-          {t("task.shownCount", { count: rows.length })}
-        </Text>
-      </Stack>
+      <Heading as="h2" fontSize="2xl" fontWeight="semibold">
+        {t("task.taskList")}
+      </Heading>
 
       <TaskTable rows={rows} isPending={isPending} onBottomReached={onBottomReached} />
     </Stack>

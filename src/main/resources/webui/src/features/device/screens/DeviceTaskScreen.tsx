@@ -1,112 +1,48 @@
-import { Button, Heading, Skeleton, Stack, Text } from "@chakra-ui/react"
+import { Heading, Stack } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { createColumnHelper } from "@tanstack/react-table"
-import { useMemo } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useParams } from "react-router"
 
 import api from "@/api"
-import { DataTable, EmptyResult } from "@/components"
-import { TaskStatusBadge } from "@/components"
-import TaskDialog from "@/components/TaskDialog"
-import { usePagination } from "@/hooks"
-import { Task } from "@/types"
-import { useLocalization } from "@/i18n"
+import TaskTable from "@/features/task/components/TaskTable"
 
-import { useCustomDialog } from "@/dialog"
 import { QUERIES } from "../constants"
-import TableButtonStack from "@/features/administration/components/TableButtonStack"
 
-const columnHelper = createColumnHelper<Task>()
+const TASKS_PAGE_SIZE = 20
 
-/**
- * @todo: Add pagination (paginator)
- */
 export default function DeviceTaskScreen() {
   const params = useParams<{ id: string }>()
   const { t } = useTranslation()
-  const { formatDateTime } = useLocalization()
-  const taskDialog = useCustomDialog()
-  const pagination = usePagination({
-    limit: 20,
-  })
+  const [limit, setLimit] = useState(TASKS_PAGE_SIZE)
 
-  const { data = [], isPending } = useQuery({
-    queryKey: [QUERIES.DEVICE_TASKS, params.id, pagination.limit],
+  const { data = [], isPending, isFetching } = useQuery({
+    queryKey: [QUERIES.DEVICE_TASKS, params.id, limit],
     queryFn: async () =>
       api.device.getAllTasksById(+params.id, {
-        limit: pagination.limit,
+        limit,
       }),
   })
 
-  function openTask(id: number) {
-    taskDialog.open(<TaskDialog id={id} />)
+  const hasMore = data.length >= limit
+
+  function onBottomReached() {
+    if (isFetching || !hasMore) {
+      return
+    }
+    setLimit((prev) => prev + TASKS_PAGE_SIZE)
   }
 
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor("taskDescription", {
-        cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("common.type"),
-      }),
-      columnHelper.accessor("status", {
-        cell: (info) => <TaskStatusBadge status={info.getValue()} />,
-        header: t("common.status"),
-      }),
-      columnHelper.accessor("executionDate", {
-        cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
-        header: t("time.executionDate"),
-      }),
-      columnHelper.accessor("comments", {
-        cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("common.comments"),
-      }),
-      columnHelper.display({
-        id: "actions",
-        cell: (info) => (
-          <TableButtonStack>
-            <Button
-              variant="frame"
-              onClick={() => openTask(info.row.original.id)}
-            >
-              {t("common.seeDetails")}
-            </Button>
-          </TableButtonStack>
-        ),
-        header: "",
-        enableSorting: false,
-        meta: {
-          align: "right",
-        },
-      }),
-    ],
-    [t, openTask]
-  )
-
   return (
-    <>
-      <Stack gap="6" flex="1" overflow="auto">
-        {isPending ? (
-          <Stack gap="3">
-            <Skeleton h="60px"></Skeleton>
-            <Skeleton h="60px"></Skeleton>
-            <Skeleton h="60px"></Skeleton>
-            <Skeleton h="60px"></Skeleton>
-          </Stack>
-        ) : (
-          <>
-            <Heading size="md">{t("device.lastTasks", { count: pagination.limit })}</Heading>
-            {data?.length > 0 ? (
-              <DataTable columns={columns} data={data} loading={isPending} />
-            ) : (
-              <EmptyResult
-                title={t("task.none")}
-                description={t("device.noTask")}
-              />
-            )}
-          </>
-        )}
-      </Stack>
-    </>
+    <Stack gap="6" flex="1" overflow="auto">
+      <Heading size="md">{t("device.latestTasks")}</Heading>
+      <TaskTable
+        rows={data}
+        isPending={isPending}
+        showTarget={false}
+        emptyDescription={t("device.noTask")}
+        onBottomReached={onBottomReached}
+      />
+    </Stack>
   )
 }

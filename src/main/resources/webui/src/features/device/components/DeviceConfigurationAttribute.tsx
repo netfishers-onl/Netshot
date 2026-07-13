@@ -35,7 +35,7 @@ function ConfigNumericAttributeValue(props: ConfigNumericAttributeValueType) {
   const { attribute } = props
   const { t } = useTranslation()
 
-  return <Text>{attribute?.number ?? t("common.nA")}</Text>
+  return <Text ml="3">{attribute?.number ?? t("common.nA")}</Text>
 }
 
 type ConfigTextAttributeValueType = {
@@ -46,7 +46,7 @@ function ConfigTextAttributeValue(props: ConfigTextAttributeValueType) {
   const { attribute } = props
   const { t } = useTranslation()
 
-  return <Text>{attribute?.text ?? t("common.nA")}</Text>
+  return <Text ml="3">{attribute?.text ?? t("common.nA")}</Text>
 }
 
 type ConfigLongTextAttributeValueType = {
@@ -94,11 +94,11 @@ function ConfigBinaryAttributeValue(props: ConfigBinaryAttributeValueType) {
   const { t } = useTranslation()
 
   if (attribute?.assumption === true) {
-    return <Text>{t("common.trueLabel")}</Text>
+    return <Text ml="3">{t("common.trueLabel")}</Text>
   } else if (attribute?.assumption === false) {
-    return <Text>{t("common.falseLabel")}</Text>
+    return <Text ml="3">{t("common.falseLabel")}</Text>
   }
-  return <Text>{t("common.nA")}</Text>
+  return <Text ml="3">{t("common.nA")}</Text>
 }
 
 type ConfigBinaryFileAttributeValueType = {
@@ -167,7 +167,7 @@ function ConfigAttributeValue(props: ConfigAttributeValueType) {
         />
       )
     default:
-      return <Text>{t("common.unsupportedAttribute")}</Text>
+      return <Text ml="3">{t("common.unsupportedAttribute")}</Text>
   }
 }
 
@@ -191,7 +191,7 @@ export default function DeviceConfigurationAttribute(props: DeviceConfigurationA
       {attribute ? (
         <ConfigAttributeValue config={config} attribute={attribute} definition={definition} />
       ) : (
-        <Text>{t("common.nA")}</Text>
+        <Text ml="3">{t("common.nA")}</Text>
       )}
     </Flex>
   )

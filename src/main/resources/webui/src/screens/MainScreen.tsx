@@ -39,11 +39,8 @@ export function MainScreen() {
 
   const doRedirect = useCallback((hard: boolean = false) => {
     if (!location.pathname.startsWith("/signin")) {
-      const f = hard ? window.location.assign : navigate;
-      // Force a full page load (rather than a client-side route change) so that
-      // password manager browser extensions reliably re-scan the page and detect
-      // the sign-in form without requiring the user to manually redetect fields.
-      window.location.assign(
+      const method = hard ? window.location.assign : navigate
+      method(
         withQuery("/signin", {
           [REDIRECT_SEARCH_PARAM]: location.pathname + location.search,
         })

@@ -167,7 +167,7 @@ public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask 
 					device.getName(), this.getLimitToOutofdateDeviceHours());
 				continue;
 			}
-			this.logger.info("Starting snapshot task for device {}.", device.getName());
+			this.logger.info("Scheduling snapshot task for device {} ({}).", device.getName(), device.getId());
 			TakeSnapshotTask task = new TakeSnapshotTask(device, comment, author, false,
 				this.dontRunDiagnostics, this.dontCheckCompliance);
 			task.setPriority(this.getPriority());

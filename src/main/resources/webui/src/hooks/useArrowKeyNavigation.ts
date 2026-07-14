@@ -1,5 +1,12 @@
 import { RefObject, useEffect } from "react"
 
+/** True when arrow keys should be left to the focused control (form fields, pickers, etc). */
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  if (target.isContentEditable) return true
+  return ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+}
+
 export type UseArrowKeyNavigationOptions<T> = {
   /** Visible entries, in visual (top-to-bottom) order. */
   items: T[]
@@ -29,6 +36,7 @@ export function useArrowKeyNavigation<T>(options: UseArrowKeyNavigationOptions<T
     function onKeyDown(evt: KeyboardEvent) {
       if (evt.key !== "ArrowDown" && evt.key !== "ArrowUp") return
       if (items.length === 0) return
+      if (isEditableTarget(evt.target)) return
 
       const delta = evt.key === "ArrowDown" ? 1 : -1
       const nextIndex =

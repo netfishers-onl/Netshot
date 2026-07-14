@@ -1,10 +1,11 @@
 import i18n from "@/i18n"
 import { SchedulePriority, TaskScheduleType } from "@/types"
-import { Stack, Text } from "@chakra-ui/react"
+import { Collapsible, Stack, Text } from "@chakra-ui/react"
 import { getLocalTimeZone, now } from "@internationalized/date"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
+import { LuChevronRight } from "react-icons/lu"
 import DateTimeField from "./DateTimeField"
 import FormControl, { FormControlType } from "./FormControl"
 import { Select } from "./Select"
@@ -71,6 +72,7 @@ export type FormData = {
 
 export default function ScheduleForm() {
   const { t } = useTranslation()
+  const [isOpen, setIsOpen] = useState(false)
 
   const tz = getLocalTimeZone()
   const parentForm = useFormContext<ScheduleFormType>()
@@ -79,7 +81,7 @@ export default function ScheduleForm() {
       type: SCHEDULE_TYPE_OPTIONS[0].value,
       every: 1,
       dateTime: now(tz).toDate().getTime(),
-      minute: 5,
+      minute: 10,
       frequency: "hourly",
       priority: SCHEDULE_PRIORITY_OPTIONS[1].value.toString(),
     },
@@ -97,10 +99,10 @@ export default function ScheduleForm() {
   const everyCount = Number(every) || 1
   const frequencyOptions = useMemo(
     () => [
-      { label: t("hour", { count: everyCount }), value: "hourly" as const },
-      { label: t("day", { count: everyCount }), value: "daily" as const },
-      { label: t("week", { count: everyCount }), value: "weekly" as const },
-      { label: t("month", { count: everyCount }), value: "monthly" as const },
+      { label: t("time.hour", { count: everyCount }), value: "hourly" as const },
+      { label: t("time.day", { count: everyCount }), value: "daily" as const },
+      { label: t("time.week", { count: everyCount }), value: "weekly" as const },
+      { label: t("time.month", { count: everyCount }), value: "monthly" as const },
     ],
     [everyCount, t]
   )
@@ -157,56 +159,101 @@ export default function ScheduleForm() {
     scheduleForm.resetField("minute")
     scheduleForm.resetField("frequency")
     scheduleForm.resetField("priority")
+
+    if (
+      selectedScheduleType === ScheduleType.AtDateTime ||
+      selectedScheduleType === ScheduleType.Repeat
+    ) {
+      scheduleForm.setValue("dateTime", now(tz).add({ minutes: 10 }).toDate().getTime())
+    }
   }, [selectedScheduleType, scheduleForm.setValue])
 
   return (
-    <>
-      <Select
-        label={t("task.schedule")}
-        options={SCHEDULE_TYPE_OPTIONS}
-        control={scheduleForm.control}
-        name="type"
-      />
-      {selectedScheduleType === ScheduleType.AtTime && (
-        <FormControl
-          control={scheduleForm.control}
-          name="minute"
-          type={FormControlType.Number}
-          required
-          rules={{ min: { value: 1, message: t("common.mustBeAtLeastOne") } }}
-          suffix={
-            <Text color="grey.400" pr="5">
-              {t("time.minute", { count: minuteCount })}
-            </Text>
-          }
-        />
-      )}
-      {(selectedScheduleType === ScheduleType.AtDateTime ||
-        selectedScheduleType === ScheduleType.Repeat) && (
-        <DateTimeField
-          control={scheduleForm.control}
-          name="dateTime"
-          label={t("time.dateTime")}
-          placeholder={t("time.dateTime")}
-        />
-      )}
-      {selectedScheduleType === ScheduleType.Repeat && (
-        <Stack direction="row" gap="4" alignItems="flex-end">
-          <FormControl
-            label={t("time.every")}
+    <Collapsible.Root open={isOpen} onOpenChange={(details) => setIsOpen(details.open)}>
+      <Collapsible.Trigger
+        cursor="pointer"
+        paddingY="3"
+        display="flex"
+        gap="2"
+        alignItems="center"
+        fontWeight="medium"
+      >
+        <Collapsible.Indicator
+          transition="transform 0.2s"
+          _open={{ transform: "rotate(90deg)" }}
+        >
+          <LuChevronRight />
+        </Collapsible.Indicator>
+        {t("task.scheduleAndPriority")}
+      </Collapsible.Trigger>
+      <Collapsible.Content>
+        <Stack gap="6" p="4">
+          <Select
+            label={t("task.schedule")}
+            options={SCHEDULE_TYPE_OPTIONS}
             control={scheduleForm.control}
-            name="every"
-            type={FormControlType.Number}
+            name="type"
           />
-          <Select options={frequencyOptions} control={scheduleForm.control} name="frequency" />
+          {selectedScheduleType === ScheduleType.AtTime && (
+            <FormControl
+              control={scheduleForm.control}
+              name="minute"
+              type={FormControlType.Number}
+              required
+              min={1}
+              step={5}
+              rules={{ min: { value: 1, message: t("common.mustBeAtLeastOne") } }}
+              endAddon={
+                <Text>
+                  {t("time.minute", { count: minuteCount })}
+                </Text>
+              }
+            />
+          )}
+          {selectedScheduleType === ScheduleType.AtDateTime && (
+            <DateTimeField
+              control={scheduleForm.control}
+              name="dateTime"
+              label={t("time.dateTime")}
+              placeholder={t("time.dateTime")}
+            />
+          )}
+          {selectedScheduleType === ScheduleType.Repeat && (
+            <Stack direction="row" gap="4" alignItems="flex-end">
+              <DateTimeField
+                control={scheduleForm.control}
+                name="dateTime"
+                label={t("time.dateTime")}
+                placeholder={t("time.dateTime")}
+              />
+              <FormControl
+                w="56"
+                label={t("time.every")}
+                control={scheduleForm.control}
+                name="every"
+                type={FormControlType.Number}
+                min={1}
+                endAddonProps={{ p: "0" }}
+                endAddon={
+                  <Select
+                    w="28"
+                    variant="ghost"
+                    options={frequencyOptions}
+                    control={scheduleForm.control}
+                    name="frequency"
+                  />
+                }
+              />
+            </Stack>
+          )}
+          <Select
+            label={t("common.priority")}
+            options={SCHEDULE_PRIORITY_OPTIONS}
+            control={scheduleForm.control}
+            name="priority"
+          />
         </Stack>
-      )}
-      <Select
-        label={t("common.priority")}
-        options={SCHEDULE_PRIORITY_OPTIONS}
-        control={scheduleForm.control}
-        name="priority"
-      />
-    </>
+      </Collapsible.Content>
+    </Collapsible.Root>
   )
 }

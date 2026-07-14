@@ -6,7 +6,16 @@ import { createFoldersFromGroups, findNodeWithPath, Folder } from "@/utils"
 import { Badge, Box, Field, Icon, Stack, Tag, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { MouseEvent, useCallback, useMemo } from "react"
-import { useFieldArray, useForm, useFormContext, useWatch } from "react-hook-form"
+import {
+  FieldPath,
+  FieldValues,
+  useController,
+  UseControllerProps,
+  useFieldArray,
+  useForm,
+  useFormContext,
+  useWatch,
+} from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { LuAsterisk, LuSquareStack } from "react-icons/lu"
 import { TreeGroup, useTreeOpenKeys } from "./group"
@@ -73,21 +82,28 @@ function SelectGroupDialog({
   )
 }
 
-export type TreeGroupSelectorProps = {
+export type TreeGroupSelectorProps<
+  TFieldValues extends FieldValues,
+  TName extends FieldPath<TFieldValues>,
+> = {
   label?: string
-  value?: number[]
-  onChange(groups: number[]): void
   isMulti?: boolean
   withAny?: boolean
   required?: boolean
   readOnly?: boolean
   disabled?: boolean
-}
+} & UseControllerProps<TFieldValues, TName>
 
-export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
+export default function TreeGroupSelector<
+  TFieldValues extends FieldValues,
+  TName extends FieldPath<TFieldValues>,
+>(props: TreeGroupSelectorProps<TFieldValues, TName>) {
   const {
-    value = [],
-    onChange,
+    control,
+    name,
+    rules,
+    defaultValue,
+    shouldUnregister,
     label,
     isMulti = false,
     withAny = false,
@@ -98,6 +114,26 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
 
   const { t } = useTranslation()
   const dialog = useFormDialog()
+
+  const { field, fieldState } = useController({
+    control,
+    name,
+    rules: { required, ...rules },
+    defaultValue,
+    shouldUnregister,
+  })
+
+  const value = useMemo<number[]>(() => {
+    if (isMulti) return (field.value as number[]) ?? []
+    return field.value != null ? [field.value as number] : []
+  }, [field.value, isMulti])
+
+  const onChange = useCallback(
+    (groups: number[]) => {
+      field.onChange(isMulti ? groups : (groups[0] ?? null))
+    },
+    [field, isMulti]
+  )
 
   const dialogForm = useForm<SelectGroupForm>({
     defaultValues: {
@@ -153,9 +189,8 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
       onSubmit() {
         const values = dialogForm.getValues()
 
-        if (onChange) {
-          onChange(values.groups.map((g) => g.id))
-        }
+        onChange(values.groups.map((g) => g.id))
+        field.onBlur()
 
         dialogRef.close()
       },
@@ -221,6 +256,7 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
             </>
           )}
         </Box>
+        {fieldState.error && <Field.ErrorText>{fieldState.error.message}</Field.ErrorText>}
       </Field.Root>
     </Stack>
   )

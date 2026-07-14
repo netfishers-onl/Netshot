@@ -7,7 +7,9 @@ import {
   IconButton,
   Input,
   InputGroup,
+  type InputAddonProps,
   type InputProps,
+  NumberInput,
   Portal,
   SystemStyleObject,
   Textarea,
@@ -50,6 +52,9 @@ export type FormControlProps<T> = {
   clearable?: boolean
   suggestions?: string[]
   mono?: boolean
+  /** Rendered attached to the end of the input as a bordered addon (e.g. a unit selector), instead of floating inside it like `suffix`. */
+  endAddon?: ReactNode
+  endAddonProps?: InputAddonProps
 } & Omit<InputProps, "recipe"> &
   Omit<SystemStyleObject, "recipe"> &
   UseControllerProps<T>
@@ -81,12 +86,17 @@ function FormControl<T>(
     autoFocus,
     suffix,
     prefix,
+    endAddon,
+    endAddonProps,
     autoComplete,
     variant,
     allowUnchanged = false,
     clearable = false,
     suggestions,
     mono,
+    min,
+    max,
+    step,
     ...other
   } = props
 
@@ -201,7 +211,6 @@ function FormControl<T>(
       )}
       {[
         FormControlType.Text,
-        FormControlType.Number,
         FormControlType.DateTime,
         FormControlType.Time,
         FormControlType.Url,
@@ -262,7 +271,12 @@ function FormControl<T>(
             </Portal>
           </Combobox.Root>
         ) : (
-          <InputGroup startElement={prefix} endElement={suffix}>
+          <InputGroup
+            startElement={prefix}
+            endElement={suffix}
+            endAddon={endAddon}
+            endAddonProps={endAddonProps}
+          >
             <Input
               type={type}
               value={String(field.value as string)}
@@ -271,6 +285,48 @@ function FormControl<T>(
             />
           </InputGroup>
         )
+      )}
+      {type === FormControlType.Number && (
+        // `suffix` overlaps the built-in steppers when floated inside the input like other
+        // types, so for Number it's rendered as an addon (a separate box) instead - same as
+        // `endAddon`, which takes priority if both are given.
+        <InputGroup
+          startElement={prefix}
+          endAddon={endAddon ?? suffix}
+          endAddonProps={endAddonProps}
+        >
+          <NumberInput.Root
+            w="full"
+            variant={variant}
+            name={name}
+            disabled={disabled}
+            value={field.value == null ? "" : String(field.value)}
+            min={min !== undefined ? Number(min) : undefined}
+            max={max !== undefined ? Number(max) : undefined}
+            step={step !== undefined ? Number(step) : undefined}
+            onValueChange={({ value }) => field.onChange(value)}
+            onFocusChange={({ focused }) => {
+              if (focused) {
+                if (onFocus) onFocus()
+              } else {
+                field.onBlur()
+              }
+            }}
+          >
+            <NumberInput.Input
+              placeholder={placeholder}
+              autoFocus={autoFocus}
+              ref={(inputRef) => {
+                field.ref(inputRef)
+                if (ref) ref.current = inputRef
+              }}
+            />
+            <NumberInput.Control>
+              <NumberInput.IncrementTrigger />
+              <NumberInput.DecrementTrigger />
+            </NumberInput.Control>
+          </NumberInput.Root>
+        </InputGroup>
       )}
       {type === FormControlType.Date && (
         <DatePicker.Root

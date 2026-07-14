@@ -58,7 +58,15 @@ export default function TaskTimeRangeMenu(props: TaskTimeRangeMenuProps) {
   }
 
   return (
-    <Menu.Root open={open} onOpenChange={(e) => setOpen(e.open)}>
+    <Menu.Root
+      open={open}
+      onOpenChange={(e) => {
+        setOpen(e.open)
+        if (!e.open) {
+          form.reset({ fromDate: from, toDate: to, types: typeSel, statuses: statusSel })
+        }
+      }}
+    >
       <Menu.Trigger asChild>
         <Button variant="primary">
           <LuFilter />

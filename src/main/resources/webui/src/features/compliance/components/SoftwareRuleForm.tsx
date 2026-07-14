@@ -41,11 +41,6 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
     form.setValue("driver", rule.driver)
   }, [isPending, rule])
 
-  const group = useWatch({
-    control: form.control,
-    name: "group",
-  })
-
   const familyRegExp = useWatch({
     control: form.control,
     name: "familyRegExp",
@@ -74,11 +69,7 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
   }, [form, versionRegExp])
   return (
     <Stack gap="5">
-      <TreeGroupSelector
-        value={group ? [group] : []}
-        onChange={(groups) => form.setValue("group", groups?.[0])}
-        withAny
-      />
+      <TreeGroupSelector control={form.control} name="group" withAny />
       <DeviceTypeSelect
         control={form.control}
         name="driver"

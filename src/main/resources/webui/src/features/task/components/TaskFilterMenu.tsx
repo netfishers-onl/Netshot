@@ -36,7 +36,15 @@ export default function TaskFilterMenu(props: TaskFilterMenuProps) {
   }
 
   return (
-    <Menu.Root open={open} onOpenChange={(e) => setOpen(e.open)}>
+    <Menu.Root
+      open={open}
+      onOpenChange={(e) => {
+        setOpen(e.open)
+        if (!e.open) {
+          form.reset({ types: typeSel, statuses: statusSel })
+        }
+      }}
+    >
       <Menu.Trigger asChild>
         <Button variant="primary">
           <LuFilter />
@@ -45,7 +53,7 @@ export default function TaskFilterMenu(props: TaskFilterMenuProps) {
       </Menu.Trigger>
       <Portal>
         <Menu.Positioner>
-          <Menu.Content w="280px" p="3">
+          <Menu.Content w="380px" p="3">
             <Stack gap="4" asChild>
               <form onSubmit={form.handleSubmit(onApply)}>
                 <TaskFilterFields control={form.control} statuses={statuses} />

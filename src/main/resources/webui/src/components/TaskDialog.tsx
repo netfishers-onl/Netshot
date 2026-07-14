@@ -4,6 +4,7 @@ import { DeviceGroupBadge, LogPanel, TaskStatusBadge } from "@/components"
 import { MUTATIONS, QUERIES } from "@/constants"
 import { useConfirmDialogWithMutation, useDialogConfig } from "@/dialog"
 import { DeviceBadge } from "@/features/device/components"
+import { TASK_TYPE_ICONS } from "@/features/task/constants"
 import { useToast } from "@/hooks"
 import { useLocalization } from "@/i18n"
 import { TaskScheduleType, TaskStatus, TaskType } from "@/types"
@@ -15,6 +16,7 @@ import {
   Dialog,
   Flex,
   Heading,
+  Icon,
   Portal,
   Separator,
   Skeleton,
@@ -174,6 +176,21 @@ export default function TaskDialog(props: TaskDialogProps) {
                     </Box>
                     <Skeleton loading={isPending}>
                       <Text>{task?.id ?? t("common.nA")}</Text>
+                    </Skeleton>
+                  </Flex>
+                  <Flex alignItems="center">
+                    <Box w="140px">
+                      <Text color="grey.400">{t("common.type")}</Text>
+                    </Box>
+                    <Skeleton loading={isPending}>
+                      {task?.type ? (
+                        <Stack direction="row" gap="2" alignItems="center">
+                          <Icon size="sm">{TASK_TYPE_ICONS[task.type as TaskType]}</Icon>
+                          <Text>{t(`task.type.${task.type}`)}</Text>
+                        </Stack>
+                      ) : (
+                        <Text>{t("common.nA")}</Text>
+                      )}
                     </Skeleton>
                   </Flex>
                   <Flex alignItems="center">
@@ -407,10 +424,10 @@ export default function TaskDialog(props: TaskDialogProps) {
             </Dialog.Body>
             <Dialog.Footer justifyContent="space-between">
               <Stack direction="row" gap="2">
-                {task?.log && (
+                {isTaskOver && (
                   <LogPanel
                     title={t("admin.logs.info")}
-                    copyValue={task.log}
+                    copyValue={task?.log}
                     trigger={
                       <Button size="sm" variant="ghost">
                         <LuScrollText />
@@ -419,7 +436,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                     }
                   >
                     <Text fontSize="xs" whiteSpace="pre-wrap" fontFamily="mono">
-                      {task.log}
+                      {task?.log}
                     </Text>
                   </LogPanel>
                 )}

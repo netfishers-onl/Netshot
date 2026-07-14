@@ -4,11 +4,12 @@ import { useCustomDialog } from "@/dialog"
 import { DeviceBadge } from "@/features/device/components"
 import { useLocalization } from "@/i18n"
 import { Task, TaskType } from "@/types"
-import { Skeleton, Stack, Text } from "@chakra-ui/react"
+import { Icon, Skeleton, Stack, Text } from "@chakra-ui/react"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
+import { TASK_TYPE_ICONS } from "../constants"
 
 const columnHelper = createColumnHelper<Task>()
 
@@ -33,7 +34,14 @@ export default function TaskTable(props: TaskTableProps) {
   const columns = useMemo(
     () => [
       columnHelper.accessor("type", {
-        cell: (info) => <Text>{t(`task.type.${info.getValue()}`)}</Text>,
+        cell: (info) => (
+          <Stack direction="row" gap="2" alignItems="center">
+            <Icon size="sm" flexShrink={0}>
+              {TASK_TYPE_ICONS[info.getValue() as TaskType]}
+            </Icon>
+            <Text>{t(`task.type.${info.getValue()}`)}</Text>
+          </Stack>
+        ),
         header: t("common.type"),
         enableSorting: true,
         size: 15000,

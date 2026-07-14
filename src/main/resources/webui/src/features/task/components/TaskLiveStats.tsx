@@ -21,6 +21,7 @@ export default function TaskLiveStats() {
   const { t } = useTranslation()
   const statusSel = useActiveTaskFilterStore((s) => s.statusSel)
   const toggleStatus = useActiveTaskFilterStore((s) => s.toggleStatus)
+  const toggleStatuses = useActiveTaskFilterStore((s) => s.toggleStatuses)
 
   const { countByStatus, threadCount } = useTaskSummary()
   const { data: recentTasks } = useRecentCompletedTasks()
@@ -52,6 +53,22 @@ export default function TaskLiveStats() {
     const on = statusSel.length === 0 || statusSel.includes(status)
     return {
       onClick: () => toggleStatus(status),
+      cursor: "pointer" as const,
+      p: "4",
+      borderRadius: "xl" as const,
+      borderWidth: "1px",
+      borderColor: on ? "grey.100" : "grey.50",
+      bg: "white",
+      opacity: on ? 1 : 0.5,
+      transition: "all .2s ease",
+      flex: "1",
+    }
+  }
+
+  function groupTileProps(statuses: TaskStatus[]) {
+    const on = statusSel.length === 0 || statuses.every((status) => statusSel.includes(status))
+    return {
+      onClick: () => toggleStatuses(statuses),
       cursor: "pointer" as const,
       p: "4",
       borderRadius: "xl" as const,
@@ -137,7 +154,7 @@ export default function TaskLiveStats() {
         </Stack>
       </Box>
 
-      <Box p="4" borderRadius="xl" borderWidth="1px" borderColor="grey.100" bg="white" flex="1">
+      <Box {...groupTileProps(FINAL_STATUS_KEYS)}>
         <Stack direction="row" alignItems="flex-start" gap="3">
           <Icon boxSize="6" color="grey.400" flexShrink={0}>
             <LuHistory />

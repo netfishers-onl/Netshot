@@ -4,7 +4,7 @@ import { Select } from "@/components/Select"
 import { DiagnosticType } from "@/types"
 import { Stack, StackProps } from "@chakra-ui/react"
 import { useMemo } from "react"
-import { useFormContext, useWatch } from "react-hook-form"
+import { useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useResultTypeOptions } from "../hooks"
 import { Form } from "../types"
@@ -25,11 +25,6 @@ export function EditDiagnosticForm(props: EditDiagnosticFormProps) {
     [type]
   )
 
-  const targetGroup = useWatch({
-    control: form.control,
-    name: "targetGroup",
-  })
-
   return (
     <Stack gap="6" p="3" {...other}>
       <FormControl
@@ -39,10 +34,7 @@ export function EditDiagnosticForm(props: EditDiagnosticFormProps) {
         control={form.control}
         name="name"
       />
-      <TreeGroupSelector
-        value={targetGroup ? [targetGroup] : []}
-        onChange={(groups) => form.setValue("targetGroup", groups?.[0])}
-      />
+      <TreeGroupSelector control={form.control} name="targetGroup" />
       <Switch
         control={form.control}
         name="enabled"

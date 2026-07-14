@@ -1,4 +1,15 @@
 import { TaskStatus, TaskType } from "@/types";
+import { ReactElement } from "react";
+import {
+  LuCamera,
+  LuCheck,
+  LuCrosshair,
+  LuDatabaseBackup,
+  LuScanSearch,
+  LuStethoscope,
+  LuTerminal,
+  LuTrophy,
+} from "react-icons/lu";
 
 export const QUERIES = {
   TASK_ACTIVE_ROWS: "task:active-rows",
@@ -28,6 +39,22 @@ export const RECENT_COMPLETED_WINDOW_MS = 3600000;
 export const RECENT_COMPLETED_LIMIT = 100;
 
 export const TASK_TYPE_KEYS = Object.values(TaskType);
+
+/** Icon shown next to a task type, in the type filter and the task list. */
+export const TASK_TYPE_ICONS: Record<TaskType, ReactElement> = {
+  [TaskType.TakeSnapshot]: <LuCamera />,
+  [TaskType.TakeGroupSnapshot]: <LuCamera />,
+  [TaskType.RunDiagnostic]: <LuStethoscope />,
+  [TaskType.RunGroupDiagnostic]: <LuStethoscope />,
+  [TaskType.CheckCompliance]: <LuCheck />,
+  [TaskType.CheckGroupCompliance]: <LuCheck />,
+  [TaskType.CheckGroupSoftware]: <LuTrophy />,
+  [TaskType.ScanSubnets]: <LuCrosshair />,
+  [TaskType.RunDeviceScript]: <LuTerminal />,
+  [TaskType.RunDeviceGroupScript]: <LuTerminal />,
+  [TaskType.PurgeDatabase]: <LuDatabaseBackup />,
+  [TaskType.DiscoverDeviceType]: <LuScanSearch />,
+};
 
 export type TimeRangePreset = {
   label: string;

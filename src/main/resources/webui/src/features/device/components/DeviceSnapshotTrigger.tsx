@@ -35,6 +35,8 @@ export default function DeviceSnapshotTrigger({ devices, children, ...rest }: De
   })
 
   const open = () => {
+    form.reset()
+
     const dialogRef = dialog.open(MUTATIONS.TASK_CREATE, {
       title: t("device.takeSnapshot"),
       description: (

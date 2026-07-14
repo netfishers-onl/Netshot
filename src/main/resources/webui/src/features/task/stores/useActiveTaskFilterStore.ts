@@ -8,6 +8,7 @@ export type ActiveTaskFilterStoreState = {
   typeSel: TaskType[]
 
   toggleStatus(status: TaskStatus): void
+  toggleStatuses(statuses: TaskStatus[]): void
   setStatusSel(statuses: TaskStatus[]): void
   setTypeSel(types: TaskType[]): void
   resetFilters(): void
@@ -23,6 +24,20 @@ export const useActiveTaskFilterStore = create<ActiveTaskFilterStoreState>((set,
       statusSel: statusSel.includes(status)
         ? statusSel.filter((s) => s !== status)
         : [...statusSel, status],
+    })
+  },
+
+  toggleStatuses(statuses) {
+    const { statusSel } = get()
+    if (statusSel.length === 0) {
+      set({ statusSel: statuses })
+      return
+    }
+    const allIncluded = statuses.every((s) => statusSel.includes(s))
+    set({
+      statusSel: allIncluded
+        ? statusSel.filter((s) => !statuses.includes(s))
+        : [...new Set([...statusSel, ...statuses])],
     })
   },
 

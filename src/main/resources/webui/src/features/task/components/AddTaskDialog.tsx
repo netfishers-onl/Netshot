@@ -23,8 +23,9 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import { FormProvider, useFieldArray, useForm, useWatch } from "react-hook-form"
-import { LuCamera, LuCheck, LuDatabase, LuPlay, LuPlus, LuSearch, LuServer, LuTrash } from "react-icons/lu"
+import { LuPlus, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
+import { TASK_TYPE_ICONS } from "../constants"
 
 enum FormStep {
   Type,
@@ -62,7 +63,7 @@ export default function AddTaskDialog() {
   const form = useForm<FormData>({
     defaultValues: {
       subnets: [""] as string[],
-      limitToOutofdateDeviceHours: 0,
+      limitToOutofdateDeviceHours: 168,
       checkCompliance: true,
       runDiagnostic: true,
       group: null,
@@ -131,17 +132,6 @@ export default function AddTaskDialog() {
     taskType === TaskType.CheckGroupCompliance ||
     taskType === TaskType.CheckGroupSoftware
 
-  // Register "group" with required validation only when a group is mandatory, so
-  // setValue(..., { shouldValidate: true }) can drive isValid in both directions.
-  useEffect(() => {
-    if (!hasGroup) return
-
-    form.register("group", { required: true })
-    form.trigger("group")
-
-    return () => form.unregister("group", { keepValue: true })
-  }, [hasGroup, form])
-
   const submit = (values: FormData) => {
     const { schedule } = values
 
@@ -192,7 +182,7 @@ export default function AddTaskDialog() {
 
   const next = () => {
     setFormStep(FormStep.Details)
-    dialogConfig.update({ size: "md" })
+    dialogConfig.update({ size: "lg" })
   }
 
   const previous = () => {
@@ -213,37 +203,37 @@ export default function AddTaskDialog() {
   const taskTypeOptions = useMemo(
     () => [
       {
-        icon: <LuCamera />,
+        icon: TASK_TYPE_ICONS[TaskType.TakeGroupSnapshot],
         type: TaskType.TakeGroupSnapshot,
         label: t("device.snapshot.label"),
         description: t("device.snapshot.takeOfGroup"),
       },
       {
-        icon: <LuPlay />,
+        icon: TASK_TYPE_ICONS[TaskType.RunGroupDiagnostic],
         type: TaskType.RunGroupDiagnostic,
         label: t("diagnostic.label"),
         description: t("diagnostic.runOnGroup"),
       },
       {
-        icon: <LuCheck />,
+        icon: TASK_TYPE_ICONS[TaskType.CheckGroupCompliance],
         type: TaskType.CheckGroupCompliance,
         label: t("device.config.compliance"),
         description: t("compliance.checkConfigOfGroup"),
       },
       {
-        icon: <LuServer />,
+        icon: TASK_TYPE_ICONS[TaskType.CheckGroupSoftware],
         type: TaskType.CheckGroupSoftware,
         label: t("compliance.softwareAndHardware"),
         description: t("compliance.checkSoftwareHardwareOfGroup"),
       },
       {
-        icon: <LuSearch />,
+        icon: TASK_TYPE_ICONS[TaskType.ScanSubnets],
         type: TaskType.ScanSubnets,
         label: t("device.discover"),
         description: t("task.scanSubnetsDesc"),
       },
       {
-        icon: <LuDatabase />,
+        icon: TASK_TYPE_ICONS[TaskType.PurgeDatabase],
         type: TaskType.PurgeDatabase,
         label: t("admin.purge.database"),
         description: t("admin.purge.desc"),
@@ -257,7 +247,7 @@ export default function AddTaskDialog() {
 
     return (
       <Alert.Root status="info" colorPalette="green">
-        <Alert.Indicator />
+        <Alert.Indicator>{selectedType?.icon}</Alert.Indicator>
         <Alert.Content>
           <Alert.Title>{selectedType?.label}</Alert.Title>
           <Alert.Description>{selectedType?.description}</Alert.Description>
@@ -269,11 +259,6 @@ export default function AddTaskDialog() {
   const limitToOutofdateDevice = useWatch({
     control: form.control,
     name: "limitToOutofdateDevice",
-  })
-
-  const group = useWatch({
-    control: form.control,
-    name: "group",
   })
 
   const limitToOutofdateDeviceHours = useWatch({
@@ -360,11 +345,10 @@ export default function AddTaskDialog() {
                     {hasGroup && (
                       <TreeGroupSelector
                         label={t("group.toProcess")}
-                        value={group ? [group] : []}
+                        control={form.control}
+                        name="group"
                         required
-                        onChange={(groups) =>
-                          form.setValue("group", groups?.[0], { shouldValidate: true })
-                        }
+                        shouldUnregister
                       />
                     )}
 
@@ -381,10 +365,11 @@ export default function AddTaskDialog() {
                             type={FormControlType.Number}
                             disabled={!limitToOutofdateDevice}
                             required={limitToOutofdateDevice}
-                            w="32"
+                            min={1}
+                            w="44"
                             suffix={
-                              <Text color="grey.400" pr="5">
-                                {t("time.hour", { count: limitToOutofdateDeviceHours })}
+                              <Text color="grey.400">
+                                {t("time.hour", { count: Number(limitToOutofdateDeviceHours) })}
                               </Text>
                             }
                           />
@@ -569,12 +554,14 @@ export default function AddTaskDialog() {
                         <Separator />
                         <TreeGroupSelector
                           label={t("common.limitTo")}
-                          value={group ? [group] : []}
-                          onChange={(groups) => form.setValue("group", groups?.[0])}
+                          control={form.control}
+                          name="group"
+                          shouldUnregister
                         />
                         <Separator />
                       </Stack>
                     )}
+
                     <ScheduleForm />
                   </Stack>
                 )}

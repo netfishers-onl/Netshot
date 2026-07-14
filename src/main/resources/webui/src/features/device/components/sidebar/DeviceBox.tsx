@@ -145,7 +145,7 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
       {...stackProps}
     >
       <Stack direction="row" alignItems="center" gap="2" opacity={isDisabled ? 0.5 : 1}>
-        <DeviceNetworkClassIcon networkClass={device?.networkClass} size="sm" />
+        <DeviceNetworkClassIcon networkClass={device?.networkClass} size="sm" color="green.600" />
         <Text fontWeight="medium">{device?.name}</Text>
       </Stack>
       <Stack direction="row" gap="3">

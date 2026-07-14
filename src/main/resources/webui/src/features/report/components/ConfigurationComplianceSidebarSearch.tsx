@@ -3,8 +3,8 @@ import { LuFilter } from "react-icons/lu"
 import Search from "@/components/Search"
 import { useFormDialog } from "@/dialog"
 import { IconButton, Stack } from "@chakra-ui/react"
-import React, { useCallback } from "react"
-import { useForm, useFormContext, useWatch } from "react-hook-form"
+import React from "react"
+import { useForm, useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useShallow } from "zustand/react/shallow"
 import { useConfigurationComplianceSidebarStore } from "../stores/useConfigurationComplianceSidebarStore"
@@ -18,22 +18,10 @@ type FilterForm = {
 function ConfigurationComplianceSidebarSearchFilterForm() {
   const form = useFormContext()
 
-  const groups = useWatch({
-    control: form.control,
-    name: "groups",
-  })
-
-  const onGroupSelect = useCallback(
-    (selectedGroups: number[]) => {
-      form.setValue("groups", selectedGroups)
-    },
-    [form]
-  )
-
   return (
     <Stack>
       <DomainSelect multiple control={form.control} name="domains" />
-      <TreeGroupSelector value={groups} onChange={onGroupSelect} withAny isMulti />
+      <TreeGroupSelector control={form.control} name="groups" withAny isMulti />
       <PolicySelect multiple control={form.control} name="policies" />
     </Stack>
   )

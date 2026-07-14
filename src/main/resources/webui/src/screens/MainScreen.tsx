@@ -64,6 +64,12 @@ export function MainScreen() {
       dialog.open({
         title: t("auth.sessionExpired"),
         description: t("auth.pleaseReAuthenticate"),
+        closeButton: {
+          label: t("auth.goToLogin"),
+          props: {
+            variant: "primary",
+          },
+        },
         onCancel() {
           doRedirect(true)
         },

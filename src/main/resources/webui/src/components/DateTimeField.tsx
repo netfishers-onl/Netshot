@@ -45,20 +45,20 @@ export default function DateTimeField<
     const merged = picked.set({
       hour: value?.hour ?? 0,
       minute: value?.minute ?? 0,
-      second: 0,
+      second: value?.second ?? 0,
       millisecond: 0,
     })
     field.onChange(calendarDateTimeToTimestamp(merged))
   }
 
   const timeValue = value
-    ? `${String(value.hour).padStart(2, "0")}:${String(value.minute).padStart(2, "0")}`
+    ? `${String(value.hour).padStart(2, "0")}:${String(value.minute).padStart(2, "0")}:${String(value.second).padStart(2, "0")}`
     : ""
 
   function onTimeChange(e: ChangeEvent<HTMLInputElement>) {
     if (!value || !e.currentTarget.value) return
-    const [hour, minute] = e.currentTarget.value.split(":").map(Number)
-    field.onChange(calendarDateTimeToTimestamp(value.set({ hour, minute, second: 0, millisecond: 0 })))
+    const [hour, minute, second = 0] = e.currentTarget.value.split(":").map(Number)
+    field.onChange(calendarDateTimeToTimestamp(value.set({ hour, minute, second, millisecond: 0 })))
   }
 
   return (
@@ -106,7 +106,14 @@ export default function DateTimeField<
                 <DatePicker.Header />
                 <DatePicker.DayTable />
               </DatePicker.View>
-              <Input type="time" value={timeValue} onChange={onTimeChange} disabled={!value} mt="2" />
+              <Input
+                type="time"
+                step="1"
+                value={timeValue}
+                onChange={onTimeChange}
+                disabled={!value}
+                mt="2"
+              />
             </DatePicker.Content>
           </DatePicker.Positioner>
         </Portal>

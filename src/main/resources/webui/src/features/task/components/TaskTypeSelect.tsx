@@ -1,9 +1,10 @@
 import { Select, SelectProps } from "@/components/Select"
 import { Option, TaskType } from "@/types"
+import { Icon } from "@chakra-ui/react"
 import { useMemo } from "react"
 import { FieldPath, FieldValues } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { TASK_TYPE_KEYS } from "../constants"
+import { TASK_TYPE_ICONS, TASK_TYPE_KEYS } from "../constants"
 
 export type TaskTypeSelectProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -26,6 +27,7 @@ export default function TaskTypeSelect<TFieldValues extends FieldValues>(
       isClearable
       options={options}
       multiple
+      renderIcon={(item) => <Icon size="sm">{TASK_TYPE_ICONS[item.value]}</Icon>}
       {...props}
     />
   )

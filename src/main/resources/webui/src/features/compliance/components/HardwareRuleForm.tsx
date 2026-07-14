@@ -45,11 +45,6 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
     name: "partNumberRegExp",
   })
 
-  const group = useWatch({
-    control: form.control,
-    name: "group",
-  })
-
   const toggleFamilyRegExp = useCallback(() => {
     form.setValue("familyRegExp", !familyRegExp)
   }, [form, familyRegExp])
@@ -58,20 +53,9 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
     form.setValue("partNumberRegExp", !partNumberRegExp)
   }, [form, partNumberRegExp])
 
-  const onGroupSelect = useCallback(
-    (groups: number[]) => {
-      form.setValue("group", groups[0])
-    },
-    [form]
-  )
-
   return (
     <Stack gap="5">
-      <TreeGroupSelector
-        value={group ? [group] : []}
-        onChange={onGroupSelect}
-        withAny
-      />
+      <TreeGroupSelector control={form.control} name="group" withAny />
       <DeviceTypeSelect
         control={form.control}
         name="driver"

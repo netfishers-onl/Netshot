@@ -7,6 +7,7 @@ import { fieldSlotRecipe } from "./field"
 import { floatingPanelSlotRecipe } from "./floating-panel"
 import { listboxSlotRecipe } from "./listbox"
 import { menuSlotRecipe } from "./menu"
+import { numberInputSlotRecipe } from "./number-input"
 import { popoverSlotRecipe } from "./popover"
 import { progressSlotRecipe } from "./progress"
 import { radioCardSlotRecipe } from "./radioCard"
@@ -26,6 +27,7 @@ export default {
   floatingPanel: floatingPanelSlotRecipe,
   listbox: listboxSlotRecipe,
   menu: menuSlotRecipe,
+  numberInput: numberInputSlotRecipe,
   popover: popoverSlotRecipe,
   progress: progressSlotRecipe,
   radioCard: radioCardSlotRecipe,

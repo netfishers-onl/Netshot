@@ -38,11 +38,6 @@ function ExportDataForm() {
     name: "withInventory",
   })
 
-  const groups = useWatch({
-    control: form.control,
-    name: "groups",
-  })
-
   useEffect(() => {
     if (!withInventory) {
       form.setValue("withInventoryHistory", false)
@@ -61,8 +56,8 @@ function ExportDataForm() {
       />
       <DomainSelect control={form.control} name="domain" withAny />
       <TreeGroupSelector
-        value={groups}
-        onChange={(groups) => form.setValue("groups", groups)}
+        control={form.control}
+        name="groups"
         isMulti
         withAny
       />

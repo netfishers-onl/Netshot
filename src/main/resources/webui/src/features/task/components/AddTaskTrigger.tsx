@@ -10,7 +10,9 @@ export default function AddTaskTrigger({ children, ...rest }: AddTaskTriggerProp
   const open = (evt?: React.MouseEvent) => {
     evt?.stopPropagation()
 
-    dialog.open(<AddTaskDialog />)
+    dialog.open(<AddTaskDialog />, {
+      size: "xl",
+    })
   }
 
   const isMenuItem = "value" in children.props

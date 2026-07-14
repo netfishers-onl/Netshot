@@ -7,12 +7,15 @@ import { useCustomDialog, useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
 import { TaskType } from "@/types"
 import {
+  Alert,
   Button,
   CloseButton,
   Dialog,
   Heading,
+  Icon,
   IconButton,
   Portal,
+  RadioCard,
   Separator,
   Stack,
   Text,
@@ -22,7 +25,6 @@ import { useEffect, useMemo, useState } from "react"
 import { FormProvider, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { LuCamera, LuCheck, LuDatabase, LuPlay, LuPlus, LuSearch, LuServer, LuTrash } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import TaskBoxButton from "./TaskBoxButton"
 
 enum FormStep {
   Type,
@@ -61,8 +63,8 @@ export default function AddTaskDialog() {
     defaultValues: {
       subnets: [""] as string[],
       limitToOutofdateDeviceHours: 0,
-      checkCompliance: false,
-      runDiagnostic: false,
+      checkCompliance: true,
+      runDiagnostic: true,
       group: null,
       domain: null,
       daysToPurge: 90,
@@ -129,6 +131,17 @@ export default function AddTaskDialog() {
     taskType === TaskType.CheckGroupCompliance ||
     taskType === TaskType.CheckGroupSoftware
 
+  // Register "group" with required validation only when a group is mandatory, so
+  // setValue(..., { shouldValidate: true }) can drive isValid in both directions.
+  useEffect(() => {
+    if (!hasGroup) return
+
+    form.register("group", { required: true })
+    form.trigger("group")
+
+    return () => form.unregister("group", { keepValue: true })
+  }, [hasGroup, form])
+
   const submit = (values: FormData) => {
     const { schedule } = values
 
@@ -179,11 +192,13 @@ export default function AddTaskDialog() {
 
   const next = () => {
     setFormStep(FormStep.Details)
+    dialogConfig.update({ size: "md" })
   }
 
   const previous = () => {
     setTaskType(null)
     setFormStep(FormStep.Type)
+    dialogConfig.update({ size: "xl" })
   }
 
   const close = () => {
@@ -191,6 +206,7 @@ export default function AddTaskDialog() {
     setTimeout(() => {
       setTaskType(null)
       setFormStep(FormStep.Type)
+      dialogConfig.update({ size: "xl" })
     })
   }
 
@@ -240,12 +256,13 @@ export default function AddTaskDialog() {
     const selectedType = taskTypeOptions.find((opt) => opt.type === taskType)
 
     return (
-      <Stack gap="0" borderRadius="2xl" bg="green.50" p="6">
-        <Text color="green.800" fontWeight="semibold">
-          {selectedType?.label}
-        </Text>
-        <Text color="green.800">{selectedType?.description}</Text>
-      </Stack>
+      <Alert.Root status="info" colorPalette="green">
+        <Alert.Indicator />
+        <Alert.Content>
+          <Alert.Title>{selectedType?.label}</Alert.Title>
+          <Alert.Description>{selectedType?.description}</Alert.Description>
+        </Alert.Content>
+      </Alert.Root>
     )
   }, [t, taskType, taskTypeOptions])
 
@@ -257,6 +274,11 @@ export default function AddTaskDialog() {
   const group = useWatch({
     control: form.control,
     name: "group",
+  })
+
+  const limitToOutofdateDeviceHours = useWatch({
+    control: form.control,
+    name: "limitToOutofdateDeviceHours",
   })
 
   useEffect(() => {
@@ -275,7 +297,8 @@ export default function AddTaskDialog() {
         placement="center"
         open={dialogConfig.props.isOpen}
         scrollBehavior="inside"
-        size="md"
+        closeOnInteractOutside={false}
+        size={dialogConfig.props.size}
         onOpenChange={(e) => {
           if (!e.open) {
             close()
@@ -291,7 +314,7 @@ export default function AddTaskDialog() {
             <Dialog.Content as="form" onSubmit={form.handleSubmit(submit)}>
               <Dialog.Header display="flex" justifyContent="space-between" alignItems="center">
                 <Heading as="h3" fontSize="2xl" fontWeight="semibold">
-                  {t("task.add")}
+                  {formStep === FormStep.Type ? t("task.chooseType") : t("task.add")}
                 </Heading>
 
                 <Stack direction="row" gap="3" alignItems="center">
@@ -303,18 +326,33 @@ export default function AddTaskDialog() {
               </Dialog.Header>
               <Dialog.Body>
                 {formStep === FormStep.Type ? (
-                  <Stack gap="3">
+                  <RadioCard.Root
+                    value={taskType}
+                    onValueChange={({ value }) => setTaskType(value as TaskType)}
+                    display="grid"
+                    gridTemplateColumns="repeat(3, 1fr)"
+                    width="full"
+                    gap="5"
+                    size="lg"
+                  >
                     {taskTypeOptions.map((option) => (
-                      <TaskBoxButton
-                        icon={option.icon}
-                        label={option.label}
-                        description={option.description}
-                        isActive={option.type === taskType}
-                        onClick={() => setTaskType(option.type)}
-                        key={option.label}
-                      />
+                      <RadioCard.Item key={option.type} value={option.type}>
+                        <RadioCard.ItemHiddenInput />
+                        <RadioCard.ItemControl>
+                          <RadioCard.ItemContent>
+                            <Icon size="xl" mb="2">
+                              {option.icon}
+                            </Icon>
+                            <RadioCard.ItemText>{option.label}</RadioCard.ItemText>
+                            <RadioCard.ItemDescription>
+                              {option.description}
+                            </RadioCard.ItemDescription>
+                          </RadioCard.ItemContent>
+                          <RadioCard.ItemIndicator />
+                        </RadioCard.ItemControl>
+                      </RadioCard.Item>
                     ))}
-                  </Stack>
+                  </RadioCard.Root>
                 ) : (
                   <Stack gap="6">
                     {taskInfoBox}
@@ -323,23 +361,34 @@ export default function AddTaskDialog() {
                       <TreeGroupSelector
                         label={t("group.toProcess")}
                         value={group ? [group] : []}
-                        onChange={(groups) => form.setValue("group", groups?.[0])}
+                        required
+                        onChange={(groups) =>
+                          form.setValue("group", groups?.[0], { shouldValidate: true })
+                        }
                       />
                     )}
 
                     {taskType === TaskType.TakeGroupSnapshot && (
                       <>
-                        <Checkbox control={form.control} name="limitToOutofdateDevice">
-                          {t("device.limitToUnchangedFor")}
-                        </Checkbox>
+                        <Stack direction="row" alignItems="center" gap="3">
+                          <Checkbox control={form.control} name="limitToOutofdateDevice">
+                            {t("device.limitToUnchangedFor")}
+                          </Checkbox>
 
-                        <FormControl
-                          control={form.control}
-                          name="limitToOutofdateDeviceHours"
-                          type={FormControlType.Number}
-                          disabled={!limitToOutofdateDevice}
-                          required={limitToOutofdateDevice}
-                        />
+                          <FormControl
+                            control={form.control}
+                            name="limitToOutofdateDeviceHours"
+                            type={FormControlType.Number}
+                            disabled={!limitToOutofdateDevice}
+                            required={limitToOutofdateDevice}
+                            w="32"
+                            suffix={
+                              <Text color="grey.400" pr="5">
+                                {t("time.hour", { count: limitToOutofdateDeviceHours })}
+                              </Text>
+                            }
+                          />
+                        </Stack>
                         <Checkbox control={form.control} name="runDiagnostic">
                           {t("device.runDiagnosticsAfterSnapshot")}
                         </Checkbox>

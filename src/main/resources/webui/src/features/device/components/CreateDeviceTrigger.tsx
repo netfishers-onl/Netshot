@@ -220,7 +220,7 @@ export default function CreateDeviceTrigger({ children, ...rest }: CreateDeviceT
       },
       size: "lg",
       submitButton: {
-        label: t("common.add"),
+        label: t("common.create"),
       },
     })
   }

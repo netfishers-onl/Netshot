@@ -66,7 +66,7 @@ export default function AddPolicyTrigger({ children, ...rest }: AddPolicyTrigger
         form.reset()
       },
       submitButton: {
-        label: t("policy.add"),
+        label: t("common.create"),
       },
     })
   }

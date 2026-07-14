@@ -58,8 +58,16 @@ export type Task = {
   repeating: boolean
   type: string
   script?: string
+  deviceDriver?: string
   userInputValues?: Record<string, string>
   deviceId?: number
   deviceGroupId?: number
   priority: SchedulePriority
+  discoveredDeviceTypeDescription?: string
+  days?: number
+  configDays?: number
+  configSize?: number
+  configKeepDays?: number
+  moduleDays?: number
+  limitToOutofdateDeviceHours?: number
 }

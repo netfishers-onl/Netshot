@@ -4,9 +4,9 @@ import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { LuFilter } from "react-icons/lu"
 import { useState } from "react"
+import { DateTimeField } from "@/components"
 import { TIME_RANGE_PRESETS } from "../constants"
 import { useTaskHistoryFilterStore } from "../stores/useTaskHistoryFilterStore"
-import TaskDateTimeField from "./TaskDateTimeField"
 import TaskStatusSelect from "./TaskStatusSelect"
 import TaskTypeSelect from "./TaskTypeSelect"
 
@@ -71,13 +71,13 @@ export default function TaskTimeRangeMenu(props: TaskTimeRangeMenuProps) {
             <Stack gap="3" asChild>
               <form onSubmit={form.handleSubmit(onApply)}>
                 <Stack direction="row" gap="2">
-                  <TaskDateTimeField
+                  <DateTimeField
                     control={form.control}
                     name="fromDate"
                     label={t("task.from")}
                     placeholder={t("task.from")}
                   />
-                  <TaskDateTimeField
+                  <DateTimeField
                     control={form.control}
                     name="toDate"
                     label={t("task.to")}

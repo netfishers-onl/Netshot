@@ -76,7 +76,7 @@ export default function AddSoftwareRuleTrigger({ children, ...rest }: AddSoftwar
         form.reset()
       },
       submitButton: {
-        label: t("policy.rule.add"),
+        label: t("common.create"),
       },
     })
   }

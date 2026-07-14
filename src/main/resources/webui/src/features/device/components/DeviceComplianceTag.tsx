@@ -1,9 +1,10 @@
 import { DeviceComplianceResultType } from "@/types"
-import { Badge, Icon } from "@chakra-ui/react"
+import { Badge, BadgeProps, Icon } from "@chakra-ui/react"
+import { forwardRef } from "react"
 import { LuCircleCheck, LuCircleX, LuCircleMinus, LuBan, LuTriangleAlert, LuMinus } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 
-export type DeviceComplianceTagProps = {
+export type DeviceComplianceTagProps = BadgeProps & {
   resultType: DeviceComplianceResultType
 }
 
@@ -46,16 +47,27 @@ const mapping: Record<DeviceComplianceResultType, Config> = {
   },
 }
 
-export function DeviceComplianceTag({ resultType }: DeviceComplianceTagProps) {
-  const { t } = useTranslation()
-  const config = mapping[resultType]
+export const DeviceComplianceTag = forwardRef<HTMLSpanElement, DeviceComplianceTagProps>(
+  ({ resultType, ...rest }, ref) => {
+    const { t } = useTranslation()
+    const config = mapping[resultType]
 
-  if (!config) return null
+    if (!config) return null
 
-  return (
-    <Badge variant="surface" colorPalette={config.colorPalette} size="md" display="inline-flex" alignItems="center" gap="1">
-      <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
-      {t(config.labelKey)}
-    </Badge>
-  )
-}
+    return (
+      <Badge
+        ref={ref}
+        variant="surface"
+        colorPalette={config.colorPalette}
+        size="md"
+        display="inline-flex"
+        alignItems="center"
+        gap="1"
+        {...rest}
+      >
+        <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
+        {t(config.labelKey)}
+      </Badge>
+    )
+  }
+)

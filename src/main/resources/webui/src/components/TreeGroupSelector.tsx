@@ -160,6 +160,9 @@ export default function TreeGroupSelector(props: TreeGroupSelectorProps) {
         dialogRef.close()
       },
       size: "lg",
+      submitButton: {
+        label: t("common.select"),
+      },
     })
   }
 

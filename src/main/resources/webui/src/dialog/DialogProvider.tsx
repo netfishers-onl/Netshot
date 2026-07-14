@@ -59,10 +59,7 @@ const DEFAULT_PROVDER_CONFIG: DialogProviderConfig = {
   },
   alert: {
     closeButton: {
-      label: "ok",
-      props: {
-        colorPalette: "green",
-      },
+      label: "close",
     },
   },
 }

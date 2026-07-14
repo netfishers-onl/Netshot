@@ -1,10 +1,11 @@
 import i18n from "@/i18n"
 import { SchedulePriority, TaskScheduleType } from "@/types"
-import { Stack } from "@chakra-ui/react"
-import { fromAbsolute, getLocalTimeZone, now, today, toZoned } from "@internationalized/date"
+import { Stack, Text } from "@chakra-ui/react"
+import { getLocalTimeZone, now } from "@internationalized/date"
 import { useEffect, useMemo } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
+import DateTimeField from "./DateTimeField"
 import FormControl, { FormControlType } from "./FormControl"
 import { Select } from "./Select"
 
@@ -44,12 +45,6 @@ export const SCHEDULE_TYPE_OPTIONS = [
 ]
 
 
-export const MINUTE_OPTIONS = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(n => ({
-  label: i18n.t("time.min", { count: n }),
-  value: n,
-}))
-
-
 export const SCHEDULE_PRIORITY_OPTIONS = [
   {
     label: i18n.t("common.low"),
@@ -67,8 +62,7 @@ export const SCHEDULE_PRIORITY_OPTIONS = [
 
 export type FormData = {
   type: ScheduleType
-  date: number | undefined
-  time: string
+  dateTime: number | undefined
   minute: number
   every: number
   frequency: "hourly" | "daily" | "weekly" | "monthly"
@@ -84,9 +78,8 @@ export default function ScheduleForm() {
     defaultValues: {
       type: SCHEDULE_TYPE_OPTIONS[0].value,
       every: 1,
-      date: toZoned(today(tz), tz).toDate().getTime(),
-      time: `${String(now(tz).hour).padStart(2, "0")}:${String(now(tz).minute).padStart(2, "0")}`,
-      minute: MINUTE_OPTIONS[0].value,
+      dateTime: now(tz).toDate().getTime(),
+      minute: 5,
       frequency: "hourly",
       priority: SCHEDULE_PRIORITY_OPTIONS[1].value.toString(),
     },
@@ -96,6 +89,9 @@ export default function ScheduleForm() {
     control: scheduleForm.control,
     name: "type",
   })
+
+  const minute = useWatch({ control: scheduleForm.control, name: "minute" })
+  const minuteCount = Number(minute) || 1
 
   const every = useWatch({ control: scheduleForm.control, name: "every" })
   const everyCount = Number(every) || 1
@@ -118,7 +114,7 @@ export default function ScheduleForm() {
 
     // When schedule form change: format, parse and set values to outer form
     const watcher = scheduleForm.watch(
-      ({ type, date, time, every, frequency, minute, priority }) => {
+      ({ type, dateTime, every, frequency, minute, priority }) => {
         let scheduleType: TaskScheduleType = TaskScheduleType.Asap
         let scheduleReference: number = now(tz).toDate().getTime()
 
@@ -127,14 +123,9 @@ export default function ScheduleForm() {
           scheduleReference = now(tz).add({ minutes: minute }).toDate().getTime()
         } else if (type === ScheduleType.AtDateTime) {
           scheduleType = TaskScheduleType.At
-
-          const [hours, minutes] = time.split(":")
-
-          scheduleReference = fromAbsolute(date, tz).set({ hour: +hours, minute: +minutes, second: 0, millisecond: 0 }).toDate().getTime()
+          scheduleReference = dateTime
         } else if (type === ScheduleType.Repeat) {
-          const [hours, minutes] = time.split(":")
-
-          scheduleReference = fromAbsolute(date, tz).set({ hour: +hours, minute: +minutes, second: 0, millisecond: 0 }).toDate().getTime()
+          scheduleReference = dateTime
 
           if (frequency === "hourly") {
             scheduleType = TaskScheduleType.Hourly
@@ -161,8 +152,7 @@ export default function ScheduleForm() {
 
   // Re-init all fields when schedule type change
   useEffect(() => {
-    scheduleForm.resetField("date")
-    scheduleForm.resetField("time")
+    scheduleForm.resetField("dateTime")
     scheduleForm.resetField("every")
     scheduleForm.resetField("minute")
     scheduleForm.resetField("frequency")
@@ -171,26 +161,34 @@ export default function ScheduleForm() {
 
   return (
     <>
-      <Select options={SCHEDULE_TYPE_OPTIONS} control={scheduleForm.control} name="type" />
+      <Select
+        label={t("task.schedule")}
+        options={SCHEDULE_TYPE_OPTIONS}
+        control={scheduleForm.control}
+        name="type"
+      />
       {selectedScheduleType === ScheduleType.AtTime && (
-        <Select options={MINUTE_OPTIONS} control={scheduleForm.control} name="minute" />
+        <FormControl
+          control={scheduleForm.control}
+          name="minute"
+          type={FormControlType.Number}
+          required
+          rules={{ min: { value: 1, message: t("common.mustBeAtLeastOne") } }}
+          suffix={
+            <Text color="grey.400" pr="5">
+              {t("time.minute", { count: minuteCount })}
+            </Text>
+          }
+        />
       )}
       {(selectedScheduleType === ScheduleType.AtDateTime ||
         selectedScheduleType === ScheduleType.Repeat) && (
-        <Stack direction="row" gap="4">
-          <FormControl
-            label={t("time.date")}
-            control={scheduleForm.control}
-            name="date"
-            type={FormControlType.Date}
-          />
-          <FormControl
-            label={t("time.time")}
-            control={scheduleForm.control}
-            name="time"
-            type={FormControlType.Time}
-          />
-        </Stack>
+        <DateTimeField
+          control={scheduleForm.control}
+          name="dateTime"
+          label={t("time.dateTime")}
+          placeholder={t("time.dateTime")}
+        />
       )}
       {selectedScheduleType === ScheduleType.Repeat && (
         <Stack direction="row" gap="4" alignItems="flex-end">

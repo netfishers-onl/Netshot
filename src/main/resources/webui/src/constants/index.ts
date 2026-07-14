@@ -17,6 +17,7 @@ export const QUERIES = {
   DEVICE_SOFTWARE_VERSION_LIST: "device-software-version-list",
   DEVICE_REPORT_GROUP_LIST: "device-report-group-list",
   DEVICE_GROUPS: "device-groups",
+  GROUP_DETAIL: "group-detail",
   DEVICE_GROUP_AGGREGATED_SEARCH: "device-group-aggregated-search",
   DEVICE_CONFIGS: "device:configs",
   DEVICE_CONFIG_COMPARE: "device-config-compare",

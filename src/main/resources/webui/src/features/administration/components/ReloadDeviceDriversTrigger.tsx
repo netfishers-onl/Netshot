@@ -52,7 +52,7 @@ export default function ReloadDeviceDriversTrigger({ children, ...rest }: Reload
       confirmButton: {
         label: t("common.reload"),
         props: {
-          colorScheme: "green",
+          colorPalette: "green",
         },
       },
     })

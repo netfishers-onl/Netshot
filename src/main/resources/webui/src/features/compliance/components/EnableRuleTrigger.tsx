@@ -54,6 +54,9 @@ export default function EnableRuleTrigger({ policyId, rule, children, ...rest }:
       },
       confirmButton: {
         label: t("common.enable"),
+        props: {
+          colorPalette: "green",
+        },
       },
     })
   }

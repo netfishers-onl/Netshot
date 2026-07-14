@@ -4,6 +4,7 @@ import { comboboxSlotRecipe } from "./combobox"
 import { datePickerSlotRecipe } from "./date-picker"
 import { dialogSlotRecipe } from "./dialog"
 import { fieldSlotRecipe } from "./field"
+import { floatingPanelSlotRecipe } from "./floating-panel"
 import { listboxSlotRecipe } from "./listbox"
 import { menuSlotRecipe } from "./menu"
 import { popoverSlotRecipe } from "./popover"
@@ -22,6 +23,7 @@ export default {
   checkbox: checkboxSlotRecipe,
   datePicker: datePickerSlotRecipe,
   dialog: dialogSlotRecipe,
+  floatingPanel: floatingPanelSlotRecipe,
   listbox: listboxSlotRecipe,
   menu: menuSlotRecipe,
   popover: popoverSlotRecipe,

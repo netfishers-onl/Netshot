@@ -63,6 +63,9 @@ export default function EnableDiagnosticTrigger({ diagnostic, children, ...rest 
       },
       confirmButton: {
         label: t("common.enable"),
+        props: {
+          colorPalette: "green",
+        },
       },
     })
   }

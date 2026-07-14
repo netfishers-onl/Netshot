@@ -34,7 +34,7 @@ export default function AlertDialog() {
   const closeButtonConfig: AlertDialogProps["closeButton"] = {
     label: closeButton?.label,
     props: {
-      variant: "primary",
+      variant: "default",
       loading: currentConfig.props.isLoading,
       onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
         evt?.stopPropagation()

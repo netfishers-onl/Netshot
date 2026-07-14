@@ -3,7 +3,7 @@ import TaskDialog from "@/components/TaskDialog"
 import { useCustomDialog } from "@/dialog"
 import { DeviceBadge } from "@/features/device/components"
 import { useLocalization } from "@/i18n"
-import { Task } from "@/types"
+import { Task, TaskType } from "@/types"
 import { Skeleton, Stack, Text } from "@chakra-ui/react"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useMemo } from "react"
@@ -42,7 +42,7 @@ export default function TaskTable(props: TaskTableProps) {
         ? [
             columnHelper.accessor("target", {
               cell: (info) => {
-                const { deviceId, deviceGroupId } = info.row.original
+                const { deviceId, deviceGroupId, type } = info.row.original
                 if (deviceId) {
                   return (
                     <DeviceBadge>
@@ -52,7 +52,7 @@ export default function TaskTable(props: TaskTableProps) {
                     </DeviceBadge>
                   )
                 }
-                if (deviceGroupId) {
+                if (deviceGroupId && type !== TaskType.PurgeDatabase) {
                   return (
                     <DeviceGroupBadge
                       id={deviceGroupId}

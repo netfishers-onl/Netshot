@@ -97,7 +97,7 @@ export default function DeviceScanSubnetTrigger({ children, ...rest }: DeviceSca
         taskDialog.open(<TaskDialog id={task.id} />)
       },
       size: "xl",
-      submitButton: { label: t("common.add") },
+      submitButton: { label: t("common.run") },
     })
   }
 

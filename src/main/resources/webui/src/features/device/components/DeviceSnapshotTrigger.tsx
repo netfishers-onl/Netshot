@@ -90,7 +90,7 @@ export default function DeviceSnapshotTrigger({ devices, children, ...rest }: De
           taskDialog.open(<TaskDialog id={tasks[0].id} />)
         }
       },
-      submitButton: { label: t("device.snapshot.take") },
+      submitButton: { label: t("common.run") },
     })
   }
 

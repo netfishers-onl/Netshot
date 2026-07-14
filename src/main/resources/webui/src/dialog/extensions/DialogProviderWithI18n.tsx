@@ -24,7 +24,7 @@ export function DialogProviderWithI18n({ children }: PropsWithChildren) {
     },
     alert: {
       closeButton: {
-        label: t("common.ok"),
+        label: t("common.close"),
       },
     },
   }

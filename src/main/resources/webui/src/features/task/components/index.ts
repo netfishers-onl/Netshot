@@ -1,4 +1,3 @@
-export { default as TaskDateTimeField } from "./TaskDateTimeField";
 export { default as TaskFilterFields } from "./TaskFilterFields";
 export { default as TaskFilterMenu } from "./TaskFilterMenu";
 export { default as TaskHistogramCard } from "./TaskHistogramCard";

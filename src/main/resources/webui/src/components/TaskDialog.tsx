@@ -1,12 +1,12 @@
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { DeviceGroupBadge, TaskStatusBadge } from "@/components"
+import { DeviceGroupBadge, LogPanel, TaskStatusBadge } from "@/components"
 import { MUTATIONS, QUERIES } from "@/constants"
 import { useConfirmDialogWithMutation, useDialogConfig } from "@/dialog"
 import { DeviceBadge } from "@/features/device/components"
 import { useToast } from "@/hooks"
 import { useLocalization } from "@/i18n"
-import { TaskScheduleType, TaskStatus } from "@/types"
+import { TaskScheduleType, TaskStatus, TaskType } from "@/types"
 import { getSchedulePriorityLabel } from "@/utils"
 import {
   Box,
@@ -22,8 +22,7 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useState } from "react"
-import { LuDownload } from "react-icons/lu"
+import { LuDownload, LuScrollText } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
 
@@ -46,7 +45,6 @@ export default function TaskDialog(props: TaskDialogProps) {
   const queryClient = useQueryClient()
   const toast = useToast()
   const confirmDialog = useConfirmDialogWithMutation()
-  const [showLog, setShowLog] = useState<boolean>(false)
 
   const { data: task, isPending } = useQuery({
     queryKey: [QUERIES.TASK, id],
@@ -69,9 +67,38 @@ export default function TaskDialog(props: TaskDialogProps) {
     },
   })
 
+  const purgeGroupId =
+    task?.type === TaskType.PurgeDatabase && task?.deviceGroupId ? task.deviceGroupId : null
+
+  const { data: purgeGroup } = useQuery({
+    queryKey: [QUERIES.GROUP_DETAIL, purgeGroupId],
+    queryFn: async () => api.group.getById(purgeGroupId),
+    enabled: Boolean(purgeGroupId),
+  })
+
   const creationDate = task?.creationDate ? formatDateTime(task?.creationDate) : null
-  const executionDate = task?.executionDate ? formatDateTime(task?.executionDate) : null
   const priorityLabel = getSchedulePriorityLabel(task?.priority)
+
+  // Not started yet: show the next scheduled run instead of the (empty) execution date
+  const isNotYetExecuted =
+    task?.status === TaskStatus.New ||
+    task?.status === TaskStatus.Waiting ||
+    task?.status === TaskStatus.Scheduled
+
+  const isTaskOver =
+    task?.status === TaskStatus.Success ||
+    task?.status === TaskStatus.Failure ||
+    task?.status === TaskStatus.Cancelled
+
+  const executionDate = isNotYetExecuted
+    ? task?.nextExecutionDate
+      ? formatDateTime(task.nextExecutionDate)
+      : t("task.asSoonAsPossible")
+    : task?.status === TaskStatus.Cancelled
+      ? t("common.cancelled")
+      : task?.executionDate
+        ? formatDateTime(task.executionDate)
+        : null
 
   const scheduleLabel = task?.repeating
     ? `${t("time.every")} ${task.scheduleFactor} ${t(
@@ -79,10 +106,6 @@ export default function TaskDialog(props: TaskDialogProps) {
         { count: task.scheduleFactor }
       )}`
     : t("task.once")
-
-  function toggleLog() {
-    setShowLog((prev) => !prev)
-  }
 
   const cancelMutation = useMutation({
     mutationKey: MUTATIONS.TASK_CANCEL,
@@ -112,7 +135,7 @@ export default function TaskDialog(props: TaskDialogProps) {
         })
       },
       confirmButton: {
-        label: t("common.cancel"),
+        label: t("task.cancelTask"),
         props: {
           colorPalette: "red",
         },
@@ -150,7 +173,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                       <Text color="grey.400">{t("common.id")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
-                      <Text>{task?.id ?? "nA"}</Text>
+                      <Text>{task?.id ?? t("common.nA")}</Text>
                     </Skeleton>
                   </Flex>
                   <Flex alignItems="center">
@@ -158,7 +181,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                       <Text color="grey.400">{t("common.description")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
-                      <Text>{task?.taskDescription ?? "nA"}</Text>
+                      <Text>{task?.taskDescription ?? t("common.nA")}</Text>
                     </Skeleton>
                   </Flex>
                   <Flex alignItems="center">
@@ -166,7 +189,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                       <Text color="grey.400">{t("common.comments")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
-                      <Text>{task?.comments ?? "nA"}</Text>
+                      <Text>{task?.comments ?? t("common.nA")}</Text>
                     </Skeleton>
                   </Flex>
                   <Flex alignItems="center">
@@ -183,14 +206,14 @@ export default function TaskDialog(props: TaskDialogProps) {
                             {task.target}
                           </Link>
                         </DeviceBadge>
-                      ) : task?.deviceGroupId ? (
+                      ) : task?.deviceGroupId && task?.type !== TaskType.PurgeDatabase ? (
                         <DeviceGroupBadge
                           id={task.deviceGroupId}
                           name={task.target}
                           onClick={() => dialogConfig.close()}
                         />
                       ) : (
-                        <Text>{task?.target ?? "nA"}</Text>
+                        <Text>{task?.target ?? t("common.nA")}</Text>
                       )}
                     </Skeleton>
                   </Flex>
@@ -199,7 +222,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                       <Text color="grey.400">{t("common.creation")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
-                      <Text>{creationDate ?? "nA"}</Text>
+                      <Text>{creationDate ?? t("common.nA")}</Text>
                     </Skeleton>
                   </Flex>
                   <Flex alignItems="center">
@@ -207,7 +230,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                       <Text color="grey.400">{t("common.execution")}</Text>
                     </Box>
                     <Skeleton loading={isPending}>
-                      <Text>{executionDate ?? "nA"}</Text>
+                      <Text>{executionDate ?? t("common.nA")}</Text>
                     </Skeleton>
                   </Flex>
                   <Flex alignItems="center">
@@ -246,6 +269,105 @@ export default function TaskDialog(props: TaskDialogProps) {
                   </Flex>
                 </Stack>
 
+                {task?.type === TaskType.DiscoverDeviceType && task?.discoveredDeviceTypeDescription && (
+                  <>
+                    <Separator />
+                    <Stack gap="3">
+                      <Flex alignItems="center">
+                        <Box w="140px">
+                          <Text color="grey.400">{t("task.discoveredDeviceType")}</Text>
+                        </Box>
+                        <Text>{task.discoveredDeviceTypeDescription}</Text>
+                      </Flex>
+                    </Stack>
+                  </>
+                )}
+
+                {task?.type === TaskType.PurgeDatabase && (
+                  <>
+                    <Separator />
+                    <Stack gap="3">
+                      <Flex alignItems="center">
+                        <Box w="140px">
+                          <Text color="grey.400">{t("task.purge")}</Text>
+                        </Box>
+                        <Text>
+                          {task.days} {t("time.day", { count: task.days })}
+                        </Text>
+                      </Flex>
+                      {task?.configDays > 0 && (
+                        <Flex alignItems="center">
+                          <Box w="140px">
+                            <Text color="grey.400">{t("device.config.purge")}</Text>
+                          </Box>
+                          <Text>
+                            {task.configDays} {t("time.day", { count: task.configDays })}
+                          </Text>
+                        </Flex>
+                      )}
+                      {task?.configSize > 0 && (
+                        <Flex alignItems="center">
+                          <Box w="140px">
+                            <Text color="grey.400">{t("device.config.size")}</Text>
+                          </Box>
+                          <Text>
+                            {task.configSize} {t("common.kb")}
+                          </Text>
+                        </Flex>
+                      )}
+                      {task?.configKeepDays > 0 && (
+                        <Flex alignItems="center">
+                          <Box w="140px">
+                            <Text color="grey.400">{t("device.config.keep")}</Text>
+                          </Box>
+                          <Text>
+                            {task.configKeepDays} {t("time.day", { count: task.configKeepDays })}
+                          </Text>
+                        </Flex>
+                      )}
+                      {task?.moduleDays > 0 && (
+                        <Flex alignItems="center">
+                          <Box w="140px">
+                            <Text color="grey.400">{t("device.module.delete")}</Text>
+                          </Box>
+                          <Text>
+                            {task.moduleDays} {t("time.day", { count: task.moduleDays })}
+                          </Text>
+                        </Flex>
+                      )}
+                      {purgeGroup && (
+                        <Flex alignItems="center">
+                          <Box w="140px">
+                            <Text color="grey.400">{t("common.limitTo")}</Text>
+                          </Box>
+                          <DeviceGroupBadge
+                            id={purgeGroup.id}
+                            name={purgeGroup.name}
+                            onClick={() => dialogConfig.close()}
+                          />
+                        </Flex>
+                      )}
+                    </Stack>
+                  </>
+                )}
+
+                {task?.type === TaskType.TakeGroupSnapshot && task?.limitToOutofdateDeviceHours > 0 && (
+                  <>
+                    <Separator />
+                    <Stack gap="3">
+                      <Flex alignItems="center">
+                        <Box w="140px">
+                          <Text color="grey.400">{t("device.limitToUnchangedFor")}</Text>
+                        </Box>
+                        <Text>
+                          {task.limitToOutofdateDeviceHours}{" "}
+                          {t("time.hour", { count: task.limitToOutofdateDeviceHours })}
+                        </Text>
+                      </Flex>
+                    </Stack>
+                  </>
+                )}
+
                 {task?.script && (
                   <>
                     <Separator />
@@ -254,6 +376,14 @@ export default function TaskDialog(props: TaskDialogProps) {
                         {t("script.label")}
                       </Heading>
                       <Stack gap="4">
+                        {task?.deviceDriver && (
+                          <Flex alignItems="center">
+                            <Box w="140px">
+                              <Text color="grey.400">{t("admin.driver.label")}</Text>
+                            </Box>
+                            <Text>{task.deviceDriver}</Text>
+                          </Flex>
+                        )}
                         <Box p="6" borderWidth="1px" borderColor="grey.100" borderRadius="xl">
                           <Text fontFamily="mono" whiteSpace="pre-wrap">
                             {task?.script}
@@ -266,47 +396,45 @@ export default function TaskDialog(props: TaskDialogProps) {
                               <Text color="grey.400">{key}</Text>
                             </Box>
 
-                            <Text>{task?.userInputValues[key] ?? "nA"}</Text>
+                            <Text>{task?.userInputValues[key] ?? t("common.nA")}</Text>
                           </Flex>
                         ))}
                       </Stack>
                     </Stack>
                   </>
                 )}
-
-                {showLog && (
-                  <>
-                    <Separator />
-                    <Stack gap="4">
-                      <Heading size="md" fontWeight="semibold">
-                        {t("admin.logs.info")}
-                      </Heading>
-                      <Box
-                        p="6"
-                        bg="grey.50"
-                        borderWidth="1px"
-                        borderColor="grey.100"
-                        borderRadius="xl"
-                      >
-                        <Text fontFamily="mono" whiteSpace="pre-wrap">
-                          {task?.log}
-                        </Text>
-                      </Box>
-                      <Button variant="ghost" size="sm" alignSelf="start" asChild>
-                        <a
-                          href={`/api/tasks/${task.id}/debuglog`}
-                          download={`task-${task?.id}-debug.log`}
-                        >
-                          <LuDownload />
-                          {t("admin.logs.debug")}
-                        </a>
-                      </Button>
-                    </Stack>
-                  </>
-                )}
               </Stack>
             </Dialog.Body>
-            <Dialog.Footer>
+            <Dialog.Footer justifyContent="space-between">
+              <Stack direction="row" gap="2">
+                {task?.log && (
+                  <LogPanel
+                    title={t("admin.logs.info")}
+                    copyValue={task.log}
+                    trigger={
+                      <Button size="sm" variant="ghost">
+                        <LuScrollText />
+                        {t("common.logs")}
+                      </Button>
+                    }
+                  >
+                    <Text fontSize="xs" whiteSpace="pre-wrap" fontFamily="mono">
+                      {task.log}
+                    </Text>
+                  </LogPanel>
+                )}
+                {task?.debugEnabled && isTaskOver && (
+                  <Button size="sm" variant="ghost" asChild>
+                    <a
+                      href={`/api/tasks/${task.id}/debuglog`}
+                      download={`task-${task.id}-debug.log`}
+                    >
+                      <LuDownload />
+                      {t("admin.logs.debug")}
+                    </a>
+                  </Button>
+                )}
+              </Stack>
               <Stack direction="row" gap="3">
                 {task?.status === TaskStatus.Scheduled && (
                   <Button
@@ -318,11 +446,8 @@ export default function TaskDialog(props: TaskDialogProps) {
                     {t("task.cancelTask")}
                   </Button>
                 )}
-                <Button onClick={toggleLog} disabled={task?.log === ""}>
-                  {t(showLog ? "common.hideLogs" : "common.showLogs")}
-                </Button>
-                <Button variant="primary" onClick={() => dialogConfig.close()}>
-                  {t("common.ok")}
+                <Button variant="default" onClick={() => dialogConfig.close()}>
+                  {t("common.close")}
                 </Button>
               </Stack>
             </Dialog.Footer>

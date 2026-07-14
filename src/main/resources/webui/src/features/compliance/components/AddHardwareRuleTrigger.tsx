@@ -73,7 +73,7 @@ export default function AddHardwareRuleTrigger({ children, ...rest }: AddHardwar
         form.reset()
       },
       submitButton: {
-        label: t("policy.rule.add"),
+        label: t("common.create"),
       },
     })
   }

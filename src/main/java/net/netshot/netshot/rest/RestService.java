@@ -384,6 +384,22 @@ public class RestService extends Thread {
 		this.request.setAttribute(ResponseCodeFilter.SUGGESTED_RESPONSE_CODE, status);
 	}
 
+
+	/**
+	 * Get the name of the current user making the request.
+	 * @return the current username or unknown
+	 */
+	private String getUsername() {
+		User user = (User) securityContext.getUserPrincipal();
+		try {
+			return user.getUsername();
+		}
+		catch (Exception e) {
+			// Whatever may happen
+		}
+		return "<Unknown>";
+	}
+
 	/**
 	 * Check whether a PersistenceException is caused by key conflict (duplicate key).
 	 * @param e = the exception to check
@@ -3709,7 +3725,8 @@ public class RestService extends Thread {
 			}
 
 			try {
-				TaskManager.cancelTask(task, "Task manually cancelled by user."); //TODO
+				String message = "Task manually cancelled by user %s.".formatted(this.getUsername());
+				TaskManager.cancelTask(task, message);
 				AAA_LOG.info("{} has been manually cancelled.", task);
 			}
 			catch (Exception e) {
@@ -3971,13 +3988,8 @@ public class RestService extends Thread {
 	@Tag(name = "Tasks", description = "Task management")
 	public Task addTask(RsTask rsTask) throws WebApplicationException {
 		log.debug("REST request, add task.");
-		User user = (User) securityContext.getUserPrincipal();
-		String userName = "<Unknown>";
-		try {
-			userName = user.getUsername();
-		}
-		catch (Exception e) {
-		}
+
+		final String userName = this.getUsername();
 
 		Task task;
 		if ("TakeSnapshotTask".equals(rsTask.getType())) {

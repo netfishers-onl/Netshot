@@ -62,7 +62,9 @@ public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask 
 	private DeviceGroup deviceGroup;
 
 	/** Only capture devices updated more than X hours ago. **/
-	@Getter
+	@Getter(onMethod = @__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
 	@Setter
 	private int limitToOutofdateDeviceHours = -1;
 

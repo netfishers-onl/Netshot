@@ -6,7 +6,7 @@ import { Control, FieldPath, FieldValues, useController } from "react-hook-form"
 import { LuCalendar } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 
-export type TaskDateTimeFieldProps<
+export type DateTimeFieldProps<
   TFieldValues extends FieldValues,
   TName extends FieldPath<TFieldValues>,
 > = {
@@ -24,10 +24,10 @@ export type TaskDateTimeFieldProps<
  * picker (`DatePicker.Input` + a small ghost `IconButton` trigger), since a
  * custom trigger is needed here to show time alongside the date.
  */
-export default function TaskDateTimeField<
+export default function DateTimeField<
   TFieldValues extends FieldValues,
   TName extends FieldPath<TFieldValues>,
->(props: TaskDateTimeFieldProps<TFieldValues, TName>) {
+>(props: DateTimeFieldProps<TFieldValues, TName>) {
   const { control, name, label, placeholder } = props
   const { t } = useTranslation()
   const { formatDateTime, numberToCalendarDateTime, calendarDateTimeToTimestamp } = useLocalization()

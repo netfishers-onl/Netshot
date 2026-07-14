@@ -47,7 +47,12 @@ export default function EnableDeviceTrigger({ devices, children, ...rest }: Enab
         queryClient.invalidateQueries({ queryKey: [DEVICE_QUERIES.DEVICE_DETAIL] })
         dialogRef.close()
       },
-      confirmButton: { label: t(isMultiple ? "common.enableAll" : "common.enable") },
+      confirmButton: {
+        label: t(isMultiple ? "common.enableAll" : "common.enable"),
+        props: {
+          colorPalette: "green",
+        },
+      },
     })
   }
 

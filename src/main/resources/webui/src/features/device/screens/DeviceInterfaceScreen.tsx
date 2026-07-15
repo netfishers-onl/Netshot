@@ -1,4 +1,4 @@
-import { List, Skeleton, Stack, Tag, Text } from "@chakra-ui/react"
+import { Badge, Icon, List, Skeleton, Span, Stack, Tag, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
@@ -13,6 +13,7 @@ import { DeviceInterface } from "@/types"
 import { merge, search } from "@/utils"
 
 import { QUERIES } from "../constants"
+import { LuChevronsLeftRightEllipsis, LuPowerOff } from "react-icons/lu"
 
 const columnHelper = createColumnHelper<DeviceInterface>()
 
@@ -65,44 +66,65 @@ export default function DeviceInterfaceScreen() {
             cell: (info) => <Text>{info.getValue()}</Text>,
             header: t("device.virtualDevice"),
             enableSorting: true,
+            size: 15000,
           }),
         columnHelper.accessor("interfaceName", {
           cell: (info) => <Text>{info.getValue()}</Text>,
           header: t("common.name"),
           enableSorting: true,
+          size: 15000,
         }),
         columnHelper.accessor("enabled", {
           cell: (info) =>
             info.getValue() === false ? (
-              <Tag.Root colorPalette="red">{t("common.disabled")}</Tag.Root>
+              <Badge variant="surface" size="md" display="inline-flex" alignItems="center" gap="1" colorPalette="red">
+                <Icon size="sm" flexShrink={0}>
+                  <LuPowerOff />
+                </Icon>
+                <Span minW="0" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+                  {t("common.disabled")}
+                </Span>
+              </Badge>
             ) : null,
           header: "",
+          size: 10000,
         }),
         columnHelper.accessor("level3", {
           cell: (info) =>
-            info.getValue() === false ? <Tag.Root colorPalette="grey">{t("device.class.l2")}</Tag.Root> : null,
+            info.getValue() === false ? (
+              <Badge variant="surface" size="md" display="inline-flex" alignItems="center" gap="1" colorPalette="grey">
+                <Icon size="sm" flexShrink={0}>
+                  <LuChevronsLeftRightEllipsis />
+                </Icon>
+                <Span minW="0" overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
+                  {t("device.class.l2")}
+                </Span>
+              </Badge>
+            ) : null,
           header: "",
+          size: 10000,
         }),
         columnHelper.accessor("description", {
           cell: (info) => <Text>{info.getValue()}</Text>,
           header: t("common.description"),
           enableSorting: true,
+          size: 25000,
         }),
         columnHelper.accessor("macAddress", {
           cell: (info) => {
-            if (info.getValue() && info.getValue() !== "0000.0000.0000") {
-              return info.getValue()
-            }
-            return ""
+            const mac = (info.getValue() && info.getValue() !== "0000.0000.0000") ? info.getValue() : ""
+            return <Text>{mac}</Text>
           },
           header: t("device.interface.macAddress"),
           enableSorting: true,
+          size: 12000,
         }),
         data.find((i) => !!i.vrfInstance) &&
           columnHelper.accessor("vrfInstance", {
             cell: (info) => <Text>{info.getValue()}</Text>,
             header: t("common.vrf"),
             enableSorting: true,
+            size: 15000,
           }),
         columnHelper.accessor("ip4Addresses", {
           cell: (info) => {
@@ -125,6 +147,7 @@ export default function DeviceInterfaceScreen() {
           },
           header: t("device.interface.ipAddress"),
           enableSorting: true,
+          size: 12000,
         }),
       ].filter((c) => !!c),
     [t, data]

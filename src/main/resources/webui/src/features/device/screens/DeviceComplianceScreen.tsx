@@ -163,7 +163,7 @@ export default function DeviceComplianceScreen() {
       <Accordion.Root multiple value={accordionValue} onValueChange={handleAccordionChange}>
         {!isSearching && (
         <>
-        <Accordion.Item value="software">
+        <Accordion.Item value="software" py="4">
           <Accordion.ItemTrigger cursor="pointer">
             <Accordion.ItemIndicator rotate="-90deg" _open={{ rotate: "0deg" }} />
             <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12" flex="1">
@@ -197,7 +197,7 @@ export default function DeviceComplianceScreen() {
           </Accordion.ItemContent>
         </Accordion.Item>
 
-        <Accordion.Item value="hardware">
+        <Accordion.Item value="hardware" py="4">
           <Accordion.ItemTrigger cursor="pointer">
             <Accordion.ItemIndicator rotate="-90deg" _open={{ rotate: "0deg" }} />
             <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12" flex="1">
@@ -253,7 +253,7 @@ export default function DeviceComplianceScreen() {
         </>
         )}
 
-        <Accordion.Item value="config">
+        <Accordion.Item value="config" py="4">
           <Accordion.ItemTrigger cursor="pointer">
             <Accordion.ItemIndicator rotate="-90deg" _open={{ rotate: "0deg" }} />
             <Stack direction="row" alignItems="center" justifyContent="space-between" gap="12" flex="1">

@@ -1,8 +1,9 @@
-import { Protected } from "@/components"
-import { LuCrosshair, LuPlus } from "react-icons/lu"
+import { AddGroupTrigger, Protected } from "@/components"
+import { LuChevronUp, LuCrosshair, LuGrid2X2Plus, LuPlus, LuWorkflow } from "react-icons/lu"
 import { Level } from "@/types"
-import { Button, Menu, Portal, Separator, Stack } from "@chakra-ui/react"
+import { Button, Group, IconButton, Menu, Portal, Separator, Stack } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
+import AddTaskTrigger from "@/features/task/components/AddTaskTrigger"
 import { useDeviceSidebarStore } from "../../stores"
 import CreateDeviceTrigger from "../CreateDeviceTrigger"
 import DeviceScanSubnetTrigger from "../DeviceScanSubnetTrigger"
@@ -26,28 +27,41 @@ export default function DeviceSidebar() {
       <Protected minLevel={Level.Operator}>
         <Separator />
         <Stack p="6">
-          <Menu.Root positioning={{ sameWidth: true }}>
-            <Menu.Trigger asChild>
-              <Button>
-                <LuPlus />
-                {t("device.add")}
-              </Button>
-            </Menu.Trigger>
+          <Menu.Root positioning={{ placement: "top" }}>
+            <Group attached w="full">
+              <CreateDeviceTrigger>
+                <Button flex="1">
+                  <LuPlus />
+                  {t("device.add")}
+                </Button>
+              </CreateDeviceTrigger>
+              <Menu.Trigger asChild>
+                <IconButton aria-label={t("common.actions")}>
+                  <LuChevronUp />
+                </IconButton>
+              </Menu.Trigger>
+            </Group>
             <Portal>
               <Menu.Positioner>
                 <Menu.Content>
-                  <CreateDeviceTrigger>
-                    <Menu.Item value="add-simple-device">
-                      <LuPlus />
-                      {t("device.addSimple")}
-                    </Menu.Item>
-                  </CreateDeviceTrigger>
                   <DeviceScanSubnetTrigger>
                     <Menu.Item value="scan-subnets-for-device">
                       <LuCrosshair />
                       {t("task.scanSubnets")}
                     </Menu.Item>
                   </DeviceScanSubnetTrigger>
+                  <AddTaskTrigger>
+                    <Menu.Item value="run-new-group-task">
+                      <LuWorkflow />
+                      {t("task.runNewGroupTask")}
+                    </Menu.Item>
+                  </AddTaskTrigger>
+                  <AddGroupTrigger>
+                    <Menu.Item value="add-group">
+                      <LuGrid2X2Plus />
+                      {t("group.add")}
+                    </Menu.Item>
+                  </AddGroupTrigger>
                 </Menu.Content>
               </Menu.Positioner>
             </Portal>

@@ -1,3 +1,4 @@
+import { Tooltip } from "@/components/ui/tooltip"
 import { Heading, IconButton, Stack, Text } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
@@ -26,22 +27,29 @@ export default function TaskHistoryScreen() {
     <Stack gap="6" p="9" flex="1" overflow="auto">
       <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap="3">
         <Stack gap="1">
-          <Heading as="h1" fontSize="4xl">
-            {t("task.history")}
-          </Heading>
+          <Stack direction="row" alignItems="center" gap="3">
+            <Heading as="h1" fontSize="4xl">
+              {t("task.history")}
+            </Heading>
+            <Tooltip content={t("common.refresh")}>
+              <IconButton
+                aria-label={t("common.refresh")}
+                variant="ghost"
+                size="sm"
+                color="fg.muted"
+                onClick={onRefresh}
+                loading={isFetchingRows || isFetchingStats}
+              >
+                <LuRefreshCcw />
+              </IconButton>
+            </Tooltip>
+          </Stack>
           <Text fontSize="sm" color="grey.400">
             {t("task.historyDescription")}
           </Text>
         </Stack>
         <Stack direction="row" gap="2" flexShrink={0}>
           <TaskTimeRangeMenu statuses={FINAL_STATUS_KEYS} />
-          <IconButton
-            aria-label={t("common.reload")}
-            onClick={onRefresh}
-            loading={isFetchingRows || isFetchingStats}
-          >
-            <LuRefreshCcw />
-          </IconButton>
         </Stack>
       </Stack>
 

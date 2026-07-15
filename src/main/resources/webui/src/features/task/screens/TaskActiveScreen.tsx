@@ -1,4 +1,5 @@
 import { Protected } from "@/components"
+import { Tooltip } from "@/components/ui/tooltip"
 import { Level } from "@/types"
 import { Button, Heading, IconButton, Stack, Text } from "@chakra-ui/react"
 import { useQueryClient } from "@tanstack/react-query"
@@ -29,21 +30,28 @@ export default function TaskActiveScreen() {
     <Stack gap="6" p="9" flex="1" overflow="auto">
       <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap="3">
         <Stack gap="1">
-          <Heading as="h1" fontSize="4xl">
-            {t("task.active")}
-          </Heading>
+          <Stack direction="row" alignItems="center" gap="3">
+            <Heading as="h1" fontSize="4xl">
+              {t("task.active")}
+            </Heading>
+            <Tooltip content={t("common.refresh")}>
+              <IconButton
+                aria-label={t("common.refresh")}
+                variant="ghost"
+                size="sm"
+                color="fg.muted"
+                onClick={onRefresh}
+                loading={isFetchingTasks || isFetchingSummary}
+              >
+                <LuRefreshCcw />
+              </IconButton>
+            </Tooltip>
+          </Stack>
           <Text fontSize="sm" color="grey.400">
             {t("task.activeDescription")}
           </Text>
         </Stack>
         <Stack direction="row" gap="2" flexShrink={0}>
-          <IconButton
-            aria-label={t("common.reload")}
-            onClick={onRefresh}
-            loading={isFetchingTasks || isFetchingSummary}
-          >
-            <LuRefreshCcw />
-          </IconButton>
           <Protected minLevel={Level.Operator}>
             <AddTaskTrigger>
               <Button>

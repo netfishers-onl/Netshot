@@ -135,8 +135,9 @@ export enum DeviceComplianceResultType {
 }
 
 export type DeviceComplianceResult = {
-  id: number
+  ruleId: number
   ruleName: string
+  policyId: number
   policyName: string
   result: DeviceComplianceResultType
   comment: string
@@ -149,7 +150,10 @@ export type DeviceDiagnosticResult = {
   lastCheckDate: number
   diagnosticName: string
   diagnosticId: number
-  type: string
+  type: DeviceAttributeType
+  number?: number
+  text?: string
+  assumption?: boolean
 }
 
 export type DeviceInterface = {

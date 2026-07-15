@@ -5577,12 +5577,12 @@ public class RestService extends Thread {
 	@AllArgsConstructor
 	public static class RsDeviceRule {
 
-		/** The id. */
+		/** The rule id. */
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
-		private long id;
+		private long ruleId;
 
 		/** The rule name. */
 		@Getter(onMethod = @__({
@@ -5590,6 +5590,13 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private String ruleName = "";
+
+		/** The policy id. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private long policyId;
 
 		/** The policy name. */
 		@Getter(onMethod = @__({
@@ -5653,8 +5660,9 @@ public class RestService extends Thread {
 		try {
 			Query<RsDeviceRule> query = session.createQuery(
 				"select new RsDeviceRule("
-					+ "r.id as id, "
+					+ "r.id as ruleId, "
 					+ "r.name as ruleName, "
+					+ "p.id as policyId, "
 					+ "p.name as policyName, "
 					+ "cr.result as result, "
 					+ "cr.comment as comment, "

@@ -1,12 +1,13 @@
-import { Accordion, Badge, Button, Heading, Icon, Stack, Text } from "@chakra-ui/react"
+import { Accordion, Badge, Button, Heading, Icon, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useMemo } from "react"
 import { Trans, useTranslation } from "react-i18next"
-import { useParams } from "react-router"
+import { useParams, useSearchParams } from "react-router"
 
 import api from "@/api"
-import { AlertBox, DataTable, Protected } from "@/components"
+import { AlertBox, DataTable, EntityLink, ExpandableTextCell, Protected } from "@/components"
+import Search from "@/components/Search"
 import { LuCircleCheck, LuTrophy } from "react-icons/lu"
 import {
   DeviceComplianceResult,
@@ -14,7 +15,8 @@ import {
   Level,
 } from "@/types"
 import { useLocalization } from "@/i18n"
-import { useSoftwareLevels } from "@/hooks"
+import { usePagination, useSoftwareLevels } from "@/hooks"
+import { search } from "@/utils"
 
 import { DeviceComplianceTag } from "../components/DeviceComplianceTag"
 import DeviceSoftwareLevelBadge from "../components/DeviceSoftwareLevelBadge"
@@ -41,38 +43,94 @@ export default function DeviceComplianceScreen() {
   const { device } = useDevice()
   const params = useParams<{ id: string }>()
   const { getColor: getLevelColor } = useSoftwareLevels()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const pagination = usePagination()
 
   const { data = [], isPending } = useQuery({
     queryKey: [QUERIES.DEVICE_COMPLIANCE, params?.id],
     queryFn: async () => api.device.getComplianceResultById(+params?.id),
   })
 
+  const isSearching = Boolean(pagination.query?.trim())
+
+  const filteredData = useMemo(
+    () => search(data, "policyName", "ruleName", "comment").with(pagination.query),
+    [data, pagination.query]
+  )
+
+  const openSections = useMemo(() => {
+    const open = searchParams.get("open")
+    return open ? open.split(",").filter(Boolean) : []
+  }, [searchParams])
+
+  const accordionValue = isSearching ? ["config"] : openSections
+
+  function handleAccordionChange(details: { value: string[] }) {
+    if (isSearching) return
+
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (details.value.length > 0) {
+          next.set("open", details.value.join(","))
+        } else {
+          next.delete("open")
+        }
+        return next
+      },
+      { replace: true }
+    )
+  }
+
   const columns = useMemo(
     () => [
       columnHelper.accessor("policyName", {
-        cell: (info) => <Text>{info.getValue()}</Text>,
+        cell: (info) => (
+          <EntityLink
+            to={`/app/compliance/config/${info.row.original.policyId}`}
+            textDecoration="none"
+            color="black"
+            _hover={{ color: "green.600" }}
+          >
+            {info.getValue()}
+          </EntityLink>
+        ),
         header: t("policy.label"),
         enableSorting: true,
+        size: 10000,
       }),
       columnHelper.accessor("ruleName", {
-        cell: (info) => <Text>{info.getValue()}</Text>,
+        cell: (info) => (
+          <EntityLink
+            to={`/app/compliance/config/${info.row.original.policyId}/${info.row.original.ruleId}`}
+            textDecoration="none"
+            color="black"
+            _hover={{ color: "green.600" }}
+          >
+            {info.getValue()}
+          </EntityLink>
+        ),
         header: t("policy.rule.label"),
         enableSorting: true,
+        size: 10000,
       }),
       columnHelper.accessor("result", {
         cell: (info) => <DeviceComplianceTag resultType={info.getValue()} />,
         header: t("common.result"),
         enableSorting: true,
+        size: 10000,
       }),
       columnHelper.accessor("comment", {
-        cell: (info) => <Text>{info.getValue()}</Text>,
+        cell: (info) => <ExpandableTextCell value={info.getValue()} title={t("common.details")} />,
         header: t("common.details"),
         enableSorting: true,
+        size: 20000,
       }),
       columnHelper.accessor("checkDate", {
         cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
         header: t("compliance.lastCheck"),
         enableSorting: true,
+        size: 10000,
       }),
     ],
     [t]
@@ -84,7 +142,27 @@ export default function DeviceComplianceScreen() {
 
   return (
     <Stack gap="6" flex="1">
-      <Accordion.Root multiple>
+      <Stack direction="row">
+        <Search
+          placeholder={t("common.searchPlaceholder")}
+          onQuery={pagination.onQuery}
+          onClear={pagination.onQueryClear}
+          w="25%"
+        />
+        <Spacer />
+        <Protected minLevel={Level.Operator}>
+          <DeviceComplianceTrigger devices={[device]}>
+            <Button alignSelf="start" variant="outline">
+              <LuCircleCheck />
+              {t("compliance.check")}
+            </Button>
+          </DeviceComplianceTrigger>
+        </Protected>
+      </Stack>
+
+      <Accordion.Root multiple value={accordionValue} onValueChange={handleAccordionChange}>
+        {!isSearching && (
+        <>
         <Accordion.Item value="software">
           <Accordion.ItemTrigger cursor="pointer">
             <Accordion.ItemIndicator rotate="-90deg" _open={{ rotate: "0deg" }} />
@@ -172,6 +250,8 @@ export default function DeviceComplianceScreen() {
             </Stack>
           </Accordion.ItemContent>
         </Accordion.Item>
+        </>
+        )}
 
         <Accordion.Item value="config">
           <Accordion.ItemTrigger cursor="pointer">
@@ -185,14 +265,20 @@ export default function DeviceComplianceScreen() {
             <Stack gap="4" p="4">
               {data?.length > 0 ? (
                 <>
-                  <AlertBox type={device?.compliant ? "success" : "error"}>
-                    {device?.compliant ? (
-                      <Text>{t("compliance.deviceCompliantWithAll")}</Text>
-                    ) : (
-                      <Text>{t("compliance.deviceNotCompliantWithSome")}</Text>
-                    )}
-                  </AlertBox>
-                  <DataTable columns={columns} data={data} loading={isPending} />
+                  {!isSearching && (
+                    <AlertBox type={device?.compliant ? "success" : "error"}>
+                      {device?.compliant ? (
+                        <Text>{t("compliance.deviceCompliantWithAll")}</Text>
+                      ) : (
+                        <Text>{t("compliance.deviceNotCompliantWithSome")}</Text>
+                      )}
+                    </AlertBox>
+                  )}
+                  {filteredData.length > 0 ? (
+                    <DataTable columns={columns} data={filteredData} loading={isPending} />
+                  ) : (
+                    <Text>{t("common.noResults")}</Text>
+                  )}
                 </>
               ) : (
                 <Text>{t("compliance.noResultForDevice")}</Text>
@@ -201,15 +287,6 @@ export default function DeviceComplianceScreen() {
           </Accordion.ItemContent>
         </Accordion.Item>
       </Accordion.Root>
-
-      <Protected minLevel={Level.Operator}>
-        <DeviceComplianceTrigger devices={[device]}>
-          <Button alignSelf="start" variant="outline">
-            <LuCircleCheck />
-            {t("compliance.check")}
-          </Button>
-        </DeviceComplianceTrigger>
-      </Protected>
     </Stack>
   )
 }

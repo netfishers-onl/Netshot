@@ -1,9 +1,10 @@
 import { DateTimeField, DomainSelect, TreeGroupSelector } from "@/components"
 import { Button, Menu, Portal, SimpleGrid, Stack } from "@chakra-ui/react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { LuFilter } from "react-icons/lu"
+import { LuFilter, LuFilterX } from "react-icons/lu"
+import { useSearchParams } from "react-router"
 import { CONFIG_CHANGE_RANGE_PRESETS } from "../constants"
 import { useConfigChangeFilterStore } from "../stores/useConfigChangeFilterStore"
 
@@ -17,13 +18,35 @@ type FilterFormValues = {
 export default function ConfigurationChangeFilterMenu() {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const from = useConfigChangeFilterStore((s) => s.from)
   const to = useConfigChangeFilterStore((s) => s.to)
   const domain = useConfigChangeFilterStore((s) => s.domain)
   const group = useConfigChangeFilterStore((s) => s.group)
+  const isFiltered = useConfigChangeFilterStore((s) => s.isFiltered)
   const applyFilters = useConfigChangeFilterStore((s) => s.applyFilters)
   const resetFilters = useConfigChangeFilterStore((s) => s.resetFilters)
+
+  const hydrated = useRef(false)
+  useEffect(() => {
+    if (hydrated.current) return
+    hydrated.current = true
+
+    const fromParam = searchParams.get("from")
+    const toParam = searchParams.get("to")
+    const domainParam = searchParams.get("domain")
+    const groupParam = searchParams.get("group")
+    if (!fromParam && !toParam && !domainParam && !groupParam) return
+
+    applyFilters({
+      from: fromParam ? +fromParam : from,
+      to: toParam ? +toParam : to,
+      domain: domainParam ? +domainParam : null,
+      group: groupParam ? +groupParam : null,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const formValues = {
     fromDate: from,
@@ -41,17 +64,42 @@ export default function ConfigurationChangeFilterMenu() {
   }
 
   function onApply(values: FilterFormValues) {
-    applyFilters({
+    const filters = {
       from: values.fromDate,
       to: values.toDate,
       domain: values.domain ? +values.domain : null,
       group: values.group,
-    })
+    }
+    applyFilters(filters)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.set("from", String(filters.from))
+        next.set("to", String(filters.to))
+        if (filters.domain != null) next.set("domain", String(filters.domain))
+        else next.delete("domain")
+        if (filters.group != null) next.set("group", String(filters.group))
+        else next.delete("group")
+        return next
+      },
+      { replace: true }
+    )
     setOpen(false)
   }
 
   function onReset() {
     resetFilters()
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete("from")
+        next.delete("to")
+        next.delete("domain")
+        next.delete("group")
+        return next
+      },
+      { replace: true }
+    )
     setOpen(false)
   }
 
@@ -67,7 +115,7 @@ export default function ConfigurationChangeFilterMenu() {
     >
       <Menu.Trigger asChild>
         <Button variant="primary">
-          <LuFilter />
+          {isFiltered ? <LuFilterX /> : <LuFilter />}
           {t("common.filters")}
         </Button>
       </Menu.Trigger>

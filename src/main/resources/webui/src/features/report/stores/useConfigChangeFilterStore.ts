@@ -15,6 +15,8 @@ export type ConfigChangeFilters = {
 export type ConfigChangeFilterStoreState = ConfigChangeFilters & {
   /** Start-of-day timestamp of the histogram bar the user clicked, narrowing the list to that day; null = no day selected. */
   day: number | null
+  /** Whether the user has applied (or loaded from URL) filters other than the defaults. */
+  isFiltered: boolean
 
   applyFilters(filters: ConfigChangeFilters): void
   setDay(day: number | null): void
@@ -30,10 +32,11 @@ export const useConfigChangeFilterStore = create<ConfigChangeFilterStoreState>((
   domain: null,
   group: null,
   day: null,
+  isFiltered: false,
   ...defaultRange(),
 
   applyFilters(filters) {
-    set({ ...filters, day: null })
+    set({ ...filters, day: null, isFiltered: true })
   },
 
   setDay(day) {
@@ -41,6 +44,6 @@ export const useConfigChangeFilterStore = create<ConfigChangeFilterStoreState>((
   },
 
   resetFilters() {
-    set({ domain: null, group: null, day: null, ...defaultRange() })
+    set({ domain: null, group: null, day: null, isFiltered: false, ...defaultRange() })
   },
 }))

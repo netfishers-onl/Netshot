@@ -2,8 +2,9 @@ import { TaskStatus, TaskType } from "@/types"
 import { Button, Menu, Portal, SimpleGrid, Stack } from "@chakra-ui/react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { LuFilter } from "react-icons/lu"
-import { useState } from "react"
+import { LuFilter, LuFilterX } from "react-icons/lu"
+import { useEffect, useRef, useState } from "react"
+import { useSearchParams } from "react-router"
 import { DateTimeField } from "@/components"
 import { TIME_RANGE_PRESETS } from "../constants"
 import { useTaskHistoryFilterStore } from "../stores/useTaskHistoryFilterStore"
@@ -25,15 +26,36 @@ export default function TaskTimeRangeMenu(props: TaskTimeRangeMenuProps) {
   const { statuses } = props
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const from = useTaskHistoryFilterStore((s) => s.from)
   const to = useTaskHistoryFilterStore((s) => s.to)
   const typeSel = useTaskHistoryFilterStore((s) => s.typeSel)
   const statusSel = useTaskHistoryFilterStore((s) => s.statusSel)
+  const isRangeCustom = useTaskHistoryFilterStore((s) => s.isRangeCustom)
   const setRange = useTaskHistoryFilterStore((s) => s.setRange)
   const setTypeSel = useTaskHistoryFilterStore((s) => s.setTypeSel)
   const setStatusSel = useTaskHistoryFilterStore((s) => s.setStatusSel)
   const resetFilters = useTaskHistoryFilterStore((s) => s.resetFilters)
+
+  const isFiltered = typeSel.length > 0 || statusSel.length > 0 || isRangeCustom
+
+  const hydrated = useRef(false)
+  useEffect(() => {
+    if (hydrated.current) return
+    hydrated.current = true
+
+    const fromParam = searchParams.get("from")
+    const toParam = searchParams.get("to")
+    const typesParam = searchParams.get("types")
+    const statusesParam = searchParams.get("statuses")
+    if (!fromParam && !toParam && !typesParam && !statusesParam) return
+
+    if (fromParam && toParam) setRange(+fromParam, +toParam)
+    if (typesParam) setTypeSel(typesParam.split(",") as TaskType[])
+    if (statusesParam) setStatusSel(statusesParam.split(",") as TaskStatus[])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const form = useForm<TaskTimeRangeFormValues>({
     values: { fromDate: from, toDate: to, types: typeSel, statuses: statusSel },
@@ -49,11 +71,35 @@ export default function TaskTimeRangeMenu(props: TaskTimeRangeMenuProps) {
     setRange(values.fromDate, values.toDate)
     setTypeSel(values.types)
     setStatusSel(values.statuses)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.set("from", String(values.fromDate))
+        next.set("to", String(values.toDate))
+        if (values.types.length > 0) next.set("types", values.types.join(","))
+        else next.delete("types")
+        if (values.statuses.length > 0) next.set("statuses", values.statuses.join(","))
+        else next.delete("statuses")
+        return next
+      },
+      { replace: true }
+    )
     setOpen(false)
   }
 
   function onReset() {
     resetFilters()
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete("from")
+        next.delete("to")
+        next.delete("types")
+        next.delete("statuses")
+        return next
+      },
+      { replace: true }
+    )
     setOpen(false)
   }
 
@@ -69,7 +115,7 @@ export default function TaskTimeRangeMenu(props: TaskTimeRangeMenuProps) {
     >
       <Menu.Trigger asChild>
         <Button variant="primary">
-          <LuFilter />
+          {isFiltered ? <LuFilterX /> : <LuFilter />}
           {t("common.filters")}
         </Button>
       </Menu.Trigger>

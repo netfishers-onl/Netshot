@@ -9,6 +9,8 @@ export type TaskHistoryFilterStoreState = {
   typeSel: TaskType[]
   from: number
   to: number
+  /** Whether `from`/`to` were set explicitly (menu apply or URL hydration) rather than left at the default window. */
+  isRangeCustom: boolean
 
   toggleStatus(status: TaskStatus): void
   setStatusSel(statuses: TaskStatus[]): void
@@ -25,6 +27,7 @@ function defaultRange() {
 export const useTaskHistoryFilterStore = create<TaskHistoryFilterStoreState>((set, get) => ({
   statusSel: [],
   typeSel: [],
+  isRangeCustom: false,
   ...defaultRange(),
 
   toggleStatus(status) {
@@ -46,10 +49,10 @@ export const useTaskHistoryFilterStore = create<TaskHistoryFilterStoreState>((se
   },
 
   setRange(from, to) {
-    set({ from, to })
+    set({ from, to, isRangeCustom: true })
   },
 
   resetFilters() {
-    set({ statusSel: [], typeSel: [], ...defaultRange() })
+    set({ statusSel: [], typeSel: [], isRangeCustom: false, ...defaultRange() })
   },
 }))

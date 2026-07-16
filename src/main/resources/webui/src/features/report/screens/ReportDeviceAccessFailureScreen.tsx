@@ -8,7 +8,7 @@ import {
 } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { DeviceBadge } from "@/features/device/components"
-import { LuFilter, LuRefreshCcw } from "react-icons/lu"
+import { LuFilter, LuFilterX, LuRefreshCcw } from "react-icons/lu"
 import { FormControlType } from "@/components/FormControl"
 import { usePagination } from "@/hooks"
 import { DeviceAccessFailure } from "@/types"
@@ -30,7 +30,7 @@ import { createColumnHelper } from "@tanstack/react-table"
 import { useMemo, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { Link, useNavigate } from "react-router"
+import { Link, useNavigate, useSearchParams } from "react-router"
 import { QUERIES } from "../constants"
 
 type FilterForm = {
@@ -50,11 +50,21 @@ export default function ReportDeviceAccessFailure() {
   const { formatDateTime } = useLocalization()
   const pagination = usePagination()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [filterOpen, setFilterOpen] = useState(false)
-  const [filter, setFilter] = useState<FilterForm>(DEFAULT_FILTER)
+  const [filter, setFilter] = useState<FilterForm>(() => {
+    const domain = searchParams.get("domain")
+    const days = searchParams.get("days")
+    return {
+      domain: domain ?? DEFAULT_FILTER.domain,
+      days: days ? +days : DEFAULT_FILTER.days,
+    }
+  })
   const form = useForm<FilterForm>({
     defaultValues: filter,
   })
+
+  const isFiltered = Boolean(filter.domain) || filter.days !== DEFAULT_FILTER.days
 
   const formDays = useWatch({
     control: form.control,
@@ -139,12 +149,32 @@ export default function ReportDeviceAccessFailure() {
 
   function applyFilter(values: FilterForm) {
     setFilter(values)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (values.domain) next.set("domain", values.domain)
+        else next.delete("domain")
+        if (values.days !== DEFAULT_FILTER.days) next.set("days", String(values.days))
+        else next.delete("days")
+        return next
+      },
+      { replace: true }
+    )
     setFilterOpen(false)
   }
 
   function clearFilter() {
     setFilter(DEFAULT_FILTER)
     form.reset(DEFAULT_FILTER)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete("domain")
+        next.delete("days")
+        return next
+      },
+      { replace: true }
+    )
     setFilterOpen(false)
   }
 
@@ -191,7 +221,7 @@ export default function ReportDeviceAccessFailure() {
           >
             <Menu.Trigger asChild>
               <Button variant="primary">
-                <LuFilter />
+                {isFiltered ? <LuFilterX /> : <LuFilter />}
                 {t("common.filters")}
               </Button>
             </Menu.Trigger>

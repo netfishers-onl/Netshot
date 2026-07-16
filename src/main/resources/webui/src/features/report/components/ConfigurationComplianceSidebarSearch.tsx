@@ -1,13 +1,19 @@
 import { DomainSelect, PolicySelect, TreeGroupSelector } from "@/components"
-import { LuFilter } from "react-icons/lu"
+import { LuFilter, LuFilterX } from "react-icons/lu"
 import Search from "@/components/Search"
 import { useFormDialog } from "@/dialog"
 import { IconButton, Stack } from "@chakra-ui/react"
-import React from "react"
+import React, { useEffect, useRef } from "react"
 import { useForm, useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
+import { useSearchParams } from "react-router"
 import { useShallow } from "zustand/react/shallow"
 import { useConfigurationComplianceSidebarStore } from "../stores/useConfigurationComplianceSidebarStore"
+
+function parseIds(value: string | null): number[] {
+  if (!value) return []
+  return value.split(",").map(Number)
+}
 
 type FilterForm = {
   domains: number[]
@@ -39,6 +45,7 @@ function ConfigurationComplianceSidebarSearchFilter({ children, ...rest }: Confi
       setFilters: state.setFilters,
     }))
   )
+  const [, setSearchParams] = useSearchParams()
 
   const dialog = useFormDialog()
   const form = useForm<FilterForm>({
@@ -49,6 +56,20 @@ function ConfigurationComplianceSidebarSearchFilter({ children, ...rest }: Confi
     },
   })
 
+  function writeFiltersToUrl(values: FilterForm) {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        for (const key of ["domains", "groups", "policies"] as const) {
+          if (values[key].length > 0) next.set(key, values[key].join(","))
+          else next.delete(key)
+        }
+        return next
+      },
+      { replace: true }
+    )
+  }
+
   const open = () => {
     const dialogRef = dialog.open({
       title: t("common.advancedFilters"),
@@ -56,12 +77,15 @@ function ConfigurationComplianceSidebarSearchFilter({ children, ...rest }: Confi
       form,
       onSubmit(values: FilterForm) {
         setFilters(values)
+        writeFiltersToUrl(values)
 
         dialogRef.close()
       },
       onCancel() {
         form.reset()
-        setFilters(form.getValues())
+        const values = form.getValues()
+        setFilters(values)
+        writeFiltersToUrl(values)
         dialogRef.close()
       },
       submitButton: {
@@ -79,12 +103,38 @@ function ConfigurationComplianceSidebarSearchFilter({ children, ...rest }: Confi
 
 export default function ConfigurationComplianceSidebarSearch() {
   const { t } = useTranslation()
-  const { query, setQuery } = useConfigurationComplianceSidebarStore(
-    useShallow((state) => ({
-      query: state.query,
-      setQuery: state.setQuery,
-    }))
-  )
+  const { query, domains, groups, policies, setQuery, setFilters } =
+    useConfigurationComplianceSidebarStore(
+      useShallow((state) => ({
+        query: state.query,
+        domains: state.domains,
+        groups: state.groups,
+        policies: state.policies,
+        setQuery: state.setQuery,
+        setFilters: state.setFilters,
+      }))
+    )
+  const [searchParams] = useSearchParams()
+
+  const isFiltered = domains.length > 0 || groups.length > 0 || policies.length > 0
+
+  const hydrated = useRef(false)
+  useEffect(() => {
+    if (hydrated.current) return
+    hydrated.current = true
+
+    const domainsParam = searchParams.get("domains")
+    const groupsParam = searchParams.get("groups")
+    const policiesParam = searchParams.get("policies")
+    if (!domainsParam && !groupsParam && !policiesParam) return
+
+    setFilters({
+      domains: parseIds(domainsParam),
+      groups: parseIds(groupsParam),
+      policies: parseIds(policiesParam),
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const onQuery = (query: string) => {
     setQuery(query)
@@ -104,7 +154,7 @@ export default function ConfigurationComplianceSidebarSearch() {
       >
         <ConfigurationComplianceSidebarSearchFilter>
           <IconButton variant="ghost" aria-label={t("common.openFilter")}>
-            <LuFilter />
+            {isFiltered ? <LuFilterX /> : <LuFilter />}
           </IconButton>
         </ConfigurationComplianceSidebarSearchFilter>
       </Search>

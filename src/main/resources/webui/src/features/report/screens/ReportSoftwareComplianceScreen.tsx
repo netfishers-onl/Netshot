@@ -1,6 +1,6 @@
 import api from "@/api"
 import { DomainSelect, Search, TreeGroup, useTreeOpenKeys } from "@/components"
-import { LuFilter, LuRefreshCcw } from "react-icons/lu"
+import { LuFilter, LuFilterX, LuRefreshCcw } from "react-icons/lu"
 import { QUERIES as GLOBAL_QUERIES } from "@/constants"
 import { useAlertDialog } from "@/dialog"
 import { DeviceGroupBadge } from "@/features/device/components"
@@ -21,9 +21,10 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { MouseEvent, useCallback, useMemo } from "react"
+import { MouseEvent, useCallback, useEffect, useMemo } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
+import { useSearchParams } from "react-router"
 import SoftwareComplianceDialog from "../components/SoftwareComplianceDialog"
 import { QUERIES } from "../constants"
 
@@ -121,9 +122,11 @@ export default function ReportSoftwareComplianceScreen() {
   const { t } = useTranslation()
 
   const pagination = usePagination()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const domainParam = searchParams.get("domain")
   const form = useForm<FilterForm>({
     defaultValues: {
-      domain: null,
+      domain: domainParam ? +domainParam : null,
     },
   })
 
@@ -131,6 +134,21 @@ export default function ReportSoftwareComplianceScreen() {
     control: form.control,
     name: "domain",
   })
+
+  const isFiltered = domain != null
+
+  useEffect(() => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (domain != null) next.set("domain", String(domain))
+        else next.delete("domain")
+        return next
+      },
+      { replace: true }
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [domain])
 
   const { data, isPending, refetch } = useQuery({
     queryKey: [QUERIES.SOFTWARE_COMPLIANCE, pagination.query, domain],
@@ -193,7 +211,7 @@ export default function ReportSoftwareComplianceScreen() {
         <Menu.Root>
           <Menu.Trigger asChild>
             <Button variant="primary">
-              <LuFilter />
+              {isFiltered ? <LuFilterX /> : <LuFilter />}
               {t("common.filters")}
             </Button>
           </Menu.Trigger>

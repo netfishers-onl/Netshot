@@ -363,6 +363,7 @@ export function VirtualizedDataTableHeader<T>({
                 {flexRender(header?.column?.columnDef?.header, header?.getContext())}
                 {isSortable && (
                   <IconButton
+                    variant="frame"
                     position="absolute"
                     top="0"
                     bottom="0"

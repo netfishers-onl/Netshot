@@ -126,8 +126,9 @@ export default function ConfigurationComplianceSidebarSearch() {
     const domainsParam = searchParams.get("domains")
     const groupsParam = searchParams.get("groups")
     const policiesParam = searchParams.get("policies")
-    if (!domainsParam && !groupsParam && !policiesParam) return
 
+    // Landed here fresh (e.g. via nav, not shared link/back-forward): don't carry over
+    // a filter left applied from a previous visit to this screen.
     setFilters({
       domains: parseIds(domainsParam),
       groups: parseIds(groupsParam),

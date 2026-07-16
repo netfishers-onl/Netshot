@@ -37,7 +37,13 @@ export default function ConfigurationChangeFilterMenu() {
     const toParam = searchParams.get("to")
     const domainParam = searchParams.get("domain")
     const groupParam = searchParams.get("group")
-    if (!fromParam && !toParam && !domainParam && !groupParam) return
+
+    if (!fromParam && !toParam && !domainParam && !groupParam) {
+      // Landed here fresh (e.g. via nav, not shared link/back-forward): don't carry over
+      // a filter left applied from a previous visit to this screen.
+      resetFilters()
+      return
+    }
 
     applyFilters({
       from: fromParam ? +fromParam : from,

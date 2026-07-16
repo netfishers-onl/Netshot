@@ -33,7 +33,13 @@ export default function TaskFilterMenu(props: TaskFilterMenuProps) {
 
     const typesParam = searchParams.get("types")
     const statusesParam = searchParams.get("statuses")
-    if (!typesParam && !statusesParam) return
+
+    if (!typesParam && !statusesParam) {
+      // Landed here fresh (e.g. via nav, not shared link/back-forward): don't carry over
+      // a filter left applied from a previous visit to this screen.
+      resetFilters()
+      return
+    }
 
     if (typesParam) setTypeSel(typesParam.split(",") as TaskType[])
     if (statusesParam) setStatusSel(statusesParam.split(",") as TaskStatus[])

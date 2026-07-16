@@ -49,7 +49,13 @@ export default function TaskTimeRangeMenu(props: TaskTimeRangeMenuProps) {
     const toParam = searchParams.get("to")
     const typesParam = searchParams.get("types")
     const statusesParam = searchParams.get("statuses")
-    if (!fromParam && !toParam && !typesParam && !statusesParam) return
+
+    if (!fromParam && !toParam && !typesParam && !statusesParam) {
+      // Landed here fresh (e.g. via nav, not shared link/back-forward): don't carry over
+      // a filter left applied from a previous visit to this screen.
+      resetFilters()
+      return
+    }
 
     if (fromParam && toParam) setRange(+fromParam, +toParam)
     if (typesParam) setTypeSel(typesParam.split(",") as TaskType[])

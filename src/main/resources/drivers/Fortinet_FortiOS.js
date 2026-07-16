@@ -206,7 +206,7 @@ function snapshot(cli, device, config) {
 	const showHa = cli.command("show full-configuration system ha | grep .");
 
 	if (vdomMode) {
-		if (!useScp && version.match(/^6\.2\..*/)) {
+		if (!useScp && osVersion.match(/^6\.2\..*/)) {
 			// In 6.2, some config blocks are missing from the root 'show'
 			// We'll take a 'show' in 'config global' mode and replace
 			globalConfig = cli.command("show | grep .", { timeout: 120000 });

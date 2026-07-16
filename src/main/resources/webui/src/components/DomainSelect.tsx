@@ -1,9 +1,9 @@
 import { useDomains } from "@/features/administration/api"
-import { Text } from "@chakra-ui/react"
+import { Badge, Icon, Text } from "@chakra-ui/react"
 import { FieldPath, FieldValues } from "react-hook-form"
 import { useTranslation } from "react-i18next"
+import { LuAsterisk } from "react-icons/lu"
 import { Select, SelectProps } from "./Select"
-import { getAnyOption } from "@/utils"
 
 export type DomainSelectProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -18,7 +18,6 @@ export default function DomainSelect<T>(props: DomainSelectProps<T>) {
   const { t } = useTranslation()
 
   const { isPending, data = [] } = useDomains()
-  const anyOption = getAnyOption(t)
 
   const domainOptions = data.map((domain) => ({
     label: domain?.name,
@@ -26,7 +25,7 @@ export default function DomainSelect<T>(props: DomainSelectProps<T>) {
   }))
 
   const options = withAny
-    ? [anyOption, ...domainOptions]
+    ? [{ label: t("common.any"), value: null }, ...domainOptions]
     : domainOptions
 
   return (
@@ -43,6 +42,16 @@ export default function DomainSelect<T>(props: DomainSelectProps<T>) {
       multiple={multiple}
       itemToString={(item) => String(item?.label)}
       itemToValue={(item) => item.value === null ? "" : item.value.toString()}
+      {...(!multiple && {
+        renderIcon: (item) => item.value === null ? <Icon as={LuAsterisk} /> : undefined,
+        renderSelectedValue: (item) =>
+          item.value === null ? (
+            <Badge size="lg" variant="outline">
+              <LuAsterisk />
+              {t("common.any")}
+            </Badge>
+          ) : undefined,
+      })}
       {...rest}
     />
   )

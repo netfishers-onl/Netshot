@@ -3,10 +3,8 @@ import { useTranslation } from "react-i18next"
 
 import { DeviceAttributeDefinition, DeviceAttributeLevel } from "@/types"
 import { useLocalization } from "@/i18n"
-import { DeviceGroupBadge } from "@/components"
-
 import { useMemo } from "react"
-import { DeviceAttributeValue, DeviceStatusBadge } from "../components"
+import { DeviceAttributeValue, DeviceGroupBadge, DeviceStatusBadge } from "../components"
 import { useDevice } from "../contexts/device"
 
 export default function DeviceGeneralScreen() {

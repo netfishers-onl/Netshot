@@ -1,4 +1,4 @@
-import { Badge, BadgeProps, Icon } from "@chakra-ui/react"
+import { BadgeProps, Icon } from "@chakra-ui/react"
 import { forwardRef } from "react"
 import {
   LuBan,
@@ -11,6 +11,7 @@ import {
 } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { TaskStatus } from "@/types"
+import IconBadge from "./IconBadge"
 
 type Config = {
   colorPalette: string
@@ -68,19 +69,10 @@ const TaskStatusBadge = forwardRef<HTMLSpanElement, TaskStatusBadgeProps>(
     if (!config) return null
 
     return (
-      <Badge
-        ref={ref}
-        variant="surface"
-        colorPalette={config.colorPalette}
-        size="md"
-        display="inline-flex"
-        alignItems="center"
-        gap="1"
-        {...rest}
-      >
+      <IconBadge ref={ref} colorPalette={config.colorPalette} {...rest}>
         <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
         {t(config.labelKey)}
-      </Badge>
+      </IconBadge>
     )
   }
 )

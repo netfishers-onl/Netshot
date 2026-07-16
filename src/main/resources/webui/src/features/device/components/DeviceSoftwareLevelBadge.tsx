@@ -1,7 +1,9 @@
-import { Badge, Icon } from "@chakra-ui/react"
+import { BadgeProps, Icon } from "@chakra-ui/react"
+import { forwardRef } from "react"
 import { LuTrophy, LuCircleX } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { DeviceSoftwareLevel } from "@/types"
+import IconBadge from "@/components/IconBadge"
 
 type Config = {
   colorPalette: string
@@ -9,7 +11,7 @@ type Config = {
   labelKey: string
 }
 
-const LEVEL_CONFIG: Record<DeviceSoftwareLevel, Config> = {
+export const DEVICE_SOFTWARE_LEVEL_CONFIG: Record<DeviceSoftwareLevel, Config> = {
   [DeviceSoftwareLevel.GOLD]: {
     colorPalette: "gold",
     icon: <LuTrophy />,
@@ -37,20 +39,24 @@ const LEVEL_CONFIG: Record<DeviceSoftwareLevel, Config> = {
   },
 }
 
-type DeviceSoftwareLevelBadgeProps = {
+type DeviceSoftwareLevelBadgeProps = BadgeProps & {
   level: DeviceSoftwareLevel
 }
 
-export default function DeviceSoftwareLevelBadge({ level }: DeviceSoftwareLevelBadgeProps) {
-  const { t } = useTranslation()
-  const config = LEVEL_CONFIG[level]
+const DeviceSoftwareLevelBadge = forwardRef<HTMLSpanElement, DeviceSoftwareLevelBadgeProps>(
+  ({ level, ...rest }, ref) => {
+    const { t } = useTranslation()
+    const config = DEVICE_SOFTWARE_LEVEL_CONFIG[level]
 
-  if (!config) return null
+    if (!config) return null
 
-  return (
-    <Badge variant="surface" colorPalette={config.colorPalette} size="md" display="inline-flex" alignItems="center" gap="1">
-      <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
-      {t(config.labelKey)}
-    </Badge>
-  )
-}
+    return (
+      <IconBadge ref={ref} colorPalette={config.colorPalette} {...rest}>
+        <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
+        {t(config.labelKey)}
+      </IconBadge>
+    )
+  }
+)
+
+export default DeviceSoftwareLevelBadge

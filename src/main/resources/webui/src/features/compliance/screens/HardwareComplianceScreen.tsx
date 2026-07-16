@@ -1,7 +1,7 @@
 import api from "@/api"
 import { DataTable, EmptyResult, Protected, Search } from "@/components"
-import DeviceGroupBadge from "@/components/DeviceGroupBadge"
 import { Tooltip } from "@/components/ui/tooltip"
+import DeviceGroupBadge from "@/features/device/components/DeviceGroupBadge"
 import { usePagination } from "@/hooks"
 import { HardwareRule, Level } from "@/types"
 import { search } from "@/utils"

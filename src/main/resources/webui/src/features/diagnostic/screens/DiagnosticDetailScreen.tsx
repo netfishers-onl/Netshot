@@ -1,7 +1,8 @@
 import api from "@/api"
 import { isNetshotError, NetshotErrorCode } from "@/api/httpClient"
-import { DeviceGroupBadge, EmptyResult, Protected } from "@/components"
+import { EmptyResult, Protected } from "@/components"
 import { LuChevronDown, LuPower, LuPencil, LuTrash } from "react-icons/lu"
+import { DeviceGroupBadge } from "@/features/device/components"
 import { DiagnosticType, Level } from "@/types"
 import {
   Box,

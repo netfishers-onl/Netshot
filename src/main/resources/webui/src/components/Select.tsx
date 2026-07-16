@@ -169,6 +169,12 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
     return value.map((v) => optionsMap.get(v)).filter((item): item is Option<T> => Boolean(item))
   }, [multiple, renderSelectedValue, value, optionsMap])
 
+  const singleSelectedValue = useMemo((): ReactNode => {
+    if (multiple || !renderSelectedValue) return undefined
+    const selectedItem = optionsMap.get(value?.[0] ?? "")
+    return selectedItem ? renderSelectedValue(selectedItem) : undefined
+  }, [multiple, renderSelectedValue, value, optionsMap])
+
   return (
     <Field.Root
       required={required}
@@ -205,13 +211,20 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
             {...(selectedValueItems.length > 0 && { h: "auto", minH: "10", py: "1.5" })}
           >
             <HStack flex="1" gap="2" overflow="hidden" flexWrap={selectedValueItems.length > 0 ? "wrap" : undefined}>
-              {selectedIcon}
               {selectedValueItems.length > 0 ? (
-                selectedValueItems.map((item) => (
-                  <Fragment key={getItemValue(item)}>{renderSelectedValue(item)}</Fragment>
-                ))
+                <>
+                  {selectedIcon}
+                  {selectedValueItems.map((item) => (
+                    <Fragment key={getItemValue(item)}>{renderSelectedValue(item)}</Fragment>
+                  ))}
+                </>
+              ) : singleSelectedValue ? (
+                singleSelectedValue
               ) : (
-                <ChakraSelect.ValueText placeholder={placeholder} />
+                <>
+                  {selectedIcon}
+                  <ChakraSelect.ValueText placeholder={placeholder} />
+                </>
               )}
             </HStack>
           </ChakraSelect.Trigger>

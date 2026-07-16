@@ -1,5 +1,6 @@
-import { Chart, DeviceGroupBadge } from "@/components"
+import { Chart } from "@/components"
 import { useAlertDialog } from "@/dialog"
+import { DeviceGroupBadge } from "@/features/device/components"
 import { GroupSoftwareComplianceStat } from "@/types"
 import {
   Box,

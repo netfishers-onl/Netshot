@@ -54,7 +54,7 @@ function ExportDataForm() {
         label={t("common.outputFormat")}
         placeholder={t("common.selectOutputFormat")}
       />
-      <DomainSelect control={form.control} name="domain" withAny />
+      <DomainSelect control={form.control} name="domain" isClearable />
       <TreeGroupSelector
         control={form.control}
         name="groups"

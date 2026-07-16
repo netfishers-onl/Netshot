@@ -103,7 +103,7 @@ export default function ConfigurationChangeFilterMenu() {
                     </Button>
                   ))}
                 </SimpleGrid>
-                <DomainSelect control={form.control} name="domain" withAny />
+                <DomainSelect control={form.control} name="domain" isClearable />
                 <TreeGroupSelector control={form.control} name="group" withAny />
                 <Stack direction="row" gap="2">
                   <Button type="button" flex="1" onClick={onReset}>

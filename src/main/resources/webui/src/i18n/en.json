@@ -43,6 +43,7 @@
         "label": "Configuration",
         "tabLabel": "Configurations",
         "changes": "Configuration changes",
+        "changeList": "Change list",
         "compareXToY": "Compare <first/> to <second/>",
         "compliance": "Configuration compliance",
         "size": "Configuration size",
@@ -62,6 +63,9 @@
         "trackChanges": "Track last configuration changes or over a period",
         "unableToLoad": "Unable to load configuration",
         "binaryNotPreviewable": "This attribute contains binary data and cannot be previewed",
+        "attributeNotInEither": "This attribute is not present in either configuration",
+        "attributeNotInOlder": "This attribute is not present in the older configuration",
+        "attributeNotInNewer": "This attribute is not present in the newer configuration",
         "select": "Select a configuration"
       },
       "configListWillAppear": "Config list will appear here when device changes",
@@ -88,7 +92,7 @@
       "name": "Device name",
       "type": "Device type",
       "withLevelAppearsWhenSoftwareRuleValidated": "Device with level {{ level }} appears when software rule is validated",
-      "withoutSuccessfulSnapshotFor": "Device without successful snapshot for",
+      "withoutSuccessfulSnapshotFor": "Devices without successful snapshot for",
       "devices": "Devices",
       "unreachableForFewDays": "Devices unreachable for a few days",
       "disable": "Disable device",
@@ -112,7 +116,7 @@
         "noInterface": "This device does not have any interface, please check its configuration"
       },
       "firstSeen": "First seen",
-      "hereYouCanViewAccessFailureDate": "Here you can view the access failure date for a device",
+      "hereYouCanViewAccessFailureDate": "All devices were successfully reached during their last snapshot attempt",
       "hereYouCanViewConfigChangeList": "Here you can view the configuration change list",
       "inCaseOfFailureTryAllCredentials": "In case of failure, also try all known credential sets",
       "latestTasks": "Latest tasks on this device",
@@ -975,17 +979,15 @@
       "canCreate": "You can create a webhook to launch external code linked to Netshot event"
     },
     "report": {
-      "exportDriverAttributes": "Export attributes of driver device",
+      "exportDriverAttributes": "Export device attributes which are specific to device types",
       "exportCompliance": "Export compliance report and information",
       "exportLocationsAndContacts": "Export device locations and contacts information",
       "list": "Reports",
       "totalDevices": "Total Devices",
       "period": {
-        "lastHour": "Last hour",
-        "last4Hours": "Last 4 hours",
-        "last12Hours": "Last 12 hours",
-        "lastDay": "Last day",
-        "specificDay": "Specific day"
+        "last24Hours": "Last 24 hours",
+        "last7Days": "Last 7 days",
+        "last30Days": "Last 30 days"
       }
     }
   }

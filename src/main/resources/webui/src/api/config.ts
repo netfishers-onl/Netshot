@@ -6,11 +6,22 @@ import { ConfigQueryParams } from "./types"
 async function getAll(queryParams: ConfigQueryParams = {}) {
   return httpClient.get<LightConfig[]>("/configs", {
     queryParams,
+    queryParamsOptions: {
+      stringifyOpt: {
+        arrayFormat: "repeat",
+      },
+    },
   })
 }
 
-async function getDiff(sourceId: number, targetId: number) {
-  return httpClient.get<ConfigDiff>(`/configs/${sourceId}/vs/${targetId}`)
+async function getDiff(
+  sourceId: number,
+  targetId: number,
+  queryParams: { deltas?: boolean; fullconfigs?: boolean } = {}
+) {
+  return httpClient.get<ConfigDiff>(`/configs/${sourceId}/vs/${targetId}`, {
+    queryParams,
+  })
 }
 
 async function getItem(id: number, item: string) {

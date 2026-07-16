@@ -1,5 +1,5 @@
 import api from "@/api"
-import { MonacoDiffEditor } from "@/components"
+import { MonacoDiffEditor, MonacoEditor } from "@/components"
 import { Icon } from "@chakra-ui/react"
 import { LuEyeOff, LuX } from "react-icons/lu"
 import { QUERIES } from "@/constants"
@@ -14,13 +14,19 @@ export type CompareEditorProps = {
   attribute: DeviceAttributeDefinition
 }
 
-function getInlineAttributeValue(config: Config, attributeName: string): string {
+type AttributeValue = {
+  /** Whether this attribute exists at all in that config, as opposed to existing with an empty value. */
+  present: boolean
+  text: string
+}
+
+function getInlineAttributeValue(config: Config, attributeName: string): AttributeValue {
   const attr = config.attributes?.find((a) => a.name === attributeName)
-  if (!attr) return ""
-  if ("number" in attr) return (attr as ConfigNumericAttribute).number?.toString() ?? ""
-  if ("text" in attr) return (attr as ConfigTextAttribute).text ?? ""
-  if ("assumption" in attr) return (attr as ConfigBinaryAttribute).assumption?.toString() ?? ""
-  return ""
+  if (!attr) return { present: false, text: "" }
+  if ("number" in attr) return { present: true, text: (attr as ConfigNumericAttribute).number?.toString() ?? "" }
+  if ("text" in attr) return { present: true, text: (attr as ConfigTextAttribute).text ?? "" }
+  if ("assumption" in attr) return { present: true, text: (attr as ConfigBinaryAttribute).assumption?.toString() ?? "" }
+  return { present: false, text: "" }
 }
 
 export default function ConfigurationCompareEditor(props: CompareEditorProps) {
@@ -37,9 +43,13 @@ export default function ConfigurationCompareEditor(props: CompareEditorProps) {
     isError: isOriginalError,
   } = useQuery({
     queryKey: [QUERIES.DEVICE_CONFIG_COMPARE, attribute.name, current.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<AttributeValue> => {
       if (!isLongText) return getInlineAttributeValue(current, attribute.name)
-      try { return await api.config.getItem(current.id, attribute.name) } catch { return "" }
+      try {
+        return { present: true, text: await api.config.getItem(current.id, attribute.name) }
+      } catch {
+        return { present: false, text: "" }
+      }
     },
   })
 
@@ -49,9 +59,13 @@ export default function ConfigurationCompareEditor(props: CompareEditorProps) {
     isError: isModifiedError,
   } = useQuery({
     queryKey: [QUERIES.DEVICE_CONFIG_COMPARE, attribute.name, compare.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<AttributeValue> => {
       if (!isLongText) return getInlineAttributeValue(compare, attribute.name)
-      try { return await api.config.getItem(compare.id, attribute.name) } catch { return "" }
+      try {
+        return { present: true, text: await api.config.getItem(compare.id, attribute.name) }
+      } catch {
+        return { present: false, text: "" }
+      }
     },
   })
 
@@ -106,5 +120,38 @@ export default function ConfigurationCompareEditor(props: CompareEditorProps) {
     )
   }
 
-  return <MonacoDiffEditor readOnly original={original} modified={modified} language="cfg" />
+  if (!original.present && !modified.present) {
+    return (
+      <Center flex="1">
+        <Text color="grey.400">{t("device.config.attributeNotInEither")}</Text>
+      </Center>
+    )
+  }
+
+  if (original.present !== modified.present) {
+    return (
+      <Stack direction="row" gap="4" flex="1" minW="0">
+        <Stack flex="1" minW="0">
+          {original.present ? (
+            <MonacoEditor readOnly value={original.text} language="cfg" flex="1" />
+          ) : (
+            <Center flex="1" borderWidth="1px" borderColor="grey.100" borderRadius="lg">
+              <Text color="grey.400">{t("device.config.attributeNotInOlder")}</Text>
+            </Center>
+          )}
+        </Stack>
+        <Stack flex="1" minW="0">
+          {modified.present ? (
+            <MonacoEditor readOnly value={modified.text} language="cfg" flex="1" />
+          ) : (
+            <Center flex="1" borderWidth="1px" borderColor="grey.100" borderRadius="lg">
+              <Text color="grey.400">{t("device.config.attributeNotInNewer")}</Text>
+            </Center>
+          )}
+        </Stack>
+      </Stack>
+    )
+  }
+
+  return <MonacoDiffEditor readOnly original={original.text} modified={modified.text} language="cfg" />
 }

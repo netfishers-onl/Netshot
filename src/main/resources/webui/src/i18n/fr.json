@@ -43,6 +43,7 @@
         "label": "Configuration",
         "tabLabel": "Configurations",
         "changes": "Changements de configuration",
+        "changeList": "Liste des changements",
         "compareXToY": "Comparer <first/> à <second/>",
         "compliance": "Conformité de la configuration",
         "size": "Taille de la configuration",
@@ -62,6 +63,9 @@
         "trackChanges": "Suivre les derniers changements de configuration ou sur une période",
         "unableToLoad": "Impossible de charger la configuration",
         "binaryNotPreviewable": "Cet attribut contient des données binaires et ne peut pas être prévisualisé",
+        "attributeNotInEither": "Cet attribut n'est présent dans aucune des deux configurations",
+        "attributeNotInOlder": "Cet attribut n'est pas présent dans la configuration la plus ancienne",
+        "attributeNotInNewer": "Cet attribut n'est pas présent dans la configuration la plus récente",
         "select": "Sélectionner une configuration"
       },
       "configListWillAppear": "La liste des configurations apparaîtra ici lorsque l'équipement change",
@@ -88,7 +92,7 @@
       "name": "Nom de l'équipement",
       "type": "Type d'équipement",
       "withLevelAppearsWhenSoftwareRuleValidated": "L'équipement avec le niveau {{ level }} apparaît lorsque la règle logicielle est validée",
-      "withoutSuccessfulSnapshotFor": "Équipement sans snapshot réussi depuis",
+      "withoutSuccessfulSnapshotFor": "Équipements sans snapshot réussi depuis",
       "devices": "Équipements",
       "unreachableForFewDays": "Équipements injoignables depuis quelques jours",
       "disable": "Désactiver l'équipement",
@@ -112,7 +116,7 @@
         "noInterface": "Cet équipement n'a pas d'interface, veuillez vérifier sa configuration"
       },
       "firstSeen": "Première détection",
-      "hereYouCanViewAccessFailureDate": "Ici vous pouvez voir la date d'échec d'accès pour un équipement",
+      "hereYouCanViewAccessFailureDate": "Tous les équipements ont été joints avec succès lors de leur dernière tentative de snapshot",
       "hereYouCanViewConfigChangeList": "Ici vous pouvez voir la liste des configurations modifiées",
       "inCaseOfFailureTryAllCredentials": "En cas d'échec, essayer aussi tous les ensembles d'identifiants connus",
       "latestTasks": "Dernières tâches sur cet équipement",
@@ -974,17 +978,15 @@
       "canCreate": "Vous pouvez créer un webhook pour lancer du code externe lié à un événement Netshot"
     },
     "report": {
-      "exportDriverAttributes": "Exporter les attributs du pilote d'équipement",
+      "exportDriverAttributes": "Exporter les attributs d'équipement spécifiques aux types d'équipement",
       "exportCompliance": "Exporter le rapport et les informations de conformité",
       "exportLocationsAndContacts": "Exporter les emplacements et informations de contact des équipements",
       "list": "Rapports",
       "totalDevices": "Total des équipements",
       "period": {
-        "lastHour": "Dernière heure",
-        "last4Hours": "4 dernières heures",
-        "last12Hours": "12 dernières heures",
-        "lastDay": "Dernier jour",
-        "specificDay": "Jour spécifique"
+        "last24Hours": "Dernières 24 heures",
+        "last7Days": "7 derniers jours",
+        "last30Days": "30 derniers jours"
       }
     }
   }

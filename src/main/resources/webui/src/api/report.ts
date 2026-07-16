@@ -82,17 +82,6 @@ async function getAllHardwareSupportStats() {
   return httpClient.get<HardwareSupportStat[]>(`/reports/hardwaresupportstats`)
 }
 
-async function getConfigChangeOverLastDay() {
-  return httpClient.get<Array<{ changeCount: number; changeDay: number }>>(
-    `/reports/last7dayschangesbyday`,
-    {
-      queryParams: {
-        tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      },
-    }
-  )
-}
-
 async function exportData(queryParams: ReportExportDataQueryParams) {
   const req = await httpClient.request(HttpMethod.GET, "/reports/export", {
     headers: {
@@ -121,6 +110,5 @@ export default {
   getAllHardwareSupportDevices,
   getAllHardwareSupportStats,
   getAllDeviceAccessFailures,
-  getConfigChangeOverLastDay,
   exportData,
 }

@@ -1,3 +1,5 @@
+import { DeviceNetworkClass } from "./device"
+
 export type ConfigNumericAttribute = {
   type: string
   name: string
@@ -40,6 +42,7 @@ export type LightConfig = {
   deviceId: number
   changeDate: number
   author: string
+  deviceNetworkClass: DeviceNetworkClass
 }
 
 export enum ConfigDiffType {
@@ -66,6 +69,10 @@ export type ConfigDiffProp = {
 export type ConfigDiff = {
   originalDate: number
   revisedDate: number
+  originalConfigId: number
+  revisedConfigId: number
+  originalConfig?: Config
+  revisedConfig?: Config
   deltas: {
     additionalProp1: ConfigDiffProp[]
     additionalProp2: ConfigDiffProp[]

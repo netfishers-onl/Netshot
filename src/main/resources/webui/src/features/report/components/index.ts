@@ -4,7 +4,7 @@ export { default as ConfigurationComplianceSidebarList } from "./ConfigurationCo
 export { default as ConfigurationComplianceSidebarSearch } from "./ConfigurationComplianceSidebarSearch";
 export { default as HardwareDeviceListTrigger } from "./HardwareDeviceListTrigger";
 export { default as ConfigurationChangeList } from "./ConfigurationChangeList";
+export { default as ConfigurationChangeFilterMenu } from "./ConfigurationChangeFilterMenu";
 export { default as ConfigurationChart } from "./ConfigurationChart";
-export { default as ConfigurationCompareDialog } from "./ConfigurationCompareDialog";
 export { default as ReportSidebar } from "./ReportSidebar";
 export { default as SoftwareComplianceItem } from "./SoftwareComplianceItem";

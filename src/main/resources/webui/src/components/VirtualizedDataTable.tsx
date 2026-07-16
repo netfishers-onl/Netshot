@@ -287,7 +287,7 @@ export function VirtualizedDataTable<Data extends object>(props: VirtualizedData
     >
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
-          <Table.Root flex="1" display="grid">
+          <Table.Root flex="1" display="grid" alignContent="start">
             <VirtualizedDataTableHeader table={table} draggable={draggable} />
             <VirtualizedDataTableBody
               table={table}

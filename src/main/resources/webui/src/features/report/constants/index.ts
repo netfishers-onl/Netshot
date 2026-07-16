@@ -1,12 +1,21 @@
 export const QUERIES = {
   CONFIG_CHANGE: "config-change",
   REPORT_CONFIG_CHANGE_LIST: "report-config-change-list",
-  REPORT_CONFIG_CHANGE_OVER_LAST_DAY: "report-config-change-over-last-day",
   SOFTWARE_COMPLIANCE: "software-compliance",
   SOFTWARE_COMPLIANCE_DEVICES: "software-compliance-devices",
   DEVICE_ACCESS_FAILURE: "device-access-failure",
   DEVICE_HARDWARE_STATUS: "device-hardware-status",
-  DEVICE_CONFIG: "device-config",
-  DEVICE_CURRENT_CONFIG: "device-current-config",
+  DEVICE_CONFIG_DIFF: "device-config-diff",
   CONFIGURATION_COMPLIANCE_STAT: "configuration-compliance-stat",
 }
+
+export type ConfigChangeRangePreset = {
+  label: string
+  ms: number
+}
+
+export const CONFIG_CHANGE_RANGE_PRESETS: ConfigChangeRangePreset[] = [
+  { label: "report.period.last24Hours", ms: 24 * 3_600_000 },
+  { label: "report.period.last7Days", ms: 7 * 86_400_000 },
+  { label: "report.period.last30Days", ms: 30 * 86_400_000 },
+]

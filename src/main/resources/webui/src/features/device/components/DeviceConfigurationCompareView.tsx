@@ -1,9 +1,7 @@
-import ConfigurationCompareEditor from "@/components/ConfigurationCompareEditor"
-import { Select } from "@/components/Select"
-import { useLocalization } from "@/i18n"
-import { Config, Device, DeviceAttributeDefinition, DeviceType } from "@/types"
+import { ConfigCompareView } from "@/components"
+import { Config, Device, DeviceType } from "@/types"
 import { getConfigDeviceAttributeDefinitions } from "@/utils"
-import { Box, Button, Separator, Stack, Text } from "@chakra-ui/react"
+import { Button, Separator, Stack } from "@chakra-ui/react"
 import { useMemo } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -13,7 +11,6 @@ import { LuArrowLeft, LuArrowRight } from "react-icons/lu"
 type FormData = {
   current: string
   compare: string
-  attribute: DeviceAttributeDefinition["name"]
 }
 
 export type DeviceConfigurationCompareViewProps = {
@@ -26,15 +23,9 @@ export type DeviceConfigurationCompareViewProps = {
 export default function DeviceConfigurationCompareView(props: DeviceConfigurationCompareViewProps) {
   const { current, compare, device, type } = props
   const { t } = useTranslation()
-  const { formatDateTime } = useLocalization()
   const { data: configs } = useDeviceConfigs(device?.id)
 
   const attributeDefinitions = type ? getConfigDeviceAttributeDefinitions(type.attributes) : []
-
-  const attributeOptions = attributeDefinitions.map((attr) => ({
-    label: attr.title,
-    value: attr.name,
-  }))
 
   const defaultValues = useMemo(() => {
     const idx1 = configs?.findIndex((c) => c.id === current?.id) ?? -1
@@ -44,7 +35,6 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
     return {
       current: (isOrdered ? current : compare)?.id?.toString(),
       compare: (isOrdered ? compare : current)?.id?.toString(),
-      attribute: attributeDefinitions[0]?.name ?? null,
     }
   }, [current?.id, compare?.id, configs])
 
@@ -60,12 +50,6 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
     control: form.control,
     name: "compare",
     compute: (value) => configs?.find((c) => c.id === +value),
-  })
-
-  const selectedAttribute = useWatch({
-    control: form.control,
-    name: "attribute",
-    compute: (value) => attributeDefinitions.find((attr) => attr.name === value),
   })
 
   const [currentValue, compareValue] = form.watch(["current", "compare"])
@@ -102,59 +86,29 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
 
   return (
     <Stack direction="row" gap="7" overflow="auto" flex="1">
-      <Stack flex="1" gap="5">
-        <Stack gap="4" flex="1">
-          <Separator />
-          <Stack direction="row" alignItems="center">
-            <Stack direction="row" flex="1" alignItems="center" gap="3">
-              {isConsecutive && (
-                <Button onClick={() => navigate("previous")} disabled={isFirst}>
-                  <LuArrowLeft />
-                  {t("common.previous")}
-                </Button>
-              )}
-              <Box w="280px">
-                {selectedCurrent && (
-                  <Text fontWeight="medium">{formatDateTime(selectedCurrent.changeDate)}</Text>
-                )}
-              </Box>
-            </Stack>
-
-            <Stack>
-              <Select
-                placeholder={t("common.selectAnAttribute")}
-                control={form.control}
-                name="attribute"
-                options={attributeOptions}
-                width="280px"
-              />
-            </Stack>
-
-            <Stack direction="row" flex="1" alignItems="center" gap="3" justifyContent="end">
-              <Box w="280px" textAlign="end">
-                {selectedCompare && (
-                  <Text fontWeight="medium">{formatDateTime(selectedCompare.changeDate)}</Text>
-                )}
-              </Box>
-              {isConsecutive && (
-                <Button onClick={() => navigate("next")} disabled={isLast}>
-                  {t("common.next")}
-                  <LuArrowRight />
-                </Button>
-              )}
-            </Stack>
-          </Stack>
-          <Separator />
-          <Stack flex="1">
-            {selectedAttribute && (
-              <ConfigurationCompareEditor
-                current={selectedCurrent}
-                compare={selectedCompare}
-                attribute={selectedAttribute}
-              />
-            )}
-          </Stack>
-        </Stack>
+      <Stack flex="1" gap="4">
+        <Separator />
+        <ConfigCompareView
+          current={selectedCurrent}
+          compare={selectedCompare}
+          attributeDefinitions={attributeDefinitions}
+          leftExtra={
+            isConsecutive && (
+              <Button onClick={() => navigate("previous")} disabled={isFirst}>
+                <LuArrowLeft />
+                {t("common.previous")}
+              </Button>
+            )
+          }
+          rightExtra={
+            isConsecutive && (
+              <Button onClick={() => navigate("next")} disabled={isLast}>
+                {t("common.next")}
+                <LuArrowRight />
+              </Button>
+            )
+          }
+        />
       </Stack>
     </Stack>
   )

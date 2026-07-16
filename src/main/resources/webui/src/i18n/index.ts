@@ -16,8 +16,14 @@ i18n
   .use(LanguageDetector)
   .init({
     resources,
-    lng: "en",
     fallbackLng: "en",
+    supportedLngs: availableLanguages,
+    load: "languageOnly",
+    detection: {
+      order: ["localStorage", "navigator"],
+      caches: ["localStorage"],
+      lookupLocalStorage: "i18nextLng",
+    },
     interpolation: {
       escapeValue: false,
     },

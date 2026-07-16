@@ -4484,6 +4484,13 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private String author;
+
+		/** The device network class. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Device.NetworkClass deviceNetworkClass;
 	}
 
 	/**
@@ -4522,7 +4529,8 @@ public class RestService extends Thread {
 				+ "c.device.name, "
 				+ "c.device.id, "
 				+ "c.changeDate, "
-				+ "c.author"
+				+ "c.author, "
+				+ "d.networkClass"
 				+ ") from Config c join c.device d";
 			Map<String, Object> hqlParams = new HashMap<>();
 			if (!deviceGroups.isEmpty()) {

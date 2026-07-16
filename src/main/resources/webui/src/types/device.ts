@@ -250,5 +250,6 @@ export type DeviceAccessFailure = {
   lastSuccess: number
   mgmtAddress: string
   name: string
+  networkClass: DeviceNetworkClass
   status: DeviceStatus
 }

@@ -1,15 +1,15 @@
 import api, { ReportDeviceAccessFailureQueryParams } from "@/api"
 import {
-  DataTable,
   DomainSelect,
   EmptyResult,
-  EntityLink,
   FormControl,
   Search,
+  VirtualizedDataTable,
 } from "@/components"
-import { LuArrowRight, LuFilter, LuRefreshCcw } from "react-icons/lu"
-import { FormControlType } from "@/components/FormControl"
 import { Tooltip } from "@/components/ui/tooltip"
+import { DeviceBadge } from "@/features/device/components"
+import { LuFilter, LuRefreshCcw } from "react-icons/lu"
+import { FormControlType } from "@/components/FormControl"
 import { usePagination } from "@/hooks"
 import { DeviceAccessFailure } from "@/types"
 import { useLocalization } from "@/i18n"
@@ -27,7 +27,7 @@ import {
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate } from "react-router"
@@ -38,34 +38,33 @@ type FilterForm = {
   days: number
 }
 
+const DEFAULT_FILTER: FilterForm = {
+  domain: null,
+  days: 7,
+}
+
 const columnHelper = createColumnHelper<DeviceAccessFailure>()
 
 export default function ReportDeviceAccessFailure() {
   const { t } = useTranslation()
   const { formatDateTime } = useLocalization()
-  const pagination = usePagination({
-    limit: 50,
-  })
+  const pagination = usePagination()
   const navigate = useNavigate()
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [filter, setFilter] = useState<FilterForm>(DEFAULT_FILTER)
   const form = useForm<FilterForm>({
-    defaultValues: {
-      domain: null,
-      days: 7,
-    },
+    defaultValues: filter,
   })
 
-  const domain = useWatch({
-    control: form.control,
-    name: "domain",
-  })
-
-  const days = useWatch({
+  const formDays = useWatch({
     control: form.control,
     name: "days",
   })
+
   const {
     data = [],
     isPending,
+    isFetching,
     refetch,
   } = useQuery({
     queryKey: [
@@ -73,17 +72,17 @@ export default function ReportDeviceAccessFailure() {
       pagination.query,
       pagination.offset,
       pagination.limit,
-      domain,
-      days,
+      filter.domain,
+      filter.days,
     ],
     queryFn: async () => {
       const queryParams: ReportDeviceAccessFailureQueryParams = {
         ...pagination,
-        days,
+        days: filter.days,
       }
 
-      if (domain) {
-        queryParams.domain = +domain
+      if (filter.domain) {
+        queryParams.domain = +filter.domain
       }
 
       return api.report.getAllDeviceAccessFailures(queryParams)
@@ -97,51 +96,56 @@ export default function ReportDeviceAccessFailure() {
     () => [
       columnHelper.accessor("name", {
         cell: (info) => (
-          <EntityLink to={`/app/devices/${info.row.original.id}/general`}>
-            {info.getValue()}
-          </EntityLink>
+          <DeviceBadge networkClass={info.row.original.networkClass}>
+            <Link
+              to={`/app/devices/${info.row.original.id}/general`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {info.getValue()}
+            </Link>
+          </DeviceBadge>
         ),
         header: t("device.label"),
+        size: 10000,
+        enableSorting: true,
       }),
       columnHelper.accessor("mgmtAddress", {
         cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("device.managementIp"),
+        size: 10000,
+        enableSorting: true,
       }),
       columnHelper.accessor("family", {
         cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("common.family"),
+        size: 15000,
+        enableSorting: true,
       }),
       columnHelper.accessor("lastSuccess", {
         cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
         header: t("device.lastSuccessfulSnapshot"),
+        size: 10000,
+        enableSorting: true,
       }),
       columnHelper.accessor("lastFailure", {
         cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
         header: t("device.lastFailedSnapshot"),
-      }),
-      columnHelper.display({
-        id: "actions",
-        cell: (info) => (
-          <Tooltip content={t("common.goToDevice")}>
-            <IconButton variant="ghost" colorPalette="green" aria-label={t("common.goToDevice")} asChild>
-              <Link to={`/app/devices/${info.getValue()}/general`}>
-                <LuArrowRight />
-              </Link>
-            </IconButton>
-          </Tooltip>
-        ),
-        header: "",
-        enableSorting: false,
-        meta: {
-          align: "right",
-        },
+        size: 10000,
+        enableSorting: true,
       }),
     ],
     [t]
   )
 
+  function applyFilter(values: FilterForm) {
+    setFilter(values)
+    setFilterOpen(false)
+  }
+
   function clearFilter() {
-    form.reset()
+    setFilter(DEFAULT_FILTER)
+    form.reset(DEFAULT_FILTER)
+    setFilterOpen(false)
   }
 
   function navigateToDevice(row: DeviceAccessFailure) {
@@ -150,10 +154,24 @@ export default function ReportDeviceAccessFailure() {
 
   return (
     <>
-      <Stack gap="6" p="9" flex="1" overflowY="auto">
-        <Heading as="h1" fontSize="4xl">
-          {t("device.accessFailures")}
-        </Heading>
+      <Stack gap="6" p="9" flex="1" minH="0" overflow="hidden">
+        <Stack direction="row" alignItems="center" gap="3">
+          <Heading as="h1" fontSize="4xl">
+            {t("device.accessFailures")}
+          </Heading>
+          <Tooltip content={t("common.refresh")}>
+            <IconButton
+              aria-label={t("common.refresh")}
+              variant="ghost"
+              size="sm"
+              color="fg.muted"
+              onClick={() => refetch()}
+              loading={isFetching}
+            >
+              <LuRefreshCcw />
+            </IconButton>
+          </Tooltip>
+        </Stack>
         <Stack direction="row" gap="3">
           <Search
             placeholder={t("common.searchPlaceholder")}
@@ -162,7 +180,15 @@ export default function ReportDeviceAccessFailure() {
             w="30%"
           />
           <Spacer />
-          <Menu.Root>
+          <Menu.Root
+            open={filterOpen}
+            onOpenChange={(e) => {
+              setFilterOpen(e.open)
+              if (!e.open) {
+                form.reset(filter)
+              }
+            }}
+          >
             <Menu.Trigger asChild>
               <Button variant="primary">
                 <LuFilter />
@@ -171,9 +197,9 @@ export default function ReportDeviceAccessFailure() {
             </Menu.Trigger>
             <Portal>
               <Menu.Positioner>
-                <Menu.Content>
-                  <Stack gap="6" p="3" asChild>
-                    <form>
+                <Menu.Content w="380px" p="3">
+                  <Stack gap="4" asChild>
+                    <form onSubmit={form.handleSubmit(applyFilter)}>
                       <DomainSelect control={form.control} name="domain" />
                       <FormControl
                         label={t("device.withoutSuccessfulSnapshotFor")}
@@ -182,12 +208,17 @@ export default function ReportDeviceAccessFailure() {
                         name="days"
                         suffix={
                           <Text color="grey.500" pr="4">
-                            {t("time.days")}
+                            {t("time.day", { count: formDays })}
                           </Text>
                         }
                       />
-                      <Stack gap="2">
-                        <Button onClick={clearFilter}>{t("common.clearAll")}</Button>
+                      <Stack direction="row" gap="2">
+                        <Button type="button" flex="1" onClick={clearFilter}>
+                          {t("common.reset")}
+                        </Button>
+                        <Button type="submit" variant="primary" flex="1">
+                          {t("common.applyFilters")}
+                        </Button>
                       </Stack>
                     </form>
                   </Stack>
@@ -195,10 +226,6 @@ export default function ReportDeviceAccessFailure() {
               </Menu.Positioner>
             </Portal>
           </Menu.Root>
-          <Button onClick={() => refetch()}>
-            <LuRefreshCcw />
-            {t("common.refresh")}
-          </Button>
         </Stack>
         {isPending ? (
           <Stack gap="3">
@@ -210,12 +237,15 @@ export default function ReportDeviceAccessFailure() {
         ) : (
           <>
             {data?.length > 0 ? (
-              <DataTable
+              <VirtualizedDataTable
                 zIndex={0}
                 columns={columns}
                 data={data}
                 loading={isPending}
                 onClickRow={navigateToDevice}
+                primaryKey="id"
+                flex="1"
+                minH="0"
               />
             ) : (
               <EmptyResult

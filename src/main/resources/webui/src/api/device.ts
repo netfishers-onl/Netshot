@@ -10,9 +10,8 @@ import {
   SimpleDevice,
 } from "@/types"
 import { Task } from "@/types/task"
-import { sortByDate } from "@/utils"
 import withQuery from "with-query"
-import httpClient, { NetshotError } from "./httpClient"
+import httpClient from "./httpClient"
 import {
   CreateDevicePayload,
   DeviceModuleQueryParams,
@@ -76,23 +75,6 @@ async function getAllDeviceConfigsById(id: number, queryParams: PaginationQueryP
 }
 
 /**
- * @todo: Add endpoint to get config from device by id
- */
-async function getConfigById(deviceId: number, id: number) {
-  let configs = []
-
-  try {
-    configs = await getAllDeviceConfigsById(deviceId, {
-      limit: 999999,
-    })
-  } catch (err) {
-    throw err as NetshotError
-  }
-
-  return configs.find((config) => config.id === id)
-}
-
-/**
  * @todo: Add endpoint to get current config from device
  */
 async function getCurrentConfig(deviceId: number) {
@@ -101,20 +83,6 @@ async function getCurrentConfig(deviceId: number) {
   })
 
   return config
-}
-
-/**
- * @todo: Add endpoint to get previous config from other config
- */
-async function getPreviousConfig(deviceId: number, id: number) {
-  const configs = await getAllDeviceConfigsById(deviceId)
-  const configIndex = sortByDate(configs, "changeDate").findIndex((config) => config.id === id)
-
-  if (configIndex === -1) {
-    return null
-  }
-
-  return configs?.[configIndex + 1]
 }
 
 async function getAllInterfacesById(id: number, queryParams: PaginationQueryParams = {}) {
@@ -171,9 +139,7 @@ export default {
   getComplianceResultById,
   getDiagnosticResultById,
   getAllConfigsById: getAllDeviceConfigsById,
-  getConfigById,
   getCurrentConfig,
-  getPreviousConfig,
   getAllInterfacesById,
   getAllModulesById,
   getAllTasksById,

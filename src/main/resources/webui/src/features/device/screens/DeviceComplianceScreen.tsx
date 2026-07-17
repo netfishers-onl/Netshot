@@ -89,7 +89,6 @@ export default function DeviceComplianceScreen() {
           <EntityLink
             to={`/app/compliance/config/${info.row.original.policyId}`}
             textDecoration="none"
-            color="black"
             _hover={{ color: "green.600" }}
           >
             {info.getValue()}
@@ -104,7 +103,6 @@ export default function DeviceComplianceScreen() {
           <EntityLink
             to={`/app/compliance/config/${info.row.original.policyId}/${info.row.original.ruleId}`}
             textDecoration="none"
-            color="black"
             _hover={{ color: "green.600" }}
           >
             {info.getValue()}

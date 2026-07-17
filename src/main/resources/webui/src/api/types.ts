@@ -182,9 +182,9 @@ export type CreateOrUpdatePolicy = {
 }
 
 export type ReportQueryParams = Partial<{
-  domains: number[]
-  groups: number[]
-  policies: number[]
+  domain: number[]
+  group: number[]
+  policy: number[]
   result?: DeviceComplianceResultType[]
 }>
 

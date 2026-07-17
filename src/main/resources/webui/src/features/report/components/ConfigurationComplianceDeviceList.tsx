@@ -6,7 +6,8 @@ import { ConfigComplianceDeviceStatus, Group } from "@/types"
 import { groupItemsByProperty, search } from "@/utils"
 import { Skeleton, Spacer, Stack } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { useCallback } from "react"
+import { useVirtualizer } from "@tanstack/react-virtual"
+import { useCallback, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import DeviceConfigurationCompliancePanel from "./DeviceConfigurationCompliancePanel"
 
@@ -21,6 +22,7 @@ export default function ConfigurationComplianceDeviceList(
 
   const { t } = useTranslation()
   const pagination = usePagination()
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const { data, isPending } = useQuery({
     queryKey: [
@@ -32,15 +34,25 @@ export default function ConfigurationComplianceDeviceList(
     ],
     queryFn: async () => api.report.getAllGroupConfigNonCompliantDevices(group.id),
     select: useCallback(
-      (res: ConfigComplianceDeviceStatus[]): Map<"name", ConfigComplianceDeviceStatus[]> => {
+      (res: ConfigComplianceDeviceStatus[]): Map<string, ConfigComplianceDeviceStatus[]> => {
         return groupItemsByProperty(search(res, "name").with(pagination.query), "name")
       },
       [pagination.query]
     ),
   })
 
+  const rows = useMemo(() => Array.from(data?.entries() ?? []), [data])
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => containerRef.current,
+    estimateSize: () => 67,
+    measureElement: (element) => element?.getBoundingClientRect().height,
+    overscan: 5,
+  })
+
   return (
-    <>
+    <Stack gap="3" flex="1" minH="0">
       <Stack direction="row">
         <Search
           placeholder={t("common.searchPlaceholder")}
@@ -59,20 +71,47 @@ export default function ConfigurationComplianceDeviceList(
         </Stack>
       ) : (
         <>
-          {data?.size > 0 ? (
-            <>
-              {Array.from(data.entries()).map(([key, value]) => (
-                <DeviceConfigurationCompliancePanel configs={value} name={key} key={key} />
-              ))}
-            </>
+          {rows.length > 0 ? (
+            <Stack ref={containerRef} flex="1" minH="0" overflow="auto" gap="0">
+              <div
+                style={{
+                  height: `${virtualizer.getTotalSize()}px`,
+                  width: "100%",
+                  position: "relative",
+                  flexShrink: 0,
+                }}
+              >
+                {virtualizer.getVirtualItems().map((virtualItem) => {
+                  const [name, configs] = rows[virtualItem.index]
+
+                  return (
+                    <div
+                      key={name}
+                      ref={virtualizer.measureElement}
+                      data-index={virtualItem.index}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        paddingBottom: "12px",
+                        transform: `translateY(${virtualItem.start}px)`,
+                      }}
+                    >
+                      <DeviceConfigurationCompliancePanel configs={configs} name={name} />
+                    </div>
+                  )
+                })}
+              </div>
+            </Stack>
           ) : (
             <EmptyResult
               title={t("device.noDevice")}
-              description={t("group.noDevice")}
+              description={t("compliance.noNonCompliantDeviceInGroup")}
             />
           )}
         </>
       )}
-    </>
+    </Stack>
   )
 }

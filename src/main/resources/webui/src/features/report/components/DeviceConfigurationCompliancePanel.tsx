@@ -1,10 +1,10 @@
-import { DataTable } from "@/components"
+import { DataTable, EntityLink } from "@/components"
 import { LuChevronDown } from "react-icons/lu"
+import { DeviceBadge, DeviceConfigComplianceBadge } from "@/features/device/components"
 import { ConfigComplianceDeviceStatus } from "@/types"
 import { useLocalization } from "@/i18n"
-import { Button, IconButton, Separator, Spacer, Stack, Tag, Text } from "@chakra-ui/react"
+import { IconButton, Separator, Stack, Text } from "@chakra-ui/react"
 import { createColumnHelper } from "@tanstack/react-table"
-import { motion, useAnimationControls } from "framer-motion"
 import { useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
@@ -20,101 +20,92 @@ export default function DeviceConfigurationCompliancePanel(props: DeviceConfigur
   const { name, configs } = props
   const { t } = useTranslation()
   const { formatDateTime } = useLocalization()
-  const controls = useAnimationControls()
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(true)
+  const [isExpanded, setIsExpanded] = useState<boolean>(false)
 
-  const toggleCollapse = useCallback(async () => {
-    setIsCollapsed((prev) => !prev)
-    await controls.start(isCollapsed ? "show" : "hidden")
-  }, [controls, isCollapsed])
+  const toggleExpand = useCallback(() => {
+    setIsExpanded((prev) => !prev)
+  }, [])
 
   const columns = useMemo(
     () => [
       columnHelper.accessor("configCompliant", {
-        cell: (info) => {
-          const value = info.getValue()
-
-          if (value) {
-            return (
-              <Tag.Root bg="green.50" color="green.900">
-                {t("compliance.compliant")}
-              </Tag.Root>
-            )
-          }
-
-          return (
-            <Tag.Root bg="green.900" color="green.50">
-              {t("compliance.nonCompliant")}
-            </Tag.Root>
-          )
-        },
+        cell: (info) => <DeviceConfigComplianceBadge compliant={info.getValue()} />,
         header: t("common.status"),
+        enableSorting: true,
       }),
       columnHelper.accessor("policyName", {
-        cell: (info) => <Text>{info.getValue()}</Text>,
+        cell: (info) => (
+          <EntityLink
+            to={`/app/compliance/config/${info.row.original.policyId}`}
+            textDecoration="none"
+            _hover={{ color: "green.600" }}
+          >
+            {info.getValue()}
+          </EntityLink>
+        ),
         header: t("policy.label"),
+        enableSorting: true,
       }),
       columnHelper.accessor("ruleName", {
-        cell: (info) => <Text>{info.getValue()}</Text>,
+        cell: (info) => (
+          <EntityLink
+            to={`/app/compliance/config/${info.row.original.policyId}/${info.row.original.ruleId}`}
+            textDecoration="none"
+            _hover={{ color: "green.600" }}
+          >
+            {info.getValue()}
+          </EntityLink>
+        ),
         header: t("policy.rule.label"),
+        enableSorting: true,
       }),
       columnHelper.accessor("checkDate", {
         cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
         header: t("time.testDateTime"),
+        enableSorting: true,
       }),
     ],
     [t, formatDateTime]
   )
 
   return (
-    <Stack borderWidth="1px" borderColor="grey.100" borderRadius="2xl" key={name} gap="0">
+    <Stack borderWidth="1px" borderColor="grey.100" borderRadius="2xl" bg="white" key={name} gap="0">
       <Stack
         direction="row"
         gap="3"
         alignItems="center"
         p="3"
-        onClick={toggleCollapse}
+        onClick={toggleExpand}
         cursor="pointer"
       >
         <IconButton
+          size="sm"
           variant="ghost"
           colorPalette="green"
           aria-label={t("common.open")}
           css={{
-            transform: isCollapsed ? "rotate(-90deg)" : "",
+            transform: isExpanded ? "" : "rotate(-90deg)",
           }}
         >
           <LuChevronDown />
         </IconButton>
-        <Text fontSize="md" fontWeight="semibold">
-          {name}
-        </Text>
-
-        <Spacer />
-        <Button colorPalette="green" variant="ghost" asChild>
-          <Link to={`/app/devices/${configs?.[0]?.id}/compliance`}>{t("common.seeDetails")}</Link>
-        </Button>
+        <DeviceBadge networkClass={configs?.[0]?.networkClass}>
+          <Link
+            to={`/app/devices/${configs?.[0]?.id}/compliance`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {name}
+          </Link>
+        </DeviceBadge>
       </Stack>
-      <motion.div
-        initial="hidden"
-        animate={controls}
-        variants={{
-          hidden: { opacity: 0, height: 0, pointerEvents: "none" },
-          show: {
-            opacity: 1,
-            height: "auto",
-            pointerEvents: "all",
-          },
-        }}
-        transition={{
-          duration: 0.2,
-        }}
-      >
-        <Separator />
-        <Stack direction="column" gap="3" pb="1">
-          <DataTable columns={columns} data={configs} border="none" borderRadius="0" />
-        </Stack>
-      </motion.div>
+      {isExpanded && (
+        <>
+          <Separator />
+          <Stack direction="column" gap="3" pb="1">
+            <DataTable columns={columns} data={configs} border="none" borderRadius="0" />
+          </Stack>
+        </>
+      )}
     </Stack>
   )
 }

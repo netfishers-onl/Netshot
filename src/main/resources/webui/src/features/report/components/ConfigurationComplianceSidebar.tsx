@@ -16,12 +16,11 @@ import ConfigurationComplianceSidebarSearch from "./ConfigurationComplianceSideb
 
 function ConfigurationComplianceGlobalChart() {
   const { t } = useTranslation()
-  const [compliantColor] = useToken("colors", "green.400")
-  const [nonCompliantColor] = useToken("colors", "green.900")
-  const { domains, groups, policies } = useConfigurationComplianceSidebarStore(
+  const [compliantColor] = useToken("colors", "green.500")
+  const [nonCompliantColor] = useToken("colors", "red.500")
+  const { domains, policies } = useConfigurationComplianceSidebarStore(
     useShallow((state) => ({
       domains: state.domains,
-      groups: state.groups,
       policies: state.policies,
     }))
   )
@@ -33,19 +32,14 @@ function ConfigurationComplianceGlobalChart() {
     queryKey: [
       QUERIES.CONFIGURATION_COMPLIANCE_STAT,
       domains.sort().join(","),
-      groups.sort().join(","),
       policies.sort().join(","),
       params?.id,
     ],
     queryFn: async () => {
       const filters = {
-        domains,
-        groups,
-        policies,
-      }
-
-      if (params.id) {
-        filters.groups.push(+params.id)
+        domain: domains,
+        policy: policies,
+        group: params.id ? [+params.id] : [],
       }
 
       return api.report.getAllGroupConfigComplianceStats(filters)
@@ -129,7 +123,7 @@ function ConfigurationComplianceGlobalChart() {
 
           <Spacer />
           <Skeleton loading={!!isPending}>
-            <Tag.Root bg="green.900" color="green.50">
+            <Tag.Root bg="red.50" color="red.900">
               {count.nonCompliant}
             </Tag.Root>
           </Skeleton>

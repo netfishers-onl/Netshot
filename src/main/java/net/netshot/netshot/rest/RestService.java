@@ -1094,7 +1094,7 @@ public class RestService extends Thread {
 					}
 				}
 			}
-			throw new WebApplicationException("Invalid configuration item",
+			throw new WebApplicationException("Invalid configuration item '%s'".formatted(item),
 				Response.Status.BAD_REQUEST);
 		}
 		catch (HibernateException e) {
@@ -6108,12 +6108,26 @@ public class RestService extends Thread {
 	@AllArgsConstructor
 	public static class RsLightPolicyRuleDevice extends RsLightDevice {
 
+		/** The policy id. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private long policyId;
+
 		/** The policy name. */
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
 		private String policyName;
+
+		/** The rule id. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private long ruleId;
 
 		/** The rule name. */
 		@Getter(onMethod = @__({
@@ -6138,10 +6152,13 @@ public class RestService extends Thread {
 
 		public RsLightPolicyRuleDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
 			String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
-			Device.NetworkClass networkClass, String policyName, String ruleName, Date checkDate, ResultOption result) {
+			Device.NetworkClass networkClass, long policyId, String policyName, long ruleId, String ruleName,
+			Date checkDate, ResultOption result) {
 			super(id, name, family, mgmtAddress, status, driver, eol, eos, configCompliant, softwareLevel, networkClass);
-			this.ruleName = ruleName;
+			this.policyId = policyId;
 			this.policyName = policyName;
+			this.ruleId = ruleId;
+			this.ruleName = ruleName;
 			this.checkDate = checkDate;
 			this.result = result;
 		}
@@ -6192,7 +6209,9 @@ public class RestService extends Thread {
 				+ "case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, "
 				+ "d.softwareLevel, "
 				+ "d.networkClass, "
+				+ "p.id as policyId, "
 				+ "p.name as policyName, "
+				+ "r.id as ruleId, "
 				+ "r.name as ruleName, "
 				+ "ccr.checkDate as checkDate, "
 				+ "ccr.result as result "
@@ -6289,7 +6308,9 @@ public class RestService extends Thread {
 						+ "case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, "
 						+ "d.softwareLevel, "
 						+ "d.networkClass, "
+						+ "p.id as policyId, "
 						+ "p.name as policyName, "
+						+ "r.id as ruleId, "
 						+ "r.name as ruleName, "
 						+ "ccr.checkDate as checkDate, "
 						+ "ccr.result as result"

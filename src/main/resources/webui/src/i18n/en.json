@@ -605,7 +605,6 @@
       "select": "Select a group",
       "showInReports": "Show this group in reports",
       "removeWarning": "The related software and hardware compliance rules, and the group specific tasks will be removed along with the group itself.",
-      "noDevice": "There is no device in this group",
       "useSlashesForFolder": "Use slashes to give a folder path",
       "aboutToRemove": "You are about to remove the group <bold>{{name}}</bold>"
     },
@@ -665,6 +664,7 @@
       "information": "Compliance information",
       "compliant": "Compliant",
       "nonCompliantDeviceListDesc": "Here is a list of non-compliant devices. You can check why a device is not compliant by clicking on it.",
+      "noNonCompliantDeviceInGroup": "There is no non-compliant device in this group",
       "lastCheck": "Last check",
       "lastStatusChange": "Last status change",
       "nonCompliant": "Non-compliant",

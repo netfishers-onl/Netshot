@@ -41,7 +41,9 @@ export type ConfigComplianceDeviceStatus = {
   sshPort: number;
   telnetPort: number;
   connectAddress: Address;
+  ruleId: number;
   ruleName: string;
+  policyId: number;
   policyName: string;
   checkDate: number;
   result: DeviceComplianceResultType;

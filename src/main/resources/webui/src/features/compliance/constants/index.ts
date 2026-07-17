@@ -16,8 +16,8 @@ export const RULE_SCRIPT_TEMPLATE = {
  * Script template - to be customized.
  */
 function check(device) {
-    //var config = device.get('runningConfig');
-    //var name = device.get('common.name');
+    //const config = device.get("runningConfig");
+    //const name = device.get("name");
     return CONFORMING;
     //return NONCONFORMING;
     //return NOTAPPLICABLE;
@@ -28,7 +28,7 @@ function check(device) {
 def check(device):
   ## Grab some data:
   #  config = device.get('running_config')
-  #  name = device.get('common.name')
+  #  name = device.get('name')
   ## Some additional checks here...
   ## debug('device name = %s' % name)
   return result_option.CONFORMING

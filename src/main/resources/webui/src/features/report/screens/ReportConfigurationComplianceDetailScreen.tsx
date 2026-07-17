@@ -23,7 +23,7 @@ export default function ReportConfigurationComplianceDetailScreen() {
   })
 
   return (
-    <Stack p="9" gap="6" flex="1" overflowY="auto">
+    <Stack p="9" gap="6" flex="1" minH="0" overflow="hidden">
       <Stack direction="row" gap="6" alignItems="center">
         <Stack gap="2">
           <Skeleton loading={!isSuccess}>

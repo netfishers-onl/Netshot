@@ -604,7 +604,6 @@
       "select": "Sélectionner un groupe",
       "showInReports": "Afficher ce groupe dans les rapports",
       "removeWarning": "Les règles de conformité logicielle et matérielle associées, ainsi que les tâches spécifiques au groupe seront supprimées avec le groupe lui-même.",
-      "noDevice": "Il n'y a pas d'équipement dans ce groupe",
       "useSlashesForFolder": "Utiliser des slashes pour donner un chemin de dossier",
       "aboutToRemove": "Vous êtes sur le point de supprimer le groupe <bold>{{name}}</bold>"
     },
@@ -664,6 +663,7 @@
       "information": "Informations de conformité",
       "compliant": "Conforme",
       "nonCompliantDeviceListDesc": "Voici une liste des équipements non conformes. Vous pouvez vérifier pourquoi un équipement n'est pas conforme en cliquant dessus.",
+      "noNonCompliantDeviceInGroup": "Il n'y a aucun équipement non conforme dans ce groupe",
       "lastCheck": "Dernière vérification",
       "lastStatusChange": "Dernier changement de statut",
       "nonCompliant": "Non conforme",

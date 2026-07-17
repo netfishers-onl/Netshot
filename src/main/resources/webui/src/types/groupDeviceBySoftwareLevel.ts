@@ -1,4 +1,4 @@
-import { DeviceComplianceResultType, DeviceSoftwareLevel } from "./device"
+import { DeviceComplianceResultType, DeviceNetworkClass, DeviceSoftwareLevel } from "./device"
 
 export type GroupDeviceBySoftwareLevel = {
   id: 0
@@ -8,4 +8,6 @@ export type GroupDeviceBySoftwareLevel = {
   status: DeviceComplianceResultType
   driver: string
   softwareLevel: DeviceSoftwareLevel
+  softwareVersion: string
+  networkClass: DeviceNetworkClass
 }

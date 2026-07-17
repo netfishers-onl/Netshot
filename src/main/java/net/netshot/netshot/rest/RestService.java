@@ -7094,6 +7094,28 @@ public class RestService extends Thread {
 	}
 
 	/**
+	 * The Class RsLightSoftwareLevelDevice.
+	 */
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.NONE)
+	@AllArgsConstructor
+	public static class RsLightSoftwareLevelDevice extends RsLightDevice {
+
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private String softwareVersion;
+
+		public RsLightSoftwareLevelDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
+			String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
+			Device.NetworkClass networkClass, String softwareVersion) {
+			super(id, name, family, mgmtAddress, status, driver, eol, eos, configCompliant, softwareLevel, networkClass);
+			this.softwareVersion = softwareVersion;
+		}
+	}
+
+	/**
 	 * Gets the group devices by software level.
 	 *
 	 * @param id the id
@@ -7113,7 +7135,7 @@ public class RestService extends Thread {
 	)
 	@Tag(name = "Reports", description = "Report and statistics")
 	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
-	public List<RsLightDevice> getGroupDevicesBySoftwareLevel(
+	public List<RsLightSoftwareLevelDevice> getGroupDevicesBySoftwareLevel(
 		@PathParam("id") @Parameter(description = "Group ID") Long id,
 		@PathParam("level") @Parameter(description = "Software compliance level") String level,
 		@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains)
@@ -7134,9 +7156,9 @@ public class RestService extends Thread {
 			if (domains.size() > 0) {
 				domainFilter = " and d.mgmtDomain.id in (:domainIds)";
 			}
-			Query<RsLightDevice> query = session
+			Query<RsLightSoftwareLevelDevice> query = session
 				.createQuery(
-					"select new RsLightDevice("
+					"select new RsLightSoftwareLevelDevice("
 						+ "d.id, "
 						+ "d.name, "
 						+ "d.family, "
@@ -7147,9 +7169,10 @@ public class RestService extends Thread {
 						+ "case when (d.eosDate < current_date()) then true else false end, "
 						+ "case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, "
 						+ "d.softwareLevel, "
-						+ "d.networkClass "
+						+ "d.networkClass, "
+						+ "d.softwareVersion "
 						+ ") from Device d join d.groupMemberships gm where gm.key.group.id = :id and d.softwareLevel = :level and d.status = :enabled" + domainFilter,
-					RsLightDevice.class)
+					RsLightSoftwareLevelDevice.class)
 				.setParameter("id", id)
 				.setParameter("level", filterLevel)
 				.setParameter("enabled", Device.Status.INPRODUCTION)
@@ -7157,7 +7180,7 @@ public class RestService extends Thread {
 			if (domains.size() > 0) {
 				query.setParameterList("domainIds", domains);
 			}
-			List<RsLightDevice> devices = query.list();
+			List<RsLightSoftwareLevelDevice> devices = query.list();
 			return devices;
 		}
 		catch (HibernateException e) {

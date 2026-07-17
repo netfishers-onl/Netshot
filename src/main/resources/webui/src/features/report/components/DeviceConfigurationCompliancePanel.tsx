@@ -91,7 +91,7 @@ export default function DeviceConfigurationCompliancePanel(props: DeviceConfigur
         </IconButton>
         <DeviceBadge networkClass={configs?.[0]?.networkClass}>
           <Link
-            to={`/app/devices/${configs?.[0]?.id}/compliance`}
+            to={`/app/devices/${configs?.[0]?.id}/compliance?open=config`}
             onClick={(e) => e.stopPropagation()}
           >
             {name}

@@ -7,4 +7,3 @@ export { default as ConfigurationChangeList } from "./ConfigurationChangeList";
 export { default as ConfigurationChangeFilterMenu } from "./ConfigurationChangeFilterMenu";
 export { default as ConfigurationChart } from "./ConfigurationChart";
 export { default as ReportSidebar } from "./ReportSidebar";
-export { default as SoftwareComplianceItem } from "./SoftwareComplianceItem";

@@ -80,7 +80,7 @@ export default function ConfigurationCompliantSidebarList() {
   })
 
   return (
-    <Stack px="6" pt="3" flex="1" overflow="auto">
+    <Stack px="6" pt="3" flex="1" overflow="auto" gap="0">
       {isPending ? (
         <Stack gap="3" pb="6">
           <Skeleton height="36px" />

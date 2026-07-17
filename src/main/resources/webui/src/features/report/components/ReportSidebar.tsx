@@ -27,7 +27,7 @@ export default function ReportSidebar() {
         />
         <SidebarLink
           to="./software-compliance"
-          label={t("compliance.software.label")}
+          label={t("compliance.software.versionLabel")}
           description={t("compliance.software.versionStatusDesc")}
         />
         <SidebarLink

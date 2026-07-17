@@ -29,7 +29,7 @@ export function usePoliciesWithOptions() {
     queryKey: [QUERIES.POLICY_OPTION_LIST],
     queryFn: () => api.policy.getAllWithRules(),
     select(policies) {
-      return policies.map((policy) => ({
+      return sortAlphabetical(policies, "name").map((policy) => ({
         label: policy?.name,
         value: policy?.id,
       }))

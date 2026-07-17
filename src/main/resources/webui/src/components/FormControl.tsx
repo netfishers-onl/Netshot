@@ -97,6 +97,7 @@ function FormControl<T>(
     min,
     max,
     step,
+    size,
     ...other
   } = props
 
@@ -297,6 +298,7 @@ function FormControl<T>(
         >
           <NumberInput.Root
             w="full"
+            size={size as "xs" | "sm" | "md" | "lg"}
             variant={variant}
             name={name}
             disabled={disabled}

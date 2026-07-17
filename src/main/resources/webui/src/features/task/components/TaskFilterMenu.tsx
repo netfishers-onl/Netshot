@@ -97,16 +97,19 @@ export default function TaskFilterMenu(props: TaskFilterMenuProps) {
       </Menu.Trigger>
       <Portal>
         <Menu.Positioner>
-          <Menu.Content w="380px" p="3">
+          <Menu.Content w="300px" p="3">
             <Stack gap="4" asChild>
               <form onSubmit={form.handleSubmit(onApply)}>
                 <TaskFilterFields control={form.control} statuses={statuses} />
                 <Stack direction="row" gap="2">
+                  <Button type="button" flex="1" onClick={() => setOpen(false)}>
+                    {t("common.cancel")}
+                  </Button>
                   <Button type="button" flex="1" onClick={onReset}>
                     {t("common.reset")}
                   </Button>
                   <Button type="submit" variant="primary" flex="1">
-                    {t("common.applyFilters")}
+                    {t("common.apply")}
                   </Button>
                 </Stack>
               </form>

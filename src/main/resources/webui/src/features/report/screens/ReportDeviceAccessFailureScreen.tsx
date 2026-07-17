@@ -227,13 +227,14 @@ export default function ReportDeviceAccessFailure() {
             </Menu.Trigger>
             <Portal>
               <Menu.Positioner>
-                <Menu.Content w="380px" p="3">
+                <Menu.Content w="300px" p="3">
                   <Stack gap="4" asChild>
                     <form onSubmit={form.handleSubmit(applyFilter)}>
-                      <DomainSelect control={form.control} name="domain" />
+                      <DomainSelect control={form.control} name="domain" withAny />
                       <FormControl
                         label={t("device.withoutSuccessfulSnapshotFor")}
                         type={FormControlType.Number}
+                        size="sm"
                         control={form.control}
                         name="days"
                         suffix={
@@ -243,11 +244,14 @@ export default function ReportDeviceAccessFailure() {
                         }
                       />
                       <Stack direction="row" gap="2">
+                        <Button type="button" flex="1" onClick={() => setFilterOpen(false)}>
+                          {t("common.cancel")}
+                        </Button>
                         <Button type="button" flex="1" onClick={clearFilter}>
                           {t("common.reset")}
                         </Button>
                         <Button type="submit" variant="primary" flex="1">
-                          {t("common.applyFilters")}
+                          {t("common.apply")}
                         </Button>
                       </Stack>
                     </form>

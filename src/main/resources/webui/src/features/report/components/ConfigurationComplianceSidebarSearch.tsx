@@ -1,11 +1,10 @@
 import { DomainSelect, PolicySelect } from "@/components"
-import { LuFilter, LuFilterX } from "react-icons/lu"
 import Search from "@/components/Search"
-import { useFormDialog } from "@/dialog"
-import { IconButton, Stack } from "@chakra-ui/react"
-import React, { useEffect, useRef } from "react"
-import { useForm, useFormContext } from "react-hook-form"
+import { Button, IconButton, Menu, Portal, Stack } from "@chakra-ui/react"
+import { useEffect, useRef, useState } from "react"
+import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
+import { LuFilter, LuFilterX } from "react-icons/lu"
 import { useSearchParams } from "react-router"
 import { useShallow } from "zustand/react/shallow"
 import { useConfigurationComplianceSidebarStore } from "../stores/useConfigurationComplianceSidebarStore"
@@ -20,21 +19,11 @@ type FilterForm = {
   policies: number[]
 }
 
-function ConfigurationComplianceSidebarSearchFilterForm() {
-  const form = useFormContext()
-
-  return (
-    <Stack>
-      <DomainSelect multiple control={form.control} name="domains" />
-      <PolicySelect multiple control={form.control} name="policies" />
-    </Stack>
-  )
-}
-
-type ConfigurationComplianceSidebarSearchFilterProps = { children: React.ReactElement<any> } & Record<string, unknown>
-
-function ConfigurationComplianceSidebarSearchFilter({ children, ...rest }: ConfigurationComplianceSidebarSearchFilterProps) {
+function ConfigurationComplianceSidebarFilterMenu() {
   const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const [, setSearchParams] = useSearchParams()
+
   const { domains, policies, setFilters } = useConfigurationComplianceSidebarStore(
     useShallow((state) => ({
       domains: state.domains,
@@ -42,15 +31,10 @@ function ConfigurationComplianceSidebarSearchFilter({ children, ...rest }: Confi
       setFilters: state.setFilters,
     }))
   )
-  const [, setSearchParams] = useSearchParams()
 
-  const dialog = useFormDialog()
-  const form = useForm<FilterForm>({
-    defaultValues: {
-      domains,
-      policies,
-    },
-  })
+  const isFiltered = domains.length > 0 || policies.length > 0
+
+  const form = useForm<FilterForm>({ values: { domains, policies } })
 
   function writeFiltersToUrl(values: FilterForm) {
     setSearchParams(
@@ -66,52 +50,71 @@ function ConfigurationComplianceSidebarSearchFilter({ children, ...rest }: Confi
     )
   }
 
-  const open = () => {
-    const dialogRef = dialog.open({
-      title: t("common.advancedFilters"),
-      description: <ConfigurationComplianceSidebarSearchFilterForm />,
-      form,
-      onSubmit(values: FilterForm) {
-        setFilters(values)
-        writeFiltersToUrl(values)
-
-        dialogRef.close()
-      },
-      onCancel() {
-        form.reset()
-        const values = form.getValues()
-        setFilters(values)
-        writeFiltersToUrl(values)
-        dialogRef.close()
-      },
-      submitButton: {
-        label: t("common.applyFilters"),
-      },
-      cancelButton: {
-        label: t("common.clearAll"),
-      },
-    })
+  function onApply(values: FilterForm) {
+    setFilters(values)
+    writeFiltersToUrl(values)
+    setOpen(false)
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  function onReset() {
+    const values = { domains: [], policies: [] }
+    setFilters(values)
+    writeFiltersToUrl(values)
+    setOpen(false)
+  }
+
+  return (
+    <Menu.Root
+      open={open}
+      onOpenChange={(e) => {
+        setOpen(e.open)
+        if (!e.open) {
+          form.reset({ domains, policies })
+        }
+      }}
+    >
+      <Menu.Trigger asChild>
+        <IconButton size="xs" variant="ghost" aria-label={t("common.openFilter")}>
+          {isFiltered ? <LuFilterX /> : <LuFilter />}
+        </IconButton>
+      </Menu.Trigger>
+      <Portal>
+        <Menu.Positioner>
+          <Menu.Content w="300px" p="3">
+            <Stack gap="4" asChild>
+              <form onSubmit={form.handleSubmit(onApply)}>
+                <DomainSelect multiple control={form.control} name="domains" />
+                <PolicySelect multiple control={form.control} name="policies" />
+                <Stack direction="row" gap="2">
+                  <Button type="button" flex="1" onClick={() => setOpen(false)}>
+                    {t("common.cancel")}
+                  </Button>
+                  <Button type="button" flex="1" onClick={onReset}>
+                    {t("common.reset")}
+                  </Button>
+                  <Button type="submit" variant="primary" flex="1">
+                    {t("common.apply")}
+                  </Button>
+                </Stack>
+              </form>
+            </Stack>
+          </Menu.Content>
+        </Menu.Positioner>
+      </Portal>
+    </Menu.Root>
+  )
 }
 
 export default function ConfigurationComplianceSidebarSearch() {
   const { t } = useTranslation()
-  const { query, domains, policies, setQuery, setFilters } =
-    useConfigurationComplianceSidebarStore(
-      useShallow((state) => ({
-        query: state.query,
-        domains: state.domains,
-        policies: state.policies,
-        setQuery: state.setQuery,
-        setFilters: state.setFilters,
-      }))
-    )
+  const { query, setQuery, setFilters } = useConfigurationComplianceSidebarStore(
+    useShallow((state) => ({
+      query: state.query,
+      setQuery: state.setQuery,
+      setFilters: state.setFilters,
+    }))
+  )
   const [searchParams] = useSearchParams()
-
-  const isFiltered = domains.length > 0 || policies.length > 0
 
   const hydrated = useRef(false)
   useEffect(() => {
@@ -146,11 +149,7 @@ export default function ConfigurationComplianceSidebarSearch() {
         onQuery={onQuery}
         onClear={onClear}
       >
-        <ConfigurationComplianceSidebarSearchFilter>
-          <IconButton size="xs" variant="ghost" aria-label={t("common.openFilter")}>
-            {isFiltered ? <LuFilterX /> : <LuFilter />}
-          </IconButton>
-        </ConfigurationComplianceSidebarSearchFilter>
+        <ConfigurationComplianceSidebarFilterMenu />
       </Search>
     </Stack>
   )

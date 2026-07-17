@@ -127,10 +127,10 @@ export default function TaskTimeRangeMenu(props: TaskTimeRangeMenuProps) {
       </Menu.Trigger>
       <Portal>
         <Menu.Positioner>
-          <Menu.Content w="560px" p="4">
+          <Menu.Content w="300px" p="3">
             <Stack gap="3" asChild>
               <form onSubmit={form.handleSubmit(onApply)}>
-                <Stack direction="row" gap="2">
+                <Stack direction="column" gap="2">
                   <DateTimeField
                     control={form.control}
                     name="fromDate"
@@ -144,7 +144,7 @@ export default function TaskTimeRangeMenu(props: TaskTimeRangeMenuProps) {
                     placeholder={t("task.to")}
                   />
                 </Stack>
-                <SimpleGrid columns={3} gap="2">
+                <SimpleGrid columns={2} gap="2">
                   {TIME_RANGE_PRESETS.map((p) => (
                     <Button
                       key={p.label}
@@ -165,11 +165,14 @@ export default function TaskTimeRangeMenu(props: TaskTimeRangeMenuProps) {
                   label={t("common.status")}
                 />
                 <Stack direction="row" gap="2">
+                  <Button type="button" flex="1" onClick={() => setOpen(false)}>
+                    {t("common.cancel")}
+                  </Button>
                   <Button type="button" flex="1" onClick={onReset}>
                     {t("common.reset")}
                   </Button>
                   <Button type="submit" variant="primary" flex="1">
-                    {t("common.applyFilters")}
+                    {t("common.apply")}
                   </Button>
                 </Stack>
               </form>

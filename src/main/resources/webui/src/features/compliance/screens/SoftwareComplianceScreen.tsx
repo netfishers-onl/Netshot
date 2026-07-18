@@ -58,6 +58,7 @@ export default function SoftwareComplianceScreen() {
   }, [isSuccess, rules, reorderPending])
 
   const isDraggable = (user?.level || 0) >= Level.ReadWrite
+  const isSearching = Boolean(pagination.query?.trim())
 
   const columns = [
     columnHelper.accessor("targetGroup", {
@@ -283,6 +284,8 @@ export default function SoftwareComplianceScreen() {
                 primaryKey="id"
                 onDropRow={onDrop}
               />
+            ) : isSearching ? (
+              <Text>{t("common.noResults")}</Text>
             ) : (
               <EmptyResult
                 title={t("compliance.software.noRule")}

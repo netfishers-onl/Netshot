@@ -45,6 +45,8 @@ export default function AdministrationUserScreen() {
     ),
   })
 
+  const isSearching = Boolean(pagination.query?.trim())
+
   const columns = useMemo(
     () => [
       columnHelper.accessor("username", {
@@ -148,6 +150,8 @@ export default function AdministrationUserScreen() {
           <>
             {data?.length > 0 ? (
               <DataTable columns={columns} data={data} loading={isPending} />
+            ) : isSearching ? (
+              <Text>{t("common.noResults")}</Text>
             ) : (
               <EmptyResult
                 title={t("user.none")}

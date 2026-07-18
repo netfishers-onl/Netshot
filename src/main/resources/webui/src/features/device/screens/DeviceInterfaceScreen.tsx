@@ -58,6 +58,8 @@ export default function DeviceInterfaceScreen() {
     ),
   })
 
+  const isSearching = Boolean(pagination.query?.trim())
+
   const columns = useMemo(
     () =>
       [
@@ -174,6 +176,8 @@ export default function DeviceInterfaceScreen() {
         <>
           {data?.length > 0 ? (
             <DataTable columns={columns} data={data} loading={isPending} />
+          ) : isSearching ? (
+            <Text>{t("common.noResults")}</Text>
           ) : (
             <EmptyResult
               title={t("device.interface.none")}

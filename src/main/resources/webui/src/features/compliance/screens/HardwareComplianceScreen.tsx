@@ -37,6 +37,8 @@ export default function HardwareComplianceScreen() {
     ),
   })
 
+  const isSearching = Boolean(pagination.query?.trim())
+
   const columns = useMemo(
     () => [
       columnHelper.accessor("targetGroup", {
@@ -201,6 +203,8 @@ export default function HardwareComplianceScreen() {
         <>
           {rules?.length > 0 ? (
             <DataTable columns={columns} data={rules} loading={isPending} />
+          ) : isSearching ? (
+            <Text>{t("common.noResults")}</Text>
           ) : (
             <EmptyResult
               title={t("compliance.hardware.noRule")}

@@ -315,6 +315,7 @@ export default function ReportSoftwareComplianceScreen() {
   )
 
   const rows = useMemo(() => flattenTree(treeItems, 0, isOpen), [treeItems, isOpen])
+  const isSearching = Boolean(pagination.query?.trim())
 
   return (
     <Stack gap="8" p="9" flex="1" overflow="auto">
@@ -406,6 +407,8 @@ export default function ReportSoftwareComplianceScreen() {
               return <GroupGridRow key={row.key} row={row} item={item} onGroupSelect={onGroupSelect} />
             })}
           </Grid>
+        ) : isSearching ? (
+          <Text>{t("common.noResults")}</Text>
         ) : (
           <EmptyResult
             title={t("group.notFound")}

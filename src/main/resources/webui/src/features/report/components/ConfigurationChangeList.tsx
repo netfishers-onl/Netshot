@@ -46,6 +46,8 @@ export default function ConfigurationChangeList() {
     return sortByDateDesc([...filtered], "changeDate")
   }, [data, day, query])
 
+  const isSearching = Boolean(query?.trim())
+
   const columns = useMemo(
     () => [
       columnHelper.accessor("changeDate", {
@@ -116,6 +118,8 @@ export default function ConfigurationChangeList() {
               flex="1"
               minH="0"
             />
+          ) : isSearching ? (
+            <Text>{t("common.noResults")}</Text>
           ) : (
             <EmptyResult
               title={t("device.config.noChange")}

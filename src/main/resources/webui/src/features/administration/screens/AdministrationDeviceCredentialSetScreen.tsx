@@ -38,6 +38,8 @@ export default function AdministrationDeviceCredentialSetScreen() {
     ),
   })
 
+  const isSearching = Boolean(pagination.query?.trim())
+
   const columns = useMemo(
     () => [
       columnHelper.accessor("name", {
@@ -137,6 +139,8 @@ export default function AdministrationDeviceCredentialSetScreen() {
           <>
             {data?.length > 0 ? (
               <DataTable columns={columns} data={data} loading={isPending} />
+            ) : isSearching ? (
+              <Text>{t("common.noResults")}</Text>
             ) : (
               <EmptyResult
                 title={t("credential.noneForDevice")}

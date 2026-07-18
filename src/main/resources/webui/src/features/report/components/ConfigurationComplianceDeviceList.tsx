@@ -4,7 +4,7 @@ import { QUERIES } from "@/constants"
 import { usePagination } from "@/hooks"
 import { ConfigComplianceDeviceStatus, Group } from "@/types"
 import { groupItemsByProperty, search } from "@/utils"
-import { Skeleton, Spacer, Stack } from "@chakra-ui/react"
+import { Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { useCallback, useMemo, useRef } from "react"
@@ -42,6 +42,7 @@ export default function ConfigurationComplianceDeviceList(
   })
 
   const rows = useMemo(() => Array.from(data?.entries() ?? []), [data])
+  const isSearching = Boolean(pagination.query?.trim())
 
   const virtualizer = useVirtualizer({
     count: rows.length,
@@ -104,6 +105,8 @@ export default function ConfigurationComplianceDeviceList(
                 })}
               </div>
             </Stack>
+          ) : isSearching ? (
+            <Text>{t("common.noResults")}</Text>
           ) : (
             <EmptyResult
               title={t("device.noDevice")}

@@ -31,6 +31,8 @@ export default function AdministrationClusteringScreen() {
     ),
   })
 
+  const isSearching = Boolean(pagination.query?.trim())
+
   return (
     <>
       <Stack gap="6" p="9" flex="1" overflow="auto">
@@ -129,6 +131,8 @@ export default function AdministrationClusteringScreen() {
                   </ExpandablePanel>
                 ))}
               </Stack>
+            ) : isSearching ? (
+              <Text>{t("common.noResults")}</Text>
             ) : (
               <EmptyResult
                 title={t("compliance.hardware.noMember")}

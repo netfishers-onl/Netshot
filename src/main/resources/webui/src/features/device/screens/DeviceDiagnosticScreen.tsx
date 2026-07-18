@@ -43,7 +43,7 @@ export default function DeviceDiagnosticScreen() {
   const { device } = useDevice()
   const [showDates, setShowDates] = useState(false)
 
-  const { data, isPending } = useQuery({
+  const { data = [], isPending } = useQuery({
     queryKey: [
       QUERIES.DEVICE_DIAGNOSTIC,
       params.id,
@@ -57,6 +57,8 @@ export default function DeviceDiagnosticScreen() {
       [pagination.query]
     ),
   })
+
+  const isSearching = Boolean(pagination.query?.trim())
 
   const columns = useMemo(() => {
     const columns = [
@@ -118,7 +120,7 @@ export default function DeviceDiagnosticScreen() {
 
   return (
     <Stack gap="6" flex="1" overflow="auto">
-      {data?.length > 0 ? (
+      {data?.length > 0 || isSearching ? (
         <>
           <Stack direction="row" alignItems="center">
             <Search
@@ -143,7 +145,11 @@ export default function DeviceDiagnosticScreen() {
             </Protected>
           </Stack>
 
-          <DataTable columns={columns} data={data} loading={isPending} />
+          {data?.length > 0 ? (
+            <DataTable columns={columns} data={data} loading={isPending} />
+          ) : (
+            <Text>{t("common.noResults")}</Text>
+          )}
         </>
       ) : (
         <EmptyResult

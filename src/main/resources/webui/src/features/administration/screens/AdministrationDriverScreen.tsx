@@ -29,6 +29,8 @@ export default function AdministrationDriverScreen() {
     ),
   })
 
+  const isSearching = Boolean(pagination.query?.trim())
+
   const getProtocolCheckbox = useCallback(
     (info: CellContext<DeviceType, DeviceTypeProtocol[]>, type: DeviceTypeProtocol) => (
       <Checkbox.Root readOnly checked={info.getValue()?.includes(type)} colorPalette="green">
@@ -139,6 +141,8 @@ export default function AdministrationDriverScreen() {
           <>
             {data?.length > 0 ? (
               <DataTable columns={columns} data={data} loading={isPending} />
+            ) : isSearching ? (
+              <Text>{t("common.noResults")}</Text>
             ) : (
               <EmptyResult
                 title={t("admin.driver.none")}

@@ -33,6 +33,8 @@ export default function AdministrationApiTokenScreen() {
     ),
   })
 
+  const isSearching = Boolean(pagination.query?.trim())
+
   const columns = useMemo(
     () => [
       columnHelper.accessor("description", {
@@ -108,6 +110,8 @@ export default function AdministrationApiTokenScreen() {
           <>
             {data?.length > 0 ? (
               <DataTable columns={columns} data={data} loading={isPending} />
+            ) : isSearching ? (
+              <Text>{t("common.noResults")}</Text>
             ) : (
               <EmptyResult
                 title={t("api.none")}

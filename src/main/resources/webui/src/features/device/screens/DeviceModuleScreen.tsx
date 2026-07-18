@@ -49,6 +49,8 @@ export default function DeviceModuleScreen() {
     ),
   })
 
+  const isSearching = Boolean(pagination.query?.trim())
+
   const columns = useMemo(() => {
     const columns = [
       columnHelper.accessor("slot", {
@@ -115,6 +117,8 @@ export default function DeviceModuleScreen() {
         <>
           {data?.length > 0 ? (
             <DataTable columns={columns} data={data} loading={isPending} />
+          ) : isSearching ? (
+            <Text>{t("common.noResults")}</Text>
           ) : (
             <EmptyResult
               title={t("device.module.none")}

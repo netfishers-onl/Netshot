@@ -102,6 +102,8 @@ export default function ReportDeviceAccessFailure() {
     },
   })
 
+  const isSearching = Boolean(pagination.query?.trim())
+
   const columns = useMemo(
     () => [
       columnHelper.accessor("name", {
@@ -281,6 +283,8 @@ export default function ReportDeviceAccessFailure() {
                 flex="1"
                 minH="0"
               />
+            ) : isSearching ? (
+              <Text>{t("common.noResults")}</Text>
             ) : (
               <EmptyResult
                 title={t("device.noAccessFailure")}

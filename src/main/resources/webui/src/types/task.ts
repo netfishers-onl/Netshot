@@ -64,6 +64,7 @@ export type Task = {
   deviceGroupId?: number
   priority: SchedulePriority
   discoveredDeviceTypeDescription?: string
+  snapshotTaskId?: number
   days?: number
   configDays?: number
   configSize?: number

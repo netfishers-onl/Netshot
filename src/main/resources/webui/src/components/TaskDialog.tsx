@@ -2,7 +2,7 @@ import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { LogPanel, TaskStatusBadge } from "@/components"
 import { MUTATIONS, QUERIES } from "@/constants"
-import { useConfirmDialogWithMutation, useDialogConfig } from "@/dialog"
+import { useConfirmDialogWithMutation, useCustomDialog, useDialogConfig } from "@/dialog"
 import { DeviceBadge, DeviceGroupBadge } from "@/features/device/components"
 import { TASK_TYPE_ICONS } from "@/features/task/constants"
 import { useToast } from "@/hooks"
@@ -47,6 +47,7 @@ export default function TaskDialog(props: TaskDialogProps) {
   const queryClient = useQueryClient()
   const toast = useToast()
   const confirmDialog = useConfirmDialogWithMutation()
+  const taskDialog = useCustomDialog()
 
   const { data: task, isPending } = useQuery({
     queryKey: [QUERIES.TASK, id],
@@ -71,6 +72,11 @@ export default function TaskDialog(props: TaskDialogProps) {
 
   const purgeGroupId =
     task?.type === TaskType.PurgeDatabase && task?.deviceGroupId ? task.deviceGroupId : null
+
+  const snapshotTaskId =
+    task?.type === TaskType.DiscoverDeviceType && task?.snapshotTaskId
+      ? task.snapshotTaskId
+      : null
 
   const { data: purgeGroup } = useQuery({
     queryKey: [QUERIES.GROUP_DETAIL, purgeGroupId],
@@ -286,16 +292,35 @@ export default function TaskDialog(props: TaskDialogProps) {
                   </Flex>
                 </Stack>
 
-                {task?.type === TaskType.DiscoverDeviceType && task?.discoveredDeviceTypeDescription && (
+                {task?.type === TaskType.DiscoverDeviceType && isTaskOver && (
                   <>
                     <Separator />
                     <Stack gap="3">
-                      <Flex alignItems="center">
-                        <Box w="140px">
-                          <Text color="grey.400">{t("task.discoveredDeviceType")}</Text>
-                        </Box>
-                        <Text>{task.discoveredDeviceTypeDescription}</Text>
-                      </Flex>
+                      {task?.discoveredDeviceTypeDescription && (
+                        <Flex alignItems="center">
+                          <Box w="140px">
+                            <Text color="grey.400">{t("task.discoveredDeviceType")}</Text>
+                          </Box>
+                          <Text>{task.discoveredDeviceTypeDescription}</Text>
+                        </Flex>
+                      )}
+                      {snapshotTaskId && (
+                        <Flex alignItems="center">
+                          <Box w="140px">
+                            <Text color="grey.400">{t("task.snapshotTask")}</Text>
+                          </Box>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              dialogConfig.close()
+                              taskDialog.open(<TaskDialog id={snapshotTaskId} />)
+                            }}
+                          >
+                            #{snapshotTaskId}
+                          </Button>
+                        </Flex>
+                      )}
                     </Stack>
                   </>
                 )}

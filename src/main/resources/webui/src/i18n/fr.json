@@ -725,6 +725,7 @@
       "scheduledWillTrigger": "Se déclenchera à l'heure prévue",
       "slotsFree_one": "{{count}} thread libre",
       "slotsFree_other": "{{count}} threads libres",
+      "snapshotTask": "Tâche de snapshot",
       "subnetsOrIpAddresses": "Sous-réseaux ou adresses IP",
       "taskCancelled": "La tâche a été annulée.",
       "taskList": "Liste des tâches",

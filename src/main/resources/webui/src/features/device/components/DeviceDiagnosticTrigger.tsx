@@ -7,7 +7,7 @@ import { MUTATIONS } from "@/constants"
 import { useCustomDialog, useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { Device, SimpleDevice, Task, TaskType } from "@/types"
-import { Box, Flex, Separator, Stack, Text } from "@chakra-ui/react"
+import { Box, Flex, Stack, Text } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
 import { FormProvider, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -60,7 +60,6 @@ export default function DeviceDiagnosticTrigger({ devices, children, ...rest }: 
                 </>
               )}
             </Stack>
-            <Separator />
             <Stack gap="3">
               <Checkbox control={form.control} name="checkCompliance">
                 {t("device.checkComplianceAfterSnapshot")}

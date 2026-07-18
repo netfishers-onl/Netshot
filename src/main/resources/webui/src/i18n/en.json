@@ -726,6 +726,7 @@
       "scheduledWillTrigger": "Will trigger at their set time",
       "slotsFree_one": "{{count}} slot free",
       "slotsFree_other": "{{count}} slots free",
+      "snapshotTask": "Snapshot task",
       "subnetsOrIpAddresses": "Subnets or IP addresses",
       "taskCancelled": "The task has been cancelled.",
       "taskList": "Task list",

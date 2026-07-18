@@ -1,5 +1,5 @@
 import { BadgeProps, Icon } from "@chakra-ui/react"
-import { forwardRef } from "react"
+import { type Ref } from "react"
 import { LuCircleCheck, LuCircleX } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import IconBadge from "@/components/IconBadge"
@@ -25,20 +25,19 @@ export const DEVICE_CONFIG_COMPLIANCE_CONFIG: Record<"compliant" | "nonCompliant
 
 type DeviceConfigComplianceBadgeProps = BadgeProps & {
   compliant: boolean
+  ref?: Ref<HTMLSpanElement>
 }
 
-const DeviceConfigComplianceBadge = forwardRef<HTMLSpanElement, DeviceConfigComplianceBadgeProps>(
-  ({ compliant, ...rest }, ref) => {
-    const { t } = useTranslation()
-    const config = DEVICE_CONFIG_COMPLIANCE_CONFIG[compliant ? "compliant" : "nonCompliant"]
+function DeviceConfigComplianceBadge({ compliant, ref, ...rest }: DeviceConfigComplianceBadgeProps) {
+  const { t } = useTranslation()
+  const config = DEVICE_CONFIG_COMPLIANCE_CONFIG[compliant ? "compliant" : "nonCompliant"]
 
-    return (
-      <IconBadge ref={ref} colorPalette={config.colorPalette} {...rest}>
-        <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
-        {t(config.labelKey)}
-      </IconBadge>
-    )
-  }
-)
+  return (
+    <IconBadge ref={ref} colorPalette={config.colorPalette} {...rest}>
+      <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
+      {t(config.labelKey)}
+    </IconBadge>
+  )
+}
 
 export default DeviceConfigComplianceBadge

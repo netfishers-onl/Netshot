@@ -11,13 +11,14 @@ import { useCallback } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 
 type Form = {
   mgmtDomain: Option<number>
   credentialSetIds: number[]
 }
 
-export type BulkEditDeviceTriggerProps = { devices: SimpleDevice[]; children: React.ReactElement<any> } & Record<string, unknown>
+export type BulkEditDeviceTriggerProps = { devices: SimpleDevice[]; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 function DeviceBulkEditForm() {
   const form = useFormContext()
@@ -46,7 +47,7 @@ function DeviceBulkEditForm() {
 
       form.setValue("credentialSetIds", ids)
     },
-    [credentialSetIds]
+    [credentialSetIds, form]
   )
 
   return (
@@ -155,6 +156,5 @@ export default function BulkEditDeviceTrigger({ devices, children, ...rest }: Bu
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

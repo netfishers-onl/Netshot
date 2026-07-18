@@ -1,5 +1,5 @@
 import { BadgeProps, Icon, Span } from "@chakra-ui/react"
-import { forwardRef } from "react"
+import { type Ref } from "react"
 import { LuSquareStack } from "react-icons/lu"
 import { Link } from "react-router"
 import IconBadge from "@/components/IconBadge"
@@ -7,10 +7,11 @@ import IconBadge from "@/components/IconBadge"
 export type DeviceGroupBadgeProps = Omit<BadgeProps, "id"> & {
   id: number
   name: string
+  ref?: Ref<HTMLSpanElement>
 }
 
-const DeviceGroupBadge = forwardRef<HTMLSpanElement, DeviceGroupBadgeProps>(
-  ({ id, name, ...rest }, ref) => (
+function DeviceGroupBadge({ id, name, ref, ...rest }: DeviceGroupBadgeProps) {
+  return (
     <IconBadge ref={ref} {...rest} asChild>
       <Link to={`/app/devices?group=${id}`}>
         <Icon size="sm" flexShrink={0}>
@@ -22,6 +23,6 @@ const DeviceGroupBadge = forwardRef<HTMLSpanElement, DeviceGroupBadgeProps>(
       </Link>
     </IconBadge>
   )
-)
+}
 
 export default DeviceGroupBadge

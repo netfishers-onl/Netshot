@@ -8,7 +8,7 @@ import {
   Hook,
   User,
 } from "@/types";
-import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
+import httpClient from "./httpClient";
 import { DeviceCredentialPayload, PaginationQueryParams } from "./types";
 
 async function getAllApiTokens(queryParams: PaginationQueryParams)  {

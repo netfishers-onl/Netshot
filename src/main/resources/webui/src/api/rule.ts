@@ -1,5 +1,5 @@
 import { ExemptedDevice, Rule, TestRuleResult } from "@/types";
-import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
+import httpClient from "./httpClient";
 import {
   CreateOrUpdateRule,
   PaginationQueryParams,

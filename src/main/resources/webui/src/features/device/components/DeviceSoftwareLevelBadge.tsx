@@ -1,5 +1,5 @@
 import { BadgeProps, Icon } from "@chakra-ui/react"
-import { forwardRef } from "react"
+import { type Ref } from "react"
 import { LuTrophy, LuCircleX } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { DeviceSoftwareLevel } from "@/types"
@@ -41,22 +41,21 @@ export const DEVICE_SOFTWARE_LEVEL_CONFIG: Record<DeviceSoftwareLevel, Config> =
 
 type DeviceSoftwareLevelBadgeProps = BadgeProps & {
   level: DeviceSoftwareLevel
+  ref?: Ref<HTMLSpanElement>
 }
 
-const DeviceSoftwareLevelBadge = forwardRef<HTMLSpanElement, DeviceSoftwareLevelBadgeProps>(
-  ({ level, ...rest }, ref) => {
-    const { t } = useTranslation()
-    const config = DEVICE_SOFTWARE_LEVEL_CONFIG[level]
+function DeviceSoftwareLevelBadge({ level, ref, ...rest }: DeviceSoftwareLevelBadgeProps) {
+  const { t } = useTranslation()
+  const config = DEVICE_SOFTWARE_LEVEL_CONFIG[level]
 
-    if (!config) return null
+  if (!config) return null
 
-    return (
-      <IconBadge ref={ref} colorPalette={config.colorPalette} {...rest}>
-        <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
-        {t(config.labelKey)}
-      </IconBadge>
-    )
-  }
-)
+  return (
+    <IconBadge ref={ref} colorPalette={config.colorPalette} {...rest}>
+      <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
+      {t(config.labelKey)}
+    </IconBadge>
+  )
+}
 
 export default DeviceSoftwareLevelBadge

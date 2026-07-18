@@ -28,12 +28,19 @@ function getInlineAttributeValue(config: Config, name: string): string | number 
   return "number" in attr ? attr.number : "text" in attr ? attr.text : undefined
 }
 
+/** Whether an attribute has a value in the given config; a Config's `attributes` array only lists attributes that are actually set. */
+function hasAttributeValue(config: Config, name: string): boolean {
+  return !!config?.attributes?.some((a) => a.name === name)
+}
+
 /**
  * Picks the attribute to preselect: the first comparable, natively-included
  * (Text/Numeric) attribute that actually differs between the two configs;
- * failing that, the first LongText attribute; failing that, the first Binary
- * one. LongText/Binary values aren't embedded in the config payload, so they
- * can't be compared without an extra fetch per attribute.
+ * failing that, the first LongText attribute that is set in at least one of
+ * the two configs (LongText values aren't embedded in the config payload, so
+ * they can't be diffed without an extra fetch per attribute, but attributes
+ * missing from both configs would just show an empty comparison and aren't
+ * worth preselecting); failing that, the first Binary one.
  */
 function getDefaultAttributeName(
   attributeDefinitions: DeviceAttributeDefinition[],
@@ -52,8 +59,11 @@ function getDefaultAttributeName(
   const firstDifferent = inlineDefs.find(
     (attr) => getInlineAttributeValue(current, attr.name) !== getInlineAttributeValue(compare, attr.name)
   )
+  const firstPresentLongText = longTextDefs.find(
+    (attr) => hasAttributeValue(current, attr.name) || hasAttributeValue(compare, attr.name)
+  )
 
-  return firstDifferent?.name ?? longTextDefs[0]?.name ?? binaryDefs[0]?.name ?? null
+  return firstDifferent?.name ?? firstPresentLongText?.name ?? binaryDefs[0]?.name ?? null
 }
 
 /**
@@ -69,7 +79,7 @@ export default function ConfigCompareView(props: ConfigCompareViewProps) {
 
   const defaultAttribute = useMemo(
     () => getDefaultAttributeName(attributeDefinitions, current, compare),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
     []
   )
 

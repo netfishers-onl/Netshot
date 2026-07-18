@@ -8,9 +8,10 @@ import { Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 import { QUERIES as DEVICE_QUERIES } from "../constants"
 
-export type EnableDeviceTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<any> } & Record<string, unknown>
+export type EnableDeviceTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function EnableDeviceTrigger({ devices, children, ...rest }: EnableDeviceTriggerProps) {
   const { t } = useTranslation()
@@ -56,6 +57,5 @@ export default function EnableDeviceTrigger({ devices, children, ...rest }: Enab
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

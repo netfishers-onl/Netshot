@@ -162,7 +162,7 @@ export default function HardwareComplianceScreen() {
         size: 200,
       }),
     ],
-    [t, rules]
+    [t, formatDate]
   )
 
   return (

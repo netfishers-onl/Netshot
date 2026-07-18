@@ -4,7 +4,7 @@ import {
   PropsWithChildren,
   SetStateAction,
   createContext,
-  useContext,
+  use,
   useState,
 } from "react"
 
@@ -18,7 +18,7 @@ export type DiagnosticSidebarContextType = {
 }
 
 export const DiagnosticSidebarContext = createContext<DiagnosticSidebarContextType>(null)
-export const useDiagnosticSidebar = () => useContext(DiagnosticSidebarContext)
+export const useDiagnosticSidebar = () => use(DiagnosticSidebarContext)
 
 export default function DiagnosticSidebarProvider(props: PropsWithChildren) {
   const { children } = props
@@ -27,7 +27,7 @@ export default function DiagnosticSidebarProvider(props: PropsWithChildren) {
   const [data, setData] = useState<Diagnostic[]>([])
 
   return (
-    <DiagnosticSidebarContext.Provider
+    <DiagnosticSidebarContext
       value={{
         query,
         setQuery,
@@ -38,6 +38,6 @@ export default function DiagnosticSidebarProvider(props: PropsWithChildren) {
       }}
     >
       {children}
-    </DiagnosticSidebarContext.Provider>
+    </DiagnosticSidebarContext>
   )
 }

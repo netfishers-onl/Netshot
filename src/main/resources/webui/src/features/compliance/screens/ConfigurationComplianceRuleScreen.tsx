@@ -3,7 +3,7 @@ import { isNetshotError, NetshotErrorCode } from "@/api/httpClient"
 import { EmptyResult, MonacoEditor } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { useLocalization } from "@/i18n"
-import { LuAsterisk, LuMessageSquareDot, LuPower, LuPencil, LuTrash, LuChevronDown } from "react-icons/lu"
+import { LuAsterisk, LuMessageSquareDot, LuZap, LuZapOff, LuPencil, LuTrash, LuChevronDown } from "react-icons/lu"
 import { RuleType } from "@/types"
 import {
   Badge,
@@ -23,7 +23,7 @@ import {
 } from "@chakra-ui/react"
 import { useDeviceTypeOptions } from "@/hooks"
 import { useQuery } from "@tanstack/react-query"
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useParams } from "react-router"
 import { DeviceBadge } from "@/features/device/components"
@@ -51,6 +51,8 @@ export default function ConfigurationComplianceRuleScreen() {
     queryFn: () => api.rule.getAllExemptedDevices(+ruleId),
     enabled: !!rule,
   })
+
+  const [now] = useState(() => Date.now())
 
   const contextLabel = rule?.anyBlock
     ? t("policy.rule.atLeastOneSuchBlock")
@@ -93,8 +95,6 @@ export default function ConfigurationComplianceRuleScreen() {
       <EmptyResult title={t("policy.rule.notFound")} description={t("policy.rule.notFoundDescription")} />
     )
   }
-
-  const now = Date.now()
 
   const exemptionsRow = exemptedDevices?.length ? (
     <Flex>
@@ -164,14 +164,14 @@ export default function ConfigurationComplianceRuleScreen() {
                         {rule?.enabled ? (
                           <DisableRuleTrigger policyId={+policyId} rule={rule}>
                             <Menu.Item value="disable">
-                              <LuPower />
+                              <LuZapOff />
                               {t("common.disable")}
                             </Menu.Item>
                           </DisableRuleTrigger>
                         ) : (
                           <EnableRuleTrigger policyId={+policyId} rule={rule}>
                             <Menu.Item value="enable">
-                              <LuPower />
+                              <LuZap />
                               {t("common.enable")}
                             </Menu.Item>
                           </EnableRuleTrigger>

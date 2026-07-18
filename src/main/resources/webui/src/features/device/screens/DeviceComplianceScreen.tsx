@@ -131,12 +131,12 @@ export default function DeviceComplianceScreen() {
         size: 10000,
       }),
     ],
-    [t]
+    [t, formatDateTime]
   )
 
   const softwareLevelColor = useMemo(() => {
     return getLevelColor(device?.softwareLevel)
-  }, [device?.softwareLevel])
+  }, [device?.softwareLevel, getLevelColor])
 
   return (
     <Stack gap="6" flex="1">

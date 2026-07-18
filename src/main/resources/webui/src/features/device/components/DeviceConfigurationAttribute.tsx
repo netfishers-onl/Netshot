@@ -1,4 +1,4 @@
-import { Box, Button, ButtonGroup, Flex, Group, Stack, Text } from "@chakra-ui/react"
+import { Box, Button, ButtonGroup, Flex, Stack, Text } from "@chakra-ui/react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 

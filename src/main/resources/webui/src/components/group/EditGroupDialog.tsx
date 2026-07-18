@@ -66,9 +66,9 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
     if (staticDevices) {
       form.setValue("staticDevices", staticDevices)
     }
-  }, [staticDevices])
+  }, [staticDevices, form])
 
-  const mutation = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationFn: async (values: GroupForm) => {
       let payload: UpdateGroupPayload = {
         name: values.name,
@@ -98,8 +98,8 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
   })
 
   const submit = useCallback((values: GroupForm) => {
-    mutation.mutate(values)
-  }, [])
+    mutate(values)
+  }, [mutate])
 
   return (
     <FormProvider {...form}>
@@ -140,7 +140,7 @@ export default function EditGroupDialog(props: EditGroupDialogProps) {
                   <Button
                     type="submit"
                     disabled={!isValid}
-                    loading={mutation.isPending}
+                    loading={isPending}
                     variant="primary"
                   >
                     {t("common.applyChanges")}

@@ -9,11 +9,12 @@ import { useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 import { QUERIES } from "../constants"
 import { HardwareRuleFormValues } from "../types"
 import HardwareRuleForm from "./HardwareRuleForm"
 
-export type EditHardwareRuleTriggerProps = { rule: HardwareRule; children: React.ReactElement<any> } & Record<string, unknown>
+export type EditHardwareRuleTriggerProps = { rule: HardwareRule; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function EditHardwareRuleTrigger({ rule, children, ...rest }: EditHardwareRuleTriggerProps) {
   const { t } = useTranslation()
@@ -87,6 +88,5 @@ export default function EditHardwareRuleTrigger({ rule, children, ...rest }: Edi
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

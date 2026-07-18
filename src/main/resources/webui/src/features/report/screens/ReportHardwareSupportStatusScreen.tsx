@@ -223,7 +223,7 @@ export default function ReportHardwareSupportStatusScreen() {
         },
       },
     } as ChartConfiguration
-  }, [isPending, stats, t, green500, bronze500, grey500, formatMonthYear])
+  }, [stats, t, green500, bronze500, grey500, formatMonthYear])
 
   const getFormattedCount = useCallback(
     (info: CellContext<GroupedHardwareSupportStat, number>) => {
@@ -288,7 +288,7 @@ export default function ReportHardwareSupportStatusScreen() {
         header: t("compliance.hardware.endOfLife"),
       }),
     ],
-    [t, getFormattedCount, filter.domain, filter.group]
+    [t, getFormattedCount, filter.domain, filter.group, formatDate]
   )
 
   const data = useMemo(() => groupStatByDate(stats), [stats])

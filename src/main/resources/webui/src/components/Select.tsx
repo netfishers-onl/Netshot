@@ -90,8 +90,14 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
 
   const contentRef = useRef<HTMLDivElement | null>(null)
   const isDisabled = disabled || isLoading
-  const getItemString = itemToString || ((item: Option<T>) => item.label)
-  const getItemValue = itemToValue || ((item: Option<T>) => String(item.value))
+  const getItemString = useMemo(
+    () => itemToString || ((item: Option<T>) => item.label),
+    [itemToString]
+  )
+  const getItemValue = useMemo(
+    () => itemToValue || ((item: Option<T>) => String(item.value)),
+    [itemToValue]
+  )
 
   const { collection, set } = useListCollection<Option<T>>({
     initialItems: [],
@@ -138,6 +144,10 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
   }
 
   const handleScrollToIndexFn = (details: { index: number }) => {
+    // flushSync forces the virtualizer to re-render synchronously so the
+    // scroll position is computed against up-to-date layout, avoiding a
+    // visual flicker when keyboard navigation jumps to an unmeasured item.
+    // eslint-disable-next-line @eslint-react/dom-no-flush-sync
     flushSync(() => {
       virtualizer.scrollToIndex(details.index, {
         align: "center",
@@ -148,7 +158,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
 
   useEffect(() => {
     set(options)
-  }, [options])
+  }, [options, set])
 
   const value = useMemo(() => {
     if (multiple) {
@@ -156,7 +166,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
     }
 
     return field.value !== null && field.value !== undefined ? [String(field.value)] : [""]
-  }, [field, isLoading, multiple])
+  }, [field, multiple])
 
   const selectedIcon = useMemo((): ReactNode => {
     if (!renderIcon || multiple) return undefined

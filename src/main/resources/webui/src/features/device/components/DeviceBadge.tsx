@@ -1,5 +1,5 @@
 import { BadgeProps, Icon } from "@chakra-ui/react"
-import { forwardRef, type ReactNode } from "react"
+import { type Ref, type ReactNode } from "react"
 import { LuSquircle } from "react-icons/lu"
 import { DeviceNetworkClass } from "@/types"
 import IconBadge from "@/components/IconBadge"
@@ -9,10 +9,11 @@ type DeviceBadgeProps = Omit<BadgeProps, "children"> & {
   /** Omit when the device's class isn't known here, rather than detected as unknown: shows a generic device icon. */
   networkClass?: DeviceNetworkClass
   children?: ReactNode
+  ref?: Ref<HTMLSpanElement>
 }
 
-const DeviceBadge = forwardRef<HTMLSpanElement, DeviceBadgeProps>(
-  ({ networkClass, children, ...rest }, ref) => (
+function DeviceBadge({ networkClass, children, ref, ...rest }: DeviceBadgeProps) {
+  return (
     <IconBadge ref={ref} {...rest}>
       {networkClass ? (
         <DeviceNetworkClassIcon networkClass={networkClass} size="sm" flexShrink={0} />
@@ -24,6 +25,6 @@ const DeviceBadge = forwardRef<HTMLSpanElement, DeviceBadgeProps>(
       {children}
     </IconBadge>
   )
-)
+}
 
 export default DeviceBadge

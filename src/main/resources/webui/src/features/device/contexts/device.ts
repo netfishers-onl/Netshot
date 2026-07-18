@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react"
+import { createContext, use } from "react"
 
 import { Device, DeviceType } from "@/types"
 
@@ -10,4 +10,4 @@ export type DeviceContextType = {
 }
 
 export const DeviceContext = createContext<DeviceContextType>(null)
-export const useDevice = () => useContext(DeviceContext)
+export const useDevice = () => use(DeviceContext)

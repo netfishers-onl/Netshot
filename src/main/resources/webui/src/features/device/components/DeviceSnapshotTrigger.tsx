@@ -12,8 +12,9 @@ import { useCustomDialog, useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { Device, SimpleDevice, Task, TaskType } from "@/types"
 import React from "react"
+import Slot from "@/components/Slot"
 
-export type DeviceSnapshotTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<any> } & Record<string, unknown>
+export type DeviceSnapshotTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 type SnapshotForm = { runDiagnostic: boolean; checkCompliance: boolean; debugEnabled: boolean } & ScheduleFormType
 
@@ -96,6 +97,5 @@ export default function DeviceSnapshotTrigger({ devices, children, ...rest }: De
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

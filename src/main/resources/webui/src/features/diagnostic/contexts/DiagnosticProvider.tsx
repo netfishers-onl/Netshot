@@ -1,5 +1,5 @@
 import { Diagnostic } from "@/types";
-import { PropsWithChildren, createContext, useContext } from "react";
+import { PropsWithChildren, createContext, use } from "react";
 
 export type DiagnosticContextType = {
   diagnostic: Diagnostic;
@@ -7,7 +7,7 @@ export type DiagnosticContextType = {
 };
 
 export const DiagnosticContext = createContext<DiagnosticContextType>(null);
-export const useDiagnostic = () => useContext(DiagnosticContext);
+export const useDiagnostic = () => use(DiagnosticContext);
 
 export default function DiagnosticProvider(
   props: PropsWithChildren<DiagnosticContextType>
@@ -15,8 +15,8 @@ export default function DiagnosticProvider(
   const { children, diagnostic, isLoading } = props;
 
   return (
-    <DiagnosticContext.Provider value={{ diagnostic, isLoading }}>
+    <DiagnosticContext value={{ diagnostic, isLoading }}>
       {children}
-    </DiagnosticContext.Provider>
+    </DiagnosticContext>
   );
 }

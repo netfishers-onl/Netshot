@@ -150,7 +150,7 @@ export default function ScheduleForm() {
     return () => {
       watcher?.unsubscribe()
     }
-  }, [parentForm.setValue, scheduleForm.watch])
+  }, [parentForm, scheduleForm, tz])
 
   // Re-init all fields when schedule type change
   useEffect(() => {
@@ -166,7 +166,7 @@ export default function ScheduleForm() {
     ) {
       scheduleForm.setValue("dateTime", now(tz).add({ minutes: 10 }).toDate().getTime())
     }
-  }, [selectedScheduleType, scheduleForm.setValue])
+  }, [selectedScheduleType, scheduleForm, tz])
 
   return (
     <Collapsible.Root open={isOpen} onOpenChange={(details) => setIsOpen(details.open)}>

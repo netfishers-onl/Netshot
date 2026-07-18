@@ -1,5 +1,5 @@
 import { Rule } from "@/types";
-import { PropsWithChildren, createContext, useContext } from "react";
+import { PropsWithChildren, createContext, use } from "react";
 
 export type RuleContextType = {
   rule: Rule;
@@ -7,7 +7,7 @@ export type RuleContextType = {
 };
 
 export const RuleContext = createContext<RuleContextType>(null);
-export const useRule = () => useContext(RuleContext);
+export const useRule = () => use(RuleContext);
 
 export default function RuleProvider(
   props: PropsWithChildren<RuleContextType>
@@ -15,8 +15,8 @@ export default function RuleProvider(
   const { children, rule, isLoading } = props;
 
   return (
-    <RuleContext.Provider value={{ rule, isLoading }}>
+    <RuleContext value={{ rule, isLoading }}>
       {children}
-    </RuleContext.Provider>
+    </RuleContext>
   );
 }

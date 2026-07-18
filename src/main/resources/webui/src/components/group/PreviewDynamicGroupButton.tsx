@@ -3,7 +3,7 @@ import { NetshotError } from "@/api/httpClient"
 import { DeviceListItem } from "@/features/device/components"
 import { Button, Popover, Separator, Stack, Stat, Text } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
-import { ComponentProps, forwardRef, useEffect } from "react"
+import { ComponentProps, type Ref, useEffect } from "react"
 import { Trans, useTranslation } from "react-i18next"
 import { LuScanSearch } from "react-icons/lu"
 
@@ -13,26 +13,27 @@ export type PreviewDynamicGroupButtonProps = {
 
 const PREVIEW_LIMIT = 5
 
-type DevicesFoundStatProps = { count: number } & Omit<ComponentProps<typeof Stat.Root>, "children">
+type DevicesFoundStatProps = { count: number; ref?: Ref<HTMLDListElement> } & Omit<
+  ComponentProps<typeof Stat.Root>,
+  "children"
+>
 
-const DevicesFoundStat = forwardRef<HTMLDListElement, DevicesFoundStatProps>(
-  ({ count, ...rootProps }, ref) => {
-    const { t } = useTranslation()
+function DevicesFoundStat({ count, ref, ...rootProps }: DevicesFoundStatProps) {
+  const { t } = useTranslation()
 
-    return (
-      <Stat.Root ref={ref} alignSelf="center" {...rootProps}>
-        <Stat.ValueText alignItems="baseline">
-          <Trans
-            t={t}
-            i18nKey="device.devicesFound"
-            count={count}
-            components={{ unit: <Stat.ValueUnit /> }}
-          />
-        </Stat.ValueText>
-      </Stat.Root>
-    )
-  }
-)
+  return (
+    <Stat.Root ref={ref} alignSelf="center" {...rootProps}>
+      <Stat.ValueText alignItems="baseline">
+        <Trans
+          t={t}
+          i18nKey="device.devicesFound"
+          count={count}
+          components={{ unit: <Stat.ValueUnit /> }}
+        />
+      </Stat.ValueText>
+    </Stat.Root>
+  )
+}
 
 export default function PreviewDynamicGroupButton(props: PreviewDynamicGroupButtonProps) {
   const { query } = props
@@ -42,10 +43,14 @@ export default function PreviewDynamicGroupButton(props: PreviewDynamicGroupButt
     mutationFn: async () => api.device.search({ query }),
   })
 
-  // Query changed since the last preview: drop the stale result rather than show it as current
+  // Query changed since the last preview: drop the stale result rather than show it as current.
+  // `mutation.reset` (not the whole `mutation` object, which is a fresh
+  // reference every render) is the real, stable dependency here; depending
+  // on `mutation` itself would re-fire this effect every render and loop.
   useEffect(() => {
     mutation.reset()
-  }, [query])
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [query, mutation.reset])
 
   const error = mutation.error
   const devices = mutation.data?.devices ?? []

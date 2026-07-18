@@ -77,7 +77,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
   const { policyId, rule } = props
   const { t, i18n } = useTranslation()
   const { formatDate, numberToCalendarDate, calendarDateToTimestamp, datePlaceholder } = useLocalization()
-  const now = Date.now()
+  const [now] = useState(() => Date.now())
   const toast = useToast()
   const dialogConfig = useDialogConfig()
   const queryClient = useQueryClient()
@@ -86,9 +86,9 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
   const debouncedQuery = useDebounce(deviceQuery, 200)
   const [leftValues, setLeftValues] = useState<string[]>([])
   const [rightValues, setRightValues] = useState<string[]>([])
-  const [exemptedIds, setExemptedIds] = useState<Set<number>>(new Set())
+  const [exemptedIds, setExemptedIds] = useState<Set<number>>(() => new Set())
   const [newExpirationDate, setNewExpirationDate] = useState<number>(() => addMonths(new Date(), 3).getTime())
-  const initialized = useRef(false)
+  const initializedRef = useRef(false)
 
   const leftCollection = useListCollection<SimpleDevice>({
     initialItems: [],
@@ -117,16 +117,24 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
   })
 
   useEffect(() => {
-    if (!initialized.current && exemptedDevices !== undefined) {
-      initialized.current = true
+    if (!initializedRef.current && exemptedDevices !== undefined) {
+      initializedRef.current = true
       rightCollection.set(exemptedDevices)
       setExemptedIds(new Set(exemptedDevices.map((d) => d.id)))
     }
+    // rightCollection is a fresh object every render (useListCollection isn't
+    // memoized); adding it here would re-fire this effect on every render its
+    // own .set() call causes, looping forever.
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [exemptedDevices])
 
   useEffect(() => {
     const filtered = (searchResult?.devices ?? []).filter((d) => !exemptedIds.has(d.id))
     leftCollection.set(filtered)
+    // leftCollection is a fresh object every render (useListCollection isn't
+    // memoized); adding it here would re-fire this effect on every render its
+    // own .set() call causes, looping forever.
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [searchResult, exemptedIds])
 
   const updateMutation = useMutation({

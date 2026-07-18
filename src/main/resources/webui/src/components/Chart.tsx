@@ -9,8 +9,8 @@ export type ChartProps<T extends keyof ChartTypeRegistry = "line"> = {
 
 export default function Chart<T extends keyof ChartTypeRegistry = "line">(props: ChartProps<T>) {
   const { config, ...other } = props
-  const ctx = useRef<HTMLCanvasElement>(null)
-  const chart = useRef<NativeChart>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const chartRef = useRef<NativeChart>(null)
   const [green500] = useToken("colors", "green.500")
   const [greyColor] = useToken("colors", "grey.400")
   const [grey100] = useToken("colors", "grey.100")
@@ -87,17 +87,17 @@ export default function Chart<T extends keyof ChartTypeRegistry = "line">(props:
   }, [green500, grey100, greyColor, bodyFont])
 
   useLayoutEffect(() => {
-    chart.current = new NativeChart(ctx.current, mergeWith({}, defaultConfig, config))
+    chartRef.current = new NativeChart(canvasRef.current, mergeWith({}, defaultConfig, config))
 
     return () => {
-      chart.current.destroy()
-      chart.current = null
+      chartRef.current.destroy()
+      chartRef.current = null
     }
-  }, [ctx, chart, config, defaultConfig])
+  }, [canvasRef, chartRef, config, defaultConfig])
 
   return (
     <Box {...other} asChild>
-      <canvas ref={ctx} />
+      <canvas ref={canvasRef} />
     </Box>
   )
 }

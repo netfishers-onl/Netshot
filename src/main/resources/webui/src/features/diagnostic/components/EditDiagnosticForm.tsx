@@ -3,7 +3,6 @@ import FormControl from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { DiagnosticType } from "@/types"
 import { Stack, StackProps } from "@chakra-ui/react"
-import { useMemo } from "react"
 import { useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useResultTypeOptions } from "../hooks"
@@ -11,19 +10,16 @@ import { Form } from "../types"
 
 export type EditDiagnosticFormProps = {
   type: DiagnosticType
-  hideTextFields?: boolean
 } & StackProps
 
 export function EditDiagnosticForm(props: EditDiagnosticFormProps) {
-  const { type, hideTextFields, ...other } = props
+  // `type` isn't rendered here, but must be excluded from `other` so it
+  // isn't spread onto the underlying <Stack>/<div> as a stray DOM attribute
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { type, ...other } = props
   const form = useFormContext<Form>()
   const { t } = useTranslation()
   const resultTypeOptions = useResultTypeOptions()
-
-  const hasScript = useMemo(
-    () => type === DiagnosticType.Javascript || type === DiagnosticType.Python,
-    [type]
-  )
 
   return (
     <Stack gap="6" p="3" {...other}>
@@ -39,6 +35,7 @@ export function EditDiagnosticForm(props: EditDiagnosticFormProps) {
         control={form.control}
         name="enabled"
         label={t("common.enabled")}
+        showStateIcon
       />
       <Select
         required

@@ -13,10 +13,11 @@ import { useEffect, useMemo } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 import { useCredentialSets } from "../api"
 import { useDeviceCredentialSetOptions } from "../hooks"
 
-export type EditDeviceTriggerProps = { device: Device; children: React.ReactElement<any> } & Record<string, unknown>
+export type EditDeviceTriggerProps = { device: Device; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 type Form = {
   name: string
@@ -72,7 +73,7 @@ function DeviceEditForm({ freezePasswords = false }: { freezePasswords?: boolean
     form.setValue("connectIpAddress", "")
     form.setValue("sshPort", "")
     form.setValue("telnetPort", "")
-  }, [overrideConnectionSetting])
+  }, [overrideConnectionSetting, form])
 
   const isSshOrTelnet = [CredentialSetType.SSH, CredentialSetType.Telnet].includes(credentialType)
 
@@ -135,7 +136,7 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
   const defaultValues = useMemo(() => {
     const credentialType = device?.specificCredentialSet
       ? device?.specificCredentialSet?.type
-      : deviceCredentialSetOptions.getFirst().value
+      : deviceCredentialSetOptions.options[0].value
 
     const overrideConnectionSetting = Boolean(device?.connectAddress && device?.sshPort && device?.telnetPort)
 
@@ -168,11 +169,11 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
     }
 
     return values
-  }, [device])
+  }, [device, deviceCredentialSetOptions.options])
 
   const form = useForm<Form>({ mode: "onChange", defaultValues })
 
-  useEffect(() => { form.reset(defaultValues) }, [defaultValues])
+  useEffect(() => { form.reset(defaultValues) }, [defaultValues, form])
 
   const mutation = useMutation({
     mutationKey: MUTATIONS.DEVICE_UPDATE,
@@ -222,6 +223,5 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

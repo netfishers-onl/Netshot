@@ -1,7 +1,7 @@
 import { QueryBuilderTrigger } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { IconButton, Input, InputGroup, Popover, Portal, Stack } from "@chakra-ui/react"
-import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react"
+import { ChangeEvent, KeyboardEvent, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { LuCompass, LuSearch, LuX } from "react-icons/lu"
 import { useLocation, useNavigate, useSearchParams } from "react-router"
@@ -54,28 +54,34 @@ export default function DeviceSidebarSearch() {
     )
 
   const [text, setText] = useState<string>(() => searchParams.get("q") ?? "")
-  const [isOpen, setOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const { items, isPending, selectedGroupId, onGroupSelect, isFolderOpen, toggleFolderOpen } =
     useDeviceGroupTree({
       enabled: isOpen,
-      onAfterSelect: () => setOpen(false),
+      onAfterSelect: () => setIsOpen(false),
     })
 
   const q = searchParams.get("q")
+  const [prevQ, setPrevQ] = useState(q)
+  const [prevGroup, setPrevGroup] = useState(group)
 
-  // Hydrate the search state from "?q=" (initial load, or browser back/forward)
-  useEffect(() => {
-    if (!q) return
-    setText(q)
-    setQuery(buildQuery(q))
-  }, [q])
+  // Hydrate the search state from "?q=" (initial load, or browser back/forward),
+  // without the extra render an effect-based sync would cost.
+  if (q !== prevQ) {
+    setPrevQ(q)
+    if (q) {
+      setText(q)
+      setQuery(buildQuery(q))
+    }
+  }
 
   // Selecting a group clears any text/advanced search shown in the box
-  useEffect(() => {
+  if (group !== prevGroup) {
+    setPrevGroup(group)
     if (group) setText("")
-  }, [group])
+  }
 
   function runSearch(value: string) {
     deselectAll()
@@ -105,7 +111,7 @@ export default function DeviceSidebarSearch() {
   function handleKeyDown(evt: KeyboardEvent<HTMLInputElement>) {
     if (evt.key !== "Enter") return
     runSearch(text)
-    setOpen(false)
+    setIsOpen(false)
   }
 
   function handleClear() {
@@ -121,7 +127,7 @@ export default function DeviceSidebarSearch() {
     <Stack p="6" gap="5">
       <Popover.Root
         open={isOpen}
-        onOpenChange={(details) => setOpen(details.open)}
+        onOpenChange={(details) => setIsOpen(details.open)}
         autoFocus={false}
         positioning={{ placement: "bottom" }}
       >
@@ -150,7 +156,7 @@ export default function DeviceSidebarSearch() {
                         },
                         { replace: true }
                       )
-                      setOpen(false)
+                      setIsOpen(false)
                     }}
                   >
                     <IconButton size="xs" variant="ghost" aria-label={t("common.openQueryBuilder")}>
@@ -170,8 +176,8 @@ export default function DeviceSidebarSearch() {
               ref={inputRef}
               variant="outline"
               value={group ? "" : text}
-              onFocus={() => setOpen(true)}
-              onClick={() => setOpen(true)}
+              onFocus={() => setIsOpen(true)}
+              onClick={() => setIsOpen(true)}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
               placeholder={group ? "" : t("device.searchOrGroupPlaceholder")}

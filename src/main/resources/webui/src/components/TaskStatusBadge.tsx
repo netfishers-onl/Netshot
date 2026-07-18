@@ -1,5 +1,5 @@
 import { BadgeProps, Icon } from "@chakra-ui/react"
-import { forwardRef } from "react"
+import { type Ref } from "react"
 import {
   LuBan,
   LuCircleDashed,
@@ -59,22 +59,21 @@ export const TASK_STATUS_CONFIG: Record<TaskStatus, Config> = {
 
 type TaskStatusBadgeProps = BadgeProps & {
   status: TaskStatus
+  ref?: Ref<HTMLSpanElement>
 }
 
-const TaskStatusBadge = forwardRef<HTMLSpanElement, TaskStatusBadgeProps>(
-  ({ status, ...rest }, ref) => {
-    const { t } = useTranslation()
-    const config = TASK_STATUS_CONFIG[status]
+function TaskStatusBadge({ status, ref, ...rest }: TaskStatusBadgeProps) {
+  const { t } = useTranslation()
+  const config = TASK_STATUS_CONFIG[status]
 
-    if (!config) return null
+  if (!config) return null
 
-    return (
-      <IconBadge ref={ref} colorPalette={config.colorPalette} {...rest}>
-        <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
-        {t(config.labelKey)}
-      </IconBadge>
-    )
-  }
-)
+  return (
+    <IconBadge ref={ref} colorPalette={config.colorPalette} {...rest}>
+      <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
+      {t(config.labelKey)}
+    </IconBadge>
+  )
+}
 
 export default TaskStatusBadge

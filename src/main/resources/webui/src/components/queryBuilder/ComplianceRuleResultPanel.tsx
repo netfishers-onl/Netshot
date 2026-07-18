@@ -1,7 +1,7 @@
 import { usePolicies } from "@/features/compliance/api"
 import { DeviceComplianceResultType } from "@/types"
 import { Box, Stack } from "@chakra-ui/react"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { Select } from "../Select"
@@ -20,25 +20,31 @@ export function ComplianceRuleResultPanel({ onInsert }: Props) {
   const [policyId, ruleId] = form.watch(["policy", "rule"])
   const policyQuery = usePolicies()
 
-  const policies = policyQuery.data ?? []
-  const policyOptions = policies.map((p) => ({ label: p.name, value: p.id }))
+  const policies = useMemo(() => policyQuery.data ?? [], [policyQuery.data])
+  const policyOptions = useMemo(
+    () => policies.map((p) => ({ label: p.name, value: p.id })),
+    [policies]
+  )
 
-  const policy = policies.find((p) => p.id === Number(policyId))
-  const ruleOptions = (policy?.rules ?? []).map((r) => ({ label: r.name, value: r.id }))
-  const rule = policy?.rules?.find((r) => r.id === Number(ruleId))
+  const policy = useMemo(() => policies.find((p) => p.id === Number(policyId)), [policies, policyId])
+  const ruleOptions = useMemo(
+    () => (policy?.rules ?? []).map((r) => ({ label: r.name, value: r.id })),
+    [policy]
+  )
+  const rule = useMemo(() => policy?.rules?.find((r) => r.id === Number(ruleId)), [policy, ruleId])
 
   useEffect(() => {
     if (policies.length > 0 && !form.getValues("policy")) {
       form.setValue("policy", String(policies[0].id))
     }
-  }, [policies.length])
+  }, [policies, form])
 
   useEffect(() => {
     form.setValue(
       "rule",
       ruleOptions[0]?.value !== undefined ? String(ruleOptions[0].value) : null
     )
-  }, [policyId])
+  }, [policyId, ruleOptions, form])
 
   const complianceAttribute = rule
     ? {

@@ -3,12 +3,12 @@ import { DataTable, EmptyResult, Search } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
 import { usePagination } from "@/hooks"
 import { CredentialSet } from "@/types"
-import { getAnyOption, search } from "@/utils"
+import { search } from "@/utils"
 import { Badge, Button, Heading, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
-import { LuSquarePen, LuHash, LuPlus, LuTrash, LuAsterisk } from "react-icons/lu"
+import { LuSquarePen, LuPlus, LuTrash, LuAsterisk } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddDeviceCredentialSetTrigger from "../components/AddDeviceCredentialSetTrigger"
 import EditDeviceCredentialSetTrigger from "../components/EditDeviceCredentialSetTrigger"
@@ -21,7 +21,6 @@ const columnHelper = createColumnHelper<CredentialSet>()
 export default function AdministrationDeviceCredentialSetScreen() {
   const { t } = useTranslation()
   const pagination = usePagination()
-  const anyOption = getAnyOption(t)
 
   const { data = [], isPending } = useQuery({
     queryKey: [

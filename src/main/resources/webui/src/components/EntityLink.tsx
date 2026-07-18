@@ -1,4 +1,4 @@
-import { Steps, Text, TextProps } from "@chakra-ui/react";
+import { Text, TextProps } from "@chakra-ui/react";
 import { PropsWithChildren } from "react"
 import { Link, LinkProps } from "react-router"
 

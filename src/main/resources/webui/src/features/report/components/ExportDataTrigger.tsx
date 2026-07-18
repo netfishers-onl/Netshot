@@ -12,6 +12,7 @@ import { useEffect } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 import { useExportMimesTypesOptions } from "../hooks"
 import { ExportMimeType } from "../types"
 
@@ -123,7 +124,7 @@ function ExportDataForm() {
   )
 }
 
-export type ExportDataTriggerProps = { children: React.ReactElement<any> } & Record<string, unknown>
+export type ExportDataTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function ExportDataTrigger({ children, ...rest }: ExportDataTriggerProps) {
   const { t } = useTranslation()
@@ -211,6 +212,5 @@ export default function ExportDataTrigger({ children, ...rest }: ExportDataTrigg
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

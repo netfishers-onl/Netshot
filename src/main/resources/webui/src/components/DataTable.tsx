@@ -1,6 +1,5 @@
 import {
   chakra,
-  Icon,
   IconButton,
   Skeleton,
   Stack,
@@ -14,7 +13,6 @@ import {
   ColumnDef,
   Header,
   Row,
-  RowModel,
   SortingState,
   flexRender,
   getCoreRowModel,
@@ -38,7 +36,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { Fragment, useCallback, useEffect, useRef, useState, useMemo } from "react"
+import { Fragment, useCallback, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { LuArrowDown, LuArrowUp, LuGripVertical } from "react-icons/lu"
 
@@ -49,14 +47,13 @@ type DataTableColumnMeta = {
 
 type RowProps<T> = {
   row: Row<T>
-  rowModel: RowModel<T>
 } & TableRowProps
 
 type DraggableRowProps<T> = RowProps<T>
 
 function DraggableRow<T>(props: DraggableRowProps<T>) {
   const { t } = useTranslation()
-  const { row, rowModel: _rowModel, ...other } = props
+  const { row, ...other } = props
 
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({
     id: row.id,
@@ -123,7 +120,7 @@ function DraggableRow<T>(props: DraggableRowProps<T>) {
 }
 
 function SimpleRow<T>(props: RowProps<T>) {
-  const { row, rowModel: _rowModel, ...other } = props
+  const { row, ...other } = props
   const cells = row.getVisibleCells()
 
   return (
@@ -193,11 +190,15 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
   const containerRef = useRef<HTMLDivElement>(null)
   const [sorting, setSorting] = useState<SortingState>([])
   const [internalData, setInternalData] = useState<Data[]>(() => [...data])
+  const [prevData, setPrevData] = useState(data)
   const { t } = useTranslation()
 
-  useEffect(() => {
+  // Re-sync the local (reorderable) copy whenever the `data` prop changes,
+  // without the extra render an effect-based sync would cost.
+  if (data !== prevData) {
+    setPrevData(data)
     setInternalData([...data])
-  }, [data])
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -357,10 +358,9 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
               {rowModel.rows.map((row) => (
                 <Fragment key={row.id}>
                   {draggable ? (
-                    <DraggableRow rowModel={rowModel} row={row} />
+                    <DraggableRow row={row} />
                   ) : (
                     <SimpleRow
-                      rowModel={rowModel}
                       row={row}
                       onClick={() => onClickRow?.(row.original, data)}
                       cursor="pointer"

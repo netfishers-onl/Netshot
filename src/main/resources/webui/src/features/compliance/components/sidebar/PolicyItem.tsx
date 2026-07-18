@@ -38,7 +38,7 @@ export default function PolicyItem(props: PolicyItemProps) {
       ctx.setPolicyExpanded(policy.id, true)
     }
     // Only react to route/data changes, expansion is driven by user toggles otherwise.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [isActive, hasRules, policy.id])
 
   useEffect(() => {

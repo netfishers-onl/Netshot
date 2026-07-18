@@ -1,7 +1,7 @@
 import { LuChevronDown } from "react-icons/lu"
 import { IconButton, Separator, Stack, StackProps } from "@chakra-ui/react"
 import { LegacyAnimationControls, Variants, motion, useAnimationControls } from "framer-motion"
-import { PropsWithChildren, createContext, useCallback, useContext, useMemo, useState } from "react"
+import { PropsWithChildren, createContext, use, useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 const ExpandablePanelContext = createContext<{
@@ -10,7 +10,7 @@ const ExpandablePanelContext = createContext<{
   controls: LegacyAnimationControls
 }>(null!)
 
-const useExpandablePanel = () => useContext(ExpandablePanelContext)
+const useExpandablePanel = () => use(ExpandablePanelContext)
 
 function Header(props: PropsWithChildren) {
   const { children } = props
@@ -81,11 +81,11 @@ function ExpandablePanel(props: PropsWithChildren<StackProps>) {
   )
 
   return (
-    <ExpandablePanelContext.Provider value={ctx}>
+    <ExpandablePanelContext value={ctx}>
       <Stack borderWidth="1px" borderColor="grey.100" borderRadius="2xl" gap="0" {...other}>
         {children}
       </Stack>
-    </ExpandablePanelContext.Provider>
+    </ExpandablePanelContext>
   )
 }
 

@@ -1,9 +1,10 @@
 import React from "react"
+import Slot from "@/components/Slot"
 import { useAlertDialog } from "@/dialog"
 import { AccountDialog } from "./AccountDialog"
 import { t } from "i18next"
 
-export type UserSettingTriggerProps = { children: React.ReactElement<any> } & Record<string, unknown>
+export type UserSettingTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function UserSettingTrigger({ children, ...rest }: UserSettingTriggerProps) {
   const dialog = useAlertDialog()
@@ -15,6 +16,5 @@ export default function UserSettingTrigger({ children, ...rest }: UserSettingTri
       hideFooter: true,
     })
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

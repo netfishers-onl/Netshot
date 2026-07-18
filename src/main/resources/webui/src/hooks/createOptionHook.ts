@@ -32,7 +32,7 @@ export function createOptionHook<T extends Option<unknown, unknown>>(
           ...(opt.description ? { description: t(opt.description) } : {}),
         }
       })
-    }, [t])
+    }, [t, translate, translateFn])
 
     function getByValue(value: T["value"]) {
       return translatedOptions.find((option) => option.value === value)

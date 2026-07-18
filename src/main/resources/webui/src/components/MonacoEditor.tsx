@@ -1,8 +1,7 @@
-import { Steps, Box, BoxProps } from "@chakra-ui/react";
+import { Box, BoxProps } from "@chakra-ui/react";
 import { editor, languages } from "monaco-editor";
 import {
   MutableRefObject,
-  forwardRef,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -64,13 +63,12 @@ export type MonacoEditorProps = {
   onModelChange?(value: string): void;
   onFocus?(): void;
   onBlur?(): void;
+  ref?: MutableRefObject<HTMLDivElement>;
 } & BoxProps;
 
-function MonacoEditor(
-  props: MonacoEditorProps,
-  ref: MutableRefObject<HTMLDivElement>
-) {
+function MonacoEditor(props: MonacoEditorProps) {
   const {
+    ref,
     value,
     readOnly = false,
     language = "typescript",
@@ -79,14 +77,14 @@ function MonacoEditor(
     onBlur,
     ...other
   } = props;
-  const container = useRef<HTMLDivElement>(null);
-  const ide = useRef<editor.IStandaloneCodeEditor>();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<editor.IStandaloneCodeEditor>();
 
   useLayoutEffect(() => {
-    if (!container?.current) return;
-    if (ide?.current) return;
+    if (!containerRef?.current) return;
+    if (editorRef?.current) return;
 
-    ide.current = editor.create(container.current, {
+    editorRef.current = editor.create(containerRef.current, {
       value,
       language,
       automaticLayout: true,
@@ -95,27 +93,27 @@ function MonacoEditor(
         top: 20,
       },
     });
-  }, [container, value, readOnly, language]);
+  }, [containerRef, value, readOnly, language]);
 
   useEffect(() => {
-    if (!ide) {
+    if (!editorRef) {
       return;
     }
 
     if (onModelChange) {
-      ide.current.onDidChangeModelContent(() => {
-        onModelChange(ide.current.getModel().getValue());
+      editorRef.current.onDidChangeModelContent(() => {
+        onModelChange(editorRef.current.getModel().getValue());
       });
     }
 
     if (onFocus) {
-      ide.current.onDidFocusEditorText(onFocus);
+      editorRef.current.onDidFocusEditorText(onFocus);
     }
 
     if (onBlur) {
-      ide.current.onDidBlurEditorText(onBlur);
+      editorRef.current.onDidBlurEditorText(onBlur);
     }
-  }, [onModelChange, onFocus, onBlur, ide]);
+  }, [onModelChange, onFocus, onBlur, editorRef]);
 
   return (
     <Box
@@ -137,10 +135,10 @@ function MonacoEditor(
         right="0"
         width="100%"
         height="100%"
-        ref={container}
+        ref={containerRef}
       />
     </Box>
   );
 }
 
-export default forwardRef(MonacoEditor);
+export default MonacoEditor;

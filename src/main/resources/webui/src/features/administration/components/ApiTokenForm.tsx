@@ -1,6 +1,5 @@
 import { FormControl } from "@/components"
 import { LuCopy, LuRefreshCcw } from "react-icons/lu"
-import { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { Tooltip } from "@/components/ui/tooltip"
 import { useToast, useUserLevelOptions } from "@/hooks"
@@ -35,7 +34,7 @@ export default function ApiTokenForm() {
       title: t("api.tokenCopied"),
       description: t("api.pleaseSaveSecurely"),
     })
-  }, [form, toast])
+  }, [form, toast, t])
 
   return (
     <Stack gap="6">

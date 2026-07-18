@@ -29,7 +29,7 @@ export function useQueryBuilder<T>(config: UseQueryBuilderFormConfig<T>) {
       field.onChange(values)
     })
     return () => unsubscribe()
-  }, [form])
+  }, [form, field])
 
   return { form, field }
 }

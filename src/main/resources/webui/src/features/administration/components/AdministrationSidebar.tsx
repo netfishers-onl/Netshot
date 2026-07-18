@@ -1,5 +1,5 @@
 import { SidebarLink } from "@/components";
-import { Steps, Stack } from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 
 export default function AdministrationSidebar() {

@@ -1,6 +1,6 @@
 import Search from "@/components/Search"
 import { useThrottle } from "@/hooks"
-import { Flex, Stack, Text } from "@chakra-ui/react"
+import { Stack } from "@chakra-ui/react"
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useDiagnosticSidebar } from "../../contexts/DiagnosticSidebarProvider"
@@ -21,7 +21,11 @@ export default function DiagnosticSidebarSearch() {
 
   useEffect(() => {
     ctx.setQuery(throttledValue)
-  }, [throttledValue])
+    // `ctx.setQuery` (a raw useState setter, guaranteed stable by React) is
+    // the real dependency; `ctx` itself is a fresh object every provider
+    // render, so depending on it here would re-fire this effect constantly.
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [throttledValue, ctx.setQuery])
 
   return (
     <Stack p="6" gap="5">

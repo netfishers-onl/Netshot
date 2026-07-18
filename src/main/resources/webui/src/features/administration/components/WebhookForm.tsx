@@ -89,7 +89,7 @@ export default function WebhookForm() {
             </Stack>
             <Text color="grey.400">{t("webhook.canActivateOrDeactivate")}</Text>
           </Stack>
-          <Switch w="initial" control={form.control} name="enabled" />
+          <Switch w="initial" control={form.control} name="enabled" showStateIcon />
         </Stack>
         <Separator />
         <Stack direction="row" gap="6">

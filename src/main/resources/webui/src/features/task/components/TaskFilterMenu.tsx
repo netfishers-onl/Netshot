@@ -26,10 +26,10 @@ export default function TaskFilterMenu(props: TaskFilterMenuProps) {
 
   const isFiltered = typeSel.length > 0 || statusSel.length > 0
 
-  const hydrated = useRef(false)
+  const hydratedRef = useRef(false)
   useEffect(() => {
-    if (hydrated.current) return
-    hydrated.current = true
+    if (hydratedRef.current) return
+    hydratedRef.current = true
 
     const typesParam = searchParams.get("types")
     const statusesParam = searchParams.get("statuses")
@@ -43,7 +43,7 @@ export default function TaskFilterMenu(props: TaskFilterMenuProps) {
 
     if (typesParam) setTypeSel(typesParam.split(",") as TaskType[])
     if (statusesParam) setStatusSel(statusesParam.split(",") as TaskStatus[])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
   const form = useTaskFilterForm({ typeSel, statusSel })

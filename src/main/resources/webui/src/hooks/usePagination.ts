@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useThrottle } from "./useThrottle";
 
 export type UsePaginationConfig = {
@@ -41,9 +41,8 @@ export function usePagination(config?: UsePaginationConfig) {
 
   const [limit, setLimit] = useState<number | undefined>(baseConfig.limit);
   const [offset, setOffset] = useState<number | undefined>(baseConfig.offset);
-  const [query, setQuery] = useState<string | undefined>(baseConfig.query);
   const [innerQuery, setInnerQuery] = useState<string | undefined>(baseConfig.query);
-  const throttledValue = useThrottle(innerQuery);
+  const query = useThrottle(innerQuery);
 
   const onQuery = useCallback((value: string) => {
     setInnerQuery(value);
@@ -65,11 +64,7 @@ export function usePagination(config?: UsePaginationConfig) {
     setLimit(baseConfig?.limit);
     setOffset(baseConfig?.offset);
     setInnerQuery(baseConfig?.query);
-  }, []);
-
-  useEffect(() => {
-    setQuery(throttledValue);
-  }, [throttledValue]);
+  }, [baseConfig?.limit, baseConfig?.offset, baseConfig?.query]);
 
   return {
     limit,

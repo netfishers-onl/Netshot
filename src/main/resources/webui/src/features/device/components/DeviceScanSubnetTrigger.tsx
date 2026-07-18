@@ -14,17 +14,18 @@ import { useEffect } from "react"
 import { useFieldArray, useForm, useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 
 type Form = { domainId: string; subnets: string[] }
 
-export type DeviceScanSubnetTriggerProps = { children: React.ReactElement<any> } & Record<string, unknown>
+export type DeviceScanSubnetTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 function DeviceCreateForm() {
   const form = useFormContext()
   const { t } = useTranslation()
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "subnets" })
 
-  useEffect(() => { append("") }, [])
+  useEffect(() => { append("") }, [append])
 
   return (
     <Stack gap="6">
@@ -101,6 +102,5 @@ export default function DeviceScanSubnetTrigger({ children, ...rest }: DeviceSca
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

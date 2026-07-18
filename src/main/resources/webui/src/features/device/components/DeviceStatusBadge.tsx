@@ -1,5 +1,5 @@
 import { BadgeProps, Icon } from "@chakra-ui/react"
-import { forwardRef } from "react"
+import { type Ref } from "react"
 import { LuHammer, LuZap, LuZapOff } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { DeviceStatus } from "@/types"
@@ -31,22 +31,21 @@ export const DEVICE_STATUS_CONFIG: Record<DeviceStatus, Config> = {
 
 type DeviceStatusBadgeProps = BadgeProps & {
   status: DeviceStatus
+  ref?: Ref<HTMLSpanElement>
 }
 
-const DeviceStatusBadge = forwardRef<HTMLSpanElement, DeviceStatusBadgeProps>(
-  ({ status, ...rest }, ref) => {
-    const { t } = useTranslation()
-    const config = DEVICE_STATUS_CONFIG[status]
+function DeviceStatusBadge({ status, ref, ...rest }: DeviceStatusBadgeProps) {
+  const { t } = useTranslation()
+  const config = DEVICE_STATUS_CONFIG[status]
 
-    if (!config) return null
+  if (!config) return null
 
-    return (
-      <IconBadge ref={ref} colorPalette={config.colorPalette} {...rest}>
-        <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
-        {t(config.labelKey)}
-      </IconBadge>
-    )
-  }
-)
+  return (
+    <IconBadge ref={ref} colorPalette={config.colorPalette} {...rest}>
+      <Icon size="sm" flexShrink={0}>{config.icon}</Icon>
+      {t(config.labelKey)}
+    </IconBadge>
+  )
+}
 
 export default DeviceStatusBadge

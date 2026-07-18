@@ -1,5 +1,5 @@
 import { HardwareRule } from "@/types";
-import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
+import httpClient from "./httpClient";
 import { CreateOrUpdateHardwareRule } from "./types";
 
 async function getAll() {

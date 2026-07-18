@@ -26,7 +26,7 @@ export function SettingInterfacePanel() {
 
   useEffect(() => {
     i18n.changeLanguage(language)
-  }, [language])
+  }, [language, i18n])
 
   return (
     <Stack gap="5" pt="7" flex="1" overflow="auto">

@@ -9,9 +9,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { MouseEvent } from "react"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 import { QUERIES } from "../constants"
 
-export type RemoveUserTriggerProps = { user: User; children: React.ReactElement<any> } & Record<string, unknown>
+export type RemoveUserTriggerProps = { user: User; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function RemoveUserTrigger({ user, children, ...rest }: RemoveUserTriggerProps) {
   const { t } = useTranslation()
@@ -52,6 +53,5 @@ export default function RemoveUserTrigger({ user, children, ...rest }: RemoveUse
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

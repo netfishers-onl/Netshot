@@ -9,9 +9,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { MouseEvent, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 import { QUERIES } from "../constants"
 
-export type RemoveDomainTriggerProps = { domain: Domain; children: React.ReactElement<any> } & Record<string, unknown>
+export type RemoveDomainTriggerProps = { domain: Domain; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function RemoveDomainTrigger({ domain, children, ...rest }: RemoveDomainTriggerProps) {
   const { t } = useTranslation()
@@ -19,7 +20,7 @@ export default function RemoveDomainTrigger({ domain, children, ...rest }: Remov
   const toast = useToast()
   const dialog = useConfirmDialogWithMutation()
 
-  const mutation = useMutation({
+  const { mutateAsync } = useMutation({
     mutationKey: MUTATIONS.ADMIN_DOMAIN_REMOVE,
     mutationFn: async () => api.admin.removeDomain(domain?.id),
     onError(err: NetshotError) {
@@ -41,7 +42,7 @@ export default function RemoveDomainTrigger({ domain, children, ...rest }: Remov
           </Text>
         ),
         async onConfirm() {
-          await mutation.mutateAsync()
+          await mutateAsync()
           queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_DEVICE_DOMAINS] })
           dialogRef.close()
         },
@@ -53,9 +54,8 @@ export default function RemoveDomainTrigger({ domain, children, ...rest }: Remov
         },
       })
     },
-    [dialog]
+    [dialog, domain?.name, mutateAsync, queryClient, t]
   )
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

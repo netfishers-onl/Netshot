@@ -1,5 +1,6 @@
 import { useCustomDialog } from "@/dialog"
 import React from "react"
+import Slot from "@/components/Slot"
 import HardwareDeviceListDialog from "./HardwareDeviceListDialog"
 
 export type HardwareDeviceListTriggerProps = {
@@ -7,7 +8,7 @@ export type HardwareDeviceListTriggerProps = {
   date: number
   domain?: number[]
   group?: number[]
-  children: React.ReactElement<any>
+  children: React.ReactElement<Record<string, unknown>>
 } & Record<string, unknown>
 
 export default function HardwareDeviceListTrigger({
@@ -25,6 +26,5 @@ export default function HardwareDeviceListTrigger({
     dialog.open(<HardwareDeviceListDialog type={type} date={date} domain={domain} group={group} />)
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

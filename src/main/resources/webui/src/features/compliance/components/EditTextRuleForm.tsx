@@ -6,7 +6,7 @@ import { useDeviceTypeOptions } from "@/hooks"
 import { Rule } from "@/types"
 import { Icon, Separator, Spacer, Stack, Tabs, Text } from "@chakra-ui/react"
 import { LuAsterisk } from "react-icons/lu"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useForm, useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useRuleBlockOptions, useRuleTextOptions } from "../hooks"
@@ -30,13 +30,16 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
   const ruleTextOptions = useRuleTextOptions()
   const { getOptionByDriver, getOptionsWithName, isPending: isDeviceTypesPending } = useDeviceTypeOptions()
   const diagnosticQuery = useDiagnostics()
-  const diagnostics = diagnosticQuery.data ?? []
+  const diagnostics = useMemo(() => diagnosticQuery.data ?? [], [diagnosticQuery.data])
 
-  const genericFieldOptions = [
-    { label: t("common.contact"), value: "contact" },
-    { label: t("common.location"), value: "location" },
-    { label: t("common.name"), value: "name" },
-  ]
+  const genericFieldOptions = useMemo(
+    () => [
+      { label: t("common.contact"), value: "contact" },
+      { label: t("common.location"), value: "location" },
+      { label: t("common.name"), value: "name" },
+    ],
+    [t]
+  )
 
   // "" = Any (no driver restriction); driver name string = specific driver
   const attrForm = useForm<{ deviceType: string; attribute: string | null }>({
@@ -55,7 +58,9 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
 
   // Wait for both queries before reading parent form values and setting local state.
   // Resolution order mirrors JsDeviceHelper.getDeviceItem: generic fields first, then
-  // driver-specific attributes, then diagnostics.
+  // driver-specific attributes, then diagnostics. Genuinely one-shot initialization
+  // gated on async readiness (isInitialized), not state derivable during render.
+  /* eslint-disable @eslint-react/set-state-in-effect */
   useEffect(() => {
     if (diagnosticQuery.isPending || isDeviceTypesPending || isInitialized) return
 
@@ -90,7 +95,18 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
     }
 
     setIsInitialized(true)
-  }, [diagnosticQuery.isPending, isDeviceTypesPending, isInitialized])
+  }, [
+    diagnosticQuery.isPending,
+    isDeviceTypesPending,
+    isInitialized,
+    attrForm,
+    diagnosticForm,
+    diagnostics,
+    form,
+    genericFieldOptions,
+    getOptionByDriver,
+  ])
+  /* eslint-enable @eslint-react/set-state-in-effect */
 
   // When driver changes, reset the attribute only if it is type-specific and no longer valid
   useEffect(() => {
@@ -107,35 +123,35 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
     if (!attrs.some((a) => a.name === currentAttr)) {
       attrForm.setValue("attribute", null)
     }
-  }, [attrDriver, isInitialized])
+  }, [attrDriver, isInitialized, attrForm, genericFieldOptions, getOptionByDriver])
 
   // Register "field" with required validation so setValue(..., { shouldValidate: true })
   // can drive isValid in both directions. clearErrors() alone does not update isValid.
   useEffect(() => {
     form.register("field", { required: true })
     return () => form.unregister("field", { keepValue: true })
-  }, [])
+  }, [form])
 
   // Trigger full validation once after initialization so isValid reflects reality.
   // With mode:"onChange", isValid stays false until validation runs at least once.
   useEffect(() => {
     if (!isInitialized) return
     form.trigger()
-  }, [isInitialized])
+  }, [isInitialized, form])
 
   // Sync active tab selections to parent form (only after initialization)
   useEffect(() => {
     if (!isInitialized || activeTab !== FieldSource.Attribute) return
     form.setValue("driver", attrDriver || "")
     form.setValue("field", attrField, { shouldValidate: true })
-  }, [isInitialized, attrDriver, attrField, activeTab])
+  }, [isInitialized, attrDriver, attrField, activeTab, form])
 
   useEffect(() => {
     if (!isInitialized || activeTab !== FieldSource.Diagnostic) return
     const diag = diagnostics.find((d) => d.id === Number(diagId))
     form.setValue("driver", "")
     form.setValue("field", diag?.name ?? null, { shouldValidate: true })
-  }, [isInitialized, diagId, activeTab])
+  }, [isInitialized, diagId, activeTab, diagnostics, form])
 
   function handleTabChange(details: { value: string }) {
     const newTab = details.value as FieldSource
@@ -185,7 +201,7 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
             control={form.control}
             name="name"
           />
-          <Switch control={form.control} name="enabled" label={t("common.enabled")} />
+          <Switch control={form.control} name="enabled" label={t("common.enabled")} showStateIcon />
         </Stack>
         <Spacer />
         <TestRuleOnDeviceButton type={_type} />

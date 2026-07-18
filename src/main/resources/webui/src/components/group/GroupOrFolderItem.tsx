@@ -1,6 +1,6 @@
 import { Group } from "@/types"
 import { Folder, isGroup } from "@/utils"
-import { Steps, BoxProps } from "@chakra-ui/react";
+import { BoxProps } from "@chakra-ui/react";
 import { PropsWithChildren } from "react"
 import FolderItem from "./FolderItem"
 import GroupItem from "./GroupItem"

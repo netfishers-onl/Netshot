@@ -8,14 +8,14 @@ export type Folder = {
 /**
  * Check if current object is a group
  */
-export function isGroup(x: any): x is Group {
+export function isGroup(x: Folder | Group): x is Group {
   return "type" in x
 }
 
 /**
  * Check if current object is a folder
  */
-export function isFolder(x: any): x is Folder {
+export function isFolder(x: Folder | Group): x is Folder {
   return "children" in x
 }
 

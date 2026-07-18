@@ -1,6 +1,6 @@
 import { Center, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { useMatch, useNavigate, useParams } from "react-router"
 import { useShallow } from "zustand/react/shallow"
@@ -29,7 +29,7 @@ export default function DeviceSidebarSearchList() {
 
   const { data, isPending, isSuccess } = useSearchDevices(query)
 
-  const devices = isSuccess ? (data?.devices ?? []) : []
+  const devices = useMemo(() => (isSuccess ? (data?.devices ?? []) : []), [isSuccess, data])
 
   useEffect(() => {
     if (isSuccess) {

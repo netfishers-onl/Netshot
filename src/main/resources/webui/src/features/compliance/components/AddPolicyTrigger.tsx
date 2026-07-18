@@ -7,10 +7,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 import { useNavigate } from "react-router"
 import PolicyForm, { Form } from "./PolicyForm"
 
-export type AddPolicyTriggerProps = { children: React.ReactElement<any> } & Record<string, unknown>
+export type AddPolicyTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function AddPolicyTrigger({ children, ...rest }: AddPolicyTriggerProps) {
   const { t } = useTranslation()
@@ -73,6 +74,5 @@ export default function AddPolicyTrigger({ children, ...rest }: AddPolicyTrigger
 
   // Menu.Item already triggers `onClick` internally to fire `onSelect`, so binding
   // both to the same handler would call it twice; pick the one the child understands.
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

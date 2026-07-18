@@ -56,7 +56,7 @@ export function useDeviceGroupTree(options: UseDeviceGroupTreeOptions) {
       return
     }
     setGroup(findGroupInTree(items ?? [], selectedGroupId))
-  }, [selectedGroupId, items, isPending])
+  }, [selectedGroupId, items, isPending, setGroup])
 
   const onGroupSelect = useCallback(
     (group: Group) => {

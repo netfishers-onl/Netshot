@@ -1,7 +1,7 @@
 import api from "@/api"
 import { isNetshotError, NetshotErrorCode } from "@/api/httpClient"
 import { EmptyResult, Protected } from "@/components"
-import { LuChevronDown, LuPower, LuPencil, LuTrash } from "react-icons/lu"
+import { LuChevronDown, LuZap, LuZapOff, LuPencil, LuTrash } from "react-icons/lu"
 import { DeviceGroupBadge } from "@/features/device/components"
 import { DiagnosticType, Level } from "@/types"
 import {
@@ -92,14 +92,14 @@ export default function DeviceDetailScreen() {
                           {diagnostic.enabled ? (
                             <DisableDiagnosticTrigger diagnostic={diagnostic}>
                               <Menu.Item value="disable">
-                                <LuPower />
+                                <LuZapOff />
                                 {t("common.disable")}
                               </Menu.Item>
                             </DisableDiagnosticTrigger>
                           ) : (
                             <EnableDiagnosticTrigger diagnostic={diagnostic}>
                               <Menu.Item value="enable">
-                                <LuPower />
+                                <LuZap />
                                 {t("common.enable")}
                               </Menu.Item>
                             </EnableDiagnosticTrigger>

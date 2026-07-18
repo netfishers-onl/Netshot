@@ -68,8 +68,8 @@ export default function StaticGroupForm() {
   const debouncedQuery = useDebounce(deviceQuery, 200)
   const [leftValues, setLeftValues] = useState<string[]>([])
   const [rightValues, setRightValues] = useState<string[]>([])
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
-  const initialized = useRef(false)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set())
+  const initializedRef = useRef(false)
 
   const formDevices = useWatch({ control: form.control, name: "staticDevices" })
 
@@ -95,16 +95,24 @@ export default function StaticGroupForm() {
   })
 
   useEffect(() => {
-    if (!initialized.current && (formDevices ?? []).length > 0) {
-      initialized.current = true
+    if (!initializedRef.current && (formDevices ?? []).length > 0) {
+      initializedRef.current = true
       rightCollection.set(formDevices)
       setSelectedIds(new Set(formDevices.map((d) => d.id)))
     }
+    // rightCollection is a fresh object every render (useListCollection isn't
+    // memoized); adding it here would re-fire this effect on every render its
+    // own .set() call causes, looping forever.
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [formDevices])
 
   useEffect(() => {
     const filtered = (searchResult?.devices ?? []).filter((d) => !selectedIds.has(d.id))
     leftCollection.set(filtered)
+    // leftCollection is a fresh object every render (useListCollection isn't
+    // memoized); adding it here would re-fire this effect on every render its
+    // own .set() call causes, looping forever.
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [searchResult, selectedIds])
 
   function transferToRight() {
@@ -156,7 +164,7 @@ export default function StaticGroupForm() {
               value={leftValues}
               onValueChange={(e: ListboxValueChangeDetails) => setLeftValues(e.value)}
               emptyMessage={deviceQuery ? t("device.noDeviceFound") : t("device.startTypingToFind")}
-              renderItem={(device, _, itemLabel) => (
+              renderItem={(device) => (
                 <Listbox.ItemText>
                   <DeviceListItem device={device} />
                 </Listbox.ItemText>
@@ -192,7 +200,7 @@ export default function StaticGroupForm() {
               value={rightValues}
               onValueChange={(e: ListboxValueChangeDetails) => setRightValues(e.value)}
               emptyMessage={t("device.noDevicesSelected")}
-              renderItem={(device, _, itemLabel) => (
+              renderItem={(device) => (
                 <Listbox.ItemText>
                   <DeviceListItem device={device} />
                 </Listbox.ItemText>

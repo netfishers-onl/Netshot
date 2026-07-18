@@ -46,7 +46,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
     if (isSuccess) {
       form.setValue("script", script.script)
     }
-  }, [isSuccess, script])
+  }, [isSuccess, script, form])
 
   const { isLoading: isDeviceTypeOptionsLoading } = useDeviceTypeOptions()
 
@@ -97,7 +97,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
     }
 
     form.setValue("driver", script?.deviceDriver)
-  }, [isDeviceTypeOptionsLoading, isPending, script])
+  }, [isDeviceTypeOptionsLoading, isPending, script, form])
 
   const onChange = useCallback(
     (value: string) => {

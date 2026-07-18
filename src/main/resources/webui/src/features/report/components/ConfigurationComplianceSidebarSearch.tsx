@@ -116,10 +116,10 @@ export default function ConfigurationComplianceSidebarSearch() {
   )
   const [searchParams] = useSearchParams()
 
-  const hydrated = useRef(false)
+  const hydratedRef = useRef(false)
   useEffect(() => {
-    if (hydrated.current) return
-    hydrated.current = true
+    if (hydratedRef.current) return
+    hydratedRef.current = true
 
     const domainsParam = searchParams.get("domains")
     const policiesParam = searchParams.get("policies")
@@ -130,7 +130,7 @@ export default function ConfigurationComplianceSidebarSearch() {
       domains: parseIds(domainsParam),
       policies: parseIds(policiesParam),
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
   const onQuery = (query: string) => {

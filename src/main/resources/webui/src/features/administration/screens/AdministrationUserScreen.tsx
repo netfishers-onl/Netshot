@@ -7,8 +7,7 @@ import { User } from "@/types"
 import { search } from "@/utils"
 import {
   Badge,
-  Box,
-  Button,
+    Button,
   Heading,
   IconButton,
   Skeleton,
@@ -114,7 +113,7 @@ export default function AdministrationUserScreen() {
         },
       }),
     ],
-    [t]
+    [t, userLevelOptions, currentUser.username]
   )
 
   return (

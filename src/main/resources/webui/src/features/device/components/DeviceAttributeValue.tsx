@@ -6,7 +6,7 @@ import {
   DeviceNumericAttribute,
   DeviceTextAttribute,
 } from "@/types"
-import { Steps, Text } from "@chakra-ui/react";
+import { Text } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next"
 import { DeviceBinaryAttributeValue } from "./DeviceBinaryAttributeValue"
 import { DeviceNumericAttributeValue } from "./DeviceNumericAttributeValue"

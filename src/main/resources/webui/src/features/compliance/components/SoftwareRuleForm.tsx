@@ -1,5 +1,5 @@
 import { DeviceTypeSelect, FormControl, TreeGroupSelector } from "@/components"
-import { LuCircleArrowDown, LuMoveDown, LuRegex, LuTrophy, LuType } from "react-icons/lu"
+import { LuCircleArrowDown, LuRegex, LuTrophy, LuType } from "react-icons/lu"
 import { useSoftwareLevels, useDeviceTypeOptions } from "@/hooks"
 import { useDeviceFamilies, useDevicePartNumbers, useDeviceSoftwareVersions } from "@/features/device/api"
 import { DeviceSoftwareLevel, SoftwareRule } from "@/types"
@@ -39,7 +39,7 @@ export default function SoftwareRuleForm(props: SoftwareRuleFormProps) {
     }
 
     form.setValue("driver", rule.driver)
-  }, [isPending, rule])
+  }, [isPending, rule, form])
 
   const familyRegExp = useWatch({
     control: form.control,

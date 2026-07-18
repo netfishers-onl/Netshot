@@ -39,13 +39,13 @@ export default function UserForm(props: UserFormProps) {
     if (!isRemote) return
     form.setValue("password", "")
     form.setValue("confirmPassword", "")
-  }, [isRemote])
+  }, [isRemote, form])
 
   useEffect(() => {
     if (password == PASSWORD_UNCHANGED) {
       form.setValue("confirmPassword", "")
     }
-  }, [password])
+  }, [password, form])
 
   return (
     <Stack gap="6">

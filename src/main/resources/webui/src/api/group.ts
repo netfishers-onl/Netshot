@@ -1,5 +1,5 @@
 import { Group } from "@/types";
-import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
+import httpClient from "./httpClient";
 import {
   CreateGroupPayload,
   PaginationQueryParams,
@@ -7,7 +7,9 @@ import {
 } from "./types";
 
 async function getAll(queryParams: PaginationQueryParams = {}) {
-  return httpClient.get<Group[]>("/groups");
+  return httpClient.get<Group[]>("/groups", {
+    queryParams,
+  });
 }
 
 async function getById(id: number) {

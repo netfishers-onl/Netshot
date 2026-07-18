@@ -10,6 +10,7 @@ type ToastConfig<M extends object = object> = {
 
 const DEFAULT_DURATION = 5000
 
+// eslint-disable-next-line @eslint-react/no-unnecessary-use-prefix -- calls no hooks today, but keeps the same use*() calling convention as the app's other hooks (useAuth, useDialogConfig, ...); renaming would ripple across 66 call sites for no behavioral gain
 export default function useToast() {
   function error(config: ToastConfig) {
     if (!config.title && !config.description) return

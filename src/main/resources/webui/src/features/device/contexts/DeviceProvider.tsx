@@ -17,6 +17,6 @@ export default function DeviceProvider(
   const ctx = { device, type, isLoading, isDisabled };
 
   return (
-    <DeviceContext.Provider value={ctx}>{children}</DeviceContext.Provider>
+    <DeviceContext value={ctx}>{children}</DeviceContext>
   );
 }

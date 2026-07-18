@@ -1,4 +1,4 @@
-import { Badge, Icon, List, Skeleton, Span, Stack, Tag, Text } from "@chakra-ui/react"
+import { Badge, Icon, List, Skeleton, Span, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useCallback, useMemo } from "react"
@@ -159,6 +159,7 @@ export default function DeviceInterfaceScreen() {
         <Search
           placeholder={t("device.searchBy")}
           onQuery={pagination.onQuery}
+          onClear={pagination.onQueryClear}
           w="30%"
         />
       </Stack>

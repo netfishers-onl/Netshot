@@ -16,7 +16,7 @@ import {
   useListCollection,
 } from "@chakra-ui/react"
 import { type DateValue } from "@internationalized/date"
-import { forwardRef, ReactElement, ReactNode, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { ReactNode, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useController, UseControllerProps } from "react-hook-form"
 import { useLocalization } from "@/i18n"
 import { useTranslation } from "react-i18next"
@@ -55,21 +55,14 @@ export type FormControlProps<T> = {
   /** Rendered attached to the end of the input as a bordered addon (e.g. a unit selector), instead of floating inside it like `suffix`. */
   endAddon?: ReactNode
   endAddonProps?: InputAddonProps
+  ref?: RefObject<HTMLInputElement | HTMLTextAreaElement>
 } & Omit<InputProps, "recipe"> &
   Omit<SystemStyleObject, "recipe"> &
   UseControllerProps<T>
 
-declare module "react" {
-  function forwardRef<T, P = object>(
-    render: (props: P, ref: React.Ref<T>) => React.ReactNode | null
-  ): (props: P & React.RefAttributes<T>) => React.ReactNode | null
-}
-
-function FormControl<T>(
-  props: FormControlProps<T>,
-  ref: RefObject<HTMLInputElement | HTMLTextAreaElement>
-) {
+function FormControl<T>(props: FormControlProps<T>) {
   const {
+    ref,
     label,
     placeholder,
     control,
@@ -118,7 +111,7 @@ function FormControl<T>(
     setSuggestionItems(
       (suggestions ?? []).slice(0, MAX_SUGGESTIONS).map((s) => ({ label: s, value: s }))
     )
-  }, [suggestions])
+  }, [suggestions, setSuggestionItems])
 
   const {
     field,
@@ -133,8 +126,13 @@ function FormControl<T>(
     defaultValue,
   })
 
-  useEffect(() => {
-    if (!allowUnchanged) return
+  const [prevFieldValue, setPrevFieldValue] = useState(field.value)
+
+  // Re-derive `isUnchanged` from `field.value` whenever it changes (e.g. form
+  // reset), resetting `showPassword` on the transition, without the extra
+  // render an effect-based sync would cost.
+  if (allowUnchanged && field.value !== prevFieldValue) {
+    setPrevFieldValue(field.value)
     if (isUnchanged && field.value != PASSWORD_UNCHANGED) {
       setIsUnchanged(false)
       setShowPassword(false)
@@ -142,13 +140,13 @@ function FormControl<T>(
       setIsUnchanged(true)
       setShowPassword(false)
     }
-  }, [field.value])
+  }
 
   useEffect(() => {
     if (!isUnchanged && allowUnchanged) {
       passwordInputRef.current?.focus()
     }
-  }, [isUnchanged])
+  }, [isUnchanged, allowUnchanged])
 
   const inputProps = {
     onChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -458,4 +456,4 @@ function FormControl<T>(
   )
 }
 
-export default forwardRef(FormControl)
+export default FormControl

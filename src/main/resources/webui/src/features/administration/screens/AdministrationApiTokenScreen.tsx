@@ -73,7 +73,7 @@ export default function AdministrationApiTokenScreen() {
         minSize: 50,
       }),
     ],
-    [t]
+    [t, userLevelOptions]
   )
 
   return (

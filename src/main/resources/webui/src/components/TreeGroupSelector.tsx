@@ -204,7 +204,7 @@ export default function TreeGroupSelector<
   const isDisabled = disabled || isLoading
 
   const tags = selectedGroups.map((group, index) => (
-    <Tag.Root key={index} size="lg">
+    <Tag.Root key={group} size="lg">
       <Icon size="xs"><LuSquareStack /></Icon>
       <Tag.Label>{group}</Tag.Label>
       <Tag.EndElement>

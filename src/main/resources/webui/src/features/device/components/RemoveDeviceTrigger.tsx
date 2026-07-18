@@ -9,9 +9,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
 import React from "react"
+import Slot from "@/components/Slot"
 import { QUERIES as DEVICE_QUERIES } from "../constants"
 
-export type RemoveDeviceTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<any> } & Record<string, unknown>
+export type RemoveDeviceTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function RemoveDeviceTrigger({ devices, children, ...rest }: RemoveDeviceTriggerProps) {
   const { t } = useTranslation()
@@ -56,6 +57,5 @@ export default function RemoveDeviceTrigger({ devices, children, ...rest }: Remo
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

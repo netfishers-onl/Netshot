@@ -62,7 +62,7 @@ export default function SoftwareComplianceDialog(props: SoftwareComplianceDialog
         header: t("compliance.software.version"),
       }),
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
     [t]
   )
 

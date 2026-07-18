@@ -1,7 +1,7 @@
-import { Steps, Stack } from "@chakra-ui/react";
+import { Stack } from "@chakra-ui/react";
 import { PropsWithChildren } from "react";
 
-export type SidebarProps = PropsWithChildren<{}>;
+export type SidebarProps = PropsWithChildren;
 
 export default function Sidebar(props: SidebarProps) {
   const { children } = props;

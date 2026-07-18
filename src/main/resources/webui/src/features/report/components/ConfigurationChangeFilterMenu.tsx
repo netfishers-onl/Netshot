@@ -28,10 +28,10 @@ export default function ConfigurationChangeFilterMenu() {
   const applyFilters = useConfigChangeFilterStore((s) => s.applyFilters)
   const resetFilters = useConfigChangeFilterStore((s) => s.resetFilters)
 
-  const hydrated = useRef(false)
+  const hydratedRef = useRef(false)
   useEffect(() => {
-    if (hydrated.current) return
-    hydrated.current = true
+    if (hydratedRef.current) return
+    hydratedRef.current = true
 
     const fromParam = searchParams.get("from")
     const toParam = searchParams.get("to")
@@ -51,7 +51,7 @@ export default function ConfigurationChangeFilterMenu() {
       domain: domainParam ? +domainParam : null,
       group: groupParam ? +groupParam : null,
     })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
   }, [])
 
   const formValues = {

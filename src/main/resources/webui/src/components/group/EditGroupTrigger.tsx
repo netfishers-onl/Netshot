@@ -1,9 +1,10 @@
 import React, { MouseEvent } from "react"
+import Slot from "@/components/Slot"
 import { useCustomDialog } from "@/dialog"
 import { Group } from "@/types"
 import EditGroupDialog from "./EditGroupDialog"
 
-export type EditGroupTriggerProps = { group: Group; children: React.ReactElement<any> } & Record<string, unknown>
+export type EditGroupTriggerProps = { group: Group; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function EditGroupTrigger({ group, children, ...rest }: EditGroupTriggerProps) {
   const dialog = useCustomDialog()
@@ -13,6 +14,5 @@ export default function EditGroupTrigger({ group, children, ...rest }: EditGroup
     dialog.open(<EditGroupDialog group={group} />)
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

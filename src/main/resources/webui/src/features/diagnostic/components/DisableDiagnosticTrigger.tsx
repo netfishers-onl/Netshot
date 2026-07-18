@@ -8,9 +8,10 @@ import { Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 import { QUERIES } from "../constants"
 
-export type DisableDiagnosticTriggerProps = { diagnostic: Diagnostic; children: React.ReactElement<any> } & Record<string, unknown>
+export type DisableDiagnosticTriggerProps = { diagnostic: Diagnostic; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function DisableDiagnosticTrigger({ diagnostic, children, ...rest }: DisableDiagnosticTriggerProps) {
   const { t } = useTranslation()
@@ -69,6 +70,5 @@ export default function DisableDiagnosticTrigger({ diagnostic, children, ...rest
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

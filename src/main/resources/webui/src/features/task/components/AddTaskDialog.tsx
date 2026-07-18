@@ -254,7 +254,7 @@ export default function AddTaskDialog() {
         </Alert.Content>
       </Alert.Root>
     )
-  }, [t, taskType, taskTypeOptions])
+  }, [taskType, taskTypeOptions])
 
   const limitToOutofdateDevice = useWatch({
     control: form.control,
@@ -273,7 +273,7 @@ export default function AddTaskDialog() {
   useEffect(() => {
     form.setValue("hasConfigKeepDays", hasConfigDaysToPurge)
     form.setValue("hasConfigSizeToPurge", hasConfigDaysToPurge)
-  }, [hasConfigDaysToPurge])
+  }, [hasConfigDaysToPurge, form])
 
   return (
     <FormProvider {...form}>

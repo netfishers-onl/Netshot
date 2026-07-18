@@ -1,6 +1,7 @@
 import { Alert, Button, ButtonGroup, List, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import React, { MouseEvent, useMemo } from "react"
+import Slot from "@/components/Slot"
 import { useTranslation } from "react-i18next"
 
 import api from "@/api"
@@ -8,6 +9,8 @@ import { NETSHOT_APP_LIBRARIES, QUERIES } from "@/constants"
 import { useAlertDialog } from "@/dialog"
 
 import { LuAtSign, LuGithub, LuHouse } from "react-icons/lu"
+
+const CURRENT_YEAR = new Date().getFullYear()
 
 function AboutContent() {
   const { t } = useTranslation()
@@ -35,7 +38,7 @@ function AboutContent() {
         </Text>
         <Text>
           {t("about.copyright", {
-            year: new Date().getFullYear(),
+            year: CURRENT_YEAR,
           })}
         </Text>
       </Stack>
@@ -85,7 +88,7 @@ function AboutContent() {
   )
 }
 
-export type AboutNetshotDialogProps = { children: React.ReactElement<any> } & Record<string, unknown>
+export type AboutNetshotDialogProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export function AboutNetshotDialog({ children, ...rest }: AboutNetshotDialogProps) {
   const { t } = useTranslation()
@@ -101,6 +104,5 @@ export function AboutNetshotDialog({ children, ...rest }: AboutNetshotDialogProp
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

@@ -1,4 +1,4 @@
-import { Steps, Center, Flex, Spinner, Stack, Text } from "@chakra-ui/react";
+import { Center, Flex, Spinner, Stack, Text } from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 

@@ -1,5 +1,5 @@
 import { getLocalTimeZone } from "@internationalized/date"
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, use, useState, type ReactNode } from "react"
 
 interface LocalizationContextValue {
   timezone: string
@@ -14,12 +14,12 @@ const LocalizationContext = createContext<LocalizationContextValue>({
 export function LocalizationProvider({ children }: { children: ReactNode }) {
   const [timezone, setTimezone] = useState(getLocalTimeZone)
   return (
-    <LocalizationContext.Provider value={{ timezone, setTimezone }}>
+    <LocalizationContext value={{ timezone, setTimezone }}>
       {children}
-    </LocalizationContext.Provider>
+    </LocalizationContext>
   )
 }
 
 export function useTimezone() {
-  return useContext(LocalizationContext)
+  return use(LocalizationContext)
 }

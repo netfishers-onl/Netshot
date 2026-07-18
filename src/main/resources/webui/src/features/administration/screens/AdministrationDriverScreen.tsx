@@ -104,7 +104,7 @@ export default function AdministrationDriverScreen() {
         size: 10000,
       }),
     ],
-    [t]
+    [t, getProtocolCheckbox]
   )
 
   return (

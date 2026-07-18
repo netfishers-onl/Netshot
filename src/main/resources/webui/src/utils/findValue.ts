@@ -7,13 +7,13 @@ export function findValue<T extends NestedObject, V>(
   key: string,
   value: V
 ) {
-  for (let obj of arr) {
+  for (const obj of arr) {
     if (obj[key] === value) {
       return obj;
     }
 
     if (obj.children) {
-      let result = findValue(obj.children, key, value);
+      const result = findValue(obj.children, key, value);
       if (result) {
         return result;
       }

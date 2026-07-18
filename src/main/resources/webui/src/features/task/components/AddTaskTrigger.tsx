@@ -1,8 +1,9 @@
 import { useCustomDialog } from "@/dialog"
 import React from "react"
+import Slot from "@/components/Slot"
 import AddTaskDialog from "./AddTaskDialog"
 
-export type AddTaskTriggerProps = { children: React.ReactElement<any> } & Record<string, unknown>
+export type AddTaskTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function AddTaskTrigger({ children, ...rest }: AddTaskTriggerProps) {
   const dialog = useCustomDialog()
@@ -15,6 +16,5 @@ export default function AddTaskTrigger({ children, ...rest }: AddTaskTriggerProp
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

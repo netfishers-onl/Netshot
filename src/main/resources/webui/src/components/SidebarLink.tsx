@@ -1,4 +1,4 @@
-import { Steps, Stack, Text } from "@chakra-ui/react";
+import { Stack, Text } from "@chakra-ui/react";
 import { NavLink } from "react-router";
 
 export type SidebarLinkProps = {

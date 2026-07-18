@@ -39,7 +39,12 @@ export function SigninForm() {
 
     api.oidc.removeState()
     signinWithOidcMutation.mutate(code)
-  }, [state, code])
+    // `signinWithOidcMutation.mutate` (stable) is the real dependency; the
+    // whole `signinWithOidcMutation` object is a fresh reference on every
+    // mutation state change (pending/success), so depending on it would
+    // re-fire this effect and re-submit the mutation in a loop.
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [state, code, mutation.isPending, mutation.isSuccess, signinWithOidcMutation.mutate])
 
   if (signinWithOidcMutation.isPending) {
     return (

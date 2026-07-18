@@ -1,4 +1,5 @@
 import React, { MouseEvent } from "react"
+import Slot from "@/components/Slot"
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { MUTATIONS, QUERIES } from "@/constants"
@@ -9,7 +10,7 @@ import { Alert, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Trans, useTranslation } from "react-i18next"
 
-export type RemoveGroupTriggerProps = { group: Group; children: React.ReactElement<any> } & Record<string, unknown>
+export type RemoveGroupTriggerProps = { group: Group; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function RemoveGroupTrigger({ group, children, ...rest }: RemoveGroupTriggerProps) {
   const { t } = useTranslation()
@@ -58,6 +59,5 @@ export default function RemoveGroupTrigger({ group, children, ...rest }: RemoveG
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

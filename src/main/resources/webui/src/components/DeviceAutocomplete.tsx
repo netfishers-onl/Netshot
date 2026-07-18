@@ -166,6 +166,7 @@ export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
     <Group attached>
       {combobox}
       {/* h/w "12" matches the combobox's own size="lg" height (--combobox-input-height: sizes.12) */}
+      {/* eslint-disable-next-line @eslint-react/no-clone-element -- one-off size override on a caller-supplied addon element, narrowly typed via ReactElement<{ h, w }> */}
       {cloneElement(endAddon, { h: "12", w: "12" })}
     </Group>
   )

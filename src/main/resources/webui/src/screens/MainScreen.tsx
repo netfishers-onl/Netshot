@@ -28,9 +28,9 @@ export function MainScreen() {
   const { user } = useAuth()
   const navigate = useNavigate()
   // Whether there has already been a successfully authentication
-  const authState = useRef<AuthState>(AuthState.AUTH_REQUIRED)
+  const authStateRef = useRef<AuthState>(AuthState.AUTH_REQUIRED)
   const queryClient = useQueryClient()
-  const idleTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const idleTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const { data: serverInfo } = useQuery({
     queryKey: [QUERIES.SERVER_INFO],
@@ -48,18 +48,18 @@ export function MainScreen() {
         navigate(url)
       }
     }
-  }, [])
+  }, [navigate])
 
   useEffect(() => {
     if (user) {
-      authState.current = AuthState.AUTHENTICATED
-    } else if (authState.current !== AuthState.REAUTH_REQUIRED) {
+      authStateRef.current = AuthState.AUTHENTICATED
+    } else if (authStateRef.current !== AuthState.REAUTH_REQUIRED) {
       doRedirect()
     }
   }, [doRedirect, user])
 
   const requireReauth = useCallback(() => {
-    if (authState.current === AuthState.AUTHENTICATED) {
+    if (authStateRef.current === AuthState.AUTHENTICATED) {
       removeAllDialogs()
       dialog.open({
         title: t("auth.sessionExpired"),
@@ -74,7 +74,7 @@ export function MainScreen() {
           doRedirect(true)
         },
       })
-      authState.current = AuthState.REAUTH_REQUIRED
+      authStateRef.current = AuthState.REAUTH_REQUIRED
     }
     queryClient.setQueryData<MeResult>([QUERIES.USER], (prev) => prev ? { ...prev, user: null } : prev)
   }, [dialog, doRedirect, queryClient, removeAllDialogs, t])
@@ -94,8 +94,8 @@ export function MainScreen() {
     }
 
     const scheduleIdleWarning = () => {
-      clearTimeout(idleTimeout.current)
-      idleTimeout.current = setTimeout(
+      clearTimeout(idleTimeoutRef.current)
+      idleTimeoutRef.current = setTimeout(
         requireReauth,
         Math.max(0, maxIdleTimeout - IDLE_WARNING_MARGIN_SECONDS) * 1000
       )
@@ -107,7 +107,7 @@ export function MainScreen() {
 
     return () => {
       httpClient.off(HttpEventType.Activity)
-      clearTimeout(idleTimeout.current)
+      clearTimeout(idleTimeoutRef.current)
     }
   }, [requireReauth, serverInfo?.maxIdleTimeout])
 

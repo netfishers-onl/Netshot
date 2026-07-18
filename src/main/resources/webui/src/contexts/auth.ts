@@ -1,6 +1,6 @@
 import { OidcInfo } from "@/api/user";
 import { User } from "@/types";
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 
 export type AuthContextType = {
   user?: User;
@@ -12,4 +12,4 @@ export const AuthContext = createContext<AuthContextType>({
   user: null,
 });
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => use(AuthContext);

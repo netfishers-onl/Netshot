@@ -36,7 +36,7 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
       current: (isOrdered ? current : compare)?.id?.toString(),
       compare: (isOrdered ? compare : current)?.id?.toString(),
     }
-  }, [current?.id, compare?.id, configs])
+  }, [current, compare, configs])
 
   const form = useForm<FormData>({ defaultValues })
 

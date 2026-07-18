@@ -10,12 +10,13 @@ import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 import { QUERIES } from "../constants"
 import DeviceCredentialSetFormComponent, {
   DeviceCredentialSetForm,
 } from "./DeviceCredentialSetForm"
 
-export type EditDeviceCredentialSetTriggerProps = { credentialSet: CredentialSet; children: React.ReactElement<any> } & Record<string, unknown>
+export type EditDeviceCredentialSetTriggerProps = { credentialSet: CredentialSet; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function EditDeviceCredentialSetTrigger({ credentialSet: credential, children, ...rest }: EditDeviceCredentialSetTriggerProps) {
   const { t } = useTranslation()
@@ -79,7 +80,7 @@ export default function EditDeviceCredentialSetTrigger({ credentialSet: credenti
 
   useEffect(() => {
     form.reset(defaultValues)
-  }, [defaultValues])
+  }, [defaultValues, form])
 
   const mutation = useMutation({
     mutationKey: MUTATIONS.ADMIN_CREDENTIAL_SET_UPDATE,
@@ -174,6 +175,5 @@ export default function EditDeviceCredentialSetTrigger({ credentialSet: credenti
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

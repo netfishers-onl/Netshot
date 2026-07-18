@@ -1,6 +1,6 @@
 import { Sidebar as SidebarLayout, SidebarLink } from "@/components";
 import { LuDownload } from "react-icons/lu";
-import { Steps, Button, Stack, Separator } from "@chakra-ui/react";
+import { Button, Stack, Separator } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next";
 import ExportDataTrigger from "./ExportDataTrigger";
 

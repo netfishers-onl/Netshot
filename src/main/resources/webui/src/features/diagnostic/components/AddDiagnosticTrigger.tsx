@@ -1,8 +1,9 @@
 import { useCustomDialog } from "@/dialog"
 import AddDiagnosticDialog from "./AddDiagnosticDialog"
 import React from "react"
+import Slot from "@/components/Slot"
 
-export type AddDiagnosticTriggerProps = { children: React.ReactElement<any> } & Record<string, unknown>
+export type AddDiagnosticTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function AddDiagnosticTrigger({ children, ...rest }: AddDiagnosticTriggerProps) {
   const dialog = useCustomDialog()
@@ -15,6 +16,5 @@ export default function AddDiagnosticTrigger({ children, ...rest }: AddDiagnosti
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

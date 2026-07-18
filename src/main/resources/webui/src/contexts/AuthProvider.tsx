@@ -53,8 +53,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   return (
-    <AuthContext.Provider value={{ user: data?.user, oidcInfo: data?.oidcInfo, serverError: isError }}>
+    <AuthContext value={{ user: data?.user, oidcInfo: data?.oidcInfo, serverError: isError }}>
       {children}
-    </AuthContext.Provider>
+    </AuthContext>
   )
 }

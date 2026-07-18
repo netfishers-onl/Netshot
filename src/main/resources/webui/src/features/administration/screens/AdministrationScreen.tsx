@@ -1,4 +1,4 @@
-import { Steps, Stack, Separator } from "@chakra-ui/react";
+import { Stack, Separator } from "@chakra-ui/react";
 import { Outlet } from "react-router";
 import { AdministrationSidebar } from "../components";
 

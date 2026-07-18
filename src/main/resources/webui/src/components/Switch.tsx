@@ -1,10 +1,12 @@
 import {
+  Icon,
   Switch as ChakraSwitch,
   Field,
   Stack,
   SwitchCheckedChangeDetails,
   Text,
 } from "@chakra-ui/react"
+import { LuZap, LuZapOff } from "react-icons/lu"
 import { Control, FieldPath, useController } from "react-hook-form"
 import { FormControlProps } from "./FormControl"
 
@@ -14,10 +16,11 @@ export type SwitchProps<T> = {
   defaultValue?: boolean
   label?: string
   description?: string
-} & FormControlProps<T>
+  showStateIcon?: boolean
+} & Omit<FormControlProps<T>, "ref">
 
 export default function Switch<T>(props: SwitchProps<T>) {
-  const { label, description, control, name, defaultValue, ...other } = props
+  const { label, description, control, name, defaultValue, showStateIcon, ...other } = props
 
   const { field } = useController({
     name,
@@ -38,7 +41,21 @@ export default function Switch<T>(props: SwitchProps<T>) {
       <ChakraSwitch.Root size="lg" checked={field.value as boolean} onCheckedChange={onChange}>
         <ChakraSwitch.HiddenInput />
         <ChakraSwitch.Control>
-          <ChakraSwitch.Thumb />
+          <ChakraSwitch.Thumb>
+            {showStateIcon && (
+              <ChakraSwitch.ThumbIndicator
+                fallback={
+                  <Icon color="red.solid">
+                    <LuZapOff />
+                  </Icon>
+                }
+              >
+                <Icon color="green.solid">
+                  <LuZap />
+                </Icon>
+              </ChakraSwitch.ThumbIndicator>
+            )}
+          </ChakraSwitch.Thumb>
         </ChakraSwitch.Control>
       </ChakraSwitch.Root>
     </Field.Root>

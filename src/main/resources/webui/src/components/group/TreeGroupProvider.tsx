@@ -1,5 +1,5 @@
 import { Group } from "@/types"
-import { createContext, JSX, PropsWithChildren, useContext } from "react"
+import { createContext, JSX, PropsWithChildren, use } from "react"
 
 export type TreeGroupContextProps = {
   isFolderOpen(key: string): boolean
@@ -12,7 +12,7 @@ export type TreeGroupContextProps = {
 
 export const TreeGroupContext = createContext<TreeGroupContextProps>(null!)
 
-export const useTreeGroup = () => useContext(TreeGroupContext)
+export const useTreeGroup = () => use(TreeGroupContext)
 
 export function TreeGroupProvider({
   children,
@@ -24,7 +24,7 @@ export function TreeGroupProvider({
   renderGroupChildren,
 }: PropsWithChildren<TreeGroupContextProps>) {
   return (
-    <TreeGroupContext.Provider
+    <TreeGroupContext
       value={{
         isFolderOpen,
         toggleFolderOpen,
@@ -35,6 +35,6 @@ export function TreeGroupProvider({
       }}
     >
       {children}
-    </TreeGroupContext.Provider>
+    </TreeGroupContext>
   )
 }

@@ -1,4 +1,5 @@
 import React, { MouseEvent } from "react"
+import Slot from "@/components/Slot"
 import { useFormDialog } from "@/dialog"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -8,7 +9,7 @@ import { QueryBuilderValue } from "./types"
 export type QueryBuilderTriggerProps = {
   value?: QueryBuilderValue
   onSubmit(values: QueryBuilderValue): void
-  children: React.ReactElement<any>
+  children: React.ReactElement<Record<string, unknown>>
 } & Record<string, unknown>
 
 export function QueryBuilderTrigger({ onSubmit, value = null, children, ...rest }: QueryBuilderTriggerProps) {
@@ -45,6 +46,5 @@ export function QueryBuilderTrigger({ onSubmit, value = null, children, ...rest 
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

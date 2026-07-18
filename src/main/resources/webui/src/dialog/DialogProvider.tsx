@@ -1,6 +1,6 @@
 import { ButtonProps } from "@chakra-ui/react"
 import mergeWith from "lodash.mergewith"
-import { createContext, memo, PropsWithChildren, useContext } from "react"
+import { createContext, memo, PropsWithChildren, use } from "react"
 import { useShallow } from "zustand/react/shallow"
 import { DialogConfigContext } from "./dialogConfigContext"
 import { useDialogStore } from "./useDialogStore"
@@ -65,7 +65,7 @@ const DEFAULT_PROVDER_CONFIG: DialogProviderConfig = {
 }
 
 const DialogProviderContext = createContext<DialogProviderConfig>(null)
-export const useDialogProviderConfig = () => useContext(DialogProviderContext)
+export const useDialogProviderConfig = () => use(DialogProviderContext)
 
 const DialogInstance = memo(({ configId }: { configId: string }) => {
   const config = useDialogStore((state) => state.configs.find((config) => config.id === configId))
@@ -73,9 +73,9 @@ const DialogInstance = memo(({ configId }: { configId: string }) => {
   if (!config) return
 
   return (
-    <DialogConfigContext.Provider value={config}>
+    <DialogConfigContext value={config}>
       <config.component />
-    </DialogConfigContext.Provider>
+    </DialogConfigContext>
   )
 })
 
@@ -86,12 +86,12 @@ export function DialogProvider({
   const configIds = useDialogStore(useShallow((state) => state.configs.map((config) => config.id)))
 
   return (
-    <DialogProviderContext.Provider value={mergeWith({}, DEFAULT_PROVDER_CONFIG, config)}>
+    <DialogProviderContext value={mergeWith({}, DEFAULT_PROVDER_CONFIG, config)}>
       {children}
 
       {configIds.map((id) => (
         <DialogInstance key={id} configId={id} />
       ))}
-    </DialogProviderContext.Provider>
+    </DialogProviderContext>
   )
 }

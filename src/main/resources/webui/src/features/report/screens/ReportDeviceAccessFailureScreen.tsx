@@ -144,7 +144,7 @@ export default function ReportDeviceAccessFailure() {
         enableSorting: true,
       }),
     ],
-    [t]
+    [t, formatDateTime]
   )
 
   function applyFilter(values: FilterForm) {

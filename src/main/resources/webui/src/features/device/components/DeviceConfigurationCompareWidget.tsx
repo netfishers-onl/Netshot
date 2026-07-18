@@ -2,7 +2,7 @@ import { useAlertDialog } from "@/dialog"
 import { useLocalization } from "@/i18n"
 import { Button, CloseButton, HStack, Input } from "@chakra-ui/react"
 import { motion } from "framer-motion"
-import { useEffect } from "react"
+import { useCallback, useEffect } from "react"
 import { Trans, useTranslation } from "react-i18next"
 import { useShallow } from "zustand/react/shallow"
 import { useDevice } from "../contexts/device"
@@ -23,10 +23,10 @@ export function DeviceConfigurationCompareWidget() {
   const dialog = useAlertDialog()
   const { device, type } = useDevice()
 
-  function cancel() {
+  const cancel = useCallback(() => {
     setCurrent(null)
     setCompare(null)
-  }
+  }, [setCurrent, setCompare])
 
   function open() {
     dialog.open({
@@ -48,7 +48,7 @@ export function DeviceConfigurationCompareWidget() {
     return () => {
       cancel()
     }
-  }, [device])
+  }, [device, cancel])
 
   return (
     <HStack

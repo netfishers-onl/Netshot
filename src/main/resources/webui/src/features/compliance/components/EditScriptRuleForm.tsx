@@ -30,7 +30,7 @@ export default function EditScriptRuleForm(props: EditScriptRuleFormProps) {
             control={form.control}
             name="name"
           />
-          <Switch control={form.control} name="enabled" label={t("common.enabled")} />
+          <Switch control={form.control} name="enabled" label={t("common.enabled")} showStateIcon />
         </Stack>
         <Spacer />
         <TestRuleOnDeviceButton type={type} />

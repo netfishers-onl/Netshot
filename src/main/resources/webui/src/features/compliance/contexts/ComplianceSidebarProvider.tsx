@@ -3,8 +3,8 @@ import {
   PropsWithChildren,
   SetStateAction,
   createContext,
+  use,
   useCallback,
-  useContext,
   useState,
 } from "react";
 
@@ -18,7 +18,7 @@ export type ComplianceSidebarContextType = {
 };
 
 export const ComplianceSidebarContext = createContext<ComplianceSidebarContextType>(null);
-export const useComplianceSidebar = () => useContext(ComplianceSidebarContext);
+export const useComplianceSidebar = () => use(ComplianceSidebarContext);
 
 function getInitiallyExpandedPolicyIds(): number[] {
   const match = window.location.pathname.match(/\/config\/(\d+)/);
@@ -26,7 +26,7 @@ function getInitiallyExpandedPolicyIds(): number[] {
 }
 
 export default function ComplianceSidebarProvider(
-  props: PropsWithChildren<{}>
+  props: PropsWithChildren
 ) {
   const { children } = props;
   const [query, setQuery] = useState<string>("");
@@ -55,7 +55,7 @@ export default function ComplianceSidebarProvider(
   }, []);
 
   return (
-    <ComplianceSidebarContext.Provider
+    <ComplianceSidebarContext
       value={{
         query,
         setQuery,
@@ -66,6 +66,6 @@ export default function ComplianceSidebarProvider(
       }}
     >
       {children}
-    </ComplianceSidebarContext.Provider>
+    </ComplianceSidebarContext>
   );
 }

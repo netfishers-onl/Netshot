@@ -1,6 +1,6 @@
 import { useDeviceTypeOptions } from "@/hooks"
 import { Box, Stack } from "@chakra-ui/react"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import DeviceTypeSelect from "../DeviceTypeSelect"
@@ -22,18 +22,28 @@ export function TypeSpecificAttributePanel({ onInsert }: Props) {
   })
   const [deviceType, attrName] = form.watch(["deviceType", "attribute"])
 
+  // Depends only on `deviceType` and `deviceTypeOptions.options` (both stable);
+  // `queryBuilderAttribute` itself is a fresh object every render (its factory
+  // hook isn't memoized) but `getAllTypeSpecificOption`'s result is otherwise a
+  // pure function of those two, so depending on the object would recompute
+  // `attributes` every render and, transitively, re-fire the effect below on
+  // every render too.
+  const attributes = useMemo(
+    () => queryBuilderAttribute.getAllTypeSpecificOption(deviceType),
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+    [deviceType, deviceTypeOptions.options]
+  )
+
   useEffect(() => {
     if (deviceTypeOptions.options.length > 0 && !form.getValues("deviceType")) {
       form.setValue("deviceType", deviceTypeOptions.options[0].value?.name ?? null)
     }
-  }, [deviceTypeOptions.options.length])
+  }, [deviceTypeOptions.options, form])
 
   useEffect(() => {
-    const attrs = queryBuilderAttribute.getAllTypeSpecificOption(deviceType)
-    form.setValue("attribute", attrs[0]?.value.name ?? null)
-  }, [deviceType])
+    form.setValue("attribute", attributes[0]?.value.name ?? null)
+  }, [attributes, form])
 
-  const attributes = queryBuilderAttribute.getAllTypeSpecificOption(deviceType)
   const attribute = attributes.find((a) => a.value.name === attrName)?.value ?? null
 
   return (

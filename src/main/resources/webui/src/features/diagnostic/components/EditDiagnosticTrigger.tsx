@@ -6,6 +6,7 @@ import { useToast } from "@/hooks"
 import { Diagnostic, DiagnosticType } from "@/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import React, { useEffect, useMemo } from "react"
+import Slot from "@/components/Slot"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { QUERIES } from "../constants"
@@ -15,7 +16,7 @@ import EditDiagnosticText from "./EditDiagnosticText"
 
 export type EditDiagnosticTriggerProps = {
   diagnostic: Diagnostic
-  children: React.ReactElement<any>
+  children: React.ReactElement<Record<string, unknown>>
 } & Record<string, unknown>
 
 export default function EditDiagnosticTrigger(props: EditDiagnosticTriggerProps) {
@@ -85,7 +86,7 @@ export default function EditDiagnosticTrigger(props: EditDiagnosticTriggerProps)
 
   useEffect(() => {
     form.reset(defaultValues)
-  }, [diagnostic])
+  }, [defaultValues, form])
 
   const open = () => {
     const dialogRef = dialog.open(MUTATIONS.DIAGNOSTIC_UPDATE, {
@@ -146,6 +147,5 @@ export default function EditDiagnosticTrigger(props: EditDiagnosticTriggerProps)
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

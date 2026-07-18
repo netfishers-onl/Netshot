@@ -13,7 +13,7 @@ import { Badge, Button, Heading, Icon, IconButton, Skeleton, Spacer, Stack, Text
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper, Row } from "@tanstack/react-table"
 import { useEffect, useState } from "react"
-import { LuSquarePen, LuPlus, LuTrash, LuAsterisk, LuTrophy, LuArrowRight, LuMoveRight, LuChevronRight, LuChevronsRight, LuArrowBigRightDash } from "react-icons/lu"
+import { LuSquarePen, LuPlus, LuTrash, LuAsterisk, LuTrophy, LuMoveRight } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddSoftwareRuleTrigger from "../components/AddSoftwareRuleTrigger"
 import EditSoftwareRuleTrigger from "../components/EditSoftwareRuleTrigger"
@@ -47,8 +47,12 @@ export default function SoftwareComplianceScreen() {
     },
   })
 
+  // Re-sync the local (reorderable) copy from the query once it settles, but
+  // not while a reorder mutation is in flight (reorderPending guards against
+  // a stale refetch clobbering the optimistic local order mid-mutation).
   useEffect(() => {
     if (isSuccess && !reorderPending) {
+      // eslint-disable-next-line @eslint-react/set-state-in-effect
       setData(rules)
     }
   }, [isSuccess, rules, reorderPending])

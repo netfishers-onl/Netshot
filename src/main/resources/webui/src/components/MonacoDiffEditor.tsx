@@ -26,13 +26,13 @@ export type MonacoDiffEditorProps = {
 
 export default function MonacoDiffEditor(props: MonacoDiffEditorProps) {
   const { original, modified, readOnly = false, language = "typescript" } = props
-  const container = useRef<HTMLDivElement>(null)
-  const ide = useRef<editor.IStandaloneDiffEditor>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const editorRef = useRef<editor.IStandaloneDiffEditor>(null)
 
   useLayoutEffect(() => {
-    if (!container?.current) return
+    if (!containerRef?.current) return
 
-    ide.current = editor.createDiffEditor(container.current, {
+    editorRef.current = editor.createDiffEditor(containerRef.current, {
       automaticLayout: true,
       readOnly,
       theme: "netshot",
@@ -40,15 +40,15 @@ export default function MonacoDiffEditor(props: MonacoDiffEditorProps) {
       fontFamily: "SF Mono",
     })
 
-    ide.current.setModel({
+    editorRef.current.setModel({
       original: editor.createModel(original, language),
       modified: editor.createModel(modified, language),
     })
 
     return () => {
-      ide?.current?.dispose()
+      editorRef?.current?.dispose()
     }
-  }, [container, original, modified, language, readOnly])
+  }, [containerRef, original, modified, language, readOnly])
 
-  return <Box flex="1" ref={container} />
+  return <Box flex="1" ref={containerRef} />
 }

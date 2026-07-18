@@ -5,6 +5,7 @@ import { useDownloadConfigMutation } from "@/hooks"
 import { Button } from "@chakra-ui/react"
 import { LuDownload } from "react-icons/lu"
 import React from "react"
+import Slot from "@/components/Slot"
 import DeviceConfigurationView from "./DeviceConfigurationView"
 
 export type DeviceConfigurationViewTriggerProps = {
@@ -12,7 +13,7 @@ export type DeviceConfigurationViewTriggerProps = {
   filename?: string
   attribute: ConfigLongTextAttribute
   definition: DeviceAttributeDefinition
-  children: React.ReactElement<any>
+  children: React.ReactElement<Record<string, unknown>>
 } & Record<string, unknown>
 
 export default function DeviceConfigurationViewTrigger({ id, filename, attribute, definition, children, ...rest }: DeviceConfigurationViewTriggerProps) {
@@ -34,6 +35,5 @@ export default function DeviceConfigurationViewTrigger({ id, filename, attribute
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

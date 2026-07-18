@@ -9,9 +9,10 @@ import { MouseEvent, useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 import PolicyForm, { Form } from "./PolicyForm"
 
-export type EditPolicyTriggerProps = { policy: Policy; children: React.ReactElement<any> } & Record<string, unknown>
+export type EditPolicyTriggerProps = { policy: Policy; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function EditPolicyTrigger({ policy, children, ...rest }: EditPolicyTriggerProps) {
   const { t } = useTranslation()
@@ -31,7 +32,7 @@ export default function EditPolicyTrigger({ policy, children, ...rest }: EditPol
 
   useEffect(() => {
     form.reset(defaultValues)
-  }, [defaultValues])
+  }, [defaultValues, form])
 
   const mutation = useMutation({
     mutationKey: MUTATIONS.POLICY_UPDATE,
@@ -78,6 +79,5 @@ export default function EditPolicyTrigger({ policy, children, ...rest }: EditPol
 
   // Menu.Item already triggers `onClick` internally to fire `onSelect`, so binding
   // both to the same handler would call it twice; pick the one the child understands.
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

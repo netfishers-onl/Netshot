@@ -1,4 +1,4 @@
-import { Steps, Center, Heading, Stack, Text } from "@chakra-ui/react";
+import { Center, Heading, Stack, Text } from "@chakra-ui/react";
 import { PropsWithChildren } from "react";
 
 export type EmptyResultProps = {

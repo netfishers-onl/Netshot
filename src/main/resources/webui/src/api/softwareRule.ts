@@ -1,5 +1,5 @@
 import { SoftwareRule } from "@/types";
-import httpClient, { HttpMethod, HttpStatus } from "./httpClient";
+import httpClient from "./httpClient";
 import { CreateOrUpdateSoftwareRule } from "./types";
 
 async function getAll() {

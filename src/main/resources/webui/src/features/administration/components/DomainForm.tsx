@@ -1,5 +1,4 @@
 import { FormControl } from "@/components"
-import { FormControlType } from "@/components/FormControl"
 import validators from "@/utils/validators"
 import { Stack } from "@chakra-ui/react"
 import { useFormContext } from "react-hook-form"

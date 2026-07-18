@@ -1,9 +1,8 @@
 import { Icon, Stack, Text } from "@chakra-ui/react"
 import { useEffect, useMemo, useRef } from "react"
-import { useTranslation } from "react-i18next"
 import { useNavigate, useParams } from "react-router"
 
-import { Level, Policy, Rule, RuleType } from "@/types"
+import { Policy, Rule, RuleType } from "@/types"
 
 import { LuAlignLeft } from "react-icons/lu"
 import { SiJavascript, SiPython } from "react-icons/si"
@@ -15,7 +14,6 @@ export type RuleItemProps = {
 
 export default function RuleItem(props: RuleItemProps) {
   const { policy, rule } = props
-  const { t } = useTranslation()
   const { policyId, ruleId } = useParams()
   const navigate = useNavigate()
 

@@ -1,4 +1,3 @@
-import { ExportMimeType } from "@/features/report/types"
 import {
   CredentialSetType,
   DeviceComplianceResultType,

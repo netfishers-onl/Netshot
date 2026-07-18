@@ -14,6 +14,7 @@ import { useEffect } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 import { useDeviceCredentialSetOptions } from "../hooks"
 
 type Form = {
@@ -29,7 +30,7 @@ type Form = {
   specificCredentialSet?: CreateDevicePayload["specificCredentialSet"]
 }
 
-export type CreateDeviceTriggerProps = { children: React.ReactElement<any> } & Record<string, unknown>
+export type CreateDeviceTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 function DeviceCreateForm() {
   const form = useFormContext()
@@ -49,7 +50,7 @@ function DeviceCreateForm() {
     form.setValue("credentialType", autoDiscover ? null : deviceCredentialSetOptions.options[0].value)
     form.setValue("overrideConnectionSetting", false)
     form.setValue("deviceType", null)
-  }, [autoDiscover])
+  }, [autoDiscover, deviceCredentialSetOptions.options, form])
 
   useEffect(() => {
     if (credentialType === CredentialSetType.SSH || credentialType === CredentialSetType.Telnet) {
@@ -65,13 +66,13 @@ function DeviceCreateForm() {
     } else {
       form.setValue("specificCredentialSet", null)
     }
-  }, [credentialType])
+  }, [credentialType, form])
 
   useEffect(() => {
     form.setValue("connectIPAddress", "")
     form.setValue("sshPort", "")
     form.setValue("telnetPort", "")
-  }, [overrideConnectionSetting])
+  }, [overrideConnectionSetting, form])
 
   return (
     <Stack gap="6">
@@ -225,6 +226,5 @@ export default function CreateDeviceTrigger({ children, ...rest }: CreateDeviceT
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

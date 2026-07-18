@@ -23,7 +23,7 @@ export default function NavbarUser() {
   const userLevelOptions = useUserLevelOptions()
   const { options: languageOptions } = useLanguageOptions()
 
-  const levelLabel = useMemo(() => userLevelOptions.getLabelByValue(user?.level), [user])
+  const levelLabel = useMemo(() => userLevelOptions.getLabelByValue(user?.level), [user, userLevelOptions])
 
 
   const logoutMutation = useMutation({

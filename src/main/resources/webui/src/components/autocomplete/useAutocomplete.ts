@@ -44,7 +44,7 @@ export function useAutocomplete<T extends object, R>(config: UseAutocompleteConf
 
   useEffect(() => {
     set(filteredEntities)
-  }, [filteredEntities])
+  }, [filteredEntities, set])
 
   return {
     entities: filteredEntities,

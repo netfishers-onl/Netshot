@@ -1,5 +1,5 @@
 import { DeviceBinaryAttribute } from "@/types"
-import { Steps, Text } from "@chakra-ui/react";
+import { Text } from "@chakra-ui/react";
 import { useTranslation } from "react-i18next"
 
 type DeviceBinaryAttributeValueProps = {

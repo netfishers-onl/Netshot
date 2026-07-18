@@ -1,18 +1,11 @@
 import { Icon, IconProps, createIcon } from "@chakra-ui/react"
 import {
   LuCircleHelp,
-  LuEthernetPort,
-  LuNetwork,
   LuPhone,
-  LuRadioTower,
-  LuRouter,
   LuServer,
-  LuSquareChevronRight,
   LuSquareTerminal,
-  LuTerminal,
   LuWifi,
 } from "react-icons/lu"
-import { TbLoadBalancer } from "react-icons/tb"
 import { DeviceNetworkClass } from "@/types"
 
 const BrickWallFire = createIcon({

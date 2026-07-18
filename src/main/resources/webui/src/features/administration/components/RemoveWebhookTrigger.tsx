@@ -9,9 +9,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { MouseEvent, useCallback } from "react"
 import { Trans, useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 import { QUERIES } from "../constants"
 
-export type RemoveWebhookTriggerProps = { webhook: Hook; children: React.ReactElement<any> } & Record<string, unknown>
+export type RemoveWebhookTriggerProps = { webhook: Hook; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 export default function RemoveWebhookTrigger({ webhook, children, ...rest }: RemoveWebhookTriggerProps) {
   const { t } = useTranslation()
@@ -19,7 +20,7 @@ export default function RemoveWebhookTrigger({ webhook, children, ...rest }: Rem
   const toast = useToast()
   const dialog = useConfirmDialogWithMutation()
 
-  const mutation = useMutation({
+  const { mutateAsync } = useMutation({
     mutationKey: MUTATIONS.ADMIN_HOOK_REMOVE,
     mutationFn: async () => api.admin.removeHook(webhook.id),
     onError(err: NetshotError) {
@@ -40,7 +41,7 @@ export default function RemoveWebhookTrigger({ webhook, children, ...rest }: Rem
           />
         ),
         async onConfirm() {
-          await mutation.mutateAsync()
+          await mutateAsync()
           queryClient.invalidateQueries({ queryKey: [QUERIES.ADMIN_WEBHOOKS] })
           dialogRef.close()
 
@@ -59,9 +60,8 @@ export default function RemoveWebhookTrigger({ webhook, children, ...rest }: Rem
         },
       })
     },
-    [dialog]
+    [dialog, mutateAsync, queryClient, t, toast, webhook.name]
   )
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

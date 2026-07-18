@@ -1,5 +1,5 @@
 import { Badge, HoverCard, Icon, Portal, Spacer, Stack, StackProps, Text } from "@chakra-ui/react"
-import { forwardRef, MouseEvent, Ref, useCallback, useEffect, useMemo, useRef } from "react"
+import { MouseEvent, Ref, useCallback, useEffect, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { useLocation, useMatch, useNavigate, useParams } from "react-router"
 
@@ -16,10 +16,11 @@ import { useDeviceSidebarStore } from "../../stores"
 
 type DeviceBoxProps = {
   device: SimpleDevice
+  ref?: Ref<HTMLDivElement>
 } & StackProps
 
-const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) => {
-  const { device, ...stackProps } = props
+function DeviceBox(props: DeviceBoxProps) {
+  const { device, ref, ...stackProps } = props
 
   const { t } = useTranslation()
   const deviceSidebarStore = useDeviceSidebarStore(
@@ -87,13 +88,10 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
       }
 
       const dataClone = [...deviceSidebarStore.devices]
-      let range: SimpleDevice[] = []
-
-      if (firstIndex < lastIndex) {
-        range = dataClone.slice(firstIndex, lastIndex + 1)
-      } else {
-        range = dataClone.slice(lastIndex, firstIndex + 1)
-      }
+      const range: SimpleDevice[] =
+        firstIndex < lastIndex
+          ? dataClone.slice(firstIndex, lastIndex + 1)
+          : dataClone.slice(lastIndex, firstIndex + 1)
 
       deviceSidebarStore.select(range)
       navigate({ pathname: `./${device?.id}/${currentSection}`, search: location.search })
@@ -103,7 +101,10 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
     }
   }
 
-  const levelInfo = useMemo(() => getSoftwareLevelInfo(device?.softwareLevel), [device])
+  const levelInfo = useMemo(
+    () => getSoftwareLevelInfo(device?.softwareLevel),
+    [device, getSoftwareLevelInfo]
+  )
 
   const compliant = useMemo<boolean>(() => {
     if (!levelInfo.isCompliant) {
@@ -123,7 +124,7 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
     }
 
     return true
-  }, [device])
+  }, [device, levelInfo.isCompliant])
 
   const family = device?.family === "" ? t("common.unknownLabel") : device?.family
 
@@ -195,6 +196,6 @@ const DeviceBox = forwardRef((props: DeviceBoxProps, ref: Ref<HTMLDivElement>) =
       </Stack>
     </Stack>
   )
-})
+}
 
 export default DeviceBox

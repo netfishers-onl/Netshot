@@ -27,7 +27,7 @@ export default function ConfirmDialog() {
   const { confirmButton, cancelButton } = mergeWith({}, providerConfig.confirm, config.props)
   // Track whether a button was explicitly clicked to avoid double-calling onCancel
   // in onExitComplete (which fires for all close paths including after confirm).
-  const wasActed = useRef(false)
+  const wasActedRef = useRef(false)
 
   const confirmButtonConfig: ConfirmDialogProps["confirmButton"] = {
     label: confirmButton?.label,
@@ -36,7 +36,7 @@ export default function ConfirmDialog() {
       loading: currentConfig.props.isLoading,
       onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
         evt?.stopPropagation()
-        wasActed.current = true
+        wasActedRef.current = true
         if (config.props.onConfirm) config.props.onConfirm()
       },
       ...confirmButton?.props,
@@ -50,7 +50,7 @@ export default function ConfirmDialog() {
       disabled: currentConfig.props.isLoading,
       onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
         evt?.stopPropagation()
-        wasActed.current = true
+        wasActedRef.current = true
         if (config.props.onCancel) config.props.onCancel()
         config.close()
       },
@@ -71,7 +71,7 @@ export default function ConfirmDialog() {
         }
       }}
       onExitComplete={() => {
-        if (!wasActed.current && config.props.onCancel) config.props.onCancel()
+        if (!wasActedRef.current && config.props.onCancel) config.props.onCancel()
         config.remove()
       }}
     >

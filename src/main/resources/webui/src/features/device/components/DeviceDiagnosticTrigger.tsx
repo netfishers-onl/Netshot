@@ -12,8 +12,9 @@ import { useMutation } from "@tanstack/react-query"
 import { FormProvider, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
+import Slot from "@/components/Slot"
 
-export type DeviceDiagnosticTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<any> } & Record<string, unknown>
+export type DeviceDiagnosticTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 type Form = { checkCompliance: boolean } & ScheduleFormType
 
@@ -97,6 +98,5 @@ export default function DeviceDiagnosticTrigger({ devices, children, ...rest }: 
     })
   }
 
-  const isMenuItem = "value" in children.props
-  return React.cloneElement(children, isMenuItem ? { onSelect: open, ...rest } : { ...rest, onClick: open })
+  return <Slot onTrigger={open} {...rest}>{children}</Slot>
 }

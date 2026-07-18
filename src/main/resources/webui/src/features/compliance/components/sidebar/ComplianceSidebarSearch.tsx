@@ -21,7 +21,11 @@ export default function ComplianceSidebarSearch() {
 
   useEffect(() => {
     ctx.setQuery(debouncedValue)
-  }, [debouncedValue])
+    // `ctx.setQuery` (a raw useState setter, guaranteed stable by React) is
+    // the real dependency; `ctx` itself is a fresh object every provider
+    // render, so depending on it here would re-fire this effect constantly.
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [debouncedValue, ctx.setQuery])
 
   return (
     <Stack p="6" gap="5">

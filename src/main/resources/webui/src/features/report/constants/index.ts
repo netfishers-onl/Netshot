@@ -4,6 +4,7 @@ export const QUERIES = {
   SOFTWARE_COMPLIANCE: "software-compliance",
   SOFTWARE_COMPLIANCE_DEVICES: "software-compliance-devices",
   DEVICE_ACCESS_FAILURE: "device-access-failure",
+  HARDWARE_SUPPORT_STATS: "hardware-support-stats",
   DEVICE_HARDWARE_STATUS: "device-hardware-status",
   DEVICE_CONFIG_DIFF: "device-config-diff",
   CONFIGURATION_COMPLIANCE_STAT: "configuration-compliance-stat",

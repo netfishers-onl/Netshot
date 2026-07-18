@@ -1,4 +1,4 @@
-import { DeviceComplianceResultType } from "./device"
+import { DeviceComplianceResultType, DeviceNetworkClass } from "./device"
 
 export type HardwareSupportDevice = {
   id: number
@@ -7,4 +7,5 @@ export type HardwareSupportDevice = {
   mgmtAddress: string
   status: DeviceComplianceResultType
   driver: string
+  networkClass: DeviceNetworkClass
 }

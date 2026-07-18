@@ -5,15 +5,24 @@ import HardwareDeviceListDialog from "./HardwareDeviceListDialog"
 export type HardwareDeviceListTriggerProps = {
   type: "eos" | "eol"
   date: number
+  domain?: number[]
+  group?: number[]
   children: React.ReactElement<any>
 } & Record<string, unknown>
 
-export default function HardwareDeviceListTrigger({ type, date, children, ...rest }: HardwareDeviceListTriggerProps) {
+export default function HardwareDeviceListTrigger({
+  type,
+  date,
+  domain,
+  group,
+  children,
+  ...rest
+}: HardwareDeviceListTriggerProps) {
   const dialog = useCustomDialog()
 
   const open = (evt?: React.MouseEvent) => {
     evt?.stopPropagation()
-    dialog.open(<HardwareDeviceListDialog type={type} date={date} />)
+    dialog.open(<HardwareDeviceListDialog type={type} date={date} domain={domain} group={group} />)
   }
 
   const isMenuItem = "value" in children.props

@@ -13,6 +13,7 @@ import httpClient, { HttpMethod } from "./httpClient"
 import {
   ReportDeviceAccessFailureQueryParams,
   ReportExportDataQueryParams,
+  ReportHardwareSupportQueryParams,
   ReportQueryParams,
 } from "./types"
 
@@ -74,12 +75,30 @@ async function getAllGroupSoftwareComplianceStats(
   })
 }
 
-async function getAllHardwareSupportDevices(type: "eos" | "eol", date: number) {
-  return httpClient.get<HardwareSupportDevice[]>(`/reports/hardwaresupportdevices/${type}/${date}`)
+async function getAllHardwareSupportDevices(
+  type: "eos" | "eol",
+  date: number,
+  queryParams: ReportHardwareSupportQueryParams = {}
+) {
+  return httpClient.get<HardwareSupportDevice[]>(`/reports/hardwaresupportdevices/${type}/${date}`, {
+    queryParams,
+    queryParamsOptions: {
+      stringifyOpt: {
+        arrayFormat: "repeat",
+      },
+    },
+  })
 }
 
-async function getAllHardwareSupportStats() {
-  return httpClient.get<HardwareSupportStat[]>(`/reports/hardwaresupportstats`)
+async function getAllHardwareSupportStats(queryParams: ReportHardwareSupportQueryParams = {}) {
+  return httpClient.get<HardwareSupportStat[]>(`/reports/hardwaresupportstats`, {
+    queryParams,
+    queryParamsOptions: {
+      stringifyOpt: {
+        arrayFormat: "repeat",
+      },
+    },
+  })
 }
 
 async function exportData(queryParams: ReportExportDataQueryParams) {

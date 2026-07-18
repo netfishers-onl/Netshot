@@ -6,7 +6,7 @@ import { MUTATIONS } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { download } from "@/utils"
-import { Separator, Stack, Text } from "@chakra-ui/react"
+import { Stack, Text } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
 import { useEffect } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
@@ -54,7 +54,7 @@ function ExportDataForm() {
         label={t("common.outputFormat")}
         placeholder={t("common.selectOutputFormat")}
       />
-      <DomainSelect control={form.control} name="domain" isClearable />
+      <DomainSelect control={form.control} name="domain" withAny />
       <TreeGroupSelector
         control={form.control}
         name="groups"
@@ -68,7 +68,6 @@ function ExportDataForm() {
         </Stack>
         <Switch w="initial" control={form.control} name="withGroups" />
       </Stack>
-      <Separator />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
           <Text fontWeight="medium">{t("device.driverSpecificAttributes")}</Text>
@@ -76,7 +75,6 @@ function ExportDataForm() {
         </Stack>
         <Switch w="initial" control={form.control} name="withDeviceDriverAttributes" />
       </Stack>
-      <Separator />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
           <Text fontWeight="medium">{t("device.interface.list")}</Text>
@@ -86,7 +84,6 @@ function ExportDataForm() {
         </Stack>
         <Switch w="initial" control={form.control} name="withInterfaces" />
       </Stack>
-      <Separator />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
           <Text fontWeight="medium">{t("common.inventory")}</Text>
@@ -96,7 +93,6 @@ function ExportDataForm() {
         </Stack>
         <Switch w="initial" control={form.control} name="withInventory" />
       </Stack>
-      <Separator />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
           <Text fontWeight="medium">{t("device.module.history")}</Text>
@@ -109,7 +105,6 @@ function ExportDataForm() {
           disabled={!withInventory}
         />
       </Stack>
-      <Separator />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
           <Text fontWeight="medium">{t("common.locationsAndContacts")}</Text>
@@ -117,7 +112,6 @@ function ExportDataForm() {
         </Stack>
         <Switch w="initial" control={form.control} name="withLocations" />
       </Stack>
-      <Separator />
       <Stack direction="row" gap="6" alignItems="start">
         <Stack gap="0" flex="1">
           <Text fontWeight="medium">{t("compliance.information")}</Text>
@@ -163,7 +157,7 @@ export default function ExportDataTrigger({ children, ...rest }: ExportDataTrigg
   })
 
   const open = () => {
-    const dialogRef = dialog.open(MUTATIONS.EXPORT_DATA, {
+    dialog.open(MUTATIONS.EXPORT_DATA, {
       title: t("common.exportData"),
       description: <ExportDataForm />,
       form,
@@ -199,15 +193,20 @@ export default function ExportDataTrigger({ children, ...rest }: ExportDataTrigg
         }
         const res = await mutation.mutateAsync(params)
 
-        dialogRef.close()
-        form.reset()
         download(res.blob, res.filename)
+        toast.success({
+          title: t("common.success"),
+          description: t("report.exportSuccess"),
+        })
       },
       onCancel() {
         form.reset()
       },
       submitButton: {
-        label: t("common.export"),
+        label: t("common.download"),
+      },
+      cancelButton: {
+        label: t("common.close"),
       },
     })
   }

@@ -32,7 +32,7 @@ export default function SoftwareComplianceDialog(props: SoftwareComplianceDialog
 
   function goToDevice(device: GroupDeviceBySoftwareLevel) {
     dialogConfig.close()
-    navigate(`/app/devices/${device.id}/compliance?open=software`)
+    navigate(`/app/devices/${device.id}/compliance?open=software&group=${groupId}`)
   }
 
   const columns = useMemo(
@@ -41,7 +41,7 @@ export default function SoftwareComplianceDialog(props: SoftwareComplianceDialog
         cell: (info) => (
           <DeviceBadge networkClass={info.row.original.networkClass}>
             <Link
-              to={`/app/devices/${info.row.original.id}/compliance?open=software`}
+              to={`/app/devices/${info.row.original.id}/compliance?open=software&group=${groupId}`}
               onClick={(evt) => {
                 evt.stopPropagation()
                 dialogConfig.close()

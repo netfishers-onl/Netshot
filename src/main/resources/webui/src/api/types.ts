@@ -205,6 +205,11 @@ export type ReportDeviceAccessFailureQueryParams = {
   domain?: number
 } & PaginationQueryParams
 
+export type ReportHardwareSupportQueryParams = Partial<{
+  domain: number[]
+  group: number[]
+}>
+
 export type CreateOrUpdateRule = {
   id: number
   name: string

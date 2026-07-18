@@ -5948,29 +5948,48 @@ public class RestService extends Thread {
 	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the global hardware support status",
-		description = "Returns the global hardware support status, i.e. a list of End-of-Life and End-of-Sale dates with the corresponding device count."
+		description = "Returns the global hardware support status, i.e. a list of End-of-Life and End-of-Sale dates with the corresponding device count; optionally filtered by domain or group."
 	)
 	@Tag(name = "Reports", description = "Report and statistics")
 	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
-	public List<RsHardwareSupportStat> getHardwareSupportStats() throws WebApplicationException {
+	public List<RsHardwareSupportStat> getHardwareSupportStats(
+		@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains,
+		@QueryParam("group") @Parameter(description = "Filter on given group ID(s)") Set<Long> deviceGroups)
+		throws WebApplicationException {
 		log.debug("REST request, hardware support stats.");
 		Session session = Database.getSession(true);
 		try {
+			String domainFilter = domains.size() > 0 ? " and d.mgmtDomain.id in (:domainIds)" : "";
+			String groupFilter = deviceGroups.size() > 0
+				? " and d.id in (select d.id from Device d left join d.groupMemberships gm where gm.key.group.id in (:groupIds))"
+				: "";
 
-			List<RsHardwareSupportEoSStat> eosStats = session
+			Query<RsHardwareSupportEoSStat> eosQuery = session
 				.createQuery(
 					"select new RsHardwareSupportEoSStat(d.eosDate AS eoxDate, count(d) as deviceCount) "
-						+ "from Device d where d.status = :enabled group by d.eosDate",
+						+ "from Device d where d.status = :enabled" + domainFilter + groupFilter + " group by d.eosDate",
 					RsHardwareSupportEoSStat.class)
-				.setParameter("enabled", Device.Status.INPRODUCTION)
-				.list();
-			List<RsHardwareSupportEoLStat> eolStats = session
+				.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domains.size() > 0) {
+				eosQuery.setParameterList("domainIds", domains);
+			}
+			if (deviceGroups.size() > 0) {
+				eosQuery.setParameterList("groupIds", deviceGroups);
+			}
+			List<RsHardwareSupportEoSStat> eosStats = eosQuery.list();
+			Query<RsHardwareSupportEoLStat> eolQuery = session
 				.createQuery(
 					"select new RsHardwareSupportEoLStat(d.eolDate AS eoxDate, count(d) as deviceCount) "
-						+ "from Device d where d.status = :enabled group by d.eolDate",
+						+ "from Device d where d.status = :enabled" + domainFilter + groupFilter + " group by d.eolDate",
 					RsHardwareSupportEoLStat.class)
-				.setParameter("enabled", Device.Status.INPRODUCTION)
-				.list();
+				.setParameter("enabled", Device.Status.INPRODUCTION);
+			if (domains.size() > 0) {
+				eolQuery.setParameterList("domainIds", domains);
+			}
+			if (deviceGroups.size() > 0) {
+				eolQuery.setParameterList("groupIds", deviceGroups);
+			}
+			List<RsHardwareSupportEoLStat> eolStats = eolQuery.list();
 			List<RsHardwareSupportStat> stats = new ArrayList<>();
 			stats.addAll(eosStats);
 			stats.addAll(eolStats);
@@ -6347,13 +6366,15 @@ public class RestService extends Thread {
 	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the End-of-Life or End-of-Sale devices matching a date.",
-		description = "Returns the list of devices getting End-of-Life (type 'eol') or End-of-Sale (type 'eos') at the given date (or never if 'date' is not given)."
+		description = "Returns the list of devices getting End-of-Life (type 'eol') or End-of-Sale (type 'eos') at the given date (or never if 'date' is not given); optionally filtered by domain or group."
 	)
 	@Tag(name = "Reports", description = "Report and statistics")
 	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
 	public List<RsLightDevice> getHardwareStatusDevices(
 		@PathParam("type") @Parameter(description = "eos (end-of-sale) or eol (end-of-life), type of date") String type,
-		@PathParam("date") @Parameter(description = "EoX date to filter on") Long date) throws WebApplicationException {
+		@PathParam("date") @Parameter(description = "EoX date to filter on") Long date,
+		@QueryParam("domain") @Parameter(description = "Filter on given domain ID(s)") Set<Long> domains,
+		@QueryParam("group") @Parameter(description = "Filter on given group ID(s)") Set<Long> deviceGroups) throws WebApplicationException {
 		log.debug("REST request, EoX devices by type and date.");
 		if (!"eol".equals(type) && !"eos".equals(type)) {
 			log.error("Invalid requested EoX type.");
@@ -6363,8 +6384,12 @@ public class RestService extends Thread {
 		Date eoxDate = new Date(date);
 		Session session = Database.getSession(true);
 		try {
+			String domainFilter = domains.size() > 0 ? " and d.mgmtDomain.id in (:domainIds)" : "";
+			String groupFilter = deviceGroups.size() > 0
+				? " and d.id in (select d.id from Device d left join d.groupMemberships gm where gm.key.group.id in (:groupIds))"
+				: "";
 			if (date == 0) {
-				List<RsLightDevice> devices = session
+				Query<RsLightDevice> query = session
 					.createQuery(
 						"select new RsLightDevice("
 							+ "d.id, "
@@ -6378,15 +6403,20 @@ public class RestService extends Thread {
 							+ "case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, "
 							+ "d.softwareLevel, "
 							+ "d.networkClass "
-							+ ") from Device d where d." + type + "Date is null and d.status = :enabled",
+							+ ") from Device d where d." + type + "Date is null and d.status = :enabled" + domainFilter + groupFilter,
 						RsLightDevice.class)
 					.setParameter("enabled", Device.Status.INPRODUCTION)
-					.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
-					.list();
-				return devices;
+					.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
+				if (domains.size() > 0) {
+					query.setParameterList("domainIds", domains);
+				}
+				if (deviceGroups.size() > 0) {
+					query.setParameterList("groupIds", deviceGroups);
+				}
+				return query.list();
 			}
 			else {
-				List<RsLightDevice> devices = session
+				Query<RsLightDevice> query = session
 					.createQuery(
 						"select new RsLightDevice("
 							+ "d.id, "
@@ -6400,13 +6430,18 @@ public class RestService extends Thread {
 							+ "case when (select count(cr) from CheckResult cr where cr.key.device = d and cr.result = :nonConforming) = 0 then true else false end, "
 							+ "d.softwareLevel, "
 							+ "d.networkClass "
-							+ ") from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled",
+							+ ") from Device d where date(d." + type + "Date) = :eoxDate and d.status = :enabled" + domainFilter + groupFilter,
 						RsLightDevice.class)
 					.setParameter("eoxDate", eoxDate)
 					.setParameter("enabled", Device.Status.INPRODUCTION)
-					.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING)
-					.list();
-				return devices;
+					.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
+				if (domains.size() > 0) {
+					query.setParameterList("domainIds", domains);
+				}
+				if (deviceGroups.size() > 0) {
+					query.setParameterList("groupIds", deviceGroups);
+				}
+				return query.list();
 			}
 		}
 		catch (HibernateException e) {

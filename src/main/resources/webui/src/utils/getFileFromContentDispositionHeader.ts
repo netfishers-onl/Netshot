@@ -1,3 +1,6 @@
 export function getFilenameFromContentDispositionHeader(headers: Headers) {
-  return headers?.get("Content-Disposition")?.split("common.filename")?.[1];
+  const header = headers?.get("Content-Disposition")
+  if (!header) return undefined
+
+  return header.match(/filename="?([^";]+)"?/)?.[1]
 }

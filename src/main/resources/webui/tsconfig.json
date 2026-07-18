@@ -17,6 +17,7 @@
 		"isolatedModules": true,
 		"noEmit": true,
 		"jsx": "react-jsx",
+		"strictNullChecks": true,
 		"types": ["vite/client"],
 		"paths": {
 			"@/*": ["./src/*"]

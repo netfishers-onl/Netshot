@@ -13,7 +13,7 @@ import { DeviceNumericAttributeValue } from "./DeviceNumericAttributeValue"
 import { DeviceTextAttributeValue } from "./DeviceTextAttributeValue"
 
 type DeviceAttributeValueProps = {
-  attribute: DeviceAttribute
+  attribute: DeviceAttribute | undefined
   definition: DeviceAttributeDefinition
 }
 

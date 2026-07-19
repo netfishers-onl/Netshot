@@ -341,7 +341,7 @@ export function VirtualizedDataTableHeader<T>({
             return (
               <Table.ColumnHeader
                 key={header.id}
-                onClick={isSortable ? header?.column?.getToggleSortingHandler() : null}
+                onClick={isSortable ? header?.column?.getToggleSortingHandler() : undefined}
                 borderColor="grey.100"
                 position="relative"
                 cursor="pointer"
@@ -396,7 +396,7 @@ export function VirtualizedDataTableBody<T>({
   onClickRow,
 }: {
   table: TanstackTable<T>
-  containerRef: RefObject<HTMLDivElement>
+  containerRef: RefObject<HTMLDivElement | null>
   draggable: boolean
   data: T[]
   onClickRow?(row: T, data?: T[]): void

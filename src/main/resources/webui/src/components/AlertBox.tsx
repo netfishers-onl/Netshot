@@ -11,15 +11,11 @@ export default function AlertBox(props: PropsWithChildren<AlertBoxProps>) {
   const { children, type } = props
 
   const icon = useMemo(() => {
-    let bg: string
-
-    if (type === "error") {
-      bg = "red.50"
-    } else if (type === "warning") {
-      bg = "yellow.50"
-    } else if (type === "success") {
-      bg = "green.50"
-    }
+    const bg: string = {
+      error: "red.50",
+      warning: "yellow.50",
+      success: "green.50",
+    }[type]
 
     return (
       <Flex

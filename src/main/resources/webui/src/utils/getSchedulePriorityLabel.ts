@@ -1,6 +1,6 @@
 import { SchedulePriority } from "@/types"
 
-export function getSchedulePriorityLabel(priority: SchedulePriority) {
+export function getSchedulePriorityLabel(priority: SchedulePriority | undefined) {
   switch (priority) {
     case SchedulePriority.Low:
       return "common.low"

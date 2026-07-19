@@ -20,8 +20,8 @@ export default function TestRuleOnDeviceButton(props: TestRuleOnDeviceButtonProp
   const { t } = useTranslation()
   const { formatHourMinute } = useLocalization()
   const form = useFormContext<RuleForm>()
-  const [device, setDevice] = useState<SimpleDevice>(null)
-  const [testedAt, setTestedAt] = useState<Date>(null)
+  const [device, setDevice] = useState<SimpleDevice | null>(null)
+  const [testedAt, setTestedAt] = useState<Date | null>(null)
 
   const isScript = type === RuleType.Javascript || type === RuleType.Python
   const textMutation = useTestRuleText()
@@ -33,14 +33,14 @@ export default function TestRuleOnDeviceButton(props: TestRuleOnDeviceButtonProp
     setTestedAt(new Date())
 
     if (isScript) {
-      scriptMutation.mutate({ device: device.id, script: values.script, type })
+      scriptMutation.mutate({ device: device!.id, script: values.script, type })
     } else {
       textMutation.mutate({
-        device: device?.id,
+        device: device!.id,
         anyBlock: stringToBoolean(values.anyBlock),
         context: values.context,
-        driver: values.driver,
-        field: values.field,
+        driver: values.driver!,
+        field: values.field!,
         invert: stringToBoolean(values.invert),
         matchAll: values.matchAll,
         normalize: values.normalize,

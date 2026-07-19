@@ -61,5 +61,5 @@ export type OperatorOption = {
 }
 
 export function isOperatorOption(x: unknown): x is OperatorOption {
-  return x && typeof x["callback"] === "function"
+  return typeof x === "object" && x !== null && typeof (x as OperatorOption).callback === "function"
 }

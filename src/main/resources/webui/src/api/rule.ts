@@ -13,7 +13,7 @@ async function getById(policyId: number, id: number) {
 }
 
 async function getAll(policyId: number) {
-  return httpClient.get<Rule[]>(`/policies/${policyId}/rules`);
+  return (await httpClient.get<Rule[]>(`/policies/${policyId}/rules`)) ?? [];
 }
 
 async function create(payload: CreateOrUpdateRule) {

@@ -34,7 +34,7 @@ import { Link, useNavigate, useSearchParams } from "react-router"
 import { QUERIES } from "../constants"
 
 type FilterForm = {
-  domain: string
+  domain: string | null
   days: number
 }
 
@@ -95,7 +95,7 @@ export default function ReportDeviceAccessFailure() {
         queryParams.domain = +filter.domain
       }
 
-      return api.report.getAllDeviceAccessFailures(queryParams)
+      return (await api.report.getAllDeviceAccessFailures(queryParams)) ?? []
     },
     select(res) {
       return search(res, "name").with(pagination.query)

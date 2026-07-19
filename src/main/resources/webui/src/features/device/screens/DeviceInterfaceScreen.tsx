@@ -33,15 +33,15 @@ export default function DeviceInterfaceScreen() {
       pagination.offset,
       pagination.limit,
     ],
-    queryFn: async () => api.device.getAllInterfacesById(+params.id, pagination),
+    queryFn: async () => api.device.getAllInterfacesById(+(params.id ?? 0), pagination),
     select: useCallback(
       (res: DeviceInterface[]): DeviceInterface[] => {
         // Search on IP addresses
         const passA = res.filter((item) => {
           return item.ip4Addresses.some((address) => {
             return (
-              address.ip.toLocaleLowerCase().startsWith(pagination.query) ||
-              address.ip.toLocaleLowerCase().includes(pagination.query)
+              address.ip.toLocaleLowerCase().startsWith(pagination.query ?? "") ||
+              address.ip.toLocaleLowerCase().includes(pagination.query ?? "")
             )
           })
         })

@@ -260,7 +260,7 @@ export default function ReportSoftwareComplianceScreen() {
     select(res) {
       // Groups with no device, or flagged as hidden from reports (already excluded server-side),
       // must not appear in the tree.
-      return res.filter((item) => item.deviceCount > 0)
+      return (res ?? []).filter((item) => item.deviceCount > 0)
     },
   })
 

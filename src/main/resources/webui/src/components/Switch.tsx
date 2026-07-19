@@ -7,10 +7,10 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { LuZap, LuZapOff } from "react-icons/lu"
-import { Control, FieldPath, useController } from "react-hook-form"
+import { Control, FieldPath, FieldValues, useController } from "react-hook-form"
 import { FormControlProps } from "./FormControl"
 
-export type SwitchProps<T> = {
+export type SwitchProps<T extends FieldValues> = {
   control: Control<T>
   name: FieldPath<T>
   defaultValue?: boolean
@@ -19,7 +19,7 @@ export type SwitchProps<T> = {
   showStateIcon?: boolean
 } & Omit<FormControlProps<T>, "ref">
 
-export default function Switch<T>(props: SwitchProps<T>) {
+export default function Switch<T extends FieldValues>(props: SwitchProps<T>) {
   const { label, description, control, name, defaultValue, showStateIcon, ...other } = props
 
   const { field } = useController({

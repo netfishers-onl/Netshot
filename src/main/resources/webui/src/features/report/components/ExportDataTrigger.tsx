@@ -194,7 +194,7 @@ export default function ExportDataTrigger({ children, ...rest }: ExportDataTrigg
         }
         const res = await mutation.mutateAsync(params)
 
-        download(res.blob, res.filename)
+        download(res.blob, res.filename ?? "download")
         toast.success({
           title: t("common.success"),
           description: t("report.exportSuccess"),

@@ -50,10 +50,10 @@ export default function AddHardwareRuleTrigger({ children, ...rest }: AddHardwar
       size: "lg",
       async onSubmit(values: HardwareRuleFormValues) {
         await mutation.mutateAsync({
-          driver: values.driver,
+          driver: values.driver!,
           family: values.family,
           familyRegExp: values.familyRegExp,
-          group: values.group,
+          group: values.group!,
           partNumber: values.partNumber,
           partNumberRegExp: values.partNumberRegExp,
           endOfLife: values.endOfLife,

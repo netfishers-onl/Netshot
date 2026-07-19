@@ -53,7 +53,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   return (
-    <AuthContext value={{ user: data?.user, oidcInfo: data?.oidcInfo, serverError: isError }}>
+    <AuthContext value={{ user: data?.user ?? undefined, oidcInfo: data?.oidcInfo, serverError: isError }}>
       {children}
     </AuthContext>
   )

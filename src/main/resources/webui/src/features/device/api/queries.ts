@@ -13,7 +13,7 @@ export function useDevice(id: number) {
 export function useDeviceTypes() {
   return useQuery({
     queryKey: [QUERIES.DEVICE_TYPE_LIST],
-    queryFn: api.device.getAllTypes,
+    queryFn: async () => (await api.device.getAllTypes()) ?? [],
     initialData: [],
   })
 }
@@ -21,7 +21,7 @@ export function useDeviceTypes() {
 export function useDeviceTypesWithOptions() {
   return useQuery({
     queryKey: [QUERIES.DEVICE_TYPE_LIST],
-    queryFn: api.device.getAllTypes,
+    queryFn: async () => (await api.device.getAllTypes()) ?? [],
     select(types) {
       return types.map((type) => ({
         label: type?.description,
@@ -44,7 +44,7 @@ export function useDeviceConfigs(deviceId: number | undefined) {
   return useQuery({
     queryKey: [QUERIES.DEVICE_CONFIGS, deviceId],
     queryFn: async () => {
-      return api.device.getAllConfigsById(deviceId)
+      return (await api.device.getAllConfigsById(deviceId!)) ?? []
     },
     enabled: !!deviceId,
   })
@@ -60,7 +60,7 @@ export function useDevices(groupId: number) {
         params.group = groupId
       }
 
-      return api.device.getAll(params)
+      return (await api.device.getAll(params)) ?? []
     },
     select: (data) => sortAlphabetical(data, "name"),
   })
@@ -69,7 +69,7 @@ export function useDevices(groupId: number) {
 export function useDeviceFamilies() {
   return useQuery({
     queryKey: [QUERIES.DEVICE_FAMILY_LIST],
-    queryFn: () => api.device.getAllFamilies({ limit: 99999 }),
+    queryFn: async () => (await api.device.getAllFamilies({ limit: 99999 })) ?? [],
     select: (data) => Array.from(new Set(data.map((f) => f.deviceFamily).filter(Boolean))).sort(),
   })
 }
@@ -77,7 +77,7 @@ export function useDeviceFamilies() {
 export function useDevicePartNumbers() {
   return useQuery({
     queryKey: [QUERIES.DEVICE_PART_NUMBER_LIST],
-    queryFn: () => api.device.getAllPartNumbers({ limit: 99999 }),
+    queryFn: async () => (await api.device.getAllPartNumbers({ limit: 99999 })) ?? [],
     select: (data) => Array.from(new Set(data.map((p) => p.partNumber).filter(Boolean))).sort(),
   })
 }
@@ -85,7 +85,7 @@ export function useDevicePartNumbers() {
 export function useDeviceSoftwareVersions() {
   return useQuery({
     queryKey: [QUERIES.DEVICE_SOFTWARE_VERSION_LIST],
-    queryFn: () => api.device.getAllSoftwareVersions({ limit: 99999 }),
+    queryFn: async () => (await api.device.getAllSoftwareVersions({ limit: 99999 })) ?? [],
     select: (data) => Array.from(new Set(data.map((v) => v.version).filter(Boolean))).sort(),
   })
 }
@@ -93,7 +93,7 @@ export function useDeviceSoftwareVersions() {
 export function useSearchDevices(query: string) {
   return useQuery({
     queryKey: [QUERIES.DEVICE_SEARCH_LIST, query],
-    queryFn: async () => api.device.search({ query }),
+    queryFn: async () => (await api.device.search({ query })) ?? { query, devices: [] },
     select: (data) => ({ ...data, devices: sortAlphabetical(data.devices, "name") }),
   })
 }

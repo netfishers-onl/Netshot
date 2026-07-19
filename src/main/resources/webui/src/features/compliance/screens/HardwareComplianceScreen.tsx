@@ -117,16 +117,18 @@ export default function HardwareComplianceScreen() {
         },
       }),
       columnHelper.accessor("endOfSale", {
-        cell: (info) => (
-          <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>
-        ),
+        cell: (info) => {
+          const value = info.getValue()
+          return <Text>{value ? formatDate(value) : t("common.nA")}</Text>
+        },
         header: t("compliance.hardware.endOfSale"),
         size: 10000,
       }),
       columnHelper.accessor("endOfLife", {
-        cell: (info) => (
-          <Text>{info.getValue() ? formatDate(info.getValue()) : t("common.nA")}</Text>
-        ),
+        cell: (info) => {
+          const value = info.getValue()
+          return <Text>{value ? formatDate(value) : t("common.nA")}</Text>
+        },
         header: t("compliance.hardware.endOfLife"),
         size: 10000,
       }),
@@ -201,8 +203,8 @@ export default function HardwareComplianceScreen() {
         </Stack>
       ) : (
         <>
-          {rules?.length > 0 ? (
-            <DataTable columns={columns} data={rules} loading={isPending} />
+          {(rules?.length ?? 0) > 0 ? (
+            <DataTable columns={columns} data={rules ?? []} loading={isPending} />
           ) : isSearching ? (
             <Text>{t("common.noResults")}</Text>
           ) : (

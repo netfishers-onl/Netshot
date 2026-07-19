@@ -46,11 +46,11 @@ function ListboxRender<T extends CollectionItem>(props: ListboxRenderProps<T>) {
         {collection.items.length > 0 ? (
           collection.items.map((item) => {
             const itemValue = collection.getItemValue(item)
-            const itemLabel = collection.stringifyItem(item)
+            const itemLabel = collection.stringifyItem(item) ?? ""
             return (
               <Listbox.Item item={item} key={itemValue} flex="0">
                 {renderItem ? (
-                  renderItem(item, itemValue, itemLabel)
+                  renderItem(item, itemValue ?? "", itemLabel)
                 ) : (
                   <Listbox.ItemText>{itemLabel}</Listbox.ItemText>
                 )}
@@ -117,7 +117,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
   })
 
   useEffect(() => {
-    if (!initializedRef.current && exemptedDevices !== undefined) {
+    if (!initializedRef.current && exemptedDevices != null) {
       initializedRef.current = true
       rightCollection.set(exemptedDevices)
       setExemptedIds(new Set(exemptedDevices.map((d) => d.id)))
@@ -147,7 +147,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
 
   function transferToRight() {
     const selected = leftCollection.collection.items.filter((item) =>
-      leftValues.includes(leftCollection.collection.getItemValue(item))
+      leftValues.includes(leftCollection.collection.getItemValue(item) ?? "")
     )
     rightCollection.append(...selected.map((device) => ({ ...device, expirationDate: newExpirationDate } as unknown as ExemptedDevice)))
     setExemptedIds((prev) => {
@@ -160,7 +160,7 @@ export default function EditRuleExemptedDeviceDialog(props: EditRuleExemptedDevi
 
   function transferToLeft() {
     const removedIds = rightCollection.collection.items
-      .filter((item) => rightValues.includes(rightCollection.collection.getItemValue(item)))
+      .filter((item) => rightValues.includes(rightCollection.collection.getItemValue(item) ?? ""))
       .map((d) => d.id)
     rightCollection.remove(...rightValues)
     setExemptedIds((prev) => {

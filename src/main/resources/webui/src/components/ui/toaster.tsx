@@ -62,14 +62,14 @@ const iconMapping: {
     color: "blue.800",
   },
   [ToastType.Loading]: {
-    bg: null,
+    bg: undefined,
     icon: null,
-    color: null,
+    color: undefined,
   },
   [ToastType.Script]: {
-    bg: null,
+    bg: undefined,
     icon: null,
-    color: null,
+    color: undefined,
   },
 }
 

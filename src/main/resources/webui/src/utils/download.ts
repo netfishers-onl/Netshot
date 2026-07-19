@@ -3,7 +3,7 @@ import { getFilenameFromContentDispositionHeader } from "./getFileFromContentDis
 export async function downloadFromUrl(url: string, filename?: string) {
   const req = await fetch(url)
   const blob = await req.blob()
-  const name = filename ?? getFilenameFromContentDispositionHeader(req.headers)
+  const name = filename ?? getFilenameFromContentDispositionHeader(req.headers) ?? "download"
 
   return download(blob, name)
 }

@@ -19,7 +19,7 @@ export function useDeviceTypeOptions() {
   /**
    * Get the option item from device type list by driver name
    */
-  const getOptionByDriver = (driver: string) => {
+  const getOptionByDriver = (driver: string | null) => {
     return data.find((option) => option.value?.name === driver)
   }
 

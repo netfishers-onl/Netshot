@@ -42,13 +42,13 @@ export default function ConfigurationComplianceRuleScreen() {
   const { getOptionByDriver } = useDeviceTypeOptions()
 
   const { data: rule, isPending, isError, error } = useQuery({
-    queryKey: [QUERIES.RULE_DETAIL, +policyId, +ruleId],
-    queryFn: async () => api.rule.getById(+policyId, +ruleId),
+    queryKey: [QUERIES.RULE_DETAIL, +(policyId ?? 0), +(ruleId ?? 0)],
+    queryFn: async () => api.rule.getById(+(policyId ?? 0), +(ruleId ?? 0)),
   })
 
   const { data: exemptedDevices } = useQuery({
-    queryKey: [QUERIES.RULE_EXEMPTED_DEVICES, +ruleId],
-    queryFn: () => api.rule.getAllExemptedDevices(+ruleId),
+    queryKey: [QUERIES.RULE_EXEMPTED_DEVICES, +(ruleId ?? 0)],
+    queryFn: () => api.rule.getAllExemptedDevices(+(ruleId ?? 0)),
     enabled: !!rule,
   })
 
@@ -136,7 +136,7 @@ export default function ConfigurationComplianceRuleScreen() {
             <Menu.Root positioning={{ placement: "bottom-end" }}>
               <Group attached>
                 {rule && (
-                  <EditRuleTrigger key={rule?.id} policyId={+policyId} rule={rule}>
+                  <EditRuleTrigger key={rule?.id} policyId={+(policyId ?? 0)} rule={rule}>
                     <Button variant="primary">
                       <LuPencil />
                       {t("common.edit")}
@@ -155,21 +155,21 @@ export default function ConfigurationComplianceRuleScreen() {
                   <Menu.Content>
                     {rule && (
                       <>
-                        <EditRuleExemptedDeviceTrigger policyId={+policyId} rule={rule}>
+                        <EditRuleExemptedDeviceTrigger policyId={+(policyId ?? 0)} rule={rule}>
                           <Menu.Item value="exempted-device">
                             <LuMessageSquareDot />
                             {t("policy.rule.exemptedDevices")}
                           </Menu.Item>
                         </EditRuleExemptedDeviceTrigger>
                         {rule?.enabled ? (
-                          <DisableRuleTrigger policyId={+policyId} rule={rule}>
+                          <DisableRuleTrigger policyId={+(policyId ?? 0)} rule={rule}>
                             <Menu.Item value="disable">
                               <LuZapOff />
                               {t("common.disable")}
                             </Menu.Item>
                           </DisableRuleTrigger>
                         ) : (
-                          <EnableRuleTrigger policyId={+policyId} rule={rule}>
+                          <EnableRuleTrigger policyId={+(policyId ?? 0)} rule={rule}>
                             <Menu.Item value="enable">
                               <LuZap />
                               {t("common.enable")}
@@ -177,7 +177,7 @@ export default function ConfigurationComplianceRuleScreen() {
                           </EnableRuleTrigger>
                         )}
 
-                        <RuleRemoveTrigger policyId={+policyId} rule={rule}>
+                        <RuleRemoveTrigger policyId={+(policyId ?? 0)} rule={rule}>
                           <Menu.Item value="remove" color="fg.error" _hover={{ bg: "bg.error", color: "fg.error" }}>
                             <LuTrash />
                             {t("common.remove")}

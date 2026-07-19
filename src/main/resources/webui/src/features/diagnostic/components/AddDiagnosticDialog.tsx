@@ -77,7 +77,7 @@ export default function AddDiagnosticDialog() {
 
       form.reset()
 
-      navigate(`/app/diagnostics/${diagnostic.id}`)
+      navigate(`/app/diagnostics/${diagnostic?.id}`)
 
       toast.success({
         title: t("common.success"),
@@ -97,10 +97,10 @@ export default function AddDiagnosticDialog() {
       script: values.script,
       type,
       name: values.name,
-      resultType: values.resultType,
+      resultType: values.resultType!,
       targetGroup: values.targetGroup ? values.targetGroup?.toString() : "-1",
-      deviceDriver: values.deviceDriver,
-      cliMode: values.cliMode,
+      deviceDriver: values.deviceDriver!,
+      cliMode: values.cliMode!,
       command: values.command,
       modifierPattern: values.modifierPattern,
       modifierReplacement: values.modifierReplacement,
@@ -111,7 +111,7 @@ export default function AddDiagnosticDialog() {
     setFormStep(FormStep.Details)
 
     dialogConfig.update({
-      variant: type === DiagnosticType.Simple ? null : "full-floating",
+      variant: type === DiagnosticType.Simple ? undefined : "full-floating",
       size: type === DiagnosticType.Simple ? "4xl" : "lg",
     })
 
@@ -124,7 +124,7 @@ export default function AddDiagnosticDialog() {
     setFormStep(FormStep.Type)
 
     dialogConfig.update({
-      variant: null,
+      variant: undefined,
       size: "xl",
     })
 
@@ -139,7 +139,7 @@ export default function AddDiagnosticDialog() {
       setFormStep(FormStep.Type)
 
       dialogConfig.update({
-        variant: null,
+        variant: undefined,
         size: "xl",
       })
 

@@ -41,7 +41,7 @@ export function useDeviceGroupTree(options: UseDeviceGroupTreeOptions) {
   const updateQueryAndDriver = useDeviceSidebarStore((state) => state.updateQueryAndDriver)
   const pagination = usePagination()
   const [searchParams] = useSearchParams()
-  const selectedGroupId = +searchParams.get("group")
+  const selectedGroupId = +(searchParams.get("group") ?? 0)
 
   const { data: items, isPending } = useQuery({
     queryKey: [QUERIES.DEVICE_GROUPS],
@@ -82,8 +82,8 @@ export function useDeviceGroupTree(options: UseDeviceGroupTreeOptions) {
   )
 
   const expandedKeys = useMemo(() => {
-    if (items?.length > 0 && selectedGroupId) {
-      return getExpandedKeys(items, selectedGroupId)
+    if ((items?.length ?? 0) > 0 && selectedGroupId) {
+      return getExpandedKeys(items ?? [], selectedGroupId)
     }
     return []
   }, [items, selectedGroupId])

@@ -37,8 +37,8 @@ function ListboxRender<T extends CollectionItem>(props: ListboxRenderProps<T>) {
       <Listbox.Content minH="96" ref={contentRef}>
         {collection.items.length > 0 ? (
           collection.items.map((item) => {
-            const itemValue = collection.getItemValue(item)
-            const itemLabel = collection.stringifyItem(item)
+            const itemValue = collection.getItemValue(item) ?? ""
+            const itemLabel = collection.stringifyItem(item) ?? ""
             return (
               <Listbox.Item item={item} key={itemValue} flex="0">
                 {renderItem ? (
@@ -117,7 +117,7 @@ export default function StaticGroupForm() {
 
   function transferToRight() {
     const selected = leftCollection.collection.items.filter((item) =>
-      leftValues.includes(leftCollection.collection.getItemValue(item))
+      leftValues.includes(leftCollection.collection.getItemValue(item) ?? "")
     )
     rightCollection.append(...selected)
     const newIds = new Set(selectedIds)
@@ -130,7 +130,7 @@ export default function StaticGroupForm() {
   function transferToLeft() {
     const removedIdSet = new Set(
       rightCollection.collection.items
-        .filter((item) => rightValues.includes(rightCollection.collection.getItemValue(item)))
+        .filter((item) => rightValues.includes(rightCollection.collection.getItemValue(item) ?? ""))
         .map((d) => d.id)
     )
     rightCollection.remove(...rightValues)

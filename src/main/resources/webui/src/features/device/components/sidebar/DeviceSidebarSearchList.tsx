@@ -46,7 +46,7 @@ export default function DeviceSidebarSearchList() {
     overscan: 10,
   })
 
-  const activeIndex = devices.findIndex((device) => device.id === +params?.id)
+  const activeIndex = devices.findIndex((device) => device.id === +(params?.id ?? 0))
 
   const onNavigate = useCallback(
     (device: SimpleDevice, index: number) => {

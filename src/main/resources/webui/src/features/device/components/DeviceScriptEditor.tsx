@@ -13,7 +13,7 @@ import RunDeviceScriptButton from "./RunDeviceScriptButton"
 
 type ScriptEditorForm = {
   script: string
-  driver: DeviceType["name"]
+  driver: DeviceType["name"] | null
 }
 
 export type DeviceScriptEditorProps = {
@@ -44,11 +44,11 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
 
   useEffect(() => {
     if (isSuccess) {
-      form.setValue("script", script.script)
+      form.setValue("script", script!.script)
     }
   }, [isSuccess, script, form])
 
-  const { isLoading: isDeviceTypeOptionsLoading } = useDeviceTypeOptions()
+  const { isPending: isDeviceTypeOptionsLoading } = useDeviceTypeOptions()
 
   const driver = useWatch({
     control: form.control,
@@ -66,8 +66,8 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
 
       await api.script.remove(scriptId)
       await api.script.create({
-        name: script.name,
-        deviceDriver: driver,
+        name: script?.name,
+        deviceDriver: driver ?? undefined,
         script: values.script,
       })
     },
@@ -96,7 +96,7 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
       return
     }
 
-    form.setValue("driver", script?.deviceDriver)
+    form.setValue("driver", script?.deviceDriver ?? null)
   }, [isDeviceTypeOptionsLoading, isPending, script, form])
 
   const onChange = useCallback(
@@ -133,9 +133,9 @@ export default function DeviceScriptEditor(props: DeviceScriptEditorProps) {
         </Button>
         <RunDeviceScriptButton
           devices={devices}
-          driver={driver}
+          driver={driver!}
           script={{
-            ...script,
+            ...script!,
             script: scriptValue,
           }}
         />

@@ -41,7 +41,7 @@ export default function ConfigurationCompliancePolicyScreen() {
   const { data: policies, isPending } = usePolicies()
 
   const policy = useMemo(
-    () => policies?.find((p) => p.id === +policyId),
+    () => policies?.find((p) => p.id === +(policyId ?? 0)),
     [policies, policyId]
   )
 

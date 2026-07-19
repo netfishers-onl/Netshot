@@ -45,7 +45,7 @@ export default function FormDialog<F extends FieldValues = FieldValues>() {
     label: cancelButton?.label,
     props: {
       variant: "default",
-      disabled: currentConfig.props.isLoading,
+      disabled: currentConfig?.props.isLoading,
       onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
         evt?.stopPropagation()
         if (config.props.onCancel) config.props.onCancel()

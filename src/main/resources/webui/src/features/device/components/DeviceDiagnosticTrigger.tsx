@@ -84,7 +84,7 @@ export default function DeviceDiagnosticTrigger({ devices, children, ...rest }: 
             dontCheckCompliance: !data.checkCompliance,
             ...schedule,
           })
-          tasks.push(task)
+          tasks.push(task!)
         }
 
         dialogRef.close()

@@ -29,7 +29,7 @@ export default function ComplianceSidebarSearchList() {
 
   const activeIndex = items.findIndex(
     (item) =>
-      +policyId === item.policy.id && (item.rule ? +ruleId === item.rule.id : !ruleId)
+      +(policyId ?? 0) === item.policy.id && (item.rule ? +(ruleId ?? 0) === item.rule.id : !ruleId)
   )
 
   const onNavigate = useCallback(

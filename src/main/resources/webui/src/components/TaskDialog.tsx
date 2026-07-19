@@ -80,7 +80,7 @@ export default function TaskDialog(props: TaskDialogProps) {
 
   const { data: purgeGroup } = useQuery({
     queryKey: [QUERIES.GROUP_DETAIL, purgeGroupId],
-    queryFn: async () => api.group.getById(purgeGroupId),
+    queryFn: async () => api.group.getById(purgeGroupId!),
     enabled: Boolean(purgeGroupId),
   })
 
@@ -337,7 +337,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                           {task.days} {t("time.day", { count: task.days })}
                         </Text>
                       </Flex>
-                      {task?.configDays > 0 && (
+                      {(task?.configDays ?? 0) > 0 && (
                         <Flex alignItems="center">
                           <Box w="140px">
                             <Text color="grey.400">{t("device.config.purge")}</Text>
@@ -347,7 +347,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                           </Text>
                         </Flex>
                       )}
-                      {task?.configSize > 0 && (
+                      {(task?.configSize ?? 0) > 0 && (
                         <Flex alignItems="center">
                           <Box w="140px">
                             <Text color="grey.400">{t("device.config.size")}</Text>
@@ -357,7 +357,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                           </Text>
                         </Flex>
                       )}
-                      {task?.configKeepDays > 0 && (
+                      {(task?.configKeepDays ?? 0) > 0 && (
                         <Flex alignItems="center">
                           <Box w="140px">
                             <Text color="grey.400">{t("device.config.keep")}</Text>
@@ -367,7 +367,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                           </Text>
                         </Flex>
                       )}
-                      {task?.moduleDays > 0 && (
+                      {(task?.moduleDays ?? 0) > 0 && (
                         <Flex alignItems="center">
                           <Box w="140px">
                             <Text color="grey.400">{t("device.module.delete")}</Text>
@@ -393,7 +393,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                   </>
                 )}
 
-                {task?.type === TaskType.TakeGroupSnapshot && task?.limitToOutofdateDeviceHours > 0 && (
+                {task?.type === TaskType.TakeGroupSnapshot && (task?.limitToOutofdateDeviceHours ?? 0) > 0 && (
                   <>
                     <Separator />
                     <Stack gap="3">
@@ -432,13 +432,13 @@ export default function TaskDialog(props: TaskDialogProps) {
                           </Text>
                         </Box>
 
-                        {Object.keys(task?.userInputValues)?.map((key) => (
+                        {Object.keys(task?.userInputValues ?? {}).map((key) => (
                           <Flex alignItems="center" key={key}>
                             <Box w="140px">
                               <Text color="grey.400">{key}</Text>
                             </Box>
 
-                            <Text>{task?.userInputValues[key] ?? t("common.nA")}</Text>
+                            <Text>{task?.userInputValues?.[key] ?? t("common.nA")}</Text>
                           </Flex>
                         ))}
                       </Stack>

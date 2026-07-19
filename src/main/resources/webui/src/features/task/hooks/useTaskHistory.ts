@@ -24,14 +24,14 @@ export function useTaskHistory() {
   const query = useInfiniteQuery({
     queryKey: [QUERIES.TASK_HISTORY_ROWS, from, to, statuses, types],
     queryFn: async ({ pageParam }) =>
-      api.task.getAll({
+      (await api.task.getAll({
         offset: pageParam,
         limit: HISTORY_ROWS_LIMIT,
         status: statuses,
         type: types,
         after: from,
         before: to,
-      }),
+      })) ?? [],
     initialPageParam: 0,
     getNextPageParam(lastPage, allPages) {
       return lastPage?.length === HISTORY_ROWS_LIMIT

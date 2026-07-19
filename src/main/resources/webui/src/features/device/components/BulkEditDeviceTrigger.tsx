@@ -64,7 +64,7 @@ function DeviceBulkEditForm() {
           </Stack>
         ) : (
           <Stack gap="2">
-            {credentialSets.map((credentialSet) => (
+            {(credentialSets ?? []).map((credentialSet) => (
               <NativeCheckbox.Root
                 defaultValue={String(credentialSetIds.includes(credentialSet?.id))}
                 onCheckedChange={() => toggleCredentialSetId(credentialSet?.id)}
@@ -103,7 +103,7 @@ export default function BulkEditDeviceTrigger({ devices, children, ...rest }: Bu
   const edit = useMutation({
     mutationKey: MUTATIONS.DEVICE_UPDATE,
     mutationFn: async (payload: Partial<UpdateDevicePayload>) =>
-      api.device.update(payload?.id, payload),
+      api.device.update(payload.id!, payload),
     onError(err: NetshotError) {
       toast.error(err)
     },

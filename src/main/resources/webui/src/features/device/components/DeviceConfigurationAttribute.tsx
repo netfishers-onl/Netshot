@@ -179,7 +179,7 @@ export type DeviceConfigurationAttributeProps = {
 export default function DeviceConfigurationAttribute(props: DeviceConfigurationAttributeProps) {
   const { config, definition } = props
   const { t } = useTranslation()
-  const attribute = useMemo<ConfigAttribute>(() => {
+  const attribute = useMemo<ConfigAttribute | undefined>(() => {
     return config?.attributes?.find((a) => a.name === definition.name)
   }, [config, definition])
 

@@ -6,7 +6,7 @@ export type TreeGroupContextProps = {
   toggleFolderOpen(key: string): void
   showMenu?: boolean
   onGroupSelect?(group: Group): void
-  isSelected(group: Group): boolean
+  isSelected?(group: Group): boolean
   renderGroupChildren?(group: Group): JSX.Element
 }
 

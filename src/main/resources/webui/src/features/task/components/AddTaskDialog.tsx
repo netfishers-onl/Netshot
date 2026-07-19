@@ -35,7 +35,7 @@ enum FormStep {
 type FormData = {
   checkCompliance: boolean
   runDiagnostic: boolean
-  group: number
+  group: number | null
   limitToOutofdateDevice: boolean
   limitToOutofdateDeviceHours?: number
   domain?: string
@@ -57,7 +57,7 @@ export default function AddTaskDialog() {
   const queryClient = useQueryClient()
   const taskDialog = useCustomDialog()
   const dialogConfig = useDialogConfig()
-  const [taskType, setTaskType] = useState<TaskType>(null)
+  const [taskType, setTaskType] = useState<TaskType | null>(null)
   const [formStep, setFormStep] = useState(FormStep.Type)
 
   const form = useForm<FormData>({
@@ -67,7 +67,7 @@ export default function AddTaskDialog() {
       checkCompliance: true,
       runDiagnostic: true,
       group: null,
-      domain: null,
+      domain: undefined,
       daysToPurge: 90,
       configDaysToPurge: 200,
       configSizeToPurge: 500,
@@ -111,7 +111,9 @@ export default function AddTaskDialog() {
     onSuccess(newTask) {
       close()
 
-      taskDialog.open(<TaskDialog id={newTask.id} />)
+      if (newTask) {
+        taskDialog.open(<TaskDialog id={newTask.id} />)
+      }
 
       queryClient.invalidateQueries({
         predicate: (query) =>
@@ -136,7 +138,7 @@ export default function AddTaskDialog() {
     const { schedule } = values
 
     const payload: CreateOrUpdateTaskPayload = {
-      type: taskType,
+      type: taskType ?? undefined,
       ...schedule,
     }
 
@@ -153,11 +155,11 @@ export default function AddTaskDialog() {
     }
 
     if (hasGroup) {
-      payload.group = values.group
+      payload.group = values.group ?? undefined
     }
 
     if (taskType === TaskType.ScanSubnets) {
-      payload.domain = +values.domain
+      payload.domain = +values.domain!
       payload.subnets = values.subnets.join("\n")
     }
 
@@ -170,7 +172,7 @@ export default function AddTaskDialog() {
 
       payload.configSizeToPurge = hasConfigSizeToPurge ? values.configSizeToPurge : 0
       payload.configKeepDays = hasConfigKeepDays ? values.configKeepDays : 0
-      payload.group = values.group
+      payload.group = values.group ?? undefined
 
       if (values.hasModuleDaysToPurge) {
         payload.moduleDaysToPurge = values.moduleDaysToPurge
@@ -380,7 +382,7 @@ export default function AddTaskDialog() {
                       </>
                     )}
 
-                    {[TaskType.TakeGroupSnapshot, TaskType.RunGroupDiagnostic].includes(
+                    {taskType != null && [TaskType.TakeGroupSnapshot, TaskType.RunGroupDiagnostic].includes(
                       taskType
                     ) && (
                       <Checkbox control={form.control} name="checkCompliance">

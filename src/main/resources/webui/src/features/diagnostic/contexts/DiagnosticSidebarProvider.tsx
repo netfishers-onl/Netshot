@@ -17,7 +17,7 @@ export type DiagnosticSidebarContextType = {
   setData: Dispatch<SetStateAction<Diagnostic[]>>
 }
 
-export const DiagnosticSidebarContext = createContext<DiagnosticSidebarContextType>(null)
+export const DiagnosticSidebarContext = createContext<DiagnosticSidebarContextType>(null!)
 export const useDiagnosticSidebar = () => use(DiagnosticSidebarContext)
 
 export default function DiagnosticSidebarProvider(props: PropsWithChildren) {

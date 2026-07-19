@@ -30,8 +30,8 @@ export default function HardwareDeviceListDialog(props: HardwareDeviceListButton
 
   const { data, isPending } = useQuery({
     queryKey: [QUERIES.DEVICE_HARDWARE_STATUS, type, date, domain, group],
-    queryFn() {
-      return api.report.getAllHardwareSupportDevices(type, date, { domain, group })
+    async queryFn() {
+      return (await api.report.getAllHardwareSupportDevices(type, date, { domain, group })) ?? []
     },
   })
 
@@ -108,8 +108,8 @@ export default function HardwareDeviceListDialog(props: HardwareDeviceListButton
                 </Stack>
               ) : (
                 <>
-                  {data?.length > 0 ? (
-                    <VirtualizedDataTable data={data} columns={columns} primaryKey="id" flex="1" minH="0" />
+                  {(data?.length ?? 0) > 0 ? (
+                    <VirtualizedDataTable data={data ?? []} columns={columns} primaryKey="id" flex="1" minH="0" />
                   ) : (
                     <EmptyResult title={t(emptyResultTitle)} description={t(description)} />
                   )}

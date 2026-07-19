@@ -16,7 +16,7 @@ function DiagnosticItem(props: DiagnosticBoxProps) {
   const { diagnostic } = props
 
   const params = useParams<{ id: string }>()
-  const isCurrentDiagnostic = +params?.id === diagnostic?.id
+  const isCurrentDiagnostic = +(params?.id ?? "0") === diagnostic?.id
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

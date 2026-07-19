@@ -29,7 +29,7 @@ export default function DeviceDetailScreen() {
   const { t } = useTranslation()
   const toast = useToast()
 
-  const { data: device, isPending, isError, error, refetch } = useDevice(+id)
+  const { data: device, isPending, isError, error, refetch } = useDevice(+(id ?? 0))
   const { data: deviceTypes, isPending: isDeviceTypePending } = useDeviceTypes()
   const queryClient = useQueryClient()
 
@@ -55,7 +55,7 @@ export default function DeviceDetailScreen() {
 
   const isDisabled = useMemo(() => device?.status === DeviceStatus.Disabled, [device?.status])
 
-  const deviceType = useMemo<DeviceType>(() => {
+  const deviceType = useMemo<DeviceType | undefined>(() => {
     return deviceTypes?.find((t) => t.name === device?.driver)
   }, [device?.driver, deviceTypes])
 
@@ -66,7 +66,7 @@ export default function DeviceDetailScreen() {
   }
 
   return (
-    <DeviceProvider device={device} type={deviceType} isLoading={isPending || isDeviceTypePending}>
+    <DeviceProvider device={device!} type={deviceType!} isLoading={isPending || isDeviceTypePending}>
       <Stack gap="0" flex="1" overflow="auto">
         <Stack gap="5" px="9" pt="9">
           <Flex alignItems="center">
@@ -96,7 +96,7 @@ export default function DeviceDetailScreen() {
             <Stack direction="row" gap="3">
               <Protected minLevel={Level.Operator}>
                 <Skeleton loading={isPending}>
-                  <DeviceSnapshotTrigger devices={[device]}>
+                  <DeviceSnapshotTrigger devices={[device!]}>
                     <Button variant="primary">
                       <LuCamera />
                       {t("device.snapshot.take")}
@@ -109,7 +109,7 @@ export default function DeviceDetailScreen() {
                 <Skeleton loading={isPending}>
                   <Menu.Root positioning={{ placement: "bottom-end" }}>
                     <Group attached>
-                      <EditDeviceTrigger device={device}>
+                      <EditDeviceTrigger device={device!}>
                         <Button>
                           <LuSquarePen />
                           {t("common.edit")}

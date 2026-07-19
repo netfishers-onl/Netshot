@@ -51,7 +51,7 @@ export default function DeviceDiagnosticScreen() {
       pagination.offset,
       pagination.limit,
     ],
-    queryFn: async () => api.device.getDiagnosticResultById(+params.id, pagination),
+    queryFn: async () => api.device.getDiagnosticResultById(+(params.id ?? 0), pagination),
     select: useCallback(
       (res: DeviceDiagnosticResult[]) => search(res, "diagnosticName", "type").with(pagination.query),
       [pagination.query]
@@ -100,14 +100,14 @@ export default function DeviceDiagnosticScreen() {
       columns.push(
         {
           accessorKey: "creationDate",
-          cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
+          cell: (info) => <Text>{info.getValue<number>() ? formatDateTime(info.getValue<number>()) : t("common.nA")}</Text>,
           header: t("time.creationDate"),
           enableSorting: true,
           size: 10000,
         },
         {
           accessorKey: "lastCheckDate",
-          cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
+          cell: (info) => <Text>{info.getValue<number>() ? formatDateTime(info.getValue<number>()) : t("common.nA")}</Text>,
           header: t("compliance.lastCheck"),
           enableSorting: true,
           size: 10000,

@@ -84,7 +84,7 @@ export default function ConfigCompareView(props: ConfigCompareViewProps) {
   )
 
   const form = useForm<FormData>({
-    defaultValues: { attribute: defaultAttribute },
+    defaultValues: { attribute: defaultAttribute ?? undefined },
   })
 
   const attributeOptions = attributeDefinitions.map((attr) => ({
@@ -110,7 +110,7 @@ export default function ConfigCompareView(props: ConfigCompareViewProps) {
           </Box>
         </Stack>
         <Stack flexShrink={0}>
-          <Select
+          <Select<FormData, "attribute", string>
             placeholder={t("common.selectAnAttribute")}
             control={form.control}
             name="attribute"

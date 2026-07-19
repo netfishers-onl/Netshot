@@ -63,10 +63,10 @@ export default function EditSoftwareRuleTrigger({ rule, children, ...rest }: Edi
       async onSubmit(values: SoftwareRuleFormValues) {
         await mutation.mutateAsync({
           id: rule.id,
-          driver: values.driver,
+          driver: values.driver!,
           family: values.family,
           familyRegExp: values.familyRegExp,
-          group: values.group,
+          group: values.group!,
           level: values.level,
           partNumber: values.partNumber,
           partNumberRegExp: values.partNumberRegExp,

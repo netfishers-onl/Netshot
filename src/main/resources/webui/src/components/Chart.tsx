@@ -87,10 +87,12 @@ export default function Chart<T extends keyof ChartTypeRegistry = "line">(props:
   }, [green500, grey100, greyColor, bodyFont])
 
   useLayoutEffect(() => {
+    if (!canvasRef.current) return
+
     chartRef.current = new NativeChart(canvasRef.current, mergeWith({}, defaultConfig, config))
 
     return () => {
-      chartRef.current.destroy()
+      chartRef.current?.destroy()
       chartRef.current = null
     }
   }, [canvasRef, chartRef, config, defaultConfig])

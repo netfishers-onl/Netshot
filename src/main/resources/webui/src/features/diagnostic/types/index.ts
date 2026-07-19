@@ -3,10 +3,10 @@ import { DeviceType, DiagnosticResultType } from "@/types"
 export type Form = {
   name: string
   enabled: boolean
-  resultType: DiagnosticResultType
-  targetGroup: number
-  deviceDriver: DeviceType["name"]
-  cliMode: string
+  resultType: DiagnosticResultType | null
+  targetGroup: number | null
+  deviceDriver: DeviceType["name"] | null
+  cliMode: string | null
   command: string
   modifierPattern: string
   modifierReplacement: string

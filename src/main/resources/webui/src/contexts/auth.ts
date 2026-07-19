@@ -9,7 +9,7 @@ export type AuthContextType = {
 };
 
 export const AuthContext = createContext<AuthContextType>({
-  user: null,
+  user: undefined,
 });
 
 export const useAuth = () => use(AuthContext);

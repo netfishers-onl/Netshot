@@ -34,7 +34,7 @@ export default function RuleItem(props: RuleItemProps) {
   }, [rule])
 
   const isActive = useMemo(
-    () => +policyId === policy.id && +ruleId === rule.id,
+    () => +(policyId ?? 0) === policy.id && +(ruleId ?? 0) === rule.id,
     [policyId, policy, ruleId, rule]
   )
 

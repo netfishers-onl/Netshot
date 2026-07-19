@@ -21,7 +21,7 @@ export default function EnableDeviceTrigger({ devices, children, ...rest }: Enab
 
   const mutation = useMutation({
     mutationKey: MUTATIONS.DEVICE_UPDATE,
-    mutationFn: async (payload: Partial<UpdateDevicePayload>) => api.device.update(payload.id, payload),
+    mutationFn: async (payload: Partial<UpdateDevicePayload>) => api.device.update(payload.id!, payload),
     onError(err: NetshotError) { toast.error(err) },
   })
 

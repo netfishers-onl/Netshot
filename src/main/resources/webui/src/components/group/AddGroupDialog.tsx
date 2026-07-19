@@ -23,7 +23,7 @@ export default function AddGroupDialog() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()
-  const [groupType, setGroupType] = useState<GroupType>(null)
+  const [groupType, setGroupType] = useState<GroupType | null>(null)
   const [formStep, setFormStep] = useState(FormStep.Type)
 
   const title = useMemo(() => {
@@ -52,7 +52,7 @@ export default function AddGroupDialog() {
       let payload: CreateGroupPayload = {
         folder: values.folder,
         name: values.name,
-        type: groupType,
+        type: groupType!,
         hiddenFromReports: !values.visibleInReports,
       }
 
@@ -72,7 +72,7 @@ export default function AddGroupDialog() {
       navigate(
         {
           pathname: location.pathname,
-          search: `?group=${group.id}`,
+          search: `?group=${group?.id}`,
         },
         { replace: true }
       )
@@ -186,7 +186,7 @@ export default function AddGroupDialog() {
 
                 {formStep === FormStep.Details && (
                   <Stack direction="row" gap="9" flex="1">
-                    <GroupInfoPanel groupType={groupType} />
+                    <GroupInfoPanel groupType={groupType!} />
                     {groupType === GroupType.Static && <StaticGroupForm />}
                     {groupType === GroupType.Dynamic && <DynamicGroupForm />}
                   </Stack>

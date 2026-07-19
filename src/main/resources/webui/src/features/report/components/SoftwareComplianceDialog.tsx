@@ -27,7 +27,7 @@ export default function SoftwareComplianceDialog(props: SoftwareComplianceDialog
 
   const { data, isPending } = useQuery({
     queryKey: [QUERIES.SOFTWARE_COMPLIANCE_DEVICES, groupId, level],
-    queryFn: async () => api.report.getAllGroupDevicesBySoftwareLevel(groupId, level),
+    queryFn: async () => (await api.report.getAllGroupDevicesBySoftwareLevel(groupId, level)) ?? [],
   })
 
   function goToDevice(device: GroupDeviceBySoftwareLevel) {
@@ -101,9 +101,9 @@ export default function SoftwareComplianceDialog(props: SoftwareComplianceDialog
                 </Stack>
               ) : (
                 <>
-                  {data?.length > 0 ? (
+                  {(data?.length ?? 0) > 0 ? (
                     <VirtualizedDataTable
-                      data={data}
+                      data={data ?? []}
                       columns={columns}
                       onClickRow={goToDevice}
                       primaryKey="id"

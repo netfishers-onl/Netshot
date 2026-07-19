@@ -102,7 +102,7 @@ export default function EditDeviceCredentialSetTrigger({ credentialSet: credenti
 
         const payload: Partial<DeviceCredentialPayload> = {
           name: values.name,
-          mgmtDomain: null,
+          mgmtDomain: undefined,
           type,
         }
 

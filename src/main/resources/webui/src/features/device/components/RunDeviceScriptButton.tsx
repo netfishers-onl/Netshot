@@ -55,8 +55,8 @@ function RunScriptForm(props: RunScriptFormProps) {
     if (isSuccess) {
       // Prepare dynamic form with script user inputs
       const userInputs = {}
-      for (const item in validatedScript.userInputDefinitions) {
-        userInputs[validatedScript.userInputDefinitions[item].name] = ""
+      for (const item in validatedScript!.userInputDefinitions) {
+        userInputs[validatedScript!.userInputDefinitions[item].name] = ""
       }
       form.setValue("userInputs", userInputs)
     }
@@ -185,7 +185,7 @@ export default function RunDeviceScriptButton(props: RunDeviceScriptButtonProps)
             ...schedule,
           })
 
-          tasks.push(task)
+          tasks.push(task!)
         }
 
         dialogRef.close()

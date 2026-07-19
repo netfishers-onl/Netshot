@@ -68,7 +68,7 @@ export default function DeviceComplianceTrigger({ devices, children, ...rest }: 
             device: device?.id,
             ...schedule,
           })
-          tasks.push(task)
+          tasks.push(task!)
         }
 
         dialogRef.close()

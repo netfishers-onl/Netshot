@@ -1,8 +1,8 @@
 import { Checkbox as NativeCheckbox } from "@chakra-ui/react"
 import { FocusEventHandler, PropsWithChildren } from "react"
-import { Control, FieldPath, Path, PathValue, useController } from "react-hook-form"
+import { Control, FieldPath, FieldValues, Path, PathValue, useController } from "react-hook-form"
 
-export type CheckboxProps<T> = {
+export type CheckboxProps<T extends FieldValues> = {
   control: Control<T>
   name: FieldPath<T>
   defaultValue?: PathValue<T, Path<T>>
@@ -12,7 +12,7 @@ export type CheckboxProps<T> = {
   onBlur?: FocusEventHandler<HTMLElement>
 }
 
-export default function Checkbox<T>(props: PropsWithChildren<CheckboxProps<T>>) {
+export default function Checkbox<T extends FieldValues>(props: PropsWithChildren<CheckboxProps<T>>) {
   const { children, name, control, defaultValue, value } = props
   const { field } = useController({
     name,

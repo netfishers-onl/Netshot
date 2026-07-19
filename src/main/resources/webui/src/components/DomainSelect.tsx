@@ -1,4 +1,5 @@
 import { useDomains } from "@/features/administration/api"
+import { Option } from "@/types"
 import { Badge, Icon, Text } from "@chakra-ui/react"
 import { FieldPath, FieldValues } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -12,24 +13,24 @@ export type DomainSelectProps<
   withAny?: boolean
 }
 
-export default function DomainSelect<T>(props: DomainSelectProps<T>) {
+export default function DomainSelect<T extends FieldValues>(props: DomainSelectProps<T>) {
   const { control, name, required, readOnly, multiple = false, withAny = false, ...rest } = props
 
   const { t } = useTranslation()
 
-  const { isPending, data = [] } = useDomains()
+  const { isPending, data } = useDomains()
 
-  const domainOptions = data.map((domain) => ({
+  const domainOptions = (data ?? []).map((domain) => ({
     label: domain?.name,
     value: domain?.id as string | number | null,
   }))
 
-  const options = withAny
+  const options: Option<string | number | null>[] = withAny
     ? [{ label: t("common.any"), value: null }, ...domainOptions]
     : domainOptions
 
   return (
-    <Select
+    <Select<T, FieldPath<T>, string | number | null>
       label={t("domain.label")}
       placeholder={t("domain.select")}
       control={control}

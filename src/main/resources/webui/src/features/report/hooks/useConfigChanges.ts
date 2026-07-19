@@ -18,12 +18,12 @@ export function useConfigChanges() {
   const { data = [], isPending, isFetching, refetch } = useQuery({
     queryKey: [QUERIES.REPORT_CONFIG_CHANGE_LIST, from, to, domain, group],
     queryFn: async () =>
-      api.config.getAll({
+      (await api.config.getAll({
         after: from,
         before: to,
         domain: domain != null ? [domain] : undefined,
         group: group != null ? [group] : undefined,
-      }),
+      })) ?? [],
   })
 
   return { data, isPending, isFetching, refetch }

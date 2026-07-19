@@ -37,8 +37,8 @@ export default function DeviceDetailScreen() {
   const { t } = useTranslation()
 
   const { data: diagnostic, isPending, isError, error } = useQuery({
-    queryKey: [QUERIES.DIAGNOSTIC_DETAIL, +id],
-    queryFn: async () => api.diagnostic.getById(+id),
+    queryKey: [QUERIES.DIAGNOSTIC_DETAIL, +(id ?? "0")],
+    queryFn: async () => api.diagnostic.getById(+(id ?? "0")),
   })
 
   const isDiagnosticNotFound =
@@ -71,7 +71,7 @@ export default function DeviceDetailScreen() {
             <Skeleton loading={isPending}>
               <Menu.Root positioning={{ placement: "bottom-end" }}>
                 <Group attached>
-                  <EditDiagnosticTrigger diagnostic={diagnostic}>
+                  <EditDiagnosticTrigger diagnostic={diagnostic!}>
                     <Button variant="primary">
                       <LuPencil />
                       {t("common.edit")}

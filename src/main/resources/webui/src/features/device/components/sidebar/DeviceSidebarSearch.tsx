@@ -89,7 +89,7 @@ export default function DeviceSidebarSearch() {
 
     if (!value.trim()) {
       updateQueryAndDriver("", null)
-      navigate({ pathname: location.pathname, search: null }, { replace: true })
+      navigate({ pathname: location.pathname, search: undefined }, { replace: true })
       return
     }
 
@@ -103,7 +103,7 @@ export default function DeviceSidebarSearch() {
   function handleChange(evt: ChangeEvent<HTMLInputElement>) {
     if (group) {
       setGroup(null)
-      navigate({ pathname: location.pathname, search: null }, { replace: true })
+      navigate({ pathname: location.pathname, search: undefined }, { replace: true })
     }
     setText(evt.target.value)
   }
@@ -119,7 +119,7 @@ export default function DeviceSidebarSearch() {
     setGroup(null)
     updateQueryAndDriver("", null)
     setQuery("")
-    navigate({ pathname: location.pathname, search: null }, { replace: true })
+    navigate({ pathname: location.pathname, search: undefined }, { replace: true })
     inputRef.current?.focus()
   }
 
@@ -144,7 +144,7 @@ export default function DeviceSidebarSearch() {
               <>
                 <Tooltip content={t("common.queryBuilder")}>
                   <QueryBuilderTrigger
-                    value={{ query, driver }}
+                    value={{ query, driver: driver ?? "" }}
                     onSubmit={(res) => {
                       setGroup(null)
                       updateQueryAndDriver(res.query, res.driver)
@@ -152,7 +152,7 @@ export default function DeviceSidebarSearch() {
                       navigate(
                         {
                           pathname: location.pathname,
-                          search: res.query ? `?q=${encodeURIComponent(res.query)}` : null,
+                          search: res.query ? `?q=${encodeURIComponent(res.query)}` : undefined,
                         },
                         { replace: true }
                       )

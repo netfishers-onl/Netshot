@@ -1,7 +1,6 @@
 import { useDebounce } from "@/hooks"
-import { useListCollection, UseListCollectionProps } from "@chakra-ui/react"
+import { ComboboxInputValueChangeDetails, useListCollection, UseListCollectionProps } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { InputValueChangeDetails } from "node_modules/@chakra-ui/react/dist/types/components/combobox/namespace"
 import { useEffect, useMemo, useState } from "react"
 import { WithFilterBy } from "./types"
 
@@ -19,7 +18,6 @@ export function useAutocomplete<T extends object, R>(config: UseAutocompleteConf
   const debouncedQuery = useDebounce(query, 200)
 
   const { collection, set } = useListCollection<T>({
-    initialItems: [],
     limit: 40,
     ...collectionConfig,
   })
@@ -53,7 +51,7 @@ export function useAutocomplete<T extends object, R>(config: UseAutocompleteConf
     isPending,
     isError,
     collection,
-    onInputValueChange: (evt: InputValueChangeDetails) => {
+    onInputValueChange: (evt: ComboboxInputValueChangeDetails) => {
       setQuery(evt.inputValue)
     },
     inputValue: debouncedQuery,

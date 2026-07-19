@@ -63,7 +63,7 @@ export default function ConfigurationCompliantSidebarList() {
 
   const expandedKeys = useMemo(() => {
     if (items?.length > 0 && params.id) {
-      return getExpandedKeys(items, +params.id)
+      return getExpandedKeys(items, +(params.id ?? 0))
     }
     return []
   }, [items, params.id])
@@ -71,7 +71,7 @@ export default function ConfigurationCompliantSidebarList() {
   const { isOpen, toggle } = useTreeOpenKeys(expandedKeys)
 
   const visibleGroups = useMemo(() => getVisibleGroups(items ?? [], isOpen), [items, isOpen])
-  const activeIndex = visibleGroups.findIndex((group) => group.id === +params.id)
+  const activeIndex = visibleGroups.findIndex((group) => group.id === +(params.id ?? 0))
 
   useArrowKeyNavigation({
     items: visibleGroups,
@@ -94,7 +94,7 @@ export default function ConfigurationCompliantSidebarList() {
           isFolderOpen={isOpen}
           toggleFolderOpen={toggle}
           onGroupSelect={onGroupSelect}
-          isSelected={(group) => group.id === +params.id}
+          isSelected={(group) => group.id === +(params.id ?? 0)}
         />
       )}
     </Stack>

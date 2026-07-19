@@ -9,7 +9,7 @@ export type PolicySelectProps<
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > = Omit<SelectProps<TFieldValues, TName, string | number>, "options">
 
-export default function PolicySelect<T>(props: PolicySelectProps<T>) {
+export default function PolicySelect<T extends FieldValues>(props: PolicySelectProps<T>) {
   const { control, name, required, readOnly, multiple, ...other } = props
 
   const { t } = useTranslation()

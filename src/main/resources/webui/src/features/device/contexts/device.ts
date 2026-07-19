@@ -9,5 +9,5 @@ export type DeviceContextType = {
   isDisabled?: boolean
 }
 
-export const DeviceContext = createContext<DeviceContextType>(null)
+export const DeviceContext = createContext<DeviceContextType>(null!)
 export const useDevice = () => use(DeviceContext)

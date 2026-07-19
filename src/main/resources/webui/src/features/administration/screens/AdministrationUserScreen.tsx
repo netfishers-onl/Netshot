@@ -83,7 +83,7 @@ export default function AdministrationUserScreen() {
         id: "actions",
         cell: (info) => {
           const user = info.row.original
-          const isCurrentUser = user.username === currentUser.username
+          const isCurrentUser = user.username === currentUser?.username
 
           if (isCurrentUser) {
             return <TableButtonStack />
@@ -115,7 +115,7 @@ export default function AdministrationUserScreen() {
         },
       }),
     ],
-    [t, userLevelOptions, currentUser.username]
+    [t, userLevelOptions, currentUser?.username]
   )
 
   return (

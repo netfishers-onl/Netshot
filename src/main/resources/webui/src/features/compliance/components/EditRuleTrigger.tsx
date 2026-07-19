@@ -61,13 +61,13 @@ export default function EditRuleTrigger({ policyId, rule, children, ...rest }: E
       bodyProps: !hasScript ? { overflow: "hidden", display: "flex" } : undefined,
       form,
       size: "xl",
-      variant: hasScript ? "full-floating" : null,
+      variant: hasScript ? "full-floating" : undefined,
       async onSubmit(values: RuleForm) {
         await mutation.mutateAsync({
           id: rule.id,
           name: values.name,
-          driver: values.driver,
-          field: values.field,
+          driver: values.driver!,
+          field: values.field!,
           context: values.context,
           script: values.script,
           text: values.text,

@@ -14,8 +14,8 @@ type FormData = {
 }
 
 export type DeviceConfigurationCompareViewProps = {
-  current: Config
-  compare: Config
+  current: Config | null
+  compare: Config | null
   device: Device
   type: DeviceType
 }
@@ -89,8 +89,8 @@ export default function DeviceConfigurationCompareView(props: DeviceConfiguratio
       <Stack flex="1" gap="4">
         <Separator />
         <ConfigCompareView
-          current={selectedCurrent}
-          compare={selectedCompare}
+          current={selectedCurrent!}
+          compare={selectedCompare!}
           attributeDefinitions={attributeDefinitions}
           leftExtra={
             isConsecutive && (

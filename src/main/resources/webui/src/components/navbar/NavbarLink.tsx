@@ -12,7 +12,7 @@ export default function NavbarLink(props: NavbarLinkProps) {
   return (
     <NavLink to={to}>
       {({ isActive }) => (
-        <Button size="sm" variant="navbar" className={isActive ? `router-active` : null}>
+        <Button size="sm" variant="navbar" className={isActive ? `router-active` : undefined}>
           {children}
         </Button>
       )}

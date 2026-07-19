@@ -147,7 +147,7 @@ export default function TreeGroupSelector<
     queryFn: async () => api.group.getAll(),
   })
 
-  const items = useMemo(() => createFoldersFromGroups(groups), [groups])
+  const items = useMemo(() => createFoldersFromGroups(groups ?? undefined), [groups])
 
   const onRemove = useCallback(
     (evt: MouseEvent<HTMLButtonElement>, index: number) => {

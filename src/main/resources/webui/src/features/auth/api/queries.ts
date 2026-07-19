@@ -24,13 +24,13 @@ export function useSigninMutation() {
       navigate(searchParams.get(REDIRECT_SEARCH_PARAM) || "/app", { replace: true })
     },
     onError(err: NetshotError) {
-      if (err.response.status === HttpStatus.Unauthorized) {
+      if (err.response?.status === HttpStatus.Unauthorized) {
         toast.error({
           title: t("auth.failed"),
           description: t("auth.incorrectCredentials"),
         })
       } else if (
-        err.response.status === HttpStatus.PreconditionFailed &&
+        err.response?.status === HttpStatus.PreconditionFailed &&
         err.code === NetshotErrorCode.ExpiredPassword
       ) {
         toast.error({
@@ -39,7 +39,7 @@ export function useSigninMutation() {
         })
         setChangePass(true)
       } else if (
-        err.response.status === HttpStatus.BadRequest &&
+        err.response?.status === HttpStatus.BadRequest &&
         err.code === NetshotErrorCode.FailedPasswordPolicy
       ) {
         toast.error({
@@ -75,7 +75,7 @@ export function useSigninWithOidcMutation() {
       const redirectUrl = new URL(window.location.origin + window.location.pathname)
 
       if (searchParams.has(REDIRECT_SEARCH_PARAM)) {
-        redirectUrl.searchParams.set(REDIRECT_SEARCH_PARAM, searchParams.get(REDIRECT_SEARCH_PARAM))
+        redirectUrl.searchParams.set(REDIRECT_SEARCH_PARAM, searchParams.get(REDIRECT_SEARCH_PARAM)!)
       }
 
       return api.auth.signinWithOidc(authorizationCode, redirectUrl.toString())

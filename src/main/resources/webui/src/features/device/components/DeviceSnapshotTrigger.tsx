@@ -84,7 +84,7 @@ export default function DeviceSnapshotTrigger({ devices, children, ...rest }: De
             dontCheckCompliance: !values.checkCompliance,
             ...schedule,
           })
-          tasks.push(task)
+          tasks.push(task!)
         }
 
         dialogRef.close()

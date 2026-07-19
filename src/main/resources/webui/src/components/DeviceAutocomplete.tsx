@@ -79,11 +79,12 @@ export default function DeviceAutocomplete(props: DeviceAutocompleteProps) {
     itemToString: (item) => item.name,
     itemToValue: (item) => item.id.toString(),
     queryKey: ["autocomplete:device"],
-    queryFn(query) {
-      return api.device.search({
+    async queryFn(query) {
+      const result = await api.device.search({
         query: `[Name] containsnocase "${query}"`,
         limit: 20,
       })
+      return result ?? { query, devices: [] }
     },
     select(data) {
       return data.devices

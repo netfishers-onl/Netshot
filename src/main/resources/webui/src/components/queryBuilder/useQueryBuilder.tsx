@@ -1,12 +1,12 @@
 import { useEffect } from "react"
-import { useController, UseControllerProps, useForm } from "react-hook-form"
+import { FieldValues, useController, UseControllerProps, useForm } from "react-hook-form"
 import { QueryBuilderValue } from "./types"
 
-export type UseQueryBuilderFormConfig<T> = {
+export type UseQueryBuilderFormConfig<T extends FieldValues> = {
   required?: boolean
 } & UseControllerProps<T>
 
-export function useQueryBuilder<T>(config: UseQueryBuilderFormConfig<T>) {
+export function useQueryBuilder<T extends FieldValues>(config: UseQueryBuilderFormConfig<T>) {
   const { name, control, defaultValue, required = false } = config
 
   const { field } = useController({

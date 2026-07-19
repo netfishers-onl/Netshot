@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next"
 import React from "react"
 import Slot from "@/components/Slot"
 
-type Form = { domainId: string; subnets: string[] }
+type Form = { domainId: string | null; subnets: string[] }
 
 export type DeviceScanSubnetTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
@@ -92,10 +92,10 @@ export default function DeviceScanSubnetTrigger({ children, ...rest }: DeviceSca
         const task = await mutation.mutateAsync({
           type: TaskType.ScanSubnets,
           subnets: values.subnets.join("\n"),
-          domain: +values.domainId,
+          domain: +(values.domainId ?? 0),
         })
         dialogRef.close()
-        taskDialog.open(<TaskDialog id={task.id} />)
+        taskDialog.open(<TaskDialog id={task!.id} />)
       },
       size: "xl",
       submitButton: { label: t("common.run") },

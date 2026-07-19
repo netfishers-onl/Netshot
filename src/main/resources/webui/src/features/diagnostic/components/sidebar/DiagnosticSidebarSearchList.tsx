@@ -37,7 +37,7 @@ export default function DiagnosticSidebarSearchList() {
     }
   }, [isSuccess, data, ctx])
 
-  const activeIndex = data?.findIndex((diagnostic) => diagnostic.id === +params?.id) ?? -1
+  const activeIndex = data?.findIndex((diagnostic) => diagnostic.id === +(params?.id ?? "0")) ?? -1
 
   const onNavigate = useCallback(
     (diagnostic: Diagnostic) => navigate(`./${diagnostic.id}`),

@@ -30,7 +30,7 @@ type Form = {
   telnetPort: string
   credentialType: CredentialSetType
   credentialSetIds: number[]
-  specificCredentialSet: UpdateDevicePayload["specificCredentialSet"]
+  specificCredentialSet: UpdateDevicePayload["specificCredentialSet"] | null
   autoTryCredentials: boolean
   comments: string
 }
@@ -96,7 +96,7 @@ function DeviceEditForm({ freezePasswords = false }: { freezePasswords?: boolean
       <Select control={form.control} name="credentialType" options={deviceCredentialSetOptions.options} label={t("credential.label")} placeholder={t("credential.select")} onSelectItem={onCredentialTypeChange} />
       {credentialType === null && !isPending && (
         <Stack gap="2">
-          {credentialSets.map((credentialSet) => (
+          {(credentialSets ?? []).map((credentialSet) => (
             <NativeCheckbox.Root defaultValue={String(credentialSetIds.includes(credentialSet?.id))} onCheckedChange={() => toggleCredentialSetId(credentialSet?.id)} key={credentialSet?.id} checked={credentialSetIds.includes(credentialSet?.id)}>
               <NativeCheckbox.HiddenInput />
               <NativeCheckbox.Control />
@@ -201,12 +201,12 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
         }
 
         if (values.credentialType !== CredentialSetType.GLOBAL) {
-          const { username, password, superPassword } = values.specificCredentialSet
-          updatedDevice.specificCredentialSet = { type: values.credentialType, username }
+          const { username, password, superPassword } = values.specificCredentialSet ?? {}
+          updatedDevice.specificCredentialSet = { type: values.credentialType, username: username! }
           if (password !== PASSWORD_UNCHANGED) updatedDevice.specificCredentialSet.password = password ?? undefined
           if (superPassword !== PASSWORD_UNCHANGED) updatedDevice.specificCredentialSet.superPassword = superPassword ?? undefined
           if (values.credentialType === CredentialSetType.SSHKey) {
-            const privateKey = values.specificCredentialSet.privateKey
+            const privateKey = values.specificCredentialSet?.privateKey
             if (privateKey !== PASSWORD_UNCHANGED && privateKey !== "") updatedDevice.specificCredentialSet.privateKey = privateKey ?? undefined
           }
         }

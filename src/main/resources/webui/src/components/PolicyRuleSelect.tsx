@@ -9,11 +9,11 @@ export type PolicyRuleSelectProps<
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > = { policyId: number } & Omit<SelectProps<TFieldValues, TName, string | number>, "options">
 
-export function PolicyRuleSelect<T>(props: PolicyRuleSelectProps<T>) {
+export function PolicyRuleSelect<T extends FieldValues>(props: PolicyRuleSelectProps<T>) {
   const { control, name, defaultValue, required, readOnly, multiple, policyId, ...other } = props
 
   const { t } = useTranslation()
-  const { isPending, data: options } = useRulesWithOptions(policyId)
+  const { isPending, data: options = [] } = useRulesWithOptions(policyId)
 
   return (
     <Select

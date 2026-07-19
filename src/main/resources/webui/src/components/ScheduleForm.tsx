@@ -116,7 +116,7 @@ export default function ScheduleForm() {
 
     // When schedule form change: format, parse and set values to outer form
     const watcher = scheduleForm.watch(
-      ({ type, dateTime, every, frequency, minute, priority }) => {
+      ({ type, dateTime, every = 1, frequency, minute = 10, priority = "" }) => {
         let scheduleType: TaskScheduleType = TaskScheduleType.Asap
         let scheduleReference: number = now(tz).toDate().getTime()
 
@@ -125,9 +125,9 @@ export default function ScheduleForm() {
           scheduleReference = now(tz).add({ minutes: minute }).toDate().getTime()
         } else if (type === ScheduleType.AtDateTime) {
           scheduleType = TaskScheduleType.At
-          scheduleReference = dateTime
+          scheduleReference = dateTime ?? scheduleReference
         } else if (type === ScheduleType.Repeat) {
-          scheduleReference = dateTime
+          scheduleReference = dateTime ?? scheduleReference
 
           if (frequency === "hourly") {
             scheduleType = TaskScheduleType.Hourly

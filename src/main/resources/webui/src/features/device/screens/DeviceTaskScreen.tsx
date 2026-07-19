@@ -19,9 +19,9 @@ export default function DeviceTaskScreen() {
   const { data = [], isPending, isFetching } = useQuery({
     queryKey: [QUERIES.DEVICE_TASKS, params.id, limit],
     queryFn: async () =>
-      api.device.getAllTasksById(+params.id, {
+      (await api.device.getAllTasksById(+(params.id ?? 0), {
         limit,
-      }),
+      })) ?? [],
   })
 
   const hasMore = data.length >= limit

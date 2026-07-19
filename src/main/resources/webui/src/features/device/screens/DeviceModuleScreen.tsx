@@ -37,7 +37,7 @@ export default function DeviceModuleScreen() {
       history,
     ],
     queryFn: async () =>
-      api.device.getAllModulesById(+params.id, {
+      api.device.getAllModulesById(+(params.id ?? 0), {
         ...pagination,
         history,
       }),
@@ -74,13 +74,13 @@ export default function DeviceModuleScreen() {
       columns.push(
         {
           accessorKey: "firstSeenDate",
-          cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
+          cell: (info) => <Text>{info.getValue<number>() ? formatDateTime(info.getValue<number>()) : t("common.nA")}</Text>,
           header: t("device.firstSeen"),
           enableSorting: true,
         },
         {
           accessorKey: "lastSeenDate",
-          cell: (info) => <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>,
+          cell: (info) => <Text>{info.getValue<number>() ? formatDateTime(info.getValue<number>()) : t("common.nA")}</Text>,
           header: t("device.lastSeen"),
           enableSorting: true,
         }

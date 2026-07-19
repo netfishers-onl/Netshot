@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint",
     "preview": "vite preview",
+    "tsx": "tsc --noEmit",
     "chakra:typegen": "npx @chakra-ui/cli typegen ./src/theme/system.ts"
   },
   "dependencies": {

@@ -25,8 +25,16 @@ self.MonacoEnvironment = {
 
 /**
  * Add extra library for typescript autocompletion
+ *
+ * `languages.typescript` is typed as a deprecated stub (`{ deprecated: true }`) in this
+ * version of monaco-editor's public types, even though `typescriptDefaults` still exists
+ * at runtime - cast to access it.
  */
-languages.typescript.typescriptDefaults.addExtraLib(`
+const typescriptLanguage = languages.typescript as unknown as {
+  typescriptDefaults: { addExtraLib(content: string): void };
+};
+
+typescriptLanguage.typescriptDefaults.addExtraLib(`
   type DeviceConfigurationType = "systemConfiguration";
   type CliMacroDefinition = "configure" | "end" | "save";
   type CliCommandDefinition = "no ip domain-lookup";
@@ -78,7 +86,7 @@ function MonacoEditor(props: MonacoEditorProps) {
     ...other
   } = props;
   const containerRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<editor.IStandaloneCodeEditor>();
+  const editorRef = useRef<editor.IStandaloneCodeEditor | undefined>(undefined);
 
   useLayoutEffect(() => {
     if (!containerRef?.current) return;
@@ -96,13 +104,14 @@ function MonacoEditor(props: MonacoEditorProps) {
   }, [containerRef, value, readOnly, language]);
 
   useEffect(() => {
-    if (!editorRef) {
+    if (!editorRef.current) {
       return;
     }
 
     if (onModelChange) {
       editorRef.current.onDidChangeModelContent(() => {
-        onModelChange(editorRef.current.getModel().getValue());
+        const value = editorRef.current?.getModel()?.getValue();
+        if (value !== undefined) onModelChange(value);
       });
     }
 

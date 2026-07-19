@@ -7,8 +7,8 @@ export type RuleForm = {
   text: string
   regExp: boolean
   context: string
-  driver: DeviceType["name"]
-  field: string
+  driver: DeviceType["name"] | null
+  field: string | null
   anyBlock: string
   matchAll: boolean
   invert: string
@@ -16,10 +16,10 @@ export type RuleForm = {
 }
 
 export type SoftwareRuleFormValues = {
-  driver: DeviceType["name"]
+  driver: DeviceType["name"] | null
   family: string
   familyRegExp: boolean
-  group: number
+  group: number | null
   level: DeviceSoftwareLevel
   partNumber: string
   partNumberRegExp: boolean
@@ -28,12 +28,12 @@ export type SoftwareRuleFormValues = {
 }
 
 export type HardwareRuleFormValues = {
-  driver: DeviceType["name"]
+  driver: DeviceType["name"] | null
   endOfLife: number | undefined
   endOfSale: number | undefined
   family: string
   familyRegExp: boolean
   partNumber: string
   partNumberRegExp: boolean
-  group: number
+  group: number | null
 }

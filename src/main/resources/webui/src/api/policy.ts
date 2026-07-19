@@ -5,7 +5,7 @@ import rule from "./rule"
 import { CreateOrUpdatePolicy } from "./types"
 
 async function getAll() {
-  return httpClient.get<Policy[]>("/policies")
+  return (await httpClient.get<Policy[]>("/policies")) ?? []
 }
 
 async function getAllWithRules(query: string = "") {

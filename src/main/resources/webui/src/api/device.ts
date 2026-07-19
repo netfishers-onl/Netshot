@@ -78,11 +78,11 @@ async function getAllDeviceConfigsById(id: number, queryParams: PaginationQueryP
  * @todo: Add endpoint to get current config from device
  */
 async function getCurrentConfig(deviceId: number) {
-  const [config] = await getAllDeviceConfigsById(deviceId, {
+  const configs = await getAllDeviceConfigsById(deviceId, {
     limit: 1,
   })
 
-  return config
+  return configs?.[0]
 }
 
 async function getAllInterfacesById(id: number, queryParams: PaginationQueryParams = {}) {

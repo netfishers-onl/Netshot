@@ -291,7 +291,7 @@ export default function ReportHardwareSupportStatusScreen() {
     [t, getFormattedCount, filter.domain, filter.group, formatDate]
   )
 
-  const data = useMemo(() => groupStatByDate(stats), [stats])
+  const data = useMemo(() => groupStatByDate(stats ?? []), [stats])
 
   return (
     <Stack gap="8" p="9" flex="1" overflowY="auto">
@@ -361,7 +361,7 @@ export default function ReportHardwareSupportStatusScreen() {
           <Skeleton height="300px" />
         ) : (
           <Stack h="300px">
-            <Chart config={config} />
+            <Chart config={config!} />
           </Stack>
         )}
       </Stack>

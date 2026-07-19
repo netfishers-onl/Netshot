@@ -68,10 +68,10 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
     onSelectItem,
     renderIcon,
     renderSelectedValue,
-    ...selectRootProps
+    ...restProps
   } = props
 
-  const [controllerProps] = splitProps(props, [
+  const [controllerProps, selectRootProps] = splitProps(restProps, [
     "name",
     "rules",
     "shouldUnregister",
@@ -126,7 +126,9 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
     }
 
     if (multiple) {
-      const selectedOptions = details.value.map((val) => optionsMap.get(val))
+      const selectedOptions = details.value
+        .map((val) => optionsMap.get(val))
+        .filter((opt): opt is Option<T> => Boolean(opt))
 
       field.onChange(selectedOptions.map(getItemValue))
       onSelectItem?.(
@@ -225,7 +227,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
                 <>
                   {selectedIcon}
                   {selectedValueItems.map((item) => (
-                    <Fragment key={getItemValue(item)}>{renderSelectedValue(item)}</Fragment>
+                    <Fragment key={getItemValue(item)}>{renderSelectedValue?.(item)}</Fragment>
                   ))}
                 </>
               ) : singleSelectedValue ? (

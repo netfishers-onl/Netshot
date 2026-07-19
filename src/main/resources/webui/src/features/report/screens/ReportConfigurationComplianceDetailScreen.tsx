@@ -13,12 +13,12 @@ export default function ReportConfigurationComplianceDetailScreen() {
   }>()
 
   const { data: group, isSuccess } = useQuery({
-    queryKey: [QUERIES.DEVICE_GROUPS, +params?.id],
+    queryKey: [QUERIES.DEVICE_GROUPS, +(params.id ?? 0)],
     queryFn: async () => {
       /**
        * @todo: Add devices count and non compliant count
        */
-      return api.group.getById(+params.id)
+      return api.group.getById(+(params.id ?? 0))
     },
   })
 
@@ -36,7 +36,7 @@ export default function ReportConfigurationComplianceDetailScreen() {
           </Skeleton>
         </Stack>
       </Stack>
-      {isSuccess && <ConfigurationComplianceDeviceList group={group} />}
+      {isSuccess && group && <ConfigurationComplianceDeviceList group={group} />}
     </Stack>
   )
 }

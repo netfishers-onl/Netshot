@@ -6,7 +6,7 @@ import { QUERIES as DEVICE_QUERIES } from "../constants"
 
 export type DeviceSidebarStoreState = {
   query: string
-  driver: DeviceType["name"]
+  driver: DeviceType["name"] | null
   total: number
   selected: SimpleDevice[]
   devices: SimpleDevice[]
@@ -17,7 +17,7 @@ export type DeviceSidebarStoreState = {
   deselectAll(): void
   isSelected(deviceId: number): boolean
   isSelectedAll(): boolean
-  updateQueryAndDriver(query: string, driver: DeviceType["name"]): void
+  updateQueryAndDriver(query: string, driver: DeviceType["name"] | null): void
   setTotal(total: number): void
   setDevices(devices: SimpleDevice[]): void
   setGroup(group: Group | null): void
@@ -26,7 +26,7 @@ export type DeviceSidebarStoreState = {
 }
 
 export const useDeviceSidebarStore = create<DeviceSidebarStoreState>((set, get) => ({
-  query: null,
+  query: "",
   driver: null,
   total: 0,
   selected: [],
@@ -57,7 +57,7 @@ export const useDeviceSidebarStore = create<DeviceSidebarStoreState>((set, get) 
     return devices.length > 0 && devices.length === selected.length
   },
 
-  updateQueryAndDriver(query: string, driver: DeviceType["name"]) {
+  updateQueryAndDriver(query: string, driver: DeviceType["name"] | null) {
     set({ query, driver })
   },
 

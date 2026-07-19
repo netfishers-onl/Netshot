@@ -19,15 +19,15 @@ import { useDeviceCredentialSetOptions } from "../hooks"
 
 type Form = {
   ipAddress: string
-  domain: string
+  domain: string | null
   autoDiscover: boolean
-  deviceType?: DeviceType["name"]
-  credentialType?: CredentialSetType
+  deviceType?: DeviceType["name"] | null
+  credentialType?: CredentialSetType | null
   overrideConnectionSetting?: boolean
   connectIpAddress?: string
   sshPort?: string
   telnetPort?: string
-  specificCredentialSet?: CreateDevicePayload["specificCredentialSet"]
+  specificCredentialSet?: CreateDevicePayload["specificCredentialSet"] | null
 }
 
 export type CreateDeviceTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
@@ -183,7 +183,7 @@ export default function CreateDeviceTrigger({ children, ...rest }: CreateDeviceT
           autoDiscoveryTask: -1,
           autoDiscover: values.autoDiscover,
           ipAddress: values?.ipAddress,
-          domainId: +values?.domain,
+          domainId: +(values?.domain ?? 0),
         } as CreateDevicePayload
 
         if (values.overrideConnectionSetting) {
@@ -196,19 +196,19 @@ export default function CreateDeviceTrigger({ children, ...rest }: CreateDeviceT
         }
 
         if (!values.autoDiscover && values.credentialType !== CredentialSetType.GLOBAL) {
-          const { username, password, superPassword } = values.specificCredentialSet
+          const { username, password, superPassword } = values.specificCredentialSet ?? {}
 
           newDevice.specificCredentialSet = {
-            type: values.credentialType,
-            username,
-            password,
-            superPassword,
+            type: values.credentialType!,
+            username: username!,
+            password: password!,
+            superPassword: superPassword!,
           }
 
           if (values.credentialType === CredentialSetType.SSHKey) {
             newDevice.specificCredentialSet = {
               ...newDevice.specificCredentialSet,
-              privateKey: values.specificCredentialSet.privateKey,
+              privateKey: values.specificCredentialSet?.privateKey,
             }
           }
         }
@@ -217,7 +217,7 @@ export default function CreateDeviceTrigger({ children, ...rest }: CreateDeviceT
 
         dialogRef.close()
 
-        taskDialog.open(<TaskDialog id={task?.id} />)
+        taskDialog.open(<TaskDialog id={task!.id} />)
       },
       size: "lg",
       submitButton: {

@@ -309,7 +309,7 @@ export default function DataTable<Data extends object>(props: DataTableProps<Dat
                   return (
                     <Table.ColumnHeader
                       key={header.id}
-                      onClick={isSortable ? header?.column?.getToggleSortingHandler() : null}
+                      onClick={isSortable ? header?.column?.getToggleSortingHandler() : undefined}
                       borderColor="grey.100"
                       position="relative"
                       cursor={isSortable ? "pointer" : undefined}

@@ -98,12 +98,12 @@ export default function EditDiagnosticTrigger(props: EditDiagnosticTriggerProps)
       ),
       form,
       size: hasScript ? "lg" : "4xl",
-      variant: hasScript ? "full-floating" : null,
+      variant: hasScript ? "full-floating" : undefined,
       bodyProps: hasScript ? undefined : { display: "flex" },
       async onSubmit(values: Form) {
         const data = await mutation.mutateAsync({
-          deviceDriver: values.deviceDriver,
-          cliMode: values.cliMode,
+          deviceDriver: values.deviceDriver!,
+          cliMode: values.cliMode!,
           command: values.command,
           modifierPattern: values.modifierPattern,
           modifierReplacement: values.modifierReplacement,
@@ -111,7 +111,7 @@ export default function EditDiagnosticTrigger(props: EditDiagnosticTriggerProps)
           enabled: values.enabled,
           type: diagnostic.type,
           name: values.name,
-          resultType: values.resultType,
+          resultType: values.resultType!,
           targetGroup: values.targetGroup ? values.targetGroup.toString() : "-1",
           script: values.script,
         })
@@ -124,7 +124,7 @@ export default function EditDiagnosticTrigger(props: EditDiagnosticTriggerProps)
         })
 
         queryClient.invalidateQueries({
-          queryKey: [QUERIES.DIAGNOSTIC_DETAIL, data.id],
+          queryKey: [QUERIES.DIAGNOSTIC_DETAIL, data?.id],
         })
 
         queryClient.invalidateQueries({ queryKey: [QUERIES.DIAGNOSTIC_LIST] })

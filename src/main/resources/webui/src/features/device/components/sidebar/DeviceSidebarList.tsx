@@ -27,7 +27,7 @@ export default function DeviceSidebarList() {
     }))
   )
 
-  const { data, isPending, isSuccess } = useDevices(group?.id)
+  const { data, isPending, isSuccess } = useDevices(group?.id ?? 0)
 
   useEffect(() => {
     if (isSuccess) {
@@ -44,7 +44,7 @@ export default function DeviceSidebarList() {
     overscan: 10,
   })
 
-  const activeIndex = data?.findIndex((device) => device.id === +params?.id) ?? -1
+  const activeIndex = data?.findIndex((device) => device.id === +(params?.id ?? 0)) ?? -1
 
   const onNavigate = useCallback(
     (device: SimpleDevice, index: number) => {

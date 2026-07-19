@@ -19,7 +19,7 @@ export default function DeviceScriptView(props: DeviceScriptViewProps) {
   const { devices } = props
   const { t } = useTranslation()
   const [query, setQuery] = useState<string>("")
-  const [selected, setSelected] = useState<Script>(null)
+  const [selected, setSelected] = useState<Script | null>(null)
   const [pagination] = useState({
     limit: 40,
     offset: 0,

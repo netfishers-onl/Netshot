@@ -17,7 +17,7 @@ export default function DeviceConfigurationScreen() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [expandedIds, setExpandedIds] = useState<Set<number>>(() => new Set())
 
-  const { data, isPending } = useDeviceConfigs(+params.id)
+  const { data, isPending } = useDeviceConfigs(+(params.id ?? 0))
 
   const toggleExpand = useCallback((id: number) => {
     setExpandedIds((prev) => {
@@ -72,7 +72,7 @@ export default function DeviceConfigurationScreen() {
           }}
         >
           {virtualizer.getVirtualItems().map((virtualItem) => {
-            const config = data[virtualItem.index]
+            const config = data![virtualItem.index]
 
             return (
               <div
@@ -90,9 +90,9 @@ export default function DeviceConfigurationScreen() {
               >
                 <DeviceConfigurationPanel
                   config={config}
-                  configs={data}
+                  configs={data!}
                   isNewest={virtualItem.index === 0}
-                  isOldest={virtualItem.index === data.length - 1}
+                  isOldest={virtualItem.index === data!.length - 1}
                   isExpanded={expandedIds.has(config?.id)}
                   onToggleExpand={toggleExpand}
                 />

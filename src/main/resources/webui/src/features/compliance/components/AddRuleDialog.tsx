@@ -29,7 +29,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const dialogConfig = useDialogConfig()
-  const [type, setType] = useState(RuleType.Text)
+  const [type, setType] = useState<RuleType | null>(RuleType.Text)
   const [formStep, setFormStep] = useState(FormStep.Type)
 
   const form = useForm<RuleForm>({
@@ -67,7 +67,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
         }),
       })
 
-      navigate(`/app/compliance/config/${policy.id}/${rule.id}`)
+      navigate(`/app/compliance/config/${policy.id}/${rule?.id}`)
     },
     onError(err: NetshotError) {
       toast.error(err)
@@ -80,17 +80,17 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
 
   function submit(values: RuleForm) {
     const payload: CreateOrUpdateRule = {
-      id: null,
+      id: null!,
       name: values.name,
-      type,
+      type: type!,
       script: values.script,
       policy: policy.id,
       enabled: true,
       text: values.text,
       regExp: values.regExp,
       context: values.context,
-      driver: values.driver,
-      field: values.field,
+      driver: values.driver!,
+      field: values.field!,
       anyBlock: stringToBoolean(values.anyBlock),
       matchAll: values.matchAll,
       invert: stringToBoolean(values.invert),
@@ -104,7 +104,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
     setFormStep(FormStep.Details)
 
     dialogConfig.update({
-      variant: hasScript ? "full-floating" : null,
+      variant: hasScript ? "full-floating" : undefined,
       size: hasScript ? "lg" : "xl",
     })
 
@@ -117,7 +117,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
     setFormStep(FormStep.Type)
 
     dialogConfig.update({
-      variant: null,
+      variant: undefined,
       size: "xl",
     })
   }
@@ -130,7 +130,7 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
       setFormStep(FormStep.Type)
 
       dialogConfig.update({
-        variant: hasScript ? "full-floating" : null,
+        variant: hasScript ? "full-floating" : undefined,
         size: hasScript ? "lg" : "xl",
       })
     }, 500)
@@ -240,9 +240,9 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
                 ) : (
                   <>
                     {hasScript ? (
-                      <EditScriptRuleForm type={type} />
+                      <EditScriptRuleForm type={type!} />
                     ) : (
-                      <EditTextRuleForm type={type} />
+                      <EditTextRuleForm type={type!} />
                     )}
                   </>
                 )}

@@ -13,7 +13,7 @@ export type DeviceConfigurationSelectProps<
   deviceId: number
 } & Omit<SelectProps<TFieldValues, TName, Config>, "options">
 
-export default function DeviceConfigurationSelect<T>(props: DeviceConfigurationSelectProps<T>) {
+export default function DeviceConfigurationSelect<T extends FieldValues>(props: DeviceConfigurationSelectProps<T>) {
   const { deviceId, control, name, defaultValue, required, readOnly, label, ...selectProps } = props
 
   const { t } = useTranslation()
@@ -23,7 +23,7 @@ export default function DeviceConfigurationSelect<T>(props: DeviceConfigurationS
 
   const options = isPending
     ? []
-    : data.map((item) => ({
+    : (data ?? []).map((item) => ({
         label: formatDateTime(item.changeDate),
         value: item,
       }))

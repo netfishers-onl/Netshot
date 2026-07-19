@@ -1,13 +1,13 @@
 import { useCallback } from "react"
-import { UseControllerProps, useController } from "react-hook-form"
+import { FieldValues, UseControllerProps, useController } from "react-hook-form"
 import MonacoEditor, { MonacoEditorProps } from "./MonacoEditor"
 
-export type MonacoEditorControlProps<T> = {
+export type MonacoEditorControlProps<T extends FieldValues> = {
   required?: boolean
 } & MonacoEditorProps &
   UseControllerProps<T>
 
-export default function MonacoEditorControl<T>(props: MonacoEditorControlProps<T>) {
+export default function MonacoEditorControl<T extends FieldValues>(props: MonacoEditorControlProps<T>) {
   const { name, defaultValue, rules, control, required = false, ...other } = props
 
   const { field } = useController({

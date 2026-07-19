@@ -19,7 +19,7 @@ export default function PolicyItem(props: PolicyItemProps) {
   const navigate = useNavigate()
   const ctx = useComplianceSidebar()
   const controls = useAnimationControls()
-  const hasRules = useMemo(() => policy.rules?.length > 0, [policy])
+  const hasRules = useMemo(() => (policy.rules?.length ?? 0) > 0, [policy])
   const isAssigned = useMemo(() => policy.targetGroups?.length > 0, [policy])
   const isActive = useMemo(() => !!policyId && +policyId === policy.id, [policyId, policy])
   const isPolicySelected = useMemo(() => isActive && !ruleId, [isActive, ruleId])

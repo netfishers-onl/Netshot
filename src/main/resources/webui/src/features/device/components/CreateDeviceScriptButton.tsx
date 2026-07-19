@@ -75,7 +75,7 @@ export function CreateDeviceScriptButton(props: CreateDeviceScriptButtonProps) {
         dialogRef.close()
         form.reset()
         await queryClient.invalidateQueries({ queryKey: [QUERIES.SCRIPT_LIST] })
-        onCreated(data)
+        onCreated(data!)
       },
       isLoading: isPending,
       submitButton: {

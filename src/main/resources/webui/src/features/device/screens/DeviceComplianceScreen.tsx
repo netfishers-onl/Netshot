@@ -48,7 +48,7 @@ export default function DeviceComplianceScreen() {
 
   const { data = [], isPending } = useQuery({
     queryKey: [QUERIES.DEVICE_COMPLIANCE, params?.id],
-    queryFn: async () => api.device.getComplianceResultById(+params?.id),
+    queryFn: async () => (await api.device.getComplianceResultById(+(params?.id ?? 0))) ?? [],
   })
 
   const isSearching = Boolean(pagination.query?.trim())

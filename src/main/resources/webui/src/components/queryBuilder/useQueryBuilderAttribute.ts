@@ -221,7 +221,7 @@ export function useQueryBuilderAttribute() {
     return sortAlphabetical(options, "label")
   }
 
-  function getAllTypeSpecificOption(driver: DeviceType["name"]) {
+  function getAllTypeSpecificOption(driver: DeviceType["name"] | null) {
     const deviceType = deviceTypeOptions.getOptionByDriver(driver)
 
     if (!deviceType) {

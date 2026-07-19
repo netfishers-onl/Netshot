@@ -86,24 +86,24 @@ export default function AddDeviceCredentialSetTrigger({ children, ...rest }: Add
             ...payload,
             username: values.username,
             authType: values.authType,
-            authKey: values.authKey,
+            authKey: values.authKey ?? undefined,
             privType: values.privType,
-            privKey: values.privKey,
+            privKey: values.privKey ?? undefined,
           }
         } else if (type === CredentialSetType.SSH || type === CredentialSetType.Telnet) {
           payload = {
             ...payload,
             username: values.username,
-            password: values.password,
-            superPassword: values.superPassword,
+            password: values.password ?? undefined,
+            superPassword: values.superPassword ?? undefined,
           }
         } else if (type === CredentialSetType.SSHKey) {
           payload = {
             ...payload,
             username: values.username,
-            privateKey: values.privateKey,
-            password: values.password,
-            superPassword: values.superPassword,
+            privateKey: values.privateKey ?? undefined,
+            password: values.password ?? undefined,
+            superPassword: values.superPassword ?? undefined,
           }
         }
 

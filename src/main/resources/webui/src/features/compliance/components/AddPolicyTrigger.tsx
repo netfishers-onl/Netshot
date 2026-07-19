@@ -61,7 +61,7 @@ export default function AddPolicyTrigger({ children, ...rest }: AddPolicyTrigger
         queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_LIST] })
         queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_SEARCH_LIST] })
 
-        navigate(`/app/compliance/config/${policy.id}`)
+        navigate(`/app/compliance/config/${policy?.id}`)
       },
       onCancel() {
         form.reset()

@@ -38,7 +38,7 @@ function DeviceBox(props: DeviceBoxProps) {
   const { getInfo: getSoftwareLevelInfo } = useSoftwareLevels()
   const sectionMatch = useMatch("/app/devices/:id/:section")
   const currentSection = sectionMatch?.params.section ?? "general"
-  const isCurrentDevice = +params?.id === device?.id
+  const isCurrentDevice = +(params?.id ?? 0) === device?.id
   const isSelected = deviceSidebarStore.isSelected(device?.id) || isCurrentDevice
   const isDisabled = device?.status === DeviceStatus.Disabled
 

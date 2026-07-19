@@ -64,7 +64,7 @@ const DEFAULT_PROVDER_CONFIG: DialogProviderConfig = {
   },
 }
 
-const DialogProviderContext = createContext<DialogProviderConfig>(null)
+const DialogProviderContext = createContext<DialogProviderConfig>(null!)
 export const useDialogProviderConfig = () => use(DialogProviderContext)
 
 const DialogInstance = memo(({ configId }: { configId: string }) => {

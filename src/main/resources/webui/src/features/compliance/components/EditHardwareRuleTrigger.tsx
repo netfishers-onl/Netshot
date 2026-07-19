@@ -59,10 +59,10 @@ export default function EditHardwareRuleTrigger({ rule, children, ...rest }: Edi
       async onSubmit(values: HardwareRuleFormValues) {
         await mutation.mutateAsync({
           id: rule.id,
-          driver: values.driver,
+          driver: values.driver!,
           family: values.family,
           familyRegExp: values.familyRegExp,
-          group: values.group,
+          group: values.group!,
           partNumber: values.partNumber,
           partNumberRegExp: values.partNumberRegExp,
           endOfLife: values.endOfLife,

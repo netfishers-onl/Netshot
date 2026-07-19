@@ -12,11 +12,11 @@ export type QueryBuilderTriggerProps = {
   children: React.ReactElement<Record<string, unknown>>
 } & Record<string, unknown>
 
-export function QueryBuilderTrigger({ onSubmit, value = null, children, ...rest }: QueryBuilderTriggerProps) {
+export function QueryBuilderTrigger({ onSubmit, value, children, ...rest }: QueryBuilderTriggerProps) {
   const { t } = useTranslation()
   const dialog = useFormDialog()
   const form = useForm<{
-    queryBuilder: QueryBuilderValue
+    queryBuilder: QueryBuilderValue | undefined
   }>({
     defaultValues: {
       queryBuilder: value,
@@ -38,8 +38,8 @@ export function QueryBuilderTrigger({ onSubmit, value = null, children, ...rest 
         dialogRef.close()
 
         onSubmit({
-          driver: values.queryBuilder.driver,
-          query: values.queryBuilder.query,
+          driver: values.queryBuilder!.driver,
+          query: values.queryBuilder!.query,
         })
       },
       size: "xl",

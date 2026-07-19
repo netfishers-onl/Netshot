@@ -41,7 +41,7 @@ export default function useToast() {
   function script(config: ToastConfig) {
     return toaster.create({
       type: ToastType.Script,
-      duration: null,
+      duration: undefined,
       ...config,
     })
   }
@@ -57,7 +57,7 @@ export default function useToast() {
   function loading(config: ToastConfig) {
     return toaster.create({
       type: ToastType.Loading,
-      duration: null,
+      duration: undefined,
       ...config,
     })
   }

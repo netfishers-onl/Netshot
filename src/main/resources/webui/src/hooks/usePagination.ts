@@ -53,11 +53,11 @@ export function usePagination(config?: UsePaginationConfig) {
   }, []);
 
   const next = useCallback(() => {
-    setOffset((prev) => prev + 1);
+    setOffset((prev) => (prev ?? 0) + 1);
   }, []);
 
   const previous = useCallback(() => {
-    setOffset((prev) => prev - 1);
+    setOffset((prev) => (prev ?? 0) - 1);
   }, []);
 
   const reset = useCallback(() => {

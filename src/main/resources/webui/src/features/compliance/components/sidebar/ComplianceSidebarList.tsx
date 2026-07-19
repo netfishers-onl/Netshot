@@ -31,7 +31,7 @@ export default function ComplianceSidebarList() {
 
   const activeIndex = items.findIndex(
     (item) =>
-      +policyId === item.policy.id && (item.rule ? +ruleId === item.rule.id : !ruleId)
+      +(policyId ?? 0) === item.policy.id && (item.rule ? +(ruleId ?? 0) === item.rule.id : !ruleId)
   )
 
   const onNavigate = useCallback(
@@ -40,7 +40,7 @@ export default function ComplianceSidebarList() {
         navigate(`./config/${item.policy.id}/${item.rule.id}`)
       } else {
         navigate(`./config/${item.policy.id}`)
-        if (item.policy.rules?.length > 0) {
+        if ((item.policy.rules?.length ?? 0) > 0) {
           ctx.setPolicyExpanded(item.policy.id, true)
         }
       }
@@ -72,7 +72,7 @@ export default function ComplianceSidebarList() {
 
   return (
     <Stack px="6" gap="0" overflow="auto" flex="1">
-      {policies.map((policy) => (
+      {policies?.map((policy) => (
         <PolicyItem key={policy?.id} policy={policy} />
       ))}
     </Stack>

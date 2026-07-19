@@ -52,10 +52,10 @@ export default function AddSoftwareRuleTrigger({ children, ...rest }: AddSoftwar
       size: "lg",
       async onSubmit(values: SoftwareRuleFormValues) {
         await mutation.mutateAsync({
-          driver: values.driver,
+          driver: values.driver!,
           family: values.family,
           familyRegExp: values.familyRegExp,
-          group: values.group,
+          group: values.group!,
           level: values.level,
           partNumber: values.partNumber,
           partNumberRegExp: values.partNumberRegExp,

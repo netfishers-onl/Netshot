@@ -33,7 +33,7 @@ export default function ConfirmDialog() {
     label: confirmButton?.label,
     props: {
       variant: "primary",
-      loading: currentConfig.props.isLoading,
+      loading: currentConfig?.props.isLoading,
       onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
         evt?.stopPropagation()
         wasActedRef.current = true
@@ -47,7 +47,7 @@ export default function ConfirmDialog() {
     label: cancelButton?.label,
     props: {
       variant: "default",
-      disabled: currentConfig.props.isLoading,
+      disabled: currentConfig?.props.isLoading,
       onClick: (evt: React.MouseEvent<HTMLButtonElement>) => {
         evt?.stopPropagation()
         wasActedRef.current = true

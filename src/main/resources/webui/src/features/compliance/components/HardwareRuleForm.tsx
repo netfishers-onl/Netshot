@@ -32,7 +32,7 @@ export default function HardwareRuleForm(props: HardwareRuleFormProps) {
       return
     }
 
-    form.setValue("driver", rule.driver)
+    form.setValue("driver", rule.driver ?? null)
   }, [isPending, rule, form])
 
   const familyRegExp = useWatch({

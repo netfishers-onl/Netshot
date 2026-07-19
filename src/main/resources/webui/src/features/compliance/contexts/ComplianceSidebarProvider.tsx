@@ -17,7 +17,7 @@ export type ComplianceSidebarContextType = {
   togglePolicyExpanded(policyId: number): void;
 };
 
-export const ComplianceSidebarContext = createContext<ComplianceSidebarContextType>(null);
+export const ComplianceSidebarContext = createContext<ComplianceSidebarContextType>(null!);
 export const useComplianceSidebar = () => use(ComplianceSidebarContext);
 
 function getInitiallyExpandedPolicyIds(): number[] {

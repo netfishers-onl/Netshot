@@ -8,7 +8,7 @@ export function EntityLink(props: EntityLinkProps) {
   const { children, ...linkProps } = props
 
   return (
-    <Text textDecoration="underline" {...linkProps} asChild><Link>
+    <Text textDecoration="underline" {...linkProps} asChild><Link to={linkProps.to}>
         {children}
       </Link></Text>
   );

@@ -17,7 +17,7 @@ import {
 } from "@chakra-ui/react"
 import { type DateValue } from "@internationalized/date"
 import { ReactNode, RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useController, UseControllerProps } from "react-hook-form"
+import { FieldValues, useController, UseControllerProps } from "react-hook-form"
 import { useLocalization } from "@/i18n"
 import { useTranslation } from "react-i18next"
 
@@ -39,7 +39,7 @@ export enum FormControlType {
   Url = "url",
 }
 
-export type FormControlProps<T> = {
+export type FormControlProps<T extends FieldValues> = {
   label?: string
   type?: FormControlType
   helperText?: string
@@ -55,12 +55,12 @@ export type FormControlProps<T> = {
   /** Rendered attached to the end of the input as a bordered addon (e.g. a unit selector), instead of floating inside it like `suffix`. */
   endAddon?: ReactNode
   endAddonProps?: InputAddonProps
-  ref?: RefObject<HTMLInputElement | HTMLTextAreaElement>
+  ref?: RefObject<HTMLInputElement | HTMLTextAreaElement | null>
 } & Omit<InputProps, "recipe"> &
   Omit<SystemStyleObject, "recipe"> &
   UseControllerProps<T>
 
-function FormControl<T>(props: FormControlProps<T>) {
+function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
   const {
     ref,
     label,

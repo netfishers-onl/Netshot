@@ -27,9 +27,13 @@ export default function StaticGroupList() {
     return options.filter((o) => !selectedIds.includes(o.id))
   }
 
+  const onSelectDevice = (device: SimpleDevice | null) => {
+    if (device) append(device)
+  }
+
   return (
     <>
-      <DeviceAutocomplete onSelectItem={append} filterBy={excludeSelected} />
+      <DeviceAutocomplete onSelectItem={onSelectDevice} filterBy={excludeSelected} />
       <Stack flex="1" overflowY="auto">
         {fields.length > 0 ? (
           <>

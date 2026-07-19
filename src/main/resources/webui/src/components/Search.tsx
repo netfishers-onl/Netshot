@@ -30,7 +30,7 @@ export default function Search(props: SearchProps) {
 
   function clearValue() {
     setInnerValue("")
-    ref.current.focus()
+    ref.current?.focus()
 
     setTimeout(() => {
       if (onClear) onClear()

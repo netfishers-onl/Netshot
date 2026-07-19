@@ -50,7 +50,7 @@ export default function AddUserTrigger({ children, ...rest }: AddUserTriggerProp
           username: values.username,
           level: +values.level,
           local: !values.isRemote,
-          password: values.password,
+          password: values.password ?? undefined,
         })
 
         dialogRef.close()

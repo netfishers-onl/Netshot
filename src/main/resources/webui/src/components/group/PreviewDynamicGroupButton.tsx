@@ -40,7 +40,7 @@ export default function PreviewDynamicGroupButton(props: PreviewDynamicGroupButt
   const { t } = useTranslation()
 
   const mutation = useMutation<DeviceSearchResult, NetshotError>({
-    mutationFn: async () => api.device.search({ query }),
+    mutationFn: async () => (await api.device.search({ query })) ?? { query, devices: [] },
   })
 
   // Query changed since the last preview: drop the stale result rather than show it as current.

@@ -232,14 +232,14 @@ export default function AddDiagnosticDialog() {
                   </>
                 )}
               </Dialog.Body>
-              <Dialog.Footer justifyContent="space-between">
-                {formStep === FormStep.Details && (
-                  <Button onClick={previous}>{t("common.previous")}</Button>
-                )}
-                <Stack direction="row" gap="3" flex="1" justifyContent="end">
+              <Dialog.Footer justifyContent="flex-end">
+                <Stack direction="row" gap="3" alignItems="center">
                   <Button onClick={close}>{t("common.cancel")}</Button>
+                  <Button onClick={previous} disabled={formStep === FormStep.Type}>
+                    {t("common.previous")}
+                  </Button>
                   {formStep === FormStep.Type && (
-                    <Button variant="primary" disabled={type === null} onClick={next}>
+                    <Button disabled={type === null} onClick={next}>
                       {t("common.next")}
                     </Button>
                   )}

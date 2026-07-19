@@ -20,7 +20,7 @@ import {
   EnableDeviceTrigger,
   RemoveDeviceTrigger,
 } from "../components"
-import OpenDeviceScriptTrigger from "../components/OpenDeviceScriptTrigger"
+import RunDeviceScriptTrigger from "../components/RunDeviceScriptTrigger"
 import DeviceSnapshotTrigger from "../components/DeviceSnapshotTrigger"
 import DeviceProvider from "../contexts/DeviceProvider"
 
@@ -97,11 +97,22 @@ export default function DeviceDetailScreen() {
               <Protected minLevel={Level.Operator}>
                 <Skeleton loading={isPending}>
                   <DeviceSnapshotTrigger devices={[device!]}>
-                    <Button variant="primary">
+                    <Button variant="primary" disabled={isDisabled}>
                       <LuCamera />
                       {t("device.snapshot.take")}
                     </Button>
                   </DeviceSnapshotTrigger>
+                </Skeleton>
+              </Protected>
+
+              <Protected minLevel={Level.ExecureReadWrite}>
+                <Skeleton loading={isPending}>
+                  <RunDeviceScriptTrigger devices={[device!]}>
+                    <Button disabled={isDisabled}>
+                      <LuPlay />
+                      {t("script.run")}
+                    </Button>
+                  </RunDeviceScriptTrigger>
                 </Skeleton>
               </Protected>
 
@@ -127,14 +138,6 @@ export default function DeviceDetailScreen() {
                         <Menu.Content>
                           {device && (
                             <>
-                              <Protected minLevel={Level.ExecureReadWrite}>
-                                <OpenDeviceScriptTrigger devices={[device]}>
-                                  <Menu.Item value="run-script">
-                                    <LuPlay />
-                                    {t("script.run")}
-                                  </Menu.Item>
-                                </OpenDeviceScriptTrigger>
-                              </Protected>
                               {isDisabled ? (
                                 <EnableDeviceTrigger devices={[device]}>
                                   <Menu.Item value="enable">

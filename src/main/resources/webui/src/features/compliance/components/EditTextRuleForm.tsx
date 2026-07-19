@@ -60,6 +60,10 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
   // Resolution order mirrors JsDeviceHelper.getDeviceItem: generic fields first, then
   // driver-specific attributes, then diagnostics. Genuinely one-shot initialization
   // gated on async readiness (isInitialized), not state derivable during render.
+  // Depend on form.control (stable) rather than `form`: useFormContext() returns a
+  // new object on every render of an ancestor (FormProvider spreads its props into a
+  // fresh object each time), so using `form` itself here would re-run this effect on
+  // every parent render and could cascade into an infinite render loop.
   /* eslint-disable @eslint-react/set-state-in-effect */
   useEffect(() => {
     if (diagnosticQuery.isPending || isDeviceTypesPending || isInitialized) return
@@ -95,6 +99,7 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
     }
 
     setIsInitialized(true)
+    // eslint-disable-next-line @eslint-react/exhaustive-deps -- form.control used instead of form, see comment above
   }, [
     diagnosticQuery.isPending,
     isDeviceTypesPending,
@@ -102,7 +107,7 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
     attrForm,
     diagnosticForm,
     diagnostics,
-    form,
+    form.control,
     genericFieldOptions,
     getOptionByDriver,
   ])
@@ -127,31 +132,36 @@ export function EditTextRuleForm(props: EditTextRuleFormProps) {
 
   // Register "field" with required validation so setValue(..., { shouldValidate: true })
   // can drive isValid in both directions. clearErrors() alone does not update isValid.
+  // form.control (stable) used instead of form, see comment on the init effect above.
   useEffect(() => {
     form.register("field", { required: true })
     return () => form.unregister("field", { keepValue: true })
-  }, [form])
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [form.control])
 
   // Trigger full validation once after initialization so isValid reflects reality.
   // With mode:"onChange", isValid stays false until validation runs at least once.
   useEffect(() => {
     if (!isInitialized) return
     form.trigger()
-  }, [isInitialized, form])
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [isInitialized, form.control])
 
   // Sync active tab selections to parent form (only after initialization)
   useEffect(() => {
     if (!isInitialized || activeTab !== FieldSource.Attribute) return
     form.setValue("driver", attrDriver || "")
     form.setValue("field", attrField, { shouldValidate: true })
-  }, [isInitialized, attrDriver, attrField, activeTab, form])
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [isInitialized, attrDriver, attrField, activeTab, form.control])
 
   useEffect(() => {
     if (!isInitialized || activeTab !== FieldSource.Diagnostic) return
     const diag = diagnostics.find((d) => d.id === Number(diagId))
     form.setValue("driver", "")
     form.setValue("field", diag?.name ?? null, { shouldValidate: true })
-  }, [isInitialized, diagId, activeTab, diagnostics, form])
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [isInitialized, diagId, activeTab, diagnostics, form.control])
 
   function handleTabChange(details: { value: string }) {
     const newTab = details.value as FieldSource

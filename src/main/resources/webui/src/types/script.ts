@@ -11,6 +11,7 @@ export type Script = {
   script: string;
   deviceDriver: string;
   author: string;
+  folder: string;
   userInputDefinitions: Record<string, ScriptUserInputDefinition>;
   realDeviceType: string;
 };

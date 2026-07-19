@@ -194,12 +194,12 @@ export default function AddGroupDialog() {
               </Dialog.Body>
               <Dialog.Footer justifyContent="flex-end">
                 <Stack direction="row" gap="3" alignItems="center">
-                  {formStep === FormStep.Details && (
-                    <Button onClick={previous}>{t("common.previous")}</Button>
-                  )}
                   <Button onClick={close}>{t("common.cancel")}</Button>
+                  <Button onClick={previous} disabled={formStep === FormStep.Type}>
+                    {t("common.previous")}
+                  </Button>
                   {formStep === FormStep.Type && (
-                    <Button variant="primary" disabled={!groupType} onClick={next}>
+                    <Button disabled={!groupType} onClick={next}>
                       {t("common.next")}
                     </Button>
                   )}

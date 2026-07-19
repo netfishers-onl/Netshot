@@ -574,14 +574,14 @@ export default function AddTaskDialog({ initialType }: AddTaskDialogProps = {}) 
                   </Stack>
                 )}
               </Dialog.Body>
-              <Dialog.Footer justifyContent="space-between">
-                {formStep === FormStep.Details && !initialType && (
-                  <Button onClick={previous}>{t("common.previous")}</Button>
-                )}
-                <Stack direction="row" gap="3" flex="1" justifyContent="end">
+              <Dialog.Footer justifyContent="flex-end">
+                <Stack direction="row" gap="3" alignItems="center">
                   <Button onClick={close}>{t("common.cancel")}</Button>
+                  <Button onClick={previous} disabled={!!initialType || formStep === FormStep.Type}>
+                    {t("common.previous")}
+                  </Button>
                   {formStep === FormStep.Type && (
-                    <Button variant="primary" disabled={taskType === null} onClick={next}>
+                    <Button disabled={taskType === null} onClick={next}>
                       {t("common.next")}
                     </Button>
                   )}

@@ -1,6 +1,7 @@
 export * from "./array"
 export * from "./booleanToString"
 export * from "./createFoldersFromGroups"
+export * from "./createFoldersFromScripts"
 export * from "./download"
 export * from "./findValue"
 export * from "./generateToken"

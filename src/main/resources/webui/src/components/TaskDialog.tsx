@@ -426,7 +426,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                             <Text>{task.deviceDriver}</Text>
                           </Flex>
                         )}
-                        <Box p="6" borderWidth="1px" borderColor="grey.100" borderRadius="xl">
+                        <Box p="6" borderWidth="1px" borderColor="grey.100" borderRadius="xl" maxH="300px" overflowY="auto">
                           <Text fontFamily="mono" whiteSpace="pre-wrap">
                             {task?.script}
                           </Text>

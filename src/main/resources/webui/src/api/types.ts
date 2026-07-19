@@ -320,6 +320,7 @@ export type CreateOrUpdateTaskPayload = {
   debugEnabled?: boolean
   dontRunDiagnostics?: boolean
   dontCheckCompliance?: boolean
+  runSnapshot?: boolean
 }
 
 export type TaskSummaryResponse = {

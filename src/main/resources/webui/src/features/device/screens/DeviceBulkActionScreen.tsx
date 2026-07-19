@@ -15,7 +15,7 @@ import {
   RemoveDeviceTrigger,
   DeviceSnapshotTrigger,
 } from "../components"
-import OpenDeviceScriptTrigger from "../components/OpenDeviceScriptTrigger"
+import RunDeviceScriptTrigger from "../components/RunDeviceScriptTrigger"
 import { useDeviceSidebarStore } from "../stores"
 
 export default function DeviceBulkActionScreen() {
@@ -36,12 +36,12 @@ export default function DeviceBulkActionScreen() {
 
         <Stack gap="2">
           <Protected minLevel={Level.ExecureReadWrite}>
-            <OpenDeviceScriptTrigger devices={selected}>
+            <RunDeviceScriptTrigger devices={selected}>
               <Button justifyContent="start">
                 {TASK_TYPE_ICONS[TaskType.RunDeviceGroupScript]}
                 {t("script.run")}
               </Button>
-            </OpenDeviceScriptTrigger>
+            </RunDeviceScriptTrigger>
           </Protected>
           <Protected minLevel={Level.Operator}>
             <DeviceSnapshotTrigger devices={selected}>

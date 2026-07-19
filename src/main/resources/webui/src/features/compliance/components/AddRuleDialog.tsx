@@ -249,12 +249,12 @@ export default function AddRuleDialog({ policy }: { policy: Policy }) {
               </Dialog.Body>
               <Dialog.Footer justifyContent="flex-end">
                 <Stack direction="row" gap="3" alignItems="center">
-                  {formStep === FormStep.Details && (
-                    <Button onClick={previous}>{t("common.previous")}</Button>
-                  )}
                   <Button onClick={close}>{t("common.cancel")}</Button>
+                  <Button onClick={previous} disabled={formStep === FormStep.Type}>
+                    {t("common.previous")}
+                  </Button>
                   {formStep === FormStep.Type && (
-                    <Button variant="primary" disabled={type === null} onClick={next}>
+                    <Button disabled={type === null} onClick={next}>
                       {t("common.next")}
                     </Button>
                   )}

@@ -1,4 +1,5 @@
 import { useDeviceTypesWithOptions } from "@/features/device/api"
+import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
 
 export function useDeviceTypeOptions() {
@@ -9,32 +10,40 @@ export function useDeviceTypeOptions() {
    */
   const { isSuccess, isPending, data } = useDeviceTypesWithOptions()
 
-  function getOptionsWithName() {
+  // Memoized so consumers can safely depend on these in effect/memo dependency
+  // arrays without them changing identity on every render.
+  const getOptionsWithName = useCallback(() => {
     return data.map((opt) => ({
       label: opt.label,
       value: opt.value.name,
     }))
-  }
+  }, [data])
 
   /**
    * Get the option item from device type list by driver name
    */
-  const getOptionByDriver = (driver: string | null) => {
-    return data.find((option) => option.value?.name === driver)
-  }
+  const getOptionByDriver = useCallback(
+    (driver: string | null) => {
+      return data.find((option) => option.value?.name === driver)
+    },
+    [data]
+  )
 
   /**
    * Get the label of device type by driver name
    */
-  const getLabelByDriver = (driver: string) => {
-    const option = getOptionByDriver(driver)
+  const getLabelByDriver = useCallback(
+    (driver: string) => {
+      const option = getOptionByDriver(driver)
 
-    if (!option) {
-      return t("common.unknownLabel")
-    }
+      if (!option) {
+        return t("common.unknownLabel")
+      }
 
-    return option.value.description
-  }
+      return option.value.description
+    },
+    [getOptionByDriver, t]
+  )
 
   return {
     isPending,

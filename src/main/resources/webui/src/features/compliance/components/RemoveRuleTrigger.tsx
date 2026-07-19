@@ -46,7 +46,7 @@ export default function RemoveRuleTrigger({ policyId, rule, children, ...rest }:
         queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.POLICY_LIST] })
         queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.POLICY_SEARCH_LIST] })
         queryClient.invalidateQueries({ queryKey: [QUERIES.POLICY_RULE_LIST, policyId] })
-        navigate("/app/compliance")
+        navigate(`/app/compliance/config/${policyId}`)
         dialogRef.close()
       },
       confirmButton: {

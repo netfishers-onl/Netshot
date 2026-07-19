@@ -2,8 +2,9 @@ import { Button, ButtonGroup, Heading, Stack, Text } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
 
 import { Protected } from "@/components"
-import { LuActivity, LuCamera, LuCircleCheck, LuSquarePen, LuPlay, LuTrash, LuZap, LuZapOff } from "react-icons/lu"
-import { Level } from "@/types"
+import { LuSquarePen, LuTrash, LuZap, LuZapOff } from "react-icons/lu"
+import { Level, TaskType } from "@/types"
+import { TASK_TYPE_ICONS } from "@/features/task/constants"
 
 import {
   BulkEditDeviceTrigger,
@@ -37,7 +38,7 @@ export default function DeviceBulkActionScreen() {
           <Protected minLevel={Level.ExecureReadWrite}>
             <OpenDeviceScriptTrigger devices={selected}>
               <Button justifyContent="start">
-                <LuPlay />
+                {TASK_TYPE_ICONS[TaskType.RunDeviceGroupScript]}
                 {t("script.run")}
               </Button>
             </OpenDeviceScriptTrigger>
@@ -45,7 +46,7 @@ export default function DeviceBulkActionScreen() {
           <Protected minLevel={Level.Operator}>
             <DeviceSnapshotTrigger devices={selected}>
               <Button justifyContent="start">
-                <LuCamera />
+                {TASK_TYPE_ICONS[TaskType.TakeGroupSnapshot]}
                 {t("device.snapshot.take")}
               </Button>
             </DeviceSnapshotTrigger>
@@ -53,7 +54,7 @@ export default function DeviceBulkActionScreen() {
           <Protected minLevel={Level.Operator}>
             <DeviceComplianceTrigger devices={selected}>
               <Button justifyContent="start">
-                <LuCircleCheck />
+                {TASK_TYPE_ICONS[TaskType.CheckGroupCompliance]}
                 {t("compliance.check")}
               </Button>
             </DeviceComplianceTrigger>
@@ -61,7 +62,7 @@ export default function DeviceBulkActionScreen() {
           <Protected minLevel={Level.Operator}>
             <DeviceDiagnosticTrigger devices={selected}>
               <Button justifyContent="start">
-                <LuActivity />
+                {TASK_TYPE_ICONS[TaskType.RunGroupDiagnostic]}
                 {t("diagnostic.run")}
               </Button>
             </DeviceDiagnosticTrigger>

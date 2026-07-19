@@ -83,6 +83,14 @@ public class DeviceJsScript {
 	private String author;
 
 	@Getter(onMethod = @__({
+		@NaturalId,
+		@Column(length = 1000),
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private String folder = "";
+
+	@Getter(onMethod = @__({
 		@Transient,
 		@XmlElement, @JsonView(DefaultView.class)
 	}))

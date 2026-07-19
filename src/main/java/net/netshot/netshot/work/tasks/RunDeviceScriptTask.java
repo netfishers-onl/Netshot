@@ -37,6 +37,7 @@ import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.TaskManager;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
@@ -82,6 +83,13 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 	}))
 	@Setter
 	private Map<String, String> userInputValues;
+
+	/** Automatically run a snapshot after successful script execution. */
+	@Getter(onMethod = @__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private boolean runSnapshot;
 
 	/**
 	 * Instantiates a new RunDeviceScriptTask task.
@@ -164,6 +172,17 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 			}
 			session.close();
 		}
+
+		if (this.runSnapshot) {
+			try {
+				Task snapshotTask = new TakeSnapshotTask(device, "Snapshot after device script execution", "Auto", false, false, false);
+				snapshotTask.setPriority(this.getPriority());
+				TaskManager.addTask(snapshotTask);
+			}
+			catch (Exception e) {
+				log.error("Task {}. Error while registering the snapshot task.", this.getId(), e);
+			}
+		}
 	}
 
 	/*(non-Javadoc)
@@ -200,6 +219,7 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 		RunDeviceScriptTask task = (RunDeviceScriptTask) super.clone();
 		task.setDevice(this.device);
 		task.setDeviceDriver(this.deviceDriver);
+		task.setRunSnapshot(this.runSnapshot);
 		return task;
 	}
 

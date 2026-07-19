@@ -408,13 +408,16 @@ public class RestService extends Thread {
 	private boolean isDuplicateException(PersistenceException e) {
 		Throwable t = e;
 		for (int i = 0; i < 2; i++) {
-			t = t.getCause();
 			if (t == null) {
 				return false;
+			}
+			if (t instanceof ConstraintViolationException) {
+				return true;
 			}
 			if (t.getMessage().toLowerCase().contains("duplicate")) {
 				return true;
 			}
+			t = t.getCause();
 		}
 		return false;
 	}
@@ -3671,6 +3674,14 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private boolean dontCheckCompliance;
+
+		/** Automatically run a snapshot after successful script execution (applies to script tasks). */
+		@Schema(description = "Automatically run a snapshot after successful script execution (applies to script tasks)")
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private boolean runSnapshot;
 	}
 
 	/**
@@ -4060,6 +4071,7 @@ public class RestService extends Thread {
 			}
 			task = new RunDeviceScriptTask(device, rsTask.getScript(), driver, rsTask.getComments(), userName);
 			((RunDeviceScriptTask) task).setUserInputValues(rsTask.getUserInputs());
+			((RunDeviceScriptTask) task).setRunSnapshot(rsTask.isRunSnapshot());
 		}
 		else if ("RunDeviceGroupScriptTask".equals(rsTask.getType())) {
 			if (!securityContext.isUserInRole(User.ROLE_EXECUTEREADWRITE)) {
@@ -4097,6 +4109,7 @@ public class RestService extends Thread {
 				}
 				task = new RunDeviceGroupScriptTask(group, rsTask.getScript(), driver, rsTask.getComments(), userName);
 				((RunDeviceGroupScriptTask) task).setUserInputValues(rsTask.getUserInputs());
+				((RunDeviceGroupScriptTask) task).setRunSnapshot(rsTask.isRunSnapshot());
 			}
 			catch (HibernateException e) {
 				log.error("Error while retrieving the group.", e);

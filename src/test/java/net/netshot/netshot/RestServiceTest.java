@@ -63,6 +63,7 @@ import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.rest.NetshotBadRequestException;
 import net.netshot.netshot.rest.RestService;
+import net.netshot.netshot.work.tasks.DeviceJsScript;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -1731,7 +1732,7 @@ public class RestServiceTest {
 	@Nested
 	@DisplayName("Report tests")
 	@ResourceLock("DB")
-	class ReportTests {
+	class ReportTest {
 
 		private String testDomainName = "Domain 1";
 		private Domain testDomain;
@@ -1824,6 +1825,154 @@ public class RestServiceTest {
 					Assertions.assertEquals(this.testDevices.size() * 2, intfSheet.getLastRowNum(),
 						"Excel report doesn't have the expected number of lines in Inventory sheet");
 				}
+			}
+		}
+
+	}
+
+	@Nested
+	@DisplayName("Script tests")
+	@ResourceLock("DB")
+	class ScriptTest {
+
+		private final String testScriptContent =
+			"function run(cli, device) {\n" +
+			"   cli.macro(\"configure\");\n" +
+			"   cli.command(\"no ip domain-lookup\")\n" +
+			"   cli.macro(\"end\");\n" +
+			"   cli.macro(\"save\");\n" +
+			"}";
+
+		@BeforeAll
+		static void loadDrivers() throws Exception {
+			DeviceDriver.refreshDrivers();
+		}
+
+		private DeviceDriver getTestDriver() {
+			return DeviceDriver.getDriverByName("CiscoIOS12");
+		}
+
+		@AfterEach
+		void cleanUpData() {
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				session
+					.createMutationQuery("delete from DeviceJsScript")
+					.executeUpdate();
+				session.getTransaction().commit();
+			}
+		}
+
+		@Test
+		@DisplayName("Add script")
+		@ResourceLock("DB")
+		void addScript() throws IOException, InterruptedException {
+			ObjectNode data = JsonNodeFactory.instance.objectNode()
+				.put("name", "Test Script")
+				.put("deviceDriver", this.getTestDriver().getName())
+				.put("script", testScriptContent);
+			{
+				HttpResponse<JsonNode> response = apiClient.post("/scripts",
+					data.deepCopy().put("deviceDriver", "NonExistingDriver"));
+				Assertions.assertEquals(
+					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+					"Not getting 400 response for invalid device driver");
+			}
+			{
+				HttpResponse<JsonNode> response = apiClient.post("/scripts",
+					data.deepCopy().put("name", ""));
+				Assertions.assertEquals(
+					Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+					"Not getting 400 response for invalid script name");
+			}
+			{
+				HttpResponse<JsonNode> response = apiClient.post("/scripts", data);
+				Assertions.assertEquals(
+					Response.Status.CREATED.getStatusCode(), response.statusCode(),
+					"Not getting 201 response for created script");
+			}
+			try (Session session = Database.getSession()) {
+				DeviceJsScript newScript = session
+					.createQuery("from DeviceJsScript s where s.name = :name", DeviceJsScript.class)
+					.setParameter("name", "Test Script")
+					.uniqueResult();
+				Assertions.assertNotNull(newScript, "Script not created as expected");
+				Assertions.assertEquals(this.getTestDriver().getName(), newScript.getDeviceDriver(),
+					"Script not created as expected");
+				Assertions.assertEquals(testScriptContent, newScript.getScript(),
+					"Script not created as expected");
+			}
+			{
+				// Duplicate script name in the same folder
+				HttpResponse<JsonNode> response = apiClient.post("/scripts", data);
+				Assertions.assertEquals(
+					Response.Status.CONFLICT.getStatusCode(), response.statusCode(),
+					"Not getting 400 response for duplicated script name");
+			}
+			{
+				// Same script name but different folder is allowed
+				HttpResponse<JsonNode> response = apiClient.post("/scripts",
+					data.deepCopy().put("folder", "Other folder"));
+				Assertions.assertEquals(
+					Response.Status.CREATED.getStatusCode(), response.statusCode(),
+					"Not getting 201 response for created script with same name in another folder");
+			}
+		}
+
+		@Test
+		@DisplayName("Get script")
+		@ResourceLock("DB")
+		void getScript() throws IOException, InterruptedException {
+			DeviceJsScript script = new DeviceJsScript(
+				"Test Script", this.getTestDriver().getName(), testScriptContent, "author1");
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				session.persist(script);
+				session.getTransaction().commit();
+			}
+			HttpResponse<JsonNode> response = apiClient.get("/scripts/%d".formatted(script.getId()));
+			Assertions.assertEquals(
+				Response.Status.OK.getStatusCode(), response.statusCode(),
+				"Not getting 200 response for script");
+			JsonNode scriptNode = response.body();
+			Assertions.assertEquals(script.getName(), scriptNode.get("name").asText(),
+				"Retrieved script doesn't match expected object");
+			Assertions.assertEquals(script.getDeviceDriver(), scriptNode.get("deviceDriver").asText(),
+				"Retrieved script doesn't match expected object");
+			Assertions.assertEquals(script.getScript(), scriptNode.get("script").asText(),
+				"Retrieved script doesn't match expected object");
+			Assertions.assertEquals(script.getAuthor(), scriptNode.get("author").asText(),
+				"Retrieved script doesn't match expected object");
+		}
+
+		@Test
+		@DisplayName("Delete script")
+		@ResourceLock("DB")
+		void deleteScript() throws IOException, InterruptedException {
+			DeviceJsScript script = new DeviceJsScript(
+				"Test Script", this.getTestDriver().getName(), testScriptContent, "author1");
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				session.persist(script);
+				session.getTransaction().commit();
+			}
+			{
+				HttpResponse<JsonNode> response = apiClient.delete(
+					"/scripts/%d".formatted(UNKNOWN_ID));
+				Assertions.assertEquals(
+					Response.Status.NOT_FOUND.getStatusCode(), response.statusCode(),
+					"Not getting 404 response for unknown script deletion");
+			}
+			{
+				HttpResponse<JsonNode> response = apiClient.delete(
+					"/scripts/%d".formatted(script.getId()));
+				Assertions.assertEquals(
+					Response.Status.NO_CONTENT.getStatusCode(), response.statusCode(),
+					"Not getting 204 response for script deletion");
+			}
+			try (Session session = Database.getSession()) {
+				DeviceJsScript deletedScript = session.get(DeviceJsScript.class, script.getId());
+				Assertions.assertNull(deletedScript, "Script not deleted as expected");
 			}
 		}
 

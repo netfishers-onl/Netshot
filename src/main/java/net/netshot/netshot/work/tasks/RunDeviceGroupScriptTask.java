@@ -81,6 +81,10 @@ public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTa
 	@Setter
 	private Map<String, String> userInputValues;
 
+	/** Automatically run a snapshot on each device after successful script execution. */
+	@Getter
+	@Setter
+	private boolean runSnapshot;
 
 	public RunDeviceGroupScriptTask() {
 
@@ -159,6 +163,7 @@ public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTa
 			RunDeviceScriptTask task = new RunDeviceScriptTask(device, script, driver, comment, author);
 			task.setPriority(this.getPriority());
 			task.setUserInputValues(this.userInputValues);
+			task.setRunSnapshot(this.runSnapshot);
 			try {
 				TaskManager.addTask(task);
 			}

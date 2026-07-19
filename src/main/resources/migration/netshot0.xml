@@ -1439,4 +1439,29 @@
 			<column name="checksum" type="VARCHAR(255)"/>
 		</addColumn>
 	</changeSet>
+	<changeSet author="netshot" id="0.25.0_1">
+		<addColumn tableName="device_js_script">
+			<column name="folder" type="VARCHAR(1000)" value=""/>
+		</addColumn>
+		<addUniqueConstraint tableName="device_js_script" columnNames="name, folder"
+			constraintName="uk_3v8g3v62xfi1lp16ol3tg1ykg"/>
+	</changeSet>
+	<changeSet author="netshot" dbms="postgresql" id="0.25.0_2a">
+		<dropUniqueConstraint tableName="device_js_script" constraintName="device_js_script_name_key"/>
+	</changeSet>
+	<changeSet author="netshot" dbms="h2" id="0.25.0_2b">
+		<dropUniqueConstraint tableName="device_js_script" constraintName="CONSTRAINT_8"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_3">
+		<addColumn tableName="run_device_script_task">
+			<column name="run_snapshot" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+		<addColumn tableName="run_device_group_script_task">
+			<column name="run_snapshot" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

@@ -5,7 +5,7 @@ import { Device, Script, SimpleDevice } from "@/types"
 import { sortAlphabetical } from "@/utils"
 import { Center, Spinner, Stack } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { CreateDeviceScriptButton } from "./CreateDeviceScriptButton"
 import DeviceScriptEditor from "./DeviceScriptEditor"
@@ -28,9 +28,12 @@ export default function DeviceScriptView(props: DeviceScriptViewProps) {
   const { data: scripts, isPending } = useQuery({
     queryKey: [QUERIES.SCRIPT_LIST, query, pagination.offset],
     queryFn: async () => api.script.getAll(pagination),
-    select(data: Script[]) {
-      return sortAlphabetical(data, "name").filter((item) => item.name?.startsWith(query))
-    },
+    select: useCallback(
+      (data: Script[]) => {
+        return sortAlphabetical(data, "name").filter((item) => item.name?.startsWith(query))
+      },
+      [query]
+    ),
   })
 
   const onQuery = (value: string) => {

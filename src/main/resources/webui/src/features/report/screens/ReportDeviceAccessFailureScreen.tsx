@@ -27,7 +27,7 @@ import {
 } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { createColumnHelper } from "@tanstack/react-table"
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { Link, useNavigate, useSearchParams } from "react-router"
@@ -97,9 +97,12 @@ export default function ReportDeviceAccessFailure() {
 
       return (await api.report.getAllDeviceAccessFailures(queryParams)) ?? []
     },
-    select(res) {
-      return search(res, "name").with(pagination.query)
-    },
+    select: useCallback(
+      (res: DeviceAccessFailure[]) => {
+        return search(res, "name").with(pagination.query)
+      },
+      [pagination.query]
+    ),
   })
 
   const isSearching = Boolean(pagination.query?.trim())

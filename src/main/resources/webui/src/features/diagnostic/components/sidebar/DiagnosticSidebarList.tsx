@@ -18,7 +18,7 @@ export default function DiagnosticSidebarList() {
   const { data, isPending } = useQuery({
     queryKey: [QUERIES.DIAGNOSTIC_INFINITE_LIST],
     queryFn: () => api.diagnostic.getAll(),
-    select: (res: Diagnostic[]) => sortAlphabetical(res, "name"),
+    select: useCallback((res: Diagnostic[]) => sortAlphabetical(res, "name"), []),
   })
 
   const activeIndex = data?.findIndex((diagnostic) => diagnostic.id === +(params?.id ?? "0")) ?? -1

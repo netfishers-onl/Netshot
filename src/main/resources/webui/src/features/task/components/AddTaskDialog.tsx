@@ -51,14 +51,18 @@ type FormData = {
   daysToPurge?: number
 } & ScheduleFormType
 
-export default function AddTaskDialog() {
+export type AddTaskDialogProps = {
+  initialType?: TaskType
+}
+
+export default function AddTaskDialog({ initialType }: AddTaskDialogProps = {}) {
   const { t } = useTranslation()
   const toast = useToast()
   const queryClient = useQueryClient()
   const taskDialog = useCustomDialog()
   const dialogConfig = useDialogConfig()
-  const [taskType, setTaskType] = useState<TaskType | null>(null)
-  const [formStep, setFormStep] = useState(FormStep.Type)
+  const [taskType, setTaskType] = useState<TaskType | null>(initialType ?? null)
+  const [formStep, setFormStep] = useState(initialType ? FormStep.Details : FormStep.Type)
 
   const form = useForm<FormData>({
     defaultValues: {
@@ -305,9 +309,11 @@ export default function AddTaskDialog() {
                 </Heading>
 
                 <Stack direction="row" gap="3" alignItems="center">
-                  <Text fontSize="md" color="grey.400">
-                    {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
-                  </Text>
+                  {!initialType && (
+                    <Text fontSize="md" color="grey.400">
+                      {t("common.stepXofY", { step: formStep === FormStep.Type ? 1 : 2, total: 2 })}
+                    </Text>
+                  )}
                   <CloseButton size="sm" variant="outline" onClick={close} />
                 </Stack>
               </Dialog.Header>
@@ -569,7 +575,7 @@ export default function AddTaskDialog() {
                 )}
               </Dialog.Body>
               <Dialog.Footer justifyContent="space-between">
-                {formStep === FormStep.Details && (
+                {formStep === FormStep.Details && !initialType && (
                   <Button onClick={previous}>{t("common.previous")}</Button>
                 )}
                 <Stack direction="row" gap="3" flex="1" justifyContent="end">

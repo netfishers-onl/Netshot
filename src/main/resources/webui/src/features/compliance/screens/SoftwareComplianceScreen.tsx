@@ -12,7 +12,7 @@ import { getNextItemInArray, search } from "@/utils"
 import { Badge, Button, Heading, Icon, IconButton, Skeleton, Spacer, Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper, Row } from "@tanstack/react-table"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { LuSquarePen, LuPlus, LuTrash, LuAsterisk, LuTrophy, LuMoveRight } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import AddSoftwareRuleTrigger from "../components/AddSoftwareRuleTrigger"
@@ -42,9 +42,12 @@ export default function SoftwareComplianceScreen() {
   } = useQuery({
     queryKey: [QUERIES.SOFTWARE_RULE_LIST, pagination.query],
     queryFn: api.softwareRule.getAll,
-    select: (res: SoftwareRule[]): SoftwareRule[] => {
-      return search(res, "deviceType", "family").with(pagination.query)
-    },
+    select: useCallback(
+      (res: SoftwareRule[]): SoftwareRule[] => {
+        return search(res, "deviceType", "family").with(pagination.query)
+      },
+      [pagination.query]
+    ),
   })
 
   // Re-sync the local (reorderable) copy from the query once it settles, but
@@ -57,8 +60,8 @@ export default function SoftwareComplianceScreen() {
     }
   }, [isSuccess, rules, reorderPending])
 
-  const isDraggable = (user?.level || 0) >= Level.ReadWrite
   const isSearching = Boolean(pagination.query?.trim())
+  const isDraggable = (user?.level || 0) >= Level.ReadWrite && !isSearching
 
   const columns = [
     columnHelper.accessor("targetGroup", {

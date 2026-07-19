@@ -1,18 +1,22 @@
 import { useCustomDialog } from "@/dialog"
 import React from "react"
 import Slot from "@/components/Slot"
+import { TaskType } from "@/types"
 import AddTaskDialog from "./AddTaskDialog"
 
-export type AddTaskTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
+export type AddTaskTriggerProps = {
+  children: React.ReactElement<Record<string, unknown>>
+  initialType?: TaskType
+} & Record<string, unknown>
 
-export default function AddTaskTrigger({ children, ...rest }: AddTaskTriggerProps) {
+export default function AddTaskTrigger({ children, initialType, ...rest }: AddTaskTriggerProps) {
   const dialog = useCustomDialog()
 
   const open = (evt?: React.MouseEvent) => {
     evt?.stopPropagation()
 
-    dialog.open(<AddTaskDialog />, {
-      size: "xl",
+    dialog.open(<AddTaskDialog initialType={initialType} />, {
+      size: initialType ? "lg" : "xl",
     })
   }
 

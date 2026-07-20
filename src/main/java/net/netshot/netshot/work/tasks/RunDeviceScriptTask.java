@@ -91,6 +91,20 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 	@Setter
 	private boolean runSnapshot;
 
+	/** Automatically run diagnostics after successful script execution. */
+	@Getter(onMethod = @__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private boolean runDiagnostics;
+
+	/** Automatically check compliance after successful script execution. */
+	@Getter(onMethod = @__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
+	@Setter
+	private boolean checkCompliance;
+
 	/**
 	 * Instantiates a new RunDeviceScriptTask task.
 	 */
@@ -175,12 +189,33 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 
 		if (this.runSnapshot) {
 			try {
-				Task snapshotTask = new TakeSnapshotTask(device, "Snapshot after device script execution", "Auto", false, false, false);
+				Task snapshotTask = new TakeSnapshotTask(device, "Snapshot after device script execution", "Auto",
+					false, !this.runDiagnostics, !this.checkCompliance);
 				snapshotTask.setPriority(this.getPriority());
 				TaskManager.addTask(snapshotTask);
 			}
 			catch (Exception e) {
 				log.error("Task {}. Error while registering the snapshot task.", this.getId(), e);
+			}
+		}
+		else if (this.runDiagnostics) {
+			try {
+				Task diagTask = new RunDiagnosticsTask(device, "Run diagnostics after device script execution", "Auto", !this.checkCompliance);
+				diagTask.setPriority(this.getPriority());
+				TaskManager.addTask(diagTask);
+			}
+			catch (Exception e) {
+				log.error("Task {}. Error while registering the diagnostic task.", this.getId(), e);
+			}
+		}
+		else if (this.checkCompliance) {
+			try {
+				Task checkTask = new CheckComplianceTask(device, "Check compliance after device script execution", "Auto");
+				checkTask.setPriority(this.getPriority());
+				TaskManager.addTask(checkTask);
+			}
+			catch (Exception e) {
+				log.error("Task {}. Error while registering the check compliance task.", this.getId(), e);
 			}
 		}
 	}
@@ -220,6 +255,8 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 		task.setDevice(this.device);
 		task.setDeviceDriver(this.deviceDriver);
 		task.setRunSnapshot(this.runSnapshot);
+		task.setRunDiagnostics(this.runDiagnostics);
+		task.setCheckCompliance(this.checkCompliance);
 		return task;
 	}
 

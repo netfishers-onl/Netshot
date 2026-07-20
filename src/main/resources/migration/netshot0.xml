@@ -1464,4 +1464,22 @@
 			</column>
 		</addColumn>
 	</changeSet>
+	<changeSet author="netshot" id="0.25.0_4">
+		<addColumn tableName="run_device_script_task">
+			<column name="run_diagnostics" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+			<column name="check_compliance" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+		<addColumn tableName="run_device_group_script_task">
+			<column name="run_diagnostics" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+			<column name="check_compliance" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

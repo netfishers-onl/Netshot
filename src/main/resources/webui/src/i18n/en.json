@@ -155,6 +155,8 @@
       "runScript": "Run device script",
       "runDiagnosticsAfterSnapshot": "Run the device diagnostics after snapshot",
       "runSnapshotAfterScript": "Run a snapshot after the script execution",
+      "runDiagnosticsAfterScript": "Run the device diagnostics after the script execution",
+      "checkComplianceAfterScript": "Check device compliance after the script execution",
       "searchBy": "Search by name, description...",
       "searchAndTestRule": "Search device and test rule...",
       "search": "Search device...",

@@ -86,6 +86,16 @@ public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTa
 	@Setter
 	private boolean runSnapshot;
 
+	/** Automatically run diagnostics on each device after successful script execution. */
+	@Getter
+	@Setter
+	private boolean runDiagnostics;
+
+	/** Automatically check compliance on each device after successful script execution. */
+	@Getter
+	@Setter
+	private boolean checkCompliance;
+
 	public RunDeviceGroupScriptTask() {
 
 	}
@@ -164,6 +174,8 @@ public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTa
 			task.setPriority(this.getPriority());
 			task.setUserInputValues(this.userInputValues);
 			task.setRunSnapshot(this.runSnapshot);
+			task.setRunDiagnostics(this.runDiagnostics);
+			task.setCheckCompliance(this.checkCompliance);
 			try {
 				TaskManager.addTask(task);
 			}

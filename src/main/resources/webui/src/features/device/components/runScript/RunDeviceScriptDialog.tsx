@@ -54,6 +54,8 @@ type RunDeviceScriptForm = {
   userInputs: Record<string, string>
   debugEnabled: boolean
   runSnapshot: boolean
+  runDiagnostics: boolean
+  checkCompliance: boolean
 } & ScheduleFormType
 
 type ConfigureStepProps = {
@@ -242,6 +244,12 @@ function RunStep(props: RunStepProps) {
         <Checkbox control={form.control} name="runSnapshot">
           {t("device.runSnapshotAfterScript")}
         </Checkbox>
+        <Checkbox control={form.control} name="runDiagnostics">
+          {t("device.runDiagnosticsAfterScript")}
+        </Checkbox>
+        <Checkbox control={form.control} name="checkCompliance">
+          {t("device.checkComplianceAfterScript")}
+        </Checkbox>
         <Checkbox control={form.control} name="debugEnabled">
           {t("device.enableFullTrace")}
         </Checkbox>
@@ -276,6 +284,8 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
       userInputs: {},
       debugEnabled: false,
       runSnapshot: true,
+      runDiagnostics: false,
+      checkCompliance: false,
     },
   })
 
@@ -397,7 +407,8 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
   })
 
   async function submit(values: RunDeviceScriptForm) {
-    const { schedule, userInputs, debugEnabled, runSnapshot, driver, script } = values
+    const { schedule, userInputs, debugEnabled, runSnapshot, runDiagnostics, checkCompliance, driver, script } =
+      values
     const tasks: Task[] = []
 
     for (const device of devices) {
@@ -409,6 +420,8 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
         userInputs,
         debugEnabled,
         runSnapshot,
+        runDiagnostics,
+        checkCompliance,
         ...schedule,
       })
 

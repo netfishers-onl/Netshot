@@ -155,6 +155,8 @@
       "runScript": "Exécuter le script d'équipement",
       "runDiagnosticsAfterSnapshot": "Exécuter les diagnostics de l'équipement après le snapshot",
       "runSnapshotAfterScript": "Exécuter un snapshot après l'exécution du script",
+      "runDiagnosticsAfterScript": "Exécuter les diagnostics de l'équipement après l'exécution du script",
+      "checkComplianceAfterScript": "Vérifier la conformité de l'équipement après l'exécution du script",
       "searchBy": "Rechercher nom, description, etc.",
       "searchAndTestRule": "Rechercher un équipement et tester la règle...",
       "search": "Rechercher un équipement...",

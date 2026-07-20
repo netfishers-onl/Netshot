@@ -3682,6 +3682,22 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private boolean runSnapshot;
+
+		/** Automatically run diagnostics after successful script execution (applies to script tasks). */
+		@Schema(description = "Automatically run diagnostics after successful script execution (applies to script tasks)")
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private boolean runDiagnostics;
+
+		/** Automatically check compliance after successful script execution (applies to script tasks). */
+		@Schema(description = "Automatically check compliance after successful script execution (applies to script tasks)")
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private boolean checkCompliance;
 	}
 
 	/**
@@ -4072,6 +4088,8 @@ public class RestService extends Thread {
 			task = new RunDeviceScriptTask(device, rsTask.getScript(), driver, rsTask.getComments(), userName);
 			((RunDeviceScriptTask) task).setUserInputValues(rsTask.getUserInputs());
 			((RunDeviceScriptTask) task).setRunSnapshot(rsTask.isRunSnapshot());
+			((RunDeviceScriptTask) task).setRunDiagnostics(rsTask.isRunDiagnostics());
+			((RunDeviceScriptTask) task).setCheckCompliance(rsTask.isCheckCompliance());
 		}
 		else if ("RunDeviceGroupScriptTask".equals(rsTask.getType())) {
 			if (!securityContext.isUserInRole(User.ROLE_EXECUTEREADWRITE)) {
@@ -4110,6 +4128,8 @@ public class RestService extends Thread {
 				task = new RunDeviceGroupScriptTask(group, rsTask.getScript(), driver, rsTask.getComments(), userName);
 				((RunDeviceGroupScriptTask) task).setUserInputValues(rsTask.getUserInputs());
 				((RunDeviceGroupScriptTask) task).setRunSnapshot(rsTask.isRunSnapshot());
+				((RunDeviceGroupScriptTask) task).setRunDiagnostics(rsTask.isRunDiagnostics());
+				((RunDeviceGroupScriptTask) task).setCheckCompliance(rsTask.isCheckCompliance());
 			}
 			catch (HibernateException e) {
 				log.error("Error while retrieving the group.", e);
@@ -5961,7 +5981,8 @@ public class RestService extends Thread {
 	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the global hardware support status",
-		description = "Returns the global hardware support status, i.e. a list of End-of-Life and End-of-Sale dates with the corresponding device count; optionally filtered by domain or group."
+		description = "Returns the global hardware support status, i.e. a list of End-of-Life and End-of-Sale dates with the corresponding device count; "
+		+ "optionally filtered by domain or group."
 	)
 	@Tag(name = "Reports", description = "Report and statistics")
 	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")
@@ -6379,7 +6400,8 @@ public class RestService extends Thread {
 	@JsonView(RestApiView.class)
 	@Operation(
 		summary = "Get the End-of-Life or End-of-Sale devices matching a date.",
-		description = "Returns the list of devices getting End-of-Life (type 'eol') or End-of-Sale (type 'eos') at the given date (or never if 'date' is not given); optionally filtered by domain or group."
+		description = "Returns the list of devices getting End-of-Life (type 'eol') or End-of-Sale (type 'eos') at the given date (or never if 'date' is not given); "
+		+ "optionally filtered by domain or group."
 	)
 	@Tag(name = "Reports", description = "Report and statistics")
 	@Tag(name = "Compliance", description = "Configuration, software, hardware compliance")

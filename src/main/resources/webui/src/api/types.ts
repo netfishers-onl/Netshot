@@ -321,6 +321,8 @@ export type CreateOrUpdateTaskPayload = {
   dontRunDiagnostics?: boolean
   dontCheckCompliance?: boolean
   runSnapshot?: boolean
+  runDiagnostics?: boolean
+  checkCompliance?: boolean
 }
 
 export type TaskSummaryResponse = {

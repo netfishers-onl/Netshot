@@ -5,7 +5,7 @@ import { QUERIES } from "@/constants"
 import { useFormDialog } from "@/dialog"
 import { Script } from "@/types"
 import { createFoldersFromScripts } from "@/utils"
-import { Box, Button, Center, Spinner, Text } from "@chakra-ui/react"
+import { Box, Button, ButtonProps, Center, Spinner, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"
 import { useCallback, useMemo } from "react"
 import { useController, useForm, useFormContext } from "react-hook-form"
@@ -76,10 +76,11 @@ function SelectScriptDialogBody() {
 
 export type LoadScriptButtonProps = {
   onLoad(script: Script): void
-}
+  label?: string
+} & Omit<ButtonProps, "onLoad">
 
 export default function LoadScriptButton(props: LoadScriptButtonProps) {
-  const { onLoad } = props
+  const { onLoad, label, ...other } = props
   const { t } = useTranslation()
   const dialog = useFormDialog()
 
@@ -112,9 +113,9 @@ export default function LoadScriptButton(props: LoadScriptButtonProps) {
   }
 
   return (
-    <Button onClick={open}>
+    <Button onClick={open} {...other}>
       <LuFolderOpen />
-      {t("script.loadExisting")}
+      {label ?? t("script.loadExisting")}
     </Button>
   )
 }

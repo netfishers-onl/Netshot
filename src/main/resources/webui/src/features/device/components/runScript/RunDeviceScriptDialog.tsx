@@ -22,6 +22,7 @@ import {
   Dialog,
   Flex,
   Heading,
+  Icon,
   Portal,
   Separator,
   Spinner,
@@ -31,7 +32,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form"
-import { LuMinimize2, LuPencil, LuPlus, LuSave } from "react-icons/lu"
+import { LuMinimize2, LuPencil, LuPlus, LuSave, LuScrollText } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { NEW_SCRIPT_TEMPLATE } from "./constants"
 import LoadScriptButton from "./LoadScriptButton"
@@ -95,16 +96,22 @@ function ConfigureStep(props: ConfigureStepProps) {
             <Text fontSize="sm" color="grey.400">
               {t("script.label")}
             </Text>
-            <Stack direction="row" alignItems="center" gap="2">
-              <Text fontWeight="semibold">{scriptMeta.name}</Text>
+            <Flex alignItems="center" gap="3" p="3" borderRadius="md" borderWidth="1px">
+              <Icon color="green.600" size="md">
+                <LuScrollText />
+              </Icon>
+              <Text fontWeight="semibold" flex="1" lineClamp={1}>
+                {scriptMeta.name}
+              </Text>
               {isDirty && (
                 <Badge size="sm" colorPalette="orange" variant="subtle">
                   {t("script.modified")}
                 </Badge>
               )}
-            </Stack>
+            </Flex>
           </Stack>
           <Stack direction="row" gap="2" flexWrap="wrap">
+            <LoadScriptButton size="sm" label={t("script.load")} onLoad={onLoad} />
             {!isExpanded && (
               <Button size="sm" onClick={onEdit}>
                 <LuPencil />

@@ -30,12 +30,47 @@ export enum TaskType {
 
 export enum TaskStatus {
   Cancelled = "CANCELLED",
+  Delayed = "DELAYED",
   Failure = "FAILURE",
   New = "NEW",
   Running = "RUNNING",
   Scheduled = "SCHEDULED",
   Success = "SUCCESS",
   Waiting = "WAITING",
+}
+
+export enum TaskScheduleMode {
+  Parallel = "PARALLEL",
+  Sequential = "SEQUENTIAL",
+}
+
+/**
+ * Light-weight task projection returned by task listing endpoints (`/tasks`,
+ * `/devices/{id}/tasks`) -- notably excludes `script`, `userInputValues` and `log`.
+ * Fetch the full `Task` (`api.task.getById`) to display a task's details.
+ */
+export type SimpleTask = {
+  id: number
+  type: string
+  status: TaskStatus
+  author: string
+  target: string
+  comments: string
+  creationDate: number
+  changeDate: number
+  executionDate: number
+  scheduleReference: number
+  scheduleType: TaskScheduleType
+  scheduleFactor: number
+  priority: SchedulePriority
+  runnerId: string
+  debugEnabled: boolean
+  deviceId?: number
+  deviceGroupId?: number
+  parentTaskId?: number
+  childOrder?: number
+  scheduleMode?: TaskScheduleMode
+  stopOnFailure?: boolean
 }
 
 export type Task = {
@@ -71,4 +106,8 @@ export type Task = {
   configKeepDays?: number
   moduleDays?: number
   limitToOutofdateDeviceHours?: number
+  parentTaskId?: number
+  childOrder?: number
+  scheduleMode?: TaskScheduleMode
+  stopOnFailure?: boolean
 }

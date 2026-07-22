@@ -9,6 +9,7 @@ import AddTaskTrigger from "../components/AddTaskTrigger"
 import TaskFilterMenu from "../components/TaskFilterMenu"
 import TaskLiveStats from "../components/TaskLiveStats"
 import TaskTable from "../components/TaskTable"
+import TaskTreeModeToggle from "../components/TaskTreeModeToggle"
 import { ALL_STATUS_KEYS } from "../constants"
 import { useActiveTasks, useTaskSummary } from "../hooks"
 
@@ -69,7 +70,10 @@ export default function TaskActiveScreen() {
         <Heading as="h2" fontSize="2xl" fontWeight="semibold">
           {t("task.taskList")}
         </Heading>
-        <TaskFilterMenu statuses={ALL_STATUS_KEYS} />
+        <Stack direction="row" alignItems="center" gap="4">
+          <TaskTreeModeToggle />
+          <TaskFilterMenu statuses={ALL_STATUS_KEYS} />
+        </Stack>
       </Stack>
 
       <TaskTable rows={rows} isPending={isPending} />

@@ -6,6 +6,7 @@ import { LuRefreshCcw } from "react-icons/lu"
 import TaskHistogramCard from "../components/TaskHistogramCard"
 import TaskTable from "../components/TaskTable"
 import TaskTimeRangeMenu from "../components/TaskTimeRangeMenu"
+import TaskTreeModeToggle from "../components/TaskTreeModeToggle"
 import { FINAL_STATUS_KEYS } from "../constants"
 import { useTaskHistory, useTaskStats } from "../hooks"
 
@@ -55,9 +56,12 @@ export default function TaskHistoryScreen() {
 
       <TaskHistogramCard />
 
-      <Heading as="h2" fontSize="2xl" fontWeight="semibold">
-        {t("task.taskList")}
-      </Heading>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" gap="3">
+        <Heading as="h2" fontSize="2xl" fontWeight="semibold">
+          {t("task.taskList")}
+        </Heading>
+        <TaskTreeModeToggle />
+      </Stack>
 
       <TaskTable rows={rows} isPending={isPending} onBottomReached={onBottomReached} />
     </Stack>

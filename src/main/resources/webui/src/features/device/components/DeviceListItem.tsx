@@ -1,9 +1,9 @@
-import { SimpleDevice, DeviceStatus } from "@/types"
+import { Device, SimpleDevice, DeviceStatus } from "@/types"
 import { Stack, Text } from "@chakra-ui/react"
 import DeviceNetworkClassIcon from "./DeviceNetworkClassIcon"
 
 type DeviceListItemProps = {
-  device: SimpleDevice
+  device: SimpleDevice | Device
 }
 
 export default function DeviceListItem({ device }: DeviceListItemProps) {

@@ -6,6 +6,7 @@ import {
   HashingAlgorithm,
   RuleType,
   SimpleDevice,
+  TaskScheduleMode,
   TaskScheduleType,
   TaskStatus,
 } from "@/types"
@@ -272,6 +273,7 @@ export type TaskQueryParams = {
   type?: string | string[]
   after?: number
   before?: number
+  parentTaskId?: number
 } & PaginationQueryParams
 
 export type TaskStatsQueryParams = {
@@ -297,6 +299,9 @@ export type CreateOrUpdateTaskPayload = {
   cancelled?: boolean
   type?: string
   group?: number
+  deviceList?: number[]
+  scheduleMode?: TaskScheduleMode
+  stopOnFailure?: boolean
   device?: number
   domain?: number
   subnets?: string

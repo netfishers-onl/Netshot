@@ -65,7 +65,10 @@ export function useDevices(groupId: number) {
 
       return (await api.device.getAll(params)) ?? []
     },
-    select: useCallback((data: SimpleDevice[]) => sortAlphabetical(data, "name"), []),
+    select: useCallback(
+      (data: SimpleDevice[]) => (groupId ? data : sortAlphabetical(data, "name")),
+      [groupId]
+    ),
   })
 }
 

@@ -114,6 +114,7 @@ import net.netshot.netshot.hooks.HookTrigger;
 import net.netshot.netshot.hooks.WebHook;
 import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
+import net.netshot.netshot.work.TaskDeviceListMember;
 import net.netshot.netshot.work.tasks.DeviceJsScript;
 
 /**
@@ -309,6 +310,7 @@ public final class Database {
 				.addAnnotatedClass(Policy.class)
 				.addAnnotatedClass(Rule.class)
 				.addAnnotatedClass(Task.class)
+				.addAnnotatedClass(TaskDeviceListMember.class)
 				.addAnnotatedClass(DebugLog.class)
 				.addAnnotatedClass(Exemption.class)
 				.addAnnotatedClass(Exemption.Key.class)
@@ -347,6 +349,7 @@ public final class Database {
 			Metadata metadata = sources.getMetadataBuilder()
 				.applyImplicitNamingStrategy(new ImprovedImplicitNamingStrategy())
 				.applyPhysicalNamingStrategy(new ImprovedPhysicalNamingStrategy())
+				.applyAttributeConverter(Task.Status.StatusConverter.class)
 				.build();
 
 			SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();

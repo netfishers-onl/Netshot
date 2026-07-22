@@ -12,7 +12,7 @@ import TaskDialog from "@/components/TaskDialog"
 import { MUTATIONS, QUERIES } from "@/constants"
 import { useCustomDialog, useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"
-import { Device, Script, ScriptUserInputDefinition, SimpleDevice, Task, TaskType } from "@/types"
+import { Device, Script, ScriptUserInputDefinition, SimpleDevice, TaskType } from "@/types"
 import {
   Badge,
   Box,
@@ -34,6 +34,7 @@ import { useEffect, useMemo, useState } from "react"
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form"
 import { LuMinimize2, LuPencil, LuPlus, LuSave, LuScrollText } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
+import { DeviceNamesPreview } from "@/features/device/components"
 import { NEW_SCRIPT_TEMPLATE } from "./constants"
 import LoadScriptButton from "./LoadScriptButton"
 import SaveScriptDialog from "./SaveScriptDialog"
@@ -183,12 +184,13 @@ function ConfigureStep(props: ConfigureStepProps) {
 
 type RunStepProps = {
   devices: SimpleDevice[] | Device[]
+  onReorderDevices(devices: SimpleDevice[] | Device[]): void
   inputs: ScriptUserInputDefinition[]
   isPending: boolean
 }
 
 function RunStep(props: RunStepProps) {
-  const { devices, inputs, isPending } = props
+  const { devices, onReorderDevices, inputs, isPending } = props
   const { t } = useTranslation()
   const form = useFormContext<RunDeviceScriptForm>()
 
@@ -208,7 +210,7 @@ function RunStep(props: RunStepProps) {
             <Box w="140px">
               <Text color="grey.400">{t("device.devices")}</Text>
             </Box>
-            <Text>{devices.map((device) => device.name).join(", ")}</Text>
+            <DeviceNamesPreview devices={devices} onReorder={onReorderDevices} />
           </Flex>
         ) : (
           <>
@@ -261,7 +263,7 @@ function RunStep(props: RunStepProps) {
           {t("device.enableFullTrace")}
         </Checkbox>
       </Stack>
-      <ScheduleForm />
+      <ScheduleForm showScheduleMode={devices.length > 1} />
     </Stack>
   )
 }
@@ -282,6 +284,7 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
   const [scriptMeta, setScriptMeta] = useState<ScriptMeta | null>(null)
   const [isNewScript, setIsNewScript] = useState(false)
   const [originalContent, setOriginalContent] = useState("")
+  const [orderedDevices, setOrderedDevices] = useState(devices)
 
   const form = useForm<RunDeviceScriptForm>({
     mode: "onChange",
@@ -414,31 +417,48 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
   })
 
   async function submit(values: RunDeviceScriptForm) {
-    const { schedule, userInputs, debugEnabled, runSnapshot, runDiagnostics, checkCompliance, driver, script } =
-      values
-    const tasks: Task[] = []
+    const {
+      schedule,
+      userInputs,
+      debugEnabled,
+      runSnapshot,
+      runDiagnostics,
+      checkCompliance,
+      driver,
+      script,
+    } = values
 
-    for (const device of devices) {
-      const task = await runMutation.mutateAsync({
-        type: TaskType.RunDeviceScript,
-        device: device?.id,
-        driver: driver!,
-        script,
-        userInputs,
-        debugEnabled,
-        runSnapshot,
-        runDiagnostics,
-        checkCompliance,
-        ...schedule,
-      })
-
-      tasks.push(task!)
-    }
+    const task = await runMutation.mutateAsync(
+      devices.length > 1
+        ? {
+            type: TaskType.RunDeviceGroupScript,
+            deviceList: orderedDevices.map((device) => device.id),
+            driver: driver!,
+            script,
+            userInputs,
+            runSnapshot,
+            runDiagnostics,
+            checkCompliance,
+            ...schedule,
+          }
+        : {
+            type: TaskType.RunDeviceScript,
+            device: devices?.[0]?.id,
+            driver: driver!,
+            script,
+            userInputs,
+            debugEnabled,
+            runSnapshot,
+            runDiagnostics,
+            checkCompliance,
+            ...schedule,
+          }
+    )
 
     close()
 
-    if (tasks.length === 1) {
-      customDialog.open(<TaskDialog id={tasks[0].id} />)
+    if (task) {
+      customDialog.open(<TaskDialog id={task.id} />)
     }
   }
 
@@ -498,7 +518,12 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
                     onSave={openSaveDialog}
                   />
                 ) : (
-                  <RunStep devices={devices} inputs={inputs} isPending={isValidatePending} />
+                  <RunStep
+                    devices={orderedDevices}
+                    onReorderDevices={setOrderedDevices}
+                    inputs={inputs}
+                    isPending={isValidatePending}
+                  />
                 )}
               </Dialog.Body>
               <Dialog.Footer justifyContent="flex-end">

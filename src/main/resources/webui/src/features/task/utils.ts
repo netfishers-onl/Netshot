@@ -1,5 +1,57 @@
 import { fromAbsolute } from "@internationalized/date"
 
+type ParentedTask = {
+  id: number
+  parentTaskId?: number
+  childOrder?: number
+}
+
+export type TaskTreeRow<T> = T & { depth: number }
+
+/**
+ * Reorders a task list so each child task is placed right after its parent
+ * (recursively, for chained tasks), instead of wherever its own date would
+ * otherwise sort it, and annotates each row with its nesting `depth` (0 for
+ * root tasks) so callers can indent child rows. Root-level tasks (no parent,
+ * or a parent absent from `rows` -- e.g. a children-only listing) keep their
+ * relative order; each parent's children are grouped by `childOrder`.
+ */
+export function buildTaskTree<T extends ParentedTask>(rows: T[]): TaskTreeRow<T>[] {
+  const idsPresent = new Set(rows.map((row) => row.id))
+  const childrenByParent = new Map<number, T[]>()
+
+  for (const row of rows) {
+    if (row.parentTaskId && idsPresent.has(row.parentTaskId)) {
+      const children = childrenByParent.get(row.parentTaskId) ?? []
+      children.push(row)
+      childrenByParent.set(row.parentTaskId, children)
+    }
+  }
+  for (const children of childrenByParent.values()) {
+    children.sort((a, b) => (a.childOrder ?? 0) - (b.childOrder ?? 0))
+  }
+
+  const visited = new Set<number>()
+  const result: TaskTreeRow<T>[] = []
+
+  function appendWithChildren(row: T, depth: number) {
+    if (visited.has(row.id)) return
+    visited.add(row.id)
+    result.push({ ...row, depth })
+    for (const child of childrenByParent.get(row.id) ?? []) {
+      appendWithChildren(child, depth + 1)
+    }
+  }
+
+  for (const row of rows) {
+    if (!row.parentTaskId || !idsPresent.has(row.parentTaskId)) {
+      appendWithChildren(row, 0)
+    }
+  }
+
+  return result
+}
+
 const MINUTE = 60_000
 const HOUR = 3_600_000
 const DAY = 86_400_000

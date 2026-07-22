@@ -18,10 +18,11 @@
  */
 package net.netshot.netshot.device;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
@@ -42,6 +43,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Transient;
 import jakarta.persistence.Version;
 import jakarta.xml.bind.annotation.XmlAccessType;
@@ -67,13 +69,14 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 })
 public abstract class DeviceGroup {
 
-	/** The cached devices. */
+	/** The cached devices, in user-defined order (for static groups). */
 	@Getter(onMethod = @__({
 		@OneToMany(mappedBy = "key.group", cascade = CascadeType.ALL, orphanRemoval = true),
+		@OrderBy("position asc"),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
-	protected Set<DeviceGroupMembership> cachedMemberships = new HashSet<>();
+	protected List<DeviceGroupMembership> cachedMemberships = new ArrayList<>();
 
 	/** The change date. */
 	@Getter(onMethod = @__({
@@ -137,12 +140,12 @@ public abstract class DeviceGroup {
 	}
 
 	/**
-	 * Return cached members of this group.
-	 * @return the cached devices of the group
+	 * Return cached members of this group, in their stored order.
+	 * @return the ordered cached devices of the group
 	 */
 	@Transient
-	public Set<Device> getCachedDevices() {
-		HashSet<Device> devices = new HashSet<>();
+	public List<Device> getCachedDevices() {
+		List<Device> devices = new ArrayList<>(this.cachedMemberships.size());
 		for (DeviceGroupMembership membership : this.cachedMemberships) {
 			devices.add(membership.getDevice());
 		}
@@ -158,17 +161,32 @@ public abstract class DeviceGroup {
 	public abstract void refreshCache(Session session) throws Exception;
 
 	/**
-	 * Update cached devices.
+	 * Update cached devices, preserving the given order.
+	 * Existing membership rows are reused (only their position is updated) so that
+	 * unaffected devices aren't needlessly deleted and reinserted on refresh.
 	 *
-	 * @param devices the devices
+	 * @param devices the ordered devices
 	 */
-	public void updateCachedDevices(Collection<Device> devices) {
-		Set<DeviceGroupMembership> memberships = new HashSet<>();
-		for (Device device : devices) {
-			memberships.add(new DeviceGroupMembership(device, this));
+	public void updateCachedDevices(List<Device> devices) {
+		Map<Device, DeviceGroupMembership> existingByDevice = new HashMap<>();
+		for (DeviceGroupMembership membership : this.cachedMemberships) {
+			existingByDevice.put(membership.getDevice(), membership);
 		}
+		List<DeviceGroupMembership> memberships = new ArrayList<>(devices.size());
+		int position = 0;
+		for (Device device : devices) {
+			DeviceGroupMembership membership = existingByDevice.get(device);
+			if (membership == null) {
+				membership = new DeviceGroupMembership(device, this, position);
+			}
+			else {
+				membership.setPosition(position);
+			}
+			memberships.add(membership);
+			position++;
+		}
+		this.cachedMemberships.clear();
 		this.cachedMemberships.addAll(memberships);
-		this.cachedMemberships.retainAll(memberships);
 	}
 
 	@Override

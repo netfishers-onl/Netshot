@@ -21,19 +21,14 @@ package net.netshot.netshot.work.tasks;
 import java.util.List;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.compliance.HardwareRule;
 import net.netshot.netshot.compliance.Policy;
@@ -49,17 +44,9 @@ import net.netshot.netshot.work.Task;
  * This task checks the configuration compliance of a device.
  */
 @Entity
-@OnDelete(action = OnDeleteAction.CASCADE)
+@DiscriminatorValue("CheckComplianceTask")
 @Slf4j
 public final class CheckComplianceTask extends Task implements DeviceBasedTask {
-
-	/** The device. */
-	@Getter(onMethod = @__({
-		@ManyToOne(fetch = FetchType.LAZY),
-		@OnDelete(action = OnDeleteAction.CASCADE)
-	}))
-	@Setter
-	private Device device;
 
 	/**
 	 * Instantiates a new check compliance task.

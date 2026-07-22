@@ -8,6 +8,7 @@ import {
   LuClock,
   LuCircleCheck,
   LuCircleX,
+  LuHourglass,
 } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { TaskStatus } from "@/types"
@@ -24,6 +25,11 @@ export const TASK_STATUS_CONFIG: Record<TaskStatus, Config> = {
     colorPalette: "gray",
     icon: <LuCircleDot />,
     labelKey: "common.new",
+  },
+  [TaskStatus.Delayed]: {
+    colorPalette: "gray",
+    icon: <LuHourglass />,
+    labelKey: "common.delayed",
   },
   [TaskStatus.Scheduled]: {
     colorPalette: "yellow",

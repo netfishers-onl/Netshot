@@ -6,6 +6,7 @@ import { useParams } from "react-router"
 
 import api from "@/api"
 import TaskTable from "@/features/task/components/TaskTable"
+import TaskTreeModeToggle from "@/features/task/components/TaskTreeModeToggle"
 
 import { QUERIES } from "../constants"
 
@@ -35,7 +36,10 @@ export default function DeviceTaskScreen() {
 
   return (
     <Stack gap="6" flex="1" overflow="auto">
-      <Heading size="md">{t("device.latestTasks")}</Heading>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" gap="3">
+        <Heading size="md">{t("device.latestTasks")}</Heading>
+        <TaskTreeModeToggle />
+      </Stack>
       <TaskTable
         rows={data}
         isPending={isPending}

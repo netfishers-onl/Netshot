@@ -18,29 +18,20 @@
  */
 package net.netshot.netshot.work.tasks;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.type.SqlTypes;
 import org.quartz.JobKey;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
-import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.TaskManager;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.DeviceGroup;
@@ -48,64 +39,40 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
 
 /**
- * This task schedules new tasks to take a new snapshot of each device of the
- * given group.
+ * This task schedules new tasks to run a script on each device of the given
+ * group (either a real device group, or a one-time device list), either in
+ * parallel or sequentially.
  */
 @Entity
-@OnDelete(action = OnDeleteAction.CASCADE)
+@DiscriminatorValue("RunDeviceGroupScriptTask")
 @Slf4j
-public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTask {
-
-	/** The device group. */
-	@Getter(onMethod = @__({
-		@ManyToOne(fetch = FetchType.LAZY),
-		@OnDelete(action = OnDeleteAction.CASCADE)
-	}))
-	@Setter
-	private DeviceGroup deviceGroup;
-
-	@Getter(onMethod = @__({
-		@Column(length = 10000000)
-	}))
-	@Setter
-	private String script;
-
-	@Getter
-	@Setter
-	private String deviceDriver;
-
-	/** Variable values for the script. */
-	@Getter(onMethod = @__({
-		@JdbcTypeCode(SqlTypes.JSON)
-	}))
-	@Setter
-	private Map<String, String> userInputValues;
-
-	/** Automatically run a snapshot on each device after successful script execution. */
-	@Getter
-	@Setter
-	private boolean runSnapshot;
-
-	/** Automatically run diagnostics on each device after successful script execution. */
-	@Getter
-	@Setter
-	private boolean runDiagnostics;
-
-	/** Automatically check compliance on each device after successful script execution. */
-	@Getter
-	@Setter
-	private boolean checkCompliance;
+public final class RunDeviceGroupScriptTask extends Task
+	implements GroupBasedTask, DeviceListBasedTask, ChildOrchestratingTask {
 
 	public RunDeviceGroupScriptTask() {
 
 	}
 
+	/**
+	 * Instantiates a new run device group script task, targeting a real device group.
+	 */
 	public RunDeviceGroupScriptTask(DeviceGroup group, String script, DeviceDriver driver,
 		String comments, String author) {
 		super(comments, group.getName(), author);
-		this.deviceGroup = group;
-		this.script = script;
-		this.deviceDriver = driver.getName();
+		this.setDeviceGroup(group);
+		this.setScript(script);
+		this.setDeviceDriver(driver.getName());
+	}
+
+	/**
+	 * Instantiates a new run device group script task, targeting a one-time device list.
+	 */
+	public RunDeviceGroupScriptTask(List<Device> devices, String script, DeviceDriver driver,
+		String comments, String author) {
+		super(comments, String.format("%d device(s)", devices.size()), author);
+		this.setDeviceList(devices);
+		this.setScript(script);
+		this.setDeviceDriver(driver.getName());
 	}
 
 	/*(non-Javadoc)
@@ -127,10 +94,10 @@ public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTa
 	@JsonView(DefaultView.class)
 	@Transient
 	public long getDeviceGroupId() {
-		if (this.deviceGroup == null) {
+		if (this.getDeviceGroup() == null) {
 			return 0;
 		}
-		return this.deviceGroup.getId();
+		return this.getDeviceGroup().getId();
 	}
 
 	/*(non-Javadoc)
@@ -142,6 +109,9 @@ public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTa
 		if (this.getDeviceGroup() != null) {
 			Hibernate.initialize(this.getDeviceGroup().getCachedDevices());
 		}
+		else {
+			Hibernate.initialize(this.getDeviceListMembers());
+		}
 	}
 
 	/*(non-Javadoc)
@@ -149,43 +119,43 @@ public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTa
 	 */
 	@Override
 	public void run() {
-		log.debug("Task {}. Starting run script task for group {}.",
-			this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
-		if (this.deviceGroup == null) {
-			this.logger.info("The device group doesn't exist, the task will be cancelled.");
+		List<Device> devices = this.getTargetDevices();
+		if (this.getDeviceGroup() == null && devices.isEmpty()) {
+			this.logger.info("Neither a device group nor a device list is set, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
-		Collection<Device> devices = this.getDeviceGroup().getCachedDevices();
-		log.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
-		String comment = String.format("Started due to group %s script task", this.getDeviceGroup().getName());
+		log.debug("Task {}. {} device(s) to process.", this.getId(), devices.size());
+		String comment = this.getDeviceGroup() == null
+			? String.format("Started due to %d-device script list", devices.size())
+			: String.format("Started due to group %s script task", this.getDeviceGroup().getName());
 
-		DeviceDriver driver = DeviceDriver.getDriverByName(this.deviceDriver);
+		DeviceDriver driver = DeviceDriver.getDriverByName(this.getDeviceDriver());
 		if (driver == null) {
-			log.error("Task {}. No such device driver {}.", this.getId(), deviceDriver);
+			log.error("Task {}. No such device driver {}.", this.getId(), this.getDeviceDriver());
 			this.logger.error("Unknown device driver.");
 			this.status = Status.FAILURE;
 			return;
 		}
 
-		for (Device device : devices) {
-			this.logger.info("Starting run script task for device {}.", device.getName());
-			RunDeviceScriptTask task = new RunDeviceScriptTask(device, script, driver, comment, author);
-			task.setPriority(this.getPriority());
-			task.setUserInputValues(this.userInputValues);
-			task.setRunSnapshot(this.runSnapshot);
-			task.setRunDiagnostics(this.runDiagnostics);
-			task.setCheckCompliance(this.checkCompliance);
-			try {
-				TaskManager.addTask(task);
+		List<Task> children = this.reloadExistingChildren();
+		if (children.isEmpty()) {
+			children = new ArrayList<>();
+			for (Device device : devices) {
+				children.add(this.buildChild(device, driver, comment));
 			}
-			catch (Exception e) {
-				log.error("Task {}. Error while scheduling the individual snapshot task.", this.getId(), e);
-				this.logger.error("Error while scheduling the task.");
-			}
+			this.preCreateChildren(children);
 		}
-		log.debug("Task {}. Everything went fine.", this.getId());
-		this.status = Status.SUCCESS;
+		this.status = this.orchestrateChildren(children);
+	}
+
+	private RunDeviceScriptTask buildChild(Device device, DeviceDriver driver, String comment) {
+		RunDeviceScriptTask child = new RunDeviceScriptTask(device, this.getScript(), driver, comment, author);
+		child.setUserInputValues(this.getUserInputValues());
+		child.setRunSnapshot(this.isRunSnapshot());
+		child.setRunDiagnostics(this.isRunDiagnostics());
+		child.setCheckCompliance(this.isCheckCompliance());
+		return child;
 	}
 
 	/*(non-Javadoc)
@@ -194,7 +164,8 @@ public final class RunDeviceGroupScriptTask extends Task implements GroupBasedTa
 	@Override
 	public Object clone() throws CloneNotSupportedException {
 		RunDeviceGroupScriptTask task = (RunDeviceGroupScriptTask) super.clone();
-		task.setDeviceGroup(this.deviceGroup);
+		task.setDeviceGroup(this.getDeviceGroup());
+		task.setDeviceList(this.getDeviceList());
 		return task;
 	}
 

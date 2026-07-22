@@ -25,19 +25,14 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.compliance.HardwareRule;
 import net.netshot.netshot.compliance.SoftwareRule;
@@ -50,20 +45,12 @@ import net.netshot.netshot.work.Task;
 
 /**
  * This task checks the compliance of the software version of a given group
- * of devices.
+ * of devices (either a real device group, or a one-time device list).
  */
 @Entity
-@OnDelete(action = OnDeleteAction.CASCADE)
+@DiscriminatorValue("CheckGroupSoftwareTask")
 @Slf4j
-public final class CheckGroupSoftwareTask extends Task implements GroupBasedTask {
-
-	/** The device group. */
-	@Getter(onMethod = @__({
-		@ManyToOne(fetch = FetchType.LAZY),
-		@OnDelete(action = OnDeleteAction.CASCADE)
-	}))
-	@Setter
-	private DeviceGroup deviceGroup;
+public final class CheckGroupSoftwareTask extends Task implements GroupBasedTask, DeviceListBasedTask {
 
 	/**
 	 * Instantiates a new check group software task.
@@ -73,7 +60,7 @@ public final class CheckGroupSoftwareTask extends Task implements GroupBasedTask
 	}
 
 	/**
-	 * Instantiates a new check group software task.
+	 * Instantiates a new check group software task, targeting a real device group.
 	 *
 	 * @param group the group
 	 * @param comments the comments
@@ -81,7 +68,19 @@ public final class CheckGroupSoftwareTask extends Task implements GroupBasedTask
 	 */
 	public CheckGroupSoftwareTask(DeviceGroup group, String comments, String author) {
 		super(comments, group.getName(), author);
-		this.deviceGroup = group;
+		this.setDeviceGroup(group);
+	}
+
+	/**
+	 * Instantiates a new check group software task, targeting a one-time device list.
+	 *
+	 * @param devices the ordered list of devices
+	 * @param comments the comments
+	 * @param author the author
+	 */
+	public CheckGroupSoftwareTask(List<Device> devices, String comments, String author) {
+		super(comments, String.format("%d device(s)", devices.size()), author);
+		this.setDeviceList(devices);
 	}
 
 	/*(non-Javadoc)
@@ -103,10 +102,10 @@ public final class CheckGroupSoftwareTask extends Task implements GroupBasedTask
 	@JsonView(DefaultView.class)
 	@Transient
 	public long getDeviceGroupId() {
-		if (this.deviceGroup == null) {
+		if (this.getDeviceGroup() == null) {
 			return 0;
 		}
-		return this.deviceGroup.getId();
+		return this.getDeviceGroup().getId();
 	}
 
 	/*(non-Javadoc)
@@ -115,6 +114,9 @@ public final class CheckGroupSoftwareTask extends Task implements GroupBasedTask
 	@Override
 	public void prepare(Session session) {
 		Hibernate.initialize(this.getDeviceGroup());
+		if (this.getDeviceGroup() == null) {
+			Hibernate.initialize(this.getDeviceListMembers());
+		}
 	}
 
 	/*(non-Javadoc)
@@ -123,7 +125,8 @@ public final class CheckGroupSoftwareTask extends Task implements GroupBasedTask
 	@Override
 	public Object clone() throws CloneNotSupportedException {
 		CheckGroupSoftwareTask task = (CheckGroupSoftwareTask) super.clone();
-		task.setDeviceGroup(this.deviceGroup);
+		task.setDeviceGroup(this.getDeviceGroup());
+		task.setDeviceList(this.getDeviceList());
 		return task;
 	}
 
@@ -132,15 +135,17 @@ public final class CheckGroupSoftwareTask extends Task implements GroupBasedTask
 	 */
 	@Override
 	public void run() {
-		log.debug("Task {}. Starting check software compliance and hardware support status task for group {}.",
-			this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
-		if (this.deviceGroup == null) {
-			this.logger.info("The device group doesn't exist, the task will be cancelled.");
+		DeviceGroup group = this.getDeviceGroup();
+		List<Device> deviceList = group == null ? this.getDeviceList() : null;
+		if (group == null && (deviceList == null || deviceList.isEmpty())) {
+			this.logger.info("Neither a device group nor a device list is set, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
-		this.logger.trace("Check software compliance task for group {}.",
-			this.deviceGroup.getName());
+		log.debug("Task {}. Starting check software compliance and hardware support status task for {}.",
+			this.getId(), group == null ? deviceList.size() + " listed device(s)" : "group " + group.getId());
+
+		List<Long> deviceIds = group == null ? deviceList.stream().map(Device::getId).toList() : null;
 
 		Session session = Database.getSession();
 		try {
@@ -154,11 +159,21 @@ public final class CheckGroupSoftwareTask extends Task implements GroupBasedTask
 				.list();
 
 			session.beginTransaction();
-			ScrollableResults<Device> devices = session
-				.createQuery("select d from Device d join d.groupMemberships gm where gm.key.group.id = :id", Device.class)
-				.setParameter("id", deviceGroup.getId())
-				.setCacheMode(CacheMode.IGNORE)
-				.scroll(ScrollMode.FORWARD_ONLY);
+			ScrollableResults<Device> devices;
+			if (group != null) {
+				devices = session
+					.createQuery("select d from Device d join d.groupMemberships gm where gm.key.group.id = :id", Device.class)
+					.setParameter("id", group.getId())
+					.setCacheMode(CacheMode.IGNORE)
+					.scroll(ScrollMode.FORWARD_ONLY);
+			}
+			else {
+				devices = session
+					.createQuery("select d from Device d where d.id in :ids", Device.class)
+					.setParameter("ids", deviceIds)
+					.setCacheMode(CacheMode.IGNORE)
+					.scroll(ScrollMode.FORWARD_ONLY);
+			}
 			while (devices.next()) {
 				Device device = devices.get();
 				device.setSoftwareLevel(ConformanceLevel.UNKNOWN);

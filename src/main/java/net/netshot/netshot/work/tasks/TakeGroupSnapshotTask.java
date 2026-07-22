@@ -18,69 +18,36 @@
  */
 package net.netshot.netshot.work.tasks;
 
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
+import java.util.List;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.TaskManager;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.rest.RestViews.HookView;
 import net.netshot.netshot.work.Task;
 
 /**
  * This task schedules new tasks to take a new snapshot of each device of the
- * given group.
+ * given group (either a real device group, or a one-time device list),
+ * either in parallel or sequentially.
  */
 @Entity
-@OnDelete(action = OnDeleteAction.CASCADE)
+@DiscriminatorValue("TakeGroupSnapshotTask")
 @Slf4j
-public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask {
-
-	/** The device group. */
-	@Getter(onMethod = @__({
-		@ManyToOne(fetch = FetchType.LAZY),
-		@OnDelete(action = OnDeleteAction.CASCADE)
-	}))
-	@Setter
-	private DeviceGroup deviceGroup;
-
-	/** Only capture devices updated more than X hours ago. **/
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	private int limitToOutofdateDeviceHours = -1;
-
-	/** Do not automatically start a run diagnostics task. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(HookView.class)
-	}))
-	@Setter
-	private boolean dontRunDiagnostics;
-
-	/** Do not automatically start a check compliance task. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(HookView.class)
-	}))
-	@Setter
-	private boolean dontCheckCompliance;
+public final class TakeGroupSnapshotTask extends Task
+	implements GroupBasedTask, DeviceListBasedTask, ChildOrchestratingTask {
 
 	/**
 	 * Instantiates a new take group snapshot task.
@@ -90,7 +57,7 @@ public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask 
 	}
 
 	/**
-	 * Instantiates a new take group snapshot task.
+	 * Instantiates a new take group snapshot task, targeting a real device group.
 	 *
 	 * @param group the group
 	 * @param comments the comments
@@ -102,10 +69,48 @@ public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask 
 	public TakeGroupSnapshotTask(DeviceGroup group, String comments, String author,
 		int limitToOutofdateDeviceHours, boolean dontRunDiagnostics, boolean dontCheckCompliance) {
 		super(comments, group.getName(), author);
-		this.deviceGroup = group;
-		this.limitToOutofdateDeviceHours = limitToOutofdateDeviceHours;
-		this.dontRunDiagnostics = dontRunDiagnostics;
-		this.dontCheckCompliance = dontCheckCompliance;
+		this.setDeviceGroup(group);
+		this.setLimitToOutofdateDeviceHours(limitToOutofdateDeviceHours);
+		this.setDontRunDiagnostics(dontRunDiagnostics);
+		this.setDontCheckCompliance(dontCheckCompliance);
+	}
+
+	/**
+	 * Instantiates a new take group snapshot task, targeting a one-time device list.
+	 *
+	 * @param devices the ordered list of devices
+	 * @param comments the comments
+	 * @param author the author
+	 * @param limitToOutofdateDeviceHours ignore devices that had a successful snapshot in the last given hours
+	 * @param dontRunDiagnostics Set to the true to disable running diagnostics
+	 * @param dontCheckCompliance Set to true to disable compliance checking
+	 */
+	public TakeGroupSnapshotTask(List<Device> devices, String comments, String author,
+		int limitToOutofdateDeviceHours, boolean dontRunDiagnostics, boolean dontCheckCompliance) {
+		super(comments, String.format("%d device(s)", devices.size()), author);
+		this.setDeviceList(devices);
+		this.setLimitToOutofdateDeviceHours(limitToOutofdateDeviceHours);
+		this.setDontRunDiagnostics(dontRunDiagnostics);
+		this.setDontCheckCompliance(dontCheckCompliance);
+	}
+
+	/**
+	 * Only capture devices updated more than X hours ago.
+	 * @return the limit, in hours (-1 = no limit)
+	 */
+	@XmlElement
+	@JsonView(DefaultView.class)
+	@Transient
+	public int getLimitToOutofdateDeviceHours() {
+		return this.getIntAttribute("limitToOutofdateDeviceHours", -1);
+	}
+
+	/**
+	 * Sets the out-of-date device limit, in hours.
+	 * @param limitToOutofdateDeviceHours the limit
+	 */
+	public void setLimitToOutofdateDeviceHours(int limitToOutofdateDeviceHours) {
+		this.setAttribute("limitToOutofdateDeviceHours", limitToOutofdateDeviceHours);
 	}
 
 	/*(non-Javadoc)
@@ -127,10 +132,10 @@ public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask 
 	@JsonView(DefaultView.class)
 	@Transient
 	public long getDeviceGroupId() {
-		if (this.deviceGroup == null) {
+		if (this.getDeviceGroup() == null) {
 			return 0;
 		}
-		return this.deviceGroup.getId();
+		return this.getDeviceGroup().getId();
 	}
 
 	/*(non-Javadoc)
@@ -142,6 +147,9 @@ public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask 
 		if (this.getDeviceGroup() != null) {
 			Hibernate.initialize(this.getDeviceGroup().getCachedDevices());
 		}
+		else {
+			Hibernate.initialize(this.getDeviceListMembers());
+		}
 	}
 
 	/*(non-Javadoc)
@@ -149,38 +157,39 @@ public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask 
 	 */
 	@Override
 	public void run() {
-		log.debug("Task {}. Starting snapshot task for group {}.",
-			this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
-		if (this.deviceGroup == null) {
-			this.logger.info("The device group doesn't exist, the task will be cancelled.");
+		List<Device> allDevices = this.getTargetDevices();
+		if (this.getDeviceGroup() == null && allDevices.isEmpty()) {
+			this.logger.info("Neither a device group nor a device list is set, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
-		Collection<Device> devices = this.getDeviceGroup().getCachedDevices();
-		log.debug("Task {}. {} devices in the group.", this.getId(), devices.size());
-		String comment = String.format("Started due to group %s snapshot", this.getDeviceGroup().getName());
+		String comment = this.getDeviceGroup() == null
+			? String.format("Started due to %d-device snapshot list", allDevices.size())
+			: String.format("Started due to group %s snapshot", this.getDeviceGroup().getName());
+
 		Calendar referenceDate = Calendar.getInstance();
 		referenceDate.add(Calendar.HOUR, -this.getLimitToOutofdateDeviceHours());
-		for (Device device : devices) {
+		List<Device> devices = new ArrayList<>();
+		for (Device device : allDevices) {
 			if (referenceDate.getTime().before(device.getChangeDate())) {
 				this.logger.info("Ignoring device {} because it changed less than {} hours ago",
 					device.getName(), this.getLimitToOutofdateDeviceHours());
 				continue;
 			}
-			this.logger.info("Scheduling snapshot task for device {} ({}).", device.getName(), device.getId());
-			TakeSnapshotTask task = new TakeSnapshotTask(device, comment, author, false,
-				this.dontRunDiagnostics, this.dontCheckCompliance);
-			task.setPriority(this.getPriority());
-			try {
-				TaskManager.addTask(task);
-			}
-			catch (Exception e) {
-				log.error("Task {}. Error while scheduling the individual snapshot task.", this.getId(), e);
-				this.logger.error("Error while scheduling the task.");
-			}
+			devices.add(device);
 		}
-		log.debug("Task {}. Everything went fine.", this.getId());
-		this.status = Status.SUCCESS;
+		log.debug("Task {}. {} device(s) to process (out of {}).", this.getId(), devices.size(), allDevices.size());
+
+		List<Task> children = this.reloadExistingChildren();
+		if (children.isEmpty()) {
+			children = new ArrayList<>();
+			for (Device device : devices) {
+				children.add(new TakeSnapshotTask(device, comment, author, false,
+					this.isDontRunDiagnostics(), this.isDontCheckCompliance()));
+			}
+			this.preCreateChildren(children);
+		}
+		this.status = this.orchestrateChildren(children);
 	}
 
 	/*(non-Javadoc)
@@ -189,7 +198,8 @@ public final class TakeGroupSnapshotTask extends Task implements GroupBasedTask 
 	@Override
 	public Object clone() throws CloneNotSupportedException {
 		TakeGroupSnapshotTask task = (TakeGroupSnapshotTask) super.clone();
-		task.setDeviceGroup(this.deviceGroup);
+		task.setDeviceGroup(this.getDeviceGroup());
+		task.setDeviceList(this.getDeviceList());
 		return task;
 	}
 

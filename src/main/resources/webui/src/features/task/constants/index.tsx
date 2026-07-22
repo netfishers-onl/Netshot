@@ -5,7 +5,7 @@ import {
   LuCheck,
   LuCrosshair,
   LuDatabaseBackup,
-  LuScanSearch,
+  LuShieldQuestion,
   LuStethoscope,
   LuTerminal,
   LuTrophy,
@@ -24,6 +24,7 @@ export const FINAL_STATUS_KEYS = [TaskStatus.Success, TaskStatus.Failure, TaskSt
 /** Live (non-final) statuses — always shown, unaffected by the time range (Active page). */
 export const LIVE_STATUS_KEYS = [
   TaskStatus.New,
+  TaskStatus.Delayed,
   TaskStatus.Running,
   TaskStatus.Waiting,
   TaskStatus.Scheduled,
@@ -53,7 +54,7 @@ export const TASK_TYPE_ICONS: Record<TaskType, ReactElement> = {
   [TaskType.RunDeviceScript]: <LuTerminal />,
   [TaskType.RunDeviceGroupScript]: <LuTerminal />,
   [TaskType.PurgeDatabase]: <LuDatabaseBackup />,
-  [TaskType.DiscoverDeviceType]: <LuScanSearch />,
+  [TaskType.DiscoverDeviceType]: <LuShieldQuestion />,
 };
 
 export type TimeRangePreset = {

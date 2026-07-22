@@ -634,6 +634,8 @@ public class Netshot extends Thread {
 			TaskManager.init();
 			log.info("Scheduling the existing tasks.");
 			TaskManager.rescheduleAll();
+			log.info("Cancelling orphaned delayed tasks.");
+			TaskManager.cancelOrphanedDelayedTasks();
 			log.info("Starting the REST service.");
 			RestService.init();
 

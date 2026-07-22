@@ -1,10 +1,11 @@
 import { EmptyResult, Protected } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
-import { LuCamera, LuSquarePen, LuChevronDown, LuPlay, LuRefreshCcw, LuTrash, LuZap, LuZapOff } from "react-icons/lu"
+import { LuCamera, LuSquarePen, LuChevronDown, LuRefreshCcw, LuTrash, LuZap, LuZapOff } from "react-icons/lu"
 import { RouterTab, RouterTabs } from "@/components/routerTab"
 import { useToast } from "@/hooks"
 import { isNetshotError, NetshotErrorCode } from "@/api/httpClient"
-import { DeviceStatus, DeviceType, Level } from "@/types"
+import { DeviceStatus, DeviceType, Level, TaskType } from "@/types"
+import { TASK_TYPE_ICONS } from "@/features/task/constants"
 import { Button, Flex, Group, Heading, IconButton, Menu, Portal, Skeleton, Spacer, Stack } from "@chakra-ui/react"
 import { QUERIES as GLOBAL_QUERIES } from "@/constants"
 import { useQueryClient } from "@tanstack/react-query"
@@ -109,7 +110,7 @@ export default function DeviceDetailScreen() {
                 <Skeleton loading={isPending}>
                   <RunDeviceScriptTrigger devices={[device!]}>
                     <Button disabled={isDisabled}>
-                      <LuPlay />
+                      {TASK_TYPE_ICONS[TaskType.RunDeviceScript]}
                       {t("script.run")}
                     </Button>
                   </RunDeviceScriptTrigger>

@@ -51,12 +51,12 @@ public class StaticDeviceGroup extends DeviceGroup {
 	}
 
 	/**
-	 * Adds the device.
+	 * Adds the device at the end of the group's ordered list.
 	 *
 	 * @param device the device
 	 */
 	public void addDevice(Device device) {
-		DeviceGroupMembership membership = new DeviceGroupMembership(device, this);
+		DeviceGroupMembership membership = new DeviceGroupMembership(device, this, this.cachedMemberships.size());
 		this.cachedMemberships.add(membership);
 	}
 

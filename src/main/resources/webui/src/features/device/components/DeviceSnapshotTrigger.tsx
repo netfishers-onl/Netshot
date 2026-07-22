@@ -1,5 +1,6 @@
 import { Box, Flex, Stack, Text } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
+import { useRef } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import api from "@/api"
@@ -10,13 +11,18 @@ import TaskDialog from "@/components/TaskDialog"
 import { MUTATIONS } from "@/constants"
 import { useCustomDialog, useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
-import { Device, SimpleDevice, Task, TaskType } from "@/types"
+import { Device, SimpleDevice, TaskType } from "@/types"
 import React from "react"
 import Slot from "@/components/Slot"
+import DeviceNamesPreview from "./DeviceNamesPreview"
 
 export type DeviceSnapshotTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
-type SnapshotForm = { runDiagnostic: boolean; checkCompliance: boolean; debugEnabled: boolean } & ScheduleFormType
+type SnapshotForm = {
+  runDiagnostic: boolean
+  checkCompliance: boolean
+  debugEnabled: boolean
+} & ScheduleFormType
 
 export default function DeviceSnapshotTrigger({ devices, children, ...rest }: DeviceSnapshotTriggerProps) {
   const { t } = useTranslation()
@@ -26,7 +32,11 @@ export default function DeviceSnapshotTrigger({ devices, children, ...rest }: De
 
   const form = useForm<SnapshotForm>({
     mode: "onChange",
-    defaultValues: { runDiagnostic: true, checkCompliance: true, debugEnabled: false },
+    defaultValues: {
+      runDiagnostic: true,
+      checkCompliance: true,
+      debugEnabled: false,
+    },
   })
 
   const mutation = useMutation({
@@ -35,8 +45,11 @@ export default function DeviceSnapshotTrigger({ devices, children, ...rest }: De
     onError(err: NetshotError) { toast.error(err) },
   })
 
+  const orderedDevicesRef = useRef<(SimpleDevice | Device)[]>(devices)
+
   const open = () => {
     form.reset()
+    orderedDevicesRef.current = devices
 
     const dialogRef = dialog.open(MUTATIONS.TASK_CREATE, {
       title: t("device.takeSnapshot"),
@@ -46,7 +59,10 @@ export default function DeviceSnapshotTrigger({ devices, children, ...rest }: De
             {devices.length > 1 ? (
               <Flex>
                 <Box w="140px"><Text color="grey.400">{t("device.devices")}</Text></Box>
-                <Text>{devices.map((device: SimpleDevice | Device) => device.name).join(", ")}</Text>
+                <DeviceNamesPreview
+                  devices={devices}
+                  onReorder={(next) => { orderedDevicesRef.current = next }}
+                />
               </Flex>
             ) : (
               <>
@@ -66,31 +82,39 @@ export default function DeviceSnapshotTrigger({ devices, children, ...rest }: De
             <Checkbox control={form.control} name="checkCompliance">{t("device.checkComplianceAfterSnapshot")}</Checkbox>
             <Checkbox control={form.control} name="debugEnabled">{t("device.enableFullTrace")}</Checkbox>
           </Stack>
-          <ScheduleForm />
+          <ScheduleForm showScheduleMode={devices.length > 1} />
         </Stack>
       ),
       form,
       size: "lg",
       async onSubmit(values: SnapshotForm) {
         const { schedule } = values
-        const tasks: Task[] = []
+        const orderedDevices = orderedDevicesRef.current
 
-        for (const device of devices) {
-          const task = await mutation.mutateAsync({
-            type: TaskType.TakeSnapshot,
-            device: device?.id,
-            debugEnabled: values.debugEnabled,
-            dontRunDiagnostics: !values.runDiagnostic,
-            dontCheckCompliance: !values.checkCompliance,
-            ...schedule,
-          })
-          tasks.push(task!)
-        }
+        const task = await mutation.mutateAsync(
+          devices.length > 1
+            ? {
+                type: TaskType.TakeGroupSnapshot,
+                deviceList: orderedDevices.map((device) => device.id),
+                debugEnabled: values.debugEnabled,
+                dontRunDiagnostics: !values.runDiagnostic,
+                dontCheckCompliance: !values.checkCompliance,
+                ...schedule,
+              }
+            : {
+                type: TaskType.TakeSnapshot,
+                device: devices?.[0]?.id,
+                debugEnabled: values.debugEnabled,
+                dontRunDiagnostics: !values.runDiagnostic,
+                dontCheckCompliance: !values.checkCompliance,
+                ...schedule,
+              }
+        )
 
         dialogRef.close()
 
-        if (tasks.length === 1) {
-          taskDialog.open(<TaskDialog id={tasks[0].id} />)
+        if (task) {
+          taskDialog.open(<TaskDialog id={task.id} />)
         }
       },
       submitButton: { label: t("common.run") },

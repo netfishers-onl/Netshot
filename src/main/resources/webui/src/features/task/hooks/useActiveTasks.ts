@@ -1,5 +1,5 @@
 import api from "@/api"
-import { Task, TaskType } from "@/types"
+import { SimpleTask, TaskType } from "@/types"
 import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
 import { LIVE_STATUS_KEYS, QUERIES } from "../constants"
@@ -8,7 +8,7 @@ import { useRecentCompletedTasks } from "./useRecentCompletedTasks"
 
 const LIVE_ROWS_LIMIT = 500
 
-function significantDate(task: Task) {
+function significantDate(task: SimpleTask) {
   return task.executionDate ?? task.changeDate
 }
 

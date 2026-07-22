@@ -18,24 +18,15 @@
  */
 package net.netshot.netshot.work.tasks;
 
-import java.util.Map;
-
 import org.hibernate.Session;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.type.SqlTypes;
 import org.quartz.JobKey;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.TaskManager;
 import net.netshot.netshot.database.Database;
@@ -50,60 +41,9 @@ import net.netshot.netshot.work.Task;
  * This task runs a JS script on a device.
  */
 @Entity
-@OnDelete(action = OnDeleteAction.CASCADE)
+@DiscriminatorValue("RunDeviceScriptTask")
 @Slf4j
 public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
-
-	/** The device. */
-	@Getter(onMethod = @__({
-		@ManyToOne(fetch = FetchType.LAZY),
-		@OnDelete(action = OnDeleteAction.CASCADE)
-	}))
-	@Setter
-	private Device device;
-
-	/** The JS script to execute. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	private String script;
-
-	/** Compatible device driver. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	private String deviceDriver;
-
-	/** Variable values for the script. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class),
-		@JdbcTypeCode(SqlTypes.JSON)
-	}))
-	@Setter
-	private Map<String, String> userInputValues;
-
-	/** Automatically run a snapshot after successful script execution. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	private boolean runSnapshot;
-
-	/** Automatically run diagnostics after successful script execution. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	private boolean runDiagnostics;
-
-	/** Automatically check compliance after successful script execution. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	private boolean checkCompliance;
 
 	/**
 	 * Instantiates a new RunDeviceScriptTask task.
@@ -123,9 +63,9 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 	public RunDeviceScriptTask(Device device, String script, DeviceDriver driver, String comments, String author) {
 		super(comments, device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName(),
 			author);
-		this.device = device;
-		this.script = script;
-		this.deviceDriver = driver.getName();
+		this.setDevice(device);
+		this.setScript(script);
+		this.setDeviceDriver(driver.getName());
 	}
 
 	@Override
@@ -192,6 +132,7 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 				Task snapshotTask = new TakeSnapshotTask(device, "Snapshot after device script execution", "Auto",
 					false, !this.runDiagnostics, !this.checkCompliance);
 				snapshotTask.setPriority(this.getPriority());
+				snapshotTask.setParentTaskId(this.getId());
 				TaskManager.addTask(snapshotTask);
 			}
 			catch (Exception e) {
@@ -202,6 +143,7 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 			try {
 				Task diagTask = new RunDiagnosticsTask(device, "Run diagnostics after device script execution", "Auto", !this.checkCompliance);
 				diagTask.setPriority(this.getPriority());
+				diagTask.setParentTaskId(this.getId());
 				TaskManager.addTask(diagTask);
 			}
 			catch (Exception e) {
@@ -212,6 +154,7 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 			try {
 				Task checkTask = new CheckComplianceTask(device, "Check compliance after device script execution", "Auto");
 				checkTask.setPriority(this.getPriority());
+				checkTask.setParentTaskId(this.getId());
 				TaskManager.addTask(checkTask);
 			}
 			catch (Exception e) {

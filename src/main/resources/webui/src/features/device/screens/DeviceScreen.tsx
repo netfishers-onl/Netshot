@@ -11,6 +11,13 @@ export default function DeviceScreen() {
   const isMultipleDeviceSelected = selected?.length > 1
   const isOnDeviceRoot = !useMatch("/app/devices/:id/*")
 
+  // Reset any stale bulk selection whenever this screen is (re)mounted, e.g.
+  // when coming back from another tab, so it doesn't override the URL.
+  useEffect(() => {
+    deselectAll()
+    // eslint-disable-next-line @eslint-react/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     if (isOnDeviceRoot) {
       deselectAll()

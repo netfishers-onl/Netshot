@@ -18,6 +18,7 @@
  */
 package net.netshot.netshot.work.tasks;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,25 +27,24 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.TaskManager;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.Network4Address;
@@ -56,9 +56,9 @@ import net.netshot.netshot.work.Task;
  * This task scans a subnet to discover devices.
  */
 @Entity
-@OnDelete(action = OnDeleteAction.CASCADE)
+@DiscriminatorValue("ScanSubnetsTask")
 @Slf4j
-public final class ScanSubnetsTask extends Task implements DomainBasedTask {
+public final class ScanSubnetsTask extends Task implements DomainBasedTask, ChildOrchestratingTask {
 
 	/** The subnets. */
 	@Getter(onMethod = @__({
@@ -66,6 +66,8 @@ public final class ScanSubnetsTask extends Task implements DomainBasedTask {
 		@ElementCollection(fetch = FetchType.EAGER),
 		// Can't make it accepted by Hibernate 6.5... nevermind
 		// @OnDelete(action = OnDeleteAction.CASCADE),
+		@CollectionTable(name = "scan_subnets_task_subnets",
+			joinColumns = @JoinColumn(name = "scan_subnets_task")),
 		@AttributeOverrides({
 			@AttributeOverride(name = "address", column = @Column(name = "ipv4address")),
 			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4usage")),
@@ -74,14 +76,6 @@ public final class ScanSubnetsTask extends Task implements DomainBasedTask {
 	}))
 	@Setter
 	private Set<Network4Address> subnets;
-
-	/** The domain. */
-	@Getter(onMethod = @__({
-		@ManyToOne(fetch = FetchType.LAZY),
-		@OnDelete(action = OnDeleteAction.CASCADE)
-	}))
-	@Setter
-	private Domain domain;
 
 	/**
 	 * Instantiates a new scan subnet task.
@@ -101,7 +95,7 @@ public final class ScanSubnetsTask extends Task implements DomainBasedTask {
 	public ScanSubnetsTask(Set<Network4Address> subnets, Domain domain, String comments,
 		String target, String author) {
 		super(comments, target, author);
-		this.domain = domain;
+		this.setDomain(domain);
 		this.subnets = subnets;
 	}
 
@@ -123,95 +117,98 @@ public final class ScanSubnetsTask extends Task implements DomainBasedTask {
 	public void run() {
 		log.debug("Task {}. Starting scan subnet process.", this.getId());
 
-		Session session = Database.getSession();
-		Set<Integer> toScan = new HashSet<Integer>();
-		List<DeviceCredentialSet> knownCommunities;
-		try {
+		List<Task> children = this.reloadExistingChildren();
+		if (children.isEmpty()) {
+			Session session = Database.getSession();
+			Set<Integer> toScan = new HashSet<Integer>();
+			List<DeviceCredentialSet> knownCommunities;
 			try {
-				for (Network4Address subnet : subnets) {
-					int address1 = subnet.getSubnetMin();
-					int address2 = subnet.getSubnetMax();
-					int min = address1 > address2 ? address2 : address1;
-					int max = address1 > address2 ? address1 : address2;
-					if (min < max - 1) {
-						min++; // Avoid subnet network address
-						max--;
-					}
-					log.trace("Task {}. Will scan from {} to {}.", this.getId(), min, max);
-					this.logger.info("Will scan {} (from {} to {})", subnet.getPrefix(), min, max);
-					List<Integer> existing = session
-						.createQuery(
-							"select d.mgmtAddress.address from Device d where d.mgmtAddress.address >= :min and d.mgmtAddress.address <= :max",
-							Integer.class)
-						.setParameter("min", min)
-						.setParameter("max", max)
-						.list();
-					for (int a = min; a <= max; a++) {
-						if (!existing.contains(a)) {
-							toScan.add(a);
+				try {
+					for (Network4Address subnet : subnets) {
+						int address1 = subnet.getSubnetMin();
+						int address2 = subnet.getSubnetMax();
+						int min = address1 > address2 ? address2 : address1;
+						int max = address1 > address2 ? address1 : address2;
+						if (min < max - 1) {
+							min++; // Avoid subnet network address
+							max--;
+						}
+						log.trace("Task {}. Will scan from {} to {}.", this.getId(), min, max);
+						this.logger.info("Will scan {} (from {} to {})", subnet.getPrefix(), min, max);
+						List<Integer> existing = session
+							.createQuery(
+								"select d.mgmtAddress.address from Device d where d.mgmtAddress.address >= :min and d.mgmtAddress.address <= :max",
+								Integer.class)
+							.setParameter("min", min)
+							.setParameter("max", max)
+							.list();
+						for (int a = min; a <= max; a++) {
+							if (!existing.contains(a)) {
+								toScan.add(a);
+							}
 						}
 					}
 				}
+				catch (HibernateException e) {
+					log.error("Task {}. Error while retrieving the existing devices in the scope.",
+						this.getId(), e);
+					this.logger.error("Error while checking the existing devices.");
+					this.status = Status.FAILURE;
+					return;
+				}
+
+				try {
+					knownCommunities = session
+						.createQuery("from DeviceSnmpCommunity c where c.mgmtDomain is null or c.mgmtDomain = :domain",
+							DeviceCredentialSet.class)
+						.setParameter("domain", this.getDomain())
+						.list();
+				}
+				catch (Exception e) {
+					log.error("Task {}. Error while retrieving the communities.", this.getId(), e);
+					this.logger.error("Error while getting the communities.");
+					this.status = Status.FAILURE;
+					return;
+				}
 			}
-			catch (HibernateException e) {
-				log.error("Task {}. Error while retrieving the existing devices in the scope.",
-					this.getId(), e);
-				this.logger.error("Error while checking the existing devices.");
+			finally {
+				session.close();
+			}
+			if (knownCommunities.size() == 0) {
+				log.error("Task {}. No available SNMP community to scan devices.", this.getId());
+				this.logger.error("No available SNMP community to scan devices.");
 				this.status = Status.FAILURE;
 				return;
 			}
+			log.trace("Task {}. Will try {} SNMP communities.", this.getId(), knownCommunities.size());
 
-			try {
-				knownCommunities = session
-					.createQuery("from DeviceSnmpCommunity c where c.mgmtDomain is null or c.mgmtDomain = :domain",
-						DeviceCredentialSet.class)
-					.setParameter("domain", domain)
-					.list();
-			}
-			catch (Exception e) {
-				log.error("Task {}. Error while retrieving the communities.", this.getId(), e);
-				this.logger.error("Error while getting the communities.");
-				this.status = Status.FAILURE;
-				return;
-			}
-		}
-		finally {
-			session.close();
-		}
-		if (knownCommunities.size() == 0) {
-			log.error("Task {}. No available SNMP community to scan devices.", this.getId());
-			this.logger.error("No available SNMP community to scan devices.");
-			this.status = Status.FAILURE;
-			return;
-		}
-		log.trace("Task {}. Will try {} SNMP communities.", this.getId(), knownCommunities.size());
-
-
-		for (int a : toScan) {
-			try {
-				Network4Address address = new Network4Address(a, 32);
-				if (!address.isNormalUnicast()) {
-					log.trace("Task {}. Bad address {} skipped.", this.getId(), a);
-					this.logger.info("Skipping {}.", address.getIp());
-					continue;
+			children = new ArrayList<>();
+			for (int a : toScan) {
+				try {
+					Network4Address address = new Network4Address(a, 32);
+					if (!address.isNormalUnicast()) {
+						log.trace("Task {}. Bad address {} skipped.", this.getId(), a);
+						this.logger.info("Skipping {}.", address.getIp());
+						continue;
+					}
+					this.logger.info("Adding a task to scan {}", address.getIp());
+					log.trace("Task {}. Will add a discovery task for device with IP {} ({}).",
+						this.getId(), a, address.getIp());
+					DiscoverDeviceTypeTask discoverTask = new DiscoverDeviceTypeTask(address, this.getDomain(), comments, author);
+					for (DeviceCredentialSet credentialSet : knownCommunities) {
+						discoverTask.addCredentialSet(credentialSet);
+					}
+					children.add(discoverTask);
 				}
-				this.logger.info("Adding a task to scan {}", address.getIp());
-				log.trace("Task {}. Will add a discovery task for device with IP {} ({}).",
-					this.getId(), a, address.getIp());
-				DiscoverDeviceTypeTask discoverTask = new DiscoverDeviceTypeTask(address, this.getDomain(), comments, author);
-				for (DeviceCredentialSet credentialSet : knownCommunities) {
-					discoverTask.addCredentialSet(credentialSet);
+				catch (Exception e) {
+					log.error("Task {}. Error while adding discovery task.", this.getId(), e);
+					this.logger.error("Error while adding discover device type: {}", e.getMessage());
 				}
-				discoverTask.setPriority(this.getPriority());
-				TaskManager.addTask(discoverTask);
 			}
-			catch (Exception e) {
-				log.error("Task {}. Error while adding discovery task.", this.getId(), e);
-				this.logger.error("Error while adding discover device type: {}", e.getMessage());
-			}
+			this.preCreateChildren(children);
 		}
 
-		this.status = Status.SUCCESS;
+		this.status = this.orchestrateChildren(children);
 	}
 
 	/*(non-Javadoc)

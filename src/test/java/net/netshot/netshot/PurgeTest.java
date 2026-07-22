@@ -8,6 +8,7 @@ import org.hibernate.Session;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
+import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.Module;
 import net.netshot.netshot.device.StaticDeviceGroup;
@@ -192,7 +193,7 @@ public class PurgeTest {
 			"Unexpected number of task entries");
 		Assertions.assertEquals(
 			expected,
-			session.createNativeQuery("select count(1) from take_snapshot_task t", Long.class)
+			session.createNativeQuery("select count(1) from task t where t.dtype = 'TakeSnapshotTask'", Long.class)
 				.getSingleResultOrNull(),
 			"Unexpected number of snapshot task entries");
 	}
@@ -229,7 +230,7 @@ public class PurgeTest {
 	@ResourceLock("DB")
 	public void taskPurgeTest() {
 		final int PURGE_DAYS = 18;
-		PurgeDatabaseTask task = new PurgeDatabaseTask("Test", "tester", PURGE_DAYS, 0, 0, 0, 0, null);
+		PurgeDatabaseTask task = new PurgeDatabaseTask("Test", "tester", PURGE_DAYS, 0, 0, 0, 0, (DeviceGroup) null);
 		task.run();
 
 		try (Session session = Database.getSession()) {
@@ -263,7 +264,7 @@ public class PurgeTest {
 	@ResourceLock("DB")
 	public void configPurgeTest() {
 		final int PURGE_DAYS = 18;
-		PurgeDatabaseTask task = new PurgeDatabaseTask("Test", "tester", 0, PURGE_DAYS, 0, 0, 0, null);
+		PurgeDatabaseTask task = new PurgeDatabaseTask("Test", "tester", 0, PURGE_DAYS, 0, 0, 0, (DeviceGroup) null);
 		task.run();
 
 		try (Session session = Database.getSession()) {
@@ -297,7 +298,7 @@ public class PurgeTest {
 	@ResourceLock("DB")
 	public void oversizedConfigPurgeTest() {
 		final int PURGE_DAYS = 18;
-		PurgeDatabaseTask task = new PurgeDatabaseTask("Test", "tester", 0, PURGE_DAYS, 2, 0, 0, null);
+		PurgeDatabaseTask task = new PurgeDatabaseTask("Test", "tester", 0, PURGE_DAYS, 2, 0, 0, (DeviceGroup) null);
 		task.run();
 
 		try (Session session = Database.getSession()) {
@@ -317,7 +318,7 @@ public class PurgeTest {
 	public void sparseConfigPurgeTest() {
 		final int PURGE_DAYS = 18;
 		final int KEEP_DAYS = 2; // Keep one config every two days
-		PurgeDatabaseTask task = new PurgeDatabaseTask("Test", "tester", 0, PURGE_DAYS, 0, KEEP_DAYS, 0, null);
+		PurgeDatabaseTask task = new PurgeDatabaseTask("Test", "tester", 0, PURGE_DAYS, 0, KEEP_DAYS, 0, (DeviceGroup) null);
 		task.run();
 
 		try (Session session = Database.getSession()) {
@@ -336,7 +337,7 @@ public class PurgeTest {
 	@ResourceLock("DB")
 	public void modulePurgeTest() {
 		final int PURGE_DAYS = 18;
-		PurgeDatabaseTask task = new PurgeDatabaseTask("Test", "tester", 0, 0, 0, 0, PURGE_DAYS, null);
+		PurgeDatabaseTask task = new PurgeDatabaseTask("Test", "tester", 0, 0, 0, 0, PURGE_DAYS, (DeviceGroup) null);
 		task.run();
 
 		try (Session session = Database.getSession()) {

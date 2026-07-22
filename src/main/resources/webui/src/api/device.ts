@@ -9,7 +9,7 @@ import {
   DeviceType,
   SimpleDevice,
 } from "@/types"
-import { Task } from "@/types/task"
+import { SimpleTask, Task } from "@/types/task"
 import withQuery from "with-query"
 import httpClient from "./httpClient"
 import {
@@ -98,7 +98,7 @@ async function getAllModulesById(id: number, queryParams: DeviceModuleQueryParam
 }
 
 async function getAllTasksById(id: number, queryParams: PaginationQueryParams = {}) {
-  return httpClient.get<Task[]>(`/devices/${id}/tasks`, {
+  return httpClient.get<SimpleTask[]>(`/devices/${id}/tasks`, {
     queryParams,
   })
 }

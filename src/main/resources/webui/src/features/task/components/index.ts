@@ -6,4 +6,5 @@ export { default as TaskSidebar } from "./TaskSidebar";
 export { default as TaskStatusSelect } from "./TaskStatusSelect";
 export { default as TaskTable } from "./TaskTable";
 export { default as TaskTimeRangeMenu } from "./TaskTimeRangeMenu";
+export { default as TaskTreeModeToggle } from "./TaskTreeModeToggle";
 export { default as TaskTypeSelect } from "./TaskTypeSelect";

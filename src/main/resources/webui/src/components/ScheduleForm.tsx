@@ -1,5 +1,5 @@
 import i18n from "@/i18n"
-import { SchedulePriority, TaskScheduleType } from "@/types"
+import { SchedulePriority, TaskScheduleMode, TaskScheduleType } from "@/types"
 import { Collapsible, Stack, Text } from "@chakra-ui/react"
 import { getLocalTimeZone, now } from "@internationalized/date"
 import { useEffect, useMemo, useState } from "react"
@@ -17,12 +17,20 @@ enum ScheduleType {
   Repeat = "repeat",
 }
 
+enum ScheduleModeOption {
+  Parallel = "parallel",
+  SequentialStop = "sequential-stop",
+  SequentialContinue = "sequential-continue",
+}
+
 export type ScheduleFormType = {
   schedule: {
     scheduleType: TaskScheduleType
     scheduleReference: number
     scheduleFactor: number
     schedulePriority: SchedulePriority
+    scheduleMode: TaskScheduleMode
+    stopOnFailure: boolean
   }
 }
 
@@ -49,15 +57,36 @@ export const SCHEDULE_TYPE_OPTIONS = [
 export const SCHEDULE_PRIORITY_OPTIONS = [
   {
     label: i18n.t("common.low"),
+    description: i18n.t("task.priorityLowDesc"),
     value: SchedulePriority.Low,
   },
   {
     label: i18n.t("common.normal"),
+    description: i18n.t("task.priorityNormalDesc"),
     value: SchedulePriority.Normal,
   },
   {
     label: i18n.t("common.high"),
+    description: i18n.t("task.priorityHighDesc"),
     value: SchedulePriority.High,
+  },
+]
+
+export const SCHEDULE_MODE_OPTIONS = [
+  {
+    label: i18n.t("task.scheduleModeParallel"),
+    description: i18n.t("task.scheduleModeParallelDesc"),
+    value: ScheduleModeOption.Parallel,
+  },
+  {
+    label: i18n.t("task.scheduleModeSequentialStop"),
+    description: i18n.t("task.scheduleModeSequentialStopDesc"),
+    value: ScheduleModeOption.SequentialStop,
+  },
+  {
+    label: i18n.t("task.scheduleModeSequentialContinue"),
+    description: i18n.t("task.scheduleModeSequentialContinueDesc"),
+    value: ScheduleModeOption.SequentialContinue,
   },
 ]
 
@@ -68,9 +97,15 @@ export type FormData = {
   every: number
   frequency: "hourly" | "daily" | "weekly" | "monthly"
   priority: string
+  scheduleMode: ScheduleModeOption
 }
 
-export default function ScheduleForm() {
+export type ScheduleFormProps = {
+  /** Only group-based tasks spawning per-device child tasks support a scheduling mode. */
+  showScheduleMode?: boolean
+}
+
+export default function ScheduleForm({ showScheduleMode = false }: ScheduleFormProps = {}) {
   const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -84,6 +119,7 @@ export default function ScheduleForm() {
       minute: 10,
       frequency: "hourly",
       priority: SCHEDULE_PRIORITY_OPTIONS[1].value.toString(),
+      scheduleMode: ScheduleModeOption.Parallel,
     },
   })
 
@@ -113,10 +149,12 @@ export default function ScheduleForm() {
     parentForm.setValue("schedule.scheduleFactor", 1)
     parentForm.setValue("schedule.scheduleType", TaskScheduleType.Asap)
     parentForm.setValue("schedule.schedulePriority", SchedulePriority.Normal)
+    parentForm.setValue("schedule.scheduleMode", TaskScheduleMode.Parallel)
+    parentForm.setValue("schedule.stopOnFailure", false)
 
     // When schedule form change: format, parse and set values to outer form
     const watcher = scheduleForm.watch(
-      ({ type, dateTime, every = 1, frequency, minute = 10, priority = "" }) => {
+      ({ type, dateTime, every = 1, frequency, minute = 10, priority = "", scheduleMode }) => {
         let scheduleType: TaskScheduleType = TaskScheduleType.Asap
         let scheduleReference: number = now(tz).toDate().getTime()
 
@@ -144,6 +182,13 @@ export default function ScheduleForm() {
         parentForm.setValue("schedule.scheduleFactor", +every)
         parentForm.setValue("schedule.scheduleType", scheduleType)
         parentForm.setValue("schedule.schedulePriority", +priority)
+        parentForm.setValue(
+          "schedule.scheduleMode",
+          scheduleMode === ScheduleModeOption.Parallel
+            ? TaskScheduleMode.Parallel
+            : TaskScheduleMode.Sequential
+        )
+        parentForm.setValue("schedule.stopOnFailure", scheduleMode === ScheduleModeOption.SequentialStop)
       }
     )
 
@@ -223,8 +268,8 @@ export default function ScheduleForm() {
               <DateTimeField
                 control={scheduleForm.control}
                 name="dateTime"
-                label={t("time.dateTime")}
-                placeholder={t("time.dateTime")}
+                label={t("time.referenceDateTime")}
+                placeholder={t("time.referenceDateTime")}
               />
               <FormControl
                 w="56"
@@ -245,6 +290,14 @@ export default function ScheduleForm() {
                 }
               />
             </Stack>
+          )}
+          {showScheduleMode && (
+            <Select
+              label={t("task.scheduleMode")}
+              options={SCHEDULE_MODE_OPTIONS}
+              control={scheduleForm.control}
+              name="scheduleMode"
+            />
           )}
           <Select
             label={t("common.priority")}

@@ -1,22 +1,22 @@
 /**
  * Copyright 2013-2025 Netshot
- * 
+ *
  * This file is part of Netshot project.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
-package net.netshot.netshot.device;
+package net.netshot.netshot.work;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -34,30 +34,33 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
+import net.netshot.netshot.device.Device;
 
 /**
- * Device membership within a group.
+ * One member (device, at a given position) of a task's one-time, ordered device list.
+ * Mirrors {@link net.netshot.netshot.device.DeviceGroupMembership}'s composite-key pattern,
+ * with an added ordering column.
  */
 @Entity
-@Table(name = "device_group_cached_devices")
-public class DeviceGroupMembership {
+@Table(name = "task_device_list_members")
+public class TaskDeviceListMember {
 
 	@Embeddable
 	private static class Key implements Serializable {
 
-		private static final long serialVersionUID = 10209729310192924L;
+		private static final long serialVersionUID = 1L;
 
 		@Getter(onMethod = @__({
 			@ManyToOne,
-			@JoinColumn(name = "owner_groups"),
+			@JoinColumn(name = "task_id"),
 			@OnDelete(action = OnDeleteAction.CASCADE),
 		}))
 		@Setter
-		private DeviceGroup group;
+		private Task task;
 
 		@Getter(onMethod = @__({
 			@ManyToOne,
-			@JoinColumn(name = "cached_devices"),
+			@JoinColumn(name = "device_id"),
 			@OnDelete(action = OnDeleteAction.CASCADE),
 		}))
 		@Setter
@@ -67,14 +70,14 @@ public class DeviceGroupMembership {
 			//
 		}
 
-		Key(Device device, DeviceGroup group) {
+		Key(Task task, Device device) {
+			this.task = task;
 			this.device = device;
-			this.group = group;
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(group, device);
+			return Objects.hash(task, device);
 		}
 
 		@Override
@@ -86,7 +89,7 @@ public class DeviceGroupMembership {
 				return false;
 			}
 			Key other = (Key) obj;
-			return Objects.equals(group, other.group) && Objects.equals(device, other.device);
+			return Objects.equals(task, other.task) && Objects.equals(device, other.device);
 		}
 	}
 
@@ -97,25 +100,25 @@ public class DeviceGroupMembership {
 	@Setter
 	private Key key = new Key();
 
-	/** Position of the device within the group's ordered membership list. */
+	/** Position of the device within the ordered list. */
 	@Getter(onMethod = @__({
 		@Column(name = "list_position")
 	}))
 	@Setter
 	private int position;
 
-	protected DeviceGroupMembership() {
+	protected TaskDeviceListMember() {
 		//
 	}
 
-	public DeviceGroupMembership(Device device, DeviceGroup group, int position) {
-		this.key = new Key(device, group);
+	public TaskDeviceListMember(Task task, Device device, int position) {
+		this.key = new Key(task, device);
 		this.position = position;
 	}
 
 	@Transient
-	public DeviceGroup getGroup() {
-		return this.key.getGroup();
+	public Task getTask() {
+		return this.key.getTask();
 	}
 
 	@Transient

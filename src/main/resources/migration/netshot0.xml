@@ -1482,4 +1482,214 @@
 			</column>
 		</addColumn>
 	</changeSet>
+	<!-- Merge all Task subclasses into the single "task" table (single-table inheritance)
+	     instead of one joined table per subclass, and add columns for the new group-based
+	     task device-list / parent-child / schedule-mode feature. -->
+	<changeSet author="netshot" id="0.25.0_5">
+		<addColumn tableName="task">
+			<column name="dtype" type="VARCHAR(255)"/>
+			<column name="device" type="BIGINT"/>
+			<column name="device_group" type="BIGINT"/>
+			<column name="domain" type="BIGINT"/>
+			<column name="discover_result_device" type="BIGINT"/>
+			<column name="ipv4_address" type="INT"/>
+			<column name="ipv4_pfxlen" type="INT"/>
+			<column name="ipv4_usage" type="INT"/>
+			<column name="device_driver" type="VARCHAR(255)"/>
+			<column name="script" type="LONGTEXT"/>
+			<column name="user_input_values" type="${JSON}"/>
+			<column name="attributes" type="${JSON}"/>
+			<column name="run_snapshot" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+			<column name="run_diagnostics" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+			<column name="check_compliance" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+			<column name="dont_run_diagnostics" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+			<column name="dont_check_compliance" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+			<column name="parent_task_id" type="BIGINT"/>
+			<column name="child_order" type="INT" value="0">
+				<constraints nullable="false"/>
+			</column>
+			<column name="schedule_mode" type="INT" value="0">
+				<constraints nullable="false"/>
+			</column>
+			<column name="stop_on_failure" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+			<column name="cancel_requested" type="${BOOLEAN}" value="false">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_6">
+		<createTable tableName="task_device_list_members">
+			<column name="task_id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="device_id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="list_position" type="INT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="task_id" baseTableName="task_device_list_members"
+			constraintName="FK_task_device_list_members_task" deferrable="false" initiallyDeferred="false"
+			onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device_id" baseTableName="task_device_list_members"
+			constraintName="FK_task_device_list_members_device" deferrable="false" initiallyDeferred="false"
+			onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_7">
+		<sql>UPDATE task SET dtype = 'CheckComplianceTask',
+			device = (SELECT device FROM check_compliance_task s WHERE s.id = task.id)
+			WHERE task.id IN (SELECT id FROM check_compliance_task)</sql>
+		<sql>UPDATE task SET dtype = 'CheckGroupComplianceTask',
+			device_group = (SELECT device_group FROM check_group_compliance_task s WHERE s.id = task.id)
+			WHERE task.id IN (SELECT id FROM check_group_compliance_task)</sql>
+		<sql>UPDATE task SET dtype = 'CheckGroupSoftwareTask',
+			device_group = (SELECT device_group FROM check_group_software_task s WHERE s.id = task.id)
+			WHERE task.id IN (SELECT id FROM check_group_software_task)</sql>
+		<sql>UPDATE task SET dtype = 'RunDeviceGroupScriptTask',
+			device_group = (SELECT device_group FROM run_device_group_script_task s WHERE s.id = task.id),
+			device_driver = (SELECT device_driver FROM run_device_group_script_task s WHERE s.id = task.id),
+			script = (SELECT script FROM run_device_group_script_task s WHERE s.id = task.id),
+			user_input_values = (SELECT user_input_values FROM run_device_group_script_task s WHERE s.id = task.id),
+			run_snapshot = (SELECT run_snapshot FROM run_device_group_script_task s WHERE s.id = task.id),
+			run_diagnostics = (SELECT run_diagnostics FROM run_device_group_script_task s WHERE s.id = task.id),
+			check_compliance = (SELECT check_compliance FROM run_device_group_script_task s WHERE s.id = task.id)
+			WHERE task.id IN (SELECT id FROM run_device_group_script_task)</sql>
+		<sql>UPDATE task SET dtype = 'RunDeviceScriptTask',
+			device = (SELECT device FROM run_device_script_task s WHERE s.id = task.id),
+			device_driver = (SELECT device_driver FROM run_device_script_task s WHERE s.id = task.id),
+			script = (SELECT script FROM run_device_script_task s WHERE s.id = task.id),
+			user_input_values = (SELECT user_input_values FROM run_device_script_task s WHERE s.id = task.id),
+			run_snapshot = (SELECT run_snapshot FROM run_device_script_task s WHERE s.id = task.id),
+			run_diagnostics = (SELECT run_diagnostics FROM run_device_script_task s WHERE s.id = task.id),
+			check_compliance = (SELECT check_compliance FROM run_device_script_task s WHERE s.id = task.id)
+			WHERE task.id IN (SELECT id FROM run_device_script_task)</sql>
+		<sql>UPDATE task SET dtype = 'RunDiagnosticsTask',
+			device = (SELECT device FROM run_diagnostics_task s WHERE s.id = task.id),
+			dont_check_compliance = (SELECT dont_check_compliance FROM run_diagnostics_task s WHERE s.id = task.id)
+			WHERE task.id IN (SELECT id FROM run_diagnostics_task)</sql>
+		<sql>UPDATE task SET dtype = 'RunGroupDiagnosticsTask',
+			device_group = (SELECT device_group FROM run_group_diagnostics_task s WHERE s.id = task.id),
+			dont_check_compliance = (SELECT dont_check_compliance FROM run_group_diagnostics_task s WHERE s.id = task.id)
+			WHERE task.id IN (SELECT id FROM run_group_diagnostics_task)</sql>
+		<sql>UPDATE task SET dtype = 'ScanSubnetsTask',
+			domain = (SELECT domain FROM scan_subnets_task s WHERE s.id = task.id)
+			WHERE task.id IN (SELECT id FROM scan_subnets_task)</sql>
+		<sql>UPDATE task SET dtype = 'TakeGroupSnapshotTask',
+			device_group = (SELECT device_group FROM take_group_snapshot_task s WHERE s.id = task.id),
+			dont_run_diagnostics = (SELECT dont_run_diagnostics FROM take_group_snapshot_task s WHERE s.id = task.id),
+			dont_check_compliance = (SELECT dont_check_compliance FROM take_group_snapshot_task s WHERE s.id = task.id),
+			attributes = CAST((SELECT '{"limitToOutofdateDeviceHours":' || s.limit_to_outofdate_device_hours || '}'
+				FROM take_group_snapshot_task s WHERE s.id = task.id) AS ${JSON})
+			WHERE task.id IN (SELECT id FROM take_group_snapshot_task)</sql>
+		<sql>UPDATE task SET dtype = 'TakeSnapshotTask',
+			device = (SELECT device FROM take_snapshot_task s WHERE s.id = task.id),
+			dont_run_diagnostics = (SELECT dont_run_diagnostics FROM take_snapshot_task s WHERE s.id = task.id),
+			dont_check_compliance = (SELECT dont_check_compliance FROM take_snapshot_task s WHERE s.id = task.id)
+			WHERE task.id IN (SELECT id FROM take_snapshot_task)</sql>
+		<sql>UPDATE task SET dtype = 'PurgeDatabaseTask',
+			device_group = (SELECT device_group FROM purge_database_task s WHERE s.id = task.id),
+			attributes = CAST((SELECT '{"days":' || s.days || ',"configDays":' || s.config_days
+				|| ',"configSize":' || s.config_size || ',"configKeepDays":' || s.config_keep_days
+				|| ',"moduleDays":' || s.module_days || '}'
+				FROM purge_database_task s WHERE s.id = task.id) AS ${JSON})
+			WHERE task.id IN (SELECT id FROM purge_database_task)</sql>
+		<sql>UPDATE task SET dtype = 'DiscoverDeviceTypeTask',
+			domain = (SELECT domain FROM discover_device_type_task s WHERE s.id = task.id),
+			discover_result_device = (SELECT device FROM discover_device_type_task s WHERE s.id = task.id),
+			ipv4_address = (SELECT ipv4_address FROM discover_device_type_task s WHERE s.id = task.id),
+			ipv4_pfxlen = (SELECT ipv4_pfxlen FROM discover_device_type_task s WHERE s.id = task.id),
+			ipv4_usage = (SELECT ipv4_usage FROM discover_device_type_task s WHERE s.id = task.id),
+			attributes = CAST((SELECT '{"discoveredDeviceType":'
+				|| CASE WHEN s.discovered_device_type IS NULL THEN 'null' ELSE '"' || replace(s.discovered_device_type, '"', '\"') || '"' END
+				|| ',"snapshotTaskId":' || s.snapshot_task_id
+				|| '}'
+				FROM discover_device_type_task s WHERE s.id = task.id) AS ${JSON})
+			WHERE task.id IN (SELECT id FROM discover_device_type_task)</sql>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_8">
+		<sql>UPDATE task SET attributes = CAST((SELECT '{"automatic":' || CASE WHEN s.automatic THEN 'true' ELSE 'false' END || '}'
+			FROM take_snapshot_task s WHERE s.id = task.id) AS ${JSON})
+			WHERE task.id IN (SELECT id FROM take_snapshot_task)</sql>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_9">
+		<!-- Any base task row with no matching subtype row (a known pre-existing orphan condition,
+		     see 0.20.2_3) can't be assigned a dtype and must be removed before it is made NOT NULL. -->
+		<sql>DELETE FROM task WHERE dtype IS NULL</sql>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_10">
+		<addNotNullConstraint tableName="task" columnName="dtype" columnDataType="VARCHAR(255)"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_11">
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="task"
+			constraintName="FK_task_device" deferrable="false" initiallyDeferred="false"
+			onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="device_group" baseTableName="task"
+			constraintName="FK_task_device_group" deferrable="false" initiallyDeferred="false"
+			onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_group" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="domain" baseTableName="task"
+			constraintName="FK_task_domain" deferrable="false" initiallyDeferred="false"
+			onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="domain" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="discover_result_device" baseTableName="task"
+			constraintName="FK_task_discover_result_device" deferrable="false" initiallyDeferred="false"
+			onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="parent_task_id" baseTableName="task"
+			constraintName="FK_task_parent_task" deferrable="false" initiallyDeferred="false"
+			onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_12">
+		<!-- Repoint the two non-inheritance child tables (element-collection / many-to-many join
+		     tables owned by specific Task subclasses) away from the about-to-be-dropped subtype
+		     tables, to the now-unified "task" table. Column values are unchanged (the subtype PK
+		     already equalled task.id under the previous joined-inheritance strategy). -->
+		<dropForeignKeyConstraint baseTableName="scan_subnets_task_subnets" constraintName="FK_6v7ehqqbb51g0fuf614s38t4g"/>
+		<addForeignKeyConstraint baseColumnNames="scan_subnets_task" baseTableName="scan_subnets_task_subnets"
+			constraintName="FK_6v7ehqqbb51g0fuf614s38t4g" deferrable="false" initiallyDeferred="false"
+			onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+		<dropForeignKeyConstraint baseTableName="discover_device_type_task_credential_sets" constraintName="FK_pxcvrxuml1idn4v6tfuggcx26"/>
+		<addForeignKeyConstraint baseColumnNames="discover_device_type_task" baseTableName="discover_device_type_task_credential_sets"
+			constraintName="FK_pxcvrxuml1idn4v6tfuggcx26" deferrable="false" initiallyDeferred="false"
+			onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="task" validate="true"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_13">
+		<dropTable tableName="check_compliance_task"/>
+		<dropTable tableName="check_group_compliance_task"/>
+		<dropTable tableName="check_group_software_task"/>
+		<dropTable tableName="discover_device_type_task"/>
+		<dropTable tableName="purge_database_task"/>
+		<dropTable tableName="run_device_group_script_task"/>
+		<dropTable tableName="run_device_script_task"/>
+		<dropTable tableName="run_diagnostics_task"/>
+		<dropTable tableName="run_group_diagnostics_task"/>
+		<dropTable tableName="scan_subnets_task"/>
+		<dropTable tableName="take_group_snapshot_task"/>
+		<dropTable tableName="take_snapshot_task"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_14">
+		<createIndex indexName="dtypeIndex" tableName="task">
+			<column name="dtype"/>
+		</createIndex>
+		<createIndex indexName="parentTaskIndex" tableName="task">
+			<column name="parent_task_id"/>
+		</createIndex>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_15">
+		<addColumn tableName="device_group_cached_devices">
+			<column name="list_position" type="INT" value="0">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

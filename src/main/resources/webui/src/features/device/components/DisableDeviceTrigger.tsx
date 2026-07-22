@@ -4,12 +4,14 @@ import { QUERIES as GLOBAL_QUERIES, MUTATIONS } from "@/constants"
 import { useConfirmDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { Device, SimpleDevice } from "@/types"
-import { Text } from "@chakra-ui/react"
+import { Stack, Text } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useRef } from "react"
 import { useTranslation } from "react-i18next"
 import React from "react"
 import Slot from "@/components/Slot"
 import { QUERIES as DEVICE_QUERIES } from "../constants"
+import DeviceNamesPreview from "./DeviceNamesPreview"
 
 export type DisableDeviceTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
@@ -26,26 +28,38 @@ export default function DisableDeviceTrigger({ devices, children, ...rest }: Dis
   })
 
   const isMultiple = devices.length > 1
+  const orderedDevicesRef = useRef<(SimpleDevice | Device)[]>(devices)
 
   const open = () => {
+    orderedDevicesRef.current = devices
+
     const dialogRef = dialog.open(MUTATIONS.DEVICE_UPDATE, {
       title: t(isMultiple ? "device.disableMultiple" : "device.disable"),
       description: (
         <>
           {isMultiple ? (
-            <Text>{t("device.aboutToDisableMultiple", { names: devices.map((device) => device.name).join(", ") })}</Text>
+            <Stack gap="3">
+              <Text>{t("device.aboutToDisableMultiple")}</Text>
+              <DeviceNamesPreview
+                devices={devices}
+                onReorder={(next) => { orderedDevicesRef.current = next }}
+              />
+            </Stack>
           ) : (
             <Text>{t("device.aboutToDisable", { deviceName: devices?.[0]?.name, deviceIp: devices?.[0]?.mgmtAddress || t("common.nA") })}</Text>
           )}
         </>
       ),
       async onConfirm() {
-        for await (const device of devices) {
-          await mutation.mutateAsync({ id: device?.id, enabled: false })
+        try {
+          for await (const device of orderedDevicesRef.current) {
+            await mutation.mutateAsync({ id: device?.id, enabled: false })
+          }
+        } finally {
+          queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.DEVICE_LIST], refetchType: "all" })
+          queryClient.invalidateQueries({ queryKey: [DEVICE_QUERIES.DEVICE_SEARCH_LIST], refetchType: "all" })
+          queryClient.invalidateQueries({ queryKey: [DEVICE_QUERIES.DEVICE_DETAIL] })
         }
-        queryClient.invalidateQueries({ queryKey: [GLOBAL_QUERIES.DEVICE_LIST], refetchType: "all" })
-        queryClient.invalidateQueries({ queryKey: [DEVICE_QUERIES.DEVICE_SEARCH_LIST], refetchType: "all" })
-        queryClient.invalidateQueries({ queryKey: [DEVICE_QUERIES.DEVICE_DETAIL] })
         dialogRef.close()
       },
       confirmButton: {

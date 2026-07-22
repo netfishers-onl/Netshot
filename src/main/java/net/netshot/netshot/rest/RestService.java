@@ -213,6 +213,7 @@ import net.netshot.netshot.work.TaskContext;
 import net.netshot.netshot.work.tasks.CheckComplianceTask;
 import net.netshot.netshot.work.tasks.CheckGroupComplianceTask;
 import net.netshot.netshot.work.tasks.CheckGroupSoftwareTask;
+import net.netshot.netshot.work.tasks.ChildOrchestratingTask;
 import net.netshot.netshot.work.tasks.DeviceBasedTask;
 import net.netshot.netshot.work.tasks.DeviceJsScript;
 import net.netshot.netshot.work.tasks.DiscoverDeviceTypeTask;
@@ -931,7 +932,7 @@ public class RestService extends Thread {
 	)
 	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
 	@Tag(name = "Tasks", description = "Task management")
-	public List<Task> getDeviceTasks(@PathParam("id") @Parameter(description = "Device ID") Long id, @BeanParam PaginationParams paginationParams)
+	public List<RsLightTask> getDeviceTasks(@PathParam("id") @Parameter(description = "Device ID") Long id, @BeanParam PaginationParams paginationParams)
 		throws WebApplicationException {
 		log.debug("REST request, get device {} tasks.", id);
 		if (paginationParams.limit == null) {
@@ -951,7 +952,8 @@ public class RestService extends Thread {
 				return Collections.emptyList();
 			}
 			String hql = String.format(
-				"select t from Task t where "
+				LIGHT_TASK_SELECT
+				+ "from Task t where "
 				+ String.join(" or ", deviceTaskConditions) + " "
 				+ "order by "
 				+ "case t.status "
@@ -961,7 +963,7 @@ public class RestService extends Thread {
 				+ "when :newStatus then 4 "
 				+ "else 10 end asc, "
 				+ "coalesce(t.executionDate, t.changeDate) desc nulls first");
-			Query<Task> query = session.createQuery(hql, Task.class)
+			Query<RsLightTask> query = session.createQuery(hql, RsLightTask.class)
 				.setParameter("deviceId", id)
 				.setParameter("running", Task.Status.RUNNING)
 				.setParameter("waiting", Task.Status.WAITING)
@@ -1634,7 +1636,7 @@ public class RestService extends Thread {
 				+ "d.networkClass "
 				+ ") from Device d";
 			if (groupId != null) {
-				hqlQuery += " join d.groupMemberships gm where gm.key.group.id = :groupId";
+				hqlQuery += " join d.groupMemberships gm where gm.key.group.id = :groupId order by gm.position asc";
 			}
 			Query<RsLightDevice> query = session.createQuery(hqlQuery, RsLightDevice.class);
 			query.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);
@@ -2636,6 +2638,217 @@ public class RestService extends Thread {
 	}
 
 	/**
+	 * The Class RsLightTask, a light-weight projection of {@link Task}, carrying only
+	 * the fields needed to list tasks -- notably excluding the script and log fields,
+	 * which can be arbitrarily large. Task listing endpoints return this instead of
+	 * the full {@link Task}; the frontend fetches the full task when it needs details.
+	 */
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.NONE)
+	public static class RsLightTask {
+
+		/** The id. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private long id;
+
+		/** The task type (simple class name). */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private String type;
+
+		/** The status. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Task.Status status;
+
+		/** The author. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private String author;
+
+		/** The target. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private String target;
+
+		/** The comments. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private String comments;
+
+		/** The creation date. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Date creationDate;
+
+		/** The change date. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Date changeDate;
+
+		/** The execution date. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Date executionDate;
+
+		/** The schedule reference. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Date scheduleReference;
+
+		/** The schedule type. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Task.ScheduleType scheduleType;
+
+		/** The schedule factor. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private int scheduleFactor;
+
+		/** The priority. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private int priority;
+
+		/** The runner ID (clustering mode). */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private String runnerId;
+
+		/** Debug enabled. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private boolean debugEnabled;
+
+		/** The target device ID, if any. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Long deviceId;
+
+		/** The target device group ID, if any. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Long deviceGroupId;
+
+		/** The parent task ID, when this task is a per-device child of a group-based task. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Long parentTaskId;
+
+		/** Position of this task among its siblings, when it has a parent task. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private int childOrder;
+
+		/** Parallel vs sequential scheduling of child tasks (group-based tasks only). */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Task.ScheduleMode scheduleMode;
+
+		/** Whether to stop scheduling further child tasks after one fails (sequential mode only). */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private boolean stopOnFailure;
+
+		public RsLightTask(long id, Class<? extends Task> type, Task.Status status, String author,
+				String target, String comments, Date creationDate, Date changeDate, Date executionDate,
+				Date scheduleReference, Task.ScheduleType scheduleType, int scheduleFactor, int priority,
+				String runnerId, boolean debugEnabled, Long deviceId, Long deviceGroupId,
+				Long parentTaskId, int childOrder, Task.ScheduleMode scheduleMode, boolean stopOnFailure) {
+			this.id = id;
+			this.type = type == null ? null : type.getSimpleName();
+			this.status = status;
+			this.author = author;
+			this.target = target;
+			this.comments = comments;
+			this.creationDate = creationDate;
+			this.changeDate = changeDate;
+			this.executionDate = executionDate;
+			this.scheduleReference = scheduleReference;
+			this.scheduleType = scheduleType;
+			this.scheduleFactor = scheduleFactor;
+			this.priority = priority;
+			this.runnerId = runnerId;
+			this.debugEnabled = debugEnabled;
+			this.deviceId = deviceId;
+			this.deviceGroupId = deviceGroupId;
+			this.parentTaskId = parentTaskId;
+			this.childOrder = childOrder;
+			this.scheduleMode = scheduleMode;
+			this.stopOnFailure = stopOnFailure;
+		}
+	}
+
+	/** Common HQL select clause for {@link RsLightTask}, to project a {@code Task} row without its heavy script/log fields. */
+	private static final String LIGHT_TASK_SELECT = "select new RsLightTask("
+		+ "t.id, "
+		+ "type(t), "
+		+ "t.status, "
+		+ "t.author, "
+		+ "t.target, "
+		+ "t.comments, "
+		+ "t.creationDate, "
+		+ "t.changeDate, "
+		+ "t.executionDate, "
+		+ "t.scheduleReference, "
+		+ "t.scheduleType, "
+		+ "t.scheduleFactor, "
+		+ "t.priority, "
+		+ "t.runnerId, "
+		+ "t.debugEnabled, "
+		+ "t.device.id, "
+		+ "t.deviceGroup.id, "
+		+ "t.parentTaskId, "
+		+ "t.childOrder, "
+		+ "t.scheduleMode, "
+		+ "t.stopOnFailure"
+		+ ") ";
+
+	/**
 	 * Resolves task type simple class names (as used in the JSON "type" discriminator)
 	 * to the corresponding task classes, ignoring names that don't match any known type.
 	 *
@@ -2672,11 +2885,12 @@ public class RestService extends Thread {
 		description = "Returns the list of tasks. Limited to 100 if no specific limit is provided."
 	)
 	@Tag(name = "Tasks", description = "Task management")
-	public List<Task> getTasks(@BeanParam PaginationParams paginationParams,
+	public List<RsLightTask> getTasks(@BeanParam PaginationParams paginationParams,
 		@QueryParam("status") @Parameter(description = "Include tasks of given status(es)") Set<Task.Status> statuses,
 		@QueryParam("type") @Parameter(description = "Include tasks of given type(s)") Set<String> types,
 		@QueryParam("after") @Parameter(description = "Tasks executed or changed after this date (as milliseconds since 1970)") Long startDate,
-		@QueryParam("before") @Parameter(description = "Tasks executed or changed before this date (as milliseconds since 1970)") Long endDate) {
+		@QueryParam("before") @Parameter(description = "Tasks executed or changed before this date (as milliseconds since 1970)") Long endDate,
+		@QueryParam("parentTaskId") @Parameter(description = "Only include child tasks of the given parent task ID") Long parentTaskId) {
 
 		log.debug("REST request, get tasks.");
 		if (paginationParams.limit == null) {
@@ -2685,7 +2899,7 @@ public class RestService extends Thread {
 
 		Session session = Database.getSession(true);
 		try {
-			StringBuilder hqlQuery = new StringBuilder("select t from Task t where (1 = 1)");
+			StringBuilder hqlQuery = new StringBuilder(LIGHT_TASK_SELECT + "from Task t where (1 = 1)");
 			Map<String, Object> hqlParams = new HashMap<>();
 
 			if (!statuses.isEmpty()) {
@@ -2706,15 +2920,19 @@ public class RestService extends Thread {
 					+ "or ((t.executionDate is null) and (t.changeDate < :endDate)))");
 				hqlParams.put("endDate", new Date(endDate));
 			}
-			hqlQuery.append(" order by id desc");
+			if (parentTaskId != null) {
+				hqlQuery.append(" and t.parentTaskId = :parentTaskId");
+				hqlParams.put("parentTaskId", parentTaskId);
+			}
+			hqlQuery.append(parentTaskId != null ? " order by t.childOrder asc" : " order by id desc");
 
-			Query<Task> query = session.createQuery(hqlQuery.toString(), Task.class);
+			Query<RsLightTask> query = session.createQuery(hqlQuery.toString(), RsLightTask.class);
 			for (Entry<String, Object> k : hqlParams.entrySet()) {
 				query.setParameter(k.getKey(), k.getValue());
 			}
 
 			paginationParams.apply(query);
-			List<Task> tasks = query.list();
+			List<RsLightTask> tasks = query.list();
 			return tasks;
 		}
 		catch (HibernateException e) {
@@ -3142,7 +3360,7 @@ public class RestService extends Thread {
 			DeviceGroup deviceGroup;
 			if ("StaticDeviceGroup".equals(rsGroup.getType())) {
 				StaticDeviceGroup staticGroup = new StaticDeviceGroup(name);
-				Set<Device> devices = new HashSet<>();
+				List<Device> devices = new ArrayList<>();
 				for (Long deviceId : rsGroup.getStaticDevices()) {
 					Device device = session.get(Device.class, deviceId);
 					if (device == null) {
@@ -3417,7 +3635,7 @@ public class RestService extends Thread {
 					NetshotBadRequestException.Reason.NETSHOT_GROUP_NOT_FOUND);
 			}
 			if (group instanceof StaticDeviceGroup staticGroup) {
-				Set<Device> devices = new HashSet<>();
+				List<Device> devices = new ArrayList<>();
 				for (Long deviceId : rsGroup.getStaticDevices()) {
 					Device device = session.get(Device.class, deviceId);
 					if (device == null) {
@@ -3524,6 +3742,30 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private Long group = 0L;
+
+		/** The one-time, ordered device list, as an alternative to a device group. */
+		@Schema(description = "The ordered list of device IDs for a one-time device list, as an alternative to a group")
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private List<Long> deviceList;
+
+		/** Parallel vs sequential scheduling of child tasks (group-based tasks only). */
+		@Schema(description = "Parallel vs sequential scheduling of the per-device child tasks (group-based tasks only)")
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private Task.ScheduleMode scheduleMode = Task.ScheduleMode.PARALLEL;
+
+		/** Whether to stop scheduling further child tasks after one fails (sequential mode only). */
+		@Schema(description = "Whether to stop scheduling further child tasks after one fails (sequential mode only)")
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private boolean stopOnFailure;
 
 		/** The device. */
 		@Schema(description = "The device ID for device-based task")
@@ -3743,8 +3985,14 @@ public class RestService extends Thread {
 		}
 
 		if (rsTask.isCancelled()) {
-			if (task.getStatus() != Task.Status.SCHEDULED) {
-				log.error("User is trying to cancel task {} not in SCHEDULE state.",
+			// A group-based task that orchestrates per-device children (either schedule mode)
+			// spends its whole run in RUNNING, so the normal SCHEDULED-only cancel path doesn't
+			// apply -- it's cancelled by flagging cancelRequested, polled by its own
+			// orchestration loop, rather than by pulling it out of the Quartz scheduler.
+			boolean runningOrchestrator = task.getStatus() == Task.Status.RUNNING
+				&& task instanceof ChildOrchestratingTask;
+			if (task.getStatus() != Task.Status.SCHEDULED && !runningOrchestrator) {
+				log.error("User is trying to cancel task {} not in SCHEDULED state (or RUNNING group task).",
 					id);
 				throw new NetshotBadRequestException(
 					"The task isn't in 'SCHEDULED' state.",
@@ -3752,9 +4000,15 @@ public class RestService extends Thread {
 			}
 
 			try {
-				String message = "Task manually cancelled by user %s.".formatted(this.getUsername());
-				TaskManager.cancelTask(task, message);
-				AAA_LOG.info("{} has been manually cancelled.", task);
+				if (runningOrchestrator) {
+					TaskManager.requestCancel(id);
+					AAA_LOG.info("{} has been requested to cancel (running group task).", task);
+				}
+				else {
+					String message = "Task manually cancelled by user %s.".formatted(this.getUsername());
+					TaskManager.cancelTask(task, message);
+					AAA_LOG.info("{} has been manually cancelled.", task);
+				}
 			}
 			catch (Exception e) {
 				log.error("Unable to cancel the task {}.", id, e);
@@ -3815,18 +4069,23 @@ public class RestService extends Thread {
 		description = "Retrieves global info about tasks."
 	)
 	@Tag(name = "Tasks", description = "Task management")
-	public RsTaskSummary getTaskSummary() throws WebApplicationException {
+	public RsTaskSummary getTaskSummary(
+		@QueryParam("parentTaskId") @Parameter(description = "Only summarize child tasks of the given parent task ID") Long parentTaskId)
+		throws WebApplicationException {
 
 		log.debug("REST request, get task summary.");
 
 		RsTaskSummary summary = new RsTaskSummary();
 		Session session = Database.getSession(true);
 		try {
-			List<RsTaskStatusCount> counts = session
-				.createQuery(
-					"select new RsTaskStatusCount(t.status, count(t.id)) from Task t group by t.status",
-					RsTaskStatusCount.class)
-				.list();
+			String hql = "select new RsTaskStatusCount(t.status, count(t.id)) from Task t"
+				+ (parentTaskId != null ? " where t.parentTaskId = :parentTaskId" : "")
+				+ " group by t.status";
+			Query<RsTaskStatusCount> countQuery = session.createQuery(hql, RsTaskStatusCount.class);
+			if (parentTaskId != null) {
+				countQuery.setParameter("parentTaskId", parentTaskId);
+			}
+			List<RsTaskStatusCount> counts = countQuery.list();
 			for (Task.Status status : Task.Status.values()) {
 				summary.getCountByStatus().put(status, 0L);
 			}
@@ -3996,6 +4255,60 @@ public class RestService extends Thread {
 	}
 
 	/**
+	 * Checks whether the given task creation request specifies a device group.
+	 * @param rsTask the request
+	 * @return true if a group ID is set
+	 */
+	private static boolean hasGroup(RsTask rsTask) {
+		return rsTask.getGroup() != null && rsTask.getGroup() != 0L;
+	}
+
+	/**
+	 * Checks whether the given task creation request specifies a one-time device list.
+	 * @param rsTask the request
+	 * @return true if a non-empty device list is set
+	 */
+	private static boolean hasDeviceList(RsTask rsTask) {
+		return rsTask.getDeviceList() != null && !rsTask.getDeviceList().isEmpty();
+	}
+
+	/**
+	 * Validates that exactly one of a device group or a one-time device list was given
+	 * for a group-based task creation request.
+	 * @param rsTask the request
+	 * @throws NetshotBadRequestException if both or neither were given
+	 */
+	private static void validateGroupOrDeviceList(RsTask rsTask) {
+		if (hasGroup(rsTask) == hasDeviceList(rsTask)) {
+			throw new NetshotBadRequestException(
+				"Exactly one of 'group' or 'deviceList' must be provided.",
+				NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
+		}
+	}
+
+	/**
+	 * Resolves the ordered list of devices for a one-time device list task creation
+	 * request.
+	 * @param session the Hibernate session
+	 * @param rsTask the request
+	 * @return the ordered list of devices
+	 * @throws NetshotBadRequestException if any device ID doesn't exist
+	 */
+	private static List<Device> resolveDeviceList(Session session, RsTask rsTask) {
+		List<Device> devices = new ArrayList<>();
+		for (Long deviceId : rsTask.getDeviceList()) {
+			Device device = session.get(Device.class, deviceId);
+			if (device == null) {
+				log.error("Unable to find the device {}.", deviceId);
+				throw new NetshotBadRequestException(String.format("Unable to find device %d.", deviceId),
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_DEVICE);
+			}
+			devices.add(device);
+		}
+		return devices;
+	}
+
+	/**
 	 * Adds a new task.
 	 *
 	 * @param rsTask the rs task
@@ -4116,20 +4429,28 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException(e.getMessage(),
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_SCRIPT);
 			}
-			DeviceGroup group;
+			validateGroupOrDeviceList(rsTask);
 			Session session = Database.getSession();
 			try {
-				group = session.get(DeviceGroup.class, rsTask.getGroup());
-				if (group == null) {
-					log.error("Unable to find the group {}.", rsTask.getGroup());
-					throw new NetshotBadRequestException("Unable to find the group.",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+				if (hasGroup(rsTask)) {
+					DeviceGroup group = session.get(DeviceGroup.class, rsTask.getGroup());
+					if (group == null) {
+						log.error("Unable to find the group {}.", rsTask.getGroup());
+						throw new NetshotBadRequestException("Unable to find the group.",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+					}
+					task = new RunDeviceGroupScriptTask(group, rsTask.getScript(), driver, rsTask.getComments(), userName);
 				}
-				task = new RunDeviceGroupScriptTask(group, rsTask.getScript(), driver, rsTask.getComments(), userName);
+				else {
+					List<Device> devices = resolveDeviceList(session, rsTask);
+					task = new RunDeviceGroupScriptTask(devices, rsTask.getScript(), driver, rsTask.getComments(), userName);
+				}
 				((RunDeviceGroupScriptTask) task).setUserInputValues(rsTask.getUserInputs());
 				((RunDeviceGroupScriptTask) task).setRunSnapshot(rsTask.isRunSnapshot());
 				((RunDeviceGroupScriptTask) task).setRunDiagnostics(rsTask.isRunDiagnostics());
 				((RunDeviceGroupScriptTask) task).setCheckCompliance(rsTask.isCheckCompliance());
+				task.setScheduleMode(rsTask.getScheduleMode());
+				task.setStopOnFailure(rsTask.isStopOnFailure());
 			}
 			catch (HibernateException e) {
 				log.error("Error while retrieving the group.", e);
@@ -4164,18 +4485,28 @@ public class RestService extends Thread {
 		}
 		else if ("TakeGroupSnapshotTask".equals(rsTask.getType())) {
 			log.trace("Adding a TakeGroupSnapshotTask");
-			DeviceGroup group;
+			validateGroupOrDeviceList(rsTask);
 			Session session = Database.getSession();
 			try {
-				group = session.get(DeviceGroup.class, rsTask.getGroup());
-				if (group == null) {
-					log.error("Unable to find the group {}.", rsTask.getGroup());
-					throw new NetshotBadRequestException("Unable to find the group.",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+				if (hasGroup(rsTask)) {
+					DeviceGroup group = session.get(DeviceGroup.class, rsTask.getGroup());
+					if (group == null) {
+						log.error("Unable to find the group {}.", rsTask.getGroup());
+						throw new NetshotBadRequestException("Unable to find the group.",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+					}
+					task = new TakeGroupSnapshotTask(group, rsTask.getComments(), userName,
+						rsTask.getLimitToOutofdateDeviceHours(), rsTask.isDontRunDiagnostics(),
+						rsTask.isDontCheckCompliance());
 				}
-				task = new TakeGroupSnapshotTask(group, rsTask.getComments(), userName,
-					rsTask.getLimitToOutofdateDeviceHours(), rsTask.isDontRunDiagnostics(),
-					rsTask.isDontCheckCompliance());
+				else {
+					List<Device> devices = resolveDeviceList(session, rsTask);
+					task = new TakeGroupSnapshotTask(devices, rsTask.getComments(), userName,
+						rsTask.getLimitToOutofdateDeviceHours(), rsTask.isDontRunDiagnostics(),
+						rsTask.isDontCheckCompliance());
+				}
+				task.setScheduleMode(rsTask.getScheduleMode());
+				task.setStopOnFailure(rsTask.isStopOnFailure());
 			}
 			catch (HibernateException e) {
 				log.error("Error while retrieving the group.", e);
@@ -4188,16 +4519,22 @@ public class RestService extends Thread {
 		}
 		else if ("CheckGroupComplianceTask".equals(rsTask.getType())) {
 			log.trace("Adding a CheckGroupComplianceTask");
-			DeviceGroup group;
+			validateGroupOrDeviceList(rsTask);
 			Session session = Database.getSession();
 			try {
-				group = session.get(DeviceGroup.class, rsTask.getGroup());
-				if (group == null) {
-					log.error("Unable to find the group {}.", rsTask.getGroup());
-					throw new NetshotBadRequestException("Unable to find the group.",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+				if (hasGroup(rsTask)) {
+					DeviceGroup group = session.get(DeviceGroup.class, rsTask.getGroup());
+					if (group == null) {
+						log.error("Unable to find the group {}.", rsTask.getGroup());
+						throw new NetshotBadRequestException("Unable to find the group.",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+					}
+					task = new CheckGroupComplianceTask(group, rsTask.getComments(), userName);
 				}
-				task = new CheckGroupComplianceTask(group, rsTask.getComments(), userName);
+				else {
+					List<Device> devices = resolveDeviceList(session, rsTask);
+					task = new CheckGroupComplianceTask(devices, rsTask.getComments(), userName);
+				}
 			}
 			catch (HibernateException e) {
 				log.error("Error while retrieving the group.", e);
@@ -4210,16 +4547,22 @@ public class RestService extends Thread {
 		}
 		else if ("CheckGroupSoftwareTask".equals(rsTask.getType())) {
 			log.trace("Adding a CheckGroupSoftwareTask");
-			DeviceGroup group;
+			validateGroupOrDeviceList(rsTask);
 			Session session = Database.getSession();
 			try {
-				group = session.get(DeviceGroup.class, rsTask.getGroup());
-				if (group == null) {
-					log.error("Unable to find the group {}.", rsTask.getGroup());
-					throw new NetshotBadRequestException("Unable to find the group.",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+				if (hasGroup(rsTask)) {
+					DeviceGroup group = session.get(DeviceGroup.class, rsTask.getGroup());
+					if (group == null) {
+						log.error("Unable to find the group {}.", rsTask.getGroup());
+						throw new NetshotBadRequestException("Unable to find the group.",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+					}
+					task = new CheckGroupSoftwareTask(group, rsTask.getComments(), userName);
 				}
-				task = new CheckGroupSoftwareTask(group, rsTask.getComments(), userName);
+				else {
+					List<Device> devices = resolveDeviceList(session, rsTask);
+					task = new CheckGroupSoftwareTask(devices, rsTask.getComments(), userName);
+				}
 			}
 			catch (HibernateException e) {
 				log.error("Error while retrieving the group.", e);
@@ -4232,17 +4575,26 @@ public class RestService extends Thread {
 		}
 		else if ("RunGroupDiagnosticsTask".equals(rsTask.getType())) {
 			log.trace("Adding a RunGroupDiagnosticsTask");
-			DeviceGroup group;
+			validateGroupOrDeviceList(rsTask);
 			Session session = Database.getSession();
 			try {
-				group = session.get(DeviceGroup.class, rsTask.getGroup());
-				if (group == null) {
-					log.error("Unable to find the group {}.", rsTask.getGroup());
-					throw new NetshotBadRequestException("Unable to find the group.",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+				if (hasGroup(rsTask)) {
+					DeviceGroup group = session.get(DeviceGroup.class, rsTask.getGroup());
+					if (group == null) {
+						log.error("Unable to find the group {}.", rsTask.getGroup());
+						throw new NetshotBadRequestException("Unable to find the group.",
+							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
+					}
+					task = new RunGroupDiagnosticsTask(group, rsTask.getComments(), userName,
+						rsTask.isDontCheckCompliance());
 				}
-				task = new RunGroupDiagnosticsTask(group, rsTask.getComments(), userName,
-					rsTask.isDontCheckCompliance());
+				else {
+					List<Device> devices = resolveDeviceList(session, rsTask);
+					task = new RunGroupDiagnosticsTask(devices, rsTask.getComments(), userName,
+						rsTask.isDontCheckCompliance());
+				}
+				task.setScheduleMode(rsTask.getScheduleMode());
+				task.setStopOnFailure(rsTask.isStopOnFailure());
 			}
 			catch (HibernateException e) {
 				log.error("Error while retrieving the group.", e);
@@ -4374,18 +4726,22 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException("The number of days of removed modules to purge must be greater than 3.",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
 			}
-			DeviceGroup group = null;
-			if (rsTask.getGroup() != 0L) {
+			if (hasGroup(rsTask) && hasDeviceList(rsTask)) {
+				throw new NetshotBadRequestException(
+					"Only one of 'group' or 'deviceList' may be provided.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_TASK);
+			}
+			if (hasGroup(rsTask)) {
 				Session session = Database.getSession();
 				try {
-					group = session.get(DeviceGroup.class, rsTask.getGroup());
+					DeviceGroup group = session.get(DeviceGroup.class, rsTask.getGroup());
 					if (group == null) {
 						log.error("Unable to find the group {}.", rsTask.getGroup());
 						throw new NetshotBadRequestException("Unable to find the group.",
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_GROUP);
 					}
-					task = new RunGroupDiagnosticsTask(group, rsTask.getComments(), userName,
-						rsTask.isDontCheckCompliance());
+					task = new PurgeDatabaseTask(rsTask.getComments(), userName, rsTask.getDaysToPurge(),
+						configDays, configSize, configKeepDays, moduleDays, group);
 				}
 				catch (HibernateException e) {
 					log.error("Error while retrieving the group.", e);
@@ -4396,8 +4752,21 @@ public class RestService extends Thread {
 					session.close();
 				}
 			}
-			task = new PurgeDatabaseTask(rsTask.getComments(), userName, rsTask.getDaysToPurge(),
-				configDays, configSize, configKeepDays, moduleDays, group);
+			else if (hasDeviceList(rsTask)) {
+				Session session = Database.getSession();
+				try {
+					List<Device> devices = resolveDeviceList(session, rsTask);
+					task = new PurgeDatabaseTask(rsTask.getComments(), userName, rsTask.getDaysToPurge(),
+						configDays, configSize, configKeepDays, moduleDays, devices);
+				}
+				finally {
+					session.close();
+				}
+			}
+			else {
+				task = new PurgeDatabaseTask(rsTask.getComments(), userName, rsTask.getDaysToPurge(),
+					configDays, configSize, configKeepDays, moduleDays, (DeviceGroup) null);
+			}
 		}
 		else if ("RunDiagnosticsTask".equals(rsTask.getType())) {
 			log.trace("Adding a RunDiagnosticsTask");

@@ -138,6 +138,9 @@ export default function AddTaskDialog({ initialType }: AddTaskDialogProps = {}) 
     taskType === TaskType.CheckGroupCompliance ||
     taskType === TaskType.CheckGroupSoftware
 
+  const hasScheduleMode =
+    taskType === TaskType.TakeGroupSnapshot || taskType === TaskType.RunGroupDiagnostic
+
   const submit = (values: FormData) => {
     const { schedule } = values
 
@@ -570,7 +573,7 @@ export default function AddTaskDialog({ initialType }: AddTaskDialogProps = {}) 
                       </Stack>
                     )}
 
-                    <ScheduleForm />
+                    <ScheduleForm showScheduleMode={hasScheduleMode} />
                   </Stack>
                 )}
               </Dialog.Body>

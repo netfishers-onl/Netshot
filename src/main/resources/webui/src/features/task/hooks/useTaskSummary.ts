@@ -10,7 +10,7 @@ import { QUERIES } from "../constants"
 export function useTaskSummary() {
   const { data, isPending, isFetching } = useQuery({
     queryKey: [QUERIES.TASK_SUMMARY],
-    queryFn: api.task.getSummary,
+    queryFn: async () => api.task.getSummary(),
   })
 
   return {

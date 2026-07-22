@@ -23,19 +23,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.TaskManager;
 import net.netshot.netshot.database.Database;
@@ -44,7 +39,6 @@ import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.device.script.RunDiagnosticCliScript;
 import net.netshot.netshot.diagnostic.Diagnostic;
 import net.netshot.netshot.rest.RestViews.DefaultView;
-import net.netshot.netshot.rest.RestViews.HookView;
 import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
 
@@ -52,7 +46,7 @@ import net.netshot.netshot.work.Task;
  * This task runs the diagnostics (if any is defined) on the specified device.
  */
 @Entity
-@OnDelete(action = OnDeleteAction.CASCADE)
+@DiscriminatorValue("RunDiagnosticsTask")
 @Slf4j
 public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 
@@ -78,21 +72,6 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 		runningDiagnostics.remove(deviceId);
 	}
 
-	/** The device. */
-	@Getter(onMethod = @__({
-		@ManyToOne(fetch = FetchType.LAZY),
-		@OnDelete(action = OnDeleteAction.CASCADE)
-	}))
-	@Setter
-	private Device device;
-
-	/** Do not automatically start a check compliance task. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(HookView.class)
-	}))
-	@Setter
-	private boolean dontCheckCompliance;
-
 	/**
 	 * Instantiate a new RunDiagnosticTask (for Hibernate).
 	 */
@@ -109,8 +88,8 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 	public RunDiagnosticsTask(Device device, String comments, String author, boolean dontCheckCompliance) {
 		super(comments, device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName(),
 			author);
-		this.device = device;
-		this.dontCheckCompliance = dontCheckCompliance;
+		this.setDevice(device);
+		this.setDontCheckCompliance(dontCheckCompliance);
 	}
 
 	@Override
@@ -232,6 +211,7 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 			try {
 				Task checkTask = new CheckComplianceTask(device, "Check compliance after device diagnostics", "Auto");
 				checkTask.setPriority(this.getPriority());
+				checkTask.setParentTaskId(this.getId());
 				TaskManager.addTask(checkTask);
 			}
 			catch (Exception e) {

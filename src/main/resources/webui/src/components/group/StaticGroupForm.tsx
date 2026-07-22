@@ -6,6 +6,7 @@ import {
   Box,
   Center,
   type CollectionItem,
+  Grid,
   Heading,
   IconButton,
   Input,
@@ -21,7 +22,7 @@ import { useQuery } from "@tanstack/react-query"
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react"
 import { useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { LuArrowLeft, LuArrowRight, LuSearch } from "react-icons/lu"
+import { LuArrowDown, LuArrowLeft, LuArrowRight, LuArrowUp, LuSearch } from "react-icons/lu"
 import { GroupForm } from "./types"
 
 type ListboxRenderProps<T extends CollectionItem> = {
@@ -144,39 +145,62 @@ export default function StaticGroupForm() {
     setRightValues([])
   }
 
+  function moveSelected(direction: -1 | 1) {
+    const items = [...rightCollection.collection.items]
+    const selected = items.map((d) => rightValues.includes(d.id.toString()))
+    if (direction === -1) {
+      for (let i = 1; i < items.length; i++) {
+        if (selected[i] && !selected[i - 1]) {
+          ;[items[i - 1], items[i]] = [items[i], items[i - 1]]
+          ;[selected[i - 1], selected[i]] = [selected[i], selected[i - 1]]
+        }
+      }
+    } else {
+      for (let i = items.length - 2; i >= 0; i--) {
+        if (selected[i] && !selected[i + 1]) {
+          ;[items[i + 1], items[i]] = [items[i], items[i + 1]]
+          ;[selected[i + 1], selected[i]] = [selected[i], selected[i + 1]]
+        }
+      }
+    }
+    rightCollection.set(items)
+    form.setValue("staticDevices", items)
+  }
+
   return (
     <Stack flex="1" gap="5" overflow="auto">
       <Heading as="h4" size="md">
         {t("group.members")}
       </Heading>
-      <Stack direction="row" gap="4" alignItems="stretch" flex="1">
-        <Stack flex="1" minW="0" gap="2">
-          <InputGroup startElement={<LuSearch />}>
-            <Input
-              placeholder={t("device.search")}
-              value={deviceQuery}
-              onChange={(e) => setDeviceQuery(e.target.value)}
-            />
-          </InputGroup>
-          <Box borderWidth="1px" borderColor="grey.100" borderRadius="xl" overflow="hidden">
-            <ListboxRender
-              collection={leftCollection.collection}
-              value={leftValues}
-              onValueChange={(e: ListboxValueChangeDetails) => setLeftValues(e.value)}
-              emptyMessage={deviceQuery ? t("device.noDeviceFound") : t("device.startTypingToFind")}
-              renderItem={(device) => (
-                <Listbox.ItemText>
-                  <DeviceListItem device={device} />
-                </Listbox.ItemText>
-              )}
-            />
-          </Box>
-          <Text textStyle="xs" color="fg.muted" px="3">{t("device.searchLimitNotice", { count: 20 })}</Text>
-        </Stack>
+      <Grid templateColumns="1fr auto 1fr" templateRows="auto 1fr auto" columnGap="4" rowGap="2" flex="1">
+        <InputGroup gridColumn="1" gridRow="1" startElement={<LuSearch />}>
+          <Input
+            placeholder={t("device.search")}
+            value={deviceQuery}
+            onChange={(e) => setDeviceQuery(e.target.value)}
+          />
+        </InputGroup>
+        <Box gridColumn="1" gridRow="2" borderWidth="1px" borderColor="grey.100" borderRadius="xl" overflow="hidden">
+          <ListboxRender
+            collection={leftCollection.collection}
+            value={leftValues}
+            onValueChange={(e: ListboxValueChangeDetails) => setLeftValues(e.value)}
+            emptyMessage={deviceQuery ? t("device.noDeviceFound") : t("device.startTypingToFind")}
+            renderItem={(device) => (
+              <Listbox.ItemText>
+                <DeviceListItem device={device} />
+              </Listbox.ItemText>
+            )}
+          />
+        </Box>
+        <Text gridColumn="1" gridRow="3" textStyle="xs" color="fg.muted" px="3">
+          {t("device.searchLimitNotice", { count: 20 })}
+        </Text>
 
-        <Stack gap="2" alignItems="center" justifyContent="center">
+        <Stack gridColumn="2" gridRow="1 / -1" gap="2" alignItems="center" justifyContent="center">
           <IconButton
             variant="outline"
+            size="sm"
             aria-label={t("common.add")}
             disabled={leftValues.length === 0}
             onClick={transferToRight}
@@ -185,6 +209,7 @@ export default function StaticGroupForm() {
           </IconButton>
           <IconButton
             variant="outline"
+            size="sm"
             aria-label={t("common.remove")}
             disabled={rightValues.length === 0}
             onClick={transferToLeft}
@@ -193,22 +218,41 @@ export default function StaticGroupForm() {
           </IconButton>
         </Stack>
 
-        <Stack flex="1" minW="0" gap="2">
-          <Box borderWidth="1px" borderColor="grey.100" borderRadius="xl" overflow="hidden">
-            <ListboxRender
-              collection={rightCollection.collection}
-              value={rightValues}
-              onValueChange={(e: ListboxValueChangeDetails) => setRightValues(e.value)}
-              emptyMessage={t("device.noDevicesSelected")}
-              renderItem={(device) => (
-                <Listbox.ItemText>
-                  <DeviceListItem device={device} />
-                </Listbox.ItemText>
-              )}
-            />
-          </Box>
+        <Stack gridColumn="3" gridRow="1" direction="row" gap="2" justifyContent="flex-end">
+          <IconButton
+            variant="outline"
+            size="sm"
+            aria-label={t("common.moveUp")}
+            disabled={rightValues.length === 0}
+            onClick={() => moveSelected(-1)}
+          >
+            <LuArrowUp />
+          </IconButton>
+          <IconButton
+            variant="outline"
+            size="sm"
+            aria-label={t("common.moveDown")}
+            disabled={rightValues.length === 0}
+            onClick={() => moveSelected(1)}
+          >
+            <LuArrowDown />
+          </IconButton>
         </Stack>
-      </Stack>
+
+        <Box gridColumn="3" gridRow="2" borderWidth="1px" borderColor="grey.100" borderRadius="xl" overflow="hidden">
+          <ListboxRender
+            collection={rightCollection.collection}
+            value={rightValues}
+            onValueChange={(e: ListboxValueChangeDetails) => setRightValues(e.value)}
+            emptyMessage={t("device.noDevicesSelected")}
+            renderItem={(device) => (
+              <Listbox.ItemText>
+                <DeviceListItem device={device} />
+              </Listbox.ItemText>
+            )}
+          />
+        </Box>
+      </Grid>
     </Stack>
   )
 }

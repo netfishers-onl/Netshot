@@ -6,17 +6,21 @@ import TaskDialog from "@/components/TaskDialog"
 import { MUTATIONS } from "@/constants"
 import { useCustomDialog, useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
-import { Device, SimpleDevice, Task, TaskType } from "@/types"
+import { Device, SimpleDevice, TaskType } from "@/types"
 import { Box, Flex, Stack, Text } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
+import { useRef } from "react"
 import { FormProvider, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
 import Slot from "@/components/Slot"
+import DeviceNamesPreview from "./DeviceNamesPreview"
 
 export type DeviceDiagnosticTriggerProps = { devices: SimpleDevice[] | Device[]; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
-type Form = { checkCompliance: boolean } & ScheduleFormType
+type Form = {
+  checkCompliance: boolean
+} & ScheduleFormType
 
 export default function DeviceDiagnosticTrigger({ devices, children, ...rest }: DeviceDiagnosticTriggerProps) {
   const { t } = useTranslation()
@@ -26,7 +30,9 @@ export default function DeviceDiagnosticTrigger({ devices, children, ...rest }: 
 
   const form = useForm<Form>({
     mode: "onChange",
-    defaultValues: { checkCompliance: true },
+    defaultValues: {
+      checkCompliance: true,
+    },
   })
 
   const mutation = useMutation({
@@ -35,7 +41,11 @@ export default function DeviceDiagnosticTrigger({ devices, children, ...rest }: 
     onError(err: NetshotError) { toast.error(err) },
   })
 
+  const orderedDevicesRef = useRef<(SimpleDevice | Device)[]>(devices)
+
   const open = () => {
+    orderedDevicesRef.current = devices
+
     const dialogRef = dialog.open(MUTATIONS.TASK_CREATE, {
       title: t("device.runDiagnostics"),
       description: (
@@ -45,7 +55,10 @@ export default function DeviceDiagnosticTrigger({ devices, children, ...rest }: 
               {devices.length > 1 ? (
                 <Flex alignItems="center">
                   <Box w="140px"><Text color="grey.400">{t("device.devices")}</Text></Box>
-                  <Text>{devices.map((device) => device.name).join(", ")}</Text>
+                  <DeviceNamesPreview
+                    devices={devices}
+                    onReorder={(next) => { orderedDevicesRef.current = next }}
+                  />
                 </Flex>
               ) : (
                 <>
@@ -65,7 +78,7 @@ export default function DeviceDiagnosticTrigger({ devices, children, ...rest }: 
                 {t("device.checkComplianceAfterSnapshot")}
               </Checkbox>
             </Stack>
-            <ScheduleForm />
+            <ScheduleForm showScheduleMode={devices.length > 1} />
           </Stack>
         </FormProvider>
       ),
@@ -73,24 +86,30 @@ export default function DeviceDiagnosticTrigger({ devices, children, ...rest }: 
       size: "lg",
       async onSubmit(data: Form) {
         const { schedule } = data
-        const tasks: Task[] = []
+        const orderedDevices = orderedDevicesRef.current
 
-        for await (const device of devices) {
-          const task = await mutation.mutateAsync({
-            type: TaskType.RunDiagnostic,
-            device: device?.id,
-            debugEnabled: false,
-            dontRunDiagnostics: true,
-            dontCheckCompliance: !data.checkCompliance,
-            ...schedule,
-          })
-          tasks.push(task!)
-        }
+        const task = await mutation.mutateAsync(
+          devices.length > 1
+            ? {
+                type: TaskType.RunGroupDiagnostic,
+                deviceList: orderedDevices.map((device) => device.id),
+                dontCheckCompliance: !data.checkCompliance,
+                ...schedule,
+              }
+            : {
+                type: TaskType.RunDiagnostic,
+                device: devices?.[0]?.id,
+                debugEnabled: false,
+                dontRunDiagnostics: true,
+                dontCheckCompliance: !data.checkCompliance,
+                ...schedule,
+              }
+        )
 
         dialogRef.close()
 
-        if (tasks.length === 1) {
-          taskDialog.open(<TaskDialog id={tasks[0].id} />)
+        if (task) {
+          taskDialog.open(<TaskDialog id={task.id} />)
         }
       },
       submitButton: { label: t("common.run") },

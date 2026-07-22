@@ -1,4 +1,4 @@
-import { Task } from "@/types";
+import { SimpleTask, Task } from "@/types";
 import httpClient, { HttpMethod } from "./httpClient";
 import {
   CreateOrUpdateTaskPayload,
@@ -9,7 +9,7 @@ import {
 } from "./types";
 
 async function getAll(queryParams: TaskQueryParams) {
-  return httpClient.get<Task[]>("/tasks", {
+  return httpClient.get<SimpleTask[]>("/tasks", {
     queryParams,
     // The backend's `status`/`type` params are repeated (?status=A&status=B), not
     // indexed (?status[0]=A&status[1]=B), which is `qs`'s (and so with-query's) default.
@@ -44,8 +44,10 @@ async function getDebugById(id: number) {
   return req;
 }
 
-async function getSummary() {
-  return httpClient.get<TaskSummaryResponse>(`/tasks/summary`);
+async function getSummary(parentTaskId?: number) {
+  return httpClient.get<TaskSummaryResponse>(`/tasks/summary`, {
+    queryParams: parentTaskId != null ? { parentTaskId } : undefined,
+  });
 }
 
 async function getStats(queryParams: TaskStatsQueryParams) {

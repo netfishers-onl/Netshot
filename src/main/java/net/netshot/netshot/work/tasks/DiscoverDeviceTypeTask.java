@@ -37,9 +37,12 @@ import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
@@ -68,15 +71,18 @@ import net.netshot.netshot.work.Task;
  * This task discovers the type of the given device.
  */
 @Entity
-@OnDelete(action = OnDeleteAction.CASCADE)
+@DiscriminatorValue("DiscoverDeviceTypeTask")
 @Slf4j
-public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTask, DomainBasedTask {
+public final class DiscoverDeviceTypeTask extends Task implements DomainBasedTask {
 
 	/** The credential sets. */
 	@Getter(onMethod = @__({
 		@ManyToMany,
 		@Fetch(FetchMode.SELECT),
-		@OnDelete(action = OnDeleteAction.CASCADE)
+		@OnDelete(action = OnDeleteAction.CASCADE),
+		@JoinTable(name = "discover_device_type_task_credential_sets",
+			joinColumns = @JoinColumn(name = "discover_device_type_task"),
+			inverseJoinColumns = @JoinColumn(name = "credential_sets"))
 	}))
 	@Setter
 	private Set<DeviceCredentialSet> credentialSets = new HashSet<DeviceCredentialSet>();
@@ -100,29 +106,18 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 	@Setter
 	private DeviceCredentialSet successCredentialSet;
 
-	@Getter
-	@Setter
-	private String discoveredDeviceType;
-
-	/** The domain. */
-	@Getter(onMethod = @__({
-		@ManyToOne(fetch = FetchType.LAZY),
-		@OnDelete(action = OnDeleteAction.CASCADE)
-	}))
-	@Setter
-	private Domain domain;
-
-	/** The device. */
+	/**
+	 * The device found/created as a result of a successful discovery. Kept as its own
+	 * column (not the shared "device" column hoisted onto Task) since its live
+	 * ON DELETE CASCADE behavior is the opposite of the shared column's SET NULL.
+	 */
 	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(HookView.class),
 		@ManyToOne(fetch = FetchType.LAZY),
 		@OnDelete(action = OnDeleteAction.CASCADE)
 	}))
 	@Setter
-	private Device device;
-
-	/** The snapshot task id. */
-	private long snapshotTaskId;
+	private Device discoverResultDevice;
 
 	/**
 	 * Instantiates a new discover device type task.
@@ -132,7 +127,7 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 
 	/**
 	 * Instantiates a new discover device type task.
-	 * 
+	 *
 	 * @param deviceAddress = the device address
 	 * @param domain = the domain
 	 * @param comments = the comments
@@ -142,7 +137,45 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 		String comments, String author) {
 		super(comments, deviceAddress.getIp(), author);
 		this.deviceAddress = deviceAddress;
-		this.domain = domain;
+		this.setDomain(domain);
+	}
+
+	/**
+	 * Gets the discovered device type name.
+	 * @return the discovered device type name
+	 */
+	@Transient
+	public String getDiscoveredDeviceType() {
+		return this.getStringAttribute("discoveredDeviceType", null);
+	}
+
+	/**
+	 * Sets the discovered device type name.
+	 * @param discoveredDeviceType the discovered device type name
+	 */
+	public void setDiscoveredDeviceType(String discoveredDeviceType) {
+		this.setAttribute("discoveredDeviceType", discoveredDeviceType);
+	}
+
+	/**
+	 * Gets the snapshot task id.
+	 *
+	 * @return the snapshot task id
+	 */
+	@XmlElement
+	@JsonView(DefaultView.class)
+	@Transient
+	public long getSnapshotTaskId() {
+		return this.getLongAttribute("snapshotTaskId", 0);
+	}
+
+	/**
+	 * Sets the snapshot task id.
+	 *
+	 * @param snapshotTaskId the new snapshot task id
+	 */
+	protected void setSnapshotTaskId(long snapshotTaskId) {
+		this.setAttribute("snapshotTaskId", snapshotTaskId);
 	}
 
 	/**
@@ -155,9 +188,9 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 	@Transient
 	public String getDiscoveredDeviceTypeDescription() {
 		String description = "Unknown";
-		DeviceDriver driver = DeviceDriver.getDriverByName(discoveredDeviceType);
+		DeviceDriver driver = DeviceDriver.getDriverByName(this.getDiscoveredDeviceType());
 		if (driver == null) {
-			log.debug("No driver named {}.", discoveredDeviceType);
+			log.debug("No driver named {}.", this.getDiscoveredDeviceType());
 		}
 		else {
 			description = driver.getDescription();
@@ -192,7 +225,7 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 			for (DeviceDriver driver : DeviceDriver.getAllDrivers()) {
 				if (driver.snmpAutoDiscover(this, sysObjectId, sysDesc, this.logger)) {
 					log.trace("The driver {} did accept the OID.", driver.getName());
-					this.discoveredDeviceType = driver.getName();
+					this.setDiscoveredDeviceType(driver.getName());
 					return true;
 				}
 			}
@@ -323,18 +356,21 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 		if (this.status == Status.SUCCESS) {
 			Task snapshotTask = null;
 			Session session = Database.getSession();
-			this.device = null;
+			this.setDiscoverResultDevice(null);
+			Device newDevice = null;
 			try {
 				session.beginTransaction();
-				this.device = new Device(this.discoveredDeviceType, deviceAddress, domain, this.author);
-				this.device.addCredentialSet(successCredentialSet);
-				session.persist(this.device);
-				snapshotTask = new TakeSnapshotTask(this.device,
+				newDevice = new Device(this.getDiscoveredDeviceType(), deviceAddress, this.getDomain(), this.author);
+				newDevice.addCredentialSet(successCredentialSet);
+				this.setDiscoverResultDevice(newDevice);
+				session.persist(newDevice);
+				snapshotTask = new TakeSnapshotTask(newDevice,
 					"Automatic snapshot after discovery", author, true, false, false);
 				snapshotTask.setPriority(this.getPriority());
+				snapshotTask.setParentTaskId(this.getId());
 				session.persist(snapshotTask);
 				session.getTransaction().commit();
-				this.snapshotTaskId = snapshotTask.getId();
+				this.setSnapshotTaskId(snapshotTask.getId());
 			}
 			catch (HibernateException e) {
 				Database.rollbackSilently(session);
@@ -349,8 +385,8 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 				session.close();
 			}
 
-			if (device != null) {
-				DynamicDeviceGroup.refreshAllGroupsOfOneDevice(device);
+			if (newDevice != null) {
+				DynamicDeviceGroup.refreshAllGroupsOfOneDevice(newDevice);
 			}
 
 			try {
@@ -437,27 +473,6 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 		return "Device autodiscovery";
 	}
 
-	/**
-	 * Gets the snapshot task id.
-	 * 
-	 * @return the snapshot task id
-	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public long getSnapshotTaskId() {
-		return snapshotTaskId;
-	}
-
-	/**
-	 * Sets the snapshot task id.
-	 * 
-	 * @param snapshotTaskId
-	 *          the new snapshot task id
-	 */
-	protected void setSnapshotTaskId(long snapshotTaskId) {
-		this.snapshotTaskId = snapshotTaskId;
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see net.netshot.netshot.work.Task#getIdentity()
@@ -473,24 +488,22 @@ public final class DiscoverDeviceTypeTask extends Task implements DeviceBasedTas
 	public void copyResultsTo(Task target) {
 		super.copyResultsTo(target);
 		DiscoverDeviceTypeTask t = (DiscoverDeviceTypeTask) target;
-		t.setDiscoveredDeviceType(this.discoveredDeviceType);
-		t.setDevice(this.device);
-		t.setSnapshotTaskId(this.snapshotTaskId);
+		t.setDiscoverResultDevice(this.getDiscoverResultDevice());
 	}
 
 	/**
-	 * Get the ID of the device.
-	 * 
+	 * Get the ID of the discovered device.
+	 *
 	 * @return the ID of the device
 	 */
 	@XmlElement
 	@JsonView(DefaultView.class)
 	@Transient
 	protected long getDeviceId() {
-		if (this.device == null) {
+		if (this.getDiscoverResultDevice() == null) {
 			return 0;
 		}
-		return this.device.getId();
+		return this.getDiscoverResultDevice().getId();
 	}
 
 }

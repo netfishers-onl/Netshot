@@ -1,21 +1,24 @@
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { LogPanel, TaskStatusBadge } from "@/components"
+import { LogPanel, TASK_STATUS_CONFIG, TaskChildrenDialog, TaskStatusBadge } from "@/components"
 import { MUTATIONS, QUERIES } from "@/constants"
-import { useConfirmDialogWithMutation, useCustomDialog, useDialogConfig } from "@/dialog"
+import { useConfirmDialogWithMutation, useCustomDialog, useDialogConfig, useDialogStore } from "@/dialog"
 import { DeviceBadge, DeviceGroupBadge } from "@/features/device/components"
-import { TASK_TYPE_ICONS } from "@/features/task/constants"
+import { QUERIES as TASK_QUERIES, TASK_TYPE_ICONS } from "@/features/task/constants"
 import { useToast } from "@/hooks"
 import { useLocalization } from "@/i18n"
-import { TaskScheduleType, TaskStatus, TaskType } from "@/types"
+import { TaskScheduleMode, TaskScheduleType, TaskStatus, TaskType } from "@/types"
 import { getSchedulePriorityLabel } from "@/utils"
+import { BarSegment, BarSegmentData, useChart } from "@chakra-ui/charts"
 import {
   Box,
   Button,
   CloseButton,
+  ColorSwatch,
   Dialog,
   Flex,
   Heading,
+  HStack,
   Icon,
   Portal,
   Separator,
@@ -24,9 +27,26 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMemo } from "react"
 import { LuDownload, LuScrollText } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
+
+const GROUP_SCHEDULING_TYPES = [
+  TaskType.TakeGroupSnapshot,
+  TaskType.RunGroupDiagnostic,
+  TaskType.RunDeviceGroupScript,
+  TaskType.ScanSubnets,
+]
+
+// Task types that may auto-chain a single follow-up task (e.g. snapshot -> check compliance)
+// once they complete, rather than pre-creating and orchestrating a known batch of children.
+const CHAIN_TASK_TYPES = [
+  TaskType.TakeSnapshot,
+  TaskType.RunDeviceScript,
+  TaskType.RunDiagnostic,
+  TaskType.DiscoverDeviceType,
+]
 
 const SCHEDULE_UNIT_KEY: Partial<Record<TaskScheduleType, string>> = {
   [TaskScheduleType.Hourly]: "time.hour",
@@ -48,6 +68,7 @@ export default function TaskDialog(props: TaskDialogProps) {
   const toast = useToast()
   const confirmDialog = useConfirmDialogWithMutation()
   const taskDialog = useCustomDialog()
+  const removeAllDialogs = useDialogStore((state) => state.removeAll)
 
   const { data: task, isPending } = useQuery({
     queryKey: [QUERIES.TASK, id],
@@ -84,6 +105,87 @@ export default function TaskDialog(props: TaskDialogProps) {
     enabled: Boolean(purgeGroupId),
   })
 
+  const isGroupTask = Boolean(task?.type && GROUP_SCHEDULING_TYPES.includes(task.type as TaskType))
+  const isChainTask = Boolean(task?.type && CHAIN_TASK_TYPES.includes(task.type as TaskType))
+  const canHaveChildren = isGroupTask || isChainTask
+
+  const { data: childSummary } = useQuery({
+    queryKey: [TASK_QUERIES.TASK_SUMMARY, "children", id],
+    queryFn: async () => api.task.getSummary(id),
+    enabled: canHaveChildren,
+    refetchIntervalInBackground: true,
+    refetchInterval: (q) => {
+      if (!dialogConfig.props.isOpen) return false
+      const taskStatus = task?.status
+      const taskOver =
+        taskStatus === TaskStatus.Cancelled ||
+        taskStatus === TaskStatus.Failure ||
+        taskStatus === TaskStatus.Success
+      if (!taskOver) return 5000
+      if (isGroupTask) {
+        // A group task stays RUNNING for as long as it's still scheduling/waiting on children,
+        // so once it's over there is nothing left to poll for.
+        return false
+      }
+      // A chain task (e.g. a snapshot auto-triggering a compliance check) reaches a terminal
+      // status *before* spawning its follow-up task, so keep polling a bit longer, until the
+      // chain itself has run its course (or we give up waiting for it to even start).
+      const counts = q.state.data?.countByStatus
+      const anyChildPending = counts
+        ? Object.entries(counts).some(
+            ([status, count]) =>
+              (count ?? 0) > 0 &&
+              status !== TaskStatus.Cancelled &&
+              status !== TaskStatus.Failure &&
+              status !== TaskStatus.Success
+          )
+        : false
+      if (anyChildPending) return 5000
+      const total = counts ? Object.values(counts).reduce((sum, count) => sum + (count ?? 0), 0) : 0
+      if (total === 0) {
+        // No follow-up task observed yet -- keep checking for a short grace period in case one
+        // is about to be created, then stop (this task type may simply not have chained one).
+        // Use changeDate (updated whenever the task record is saved, e.g. on its terminal status
+        // transition) rather than executionDate (set when the task *starts* running), otherwise
+        // a long-running task would already be past the grace period the moment it completes.
+        const elapsedMs = task?.changeDate ? Date.now() - new Date(task.changeDate).getTime() : Infinity
+        return elapsedMs < 15000 ? 3000 : false
+      }
+      return false
+    },
+  })
+
+  // Group tasks pre-create every child upfront (including not-yet-promoted DELAYED ones), so
+  // their total is stable from the very start of the run. Chain tasks instead spawn a single
+  // follow-up task once they complete, and that follow-up may itself chain another one, so the
+  // total grows one task at a time as the chain unfolds.
+  const childTotal = childSummary
+    ? Object.values(childSummary.countByStatus).reduce((sum, count) => sum + (count ?? 0), 0)
+    : 0
+
+  const childStatusData = useMemo(() => {
+    if (!childSummary) return []
+    return Object.entries(childSummary.countByStatus)
+      .filter(([, count]) => (count ?? 0) > 0)
+      .map(([status, count]) => ({
+        status: status as TaskStatus,
+        name: t(TASK_STATUS_CONFIG[status as TaskStatus].labelKey),
+        value: count ?? 0,
+        color: `${TASK_STATUS_CONFIG[status as TaskStatus].colorPalette}.solid`,
+      }))
+  }, [childSummary, t])
+
+  const childChartData = useMemo<BarSegmentData[]>(
+    () => childStatusData.map(({ name, value, color }) => ({ name, value, color })),
+    [childStatusData]
+  )
+
+  const childChart = useChart({ data: childChartData })
+
+  function openChildren(status?: TaskStatus) {
+    taskDialog.open(<TaskChildrenDialog parentTaskId={id} statusFilter={status} />)
+  }
+
   const creationDate = task?.creationDate ? formatDateTime(task?.creationDate) : null
   const priorityLabel = getSchedulePriorityLabel(task?.priority)
 
@@ -114,6 +216,13 @@ export default function TaskDialog(props: TaskDialogProps) {
         { count: task.scheduleFactor }
       )}`
     : t("task.once")
+
+  const scheduleModeLabelKey =
+    task?.scheduleMode === TaskScheduleMode.Parallel
+      ? "task.scheduleModeParallel"
+      : task?.stopOnFailure
+        ? "task.scheduleModeSequentialStop"
+        : "task.scheduleModeSequentialContinue"
 
   const cancelMutation = useMutation({
     mutationKey: MUTATIONS.TASK_CANCEL,
@@ -170,20 +279,35 @@ export default function TaskDialog(props: TaskDialogProps) {
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header as="h3" fontSize="xl" lineHeight="120%" fontWeight="bold">
+            <Dialog.Header
+              as="h3"
+              fontSize="xl"
+              lineHeight="120%"
+              fontWeight="bold"
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+            >
               {t("task.details")}
+              <Stack direction="row" gap="3" alignItems="center">
+                {task && (task.parentTaskId ?? 0) > 0 && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      dialogConfig.close()
+                      taskDialog.open(<TaskDialog id={task.parentTaskId!} />)
+                    }}
+                  >
+                    {t("task.parentTask")}
+                  </Button>
+                )}
+                <CloseButton size="sm" variant="outline" onClick={() => dialogConfig.close()} />
+              </Stack>
             </Dialog.Header>
             <Dialog.Body>
               <Stack gap="6">
                 <Stack gap="3">
-                  <Flex alignItems="center">
-                    <Box w="140px">
-                      <Text color="grey.400">{t("common.id")}</Text>
-                    </Box>
-                    <Skeleton loading={isPending}>
-                      <Text>{task?.id ?? t("common.nA")}</Text>
-                    </Skeleton>
-                  </Flex>
                   <Flex alignItems="center">
                     <Box w="140px">
                       <Text color="grey.400">{t("common.type")}</Text>
@@ -224,7 +348,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                         <DeviceBadge>
                           <Link
                             to={`/app/devices/${task.deviceId}/tasks`}
-                            onClick={() => dialogConfig.close()}
+                            onClick={() => removeAllDialogs()}
                           >
                             {task.target}
                           </Link>
@@ -233,7 +357,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                         <DeviceGroupBadge
                           id={task.deviceGroupId}
                           name={task.target}
-                          onClick={() => dialogConfig.close()}
+                          onClick={() => removeAllDialogs()}
                         />
                       ) : (
                         <Text>{task?.target ?? t("common.nA")}</Text>
@@ -264,6 +388,14 @@ export default function TaskDialog(props: TaskDialogProps) {
                       <Text>{scheduleLabel}</Text>
                     </Skeleton>
                   </Flex>
+                  {isGroupTask && task?.scheduleMode && (
+                    <Flex alignItems="center">
+                      <Box w="140px">
+                        <Text color="grey.400">{t("task.scheduleMode")}</Text>
+                      </Box>
+                      <Text>{t(scheduleModeLabelKey)}</Text>
+                    </Flex>
+                  )}
                   {task?.runnerId && (
                     <Flex alignItems="center">
                       <Box w="140px">
@@ -385,7 +517,7 @@ export default function TaskDialog(props: TaskDialogProps) {
                           <DeviceGroupBadge
                             id={purgeGroup.id}
                             name={purgeGroup.name}
-                            onClick={() => dialogConfig.close()}
+                            onClick={() => removeAllDialogs()}
                           />
                         </Flex>
                       )}
@@ -406,6 +538,46 @@ export default function TaskDialog(props: TaskDialogProps) {
                           {t("time.hour", { count: task.limitToOutofdateDeviceHours })}
                         </Text>
                       </Flex>
+                    </Stack>
+                  </>
+                )}
+
+                {canHaveChildren && childTotal > 0 && (
+                  <>
+                    <Separator />
+                    <Stack gap="3">
+                      <Flex alignItems="center" justifyContent="space-between">
+                        <Heading size="md" fontWeight="semibold">
+                          {t("task.childTasks")}
+                        </Heading>
+                        <Button size="sm" variant="ghost" onClick={() => openChildren()}>
+                          {t("task.viewChildTasks")}
+                        </Button>
+                      </Flex>
+                      <BarSegment.Root chart={childChart} barSize="3">
+                        <BarSegment.Content>
+                          <BarSegment.Value />
+                          <BarSegment.Bar tooltip />
+                          <BarSegment.Label />
+                        </BarSegment.Content>
+                        <HStack wrap="wrap" gap="4" textStyle="sm">
+                          {childStatusData.map((item) => (
+                            <HStack
+                              key={item.status}
+                              gap="1.5"
+                              cursor="pointer"
+                              onClick={() => openChildren(item.status)}
+                            >
+                              <ColorSwatch value={childChart.color(item.color)} boxSize="0.82em" rounded="full" />
+                              <Text>{item.name}</Text>
+                              <Text fontWeight="medium">{item.value}</Text>
+                              <Text color="fg.muted">
+                                {childTotal > 0 ? Math.round((item.value / childTotal) * 100) : 0}%
+                              </Text>
+                            </HStack>
+                          ))}
+                        </HStack>
+                      </BarSegment.Root>
                     </Stack>
                   </>
                 )}
@@ -478,7 +650,8 @@ export default function TaskDialog(props: TaskDialogProps) {
                 )}
               </Stack>
               <Stack direction="row" gap="3">
-                {task?.status === TaskStatus.Scheduled && (
+                {(task?.status === TaskStatus.Scheduled ||
+                  (task?.status === TaskStatus.Running && isGroupTask)) && (
                   <Button
                     colorPalette="red"
                     variant="ghost"
@@ -493,9 +666,6 @@ export default function TaskDialog(props: TaskDialogProps) {
                 </Button>
               </Stack>
             </Dialog.Footer>
-            <Dialog.CloseTrigger asChild>
-              <CloseButton size="sm" variant="outline" />
-            </Dialog.CloseTrigger>
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>

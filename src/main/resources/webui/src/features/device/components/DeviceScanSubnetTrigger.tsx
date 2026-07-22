@@ -3,6 +3,7 @@ import { NetshotError } from "@/api/httpClient"
 import { DomainSelect } from "@/components"
 import FormControl from "@/components/FormControl"
 import { LuPlus, LuTrash } from "react-icons/lu"
+import ScheduleForm, { ScheduleFormType } from "@/components/ScheduleForm"
 import TaskDialog from "@/components/TaskDialog"
 import { MUTATIONS } from "@/constants"
 import { useCustomDialog, useFormDialogWithMutation } from "@/dialog"
@@ -16,7 +17,7 @@ import { useTranslation } from "react-i18next"
 import React from "react"
 import Slot from "@/components/Slot"
 
-type Form = { domainId: string | null; subnets: string[] }
+type Form = { domainId: string | null; subnets: string[] } & ScheduleFormType
 
 export type DeviceScanSubnetTriggerProps = { children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
@@ -61,6 +62,7 @@ function DeviceCreateForm() {
           <Button onClick={() => append("")}><LuPlus />{t("common.addEntry")}</Button>
         </Stack>
       </Stack>
+      <ScheduleForm />
     </Stack>
   )
 }
@@ -89,15 +91,17 @@ export default function DeviceScanSubnetTrigger({ children, ...rest }: DeviceSca
       description: <DeviceCreateForm />,
       form,
       async onSubmit(values: Form) {
+        const { schedule } = values
         const task = await mutation.mutateAsync({
           type: TaskType.ScanSubnets,
           subnets: values.subnets.join("\n"),
           domain: +(values.domainId ?? 0),
+          ...schedule,
         })
         dialogRef.close()
         taskDialog.open(<TaskDialog id={task!.id} />)
       },
-      size: "xl",
+      size: "lg",
       submitButton: { label: t("common.run") },
     })
   }

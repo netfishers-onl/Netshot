@@ -1,31 +1,53 @@
-import { EmptyResult, TaskStatusBadge, VirtualizedDataTable } from "@/components"
+import { EmptyResult, TaskStatusBadge, Tooltip, VirtualizedDataTable } from "@/components"
 import TaskDialog from "@/components/TaskDialog"
-import { useCustomDialog } from "@/dialog"
+import { useCustomDialog, useDialogStore } from "@/dialog"
 import { DeviceBadge, DeviceGroupBadge } from "@/features/device/components"
 import { useLocalization } from "@/i18n"
-import { Task, TaskType } from "@/types"
+import { SimpleTask, TaskType } from "@/types"
 import { Icon, Skeleton, Stack, Text } from "@chakra-ui/react"
 import { createColumnHelper } from "@tanstack/react-table"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
+import { LuCornerDownRight } from "react-icons/lu"
 import { Link } from "react-router"
 import { TASK_TYPE_ICONS } from "../constants"
+import { useTaskTreeModeStore } from "../stores/useTaskTreeModeStore"
+import { buildTaskTree, TaskTreeRow } from "../utils"
 
-const columnHelper = createColumnHelper<Task>()
+const columnHelper = createColumnHelper<TaskTreeRow<SimpleTask>>()
+
+const TREE_INDENT_PX = 10
 
 export type TaskTableProps = {
-  rows: Task[]
+  rows: SimpleTask[]
   isPending: boolean
   onBottomReached?(): void
   showTarget?: boolean
+  showCreator?: boolean
+  showComments?: boolean
   emptyDescription?: string
 }
 
 export default function TaskTable(props: TaskTableProps) {
-  const { rows, isPending, onBottomReached, showTarget = true, emptyDescription } = props
+  const {
+    rows,
+    isPending,
+    onBottomReached,
+    showTarget = true,
+    showCreator = true,
+    showComments = true,
+    emptyDescription,
+  } = props
   const { t } = useTranslation()
   const { formatDateTime } = useLocalization()
   const dialog = useCustomDialog()
+  const removeAllDialogs = useDialogStore((state) => state.removeAll)
+  const treeMode = useTaskTreeModeStore((state) => state.treeMode)
+
+  const displayRows = useMemo(
+    () => (treeMode ? buildTaskTree(rows) : rows.map((row) => ({ ...row, depth: 0 }))),
+    [rows, treeMode]
+  )
 
   function openTask(id: number) {
     dialog.open(<TaskDialog id={id} />)
@@ -35,7 +57,19 @@ export default function TaskTable(props: TaskTableProps) {
     () => [
       columnHelper.accessor("type", {
         cell: (info) => (
-          <Stack direction="row" gap="2" alignItems="center">
+          <Stack
+            direction="row"
+            gap="2"
+            alignItems="center"
+            pl={`${info.row.original.depth * TREE_INDENT_PX}px`}
+          >
+            {Boolean(info.row.original.parentTaskId) && (
+              <Tooltip content={t("task.childOfTask", { id: info.row.original.parentTaskId })}>
+                <Icon size="xs" color="grey.400" flexShrink={0}>
+                  <LuCornerDownRight />
+                </Icon>
+              </Tooltip>
+            )}
             <Icon size="sm" flexShrink={0}>
               {TASK_TYPE_ICONS[info.getValue() as TaskType]}
             </Icon>
@@ -43,7 +77,7 @@ export default function TaskTable(props: TaskTableProps) {
           </Stack>
         ),
         header: t("common.type"),
-        enableSorting: true,
+        enableSorting: !treeMode,
         size: 15000,
       }),
       ...(showTarget
@@ -54,7 +88,13 @@ export default function TaskTable(props: TaskTableProps) {
                 if (deviceId) {
                   return (
                     <DeviceBadge>
-                      <Link to={`/app/devices/${deviceId}/tasks`} onClick={(e) => e.stopPropagation()}>
+                      <Link
+                        to={`/app/devices/${deviceId}/tasks`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeAllDialogs()
+                        }}
+                      >
                         {info.getValue()}
                       </Link>
                     </DeviceBadge>
@@ -65,46 +105,57 @@ export default function TaskTable(props: TaskTableProps) {
                     <DeviceGroupBadge
                       id={deviceGroupId}
                       name={info.getValue()}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeAllDialogs()
+                      }}
                     />
                   )
                 }
                 return <Text>{info.getValue()}</Text>
               },
               header: t("common.target"),
-              enableSorting: true,
-              size: 10000,
+              enableSorting: !treeMode,
+              size: 15000,
             }),
           ]
         : []),
-      columnHelper.accessor("author", {
-        cell: (info) => <Text>{info.getValue()}</Text>,
-        header: t("common.creator"),
-        enableSorting: true,
-        size: 10000,
-      }),
+      ...(showCreator
+        ? [
+            columnHelper.accessor("author", {
+              cell: (info) => <Text>{info.getValue()}</Text>,
+              header: t("common.creator"),
+              enableSorting: !treeMode,
+              size: 8000,
+            }),
+          ]
+        : []),
       columnHelper.accessor("status", {
         cell: (info) => <TaskStatusBadge status={info.getValue()} />,
         header: t("common.status"),
-        enableSorting: true,
-        size: 10000,
+        enableSorting: !treeMode,
+        size: 8000,
       }),
       columnHelper.accessor("executionDate", {
         cell: (info) => (
           <Text>{info.getValue() ? formatDateTime(info.getValue()) : t("common.nA")}</Text>
         ),
         header: t("time.executionDate"),
-        enableSorting: true,
+        enableSorting: !treeMode,
         size: 15000,
       }),
-      columnHelper.accessor("comments", {
-        cell: (info) => <Text truncate>{info.getValue()}</Text>,
-        header: t("common.comments"),
-        enableSorting: true,
-        size: 25000,
-      }),
+      ...(showComments
+        ? [
+            columnHelper.accessor("comments", {
+              cell: (info) => <Text truncate>{info.getValue()}</Text>,
+              header: t("common.comments"),
+              enableSorting: !treeMode,
+              size: 25000,
+            }),
+          ]
+        : []),
     ],
-    [t, formatDateTime, showTarget]
+    [t, formatDateTime, showTarget, showCreator, showComments, removeAllDialogs, treeMode]
   )
 
   if (isPending) {
@@ -125,7 +176,7 @@ export default function TaskTable(props: TaskTableProps) {
   return (
     <VirtualizedDataTable
       columns={columns}
-      data={rows}
+      data={displayRows}
       primaryKey="id"
       onClickRow={(row) => openTask(row.id)}
       onBottomReached={onBottomReached}

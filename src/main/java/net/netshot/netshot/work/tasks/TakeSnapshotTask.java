@@ -23,19 +23,15 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.TaskManager;
@@ -55,7 +51,7 @@ import net.netshot.netshot.work.Task;
  * This task takes a snapshot of a device.
  */
 @Entity
-@OnDelete(action = OnDeleteAction.CASCADE)
+@DiscriminatorValue("TakeSnapshotTask")
 @Slf4j
 public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 
@@ -139,42 +135,30 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		TakeSnapshotTask.loadConfig();
 	}
 
-	/** The device. */
-	@Getter(onMethod = @__({
-		@ManyToOne(fetch = FetchType.LAZY),
-		@OnDelete(action = OnDeleteAction.CASCADE),
-		@XmlElement, @JsonView(HookView.class)
-	}))
-	@Setter
-	private Device device;
-
-	/** Automatic snapshot. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(HookView.class)
-	}))
-	@Setter
-	private boolean automatic;
-
-	/** Do not automatically start a run diagnostics task. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(HookView.class)
-	}))
-	@Setter
-	private boolean dontRunDiagnostics;
-
-	/** Do not automatically start a check compliance task. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(HookView.class)
-	}))
-	@Setter
-	private boolean dontCheckCompliance;
-
 	/**
 	 * Instantiates a new take snapshot task.
 	 */
 	protected TakeSnapshotTask() {
 	}
 
+	/**
+	 * Whether this is an automatic snapshot (as opposed to user/API requested).
+	 * @return true if automatic
+	 */
+	@XmlElement
+	@JsonView(HookView.class)
+	@Transient
+	public boolean isAutomatic() {
+		return this.getBooleanAttribute("automatic", false);
+	}
+
+	/**
+	 * Sets whether this is an automatic snapshot.
+	 * @param automatic true if automatic
+	 */
+	public void setAutomatic(boolean automatic) {
+		this.setAttribute("automatic", automatic);
+	}
 
 	/**
 	 * Instantiates a new take snapshot task.
@@ -189,10 +173,10 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		boolean dontRunDiagnostics, boolean dontCheckCompliance) {
 		super(comments, device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName(),
 			author);
-		this.device = device;
-		this.automatic = automatic;
-		this.dontRunDiagnostics = dontRunDiagnostics;
-		this.dontCheckCompliance = dontCheckCompliance;
+		this.setDevice(device);
+		this.setAutomatic(automatic);
+		this.setDontRunDiagnostics(dontRunDiagnostics);
+		this.setDontCheckCompliance(dontCheckCompliance);
 	}
 
 	/*(non-Javadoc)
@@ -256,8 +240,8 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 			if (locked) {
 				clearRunningSnapshot(device.getId());
 			}
-			if (automatic) {
-				clearScheduledAutoSnapshot(this.device.getId());
+			if (this.isAutomatic()) {
+				clearScheduledAutoSnapshot(this.getDevice().getId());
 			}
 		}
 
@@ -268,6 +252,7 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 			try {
 				Task diagTask = new RunDiagnosticsTask(device, "Run diagnostics after device snapshot", "Auto", this.dontCheckCompliance);
 				diagTask.setPriority(this.getPriority());
+				diagTask.setParentTaskId(this.getId());
 				TaskManager.addTask(diagTask);
 			}
 			catch (Exception e) {
@@ -279,6 +264,7 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 			try {
 				Task checkTask = new CheckComplianceTask(device, "Check compliance after device snapshot", "Auto");
 				checkTask.setPriority(this.getPriority());
+				checkTask.setParentTaskId(this.getId());
 				TaskManager.addTask(checkTask);
 			}
 			catch (Exception e) {
@@ -418,8 +404,8 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	 */
 	@Override
 	public void onSchedule() {
-		if (automatic) {
-			checkAutoSnapshot(device.getId());
+		if (this.isAutomatic()) {
+			checkAutoSnapshot(this.getDevice().getId());
 		}
 	}
 

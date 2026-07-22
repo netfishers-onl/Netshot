@@ -256,7 +256,37 @@ public final class TaskManager {
 	}
 
 	/**
-	 * Cancels a task.
+	 * Requests cancellation of a task that is already RUNNING in sequential mode. Unlike
+	 * {@link #cancelTask}, this doesn't touch the Quartz scheduler (the job is genuinely
+	 * running, not sitting in the scheduler waiting to fire) -- it just flags the task so
+	 * that its own sequential scheduling loop stops scheduling further child tasks the
+	 * next time it polls (the currently in-flight child is left to finish naturally).
+	 *
+	 * @param taskId the ID of the task to request cancellation of
+	 * @throws HibernateException the Hibernate exception
+	 */
+	public static void requestCancel(long taskId) throws HibernateException {
+		log.debug("Requesting cancellation of running sequential task {}.", taskId);
+		Session session = Database.getSession();
+		try {
+			session.beginTransaction();
+			session.createMutationQuery("update Task t set t.cancelRequested = true where t.id = :id")
+				.setParameter("id", taskId)
+				.executeUpdate();
+			session.getTransaction().commit();
+		}
+		catch (HibernateException e) {
+			Database.rollbackSilently(session);
+			log.error("Error while requesting cancellation of task {}.", taskId, e);
+			throw e;
+		}
+		finally {
+			session.close();
+		}
+	}
+
+	/**
+	 * Cancels the task.
 	 *
 	 * @param task the task
 	 * @param reason the reason
@@ -634,6 +664,36 @@ public final class TaskManager {
 			catch (SchedulerException e) {
 				log.error("Unable to schedule the task {}.", task.getId(), e);
 			}
+		}
+	}
+
+	/**
+	 * Cancels any DELAYED task left with no parent -- a pre-created child of a group-based task
+	 * whose parent no longer exists (deletion clears a child's {@code parentTaskId} rather than
+	 * cascading, see {@link Task}), so nothing will ever promote it. To be called once at
+	 * startup, on every node regardless of clustering mode: it's a plain, idempotent bulk update,
+	 * so no cross-node coordination is needed the way {@link #reassignOrphanTasks()} needs.
+	 */
+	public static void cancelOrphanedDelayedTasks() {
+		log.debug("Looking for orphaned DELAYED tasks (no parent) to cancel.");
+		Session session = Database.getSession();
+		try {
+			session.beginTransaction();
+			int count = session
+				.createMutationQuery(
+					"update Task t set t.status = :cancelled where t.status = :delayed and t.parentTaskId is null")
+				.setParameter("cancelled", Task.Status.CANCELLED)
+				.setParameter("delayed", Task.Status.DELAYED)
+				.executeUpdate();
+			session.getTransaction().commit();
+			log.info("{} orphaned DELAYED task(s) cancelled at startup", count);
+		}
+		catch (HibernateException e) {
+			Database.rollbackSilently(session);
+			log.error("Error while cancelling orphaned DELAYED tasks", e);
+		}
+		finally {
+			session.close();
 		}
 	}
 

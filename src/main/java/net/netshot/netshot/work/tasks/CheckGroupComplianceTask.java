@@ -25,19 +25,14 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.quartz.JobKey;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Transient;
 import jakarta.xml.bind.annotation.XmlElement;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.compliance.Policy;
 import net.netshot.netshot.database.Database;
@@ -48,20 +43,13 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.Task;
 
 /**
- * This task checks the configuration compliance status of a group of devices.
+ * This task checks the configuration compliance status of a group of devices
+ * (either a real device group, or a one-time device list).
  */
 @Entity
-@OnDelete(action = OnDeleteAction.CASCADE)
+@DiscriminatorValue("CheckGroupComplianceTask")
 @Slf4j
-public final class CheckGroupComplianceTask extends Task implements GroupBasedTask {
-
-	/** The device group. */
-	@Getter(onMethod = @__({
-		@ManyToOne(fetch = FetchType.LAZY),
-		@OnDelete(action = OnDeleteAction.CASCADE)
-	}))
-	@Setter
-	private DeviceGroup deviceGroup;
+public final class CheckGroupComplianceTask extends Task implements GroupBasedTask, DeviceListBasedTask {
 
 	/**
 	 * Instantiates a new check group compliance task.
@@ -71,7 +59,7 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 	}
 
 	/**
-	 * Instantiates a new check group compliance task.
+	 * Instantiates a new check group compliance task, targeting a real device group.
 	 *
 	 * @param group the group
 	 * @param comments the comments
@@ -79,7 +67,19 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 	 */
 	public CheckGroupComplianceTask(DeviceGroup group, String comments, String author) {
 		super(comments, group.getName(), author);
-		this.deviceGroup = group;
+		this.setDeviceGroup(group);
+	}
+
+	/**
+	 * Instantiates a new check group compliance task, targeting a one-time device list.
+	 *
+	 * @param devices the ordered list of devices
+	 * @param comments the comments
+	 * @param author the author
+	 */
+	public CheckGroupComplianceTask(List<Device> devices, String comments, String author) {
+		super(comments, String.format("%d device(s)", devices.size()), author);
+		this.setDeviceList(devices);
 	}
 
 	/*(non-Javadoc)
@@ -101,10 +101,10 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 	@JsonView(DefaultView.class)
 	@Transient
 	public long getDeviceGroupId() {
-		if (this.deviceGroup == null) {
+		if (this.getDeviceGroup() == null) {
 			return 0;
 		}
-		return this.deviceGroup.getId();
+		return this.getDeviceGroup().getId();
 	}
 
 	/*(non-Javadoc)
@@ -113,6 +113,9 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 	@Override
 	public void prepare(Session session) {
 		Hibernate.initialize(this.getDeviceGroup());
+		if (this.getDeviceGroup() == null) {
+			Hibernate.initialize(this.getDeviceListMembers());
+		}
 	}
 
 	/*(non-Javadoc)
@@ -121,7 +124,8 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 	@Override
 	public Object clone() throws CloneNotSupportedException {
 		CheckGroupComplianceTask task = (CheckGroupComplianceTask) super.clone();
-		task.setDeviceGroup(this.deviceGroup);
+		task.setDeviceGroup(this.getDeviceGroup());
+		task.setDeviceList(this.getDeviceList());
 		return task;
 	}
 
@@ -130,15 +134,17 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 	 */
 	@Override
 	public void run() {
-		log.debug("Task {}. Starting check compliance task for group {}.",
-			this.getId(), this.deviceGroup == null ? "null" : this.deviceGroup.getId());
-		if (this.deviceGroup == null) {
-			this.logger.info("The device group doesn't exist, the task will be cancelled.");
+		DeviceGroup group = this.getDeviceGroup();
+		List<Device> devices = group == null ? this.getDeviceList() : null;
+		if (group == null && (devices == null || devices.isEmpty())) {
+			this.logger.info("Neither a device group nor a device list is set, the task will be cancelled.");
 			this.status = Status.CANCELLED;
 			return;
 		}
-		this.logger.trace("Check compliance task for group {}.",
-			this.deviceGroup.getName());
+		log.debug("Task {}. Starting check compliance task for {}.", this.getId(),
+			group == null ? devices.size() + " listed device(s)" : "group " + group.getId());
+
+		List<Long> deviceIds = group == null ? devices.stream().map(Device::getId).toList() : null;
 
 		Session session = Database.getSession();
 		try {
@@ -146,25 +152,47 @@ public final class CheckGroupComplianceTask extends Task implements GroupBasedTa
 				session.createQuery("select p from Policy p", Policy.class).list();
 
 			session.beginTransaction();
-			session
-				.createMutationQuery(
-					"delete from CheckResult c where c.key.device.id in "
-					+ "(select dm1.key.device.id as id from DeviceGroup g1 join g1.cachedMemberships dm1 where dm1.key.group.id = :id)")
-				.setParameter("id", deviceGroup.getId())
-				.executeUpdate();
+			if (group != null) {
+				session
+					.createMutationQuery(
+						"delete from CheckResult c where c.key.device.id in "
+						+ "(select dm1.key.device.id as id from DeviceGroup g1 join g1.cachedMemberships dm1 where dm1.key.group.id = :id)")
+					.setParameter("id", group.getId())
+					.executeUpdate();
+			}
+			else {
+				session
+					.createMutationQuery("delete from CheckResult c where c.key.device.id in :ids")
+					.setParameter("ids", deviceIds)
+					.executeUpdate();
+			}
 			for (Policy policy : policies) {
-				// Get devices which are part of the target group and which are in a group which the policy is applied to
-				ScrollableResults<Device> devices = session
-					.createQuery(
-						"select d from Device d join d.groupMemberships gm where gm.key.group.id = :groupId and d in "
-						+ "(select dm1.key.device from Policy p join p.targetGroups g1 join g1.cachedMemberships dm1 where p.id = :policyId)",
-						Device.class)
-					.setParameter("groupId", deviceGroup.getId())
-					.setParameter("policyId", policy.getId())
-					.setCacheMode(CacheMode.IGNORE)
-					.scroll(ScrollMode.FORWARD_ONLY);
-				while (devices.next()) {
-					Device device = devices.get();
+				// Get devices which are part of the target group/list and which are in a group which the policy is applied to
+				ScrollableResults<Device> scrolledDevices;
+				if (group != null) {
+					scrolledDevices = session
+						.createQuery(
+							"select d from Device d join d.groupMemberships gm where gm.key.group.id = :groupId and d in "
+							+ "(select dm1.key.device from Policy p join p.targetGroups g1 join g1.cachedMemberships dm1 where p.id = :policyId)",
+							Device.class)
+						.setParameter("groupId", group.getId())
+						.setParameter("policyId", policy.getId())
+						.setCacheMode(CacheMode.IGNORE)
+						.scroll(ScrollMode.FORWARD_ONLY);
+				}
+				else {
+					scrolledDevices = session
+						.createQuery(
+							"select d from Device d where d.id in :deviceIds and d in "
+							+ "(select dm1.key.device from Policy p join p.targetGroups g1 join g1.cachedMemberships dm1 where p.id = :policyId)",
+							Device.class)
+						.setParameter("deviceIds", deviceIds)
+						.setParameter("policyId", policy.getId())
+						.setCacheMode(CacheMode.IGNORE)
+						.scroll(ScrollMode.FORWARD_ONLY);
+				}
+				while (scrolledDevices.next()) {
+					Device device = scrolledDevices.get();
 					this.logger.info("Checking configuration compliance of device {} ({})", device.getName(), device.getId());
 					policy.check(device, session, this.logger);
 					session.persist(device);

@@ -1636,7 +1636,7 @@ public class RestService extends Thread {
 				+ "d.networkClass "
 				+ ") from Device d";
 			if (groupId != null) {
-				hqlQuery += " join d.groupMemberships gm where gm.key.group.id = :groupId order by gm.position asc";
+				hqlQuery += " join d.groupMemberships gm where gm.key.group.id = :groupId order by gm.position asc, d.name asc";
 			}
 			Query<RsLightDevice> query = session.createQuery(hqlQuery, RsLightDevice.class);
 			query.setParameter("nonConforming", CheckResult.ResultOption.NONCONFORMING);

@@ -115,27 +115,6 @@ public class DynamicDeviceGroup extends DeviceGroup {
 	}
 
 	/**
-	 * Renumbers every membership of the given group by ascending device id (dense, 0-based),
-	 * within the given session. Used right after a bulk insert-select of new memberships (which
-	 * can't itself compute a real position value inline -- see the comments at its two call
-	 * sites) to give the group a stable, deterministic device order. Safe to call even when
-	 * every row already has its correct position (idempotent), since it's a pure function of
-	 * the current row set, not of insertion history.
-	 *
-	 * @param session the DB session
-	 * @param group the group whose memberships to renumber
-	 */
-	private static void renumberGroupMemberships(Session session, DeviceGroup group) {
-		session.createMutationQuery(
-			"update DeviceGroupMembership m set m.position = "
-			+ "(select count(m2) from DeviceGroupMembership m2 "
-			+ "where m2.key.group = m.key.group and m2.key.device.id <= m.key.device.id) - 1 "
-			+ "where m.key.group = :group")
-			.setParameter("group", group)
-			.executeUpdate();
-	}
-
-	/**
 	 * Refresh all group membership for a given device, within a given session.
 	 *
 	 * @param session = the DB session
@@ -158,10 +137,11 @@ public class DynamicDeviceGroup extends DeviceGroup {
 				}
 				log.trace("Finder query for group: '{}'.", deviceQuery);
 				Finder finder = new Finder(deviceQuery);
-				// position is NOT NULL with no DB-level default, so a value must be supplied --
-				// a placeholder here, immediately fixed up by renumberGroupMemberships() below.
-				// (A computed value, e.g. a subquery, in this select list breaks Hibernate's
-				// "on conflict do nothing" emulation on some dialects -- a plain literal doesn't.)
+				// Dynamic group membership has no user-defined order (unlike static groups, whose
+				// position is set explicitly in StaticDeviceGroup.addDevice()/updateCachedDevices()),
+				// so "position" is only a placeholder to satisfy the NOT NULL column; it's not
+				// meant to be meaningful or kept dense. Devices are listed by name instead, see
+				// RestService#getDevices().
 				MutationQuery insertQuery = session.createMutationQuery(
 					"insert into DeviceGroupMembership(key.device, key.group, position) "
 					+ "select d, :group, 0 " + finder.getHql() + " "
@@ -169,7 +149,6 @@ public class DynamicDeviceGroup extends DeviceGroup {
 				insertQuery.setParameter("group", group);
 				finder.setVariables(insertQuery);
 				insertQuery.executeUpdate();
-				renumberGroupMemberships(session, group);
 			}
 			catch (FinderParseException e) {
 				log.error("Parse error while updating the group {}.", group.getId(), e);
@@ -228,11 +207,9 @@ public class DynamicDeviceGroup extends DeviceGroup {
 						.setParameter("group", group)
 						.executeUpdate();
 					Finder finder = new Finder(group.getQuery());
-					// position is NOT NULL with no DB-level default, so a value must be supplied --
-					// a placeholder here, immediately fixed up by renumberGroupMemberships() below.
-					// (A computed value, e.g. a window function, in this select list breaks
-					// Hibernate's "on conflict do nothing" emulation on some dialects -- a plain
-					// literal doesn't.)
+					// Dynamic group membership has no user-defined order, so "position" is only a
+					// placeholder to satisfy the NOT NULL column -- see the comment in
+					// refreshAllGroupsOfOneDevice() above.
 					MutationQuery insertQuery = session.createMutationQuery(
 						"insert into DeviceGroupMembership(key.device, key.group, position) "
 						+ "select d, :group, 0 " + finder.getHql() + " "
@@ -240,7 +217,6 @@ public class DynamicDeviceGroup extends DeviceGroup {
 					insertQuery.setParameter("group", group);
 					finder.setVariables(insertQuery);
 					insertQuery.executeUpdate();
-					renumberGroupMemberships(session, group);
 				}
 				catch (FinderParseException e) {
 					log.error("Parse error while updating the group {}.", group.getId(), e);

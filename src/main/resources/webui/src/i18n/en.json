@@ -69,7 +69,8 @@
         "select": "Select a configuration"
       },
       "configListWillAppear": "Config list will appear here when device changes",
-      "connectIp": "Connect IP",
+      "connectIp": "Connect IP or hostname",
+      "mgmtAddress": "IP address or hostname",
       "module": {
         "delete": "Delete modules",
         "deleteRemovedMoreThan": "Delete modules removed more than",
@@ -88,7 +89,7 @@
       "accessFailures": "Device access failures",
       "details": "Device details",
       "family": "Device family",
-      "ipAddress": "Device IP address",
+      "ipAddress": "Device IP address or hostname",
       "name": "Device name",
       "type": "Device type",
       "withLevelAppearsWhenSoftwareRuleValidated": "Device with level {{ level }} appears when software rule is validated",
@@ -437,6 +438,7 @@
       "theNetshotServerDidnTReplyProperly": "The Netshot server didn't reply properly",
       "thisFieldIsRequired": "This field is required",
       "thisIsNotAValidIpAddress": "This is not a valid IP address",
+      "thisIsNotAValidIpAddressOrHostname": "This is not a valid IP address or hostname",
       "token": "Token",
       "true": "true",
       "trueLabel": "True",

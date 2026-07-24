@@ -351,7 +351,7 @@ public final class PyDeviceHelper {
 			return targetDevice.getFamily();
 		}
 		else if ("management_ip_address".equals(item)) {
-			return targetDevice.getMgmtAddress().getIp();
+			return targetDevice.getMgmtAddress();
 		}
 		else if ("management_domain".equals(item)) {
 			return targetDevice.getMgmtDomain().getName();

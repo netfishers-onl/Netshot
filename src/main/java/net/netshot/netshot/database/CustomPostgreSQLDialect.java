@@ -35,5 +35,10 @@ public class CustomPostgreSQLDialect extends PostgreSQLDialect {
 			"regexp_like",
 			"?1 ~ ?2",
 			basicTypeRegistry.resolve(StandardBasicTypes.BOOLEAN));
+
+		functionContributions.getFunctionRegistry().registerPattern(
+			"net_contains",
+			"?1 <<= ?2::inet",
+			basicTypeRegistry.resolve(StandardBasicTypes.BOOLEAN));
 	}
 }

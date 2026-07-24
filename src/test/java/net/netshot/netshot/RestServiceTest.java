@@ -21,6 +21,7 @@ package net.netshot.netshot;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpCookie;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpResponse;
@@ -1377,10 +1378,10 @@ public class RestServiceTest {
 			}
 			this.createTestDomain();
 			Device device1 = new Device(this.getTestDriver().getName(),
-				new Network4Address("10.1.1.1"), this.testDomain, "test");
+				"10.1.1.1", this.testDomain, "test");
 			device1.setName("device1");
 			Device device2 = new Device(this.getTestDriver().getName(),
-				new Network4Address("10.1.1.2"), this.testDomain, "test");
+				"10.1.1.2", this.testDomain, "test");
 			device2.setName("device2");
 			try (Session session = Database.getSession()) {
 				session.beginTransaction();
@@ -1402,13 +1403,14 @@ public class RestServiceTest {
 						.put("id", device1.getId())
 						.put("name", device1.getName())
 						.put("family", device1.getFamily())
-						.put("mgmtAddress", device1.getMgmtAddress().getIp())
+						.put("mgmtAddress", device1.getMgmtAddress())
 						.put("status", device1.getStatus().toString())
 						.put("driver", device1.getDriver())
 						.put("eol", device1.isEndOfLife())
 						.put("eos", device1.isEndOfSale())
 						.put("configCompliant", device1.isCompliant())
-						.put("softwareLevel", device1.getSoftwareLevel().toString()),
+						.put("softwareLevel", device1.getSoftwareLevel().toString())
+						.put("networkClass", device1.getNetworkClass().toString()),
 					deviceNode1,
 					"Retrieved device doesn't match expected object");
 			}
@@ -1420,7 +1422,7 @@ public class RestServiceTest {
 		void getDevice() throws IOException, InterruptedException, MissingDeviceDriverException {
 			this.createTestDomain();
 			Device device1 = new Device(this.getTestDriver().getName(),
-				new Network4Address("10.1.1.1"), this.testDomain, "test");
+				"10.1.1.1", this.testDomain, "test");
 			device1.setName("device1");
 			try (Session session = Database.getSession()) {
 				session.beginTransaction();
@@ -1444,8 +1446,9 @@ public class RestServiceTest {
 					.put("name", device1.getName())
 					.put("networkClass", device1.getNetworkClass().toString())
 					.put("family", device1.getFamily())
-					.put("mgmtAddress", device1.getMgmtAddress().getIp())
+					.put("mgmtAddress", device1.getMgmtAddress())
 					.putNull("connectAddress")
+					.put("cachedIpAddress", device1.getMgmtAddress())
 					.put("status", device1.getStatus().toString())
 					.put("driver", device1.getDriver())
 					.put("realDeviceType", device1.getDeviceDriver().getDescription())
@@ -1492,10 +1495,10 @@ public class RestServiceTest {
 		void createDevice() throws IOException, InterruptedException {
 			this.createTestDomain();
 			Device device1 = new Device(this.getTestDriver().getName(),
-				new Network4Address("10.1.1.1"), this.testDomain, "test");
+				"10.1.1.1", this.testDomain, "test");
 			ObjectNode data = JsonNodeFactory.instance.objectNode()
 				.put("autoDiscover", false)
-				.put("ipAddress", device1.getMgmtAddress().getIp())
+				.put("ipAddress", device1.getMgmtAddress())
 				.put("domainId", this.testDomain.getId())
 				.put("name", device1.getName())
 				.put("deviceType", device1.getDriver());
@@ -1531,6 +1534,73 @@ public class RestServiceTest {
 		}
 
 		@Test
+		@DisplayName("Create device with IPv6 management address")
+		@ResourceLock("DB")
+		void createDeviceWithIpv6Address() throws IOException, InterruptedException {
+			this.createTestDomain();
+			ObjectNode data = JsonNodeFactory.instance.objectNode()
+				.put("autoDiscover", false)
+				.put("ipAddress", "2001:db8::1")
+				.put("domainId", this.testDomain.getId())
+				.put("name", "device1")
+				.put("deviceType", this.getTestDriver().getName());
+			HttpResponse<JsonNode> response = apiClient.post("/devices", data);
+			Assertions.assertEquals(
+				Response.Status.CREATED.getStatusCode(), response.statusCode(),
+				"Not getting 201 response for created device with an IPv6 management address");
+			try (Session session = Database.getSession()) {
+				Device newDevice = session
+					.createQuery("from Device d", Device.class)
+					.uniqueResult();
+				Assertions.assertEquals("2001:db8::1", newDevice.getMgmtAddress(),
+					"Management address not stored as entered");
+				Assertions.assertEquals(InetAddress.getByName("2001:db8::1"), newDevice.getCachedIpAddress(),
+					"Cached IP address not resolved from management address at creation");
+			}
+		}
+
+		@Test
+		@DisplayName("Create device with FQDN management address")
+		@ResourceLock("DB")
+		void createDeviceWithFqdnAddress() throws IOException, InterruptedException {
+			this.createTestDomain();
+			ObjectNode data = JsonNodeFactory.instance.objectNode()
+				.put("autoDiscover", false)
+				.put("ipAddress", "router1.example.com")
+				.put("domainId", this.testDomain.getId())
+				.put("name", "device1")
+				.put("deviceType", this.getTestDriver().getName());
+			HttpResponse<JsonNode> response = apiClient.post("/devices", data);
+			Assertions.assertEquals(
+				Response.Status.CREATED.getStatusCode(), response.statusCode(),
+				"Not getting 201 response for created device with a hostname management address");
+			try (Session session = Database.getSession()) {
+				Device newDevice = session
+					.createQuery("from Device d", Device.class)
+					.uniqueResult();
+				Assertions.assertEquals("router1.example.com", newDevice.getMgmtAddress(),
+					"Management address not stored as entered");
+			}
+		}
+
+		@Test
+		@DisplayName("Reject device with malformed management address")
+		@ResourceLock("DB")
+		void createDeviceWithMalformedAddress() throws IOException, InterruptedException {
+			this.createTestDomain();
+			ObjectNode data = JsonNodeFactory.instance.objectNode()
+				.put("autoDiscover", false)
+				.put("ipAddress", "not an address!")
+				.put("domainId", this.testDomain.getId())
+				.put("name", "device1")
+				.put("deviceType", this.getTestDriver().getName());
+			HttpResponse<JsonNode> response = apiClient.post("/devices", data);
+			Assertions.assertEquals(
+				Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+				"Not getting 400 response for a malformed management address");
+		}
+
+		@Test
 		@DisplayName("Create devices with same management address")
 		@ResourceLock("DB")
 		void createDevicesWithSameMgmtAddress() throws IOException, InterruptedException {
@@ -1538,7 +1608,7 @@ public class RestServiceTest {
 			Device device1 = FakeDeviceFactory.getFakeCiscoIosDevice(this.testDomain, null, 0);
 			ObjectNode data = JsonNodeFactory.instance.objectNode()
 				.put("autoDiscover", false)
-				.put("ipAddress", device1.getMgmtAddress().getIp())
+				.put("ipAddress", device1.getMgmtAddress())
 				.put("domainId", this.testDomain.getId())
 				.put("name", device1.getName())
 				.put("deviceType", device1.getDriver());
@@ -1596,10 +1666,10 @@ public class RestServiceTest {
 		void deleteDevice() throws IOException, InterruptedException {
 			this.createTestDomain();
 			Device device1 = new Device(this.getTestDriver().getName(),
-				new Network4Address("10.1.1.1"), this.testDomain, "test");
+				"10.1.1.1", this.testDomain, "test");
 			device1.setName("device1");
 			Device device2 = new Device(this.getTestDriver().getName(),
-				new Network4Address("10.1.1.2"), this.testDomain, "test");
+				"10.1.1.2", this.testDomain, "test");
 			device2.setName("device2");
 			try (Session session = Database.getSession()) {
 				session.beginTransaction();
@@ -1633,13 +1703,14 @@ public class RestServiceTest {
 					.put("id", device2.getId())
 					.put("name", device2.getName())
 					.put("family", device2.getFamily())
-					.put("mgmtAddress", device2.getMgmtAddress().getIp())
+					.put("mgmtAddress", device2.getMgmtAddress())
 					.put("status", device2.getStatus().toString())
 					.put("driver", device2.getDriver())
 					.put("eol", device2.isEndOfLife())
 					.put("eos", device2.isEndOfSale())
 					.put("configCompliant", device2.isCompliant())
-					.put("softwareLevel", device2.getSoftwareLevel().toString()),
+					.put("softwareLevel", device2.getSoftwareLevel().toString())
+					.put("networkClass", device2.getNetworkClass().toString()),
 				deviceNode,
 				"Retrieved device doesn't match expected object");
 		}

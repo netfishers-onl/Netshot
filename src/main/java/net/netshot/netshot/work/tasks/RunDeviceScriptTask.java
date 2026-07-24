@@ -61,7 +61,7 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 	 * @param author the author
 	 */
 	public RunDeviceScriptTask(Device device, String script, DeviceDriver driver, String comments, String author) {
-		super(comments, device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName(),
+		super(comments, device.getLastConfig() == null ? device.getMgmtAddress() : device.getName(),
 			author);
 		this.setDevice(device);
 		this.setScript(script);
@@ -85,7 +85,7 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 			// Start over from a fresh device from DB
 			device = session.get(Device.class, device.getId());
 			this.logger.info("Run script task for device {} ({}).",
-				device.getName(), device.getMgmtAddress().getIp());
+				device.getName(), device.getMgmtAddress());
 			if (deviceDriver == null || !deviceDriver.equals(device.getDriver())) {
 				log.trace("Task {}. The script doesn't apply to the driver of the device.", this.getId());
 				this.logger.error("The script doesn't apply to the driver of the device.");

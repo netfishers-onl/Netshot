@@ -18,6 +18,8 @@
  */
 package net.netshot.netshot.work.tasks;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -135,13 +137,18 @@ public final class ScanSubnetsTask extends Task implements DomainBasedTask, Chil
 						}
 						log.trace("Task {}. Will scan from {} to {}.", this.getId(), min, max);
 						this.logger.info("Will scan {} (from {} to {})", subnet.getPrefix(), min, max);
-						List<Integer> existing = session
+						List<InetAddress> existingAddresses = session
 							.createQuery(
-								"select d.mgmtAddress.address from Device d where d.mgmtAddress.address >= :min and d.mgmtAddress.address <= :max",
-								Integer.class)
-							.setParameter("min", min)
-							.setParameter("max", max)
+								"select d.cachedIpAddress from Device d where net_contains(d.cachedIpAddress, :cidr)",
+								InetAddress.class)
+							.setParameter("cidr", subnet.getPrefix())
 							.list();
+						Set<Integer> existing = new HashSet<>();
+						for (InetAddress ip : existingAddresses) {
+							if (ip instanceof Inet4Address ip4) {
+								existing.add(Network4Address.inetAddressToInt(ip4));
+							}
+						}
 						for (int a = min; a <= max; a++) {
 							if (!existing.contains(a)) {
 								toScan.add(a);
@@ -194,7 +201,7 @@ public final class ScanSubnetsTask extends Task implements DomainBasedTask, Chil
 					this.logger.info("Adding a task to scan {}", address.getIp());
 					log.trace("Task {}. Will add a discovery task for device with IP {} ({}).",
 						this.getId(), a, address.getIp());
-					DiscoverDeviceTypeTask discoverTask = new DiscoverDeviceTypeTask(address, this.getDomain(), comments, author);
+					DiscoverDeviceTypeTask discoverTask = new DiscoverDeviceTypeTask(address.getIp(), this.getDomain(), comments, author);
 					for (DeviceCredentialSet credentialSet : knownCommunities) {
 						discoverTask.addCredentialSet(credentialSet);
 					}

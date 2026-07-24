@@ -19,6 +19,7 @@
 package net.netshot.netshot;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -534,8 +535,8 @@ public class DeviceTest {
 		void queryByIp() throws Exception {
 			assertFinder("[IP] is 10.0.2.1",
 				null,
-				" from Device d where d.id in (select d.id from Device d left join d.networkInterfaces ni left join ni.ip4Addresses ip4 where d.mgmtAddress.address = :var_0 or ip4.address = :var_0)",
-				Map.of("var_0", 10 << 24 | 0 << 16 | 2 << 8 | 1),
+				" from Device d where d.id in (select d.id from Device d left join d.networkInterfaces ni left join ni.ip4Addresses ip4 where d.cachedIpAddress = :var_ip or ip4.address = :var_0)",
+				Map.of("var_0", 10 << 24 | 0 << 16 | 2 << 8 | 1, "var_ip", InetAddress.getByName("10.0.2.1")),
 				List.of("router00002"));
 		}
 
@@ -544,9 +545,33 @@ public class DeviceTest {
 		void queryByIpRange() throws Exception {
 			assertFinder("[IP] in 10.0.0.0/22",
 				null,
-				" from Device d where d.id in (select d.id from Device d left join d.networkInterfaces ni left join ni.ip4Addresses ip4 where (d.mgmtAddress.address >= :var_0 and d.mgmtAddress.address <= :var_1) or (ip4.address >= :var_0 and ip4.address < :var_1))",
-				Map.of("var_0", 10 << 24 | 0 << 16 | 0 << 8 | 0, "var_1", 10 << 24 | 0 << 16 | 3 << 8 | 255),
+				" from Device d where d.id in (select d.id from Device d left join d.networkInterfaces ni left join ni.ip4Addresses ip4 where net_contains(d.cachedIpAddress, :var_cidr) or (ip4.address >= :var_0 and ip4.address < :var_1))",
+				Map.of("var_0", 10 << 24 | 0 << 16 | 0 << 8 | 0, "var_1", 10 << 24 | 0 << 16 | 3 << 8 | 255, "var_cidr", "10.0.0.0/22"),
 				List.of("router00000", "router00001", "router00002", "router00003"));
+		}
+
+		@Test
+		@DisplayName("Query device by cached IP address (not on any configured interface)")
+		void queryByCachedIp() throws Exception {
+			// Every test device's cachedIpAddress is auto-resolved from its mgmt
+			// address (172.16.0.<shift>) at creation time; that mgmt address doesn't
+			// match any configured interface, so a match here can only come from
+			// the new cachedIpAddress column.
+			assertFinder("[IP] is 172.16.0.50",
+				null,
+				null,
+				null,
+				List.of("router00050"));
+		}
+
+		@Test
+		@DisplayName("Query device by cached IP subnet (not on any configured interface)")
+		void queryByCachedIpRange() throws Exception {
+			assertFinder("[IP] in 172.16.0.60/30",
+				null,
+				null,
+				null,
+				List.of("router00060", "router00061", "router00062", "router00063"));
 		}
 
 		@Test

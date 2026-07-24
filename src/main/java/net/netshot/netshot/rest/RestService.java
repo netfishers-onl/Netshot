@@ -1538,12 +1538,10 @@ public class RestService extends Thread {
 
 		/** The mgmt address. */
 		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class),
-			@JsonSerialize(using = Network4Address.AddressOnlySerializer.class),
-			@JsonDeserialize(using = Network4Address.AddressOnlyDeserializer.class)
+			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
-		private Network4Address mgmtAddress;
+		private String mgmtAddress;
 
 		/** The status. */
 		@Getter(onMethod = @__({
@@ -1922,6 +1920,62 @@ public class RestService extends Thread {
 		private DeviceCredentialSet specificCredentialSet;
 	}
 
+	/** Strict IPv4 dotted-quad pattern (each octet 0-255), to detect an IPv4 literal without ever risking a DNS lookup. */
+	private static final Pattern IPV4_LITERAL_PATTERN = Pattern.compile(
+		"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+
+	/** RFC-1123-ish hostname/FQDN pattern. */
+	private static final Pattern HOSTNAME_PATTERN = Pattern.compile(
+		"^(?=.{1,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\\.)*[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$");
+
+	/**
+	 * Validates a device management/connect address, accepting an IPv4 literal, an IPv6
+	 * literal, or a syntactically valid hostname/FQDN. Never performs a DNS lookup:
+	 * hostnames are only resolved later, at actual connect time.
+	 *
+	 * @param address the address to validate
+	 * @param allowLoopback whether a loopback address should be accepted (used for the
+	 *                      optional "connect address" override, which may point to a
+	 *                      local port-forwarded tunnel)
+	 * @throws NetshotBadRequestException if the address is malformed or invalid
+	 */
+	private static void validateMgmtAddress(String address, boolean allowLoopback) throws NetshotBadRequestException {
+		if (address == null || "".equals(address)) {
+			throw new NetshotBadRequestException("Malformed IP address",
+				NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
+		}
+		if (IPV4_LITERAL_PATTERN.matcher(address).matches()) {
+			try {
+				Network4Address v4Address = new Network4Address(address);
+				if (!v4Address.isNormalUnicast() && !(allowLoopback && v4Address.isLoopback())) {
+					throw new NetshotBadRequestException("Invalid IP address",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
+				}
+			}
+			catch (UnknownHostException e) {
+				throw new NetshotBadRequestException("Malformed IP address",
+					NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
+			}
+		}
+		else if (address.contains(":")) {
+			try {
+				Network6Address v6Address = new Network6Address(address);
+				if (v6Address.isMulticast()) {
+					throw new NetshotBadRequestException("Invalid IP address",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
+				}
+			}
+			catch (UnknownHostException e) {
+				throw new NetshotBadRequestException("Malformed IP address",
+					NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
+			}
+		}
+		else if (!HOSTNAME_PATTERN.matcher(address).matches()) {
+			throw new NetshotBadRequestException("Malformed IP address or hostname",
+				NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
+		}
+	}
+
 	/**
 	 * Adds the device.
 	 *
@@ -1943,35 +1997,12 @@ public class RestService extends Thread {
 	@Tag(name = "Devices", description = "Device (such as network or security equipment) management")
 	public Task addDevice(RsNewDevice device) throws WebApplicationException {
 		log.debug("REST request, new device.");
-		Network4Address deviceAddress;
-		try {
-			deviceAddress = new Network4Address(device.getIpAddress());
-			if (!deviceAddress.isNormalUnicast()) {
-				log.warn("User posted an invalid IP address (not normal unicast).");
-				throw new NetshotBadRequestException("Invalid IP address",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
-			}
-		}
-		catch (UnknownHostException e) {
-			log.warn("User posted an invalid IP address.");
-			throw new NetshotBadRequestException("Malformed IP address",
-				NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
-		}
-		Network4Address connectAddress = null;
+		String deviceAddress = device.getIpAddress();
+		RestService.validateMgmtAddress(deviceAddress, false);
+		String connectAddress = null;
 		if (device.getConnectIpAddress() != null && !"".equals(device.getConnectIpAddress())) {
-			try {
-				connectAddress = new Network4Address(device.getConnectIpAddress());
-				if (!deviceAddress.isNormalUnicast()) {
-					log.warn("User posted an invalid connect IP address (not normal unicast).");
-					throw new NetshotBadRequestException("Invalid connect IP address",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
-				}
-			}
-			catch (UnknownHostException e) {
-				log.warn("User posted an invalid IP address.");
-				throw new NetshotBadRequestException("Malformed connect IP address",
-					NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
-			}
+			connectAddress = device.getConnectIpAddress();
+			RestService.validateMgmtAddress(connectAddress, true);
 		}
 		Integer sshPort = null;
 		if (device.getSshPort() != null && !"".equals(device.getSshPort())) {
@@ -2007,8 +2038,8 @@ public class RestService extends Thread {
 		try {
 			log.debug("Looking for an active device with this IP address.");
 			Device duplicate = session
-				.createQuery("from Device d where d.mgmtAddress.address = :ip and d.status <> :disabled", Device.class)
-				.setParameter("ip", deviceAddress.getIntAddress())
+				.createQuery("from Device d where lower(d.mgmtAddress) = lower(:address) and d.status <> :disabled", Device.class)
+				.setParameter("address", deviceAddress)
 				.setParameter("disabled", Device.Status.DISABLED)
 				.uniqueResult();
 			if (duplicate != null) {
@@ -2051,7 +2082,7 @@ public class RestService extends Thread {
 				DiscoverDeviceTypeTask task = new DiscoverDeviceTypeTask(deviceAddress, domain,
 					String.format("Device added by %s", user.getUsername()), user.getUsername());
 				task.setComments(String.format("Autodiscover device %s",
-					deviceAddress.getIp()));
+					deviceAddress));
 				for (DeviceCredentialSet credentialSet : knownCommunities) {
 					task.addCredentialSet(credentialSet);
 				}
@@ -2354,26 +2385,17 @@ public class RestService extends Thread {
 				device.setStatus(rsDevice.getEnabled() ? Status.INPRODUCTION : Status.DISABLED);
 			}
 			if (rsDevice.getIpAddress() != null) {
-				Network4Address v4Address = new Network4Address(rsDevice.getIpAddress());
-				if (!v4Address.isNormalUnicast()) {
-					Database.rollbackSilently(session);
-					throw new NetshotBadRequestException("Invalid IP address",
-						NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
-				}
-				device.setMgmtAddress(v4Address);
+				RestService.validateMgmtAddress(rsDevice.getIpAddress(), false);
+				device.setMgmtAddress(rsDevice.getIpAddress());
+				device.refreshCachedIpAddress();
 			}
 			if (rsDevice.getConnectIpAddress() != null) {
 				if ("".equals(rsDevice.getConnectIpAddress())) {
 					device.setConnectAddress(null);
 				}
 				else {
-					Network4Address v4ConnectAddress = new Network4Address(rsDevice.getConnectIpAddress());
-					if (!v4ConnectAddress.isNormalUnicast() && !v4ConnectAddress.isLoopback()) {
-						Database.rollbackSilently(session);
-						throw new NetshotBadRequestException("Invalid Connect IP address",
-							NetshotBadRequestException.Reason.NETSHOT_INVALID_IP_ADDRESS);
-					}
-					device.setConnectAddress(v4ConnectAddress);
+					RestService.validateMgmtAddress(rsDevice.getConnectIpAddress(), true);
+					device.setConnectAddress(rsDevice.getConnectIpAddress());
 				}
 			}
 			if (rsDevice.getSshPort() != null) {
@@ -2488,13 +2510,11 @@ public class RestService extends Thread {
 			}
 
 			if (!Device.Status.DISABLED.equals(device.getStatus())) {
-				// This is backed up by UK_88j8woberkhc2jxjx2hfddv4a constraint
-				// on PostgreSQL schema.
 				log.debug("Looking for an active device with this IP address.");
 				Device duplicate = session
-					.createQuery("from Device d where d.id <> :id and d.mgmtAddress.address = :ip and d.status <> :disabled", Device.class)
+					.createQuery("from Device d where d.id <> :id and lower(d.mgmtAddress) = lower(:address) and d.status <> :disabled", Device.class)
 					.setParameter("id", device.getId())
-					.setParameter("ip", device.getMgmtAddress().getIntAddress())
+					.setParameter("address", device.getMgmtAddress())
 					.setParameter("disabled", Device.Status.DISABLED)
 					.setMaxResults(1)
 					.uniqueResult();
@@ -2511,24 +2531,12 @@ public class RestService extends Thread {
 			session.getTransaction().commit();
 			AAA_LOG.info("{} has been edited.", device);
 		}
-		catch (UnknownHostException e) {
-			Database.rollbackSilently(session);
-			log.warn("User posted an invalid IP address.", e);
-			throw new NetshotBadRequestException("Malformed IP address",
-				NetshotBadRequestException.Reason.NETSHOT_MALFORMED_IP_ADDRESS);
-		}
 		catch (HibernateException e) {
 			Database.rollbackSilently(session);
 			log.error("Cannot edit the device.", e);
 			if (this.isDuplicateException(e)) {
 				throw new NetshotBadRequestException(
 					"A device with this IP address already exists.",
-					NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DEVICE);
-			}
-			else if (e instanceof ConstraintViolationException
-				&& e.getMessage().contains("UK_88j8woberkhc2jxjx2hfddv4a")) {
-				throw new NetshotBadRequestException(
-					"A device with this management IP address is already active.",
 					NetshotBadRequestException.Reason.NETSHOT_DUPLICATE_DEVICE);
 			}
 			Throwable t = e.getCause();
@@ -5916,7 +5924,7 @@ public class RestService extends Thread {
 		@Setter
 		private Date expirationDate;
 
-		public RsLightExemptedDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
+		public RsLightExemptedDevice(long id, String name, String family, String mgmtAddress, Status status,
 			String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
 			Device.NetworkClass networkClass, Date expirationDate) {
 			super(id, name, family, mgmtAddress, status, driver, eol, eos, configCompliant, softwareLevel, networkClass);
@@ -6572,7 +6580,7 @@ public class RestService extends Thread {
 		@Setter
 		private ResultOption result;
 
-		public RsLightPolicyRuleDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
+		public RsLightPolicyRuleDevice(long id, String name, String family, String mgmtAddress, Status status,
 			String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
 			Device.NetworkClass networkClass, long policyId, String policyName, long ruleId, String ruleName,
 			Date checkDate, ResultOption result) {
@@ -7546,7 +7554,7 @@ public class RestService extends Thread {
 		@Setter
 		private String softwareVersion;
 
-		public RsLightSoftwareLevelDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
+		public RsLightSoftwareLevelDevice(long id, String name, String family, String mgmtAddress, Status status,
 			String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
 			Device.NetworkClass networkClass, String softwareVersion) {
 			super(id, name, family, mgmtAddress, status, driver, eol, eos, configCompliant, softwareLevel, networkClass);
@@ -7652,7 +7660,7 @@ public class RestService extends Thread {
 		@Setter
 		private Date lastFailure;
 
-		public RsLightAccessFailureDevice(long id, String name, String family, Network4Address mgmtAddress, Status status,
+		public RsLightAccessFailureDevice(long id, String name, String family, String mgmtAddress, Status status,
 			String driver, Boolean eol, Boolean eos, Boolean configCompliant, ConformanceLevel softwareLevel,
 			Device.NetworkClass networkClass, Date lastSuccess, Date lastFailure) {
 			super(id, name, family, mgmtAddress, status, driver, eol, eos, configCompliant, softwareLevel, networkClass);
@@ -8825,7 +8833,7 @@ public class RestService extends Thread {
 							row = deviceSheet.createRow(++y);
 							row.createCell(++x).setCellValue(device.getId());
 							row.createCell(++x).setCellValue(device.getName());
-							row.createCell(++x).setCellValue(device.getMgmtAddress().getIp());
+							row.createCell(++x).setCellValue(device.getMgmtAddress());
 							row.createCell(++x).setCellValue(device.getMgmtDomain().getName());
 							row.createCell(++x).setCellValue(device.getNetworkClass().toString());
 							row.createCell(++x).setCellValue(device.getFamily());

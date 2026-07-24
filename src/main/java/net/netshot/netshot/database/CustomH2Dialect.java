@@ -35,5 +35,10 @@ public class CustomH2Dialect extends H2Dialect {
 			"regexp_like",
 			"REGEXP_LIKE(?1, ?2)",
 			basicTypeRegistry.resolve(StandardBasicTypes.BOOLEAN));
+
+		functionContributions.getFunctionRegistry().registerPattern(
+			"net_contains",
+			"NET_CONTAINS(?1, ?2)",
+			basicTypeRegistry.resolve(StandardBasicTypes.BOOLEAN));
 	}
 }

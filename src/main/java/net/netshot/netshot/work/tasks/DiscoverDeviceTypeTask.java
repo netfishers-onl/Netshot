@@ -19,6 +19,7 @@
 package net.netshot.netshot.work.tasks;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,11 +35,8 @@ import org.quartz.JobKey;
 
 import com.fasterxml.jackson.annotation.JsonView;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
@@ -56,7 +54,7 @@ import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.DynamicDeviceGroup;
-import net.netshot.netshot.device.Network4Address;
+import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.access.Snmp;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
@@ -87,17 +85,19 @@ public final class DiscoverDeviceTypeTask extends Task implements DomainBasedTas
 	@Setter
 	private Set<DeviceCredentialSet> credentialSets = new HashSet<DeviceCredentialSet>();
 
-	/** The device address. */
+	/** The device address (IPv4 literal, IPv6 literal, or FQDN, resolved lazily). */
 	@Getter(onMethod = @__({
-		@Embedded,
-		@AttributeOverrides({
-			@AttributeOverride(name = "address", column = @Column(name = "ipv4_address")),
-			@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
-			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4_usage"))}),
+		@Column(name = "device_address"),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private Network4Address deviceAddress;
+	private String deviceAddress;
+
+	/** The resolved device address, computed once at the start of {@link #run()}. */
+	@Getter(onMethod = @__({
+		@Transient
+	}))
+	private transient NetworkAddress resolvedAddress;
 
 	/** The success credential set. */
 	@Getter(onMethod = @__({
@@ -133,9 +133,9 @@ public final class DiscoverDeviceTypeTask extends Task implements DomainBasedTas
 	 * @param comments = the comments
 	 * @param author = the author
 	 */
-	public DiscoverDeviceTypeTask(Network4Address deviceAddress, Domain domain,
+	public DiscoverDeviceTypeTask(String deviceAddress, Domain domain,
 		String comments, String author) {
-		super(comments, deviceAddress.getIp(), author);
+		super(comments, deviceAddress, author);
 		this.deviceAddress = deviceAddress;
 		this.setDomain(domain);
 	}
@@ -250,7 +250,7 @@ public final class DiscoverDeviceTypeTask extends Task implements DomainBasedTas
 			this.getId(), community.getName());
 		this.logger.trace("Trying SNMPv1 discovery (credentials {})", community.getName());
 		try {
-			Snmp poller = new Snmp(deviceAddress, community);
+			Snmp poller = new Snmp(this.resolvedAddress, community);
 			return snmpDiscover(poller);
 		}
 		catch (UnknownHostException e) {
@@ -269,7 +269,7 @@ public final class DiscoverDeviceTypeTask extends Task implements DomainBasedTas
 			this.getId(), community.getName());
 		this.logger.trace("Trying SNMPv2c discovery (credential set {})", community.getName());
 		try {
-			Snmp poller = new Snmp(deviceAddress, community);
+			Snmp poller = new Snmp(this.resolvedAddress, community);
 			return snmpDiscover(poller);
 		}
 		catch (UnknownHostException e) {
@@ -288,7 +288,7 @@ public final class DiscoverDeviceTypeTask extends Task implements DomainBasedTas
 			this.getId(), cred.getName());
 		this.logger.trace("Trying SNMPv3 discovery (credentials {})", cred.getName());
 		try {
-			Snmp poller = new Snmp(deviceAddress, cred);
+			Snmp poller = new Snmp(this.resolvedAddress, cred);
 			return snmpDiscover(poller);
 		}
 		catch (UnknownHostException e) {
@@ -322,6 +322,16 @@ public final class DiscoverDeviceTypeTask extends Task implements DomainBasedTas
 	public void run() {
 		log.debug("Task {}. Starting autodiscovery process.", this.getId());
 		boolean didTrySnmp = false;
+
+		try {
+			this.resolvedAddress = NetworkAddress.getNetworkAddress(InetAddress.getByName(this.deviceAddress));
+		}
+		catch (UnknownHostException e) {
+			log.warn("Task {}. Unable to resolve device address '{}'.", this.getId(), this.deviceAddress, e);
+			this.logger.error("Unable to resolve device address '{}'.", this.deviceAddress);
+			this.status = Status.FAILURE;
+			return;
+		}
 
 		log.trace("Task {}. {} credential sets in the list.", this.getId(), credentialSets.size());
 		for (DeviceCredentialSet credentialSet : credentialSets) {
@@ -481,7 +491,7 @@ public final class DiscoverDeviceTypeTask extends Task implements DomainBasedTas
 	@Transient
 	public JobKey getIdentity() {
 		return new JobKey(String.format("Task_%d", this.getId()),
-			String.format("DiscoverDeviceType_%s", this.getDeviceAddress().getIp()));
+			String.format("DiscoverDeviceType_%s", this.getDeviceAddress()));
 	}
 
 	@Override

@@ -62,7 +62,7 @@ public final class CheckComplianceTask extends Task implements DeviceBasedTask {
 	 * @param author the author
 	 */
 	public CheckComplianceTask(Device device, String comments, String author) {
-		super(comments, device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName(), author);
+		super(comments, device.getLastConfig() == null ? device.getMgmtAddress() : device.getName(), author);
 		this.device = device;
 	}
 
@@ -90,7 +90,7 @@ public final class CheckComplianceTask extends Task implements DeviceBasedTask {
 			// Start over from a fresh device from DB
 			device = session.get(Device.class, device.getId());
 			this.logger.info("Check compliance task for device {} ({}).",
-				device.getName(), device.getMgmtAddress().getIp());
+				device.getName(), device.getMgmtAddress());
 			if (this.device.getLastConfig() == null) {
 				log.info("Task {}. Unable to fetch the device with its last config... has it been captured at least once?",
 					this.getId());

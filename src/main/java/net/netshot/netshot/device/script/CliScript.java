@@ -19,6 +19,8 @@
 package net.netshot.netshot.device.script;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -33,7 +35,7 @@ import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.MissingDeviceDriverException;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
-import net.netshot.netshot.device.Network4Address;
+import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.access.Cli;
 import net.netshot.netshot.device.access.InvalidCredentialsException;
 import net.netshot.netshot.device.access.Snmp;
@@ -89,9 +91,28 @@ public abstract class CliScript {
 		boolean sshTried = false;
 		boolean telnetTried = false;
 
-		Network4Address address = device.getConnectAddress();
-		if (address == null) {
-			address = device.getMgmtAddress();
+		InetAddress resolvedMgmtAddress = null;
+		try {
+			resolvedMgmtAddress = InetAddress.getByName(device.getMgmtAddress());
+			device.setCachedIpAddress(resolvedMgmtAddress);
+		}
+		catch (UnknownHostException e) {
+			log.warn("Unable to resolve management address '{}' of device {}.",
+				device.getMgmtAddress(), device.getId(), e);
+			this.taskContext.warn("Unable to resolve management address '{}'.", device.getMgmtAddress());
+		}
+
+		NetworkAddress address;
+		String connectAddressString = device.getConnectAddress();
+		if (connectAddressString != null && !connectAddressString.isEmpty()) {
+			address = NetworkAddress.getNetworkAddress(InetAddress.getByName(connectAddressString));
+		}
+		else if (resolvedMgmtAddress != null) {
+			address = NetworkAddress.getNetworkAddress(resolvedMgmtAddress);
+		}
+		else {
+			throw new UnknownHostException(
+				"Unable to resolve management address '%s'.".formatted(device.getMgmtAddress()));
 		}
 		Set<DeviceCredentialSet> credentialSets = new HashSet<>();
 		if (oneTimeCredentialSets != null) {

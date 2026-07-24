@@ -7,6 +7,7 @@ import { MUTATIONS, QUERIES } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { CredentialSetType, Device } from "@/types"
+import validators from "@/utils/validators"
 import { Checkbox as NativeCheckbox, Stack } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo } from "react"
@@ -82,11 +83,11 @@ function DeviceEditForm({ freezePasswords = false }: { freezePasswords?: boolean
       <FormControl readOnly label={t("common.name")} placeholder={t("device.name")} control={form.control} name="name" />
       <DeviceTypeSelect disabled label={t("device.type")} control={form.control} name="deviceType" />
       <DomainSelect control={form.control} name="mgmtDomain" />
-      <FormControl required label={t("device.interface.ipAddress")} placeholder={t("device.ipAddress")} control={form.control} name="ipAddress" rules={{ pattern: { value: /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g, message: t("common.thisIsNotAValidIpAddress") } }} />
+      <FormControl required label={t("device.mgmtAddress")} placeholder={t("common.eG", { example: "10.216.5.3, 2001:db8::1, router1.example.com" })} control={form.control} name="ipAddress" rules={validators.hostOrIp()} />
       <Checkbox control={form.control} name="overrideConnectionSetting">{t("device.overrideConnectionSettings")}</Checkbox>
       {overrideConnectionSetting && (
         <>
-          <FormControl required label={t("device.connectIp")} placeholder={t("common.eG", { example: "10.216.5.3" })} control={form.control} name="connectIpAddress" rules={{ pattern: { value: /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g, message: t("common.thisIsNotAValidIpAddress") } }} />
+          <FormControl required label={t("device.connectIp")} placeholder={t("common.eG", { example: "10.216.5.3 or router1.example.com" })} control={form.control} name="connectIpAddress" rules={validators.hostOrIp()} />
           <Stack direction="row" gap="4">
             <FormControl required label={t("network.sshPort")} placeholder={t("common.eG", { example: "22" })} control={form.control} name="sshPort" />
             <FormControl required label={t("network.telnetPort")} placeholder={t("common.eG", { example: "6753" })} control={form.control} name="telnetPort" />

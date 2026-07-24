@@ -140,7 +140,7 @@ public class DemoDataCreator {
 		catch (UnknownHostException e) {
 			// Ignore
 		}
-		Device device = new Device("CiscoIOS12", mgmtIp, domain, "test");
+		Device device = new Device("CiscoIOS12", mgmtIp.getIp(), domain, "test");
 		device.setName(String.format("cisco%05d", shift));
 		device.setFamily("Fake IOS device");
 		device.setNetworkClass(NetworkClass.ROUTER);
@@ -348,7 +348,7 @@ public class DemoDataCreator {
 		catch (UnknownHostException e) {
 			// Ignore
 		}
-		Device device = new Device("JuniperJunos", mgmtIp, domain, "test");
+		Device device = new Device("JuniperJunos", mgmtIp.getIp(), domain, "test");
 		device.setName(String.format("juniper%05d", shift));
 		device.setFamily("Fake Junos device");
 		device.setNetworkClass(NetworkClass.FIREWALL);
@@ -492,7 +492,7 @@ public class DemoDataCreator {
 		catch (UnknownHostException e) {
 			// Ignore
 		}
-		Device device = new Device("FortinetFortiOS", mgmtIp, domain, "test");
+		Device device = new Device("FortinetFortiOS", mgmtIp.getIp(), domain, "test");
 		device.setName(String.format("fortigate%05d", shift));
 		device.setFamily("Fake FortiGate");
 		device.setNetworkClass(NetworkClass.FIREWALL);

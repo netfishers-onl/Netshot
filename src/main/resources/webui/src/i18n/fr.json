@@ -69,7 +69,8 @@
         "select": "Sélectionner une configuration"
       },
       "configListWillAppear": "La liste des configurations apparaîtra ici lorsque l'équipement change",
-      "connectIp": "IP de connexion",
+      "connectIp": "IP ou nom d'hôte de connexion",
+      "mgmtAddress": "Adresse IP ou nom d'hôte",
       "module": {
         "delete": "Supprimer les modules",
         "deleteRemovedMoreThan": "Supprimer les modules retirés il y a plus de",
@@ -88,7 +89,7 @@
       "accessFailures": "Échecs d'accès aux équipements",
       "details": "Détails de l'équipement",
       "family": "Famille d'équipement",
-      "ipAddress": "Adresse IP de l'équipement",
+      "ipAddress": "Adresse IP ou nom d'hôte de l'équipement",
       "name": "Nom de l'équipement",
       "type": "Type d'équipement",
       "withLevelAppearsWhenSoftwareRuleValidated": "L'équipement avec le niveau {{ level }} apparaît lorsque la règle logicielle est validée",
@@ -436,6 +437,7 @@
       "theNetshotServerDidnTReplyProperly": "Le serveur Netshot n'a pas répondu correctement",
       "thisFieldIsRequired": "Ce champ est requis",
       "thisIsNotAValidIpAddress": "Ceci n'est pas une adresse IP valide",
+      "thisIsNotAValidIpAddressOrHostname": "Ceci n'est pas une adresse IP ou un nom d'hôte valide",
       "token": "Token",
       "true": "vrai",
       "trueLabel": "Vrai",

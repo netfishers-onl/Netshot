@@ -18,6 +18,8 @@
  */
 package net.netshot.netshot.device;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,17 +36,14 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Type;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -70,6 +69,7 @@ import net.netshot.netshot.compliance.Exemption;
 import net.netshot.netshot.compliance.Rule;
 import net.netshot.netshot.compliance.SoftwareRule;
 import net.netshot.netshot.compliance.SoftwareRule.ConformanceLevel;
+import net.netshot.netshot.database.InetAddressUserType;
 import net.netshot.netshot.device.access.Ssh;
 import net.netshot.netshot.device.access.Telnet;
 import net.netshot.netshot.device.attribute.AttributeDefinition.EnumAttribute;
@@ -323,20 +323,37 @@ public class Device {
 	@Setter
 	private String location = "";
 
-	/** The mgmt address. */
+	/** The mgmt address (IPv4 literal, IPv6 literal, or FQDN, resolved lazily at connect time). */
 	@Getter(onMethod = @__({
-		@Embedded,
-		@AttributeOverrides({
-			@AttributeOverride(name = "address", column = @Column(name = "ipv4_address")),
-			@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv4_pfxlen")),
-			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv4_usage")),
-		}),
-		@XmlElement, @JsonView(DefaultView.class),
-		@JsonSerialize(using = Network4Address.AddressOnlySerializer.class),
-		@JsonDeserialize(using = Network4Address.AddressOnlyDeserializer.class)
+		@Column(name = "mgmt_address"),
+		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private Network4Address mgmtAddress;
+	private String mgmtAddress;
+
+	/**
+	 * The last IP address that {@link #mgmtAddress} resolved to, refreshed on every
+	 * successful connection attempt. Used for fast IP-based search/dedup/passive
+	 * matching, since {@link #mgmtAddress} itself may be a hostname.
+	 */
+	@Getter(onMethod = @__({
+		@Column(name = "cached_ip_address"),
+		@Type(InetAddressUserType.class)
+	}))
+	@Setter
+	private InetAddress cachedIpAddress;
+
+	/**
+	 * String view of {@link #cachedIpAddress}, exposed on the full device REST
+	 * representation only (not on the lightweight device list DTO).
+	 */
+	@Transient
+	@XmlElement(name = "cachedIpAddress")
+	@JsonProperty("cachedIpAddress")
+	@JsonView(DefaultView.class)
+	public String getCachedIpAddressAsString() {
+		return this.cachedIpAddress == null ? null : this.cachedIpAddress.getHostAddress();
+	}
 
 	/** The mgmt domain. */
 	@Getter(onMethod = @__({
@@ -439,20 +456,13 @@ public class Device {
 	@Setter
 	private int telnetPort = Telnet.DEFAULT_PORT;
 
-	/** An optional connection address, in case the management address can't be used to connect to the device. */
+	/** An optional connection address (IPv4 literal, IPv6 literal, or FQDN), in case the management address can't be used to connect to the device. */
 	@Getter(onMethod = @__({
-		@Embedded,
-		@AttributeOverrides({
-			@AttributeOverride(name = "address", column = @Column(name = "connect_ipv4_address")),
-			@AttributeOverride(name = "prefixLength", column = @Column(name = "connect_ipv4_pfxlen")),
-			@AttributeOverride(name = "addressUsage", column = @Column(name = "connect_ipv4_usage")),
-		}),
-		@XmlElement, @JsonView(DefaultView.class),
-		@JsonSerialize(using = Network4Address.AddressOnlySerializer.class),
-		@JsonDeserialize(using = Network4Address.AddressOnlyDeserializer.class)
+		@Column(name = "connect_address"),
+		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private Network4Address connectAddress;
+	private String connectAddress;
 
 	/**
 	 * Instantiates a new device.
@@ -469,11 +479,28 @@ public class Device {
 	 * @param domain the domain
 	 * @param creator the username who is creating the device
 	 */
-	public Device(String driver, Network4Address address, Domain domain, String creator) {
+	public Device(String driver, String address, Domain domain, String creator) {
 		this.driver = driver;
 		this.mgmtAddress = address;
 		this.mgmtDomain = domain;
 		this.creator = creator;
+		this.refreshCachedIpAddress();
+	}
+
+	/**
+	 * Resolves {@link #mgmtAddress} and updates {@link #cachedIpAddress} accordingly
+	 * (cleared to null if the address can't currently be resolved). Called when the
+	 * device is created or its management address is changed; also refreshed on every
+	 * successful connection attempt (see CliScript), which is where a stale cache
+	 * left over from a failed resolution normally gets a chance to heal.
+	 */
+	public void refreshCachedIpAddress() {
+		try {
+			this.cachedIpAddress = InetAddress.getByName(this.mgmtAddress);
+		}
+		catch (UnknownHostException e) {
+			this.cachedIpAddress = null;
+		}
 	}
 
 	public void addAttribute(DeviceAttribute attribute) {

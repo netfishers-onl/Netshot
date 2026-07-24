@@ -1511,15 +1511,16 @@ public class Finder {
 		private String buildWhere(String itemPrefix) {
 			if (this.sign == TokenType.IN) {
 				return
-					("(d.mgmtAddress.address >= :%s_0 and d.mgmtAddress.address <= :%s_1) or "
+					("net_contains(d.cachedIpAddress, :%s_cidr) or "
 						+ "(ip4.address >= :%s_0 and ip4.address < :%s_1)")
-					.formatted(itemPrefix, itemPrefix, itemPrefix, itemPrefix);
+					.formatted(itemPrefix, itemPrefix, itemPrefix);
 			}
 			else if (this.withMask) {
+				// A mgmt/cached address is a single host, never a subnet with a mask,
+				// so this only makes sense against configured interface addresses.
 				return
-					("(d.mgmtAddress.address = :%s_0 and d.mgmtAddress.prefixLength = :%s_1) or "
-						+ "(ip4.address = :%s_0 and ip4.prefixLength = :%s_1)")
-					.formatted(itemPrefix, itemPrefix, itemPrefix, itemPrefix);
+					("ip4.address = :%s_0 and ip4.prefixLength = :%s_1")
+					.formatted(itemPrefix, itemPrefix);
 			}
 			else if (this.sign == TokenType.CONTAINS) {
 				return
@@ -1530,7 +1531,7 @@ public class Finder {
 						+ "and :%s_0 <= ip4.address -mod(ip4.address, power(2, 32 - ip4.prefixLength)) + power(2, 32 - ip4.prefixLength) - 1)")
 					.formatted(itemPrefix, itemPrefix, itemPrefix, itemPrefix);
 			}
-			return "d.mgmtAddress.address = :%s_0 or ip4.address = :%s_0"
+			return "d.cachedIpAddress = :%s_ip or ip4.address = :%s_0"
 				.formatted(itemPrefix, itemPrefix);
 		}
 
@@ -1558,6 +1559,7 @@ public class Finder {
 				}
 				query.setParameter(itemPrefix + "_0", max > min ? min : max);
 				query.setParameter(itemPrefix + "_1", max > min ? max : min);
+				query.setParameter(itemPrefix + "_cidr", this.target.getPrefix());
 			}
 			else if (this.withMask) {
 				query.setParameter(itemPrefix + "_0", this.target.getIntAddress());
@@ -1565,6 +1567,7 @@ public class Finder {
 			}
 			else {
 				query.setParameter(itemPrefix + "_0", this.target.getIntAddress());
+				query.setParameter(itemPrefix + "_ip", this.target.getInetAddress());
 			}
 		}
 
@@ -1646,20 +1649,24 @@ public class Finder {
 		private String buildWhere(String itemPrefix) {
 			if (this.sign == TokenType.IN) {
 				if (this.target.getPrefixLength() <= 64) {
-					return "ip6.address1 >= :%s_0 and ip6.address1 <= :%s_1"
-						.formatted(itemPrefix, itemPrefix);
+					return ("net_contains(d.cachedIpAddress, :%s_cidr) or "
+						+ "(ip6.address1 >= :%s_0 and ip6.address1 <= :%s_1)")
+						.formatted(itemPrefix, itemPrefix, itemPrefix);
 				}
 				else {
-					return "ip6.address2 >= :%s_0 and ip6.address2 <= :%s_1 and ip6.address1 = :%s_2"
-						.formatted(itemPrefix, itemPrefix, itemPrefix);
+					return ("net_contains(d.cachedIpAddress, :%s_cidr) or "
+						+ "(ip6.address2 >= :%s_0 and ip6.address2 <= :%s_1 and ip6.address1 = :%s_2)")
+						.formatted(itemPrefix, itemPrefix, itemPrefix, itemPrefix);
 				}
 			}
 			else if (this.withMask) {
-				return "ip6.address1 = :%s_0 and ip6.address2 = :%s_1 and ip6.prefixLength = :%s_2)"
+				// A mgmt/cached address is a single host, never a subnet with a mask,
+				// so this only makes sense against configured interface addresses.
+				return "ip6.address1 = :%s_0 and ip6.address2 = :%s_1 and ip6.prefixLength = :%s_2"
 					.formatted(itemPrefix, itemPrefix, itemPrefix);
 			}
-			return "ip6.address1 = :%s_0 and ip6.address2 = :%s_1"
-				.formatted(itemPrefix, itemPrefix);
+			return "d.cachedIpAddress = :%s_ip or (ip6.address1 = :%s_0 and ip6.address2 = :%s_1)"
+				.formatted(itemPrefix, itemPrefix, itemPrefix);
 		}
 
 		/*(non-Javadoc)
@@ -1678,6 +1685,7 @@ public class Finder {
 		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			if (this.sign == TokenType.IN) {
+				query.setParameter(itemPrefix + "_cidr", this.target.getPrefix());
 				if (this.target.getPrefixLength() <= 64) {
 					long mask = 0xFFFFFFFFFFFFFFFFL << (64 - this.target
 						.getPrefixLength());
@@ -1704,6 +1712,7 @@ public class Finder {
 			else {
 				query.setParameter(itemPrefix + "_0", this.target.getAddress1());
 				query.setParameter(itemPrefix + "_1", this.target.getAddress2());
+				query.setParameter(itemPrefix + "_ip", this.target.getInetAddress());
 			}
 		}
 	}

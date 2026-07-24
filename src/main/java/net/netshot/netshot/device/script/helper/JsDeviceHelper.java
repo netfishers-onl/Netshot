@@ -360,7 +360,7 @@ public final class JsDeviceHelper {
 			return targetDevice.getFamily();
 		}
 		else if ("managementIpAddress".equals(item)) {
-			return targetDevice.getMgmtAddress().getIp();
+			return targetDevice.getMgmtAddress();
 		}
 		else if ("managementDomain".equals(item)) {
 			return targetDevice.getMgmtDomain().getName();

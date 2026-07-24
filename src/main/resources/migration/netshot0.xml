@@ -11,8 +11,10 @@
 	<property name="BOOLEAN" value="BIT(1)"/>
 	<property name="JSON" value="JSONB" dbms="postgresql"/>
 	<property name="JSON" value="JSON"/>
-	<property name="NOW" value="now()" dbms="mysql,h2"/>
+	<property name="NOW" value="now()" dbms="h2"/>
 	<property name="NOW" value="current_timestamp" dbms="postgresql"/>
+	<property name="INETTYPE" value="inet" dbms="postgresql"/>
+	<property name="INETTYPE" value="varbinary(16)" dbms="h2"/>
 <!-- netshot_0_5_2.xml -->
 	<changeSet author="netshot (generated)" id="0.5.2_1">
 		<validCheckSum>8:1534a0df4e73e7c5877f8f03c0ffde51</validCheckSum>
@@ -1691,5 +1693,48 @@
 				<constraints nullable="false"/>
 			</column>
 		</addColumn>
+	</changeSet>
+	<!-- Device management/connect address becomes a plain string (IPv4, IPv6 or FQDN),
+	     resolved lazily at connect time; a new cached_ip_address column keeps the last
+	     resolved IP around for fast search/dedup/passive-match. MySQL support is dropped
+	     at the same time, so cached_ip_address only needs to account for PostgreSQL
+	     (native "inet" column) and H2 (binary column, used in tests). -->
+	<changeSet author="netshot" id="0.25.0_16">
+		<addColumn tableName="device">
+			<column name="mgmt_address" type="VARCHAR(255)"/>
+			<column name="connect_address" type="VARCHAR(255)"/>
+			<column name="cached_ip_address" type="${INETTYPE}"/>
+		</addColumn>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_17">
+		<addColumn tableName="task">
+			<column name="device_address" type="VARCHAR(255)"/>
+		</addColumn>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_18">
+		<customChange class="net.netshot.netshot.database.migrator.MgmtAddressMigrator"/>
+	</changeSet>
+	<changeSet author="netshot" dbms="postgresql" id="0.25.0_19">
+		<dropIndex indexName="UK_88j8woberkhc2jxjx2hfddv4a" tableName="device"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_20">
+		<dropColumn tableName="device">
+			<column name="ipv4_address"/>
+			<column name="ipv4_pfxlen"/>
+			<column name="ipv4_usage"/>
+			<column name="connect_ipv4_address"/>
+			<column name="connect_ipv4_pfxlen"/>
+			<column name="connect_ipv4_usage"/>
+		</dropColumn>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_21">
+		<dropColumn tableName="task">
+			<column name="ipv4_address"/>
+			<column name="ipv4_pfxlen"/>
+			<column name="ipv4_usage"/>
+		</dropColumn>
+	</changeSet>
+	<changeSet author="netshot" dbms="h2" id="0.25.0_22">
+		<sql>CREATE ALIAS IF NOT EXISTS NET_CONTAINS FOR "net.netshot.netshot.database.H2NetworkFunctions.netContains"</sql>
 	</changeSet>
 </databaseChangeLog>

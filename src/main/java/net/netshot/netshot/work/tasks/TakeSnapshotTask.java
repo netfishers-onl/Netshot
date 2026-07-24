@@ -171,7 +171,7 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 	 */
 	public TakeSnapshotTask(Device device, String comments, String author, boolean automatic,
 		boolean dontRunDiagnostics, boolean dontCheckCompliance) {
-		super(comments, device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName(),
+		super(comments, device.getLastConfig() == null ? device.getMgmtAddress() : device.getName(),
 			author);
 		this.setDevice(device);
 		this.setAutomatic(automatic);
@@ -200,7 +200,7 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 			// Start over from a fresh device from DB
 			device = session.get(Device.class, device.getId());
 			this.logger.info("Snapshot task for device {} ({}).",
-				device.getName(), device.getMgmtAddress().getIp());
+				device.getName(), device.getMgmtAddress());
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				log.trace("Task {}. Device not INPRODUCTION, stopping the snapshot task.", this.getId());
 				this.logger.warn("The device is not enabled (not in production).");
@@ -317,10 +317,10 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		try {
 			log.trace("Retrieving the device.");
 			device = session.createQuery(
-				"select d from Device d where d.status = :inprod and d.mgmtAddress.address = :ip",
+				"select d from Device d where d.status = :inprod and d.cachedIpAddress = :ip",
 				Device.class)
 				.setParameter("inprod", Device.Status.INPRODUCTION)
-				.setParameter("ip", address.getAddress())
+				.setParameter("ip", address.getInetAddress())
 				.uniqueResult();
 			if (device == null && TakeSnapshotTask.SETTINGS.isAutoSnapshotAnyIp()) {
 				log.warn("No device with such management IP {} in the database. Looking for this address in the interface table.",

@@ -112,7 +112,7 @@ public class FakeDeviceFactory {
 		catch (UnknownHostException e) {
 			// Ignore
 		}
-		Device device = new Device("CiscoIOS12", mgmtIp, domain, "test");
+		Device device = new Device("CiscoIOS12", mgmtIp.getIp(), domain, "test");
 		device.setName(String.format("router%05d", shift));
 		device.setFamily("Unknown IOS device");
 		device.setNetworkClass(NetworkClass.ROUTER);

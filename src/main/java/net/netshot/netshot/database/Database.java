@@ -267,9 +267,6 @@ public final class Database {
 			if (getDriverClass().contains("postgresql")) {
 				serviceProperties.setProperty(AvailableSettings.DIALECT, "net.netshot.netshot.database.CustomPostgreSQLDialect");
 			}
-			else if (getDriverClass().contains("mysql")) {
-				serviceProperties.setProperty(AvailableSettings.DIALECT, "net.netshot.netshot.database.CustomMySQLDialect");
-			}
 			else if (getDriverClass().contains("h2")) {
 				serviceProperties.setProperty(AvailableSettings.DIALECT, "net.netshot.netshot.database.CustomH2Dialect");
 			}

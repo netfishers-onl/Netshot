@@ -86,7 +86,7 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 	 * @param dontCheckCompliance Do not check compliance after these diagnostics
 	 */
 	public RunDiagnosticsTask(Device device, String comments, String author, boolean dontCheckCompliance) {
-		super(comments, device.getLastConfig() == null ? device.getMgmtAddress().getIp() : device.getName(),
+		super(comments, device.getLastConfig() == null ? device.getMgmtAddress() : device.getName(),
 			author);
 		this.setDevice(device);
 		this.setDontCheckCompliance(dontCheckCompliance);
@@ -143,7 +143,7 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 			// Start over from a fresh device from DB
 			device = session.get(Device.class, device.getId());
 			this.logger.trace("Run diagnostic task for device {} ({}).",
-				device.getName(), device.getMgmtAddress().getIp());
+				device.getName(), device.getMgmtAddress());
 			if (device.getStatus() != Device.Status.INPRODUCTION) {
 				log.trace("Task {}. Device not INPRODUCTION, stopping the diagnostic task.", this.getId());
 				this.logger.warn("The device is not enabled (not in production).");

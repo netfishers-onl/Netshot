@@ -18,6 +18,8 @@
  */
 package net.netshot.netshot;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -109,7 +111,14 @@ public class DeviceListExtractor extends Netshot {
 					log.warn("No SNMP community found for device {}.", device.getName());
 				}
 				List<String> fields = new ArrayList<>();
-				fields.add(device.getMgmtAddress().getInetAddress().getHostAddress());		// Col. 1 = IP Address <<<
+				String ipAddress;
+				try {
+					ipAddress = InetAddress.getByName(device.getMgmtAddress()).getHostAddress();
+				}
+				catch (UnknownHostException e) {
+					ipAddress = device.getMgmtAddress();
+				}
+				fields.add(ipAddress);					// Col. 1 = IP Address <<<
 				fields.add(device.getName());			// Col. 2 = Host Name <<<
 				fields.add("");							// Col. 3 = Domain Name
 				fields.add("");							// Col. 4 = Device Identity

@@ -8,6 +8,7 @@ import { MUTATIONS } from "@/constants"
 import { useCustomDialog, useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { CredentialSetType, DeviceType } from "@/types"
+import validators from "@/utils/validators"
 import { Separator, Stack } from "@chakra-ui/react"
 import { useMutation } from "@tanstack/react-query"
 import { useEffect } from "react"
@@ -79,16 +80,11 @@ function DeviceCreateForm() {
       <DomainSelect required control={form.control} name="domain" />
       <FormControl
         required
-        label={t("device.interface.ipAddress")}
-        placeholder={t("device.ipAddress")}
+        label={t("device.mgmtAddress")}
+        placeholder={t("common.eG", { example: "10.216.5.3, 2001:db8::1, router1.example.com" })}
         control={form.control}
         name="ipAddress"
-        rules={{
-          pattern: {
-            value: /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
-            message: t("common.thisIsNotAValidIpAddress"),
-          },
-        }}
+        rules={validators.hostOrIp()}
       />
       <Separator />
       <Switch label={t("device.autodiscover")} description={t("device.automaticallyDiscoverType")} control={form.control} name="autoDiscover" />
@@ -102,15 +98,10 @@ function DeviceCreateForm() {
               <FormControl
                 required
                 label={t("device.connectIp")}
-                placeholder={t("common.eG", { example: "10.216.5.3" })}
+                placeholder={t("common.eG", { example: "10.216.5.3 or router1.example.com" })}
                 control={form.control}
                 name="connectIpAddress"
-                rules={{
-                  pattern: {
-                    value: /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
-                    message: t("common.thisIsNotAValidIpAddress"),
-                  },
-                }}
+                rules={validators.hostOrIp()}
               />
               <Stack direction="row" gap="4">
                 <FormControl label={t("network.sshPort")} placeholder={t("common.eG", { example: "22" })} control={form.control} name="sshPort" />

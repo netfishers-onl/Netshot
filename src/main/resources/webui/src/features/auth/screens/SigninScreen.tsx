@@ -2,7 +2,7 @@ import { Alert } from "@chakra-ui/react"
 import { Box, Heading, Spacer, Stack } from "@chakra-ui/react"
 import { Trans, useTranslation } from "react-i18next"
 
-import { Brand } from "@/components"
+import { Brand, LanguageMenu } from "@/components"
 import { useAuth } from "@/contexts"
 import { SigninForm } from "@/features/auth"
 
@@ -12,7 +12,10 @@ export function SigninScreen() {
 
   return (
     <Stack direction="row" gap="0" h="100vh">
-      <Stack justifyContent="center" alignItems="center" flex="1">
+      <Stack position="relative" justifyContent="center" alignItems="center" flex="1">
+        <Box position="absolute" top="6" right="6">
+          <LanguageMenu />
+        </Box>
         <Stack mx="auto" width="40%" gap="12">
           <Stack gap="6">
             <Stack gap="10">

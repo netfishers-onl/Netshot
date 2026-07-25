@@ -5,11 +5,12 @@ import { useTranslation } from "react-i18next"
 
 import api from "@/api"
 import { MeResult } from "@/api/user"
+import { LanguageMenuItems } from "@/components/LanguageMenu"
 import { QUERIES } from "@/constants"
 import { useAuth } from "@/contexts"
 import useToast from "@/hooks/useToast"
 
-import { useLanguageOptions, useUserLevelOptions } from "@/hooks"
+import { useUserLevelOptions } from "@/hooks"
 import { Icon } from "@chakra-ui/react"
 import { LuChevronDown, LuCloud, LuCircleHelp, LuInfo, LuLogOut, LuUser } from "react-icons/lu"
 import { AboutNetshotDialog } from "./AboutNetshotDialog"
@@ -17,11 +18,10 @@ import UserSettingTrigger from "./UserSettingTrigger"
 
 export default function NavbarUser() {
   const { user } = useAuth()
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const toast = useToast()
   const userLevelOptions = useUserLevelOptions()
-  const { options: languageOptions } = useLanguageOptions()
 
   const levelLabel = useMemo(
     () => (user ? userLevelOptions.getLabelByValue(user.level) : undefined),
@@ -115,18 +115,7 @@ export default function NavbarUser() {
             <Menu.Separator />
             <Menu.ItemGroup>
               <Menu.ItemGroupLabel>{t("common.language")}</Menu.ItemGroupLabel>
-              {languageOptions.map((option) => (
-                <Menu.CheckboxItem
-                  key={option.value}
-                  value={option.value}
-                  checked={i18n.language === option.value}
-                  onCheckedChange={() => i18n.changeLanguage(option.value)}
-                >
-                  <Menu.ItemIndicator />
-                  <Text fontSize="xl">{option.flag}</Text>
-                  {option.label}
-                </Menu.CheckboxItem>
-              ))}
+              <LanguageMenuItems />
             </Menu.ItemGroup>
             <Menu.Separator />
             <Menu.Item value="user-guide" asChild>

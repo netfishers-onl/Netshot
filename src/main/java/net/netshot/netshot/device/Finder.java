@@ -1512,26 +1512,21 @@ public class Finder {
 			if (this.sign == TokenType.IN) {
 				return
 					("net_contains(d.cachedIpAddress, :%s_cidr) or "
-						+ "(ip4.address >= :%s_0 and ip4.address < :%s_1)")
-					.formatted(itemPrefix, itemPrefix, itemPrefix);
+						+ "net_contains(ip4.address, :%s_cidr)")
+					.formatted(itemPrefix, itemPrefix);
 			}
 			else if (this.withMask) {
 				// A mgmt/cached address is a single host, never a subnet with a mask,
 				// so this only makes sense against configured interface addresses.
 				return
-					("ip4.address = :%s_0 and ip4.prefixLength = :%s_1")
+					("ip4.address = :%s_ip and ip4.prefixLength = :%s_1")
 					.formatted(itemPrefix, itemPrefix);
 			}
 			else if (this.sign == TokenType.CONTAINS) {
-				return
-					("i4.prefixLength = 0 or "
-						+ "(ip4.address < 0 and ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) - power(2, 32 - ip4.prefixLength) <= :%s_0 "
-						+ "and :%s_0 <= ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) - 1) or "
-						+ "(ip4.address >= 0 and ip4.address - mod(ip4.address, power(2, 32 - ip4.prefixLength)) <= :%s_0 "
-						+ "and :%s_0 <= ip4.address -mod(ip4.address, power(2, 32 - ip4.prefixLength)) + power(2, 32 - ip4.prefixLength) - 1)")
-					.formatted(itemPrefix, itemPrefix, itemPrefix, itemPrefix);
+				return "net_in_subnet(:%s_ip, ip4.address, ip4.prefixLength)"
+					.formatted(itemPrefix);
 			}
-			return "d.cachedIpAddress = :%s_ip or ip4.address = :%s_0"
+			return "d.cachedIpAddress = :%s_ip or ip4.address = :%s_ip"
 				.formatted(itemPrefix, itemPrefix);
 		}
 
@@ -1551,22 +1546,13 @@ public class Finder {
 		public void setVariables(MutationQuery query, String itemPrefix) {
 			super.setVariables(query, itemPrefix);
 			if (this.sign == TokenType.IN) {
-				int min = this.target.getSubnetMin();
-				int max = this.target.getSubnetMax();
-				if (this.target.getPrefixLength() == 0) {
-					max = (int) (0x7FFFFFFF);
-					min = (int) (0x80000000);
-				}
-				query.setParameter(itemPrefix + "_0", max > min ? min : max);
-				query.setParameter(itemPrefix + "_1", max > min ? max : min);
 				query.setParameter(itemPrefix + "_cidr", this.target.getPrefix());
 			}
 			else if (this.withMask) {
-				query.setParameter(itemPrefix + "_0", this.target.getIntAddress());
+				query.setParameter(itemPrefix + "_ip", this.target.getInetAddress());
 				query.setParameter(itemPrefix + "_1", this.target.getPrefixLength());
 			}
 			else {
-				query.setParameter(itemPrefix + "_0", this.target.getIntAddress());
 				query.setParameter(itemPrefix + "_ip", this.target.getInetAddress());
 			}
 		}
@@ -1648,25 +1634,19 @@ public class Finder {
 
 		private String buildWhere(String itemPrefix) {
 			if (this.sign == TokenType.IN) {
-				if (this.target.getPrefixLength() <= 64) {
-					return ("net_contains(d.cachedIpAddress, :%s_cidr) or "
-						+ "(ip6.address1 >= :%s_0 and ip6.address1 <= :%s_1)")
-						.formatted(itemPrefix, itemPrefix, itemPrefix);
-				}
-				else {
-					return ("net_contains(d.cachedIpAddress, :%s_cidr) or "
-						+ "(ip6.address2 >= :%s_0 and ip6.address2 <= :%s_1 and ip6.address1 = :%s_2)")
-						.formatted(itemPrefix, itemPrefix, itemPrefix, itemPrefix);
-				}
+				return
+					("net_contains(d.cachedIpAddress, :%s_cidr) or "
+						+ "net_contains(ip6.address, :%s_cidr)")
+					.formatted(itemPrefix, itemPrefix);
 			}
 			else if (this.withMask) {
 				// A mgmt/cached address is a single host, never a subnet with a mask,
 				// so this only makes sense against configured interface addresses.
-				return "ip6.address1 = :%s_0 and ip6.address2 = :%s_1 and ip6.prefixLength = :%s_2"
-					.formatted(itemPrefix, itemPrefix, itemPrefix);
+				return "ip6.address = :%s_ip and ip6.prefixLength = :%s_1"
+					.formatted(itemPrefix, itemPrefix);
 			}
-			return "d.cachedIpAddress = :%s_ip or (ip6.address1 = :%s_0 and ip6.address2 = :%s_1)"
-				.formatted(itemPrefix, itemPrefix, itemPrefix);
+			return "d.cachedIpAddress = :%s_ip or ip6.address = :%s_ip"
+				.formatted(itemPrefix, itemPrefix);
 		}
 
 		/*(non-Javadoc)
@@ -1686,32 +1666,12 @@ public class Finder {
 			super.setVariables(query, itemPrefix);
 			if (this.sign == TokenType.IN) {
 				query.setParameter(itemPrefix + "_cidr", this.target.getPrefix());
-				if (this.target.getPrefixLength() <= 64) {
-					long mask = 0xFFFFFFFFFFFFFFFFL << (64 - this.target
-						.getPrefixLength());
-					long min = this.target.getAddress1() & mask;
-					long max = this.target.getAddress1() | ~mask;
-					query.setParameter(itemPrefix + "_0", max > min ? min : max);
-					query.setParameter(itemPrefix + "_1", max > min ? max : min);
-				}
-				else {
-					long mask = 0xFFFFFFFFFFFFFFFFL << (128 - this.target
-						.getPrefixLength());
-					long min = this.target.getAddress1() & mask;
-					long max = this.target.getAddress1() | ~mask;
-					query.setParameter(itemPrefix + "_0", max > min ? min : max);
-					query.setParameter(itemPrefix + "_1", max > min ? max : min);
-					query.setParameter(itemPrefix + "_2", this.target.getAddress1());
-				}
 			}
 			else if (this.withMask) {
-				query.setParameter(itemPrefix + "_0", this.target.getAddress1());
-				query.setParameter(itemPrefix + "_1", this.target.getAddress2());
-				query.setParameter(itemPrefix + "_2", this.target.getPrefixLength());
+				query.setParameter(itemPrefix + "_ip", this.target.getInetAddress());
+				query.setParameter(itemPrefix + "_1", this.target.getPrefixLength());
 			}
 			else {
-				query.setParameter(itemPrefix + "_0", this.target.getAddress1());
-				query.setParameter(itemPrefix + "_1", this.target.getAddress2());
 				query.setParameter(itemPrefix + "_ip", this.target.getInetAddress());
 			}
 		}

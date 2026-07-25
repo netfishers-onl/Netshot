@@ -23,6 +23,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JacksonException;
@@ -40,7 +41,10 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import net.netshot.netshot.database.InetAddressUserType;
 import net.netshot.netshot.rest.RestViews.DefaultView;
+
+import org.hibernate.annotations.Type;
 
 /**
  * An IPv4 address.
@@ -169,8 +173,8 @@ public final class Network4Address extends NetworkAddress {
 	}
 
 
-	/** The address. */
-	private int address;
+	/** The address, stored as a native PostgreSQL "inet" column. */
+	private InetAddress address;
 
 	/** The prefix length. */
 	private int prefixLength;
@@ -184,7 +188,7 @@ public final class Network4Address extends NetworkAddress {
 
 	/**
 	 * Instantiates a new network4 address.
-	 * 
+	 *
 	 * @param address
 	 *          the address
 	 * @param prefixLength
@@ -194,7 +198,7 @@ public final class Network4Address extends NetworkAddress {
 	 */
 	public Network4Address(Inet4Address address, int prefixLength)
 		throws UnknownHostException {
-		this.address = inetAddressToInt(address);
+		this.address = address;
 		if (prefixLength < 0 || prefixLength > 32) {
 			throw new UnknownHostException("Invalid prefix length");
 		}
@@ -203,7 +207,7 @@ public final class Network4Address extends NetworkAddress {
 
 	/**
 	 * Instantiates a new network4 address.
-	 * 
+	 *
 	 * @param address
 	 *          the address
 	 * @throws UnknownHostException
@@ -215,7 +219,7 @@ public final class Network4Address extends NetworkAddress {
 
 	/**
 	 * Instantiates a new network4 address.
-	 * 
+	 *
 	 * @param address
 	 *          the address
 	 * @param prefixLength
@@ -225,7 +229,7 @@ public final class Network4Address extends NetworkAddress {
 	 */
 	public Network4Address(int address, int prefixLength)
 		throws UnknownHostException {
-		this.address = address;
+		this.address = Network4Address.intToInetAddress(address);
 		if (prefixLength < 0 || prefixLength > 32) {
 			throw new UnknownHostException("Invalid prefix length");
 		}
@@ -234,7 +238,7 @@ public final class Network4Address extends NetworkAddress {
 
 	/**
 	 * Instantiates a new network4 address.
-	 * 
+	 *
 	 * @param address
 	 *          the address
 	 * @param prefixLength
@@ -244,7 +248,7 @@ public final class Network4Address extends NetworkAddress {
 	 */
 	public Network4Address(String address, int prefixLength)
 		throws UnknownHostException {
-		this.address = Network4Address.ipToInt(address);
+		this.address = Network4Address.intToInetAddress(Network4Address.ipToInt(address));
 		if (prefixLength < 0 || prefixLength > 32) {
 			throw new UnknownHostException("Invalid prefix length");
 		}
@@ -253,7 +257,7 @@ public final class Network4Address extends NetworkAddress {
 
 	/**
 	 * Instantiates a new network4 address.
-	 * 
+	 *
 	 * @param address
 	 *          the address
 	 * @param mask
@@ -263,7 +267,7 @@ public final class Network4Address extends NetworkAddress {
 	 */
 	public Network4Address(String address, String mask)
 		throws UnknownHostException {
-		this.address = Network4Address.ipToInt(address);
+		this.address = Network4Address.intToInetAddress(Network4Address.ipToInt(address));
 		this.prefixLength = Network4Address.dottedMaskToPrefixLength(mask);
 	}
 
@@ -284,65 +288,61 @@ public final class Network4Address extends NetworkAddress {
 			return false;
 		}
 		Network4Address other = (Network4Address) obj;
-		return (address == other.address) && (prefixLength == other.prefixLength);
+		return Objects.equals(address, other.address) && (prefixLength == other.prefixLength);
 	}
 
 	/**
-	 * Gets the address.
-	 * 
+	 * Gets the address, mapped to a native "inet" column.
+	 *
 	 * @return the address
 	 */
-	public int getAddress() {
+	@Type(InetAddressUserType.class)
+	public InetAddress getAddress() {
 		return address;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see net.netshot.netshot.device.NetworkAddress#getInetAddress()
 	 */
 	@Transient
 	@Override
 	public InetAddress getInetAddress() {
-		try {
-			return Network4Address.intToInetAddress(this.address);
-		}
-		catch (UnknownHostException e) {
-		}
-		return null;
+		return this.address;
 	}
 
 	/**
 	 * Gets the int address.
-	 * 
+	 *
 	 * @return the int address
 	 */
 	@Transient
 	public int getIntAddress() {
-		return address;
+		return this.address == null ? 0 : Network4Address.inetAddressToInt((Inet4Address) this.address);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see net.netshot.netshot.device.NetworkAddress#getIP()
 	 */
 	@XmlAttribute
 	@Transient
 	@Override
 	public String getIp() {
-		return intToIP(this.address);
+		return intToIP(this.getIntAddress());
 	}
 
 	/**
 	 * Gets the prefix.
-	 * 
+	 *
 	 * @return the prefix
 	 */
 	@Transient
 	@Override
 	public String getPrefix() {
-		return intToIP(this.address) + "/" + prefixLength;
+		return intToIP(this.getIntAddress()) + "/" + prefixLength;
 	}
 
 	/**
@@ -365,24 +365,24 @@ public final class Network4Address extends NetworkAddress {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + address;
+		result = prime * result + Objects.hashCode(address);
 		result = prime * result + prefixLength;
 		return result;
 	}
 
 	/**
 	 * Checks if is broadcast (255.255.255.255).
-	 * 
+	 *
 	 * @return true, if is broadcast
 	 */
 	@Transient
 	public boolean isBroadcast() {
-		return this.address == 0xFFFFFFFF;
+		return this.getIntAddress() == 0xFFFFFFFF;
 	}
 
 	/**
 	 * Checks if is a directed broadcast address.
-	 * 
+	 *
 	 * @return true, if directed broadcast
 	 */
 	@Transient
@@ -390,27 +390,27 @@ public final class Network4Address extends NetworkAddress {
 		if (this.prefixLength > 30 || this.prefixLength == 0) {
 			return false;
 		}
-		return (this.address | Network4Address.prefixLengthToIntAddress(this.getPrefixLength())) == 0xFFFFFFFF;
+		return (this.getIntAddress() | Network4Address.prefixLengthToIntAddress(this.getPrefixLength())) == 0xFFFFFFFF;
 	}
 
 	/**
 	 * Checks if is loopback.
-	 * 
+	 *
 	 * @return true, if is loopback
 	 */
 	@Transient
 	public boolean isLoopback() {
-		return ((this.address >>> 24) & 255) == 127;
+		return ((this.getIntAddress() >>> 24) & 255) == 127;
 	}
 
 	/**
 	 * Checks if is multicast.
-	 * 
+	 *
 	 * @return true, if is multicast
 	 */
 	@Transient
 	public boolean isMulticast() {
-		return ((this.address >>> 28) & 0b1111) == 0b1110;
+		return ((this.getIntAddress() >>> 28) & 0b1111) == 0b1110;
 	}
 
 	/**
@@ -431,17 +431,32 @@ public final class Network4Address extends NetworkAddress {
 	 */
 	@Transient
 	public boolean isUndefined() {
-		return this.address == 0;
+		return this.address == null || this.getIntAddress() == 0;
 	}
 
 	/**
 	 * Sets the address.
-	 * 
+	 *
 	 * @param address
 	 *          the new address
 	 */
-	public void setAddress(int address) {
+	public void setAddress(InetAddress address) {
 		this.address = address;
+	}
+
+	/**
+	 * Sets the address from its 32-bit integer representation.
+	 *
+	 * @param intAddress
+	 *          the new address
+	 */
+	@Transient
+	public void setIntAddress(int intAddress) {
+		try {
+			this.address = Network4Address.intToInetAddress(intAddress);
+		}
+		catch (UnknownHostException e) {
+		}
 	}
 
 	/**
@@ -484,7 +499,7 @@ public final class Network4Address extends NetworkAddress {
 	 * @return true if the IP is contained within the current subnet
 	 */
 	public boolean contains(Network4Address otherAddress) {
-		return (this.address >>> (32 - this.prefixLength)) == (otherAddress
+		return (this.getIntAddress() >>> (32 - this.prefixLength)) == (otherAddress
 			.getIntAddress() >>> (32 - this.prefixLength));
 	}
 

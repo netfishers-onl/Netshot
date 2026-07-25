@@ -267,9 +267,6 @@ public final class Database {
 			if (getDriverClass().contains("postgresql")) {
 				serviceProperties.setProperty(AvailableSettings.DIALECT, "net.netshot.netshot.database.CustomPostgreSQLDialect");
 			}
-			else if (getDriverClass().contains("h2")) {
-				serviceProperties.setProperty(AvailableSettings.DIALECT, "net.netshot.netshot.database.CustomH2Dialect");
-			}
 			serviceRegistry = new StandardServiceRegistryBuilder().applySettings(serviceProperties).build();
 
 			MetadataSources sources = new MetadataSources(serviceRegistry)
@@ -328,7 +325,7 @@ public final class Database {
 				.addAnnotatedClass(WebHook.class)
 				.addAnnotatedClass(HookTrigger.class);
 			for (Class<?> clazz : Task.getTaskClasses()) {
-				log.info("Registering task class " + clazz.getName());
+				log.debug("Registering task class " + clazz.getName());
 				sources.addAnnotatedClass(clazz);
 			}
 			for (Class<?> clazz : Rule.getRuleClasses()) {

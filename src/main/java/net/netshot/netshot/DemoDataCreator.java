@@ -135,7 +135,7 @@ public class DemoDataCreator {
 		Network4Address mgmtIp = null;
 		try {
 			mgmtIp = new Network4Address("172.16.0.0");
-			mgmtIp.setAddress(mgmtIp.getAddress() + shift);
+			mgmtIp.setIntAddress(mgmtIp.getIntAddress() + shift);
 		}
 		catch (UnknownHostException e) {
 			// Ignore
@@ -162,7 +162,7 @@ public class DemoDataCreator {
 			NetworkInterface ni = new NetworkInterface(device, "GigabitEthernet0/0", "", "VRF1", true, true, "Desc for interface 0/0");
 			try {
 				Network4Address na1 = new Network4Address("10.0.0.1", 25);
-				na1.setAddress(na1.getAddress() + (shift << 8));
+				na1.setIntAddress(na1.getIntAddress() + (shift << 8));
 				ni.addIpAddress(na1);
 				Network6Address na2 = new Network6Address(
 					String.format("2016:1:%x:1::1", shift), 64);
@@ -176,7 +176,7 @@ public class DemoDataCreator {
 			NetworkInterface ni = new NetworkInterface(device, "GigabitEthernet0/1", "", "VRF2", false, true, "Desc for interface 0/1");
 			try {
 				Network4Address na1 = new Network4Address("10.0.0.129", 25);
-				na1.setAddress(na1.getAddress() + (shift << 8));
+				na1.setIntAddress(na1.getIntAddress() + (shift << 8));
 				ni.addIpAddress(na1);
 				Network6Address na2 = new Network6Address(
 					String.format("2016:1:%x:2::1", shift), 64);
@@ -343,7 +343,7 @@ public class DemoDataCreator {
 		Network4Address mgmtIp = null;
 		try {
 			mgmtIp = new Network4Address("172.17.0.0");
-			mgmtIp.setAddress(mgmtIp.getAddress() + shift);
+			mgmtIp.setIntAddress(mgmtIp.getIntAddress() + shift);
 		}
 		catch (UnknownHostException e) {
 			// Ignore
@@ -369,7 +369,7 @@ public class DemoDataCreator {
 			NetworkInterface ni = new NetworkInterface(device, "ge-0/0/0", "", "VRF1", true, true, "WAN interface");
 			try {
 				Network4Address na1 = new Network4Address("10.1.0.1", 24);
-				na1.setAddress(na1.getAddress() + (shift << 8));
+				na1.setIntAddress(na1.getIntAddress() + (shift << 8));
 				ni.addIpAddress(na1);
 				Network6Address na2 = new Network6Address(
 					String.format("2017:1:%x:1::1", shift), 64);
@@ -383,7 +383,7 @@ public class DemoDataCreator {
 			NetworkInterface ni = new NetworkInterface(device, "ge-0/0/1", "", "VRF2", true, true, "LAN interface");
 			try {
 				Network4Address na1 = new Network4Address("10.1.1.1", 24);
-				na1.setAddress(na1.getAddress() + (shift << 8));
+				na1.setIntAddress(na1.getIntAddress() + (shift << 8));
 				ni.addIpAddress(na1);
 				Network6Address na2 = new Network6Address(
 					String.format("2017:1:%x:2::1", shift), 64);
@@ -487,7 +487,7 @@ public class DemoDataCreator {
 		Network4Address mgmtIp = null;
 		try {
 			mgmtIp = new Network4Address("172.18.0.0");
-			mgmtIp.setAddress(mgmtIp.getAddress() + shift);
+			mgmtIp.setIntAddress(mgmtIp.getIntAddress() + shift);
 		}
 		catch (UnknownHostException e) {
 			// Ignore
@@ -513,7 +513,7 @@ public class DemoDataCreator {
 			NetworkInterface ni = new NetworkInterface(device, "port1", "", "VRF1", true, true, "WAN port");
 			try {
 				Network4Address na1 = new Network4Address("10.2.0.1", 24);
-				na1.setAddress(na1.getAddress() + (shift << 8));
+				na1.setIntAddress(na1.getIntAddress() + (shift << 8));
 				ni.addIpAddress(na1);
 				Network6Address na2 = new Network6Address(
 					String.format("2018:1:%x:1::1", shift), 64);
@@ -527,7 +527,7 @@ public class DemoDataCreator {
 			NetworkInterface ni = new NetworkInterface(device, "port2", "", "VRF2", true, true, "LAN port");
 			try {
 				Network4Address na1 = new Network4Address("10.2.1.1", 24);
-				na1.setAddress(na1.getAddress() + (shift << 8));
+				na1.setIntAddress(na1.getIntAddress() + (shift << 8));
 				ni.addIpAddress(na1);
 				Network6Address na2 = new Network6Address(
 					String.format("2018:1:%x:2::1", shift), 64);

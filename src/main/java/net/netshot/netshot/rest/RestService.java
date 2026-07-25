@@ -2881,6 +2881,7 @@ public class RestService extends Thread {
 	 * @param types = the task type(s) to include
 	 * @param startDate = the start date
 	 * @param endDate = the end date
+	 * @param parentTaskId = the parent task ID
 	 * @return the tasks
 	 */
 	@GET

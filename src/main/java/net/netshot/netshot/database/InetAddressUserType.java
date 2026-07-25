@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2025 Netshot
- *
+ * 
  * This file is part of Netshot project.
- *
+ * 
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -28,16 +28,15 @@ import java.sql.Types;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 import org.postgresql.util.PGobject;
 
 /**
  * Custom Hibernate type mapping a {@link InetAddress} (IPv4 or IPv6) to a
- * native "inet" column on PostgreSQL, or to a binary column on H2 (used in
- * tests). No schema DDL is generated from this type (Liquibase owns the
- * schema); it only controls how Hibernate binds/extracts the JDBC value.
+ * native PostgreSQL "inet" column. No schema DDL is generated from this type
+ * (Liquibase owns the schema); it only controls how Hibernate binds/extracts
+ * the JDBC value.
  */
 public class InetAddressUserType implements UserType<InetAddress> {
 
@@ -61,57 +60,32 @@ public class InetAddressUserType implements UserType<InetAddress> {
 		return x == null ? 0 : x.hashCode();
 	}
 
-	private boolean isPostgreSql(SharedSessionContractImplementor session) {
-		Dialect dialect = session.getJdbcServices().getDialect();
-		return dialect instanceof CustomPostgreSQLDialect;
-	}
-
 	@Override
 	public InetAddress nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner)
 			throws SQLException {
-		if (this.isPostgreSql(session)) {
-			String text = rs.getString(position);
-			if (rs.wasNull() || text == null) {
-				return null;
-			}
-			try {
-				return InetAddress.getByName(text);
-			}
-			catch (UnknownHostException e) {
-				throw new HibernateException("Unable to parse cached IP address '%s'.".formatted(text), e);
-			}
+		String text = rs.getString(position);
+		if (rs.wasNull() || text == null) {
+			return null;
 		}
-		else {
-			byte[] bytes = rs.getBytes(position);
-			if (rs.wasNull() || bytes == null) {
-				return null;
-			}
-			try {
-				return InetAddress.getByAddress(bytes);
-			}
-			catch (UnknownHostException e) {
-				throw new HibernateException("Unable to parse cached IP address bytes.", e);
-			}
+		try {
+			return InetAddress.getByName(text);
+		}
+		catch (UnknownHostException e) {
+			throw new HibernateException("Unable to parse cached IP address '%s'.".formatted(text), e);
 		}
 	}
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, InetAddress value, int index, SharedSessionContractImplementor session)
 			throws SQLException {
-		final boolean postgreSql = this.isPostgreSql(session);
 		if (value == null) {
-			st.setNull(index, postgreSql ? Types.OTHER : Types.VARBINARY);
+			st.setNull(index, Types.OTHER);
 			return;
 		}
-		if (postgreSql) {
-			PGobject pgObject = new PGobject();
-			pgObject.setType("inet");
-			pgObject.setValue(value.getHostAddress());
-			st.setObject(index, pgObject);
-		}
-		else {
-			st.setBytes(index, value.getAddress());
-		}
+		PGobject pgObject = new PGobject();
+		pgObject.setType("inet");
+		pgObject.setValue(value.getHostAddress());
+		st.setObject(index, pgObject);
 	}
 
 	@Override

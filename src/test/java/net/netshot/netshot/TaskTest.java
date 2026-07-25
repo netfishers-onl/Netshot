@@ -49,7 +49,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.parallel.ResourceLock;
 
-public class TaskTest {
+public class TaskTest extends WithDatabaseTest {
 
 	@BeforeAll
 	static void initNetshot() {
@@ -269,13 +269,9 @@ public class TaskTest {
 
 		@BeforeAll
 		void initDb() throws Exception {
-			Properties config = new Properties();
+			Properties config = getDatabaseConfig("tasktest");
 			config.setProperty("netshot.log.file", "CONSOLE");
 			config.setProperty("netshot.log.level", "WARN");
-			config.setProperty("netshot.db.driver_class", "org.h2.Driver");
-			config.setProperty("netshot.db.url",
-				"jdbc:h2:mem:tasktest;TRACE_LEVEL_SYSTEM_OUT=0;"
-					+ "CASE_INSENSITIVE_IDENTIFIERS=true;DB_CLOSE_DELAY=-1");
 			Netshot.initConfig(config);
 			Database.update();
 			Database.init();
@@ -575,13 +571,9 @@ public class TaskTest {
 
 		@BeforeAll
 		void initDb() throws Exception {
-			Properties config = new Properties();
+			Properties config = getDatabaseConfig("tasktest_orphan");
 			config.setProperty("netshot.log.file", "CONSOLE");
 			config.setProperty("netshot.log.level", "WARN");
-			config.setProperty("netshot.db.driver_class", "org.h2.Driver");
-			config.setProperty("netshot.db.url",
-				"jdbc:h2:mem:tasktest_orphan;TRACE_LEVEL_SYSTEM_OUT=0;"
-					+ "CASE_INSENSITIVE_IDENTIFIERS=true;DB_CLOSE_DELAY=-1");
 			Netshot.initConfig(config);
 			Database.update();
 			Database.init();

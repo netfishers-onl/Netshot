@@ -506,16 +506,12 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	private Engine engine;
 
 	/** Driver-specific SSH config. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
+	@Getter
 	@Setter
 	private SshConfig sshConfig;
 
 	/** Driver-specific Telnet config. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
+	@Getter
 	@Setter
 	private TelnetConfig telnetConfig;
 

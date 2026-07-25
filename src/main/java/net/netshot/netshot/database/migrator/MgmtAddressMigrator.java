@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2025 Netshot
- *
+ * 
  * This file is part of Netshot project.
- *
+ * 
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -89,6 +89,14 @@ public class MgmtAddressMigrator implements CustomSqlChange {
 	/**
 	 * Reads every non-null value of the legacy int column and queues an update
 	 * converting it to its dotted-quad string form in the new column.
+	 *
+	 * @param connection the JDBC connection to read from
+	 * @param database the target database
+	 * @param statements the list of statements to append the generated updates to
+	 * @param tableName the table to migrate
+	 * @param idColumn the primary key column of the table
+	 * @param intColumn the legacy 32-bit-int address column to read
+	 * @param stringColumn the new string address column to write
 	 */
 	private void migrateAddressColumn(JdbcConnection connection, Database database,
 			List<SqlStatement> statements, String tableName, String idColumn,

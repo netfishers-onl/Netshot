@@ -55,6 +55,12 @@ public final class RunDeviceGroupScriptTask extends Task
 
 	/**
 	 * Instantiates a new run device group script task, targeting a real device group.
+	 *
+	 * @param group the device group to target
+	 * @param script the script to run
+	 * @param driver the device driver the script applies to
+	 * @param comments the task comments
+	 * @param author the task author
 	 */
 	public RunDeviceGroupScriptTask(DeviceGroup group, String script, DeviceDriver driver,
 		String comments, String author) {
@@ -66,6 +72,12 @@ public final class RunDeviceGroupScriptTask extends Task
 
 	/**
 	 * Instantiates a new run device group script task, targeting a one-time device list.
+	 *
+	 * @param devices the devices to target
+	 * @param script the script to run
+	 * @param driver the device driver the script applies to
+	 * @param comments the task comments
+	 * @param author the task author
 	 */
 	public RunDeviceGroupScriptTask(List<Device> devices, String script, DeviceDriver driver,
 		String comments, String author) {

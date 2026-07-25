@@ -40,5 +40,14 @@ public class CustomPostgreSQLDialect extends PostgreSQLDialect {
 			"net_contains",
 			"?1 <<= ?2::inet",
 			basicTypeRegistry.resolve(StandardBasicTypes.BOOLEAN));
+
+		// Whether the subnet defined by a stored (address, prefix length) pair
+		// contains the given target address; unlike net_contains, the subnet's
+		// prefix length is not embedded in the stored "inet" value itself (it
+		// is a separate sibling column), so the CIDR has to be rebuilt in SQL.
+		functionContributions.getFunctionRegistry().registerPattern(
+			"net_in_subnet",
+			"?1 <<= (host(?2) || '/' || ?3)::inet",
+			basicTypeRegistry.resolve(StandardBasicTypes.BOOLEAN));
 	}
 }

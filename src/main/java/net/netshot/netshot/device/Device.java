@@ -346,6 +346,8 @@ public class Device {
 	/**
 	 * String view of {@link #cachedIpAddress}, exposed on the full device REST
 	 * representation only (not on the lightweight device list DTO).
+	 *
+	 * @return the cached IP address as a string, or null if not set
 	 */
 	@Transient
 	@XmlElement(name = "cachedIpAddress")

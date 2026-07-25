@@ -59,7 +59,7 @@ jobs:
         run: docker run --rm builder ./mvnw checkstyle:check
 
       - name: Run the tests
-        run: docker run --rm builder ./mvnw test
+        run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock builder ./mvnw test
 
       - name: Build and push the image
         uses: docker/build-push-action@v6

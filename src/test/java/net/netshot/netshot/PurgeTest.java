@@ -24,7 +24,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
 
-public class PurgeTest {
+public class PurgeTest extends WithDatabaseTest {
 	static final int DEVICES = 10;
 	static final int CONFIGS_PER_DAY = 4;
 	static final int DAYS = 30;
@@ -33,13 +33,9 @@ public class PurgeTest {
 	static final int DEVICES_WITH_BIG_CONFIG = 2;
 
 	protected static Properties getNetshotConfig() {
-		Properties config = new Properties();
+		Properties config = getDatabaseConfig("purgetest");
 		config.setProperty("netshot.log.file", "CONSOLE");
 		config.setProperty("netshot.log.level", "INFO");
-		config.setProperty("netshot.db.driver_class", "org.h2.Driver");
-		config.setProperty("netshot.db.url",
-			"jdbc:h2:mem:purgetest;TRACE_LEVEL_SYSTEM_OUT=2;"
-				+ "CASE_INSENSITIVE_IDENTIFIERS=true;DB_CLOSE_DELAY=-1");
 		return config;
 	}
 

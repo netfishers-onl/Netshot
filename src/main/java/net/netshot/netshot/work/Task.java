@@ -631,8 +631,8 @@ public abstract class Task implements Cloneable {
 		this.deviceListMembers.clear();
 		if (devices != null) {
 			int position = 0;
-			for (Device device : devices) {
-				this.deviceListMembers.add(new TaskDeviceListMember(this, device, position));
+			for (Device listDevice : devices) {
+				this.deviceListMembers.add(new TaskDeviceListMember(this, listDevice, position));
 				position++;
 			}
 		}
@@ -982,15 +982,15 @@ public abstract class Task implements Cloneable {
 						.setParameter("ids", pending.keySet())
 						.list();
 					for (Object[] row : rows) {
-						Status status = (Status) row[1];
-						if (isTerminalStatus(status)) {
-							Long id = (Long) row[0];
-							Task child = pending.remove(id);
-							if (status == Status.FAILURE) {
+						Status childStatus = (Status) row[1];
+						if (isTerminalStatus(childStatus)) {
+							Long childId = (Long) row[0];
+							Task child = pending.remove(childId);
+							if (childStatus == Status.FAILURE) {
 								failed++;
-								this.logger.warn("Child task {} for {} failed.", id, describeChildDevice(child));
+								this.logger.warn("Child task {} for {} failed.", childId, describeChildDevice(child));
 							}
-							else if (status == Status.SUCCESS) {
+							else if (childStatus == Status.SUCCESS) {
 								succeeded++;
 							}
 						}
@@ -1036,12 +1036,12 @@ public abstract class Task implements Cloneable {
 					}
 					continue;
 				}
-				boolean cancelRequested = this.isCancelRequestedFresh();
+				boolean cancellationRequested = this.isCancelRequestedFresh();
 				SequentialScheduling.NextAction next =
-					SequentialScheduling.decideNextAction(anyFailed, this.isStopOnFailure(), cancelRequested);
+					SequentialScheduling.decideNextAction(anyFailed, this.isStopOnFailure(), cancellationRequested);
 				if (next == SequentialScheduling.NextAction.STOP) {
-					cancelHonored = cancelHonored || cancelRequested;
-					if (cancelRequested) {
+					cancelHonored = cancelHonored || cancellationRequested;
+					if (cancellationRequested) {
 						this.logger.info("Cancellation requested: stopping sequential scheduling at device {}/{}.",
 							i + 1, children.size());
 					}

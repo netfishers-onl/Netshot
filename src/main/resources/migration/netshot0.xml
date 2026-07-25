@@ -7,14 +7,10 @@
 			http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.31.xsd
 			http://www.liquibase.org/xml/ns/dbchangelog-ext
 			http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
-	<property name="BOOLEAN" value="BOOLEAN" dbms="postgresql"/>
-	<property name="BOOLEAN" value="BIT(1)"/>
-	<property name="JSON" value="JSONB" dbms="postgresql"/>
-	<property name="JSON" value="JSON"/>
-	<property name="NOW" value="now()" dbms="h2"/>
-	<property name="NOW" value="current_timestamp" dbms="postgresql"/>
-	<property name="INETTYPE" value="inet" dbms="postgresql"/>
-	<property name="INETTYPE" value="varbinary(16)" dbms="h2"/>
+	<property name="BOOLEAN" value="BOOLEAN"/>
+	<property name="JSON" value="JSONB"/>
+	<property name="NOW" value="current_timestamp"/>
+	<property name="INETTYPE" value="inet"/>
 <!-- netshot_0_5_2.xml -->
 	<changeSet author="netshot (generated)" id="0.5.2_1">
 		<validCheckSum>8:1534a0df4e73e7c5877f8f03c0ffde51</validCheckSum>
@@ -1390,16 +1386,13 @@
 			<column name="custom_hash" type="VARCHAR(255)"/>
 		</addColumn>
 	</changeSet>
-	<changeSet author="netshot" dbms="postgresql" id="0.21.0_3a">
+	<changeSet author="netshot" id="0.21.0_3a">
 		<dropUniqueConstraint constraintName="device_ipv4_address_key" tableName="device"/>
-	</changeSet>
-	<changeSet author="netshot" dbms="h2" id="0.21.0_3b">
-		<dropUniqueConstraint constraintName="CONSTRAINT_7" tableName="device"/>
 	</changeSet>
 	<changeSet author="netshot" id="0.21.0_4">
 		<dropUniqueConstraint constraintName="UK_d884xdfb8fkx9hgptyjds2ebs" tableName="device"/>
 	</changeSet>
-	<changeSet author="netshot" dbms="postgresql" id="0.21.0_5">
+	<changeSet author="netshot" id="0.21.0_5">
 		<createIndex indexName="UK_88j8woberkhc2jxjx2hfddv4a" tableName="device" unique="true">
 			<column name="ipv4_address"/>
 		</createIndex>
@@ -1448,11 +1441,8 @@
 		<addUniqueConstraint tableName="device_js_script" columnNames="name, folder"
 			constraintName="uk_3v8g3v62xfi1lp16ol3tg1ykg"/>
 	</changeSet>
-	<changeSet author="netshot" dbms="postgresql" id="0.25.0_2a">
+	<changeSet author="netshot" id="0.25.0_2a">
 		<dropUniqueConstraint tableName="device_js_script" constraintName="device_js_script_name_key"/>
-	</changeSet>
-	<changeSet author="netshot" dbms="h2" id="0.25.0_2b">
-		<dropUniqueConstraint tableName="device_js_script" constraintName="CONSTRAINT_8"/>
 	</changeSet>
 	<changeSet author="netshot" id="0.25.0_3">
 		<addColumn tableName="run_device_script_task">
@@ -1696,9 +1686,8 @@
 	</changeSet>
 	<!-- Device management/connect address becomes a plain string (IPv4, IPv6 or FQDN),
 	     resolved lazily at connect time; a new cached_ip_address column keeps the last
-	     resolved IP around for fast search/dedup/passive-match. MySQL support is dropped
-	     at the same time, so cached_ip_address only needs to account for PostgreSQL
-	     (native "inet" column) and H2 (binary column, used in tests). -->
+	     resolved IP around for fast search/dedup/passive-match, stored as a native
+	     PostgreSQL "inet" column. -->
 	<changeSet author="netshot" id="0.25.0_16">
 		<addColumn tableName="device">
 			<column name="mgmt_address" type="VARCHAR(255)"/>
@@ -1714,7 +1703,7 @@
 	<changeSet author="netshot" id="0.25.0_18">
 		<customChange class="net.netshot.netshot.database.migrator.MgmtAddressMigrator"/>
 	</changeSet>
-	<changeSet author="netshot" dbms="postgresql" id="0.25.0_19">
+	<changeSet author="netshot" id="0.25.0_19">
 		<dropIndex indexName="UK_88j8woberkhc2jxjx2hfddv4a" tableName="device"/>
 	</changeSet>
 	<changeSet author="netshot" id="0.25.0_20">
@@ -1734,7 +1723,57 @@
 			<column name="ipv4_usage"/>
 		</dropColumn>
 	</changeSet>
-	<changeSet author="netshot" dbms="h2" id="0.25.0_22">
-		<sql>CREATE ALIAS IF NOT EXISTS NET_CONTAINS FOR "net.netshot.netshot.database.H2NetworkFunctions.netContains"</sql>
+	<!-- Interface IPv4/IPv6 addresses, domain server addresses and subnet-scan
+	     targets move from raw int/bigint columns to native "inet" columns,
+	     mirroring what was already done for device.cached_ip_address. -->
+	<changeSet author="netshot" id="0.25.0_23">
+		<addColumn tableName="network_interface_ip4addresses">
+			<column name="address_inet" type="${INETTYPE}"/>
+		</addColumn>
+		<addColumn tableName="network_interface_ip6addresses">
+			<column name="address_inet" type="${INETTYPE}"/>
+		</addColumn>
+		<addColumn tableName="domain">
+			<column name="ipv4_address_inet" type="${INETTYPE}"/>
+			<column name="ipv6_address_inet" type="${INETTYPE}"/>
+		</addColumn>
+		<addColumn tableName="scan_subnets_task_subnets">
+			<column name="ipv4address_inet" type="${INETTYPE}"/>
+		</addColumn>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_24">
+		<customChange class="net.netshot.netshot.database.migrator.NetworkAddressMigrator"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_25">
+		<dropPrimaryKey tableName="network_interface_ip4addresses"/>
+		<dropPrimaryKey tableName="network_interface_ip6addresses"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_26">
+		<dropColumn tableName="network_interface_ip4addresses">
+			<column name="address"/>
+		</dropColumn>
+		<dropColumn tableName="network_interface_ip6addresses">
+			<column name="address1"/>
+			<column name="address2"/>
+		</dropColumn>
+		<dropColumn tableName="domain">
+			<column name="ipv4_address"/>
+			<column name="ipv6_address1"/>
+			<column name="ipv6_address2"/>
+		</dropColumn>
+		<dropColumn tableName="scan_subnets_task_subnets">
+			<column name="ipv4address"/>
+		</dropColumn>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_27">
+		<renameColumn tableName="network_interface_ip4addresses" oldColumnName="address_inet" newColumnName="address" columnDataType="${INETTYPE}"/>
+		<renameColumn tableName="network_interface_ip6addresses" oldColumnName="address_inet" newColumnName="address" columnDataType="${INETTYPE}"/>
+		<renameColumn tableName="domain" oldColumnName="ipv4_address_inet" newColumnName="ipv4_address" columnDataType="${INETTYPE}"/>
+		<renameColumn tableName="domain" oldColumnName="ipv6_address_inet" newColumnName="ipv6_address" columnDataType="${INETTYPE}"/>
+		<renameColumn tableName="scan_subnets_task_subnets" oldColumnName="ipv4address_inet" newColumnName="ipv4address" columnDataType="${INETTYPE}"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_28">
+		<addPrimaryKey tableName="network_interface_ip4addresses" columnNames="network_interface, address, prefix_length"/>
+		<addPrimaryKey tableName="network_interface_ip6addresses" columnNames="network_interface, address, prefix_length"/>
 	</changeSet>
 </databaseChangeLog>

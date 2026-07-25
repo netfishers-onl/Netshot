@@ -20,6 +20,7 @@
 		<netty.version>4.2.15.Final</netty.version>
 		<checkstyle.version>13.5.0</checkstyle.version>
 		<bouncycastle.version>1.84</bouncycastle.version>
+		<testcontainers.version>2.0.5</testcontainers.version>
 	</properties>
 	<build>
 		<finalName>netshot</finalName>
@@ -117,7 +118,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.22.2</version>
+				<version>3.5.4</version>
 			</plugin>
 			<plugin>
 				<groupId>org.owasp</groupId>
@@ -204,11 +205,6 @@
 			<groupId>com.mchange</groupId>
 			<artifactId>c3p0</artifactId>
 			<version>${c3p0.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<version>2.4.240</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-net</groupId>
@@ -470,6 +466,24 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers</artifactId>
+			<version>${testcontainers.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
+			<version>${testcontainers.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-postgresql</artifactId>
+			<version>${testcontainers.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>com.github.markusju</groupId>
 			<artifactId>TACACS</artifactId>
 			<version>31ad30d66bf84522fd03affd96f39af8b98be172</version>
@@ -518,20 +532,6 @@
 		</dependency>
 	</dependencies>
 	<repositories>
-		<repository>
-			<id>jersey-repository</id>
-			<name>Jersey Repository</name>
-			<url>https://maven.java.net/content/repositories/releases/</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</repository>
 		<repository>
 			<id>jcenter</id>
 			<name>JCenter Repository</name>

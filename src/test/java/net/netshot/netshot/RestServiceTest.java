@@ -77,7 +77,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.parallel.ResourceLock;
 
-public class RestServiceTest {
+public class RestServiceTest extends WithDatabaseTest {
 
 	private static final String apiUrl = "http://localhost:8888/api";
 	private static final long UNKNOWN_ID = 99999999;
@@ -107,13 +107,9 @@ public class RestServiceTest {
 	}
 
 	protected static Properties getNetshotConfig() {
-		Properties config = new Properties();
+		Properties config = getDatabaseConfig("restservicetest");
 		config.setProperty("netshot.log.file", "CONSOLE");
 		config.setProperty("netshot.log.level", "INFO");
-		config.setProperty("netshot.db.driver_class", "org.h2.Driver");
-		config.setProperty("netshot.db.url",
-			"jdbc:h2:mem:restservicetest;TRACE_LEVEL_SYSTEM_OUT=2;"
-				+ "CASE_INSENSITIVE_IDENTIFIERS=true;DB_CLOSE_DELAY=-1");
 		config.setProperty("netshot.http.ssl.enabled", "false");
 		URI uri = UriBuilder.fromUri(apiUrl).replacePath("/").build();
 		config.setProperty("netshot.http.baseurl", uri.toString());
@@ -124,7 +120,7 @@ public class RestServiceTest {
 
 	@BeforeAll
 	protected static void initNetshot() throws Exception {
-		Netshot.initConfig(RestServiceTest.getNetshotConfig());
+		Netshot.initConfig(getNetshotConfig());
 		Netshot.loadModuleConfigs();
 		Database.update();
 		Database.init();
@@ -357,7 +353,7 @@ public class RestServiceTest {
 		@DisplayName("Expired password authentication attempt")
 		@ResourceLock("DB")
 		void expiredPasswordFailAuth() throws IOException, InterruptedException {
-			Properties config = RestServiceTest.getNetshotConfig();
+			Properties config = getNetshotConfig();
 			config.setProperty("netshot.aaa.passwordpolicy.maxduration", "90");
 			Netshot.initConfig(config);
 			PasswordPolicy.loadConfig();
@@ -376,7 +372,7 @@ public class RestServiceTest {
 		@DisplayName("Expired password, change and authentication attempt")
 		@ResourceLock("DB")
 		void expiredPasswordChangeAuth() throws IOException, InterruptedException {
-			Properties config = RestServiceTest.getNetshotConfig();
+			Properties config = getNetshotConfig();
 			config.setProperty("netshot.aaa.passwordpolicy.maxduration", "90");
 			Netshot.initConfig(config);
 			PasswordPolicy.loadConfig();
@@ -422,7 +418,7 @@ public class RestServiceTest {
 		@DisplayName("Password policy")
 		@ResourceLock("DB")
 		void passwordChangeWithPolicy() throws IOException, InterruptedException {
-			Properties config = RestServiceTest.getNetshotConfig();
+			Properties config = getNetshotConfig();
 			config.setProperty("netshot.aaa.passwordpolicy.maxhistory", "5");
 			Netshot.initConfig(config);
 			PasswordPolicy.loadConfig();
@@ -584,7 +580,7 @@ public class RestServiceTest {
 			this.idpServer = new FakeOidcIdpServer();
 			this.idpServer.registerClient(clientId, clientSecret, redirectUri);
 			this.idpServer.start();
-			Properties config = RestServiceTest.getNetshotConfig();
+			Properties config = getNetshotConfig();
 			config.setProperty("netshot.aaa.oidc.idp.url", this.idpServer.getBaseUri().toString());
 			config.setProperty("netshot.aaa.oidc.clientid", clientId);
 			config.setProperty("netshot.aaa.oidc.clientsecret", clientSecret);
@@ -1348,18 +1344,12 @@ public class RestServiceTest {
 			for (String mode : testDriver.getCliMainModes()) {
 				targetData.withArray("cliMainModes").add(mode);
 			}
-			targetData.put("sourceHash", testDriver.getSourceHash())
-				.set("location", JsonNodeFactory.instance.objectNode()
-					.put("type", testDriver.getLocation().getType().toString())
-					.put("fileName", testDriver.getLocation().getFileName()));
-			if (testDriver.getSshConfig() != null) {
-				targetData.set("sshConfig", JsonNodeFactory.instance.objectNode());
-			}
-			if (testDriver.getTelnetConfig() != null) {
-				targetData.set("telnetConfig",
+			targetData
+				.put("sourceHash", testDriver.getSourceHash())
+				.set("location",
 					JsonNodeFactory.instance.objectNode()
-						.put("terminalType", testDriver.getTelnetConfig().getTerminalType()));
-			}
+						.put("type", testDriver.getLocation().getType().toString())
+						.put("fileName", testDriver.getLocation().getFileName()));
 			Assertions.assertEquals(targetData, testDriverNode,
 				"Retrieved device type doesn't match expected object");
 		}

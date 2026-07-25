@@ -107,7 +107,7 @@ public class FakeDeviceFactory {
 		Network4Address mgmtIp = null;
 		try {
 			mgmtIp = new Network4Address("172.16.0.0");
-			mgmtIp.setAddress(mgmtIp.getAddress() + shift);
+			mgmtIp.setIntAddress(mgmtIp.getIntAddress() + shift);
 		}
 		catch (UnknownHostException e) {
 			// Ignore
@@ -134,7 +134,7 @@ public class FakeDeviceFactory {
 			NetworkInterface ni = new NetworkInterface(device, "GigabitEthernet0/0", "", "VRF1", true, true, "Desc for interface 0/0");
 			try {
 				Network4Address na1 = new Network4Address("10.0.0.1", 25);
-				na1.setAddress(na1.getAddress() + (shift << 8));
+				na1.setIntAddress(na1.getIntAddress() + (shift << 8));
 				ni.addIpAddress(na1);
 				Network6Address na2 = new Network6Address(
 					String.format("2016:1:%x:1::1", shift), 64);
@@ -148,7 +148,7 @@ public class FakeDeviceFactory {
 			NetworkInterface ni = new NetworkInterface(device, "GigabitEthernet0/1", "", "VRF2", false, true, "Desc for interface 0/1");
 			try {
 				Network4Address na1 = new Network4Address("10.0.0.129", 25);
-				na1.setAddress(na1.getAddress() + (shift << 8));
+				na1.setIntAddress(na1.getIntAddress() + (shift << 8));
 				ni.addIpAddress(na1);
 				Network6Address na2 = new Network6Address(
 					String.format("2016:1:%x:2::1", shift), 64);

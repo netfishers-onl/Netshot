@@ -117,8 +117,7 @@ public final class Domain {
 		@JsonSerialize(using = Network6Address.AddressOnlySerializer.class),
 		@JsonDeserialize(using = Network6Address.AddressOnlyDeserializer.class),
 		@AttributeOverrides({
-			@AttributeOverride(name = "address1", column = @Column(name = "ipv6_address1")),
-			@AttributeOverride(name = "address2", column = @Column(name = "ipv6_address2")),
+			@AttributeOverride(name = "address", column = @Column(name = "ipv6_address")),
 			@AttributeOverride(name = "prefixLength", column = @Column(name = "ipv6_pfxlen")),
 			@AttributeOverride(name = "addressUsage", column = @Column(name = "ipv6_usage"))})
 	}))

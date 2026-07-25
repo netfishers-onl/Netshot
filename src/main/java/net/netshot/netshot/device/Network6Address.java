@@ -23,6 +23,7 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JacksonException;
@@ -40,7 +41,10 @@ import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import net.netshot.netshot.database.InetAddressUserType;
 import net.netshot.netshot.rest.RestViews.DefaultView;
+
+import org.hibernate.annotations.Type;
 
 /**
  * An IPv6 address.
@@ -96,11 +100,8 @@ public final class Network6Address extends NetworkAddress {
 		}
 	}
 
-	/** The address1. */
-	private long address1;
-
-	/** The address2. */
-	private long address2;
+	/** The address, stored as a native PostgreSQL "inet" column. */
+	private InetAddress address;
 
 	/** The prefix length. */
 	private int prefixLength;
@@ -119,10 +120,8 @@ public final class Network6Address extends NetworkAddress {
 	 * @param prefixLength the prefix length
 	 */
 	public Network6Address(Inet6Address address, int prefixLength) {
-		byte[] buffer = address.getAddress();
-		ByteBuffer bBuffer = ByteBuffer.wrap(buffer);
-		this.address1 = bBuffer.getLong();
-		this.address2 = bBuffer.getLong();
+		this.address = address;
+		this.prefixLength = prefixLength;
 	}
 
 	/**
@@ -147,10 +146,7 @@ public final class Network6Address extends NetworkAddress {
 		try {
 			InetAddress inetAddress = InetAddress.getByName(address);
 			if (inetAddress instanceof Inet6Address) {
-				byte[] buffer = inetAddress.getAddress();
-				ByteBuffer bBuffer = ByteBuffer.wrap(buffer);
-				this.address1 = bBuffer.getLong();
-				this.address2 = bBuffer.getLong();
+				this.address = inetAddress;
 				return;
 			}
 		}
@@ -185,25 +181,46 @@ public final class Network6Address extends NetworkAddress {
 			return false;
 		}
 		Network6Address other = (Network6Address) obj;
-		return (address1 == other.address1) && (address2 == other.address2) && (prefixLength == other.prefixLength);
+		return Objects.equals(address, other.address) && (prefixLength == other.prefixLength);
 	}
 
 	/**
-	 * Gets the address1.
+	 * Gets the address, mapped to a native "inet" column.
+	 *
+	 * @return the address
+	 */
+	@Type(InetAddressUserType.class)
+	public InetAddress getAddress() {
+		return address;
+	}
+
+	/**
+	 * Sets the address.
+	 *
+	 * @param address the new address
+	 */
+	public void setAddress(InetAddress address) {
+		this.address = address;
+	}
+
+	/**
+	 * Gets the high-order 64 bits of the address.
 	 *
 	 * @return the address1
 	 */
+	@Transient
 	public long getAddress1() {
-		return address1;
+		return this.address == null ? 0 : ByteBuffer.wrap(this.address.getAddress()).getLong(0);
 	}
 
 	/**
-	 * Gets the address2.
+	 * Gets the low-order 64 bits of the address.
 	 *
 	 * @return the address2
 	 */
+	@Transient
 	public long getAddress2() {
-		return address2;
+		return this.address == null ? 0 : ByteBuffer.wrap(this.address.getAddress()).getLong(8);
 	}
 
 	/*(non-Javadoc)
@@ -212,7 +229,7 @@ public final class Network6Address extends NetworkAddress {
 	@Override
 	@Transient
 	public InetAddress getInetAddress() {
-		return longToInetAddress(this.address1, this.address2);
+		return this.address;
 	}
 
 	/*(non-Javadoc)
@@ -222,7 +239,7 @@ public final class Network6Address extends NetworkAddress {
 	@XmlAttribute
 	@Override
 	public String getIp() {
-		return Network6Address.intToIP(address1, address2);
+		return Network6Address.intToIP(this.getAddress1(), this.getAddress2());
 	}
 
 	/**
@@ -254,28 +271,9 @@ public final class Network6Address extends NetworkAddress {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (int) (address1 ^ (address1 >>> 32));
-		result = prime * result + (int) (address2 ^ (address2 >>> 32));
+		result = prime * result + Objects.hashCode(address);
 		result = prime * result + prefixLength;
 		return result;
-	}
-
-	/**
-	 * Sets the address1.
-	 *
-	 * @param address1 the new address1
-	 */
-	protected void setAddress1(long address1) {
-		this.address1 = address1;
-	}
-
-	/**
-	 * Sets the address2.
-	 *
-	 * @param address2 the new address2
-	 */
-	protected void setAddress2(long address2) {
-		this.address2 = address2;
 	}
 
 	/**
@@ -309,46 +307,46 @@ public final class Network6Address extends NetworkAddress {
 		this.addressUsage = usage;
 	}
 
-	public boolean contains(Network6Address address) {
+	public boolean contains(Network6Address other) {
 		if (prefixLength <= 64) {
-			return (this.address1 >>> (64 - this.prefixLength)) == (address
-				.address1 >>> (64 - this.prefixLength));
+			return (this.getAddress1() >>> (64 - this.prefixLength)) == (other
+				.getAddress1() >>> (64 - this.prefixLength));
 		}
 		else {
-			return (this.address1 == address.address1) && (this.address2 >>> (64 - this.prefixLength))
-				== (address.address2 >>> (64 - this.prefixLength));
+			return (this.getAddress1() == other.getAddress1()) && (this.getAddress2() >>> (64 - this.prefixLength))
+				== (other.getAddress2() >>> (64 - this.prefixLength));
 		}
 	}
 
 	/**
 	 * Checks if is multicast.
-	 * 
+	 *
 	 * @return true, if is multicast
 	 */
 	@Transient
 	public boolean isMulticast() {
-		return ((this.address1 >>> 56) & 0xFF) == 0xFF;
+		return ((this.getAddress1() >>> 56) & 0xFF) == 0xFF;
 	}
 
 	/**
 	 * Checks if is multicast.
-	 * 
+	 *
 	 * @return true, if is multicast
 	 */
 	@Transient
 	public boolean isLinkLocal() {
-		return ((this.address1 >>> 48) & 0xFE80) == 0xFE80;
+		return ((this.getAddress1() >>> 48) & 0xFE80) == 0xFE80;
 	}
 
 
 	/**
 	 * Checks if is normal unicast.
-	 * 
+	 *
 	 * @return true, if is normal unicast
 	 */
 	@Transient
 	public boolean isGlobalUnicast() {
-		return ((this.address1 >>> 61) & 0b111) == 0b001;
+		return ((this.getAddress1() >>> 61) & 0b111) == 0b001;
 	}
 
 }

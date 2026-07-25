@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -65,7 +66,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-public class DeviceTest {
+public class DeviceTest extends WithDatabaseTest {
 
 	@Nested
 	@DisplayName("Device finder test")
@@ -79,13 +80,9 @@ public class DeviceTest {
 		protected static Map<String, Rule> testRules = new HashMap<>();
 
 		protected static Properties getNetshotConfig() {
-			Properties config = new Properties();
+			Properties config = getDatabaseConfig("devicetest");
 			config.setProperty("netshot.log.file", "CONSOLE");
 			config.setProperty("netshot.log.level", "INFO");
-			config.setProperty("netshot.db.driver_class", "org.h2.Driver");
-			config.setProperty("netshot.db.url",
-				"jdbc:h2:mem:devicetest;TRACE_LEVEL_SYSTEM_OUT=2;"
-					+ "CASE_INSENSITIVE_IDENTIFIERS=true;DB_CLOSE_DELAY=-1");
 			return config;
 		}
 
@@ -353,9 +350,17 @@ public class DeviceTest {
 					"select d.name " + hqlQuery, String.class);
 				finder.setVariables(query);
 				List<String> deviceNames = query.list();
+				// The generated HQL carries no ORDER BY, so row order is not guaranteed
+				// by the database (unlike H2's incidental insertion-order behavior,
+				// PostgreSQL's query planner is free to return rows in any order) -
+				// compare as sets, sorted only for a readable failure diff.
+				List<String> sortedExpected = new ArrayList<>(expectedDeviceNames);
+				List<String> sortedActual = new ArrayList<>(deviceNames);
+				Collections.sort(sortedExpected);
+				Collections.sort(sortedActual);
 				Assertions.assertArrayEquals(
-					expectedDeviceNames.toArray(new String[0]),
-					deviceNames.toArray(new String[0]),
+					sortedExpected.toArray(new String[0]),
+					sortedActual.toArray(new String[0]),
 					"Unexpected device list");
 			}
 		}
@@ -535,8 +540,8 @@ public class DeviceTest {
 		void queryByIp() throws Exception {
 			assertFinder("[IP] is 10.0.2.1",
 				null,
-				" from Device d where d.id in (select d.id from Device d left join d.networkInterfaces ni left join ni.ip4Addresses ip4 where d.cachedIpAddress = :var_ip or ip4.address = :var_0)",
-				Map.of("var_0", 10 << 24 | 0 << 16 | 2 << 8 | 1, "var_ip", InetAddress.getByName("10.0.2.1")),
+				" from Device d where d.id in (select d.id from Device d left join d.networkInterfaces ni left join ni.ip4Addresses ip4 where d.cachedIpAddress = :var_ip or ip4.address = :var_ip)",
+				Map.of("var_ip", InetAddress.getByName("10.0.2.1")),
 				List.of("router00002"));
 		}
 
@@ -545,8 +550,8 @@ public class DeviceTest {
 		void queryByIpRange() throws Exception {
 			assertFinder("[IP] in 10.0.0.0/22",
 				null,
-				" from Device d where d.id in (select d.id from Device d left join d.networkInterfaces ni left join ni.ip4Addresses ip4 where net_contains(d.cachedIpAddress, :var_cidr) or (ip4.address >= :var_0 and ip4.address < :var_1))",
-				Map.of("var_0", 10 << 24 | 0 << 16 | 0 << 8 | 0, "var_1", 10 << 24 | 0 << 16 | 3 << 8 | 255, "var_cidr", "10.0.0.0/22"),
+				" from Device d where d.id in (select d.id from Device d left join d.networkInterfaces ni left join ni.ip4Addresses ip4 where net_contains(d.cachedIpAddress, :var_cidr) or net_contains(ip4.address, :var_cidr))",
+				Map.of("var_cidr", "10.0.0.0/22"),
 				List.of("router00000", "router00001", "router00002", "router00003"));
 		}
 

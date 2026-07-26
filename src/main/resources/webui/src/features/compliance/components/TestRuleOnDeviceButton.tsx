@@ -1,5 +1,6 @@
-import { DeviceAutocomplete, LogPanel } from "@/components"
-import { DeviceComplianceTag } from "@/features/device/components"
+import { LogPanel } from "@/components"
+import { DeviceAutocomplete } from "@/features/device/components"
+import { DeviceComplianceTag } from "@/components/entity"
 import { useLocalization } from "@/i18n"
 import { Rule, RuleType, SimpleDevice } from "@/types"
 import { stringToBoolean } from "@/utils"

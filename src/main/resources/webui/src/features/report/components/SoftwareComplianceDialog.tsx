@@ -1,7 +1,7 @@
 import api from "@/api"
 import { EmptyResult, VirtualizedDataTable } from "@/components"
 import { useDialogConfig } from "@/dialog"
-import { DeviceBadge, DeviceGroupBadge, DeviceSoftwareLevelBadge } from "@/features/device/components"
+import { DeviceBadge, DeviceGroupBadge, DeviceSoftwareLevelBadge } from "@/components/entity"
 import { DeviceSoftwareLevel, GroupDeviceBySoftwareLevel } from "@/types"
 import { CloseButton, Dialog, Heading, Portal, Skeleton, Stack, Text } from "@chakra-ui/react"
 import { useQuery } from "@tanstack/react-query"

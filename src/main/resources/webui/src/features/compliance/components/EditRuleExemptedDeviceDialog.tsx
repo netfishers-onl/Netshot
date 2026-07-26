@@ -6,7 +6,7 @@ import { LuArrowLeft, LuArrowRight, LuCalendar, LuSearch } from "react-icons/lu"
 import { useDialogConfig } from "@/dialog"
 import { ExemptedDevice, Rule, SimpleDevice } from "@/types"
 import { useLocalization } from "@/i18n"
-import { DeviceListItem, DeviceNetworkClassIcon } from "@/features/device/components"
+import { DeviceListItem, DeviceNetworkClassIcon } from "@/components/entity"
 import {
   Box,
   Button,

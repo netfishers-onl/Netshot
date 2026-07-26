@@ -15,7 +15,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { useRef, useState } from "react"
 import { LuArrowDown, LuArrowUp, LuCheck } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
-import DeviceListItem from "./DeviceListItem"
+import DeviceListItem from "@/components/entity/DeviceListItem"
 
 export type DeviceReorderDialogProps = {
   devices: (SimpleDevice | Device)[]

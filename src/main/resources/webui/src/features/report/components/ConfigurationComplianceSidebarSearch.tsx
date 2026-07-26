@@ -1,4 +1,5 @@
-import { DomainSelect, PolicySelect } from "@/components"
+import { PolicySelect } from "@/features/compliance/components"
+import { DomainSelect } from "@/features/administration/components"
 import Search from "@/components/Search"
 import { Button, IconButton, Menu, Portal, Stack } from "@chakra-ui/react"
 import { useEffect, useRef, useState } from "react"

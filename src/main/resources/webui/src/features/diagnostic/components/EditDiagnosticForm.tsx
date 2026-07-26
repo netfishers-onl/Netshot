@@ -1,4 +1,5 @@
-import { Switch, TreeGroupSelector } from "@/components"
+import { Switch } from "@/components"
+import { TreeGroupSelector } from "@/features/group"
 import FormControl from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { DiagnosticType } from "@/types"

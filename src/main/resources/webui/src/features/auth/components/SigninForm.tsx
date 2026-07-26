@@ -1,12 +1,12 @@
 import api from "@/api"
 import FormControl, { FormControlType } from "@/components/FormControl"
 import { useAuth } from "@/contexts"
-import { useSigninForm } from "@/hooks"
 import { Button, Center, Spinner, Stack, Text } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useSearchParams } from "react-router"
 import { useSigninMutation, useSigninWithOidcMutation } from "../api/queries"
+import { useSigninForm } from "../hooks"
 
 export function SigninForm() {
   const { t } = useTranslation()

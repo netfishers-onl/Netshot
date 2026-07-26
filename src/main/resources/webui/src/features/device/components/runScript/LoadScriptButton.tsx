@@ -1,5 +1,5 @@
 import api from "@/api"
-import { useTreeOpenKeys } from "@/components/group"
+import { useTreeOpenKeys } from "@/hooks"
 import { TreeScript } from "../scriptTree"
 import { QUERIES } from "@/constants"
 import { useFormDialog } from "@/dialog"

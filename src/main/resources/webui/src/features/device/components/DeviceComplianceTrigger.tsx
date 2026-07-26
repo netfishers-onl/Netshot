@@ -1,7 +1,7 @@
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import ScheduleForm, { ScheduleFormType } from "@/components/ScheduleForm"
-import TaskDialog from "@/components/TaskDialog"
+import { TaskDialog } from "@/features/task/components"
 import { MUTATIONS } from "@/constants"
 import { useCustomDialog, useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"

@@ -2,7 +2,7 @@ import { Button, Icon, Menu, Portal } from "@chakra-ui/react"
 import { useTranslation } from "react-i18next"
 import { LuChevronDown } from "react-icons/lu"
 
-import { useLanguageOptions } from "@/hooks"
+import { useLanguageOptions } from "@/i18n"
 
 export function LanguageMenuItems() {
   const { i18n } = useTranslation()

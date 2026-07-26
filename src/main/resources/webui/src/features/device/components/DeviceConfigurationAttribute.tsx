@@ -3,7 +3,7 @@ import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
 import { LuDownload, LuEye } from "react-icons/lu"
-import { useDownloadConfigMutation } from "@/hooks"
+import { useDownloadConfigMutation } from "../hooks"
 import {
   Config,
   ConfigAttribute,

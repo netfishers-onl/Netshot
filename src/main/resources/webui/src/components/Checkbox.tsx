@@ -1,5 +1,5 @@
-import { Checkbox as NativeCheckbox } from "@chakra-ui/react"
-import { FocusEventHandler, PropsWithChildren } from "react"
+import { Checkbox as ChakraCheckbox } from "@chakra-ui/react"
+import { PropsWithChildren } from "react"
 import { Control, FieldPath, FieldValues, Path, PathValue, useController } from "react-hook-form"
 
 export type CheckboxProps<T extends FieldValues> = {
@@ -7,9 +7,6 @@ export type CheckboxProps<T extends FieldValues> = {
   name: FieldPath<T>
   defaultValue?: PathValue<T, Path<T>>
   value?: PathValue<T, Path<T>>
-  onFocus?: FocusEventHandler<HTMLElement>
-  onChange?(value: PathValue<T, FieldPath<T>>): void
-  onBlur?: FocusEventHandler<HTMLElement>
 }
 
 export default function Checkbox<T extends FieldValues>(props: PropsWithChildren<CheckboxProps<T>>) {
@@ -21,18 +18,18 @@ export default function Checkbox<T extends FieldValues>(props: PropsWithChildren
   })
 
   return (
-    <NativeCheckbox.Root
+    <ChakraCheckbox.Root
       onCheckedChange={(evt) => field.onChange(evt.checked)}
       onBlur={field.onBlur}
       ref={field.ref}
       checked={field.value as boolean}
       value={String(value)}
     >
-      <NativeCheckbox.HiddenInput />
-      <NativeCheckbox.Control />
-      <NativeCheckbox.Label fontSize="md" fontWeight="normal">
+      <ChakraCheckbox.HiddenInput />
+      <ChakraCheckbox.Control />
+      <ChakraCheckbox.Label fontSize="md" fontWeight="normal">
         {children}
-      </NativeCheckbox.Label>
-    </NativeCheckbox.Root>
+      </ChakraCheckbox.Label>
+    </ChakraCheckbox.Root>
   )
 }

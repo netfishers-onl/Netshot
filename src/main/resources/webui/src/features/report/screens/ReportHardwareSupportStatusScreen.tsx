@@ -1,5 +1,7 @@
 import api from "@/api"
-import { Chart, DataTable, DomainSelect, TreeGroupSelector } from "@/components"
+import { Chart, DataTable } from "@/components"
+import { DomainSelect } from "@/features/administration/components"
+import { TreeGroupSelector } from "@/features/group"
 import { Tooltip } from "@/components/ui/tooltip"
 import { LuFilter, LuFilterX, LuRefreshCcw } from "react-icons/lu"
 import { GroupedHardwareSupportStat, HardwareSupportStatType } from "@/types"

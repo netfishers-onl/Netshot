@@ -1,4 +1,5 @@
-import { Chart, TASK_STATUS_CONFIG } from "@/components"
+import { Chart } from "@/components"
+import { TASK_STATUS_CONFIG } from "./TaskStatusBadge"
 import { useLocalization } from "@/i18n"
 import { Badge, Box, Icon, Stack, Text, useToken } from "@chakra-ui/react"
 import { ChartConfiguration } from "chart.js/auto"

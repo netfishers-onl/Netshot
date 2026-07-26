@@ -1,6 +1,7 @@
 import api, { UpdateDevicePayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { Checkbox, DomainSelect } from "@/components"
+import { Checkbox } from "@/components"
+import { DomainSelect } from "@/features/administration/components"
 import { MUTATIONS, QUERIES } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
@@ -66,7 +67,6 @@ function DeviceBulkEditForm() {
           <Stack gap="2">
             {(credentialSets ?? []).map((credentialSet) => (
               <NativeCheckbox.Root
-                defaultValue={String(credentialSetIds.includes(credentialSet?.id))}
                 onCheckedChange={() => toggleCredentialSetId(credentialSet?.id)}
                 key={credentialSet?.id}
                 checked={credentialSetIds.includes(credentialSet?.id)}

@@ -1,4 +1,4 @@
-import { DeviceComplianceTag } from "@/features/device/components/DeviceComplianceTag"
+import { DeviceComplianceTag } from "./../entity/DeviceComplianceTag"
 import { DeviceComplianceResultType } from "@/types"
 import {
   Alert,

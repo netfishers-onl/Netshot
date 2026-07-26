@@ -1,4 +1,6 @@
-import { DateTimeField, DomainSelect, TreeGroupSelector } from "@/components"
+import { DateTimeField } from "@/components"
+import { DomainSelect } from "@/features/administration/components"
+import { TreeGroupSelector } from "@/features/group"
 import { Button, Menu, Portal, SimpleGrid, Stack } from "@chakra-ui/react"
 import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"

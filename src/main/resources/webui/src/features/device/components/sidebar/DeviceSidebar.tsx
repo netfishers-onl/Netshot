@@ -1,4 +1,5 @@
-import { AddGroupTrigger, Protected } from "@/components"
+import { Protected } from "@/components"
+import { AddGroupTrigger } from "@/features/group"
 import { LuChevronUp, LuCrosshair, LuGrid2X2Plus, LuPlus, LuWorkflow } from "react-icons/lu"
 import { Level } from "@/types"
 import { Button, Group, IconButton, Menu, Portal, Separator, Stack } from "@chakra-ui/react"

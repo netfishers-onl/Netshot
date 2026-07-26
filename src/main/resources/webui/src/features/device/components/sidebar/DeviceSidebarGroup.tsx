@@ -1,4 +1,5 @@
-import { AddGroupTrigger, Protected, TreeGroup } from "@/components"
+import { Protected } from "@/components"
+import { AddGroupTrigger, TreeGroup } from "@/features/group"
 import { Tooltip } from "@/components/ui/tooltip"
 import { Group, Level } from "@/types"
 import { Folder } from "@/utils"

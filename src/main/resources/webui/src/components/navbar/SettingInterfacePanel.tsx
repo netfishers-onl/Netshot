@@ -1,4 +1,4 @@
-import { useLanguageOptions } from "@/hooks"
+import { useLanguageOptions } from "@/i18n"
 import { Stack } from "@chakra-ui/react"
 import { useEffect } from "react"
 import { useForm, useWatch } from "react-hook-form"

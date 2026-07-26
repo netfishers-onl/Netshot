@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next"
 import { useAlertDialog } from "@/dialog"
 import { ConfigLongTextAttribute, DeviceAttributeDefinition } from "@/types"
-import { useDownloadConfigMutation } from "@/hooks"
 import { Button } from "@chakra-ui/react"
 import { LuDownload } from "react-icons/lu"
 import React from "react"
 import Slot from "@/components/Slot"
+import { useDownloadConfigMutation } from "../hooks"
 import DeviceConfigurationView from "./DeviceConfigurationView"
 
 export type DeviceConfigurationViewTriggerProps = {

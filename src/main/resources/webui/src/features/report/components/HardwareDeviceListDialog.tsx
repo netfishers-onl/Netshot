@@ -1,7 +1,7 @@
 import api from "@/api"
 import { EmptyResult, VirtualizedDataTable } from "@/components"
 import { useDialogConfig } from "@/dialog"
-import { DeviceBadge } from "@/features/device/components"
+import { DeviceBadge } from "@/components/entity"
 import { HardwareSupportDevice } from "@/types"
 import { useLocalization } from "@/i18n"
 import { CloseButton, Dialog, Heading, Portal, Skeleton, Stack, Tag, Text } from "@chakra-ui/react"

@@ -25,7 +25,7 @@ import EditPolicyTrigger from "../components/EditPolicyTrigger"
 import RemovePolicyTrigger from "../components/RemovePolicyTrigger"
 import { usePolicies } from "../api"
 import { EmptyResult } from "@/components"
-import { DeviceGroupBadge } from "@/features/device/components"
+import { DeviceGroupBadge } from "@/components/entity"
 
 function getRuleIcon(type: RuleType) {
   if (type === RuleType.Javascript) return <SiJavascript />

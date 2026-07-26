@@ -2,13 +2,13 @@ import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import {
   Checkbox,
-  DeviceTypeSelect,
   FormControl,
   MonacoEditorControl,
   ScheduleForm,
 } from "@/components"
+import DeviceTypeSelect from "../DeviceTypeSelect"
 import { ScheduleFormType } from "@/components/ScheduleForm"
-import TaskDialog from "@/components/TaskDialog"
+import { TaskDialog } from "@/features/task/components"
 import { MUTATIONS, QUERIES } from "@/constants"
 import { useCustomDialog, useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"

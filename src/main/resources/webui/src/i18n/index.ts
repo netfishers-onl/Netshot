@@ -28,6 +28,7 @@ i18n
   })
 
 export * from "./languages"
+export * from "./useLanguageOptions"
 export * from "./useLocalization"
 export * from "./LocalizationContext"
 

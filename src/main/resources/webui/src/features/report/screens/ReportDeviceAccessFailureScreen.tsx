@@ -1,13 +1,13 @@
 import api, { ReportDeviceAccessFailureQueryParams } from "@/api"
 import {
-  DomainSelect,
   EmptyResult,
   FormControl,
   Search,
   VirtualizedDataTable,
 } from "@/components"
 import { Tooltip } from "@/components/ui/tooltip"
-import { DeviceBadge } from "@/features/device/components"
+import { DomainSelect } from "@/features/administration/components"
+import { DeviceBadge } from "@/components/entity"
 import { LuFilter, LuFilterX, LuRefreshCcw } from "react-icons/lu"
 import { FormControlType } from "@/components/FormControl"
 import { usePagination } from "@/hooks"

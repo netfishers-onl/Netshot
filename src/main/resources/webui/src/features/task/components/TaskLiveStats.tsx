@@ -1,4 +1,4 @@
-import { TASK_STATUS_CONFIG } from "@/components"
+import { TASK_STATUS_CONFIG } from "./TaskStatusBadge"
 import { TaskStatus } from "@/types"
 import { Box, Icon, Progress, SimpleGrid, Stack, Text } from "@chakra-ui/react"
 import { useMemo } from "react"

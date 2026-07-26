@@ -1,6 +1,8 @@
 import api, { UpdateDevicePayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { Checkbox, DeviceTypeSelect, DomainSelect } from "@/components"
+import { Checkbox } from "@/components"
+import { DomainSelect } from "@/features/administration/components"
+import DeviceTypeSelect from "./DeviceTypeSelect"
 import FormControl, { FormControlType, PASSWORD_UNCHANGED } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { MUTATIONS, QUERIES } from "@/constants"
@@ -98,7 +100,7 @@ function DeviceEditForm({ freezePasswords = false }: { freezePasswords?: boolean
       {credentialType === null && !isPending && (
         <Stack gap="2">
           {(credentialSets ?? []).map((credentialSet) => (
-            <NativeCheckbox.Root defaultValue={String(credentialSetIds.includes(credentialSet?.id))} onCheckedChange={() => toggleCredentialSetId(credentialSet?.id)} key={credentialSet?.id} checked={credentialSetIds.includes(credentialSet?.id)}>
+            <NativeCheckbox.Root onCheckedChange={() => toggleCredentialSetId(credentialSet?.id)} key={credentialSet?.id} checked={credentialSetIds.includes(credentialSet?.id)}>
               <NativeCheckbox.HiddenInput />
               <NativeCheckbox.Control />
               <NativeCheckbox.Label>{credentialSet?.name} ({credentialSet?.type})</NativeCheckbox.Label>

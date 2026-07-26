@@ -8,3 +8,6 @@ export { default as TaskTable } from "./TaskTable";
 export { default as TaskTimeRangeMenu } from "./TaskTimeRangeMenu";
 export { default as TaskTreeModeToggle } from "./TaskTreeModeToggle";
 export { default as TaskTypeSelect } from "./TaskTypeSelect";
+export { default as TaskDialog } from "./TaskDialog"
+export { default as TaskChildrenDialog } from "./TaskChildrenDialog"
+export { default as TaskStatusBadge, TASK_STATUS_CONFIG } from "./TaskStatusBadge"

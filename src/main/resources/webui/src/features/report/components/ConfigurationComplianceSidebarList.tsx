@@ -1,5 +1,6 @@
 import api from "@/api"
-import { getExpandedKeys, getVisibleGroups, TreeGroup, useTreeOpenKeys } from "@/components"
+import { getExpandedKeys, getVisibleGroups, TreeGroup } from "@/features/group"
+import { useTreeOpenKeys } from "@/hooks"
 import { QUERIES } from "@/constants"
 import { useArrowKeyNavigation, usePagination } from "@/hooks"
 import { Group } from "@/types"

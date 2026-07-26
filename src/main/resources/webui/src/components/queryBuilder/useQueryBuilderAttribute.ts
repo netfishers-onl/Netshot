@@ -1,5 +1,5 @@
 import { useDomains } from "@/features/administration/api/queries"
-import { useDeviceTypeOptions } from "@/hooks"
+import { useDeviceTypeOptions } from "@/features/device/hooks"
 import {
   DeviceNetworkClass,
   DeviceSoftwareLevel,

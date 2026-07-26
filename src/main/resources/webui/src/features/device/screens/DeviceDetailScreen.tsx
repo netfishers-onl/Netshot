@@ -14,13 +14,8 @@ import { useTranslation } from "react-i18next"
 import { Outlet, useParams } from "react-router"
 import { useDevice, useDeviceTypes } from "../api"
 import { QUERIES } from "../constants"
-import {
-  DeviceNetworkClassIcon,
-  DisableDeviceTrigger,
-  EditDeviceTrigger,
-  EnableDeviceTrigger,
-  RemoveDeviceTrigger,
-} from "../components"
+import { DisableDeviceTrigger, EditDeviceTrigger, EnableDeviceTrigger, RemoveDeviceTrigger } from "../components"
+import { DeviceNetworkClassIcon } from "@/components/entity"
 import RunDeviceScriptTrigger from "../components/RunDeviceScriptTrigger"
 import DeviceSnapshotTrigger from "../components/DeviceSnapshotTrigger"
 import DeviceProvider from "../contexts/DeviceProvider"

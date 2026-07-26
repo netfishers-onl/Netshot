@@ -1,6 +1,6 @@
 import { DataTable, EntityLink } from "@/components"
 import { LuChevronDown } from "react-icons/lu"
-import { DeviceBadge, DeviceConfigComplianceBadge } from "@/features/device/components"
+import { DeviceBadge, DeviceConfigComplianceBadge } from "@/components/entity"
 import { ConfigComplianceDeviceStatus } from "@/types"
 import { useLocalization } from "@/i18n"
 import { IconButton, Separator, Stack, Text } from "@chakra-ui/react"

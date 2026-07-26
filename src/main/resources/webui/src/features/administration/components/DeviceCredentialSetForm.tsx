@@ -1,4 +1,5 @@
-import { DomainSelect, FormControl } from "@/components"
+import { FormControl } from "@/components"
+import DomainSelect from "./DomainSelect"
 import { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { CredentialSetType, HashingAlgorithm } from "@/types"

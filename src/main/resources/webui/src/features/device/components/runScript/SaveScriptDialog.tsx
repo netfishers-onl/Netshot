@@ -1,7 +1,7 @@
 import api from "@/api"
 import { NetshotError } from "@/api/httpClient"
 import { FormControl } from "@/components"
-import { useTreeOpenKeys } from "@/components/group"
+import { useTreeOpenKeys } from "@/hooks"
 import { MUTATIONS, QUERIES } from "@/constants"
 import { useDialogConfig } from "@/dialog"
 import { useToast } from "@/hooks"

@@ -1,6 +1,6 @@
 import { EmptyResult, Search, VirtualizedDataTable } from "@/components"
 import { useAlertDialog } from "@/dialog"
-import { DeviceBadge } from "@/features/device/components"
+import { DeviceBadge } from "@/components/entity"
 import { LightConfig } from "@/types"
 import { useLocalization } from "@/i18n"
 import { search, sortByDateDesc } from "@/utils"

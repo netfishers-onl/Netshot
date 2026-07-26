@@ -1,6 +1,6 @@
 import FormControl from "@/components/FormControl"
 import { Select } from "@/components/Select"
-import { useDeviceTypeOptions } from "@/hooks"
+import { useDeviceTypeOptions } from "@/features/device/hooks"
 import { Stack, StackProps, Text } from "@chakra-ui/react"
 import { useEffect, useMemo } from "react"
 import { useFormContext, useWatch } from "react-hook-form"

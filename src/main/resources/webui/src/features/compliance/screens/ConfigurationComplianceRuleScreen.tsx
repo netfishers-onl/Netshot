@@ -21,12 +21,12 @@ import {
   Tag,
   Text,
 } from "@chakra-ui/react"
-import { useDeviceTypeOptions } from "@/hooks"
+import { useDeviceTypeOptions } from "@/features/device/hooks"
 import { useQuery } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Link, useParams } from "react-router"
-import { DeviceBadge } from "@/features/device/components"
+import { DeviceBadge } from "@/components/entity"
 import DisableRuleTrigger from "../components/DisableRuleTrigger"
 import EditRuleTrigger from "../components/EditRuleTrigger"
 import EditRuleExemptedDeviceTrigger from "../components/EditRuleExemptedDeviceTrigger"

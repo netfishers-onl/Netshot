@@ -1,5 +1,5 @@
 import { Select, SelectProps } from "@/components/Select"
-import TaskStatusBadge, { TASK_STATUS_CONFIG } from "@/components/TaskStatusBadge"
+import TaskStatusBadge, { TASK_STATUS_CONFIG } from "./TaskStatusBadge"
 import { Option, TaskStatus } from "@/types"
 import { Icon } from "@chakra-ui/react"
 import { useMemo } from "react"

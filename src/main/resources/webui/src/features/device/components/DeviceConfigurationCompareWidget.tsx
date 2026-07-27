@@ -1,3 +1,4 @@
+import { useSidebarWidthStore } from "@/components/useSidebarWidthStore"
 import { useAlertDialog } from "@/dialog"
 import { useLocalization } from "@/i18n"
 import { Button, CloseButton, HStack, Input } from "@chakra-ui/react"
@@ -12,6 +13,7 @@ import DeviceConfigurationCompareView from "./DeviceConfigurationCompareView"
 export function DeviceConfigurationCompareWidget() {
   const { t } = useTranslation()
   const { formatDateTime } = useLocalization()
+  const sidebarWidth = useSidebarWidthStore((state) => state.width)
   const { current, compare, setCurrent, setCompare } = useDeviceConfigurationCompareStore(
     useShallow((state) => ({
       setCurrent: state.setCurrent,
@@ -59,7 +61,7 @@ export function DeviceConfigurationCompareWidget() {
       className="dark"
       position="absolute"
       bottom="9"
-      left="300px"
+      left={`${sidebarWidth}px`}
       right="0"
       width="fit-content"
       mx="auto"

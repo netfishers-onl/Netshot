@@ -1,4 +1,4 @@
-import { Separator, Stack } from "@chakra-ui/react"
+import { SidebarSplitter } from "@/components"
 import { useEffect } from "react"
 import { Outlet, useMatch } from "react-router"
 import { DeviceSidebar } from "../components"
@@ -25,12 +25,8 @@ export default function DeviceScreen() {
   }, [isOnDeviceRoot, deselectAll])
 
   return (
-    <Stack direction="row" flex="1" overflow="auto" gap="0">
-      <DeviceSidebar />
-      <Separator orientation="vertical" />
-      <Stack flex="1" overflow="auto">
-        {isMultipleDeviceSelected ? <DeviceBulkActionScreen /> : <Outlet />}
-      </Stack>
-    </Stack>
+    <SidebarSplitter sidebar={<DeviceSidebar />}>
+      {isMultipleDeviceSelected ? <DeviceBulkActionScreen /> : <Outlet />}
+    </SidebarSplitter>
   )
 }

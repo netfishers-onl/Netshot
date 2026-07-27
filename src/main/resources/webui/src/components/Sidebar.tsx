@@ -7,7 +7,7 @@ export default function Sidebar(props: SidebarProps) {
   const { children } = props;
 
   return (
-    <Stack w="300px" overflow="auto" gap="0">
+    <Stack w="full" h="full" overflow="auto" gap="0">
       {children}
     </Stack>
   );

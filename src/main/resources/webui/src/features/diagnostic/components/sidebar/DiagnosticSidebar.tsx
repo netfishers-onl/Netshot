@@ -16,7 +16,7 @@ export default function DiagnosticSidebar() {
 
   return (
     <DiagnosticSidebarProvider>
-      <Stack w="300px" overflow="hidden" gap="0">
+      <Stack w="full" h="full" overflow="hidden" gap="0">
         <DiagnosticSidebarContext.Consumer>
           {({ query }) => (
             <>

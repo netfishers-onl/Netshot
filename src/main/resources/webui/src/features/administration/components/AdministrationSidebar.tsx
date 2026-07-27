@@ -6,7 +6,7 @@ export default function AdministrationSidebar() {
   const { t } = useTranslation();
 
   return (
-    <Stack w="300px" overflow="auto" gap="0">
+    <Stack w="full" h="full" overflow="auto" gap="0">
       <Stack gap="0" py="4" px="5" flex="1">
         <SidebarLink
           to="./user"

@@ -16,7 +16,7 @@ export default function ComplianceSidebar() {
 
   return (
     <ComplianceSidebarProvider>
-      <Stack w="300px" overflow="hidden" gap="0">
+      <Stack w="full" h="full" overflow="hidden" gap="0">
         <ComplianceSidebarContext.Consumer>
           {({ query }) => (
             <>

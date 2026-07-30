@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2025 Netshot
- * 
+ *
  * This file is part of Netshot project.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -20,6 +20,7 @@ package net.netshot.netshot.device.script.helper;
 
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,26 +28,42 @@ import org.apache.commons.lang3.StringUtils;
 import org.graalvm.polyglot.HostAccess.Export;
 
 import lombok.extern.slf4j.Slf4j;
+import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
+import net.netshot.netshot.device.DeviceDriver.AccessDefinition;
+import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
+import net.netshot.netshot.device.access.AccessManager;
+import net.netshot.netshot.device.access.AccessManager.Resolution;
 import net.netshot.netshot.device.access.Cli;
 import net.netshot.netshot.device.access.Cli.WithBufferIOException;
+import net.netshot.netshot.device.access.Client;
+import net.netshot.netshot.device.access.Ssh;
+import net.netshot.netshot.device.access.Telnet;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
+import net.netshot.netshot.device.credentials.DeviceCredentialSet;
+import net.netshot.netshot.device.credentials.DeviceSshAccount;
+import net.netshot.netshot.device.credentials.DeviceSshKeyAccount;
 import net.netshot.netshot.work.TaskContext;
 
 /**
  * This class is used to pass CLI control to JavaScript.
- * @author sylvain.cadilhac
- *
+ * <p>
+ * Connection (and credential-set fallback) is lazy: nothing happens until the
+ * first {@code send}/{@code macro}/{@code command} call actually needs it -
+ * see {@link #ensureResolved()}.
  */
 @Slf4j
 public class JsCliHelper {
 
-	/** The CLI object to interact with the device via command line. */
+	private final AccessManager accessManager;
+	private final Resolution resolution;
+	private final boolean autoTryCredentials;
+	private final TaskContext taskContext;
+
+	/** The resolved CLI object, once connected. */
 	private Cli cli;
-	/** The CLI account (SSH/Telnet). */
+	/** The resolved CLI account (SSH/Telnet), once connected. */
 	private DeviceCliAccount account;
-	/** The task context. */
-	private TaskContext taskContext;
 	/** An error was raised. */
 	private boolean errored;
 	/** The last output from a send command. */
@@ -54,14 +71,133 @@ public class JsCliHelper {
 
 	/**
 	 * Instantiate a new JsCliHelper object.
-	 * @param cli The device CLI
-	 * @param account The account to connect to the device
+	 * @param accessManager the access manager (shared across all clients of this task attempt)
+	 * @param accessDefs the ordered list of CLI accesses to try (e.g. [ssh, telnet])
+	 * @param autoTryCredentials whether to transparently loop through all candidate
+	 *        credential sets (true, historical behavior) or stop at the first
+	 *        failure and let the driver call {@code tryNextCredentials()} (false)
 	 * @param taskContext The task context
 	 */
-	public JsCliHelper(Cli cli, DeviceCliAccount account, TaskContext taskContext) {
-		this.cli = cli;
-		this.account = account;
+	public JsCliHelper(AccessManager accessManager, List<AccessDefinition> accessDefs,
+			boolean autoTryCredentials, TaskContext taskContext) {
+		this.accessManager = accessManager;
+		this.autoTryCredentials = autoTryCredentials;
 		this.taskContext = taskContext;
+		this.resolution = accessManager.newResolution(accessDefs, this::buildClient);
+	}
+
+	private Client buildClient(AccessDefinition accessDef, DeviceCredentialSet credentialSet) throws IOException {
+		Device device = this.accessManager.getDevice();
+		int port = accessDef.getDefaultPort();
+		if (accessDef.getProtocol() == DriverProtocol.SSH && "ssh".equals(accessDef.getName())
+				&& device.getSshPort() != 0) {
+			port = device.getSshPort();
+		}
+		else if (accessDef.getProtocol() == DriverProtocol.TELNET && "telnet".equals(accessDef.getName())
+				&& device.getTelnetPort() != 0) {
+			port = device.getTelnetPort();
+		}
+		if (accessDef.getProtocol() == DriverProtocol.SSH) {
+			Ssh ssh;
+			if (credentialSet instanceof DeviceSshKeyAccount sshKeyAccount) {
+				ssh = new Ssh(this.accessManager.getAddress(), port, sshKeyAccount.getUsername(),
+					sshKeyAccount.getPrivateKey(), sshKeyAccount.getPassword(), this.taskContext);
+			}
+			else {
+				DeviceSshAccount sshAccount = (DeviceSshAccount) credentialSet;
+				ssh = new Ssh(this.accessManager.getAddress(), port, sshAccount.getUsername(),
+					sshAccount.getPassword(), this.taskContext);
+			}
+			ssh.applySshConfig(accessDef.getSshConfig());
+			return ssh;
+		}
+		Telnet telnet = new Telnet(this.accessManager.getAddress(), port, this.taskContext);
+		telnet.setTelnetConfig(accessDef.getTelnetConfig());
+		return telnet;
+	}
+
+	/**
+	 * Ensures the underlying CLI connection is resolved (lazy connect on first use).
+	 * @throws IOException if resolution fails (see {@link Resolution#ensureResolved(boolean)})
+	 */
+	private void ensureResolved() throws IOException {
+		if (this.cli != null) {
+			return;
+		}
+		Client client = this.resolution.ensureResolved(this.autoTryCredentials);
+		this.cli = (Cli) client;
+		this.account = (DeviceCliAccount) this.resolution.getCurrentCredentialSet();
+	}
+
+	/**
+	 * Explicitly triggers lazy connection (called from JS before the first
+	 * macro/command, and again after {@link #resetForInBandAuthFailure()}).
+	 * @throws IOException if resolution fails
+	 */
+	@Export
+	public void reconnect() throws IOException {
+		this.ensureResolved();
+	}
+
+	/**
+	 * Triggers lazy connection if needed, and returns the name of the access
+	 * that actually resolved (e.g. "ssh", "telnet", "alternateSsh") - used by
+	 * the JS CLI mode-graph to seed its initial mode, since which access ends
+	 * up connecting is no longer known ahead of time (unlike before, when
+	 * Java always connected before invoking the driver).
+	 * @return the resolved access name
+	 * @throws IOException if resolution fails
+	 */
+	@Export
+	public String getResolvedAccessName() throws IOException {
+		this.ensureResolved();
+		return this.resolution.getCurrentAccessDef().getName();
+	}
+
+	/**
+	 * Java-internal accessor (not exposed to JS - not annotated with
+	 * {@code @Export}) used by {@code JsDeviceHelper}/{@code JsConfigHelper}
+	 * for SFTP/SCP file transfers over an existing SSH session. Forces lazy
+	 * resolution if this client hasn't been used yet.
+	 * @return the underlying, connected {@link Cli}
+	 * @throws IOException if resolution fails
+	 */
+	public Cli getUnderlyingCli() throws IOException {
+		this.ensureResolved();
+		return this.cli;
+	}
+
+	/**
+	 * Called by JS when the driver's own CLI mode graph detects an in-band
+	 * authentication failure (typically Telnet, whose real login only happens
+	 * through mode transitions, not at the transport level). Disconnects the
+	 * current client and clears the "resolved" pointer so a subsequent
+	 * {@link #reconnect()} resumes with the next candidate credential set.
+	 */
+	@Export
+	public void resetForInBandAuthFailure() {
+		this.resolution.resetForInBandAuthFailure();
+		this.cli = null;
+		this.account = null;
+	}
+
+	/**
+	 * Manually advances to the next candidate credential set (only relevant
+	 * when {@code autoTryCredentials} is disabled for this client).
+	 * @return true if a new client is now connected, false if exhausted
+	 */
+	@Export
+	public boolean tryNextCredentials() {
+		boolean success = this.resolution.tryNextCredentials();
+		if (success) {
+			this.cli = (Cli) this.resolution.getCurrentClient();
+			this.account = (DeviceCliAccount) this.resolution.getCurrentCredentialSet();
+		}
+		else {
+			this.cli = null;
+			this.account = null;
+		}
+		return success;
 	}
 
 	/**
@@ -96,6 +232,15 @@ public class JsCliHelper {
 	@Export
 	public String send(String command, String[] expects, int timeout, String[] cleanUpActions, int discoverWaitTime) {
 		this.errored = false;
+		try {
+			this.ensureResolved();
+		}
+		catch (IOException e) {
+			log.error("Unable to resolve the CLI access.", e);
+			this.taskContext.error("Unable to connect: " + e.getMessage());
+			this.errored = true;
+			return null;
+		}
 		if (command == null) {
 			command = "";
 		}

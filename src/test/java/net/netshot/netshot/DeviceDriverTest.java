@@ -24,12 +24,15 @@ import java.io.PipedOutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,10 +42,10 @@ import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.NetworkClass;
 import net.netshot.netshot.device.DeviceDriver;
-import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.NetworkAddress;
+import net.netshot.netshot.device.access.AccessManager;
 import net.netshot.netshot.device.access.Cli;
 import net.netshot.netshot.device.access.Snmp;
 import net.netshot.netshot.device.access.Ssh;
@@ -52,7 +55,8 @@ import net.netshot.netshot.device.attribute.DeviceBinaryAttribute;
 import net.netshot.netshot.device.attribute.DeviceNumericAttribute;
 import net.netshot.netshot.device.attribute.DeviceTextAttribute;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
-import net.netshot.netshot.device.credentials.DeviceCredentialSet;
+import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
+import net.netshot.netshot.device.credentials.DeviceSnmpv2cCommunity;
 import net.netshot.netshot.device.credentials.DeviceSshAccount;
 import net.netshot.netshot.device.script.SnapshotCliScript;
 import net.netshot.netshot.work.TaskContext;
@@ -389,10 +393,12 @@ public class DeviceDriverTest {
 			Session nullSession = null;
 			Device device = FakeDeviceFactory.getFakeCiscoIosDevice();
 			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
+			AccessManager accessManager = new AccessManager(nullSession, device, null, this.taskContext, null);
+			accessManager.forceClientForTest(fakeCli, credentials);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
-				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
+				Device.class, AccessManager.class);
 			runMethod.setAccessible(true);
-			runMethod.invoke(script, nullSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
+			runMethod.invoke(script, nullSession, device, accessManager);
 			Assertions.assertEquals("router1", device.getName(), "The device name is incorrect");
 			Assertions.assertEquals("15.5(3)S7b", device.getSoftwareVersion(), "The software version is incorrect");
 			Assertions.assertEquals("Cisco CSR1000V", device.getFamily(), "The device family is incorrect");
@@ -666,10 +672,12 @@ public class DeviceDriverTest {
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("ZPENodeGrid", null, domain, "test");
 			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
+			AccessManager accessManager = new AccessManager(nullSession, device, null, this.taskContext, null);
+			accessManager.forceClientForTest(fakeCli, credentials);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
-				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
+				Device.class, AccessManager.class);
 			runMethod.setAccessible(true);
-			runMethod.invoke(script, nullSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
+			runMethod.invoke(script, nullSession, device, accessManager);
 			Assertions.assertEquals("NODEGRID-1", device.getName(), "The device name is incorrect");
 			Assertions.assertEquals("3.1.16", device.getSoftwareVersion(), "The software version is incorrect");
 			Assertions.assertEquals("NSC-T16S", device.getFamily(), "The device family is incorrect");
@@ -1143,10 +1151,12 @@ public class DeviceDriverTest {
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("AristaMOS", null, domain, "test");
 			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
+			AccessManager accessManager = new AccessManager(nullSession, device, null, this.taskContext, null);
+			accessManager.forceClientForTest(fakeCli, credentials);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
-				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
+				Device.class, AccessManager.class);
 			runMethod.setAccessible(true);
-			runMethod.invoke(script, nullSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
+			runMethod.invoke(script, nullSession, device, accessManager);
 			Assertions.assertEquals("switch1", device.getName(), "The device name is incorrect");
 			Assertions.assertEquals("0.31.0", device.getSoftwareVersion(), "The software version is incorrect");
 			Assertions.assertEquals("MetaConnect 48", device.getFamily(), "The device family is incorrect");
@@ -1525,13 +1535,88 @@ public class DeviceDriverTest {
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("CiscoAsyncOS", null, domain, "test");
 			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
+			AccessManager accessManager = new AccessManager(nullSession, device, null, this.taskContext, null);
+			accessManager.forceClientForTest(fakeCli, credentials);
 			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
-				Device.class, Cli.class, Snmp.class, DriverProtocol.class, DeviceCredentialSet.class);
+				Device.class, AccessManager.class);
 			runMethod.setAccessible(true);
-			runMethod.invoke(script, nullSession, device, fakeCli, null, DriverProtocol.SSH, credentials);
+			runMethod.invoke(script, nullSession, device, accessManager);
 			Config config = device.getLastConfig();
 			Assertions.assertNotNull(config, "The config doesn't exist");
 			Assertions.assertEquals("esa.netshot.lab", device.getName(), "The device name is incorrect");
+		}
+	}
+
+	/**
+	 * Fake SNMP poller returning canned data instead of doing real network I/O.
+	 * This is what caught the "results.forEach is not a function on a Java Map"
+	 * bug in poller.walk() (Object.keys(results) must be used instead, since
+	 * only @Export-annotated members are callable from JS, and a Java Map's
+	 * own forEach isn't one - plus JsSnmpHelper.walkAsString() needs to wrap
+	 * its result in ProxyObject.fromMap(...) for JS to see its keys at all).
+	 */
+	public static class FakeGenericSnmp extends Snmp {
+		FakeGenericSnmp(NetworkAddress address, DeviceSnmpCommunity community) throws IOException {
+			super(address, community);
+		}
+
+		@Override
+		public String getAsString(String oid) throws IOException {
+			return switch (oid) {
+				case "1.3.6.1.2.1.1.5.0" -> "myhost"; // sysName
+				case "1.3.6.1.2.1.1.4.0" -> "someone@example.com"; // sysContact
+				case "1.3.6.1.2.1.1.6.0" -> "Rack 1"; // sysLocation
+				case "1.3.6.1.2.1.1.2.0" -> "1.3.6.1.4.1.9.1.1"; // sysObjectID
+				case "1.3.6.1.2.1.1.1.0" -> "Fake SNMP Device"; // sysDescr
+				default -> throw new IOException("noSuchObject");
+			};
+		}
+
+		@Override
+		public Map<String, String> walkAsString(String oid) throws IOException {
+			Map<String, String> result = new TreeMap<>();
+			if ("1.3.6.1.2.1.2.2.1.2".equals(oid)) {
+				result.put(oid + ".1", "eth0");
+			}
+			else if ("1.3.6.1.2.1.2.2.1.7".equals(oid)) {
+				result.put(oid + ".1", "1");
+			}
+			return result;
+		}
+	}
+
+	@Nested
+	@DisplayName("GenericSNMP driver test")
+	class GenericSNMPTest {
+
+		TaskContext taskContext = new FakeTaskContext();
+
+		@Test
+		@DisplayName("GenericSNMP Snapshot (via poller.walk, real JS engine)")
+		void snapshot() throws NoSuchMethodException, SecurityException, IOException,
+			IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+			DeviceSnmpCommunity community = new DeviceSnmpv2cCommunity("public", "community1");
+			NetworkAddress address = NetworkAddress.getNetworkAddress(InetAddress.getByName("127.0.0.1"));
+			FakeGenericSnmp fakeSnmp = new FakeGenericSnmp(address, community);
+			Session nullSession = null;
+			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
+			Device device = new Device("GenericSNMP", null, domain, "test");
+			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
+
+			AccessManager accessManager = new AccessManager(nullSession, device, address, this.taskContext, null);
+			accessManager.forceClientForTest(fakeSnmp, community);
+			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
+				Device.class, AccessManager.class);
+			runMethod.setAccessible(true);
+			runMethod.invoke(script, nullSession, device, accessManager);
+
+			Assertions.assertEquals("myhost", device.getName(), "The device name is incorrect");
+			Assertions.assertEquals("Rack 1", device.getLocation(), "The location is incorrect");
+			Assertions.assertEquals("someone@example.com", device.getContact(), "The contact is incorrect");
+			Assertions.assertEquals(NetworkClass.UNKNOWN, device.getNetworkClass(), "The network class is incorrect");
+			Assertions.assertEquals("1.3.6.1.4.1.9.1.1",
+				((DeviceTextAttribute) device.getAttribute("sysObjectId")).getText(), "The sysObjectId is incorrect");
+			Assertions.assertNotNull(device.getNetworkInterface("eth0"), "The eth0 interface should have been created");
 		}
 	}
 

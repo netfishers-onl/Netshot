@@ -31,9 +31,11 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,11 +68,21 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
+import net.netshot.netshot.device.access.Http;
+import net.netshot.netshot.device.access.Http.AuthScheme;
+import net.netshot.netshot.device.access.Http.HttpConfig;
 import net.netshot.netshot.device.access.Ssh.SshConfig;
 import net.netshot.netshot.device.access.Ssh.SshInteractionInstruction;
 import net.netshot.netshot.device.access.Telnet.TelnetConfig;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
+import net.netshot.netshot.device.credentials.DeviceCredentialSet;
+import net.netshot.netshot.device.credentials.DeviceHttpAccount;
+import net.netshot.netshot.device.credentials.DeviceSnmpv1Community;
+import net.netshot.netshot.device.credentials.DeviceSnmpv2cCommunity;
+import net.netshot.netshot.device.credentials.DeviceSnmpv3Community;
+import net.netshot.netshot.device.credentials.DeviceSshAccount;
+import net.netshot.netshot.device.credentials.DeviceTelnetAccount;
 import net.netshot.netshot.device.script.helper.JsUtils;
 import net.netshot.netshot.device.collector.SnmpTrapReceiver;
 import net.netshot.netshot.device.collector.SyslogServer;
@@ -96,7 +108,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	public enum DriverProtocol {
 		TELNET("telnet"),
 		SSH("ssh"),
-		SNMP("snmp");
+		SNMP("snmp"),
+		HTTP("http");
 
 		private final String protocol;
 
@@ -505,15 +518,159 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	/** The execution engine (for eval caching). */
 	private Engine engine;
 
-	/** Driver-specific SSH config. */
-	@Getter
-	@Setter
-	private SshConfig sshConfig;
+	/**
+	 * Describes one named access (e.g. "ssh", "alternateSsh", "snmpv1", "https")
+	 * declared by the driver, generalizing what used to be a single driver-wide
+	 * SSH/Telnet config. A driver may declare several accesses of the same
+	 * protocol (e.g. a secondary SSH access on another port).
+	 */
+	public static final class AccessDefinition {
+		/** The JS key this access was declared under (e.g. "alternateSsh"). */
+		@Getter
+		private final String name;
 
-	/** Driver-specific Telnet config. */
+		/** The protocol family (SSH, TELNET, SNMP or HTTP). */
+		@Getter
+		private final DriverProtocol protocol;
+
+		/** For SNMP accesses only: "v1", "v2c" or "v3". */
+		@Getter
+		private final String snmpVersion;
+
+		/** Optional human-readable description. */
+		@Getter
+		private final String description;
+
+		/** Populated only when protocol == SSH. */
+		@Getter
+		private final SshConfig sshConfig;
+
+		/** Populated only when protocol == TELNET. */
+		@Getter
+		private final TelnetConfig telnetConfig;
+
+		/** Populated only when protocol == HTTP. */
+		@Getter
+		private final HttpConfig httpConfig;
+
+		/**
+		 * The driver-declared default TCP port for this access (SSH/Telnet only;
+		 * for HTTP the port lives in {@link HttpConfig} instead). Only the
+		 * conventionally-named "ssh"/"telnet" accesses may additionally be
+		 * overridden at the device level (Device.sshPort/telnetPort) - see
+		 * JsCliHelper - any other/alternate CLI access always uses this value.
+		 */
+		@Getter
+		private final int defaultPort;
+
+		public AccessDefinition(String name, DriverProtocol protocol, String snmpVersion, String description,
+				SshConfig sshConfig, TelnetConfig telnetConfig, HttpConfig httpConfig, int defaultPort) {
+			this.name = name;
+			this.protocol = protocol;
+			this.snmpVersion = snmpVersion;
+			this.description = description;
+			this.sshConfig = sshConfig;
+			this.telnetConfig = telnetConfig;
+			this.httpConfig = httpConfig;
+			this.defaultPort = defaultPort;
+		}
+
+		/**
+		 * The credential subtype able to authenticate against this access.
+		 * @return the credential class to filter candidate credential sets on
+		 */
+		@Transient
+		public Class<? extends DeviceCredentialSet> getCredentialClass() {
+			switch (this.protocol) {
+				case SSH:
+					return DeviceSshAccount.class;
+				case TELNET:
+					return DeviceTelnetAccount.class;
+				case HTTP:
+					return DeviceHttpAccount.class;
+				case SNMP:
+				default:
+					if ("v1".equals(this.snmpVersion)) {
+						return DeviceSnmpv1Community.class;
+					}
+					if ("v3".equals(this.snmpVersion)) {
+						return DeviceSnmpv3Community.class;
+					}
+					return DeviceSnmpv2cCommunity.class;
+			}
+		}
+	}
+
+	/** The named accesses (CLI/SNMP/HTTP) declared by this driver, in declaration order. */
 	@Getter
-	@Setter
-	private TelnetConfig telnetConfig;
+	private Map<String, AccessDefinition> accessDefinitions = new LinkedHashMap<>();
+
+	/**
+	 * Gets a declared access by name.
+	 * @param name the access name (JS key)
+	 * @return the access definition, or null if not found
+	 */
+	@Transient
+	public AccessDefinition getAccessDefinition(String name) {
+		return this.accessDefinitions.get(name);
+	}
+
+	/**
+	 * Gets the default (legacy/backward-compatible) list of CLI accesses to use
+	 * when a driver doesn't explicitly call {@code client.create(...)}: all SSH
+	 * accesses (in declaration order), then all Telnet accesses (in declaration
+	 * order) - SSH is always prioritized over Telnet, matching historical behavior.
+	 * @return the ordered list of default CLI access definitions
+	 */
+	@Transient
+	public List<AccessDefinition> getDefaultCliAccessDefinitions() {
+		List<AccessDefinition> result = new ArrayList<>();
+		for (AccessDefinition def : this.accessDefinitions.values()) {
+			if (def.getProtocol() == DriverProtocol.SSH) {
+				result.add(def);
+			}
+		}
+		for (AccessDefinition def : this.accessDefinitions.values()) {
+			if (def.getProtocol() == DriverProtocol.TELNET) {
+				result.add(def);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Gets the default list of SNMP accesses to use when a driver doesn't
+	 * explicitly call {@code client.create(...)} (declaration order).
+	 * @return the ordered list of default SNMP access definitions
+	 */
+	@Transient
+	public List<AccessDefinition> getDefaultSnmpAccessDefinitions() {
+		List<AccessDefinition> result = new ArrayList<>();
+		for (AccessDefinition def : this.accessDefinitions.values()) {
+			if (def.getProtocol() == DriverProtocol.SNMP) {
+				result.add(def);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Resolves a list of access names into their definitions.
+	 * @param names the access names (already resolved from JS, literal keys)
+	 * @return the matching access definitions, in the given order
+	 */
+	@Transient
+	public List<AccessDefinition> getAccessDefinitions(List<String> names) {
+		List<AccessDefinition> result = new ArrayList<>();
+		for (String name : names) {
+			AccessDefinition def = this.accessDefinitions.get(name);
+			if (def == null) {
+				throw new IllegalArgumentException("Unknown access '" + name + "'.");
+			}
+			result.add(def);
+		}
+		return result;
+	}
 
 	/** Instantiates a new device driver (empty constructor). */
 	protected DeviceDriver() {
@@ -541,9 +698,6 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			this.sourceHash = Hex.encodeHexString(hash, true);
 		}
 		this.engine = Engine.create();
-
-		this.sshConfig = new SshConfig(false);
-		this.telnetConfig = new TelnetConfig();
 
 		try (Context context = this.getContext()) {
 			this.loadCode(context);
@@ -608,177 +762,66 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			try {
 				Value cli = context.getBindings("js").getMember("CLI");
 				if (cli.hasMembers()) {
-					Value ssh = cli.getMember("ssh");
-					if (ssh != null && ssh.hasMembers()) {
-						this.protocols.add(DriverProtocol.SSH);
-						Value cliSshConfig = ssh.getMember("config");
-						if (cliSshConfig != null && cliSshConfig.hasMembers()) {
-							Value terminal = cliSshConfig.getMember("terminal");
-							if (terminal != null && terminal.hasMembers()) {
-								Value usePty = terminal.getMember("pty");
-								if (usePty != null) {
-									this.sshConfig.setUsePty(usePty.asBoolean());
-								}
-								Value vtType = terminal.getMember("type");
-								if (vtType != null) {
-									this.sshConfig.setTerminalType(vtType.asString());
-								}
-								Value vtHeight = terminal.getMember("height");
-								if (vtHeight != null) {
-									this.sshConfig.setTerminalHeight(vtHeight.asInt());
-								}
-								Value vtWidth = terminal.getMember("width");
-								if (vtWidth != null) {
-									this.sshConfig.setTerminalWidth(vtWidth.asInt());
-								}
-								Value vtRows = terminal.getMember("rows");
-								if (vtRows != null) {
-									this.sshConfig.setTerminalRows(vtRows.asInt());
-									if (vtHeight == null) {
-										this.sshConfig.setTerminalHeight(vtRows.asInt() * 8);
-									}
-								}
-								Value vtCols = terminal.getMember("cols");
-								if (vtCols != null) {
-									this.sshConfig.setTerminalCols(vtCols.asInt());
-									if (vtWidth == null) {
-										this.sshConfig.setTerminalWidth(vtCols.asInt() * 20);
-									}
-								}
+					for (String key : cli.getMemberKeys()) {
+						Value accessValue = cli.getMember(key);
+						if (accessValue == null || !accessValue.hasMembers()) {
+							continue;
+						}
+						DriverProtocol accessProtocol;
+						Value protocolValue = accessValue.getMember("protocol");
+						if (protocolValue != null && protocolValue.isString()) {
+							String p = protocolValue.asString().toLowerCase();
+							if ("ssh".equals(p)) {
+								accessProtocol = DriverProtocol.SSH;
 							}
-							{
-								Value kexAlgorithms = cliSshConfig.getMember("kexAlgorithms");
-								if (kexAlgorithms != null && kexAlgorithms.hasArrayElements()) {
-									Set<String> algos = new HashSet<>();
-									for (long i = 0; i < kexAlgorithms.getArraySize(); i++) {
-										Value algo = kexAlgorithms.getArrayElement(i);
-										algos.add(algo.asString());
-									}
-									this.sshConfig.setKexAlgorithms(algos.toArray(new String[0]));
-								}
+							else if ("telnet".equals(p)) {
+								accessProtocol = DriverProtocol.TELNET;
 							}
-							{
-								Value hostKeyAlgorithms = cliSshConfig.getMember("hostKeyAlgorithms");
-								if (hostKeyAlgorithms != null && hostKeyAlgorithms.hasArrayElements()) {
-									Set<String> algos = new HashSet<>();
-									for (long i = 0; i < hostKeyAlgorithms.getArraySize(); i++) {
-										Value algo = hostKeyAlgorithms.getArrayElement(i);
-										algos.add(algo.asString());
-									}
-									this.sshConfig.setHostKeyAlgorithms(algos.toArray(new String[0]));
-								}
-							}
-							{
-								Value ciphers = cliSshConfig.getMember("ciphers");
-								if (ciphers != null && ciphers.hasArrayElements()) {
-									Set<String> algos = new HashSet<>();
-									for (long i = 0; i < ciphers.getArraySize(); i++) {
-										Value algo = ciphers.getArrayElement(i);
-										algos.add(algo.asString());
-									}
-									this.sshConfig.setCiphers(algos.toArray(new String[0]));
-								}
-							}
-							{
-								Value macs = cliSshConfig.getMember("macs");
-								if (macs != null && macs.hasArrayElements()) {
-									Set<String> algos = new HashSet<>();
-									for (long i = 0; i < macs.getArraySize(); i++) {
-										Value algo = macs.getArrayElement(i);
-										algos.add(algo.asString());
-									}
-									this.sshConfig.setMacs(algos.toArray(new String[0]));
-								}
-							}
-							{
-								Value compressionAlgorithms = cliSshConfig.getMember("compressionAlgorithms");
-								if (compressionAlgorithms != null && compressionAlgorithms.hasArrayElements()) {
-									Set<String> algos = new HashSet<>();
-									for (long i = 0; i < compressionAlgorithms.getArraySize(); i++) {
-										Value algo = compressionAlgorithms.getArrayElement(i);
-										algos.add(algo.asString());
-									}
-									this.sshConfig.setCompressionAlgorithms(algos.toArray(new String[0]));
-								}
-							}
-							{
-								Value rekey = cliSshConfig.getMember("rekey");
-								if (rekey != null && rekey.hasMembers()) {
-									Value timeLimit = rekey.getMember("timeLimit");
-									if (timeLimit != null) {
-										this.sshConfig.setRekeyTimeLimit(timeLimit.asLong());
-									}
-									Value dataLimit = rekey.getMember("dataLimit");
-									if (dataLimit != null) {
-										this.sshConfig.setRekeyDataLimit(dataLimit.asLong());
-									}
-								}
-							}
-							Value auth = cliSshConfig.getMember("auth");
-							if (auth != null && auth.hasMembers()) {
-								Value interactive = auth.getMember("interactive");
-								if (interactive != null && interactive.hasMembers()) {
-									Value interactions = interactive.getMember("interactions");
-									if (interactions != null && interactions.hasArrayElements()) {
-										List<SshInteractionInstruction> instructions = new ArrayList<>();
-										for (long i = 0; i < interactions.getArraySize(); i++) {
-											Value interaction = interactions.getArrayElement(i);
-											Value echo = interaction.getMember("echo");
-											Pattern promptPattern = null;
-											Value prompt = interaction.getMember("prompt");
-											if (prompt != null) {
-												try {
-													promptPattern = JsUtils.jsRegExpToPattern(prompt);
-												}
-												catch (Exception e) {
-													throw new IllegalArgumentException(
-														"Invalid RegExp used as SSH interaction prompt (index %d)".formatted(i));
-												}
-											}
-											Value response = interaction.getMember("response");
-											instructions.add(new SshInteractionInstruction(
-												promptPattern,
-												(echo != null && echo.isBoolean()) ? echo.asBoolean() : null,
-												(response != null && response.isString()) ? response.asString() : null
-											));
-										}
-										this.sshConfig.setInteractionInstructions(instructions);
-									}
-								}
+							else {
+								throw new IllegalArgumentException(
+									String.format("Invalid protocol '%s' for CLI access '%s'.", p, key));
 							}
 						}
-						Value macros = ssh.getMember("macros");
+						else if ("ssh".equalsIgnoreCase(key)) {
+							accessProtocol = DriverProtocol.SSH;
+						}
+						else if ("telnet".equalsIgnoreCase(key)) {
+							accessProtocol = DriverProtocol.TELNET;
+						}
+						else {
+							// Not an access definition (e.g. a CLI mode like 'enable', 'username', etc.)
+							continue;
+						}
+						String description = null;
+						Value descriptionValue = accessValue.getMember("description");
+						if (descriptionValue != null && descriptionValue.isString()) {
+							description = descriptionValue.asString();
+						}
+						this.protocols.add(accessProtocol);
+						SshConfig accessSshConfig = null;
+						TelnetConfig accessTelnetConfig = null;
+						Value configValue = accessValue.getMember("config");
+						int defaultPort;
+						if (accessProtocol == DriverProtocol.SSH) {
+							accessSshConfig = this.parseSshConfig(configValue);
+							defaultPort = net.netshot.netshot.device.access.Ssh.DEFAULT_PORT;
+						}
+						else {
+							accessTelnetConfig = this.parseTelnetConfig(configValue);
+							defaultPort = net.netshot.netshot.device.access.Telnet.DEFAULT_PORT;
+						}
+						if (configValue != null && configValue.hasMembers()) {
+							Value defaultPortValue = configValue.getMember("defaultPort");
+							if (defaultPortValue != null) {
+								defaultPort = defaultPortValue.asInt();
+							}
+						}
+						Value macros = accessValue.getMember("macros");
 						if (macros != null && macros.hasMembers()) {
 							this.cliMainModes.addAll(macros.getMemberKeys());
 						}
-					}
-					Value telnet = cli.getMember("telnet");
-					if (telnet != null && telnet.hasMembers()) {
-						this.protocols.add(DriverProtocol.TELNET);
-						Value cliTelnetConfig = telnet.getMember("config");
-						if (cliTelnetConfig != null && cliTelnetConfig.hasMembers()) {
-							Value terminal = cliTelnetConfig.getMember("terminal");
-							if (terminal != null && terminal.hasMembers()) {
-								Value vtType = terminal.getMember("type");
-								if (vtType != null) {
-									this.telnetConfig.setTerminalType(vtType.asString());
-								}
-								Value vtCols = terminal.getMember("cols");
-								if (vtCols != null) {
-									this.telnetConfig.setTerminalCols(vtCols.asInt());
-								}
-								Value vtRows = terminal.getMember("rows");
-								if (vtRows != null) {
-									this.telnetConfig.setTerminalRows(vtRows.asInt());
-								}
-							}
-						}
-						Value macros = telnet.getMember("macros");
-						if (macros != null && macros.hasMembers()) {
-							this.cliMainModes.addAll(macros.getMemberKeys());
-						}
-
-
+						this.accessDefinitions.put(key, new AccessDefinition(key, accessProtocol, null,
+							description, accessSshConfig, accessTelnetConfig, null, defaultPort));
 					}
 				}
 			}
@@ -787,15 +830,110 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			}
 
 			try {
-				if (context.getBindings("js").hasMember("SNMP")) {
-					this.protocols.add(DriverProtocol.SNMP);
+				Value snmp = context.getBindings("js").getMember("SNMP");
+				if (snmp != null && snmp.hasMembers()) {
+					for (String key : snmp.getMemberKeys()) {
+						Value accessValue = snmp.getMember(key);
+						if (accessValue == null || !accessValue.hasMembers()) {
+							continue;
+						}
+						String snmpVersion;
+						Value protocolValue = accessValue.getMember("protocol");
+						if (protocolValue != null && protocolValue.isString()) {
+							String p = protocolValue.asString().toLowerCase();
+							if (p.contains("1")) {
+								snmpVersion = "v1";
+							}
+							else if (p.contains("3")) {
+								snmpVersion = "v3";
+							}
+							else if (p.contains("2")) {
+								snmpVersion = "v2c";
+							}
+							else {
+								throw new IllegalArgumentException(
+									String.format("Invalid protocol '%s' for SNMP access '%s'.", p, key));
+							}
+						}
+						else if (key.toLowerCase().contains("1")) {
+							snmpVersion = "v1";
+						}
+						else if (key.toLowerCase().contains("3")) {
+							snmpVersion = "v3";
+						}
+						else {
+							snmpVersion = "v2c";
+						}
+						String description = null;
+						Value descriptionValue = accessValue.getMember("description");
+						if (descriptionValue != null && descriptionValue.isString()) {
+							description = descriptionValue.asString();
+						}
+						this.protocols.add(DriverProtocol.SNMP);
+						this.accessDefinitions.put(key, new AccessDefinition(key, DriverProtocol.SNMP,
+							snmpVersion, description, null, null, null, 0));
+					}
 				}
 			}
 			catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Invalid SNMP object.", e);
 			}
 
-			if (this.protocols.isEmpty()) {
-				throw new IllegalArgumentException("Invalid driver, it supports neither Telnet nor SSH.");
+			try {
+				Value http = context.getBindings("js").getMember("HTTP");
+				if (http != null && http.hasMembers()) {
+					for (String key : http.getMemberKeys()) {
+						Value accessValue = http.getMember(key);
+						if (accessValue == null || !accessValue.hasMembers()) {
+							continue;
+						}
+						String description = null;
+						Value descriptionValue = accessValue.getMember("description");
+						if (descriptionValue != null && descriptionValue.isString()) {
+							description = descriptionValue.asString();
+						}
+						HttpConfig httpConfig = new HttpConfig();
+						httpConfig.setTls(!"http".equalsIgnoreCase(key));
+						Value configValue = accessValue.getMember("config");
+						if (configValue != null && configValue.hasMembers()) {
+							Value tlsValue = configValue.getMember("tls");
+							if (tlsValue != null && tlsValue.isBoolean()) {
+								httpConfig.setTls(tlsValue.asBoolean());
+							}
+							Value basePath = configValue.getMember("basePath");
+							if (basePath != null && basePath.isString()) {
+								httpConfig.setBasePath(basePath.asString());
+							}
+							Value defaultPort = configValue.getMember("defaultPort");
+							if (defaultPort != null) {
+								httpConfig.setDefaultPort(defaultPort.asInt());
+							}
+							else {
+								httpConfig.setDefaultPort(httpConfig.isTls() ? Http.DEFAULT_PORT : 80);
+							}
+						}
+						else {
+							httpConfig.setDefaultPort(httpConfig.isTls() ? Http.DEFAULT_PORT : 80);
+						}
+						Value authValue = accessValue.getMember("auth");
+						if (authValue != null && authValue.hasMembers()) {
+							httpConfig.setAuth(this.parseHttpAuthScheme(authValue, key));
+						}
+						this.protocols.add(DriverProtocol.HTTP);
+						this.accessDefinitions.put(key, new AccessDefinition(key, DriverProtocol.HTTP,
+							null, description, null, null, httpConfig, 0));
+					}
+				}
+			}
+			catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Invalid HTTP object.", e);
+			}
+
+			Set<DriverProtocol> connectableProtocols = EnumSet.copyOf(
+				this.protocols.isEmpty() ? EnumSet.noneOf(DriverProtocol.class) : this.protocols);
+			connectableProtocols.remove(DriverProtocol.HTTP);
+			if (connectableProtocols.isEmpty()) {
+				throw new IllegalArgumentException("Invalid driver, it supports neither Telnet, SSH nor SNMP.");
 			}
 
 			try {
@@ -812,8 +950,229 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	}
 
 	/**
+	 * Parses the "config" object of a CLI SSH access into an {@link SshConfig}.
+	 * @param cliSshConfig the JS "config" object (may be null)
+	 * @return the populated SshConfig
+	 */
+	private SshConfig parseSshConfig(Value cliSshConfig) {
+		SshConfig sshConfig = new SshConfig(false);
+		if (cliSshConfig != null && cliSshConfig.hasMembers()) {
+			Value terminal = cliSshConfig.getMember("terminal");
+			if (terminal != null && terminal.hasMembers()) {
+				Value usePty = terminal.getMember("pty");
+				if (usePty != null) {
+					sshConfig.setUsePty(usePty.asBoolean());
+				}
+				Value vtType = terminal.getMember("type");
+				if (vtType != null) {
+					sshConfig.setTerminalType(vtType.asString());
+				}
+				Value vtHeight = terminal.getMember("height");
+				if (vtHeight != null) {
+					sshConfig.setTerminalHeight(vtHeight.asInt());
+				}
+				Value vtWidth = terminal.getMember("width");
+				if (vtWidth != null) {
+					sshConfig.setTerminalWidth(vtWidth.asInt());
+				}
+				Value vtRows = terminal.getMember("rows");
+				if (vtRows != null) {
+					sshConfig.setTerminalRows(vtRows.asInt());
+					if (vtHeight == null) {
+						sshConfig.setTerminalHeight(vtRows.asInt() * 8);
+					}
+				}
+				Value vtCols = terminal.getMember("cols");
+				if (vtCols != null) {
+					sshConfig.setTerminalCols(vtCols.asInt());
+					if (vtWidth == null) {
+						sshConfig.setTerminalWidth(vtCols.asInt() * 20);
+					}
+				}
+			}
+			{
+				Value kexAlgorithms = cliSshConfig.getMember("kexAlgorithms");
+				if (kexAlgorithms != null && kexAlgorithms.hasArrayElements()) {
+					Set<String> algos = new HashSet<>();
+					for (long i = 0; i < kexAlgorithms.getArraySize(); i++) {
+						Value algo = kexAlgorithms.getArrayElement(i);
+						algos.add(algo.asString());
+					}
+					sshConfig.setKexAlgorithms(algos.toArray(new String[0]));
+				}
+			}
+			{
+				Value hostKeyAlgorithms = cliSshConfig.getMember("hostKeyAlgorithms");
+				if (hostKeyAlgorithms != null && hostKeyAlgorithms.hasArrayElements()) {
+					Set<String> algos = new HashSet<>();
+					for (long i = 0; i < hostKeyAlgorithms.getArraySize(); i++) {
+						Value algo = hostKeyAlgorithms.getArrayElement(i);
+						algos.add(algo.asString());
+					}
+					sshConfig.setHostKeyAlgorithms(algos.toArray(new String[0]));
+				}
+			}
+			{
+				Value ciphers = cliSshConfig.getMember("ciphers");
+				if (ciphers != null && ciphers.hasArrayElements()) {
+					Set<String> algos = new HashSet<>();
+					for (long i = 0; i < ciphers.getArraySize(); i++) {
+						Value algo = ciphers.getArrayElement(i);
+						algos.add(algo.asString());
+					}
+					sshConfig.setCiphers(algos.toArray(new String[0]));
+				}
+			}
+			{
+				Value macs = cliSshConfig.getMember("macs");
+				if (macs != null && macs.hasArrayElements()) {
+					Set<String> algos = new HashSet<>();
+					for (long i = 0; i < macs.getArraySize(); i++) {
+						Value algo = macs.getArrayElement(i);
+						algos.add(algo.asString());
+					}
+					sshConfig.setMacs(algos.toArray(new String[0]));
+				}
+			}
+			{
+				Value compressionAlgorithms = cliSshConfig.getMember("compressionAlgorithms");
+				if (compressionAlgorithms != null && compressionAlgorithms.hasArrayElements()) {
+					Set<String> algos = new HashSet<>();
+					for (long i = 0; i < compressionAlgorithms.getArraySize(); i++) {
+						Value algo = compressionAlgorithms.getArrayElement(i);
+						algos.add(algo.asString());
+					}
+					sshConfig.setCompressionAlgorithms(algos.toArray(new String[0]));
+				}
+			}
+			{
+				Value rekey = cliSshConfig.getMember("rekey");
+				if (rekey != null && rekey.hasMembers()) {
+					Value timeLimit = rekey.getMember("timeLimit");
+					if (timeLimit != null) {
+						sshConfig.setRekeyTimeLimit(timeLimit.asLong());
+					}
+					Value dataLimit = rekey.getMember("dataLimit");
+					if (dataLimit != null) {
+						sshConfig.setRekeyDataLimit(dataLimit.asLong());
+					}
+				}
+			}
+			Value auth = cliSshConfig.getMember("auth");
+			if (auth != null && auth.hasMembers()) {
+				Value interactive = auth.getMember("interactive");
+				if (interactive != null && interactive.hasMembers()) {
+					Value interactions = interactive.getMember("interactions");
+					if (interactions != null && interactions.hasArrayElements()) {
+						List<SshInteractionInstruction> instructions = new ArrayList<>();
+						for (long i = 0; i < interactions.getArraySize(); i++) {
+							Value interaction = interactions.getArrayElement(i);
+							Value echo = interaction.getMember("echo");
+							Pattern promptPattern = null;
+							Value prompt = interaction.getMember("prompt");
+							if (prompt != null) {
+								try {
+									promptPattern = JsUtils.jsRegExpToPattern(prompt);
+								}
+								catch (Exception e) {
+									throw new IllegalArgumentException(
+										"Invalid RegExp used as SSH interaction prompt (index %d)".formatted(i));
+								}
+							}
+							Value response = interaction.getMember("response");
+							instructions.add(new SshInteractionInstruction(
+								promptPattern,
+								(echo != null && echo.isBoolean()) ? echo.asBoolean() : null,
+								(response != null && response.isString()) ? response.asString() : null
+							));
+						}
+						sshConfig.setInteractionInstructions(instructions);
+					}
+				}
+			}
+		}
+		return sshConfig;
+	}
+
+	/**
+	 * Parses the "config" object of a CLI Telnet access into a {@link TelnetConfig}.
+	 * @param cliTelnetConfig the JS "config" object (may be null)
+	 * @return the populated TelnetConfig
+	 */
+	private TelnetConfig parseTelnetConfig(Value cliTelnetConfig) {
+		TelnetConfig telnetConfig = new TelnetConfig();
+		if (cliTelnetConfig != null && cliTelnetConfig.hasMembers()) {
+			Value terminal = cliTelnetConfig.getMember("terminal");
+			if (terminal != null && terminal.hasMembers()) {
+				Value vtType = terminal.getMember("type");
+				if (vtType != null) {
+					telnetConfig.setTerminalType(vtType.asString());
+				}
+				Value vtCols = terminal.getMember("cols");
+				if (vtCols != null) {
+					telnetConfig.setTerminalCols(vtCols.asInt());
+				}
+				Value vtRows = terminal.getMember("rows");
+				if (vtRows != null) {
+					telnetConfig.setTerminalRows(vtRows.asInt());
+				}
+			}
+		}
+		return telnetConfig;
+	}
+
+	/**
+	 * Parses the "auth" object of an HTTP access into an {@link AuthScheme},
+	 * OpenAPI-securitySchemes-inspired. "oauth2"/"openIdConnect" shapes are
+	 * recognized but the actual IdP token fetch/cache/refresh flow is a
+	 * deliberately deferred fast-follow, not implemented in this phase.
+	 * @param authValue the JS "auth" object
+	 * @param accessName the name of the HTTP access (for error messages)
+	 * @return the populated AuthScheme
+	 */
+	private AuthScheme parseHttpAuthScheme(Value authValue, String accessName) {
+		AuthScheme auth = new AuthScheme();
+		Value typeValue = authValue.getMember("type");
+		if (typeValue == null || !typeValue.isString()) {
+			throw new IllegalArgumentException(
+				String.format("Missing 'type' in auth scheme of HTTP access '%s'.", accessName));
+		}
+		String type = typeValue.asString();
+		auth.setType(type);
+		if ("http".equalsIgnoreCase(type)) {
+			Value schemeValue = authValue.getMember("scheme");
+			String scheme = (schemeValue != null && schemeValue.isString()) ? schemeValue.asString() : "basic";
+			if (!"basic".equalsIgnoreCase(scheme) && !"bearer".equalsIgnoreCase(scheme)) {
+				throw new IllegalArgumentException(
+					String.format("Invalid 'scheme' '%s' in auth scheme of HTTP access '%s'.", scheme, accessName));
+			}
+			auth.setScheme(scheme);
+		}
+		else if ("apiKey".equalsIgnoreCase(type)) {
+			Value inValue = authValue.getMember("in");
+			String in = (inValue != null && inValue.isString()) ? inValue.asString() : "header";
+			if (!"header".equalsIgnoreCase(in) && !"query".equalsIgnoreCase(in) && !"cookie".equalsIgnoreCase(in)) {
+				throw new IllegalArgumentException(
+					String.format("Invalid 'in' '%s' in auth scheme of HTTP access '%s'.", in, accessName));
+			}
+			auth.setIn(in);
+			Value nameValue = authValue.getMember("name");
+			if (nameValue == null || !nameValue.isString()) {
+				throw new IllegalArgumentException(
+					String.format("Missing 'name' in apiKey auth scheme of HTTP access '%s'.", accessName));
+			}
+			auth.setName(nameValue.asString());
+		}
+		else if (!"oauth2".equalsIgnoreCase(type) && !"openIdConnect".equalsIgnoreCase(type)) {
+			throw new IllegalArgumentException(
+				String.format("Invalid auth 'type' '%s' in HTTP access '%s'.", type, accessName));
+		}
+		return auth;
+	}
+
+	/**
 	 * Asks the driver to analyze a syslog message.
-	 * 
+	 *
 	 * @param message
 	 *                    The syslog message
 	 * @param ip

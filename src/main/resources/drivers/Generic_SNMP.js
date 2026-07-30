@@ -21,7 +21,7 @@ var Info = {
 	name: "GenericSNMP",
 	description: "Generic SNMP device",
 	author: "Netshot Team",
-	version: "1.1",
+	version: "2.0",
 	priority: 1024, /* Less than default */
 };
 
@@ -46,10 +46,14 @@ var CLI = {
 };
 
 var SNMP = {
-	/* Enable SNMP */
+	snmpv1: {},
+	snmpv2c: {},
+	snmpv3: {},
 };
 
-function snapshot(poller, device, config, debug) {
+function snapshot(client, device, config) {
+
+	var poller = client.create("snmp");
 
 	var hostname = poller.get("1.3.6.1.2.1.1.5.0"); /* sysName.0 */
 	device.set("name", hostname);

@@ -36,7 +36,7 @@ import net.netshot.netshot.work.TaskContext;
  * Abstract - real implementations are Telnet, SSH.
  */
 @Slf4j
-public abstract class Cli {
+public abstract class Cli implements Client {
 
 	/** Possible clean up actions to enable on the Cli instance. */
 	public enum CleanUpAction {

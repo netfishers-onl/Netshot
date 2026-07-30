@@ -207,6 +207,7 @@ export enum DeviceTypeProtocol {
   Ssh = "SSH",
   Telnet = "TELNET",
   Snmp = "SNMP",
+  Http = "HTTP",
 }
 
 export type DeviceType = {

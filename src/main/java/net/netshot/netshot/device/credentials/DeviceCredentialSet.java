@@ -62,7 +62,8 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 	@Type(value = DeviceSnmpv3Community.class, name = "SNMP v3"),
 	@Type(value = DeviceSshAccount.class, name = "SSH"),
 	@Type(value = DeviceSshKeyAccount.class, name = "SSH Key"),
-	@Type(value = DeviceTelnetAccount.class, name = "Telnet")
+	@Type(value = DeviceTelnetAccount.class, name = "Telnet"),
+	@Type(value = DeviceHttpAccount.class, name = "HTTP")
 })
 public abstract class DeviceCredentialSet {
 

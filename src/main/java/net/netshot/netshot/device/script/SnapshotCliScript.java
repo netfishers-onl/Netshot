@@ -40,19 +40,15 @@ import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.MissingDeviceDriverException;
 import net.netshot.netshot.device.DeviceDriver;
-import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
-import net.netshot.netshot.device.access.Cli;
+import net.netshot.netshot.device.access.AccessManager;
 import net.netshot.netshot.device.access.InvalidCredentialsException;
-import net.netshot.netshot.device.access.Snmp;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
-import net.netshot.netshot.device.credentials.DeviceCliAccount;
-import net.netshot.netshot.device.credentials.DeviceCredentialSet;
-import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
 import net.netshot.netshot.device.script.helper.JsCliHelper;
 import net.netshot.netshot.device.script.helper.JsCliScriptOptions;
+import net.netshot.netshot.device.script.helper.JsClientFactory;
 import net.netshot.netshot.device.script.helper.JsConfigHelper;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.device.script.helper.JsSnmpHelper;
@@ -130,36 +126,28 @@ public final class SnapshotCliScript extends CliScript {
 	}
 
 	@Override
-	protected void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
+	protected void run(Session session, Device device, AccessManager accessManager)
 		throws InvalidCredentialsException, IOException, InvalidOperationException, MissingDeviceDriverException {
 
-		JsCliHelper jsCliHelper = null;
-		JsSnmpHelper jsSnmpHelper = null;
-		switch (protocol) {
-			case SNMP:
-				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.taskContext);
-				break;
-			case TELNET:
-			case SSH:
-			default:
-				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.taskContext);
-				break;
-		}
-		JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
-
 		DeviceDriver driver = device.getDeviceDriver();
+		JsCliHelper jsCliHelper = new JsCliHelper(accessManager, driver.getDefaultCliAccessDefinitions(), true, this.taskContext);
+		JsSnmpHelper jsSnmpHelper = new JsSnmpHelper(accessManager, driver.getDefaultSnmpAccessDefinitions(), true, this.taskContext);
+		JsClientFactory clientFactory = new JsClientFactory(accessManager, driver);
+		JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
+		options.setClientFactory(clientFactory);
+
 		try (Context context = driver.getContext()) {
 			this.taskContext.info("Starting snapshot of device {} using driver {} version {}",
 				device.getId(), driver.getName(), driver.getVersion());
 			driver.loadCode(context);
-			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, cli, session, this.taskContext, false);
+			JsDeviceHelper deviceHelper = new JsDeviceHelper(device, jsCliHelper, session, this.taskContext, false);
 			options.setDeviceHelper(deviceHelper);
 			Config config = new Config(device);
 			Config lastConfig = Database.unproxy(device.getLastConfig());
-			JsConfigHelper configHelper = new JsConfigHelper(device, config, lastConfig, cli, this.taskContext);
+			JsConfigHelper configHelper = new JsConfigHelper(device, config, lastConfig, jsCliHelper, this.taskContext);
 			options.setConfigHelper(configHelper);
 			context.getBindings("js").getMember("_connect")
-				.execute("snapshot", protocol.value(), options, this.taskContext);
+				.execute("snapshot", options);
 
 			// Check whether the config has actually changed
 			boolean different = false;

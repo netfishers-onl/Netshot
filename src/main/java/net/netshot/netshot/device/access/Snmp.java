@@ -63,7 +63,7 @@ import org.snmp4j.util.TreeUtils;
  * A SNMP poller class, to poll data from a device via SNMP.
  */
 @Slf4j
-public class Snmp extends Poller {
+public class Snmp extends Poller implements Client {
 
 	/** The port. */
 	private static final int PORT = 161;
@@ -162,6 +162,28 @@ public class Snmp extends Poller {
 		this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community));
 		this.target.setVersion(v1 ? SnmpConstants.version1 : SnmpConstants.version2c);
 		start();
+	}
+
+	/**
+	 * Connect. A no-op: the UDP transport is already opened by the constructor
+	 * (via {@link #start()}), so there is nothing left to do lazily here.
+	 */
+	@Override
+	public void connect() throws IOException {
+		// Nothing to do: the transport is already listening.
+	}
+
+	/**
+	 * Disconnect, i.e. release the underlying UDP transport.
+	 */
+	@Override
+	public void disconnect() {
+		try {
+			this.stop();
+		}
+		catch (IOException e) {
+			log.warn("Error while closing the SNMP transport.", e);
+		}
 	}
 
 	/**

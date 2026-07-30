@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2025 Netshot
- * 
+ *
  * This file is part of Netshot project.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -32,15 +32,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.MissingDeviceDriverException;
 import net.netshot.netshot.device.DeviceDriver;
-import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
-import net.netshot.netshot.device.access.Cli;
+import net.netshot.netshot.device.access.AccessManager;
 import net.netshot.netshot.device.access.InvalidCredentialsException;
-import net.netshot.netshot.device.access.Snmp;
-import net.netshot.netshot.device.credentials.DeviceCliAccount;
-import net.netshot.netshot.device.credentials.DeviceCredentialSet;
-import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
 import net.netshot.netshot.device.script.helper.JsCliHelper;
 import net.netshot.netshot.device.script.helper.JsCliScriptOptions;
+import net.netshot.netshot.device.script.helper.JsClientFactory;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.device.script.helper.JsDiagnosticHelper;
 import net.netshot.netshot.device.script.helper.JsSnmpHelper;
@@ -65,26 +61,18 @@ public final class RunDiagnosticCliScript extends CliScript {
 	}
 
 	@Override
-	protected void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
+	protected void run(Session session, Device device, AccessManager accessManager)
 		throws InvalidCredentialsException, IOException, UnsupportedOperationException, MissingDeviceDriverException {
-		JsCliHelper jsCliHelper = null;
-		JsSnmpHelper jsSnmpHelper = null;
-		switch (protocol) {
-			case SNMP:
-				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.taskContext);
-				break;
-			case TELNET:
-			case SSH:
-			default:
-				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.taskContext);
-				break;
-		}
 		DeviceDriver driver = device.getDeviceDriver();
+		JsCliHelper jsCliHelper = new JsCliHelper(accessManager, driver.getDefaultCliAccessDefinitions(), true, this.taskContext);
+		JsSnmpHelper jsSnmpHelper = new JsSnmpHelper(accessManager, driver.getDefaultSnmpAccessDefinitions(), true, this.taskContext);
+		JsClientFactory clientFactory = new JsClientFactory(accessManager, driver);
 		// Filter on the device driver
 		try (Context context = driver.getContext()) {
 			driver.loadCode(context);
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
-			options.setDeviceHelper(new JsDeviceHelper(device, cli, null, this.taskContext, false));
+			options.setClientFactory(clientFactory);
+			options.setDeviceHelper(new JsDeviceHelper(device, jsCliHelper, null, this.taskContext, false));
 
 			Map<String, Object> jsDiagnostics = new HashMap<String, Object>();
 			for (Diagnostic diagnostic : this.diagnostics) {
@@ -106,7 +94,7 @@ public final class RunDiagnosticCliScript extends CliScript {
 			if (jsDiagnostics.size() > 0) {
 				context.getBindings("js")
 					.getMember("_connect")
-					.execute("diagnostics", protocol.value(), options, this.taskContext);
+					.execute("diagnostics", options);
 			}
 
 		}

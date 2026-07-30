@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2025 Netshot
- * 
+ *
  * This file is part of Netshot project.
- * 
+ *
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -101,11 +101,76 @@ const _validate = (_target, _options) => {
 	}
 }
 
-const _connect = (_function, _protocol, _options) => {
-	
-	const _cli = _options.getCliHelper();
-	const _snmp = _options.getSnmpHelper();
-	const _deviceHelper = _options.getDeviceHelper();
+/**
+ * Checks whether an error looks like an authentication failure, per the
+ * historical convention (driver-declared CLI "fail" mode strings, or the
+ * dedicated Java exceptions thrown when autoTryCredentials is disabled).
+ */
+const isAuthFailureError = (e) => {
+	const message = (e && typeof e.message === "string") ? e.message : String(e);
+	return message.indexOf("Authentication failed") >= 0;
+};
+
+/**
+ * Resolves a literal access name or family word (e.g. "ssh", "snmp", "http")
+ * against the driver's own CLI/SNMP/HTTP globals, returning the ordered list
+ * of concrete, literal access names to try (in priority order).
+ */
+const resolveAccessNames = (nameOrArray) => {
+	const names = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
+	const groups = { cli: (typeof CLI === "object" ? CLI : {}), snmp: (typeof SNMP === "object" ? SNMP : {}),
+		http: (typeof HTTP === "object" ? HTTP : {}) };
+	const familyOf = (groupName) => (groupName === "cli" ? ["ssh", "telnet"] : [groupName]);
+
+	const resolveOne = (name) => {
+		// 1. Literal key match, across CLI/SNMP/HTTP (in that search order).
+		for (const groupName of ["cli", "snmp", "http"]) {
+			if (Object.prototype.hasOwnProperty.call(groups[groupName], name)) {
+				return { family: groupName, accessNames: [name] };
+			}
+		}
+		// 2. Family word alias: all declared accesses of that family, in order.
+		if (name === "ssh" || name === "telnet") {
+			const keys = Object.keys(groups.cli).filter((k) => {
+				const proto = (groups.cli[k] && groups.cli[k].protocol) ? String(groups.cli[k].protocol).toLowerCase() : k.toLowerCase();
+				return proto === name;
+			});
+			if (keys.length > 0) {
+				return { family: "cli", accessNames: keys };
+			}
+		}
+		if (name === "snmp") {
+			const keys = Object.keys(groups.snmp);
+			if (keys.length > 0) {
+				return { family: "snmp", accessNames: keys };
+			}
+		}
+		if (name === "http") {
+			const keys = Object.keys(groups.http);
+			if (keys.length > 0) {
+				return { family: "http", accessNames: keys };
+			}
+		}
+		throw `Unknown access '${name}': no such CLI/SNMP/HTTP access is declared by this driver.`;
+	};
+
+	let family = null;
+	let accessNames = [];
+	names.forEach((name) => {
+		const resolved = resolveOne(name);
+		if (family === null) {
+			family = resolved.family;
+		}
+		else if (family !== resolved.family) {
+			throw `Cannot mix accesses of different families ('${family}' and '${resolved.family}') in the same client.create(...) call.`;
+		}
+		accessNames = accessNames.concat(resolved.accessNames);
+	});
+	return { family, accessNames };
+};
+
+const _connect = (_function, _options) => {
+
 	const _taskContext = _options.getTaskContext();
 
 	const debug = (message) => {
@@ -114,400 +179,7 @@ const _connect = (_function, _protocol, _options) => {
 			_taskContext.debug(message);
 		}
 	};
-	
-	const cli = {
-		
-		_mode: _protocol,
-		_modeHistory: [_protocol],
-		_strictPrompt: null,
-		CR: "\r",
-		_recursion: 0,
 
-		_applyPager: function(mode, name) {
-			const pager = mode.pager;
-			if (pager) {
-				delete this.pagerMatch;
-				if (typeof pager !== "object") {
-					throw `In CLI mode ${name}, the pager is not an object.`;
-				}
-				if (pager.match) {
-					if (!(pager.match instanceof RegExp)) {
-						throw `In CLI mode ${name}, the pager match entry is not a RegExp.`;
-					}
-					if (typeof(pager.response) !== "string") {
-						throw `In CLI mode ${name} the pager response is not a string.`;
-					}
-					this.pagerMatch = pager.match;
-					this.pagerResponse = pager.response;
-				}
-				if (pager.avoid) {
-					let avoid = pager.avoid;
-					if (typeof(avoid) === "string") {
-						avoid = [avoid];
-					}
-					if (!Array.isArray(avoid)) {
-						throw `In CLI mode ${name}, the pager avoid command is invalid.`;
-					}
-					avoid.forEach((avoidCommand) => {
-						if (typeof(avoidCommand) !== "string") {
-							throw `In CLI mode ${name}, one of the avoid commands is invalid.`;
-						}
-						try { 
-							this.command(avoidCommand);
-						}
-						catch(e) {
-						}
-					});
-				}
-			}
-		},
-		
-		macro: function(macro) {
-			if (this._mode == macro) return;
-			this.recursion = 0;
-			this._runningTarget = null;
-			this._runningMacro = macro;
-			this._originalMode = this._mode;
-			this._macro(macro);
-
-			if (typeof(CLI[this._mode]) !== "object") {
-				throw `No mode ${this._mode} could be found in CLI object.`;
-			}
-			this._applyPager(CLI[this._mode], this._mode);
-		},
-		
-		_macro: function(macroName) {
-			_cli.trace(`Macro '${macroName}' was called (current mode is '${this._mode}').`);
-			if (this.recursion++ > 10) {
-				throw "Too many steps while switching to a new mode.";
-			}
-			if (typeof(macroName) !== "string") {
-				throw "Invalid called macro.";
-			}
-			if (typeof(CLI[this._mode]) !== "object") {
-				throw `No mode ${this._mode} could be found in CLI object.`;
-			}
-			if (typeof(CLI[this._mode].macros) !== "object") {
-				throw `No targets array in ${this._mode} mode in CLI object.`;
-			}
-			const macro = CLI[this._mode].macros[macroName];
-			if (typeof(macro) != "object") {
-				throw `Cannot find macro ${macroName} in macros of mode ${this._mode} in CLI object.`;
-			}
-			if (this._runningTarget === null) {
-				const target = macro.target;
-				if (typeof(target) !== "string") {
-					throw `Cannot find target ${target} of macro ${macroName} of mode ${this._mode} in CLI object.`;
-				}
-				if (typeof(CLI[target]) !== "object") {
-					throw `No mode ${target} in CLI.`;
-				}
-				this._runningTarget = target;
-			}
-			let cmd = undefined;
-			if (typeof(macro.cmd) !== "undefined") {
-				if (typeof(macro.cmd) !== "string") {
-					throw `Invalid 'cmd' in macro of mode ${this._mode} in CLI object.`;
-				}
-				cmd = macro.cmd;
-			}
-			const prompts = [];
-			if (!(macro.options instanceof Array)) {
-				throw `Invalid 'options' array in macro of mode ${this._mode} in CLI object.`;
-			}
-			macro.options.forEach((option) => {
-				if (typeof option !== "string") {
-					throw `Invalid option in macro of ${this._mode} in CLI object.`;
-				}
-				if (typeof CLI[option] !== "object") {
-					throw `No mode ${option} can be found in CLI object.`;
-				}
-				if (!(CLI[option].prompt instanceof RegExp)) {
-					throw `No regexp prompt in ${option} mode in CLI object.`;
-				}
-				prompts.push(CLI[option].prompt.source);
-			});
-			if (cmd === undefined) {
-				cmd = "";
-			}
-			else if (macro.noCr !== true) {
-				cmd += this.CR;
-			}
-			if (typeof(macro.waitBefore) === "number") {
-				this.sleep(macro.waitBefore);
-			}
-			const sendParams = { // defaults
-				timeout: -1,
-				cleanUpActions: null,
-				discoverWaitTime: -1,
-			};
-			if (typeof(macro.timeout) === "number") {
-				sendParams.timeout = macro.timeout;
-			}
-			if (typeof(macro.discoverWaitTime) === "number") {
-				sendParams.discoverWaitTime = macro.discoverWaitTime;
-			}
-			const output = _cli.send(cmd, prompts, sendParams.timeout,
-					sendParams.cleanUpActions, sendParams.discoverWaitTime);
-			if (typeof(macro.waitAfter) === "number") {
-				this.sleep(macro.waitAfter);
-			}
-			if (_cli.isErrored()) {
-				throw `Error while running CLI macro '${macroName}'.`;
-			}
-			if (CLI[this._mode].error instanceof RegExp) {
-				const errorMatch = CLI[this._mode].error.exec(output);
-				if (errorMatch) {
-					const messageParts = [];
-					messageParts.push("CLI error returned by the device");
-					if (errorMatch[1]) {
-						messageParts.push(`: '${errorMatch[1]}'`);
-					}
-					messageParts.push(` after command '${cmd.trim()}'.`);
-					const message = messageParts.join("");
-					throw message;
-				}
-			}
-			this._mode = macro.options[_cli.getLastExpectMatchIndex()];
-			this._modeHistory.push(this._mode);
-			this._strictPrompt = _cli.getLastExpectMatchGroup(1);
-			if (this._mode === this._runningTarget) {
-				_cli.trace(`Reached target mode '${this._mode}'.`);
-				return;
-			}
-			if (typeof(CLI[this._mode].fail) === "string") {
-				throw `In mode ${this._mode}: ${CLI[this._mode].fail}`;
-			}
-			if (typeof(CLI[this._mode].macros) === "object" && typeof(CLI[this._mode].macros.auto) === "object") {
-				this._macro("auto");
-			}
-			else if (typeof(CLI[this._mode].macros) === "object" && typeof(CLI[this._mode].macros[this._runningMacro]) === "object") {
-				this._macro(this._runningMacro);
-			}
-			if (this._mode !== this._runningTarget) {
-				throw `Couldn't switch to mode ${this._runningTarget} using macro ${this._runningMacro} from mode ${this._originalMode} (reached mode ${this._mode}).`;
-			}
-		},
-		
-		command: function(command, options) {
-			let mode;
-			let clearPrompt = false;
-			let noCr = false;
-			if (typeof(options) === "object" && typeof(options.mode) === "string") {
-				mode = CLI[options.mode];
-				if (typeof(mode) !== "object") {
-					throw `No mode ${options.mode} can be found in CLI object.`;
-				}
-				this._applyPager(mode, options.mode);
-			}
-			else if (typeof(options) === "object" && typeof(options.mode) === "object") {
-				mode = options.mode;
-				this._applyPager(mode, "[temp]");
-			}
-			else if (typeof(options) === "object" && typeof(options.mode) !== "undefined") {
-				throw "Invalid mode parameters in 'command' options";
-			}
-			else if (typeof(CLI[this._mode]) !== "object") {
-				throw `No mode ${this._mode} in CLI object.`;
-			}
-			else {
-				mode = CLI[this._mode];
-			}
-			if (mode.prompt && !(mode.prompt instanceof RegExp)) {
-				throw "The prompt in the selected mode is not a RegExp.";
-			}
-			
-			const prompts = [];
-			if (mode.clearPrompt === true) {
-				clearPrompt = true;
-			}
-			if (typeof(options) === "object" && options.clearPrompt === true) {
-				clearPrompt = true;
-			}
-			if (typeof options === "object" && options.noCr === true) {
-				noCr = true;
-			}
-			if (clearPrompt) {
-				this._strictPrompt = null;
-			}
-			if (mode.prompt) {
-				let prompt = mode.prompt.source;
-				prompt = stripPreviousMatch(prompt, this._strictPrompt);
-				prompts.push(prompt);
-				if (typeof(this.pagerMatch) !== "undefined") {
-					prompts.push(this.pagerMatch.source);
-				}
-			}
-			
-			let result = "";
-			let toSend = command;
-			if (!noCr) {
-				toSend += this.CR;
-			}
-			while (true) {
-				const sendParams = { // defaults
-					timeout: -1,
-					cleanUpActions: null,
-					discoverWaitTime: -1,
-				};
-				if (typeof(options) === "object") {
-					if (typeof(options.timeout) === "number") {
-						sendParams.timeout = options.timeout;
-					}
-					if (Array.isArray(options.cleanUpActions)) {
-						sendParams.cleanUpActions = options.cleanUpActions;
-					}
-					if (typeof(options.discoverWaitTime) === "number") {
-						sendParams.discoverWaitTime = options.discoverWaitTime;
-					}
-				}
-				const buffer = _cli.send(toSend, prompts,
-					sendParams.timeout, sendParams.cleanUpActions, sendParams.discoverWaitTime);
-
-				if (_cli.isErrored()) {
-					throw `CLI error after command '${command}'`;
-				}
-				if (_cli.getLastExpectMatchIndex() === 1) {
-					result += _cli.getLastFullOutput();
-					toSend = this.pagerResponse;
-				}
-				else {
-					result += buffer;
-					break;
-				}
-			}
-			result = _cli.removeEcho(result, command);
-			if (mode.error instanceof RegExp) {
-				const errorMatch = mode.error.exec(result);
-				if (errorMatch) {
-					const messageParts = [];
-					messageParts.push("CLI error returned by the device");
-					if (errorMatch[1]) {
-						messageParts.push(`: '${errorMatch[1]}'`);
-					}
-					messageParts.push(` after command '${command}'.`);
-					const message = messageParts.join("");
-					throw message;
-				}
-			}
-			return result;
-		},
-		
-		findSections: function(text, regex) {
-			if (typeof(text) !== "string") {
-				throw "Invalid text string in findSections.";
-			}
-			if (typeof(regex) !== "object" || !(regex instanceof RegExp)) {
-				throw "Invalid regex parameter in findSections.";
-			}
-			const sections = [];
-			let section;
-			let indent = -1;
-			const lines = text.split(/[\r\n]+/g);
-			for (let l in lines) {
-				const line = lines[l];
-				const i = line.search(/[^\t\s]/);
-				if (i > indent) {
-					if (indent > -1) {
-						section.lines.push(line);
-					}
-				}
-				else {
-					indent = -1;
-				}
-				if (indent == -1) {
-					regex.lastIndex = 0;
-					const match = regex.exec(line);
-					if (match) {
-						indent = i;
-						section = {
-							match: match,
-							lines: []
-						};
-						sections.push(section);
-					}
-				}
-			}
-			sections.forEach((section) => {
-				section.config = section.lines.join("\n");
-			});
-			return sections;
-		},
-		
-		sleep: function(millis) {
-			if (typeof(millis) !== "number") {
-				throw "Invalid number of milliseconds in sleep.";
-			}
-			if (millis < 0) {
-				throw "The number of milliseconds to wait can't be negative in sleep.";
-			}
-			if (millis % 1 !== 0) {
-				throw "The number of milliseconds to wait must be integer in sleep.";
-			}
-			_cli.sleep(millis);
-		},
-
-		debug: function(message) {
-			debug(message);
-		},
-		
-	};
-
-
-	const poller = {
-		get: function(oid) {
-			if (typeof(oid) == "string") {
-				oid = String(oid);
-			}
-			else {
-				throw "The OID should be a string in poller.get.";
-			}
-			const result = _snmp.getAsString(oid);
-			if (_snmp.isErrored()) {
-				throw `Error while SNMP polling OID ${oid}`;
-			}
-			return result;
-		},
-
-		walk: function(oid, reindex) {
-			if (typeof(oid) === "string") {
-				oid = String(oid);
-			}
-			else {
-				throw "The OID should be a string in poller.walk.";
-			}
-			const results = _snmp.walkAsString(oid);
-			if (_snmp.isErrored()) {
-				throw `Error while SNMP polling OID ${oid}`;
-			}
-			const resultMap = {}
-			results.forEach((r) => {
-				if (reindex) {
-					if (r.startsWith(oid + ".")) {
-						resultMap[r.slice(oid.length + 1)] = results[r];
-					}
-				}
-				else {
-					resultMap[r] = results[r];
-				}
-			});
-			return resultMap;
-		},
-
-		sleep: function(millis) {
-			if (typeof(millis) !== "number") {
-				throw "Invalid number of milliseconds in sleep.";
-			}
-			if (millis < 0) {
-				throw "The number of milliseconds to wait can't be negative in sleep.";
-			}
-			if (millis % 1 !== 0) {
-				throw "The number of milliseconds to wait must be integer in sleep.";
-			}
-			_snmp.sleep(millis);
-		}
-	};
-	
 	const stripPreviousMatch = (prompt, strictPrompt) => {
 		if (typeof(strictPrompt) === "string") {
 			const groups = [];
@@ -535,7 +207,558 @@ const _connect = (_function, _protocol, _options) => {
 		}
 		return prompt;
 	};
-	
+
+	/**
+	 * Builds a JS "cli"-shaped client object bound to the given Java JsCliHelper.
+	 * `_autoTryCredentials` controls whether an in-band authentication failure
+	 * (or the initial connect itself) is retried transparently or surfaced to
+	 * the driver as a catchable error with an `authenticationFailed` marker.
+	 */
+	const makeCliClient = (_cli, _autoTryCredentials) => {
+		const cli = {
+
+			_mode: null,
+			_modeHistory: [],
+			_strictPrompt: null,
+			CR: "\r",
+			_recursion: 0,
+
+			_applyPager: function(mode, name) {
+				const pager = mode.pager;
+				if (pager) {
+					delete this.pagerMatch;
+					if (typeof pager !== "object") {
+						throw `In CLI mode ${name}, the pager is not an object.`;
+					}
+					if (pager.match) {
+						if (!(pager.match instanceof RegExp)) {
+							throw `In CLI mode ${name}, the pager match entry is not a RegExp.`;
+						}
+						if (typeof(pager.response) !== "string") {
+							throw `In CLI mode ${name} the pager response is not a string.`;
+						}
+						this.pagerMatch = pager.match;
+						this.pagerResponse = pager.response;
+					}
+					if (pager.avoid) {
+						let avoid = pager.avoid;
+						if (typeof(avoid) === "string") {
+							avoid = [avoid];
+						}
+						if (!Array.isArray(avoid)) {
+							throw `In CLI mode ${name}, the pager avoid command is invalid.`;
+						}
+						avoid.forEach((avoidCommand) => {
+							if (typeof(avoidCommand) !== "string") {
+								throw `In CLI mode ${name}, one of the avoid commands is invalid.`;
+							}
+							try {
+								this.command(avoidCommand);
+							}
+							catch(e) {
+							}
+						});
+					}
+				}
+			},
+
+			/** Lazily connects and seeds `_mode` on first use. Returns true if this call did the seeding. */
+			_ensureSeeded: function() {
+				if (this._mode === null) {
+					this._mode = _cli.getResolvedAccessName();
+					this._modeHistory = [this._mode];
+					return true;
+				}
+				return false;
+			},
+
+			/** Handles an in-band ("fail" mode) or connect-time auth failure caught around a first-use call. */
+			_handleFirstUseAuthFailure: function(e) {
+				_cli.resetForInBandAuthFailure();
+				if (_autoTryCredentials) {
+					if (_cli.tryNextCredentials()) {
+						this._mode = null;
+						return true; // caller should retry
+					}
+					return false; // exhausted, caller should rethrow original error
+				}
+				const authError = new Error(String(e && e.message ? e.message : e));
+				authError.authenticationFailed = true;
+				throw authError;
+			},
+
+			macro: function(macro) {
+				const isFirstUse = (this._mode === null);
+				try {
+					this._ensureSeeded();
+					if (this._mode == macro) return;
+					this.recursion = 0;
+					this._runningTarget = null;
+					this._runningMacro = macro;
+					this._originalMode = this._mode;
+					this._macro(macro);
+
+					if (typeof(CLI[this._mode]) !== "object") {
+						throw `No mode ${this._mode} could be found in CLI object.`;
+					}
+					this._applyPager(CLI[this._mode], this._mode);
+				}
+				catch (e) {
+					if (isFirstUse && isAuthFailureError(e) && this._handleFirstUseAuthFailure(e)) {
+						return this.macro(macro);
+					}
+					throw e;
+				}
+			},
+
+			_macro: function(macroName) {
+				_cli.trace(`Macro '${macroName}' was called (current mode is '${this._mode}').`);
+				if (this.recursion++ > 10) {
+					throw "Too many steps while switching to a new mode.";
+				}
+				if (typeof(macroName) !== "string") {
+					throw "Invalid called macro.";
+				}
+				if (typeof(CLI[this._mode]) !== "object") {
+					throw `No mode ${this._mode} could be found in CLI object.`;
+				}
+				if (typeof(CLI[this._mode].macros) !== "object") {
+					throw `No targets array in ${this._mode} mode in CLI object.`;
+				}
+				const macro = CLI[this._mode].macros[macroName];
+				if (typeof(macro) != "object") {
+					throw `Cannot find macro ${macroName} in macros of mode ${this._mode} in CLI object.`;
+				}
+				if (this._runningTarget === null) {
+					const target = macro.target;
+					if (typeof(target) !== "string") {
+						throw `Cannot find target ${target} of macro ${macroName} of mode ${this._mode} in CLI object.`;
+					}
+					if (typeof(CLI[target]) !== "object") {
+						throw `No mode ${target} in CLI.`;
+					}
+					this._runningTarget = target;
+				}
+				let cmd = undefined;
+				if (typeof(macro.cmd) !== "undefined") {
+					if (typeof(macro.cmd) !== "string") {
+						throw `Invalid 'cmd' in macro of mode ${this._mode} in CLI object.`;
+					}
+					cmd = macro.cmd;
+				}
+				const prompts = [];
+				if (!(macro.options instanceof Array)) {
+					throw `Invalid 'options' array in macro of mode ${this._mode} in CLI object.`;
+				}
+				macro.options.forEach((option) => {
+					if (typeof option !== "string") {
+						throw `Invalid option in macro of ${this._mode} in CLI object.`;
+					}
+					if (typeof CLI[option] !== "object") {
+						throw `No mode ${option} can be found in CLI object.`;
+					}
+					if (!(CLI[option].prompt instanceof RegExp)) {
+						throw `No regexp prompt in ${option} mode in CLI object.`;
+					}
+					prompts.push(CLI[option].prompt.source);
+				});
+				if (cmd === undefined) {
+					cmd = "";
+				}
+				else if (macro.noCr !== true) {
+					cmd += this.CR;
+				}
+				if (typeof(macro.waitBefore) === "number") {
+					this.sleep(macro.waitBefore);
+				}
+				const sendParams = { // defaults
+					timeout: -1,
+					cleanUpActions: null,
+					discoverWaitTime: -1,
+				};
+				if (typeof(macro.timeout) === "number") {
+					sendParams.timeout = macro.timeout;
+				}
+				if (typeof(macro.discoverWaitTime) === "number") {
+					sendParams.discoverWaitTime = macro.discoverWaitTime;
+				}
+				const output = _cli.send(cmd, prompts, sendParams.timeout,
+						sendParams.cleanUpActions, sendParams.discoverWaitTime);
+				if (typeof(macro.waitAfter) === "number") {
+					this.sleep(macro.waitAfter);
+				}
+				if (_cli.isErrored()) {
+					throw `Error while running CLI macro '${macroName}'.`;
+				}
+				if (CLI[this._mode].error instanceof RegExp) {
+					const errorMatch = CLI[this._mode].error.exec(output);
+					if (errorMatch) {
+						const messageParts = [];
+						messageParts.push("CLI error returned by the device");
+						if (errorMatch[1]) {
+							messageParts.push(`: '${errorMatch[1]}'`);
+						}
+						messageParts.push(` after command '${cmd.trim()}'.`);
+						const message = messageParts.join("");
+						throw message;
+					}
+				}
+				this._mode = macro.options[_cli.getLastExpectMatchIndex()];
+				this._modeHistory.push(this._mode);
+				this._strictPrompt = _cli.getLastExpectMatchGroup(1);
+				if (this._mode === this._runningTarget) {
+					_cli.trace(`Reached target mode '${this._mode}'.`);
+					return;
+				}
+				if (typeof(CLI[this._mode].fail) === "string") {
+					throw `In mode ${this._mode}: ${CLI[this._mode].fail}`;
+				}
+				if (typeof(CLI[this._mode].macros) === "object" && typeof(CLI[this._mode].macros.auto) === "object") {
+					this._macro("auto");
+				}
+				else if (typeof(CLI[this._mode].macros) === "object" && typeof(CLI[this._mode].macros[this._runningMacro]) === "object") {
+					this._macro(this._runningMacro);
+				}
+				if (this._mode !== this._runningTarget) {
+					throw `Couldn't switch to mode ${this._runningTarget} using macro ${this._runningMacro} from mode ${this._originalMode} (reached mode ${this._mode}).`;
+				}
+			},
+
+			command: function(command, options) {
+				const isFirstUse = (this._mode === null);
+				try {
+					this._ensureSeeded();
+					return this._command(command, options);
+				}
+				catch (e) {
+					if (isFirstUse && isAuthFailureError(e) && this._handleFirstUseAuthFailure(e)) {
+						return this.command(command, options);
+					}
+					throw e;
+				}
+			},
+
+			_command: function(command, options) {
+				let mode;
+				let clearPrompt = false;
+				let noCr = false;
+				if (typeof(options) === "object" && typeof(options.mode) === "string") {
+					mode = CLI[options.mode];
+					if (typeof(mode) !== "object") {
+						throw `No mode ${options.mode} can be found in CLI object.`;
+					}
+					this._applyPager(mode, options.mode);
+				}
+				else if (typeof(options) === "object" && typeof(options.mode) === "object") {
+					mode = options.mode;
+					this._applyPager(mode, "[temp]");
+				}
+				else if (typeof(options) === "object" && typeof(options.mode) !== "undefined") {
+					throw "Invalid mode parameters in 'command' options";
+				}
+				else if (typeof(CLI[this._mode]) !== "object") {
+					throw `No mode ${this._mode} in CLI object.`;
+				}
+				else {
+					mode = CLI[this._mode];
+				}
+				if (mode.prompt && !(mode.prompt instanceof RegExp)) {
+					throw "The prompt in the selected mode is not a RegExp.";
+				}
+
+				const prompts = [];
+				if (mode.clearPrompt === true) {
+					clearPrompt = true;
+				}
+				if (typeof(options) === "object" && options.clearPrompt === true) {
+					clearPrompt = true;
+				}
+				if (typeof options === "object" && options.noCr === true) {
+					noCr = true;
+				}
+				if (clearPrompt) {
+					this._strictPrompt = null;
+				}
+				if (mode.prompt) {
+					let prompt = mode.prompt.source;
+					prompt = stripPreviousMatch(prompt, this._strictPrompt);
+					prompts.push(prompt);
+					if (typeof(this.pagerMatch) !== "undefined") {
+						prompts.push(this.pagerMatch.source);
+					}
+				}
+
+				let result = "";
+				let toSend = command;
+				if (!noCr) {
+					toSend += this.CR;
+				}
+				while (true) {
+					const sendParams = { // defaults
+						timeout: -1,
+						cleanUpActions: null,
+						discoverWaitTime: -1,
+					};
+					if (typeof(options) === "object") {
+						if (typeof(options.timeout) === "number") {
+							sendParams.timeout = options.timeout;
+						}
+						if (Array.isArray(options.cleanUpActions)) {
+							sendParams.cleanUpActions = options.cleanUpActions;
+						}
+						if (typeof(options.discoverWaitTime) === "number") {
+							sendParams.discoverWaitTime = options.discoverWaitTime;
+						}
+					}
+					const buffer = _cli.send(toSend, prompts,
+						sendParams.timeout, sendParams.cleanUpActions, sendParams.discoverWaitTime);
+
+					if (_cli.isErrored()) {
+						throw `CLI error after command '${command}'`;
+					}
+					if (_cli.getLastExpectMatchIndex() === 1) {
+						result += _cli.getLastFullOutput();
+						toSend = this.pagerResponse;
+					}
+					else {
+						result += buffer;
+						break;
+					}
+				}
+				result = _cli.removeEcho(result, command);
+				if (mode.error instanceof RegExp) {
+					const errorMatch = mode.error.exec(result);
+					if (errorMatch) {
+						const messageParts = [];
+						messageParts.push("CLI error returned by the device");
+						if (errorMatch[1]) {
+							messageParts.push(`: '${errorMatch[1]}'`);
+						}
+						messageParts.push(` after command '${command}'.`);
+						const message = messageParts.join("");
+						throw message;
+					}
+				}
+				return result;
+			},
+
+			findSections: function(text, regex) {
+				if (typeof(text) !== "string") {
+					throw "Invalid text string in findSections.";
+				}
+				if (typeof(regex) !== "object" || !(regex instanceof RegExp)) {
+					throw "Invalid regex parameter in findSections.";
+				}
+				const sections = [];
+				let section;
+				let indent = -1;
+				const lines = text.split(/[\r\n]+/g);
+				for (let l in lines) {
+					const line = lines[l];
+					const i = line.search(/[^\t\s]/);
+					if (i > indent) {
+						if (indent > -1) {
+							section.lines.push(line);
+						}
+					}
+					else {
+						indent = -1;
+					}
+					if (indent == -1) {
+						regex.lastIndex = 0;
+						const match = regex.exec(line);
+						if (match) {
+							indent = i;
+							section = {
+								match: match,
+								lines: []
+							};
+							sections.push(section);
+						}
+					}
+				}
+				sections.forEach((section) => {
+					section.config = section.lines.join("\n");
+				});
+				return sections;
+			},
+
+			sleep: function(millis) {
+				if (typeof(millis) !== "number") {
+					throw "Invalid number of milliseconds in sleep.";
+				}
+				if (millis < 0) {
+					throw "The number of milliseconds to wait can't be negative in sleep.";
+				}
+				if (millis % 1 !== 0) {
+					throw "The number of milliseconds to wait must be integer in sleep.";
+				}
+				_cli.sleep(millis);
+			},
+
+			debug: function(message) {
+				debug(message);
+			},
+
+			/** Manually advance to the next candidate credential set (manual/autoTryCredentials=false mode). */
+			tryNextCredentials: function() {
+				const success = _cli.tryNextCredentials();
+				this._mode = success ? null : this._mode;
+				return success;
+			},
+
+		};
+		return cli;
+	};
+
+	/**
+	 * Builds a JS "poller"-shaped (SNMP) client object bound to the given
+	 * Java JsSnmpHelper.
+	 */
+	const makeSnmpClient = (_snmp) => {
+		const poller = {
+			get: function(oid) {
+				if (typeof(oid) == "string") {
+					oid = String(oid);
+				}
+				else {
+					throw "The OID should be a string in poller.get.";
+				}
+				const result = _snmp.getAsString(oid);
+				if (_snmp.isErrored()) {
+					throw `Error while SNMP polling OID ${oid}`;
+				}
+				return result;
+			},
+
+			walk: function(oid, reindex) {
+				if (typeof(oid) === "string") {
+					oid = String(oid);
+				}
+				else {
+					throw "The OID should be a string in poller.walk.";
+				}
+				const results = _snmp.walkAsString(oid);
+				if (_snmp.isErrored()) {
+					throw `Error while SNMP polling OID ${oid}`;
+				}
+				const resultMap = {}
+				Object.keys(results).forEach((r) => {
+					if (reindex) {
+						if (r.startsWith(oid + ".")) {
+							resultMap[r.slice(oid.length + 1)] = results[r];
+						}
+					}
+					else {
+						resultMap[r] = results[r];
+					}
+				});
+				return resultMap;
+			},
+
+			sleep: function(millis) {
+				if (typeof(millis) !== "number") {
+					throw "Invalid number of milliseconds in sleep.";
+				}
+				if (millis < 0) {
+					throw "The number of milliseconds to wait can't be negative in sleep.";
+				}
+				if (millis % 1 !== 0) {
+					throw "The number of milliseconds to wait must be integer in sleep.";
+				}
+				_snmp.sleep(millis);
+			},
+
+			tryNextCredentials: function() {
+				return _snmp.tryNextCredentials();
+			},
+		};
+		return poller;
+	};
+
+	/**
+	 * Builds a JS "http" client object (axios-inspired) bound to the given
+	 * Java JsHttpHelper.
+	 */
+	const makeHttpClient = (_http) => {
+		const normalizeConfig = (config) => {
+			config = config || {};
+			return {
+				headers: config.headers || {},
+				query: config.params || config.query || {},
+				cookies: config.cookies || {},
+				validateStatus: (typeof config.validateStatus === "function")
+					? config.validateStatus
+					: (status) => status >= 200 && status < 300,
+			};
+		};
+
+		const httpClient = {
+			request: function(config) {
+				config = config || {};
+				const method = (config.method || "GET").toUpperCase();
+				const path = config.url || config.path || "";
+				const normalized = normalizeConfig(config);
+				let body = config.data;
+				if (typeof body !== "undefined" && body !== null && typeof body !== "string") {
+					body = JSON.stringify(body);
+					if (!Object.keys(normalized.headers).some((h) => h.toLowerCase() === "content-type")) {
+						normalized.headers["Content-Type"] = "application/json";
+					}
+				}
+				const raw = _http.request(method, path, normalized.headers, normalized.query, normalized.cookies,
+					(typeof body === "string") ? body : null);
+				const response = {
+					status: raw.status,
+					statusText: String(raw.status),
+					headers: raw.headers,
+					config: config,
+					data: raw.body,
+				};
+				try {
+					response.json = () => JSON.parse(raw.body);
+				}
+				catch (e) {
+					// Leave json() undefined-ish (will throw only if actually called on invalid content)
+				}
+				if (!normalized.validateStatus(response.status)) {
+					const error = new Error(`Request failed with status code ${response.status}`);
+					error.response = response;
+					error.config = config;
+					throw error;
+				}
+				return response;
+			},
+
+			get: function(url, config) {
+				return this.request(Object.assign({}, config, { method: "GET", url: url }));
+			},
+			delete: function(url, config) {
+				return this.request(Object.assign({}, config, { method: "DELETE", url: url }));
+			},
+			head: function(url, config) {
+				return this.request(Object.assign({}, config, { method: "HEAD", url: url }));
+			},
+			options: function(url, config) {
+				return this.request(Object.assign({}, config, { method: "OPTIONS", url: url }));
+			},
+			post: function(url, data, config) {
+				return this.request(Object.assign({}, config, { method: "POST", url: url, data: data }));
+			},
+			put: function(url, data, config) {
+				return this.request(Object.assign({}, config, { method: "PUT", url: url, data: data }));
+			},
+			patch: function(url, data, config) {
+				return this.request(Object.assign({}, config, { method: "PATCH", url: url, data: data }));
+			},
+
+			tryNextCredentials: function() {
+				return _http.tryNextCredentials();
+			},
+		};
+		return httpClient;
+	};
+
 	const deviceHelper = {
 		set: function(key, value) {
 			if (typeof(key) === "string") {
@@ -550,7 +773,7 @@ const _connect = (_function, _protocol, _options) => {
 			else if (typeof(value) === "string") {
 				value = String(value);
 			}
-			_deviceHelper.set(key, value);
+			_options.getDeviceHelper().set(key, value);
 		},
 		add: function(collection, value) {
 			if (typeof(collection) === "string") {
@@ -568,20 +791,20 @@ const _connect = (_function, _protocol, _options) => {
 			else if (typeof(value) === "string") {
 				value = String(value);
 			}
-			_deviceHelper.add(collection, value);
+			_options.getDeviceHelper().add(collection, value);
 		},
 		get: function(key, id) {
 			if (typeof(key) === "string") {
 				key = String(key);
 				if (typeof(id) === "undefined") {
-					return _deviceHelper.get(key);
+					return _options.getDeviceHelper().get(key);
 				}
 				else if (typeof(id) === "number" && !isNaN(id)) {
-					return _deviceHelper.get(key, id);
+					return _options.getDeviceHelper().get(key, id);
 				}
 				else if (typeof(id) === "string") {
 					const name = String(id);
-					return _deviceHelper.get(key, name);
+					return _options.getDeviceHelper().get(key, name);
 				}
 				else {
 					throw "Invalid device id to retrieve data from.";
@@ -622,10 +845,10 @@ const _connect = (_function, _protocol, _options) => {
 			else {
 				throw "Invalid argument in device.textDownload";
 			}
-			return _deviceHelper.textDownload(method, fileName, charset, newSession);
+			return _options.getDeviceHelper().textDownload(method, fileName, charset, newSession);
 		},
 	};
-	
+
 	const configHelper = {
 		set: function(key, value) {
 			if (typeof(key) === "string") {
@@ -711,7 +934,7 @@ const _connect = (_function, _protocol, _options) => {
 			return _options.getConfigHelper().getLastCustomHash();
 		},
 		isChangedHash: function() {
-			return _options.getConfigHelper().getCustomHash() !== 
+			return _options.getConfigHelper().getCustomHash() !==
 			       _options.getConfigHelper().getLastCustomHash();
 		},
 		requestUpload: function(options) {
@@ -783,7 +1006,7 @@ const _connect = (_function, _protocol, _options) => {
 			_options.getConfigHelper().commitUpload(ticketId, fileId, String(key), storeName, expectedHash);
 		},
 	};
-	
+
 	const diagnosticHelper = {
 		setKey: function(key) {
 			this.currentKey = key;
@@ -806,19 +1029,35 @@ const _connect = (_function, _protocol, _options) => {
 		}
 	};
 
-	let commandHelper = cli;
-	if (_protocol == "snmp") {
-		commandHelper = poller;
-	}
-	
+	// The default (implicit, backward-compatible) CLI client, bound to the
+	// driver's default SSH/Telnet access(es). autoTryCredentials is always
+	// true here, matching historical behavior - a driver that wants control
+	// must explicitly call client.create(...) with autoTryCredentials: false.
+	const client = makeCliClient(_options.getCliHelper(), true);
+
+	client.create = function(nameOrArray, createOptions) {
+		createOptions = createOptions || {};
+		const autoTryCredentials = (createOptions.autoTryCredentials !== false);
+		const resolved = resolveAccessNames(nameOrArray);
+		const factory = _options.getClientFactory();
+		if (resolved.family === "cli") {
+			return makeCliClient(factory.createCli(resolved.accessNames, autoTryCredentials), autoTryCredentials);
+		}
+		if (resolved.family === "snmp") {
+			return makeSnmpClient(factory.createSnmp(resolved.accessNames, autoTryCredentials));
+		}
+		// http
+		return makeHttpClient(factory.createHttp(resolved.accessNames, autoTryCredentials, createOptions.basePath || null));
+	};
+
 	if (_function === "snapshot") {
-		_deviceHelper.reset();
-		snapshot(commandHelper, deviceHelper, configHelper);
+		_options.getDeviceHelper().reset();
+		snapshot(client, deviceHelper, configHelper);
 	}
 	else if (_function === "run") {
 		validateRunScript();
-		commandHelper.userInputs = validateUserInputs(_options.getUserInputs() || {});
-		run(commandHelper, deviceHelper, configHelper);
+		client.userInputs = validateUserInputs(_options.getUserInputs() || {});
+		run(client, deviceHelper, configHelper);
 	}
 	else if (_function === "diagnostics") {
 		const diagnostics = _options.getDiagnosticHelper().getDiagnostics();
@@ -828,11 +1067,11 @@ const _connect = (_function, _protocol, _options) => {
 				diagnosticHelper.setKey(name);
 				if (typeof diagnostic === "function") {
 					const diagnose = diagnostic;
-					diagnose(commandHelper, deviceHelper, diagnosticHelper);
+					diagnose(client, deviceHelper, diagnosticHelper);
 				}
 				else {
-					cli.macro(diagnostic.getMode());
-					const output = cli.command(diagnostic.getCommand());
+					client.macro(diagnostic.getMode());
+					const output = client.command(diagnostic.getCommand());
 					diagnosticHelper.set(output);
 				}
 			}

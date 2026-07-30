@@ -71,7 +71,7 @@ import net.netshot.netshot.work.TaskContext;
 public final class JsDeviceHelper {
 
 	private Device device;
-	private Cli cli;
+	private JsCliHelper defaultCliHelper;
 	private Session session;
 	private TaskContext taskContext;
 	private boolean readOnly;
@@ -95,9 +95,9 @@ public final class JsDeviceHelper {
 		return defaultResult;
 	}
 
-	public JsDeviceHelper(Device device, Cli cli, Session session, TaskContext taskContext, boolean readOnly) throws MissingDeviceDriverException {
+	public JsDeviceHelper(Device device, JsCliHelper defaultCliHelper, Session session, TaskContext taskContext, boolean readOnly) throws MissingDeviceDriverException {
 		this.device = device;
-		this.cli = cli;
+		this.defaultCliHelper = defaultCliHelper;
 		this.session = session;
 		this.taskContext = taskContext;
 		this.readOnly = readOnly;
@@ -606,12 +606,13 @@ public final class JsDeviceHelper {
 			throw new IllegalArgumentException("Remote file name to download is missing in textDownload request");
 		}
 		if (TransferProtocol.SCP.equals(protocol) || TransferProtocol.SFTP.equals(protocol)) {
-			if (cli == null) {
+			if (defaultCliHelper == null) {
 				log.warn("Error during textDownload: can't use SCP/SFTP textDownload as no CLI access exists in the context.");
 				taskContext.error("Can't use SCP/SFTP method in textDownload request as no CLI access exists in the context.");
 				throw new IllegalArgumentException("Can't use SCP/SFTP textDownload method as no CLI access exists in this context.");
 			}
 
+			Cli cli = defaultCliHelper.getUnderlyingCli();
 			if (cli instanceof Ssh sshCli) {
 				ByteArrayOutputStream targetStream = new ByteArrayOutputStream();
 				if (TransferProtocol.SCP.equals(protocol)) {

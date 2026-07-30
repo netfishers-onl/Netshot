@@ -40,15 +40,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.MissingDeviceDriverException;
 import net.netshot.netshot.device.DeviceDriver;
-import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
-import net.netshot.netshot.device.access.Cli;
+import net.netshot.netshot.device.access.AccessManager;
 import net.netshot.netshot.device.access.InvalidCredentialsException;
-import net.netshot.netshot.device.access.Snmp;
-import net.netshot.netshot.device.credentials.DeviceCliAccount;
-import net.netshot.netshot.device.credentials.DeviceCredentialSet;
-import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
 import net.netshot.netshot.device.script.helper.JsCliHelper;
 import net.netshot.netshot.device.script.helper.JsCliScriptOptions;
+import net.netshot.netshot.device.script.helper.JsClientFactory;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.device.script.helper.JsSnmpHelper;
 import net.netshot.netshot.device.script.helper.JsUtils;
@@ -136,31 +132,23 @@ public class JsCliScript extends CliScript {
 	}
 
 	@Override
-	protected void run(Session session, Device device, Cli cli, Snmp snmp, DriverProtocol protocol, DeviceCredentialSet account)
+	protected void run(Session session, Device device, AccessManager accessManager)
 		throws InvalidCredentialsException, IOException, UnsupportedOperationException, MissingDeviceDriverException {
-		JsCliHelper jsCliHelper = null;
-		JsSnmpHelper jsSnmpHelper = null;
-		switch (protocol) {
-			case SNMP:
-				jsSnmpHelper = new JsSnmpHelper(snmp, (DeviceSnmpCommunity) account, this.taskContext);
-				break;
-			case TELNET:
-			case SSH:
-			default:
-				jsCliHelper = new JsCliHelper(cli, (DeviceCliAccount) account, this.taskContext);
-				break;
-		}
 		DeviceDriver driver = device.getDeviceDriver();
+		JsCliHelper jsCliHelper = new JsCliHelper(accessManager, driver.getDefaultCliAccessDefinitions(), true, this.taskContext);
+		JsSnmpHelper jsSnmpHelper = new JsSnmpHelper(accessManager, driver.getDefaultSnmpAccessDefinitions(), true, this.taskContext);
+		JsClientFactory clientFactory = new JsClientFactory(accessManager, driver);
 		try (Context context = driver.getContext()) {
 			driver.loadCode(context);
 			context.eval("js", code);
 			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
-			options.setDeviceHelper(new JsDeviceHelper(device, cli, null, this.taskContext, false));
+			options.setClientFactory(clientFactory);
+			options.setDeviceHelper(new JsDeviceHelper(device, jsCliHelper, null, this.taskContext, false));
 			options.setUserInputs(this.userInputValues);
 			context
 				.getBindings("js")
 				.getMember("_connect")
-				.execute("run", protocol.value(), options);
+				.execute("run", options);
 		}
 		catch (PolyglotException e) {
 			log.error("Error while running script using driver {}.", driver.getName(), e);

@@ -264,17 +264,17 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 	private Config config;
 	private Config lastConfig;
 	private TaskContext taskContext;
-	private Cli cli;
+	private JsCliHelper defaultCliHelper;
 
 	/** Upload tickets of this config helper context. */
 	private Map<Long, ConfigUploadTicket> uploadTickets = new HashMap<>();
 
 	public JsConfigHelper(Device device, Config config, Config lastConfig,
-		Cli cli, TaskContext taskContext) {
+		JsCliHelper defaultCliHelper, TaskContext taskContext) {
 		this.device = device;
 		this.config = config;
 		this.lastConfig = lastConfig;
-		this.cli = cli;
+		this.defaultCliHelper = defaultCliHelper;
 		this.taskContext = taskContext;
 	}
 
@@ -472,10 +472,11 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		}
 
 		if (TransferProtocol.SCP.equals(protocol) || TransferProtocol.SFTP.equals(protocol)) {
-			if (cli == null) {
+			if (defaultCliHelper == null) {
 				throw new IllegalArgumentException("Can't use SCP/SFTP download method as no CLI access exists in the current context.");
 			}
 
+			Cli cli = defaultCliHelper.getUnderlyingCli();
 			if (cli instanceof Ssh sshCli) {
 				try {
 					ConfigBinaryFileAttribute fileAttribute = new ConfigBinaryFileAttribute(config, attribute.getName(), storeName);

@@ -50,6 +50,12 @@ public final class JsCliScriptOptions {
 		@Export
 	}))
 	@Setter
+	private JsClientFactory clientFactory;
+
+	@Getter(onMethod = @__({
+		@Export
+	}))
+	@Setter
 	private JsConfigHelper configHelper;
 
 	@Getter(onMethod = @__({

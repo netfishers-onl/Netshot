@@ -1494,6 +1494,7 @@ public class RestService extends Thread {
 			device.getOwnerGroups().size();
 			device.getCredentialSets().size();
 			device.getComplianceCheckResults().size();
+			device.getAccessOverrides().size();
 		}
 		catch (HibernateException e) {
 			log.error("Unable to fetch the device", e);

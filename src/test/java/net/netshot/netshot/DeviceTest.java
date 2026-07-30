@@ -30,9 +30,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import net.netshot.netshot.compliance.CheckResult;
 import net.netshot.netshot.compliance.Policy;
@@ -43,15 +45,27 @@ import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
+import net.netshot.netshot.device.DeviceDriver.AccessDefinition;
+import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.Finder;
 import net.netshot.netshot.device.Finder.FinderParseException;
+import net.netshot.netshot.device.NetworkAddress;
+import net.netshot.netshot.device.access.AccessAuthenticationException;
+import net.netshot.netshot.device.access.AccessManager;
+import net.netshot.netshot.device.access.AccessManager.Resolution;
+import net.netshot.netshot.device.access.AccessOverride;
+import net.netshot.netshot.device.access.Client;
+import net.netshot.netshot.device.access.InvalidCredentialsException;
 import net.netshot.netshot.device.attribute.ConfigTextAttribute;
 import net.netshot.netshot.device.attribute.DeviceBinaryAttribute;
 import net.netshot.netshot.device.attribute.DeviceNumericAttribute;
 import net.netshot.netshot.device.Network4Address;
 import net.netshot.netshot.device.Device.NetworkClass;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
+import net.netshot.netshot.device.credentials.DeviceCredentialSet;
+import net.netshot.netshot.device.credentials.DeviceSshAccount;
+import net.netshot.netshot.device.credentials.DeviceTelnetAccount;
 import net.netshot.netshot.diagnostic.Diagnostic;
 import net.netshot.netshot.diagnostic.DiagnosticBinaryResult;
 import net.netshot.netshot.diagnostic.DiagnosticNumericResult;
@@ -1097,6 +1111,231 @@ public class DeviceTest extends WithDatabaseTest {
 			int[] computedParents = Config.getLineParents(Arrays.asList(configLines));
 			Assertions.assertArrayEquals(parents, computedParents,
 				"Parent line indices do not match the expected ones");
+		}
+
+	}
+
+	/**
+	 * Unit tests for {@link AccessManager}, the generalized lazy connect +
+	 * credential-set fallback engine that replaced the triplicated SSH/Telnet/SNMP
+	 * loops previously duplicated in {@code CliScript.connectRun}.
+	 */
+	@Nested
+	@DisplayName("AccessManager tests")
+	class AccessManagerTest {
+
+		/** A minimal fake {@link Client} whose connect() behavior is scripted by the test. */
+		private final class FakeClient implements Client {
+			private final AtomicInteger connectCount;
+			private final IOException failure;
+			boolean connected = false;
+
+			FakeClient(AtomicInteger connectCount, IOException failure) {
+				this.connectCount = connectCount;
+				this.failure = failure;
+			}
+
+			@Override
+			public void connect() throws IOException {
+				this.connectCount.incrementAndGet();
+				if (this.failure != null) {
+					throw this.failure;
+				}
+				this.connected = true;
+			}
+
+			@Override
+			public void disconnect() {
+				this.connected = false;
+			}
+		}
+
+		private AccessDefinition sshAccess(String name) {
+			return new AccessDefinition(name, DriverProtocol.SSH, null, null, null, null, null, 22);
+		}
+
+		private AccessDefinition telnetAccess(String name) {
+			return new AccessDefinition(name, DriverProtocol.TELNET, null, null, null, null, null, 23);
+		}
+
+		private Device fakeDevice() {
+			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
+			return new Device("CiscoIOS12", null, domain, "test");
+		}
+
+		@Test
+		@DisplayName("Resolution is lazy: no connect() attempt happens before first use")
+		void resolutionIsLazy() throws IOException {
+			Device device = fakeDevice();
+			DeviceCredentialSet cred = new DeviceSshAccount("admin", "admin", null, "cred1");
+			device.getCredentialSets().add(cred);
+
+			AtomicInteger connectCount = new AtomicInteger(0);
+			AccessManager manager = new AccessManager(null, device, null, new FakeTaskContext(), null);
+			Resolution resolution = manager.newResolution(List.of(sshAccess("ssh")),
+				(accessDef, credentialSet) -> new FakeClient(connectCount, null));
+
+			Assertions.assertEquals(0, connectCount.get(), "No connection attempt should happen before first use");
+			Assertions.assertNull(resolution.getCurrentClient());
+
+			resolution.ensureResolved(true);
+			Assertions.assertEquals(1, connectCount.get(), "Exactly one connection attempt should happen on first use");
+		}
+
+		@Test
+		@DisplayName("Auto-try cycles through device-scoped credentials in order, without mutating the pool on a scoped success")
+		void autoTryCyclesScopedCredentials() throws IOException {
+			Device device = fakeDevice();
+			DeviceCredentialSet credA = new DeviceSshAccount("admin", "wrong", null, "credA");
+			DeviceCredentialSet credB = new DeviceSshAccount("admin", "right", null, "credB");
+			device.setCredentialSets(new LinkedHashSet<>(List.of(credA, credB)));
+
+			AtomicInteger connectCount = new AtomicInteger(0);
+			AccessManager manager = new AccessManager(null, device, null, new FakeTaskContext(), null);
+			Resolution resolution = manager.newResolution(List.of(sshAccess("ssh")), (accessDef, credentialSet) -> {
+				if (credentialSet == credA) {
+					return new FakeClient(connectCount, new InvalidCredentialsException("bad password"));
+				}
+				return new FakeClient(connectCount, null);
+			});
+
+			Client client = resolution.ensureResolved(true);
+			Assertions.assertNotNull(client);
+			Assertions.assertEquals(credB, resolution.getCurrentCredentialSet(), "Should have connected using credB");
+			Assertions.assertEquals(2, connectCount.get(), "Both credentials should have been attempted (credA then credB)");
+
+			// A scoped (device-pool) success must NOT trigger the "remember what worked" mutation:
+			// both credentials should still be present in the device's own pool.
+			Assertions.assertTrue(device.getCredentialSets().contains(credA),
+				"credA should still be in the device's credential pool (no rewrite on scoped success)");
+			Assertions.assertTrue(device.getCredentialSets().contains(credB),
+				"credB should still be in the device's credential pool");
+		}
+
+		@Test
+		@DisplayName("A non-auth IOException aborts remaining candidates of that access, but a different access is still tried")
+		void connectFailureAbortsOnlyThatAccess() throws IOException {
+			Device device = fakeDevice();
+			DeviceCredentialSet sshCred = new DeviceSshAccount("admin", "admin", null, "sshCred");
+			DeviceCredentialSet telnetCred = new DeviceTelnetAccount("admin", "admin", null, "telnetCred");
+			device.getCredentialSets().add(sshCred);
+			device.getCredentialSets().add(telnetCred);
+
+			AtomicInteger connectCount = new AtomicInteger(0);
+			AccessManager manager = new AccessManager(null, device, null, new FakeTaskContext(), null);
+			Resolution resolution = manager.newResolution(List.of(sshAccess("ssh"), telnetAccess("telnet")),
+				(accessDef, credentialSet) -> {
+					if ("ssh".equals(accessDef.getName())) {
+						return new FakeClient(connectCount, new IOException("connection refused"));
+					}
+					return new FakeClient(connectCount, null);
+				});
+
+			Client client = resolution.ensureResolved(true);
+			Assertions.assertNotNull(client);
+			Assertions.assertEquals("telnet", resolution.getCurrentAccessDef().getName(),
+				"Should have fallen back to the Telnet access after SSH was unreachable");
+			Assertions.assertEquals(telnetCred, resolution.getCurrentCredentialSet());
+		}
+
+		@Test
+		@DisplayName("Manual mode (autoTryCredentials=false) surfaces an AccessAuthenticationException instead of auto-cycling")
+		void manualModeSurfacesAuthFailure() throws IOException {
+			Device device = fakeDevice();
+			DeviceCredentialSet credA = new DeviceSshAccount("admin", "wrong", null, "credA");
+			DeviceCredentialSet credB = new DeviceSshAccount("admin", "right", null, "credB");
+			device.setCredentialSets(new LinkedHashSet<>(List.of(credA, credB)));
+
+			AtomicInteger connectCount = new AtomicInteger(0);
+			AccessManager manager = new AccessManager(null, device, null, new FakeTaskContext(), null);
+			Resolution resolution = manager.newResolution(List.of(sshAccess("ssh")), (accessDef, credentialSet) -> {
+				if (credentialSet == credA) {
+					return new FakeClient(connectCount, new InvalidCredentialsException("bad password"));
+				}
+				return new FakeClient(connectCount, null);
+			});
+
+			Assertions.assertThrows(AccessAuthenticationException.class, () -> resolution.ensureResolved(false),
+				"The first (failing) candidate should surface as a catchable authentication error, not auto-cycle");
+			Assertions.assertEquals(1, connectCount.get(), "Only the first candidate should have been tried so far");
+			Assertions.assertNull(resolution.getCurrentClient());
+
+			boolean advanced = resolution.tryNextCredentials();
+			Assertions.assertTrue(advanced, "tryNextCredentials() should move to credB and succeed");
+			Assertions.assertEquals(credB, resolution.getCurrentCredentialSet());
+			Assertions.assertEquals(2, connectCount.get());
+		}
+
+		@Test
+		@DisplayName("Exhausting all candidates without any credential configured throws immediately")
+		void noCredentialsConfigured() {
+			Device device = fakeDevice();
+			device.setAutoTryCredentials(false);
+			AccessManager manager = new AccessManager(null, device, null, new FakeTaskContext(), null);
+			Resolution resolution = manager.newResolution(List.of(sshAccess("ssh")),
+				(accessDef, credentialSet) -> new FakeClient(new AtomicInteger(), null));
+
+			Assertions.assertThrows(InvalidCredentialsException.class, () -> resolution.ensureResolved(true));
+		}
+
+		@Test
+		@DisplayName("resolveAddress/resolvePort use the device's per-access override when set, for any access name")
+		void perAccessOverrideResolution() throws IOException {
+			Device device = fakeDevice();
+			NetworkAddress defaultAddress = NetworkAddress.getNetworkAddress(InetAddress.getByName("10.0.0.1"));
+
+			// A brand new, non-legacy access ("alternateSsh") with no override at all:
+			// should fall back to the default address and the driver-declared default port.
+			AccessDefinition alternateSsh = new AccessDefinition("alternateSsh", DriverProtocol.SSH, null, null,
+				null, null, null, 2222);
+			AccessManager manager = new AccessManager(null, device, defaultAddress, new FakeTaskContext(), null);
+			Assertions.assertEquals(defaultAddress, manager.resolveAddress(alternateSsh));
+			Assertions.assertEquals(2222, manager.resolvePort(alternateSsh));
+
+			// Now add a per-access override for that same access, with both an address and a port.
+			AccessOverride override = new AccessOverride(device, "alternateSsh");
+			override.setAddress("192.168.1.50");
+			override.setPort(2223);
+			device.getAccessOverrides().add(override);
+			NetworkAddress overrideAddress = NetworkAddress.getNetworkAddress(InetAddress.getByName("192.168.1.50"));
+			Assertions.assertEquals(overrideAddress, manager.resolveAddress(alternateSsh));
+			Assertions.assertEquals(2223, manager.resolvePort(alternateSsh));
+
+			// The plain "ssh" access is unaffected by the "alternateSsh" override.
+			AccessDefinition ssh = sshAccess("ssh");
+			Assertions.assertEquals(defaultAddress, manager.resolveAddress(ssh));
+			Assertions.assertEquals(22, manager.resolvePort(ssh));
+		}
+
+		@Test
+		@DisplayName("Device.getSshPort/getTelnetPort/getConnectAddress preserve their historical semantics")
+		void legacyPortAndAddressAccessorsBackwardCompat() {
+			Device device = fakeDevice();
+
+			// Untouched device: same defaults as the old field initializers (Ssh.DEFAULT_PORT/Telnet.DEFAULT_PORT).
+			Assertions.assertEquals(22, device.getSshPort());
+			Assertions.assertEquals(23, device.getTelnetPort());
+			Assertions.assertNull(device.getConnectAddress());
+
+			// Explicit port overrides, independent per protocol.
+			device.setSshPort(2222);
+			device.setTelnetPort(2323);
+			Assertions.assertEquals(2222, device.getSshPort());
+			Assertions.assertEquals(2323, device.getTelnetPort());
+
+			// connectAddress historically applied to both SSH and Telnet at once.
+			device.setConnectAddress("192.168.1.1");
+			Assertions.assertEquals("192.168.1.1", device.getConnectAddress());
+			Assertions.assertEquals("192.168.1.1", device.getAccessOverride("ssh").getAddress());
+			Assertions.assertEquals("192.168.1.1", device.getAccessOverride("telnet").getAddress());
+
+			// Explicitly clearing a port (0) is distinguishable from "never touched": both
+			// return 0 (matching the historical sentinel), not the protocol default.
+			device.setSshPort(0);
+			Assertions.assertEquals(0, device.getSshPort());
+
+			device.setConnectAddress(null);
+			Assertions.assertNull(device.getConnectAddress());
 		}
 
 	}

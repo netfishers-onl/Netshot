@@ -19,6 +19,8 @@
 package net.netshot.netshot.device.access;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -30,6 +32,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver.AccessDefinition;
+import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
 import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.work.TaskContext;
@@ -91,7 +94,9 @@ public class AccessManager {
 	 * Instantiates a new access manager for one task attempt.
 	 * @param session the Hibernate session (may be null, e.g. for ad-hoc/test runs)
 	 * @param device the device being accessed
-	 * @param address the resolved network address to connect to
+	 * @param address the resolved default network address (the device's management
+	 *        address) to connect to, used by any access without its own address
+	 *        override; may be null if it failed to resolve (see {@link #resolveAddress})
 	 * @param taskContext the current task context
 	 * @param oneTimeCredentialSets one-time credential sets to try first (may be null/empty)
 	 */
@@ -102,6 +107,46 @@ public class AccessManager {
 		this.address = address;
 		this.taskContext = taskContext;
 		this.oneTimeCredentialSets = oneTimeCredentialSets;
+	}
+
+	/**
+	 * Resolves the effective network address to connect to for a given access:
+	 * its own per-access override address if configured (see
+	 * {@link Device#getAccessOverride(String)}), otherwise the device's default
+	 * (management) address.
+	 * @param accessDef the access to resolve the address for
+	 * @return the effective address
+	 * @throws IOException if the access has no override and the default address
+	 *         itself failed to resolve, or if the override address is malformed
+	 */
+	public NetworkAddress resolveAddress(AccessDefinition accessDef) throws IOException {
+		AccessOverride override = this.device.getAccessOverride(accessDef.getName());
+		if (override != null && override.getAddress() != null && !override.getAddress().isEmpty()) {
+			return NetworkAddress.getNetworkAddress(InetAddress.getByName(override.getAddress()));
+		}
+		if (this.address == null) {
+			throw new UnknownHostException(
+				"Unable to resolve an address to connect to for access '" + accessDef.getName() + "'.");
+		}
+		return this.address;
+	}
+
+	/**
+	 * Resolves the effective TCP port to use for a given access: its own
+	 * per-access override port if configured, otherwise the access's own
+	 * driver-declared default port.
+	 * @param accessDef the access to resolve the port for
+	 * @return the effective port
+	 */
+	public int resolvePort(AccessDefinition accessDef) {
+		AccessOverride override = this.device.getAccessOverride(accessDef.getName());
+		if (override != null && override.getPort() != null) {
+			return override.getPort();
+		}
+		if (accessDef.getProtocol() == DriverProtocol.HTTP) {
+			return accessDef.getHttpConfig().getDefaultPort();
+		}
+		return accessDef.getDefaultPort();
 	}
 
 	/** Test-only: when set, every {@link Resolution} instantly "resolves" to this client. */

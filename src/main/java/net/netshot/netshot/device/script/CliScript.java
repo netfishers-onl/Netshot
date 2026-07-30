@@ -68,28 +68,21 @@ public abstract class CliScript {
 		throws IOException, MissingDeviceDriverException, InvalidCredentialsException, ScriptException, MissingDeviceDriverException {
 		device.getDeviceDriver(); // fail fast if the driver is missing
 
-		InetAddress resolvedMgmtAddress = null;
+		// Resolve the device's default (management) address, used by any access
+		// without its own address override (see AccessManager.resolveAddress).
+		// Failure here isn't immediately fatal: an access with its own override
+		// address may still be usable, so resolution is deferred - the task only
+		// actually fails if a used access ends up needing this default address.
+		NetworkAddress address = null;
 		try {
-			resolvedMgmtAddress = InetAddress.getByName(device.getMgmtAddress());
+			InetAddress resolvedMgmtAddress = InetAddress.getByName(device.getMgmtAddress());
 			device.setCachedIpAddress(resolvedMgmtAddress);
+			address = NetworkAddress.getNetworkAddress(resolvedMgmtAddress);
 		}
 		catch (UnknownHostException e) {
 			log.warn("Unable to resolve management address '{}' of device {}.",
 				device.getMgmtAddress(), device.getId(), e);
 			this.taskContext.warn("Unable to resolve management address '{}'.", device.getMgmtAddress());
-		}
-
-		NetworkAddress address;
-		String connectAddressString = device.getConnectAddress();
-		if (connectAddressString != null && !connectAddressString.isEmpty()) {
-			address = NetworkAddress.getNetworkAddress(InetAddress.getByName(connectAddressString));
-		}
-		else if (resolvedMgmtAddress != null) {
-			address = NetworkAddress.getNetworkAddress(resolvedMgmtAddress);
-		}
-		else {
-			throw new UnknownHostException(
-				"Unable to resolve management address '%s'.".formatted(device.getMgmtAddress()));
 		}
 
 		Set<DeviceCredentialSet> credentialSets = new HashSet<>();

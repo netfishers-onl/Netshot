@@ -85,6 +85,7 @@ import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.NetworkInterface;
 import net.netshot.netshot.device.PhysicalAddress;
 import net.netshot.netshot.device.StaticDeviceGroup;
+import net.netshot.netshot.device.access.AccessOverride;
 import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.attribute.ConfigBinaryAttribute;
 import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
@@ -97,6 +98,7 @@ import net.netshot.netshot.device.attribute.DeviceLongTextAttribute;
 import net.netshot.netshot.device.attribute.DeviceNumericAttribute;
 import net.netshot.netshot.device.attribute.DeviceTextAttribute;
 import net.netshot.netshot.device.attribute.LongTextConfiguration;
+import net.netshot.netshot.device.credentials.DeviceHttpAccount;
 import net.netshot.netshot.device.credentials.DeviceSnmpv1Community;
 import net.netshot.netshot.device.credentials.DeviceSnmpv2cCommunity;
 import net.netshot.netshot.device.credentials.DeviceSnmpv3Community;
@@ -295,12 +297,14 @@ public final class Database {
 				.addAnnotatedClass(Network4Address.class)
 				.addAnnotatedClass(Network6Address.class)
 				.addAnnotatedClass(NetworkInterface.class)
+				.addAnnotatedClass(AccessOverride.class)
 				.addAnnotatedClass(DeviceSnmpv1Community.class)
 				.addAnnotatedClass(DeviceSnmpv2cCommunity.class)
 				.addAnnotatedClass(DeviceSnmpv3Community.class)
 				.addAnnotatedClass(DeviceSshAccount.class)
 				.addAnnotatedClass(DeviceSshKeyAccount.class)
 				.addAnnotatedClass(DeviceTelnetAccount.class)
+				.addAnnotatedClass(DeviceHttpAccount.class)
 				.addAnnotatedClass(Policy.class)
 				.addAnnotatedClass(Rule.class)
 				.addAnnotatedClass(Task.class)

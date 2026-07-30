@@ -70,6 +70,7 @@ import net.netshot.netshot.compliance.Rule;
 import net.netshot.netshot.compliance.SoftwareRule;
 import net.netshot.netshot.compliance.SoftwareRule.ConformanceLevel;
 import net.netshot.netshot.database.InetAddressUserType;
+import net.netshot.netshot.device.access.AccessOverride;
 import net.netshot.netshot.device.access.Ssh;
 import net.netshot.netshot.device.access.Telnet;
 import net.netshot.netshot.device.attribute.AttributeDefinition.EnumAttribute;
@@ -444,27 +445,133 @@ public class Device {
 	@Setter
 	private Set<String> vrfInstances = new HashSet<>();
 
-	/** SSH TCP port, 22 by default. */
+	/**
+	 * Per-access connection overrides (address/port), keyed by access name
+	 * (e.g. "ssh", "telnet", "https"). {@code sshPort}/{@code telnetPort}/
+	 * {@code connectAddress} below are computed accessors backed by this
+	 * collection's "ssh"/"telnet" rows, kept for REST/frontend backward
+	 * compatibility - see {@link AccessOverride}.
+	 * <p>
+	 * Not exposed in the REST/XML API yet (no {@code @XmlElement}/
+	 * {@code @JsonView}): a later phase will design proper dedicated
+	 * endpoints for managing arbitrary per-access overrides, rather than
+	 * committing to this raw collection's shape now.
+	 */
 	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
+		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL)
 	}))
 	@Setter
-	private int sshPort = Ssh.DEFAULT_PORT;
+	private Set<AccessOverride> accessOverrides = new HashSet<>();
 
-	/** Telnet TCP port, 23 by default. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	private int telnetPort = Telnet.DEFAULT_PORT;
+	/**
+	 * Gets the connection override for the given access name, if any.
+	 * @param accessName the access name (e.g. "ssh", "telnet", "https")
+	 * @return the override, or null if none is configured
+	 */
+	@Transient
+	public AccessOverride getAccessOverride(String accessName) {
+		for (AccessOverride override : this.accessOverrides) {
+			if (accessName.equals(override.getAccessName())) {
+				return override;
+			}
+		}
+		return null;
+	}
 
-	/** An optional connection address (IPv4 literal, IPv6 literal, or FQDN), in case the management address can't be used to connect to the device. */
-	@Getter(onMethod = @__({
-		@Column(name = "connect_address"),
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	private String connectAddress;
+	/**
+	 * Gets (creating if necessary) the connection override for the given access name.
+	 * @param accessName the access name
+	 * @return the (possibly newly created) override
+	 */
+	@Transient
+	private AccessOverride getOrCreateAccessOverride(String accessName) {
+		AccessOverride override = this.getAccessOverride(accessName);
+		if (override == null) {
+			override = new AccessOverride(this, accessName);
+			this.accessOverrides.add(override);
+		}
+		return override;
+	}
+
+	/**
+	 * SSH TCP port override (0 = not set, i.e. use the driver's default port).
+	 * Computed from the "ssh" access override - see {@link #accessOverrides}.
+	 * @return the SSH port override, or the protocol default if none is set
+	 */
+	@Transient
+	@XmlElement
+	@JsonView(DefaultView.class)
+	public int getSshPort() {
+		AccessOverride override = this.getAccessOverride("ssh");
+		if (override == null) {
+			return Ssh.DEFAULT_PORT;
+		}
+		return override.getPort() == null ? 0 : override.getPort();
+	}
+
+	/**
+	 * Sets the SSH TCP port override (0 to clear it).
+	 * @param sshPort the port to use, or 0 to clear the override
+	 */
+	public void setSshPort(int sshPort) {
+		this.getOrCreateAccessOverride("ssh").setPort(sshPort == 0 ? null : sshPort);
+	}
+
+	/**
+	 * Telnet TCP port override (0 = not set, i.e. use the driver's default port).
+	 * Computed from the "telnet" access override - see {@link #accessOverrides}.
+	 * @return the Telnet port override, or the protocol default if none is set
+	 */
+	@Transient
+	@XmlElement
+	@JsonView(DefaultView.class)
+	public int getTelnetPort() {
+		AccessOverride override = this.getAccessOverride("telnet");
+		if (override == null) {
+			return Telnet.DEFAULT_PORT;
+		}
+		return override.getPort() == null ? 0 : override.getPort();
+	}
+
+	/**
+	 * Sets the Telnet TCP port override (0 to clear it).
+	 * @param telnetPort the port to use, or 0 to clear the override
+	 */
+	public void setTelnetPort(int telnetPort) {
+		this.getOrCreateAccessOverride("telnet").setPort(telnetPort == 0 ? null : telnetPort);
+	}
+
+	/**
+	 * An optional connection address (IPv4 literal, IPv6 literal, or FQDN), in case the
+	 * management address can't be used to connect to the device. Historically a single
+	 * device-wide value applying to both SSH and Telnet - computed here from whichever
+	 * of the "ssh"/"telnet" access overrides has an address set (see {@link #accessOverrides}).
+	 * @return the connect address override, or null if none is set
+	 */
+	@Transient
+	@XmlElement
+	@JsonView(DefaultView.class)
+	public String getConnectAddress() {
+		AccessOverride sshOverride = this.getAccessOverride("ssh");
+		if (sshOverride != null && sshOverride.getAddress() != null) {
+			return sshOverride.getAddress();
+		}
+		AccessOverride telnetOverride = this.getAccessOverride("telnet");
+		if (telnetOverride != null) {
+			return telnetOverride.getAddress();
+		}
+		return null;
+	}
+
+	/**
+	 * Sets the connection address override, applied to both the "ssh" and "telnet"
+	 * accesses (matching the historical, protocol-agnostic semantics of this field).
+	 * @param connectAddress the address to use, or null to clear the override
+	 */
+	public void setConnectAddress(String connectAddress) {
+		this.getOrCreateAccessOverride("ssh").setAddress(connectAddress);
+		this.getOrCreateAccessOverride("telnet").setAddress(connectAddress);
+	}
 
 	/**
 	 * Instantiates a new device.

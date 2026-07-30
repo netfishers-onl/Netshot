@@ -1776,4 +1776,58 @@
 		<addPrimaryKey tableName="network_interface_ip4addresses" columnNames="network_interface, address, prefix_length"/>
 		<addPrimaryKey tableName="network_interface_ip6addresses" columnNames="network_interface, address, prefix_length"/>
 	</changeSet>
+	<!-- Generic per-access connection overrides (address/port), replacing the
+	     device-wide ssh_port/telnet_port/connect_address columns. Device.java's
+	     getSshPort()/getTelnetPort()/getConnectAddress() become computed
+	     accessors backed by the "ssh"/"telnet" rows of this table, so the REST
+	     API and existing frontend keep working unchanged. -->
+	<changeSet author="netshot" id="0.25.0_29">
+		<createTable tableName="device_access_override">
+			<column autoIncrement="true" name="id" type="BIGINT">
+				<constraints primaryKey="true"/>
+			</column>
+			<column name="device" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="access_name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="address" type="VARCHAR(255)"/>
+			<column name="port" type="INT"/>
+		</createTable>
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="device_access_override"
+			constraintName="FK_device_access_override_device" deferrable="false" initiallyDeferred="false"
+			onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
+		<addUniqueConstraint tableName="device_access_override" columnNames="device, access_name"
+			constraintName="UQ_device_access_override_device_access_name"/>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_30">
+		<sql>
+			INSERT INTO device_access_override (device, access_name, port)
+			SELECT id, 'ssh', CASE WHEN ssh_port = 0 THEN NULL ELSE ssh_port END
+			FROM device WHERE ssh_port &lt;&gt; 22;
+		</sql>
+		<sql>
+			INSERT INTO device_access_override (device, access_name, port)
+			SELECT id, 'telnet', CASE WHEN telnet_port = 0 THEN NULL ELSE telnet_port END
+			FROM device WHERE telnet_port &lt;&gt; 23;
+		</sql>
+		<sql>
+			INSERT INTO device_access_override (device, access_name, address)
+			SELECT id, 'ssh', connect_address FROM device WHERE connect_address IS NOT NULL
+			ON CONFLICT (device, access_name) DO UPDATE SET address = EXCLUDED.address;
+		</sql>
+		<sql>
+			INSERT INTO device_access_override (device, access_name, address)
+			SELECT id, 'telnet', connect_address FROM device WHERE connect_address IS NOT NULL
+			ON CONFLICT (device, access_name) DO UPDATE SET address = EXCLUDED.address;
+		</sql>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_31">
+		<dropColumn tableName="device">
+			<column name="ssh_port"/>
+			<column name="telnet_port"/>
+			<column name="connect_address"/>
+		</dropColumn>
+	</changeSet>
 </databaseChangeLog>

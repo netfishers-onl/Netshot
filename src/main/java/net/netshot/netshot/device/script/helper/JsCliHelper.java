@@ -28,10 +28,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.graalvm.polyglot.HostAccess.Export;
 
 import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.DeviceDriver.AccessDefinition;
 import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
+import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.access.AccessManager;
 import net.netshot.netshot.device.access.AccessManager.Resolution;
 import net.netshot.netshot.device.access.Cli;
@@ -87,31 +87,23 @@ public class JsCliHelper {
 	}
 
 	private Client buildClient(AccessDefinition accessDef, DeviceCredentialSet credentialSet) throws IOException {
-		Device device = this.accessManager.getDevice();
-		int port = accessDef.getDefaultPort();
-		if (accessDef.getProtocol() == DriverProtocol.SSH && "ssh".equals(accessDef.getName())
-				&& device.getSshPort() != 0) {
-			port = device.getSshPort();
-		}
-		else if (accessDef.getProtocol() == DriverProtocol.TELNET && "telnet".equals(accessDef.getName())
-				&& device.getTelnetPort() != 0) {
-			port = device.getTelnetPort();
-		}
+		NetworkAddress address = this.accessManager.resolveAddress(accessDef);
+		int port = this.accessManager.resolvePort(accessDef);
 		if (accessDef.getProtocol() == DriverProtocol.SSH) {
 			Ssh ssh;
 			if (credentialSet instanceof DeviceSshKeyAccount sshKeyAccount) {
-				ssh = new Ssh(this.accessManager.getAddress(), port, sshKeyAccount.getUsername(),
+				ssh = new Ssh(address, port, sshKeyAccount.getUsername(),
 					sshKeyAccount.getPrivateKey(), sshKeyAccount.getPassword(), this.taskContext);
 			}
 			else {
 				DeviceSshAccount sshAccount = (DeviceSshAccount) credentialSet;
-				ssh = new Ssh(this.accessManager.getAddress(), port, sshAccount.getUsername(),
+				ssh = new Ssh(address, port, sshAccount.getUsername(),
 					sshAccount.getPassword(), this.taskContext);
 			}
 			ssh.applySshConfig(accessDef.getSshConfig());
 			return ssh;
 		}
-		Telnet telnet = new Telnet(this.accessManager.getAddress(), port, this.taskContext);
+		Telnet telnet = new Telnet(address, port, this.taskContext);
 		telnet.setTelnetConfig(accessDef.getTelnetConfig());
 		return telnet;
 	}

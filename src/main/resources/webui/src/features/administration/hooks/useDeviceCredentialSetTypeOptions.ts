@@ -26,4 +26,8 @@ export const useDeviceCredentialSetTypeOptions = createOptionHook([
     label: "network.telnet",
     value: CredentialSetType.Telnet,
   },
+  {
+    label: "network.http",
+    value: CredentialSetType.HTTP,
+  },
 ])

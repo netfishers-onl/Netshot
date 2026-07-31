@@ -105,6 +105,12 @@ export default function AddDeviceCredentialSetTrigger({ children, ...rest }: Add
             password: values.password ?? undefined,
             superPassword: values.superPassword ?? undefined,
           }
+        } else if (type === CredentialSetType.HTTP) {
+          payload = {
+            ...payload,
+            username: values.username,
+            password: values.password ?? undefined,
+          }
         }
 
         await mutation.mutateAsync(payload)

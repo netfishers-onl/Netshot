@@ -9,6 +9,7 @@ export enum CredentialSetType {
   SSH = "SSH",
   SSHKey = "SSH Key",
   Telnet = "Telnet",
+  HTTP = "HTTP",
 }
 
 export type CredentialSet = {

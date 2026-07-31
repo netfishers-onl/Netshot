@@ -524,13 +524,19 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 * SSH/Telnet config. A driver may declare several accesses of the same
 	 * protocol (e.g. a secondary SSH access on another port).
 	 */
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.NONE)
 	public static final class AccessDefinition {
 		/** The JS key this access was declared under (e.g. "alternateSsh"). */
-		@Getter
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
 		private final String name;
 
 		/** The protocol family (SSH, TELNET, SNMP or HTTP). */
-		@Getter
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
 		private final DriverProtocol protocol;
 
 		/** For SNMP accesses only: "v1", "v2c" or "v3". */
@@ -538,7 +544,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		private final String snmpVersion;
 
 		/** Optional human-readable description. */
-		@Getter
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
 		private final String description;
 
 		/** Populated only when protocol == SSH. */
@@ -576,6 +584,23 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		}
 
 		/**
+		 * The default TCP port for this access, regardless of protocol (unlike
+		 * {@link #getDefaultPort()}, which is meaningless for HTTP accesses -
+		 * their default port lives in {@link #httpConfig} instead). This is
+		 * what the frontend should display/prefill for a per-access override.
+		 * @return the effective default port
+		 */
+		@Transient
+		@XmlElement
+		@JsonView(DefaultView.class)
+		public int getEffectiveDefaultPort() {
+			if (this.protocol == DriverProtocol.HTTP && this.httpConfig != null) {
+				return this.httpConfig.getDefaultPort();
+			}
+			return this.defaultPort;
+		}
+
+		/**
 		 * The credential subtype able to authenticate against this access.
 		 * @return the credential class to filter candidate credential sets on
 		 */
@@ -602,7 +627,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	}
 
 	/** The named accesses (CLI/SNMP/HTTP) declared by this driver, in declaration order. */
-	@Getter
+	@Getter(onMethod = @__({
+		@XmlElement, @JsonView(DefaultView.class)
+	}))
 	private Map<String, AccessDefinition> accessDefinitions = new LinkedHashMap<>();
 
 	/**

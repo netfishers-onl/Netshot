@@ -3,6 +3,7 @@ import { NetshotError } from "@/api/httpClient"
 import { Checkbox } from "@/components"
 import { DomainSelect } from "@/features/administration/components"
 import DeviceTypeSelect from "./DeviceTypeSelect"
+import DeviceAccessOverridesFields, { AccessOverrideFormValue } from "./DeviceAccessOverridesFields"
 import FormControl, { FormControlType, PASSWORD_UNCHANGED } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { MUTATIONS, QUERIES } from "@/constants"
@@ -10,7 +11,7 @@ import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { CredentialSetType, Device } from "@/types"
 import validators from "@/utils/validators"
-import { Checkbox as NativeCheckbox, Stack } from "@chakra-ui/react"
+import { Checkbox as NativeCheckbox, Separator, Stack } from "@chakra-ui/react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo } from "react"
 import { useForm, useFormContext, useWatch } from "react-hook-form"
@@ -18,7 +19,7 @@ import { useTranslation } from "react-i18next"
 import React from "react"
 import Slot from "@/components/Slot"
 import { useCredentialSets } from "../api"
-import { useDeviceCredentialSetOptions } from "../hooks"
+import { useDeviceCredentialSetOptions, useDeviceTypeOptions } from "../hooks"
 
 export type EditDeviceTriggerProps = { device: Device; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
@@ -27,10 +28,7 @@ type Form = {
   deviceType: string
   ipAddress: string
   mgmtDomain: string
-  overrideConnectionSetting: boolean
-  connectIpAddress: string
-  sshPort: string
-  telnetPort: string
+  accessOverrides: AccessOverrideFormValue[]
   credentialType: CredentialSetType
   credentialSetIds: number[]
   specificCredentialSet: UpdateDevicePayload["specificCredentialSet"] | null
@@ -43,10 +41,13 @@ function DeviceEditForm({ freezePasswords = false }: { freezePasswords?: boolean
   const { t } = useTranslation()
   const deviceCredentialSetOptions = useDeviceCredentialSetOptions()
   const { data: credentialSets, isPending } = useCredentialSets()
+  const { getOptionByDriver } = useDeviceTypeOptions()
 
-  const overrideConnectionSetting = useWatch({ control: form.control, name: "overrideConnectionSetting" })
+  const deviceType = useWatch({ control: form.control, name: "deviceType" })
   const credentialType = useWatch({ control: form.control, name: "credentialType" })
   const credentialSetIds = useWatch({ control: form.control, name: "credentialSetIds" })
+
+  const selectedDeviceType = getOptionByDriver(deviceType)?.value
 
   function toggleCredentialSetId(id: number) {
     const ids = [...credentialSetIds] as number[]
@@ -71,13 +72,6 @@ function DeviceEditForm({ freezePasswords = false }: { freezePasswords?: boolean
     }
   }
 
-  useEffect(() => {
-    if (overrideConnectionSetting) return
-    form.setValue("connectIpAddress", "")
-    form.setValue("sshPort", "")
-    form.setValue("telnetPort", "")
-  }, [overrideConnectionSetting, form])
-
   const isSshOrTelnet = [CredentialSetType.SSH, CredentialSetType.Telnet].includes(credentialType)
 
   return (
@@ -86,14 +80,11 @@ function DeviceEditForm({ freezePasswords = false }: { freezePasswords?: boolean
       <DeviceTypeSelect disabled label={t("device.type")} control={form.control} name="deviceType" />
       <DomainSelect control={form.control} name="mgmtDomain" />
       <FormControl required label={t("device.mgmtAddress")} placeholder={t("common.eG", { example: "10.216.5.3, 2001:db8::1, router1.example.com" })} control={form.control} name="ipAddress" rules={validators.hostOrIp()} />
-      <Checkbox control={form.control} name="overrideConnectionSetting">{t("device.overrideConnectionSettings")}</Checkbox>
-      {overrideConnectionSetting && (
+      {selectedDeviceType && Object.keys(selectedDeviceType.accessDefinitions ?? {}).length > 0 && (
         <>
-          <FormControl required label={t("device.connectIp")} placeholder={t("common.eG", { example: "10.216.5.3 or router1.example.com" })} control={form.control} name="connectIpAddress" rules={validators.hostOrIp()} />
-          <Stack direction="row" gap="4">
-            <FormControl required label={t("network.sshPort")} placeholder={t("common.eG", { example: "22" })} control={form.control} name="sshPort" />
-            <FormControl required label={t("network.telnetPort")} placeholder={t("common.eG", { example: "6753" })} control={form.control} name="telnetPort" />
-          </Stack>
+          <Separator />
+          <DeviceAccessOverridesFields control={form.control} accessDefinitions={selectedDeviceType.accessDefinitions} />
+          <Separator />
         </>
       )}
       <Select control={form.control} name="credentialType" options={deviceCredentialSetOptions.options} label={t("credential.label")} placeholder={t("credential.select")} onSelectItem={onCredentialTypeChange} />
@@ -141,17 +132,20 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
       ? device?.specificCredentialSet?.type
       : deviceCredentialSetOptions.options[0].value
 
-    const overrideConnectionSetting = Boolean(device?.connectAddress && device?.sshPort && device?.telnetPort)
+    const accessOverrides = (device?.accessOverrides ?? []).map((override) => ({
+      accessName: override.accessName,
+      protocol: "",
+      defaultPort: 0,
+      address: override.address ?? "",
+      port: override.port?.toString() ?? "",
+    })) as AccessOverrideFormValue[]
 
     let values = {
       name: device?.name,
       deviceType: device?.driver,
       ipAddress: device?.mgmtAddress,
       mgmtDomain: device?.mgmtDomain?.id?.toString(),
-      overrideConnectionSetting,
-      connectIpAddress: device?.connectAddress ?? "",
-      sshPort: device?.sshPort?.toString() ?? "",
-      telnetPort: device?.telnetPort?.toString() ?? "",
+      accessOverrides,
       autoTryCredentials: device?.autoTryCredentials,
       credentialSetIds: device?.credentialSetIds ?? [],
       credentialType,
@@ -191,7 +185,7 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
       form,
       size: "lg",
       async onSubmit(values: Form) {
-        let updatedDevice: Partial<UpdateDevicePayload> = {
+        const updatedDevice: Partial<UpdateDevicePayload> = {
           comments: values?.comments,
           ipAddress: values?.ipAddress,
           mgmtDomain: +values?.mgmtDomain,
@@ -199,9 +193,13 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
           autoTryCredentials: values?.autoTryCredentials,
         }
 
-        if (values.overrideConnectionSetting) {
-          updatedDevice = { ...updatedDevice, connectIpAddress: values?.connectIpAddress, sshPort: values?.sshPort, telnetPort: values?.telnetPort }
-        }
+        updatedDevice.accessOverrides = (values.accessOverrides ?? [])
+          .filter((override) => override.address || override.port)
+          .map((override) => ({
+            accessName: override.accessName,
+            address: override.address || undefined,
+            port: override.port ? Number(override.port) : undefined,
+          }))
 
         if (values.credentialType !== CredentialSetType.GLOBAL) {
           const { username, password, superPassword } = values.specificCredentialSet ?? {}

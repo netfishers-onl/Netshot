@@ -1350,6 +1350,20 @@ public class RestServiceTest extends WithDatabaseTest {
 					JsonNodeFactory.instance.objectNode()
 						.put("type", testDriver.getLocation().getType().toString())
 						.put("fileName", testDriver.getLocation().getFileName()));
+			ObjectNode accessDefinitionsNode = targetData.putObject("accessDefinitions");
+			for (var entry : testDriver.getAccessDefinitions().entrySet()) {
+				DeviceDriver.AccessDefinition accessDef = entry.getValue();
+				ObjectNode accessDefNode = accessDefinitionsNode.putObject(entry.getKey())
+					.put("name", accessDef.getName())
+					.put("protocol", accessDef.getProtocol().toString());
+				if (accessDef.getDescription() == null) {
+					accessDefNode.putNull("description");
+				}
+				else {
+					accessDefNode.put("description", accessDef.getDescription());
+				}
+				accessDefNode.put("effectiveDefaultPort", Long.valueOf(accessDef.getEffectiveDefaultPort()));
+			}
 			Assertions.assertEquals(targetData, testDriverNode,
 				"Retrieved device type doesn't match expected object");
 		}
@@ -1466,6 +1480,7 @@ public class RestServiceTest extends WithDatabaseTest {
 				expectedNode1.putArray("attributes");
 				expectedNode1.putArray("credentialSetIds");
 				expectedNode1.putArray("credentialSets");
+				expectedNode1.putArray("accessOverrides");
 				expectedNode1.set("mgmtDomain",
 					JsonNodeFactory.instance.objectNode()
 						.put("id", device1.getMgmtDomain().getId())

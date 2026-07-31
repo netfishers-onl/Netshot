@@ -451,14 +451,10 @@ public class Device {
 	 * {@code connectAddress} below are computed accessors backed by this
 	 * collection's "ssh"/"telnet" rows, kept for REST/frontend backward
 	 * compatibility - see {@link AccessOverride}.
-	 * <p>
-	 * Not exposed in the REST/XML API yet (no {@code @XmlElement}/
-	 * {@code @JsonView}): a later phase will design proper dedicated
-	 * endpoints for managing arbitrary per-access overrides, rather than
-	 * committing to this raw collection's shape now.
 	 */
 	@Getter(onMethod = @__({
-		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL)
+		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL),
+		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
 	private Set<AccessOverride> accessOverrides = new HashSet<>();
@@ -491,6 +487,32 @@ public class Device {
 			this.accessOverrides.add(override);
 		}
 		return override;
+	}
+
+	/**
+	 * Replaces the whole set of per-access connection overrides at once (e.g.
+	 * from a device edit form submitting the full list of accesses). Entries
+	 * with neither an address nor a port are dropped (equivalent to "no
+	 * override for this access").
+	 * @param overrides the new full list of overrides (may be null, meaning "clear all")
+	 */
+	@Transient
+	public void replaceAccessOverrides(java.util.Collection<AccessOverride> overrides) {
+		this.accessOverrides.clear();
+		if (overrides == null) {
+			return;
+		}
+		for (AccessOverride input : overrides) {
+			boolean hasAddress = input.getAddress() != null && !input.getAddress().isEmpty();
+			boolean hasPort = input.getPort() != null;
+			if (!hasAddress && !hasPort) {
+				continue;
+			}
+			AccessOverride override = new AccessOverride(this, input.getAccessName());
+			override.setAddress(hasAddress ? input.getAddress() : null);
+			override.setPort(input.getPort());
+			this.accessOverrides.add(override);
+		}
 	}
 
 	/**

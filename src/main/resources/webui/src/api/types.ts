@@ -1,5 +1,6 @@
 import {
   CredentialSetType,
+  DeviceAccessOverride,
   DeviceComplianceResultType,
   DeviceSoftwareLevel,
   GroupType,
@@ -77,9 +78,7 @@ export type CreateDevicePayload = {
   domainId: number
   name: string
   deviceType: string
-  connectIpAddress?: string
-  sshPort?: string
-  telnetPort?: string
+  accessOverrides?: DeviceAccessOverride[]
   specificCredentialSet?: {
     password: string
     privateKey?: string
@@ -95,9 +94,7 @@ export type UpdateDevicePayload = {
   comments: string
   ipAddress: string
   mgmtDomain: number
-  connectIpAddress: string
-  sshPort: string
-  telnetPort: string
+  accessOverrides: DeviceAccessOverride[]
   autoTryCredentials: boolean
   credentialSetIds: number[]
   clearCredentialSetIds: number[]

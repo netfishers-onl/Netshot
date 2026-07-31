@@ -205,6 +205,27 @@ export default function DeviceCredentialSetForm(props: DeviceCredentialSetFormPr
           name="community"
         />
       )}
+      {type === CredentialSetType.HTTP && (
+        <>
+          <FormControl
+            label={t("user.username")}
+            placeholder={t("common.eG", { example: "admin" })}
+            control={form.control}
+            name="username"
+            helperText={t("credential.httpUsernameHelperText")}
+          />
+          <FormControl
+            required={!freezePasswords}
+            allowUnchanged={freezePasswords}
+            type={FormControlType.Password}
+            label={t("auth.password")}
+            placeholder={t("auth.typeYourPassword")}
+            control={form.control}
+            name="password"
+            helperText={t("credential.httpPasswordHelperText")}
+          />
+        </>
+      )}
     </Stack>
   )
 }

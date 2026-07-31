@@ -87,6 +87,12 @@ export type DeviceBinaryAttribute = {
 
 export type DeviceAttribute = DeviceNumericAttribute | DeviceTextAttribute | DeviceBinaryAttribute
 
+export type DeviceAccessOverride = {
+  accessName: string
+  address?: string
+  port?: number
+}
+
 export type Device = {
   attributes: DeviceAttribute[]
   autoTryCredentials: boolean
@@ -117,6 +123,7 @@ export type Device = {
   sshPort: string
   telnetPort: string
   connectAddress: string
+  accessOverrides: DeviceAccessOverride[]
   credentialSetIds: number[]
   realDeviceType: string
   endOfLife: boolean
@@ -210,6 +217,13 @@ export enum DeviceTypeProtocol {
   Http = "HTTP",
 }
 
+export type DeviceAccessDefinition = {
+  name: string
+  protocol: DeviceTypeProtocol
+  description?: string
+  effectiveDefaultPort: number
+}
+
 export type DeviceType = {
   attributes: DeviceAttributeDefinition[]
   author: string
@@ -223,23 +237,7 @@ export type DeviceType = {
   priority: number
   protocols: DeviceTypeProtocol[]
   sourceHash: string
-  sshConfig: {
-    ciphers: string[]
-    hostKeyAlgorithms: string[]
-    kexAlgorithms: string[]
-    macs: string[]
-    terminalCols: number
-    terminalHeight: number
-    terminalRows: number
-    terminalType: string
-    terminalWidth: number
-    usePty: boolean
-  }
-  telnetConfig: {
-    terminalCols: number
-    terminalRows: number
-    terminalType: string
-  }
+  accessDefinitions: Record<string, DeviceAccessDefinition>
   version: string
 }
 

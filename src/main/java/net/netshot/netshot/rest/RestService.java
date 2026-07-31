@@ -182,6 +182,7 @@ import net.netshot.netshot.device.Network6Address;
 import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.NetworkInterface;
 import net.netshot.netshot.device.StaticDeviceGroup;
+import net.netshot.netshot.device.access.AccessOverride;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
@@ -191,6 +192,7 @@ import net.netshot.netshot.device.attribute.ConfigLongTextAttribute;
 import net.netshot.netshot.device.attribute.DeviceAttribute;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
+import net.netshot.netshot.device.credentials.DeviceHttpAccount;
 import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
 import net.netshot.netshot.device.credentials.DeviceSnmpv3Community;
 import net.netshot.netshot.device.credentials.DeviceSshKeyAccount;
@@ -1919,6 +1921,13 @@ public class RestService extends Thread {
 		}))
 		@Setter
 		private DeviceCredentialSet specificCredentialSet;
+
+		/** Per-access connection overrides (address/port), keyed by access name. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private List<AccessOverride> accessOverrides;
 	}
 
 	/** Strict IPv4 dotted-quad pattern (each octet 0-255), to detect an IPv4 literal without ever risking a DNS lookup. */
@@ -1978,6 +1987,33 @@ public class RestService extends Thread {
 	}
 
 	/**
+	 * Validates a list of per-access connection overrides posted by a device
+	 * create/update request (address must be a valid address/hostname if set,
+	 * port must be in the 1-65535 range if set, access name must be present).
+	 * @param accessOverrides the overrides to validate (may be null)
+	 * @throws NetshotBadRequestException if any entry is invalid
+	 */
+	private static void validateAccessOverrides(List<AccessOverride> accessOverrides) throws NetshotBadRequestException {
+		if (accessOverrides == null) {
+			return;
+		}
+		for (AccessOverride override : accessOverrides) {
+			if (override.getAccessName() == null || override.getAccessName().isEmpty()) {
+				throw new NetshotBadRequestException("Missing access name in one of the connection overrides.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+			}
+			if (override.getAddress() != null && !override.getAddress().isEmpty()) {
+				RestService.validateMgmtAddress(override.getAddress(), true);
+			}
+			if (override.getPort() != null && (override.getPort() < 1 || override.getPort() > 65535)) {
+				throw new NetshotBadRequestException(
+					"Invalid port for access '" + override.getAccessName() + "'.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
+			}
+		}
+	}
+
+	/**
 	 * Adds the device.
 	 *
 	 * @param device the device
@@ -2033,6 +2069,7 @@ public class RestService extends Thread {
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
 			}
 		}
+		RestService.validateAccessOverrides(device.getAccessOverrides());
 		Domain domain;
 		List<DeviceCredentialSet> knownCommunities;
 		Session session = Database.getSession();
@@ -2124,6 +2161,9 @@ public class RestService extends Thread {
 				}
 				if (telnetPort != null) {
 					newDevice.setTelnetPort(telnetPort);
+				}
+				if (device.getAccessOverrides() != null) {
+					newDevice.replaceAccessOverrides(device.getAccessOverrides());
 				}
 				if (device.getSpecificCredentialSet() != null && device.getSpecificCredentialSet() instanceof DeviceCliAccount) {
 					device.getSpecificCredentialSet().setName(DeviceCredentialSet.generateSpecificName());
@@ -2342,6 +2382,13 @@ public class RestService extends Thread {
 		@Setter
 		private DeviceCredentialSet specificCredentialSet;
 
+		/** Per-access connection overrides (address/port), keyed by access name. */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		@Setter
+		private List<AccessOverride> accessOverrides;
+
 		/**
 		 * Instantiates a new rs device.
 		 */
@@ -2436,6 +2483,16 @@ public class RestService extends Thread {
 							NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
 					}
 				}
+			}
+			if (rsDevice.getAccessOverrides() != null) {
+				try {
+					RestService.validateAccessOverrides(rsDevice.getAccessOverrides());
+				}
+				catch (NetshotBadRequestException e) {
+					Database.rollbackSilently(session);
+					throw e;
+				}
+				device.replaceAccessOverrides(rsDevice.getAccessOverrides());
 			}
 			if (rsDevice.getComments() != null) {
 				device.setComments(rsDevice.getComments());
@@ -3202,6 +3259,14 @@ public class RestService extends Thread {
 				((DeviceSnmpCommunity) credentialSet)
 					.setCommunity(((DeviceSnmpCommunity) rsCredentialSet)
 						.getCommunity());
+			}
+			else if (DeviceHttpAccount.class.isInstance(credentialSet)) {
+				DeviceHttpAccount httpAccount = (DeviceHttpAccount) credentialSet;
+				DeviceHttpAccount rsHttpAccount = (DeviceHttpAccount) rsCredentialSet;
+				httpAccount.setUsername(rsHttpAccount.getUsername());
+				if (rsHttpAccount.getPassword() != null) {
+					httpAccount.setPassword(rsHttpAccount.getPassword());
+				}
 			}
 			session.merge(credentialSet);
 			session.getTransaction().commit();

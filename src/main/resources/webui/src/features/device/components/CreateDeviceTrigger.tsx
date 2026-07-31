@@ -3,6 +3,7 @@ import { NetshotError } from "@/api/httpClient"
 import { Switch } from "@/components"
 import { DomainSelect } from "@/features/administration/components"
 import DeviceTypeSelect from "./DeviceTypeSelect"
+import DeviceAccessOverridesFields, { AccessOverrideFormValue } from "./DeviceAccessOverridesFields"
 import FormControl, { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import { TaskDialog } from "@/features/task/components"
@@ -18,7 +19,7 @@ import { useForm, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
 import Slot from "@/components/Slot"
-import { useDeviceCredentialSetOptions } from "../hooks"
+import { useDeviceCredentialSetOptions, useDeviceTypeOptions } from "../hooks"
 
 type Form = {
   ipAddress: string
@@ -26,10 +27,7 @@ type Form = {
   autoDiscover: boolean
   deviceType?: DeviceType["name"] | null
   credentialType?: CredentialSetType | null
-  overrideConnectionSetting?: boolean
-  connectIpAddress?: string
-  sshPort?: string
-  telnetPort?: string
+  accessOverrides?: AccessOverrideFormValue[]
   specificCredentialSet?: CreateDevicePayload["specificCredentialSet"] | null
 }
 
@@ -39,19 +37,16 @@ function DeviceCreateForm() {
   const form = useFormContext()
   const { t } = useTranslation()
   const deviceCredentialSetOptions = useDeviceCredentialSetOptions()
+  const { getOptionByDriver } = useDeviceTypeOptions()
 
   const autoDiscover = useWatch({ control: form.control, name: "autoDiscover" })
-  const overrideConnectionSetting = useWatch({ control: form.control, name: "overrideConnectionSetting" })
+  const deviceType = useWatch({ control: form.control, name: "deviceType" })
   const credentialType = useWatch({ control: form.control, name: "credentialType" })
 
-  useEffect(() => {
-    const { unsubscribe } = form.watch((values) => { console.log(values) })
-    return () => unsubscribe()
-  }, [form])
+  const selectedDeviceType = getOptionByDriver(deviceType)?.value
 
   useEffect(() => {
     form.setValue("credentialType", autoDiscover ? null : deviceCredentialSetOptions.options[0].value)
-    form.setValue("overrideConnectionSetting", false)
     form.setValue("deviceType", null)
   }, [autoDiscover, deviceCredentialSetOptions.options, form])
 
@@ -71,12 +66,6 @@ function DeviceCreateForm() {
     }
   }, [credentialType, form])
 
-  useEffect(() => {
-    form.setValue("connectIPAddress", "")
-    form.setValue("sshPort", "")
-    form.setValue("telnetPort", "")
-  }, [overrideConnectionSetting, form])
-
   return (
     <Stack gap="6">
       <DomainSelect required control={form.control} name="domain" />
@@ -93,22 +82,10 @@ function DeviceCreateForm() {
       {!autoDiscover && (
         <>
           <DeviceTypeSelect required control={form.control} name="deviceType" />
-          <Separator />
-          <Switch label={t("device.overrideConnection")} description={t("device.replaceDefaultConnectionSettings")} control={form.control} name="overrideConnectionSetting" />
-          {overrideConnectionSetting && (
+          {selectedDeviceType && Object.keys(selectedDeviceType.accessDefinitions ?? {}).length > 0 && (
             <>
-              <FormControl
-                required
-                label={t("device.connectIp")}
-                placeholder={t("common.eG", { example: "10.216.5.3 or router1.example.com" })}
-                control={form.control}
-                name="connectIpAddress"
-                rules={validators.hostOrIp()}
-              />
-              <Stack direction="row" gap="4">
-                <FormControl label={t("network.sshPort")} placeholder={t("common.eG", { example: "22" })} control={form.control} name="sshPort" />
-                <FormControl label={t("network.telnetPort")} placeholder={t("common.eG", { example: "23" })} control={form.control} name="telnetPort" />
-              </Stack>
+              <Separator />
+              <DeviceAccessOverridesFields control={form.control} accessDefinitions={selectedDeviceType.accessDefinitions} />
             </>
           )}
           <Separator />
@@ -147,10 +124,7 @@ export default function CreateDeviceTrigger({ children, ...rest }: CreateDeviceT
       ipAddress: "",
       domain: null,
       autoDiscover: true,
-      overrideConnectionSetting: false,
-      connectIpAddress: "",
-      sshPort: "",
-      telnetPort: "",
+      accessOverrides: [],
       deviceType: null,
       credentialType: null,
       specificCredentialSet: null,
@@ -171,7 +145,7 @@ export default function CreateDeviceTrigger({ children, ...rest }: CreateDeviceT
       description: <DeviceCreateForm />,
       form,
       async onSubmit(values: Form) {
-        let newDevice = {
+        const newDevice = {
           deviceType: values?.deviceType,
           autoDiscoveryTask: -1,
           autoDiscover: values.autoDiscover,
@@ -179,13 +153,15 @@ export default function CreateDeviceTrigger({ children, ...rest }: CreateDeviceT
           domainId: +(values?.domain ?? 0),
         } as CreateDevicePayload
 
-        if (values.overrideConnectionSetting) {
-          newDevice = {
-            ...newDevice,
-            connectIpAddress: values.connectIpAddress,
-            sshPort: values.sshPort,
-            telnetPort: values.telnetPort,
-          }
+        const accessOverrides = (values.accessOverrides ?? [])
+          .filter((override) => override.address || override.port)
+          .map((override) => ({
+            accessName: override.accessName,
+            address: override.address || undefined,
+            port: override.port ? Number(override.port) : undefined,
+          }))
+        if (accessOverrides.length > 0) {
+          newDevice.accessOverrides = accessOverrides
         }
 
         if (!values.autoDiscover && values.credentialType !== CredentialSetType.GLOBAL) {

@@ -68,6 +68,11 @@ export default function EditDeviceCredentialSetTrigger({ credentialSet: credenti
         password: PASSWORD_UNCHANGED,
         superPassword: PASSWORD_UNCHANGED,
       })
+    } else if (credential.type === CredentialSetType.HTTP) {
+      Object.assign(values, {
+        username: credential.username,
+        password: PASSWORD_UNCHANGED,
+      })
     }
 
     return values
@@ -148,6 +153,10 @@ export default function EditDeviceCredentialSetTrigger({ credentialSet: credenti
           if (values.password !== PASSWORD_UNCHANGED) sshKeyPayload.password = values.password ?? undefined
           if (values.superPassword !== PASSWORD_UNCHANGED) sshKeyPayload.superPassword = values.superPassword ?? undefined
           Object.assign(payload, sshKeyPayload)
+        } else if (type === CredentialSetType.HTTP) {
+          const httpPayload: Partial<DeviceCredentialPayload> = { username: values.username }
+          if (values.password !== PASSWORD_UNCHANGED) httpPayload.password = values.password ?? undefined
+          Object.assign(payload, httpPayload)
         }
 
         await mutation.mutateAsync(payload)

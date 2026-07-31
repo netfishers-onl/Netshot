@@ -87,6 +87,16 @@ export default function AdministrationDriverScreen() {
           align: "center",
         },
       }),
+      columnHelper.accessor("protocols", {
+        id: "protocol.http",
+        cell: (info) => getProtocolCheckbox(info, DeviceTypeProtocol.Http),
+        header: t("network.http"),
+        size: 50,
+        minSize: 70,
+        meta: {
+          align: "center",
+        },
+      }),
       columnHelper.accessor("version", {
         cell: (info) => <Text>{info.getValue()}</Text>,
         header: t("common.version"),

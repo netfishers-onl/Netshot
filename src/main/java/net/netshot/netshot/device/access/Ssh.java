@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,6 +53,7 @@ import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.common.NamedFactory;
 import org.apache.sshd.common.NamedResource;
 import org.apache.sshd.common.PropertyResolverUtils;
+import org.apache.sshd.common.SshConstants;
 import org.apache.sshd.common.SshException;
 import org.apache.sshd.common.channel.PtyChannelConfigurationHolder;
 import org.apache.sshd.common.channel.PtyMode;
@@ -557,131 +559,11 @@ public class Ssh extends Cli {
 				.connect(this.username, this.host.getIp(), this.port)
 				.verify(this.connectionTimeout)
 				.getSession();
-			this.session.setKeyExchangeFactories(
-				NamedFactory.setUpTransformedFactories(true,
-					BuiltinDHFactories.parseDHFactoriesList(this.sshConfig.kexAlgorithms).getParsedFactories(),
-					ClientBuilder.DH2KEX));
-			this.session.setSignatureFactoriesNames(this.sshConfig.hostKeyAlgorithms);
-			this.session.setCipherFactoriesNames(this.sshConfig.ciphers);
-			this.session.setMacFactoriesNames(this.sshConfig.macs);
-			this.session.setCompressionFactoriesNames(this.sshConfig.compressionAlgorithms);
-			CoreModuleProperties.REKEY_TIME_LIMIT.set(this.session, Duration.ofMillis(this.sshConfig.rekeyTimeLimit));
-			CoreModuleProperties.REKEY_BYTES_LIMIT.set(this.session, this.sshConfig.rekeyDataLimit);
-			if (privateKey == null) {
-				this.session.addPasswordIdentity(this.password);
-				if (Ssh.this.sshConfig.interactionInstructions != null) {
-					PropertyResolverUtils.updateProperty(
-						this.session, UserInteraction.AUTO_DETECT_PASSWORD_PROMPT, false);
-				}
-				this.session.setUserInteraction(new UserInteraction() {
-					@Override
-					public String[] interactive(ClientSession sshSession, String name, String instruction, String lang,
-							String[] prompts, boolean[] echos) {
-						if (Ssh.this.taskContext.isTracing()) {
-							List<String> promptEchoes = new ArrayList<>();
-							for (int p = 0; p < Math.min(prompts.length, echos.length); p++) {
-								promptEchoes.add("%s (%s)".formatted(prompts[p], echos[p] ? "echo" : "no echo"));
-							}
-							Ssh.this.taskContext.trace(
-								"SSH user interactive authentication, name '{}', instruction '{}', lang '{}', prompts {}",
-								name, instruction, lang, String.join(", ", promptEchoes));
-						}
-						if (Ssh.this.sshConfig.interactionInstructions == null) {
-							if (prompts.length == 1 && echos.length == 1 && !echos[0]) {
-								Ssh.this.taskContext.debug("Password requested in user interactive mode (prompt '{}')",
-									prompts[0]);
-								return new String[] { Ssh.this.password };
-							}
-							Ssh.this.taskContext.error("Multiple prompts returned by device in SSH user interactive "
-								+
-								"mode while the driver doesn't provide user interaction instructions.");
-							throw new RuntimeException("Cannot reply to multiple SSH user interaction prompts");
-						}
-						List<String> responses = new ArrayList<>();
-						for (int p = 0; p < Math.min(prompts.length, echos.length); p++) {
-							for (SshInteractionInstruction configInstruction : Ssh.this.sshConfig.interactionInstructions) {
-								if (configInstruction.promptPattern != null) {
-									Matcher matcher = configInstruction.promptPattern.matcher(prompts[p]);
-									if (!matcher.matches()) {
-										continue;
-									}
-								}
-								if (configInstruction.echo != null && !configInstruction.echo.equals(echos[p])) {
-									continue;
-								}
-								Ssh.this.taskContext.trace(
-									"Found matching instruction for SSH user interaction, prompt '{}'", prompts[p]);
-								if (configInstruction.response == null) {
-									Ssh.this.taskContext.trace("Will send device password");
-									responses.add(Ssh.this.password);
-								}
-								else {
-									String response = configInstruction.response;
-									Ssh.this.taskContext.trace("Will send planned response '{}'", response);
-									response = response.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
-										Matcher.quoteReplacement(Ssh.this.username));
-									response = response.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_PASSWORD),
-										Matcher.quoteReplacement(Ssh.this.password));
-									responses.add(response);
-								}
-								break;
-							}
-							if (responses.size() < p + 1) {
-								Ssh.this.taskContext.warn(
-									"No driver instruction for SSH user interaction prompt '{}'", prompts[p]);
-								responses.add("");
-							}
-						}
-						return responses.toArray(new String[0]);
-					}
-					@Override
-					public String getUpdatedPassword(ClientSession sshSession, String prompt, String lang) {
-						Ssh.this.taskContext.warn("SSH password update requested by the device: '{}'", prompt);
-						return null;
-					}
-					@Override
-					public void serverVersionInfo(ClientSession sshSession, List<String> lines) {
-						Ssh.this.taskContext.debug("SSH version info: {}", String.join("\n", lines));
-					}
-					@Override
-					public void welcome(ClientSession sshSession, String banner, String lang) {
-						Ssh.this.taskContext.debug("Welcome banner: {}", banner);
-					}
-				});
-			}
-			else {
-				KeyPairResourceLoader loader = SecurityUtils.getKeyPairResourceParser();
-				FilePasswordProvider passwordProvider = this.password == null ? null : FilePasswordProvider.of(password);
-				Collection<KeyPair> keys = loader.loadKeyPairs(this.session, NamedResource.ofName("Specific"), passwordProvider, this.privateKey);
-				for (KeyPair key : keys) {
-					this.session.addPublicKeyIdentity(key);
-				}
-			}
-			this.session.setPasswordAuthenticationReporter(new PasswordAuthenticationReporter() {
-				@Override
-				public void signalAuthenticationSuccess(ClientSession sshSession, String service, String givenPassword) throws Exception {
-					Ssh.this.taskContext.debug("SSH password authentication succeeded (service {})", service);
-				}
-				@Override
-				public void signalAuthenticationFailure(ClientSession sshSession, String service, String givenPassword,
-					boolean partial, List<String> serverMethods) throws Exception {
-					Ssh.this.taskContext.warn("SSH password authentication failed (service {})", service);
-					throw new InvalidCredentialsException("Invalid SSH password");
-				}
-			});
-			this.session.setPublicKeyAuthenticationReporter(new PublicKeyAuthenticationReporter() {
-				public void signalAuthenticationSuccess(ClientSession sshSession, String service, KeyPair identity) throws Exception {
-					Ssh.this.taskContext.debug("SSH public key authentication succeeded (service {})", service);
-				}
-				public void signalAuthenticationFailure(
-								ClientSession sshSession, String service, KeyPair identity, boolean partial, List<String> serverMethods)
-								throws Exception {
-					Ssh.this.taskContext.warn("SSH public key authentication failed (service {})", service);
-					throw new InvalidCredentialsException("Invalid SSH public key");
-				}
-			});
 
-			// Add session listener to trace protocol negotiation details
+			// Add session listener to trace protocol negotiation details.
+			// This must be registered before any further session configuration below,
+			// since on a fast link the server's KEXINIT can otherwise be processed
+			// (and this one-shot event fired) before we get a chance to attach the listener.
 			this.session.addSessionListener(new SessionListener() {
 				@Override
 				public void sessionNegotiationEnd(
@@ -790,6 +672,183 @@ public class Ssh extends Cli {
 				}
 			});
 
+			this.session.setKeyExchangeFactories(
+				NamedFactory.setUpTransformedFactories(true,
+					BuiltinDHFactories.parseDHFactoriesList(this.sshConfig.kexAlgorithms).getParsedFactories(),
+					ClientBuilder.DH2KEX));
+			this.session.setSignatureFactoriesNames(this.sshConfig.hostKeyAlgorithms);
+			this.session.setCipherFactoriesNames(this.sshConfig.ciphers);
+			this.session.setMacFactoriesNames(this.sshConfig.macs);
+			this.session.setCompressionFactoriesNames(this.sshConfig.compressionAlgorithms);
+			CoreModuleProperties.REKEY_TIME_LIMIT.set(this.session, Duration.ofMillis(this.sshConfig.rekeyTimeLimit));
+			CoreModuleProperties.REKEY_BYTES_LIMIT.set(this.session, this.sshConfig.rekeyDataLimit);
+			if (privateKey == null) {
+				this.session.addPasswordIdentity(this.password);
+				if (Ssh.this.sshConfig.interactionInstructions != null) {
+					PropertyResolverUtils.updateProperty(
+						this.session, UserInteraction.AUTO_DETECT_PASSWORD_PROMPT, false);
+				}
+				this.session.setUserInteraction(new UserInteraction() {
+					@Override
+					public String[] interactive(ClientSession sshSession, String name, String instruction, String lang,
+							String[] prompts, boolean[] echos) {
+						if (Ssh.this.taskContext.isTracing()) {
+							List<String> promptEchoes = new ArrayList<>();
+							for (int p = 0; p < Math.min(prompts.length, echos.length); p++) {
+								promptEchoes.add("%s (%s)".formatted(prompts[p], echos[p] ? "echo" : "no echo"));
+							}
+							Ssh.this.taskContext.trace(
+								"SSH user interactive authentication, name '{}', instruction '{}', lang '{}', prompts {}",
+								name, instruction, lang, String.join(", ", promptEchoes));
+						}
+						if (Ssh.this.sshConfig.interactionInstructions == null) {
+							if (prompts.length == 1 && echos.length == 1 && !echos[0]) {
+								Ssh.this.taskContext.debug("Password requested in user interactive mode (prompt '{}')",
+									prompts[0]);
+								return new String[] { Ssh.this.password };
+							}
+							Ssh.this.taskContext.error("Multiple prompts returned by device in SSH user interactive "
+								+
+								"mode while the driver doesn't provide user interaction instructions.");
+							throw new RuntimeException("Cannot reply to multiple SSH user interaction prompts");
+						}
+						List<String> responses = new ArrayList<>();
+						for (int p = 0; p < Math.min(prompts.length, echos.length); p++) {
+							for (SshInteractionInstruction configInstruction : Ssh.this.sshConfig.interactionInstructions) {
+								if (configInstruction.promptPattern != null) {
+									Matcher matcher = configInstruction.promptPattern.matcher(prompts[p]);
+									if (!matcher.matches()) {
+										continue;
+									}
+								}
+								if (configInstruction.echo != null && !configInstruction.echo.equals(echos[p])) {
+									continue;
+								}
+								Ssh.this.taskContext.trace(
+									"Found matching instruction for SSH user interaction, prompt '{}'", prompts[p]);
+								if (configInstruction.response == null) {
+									Ssh.this.taskContext.trace("Will send device password");
+									responses.add(Ssh.this.password);
+								}
+								else {
+									String response = configInstruction.response;
+									Ssh.this.taskContext.trace("Will send planned response '{}'", response);
+									response = response.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
+										Matcher.quoteReplacement(Ssh.this.username));
+									response = response.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_PASSWORD),
+										Matcher.quoteReplacement(Ssh.this.password));
+									responses.add(response);
+								}
+								break;
+							}
+							if (responses.size() < p + 1) {
+								Ssh.this.taskContext.warn(
+									"No driver instruction for SSH user interaction prompt '{}'", prompts[p]);
+								responses.add("");
+							}
+						}
+						return responses.toArray(new String[0]);
+					}
+					@Override
+					public String getUpdatedPassword(ClientSession sshSession, String prompt, String lang) {
+						Ssh.this.taskContext.warn("SSH password update requested by the device: '{}'", prompt);
+						return null;
+					}
+					@Override
+					public void serverVersionInfo(ClientSession sshSession, List<String> lines) {
+						Ssh.this.taskContext.debug("SSH version info: {}", String.join("\n", lines));
+					}
+					@Override
+					public void welcome(ClientSession sshSession, String banner, String lang) {
+						Ssh.this.taskContext.debug("Welcome banner: {}", banner);
+					}
+				});
+			}
+			else {
+				KeyPairResourceLoader loader = SecurityUtils.getKeyPairResourceParser();
+				FilePasswordProvider passwordProvider = this.password == null ? null : FilePasswordProvider.of(password);
+				Collection<KeyPair> keys = loader.loadKeyPairs(this.session, NamedResource.ofName("Specific"), passwordProvider, this.privateKey);
+				for (KeyPair key : keys) {
+					this.session.addPublicKeyIdentity(key);
+				}
+			}
+			this.session.setPasswordAuthenticationReporter(new PasswordAuthenticationReporter() {
+				@Override
+				public void signalAuthenticationAttempt(ClientSession sshSession, String service, String oldPassword,
+						boolean modified, String newPassword) throws Exception {
+					Ssh.this.taskContext.trace("SSH password authentication attempt (service {}){}",
+						service, modified ? ", following a password change request" : "");
+				}
+				@Override
+				public void signalAuthenticationSuccess(ClientSession sshSession, String service, String givenPassword) throws Exception {
+					Ssh.this.taskContext.debug("SSH password authentication succeeded (service {})", service);
+				}
+				@Override
+				public void signalAuthenticationFailure(ClientSession sshSession, String service, String givenPassword,
+					boolean partial, List<String> serverMethods) throws Exception {
+					// Don't throw here: this is called once per failed attempt, and throwing would
+					// prevent the SSH library from falling back to another offered authentication
+					// method (e.g. keyboard-interactive). The definitive failure, if any, is reported
+					// once all methods/algorithms are exhausted (see connect()'s auth().verify() below).
+					Ssh.this.taskContext.warn("SSH password authentication failed (service {}); other methods offered by server: {}",
+						service, serverMethods == null || serverMethods.isEmpty() ? "none" : String.join(", ", serverMethods));
+				}
+				@Override
+				public void signalAuthenticationExhausted(ClientSession sshSession, String service) throws Exception {
+					Ssh.this.taskContext.trace("SSH password authentication exhausted, no more attempts (service {})", service);
+				}
+			});
+			this.session.setPublicKeyAuthenticationReporter(new PublicKeyAuthenticationReporter() {
+				@Override
+				public void signalAuthenticationAttempt(ClientSession sshSession, String service, KeyPair identity, String signature)
+						throws Exception {
+					PublicKey publicKey = identity == null ? null : identity.getPublic();
+					Ssh.this.taskContext.trace(
+						"SSH public key authentication attempt (service {}), key type {}, fingerprint {}, signature algorithm '{}'",
+						service,
+						publicKey == null ? "unknown" : KeyUtils.getKeyType(publicKey),
+						publicKey == null ? "unknown" : KeyUtils.getFingerPrint(publicKey),
+						signature);
+				}
+				@Override
+				public void signalIdentitySkipped(ClientSession sshSession, String service, KeyPair identity) throws Exception {
+					PublicKey publicKey = identity == null ? null : identity.getPublic();
+					Ssh.this.taskContext.trace(
+						"SSH public key identity skipped (service {}), key type {}, fingerprint {}: no matching signature algorithm",
+						service,
+						publicKey == null ? "unknown" : KeyUtils.getKeyType(publicKey),
+						publicKey == null ? "unknown" : KeyUtils.getFingerPrint(publicKey));
+				}
+				@Override
+				public void signalAuthenticationSuccess(ClientSession sshSession, String service, KeyPair identity) throws Exception {
+					Ssh.this.taskContext.debug("SSH public key authentication succeeded (service {})", service);
+				}
+				@Override
+				public void signalAuthenticationFailure(
+								ClientSession sshSession, String service, KeyPair identity, boolean partial, List<String> serverMethods)
+								throws Exception {
+					// Don't throw here: this is called once per rejected (key, signature algorithm)
+					// pair, and throwing would prevent the SSH library from retrying with the other
+					// signature algorithms configured for this key type (e.g. falling back from
+					// 'rsa-sha2-256' to 'ssh-rsa' for devices which don't support RFC 8332), or from
+					// falling back to another offered authentication method. The definitive failure,
+					// if any, is reported once all methods/algorithms are exhausted (see connect()'s
+					// auth().verify() below).
+					PublicKey publicKey = identity == null ? null : identity.getPublic();
+					Ssh.this.taskContext.warn(
+						"SSH public key authentication failed (service {}), key type {}, fingerprint {}; other methods offered by server: {}",
+						service,
+						publicKey == null ? "unknown" : KeyUtils.getKeyType(publicKey),
+						publicKey == null ? "unknown" : KeyUtils.getFingerPrint(publicKey),
+						serverMethods == null || serverMethods.isEmpty() ? "none" : String.join(", ", serverMethods));
+				}
+				@Override
+				public void signalAuthenticationExhausted(ClientSession sshSession, String service) throws Exception {
+					Ssh.this.taskContext.trace(
+						"SSH public key authentication exhausted, no more keys/algorithms to try (service {})", service);
+				}
+			});
+
 			try {
 				this.session.auth().verify(Duration.ofMillis(this.connectionTimeout));
 			}
@@ -798,8 +857,11 @@ public class Ssh extends Cli {
 					// Already intercepted by *AuthenticationReporter
 					throw credException;
 				}
-				if (e.getDisconnectCode() == 0) {
-					// No specific message in case of simple password authentication
+				if (e.getDisconnectCode() == 0
+						|| e.getDisconnectCode() == SshConstants.SSH2_DISCONNECT_NO_MORE_AUTH_METHODS_AVAILABLE) {
+					// No specific message in case of simple password authentication,
+					// or all offered authentication methods/algorithms have been exhausted
+					// (each individual attempt was already logged by the *AuthenticationReporter above)
 					throw new InvalidCredentialsException("Authentication error: " + e.getMessage());
 				}
 				throw e;

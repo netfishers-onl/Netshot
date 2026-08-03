@@ -1,6 +1,6 @@
 import {
   CredentialSetType,
-  DeviceAccessOverride,
+  DeviceAccess,
   DeviceComplianceResultType,
   DeviceSoftwareLevel,
   GroupType,
@@ -78,14 +78,7 @@ export type CreateDevicePayload = {
   domainId: number
   name: string
   deviceType: string
-  accessOverrides?: DeviceAccessOverride[]
-  specificCredentialSet?: {
-    password: string
-    privateKey?: string
-    superPassword: string
-    type: string
-    username: string
-  }
+  accesses?: DeviceAccess[]
 }
 
 export type UpdateDevicePayload = {
@@ -94,17 +87,7 @@ export type UpdateDevicePayload = {
   comments: string
   ipAddress: string
   mgmtDomain: number
-  accessOverrides: DeviceAccessOverride[]
-  autoTryCredentials: boolean
-  credentialSetIds: number[]
-  clearCredentialSetIds: number[]
-  specificCredentialSet: {
-    password?: string | null
-    privateKey?: string | null
-    superPassword?: string | null
-    type?: string
-    username: string
-  }
+  accesses: DeviceAccess[]
 }
 
 export type DeviceSearchResult = {

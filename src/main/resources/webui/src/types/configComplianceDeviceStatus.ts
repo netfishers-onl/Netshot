@@ -1,5 +1,4 @@
 import { Address } from "./address";
-import { CredentialSet } from "./credentialSet";
 import {
   DeviceAttribute,
   DeviceComplianceResultType,
@@ -13,14 +12,11 @@ import { MgmtDomain } from "./mgmtDomain";
 
 export type ConfigComplianceDeviceStatus = {
   attributes: DeviceAttribute[];
-  autoTryCredentials: boolean;
   changeDate: number;
   comments: string;
   contact: string;
   createdDate: number;
   creator: string;
-  credentialSets: CredentialSet[];
-  specificCredentialSet: CredentialSet;
   driver: string;
   eolDate: number;
   eolModule: DeviceModule;
@@ -38,16 +34,12 @@ export type ConfigComplianceDeviceStatus = {
   softwareLevel: DeviceSoftwareLevel;
   softwareVersion: string;
   status: DeviceStatus;
-  sshPort: number;
-  telnetPort: number;
-  connectAddress: Address;
   ruleId: number;
   ruleName: string;
   policyId: number;
   policyName: string;
   checkDate: number;
   result: DeviceComplianceResultType;
-  credentialSetIds: number[];
   realDeviceType: string;
   endOfLife: boolean;
   endOfSale: boolean;

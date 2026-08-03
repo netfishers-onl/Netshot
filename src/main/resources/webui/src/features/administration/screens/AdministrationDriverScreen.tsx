@@ -32,8 +32,12 @@ export default function AdministrationDriverScreen() {
   const isSearching = Boolean(pagination.query?.trim())
 
   const getProtocolCheckbox = useCallback(
-    (info: CellContext<DeviceType, DeviceTypeProtocol[]>, type: DeviceTypeProtocol) => (
-      <Checkbox.Root readOnly checked={info.getValue()?.includes(type)} colorPalette="green">
+    (info: CellContext<DeviceType, DeviceTypeProtocol[]>, types: DeviceTypeProtocol | DeviceTypeProtocol[]) => (
+      <Checkbox.Root
+        readOnly
+        checked={(Array.isArray(types) ? types : [types]).some((type) => info.getValue()?.includes(type))}
+        colorPalette="green"
+      >
         <Checkbox.HiddenInput />
         <Checkbox.Control>
           <Checkbox.Indicator />
@@ -79,7 +83,9 @@ export default function AdministrationDriverScreen() {
       }),
       columnHelper.accessor("protocols", {
         id: "protocol.snmp",
-        cell: (info) => getProtocolCheckbox(info, DeviceTypeProtocol.Snmp),
+        cell: (info) => getProtocolCheckbox(info, [
+          DeviceTypeProtocol.SnmpV1, DeviceTypeProtocol.SnmpV2c, DeviceTypeProtocol.SnmpV3,
+        ]),
         header: t("network.snmp"),
         size: 50,
         minSize: 70,
@@ -89,7 +95,7 @@ export default function AdministrationDriverScreen() {
       }),
       columnHelper.accessor("protocols", {
         id: "protocol.http",
-        cell: (info) => getProtocolCheckbox(info, DeviceTypeProtocol.Http),
+        cell: (info) => getProtocolCheckbox(info, [DeviceTypeProtocol.Http, DeviceTypeProtocol.Https]),
         header: t("network.http"),
         size: 50,
         minSize: 70,

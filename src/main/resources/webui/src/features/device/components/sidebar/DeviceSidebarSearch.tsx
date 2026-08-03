@@ -64,7 +64,9 @@ export default function DeviceSidebarSearch() {
     })
 
   const q = searchParams.get("q")
-  const [prevQ, setPrevQ] = useState(q)
+  // Sentinel distinct from any possible searchParams value, so the hydration
+  // branch below always runs once on mount (even when q is already set).
+  const [prevQ, setPrevQ] = useState<string | null | undefined>(undefined)
   const [prevGroup, setPrevGroup] = useState(group)
 
   // Hydrate the search state from "?q=" (initial load, or browser back/forward),

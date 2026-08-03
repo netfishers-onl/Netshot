@@ -182,7 +182,7 @@ import net.netshot.netshot.device.Network6Address;
 import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.NetworkInterface;
 import net.netshot.netshot.device.StaticDeviceGroup;
-import net.netshot.netshot.device.access.AccessOverride;
+import net.netshot.netshot.device.access.DeviceAccess;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeType;
@@ -1482,7 +1482,6 @@ public class RestService extends Thread {
 					+ "left join fetch d.mgmtDomain "
 					+ "left join fetch d.eolModule "
 					+ "left join fetch d.eosModule "
-					+ "left join fetch d.specificCredentialSet "
 					+ "left join fetch d.attributes "
 					+ "where d.id = :id",
 				Device.class)
@@ -1494,9 +1493,8 @@ public class RestService extends Thread {
 			}
 			device.getGroupMemberships().size();
 			device.getOwnerGroups().size();
-			device.getCredentialSets().size();
 			device.getComplianceCheckResults().size();
-			device.getAccessOverrides().size();
+			device.getAccesses().size();
 		}
 		catch (HibernateException e) {
 			log.error("Unable to fetch the device", e);
@@ -1894,40 +1892,12 @@ public class RestService extends Thread {
 		@Setter
 		private String deviceType = "";
 
-		/** The connection IP address (optional). */
+		/** Per-access configuration (address/port overrides, credential pins), keyed by access name. */
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
-		private String connectIpAddress;
-
-		/** The SSH port. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private String sshPort;
-
-		/** The Telnet port. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private String telnetPort;
-
-		/** A device-specific credential set. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private DeviceCredentialSet specificCredentialSet;
-
-		/** Per-access connection overrides (address/port), keyed by access name. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private List<AccessOverride> accessOverrides;
+		private List<DeviceAccess> accesses;
 	}
 
 	/** Strict IPv4 dotted-quad pattern (each octet 0-255), to detect an IPv4 literal without ever risking a DNS lookup. */
@@ -1987,29 +1957,167 @@ public class RestService extends Thread {
 	}
 
 	/**
-	 * Validates a list of per-access connection overrides posted by a device
-	 * create/update request (address must be a valid address/hostname if set,
-	 * port must be in the 1-65535 range if set, access name must be present).
-	 * @param accessOverrides the overrides to validate (may be null)
+	 * Validates a list of per-(device, access) configurations posted by a
+	 * device create/update request: address must be a valid address/hostname
+	 * if set, port must be in the 1-65535 range if set, access name must be
+	 * present. If a credential is pinned (at most one of globalCredentialSet/
+	 * specificCredentialSet may be set - both is rejected), the access name
+	 * must be a real access declared by the driver and the credential's
+	 * runtime class must match that access's declared credential family. A
+	 * posted {@code globalCredentialSet} is resolved here (by id) to the
+	 * managed, persistent entity and written back onto the same {@link DeviceAccess}
+	 * instance, so the caller can pass the list straight into
+	 * {@link Device#replaceAccesses} afterwards.
+	 * @param session the Hibernate session (used to resolve a posted globalCredentialSet id)
+	 * @param driver the device's driver, or null if not known yet (e.g. an
+	 *        autodiscovering device) - credential pins are rejected in that case
+	 * @param accesses the accesses to validate (may be null)
 	 * @throws NetshotBadRequestException if any entry is invalid
 	 */
-	private static void validateAccessOverrides(List<AccessOverride> accessOverrides) throws NetshotBadRequestException {
-		if (accessOverrides == null) {
+	private static void validateDeviceAccesses(Session session, DeviceDriver driver, List<DeviceAccess> accesses)
+			throws NetshotBadRequestException {
+		if (accesses == null) {
 			return;
 		}
-		for (AccessOverride override : accessOverrides) {
-			if (override.getAccessName() == null || override.getAccessName().isEmpty()) {
-				throw new NetshotBadRequestException("Missing access name in one of the connection overrides.",
+		for (DeviceAccess access : accesses) {
+			if (access.getAccessName() == null || access.getAccessName().isEmpty()) {
+				throw new NetshotBadRequestException("Missing access name in one of the device accesses.",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
 			}
-			if (override.getAddress() != null && !override.getAddress().isEmpty()) {
-				RestService.validateMgmtAddress(override.getAddress(), true);
+			if (access.getAddress() != null && !access.getAddress().isEmpty()) {
+				RestService.validateMgmtAddress(access.getAddress(), true);
 			}
-			if (override.getPort() != null && (override.getPort() < 1 || override.getPort() > 65535)) {
+			if (access.getPort() != null && (access.getPort() < 1 || access.getPort() > 65535)) {
 				throw new NetshotBadRequestException(
-					"Invalid port for access '" + override.getAccessName() + "'.",
+					"Invalid port for access '" + access.getAccessName() + "'.",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
 			}
+			if (access.getGlobalCredentialSet() == null && access.getSpecificCredentialSet() == null) {
+				continue;
+			}
+			if (access.getGlobalCredentialSet() != null && access.getSpecificCredentialSet() != null) {
+				throw new NetshotBadRequestException(
+					"Cannot set both a global and a specific credential set for access '" + access.getAccessName() + "'.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS);
+			}
+			if (driver == null) {
+				throw new NetshotBadRequestException(
+					"Cannot pin credentials for access '" + access.getAccessName() + "' without a known device type.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS);
+			}
+			DeviceDriver.AccessDefinition accessDef = driver.getAccessDefinition(access.getAccessName());
+			if (accessDef == null) {
+				throw new NetshotBadRequestException(
+					"Unknown access '" + access.getAccessName() + "' for this device type.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_REQUEST_PARAMETER);
+			}
+			Class<? extends DeviceCredentialSet> credentialClass = accessDef.getCredentialClass();
+			if (access.getGlobalCredentialSet() != null) {
+				DeviceCredentialSet global = session.get(DeviceCredentialSet.class, access.getGlobalCredentialSet().getId());
+				if (global == null || global.isDeviceSpecific()) {
+					throw new NetshotBadRequestException(
+						"Invalid global credential set for access '" + access.getAccessName() + "'.",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS);
+				}
+				if (!credentialClass.isInstance(global)) {
+					throw new NetshotBadRequestException(
+						"The selected credential set is not compatible with access '" + access.getAccessName() + "'.",
+						NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS_TYPE);
+				}
+				access.setGlobalCredentialSet(global);
+			}
+			else if (!credentialClass.isInstance(access.getSpecificCredentialSet())) {
+				throw new NetshotBadRequestException(
+					"The specific credential set is not compatible with access '" + access.getAccessName() + "'.",
+					NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS_TYPE);
+			}
+		}
+	}
+
+	/**
+	 * Creates or updates an owned, per-access specific credential set: if
+	 * {@code existing} is null or of a different concrete class than
+	 * {@code incoming}, the old one (if any) is deleted and {@code incoming}
+	 * is persisted as the new owned credential set (stamped
+	 * {@code deviceSpecific=true}, given a synthetic name); otherwise
+	 * {@code incoming}'s fields are copied onto {@code existing} in place,
+	 * preserving secret fields submitted as the unchanged sentinel ("="),
+	 * matching the convention already used for the device-wide singleton.
+	 * @param session the Hibernate session
+	 * @param existing the currently persisted specific credential set, or null if none yet
+	 * @param incoming the incoming (deserialized, not yet persisted) credential set payload
+	 * @return the resulting persisted credential set
+	 */
+	private static DeviceCredentialSet applySpecificCredentialSet(Session session, DeviceCredentialSet existing,
+			DeviceCredentialSet incoming) {
+		if (existing != null && !existing.getClass().equals(incoming.getClass())) {
+			session.remove(existing);
+			existing = null;
+		}
+		if (existing == null) {
+			incoming.setDeviceSpecific(true);
+			incoming.setName(DeviceCredentialSet.generateSpecificName());
+			session.persist(incoming);
+			return incoming;
+		}
+		if (DeviceCliAccount.class.isInstance(existing)) {
+			DeviceCliAccount cliAccount = (DeviceCliAccount) existing;
+			DeviceCliAccount rsCliAccount = (DeviceCliAccount) incoming;
+			cliAccount.setUsername(rsCliAccount.getUsername());
+			if (rsCliAccount.getPassword() != null && !"=".equals(rsCliAccount.getPassword())) {
+				cliAccount.setPassword(rsCliAccount.getPassword());
+			}
+			if (rsCliAccount.getSuperPassword() != null && !"=".equals(rsCliAccount.getSuperPassword())) {
+				cliAccount.setSuperPassword(rsCliAccount.getSuperPassword());
+			}
+			if (DeviceSshKeyAccount.class.isInstance(existing)) {
+				((DeviceSshKeyAccount) cliAccount).setPrivateKey(((DeviceSshKeyAccount) rsCliAccount).getPrivateKey());
+			}
+		}
+		else if (DeviceSnmpv3Community.class.isInstance(existing)) {
+			DeviceSnmpv3Community rsSnmp3 = (DeviceSnmpv3Community) incoming;
+			((DeviceSnmpv3Community) existing).setUsername(rsSnmp3.getUsername());
+			((DeviceSnmpv3Community) existing).setAuthType(rsSnmp3.getAuthType());
+			if (rsSnmp3.getAuthKey() != null && !"=".equals(rsSnmp3.getAuthKey())) {
+				((DeviceSnmpv3Community) existing).setAuthKey(rsSnmp3.getAuthKey());
+			}
+			((DeviceSnmpv3Community) existing).setPrivType(rsSnmp3.getPrivType());
+			if (rsSnmp3.getPrivKey() != null && !"=".equals(rsSnmp3.getPrivKey())) {
+				((DeviceSnmpv3Community) existing).setPrivKey(rsSnmp3.getPrivKey());
+			}
+		}
+		else if (DeviceSnmpCommunity.class.isInstance(existing)) {
+			((DeviceSnmpCommunity) existing).setCommunity(((DeviceSnmpCommunity) incoming).getCommunity());
+		}
+		else if (DeviceHttpAccount.class.isInstance(existing)) {
+			DeviceHttpAccount httpAccount = (DeviceHttpAccount) existing;
+			DeviceHttpAccount rsHttpAccount = (DeviceHttpAccount) incoming;
+			httpAccount.setUsername(rsHttpAccount.getUsername());
+			if (rsHttpAccount.getPassword() != null && !"=".equals(rsHttpAccount.getPassword())) {
+				httpAccount.setPassword(rsHttpAccount.getPassword());
+			}
+		}
+		return existing;
+	}
+
+	/**
+	 * Resolves each posted access's specific credential set against the
+	 * device's current state before {@link Device#replaceAccesses} is
+	 * called, reusing {@link #applySpecificCredentialSet}. Mutates each
+	 * {@link DeviceAccess} in the list in place.
+	 * @param session the Hibernate session
+	 * @param device the device being edited (may be a brand-new, not-yet-persisted device)
+	 * @param accesses the posted accesses (already validated)
+	 */
+	private static void resolveDeviceAccessSpecificCredentials(Session session, Device device, List<DeviceAccess> accesses) {
+		for (DeviceAccess input : accesses) {
+			if (input.getSpecificCredentialSet() == null) {
+				continue;
+			}
+			DeviceAccess existingAccess = device.getDeviceAccess(input.getAccessName());
+			DeviceCredentialSet existingSpecific = existingAccess == null ? null : existingAccess.getSpecificCredentialSet();
+			DeviceCredentialSet resolved = RestService.applySpecificCredentialSet(session, existingSpecific, input.getSpecificCredentialSet());
+			input.setSpecificCredentialSet(resolved);
 		}
 	}
 
@@ -2036,40 +2144,6 @@ public class RestService extends Thread {
 		log.debug("REST request, new device.");
 		String deviceAddress = device.getIpAddress();
 		RestService.validateMgmtAddress(deviceAddress, false);
-		String connectAddress = null;
-		if (device.getConnectIpAddress() != null && !"".equals(device.getConnectIpAddress())) {
-			connectAddress = device.getConnectIpAddress();
-			RestService.validateMgmtAddress(connectAddress, true);
-		}
-		Integer sshPort = null;
-		if (device.getSshPort() != null && !"".equals(device.getSshPort())) {
-			try {
-				int port = Integer.parseInt(device.getSshPort());
-				if (port < 1 || port > 65535) {
-					throw new Exception();
-				}
-				sshPort = port;
-			}
-			catch (Exception e) {
-				throw new NetshotBadRequestException("Invalid SSH port",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
-			}
-		}
-		Integer telnetPort = null;
-		if (device.getTelnetPort() != null && !"".equals(device.getTelnetPort())) {
-			try {
-				int port = Integer.parseInt(device.getTelnetPort());
-				if (port < 1 || port > 65535) {
-					throw new Exception();
-				}
-				telnetPort = port;
-			}
-			catch (Exception e) {
-				throw new NetshotBadRequestException("Invalid Telnet port",
-					NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
-			}
-		}
-		RestService.validateAccessOverrides(device.getAccessOverrides());
 		Domain domain;
 		List<DeviceCredentialSet> knownCommunities;
 		Session session = Database.getSession();
@@ -2152,31 +2226,21 @@ public class RestService extends Thread {
 			Device newDevice = null;
 			try {
 				session.beginTransaction();
+				RestService.validateDeviceAccesses(session, driver, device.getAccesses());
 				newDevice = new Device(driver.getName(), deviceAddress, domain, user.getUsername());
-				if (connectAddress != null) {
-					newDevice.setConnectAddress(connectAddress);
-				}
-				if (sshPort != null) {
-					newDevice.setSshPort(sshPort);
-				}
-				if (telnetPort != null) {
-					newDevice.setTelnetPort(telnetPort);
-				}
-				if (device.getAccessOverrides() != null) {
-					newDevice.replaceAccessOverrides(device.getAccessOverrides());
-				}
-				if (device.getSpecificCredentialSet() != null && device.getSpecificCredentialSet() instanceof DeviceCliAccount) {
-					device.getSpecificCredentialSet().setName(DeviceCredentialSet.generateSpecificName());
-					device.getSpecificCredentialSet().setDeviceSpecific(true);
-					session.persist(device.getSpecificCredentialSet());
-					newDevice.setSpecificCredentialSet(device.getSpecificCredentialSet());
-					newDevice.setAutoTryCredentials(false);
+				if (device.getAccesses() != null) {
+					RestService.resolveDeviceAccessSpecificCredentials(session, newDevice, device.getAccesses());
+					newDevice.replaceAccesses(device.getAccesses());
 				}
 				session.persist(newDevice);
 				task = new TakeSnapshotTask(newDevice, "Initial snapshot after device creation", user.getUsername(), true, false, false);
 				session.persist(task);
 				session.getTransaction().commit();
 				AAA_LOG.info("{} has been created.", newDevice);
+			}
+			catch (NetshotBadRequestException e) {
+				Database.rollbackSilently(session);
+				throw e;
 			}
 			catch (Exception e) {
 				Database.rollbackSilently(session);
@@ -2328,66 +2392,18 @@ public class RestService extends Thread {
 		@Setter
 		private String ipAddress;
 
-		/** The connection IP address (optional). */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private String connectIpAddress;
-
-		/** The SSH port. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private String sshPort;
-
-		/** The Telnet port. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private String telnetPort;
-
-		/** The auto try credentials. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private Boolean autoTryCredentials;
-
-		/** The credential set ids. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private List<Long> credentialSetIds;
-
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private List<Long> clearCredentialSetIds;
-
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
 		private Long mgmtDomain;
 
-		/** A device-specific credential set. */
+		/** Per-access configuration (address/port overrides, credential pins), keyed by access name. */
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		@Setter
-		private DeviceCredentialSet specificCredentialSet;
-
-		/** Per-access connection overrides (address/port), keyed by access name. */
-		@Getter(onMethod = @__({
-			@XmlElement, @JsonView(DefaultView.class)
-		}))
-		@Setter
-		private List<AccessOverride> accessOverrides;
+		private List<DeviceAccess> accesses;
 
 		/**
 		 * Instantiates a new rs device.
@@ -2437,126 +2453,20 @@ public class RestService extends Thread {
 				device.setMgmtAddress(rsDevice.getIpAddress());
 				device.refreshCachedIpAddress();
 			}
-			if (rsDevice.getConnectIpAddress() != null) {
-				if ("".equals(rsDevice.getConnectIpAddress())) {
-					device.setConnectAddress(null);
-				}
-				else {
-					RestService.validateMgmtAddress(rsDevice.getConnectIpAddress(), true);
-					device.setConnectAddress(rsDevice.getConnectIpAddress());
-				}
-			}
-			if (rsDevice.getSshPort() != null) {
-				if ("".equals(rsDevice.getSshPort())) {
-					device.setSshPort(0);
-				}
-				else {
-					try {
-						int port = Integer.parseInt(rsDevice.getSshPort());
-						if (port < 1 || port > 65535) {
-							throw new Exception();
-						}
-						device.setSshPort(port);
-					}
-					catch (Exception e) {
-						Database.rollbackSilently(session);
-						throw new NetshotBadRequestException("Invalid SSH port",
-							NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
-					}
-				}
-			}
-			if (rsDevice.getTelnetPort() != null) {
-				if ("".equals(rsDevice.getTelnetPort())) {
-					device.setTelnetPort(0);
-				}
-				else {
-					try {
-						int port = Integer.parseInt(rsDevice.getTelnetPort());
-						if (port < 1 || port > 65535) {
-							throw new Exception();
-						}
-						device.setTelnetPort(port);
-					}
-					catch (Exception e) {
-						Database.rollbackSilently(session);
-						throw new NetshotBadRequestException("Invalid Telnet port",
-							NetshotBadRequestException.Reason.NETSHOT_INVALID_PORT);
-					}
-				}
-			}
-			if (rsDevice.getAccessOverrides() != null) {
+			if (rsDevice.getAccesses() != null) {
 				try {
-					RestService.validateAccessOverrides(rsDevice.getAccessOverrides());
+					DeviceDriver driver = DeviceDriver.getDriverByName(device.getDriver());
+					RestService.validateDeviceAccesses(session, driver, rsDevice.getAccesses());
 				}
 				catch (NetshotBadRequestException e) {
 					Database.rollbackSilently(session);
 					throw e;
 				}
-				device.replaceAccessOverrides(rsDevice.getAccessOverrides());
+				RestService.resolveDeviceAccessSpecificCredentials(session, device, rsDevice.getAccesses());
+				device.replaceAccesses(rsDevice.getAccesses());
 			}
 			if (rsDevice.getComments() != null) {
 				device.setComments(rsDevice.getComments());
-			}
-			if (rsDevice.getCredentialSetIds() != null) {
-				if (rsDevice.getClearCredentialSetIds() == null) {
-					device.clearCredentialSets();
-				}
-				else {
-					Iterator<DeviceCredentialSet> csIterator = device.getCredentialSets().iterator();
-					while (csIterator.hasNext()) {
-						if (rsDevice.getClearCredentialSetIds().contains(csIterator.next().getId())) {
-							csIterator.remove();
-						}
-					}
-				}
-				for (Long credentialSetId : rsDevice.getCredentialSetIds()) {
-					DeviceCredentialSet credentialSet = session
-						.get(DeviceCredentialSet.class, credentialSetId);
-					if (credentialSet == null) {
-						log.error("Non existing credential set {}.", credentialSetId);
-						continue;
-					}
-					device.addCredentialSet(credentialSet);
-				}
-			}
-			if (rsDevice.getAutoTryCredentials() != null) {
-				device.setAutoTryCredentials(rsDevice.getAutoTryCredentials());
-			}
-			DeviceCredentialSet rsCredentialSet = rsDevice.getSpecificCredentialSet();
-			DeviceCredentialSet credentialSet = device.getSpecificCredentialSet();
-
-			if (rsCredentialSet == null && rsDevice.getCredentialSetIds() != null) {
-				if (credentialSet != null) {
-					session.remove(credentialSet);
-					device.setSpecificCredentialSet(null);
-				}
-			}
-			else if (DeviceCliAccount.class.isInstance(rsCredentialSet)) {
-				if (credentialSet != null && !credentialSet.getClass().equals(rsCredentialSet.getClass())) {
-					session.remove(credentialSet);
-					credentialSet = null;
-				}
-				if (credentialSet == null) {
-					credentialSet = rsCredentialSet;
-					credentialSet.setDeviceSpecific(true);
-					credentialSet.setName(DeviceCredentialSet.generateSpecificName());
-					session.persist(credentialSet);
-					device.setSpecificCredentialSet(credentialSet);
-				}
-				else {
-					DeviceCliAccount cliAccount = (DeviceCliAccount) credentialSet;
-					DeviceCliAccount rsCliAccount = (DeviceCliAccount) rsCredentialSet;
-					cliAccount.setUsername(rsCliAccount.getUsername());
-					if (rsCliAccount.getPassword() != null && !"=".equals(rsCliAccount.getPassword())) {
-						cliAccount.setPassword(rsCliAccount.getPassword());
-					}
-					if (rsCliAccount.getSuperPassword() != null && !"=".equals(rsCliAccount.getSuperPassword())) {
-						cliAccount.setSuperPassword(rsCliAccount.getSuperPassword());
-					}
-					if (DeviceSshKeyAccount.class.isInstance(credentialSet)) {
-						((DeviceSshKeyAccount) cliAccount).setPrivateKey(((DeviceSshKeyAccount) rsCliAccount).getPrivateKey());
-					}
-				}
 			}
 			if (rsDevice.getMgmtDomain() != null) {
 				Domain domain = session.get(Domain.class, rsDevice.getMgmtDomain());
@@ -8814,7 +8724,6 @@ public class RestService extends Thread {
 				{
 					StringBuilder deviceHqlQuery = new StringBuilder(
 						"select d from Device d left join d.groupMemberships gm "
-							+ "left join fetch d.specificCredentialSet cs "
 							+ "left join fetch d.mgmtDomain "
 							+ "where 1 = 1");
 					if (domains.size() > 0) {

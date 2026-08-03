@@ -26,10 +26,13 @@ export function useDeviceTypesWithOptions() {
     queryKey: [QUERIES.DEVICE_TYPE_LIST],
     queryFn: async () => (await api.device.getAllTypes()) ?? [],
     select: useCallback((types: DeviceType[]) => {
-      return types.map((type) => ({
-        label: type?.description,
-        value: type,
-      }))
+      return sortAlphabetical(
+        types.map((type) => ({
+          label: type?.description,
+          value: type,
+        })),
+        "label"
+      )
     }, []),
     initialData: [],
   })

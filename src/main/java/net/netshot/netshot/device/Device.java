@@ -31,8 +31,6 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SQLRestriction;
@@ -51,7 +49,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
@@ -70,9 +67,7 @@ import net.netshot.netshot.compliance.Rule;
 import net.netshot.netshot.compliance.SoftwareRule;
 import net.netshot.netshot.compliance.SoftwareRule.ConformanceLevel;
 import net.netshot.netshot.database.InetAddressUserType;
-import net.netshot.netshot.device.access.AccessOverride;
-import net.netshot.netshot.device.access.Ssh;
-import net.netshot.netshot.device.access.Telnet;
+import net.netshot.netshot.device.access.DeviceAccess;
 import net.netshot.netshot.device.attribute.AttributeDefinition.EnumAttribute;
 import net.netshot.netshot.device.attribute.DeviceAttribute;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
@@ -164,13 +159,6 @@ public class Device {
 	@Setter
 	private Set<DeviceAttribute> attributes = new HashSet<>();
 
-	/** The auto try credentials. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
-	}))
-	@Setter
-	private boolean autoTryCredentials = true;
-
 	/** The change date. */
 	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
@@ -239,23 +227,6 @@ public class Device {
 	}))
 	@Setter
 	private String creator;
-
-	/** The credential sets. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class),
-		@ManyToMany(), @Fetch(FetchMode.SELECT),
-		@OnDelete(action = OnDeleteAction.CASCADE)
-	}))
-	@Setter
-	private Set<DeviceCredentialSet> credentialSets = new HashSet<>();
-
-	/** Device-specific credential set. */
-	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class),
-		@OneToOne(cascade = CascadeType.ALL)
-	}))
-	@Setter
-	private DeviceCredentialSet specificCredentialSet;
 
 	/** The device deviceDriver name. */
 	@Getter(onMethod = @__({
@@ -446,153 +417,108 @@ public class Device {
 	private Set<String> vrfInstances = new HashSet<>();
 
 	/**
-	 * Per-access connection overrides (address/port), keyed by access name
-	 * (e.g. "ssh", "telnet", "https"). {@code sshPort}/{@code telnetPort}/
-	 * {@code connectAddress} below are computed accessors backed by this
-	 * collection's "ssh"/"telnet" rows, kept for REST/frontend backward
-	 * compatibility - see {@link AccessOverride}.
+	 * Per-access configuration (address/port overrides and credential pins),
+	 * keyed by access name (e.g. "ssh", "telnet", "https") - see {@link DeviceAccess}.
 	 */
 	@Getter(onMethod = @__({
-		@OneToMany(mappedBy = "device", orphanRemoval = true, cascade = CascadeType.ALL),
+		@OneToMany(mappedBy = "key.device", orphanRemoval = true, cascade = CascadeType.ALL),
 		@XmlElement, @JsonView(DefaultView.class)
 	}))
 	@Setter
-	private Set<AccessOverride> accessOverrides = new HashSet<>();
+	private Set<DeviceAccess> accesses = new HashSet<>();
 
 	/**
-	 * Gets the connection override for the given access name, if any.
+	 * Gets the per-access configuration for the given access name, if any.
 	 * @param accessName the access name (e.g. "ssh", "telnet", "https")
-	 * @return the override, or null if none is configured
+	 * @return the access, or null if none is configured
 	 */
 	@Transient
-	public AccessOverride getAccessOverride(String accessName) {
-		for (AccessOverride override : this.accessOverrides) {
-			if (accessName.equals(override.getAccessName())) {
-				return override;
+	public DeviceAccess getDeviceAccess(String accessName) {
+		for (DeviceAccess access : this.accesses) {
+			if (accessName.equals(access.getAccessName())) {
+				return access;
 			}
 		}
 		return null;
 	}
 
 	/**
-	 * Gets (creating if necessary) the connection override for the given access name.
+	 * Gets (creating if necessary) the per-access configuration for the given access name.
 	 * @param accessName the access name
-	 * @return the (possibly newly created) override
+	 * @return the (possibly newly created) access
 	 */
 	@Transient
-	private AccessOverride getOrCreateAccessOverride(String accessName) {
-		AccessOverride override = this.getAccessOverride(accessName);
-		if (override == null) {
-			override = new AccessOverride(this, accessName);
-			this.accessOverrides.add(override);
+	private DeviceAccess getOrCreateDeviceAccess(String accessName) {
+		DeviceAccess access = this.getDeviceAccess(accessName);
+		if (access == null) {
+			access = new DeviceAccess(this, accessName);
+			this.accesses.add(access);
 		}
-		return override;
+		return access;
 	}
 
 	/**
-	 * Replaces the whole set of per-access connection overrides at once (e.g.
-	 * from a device edit form submitting the full list of accesses). Entries
-	 * with neither an address nor a port are dropped (equivalent to "no
-	 * override for this access").
-	 * @param overrides the new full list of overrides (may be null, meaning "clear all")
+	 * Pins the given credential set as the global credential set for the given
+	 * access, creating the per-access row if needed. Used by {@code AccessManager}
+	 * to remember a credential set that successfully authenticated via the
+	 * domain's auto-try pool, so subsequent connections use it directly instead
+	 * of trying the whole pool again.
+	 * @param accessName the access name (e.g. "ssh", "telnet")
+	 * @param credentialSet the credential set to pin
 	 */
 	@Transient
-	public void replaceAccessOverrides(java.util.Collection<AccessOverride> overrides) {
-		this.accessOverrides.clear();
-		if (overrides == null) {
+	public void pinGlobalCredentialSet(String accessName, DeviceCredentialSet credentialSet) {
+		this.getOrCreateDeviceAccess(accessName).setGlobalCredentialSet(credentialSet);
+	}
+
+	/**
+	 * Removes the per-access configuration for the given access name, if any -
+	 * an access with no {@code DeviceAccess} row is never used at all (see
+	 * {@code AccessManager}), so this is how an access still lingering from a
+	 * previous configuration gets fully disabled/forgotten. Used by
+	 * {@code AccessManager} to drop sibling accesses once one of them is
+	 * known to work.
+	 * @param accessName the access name
+	 * @return true if a row was actually removed, false if there was none
+	 */
+	@Transient
+	public boolean removeDeviceAccess(String accessName) {
+		return this.accesses.removeIf(access -> accessName.equals(access.getAccessName()));
+	}
+
+	/**
+	 * Replaces the whole set of per-access configurations at once (e.g. from a
+	 * device edit form or a device-creation request submitting the full list
+	 * of accesses to use). An access not present in the incoming list is
+	 * simply not created/kept - since no {@code DeviceAccess} row at all means
+	 * "never use this access" (see {@code AccessManager}), the caller is
+	 * responsible for including an entry for every access it wants usable
+	 * (even a bare one, with nothing set, for plain auto-try). Existing rows
+	 * are updated in place (matched by access name) rather than deleted and
+	 * recreated, so that an owned {@code specificCredentialSet} already
+	 * resolved/updated in place by the caller (see {@code RestService}) keeps
+	 * its identity instead of racing with this same access's own orphan removal.
+	 * @param newAccesses the new full list of accesses (may be null, meaning "clear all")
+	 */
+	@Transient
+	public void replaceAccesses(java.util.Collection<DeviceAccess> newAccesses) {
+		if (newAccesses == null) {
+			this.accesses.clear();
 			return;
 		}
-		for (AccessOverride input : overrides) {
-			boolean hasAddress = input.getAddress() != null && !input.getAddress().isEmpty();
-			boolean hasPort = input.getPort() != null;
-			if (!hasAddress && !hasPort) {
-				continue;
-			}
-			AccessOverride override = new AccessOverride(this, input.getAccessName());
-			override.setAddress(hasAddress ? input.getAddress() : null);
-			override.setPort(input.getPort());
-			this.accessOverrides.add(override);
+		Map<String, DeviceAccess> incomingByName = new HashMap<>();
+		for (DeviceAccess input : newAccesses) {
+			incomingByName.put(input.getAccessName(), input);
 		}
-	}
-
-	/**
-	 * SSH TCP port override (0 = not set, i.e. use the driver's default port).
-	 * Computed from the "ssh" access override - see {@link #accessOverrides}.
-	 * @return the SSH port override, or the protocol default if none is set
-	 */
-	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public int getSshPort() {
-		AccessOverride override = this.getAccessOverride("ssh");
-		if (override == null) {
-			return Ssh.DEFAULT_PORT;
+		this.accesses.removeIf(existing -> !incomingByName.containsKey(existing.getAccessName()));
+		for (Map.Entry<String, DeviceAccess> entry : incomingByName.entrySet()) {
+			DeviceAccess input = entry.getValue();
+			DeviceAccess access = this.getOrCreateDeviceAccess(entry.getKey());
+			access.setAddress(input.getAddress() != null && !input.getAddress().isEmpty() ? input.getAddress() : null);
+			access.setPort(input.getPort());
+			access.setGlobalCredentialSet(input.getGlobalCredentialSet());
+			access.setSpecificCredentialSet(input.getSpecificCredentialSet());
 		}
-		return override.getPort() == null ? 0 : override.getPort();
-	}
-
-	/**
-	 * Sets the SSH TCP port override (0 to clear it).
-	 * @param sshPort the port to use, or 0 to clear the override
-	 */
-	public void setSshPort(int sshPort) {
-		this.getOrCreateAccessOverride("ssh").setPort(sshPort == 0 ? null : sshPort);
-	}
-
-	/**
-	 * Telnet TCP port override (0 = not set, i.e. use the driver's default port).
-	 * Computed from the "telnet" access override - see {@link #accessOverrides}.
-	 * @return the Telnet port override, or the protocol default if none is set
-	 */
-	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public int getTelnetPort() {
-		AccessOverride override = this.getAccessOverride("telnet");
-		if (override == null) {
-			return Telnet.DEFAULT_PORT;
-		}
-		return override.getPort() == null ? 0 : override.getPort();
-	}
-
-	/**
-	 * Sets the Telnet TCP port override (0 to clear it).
-	 * @param telnetPort the port to use, or 0 to clear the override
-	 */
-	public void setTelnetPort(int telnetPort) {
-		this.getOrCreateAccessOverride("telnet").setPort(telnetPort == 0 ? null : telnetPort);
-	}
-
-	/**
-	 * An optional connection address (IPv4 literal, IPv6 literal, or FQDN), in case the
-	 * management address can't be used to connect to the device. Historically a single
-	 * device-wide value applying to both SSH and Telnet - computed here from whichever
-	 * of the "ssh"/"telnet" access overrides has an address set (see {@link #accessOverrides}).
-	 * @return the connect address override, or null if none is set
-	 */
-	@Transient
-	@XmlElement
-	@JsonView(DefaultView.class)
-	public String getConnectAddress() {
-		AccessOverride sshOverride = this.getAccessOverride("ssh");
-		if (sshOverride != null && sshOverride.getAddress() != null) {
-			return sshOverride.getAddress();
-		}
-		AccessOverride telnetOverride = this.getAccessOverride("telnet");
-		if (telnetOverride != null) {
-			return telnetOverride.getAddress();
-		}
-		return null;
-	}
-
-	/**
-	 * Sets the connection address override, applied to both the "ssh" and "telnet"
-	 * accesses (matching the historical, protocol-agnostic semantics of this field).
-	 * @param connectAddress the address to use, or null to clear the override
-	 */
-	public void setConnectAddress(String connectAddress) {
-		this.getOrCreateAccessOverride("ssh").setAddress(connectAddress);
-		this.getOrCreateAccessOverride("telnet").setAddress(connectAddress);
 	}
 
 	/**
@@ -651,16 +577,6 @@ public class Device {
 
 
 	/**
-	 * Adds the credential set.
-	 *
-	 * @param credentialSet the credential set
-	 */
-	public void addCredentialSet(DeviceCredentialSet credentialSet) {
-		this.credentialSets.add(credentialSet);
-	}
-
-
-	/**
 	 * Adds the virtual device.
 	 *
 	 * @param virtualDevice the virtual device
@@ -680,13 +596,6 @@ public class Device {
 
 	public void clearAttributes() {
 		this.attributes.clear();
-	}
-
-	/**
-	 * Clear credential sets.
-	 */
-	public void clearCredentialSets() {
-		this.credentialSets.clear();
 	}
 
 	/**
@@ -792,22 +701,6 @@ public class Device {
 			groups.add(membership.getGroup());
 		}
 		return groups;
-	}
-
-	/**
-	 * Gets the credential set ids.
-	 *
-	 * @return the credential set ids
-	 */
-	@XmlElement
-	@JsonView(DefaultView.class)
-	@Transient
-	public List<Long> getCredentialSetIds() {
-		List<Long> l = new ArrayList<>();
-		for (DeviceCredentialSet credentialSet : credentialSets) {
-			l.add(credentialSet.getId());
-		}
-		return l;
 	}
 
 	@Transient

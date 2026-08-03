@@ -395,14 +395,14 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
                 </Tooltip>
               )}
               <Tooltip
-                content={isUnchanged ? t("auth.passwordUnchanged") : showPassword ? t("common.hidePassword") : t("common.showPassword")}
+                content={isUnchanged ? t("common.clickToSetNewSecret") : showPassword ? t("common.hidePassword") : t("common.showPassword")}
                 positioning={{ placement: "top" }}
               >
                 <span>
                   <IconButton
                     size="xs"
                     variant="ghost"
-                    aria-label={isUnchanged ? t("auth.passwordUnchanged") : showPassword ? t("common.hidePassword") : t("common.showPassword")}
+                    aria-label={isUnchanged ? t("common.clickToSetNewSecret") : showPassword ? t("common.hidePassword") : t("common.showPassword")}
                     onClick={togglePassword}
                   >
                     {isUnchanged ? <LuLock /> : showPassword ? <LuEye /> : <LuEyeOff />}

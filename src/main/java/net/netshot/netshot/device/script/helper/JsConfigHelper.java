@@ -321,7 +321,7 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 			}
 		}
 		catch (Exception e) {
-			log.warn("Error during snapshot while setting config attribute key '{}'.", key);
+			log.warn("Error during snapshot while setting config attribute key '{}'.", key, e);
 		}
 	}
 

@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2025 Netshot
- *
+ * 
  * This file is part of Netshot project.
- *
+ * 
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -81,10 +81,12 @@ public class JsHttpHelper {
 		this.resolution = accessManager.newResolution(accessDefs, this::buildClient);
 	}
 
-	private Client buildClient(AccessDefinition accessDef, DeviceCredentialSet credentialSet) throws IOException {
-		Http.HttpConfig httpConfig = accessDef.getHttpConfig();
-		NetworkAddress address = this.accessManager.resolveAddress(accessDef);
-		int port = this.accessManager.resolvePort(accessDef);
+	private Client buildClient(AccessDefinition candidateAccessDef, DeviceCredentialSet credentialSet) throws IOException {
+		Http.HttpConfig httpConfig = candidateAccessDef.getHttpConfig();
+		NetworkAddress address = this.accessManager.resolveAddress(candidateAccessDef);
+		int port = this.accessManager.resolvePort(candidateAccessDef);
+		this.taskContext.debug("Trying access '{}' ({}) using credentials '{}', at {}:{}.",
+			candidateAccessDef.getName(), candidateAccessDef.getProtocol(), credentialSet.getName(), address.getIp(), port);
 		return new Http(address, port, httpConfig.isTls(), this.taskContext);
 	}
 
@@ -171,6 +173,10 @@ public class JsHttpHelper {
 						"Authentication failed for this access (HTTP status " + result.getStatus() + ").");
 				}
 			}
+			// The first request came back without an auth-status rejection (either
+			// from the start, or after tryNextCredentials() found one that works),
+			// so the credentials are confirmed valid.
+			this.resolution.confirmCredentialWorks();
 		}
 		Map<String, Object> jsResult = new HashMap<>();
 		jsResult.put("status", result.getStatus());

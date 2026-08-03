@@ -105,12 +105,10 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
     itemToValue: getItemValue,
   })
 
-  const hasDescriptions = options.some((opt) => opt.description)
-
   const virtualizer = useVirtualizer({
     count: collection.size,
     getScrollElement: () => contentRef.current,
-    estimateSize: () => (hasDescriptions ? 56 : 40),
+    estimateSize: (index) => (collection.items[index]?.description ? 56 : 40),
     overscan: 10,
     scrollPaddingEnd: 32,
   })
@@ -266,6 +264,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
                     height: `${virtualizer.getTotalSize()}px`,
                     width: "100%",
                     position: "relative",
+                    flexShrink: 0,
                   }}
                 >
                   {virtualizer.getVirtualItems().map((virtualItem) => {
@@ -274,7 +273,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
                     return (
                       <ChakraSelect.Item
                         item={item}
-                        key={item.label}
+                        key={virtualItem.key}
                         style={{
                           position: "absolute",
                           top: 0,
@@ -284,6 +283,7 @@ export function Select<TFieldValues extends FieldValues, TName extends FieldPath
                           transform: `translateY(${virtualItem.start}px)`,
                         }}
                         alignItems="center"
+                        overflow="hidden"
                       >
                         {renderIcon?.(item)}
                         <VStack gap="0" align="start" overflow="hidden" flex="1">

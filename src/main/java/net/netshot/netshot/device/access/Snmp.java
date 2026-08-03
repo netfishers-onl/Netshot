@@ -66,7 +66,7 @@ import org.snmp4j.util.TreeUtils;
 public class Snmp extends Poller implements Client {
 
 	/** The port. */
-	private static final int PORT = 161;
+	public static final int DEFAULT_PORT = 161;
 
 	/** The snmp. */
 	private org.snmp4j.Snmp snmp;
@@ -81,19 +81,31 @@ public class Snmp extends Poller implements Client {
 	private OID privProtocol;
 
 	/**
-	 * Instantiates a new SNMP object based on a target address and a Netshot community.
+	 * Instantiates a new SNMP object based on a target address and a Netshot community,
+	 * using the default SNMP port ({@link #DEFAULT_PORT}).
 	 * @param address The target
 	 * @param community The SNMP credentials
 	 * @throws IOException it can happen
 	 */
 	public Snmp(NetworkAddress address, DeviceSnmpCommunity community) throws IOException {
+		this(address, DEFAULT_PORT, community);
+	}
+
+	/**
+	 * Instantiates a new SNMP object based on a target address/port and a Netshot community.
+	 * @param address The target
+	 * @param port The target UDP port
+	 * @param community The SNMP credentials
+	 * @throws IOException it can happen
+	 */
+	public Snmp(NetworkAddress address, int port, DeviceSnmpCommunity community) throws IOException {
 		if (community instanceof DeviceSnmpv1Community) {
-			this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community.getCommunity()));
+			this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), port), new OctetString(community.getCommunity()));
 			this.target.setVersion(SnmpConstants.version1);
 			start();
 		}
 		else if (community instanceof DeviceSnmpv2cCommunity) {
-			this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community.getCommunity()));
+			this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), port), new OctetString(community.getCommunity()));
 			this.target.setVersion(SnmpConstants.version2c);
 			start();
 		}
@@ -103,7 +115,7 @@ public class Snmp extends Poller implements Client {
 			this.target = new UserTarget<>();
 			this.target.setTimeout(5000);
 			this.target.setVersion(SnmpConstants.version3);
-			this.target.setAddress(new UdpAddress(address.getInetAddress(), PORT));
+			this.target.setAddress(new UdpAddress(address.getInetAddress(), port));
 			if (v3Credentials.getAuthKey() == null) {
 				this.target.setSecurityLevel(SecurityLevel.NOAUTH_NOPRIV);
 			}
@@ -159,7 +171,7 @@ public class Snmp extends Poller implements Client {
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
 	public Snmp(NetworkAddress address, String community, boolean v1) throws IOException {
-		this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), PORT), new OctetString(community));
+		this.target = new CommunityTarget<>(new UdpAddress(address.getInetAddress(), DEFAULT_PORT), new OctetString(community));
 		this.target.setVersion(v1 ? SnmpConstants.version1 : SnmpConstants.version2c);
 		start();
 	}

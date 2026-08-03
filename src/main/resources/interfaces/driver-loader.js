@@ -112,46 +112,106 @@ const isAuthFailureError = (e) => {
 };
 
 /**
- * Resolves a literal access name or family word (e.g. "ssh", "snmp", "http")
- * against the driver's own CLI/SNMP/HTTP globals, returning the ordered list
- * of concrete, literal access names to try (in priority order).
+ * Default priority per protocol, mirroring DeviceDriver.defaultPriorityFor
+ * (Java) - higher is tried first within the same group.
+ */
+const ACCESS_PRIORITY_DEFAULTS = {
+	ssh: 100, https: 90, snmpv3: 80, http: 30, snmpv2c: 22, snmpv1: 20, telnet: 10,
+};
+
+/**
+ * Infers the effective protocol of one declared access, mirroring
+ * DeviceDriver's own per-loop inference (explicit "protocol" member first,
+ * else the key name). Returns null for a CLI-family member that isn't
+ * actually an access (e.g. a CLI mode like "enable"), so it can be excluded
+ * from group resolution.
+ */
+const inferAccessProtocol = (family, key, accessValue) => {
+	const explicit = (accessValue && typeof accessValue.protocol === "string")
+		? accessValue.protocol.toLowerCase() : null;
+	if (family === "cli") {
+		if (explicit === "ssh" || explicit === "telnet") {
+			return explicit;
+		}
+		if (explicit) {
+			return null;
+		}
+		const k = key.toLowerCase();
+		if (k === "ssh" || k === "telnet") {
+			return k;
+		}
+		return null; // Not an access definition (e.g. a CLI mode like 'enable').
+	}
+	if (family === "snmp") {
+		if (explicit === "snmpv1" || explicit === "snmpv2c" || explicit === "snmpv3") {
+			return explicit;
+		}
+		if (explicit) {
+			return null;
+		}
+		const k = key.toLowerCase();
+		if (k === "snmpv1" || k === "snmpv2c" || k === "snmpv3") {
+			return k;
+		}
+		return null; // Not a recognized SNMP access key.
+	}
+	// http
+	if (explicit === "http" || explicit === "https") {
+		return explicit;
+	}
+	return (key.toLowerCase() === "http") ? "http" : "https";
+};
+
+/**
+ * Resolves a literal access name or group word (e.g. "cli", "snmp", "http",
+ * or any custom group a driver declared) against the driver's own
+ * CLI/SNMP/HTTP globals, returning the ordered list of concrete, literal
+ * access names to try. A group word expands to every declared access whose
+ * (possibly defaulted) group matches, sorted by priority descending.
  */
 const resolveAccessNames = (nameOrArray) => {
 	const names = Array.isArray(nameOrArray) ? nameOrArray : [nameOrArray];
 	const groups = { cli: (typeof CLI === "object" ? CLI : {}), snmp: (typeof SNMP === "object" ? SNMP : {}),
 		http: (typeof HTTP === "object" ? HTTP : {}) };
-	const familyOf = (groupName) => (groupName === "cli" ? ["ssh", "telnet"] : [groupName]);
 
 	const resolveOne = (name) => {
 		// 1. Literal key match, across CLI/SNMP/HTTP (in that search order).
-		for (const groupName of ["cli", "snmp", "http"]) {
-			if (Object.prototype.hasOwnProperty.call(groups[groupName], name)) {
-				return { family: groupName, accessNames: [name] };
+		for (const family of ["cli", "snmp", "http"]) {
+			if (Object.prototype.hasOwnProperty.call(groups[family], name)) {
+				return { family, accessNames: [name] };
 			}
 		}
-		// 2. Family word alias: all declared accesses of that family, in order.
-		if (name === "ssh" || name === "telnet") {
-			const keys = Object.keys(groups.cli).filter((k) => {
-				const proto = (groups.cli[k] && groups.cli[k].protocol) ? String(groups.cli[k].protocol).toLowerCase() : k.toLowerCase();
-				return proto === name;
+		// 2. Group word: every declared access (across CLI/SNMP/HTTP) whose
+		// effective group equals this name, sorted by priority descending.
+		const matches = [];
+		["cli", "snmp", "http"].forEach((family) => {
+			Object.keys(groups[family]).forEach((key) => {
+				const accessValue = groups[family][key];
+				if (!accessValue || typeof accessValue !== "object") {
+					return;
+				}
+				const protocol = inferAccessProtocol(family, key, accessValue);
+				if (protocol === null) {
+					return;
+				}
+				const group = (typeof accessValue.group === "string") ? accessValue.group : family;
+				if (group !== name) {
+					return;
+				}
+				const priority = (typeof accessValue.priority === "number")
+					? accessValue.priority : (ACCESS_PRIORITY_DEFAULTS[protocol] || 0);
+				matches.push({ family, key, priority });
 			});
-			if (keys.length > 0) {
-				return { family: "cli", accessNames: keys };
-			}
+		});
+		if (matches.length === 0) {
+			throw `Unknown access '${name}': no such CLI/SNMP/HTTP access is declared by this driver.`;
 		}
-		if (name === "snmp") {
-			const keys = Object.keys(groups.snmp);
-			if (keys.length > 0) {
-				return { family: "snmp", accessNames: keys };
-			}
+		const families = Array.from(new Set(matches.map((m) => m.family)));
+		if (families.length > 1) {
+			throw `Group '${name}' mixes accesses of different kinds (${families.join(", ")}); a client can only be built from accesses of the same kind.`;
 		}
-		if (name === "http") {
-			const keys = Object.keys(groups.http);
-			if (keys.length > 0) {
-				return { family: "http", accessNames: keys };
-			}
-		}
-		throw `Unknown access '${name}': no such CLI/SNMP/HTTP access is declared by this driver.`;
+		matches.sort((a, b) => b.priority - a.priority);
+		return { family: families[0], accessNames: matches.map((m) => m.key) };
 	};
 
 	let family = null;
@@ -291,7 +351,12 @@ const _connect = (_function, _options) => {
 				const isFirstUse = (this._mode === null);
 				try {
 					this._ensureSeeded();
-					if (this._mode == macro) return;
+					if (this._mode == macro) {
+						if (isFirstUse) {
+							_cli.confirmFirstUseSuccess();
+						}
+						return;
+					}
 					this.recursion = 0;
 					this._runningTarget = null;
 					this._runningMacro = macro;
@@ -302,6 +367,9 @@ const _connect = (_function, _options) => {
 						throw `No mode ${this._mode} could be found in CLI object.`;
 					}
 					this._applyPager(CLI[this._mode], this._mode);
+					if (isFirstUse) {
+						_cli.confirmFirstUseSuccess();
+					}
 				}
 				catch (e) {
 					if (isFirstUse && isAuthFailureError(e) && this._handleFirstUseAuthFailure(e)) {
@@ -428,7 +496,11 @@ const _connect = (_function, _options) => {
 				const isFirstUse = (this._mode === null);
 				try {
 					this._ensureSeeded();
-					return this._command(command, options);
+					const result = this._command(command, options);
+					if (isFirstUse) {
+						_cli.confirmFirstUseSuccess();
+					}
+					return result;
 				}
 				catch (e) {
 					if (isFirstUse && isAuthFailureError(e) && this._handleFirstUseAuthFailure(e)) {

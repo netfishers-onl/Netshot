@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2025 Netshot
- *
+ * 
  * This file is part of Netshot project.
- *
+ * 
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -89,6 +89,8 @@ public class JsCliHelper {
 	private Client buildClient(AccessDefinition accessDef, DeviceCredentialSet credentialSet) throws IOException {
 		NetworkAddress address = this.accessManager.resolveAddress(accessDef);
 		int port = this.accessManager.resolvePort(accessDef);
+		this.taskContext.debug("Trying access '{}' ({}) using credentials '{}', at {}:{}.",
+			accessDef.getName(), accessDef.getProtocol(), credentialSet.getName(), address.getIp(), port);
 		if (accessDef.getProtocol() == DriverProtocol.SSH) {
 			Ssh ssh;
 			if (credentialSet instanceof DeviceSshKeyAccount sshKeyAccount) {
@@ -144,6 +146,20 @@ public class JsCliHelper {
 	public String getResolvedAccessName() throws IOException {
 		this.ensureResolved();
 		return this.resolution.getCurrentAccessDef().getName();
+	}
+
+	/**
+	 * Called from JS after a first-use {@code macro}/{@code command} call
+	 * completes without hitting an in-band authentication failure. For SSH
+	 * this merely confirms what Java already knows (auth happens
+	 * synchronously in {@code connect()}); for Telnet, whose login only
+	 * happens through CLI mode transitions, this is the only reliable
+	 * "credentials genuinely work" signal - see
+	 * {@link Resolution#confirmCredentialWorks()}.
+	 */
+	@Export
+	public void confirmFirstUseSuccess() {
+		this.resolution.confirmCredentialWorks();
 	}
 
 	/**

@@ -26,6 +26,7 @@ import net.netshot.netshot.compliance.SoftwareRule.ConformanceLevel;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.NetworkClass;
+import net.netshot.netshot.device.access.DeviceAccess;
 import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.DynamicDeviceGroup;
@@ -124,7 +125,9 @@ public class FakeDeviceFactory {
 		DeviceCredentialSet cs = new DeviceSshAccount("user", "pass", "pass",
 			DeviceCredentialSet.generateSpecificName());
 		cs.setDeviceSpecific(true);
-		device.setSpecificCredentialSet(cs);
+		DeviceAccess sshAccess = new DeviceAccess(device, "ssh");
+		sshAccess.setSpecificCredentialSet(cs);
+		device.getAccesses().add(sshAccess);
 		device.setSerialNumber("16161616TEST16");
 		device.setComments("Comments for testing");
 		device.setVrfInstances(new HashSet<String>(Set.of("VRF1", "VRF2")));

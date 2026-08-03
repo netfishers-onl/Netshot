@@ -33,6 +33,7 @@ import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Config;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.Device.NetworkClass;
+import net.netshot.netshot.device.access.DeviceAccess;
 import net.netshot.netshot.device.DeviceGroup;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.DynamicDeviceGroup;
@@ -152,7 +153,9 @@ public class DemoDataCreator {
 		DeviceCredentialSet cs = new DeviceSshAccount("user", "pass", "pass",
 			DeviceCredentialSet.generateSpecificName());
 		cs.setDeviceSpecific(true);
-		device.setSpecificCredentialSet(cs);
+		DeviceAccess sshAccess = new DeviceAccess(device, "ssh");
+		sshAccess.setSpecificCredentialSet(cs);
+		device.getAccesses().add(sshAccess);
 		device.setSerialNumber("1616TEST%05d".formatted(shift));
 		device.setComments("Comments for testing");
 		device.setVrfInstances(new HashSet<String>(Set.of("VRF1", "VRF2")));
@@ -360,7 +363,9 @@ public class DemoDataCreator {
 		DeviceCredentialSet cs = new DeviceSshAccount("user", "pass", "pass",
 			DeviceCredentialSet.generateSpecificName());
 		cs.setDeviceSpecific(true);
-		device.setSpecificCredentialSet(cs);
+		DeviceAccess sshAccess = new DeviceAccess(device, "ssh");
+		sshAccess.setSpecificCredentialSet(cs);
+		device.getAccesses().add(sshAccess);
 		device.setSerialNumber("JN23040TEST");
 		device.setComments("Comments for testing");
 		device.setVrfInstances(new HashSet<String>(Set.of("VRF1", "VRF2")));
@@ -504,7 +509,9 @@ public class DemoDataCreator {
 		DeviceCredentialSet cs = new DeviceSshAccount("admin", "pass", "pass",
 			DeviceCredentialSet.generateSpecificName());
 		cs.setDeviceSpecific(true);
-		device.setSpecificCredentialSet(cs);
+		DeviceAccess sshAccess = new DeviceAccess(device, "ssh");
+		sshAccess.setSpecificCredentialSet(cs);
+		device.getAccesses().add(sshAccess);
 		device.setSerialNumber("FGT60E7440TEST");
 		device.setComments("Comments for testing");
 		device.setVrfInstances(new HashSet<String>(Set.of("VRF1", "VRF2")));

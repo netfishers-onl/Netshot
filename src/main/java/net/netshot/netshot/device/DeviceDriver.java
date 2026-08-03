@@ -108,8 +108,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	public enum DriverProtocol {
 		TELNET("telnet"),
 		SSH("ssh"),
-		SNMP("snmp"),
-		HTTP("http");
+		SNMPV1("snmpv1"),
+		SNMPV2C("snmpv2c"),
+		SNMPV3("snmpv3"),
+		HTTP("http"),
+		HTTPS("https");
 
 		private final String protocol;
 
@@ -119,6 +122,16 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 		public String value() {
 			return protocol;
+		}
+
+		/** @return true for any of the SNMPv1/v2c/v3 family values */
+		public boolean isSnmp() {
+			return this == SNMPV1 || this == SNMPV2C || this == SNMPV3;
+		}
+
+		/** @return true for HTTP or HTTPS */
+		public boolean isHttp() {
+			return this == HTTP || this == HTTPS;
 		}
 	}
 
@@ -533,15 +546,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		}))
 		private final String name;
 
-		/** The protocol family (SSH, TELNET, SNMP or HTTP). */
+		/** The protocol family (SSH, TELNET, SNMPV1/V2C/V3 or HTTP). */
 		@Getter(onMethod = @__({
 			@XmlElement, @JsonView(DefaultView.class)
 		}))
 		private final DriverProtocol protocol;
-
-		/** For SNMP accesses only: "v1", "v2c" or "v3". */
-		@Getter
-		private final String snmpVersion;
 
 		/** Optional human-readable description. */
 		@Getter(onMethod = @__({
@@ -562,42 +571,67 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		private final HttpConfig httpConfig;
 
 		/**
-		 * The driver-declared default TCP port for this access (SSH/Telnet only;
-		 * for HTTP the port lives in {@link HttpConfig} instead). Only the
-		 * conventionally-named "ssh"/"telnet" accesses may additionally be
-		 * overridden at the device level (Device.sshPort/telnetPort) - see
-		 * JsCliHelper - any other/alternate CLI access always uses this value.
+		 * The driver-declared default port for this access - TCP for SSH/Telnet/
+		 * HTTP/HTTPS, UDP for SNMP. This is what the frontend should display/
+		 * prefill for a per-access address/port override.
 		 */
-		@Getter
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
 		private final int defaultPort;
 
-		public AccessDefinition(String name, DriverProtocol protocol, String snmpVersion, String description,
+		/**
+		 * The group this access belongs to, used to pick alternatives among
+		 * several accesses serving the same purpose (e.g. "cli" for SSH/Telnet,
+		 * "snmp" for SNMPv1/v2c/v3, "http" for HTTP/HTTPS). Defaults to the
+		 * access's protocol family (see {@link #defaultGroupFor}) but may be
+		 * overridden by the driver, including to a fully custom value.
+		 */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		private final String group;
+
+		/**
+		 * The priority used to order accesses within the same {@link #group}
+		 * (higher = tried first). Defaults per protocol (see
+		 * {@link #defaultPriorityFor}) but may be overridden by the driver.
+		 */
+		@Getter(onMethod = @__({
+			@XmlElement, @JsonView(DefaultView.class)
+		}))
+		private final int priority;
+
+		/**
+		 * Convenience constructor defaulting {@link #group}/{@link #priority}
+		 * from the access's protocol. Kept so existing call sites (mainly
+		 * tests) that predate the group/priority feature keep compiling.
+		 * @param name the access name
+		 * @param protocol the access protocol
+		 * @param description the access description
+		 * @param sshConfig the SSH config, if applicable
+		 * @param telnetConfig the Telnet config, if applicable
+		 * @param httpConfig the HTTP config, if applicable
+		 * @param defaultPort the default port to use
+		 */
+		public AccessDefinition(String name, DriverProtocol protocol, String description,
 				SshConfig sshConfig, TelnetConfig telnetConfig, HttpConfig httpConfig, int defaultPort) {
+			this(name, protocol, description, sshConfig, telnetConfig, httpConfig, defaultPort,
+				defaultGroupFor(protocol), defaultPriorityFor(protocol));
+		}
+
+		public AccessDefinition(String name, DriverProtocol protocol, String description,
+				SshConfig sshConfig, TelnetConfig telnetConfig, HttpConfig httpConfig, int defaultPort,
+				String group, int priority) {
 			this.name = name;
 			this.protocol = protocol;
-			this.snmpVersion = snmpVersion;
 			this.description = description;
 			this.sshConfig = sshConfig;
 			this.telnetConfig = telnetConfig;
 			this.httpConfig = httpConfig;
 			this.defaultPort = defaultPort;
-		}
-
-		/**
-		 * The default TCP port for this access, regardless of protocol (unlike
-		 * {@link #getDefaultPort()}, which is meaningless for HTTP accesses -
-		 * their default port lives in {@link #httpConfig} instead). This is
-		 * what the frontend should display/prefill for a per-access override.
-		 * @return the effective default port
-		 */
-		@Transient
-		@XmlElement
-		@JsonView(DefaultView.class)
-		public int getEffectiveDefaultPort() {
-			if (this.protocol == DriverProtocol.HTTP && this.httpConfig != null) {
-				return this.httpConfig.getDefaultPort();
-			}
-			return this.defaultPort;
+			this.group = group;
+			this.priority = priority;
 		}
 
 		/**
@@ -612,17 +646,59 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 				case TELNET:
 					return DeviceTelnetAccount.class;
 				case HTTP:
+				case HTTPS:
 					return DeviceHttpAccount.class;
-				case SNMP:
+				case SNMPV1:
+					return DeviceSnmpv1Community.class;
+				case SNMPV3:
+					return DeviceSnmpv3Community.class;
+				case SNMPV2C:
 				default:
-					if ("v1".equals(this.snmpVersion)) {
-						return DeviceSnmpv1Community.class;
-					}
-					if ("v3".equals(this.snmpVersion)) {
-						return DeviceSnmpv3Community.class;
-					}
 					return DeviceSnmpv2cCommunity.class;
 			}
+		}
+	}
+
+	/**
+	 * Default {@link AccessDefinition#getGroup()} for a protocol: the
+	 * access's protocol family ("cli" for SSH/Telnet, "snmp" for any SNMP
+	 * version, "http" for HTTP/HTTPS).
+	 * @param protocol the protocol
+	 * @return the default group name
+	 */
+	private static String defaultGroupFor(DriverProtocol protocol) {
+		if (protocol.isSnmp()) {
+			return "snmp";
+		}
+		if (protocol.isHttp()) {
+			return "http";
+		}
+		return "cli";
+	}
+
+	/**
+	 * Default {@link AccessDefinition#getPriority()} for a protocol, used to
+	 * order accesses within the same group (higher = tried first).
+	 * @param protocol the protocol
+	 * @return the default priority
+	 */
+	private static int defaultPriorityFor(DriverProtocol protocol) {
+		switch (protocol) {
+			case SSH:
+				return 100;
+			case HTTPS:
+				return 90;
+			case SNMPV3:
+				return 80;
+			case HTTP:
+				return 30;
+			case SNMPV2C:
+				return 22;
+			case SNMPV1:
+				return 20;
+			case TELNET:
+			default:
+				return 10;
 		}
 	}
 
@@ -634,50 +710,55 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 	/**
 	 * Gets a declared access by name.
-	 * @param name the access name (JS key)
+	 * @param accessName the access name (JS key)
 	 * @return the access definition, or null if not found
 	 */
 	@Transient
-	public AccessDefinition getAccessDefinition(String name) {
-		return this.accessDefinitions.get(name);
+	public AccessDefinition getAccessDefinition(String accessName) {
+		return this.accessDefinitions.get(accessName);
 	}
 
 	/**
 	 * Gets the default (legacy/backward-compatible) list of CLI accesses to use
-	 * when a driver doesn't explicitly call {@code client.create(...)}: all SSH
-	 * accesses (in declaration order), then all Telnet accesses (in declaration
-	 * order) - SSH is always prioritized over Telnet, matching historical behavior.
+	 * when a driver doesn't explicitly call {@code client.create(...)}: every
+	 * SSH/Telnet access, sorted by priority descending (higher-priority
+	 * accesses tried first) - by default this means SSH before Telnet,
+	 * matching historical behavior, but a driver may reorder this via
+	 * explicit per-access priorities.
 	 * @return the ordered list of default CLI access definitions
 	 */
 	@Transient
 	public List<AccessDefinition> getDefaultCliAccessDefinitions() {
-		List<AccessDefinition> result = new ArrayList<>();
-		for (AccessDefinition def : this.accessDefinitions.values()) {
-			if (def.getProtocol() == DriverProtocol.SSH) {
-				result.add(def);
-			}
-		}
-		for (AccessDefinition def : this.accessDefinitions.values()) {
-			if (def.getProtocol() == DriverProtocol.TELNET) {
-				result.add(def);
-			}
-		}
-		return result;
+		return this.getAccessDefinitionsByGroup("cli");
 	}
 
 	/**
 	 * Gets the default list of SNMP accesses to use when a driver doesn't
-	 * explicitly call {@code client.create(...)} (declaration order).
+	 * explicitly call {@code client.create(...)}, sorted by priority
+	 * descending (by default: SNMPv3, then v2c, then v1).
 	 * @return the ordered list of default SNMP access definitions
 	 */
 	@Transient
 	public List<AccessDefinition> getDefaultSnmpAccessDefinitions() {
+		return this.getAccessDefinitionsByGroup("snmp");
+	}
+
+	/**
+	 * Gets every declared access whose {@link AccessDefinition#getGroup()}
+	 * equals the given name, sorted by {@link AccessDefinition#getPriority()}
+	 * descending (stable, so equal-priority accesses keep declaration order).
+	 * @param group the group name
+	 * @return the matching access definitions, priority-sorted
+	 */
+	@Transient
+	public List<AccessDefinition> getAccessDefinitionsByGroup(String group) {
 		List<AccessDefinition> result = new ArrayList<>();
 		for (AccessDefinition def : this.accessDefinitions.values()) {
-			if (def.getProtocol() == DriverProtocol.SNMP) {
+			if (def.getGroup().equals(group)) {
 				result.add(def);
 			}
 		}
+		result.sort((a, b) -> Integer.compare(b.getPriority(), a.getPriority()));
 		return result;
 	}
 
@@ -689,10 +770,10 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	@Transient
 	public List<AccessDefinition> getAccessDefinitions(List<String> names) {
 		List<AccessDefinition> result = new ArrayList<>();
-		for (String name : names) {
-			AccessDefinition def = this.accessDefinitions.get(name);
+		for (String accessName : names) {
+			AccessDefinition def = this.accessDefinitions.get(accessName);
 			if (def == null) {
-				throw new IllegalArgumentException("Unknown access '" + name + "'.");
+				throw new IllegalArgumentException("Unknown access '" + accessName + "'.");
 			}
 			result.add(def);
 		}
@@ -819,10 +900,10 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 							// Not an access definition (e.g. a CLI mode like 'enable', 'username', etc.)
 							continue;
 						}
-						String description = null;
+						String accessDescription = null;
 						Value descriptionValue = accessValue.getMember("description");
 						if (descriptionValue != null && descriptionValue.isString()) {
-							description = descriptionValue.asString();
+							accessDescription = descriptionValue.asString();
 						}
 						this.protocols.add(accessProtocol);
 						SshConfig accessSshConfig = null;
@@ -847,8 +928,9 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						if (macros != null && macros.hasMembers()) {
 							this.cliMainModes.addAll(macros.getMemberKeys());
 						}
-						this.accessDefinitions.put(key, new AccessDefinition(key, accessProtocol, null,
-							description, accessSshConfig, accessTelnetConfig, null, defaultPort));
+						this.accessDefinitions.put(key, new AccessDefinition(key, accessProtocol,
+							accessDescription, accessSshConfig, accessTelnetConfig, null, defaultPort,
+							this.parseGroup(accessValue, accessProtocol), this.parsePriority(accessValue, accessProtocol)));
 					}
 				}
 			}
@@ -864,41 +946,47 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						if (accessValue == null || !accessValue.hasMembers()) {
 							continue;
 						}
-						String snmpVersion;
+						DriverProtocol accessProtocol;
 						Value protocolValue = accessValue.getMember("protocol");
 						if (protocolValue != null && protocolValue.isString()) {
 							String p = protocolValue.asString().toLowerCase();
-							if (p.contains("1")) {
-								snmpVersion = "v1";
+							if ("snmpv1".equals(p)) {
+								accessProtocol = DriverProtocol.SNMPV1;
 							}
-							else if (p.contains("3")) {
-								snmpVersion = "v3";
+							else if ("snmpv3".equals(p)) {
+								accessProtocol = DriverProtocol.SNMPV3;
 							}
-							else if (p.contains("2")) {
-								snmpVersion = "v2c";
+							else if ("snmpv2c".equals(p)) {
+								accessProtocol = DriverProtocol.SNMPV2C;
 							}
 							else {
 								throw new IllegalArgumentException(
 									String.format("Invalid protocol '%s' for SNMP access '%s'.", p, key));
 							}
 						}
-						else if (key.toLowerCase().contains("1")) {
-							snmpVersion = "v1";
+						else if ("snmpv1".equalsIgnoreCase(key)) {
+							accessProtocol = DriverProtocol.SNMPV1;
 						}
-						else if (key.toLowerCase().contains("3")) {
-							snmpVersion = "v3";
+						else if ("snmpv3".equalsIgnoreCase(key)) {
+							accessProtocol = DriverProtocol.SNMPV3;
+						}
+						else if ("snmpv2c".equalsIgnoreCase(key)) {
+							accessProtocol = DriverProtocol.SNMPV2C;
 						}
 						else {
-							snmpVersion = "v2c";
+							throw new IllegalArgumentException(
+								String.format("Invalid SNMP access key '%s': must be one of 'snmpv1', 'snmpv2c', 'snmpv3', "
+									+ "or declare an explicit 'protocol'.", key));
 						}
-						String description = null;
+						String accessDescription = null;
 						Value descriptionValue = accessValue.getMember("description");
 						if (descriptionValue != null && descriptionValue.isString()) {
-							description = descriptionValue.asString();
+							accessDescription = descriptionValue.asString();
 						}
-						this.protocols.add(DriverProtocol.SNMP);
-						this.accessDefinitions.put(key, new AccessDefinition(key, DriverProtocol.SNMP,
-							snmpVersion, description, null, null, null, 0));
+						this.protocols.add(accessProtocol);
+						this.accessDefinitions.put(key, new AccessDefinition(key, accessProtocol,
+							accessDescription, null, null, null, net.netshot.netshot.device.access.Snmp.DEFAULT_PORT,
+							this.parseGroup(accessValue, accessProtocol), this.parsePriority(accessValue, accessProtocol)));
 					}
 				}
 			}
@@ -914,19 +1002,36 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						if (accessValue == null || !accessValue.hasMembers()) {
 							continue;
 						}
-						String description = null;
+						DriverProtocol accessProtocol;
+						Value protocolValue = accessValue.getMember("protocol");
+						if (protocolValue != null && protocolValue.isString()) {
+							String p = protocolValue.asString().toLowerCase();
+							if ("https".equals(p)) {
+								accessProtocol = DriverProtocol.HTTPS;
+							}
+							else if ("http".equals(p)) {
+								accessProtocol = DriverProtocol.HTTP;
+							}
+							else {
+								throw new IllegalArgumentException(
+									String.format("Invalid protocol '%s' for HTTP access '%s'.", p, key));
+							}
+						}
+						else if ("http".equalsIgnoreCase(key)) {
+							accessProtocol = DriverProtocol.HTTP;
+						}
+						else {
+							accessProtocol = DriverProtocol.HTTPS;
+						}
+						String accessDescription = null;
 						Value descriptionValue = accessValue.getMember("description");
 						if (descriptionValue != null && descriptionValue.isString()) {
-							description = descriptionValue.asString();
+							accessDescription = descriptionValue.asString();
 						}
 						HttpConfig httpConfig = new HttpConfig();
-						httpConfig.setTls(!"http".equalsIgnoreCase(key));
+						httpConfig.setTls(accessProtocol == DriverProtocol.HTTPS);
 						Value configValue = accessValue.getMember("config");
 						if (configValue != null && configValue.hasMembers()) {
-							Value tlsValue = configValue.getMember("tls");
-							if (tlsValue != null && tlsValue.isBoolean()) {
-								httpConfig.setTls(tlsValue.asBoolean());
-							}
 							Value basePath = configValue.getMember("basePath");
 							if (basePath != null && basePath.isString()) {
 								httpConfig.setBasePath(basePath.asString());
@@ -946,9 +1051,10 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 						if (authValue != null && authValue.hasMembers()) {
 							httpConfig.setAuth(this.parseHttpAuthScheme(authValue, key));
 						}
-						this.protocols.add(DriverProtocol.HTTP);
-						this.accessDefinitions.put(key, new AccessDefinition(key, DriverProtocol.HTTP,
-							null, description, null, null, httpConfig, 0));
+						this.protocols.add(accessProtocol);
+						this.accessDefinitions.put(key, new AccessDefinition(key, accessProtocol,
+							accessDescription, null, null, httpConfig, httpConfig.getDefaultPort(),
+							this.parseGroup(accessValue, accessProtocol), this.parsePriority(accessValue, accessProtocol)));
 					}
 				}
 			}
@@ -958,7 +1064,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 			Set<DriverProtocol> connectableProtocols = EnumSet.copyOf(
 				this.protocols.isEmpty() ? EnumSet.noneOf(DriverProtocol.class) : this.protocols);
-			connectableProtocols.remove(DriverProtocol.HTTP);
+			connectableProtocols.removeIf(DriverProtocol::isHttp);
 			if (connectableProtocols.isEmpty()) {
 				throw new IllegalArgumentException("Invalid driver, it supports neither Telnet, SSH nor SNMP.");
 			}
@@ -974,6 +1080,36 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 			log.info("Loaded driver {} version {}.", this.name, this.version);
 		}
+	}
+
+	/**
+	 * Reads the optional "group" member off an access's JS object, defaulting
+	 * to {@link #defaultGroupFor} when not set.
+	 * @param accessValue the JS access object
+	 * @param protocol the access's protocol (for the default)
+	 * @return the effective group name
+	 */
+	private String parseGroup(Value accessValue, DriverProtocol protocol) {
+		Value groupValue = accessValue.getMember("group");
+		if (groupValue != null && groupValue.isString()) {
+			return groupValue.asString();
+		}
+		return defaultGroupFor(protocol);
+	}
+
+	/**
+	 * Reads the optional "priority" member off an access's JS object,
+	 * defaulting to {@link #defaultPriorityFor} when not set.
+	 * @param accessValue the JS access object
+	 * @param protocol the access's protocol (for the default)
+	 * @return the effective priority
+	 */
+	private int parsePriority(Value accessValue, DriverProtocol protocol) {
+		Value priorityValue = accessValue.getMember("priority");
+		if (priorityValue != null && priorityValue.fitsInInt()) {
+			return priorityValue.asInt();
+		}
+		return defaultPriorityFor(protocol);
 	}
 
 	/**

@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2025 Netshot
- *
+ * 
  * This file is part of Netshot project.
- *
+ * 
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -23,7 +23,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.Session;
@@ -32,7 +31,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver.AccessDefinition;
-import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
 import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.work.TaskContext;
@@ -72,12 +70,13 @@ public class AccessManager {
 	private static final class Candidate {
 		private final AccessDefinition accessDef;
 		private final DeviceCredentialSet credentialSet;
-		private final boolean fromGlobalPool;
+		/** True when this candidate comes from the domain's auto-try pool (no pin configured for this access). */
+		private final boolean fromAutoPool;
 
-		Candidate(AccessDefinition accessDef, DeviceCredentialSet credentialSet, boolean fromGlobalPool) {
+		Candidate(AccessDefinition accessDef, DeviceCredentialSet credentialSet, boolean fromAutoPool) {
 			this.accessDef = accessDef;
 			this.credentialSet = credentialSet;
-			this.fromGlobalPool = fromGlobalPool;
+			this.fromAutoPool = fromAutoPool;
 		}
 	}
 
@@ -112,7 +111,7 @@ public class AccessManager {
 	/**
 	 * Resolves the effective network address to connect to for a given access:
 	 * its own per-access override address if configured (see
-	 * {@link Device#getAccessOverride(String)}), otherwise the device's default
+	 * {@link Device#getDeviceAccess(String)}), otherwise the device's default
 	 * (management) address.
 	 * @param accessDef the access to resolve the address for
 	 * @return the effective address
@@ -120,9 +119,9 @@ public class AccessManager {
 	 *         itself failed to resolve, or if the override address is malformed
 	 */
 	public NetworkAddress resolveAddress(AccessDefinition accessDef) throws IOException {
-		AccessOverride override = this.device.getAccessOverride(accessDef.getName());
-		if (override != null && override.getAddress() != null && !override.getAddress().isEmpty()) {
-			return NetworkAddress.getNetworkAddress(InetAddress.getByName(override.getAddress()));
+		DeviceAccess access = this.device.getDeviceAccess(accessDef.getName());
+		if (access != null && access.getAddress() != null && !access.getAddress().isEmpty()) {
+			return NetworkAddress.getNetworkAddress(InetAddress.getByName(access.getAddress()));
 		}
 		if (this.address == null) {
 			throw new UnknownHostException(
@@ -139,12 +138,9 @@ public class AccessManager {
 	 * @return the effective port
 	 */
 	public int resolvePort(AccessDefinition accessDef) {
-		AccessOverride override = this.device.getAccessOverride(accessDef.getName());
-		if (override != null && override.getPort() != null) {
-			return override.getPort();
-		}
-		if (accessDef.getProtocol() == DriverProtocol.HTTP) {
-			return accessDef.getHttpConfig().getDefaultPort();
+		DeviceAccess access = this.device.getDeviceAccess(accessDef.getName());
+		if (access != null && access.getPort() != null) {
+			return access.getPort();
 		}
 		return accessDef.getDefaultPort();
 	}
@@ -187,61 +183,132 @@ public class AccessManager {
 		}
 	}
 
-	private List<DeviceCredentialSet> getScopedCandidates() {
-		List<DeviceCredentialSet> result = new ArrayList<>();
-		if (this.oneTimeCredentialSets != null && !this.oneTimeCredentialSets.isEmpty()) {
-			result.addAll(this.oneTimeCredentialSets);
+	/**
+	 * Persists a credential set that successfully authenticated via the
+	 * domain's auto-try pool as this access's pinned global credential set,
+	 * so subsequent connections use it directly instead of trying the whole
+	 * pool again. Called (via {@link Resolution#confirmCredentialWorks()})
+	 * once a caller is certain the credentials genuinely worked - not just
+	 * that a transport-level connection succeeded (see the protocol-specific
+	 * confirmation points in JsCliHelper/JsSnmpHelper/JsHttpHelper).
+	 * @param accessDef the access whose credential worked
+	 * @param credentialSet the credential set that worked
+	 */
+	private void pinSuccessfulCredential(AccessDefinition accessDef, DeviceCredentialSet credentialSet) {
+		try {
+			this.device.pinGlobalCredentialSet(accessDef.getName(), credentialSet);
+			this.taskContext.info(
+				"Credential set '{}' worked for access '{}' and has been saved as the account to use for this access.",
+				credentialSet.getName(), accessDef.getName());
 		}
-		else if (this.device.getSpecificCredentialSet() != null) {
-			result.add(this.device.getSpecificCredentialSet());
+		catch (Exception e) {
+			log.warn("Unable to pin the successful credential set '{}' for access '{}' on device {}.",
+				credentialSet.getName(), accessDef.getName(), this.device.getId(), e);
 		}
-		else {
-			result.addAll(this.device.getCredentialSets());
-		}
-		return result;
 	}
 
-	private List<Candidate> buildCandidates(List<AccessDefinition> accessDefs) {
-		List<Candidate> candidates = new ArrayList<>();
-		List<DeviceCredentialSet> scoped = this.getScopedCandidates();
-		for (AccessDefinition accessDef : accessDefs) {
-			Class<? extends DeviceCredentialSet> credentialClass = accessDef.getCredentialClass();
-			for (DeviceCredentialSet cs : scoped) {
-				if (credentialClass.isInstance(cs)) {
-					candidates.add(new Candidate(accessDef, cs, false));
+	/**
+	 * Once an access is known to work, every other access declared in the
+	 * same group (e.g. "telnet" once "ssh" succeeded) is no longer needed -
+	 * their {@code DeviceAccess} rows (if any) are removed so they won't be
+	 * considered/tried anymore. Called (via {@link Resolution#confirmCredentialWorks()})
+	 * every time a connection is confirmed to genuinely work, regardless of
+	 * whether the winning access was pinned or freshly auto-tried.
+	 * @param accessDef the access that is now known to work
+	 */
+	private void removeSiblingAccesses(AccessDefinition accessDef) {
+		try {
+			List<AccessDefinition> siblings = this.device.getDeviceDriver().getAccessDefinitionsByGroup(accessDef.getGroup());
+			for (AccessDefinition sibling : siblings) {
+				if (sibling.getName().equals(accessDef.getName())) {
+					continue;
+				}
+				if (this.device.removeDeviceAccess(sibling.getName())) {
+					this.taskContext.info(
+						"Access '{}' is no longer needed now that '{}' is known to work, and has been removed.",
+						sibling.getName(), accessDef.getName());
 				}
 			}
 		}
-		if (this.device.isAutoTryCredentials()) {
-			List<DeviceCredentialSet> global;
-			try {
-				global = this.session == null ? Collections.emptyList()
-					: this.device.getAutoCredentialSetList(this.session);
-			}
-			catch (Exception e) {
-				log.warn("Unable to retrieve the global credential set pool.", e);
-				global = Collections.emptyList();
-			}
+		catch (Exception e) {
+			log.warn("Unable to remove sibling accesses of '{}' on device {}.", accessDef.getName(), this.device.getId(), e);
+		}
+	}
+
+	/**
+	 * Builds the ordered candidate list for the given accesses. One-time
+	 * credential sets (if any were supplied to this whole {@code AccessManager}
+	 * - an explicit ad-hoc choice, e.g. a connectivity test) win over
+	 * everything else and are tried against every given access regardless of
+	 * its configured state - they bypass the "has a row" check entirely,
+	 * since testing a credential is independent of whatever is (or isn't)
+	 * currently configured. Otherwise, priority per access: no
+	 * {@code DeviceAccess} row at all for this access yields zero candidates -
+	 * an access is only ever used if it has been explicitly configured (see
+	 * {@code Device.getDeviceAccess}) &gt; a per-access credential pin
+	 * ({@code DeviceAccess.specificCredentialSet}/{@code globalCredentialSet}
+	 * - exactly one candidate, no fallback if it fails) &gt; "auto" (no pin
+	 * configured for this access): every credential set in the domain's
+	 * auto-try pool ({@link Device#getAutoCredentialSetList}) compatible with
+	 * this access's credential family. There is no device-wide fallback layer
+	 * - resolution is entirely per access.
+	 * @param accessDefs the accesses to build candidates for
+	 * @return the ordered list of candidates
+	 */
+	private List<Candidate> buildCandidates(List<AccessDefinition> accessDefs) {
+		List<Candidate> candidates = new ArrayList<>();
+		if (this.oneTimeCredentialSets != null && !this.oneTimeCredentialSets.isEmpty()) {
 			for (AccessDefinition accessDef : accessDefs) {
 				Class<? extends DeviceCredentialSet> credentialClass = accessDef.getCredentialClass();
-				for (DeviceCredentialSet cs : global) {
+				for (DeviceCredentialSet cs : this.oneTimeCredentialSets) {
 					if (credentialClass.isInstance(cs)) {
-						candidates.add(new Candidate(accessDef, cs, true));
+						candidates.add(new Candidate(accessDef, cs, false));
 					}
+				}
+			}
+			return candidates;
+		}
+		List<AccessDefinition> enabledAccessDefs = new ArrayList<>();
+		for (AccessDefinition accessDef : accessDefs) {
+			DeviceAccess access = this.device.getDeviceAccess(accessDef.getName());
+			if (access != null) {
+				enabledAccessDefs.add(accessDef);
+			}
+		}
+		List<DeviceCredentialSet> autoPool = null;
+		for (AccessDefinition accessDef : enabledAccessDefs) {
+			Class<? extends DeviceCredentialSet> credentialClass = accessDef.getCredentialClass();
+			DeviceAccess access = this.device.getDeviceAccess(accessDef.getName());
+			DeviceCredentialSet pinned = null;
+			if (access != null) {
+				if (access.getSpecificCredentialSet() != null) {
+					pinned = access.getSpecificCredentialSet();
+				}
+				else if (access.getGlobalCredentialSet() != null) {
+					pinned = access.getGlobalCredentialSet();
+				}
+			}
+			if (pinned != null) {
+				candidates.add(new Candidate(accessDef, pinned, false));
+				continue;
+			}
+			if (autoPool == null) {
+				try {
+					autoPool = this.session == null ? Collections.emptyList()
+						: this.device.getAutoCredentialSetList(this.session);
+				}
+				catch (Exception e) {
+					log.warn("Unable to retrieve the auto-try credential set pool.", e);
+					autoPool = Collections.emptyList();
+				}
+			}
+			for (DeviceCredentialSet cs : autoPool) {
+				if (credentialClass.isInstance(cs)) {
+					candidates.add(new Candidate(accessDef, cs, true));
 				}
 			}
 		}
 		return candidates;
-	}
-
-	private void rememberWorking(DeviceCredentialSet credentialSet, Class<? extends DeviceCredentialSet> credentialClass) {
-		Iterator<DeviceCredentialSet> it = this.device.getCredentialSets().iterator();
-		while (it.hasNext()) {
-			if (credentialClass.isInstance(it.next())) {
-				it.remove();
-			}
-		}
-		this.device.getCredentialSets().add(credentialSet);
 	}
 
 	/**
@@ -269,6 +336,9 @@ public class AccessManager {
 		private Client currentClient;
 		private DeviceCredentialSet currentCredentialSet;
 		private AccessDefinition currentAccessDef;
+		private boolean currentFromAutoPool;
+		/** Guards {@link #confirmCredentialWorks()} so a candidate is only ever pinned once per resolution. */
+		private boolean pinned;
 
 		private Resolution(List<AccessDefinition> accessDefs, ClientFactory factory) {
 			this.accessDefs = accessDefs;
@@ -302,6 +372,7 @@ public class AccessManager {
 				this.currentClient = AccessManager.this.forcedClientForTest;
 				this.currentCredentialSet = AccessManager.this.forcedCredentialSetForTest;
 				this.currentAccessDef = this.accessDefs.isEmpty() ? null : this.accessDefs.get(0);
+				this.currentFromAutoPool = false;
 				return AttemptOutcome.SUCCESS;
 			}
 			if (this.candidates.isEmpty()) {
@@ -315,9 +386,7 @@ public class AccessManager {
 				this.currentClient = client;
 				this.currentCredentialSet = candidate.credentialSet;
 				this.currentAccessDef = candidate.accessDef;
-				if (candidate.fromGlobalPool) {
-					AccessManager.this.rememberWorking(candidate.credentialSet, candidate.accessDef.getCredentialClass());
-				}
+				this.currentFromAutoPool = candidate.fromAutoPool;
 				return AttemptOutcome.SUCCESS;
 			}
 			catch (InvalidCredentialsException e) {
@@ -414,6 +483,7 @@ public class AccessManager {
 				this.currentClient = null;
 				this.currentCredentialSet = null;
 				this.currentAccessDef = null;
+				this.currentFromAutoPool = false;
 			}
 			try {
 				while (true) {
@@ -453,6 +523,32 @@ public class AccessManager {
 			this.currentClient = null;
 			this.currentCredentialSet = null;
 			this.currentAccessDef = null;
+			this.currentFromAutoPool = false;
+		}
+
+		/**
+		 * Confirms that the currently connected candidate has been fully
+		 * authenticated - not just that a transport-level connection succeeded,
+		 * but that the credentials are genuinely valid (e.g. after a Telnet
+		 * in-band login completes, or after the first HTTP request comes back
+		 * with a non-401/403 status). If the current candidate came from the
+		 * domain's auto-try pool (i.e. this access has no pin configured), it
+		 * is persisted as the access's pinned global credential set so future
+		 * connections use it directly. Either way, every other access
+		 * declared in the same group is removed, since it's now redundant
+		 * (see {@link AccessManager#removeSiblingAccesses}). No-op if nothing
+		 * is currently resolved, or a candidate has already been confirmed
+		 * during this resolution.
+		 */
+		public void confirmCredentialWorks() {
+			if (this.pinned || this.currentCredentialSet == null || this.currentAccessDef == null) {
+				return;
+			}
+			this.pinned = true;
+			if (this.currentFromAutoPool) {
+				AccessManager.this.pinSuccessfulCredential(this.currentAccessDef, this.currentCredentialSet);
+			}
+			AccessManager.this.removeSiblingAccesses(this.currentAccessDef);
 		}
 	}
 

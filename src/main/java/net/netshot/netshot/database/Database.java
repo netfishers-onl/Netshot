@@ -85,7 +85,7 @@ import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.NetworkInterface;
 import net.netshot.netshot.device.PhysicalAddress;
 import net.netshot.netshot.device.StaticDeviceGroup;
-import net.netshot.netshot.device.access.AccessOverride;
+import net.netshot.netshot.device.access.DeviceAccess;
 import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.attribute.ConfigBinaryAttribute;
 import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
@@ -297,7 +297,7 @@ public final class Database {
 				.addAnnotatedClass(Network4Address.class)
 				.addAnnotatedClass(Network6Address.class)
 				.addAnnotatedClass(NetworkInterface.class)
-				.addAnnotatedClass(AccessOverride.class)
+				.addAnnotatedClass(DeviceAccess.class)
 				.addAnnotatedClass(DeviceSnmpv1Community.class)
 				.addAnnotatedClass(DeviceSnmpv2cCommunity.class)
 				.addAnnotatedClass(DeviceSnmpv3Community.class)

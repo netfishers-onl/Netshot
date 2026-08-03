@@ -1776,51 +1776,50 @@
 		<addPrimaryKey tableName="network_interface_ip4addresses" columnNames="network_interface, address, prefix_length"/>
 		<addPrimaryKey tableName="network_interface_ip6addresses" columnNames="network_interface, address, prefix_length"/>
 	</changeSet>
-	<!-- Generic per-access connection overrides (address/port), replacing the
-	     device-wide ssh_port/telnet_port/connect_address columns. Device.java's
-	     getSshPort()/getTelnetPort()/getConnectAddress() become computed
-	     accessors backed by the "ssh"/"telnet" rows of this table, so the REST
-	     API and existing frontend keep working unchanged. -->
+	<!-- Generic per-(device, access) configuration: connection overrides
+	     (address/port), replacing the device-wide ssh_port/telnet_port/
+	     connect_address columns, plus an optional credential pin (a specific
+	     existing global credential set, or an owned device-and-access-specific
+	     one). Device.java's getSshPort()/getTelnetPort()/getConnectAddress()
+	     become computed accessors backed by the "ssh"/"telnet" rows of this
+	     table, so the REST API and existing frontend keep working unchanged. -->
 	<changeSet author="netshot" id="0.25.0_29">
-		<createTable tableName="device_access_override">
-			<column autoIncrement="true" name="id" type="BIGINT">
-				<constraints primaryKey="true"/>
-			</column>
+		<createTable tableName="device_access">
 			<column name="device" type="BIGINT">
-				<constraints nullable="false"/>
+				<constraints primaryKey="true" nullable="false"/>
 			</column>
 			<column name="access_name" type="VARCHAR(255)">
-				<constraints nullable="false"/>
+				<constraints primaryKey="true" nullable="false"/>
 			</column>
 			<column name="address" type="VARCHAR(255)"/>
 			<column name="port" type="INT"/>
+			<column name="global_credential_set" type="BIGINT"/>
+			<column name="specific_credential_set" type="BIGINT"/>
 		</createTable>
-		<addForeignKeyConstraint baseColumnNames="device" baseTableName="device_access_override"
-			constraintName="FK_device_access_override_device" deferrable="false" initiallyDeferred="false"
+		<addForeignKeyConstraint baseColumnNames="device" baseTableName="device_access"
+			constraintName="FK_device_access_device" deferrable="false" initiallyDeferred="false"
 			onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device" validate="true"/>
-		<addUniqueConstraint tableName="device_access_override" columnNames="device, access_name"
-			constraintName="UQ_device_access_override_device_access_name"/>
+		<addForeignKeyConstraint baseColumnNames="global_credential_set" baseTableName="device_access"
+			constraintName="FK_device_access_global_credential_set" deferrable="false" initiallyDeferred="false"
+			onDelete="SET NULL" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_credential_set" validate="true"/>
+		<addForeignKeyConstraint baseColumnNames="specific_credential_set" baseTableName="device_access"
+			constraintName="FK_device_access_specific_credential_set" deferrable="false" initiallyDeferred="false"
+			onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="device_credential_set" validate="true"/>
 	</changeSet>
 	<changeSet author="netshot" id="0.25.0_30">
 		<sql>
-			INSERT INTO device_access_override (device, access_name, port)
-			SELECT id, 'ssh', CASE WHEN ssh_port = 0 THEN NULL ELSE ssh_port END
-			FROM device WHERE ssh_port &lt;&gt; 22;
+			INSERT INTO device_access (device, access_name, port, address)
+			SELECT id, 'ssh',
+				CASE WHEN ssh_port IN (0, 22) THEN NULL ELSE ssh_port END,
+				connect_address
+			FROM device WHERE ssh_port &lt;&gt; 22 OR connect_address IS NOT NULL;
 		</sql>
 		<sql>
-			INSERT INTO device_access_override (device, access_name, port)
-			SELECT id, 'telnet', CASE WHEN telnet_port = 0 THEN NULL ELSE telnet_port END
-			FROM device WHERE telnet_port &lt;&gt; 23;
-		</sql>
-		<sql>
-			INSERT INTO device_access_override (device, access_name, address)
-			SELECT id, 'ssh', connect_address FROM device WHERE connect_address IS NOT NULL
-			ON CONFLICT (device, access_name) DO UPDATE SET address = EXCLUDED.address;
-		</sql>
-		<sql>
-			INSERT INTO device_access_override (device, access_name, address)
-			SELECT id, 'telnet', connect_address FROM device WHERE connect_address IS NOT NULL
-			ON CONFLICT (device, access_name) DO UPDATE SET address = EXCLUDED.address;
+			INSERT INTO device_access (device, access_name, port, address)
+			SELECT id, 'telnet',
+				CASE WHEN telnet_port IN (0, 23) THEN NULL ELSE telnet_port END,
+				connect_address
+			FROM device WHERE telnet_port &lt;&gt; 23 OR connect_address IS NOT NULL;
 		</sql>
 	</changeSet>
 	<changeSet author="netshot" id="0.25.0_31">
@@ -1829,5 +1828,99 @@
 			<column name="telnet_port"/>
 			<column name="connect_address"/>
 		</dropColumn>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_32">
+		<!-- Migrate from device-level credentials to access-level -->
+		<sql>
+			WITH credential_family(dtype, access_name, family) AS (
+				VALUES
+					('DeviceSnmpv1Community', 'snmpv1', 'snmp'),
+					('DeviceSnmpv2cCommunity', 'snmpv2c', 'snmp'),
+					('DeviceSnmpv3Community', 'snmpv3', 'snmp'),
+					('DeviceSshAccount', 'ssh', 'cli'),
+					('DeviceSshKeyAccount', 'ssh', 'cli'),
+					('DeviceTelnetAccount', 'telnet', 'cli')
+			)
+			INSERT INTO device_access (device, access_name, specific_credential_set)
+			SELECT d.id, cf.access_name, d.specific_credential_set
+			FROM device d
+			JOIN device_credential_set dcs ON dcs.id = d.specific_credential_set
+			JOIN credential_family cf ON cf.dtype = dcs.dtype
+			WHERE cf.family = CASE WHEN d.driver = 'GenericSNMP' THEN 'snmp' ELSE 'cli' END
+			ON CONFLICT (device, access_name) DO UPDATE SET
+				specific_credential_set = EXCLUDED.specific_credential_set,
+				global_credential_set = NULL;
+		</sql>
+		<sql>
+			WITH credential_family(dtype, access_name, family) AS (
+				VALUES
+					('DeviceSnmpv1Community', 'snmpv1', 'snmp'),
+					('DeviceSnmpv2cCommunity', 'snmpv2c', 'snmp'),
+					('DeviceSnmpv3Community', 'snmpv3', 'snmp'),
+					('DeviceSshAccount', 'ssh', 'cli'),
+					('DeviceSshKeyAccount', 'ssh', 'cli'),
+					('DeviceTelnetAccount', 'telnet', 'cli')
+			),
+			winner AS (
+				SELECT DISTINCT ON (dcs.device)
+					dcs.device AS device_id, dcs.credential_sets AS cs_id, cf.access_name, cf.family
+				FROM device_credential_sets dcs
+				JOIN device_credential_set c ON c.id = dcs.credential_sets
+				JOIN credential_family cf ON cf.dtype = c.dtype
+				JOIN device dd ON dd.id = dcs.device
+				WHERE COALESCE(c.device_specific, FALSE) = FALSE
+					AND cf.family = CASE WHEN dd.driver = 'GenericSNMP' THEN 'snmp' ELSE 'cli' END
+				ORDER BY dcs.device, dcs.credential_sets
+			)
+			INSERT INTO device_access (device, access_name, global_credential_set)
+			SELECT w.device_id, w.access_name, w.cs_id
+			FROM winner w
+			JOIN device d ON d.id = w.device_id
+			WHERE NOT EXISTS (
+				SELECT 1 FROM device_credential_set sc
+				JOIN credential_family scf ON scf.dtype = sc.dtype
+				WHERE sc.id = d.specific_credential_set AND scf.family = w.family
+			)
+			ON CONFLICT (device, access_name) DO UPDATE SET
+				global_credential_set = EXCLUDED.global_credential_set,
+				specific_credential_set = NULL;
+		</sql>
+		<sql>
+			WITH access_family(access_name, family) AS (
+				VALUES ('snmpv1', 'snmp'), ('snmpv2c', 'snmp'), ('snmpv3', 'snmp'), ('ssh', 'cli'), ('telnet', 'cli')
+			),
+			credential_family(dtype, family) AS (
+				VALUES
+					('DeviceSnmpv1Community', 'snmp'), ('DeviceSnmpv2cCommunity', 'snmp'), ('DeviceSnmpv3Community', 'snmp'),
+					('DeviceSshAccount', 'cli'), ('DeviceSshKeyAccount', 'cli'), ('DeviceTelnetAccount', 'cli')
+			)
+			INSERT INTO device_access (device, access_name)
+			SELECT d.id, af.access_name
+			FROM device d
+			JOIN access_family af ON af.family = CASE WHEN d.driver = 'GenericSNMP' THEN 'snmp' ELSE 'cli' END
+			WHERE d.auto_try_credentials = TRUE
+				AND NOT EXISTS (
+					SELECT 1 FROM device_credential_set sc
+					JOIN credential_family cf ON cf.dtype = sc.dtype
+					WHERE sc.id = d.specific_credential_set AND cf.family = af.family
+				)
+				AND NOT EXISTS (
+					SELECT 1 FROM device_credential_sets dcs
+					JOIN device_credential_set c ON c.id = dcs.credential_sets
+					JOIN credential_family cf ON cf.dtype = c.dtype
+					WHERE dcs.device = d.id AND COALESCE(c.device_specific, FALSE) = FALSE AND cf.family = af.family
+				)
+			ON CONFLICT (device, access_name) DO NOTHING;
+		</sql>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_33">
+		<dropForeignKeyConstraint baseTableName="device" constraintName="FK_puwqpsdbpiwy4tmptice8vwy1"/>
+		<dropColumn tableName="device">
+			<column name="specific_credential_set"/>
+			<column name="auto_try_credentials"/>
+		</dropColumn>
+		<dropForeignKeyConstraint baseTableName="device_credential_sets" constraintName="FK_8ef54qntljb5yg34cyt3mt8n0"/>
+		<dropForeignKeyConstraint baseTableName="device_credential_sets" constraintName="FK_e1p7bmak3fa8yhqns9y4ttofg"/>
+		<dropTable tableName="device_credential_sets"/>
 	</changeSet>
 </databaseChangeLog>

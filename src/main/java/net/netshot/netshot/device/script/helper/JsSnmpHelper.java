@@ -1,18 +1,18 @@
 /**
  * Copyright 2013-2025 Netshot
- *
+ * 
  * This file is part of Netshot project.
- *
+ * 
  * Netshot is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * Netshot is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with Netshot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,6 +21,7 @@ package net.netshot.netshot.device.script.helper;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.graalvm.polyglot.HostAccess.Export;
 import org.graalvm.polyglot.proxy.ProxyObject;
@@ -79,8 +80,12 @@ public class JsSnmpHelper {
 
 	private Client buildClient(AccessDefinition accessDef, net.netshot.netshot.device.credentials.DeviceCredentialSet credentialSet)
 			throws IOException {
-		DeviceSnmpCommunity community = (DeviceSnmpCommunity) credentialSet;
-		Snmp snmp = new Snmp(this.accessManager.getAddress(), community);
+		DeviceSnmpCommunity resolvedCommunity = (DeviceSnmpCommunity) credentialSet;
+		net.netshot.netshot.device.NetworkAddress address = this.accessManager.resolveAddress(accessDef);
+		int port = this.accessManager.resolvePort(accessDef);
+		this.taskContext.debug("Trying access '{}' ({}) using credentials '{}', at {}:{}.",
+			accessDef.getName(), accessDef.getProtocol(), resolvedCommunity.getName(), address.getIp(), port);
+		Snmp snmp = new Snmp(address, port, resolvedCommunity);
 		try {
 			snmp.getAsString("1.3.6.1.2.1.1.3.0"); /* sysUptime.0 */
 		}
@@ -100,6 +105,9 @@ public class JsSnmpHelper {
 		Client client = this.resolution.ensureResolved(this.autoTryCredentials);
 		this.poller = (Snmp) client;
 		this.community = (DeviceSnmpCommunity) this.resolution.getCurrentCredentialSet();
+		// The community was already validated by a sysUptime probe in buildClient(),
+		// so a successful resolution here is a reliable "credentials work" signal.
+		this.resolution.confirmCredentialWorks();
 	}
 
 	/**
@@ -139,12 +147,22 @@ public class JsSnmpHelper {
 	@Export
 	public String getAsString(String oid) throws IOException {
 		this.ensureResolved();
+		if (this.taskContext.isTracing()) {
+			this.taskContext.trace("About to send SNMP GET for OID '{}'.", oid);
+		}
 		try {
-			return this.poller.getAsString(oid);
+			String value = this.poller.getAsString(oid);
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace("Received SNMP response: '{}' = '{}'.", oid, value);
+			}
+			return value;
 		}
 		catch (IOException e) {
 			log.error("SNMP I/O error.", e);
 			this.taskContext.error("I/O error: " + e.getMessage());
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace("I/O exception: {}", e.getMessage());
+			}
 			throw e;
 		}
 	}
@@ -158,12 +176,25 @@ public class JsSnmpHelper {
 	@Export
 	public ProxyObject walkAsString(String oid) throws IOException {
 		this.ensureResolved();
+		if (this.taskContext.isTracing()) {
+			this.taskContext.trace("About to send SNMP WALK on OID '{}'.", oid);
+		}
 		try {
-			return ProxyObject.fromMap(new HashMap<String, Object>(this.poller.walkAsString(oid)));
+			Map<String, String> results = this.poller.walkAsString(oid);
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace("Received {} SNMP response(s) for the walk:", results.size());
+				for (Map.Entry<String, String> entry : results.entrySet()) {
+					this.taskContext.trace("'{}' = '{}'.", entry.getKey(), entry.getValue());
+				}
+			}
+			return ProxyObject.fromMap(new HashMap<String, Object>(results));
 		}
 		catch (IOException e) {
 			log.error("SNMP I/O error.", e);
 			this.taskContext.error("I/O error: " + e.getMessage());
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace("I/O exception: {}", e.getMessage());
+			}
 			throw e;
 		}
 	}

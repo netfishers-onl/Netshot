@@ -55,6 +55,7 @@ import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.device.NetworkAddress;
+import net.netshot.netshot.device.access.DeviceAccess;
 import net.netshot.netshot.device.access.Snmp;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
@@ -371,7 +372,15 @@ public final class DiscoverDeviceTypeTask extends Task implements DomainBasedTas
 			try {
 				session.beginTransaction();
 				newDevice = new Device(this.getDiscoveredDeviceType(), deviceAddress, this.getDomain(), this.author);
-				newDevice.addCredentialSet(successCredentialSet);
+				// Create a bare (enabled, no pin) DeviceAccess row for every access the
+				// driver declares, so each is usable via the domain's auto-try pool -
+				// an access with no row at all is never used (see AccessManager).
+				DeviceDriver newDeviceDriver = DeviceDriver.getDriverByName(this.getDiscoveredDeviceType());
+				if (newDeviceDriver != null) {
+					for (String accessName : newDeviceDriver.getAccessDefinitions().keySet()) {
+						newDevice.getAccesses().add(new DeviceAccess(newDevice, accessName));
+					}
+				}
 				this.setDiscoverResultDevice(newDevice);
 				session.persist(newDevice);
 				snapshotTask = new TakeSnapshotTask(newDevice,

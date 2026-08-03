@@ -1,89 +1,29 @@
 import api, { UpdateDevicePayload } from "@/api"
 import { NetshotError } from "@/api/httpClient"
-import { Checkbox } from "@/components"
 import { DomainSelect } from "@/features/administration/components"
-import { MUTATIONS, QUERIES } from "@/constants"
+import { MUTATIONS } from "@/constants"
 import { useFormDialogWithMutation } from "@/dialog"
 import { useToast } from "@/hooks"
 import { Option, SimpleDevice } from "@/types"
-import { Alert, Field, Checkbox as NativeCheckbox, Skeleton, Stack } from "@chakra-ui/react"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { useCallback } from "react"
-import { useForm, useFormContext, useWatch } from "react-hook-form"
+import { Alert, Stack } from "@chakra-ui/react"
+import { useMutation } from "@tanstack/react-query"
+import { useForm, useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import React from "react"
 import Slot from "@/components/Slot"
 
 type Form = {
   mgmtDomain: Option<number>
-  credentialSetIds: number[]
 }
 
 export type BulkEditDeviceTriggerProps = { devices: SimpleDevice[]; children: React.ReactElement<Record<string, unknown>> } & Record<string, unknown>
 
 function DeviceBulkEditForm() {
   const form = useFormContext()
-  const { t } = useTranslation()
-
-  const { data: credentialSets, isPending } = useQuery({
-    queryKey: [QUERIES.CREDENTIAL_SET_LIST],
-    queryFn: async () => api.admin.getAllCredentialSets({}),
-  })
-
-  const credentialSetIds = useWatch({
-    control: form.control,
-    name: "credentialSetIds",
-  })
-
-  const toggleCredentialSetId = useCallback(
-    (id: number) => {
-      const ids = [...credentialSetIds]
-      const index = credentialSetIds.findIndex((i) => i === id)
-
-      if (index !== -1) {
-        ids.splice(index, 1)
-      } else {
-        ids.push(id)
-      }
-
-      form.setValue("credentialSetIds", ids)
-    },
-    [credentialSetIds, form]
-  )
 
   return (
     <Stack gap="6" px="6">
       <DomainSelect control={form.control} name="mgmtDomain" />
-      <Stack gap="3">
-        <Field.Label>{t("device.useFollowingCredentialSet")}</Field.Label>
-        {isPending ? (
-          <Stack gap="2">
-            <Skeleton w="100%" h="36px" />
-            <Skeleton w="100%" h="36px" />
-            <Skeleton w="100%" h="36px" />
-            <Skeleton w="100%" h="36px" />
-          </Stack>
-        ) : (
-          <Stack gap="2">
-            {(credentialSets ?? []).map((credentialSet) => (
-              <NativeCheckbox.Root
-                onCheckedChange={() => toggleCredentialSetId(credentialSet?.id)}
-                key={credentialSet?.id}
-                checked={credentialSetIds.includes(credentialSet?.id)}
-              >
-                <NativeCheckbox.HiddenInput />
-                <NativeCheckbox.Control />
-                <NativeCheckbox.Label>
-                  {credentialSet?.name} ({credentialSet?.type})
-                </NativeCheckbox.Label>
-              </NativeCheckbox.Root>
-            ))}
-            <Checkbox control={form.control} name="autoTryCredentials">
-              {t("device.inCaseOfFailureTryAllCredentials")}
-            </Checkbox>
-          </Stack>
-        )}
-      </Stack>
     </Stack>
   )
 }
@@ -95,9 +35,7 @@ export default function BulkEditDeviceTrigger({ devices, children, ...rest }: Bu
 
   const form = useForm<Form>({
     mode: "onChange",
-    defaultValues: {
-      credentialSetIds: [],
-    },
+    defaultValues: {},
   })
 
   const edit = useMutation({
@@ -135,7 +73,6 @@ export default function BulkEditDeviceTrigger({ devices, children, ...rest }: Bu
           await edit.mutateAsync({
             id: device?.id,
             mgmtDomain: data?.mgmtDomain?.value,
-            credentialSetIds: data?.credentialSetIds,
           } as Partial<UpdateDevicePayload>)
         }
 

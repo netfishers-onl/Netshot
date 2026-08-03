@@ -206,4 +206,264 @@ public class DatabaseMigrationTest extends WithDatabaseTest {
 			}
 		}
 	}
+
+	/**
+	 * Asserts a single {@code device_access} row's pin columns. Pass {@code null}
+	 * for {@code expectedGlobalCredId}/{@code expectedSpecificCredId} to assert
+	 * that column is NULL.
+	 */
+	private static void assertDeviceAccess(Statement statement, long deviceId, String accessName,
+			Long expectedGlobalCredId, Long expectedSpecificCredId) throws SQLException {
+		try (var rows = statement.executeQuery(
+				"select global_credential_set, specific_credential_set from device_access "
+					+ "where device = %d and access_name = '%s'".formatted(deviceId, accessName))) {
+			Assertions.assertTrue(rows.next(),
+				"No device_access row for device %d access '%s'".formatted(deviceId, accessName));
+			Assertions.assertEquals(expectedGlobalCredId, rows.getObject("global_credential_set", Long.class),
+				"Unexpected 'global_credential_set' for device %d access '%s'".formatted(deviceId, accessName));
+			Assertions.assertEquals(expectedSpecificCredId, rows.getObject("specific_credential_set", Long.class),
+				"Unexpected 'specific_credential_set' for device %d access '%s'".formatted(deviceId, accessName));
+		}
+	}
+
+	/** Asserts no {@code device_access} row exists for the given (device, accessName). */
+	private static void assertNoDeviceAccess(Statement statement, long deviceId, String accessName) throws SQLException {
+		try (var rows = statement.executeQuery(
+				"select 1 from device_access where device = %d and access_name = '%s'".formatted(deviceId, accessName))) {
+			Assertions.assertFalse(rows.next(),
+				"Unexpected device_access row for device %d access '%s'".formatted(deviceId, accessName));
+		}
+	}
+
+	/** Asserts a single {@code device_access} row's port/address columns (pass {@code null} to assert NULL). */
+	private static void assertDeviceAccessPortAddress(Statement statement, long deviceId, String accessName,
+			Integer expectedPort, String expectedAddress) throws SQLException {
+		try (var rows = statement.executeQuery(
+				"select port, address from device_access where device = %d and access_name = '%s'"
+					.formatted(deviceId, accessName))) {
+			Assertions.assertTrue(rows.next(),
+				"No device_access row for device %d access '%s'".formatted(deviceId, accessName));
+			Assertions.assertEquals(expectedPort, rows.getObject("port", Integer.class),
+				"Unexpected 'port' for device %d access '%s'".formatted(deviceId, accessName));
+			Assertions.assertEquals(expectedAddress, rows.getString("address"),
+				"Unexpected 'address' for device %d access '%s'".formatted(deviceId, accessName));
+		}
+	}
+
+	@Nested
+	@DisplayName("0.25.0_30 - migrate legacy ssh_port/telnet_port/connect_address into per-access device_access rows")
+	class Changeset_0_25_0_30_PortAddressMigrationTest {
+
+		private Properties getNetshotConfig() {
+			Properties config = getFreshDatabaseConfig("portaddressmigrationtest");
+			config.setProperty("netshot.log.file", "CONSOLE");
+			config.setProperty("netshot.log.level", "INFO");
+			return config;
+		}
+
+		@Test
+		@DisplayName("Port override and connect address merge into a single device_access row per protocol, with no spurious port override when only the address differs")
+		void migratesPortsAndAddressToSingleRowPerProtocol() throws Exception {
+			Netshot.initConfig(this.getNetshotConfig());
+
+			// Stop right before 0.25.0_30: device_access exists (0.25.0_29), but the
+			// legacy ssh_port/telnet_port/connect_address columns are still on device.
+			updateToChangeSet("0.25.0_29", "netshot");
+
+			try (Connection connection = Database.getConnection(false);
+					Statement statement = connection.createStatement()) {
+				// 301: both ports already at their protocol default, no address -> no row at all.
+				statement.execute("insert into device (id, name, auto_try_credentials, version, ssh_port, telnet_port) "
+					+ "values (301, 'dev301', false, 0, 22, 23)");
+				// 302: custom ssh port, default telnet port, no address -> ssh row (port=2222), no telnet row.
+				statement.execute("insert into device (id, name, auto_try_credentials, version, ssh_port, telnet_port) "
+					+ "values (302, 'dev302', false, 0, 2222, 23)");
+				// 303: both ports at their protocol default (22/23, not the 0 sentinel), but a connect address set ->
+				// one row per protocol, address set, port left NULL (22/23 already is the default, not an override).
+				statement.execute("insert into device (id, name, auto_try_credentials, version, ssh_port, telnet_port, connect_address) "
+					+ "values (303, 'dev303', false, 0, 22, 23, '10.0.0.1')");
+				// 304: custom ports on both protocols AND a connect address -> one row per protocol with both set.
+				statement.execute("insert into device (id, name, auto_try_credentials, version, ssh_port, telnet_port, connect_address) "
+					+ "values (304, 'dev304', false, 0, 2222, 2323, '10.0.0.2')");
+			}
+
+			// Resume the migration to completion: this is where 0.25.0_30 runs.
+			Database.update();
+
+			try (Connection connection = Database.getConnection(false);
+					Statement statement = connection.createStatement()) {
+				assertNoDeviceAccess(statement, 301, "ssh");
+				assertNoDeviceAccess(statement, 301, "telnet");
+
+				assertDeviceAccessPortAddress(statement, 302, "ssh", 2222, null);
+				assertNoDeviceAccess(statement, 302, "telnet");
+
+				assertDeviceAccessPortAddress(statement, 303, "ssh", null, "10.0.0.1");
+				assertDeviceAccessPortAddress(statement, 303, "telnet", null, "10.0.0.1");
+
+				assertDeviceAccessPortAddress(statement, 304, "ssh", 2222, "10.0.0.2");
+				assertDeviceAccessPortAddress(statement, 304, "telnet", 2323, "10.0.0.2");
+			}
+		}
+	}
+
+	@Nested
+	@DisplayName("0.25.0_32 - migrate device-wide SNMP/SSH/Telnet credentials into per-access device_access rows")
+	class Changeset_0_25_0_32_DeviceAccessMigrationTest {
+
+		private Properties getNetshotConfig() {
+			Properties config = getFreshDatabaseConfig("deviceaccessmigrationtest");
+			config.setProperty("netshot.log.file", "CONSOLE");
+			config.setProperty("netshot.log.level", "INFO");
+			return config;
+		}
+
+		@Test
+		@DisplayName("Specific/pooled/auto-try device-wide credentials resolve to the right per-access pin")
+		void migratesDeviceWideCredentialsToPerAccessPins() throws Exception {
+			Netshot.initConfig(this.getNetshotConfig());
+
+			// Stop right before the (modified) 0.25.0_32 changeset under test: the
+			// device_access table exists (0.25.0_29) and ssh_port/telnet_port/
+			// connect_address are already migrated away and dropped (0.25.0_30/31),
+			// but the legacy device-wide specific_credential_set/auto_try_credentials
+			// columns and the device_credential_sets pool table are still present.
+			updateToChangeSet("0.25.0_31", "netshot");
+
+			try (Connection connection = Database.getConnection(false);
+					Statement statement = connection.createStatement()) {
+
+				// A credential set for each scenario below.
+				statement.execute("insert into device_credential_set (id, dtype, name, version, device_specific, community) "
+					+ "values (201, 'DeviceSnmpv2cCommunity', 'cred-201', 0, true, 'specific-v2c')");
+				statement.execute("insert into device_credential_set (id, dtype, name, version, device_specific, community) "
+					+ "values (202, 'DeviceSnmpv3Community', 'cred-202', 0, false, 'pool-v3')");
+				statement.execute("insert into device_credential_set (id, dtype, name, version, device_specific, community) "
+					+ "values (203, 'DeviceSnmpv1Community', 'cred-203', 0, false, 'pool-v1-a')");
+				statement.execute("insert into device_credential_set (id, dtype, name, version, device_specific, community) "
+					+ "values (204, 'DeviceSnmpv2cCommunity', 'cred-204', 0, false, 'pool-v2c-b')");
+				statement.execute("insert into device_credential_set (id, dtype, name, version, device_specific, username, password) "
+					+ "values (205, 'DeviceSshAccount', 'cred-205', 0, true, 'admin', 'pwd')");
+				statement.execute("insert into device_credential_set (id, dtype, name, version, device_specific, username, private_key) "
+					+ "values (206, 'DeviceSshKeyAccount', 'cred-206', 0, false, 'admin', 'key-material')");
+				statement.execute("insert into device_credential_set (id, dtype, name, version, device_specific, username, password) "
+					+ "values (208, 'DeviceTelnetAccount', 'cred-208', 0, true, 'admin', 'pwd')");
+				statement.execute("insert into device_credential_set (id, dtype, name, version, device_specific, username, password) "
+					+ "values (209, 'DeviceTelnetAccount', 'cred-209', 0, false, 'admin', 'pwd')");
+				statement.execute("insert into device_credential_set (id, dtype, name, version, device_specific, username, password) "
+					+ "values (210, 'DeviceSshAccount', 'cred-210', 0, false, 'admin', 'pwd')");
+
+				// Device 101 (GenericSNMP): specific SNMPv2c credential -> "specific" pin on snmpv2c.
+				statement.execute("insert into device (id, name, driver, auto_try_credentials, version, specific_credential_set) "
+					+ "values (101, 'dev101', 'GenericSNMP', false, 0, 201)");
+
+				// Device 102 (GenericSNMP): no specific, exactly one pooled SNMP credential (v3) -> "global" pin on snmpv3.
+				statement.execute("insert into device (id, name, driver, auto_try_credentials, version) "
+					+ "values (102, 'dev102', 'GenericSNMP', true, 0)");
+				statement.execute("insert into device_credential_sets (device, credential_sets) values (102, 202)");
+
+				// Device 103 (GenericSNMP): no specific, TWO pooled SNMP credentials (203 then 204) ->
+				// the first one (lowest id, 203/snmpv1) is pinned as "global" on snmpv1.
+				statement.execute("insert into device (id, name, driver, auto_try_credentials, version) "
+					+ "values (103, 'dev103', 'GenericSNMP', true, 0)");
+				statement.execute("insert into device_credential_sets (device, credential_sets) values (103, 203)");
+				statement.execute("insert into device_credential_sets (device, credential_sets) values (103, 204)");
+
+				// Device 104 (GenericSNMP): no specific, no pooled credential, auto-try disabled ->
+				// no device_access row at all (no row already means "never used").
+				statement.execute("insert into device (id, name, driver, auto_try_credentials, version) "
+					+ "values (104, 'dev104', 'GenericSNMP', false, 0)");
+
+				// Device 105 (non-GenericSNMP): specific SSH credential -> "specific" pin on ssh.
+				statement.execute("insert into device (id, name, driver, auto_try_credentials, version, specific_credential_set) "
+					+ "values (105, 'dev105', 'CiscoIOS12', false, 0, 205)");
+
+				// Device 106 (non-GenericSNMP): no specific, exactly one pooled SSH-key credential -> "global" pin on ssh.
+				statement.execute("insert into device (id, name, driver, auto_try_credentials, version) "
+					+ "values (106, 'dev106', 'CiscoIOS12', true, 0)");
+				statement.execute("insert into device_credential_sets (device, credential_sets) values (106, 206)");
+
+				// Device 107 (non-GenericSNMP): no specific, no pooled credential, auto-try disabled ->
+				// no device_access row at all.
+				statement.execute("insert into device (id, name, driver, auto_try_credentials, version) "
+					+ "values (107, 'dev107', 'CiscoIOS12', false, 0)");
+
+				// Device 108 (non-GenericSNMP): BOTH a specific Telnet credential AND a (different) pooled Telnet
+				// credential -> specific must win, pinning cred-208 (not the pooled cred-209) on telnet.
+				statement.execute("insert into device (id, name, driver, auto_try_credentials, version, specific_credential_set) "
+					+ "values (108, 'dev108', 'CiscoIOS12', false, 0, 208)");
+				statement.execute("insert into device_credential_sets (device, credential_sets) values (108, 209)");
+
+				// Device 109 (GenericSNMP): only a pooled SSH credential (no SNMP credential at all), auto-try
+				// disabled -> SSH must NOT be migrated (GenericSNMP devices are excluded from ssh/telnet), and
+				// SNMP gets no row either (no usable SNMP credential, auto-try disabled).
+				statement.execute("insert into device (id, name, driver, auto_try_credentials, version) "
+					+ "values (109, 'dev109', 'GenericSNMP', false, 0)");
+				statement.execute("insert into device_credential_sets (device, credential_sets) values (109, 210)");
+
+				// Device 110 (GenericSNMP): no specific, no pooled credential, auto-try enabled -> bare
+				// (unpinned, enabled) device_access rows for all three snmpv1/snmpv2c/snmpv3.
+				statement.execute("insert into device (id, name, driver, auto_try_credentials, version) "
+					+ "values (110, 'dev110', 'GenericSNMP', true, 0)");
+
+				// Device 111 (non-GenericSNMP): no specific, no pooled credential, auto-try enabled -> bare
+				// (unpinned, enabled) device_access rows for both ssh and telnet.
+				statement.execute("insert into device (id, name, driver, auto_try_credentials, version) "
+					+ "values (111, 'dev111', 'CiscoIOS12', true, 0)");
+
+				// Device 112 (non-GenericSNMP): an 'ssh' device_access row already exists (simulating what
+				// 0.25.0_30 would have produced from a custom ssh_port - by this point in the changelog
+				// ssh_port/telnet_port are already dropped, so it's seeded directly), no specific/pooled
+				// credential, auto-try enabled -> the bare-row insert must leave that pre-existing row
+				// alone (ON CONFLICT DO NOTHING), while still creating a fresh bare 'telnet' row.
+				statement.execute("insert into device (id, name, driver, auto_try_credentials, version) "
+					+ "values (112, 'dev112', 'CiscoIOS12', true, 0)");
+				statement.execute("insert into device_access (device, access_name, port) values (112, 'ssh', 2222)");
+			}
+
+			// Resume the migration to completion: this is where the enhanced 0.25.0_32 logic runs.
+			Database.update();
+
+			try (Connection connection = Database.getConnection(false);
+					Statement statement = connection.createStatement()) {
+				assertDeviceAccess(statement, 101, "snmpv2c", null, 201L);
+				assertNoDeviceAccess(statement, 101, "snmpv1");
+				assertNoDeviceAccess(statement, 101, "snmpv3");
+
+				assertDeviceAccess(statement, 102, "snmpv3", 202L, null);
+
+				assertDeviceAccess(statement, 103, "snmpv1", 203L, null);
+				assertNoDeviceAccess(statement, 103, "snmpv2c");
+				assertNoDeviceAccess(statement, 103, "snmpv3");
+
+				assertNoDeviceAccess(statement, 104, "snmpv1");
+				assertNoDeviceAccess(statement, 104, "snmpv2c");
+				assertNoDeviceAccess(statement, 104, "snmpv3");
+
+				assertDeviceAccess(statement, 105, "ssh", null, 205L);
+
+				assertDeviceAccess(statement, 106, "ssh", 206L, null);
+
+				assertNoDeviceAccess(statement, 107, "ssh");
+
+				assertDeviceAccess(statement, 108, "telnet", null, 208L);
+
+				assertNoDeviceAccess(statement, 109, "ssh");
+				assertNoDeviceAccess(statement, 109, "snmpv1");
+				assertNoDeviceAccess(statement, 109, "snmpv2c");
+				assertNoDeviceAccess(statement, 109, "snmpv3");
+
+				assertDeviceAccess(statement, 110, "snmpv1", null, null);
+				assertDeviceAccess(statement, 110, "snmpv2c", null, null);
+				assertDeviceAccess(statement, 110, "snmpv3", null, null);
+
+				assertDeviceAccess(statement, 111, "ssh", null, null);
+				assertDeviceAccess(statement, 111, "telnet", null, null);
+
+				assertDeviceAccess(statement, 112, "ssh", null, null);
+				assertDeviceAccessPortAddress(statement, 112, "ssh", 2222, null);
+				assertDeviceAccess(statement, 112, "telnet", null, null);
+			}
+		}
+	}
 }

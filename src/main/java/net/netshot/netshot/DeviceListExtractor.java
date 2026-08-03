@@ -29,11 +29,10 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
+import net.netshot.netshot.device.access.DeviceAccess;
 import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceCredentialSet;
 import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
-import net.netshot.netshot.device.credentials.DeviceSshAccount;
-import net.netshot.netshot.device.credentials.DeviceTelnetAccount;
 
 @Slf4j
 public class DeviceListExtractor extends Netshot {
@@ -89,20 +88,27 @@ public class DeviceListExtractor extends Netshot {
 				DeviceCliAccount cliAccount = null;
 				DeviceSnmpCommunity community = null;
 
-				for (DeviceCredentialSet credentialSet : device.getCredentialSets()) {
-					if (credentialSet instanceof DeviceSshAccount sa) {
-						cliAccount = sa;
+				for (String accessName : List.of("telnet", "ssh")) {
+					DeviceAccess access = device.getDeviceAccess(accessName);
+					if (access == null) {
+						continue;
 					}
-					else if (cliAccount == null && credentialSet instanceof DeviceTelnetAccount ta) {
-						cliAccount = ta;
-					}
-					else if (credentialSet instanceof DeviceSnmpCommunity sc) {
-						community = sc;
+					DeviceCredentialSet pinned = access.getSpecificCredentialSet() != null
+						? access.getSpecificCredentialSet() : access.getGlobalCredentialSet();
+					if (pinned instanceof DeviceCliAccount ca) {
+						cliAccount = ca;
 					}
 				}
-				if (device.getSpecificCredentialSet() != null
-						&& device.getSpecificCredentialSet() instanceof DeviceCliAccount ca) {
-					cliAccount = ca;
+				for (String accessName : List.of("snmpv1", "snmpv2c", "snmpv3")) {
+					DeviceAccess access = device.getDeviceAccess(accessName);
+					if (access == null) {
+						continue;
+					}
+					DeviceCredentialSet pinned = access.getSpecificCredentialSet() != null
+						? access.getSpecificCredentialSet() : access.getGlobalCredentialSet();
+					if (pinned instanceof DeviceSnmpCommunity sc) {
+						community = sc;
+					}
 				}
 				if (cliAccount == null) {
 					log.warn("No CLI account found for device {}.", device.getName());

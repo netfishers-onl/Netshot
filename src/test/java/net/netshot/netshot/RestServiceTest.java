@@ -61,7 +61,11 @@ import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
 import net.netshot.netshot.device.Domain;
 import net.netshot.netshot.device.Network4Address;
+import net.netshot.netshot.device.access.DeviceAccess;
 import net.netshot.netshot.device.attribute.AttributeDefinition;
+import net.netshot.netshot.device.credentials.DeviceCredentialSet;
+import net.netshot.netshot.device.credentials.DeviceSnmpv2cCommunity;
+import net.netshot.netshot.device.credentials.DeviceSshAccount;
 import net.netshot.netshot.rest.NetshotBadRequestException;
 import net.netshot.netshot.rest.RestService;
 import net.netshot.netshot.work.tasks.DeviceJsScript;
@@ -1219,11 +1223,9 @@ public class RestServiceTest extends WithDatabaseTest {
 		private Domain testDomain;
 
 		private static enum DeviceField {
-			AUTO_TRY_CREDENTIALS(Device::isAutoTryCredentials),
 			CONTACT(Device::getContact),
 			CREATED_DATE(Device::getCreatedDate),
 			CREATOR(Device::getCreator),
-			SPECIFIC_CREDENTIAL_SET(Device::getSpecificCredentialSet),
 			DRIVER(Device::getDriver),
 			EOL_DATE(Device::getEolDate),
 			EOS_DATE(Device::getEosDate),
@@ -1236,9 +1238,6 @@ public class RestServiceTest extends WithDatabaseTest {
 			SOFTWARE_LEVEL(Device::getSoftwareLevel),
 			SOFTWARE_VERSION(Device::getSoftwareVersion),
 			STATUS(Device::getStatus),
-			SSH_PORT(Device::getSshPort),
-			TELNET_PORT(Device::getTelnetPort),
-			CONNECT_ADDRESS(Device::getConnectAddress),
 			COMMENTS(Device::getComments);
 
 			private Function<Device, ?> getter;
@@ -1362,7 +1361,9 @@ public class RestServiceTest extends WithDatabaseTest {
 				else {
 					accessDefNode.put("description", accessDef.getDescription());
 				}
-				accessDefNode.put("effectiveDefaultPort", Long.valueOf(accessDef.getEffectiveDefaultPort()));
+				accessDefNode.put("defaultPort", Long.valueOf(accessDef.getDefaultPort()));
+				accessDefNode.put("group", accessDef.getGroup());
+				accessDefNode.put("priority", Long.valueOf(accessDef.getPriority()));
 			}
 			Assertions.assertEquals(targetData, testDriverNode,
 				"Retrieved device type doesn't match expected object");
@@ -1451,7 +1452,6 @@ public class RestServiceTest extends WithDatabaseTest {
 					.put("networkClass", device1.getNetworkClass().toString())
 					.put("family", device1.getFamily())
 					.put("mgmtAddress", device1.getMgmtAddress())
-					.putNull("connectAddress")
 					.put("cachedIpAddress", device1.getMgmtAddress())
 					.put("status", device1.getStatus().toString())
 					.put("driver", device1.getDriver())
@@ -1464,7 +1464,6 @@ public class RestServiceTest extends WithDatabaseTest {
 					.put("creator", device1.getCreator())
 					.put("changeDate", device1.getChangeDate().getTime())
 					.put("createdDate", device1.getCreatedDate().getTime())
-					.putNull("specificCredentialSet")
 					.putNull("eolDate")
 					.putNull("eolModule")
 					.putNull("eosDate")
@@ -1472,15 +1471,10 @@ public class RestServiceTest extends WithDatabaseTest {
 					.put("endOfLife", device1.isEndOfLife())
 					.put("endOfSale", device1.isEndOfSale())
 					.put("compliant", device1.isCompliant())
-					.put("autoTryCredentials", device1.isAutoTryCredentials())
-					.put("comments", device1.getComments())
-					.put("sshPort", Integer.toUnsignedLong(device1.getSshPort()))
-					.put("telnetPort", Integer.toUnsignedLong(device1.getTelnetPort()));
+					.put("comments", device1.getComments());
 				expectedNode1.putArray("ownerGroups");
 				expectedNode1.putArray("attributes");
-				expectedNode1.putArray("credentialSetIds");
-				expectedNode1.putArray("credentialSets");
-				expectedNode1.putArray("accessOverrides");
+				expectedNode1.putArray("accesses");
 				expectedNode1.set("mgmtDomain",
 					JsonNodeFactory.instance.objectNode()
 						.put("id", device1.getMgmtDomain().getId())
@@ -1718,6 +1712,108 @@ public class RestServiceTest extends WithDatabaseTest {
 					.put("networkClass", device2.getNetworkClass().toString()),
 				deviceNode,
 				"Retrieved device doesn't match expected object");
+		}
+
+		@Test
+		@DisplayName("Deleting a device cascades to its DeviceAccess rows and their owned specific credential, but not a referenced global one")
+		@ResourceLock("DB")
+		void deleteDeviceCascadesAccessesAndOwnedCredentialOnly() throws IOException, InterruptedException {
+			this.createTestDomain();
+			Device device1 = new Device(this.getTestDriver().getName(),
+				"10.1.1.1", this.testDomain, "test");
+			device1.setName("device1");
+			DeviceCredentialSet globalCred = new DeviceSshAccount("admin", "admin", null, "globalCredForCascadeTest");
+			DeviceCredentialSet specificCred = new DeviceSshAccount("admin", "admin", null,
+				DeviceCredentialSet.generateSpecificName());
+			specificCred.setDeviceSpecific(true);
+			long globalCredId;
+			long specificCredId;
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				session.persist(globalCred);
+				DeviceAccess sshAccess = new DeviceAccess(device1, "ssh");
+				sshAccess.setGlobalCredentialSet(globalCred);
+				device1.getAccesses().add(sshAccess);
+				DeviceAccess telnetAccess = new DeviceAccess(device1, "telnet");
+				telnetAccess.setSpecificCredentialSet(specificCred);
+				device1.getAccesses().add(telnetAccess);
+				session.persist(device1);
+				session.getTransaction().commit();
+				globalCredId = globalCred.getId();
+				specificCredId = specificCred.getId();
+			}
+
+			HttpResponse<JsonNode> response = apiClient.delete("/devices/%d".formatted(device1.getId()));
+			Assertions.assertEquals(
+				Response.Status.NO_CONTENT.getStatusCode(), response.statusCode(),
+				"Not getting 204 response for device deletion");
+
+			try (Session session = Database.getSession()) {
+				Long deviceAccessCount = session
+					.createQuery("select count(a) from DeviceAccess a where a.key.device.id = :id", Long.class)
+					.setParameter("id", device1.getId())
+					.uniqueResult();
+				Assertions.assertEquals(0L, deviceAccessCount,
+					"DeviceAccess rows should be cascade-deleted along with the device");
+				Assertions.assertNull(session.get(DeviceCredentialSet.class, specificCredId),
+					"The owned specific credential set should be cascade-deleted along with its DeviceAccess");
+				Assertions.assertNotNull(session.get(DeviceCredentialSet.class, globalCredId),
+					"A referenced global credential set must survive device deletion");
+			}
+		}
+
+		@Test
+		@DisplayName("Reject a device access that sets both a global and a specific credential set")
+		@ResourceLock("DB")
+		void deviceAccessRejectsBothCredentialRelations() throws IOException, InterruptedException {
+			this.createTestDomain();
+			ObjectNode data = JsonNodeFactory.instance.objectNode()
+				.put("autoDiscover", false)
+				.put("ipAddress", "10.1.1.1")
+				.put("domainId", this.testDomain.getId())
+				.put("name", "device1")
+				.put("deviceType", this.getTestDriver().getName());
+			ObjectNode accessNode = JsonNodeFactory.instance.objectNode()
+				.put("accessName", "ssh");
+			accessNode.putObject("globalCredentialSet").put("type", "SSH").put("id", 1);
+			accessNode.putObject("specificCredentialSet").put("type", "SSH")
+				.put("username", "admin").put("password", "admin");
+			data.withArray("accesses").add(accessNode);
+
+			HttpResponse<JsonNode> response = apiClient.post("/devices", data);
+			Assertions.assertEquals(
+				Response.Status.PRECONDITION_FAILED.getStatusCode(), response.statusCode(),
+				"Not getting the expected error status for a device access with both credential relations set");
+		}
+
+		@Test
+		@DisplayName("Reject a device access pinned to a global credential set of the wrong family")
+		@ResourceLock("DB")
+		void deviceAccessRejectsMismatchedCredentialClass() throws IOException, InterruptedException {
+			this.createTestDomain();
+			DeviceCredentialSet snmpCred = new DeviceSnmpv2cCommunity("public", "snmpCredForMismatchTest");
+			long snmpCredId;
+			try (Session session = Database.getSession()) {
+				session.beginTransaction();
+				session.persist(snmpCred);
+				session.getTransaction().commit();
+				snmpCredId = snmpCred.getId();
+			}
+			ObjectNode data = JsonNodeFactory.instance.objectNode()
+				.put("autoDiscover", false)
+				.put("ipAddress", "10.1.1.1")
+				.put("domainId", this.testDomain.getId())
+				.put("name", "device1")
+				.put("deviceType", this.getTestDriver().getName());
+			ObjectNode accessNode = JsonNodeFactory.instance.objectNode()
+				.put("accessName", "ssh");
+			accessNode.putObject("globalCredentialSet").put("type", "SNMP v2").put("id", snmpCredId);
+			data.withArray("accesses").add(accessNode);
+
+			HttpResponse<JsonNode> response = apiClient.post("/devices", data);
+			Assertions.assertEquals(
+				Response.Status.BAD_REQUEST.getStatusCode(), response.statusCode(),
+				"Not getting 400 for a credential class mismatched with the access's declared family");
 		}
 
 		@Test

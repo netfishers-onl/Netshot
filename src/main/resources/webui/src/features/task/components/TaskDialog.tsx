@@ -30,7 +30,7 @@ import {
 } from "@chakra-ui/react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useMemo } from "react"
-import { LuDownload, LuScrollText } from "react-icons/lu"
+import { LuDownload, LuFileTerminal, LuScrollText } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
 
@@ -184,8 +184,38 @@ export default function TaskDialog(props: TaskDialogProps) {
 
   const childChart = useChart({ data: childChartData })
 
+  // A chain task only ever has a single follow-up task, so there is no point showing the
+  // group-task breakdown chart for it -- fetch that one task instead, to link to it directly.
+  const { data: chainChild } = useQuery({
+    queryKey: [QUERIES.TASK, "children", id, "chain"],
+    queryFn: async () => {
+      const rows = await api.task.getAll({ parentTaskId: id, limit: 1 })
+      return rows?.[0] ?? null
+    },
+    enabled: isChainTask && childTotal > 0,
+    refetchIntervalInBackground: true,
+    refetchInterval: (q) => {
+      if (!dialogConfig.props.isOpen) return false
+      const status = q.state.data?.status
+      if (
+        status === TaskStatus.Cancelled ||
+        status === TaskStatus.Failure ||
+        status === TaskStatus.Success
+      ) {
+        return false
+      }
+      return 5000
+    },
+  })
+
   function openChildren(status?: TaskStatus) {
-    taskDialog.open(<TaskChildrenDialog parentTaskId={id} statusFilter={status} />)
+    taskDialog.open(
+      <TaskChildrenDialog
+        parentTaskId={id}
+        statusFilter={status}
+        onBeforeOpenChild={() => dialogConfig.close()}
+      />
+    )
   }
 
   const creationDate = task?.creationDate ? formatDateTime(task?.creationDate) : null
@@ -544,53 +574,29 @@ export default function TaskDialog(props: TaskDialogProps) {
                   </>
                 )}
 
-                {canHaveChildren && childTotal > 0 && (
-                  <>
-                    <Separator />
-                    <Stack gap="3">
-                      <Flex alignItems="center" justifyContent="space-between">
-                        <Heading size="md" fontWeight="semibold">
-                          {t("task.childTasks")}
-                        </Heading>
-                        <Button size="sm" variant="ghost" onClick={() => openChildren()}>
-                          {t("task.viewChildTasks")}
-                        </Button>
-                      </Flex>
-                      <BarSegment.Root chart={childChart} barSize="3">
-                        <BarSegment.Content>
-                          <BarSegment.Value />
-                          <BarSegment.Bar tooltip />
-                          <BarSegment.Label />
-                        </BarSegment.Content>
-                        <HStack wrap="wrap" gap="4" textStyle="sm">
-                          {childStatusData.map((item) => (
-                            <HStack
-                              key={item.status}
-                              gap="1.5"
-                              cursor="pointer"
-                              onClick={() => openChildren(item.status)}
-                            >
-                              <ColorSwatch value={childChart.color(item.color)} boxSize="0.82em" rounded="full" />
-                              <Text>{item.name}</Text>
-                              <Text fontWeight="medium">{item.value}</Text>
-                              <Text color="fg.muted">
-                                {childTotal > 0 ? Math.round((item.value / childTotal) * 100) : 0}%
-                              </Text>
-                            </HStack>
-                          ))}
-                        </HStack>
-                      </BarSegment.Root>
-                    </Stack>
-                  </>
-                )}
-
                 {task?.script && (
                   <>
                     <Separator />
                     <Stack gap="4">
-                      <Heading size="md" fontWeight="semibold">
-                        {t("script.label")}
-                      </Heading>
+                      <Flex alignItems="center" justifyContent="space-between">
+                        <Heading size="md" fontWeight="semibold">
+                          {t("script.label")}
+                        </Heading>
+                        <LogPanel
+                          title={t("script.label")}
+                          copyValue={task.script}
+                          trigger={
+                            <Button size="sm" variant="ghost">
+                              <LuFileTerminal />
+                              {t("script.view")}
+                            </Button>
+                          }
+                        >
+                          <Text fontSize="xs" whiteSpace="pre-wrap" fontFamily="mono">
+                            {task.script}
+                          </Text>
+                        </LogPanel>
+                      </Flex>
                       <Stack gap="4">
                         {task?.deviceDriver && (
                           <Flex alignItems="center">
@@ -600,11 +606,6 @@ export default function TaskDialog(props: TaskDialogProps) {
                             <Text>{task.deviceDriver}</Text>
                           </Flex>
                         )}
-                        <Box p="6" borderWidth="1px" borderColor="grey.100" borderRadius="xl" maxH="300px" overflowY="auto">
-                          <Text fontFamily="mono" whiteSpace="pre-wrap">
-                            {task?.script}
-                          </Text>
-                        </Box>
 
                         {Object.keys(task?.userInputValues ?? {}).map((key) => (
                           <Flex alignItems="center" key={key}>
@@ -616,6 +617,67 @@ export default function TaskDialog(props: TaskDialogProps) {
                           </Flex>
                         ))}
                       </Stack>
+                    </Stack>
+                  </>
+                )}
+
+                {canHaveChildren && childTotal > 0 && (
+                  <>
+                    <Separator />
+                    <Stack gap="3">
+                      <Flex alignItems="center" justifyContent="space-between">
+                        <Heading size="md" fontWeight="semibold">
+                          {t("task.childTasks")}
+                        </Heading>
+                        {isGroupTask && (
+                          <Button size="sm" variant="ghost" onClick={() => openChildren()}>
+                            {t("task.viewChildTasks")}
+                          </Button>
+                        )}
+                      </Flex>
+                      {isGroupTask ? (
+                        <BarSegment.Root chart={childChart} barSize="3">
+                          <BarSegment.Content>
+                            <BarSegment.Value />
+                            <BarSegment.Bar tooltip />
+                            <BarSegment.Label />
+                          </BarSegment.Content>
+                          <HStack wrap="wrap" gap="4" textStyle="sm">
+                            {childStatusData.map((item) => (
+                              <HStack
+                                key={item.status}
+                                gap="1.5"
+                                cursor="pointer"
+                                onClick={() => openChildren(item.status)}
+                              >
+                                <ColorSwatch value={childChart.color(item.color)} boxSize="0.82em" rounded="full" />
+                                <Text>{item.name}</Text>
+                                <Text fontWeight="medium">{item.value}</Text>
+                                <Text color="fg.muted">
+                                  {childTotal > 0 ? Math.round((item.value / childTotal) * 100) : 0}%
+                                </Text>
+                              </HStack>
+                            ))}
+                          </HStack>
+                        </BarSegment.Root>
+                      ) : (
+                        chainChild && (
+                          <Flex alignItems="center" gap="3">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                dialogConfig.close()
+                                taskDialog.open(<TaskDialog id={chainChild.id} />)
+                              }}
+                            >
+                              <Icon size="sm">{TASK_TYPE_ICONS[chainChild.type as TaskType]}</Icon>
+                              {t(`task.type.${chainChild.type}`)}
+                            </Button>
+                            <TaskStatusBadge status={chainChild.status} />
+                          </Flex>
+                        )
+                      )}
                     </Stack>
                   </>
                 )}

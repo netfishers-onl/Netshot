@@ -14,10 +14,13 @@ import { useTranslation } from "react-i18next"
 export type TaskChildrenDialogProps = {
   parentTaskId: number
   statusFilter?: TaskStatus
+  // Called right before a child task's dialog is opened, so the caller can close
+  // dialogs upstream of this one (e.g. the parent task's own dialog).
+  onBeforeOpenChild?: () => void
 }
 
 export default function TaskChildrenDialog(props: TaskChildrenDialogProps) {
-  const { parentTaskId, statusFilter: initialStatusFilter } = props
+  const { parentTaskId, statusFilter: initialStatusFilter, onBeforeOpenChild } = props
   const { t } = useTranslation()
   const dialogConfig = useDialogConfig()
   const [statusFilter, setStatusFilter] = useState(initialStatusFilter)
@@ -93,6 +96,10 @@ export default function TaskChildrenDialog(props: TaskChildrenDialogProps) {
                 showTarget
                 showCreator={false}
                 showComments={false}
+                onBeforeOpenTask={() => {
+                  dialogConfig.close()
+                  onBeforeOpenChild?.()
+                }}
               />
             </Dialog.Body>
             <Dialog.Footer>

@@ -18,7 +18,20 @@ export default function DeviceSidebarListToolbar() {
 
   return (
     <Stack direction="row" alignItems="center" px="6" py="3">
-      <Text>{t("device.device", { count: total })}</Text>
+      <Stack direction="row" alignItems="center" gap="1">
+        <Text>{t("device.device", { count: total })}</Text>
+        <Tooltip content={t("device.refreshList")}>
+          <IconButton
+            aria-label={t("device.refreshList")}
+            variant="ghost"
+            size="xs"
+            color="fg.muted"
+            onClick={refresh}
+          >
+            <LuRefreshCcw />
+          </IconButton>
+        </Tooltip>
+      </Stack>
       <Spacer />
       <Stack direction="row" gap="2">
         {!isSelectedAll() && total > 0 && (
@@ -28,11 +41,6 @@ export default function DeviceSidebarListToolbar() {
             </IconButton>
           </Tooltip>
         )}
-        <Tooltip content={t("device.refreshList")}>
-          <IconButton aria-label={t("device.refreshList")} size="sm" onClick={refresh}>
-            <LuRefreshCcw />
-          </IconButton>
-        </Tooltip>
       </Stack>
     </Stack>
   )

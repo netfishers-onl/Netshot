@@ -27,6 +27,9 @@ export type TaskTableProps = {
   showCreator?: boolean
   showComments?: boolean
   emptyDescription?: string
+  // Called right before a task row is opened, e.g. to close dialogs that should
+  // no longer be visible once the clicked task's dialog takes over (see TaskChildrenDialog).
+  onBeforeOpenTask?(): void
 }
 
 export default function TaskTable(props: TaskTableProps) {
@@ -38,6 +41,7 @@ export default function TaskTable(props: TaskTableProps) {
     showCreator = true,
     showComments = true,
     emptyDescription,
+    onBeforeOpenTask,
   } = props
   const { t } = useTranslation()
   const { formatDateTime } = useLocalization()
@@ -51,6 +55,7 @@ export default function TaskTable(props: TaskTableProps) {
   )
 
   function openTask(id: number) {
+    onBeforeOpenTask?.()
     dialog.open(<TaskDialog id={id} />)
   }
 

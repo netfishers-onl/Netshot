@@ -32,7 +32,7 @@ import {
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useEffect, useMemo, useState } from "react"
 import { FormProvider, useForm, useFormContext, useWatch } from "react-hook-form"
-import { LuMinimize2, LuPencil, LuPlus, LuSave, LuScrollText } from "react-icons/lu"
+import { LuFileTerminal, LuMinimize2, LuPencil, LuPlus, LuSave } from "react-icons/lu"
 import { useTranslation } from "react-i18next"
 import { DeviceNamesPreview } from "@/features/device/components"
 import { NEW_SCRIPT_TEMPLATE } from "./constants"
@@ -99,7 +99,7 @@ function ConfigureStep(props: ConfigureStepProps) {
             </Text>
             <Flex alignItems="center" gap="3" p="3" borderRadius="md" borderWidth="1px">
               <Icon color="green.600" size="md">
-                <LuScrollText />
+                <LuFileTerminal />
               </Icon>
               <Text fontWeight="semibold" flex="1" lineClamp={1}>
                 {scriptMeta.name}
@@ -294,8 +294,8 @@ export default function RunDeviceScriptDialog(props: RunDeviceScriptDialogProps)
       userInputs: {},
       debugEnabled: false,
       runSnapshot: true,
-      runDiagnostics: false,
-      checkCompliance: false,
+      runDiagnostics: true,
+      checkCompliance: true,
     },
   })
 

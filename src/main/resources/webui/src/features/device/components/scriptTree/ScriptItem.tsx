@@ -1,6 +1,6 @@
 import { Protected } from "@/components"
 import { Icon } from "@chakra-ui/react"
-import { LuScrollText, LuTrash, LuEllipsis } from "react-icons/lu"
+import { LuFileTerminal, LuTrash, LuEllipsis } from "react-icons/lu"
 import { Level, Script } from "@/types"
 import {
   Box,
@@ -66,7 +66,7 @@ export default function ScriptItem(props: ScriptItemProps) {
       >
         <Stack direction="row" gap="3" alignItems="center">
           <Icon color="green.600" size="md">
-            <LuScrollText />
+            <LuFileTerminal />
           </Icon>
           <Text>{script?.name}</Text>
           <Stack direction="row" gap="2">

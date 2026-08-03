@@ -998,6 +998,7 @@
       "remove": "Supprimer le script",
       "run": "Exécuter le script",
       "label": "Script",
+      "view": "Voir le script",
       "parameters": "Paramètres du script",
       "exitEditMode": "Quitter le mode édition",
       "modified": "Modifié",

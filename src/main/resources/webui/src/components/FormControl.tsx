@@ -50,6 +50,7 @@ export type FormControlProps<T extends FieldValues> = {
   prefix?: ReactNode
   allowUnchanged?: boolean
   clearable?: boolean
+  autosize?: boolean
   suggestions?: string[]
   mono?: boolean
   /** Rendered attached to the end of the input as a bordered addon (e.g. a unit selector), instead of floating inside it like `suffix`. */
@@ -85,6 +86,7 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
     variant,
     allowUnchanged = false,
     clearable = false,
+    autosize = false,
     suggestions,
     mono,
     min,
@@ -98,7 +100,7 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
   const { datePlaceholder, numberToCalendarDate, calendarDateToTimestamp } = useLocalization()
   const [showPassword, setShowPassword] = useState(false)
   const [isUnchanged, setIsUnchanged] = useState(allowUnchanged)
-  const passwordInputRef = useRef<HTMLInputElement>(null)
+  const passwordInputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null)
   const allSuggestionsRef = useRef<string[]>([])
   const { collection: suggestionCollection, set: setSuggestionItems } = useListCollection({
     initialItems: [] as { label: string; value: string }[],
@@ -427,26 +429,60 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
       )}
       {type === FormControlType.LongText && (
         <InputGroup
+          endElementProps={{ alignItems: "flex-start", pt: "2" }}
           endElement={
-            clearable && field.value ? (
-              <IconButton
-                size="xs"
-                variant="ghost"
-                aria-label={t("common.clear")}
-                alignSelf="flex-start"
-                mt="1"
-                mr="1"
-                onClick={() => field.onChange("")}
-              >
-                <LuX />
-              </IconButton>
-            ) : undefined
+            <>
+              {allowUnchanged && !isUnchanged && (
+                <Tooltip content={t("auth.passwordUnchanged")} positioning={{ placement: "top" }}>
+                  <span>
+                    <IconButton
+                      size="xs"
+                      variant="ghost"
+                      aria-label={t("auth.passwordUnchanged")}
+                      onClick={lockPassword}
+                    >
+                      <LuLockOpen />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              )}
+              {allowUnchanged && isUnchanged && (
+                <Tooltip content={t("common.clickToSetNewSecret")} positioning={{ placement: "top" }}>
+                  <span>
+                    <IconButton
+                      size="xs"
+                      variant="ghost"
+                      aria-label={t("common.clickToSetNewSecret")}
+                      onClick={togglePassword}
+                    >
+                      <LuLock />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              )}
+              {clearable && field.value && !isUnchanged && (
+                <IconButton
+                  size="xs"
+                  variant="ghost"
+                  aria-label={t("common.clear")}
+                  onClick={() => field.onChange("")}
+                >
+                  <LuX />
+                </IconButton>
+              )}
+            </>
           }
         >
           <Textarea
             rows={rows}
-            value={field.value == null ? "" : String(field.value as string)}
+            autoresize={autosize}
+            value={isUnchanged ? "••••••••" : field.value == null ? "" : String(field.value as string)}
+            disabled={isUnchanged}
             {...inputProps}
+            ref={(inputRef) => {
+              inputProps.ref(inputRef)
+              passwordInputRef.current = inputRef
+            }}
           />
         </InputGroup>
       )}

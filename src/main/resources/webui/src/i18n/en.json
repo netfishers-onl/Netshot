@@ -974,7 +974,6 @@
       "passwordsDontMatch": "Passwords don't match",
       "pleaseReAuthenticate": "Please re-authenticate to continue.",
       "pleaseSignIn": "Please sign in",
-      "leaveEmptyToKeepCurrentKey": "Leave empty to keep current key",
       "leaveEmptyToKeepCurrentPassword": "Leave empty to keep current password",
       "passwordUnchanged": "Keep password unchanged",
       "signIn": "Sign in",

@@ -159,10 +159,12 @@ export function SpecificCredentialFields({ control, namePrefix, type, allowUncha
         />
         <FormControl
           required={!allowUnchanged}
+          allowUnchanged={allowUnchanged}
+          autosize
+          rows={2}
           type={FormControlType.LongText}
           label={t("network.sshPrivateKey")}
           placeholder={t("network.typePrivateKey")}
-          helperText={allowUnchanged ? t("auth.leaveEmptyToKeepCurrentKey") : undefined}
           control={control}
           name={`${namePrefix}.privateKey`}
         />

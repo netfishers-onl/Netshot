@@ -23,6 +23,11 @@ export const textAreaRecipe = defineRecipe({
           bg: "white",
         },
         boxShadow: "initial!important",
+        _disabled: {
+          opacity: 1,
+          bg: "grey.100",
+          color: "grey.600",
+        },
       },
     },
     size: {

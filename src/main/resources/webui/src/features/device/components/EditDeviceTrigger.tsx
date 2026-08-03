@@ -62,7 +62,7 @@ function DeviceEditForm() {
           <Separator />
         </>
       )}
-      <FormControl type={FormControlType.LongText} rows={4} label={t("common.comments")} placeholder={t("device.addDescription")} control={form.control} name="comments" />
+      <FormControl type={FormControlType.LongText} autosize rows={2} label={t("common.comments")} placeholder={t("device.addDescription")} control={form.control} name="comments" />
     </Stack>
   )
 }

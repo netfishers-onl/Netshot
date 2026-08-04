@@ -7,8 +7,9 @@
       "devicesFound_other": "{{count}} <unit>équipements trouvés</unit>",
       "successfullyModifiedCount_one": "{{count}} équipement a été modifié avec succès",
       "successfullyModifiedCount_other": "{{count}} équipements ont été modifiés avec succès",
-      "modificationsWillBeApplied_one": "Les modifications seront appliquées à {{count}} équipement",
-      "modificationsWillBeApplied_other": "Les modifications seront appliquées à {{count}} équipements",
+      "bulkFieldUnchangedTooltip": "Laisser ce champ inchangé sur tous les équipements sélectionnés",
+      "bulkFieldClickToEdit": "Cliquez pour définir une nouvelle valeur pour tous les équipements sélectionnés",
+      "selectSameDeviceTypeToEditConnectionSettings": "Sélectionnez des équipements du même type pour modifier leurs paramètres de connexion et leurs identifiants",
       "youVeSelected_one": "Vous avez sélectionné {{count}} équipement, les actions suivantes s'appliquent à tous les équipements sélectionnés",
       "youVeSelected_other": "Vous avez sélectionné {{count}} équipements, les actions suivantes s'appliquent à tous les équipements sélectionnés",
       "class": {

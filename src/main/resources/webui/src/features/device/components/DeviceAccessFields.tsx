@@ -2,10 +2,11 @@ import { useDeviceCredentialSetAuthTypeOptions, useDeviceCredentialSetPrivateKey
 import FormControl, { FormControlType } from "@/components/FormControl"
 import { Select } from "@/components/Select"
 import Switch from "@/components/Switch"
+import BulkEditLockToggle from "./BulkEditLockToggle"
 import { CredentialSet, CredentialSetType, DeviceAccess, DeviceAccessDefinition, DeviceTypeProtocol, HashingAlgorithm } from "@/types"
 import { Collapsible, Field, Group, Separator, Stack, Text } from "@chakra-ui/react"
 import { useEffect, useMemo, useState } from "react"
-import { Control, useFieldArray, useWatch } from "react-hook-form"
+import { Control, useController, useFieldArray, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { LuChevronRight } from "react-icons/lu"
 import { useCredentialSets } from "../api"
@@ -20,6 +21,8 @@ export type DeviceAccessFormValue = {
   accessName: string
   protocol: string
   defaultPort: number
+  /** Bulk-edit only: while true, this access is left untouched on every selected device and excluded from the submitted payload. */
+  locked?: boolean
   overrideConnection: boolean
   address: string
   port: string
@@ -41,6 +44,8 @@ export type DeviceAccessFieldsProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<any>
   accessDefinitions: Record<string, DeviceAccessDefinition> | undefined
+  /** Bulk-edit mode: every row starts locked ("leave unchanged on all selected devices") and must be explicitly unlocked to be included in the payload. */
+  bulk?: boolean
 }
 
 /** Known protocol acronyms, kept fully (or conventionally) cased when humanizing an access/group name. */
@@ -343,14 +348,19 @@ function AccessRow({
   control,
   index,
   value,
+  bulk = false,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   control: Control<any>
   index: number
   value: DeviceAccessFormValue
+  bulk?: boolean
 }) {
   const { t } = useTranslation()
   const { data: credentialSets, isPending: isLoadingCredentialSets } = useCredentialSets()
+
+  const { field: lockedField } = useController({ control, name: `accesses.${index}.locked` })
+  const locked = bulk && Boolean(lockedField.value)
 
   const mode = useWatch({ control, name: `accesses.${index}.mode` }) as DeviceAccessCredentialMode
   const overrideConnection = useWatch({ control, name: `accesses.${index}.overrideConnection` }) as boolean
@@ -391,36 +401,70 @@ function AccessRow({
 
   const [isOpen, setIsOpen] = useState(false)
 
+  const toggleLock = () => {
+    lockedField.onChange(!locked)
+    if (locked) setIsOpen(true)
+  }
+
+  // Only relevant to the (non-bulk) single-edit layout below - bulk rows show
+  // no summary text at all, just the disclosure trigger and the lock toggle.
+  const rowSummary = !isOpen && (
+    <Text fontSize="sm" color="fg.muted">
+      <AccessRowSummary
+        mode={mode}
+        globalCredentialSetId={globalCredentialSetId}
+        globalCredentialSetName={globalCredentialSetName}
+        overrideConnection={overrideConnection}
+        address={address}
+        port={port}
+      />
+    </Text>
+  )
+
   return (
-    <Collapsible.Root open={isOpen} onOpenChange={(details) => setIsOpen(details.open)}>
-      <Collapsible.Trigger
-        cursor="pointer"
-        paddingY="3"
-        display="flex"
-        gap="2"
-        alignItems="center"
-        fontWeight="medium"
-        w="full"
-      >
-        <Collapsible.Indicator transition="transform 0.2s" _open={{ transform: "rotate(90deg)" }}>
-          <LuChevronRight />
-        </Collapsible.Indicator>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" flex="1">
-          <Text fontSize="sm" fontWeight="medium">{humanizeAccessName(value.accessName)}</Text>
-          {!isOpen && (
-            <Text fontSize="sm" color="fg.muted">
-              <AccessRowSummary
-                mode={mode}
-                globalCredentialSetId={globalCredentialSetId}
-                globalCredentialSetName={globalCredentialSetName}
-                overrideConnection={overrideConnection}
-                address={address}
-                port={port}
-              />
-            </Text>
-          )}
+    <Collapsible.Root open={!locked && isOpen} onOpenChange={(details) => setIsOpen(details.open)}>
+      {bulk ? (
+        // Bulk mode: no summary/"unchanged" text, just the disclosure trigger
+        // (chevron+name) and the right-aligned pen/pen-off toggle - consistent
+        // with the domain/comments lock toggles.
+        <Stack direction="row" alignItems="center" justifyContent="space-between" gap="2" w="full">
+          <Collapsible.Trigger
+            cursor={locked ? "default" : "pointer"}
+            paddingY="3"
+            display="flex"
+            gap="2"
+            alignItems="center"
+            fontWeight="medium"
+            disabled={locked}
+          >
+            {!locked && (
+              <Collapsible.Indicator transition="transform 0.2s" _open={{ transform: "rotate(90deg)" }}>
+                <LuChevronRight />
+              </Collapsible.Indicator>
+            )}
+            <Text fontSize="sm" fontWeight="medium">{humanizeAccessName(value.accessName)}</Text>
+          </Collapsible.Trigger>
+          <BulkEditLockToggle locked={locked} onToggle={toggleLock} />
         </Stack>
-      </Collapsible.Trigger>
+      ) : (
+        <Collapsible.Trigger
+          cursor="pointer"
+          paddingY="3"
+          display="flex"
+          gap="2"
+          alignItems="center"
+          fontWeight="medium"
+          w="full"
+        >
+          <Collapsible.Indicator transition="transform 0.2s" _open={{ transform: "rotate(90deg)" }}>
+            <LuChevronRight />
+          </Collapsible.Indicator>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" flex="1">
+            <Text fontSize="sm" fontWeight="medium">{humanizeAccessName(value.accessName)}</Text>
+            {rowSummary}
+          </Stack>
+        </Collapsible.Trigger>
+      )}
       <Collapsible.Content>
         <Stack direction="column" gap="4" px="4" pb="3">
           <Select
@@ -519,7 +563,7 @@ function preserveSecret(value: string | null | undefined): string | null {
  * defined just for this access). Backed by an `accesses` field array on the
  * form, kept in sync with the driver's access definitions.
  */
-export default function DeviceAccessFields({ control, accessDefinitions }: DeviceAccessFieldsProps) {
+export default function DeviceAccessFields({ control, accessDefinitions, bulk = false }: DeviceAccessFieldsProps) {
   const { t } = useTranslation()
   const { fields, replace } = useFieldArray({ control, name: "accesses" })
 
@@ -534,6 +578,9 @@ export default function DeviceAccessFields({ control, accessDefinitions }: Devic
           accessName: def.name,
           protocol: def.protocol,
           defaultPort: def.defaultPort,
+          // Bulk edit: every row starts locked ("leave unchanged") until the user
+          // explicitly unlocks it - see `AccessRow`'s lock toggle. Not used outside bulk mode.
+          locked: existing?.locked ?? bulk,
           overrideConnection: existing?.overrideConnection ?? false,
           address: existing?.address ?? "",
           port: existing?.port ?? "",
@@ -605,6 +652,7 @@ export default function DeviceAccessFields({ control, accessDefinitions }: Devic
                       control={control}
                       index={index}
                       value={fields[index] as unknown as DeviceAccessFormValue}
+                      bulk={bulk}
                     />
                   )
                 })}

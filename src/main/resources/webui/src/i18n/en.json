@@ -7,8 +7,9 @@
       "devicesFound_other": "{{count}} <unit>devices found</unit>",
       "successfullyModifiedCount_one": "{{count}} device has been successfully modified",
       "successfullyModifiedCount_other": "{{count}} devices have been successfully modified",
-      "modificationsWillBeApplied_one": "The modifications will be applied to {{count}} device",
-      "modificationsWillBeApplied_other": "The modifications will be applied to {{count}} devices",
+      "bulkFieldUnchangedTooltip": "Leave this field unchanged on all selected devices",
+      "bulkFieldClickToEdit": "Click to set a new value for all selected devices",
+      "selectSameDeviceTypeToEditConnectionSettings": "Select devices of the same type to edit their connection settings and credentials",
       "youVeSelected_one": "You've selected {{count}} device, the following actions apply to all of the selected devices",
       "youVeSelected_other": "You've selected {{count}} devices, the following actions apply to all of the selected devices",
       "class": {

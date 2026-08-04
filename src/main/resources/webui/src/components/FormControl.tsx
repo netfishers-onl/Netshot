@@ -282,6 +282,7 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
               type={type}
               value={String(field.value as string)}
               autoComplete={autoComplete}
+              disabled={disabled}
               {...inputProps}
             />
           </InputGroup>
@@ -417,7 +418,7 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
           <Input
             type={showPassword ? "text" : "password"}
             value={isUnchanged ? "••••••••" : String(field.value as string)}
-            disabled={isUnchanged}
+            disabled={disabled || isUnchanged}
             autoComplete={autoComplete}
             {...inputProps}
             ref={(inputRef) => {
@@ -477,7 +478,7 @@ function FormControl<T extends FieldValues>(props: FormControlProps<T>) {
             rows={rows}
             autoresize={autosize}
             value={isUnchanged ? "••••••••" : field.value == null ? "" : String(field.value as string)}
-            disabled={isUnchanged}
+            disabled={disabled || isUnchanged}
             {...inputProps}
             ref={(inputRef) => {
               inputProps.ref(inputRef)

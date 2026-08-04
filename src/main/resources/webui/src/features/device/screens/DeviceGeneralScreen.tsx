@@ -154,9 +154,11 @@ export default function DeviceGeneralScreen() {
             </Box>
             <Skeleton loading={!!isLoading}>
               <Stack direction="row" gap="2">
-                {device?.ownerGroups?.map((group) => (
-                  <DeviceGroupBadge key={group?.id} id={group?.id} name={group?.name} />
-                ))}
+                {[...(device?.ownerGroups ?? [])]
+                  .sort((a, b) => (a?.name ?? "").localeCompare(b?.name ?? ""))
+                  .map((group) => (
+                    <DeviceGroupBadge key={group?.id} id={group?.id} name={group?.name} />
+                  ))}
               </Stack>
             </Skeleton>
           </Flex>

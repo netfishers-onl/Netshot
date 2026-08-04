@@ -33,7 +33,7 @@ export type DeviceAccessFormValue = {
   password: string | null
   superPassword: string | null
   privateKey: string | null
-  community: string
+  community: string | null
   authType?: HashingAlgorithm
   authKey?: string | null
   privType?: HashingAlgorithm
@@ -121,6 +121,15 @@ export function SpecificCredentialFields({ control, namePrefix, type, allowUncha
   const { t } = useTranslation()
   const authTypeOptions = useDeviceCredentialSetAuthTypeOptions()
   const privateKeyTypeOptions = useDeviceCredentialSetPrivateKeyTypeOptions()
+
+  const authType = useWatch({ control, name: `${namePrefix}.authType` }) as HashingAlgorithm | undefined
+  const privType = useWatch({ control, name: `${namePrefix}.privType` }) as HashingAlgorithm | undefined
+  const hasAuth = authType !== HashingAlgorithm.NONE
+  const hasPriv = hasAuth && privType !== HashingAlgorithm.NONE
+
+  const { field: authKeyField } = useController({ control, name: `${namePrefix}.authKey` })
+  const { field: privTypeField } = useController({ control, name: `${namePrefix}.privType` })
+  const { field: privKeyField } = useController({ control, name: `${namePrefix}.privKey` })
 
   if (type === CredentialSetType.SSH || type === CredentialSetType.Telnet) {
     return (
@@ -216,7 +225,9 @@ export function SpecificCredentialFields({ control, namePrefix, type, allowUncha
   if (type === CredentialSetType.SNMP_V1 || type === CredentialSetType.SNMP_V2C) {
     return (
       <FormControl
-        required
+        required={!allowUnchanged}
+        allowUnchanged={allowUnchanged}
+        type={FormControlType.Password}
         label={t("common.community")}
         placeholder={t("common.eG", { example: "public" })}
         control={control}
@@ -234,50 +245,67 @@ export function SpecificCredentialFields({ control, namePrefix, type, allowUncha
           control={control}
           name={`${namePrefix}.username`}
         />
-        <Field.Root required={!allowUnchanged}>
+        <Field.Root required={!allowUnchanged && hasAuth}>
           <Field.Label>
             {t("network.authKey")}
-            {!allowUnchanged && <Field.RequiredIndicator />}
+            {!allowUnchanged && hasAuth && <Field.RequiredIndicator />}
           </Field.Label>
           <Group w="full">
             <Select
               required
-              fieldProps={{ flex: "1", w: "auto" }}
+              fieldProps={{ flex: hasAuth ? "1" : "1 0 100%", w: "auto" }}
               control={control}
               name={`${namePrefix}.authType`}
               options={authTypeOptions.options}
+              onSelectItem={(value) => {
+                if (value === HashingAlgorithm.NONE) {
+                  privTypeField.onChange(HashingAlgorithm.NONE)
+                  privKeyField.onChange("")
+                  authKeyField.onChange("")
+                }
+              }}
             />
-            <FormControl
-              flex="2"
-              type={FormControlType.Password}
-              allowUnchanged={allowUnchanged}
-              placeholder={t("common.eG", { example: t("credential.secretKey") })}
-              control={control}
-              name={`${namePrefix}.authKey`}
-            />
+            {hasAuth && (
+              <FormControl
+                flex="2"
+                type={FormControlType.Password}
+                allowUnchanged={allowUnchanged}
+                placeholder={t("common.eG", { example: t("credential.secretKey") })}
+                control={control}
+                name={`${namePrefix}.authKey`}
+              />
+            )}
           </Group>
         </Field.Root>
-        <Field.Root required={!allowUnchanged}>
+        <Field.Root required={!allowUnchanged && hasPriv}>
           <Field.Label>
             {t("network.privKey")}
-            {!allowUnchanged && <Field.RequiredIndicator />}
+            {!allowUnchanged && hasPriv && <Field.RequiredIndicator />}
           </Field.Label>
           <Group w="full">
             <Select
               required
-              fieldProps={{ flex: "1", w: "auto" }}
+              disabled={!hasAuth}
+              fieldProps={{ flex: hasPriv ? "1" : "1 0 100%", w: "auto" }}
               control={control}
               name={`${namePrefix}.privType`}
               options={privateKeyTypeOptions.options}
+              onSelectItem={(value) => {
+                if (value === HashingAlgorithm.NONE) {
+                  privKeyField.onChange("")
+                }
+              }}
             />
-            <FormControl
-              flex="2"
-              type={FormControlType.Password}
-              allowUnchanged={allowUnchanged}
-              placeholder={t("common.eG", { example: t("credential.secretKey") })}
-              control={control}
-              name={`${namePrefix}.privKey`}
-            />
+            {hasPriv && (
+              <FormControl
+                flex="2"
+                type={FormControlType.Password}
+                allowUnchanged={allowUnchanged}
+                placeholder={t("common.eG", { example: t("credential.secretKey") })}
+                control={control}
+                name={`${namePrefix}.privKey`}
+              />
+            )}
           </Group>
         </Field.Root>
       </>
@@ -373,7 +401,7 @@ function AccessRow({
   // secret to preserve (edit mode), so the lock-icon "unchanged" UX only appears then.
   const [allowUnchanged] = useState(
     () => value.password === null || value.privateKey === null || value.superPassword === null
-      || value.authKey === null || value.privKey === null
+      || value.authKey === null || value.privKey === null || value.community === null
   )
 
   const compatibleTypes = useMemo(() => getCompatibleCredentialTypes(value.protocol), [value.protocol])
@@ -594,7 +622,7 @@ export default function DeviceAccessFields({ control, accessDefinitions, bulk = 
           password: preserveSecret(existing?.password),
           superPassword: preserveSecret(existing?.superPassword),
           privateKey: preserveSecret(existing?.privateKey),
-          community: existing?.community ?? "",
+          community: preserveSecret(existing?.community),
           authType: existing?.authType,
           authKey: preserveSecret(existing?.authKey),
           privType: existing?.privType,
@@ -699,7 +727,7 @@ function buildSpecificCredentialPayload(access: DeviceAccessFormValue): Credenti
       } as CredentialSet
     case CredentialSetType.SNMP_V1:
     case CredentialSetType.SNMP_V2C:
-      return { type, community: access.community } as CredentialSet
+      return { type, community: secret(access.community) } as CredentialSet
     case CredentialSetType.SNMP_V3:
       return {
         type,

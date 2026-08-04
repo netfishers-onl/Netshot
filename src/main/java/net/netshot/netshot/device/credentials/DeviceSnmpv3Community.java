@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
@@ -39,6 +41,34 @@ import net.netshot.netshot.rest.RestViews.DefaultView;
 @XmlRootElement
 public final class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 
+	/**
+	 * SNMPv3 authentication protocol. {@link #NONE} means noAuth (and,
+	 * transitively, noPriv - privacy requires authentication). SHA-2 variants
+	 * (RFC 7860) are named after their snmp4j class (e.g. {@code HMAC192SHA256}),
+	 * matching the naming already used for the SNMP trap receiver's user config.
+	 */
+	public enum AuthProtocol {
+		NONE,
+		MD5,
+		SHA,
+		HMAC128SHA224,
+		HMAC192SHA256,
+		HMAC256SHA384,
+		HMAC384SHA512,
+	}
+
+	/**
+	 * SNMPv3 privacy (encryption) protocol. {@link #NONE} means noPriv.
+	 */
+	public enum PrivProtocol {
+		NONE,
+		DES,
+		DES3,
+		AES128,
+		AES192,
+		AES256,
+	}
+
 	/** The username. */
 	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class)
@@ -48,10 +78,11 @@ public final class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 
 	/** The auth type. */
 	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
+		@XmlElement, @JsonView(DefaultView.class),
+		@Enumerated(EnumType.STRING)
 	}))
 	@Setter
-	private String authType;
+	private AuthProtocol authType;
 
 	/** The auth key. */
 	@Getter(onMethod = @__({
@@ -65,10 +96,11 @@ public final class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 
 	/** The priv type. */
 	@Getter(onMethod = @__({
-		@XmlElement, @JsonView(DefaultView.class)
+		@XmlElement, @JsonView(DefaultView.class),
+		@Enumerated(EnumType.STRING)
 	}))
 	@Setter
-	private String privType;
+	private PrivProtocol privType;
 
 	/** The priv key. */
 	@Getter(onMethod = @__({
@@ -98,8 +130,8 @@ public final class DeviceSnmpv3Community extends DeviceSnmpCommunity {
 	 * @param privType the priv type
 	 * @param privKey the priv key
 	 */
-	public DeviceSnmpv3Community(String community, String name, String username, String authType,
-		String authKey, String privType, String privKey) {
+	public DeviceSnmpv3Community(String community, String name, String username, AuthProtocol authType,
+		String authKey, PrivProtocol privType, String privKey) {
 		super(community, name);
 		this.username = username;
 		this.authType = authType;

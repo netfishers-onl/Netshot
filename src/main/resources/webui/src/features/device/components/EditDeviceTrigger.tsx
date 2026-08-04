@@ -103,7 +103,7 @@ export default function EditDeviceTrigger({ device, children, ...rest }: EditDev
         password: access?.specificCredentialSet ? PASSWORD_UNCHANGED : "",
         superPassword: access?.specificCredentialSet ? PASSWORD_UNCHANGED : "",
         privateKey: access?.specificCredentialSet?.type === CredentialSetType.SSHKey ? PASSWORD_UNCHANGED : "",
-        community: access?.specificCredentialSet?.community ?? "",
+        community: access?.specificCredentialSet ? PASSWORD_UNCHANGED : "",
         authType: access?.specificCredentialSet?.authType,
         authKey: access?.specificCredentialSet ? PASSWORD_UNCHANGED : "",
         privType: access?.specificCredentialSet?.privType,

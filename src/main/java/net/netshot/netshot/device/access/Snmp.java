@@ -38,12 +38,17 @@ import org.snmp4j.UserTarget;
 import org.snmp4j.event.ResponseEvent;
 import org.snmp4j.mp.MPv3;
 import org.snmp4j.mp.SnmpConstants;
+import org.snmp4j.security.AuthHMAC128SHA224;
+import org.snmp4j.security.AuthHMAC192SHA256;
+import org.snmp4j.security.AuthHMAC256SHA384;
+import org.snmp4j.security.AuthHMAC384SHA512;
 import org.snmp4j.security.AuthMD5;
 import org.snmp4j.security.AuthSHA;
 import org.snmp4j.security.Priv3DES;
 import org.snmp4j.security.PrivAES128;
 import org.snmp4j.security.PrivAES192;
 import org.snmp4j.security.PrivAES256;
+import org.snmp4j.security.PrivDES;
 import org.snmp4j.security.SecurityLevel;
 import org.snmp4j.security.SecurityModels;
 import org.snmp4j.security.SecurityProtocols;
@@ -79,6 +84,24 @@ public class Snmp extends Poller implements Client {
 
 	/** SNMPv3 priv protocol. */
 	private OID privProtocol;
+
+	static {
+		// Registered once for the whole JVM (SecurityProtocols is a global
+		// singleton) - not relying on SnmpTrapReceiver having done it first,
+		// since the trap receiver can be disabled by configuration.
+		SecurityProtocols protocols = SecurityProtocols.getInstance();
+		protocols.addAuthenticationProtocol(new AuthMD5());
+		protocols.addAuthenticationProtocol(new AuthSHA());
+		protocols.addAuthenticationProtocol(new AuthHMAC128SHA224());
+		protocols.addAuthenticationProtocol(new AuthHMAC192SHA256());
+		protocols.addAuthenticationProtocol(new AuthHMAC256SHA384());
+		protocols.addAuthenticationProtocol(new AuthHMAC384SHA512());
+		protocols.addPrivacyProtocol(new PrivDES());
+		protocols.addPrivacyProtocol(new Priv3DES());
+		protocols.addPrivacyProtocol(new PrivAES128());
+		protocols.addPrivacyProtocol(new PrivAES192());
+		protocols.addPrivacyProtocol(new PrivAES256());
+	}
 
 	/**
 	 * Instantiates a new SNMP object based on a target address and a Netshot community,
@@ -116,10 +139,16 @@ public class Snmp extends Poller implements Client {
 			this.target.setTimeout(5000);
 			this.target.setVersion(SnmpConstants.version3);
 			this.target.setAddress(new UdpAddress(address.getInetAddress(), port));
-			if (v3Credentials.getAuthKey() == null) {
+
+			final DeviceSnmpv3Community.AuthProtocol authType = v3Credentials.getAuthType();
+			final DeviceSnmpv3Community.PrivProtocol privType = v3Credentials.getPrivType();
+			final boolean hasAuth = authType != null && authType != DeviceSnmpv3Community.AuthProtocol.NONE;
+			final boolean hasPriv = hasAuth && privType != null && privType != DeviceSnmpv3Community.PrivProtocol.NONE;
+
+			if (!hasAuth) {
 				this.target.setSecurityLevel(SecurityLevel.NOAUTH_NOPRIV);
 			}
-			else if (v3Credentials.getPrivKey() == null) {
+			else if (!hasPriv) {
 				this.target.setSecurityLevel(SecurityLevel.AUTH_NOPRIV);
 			}
 			else {
@@ -128,34 +157,37 @@ public class Snmp extends Poller implements Client {
 			this.target.setSecurityName(new OctetString(v3Credentials.getUsername()));
 
 			// Prepare transport
-			log.debug("Auth Protocol called: {}", v3Credentials.getAuthType());
-			if ("SHA".equals(v3Credentials.getAuthType())) {
-				this.authProtocol = AuthSHA.ID;
-				log.debug("Using SHA Auth");
-			}
-			else {
-				this.authProtocol = AuthMD5.ID;
+			log.debug("Auth Protocol called: {}", authType);
+			if (hasAuth) {
+				this.authProtocol = switch (authType) {
+					case SHA -> AuthSHA.ID;
+					case HMAC128SHA224 -> AuthHMAC128SHA224.ID;
+					case HMAC192SHA256 -> AuthHMAC192SHA256.ID;
+					case HMAC256SHA384 -> AuthHMAC256SHA384.ID;
+					case HMAC384SHA512 -> AuthHMAC384SHA512.ID;
+					default -> AuthMD5.ID;
+				};
 			}
 
-			if ("AES128".equals(v3Credentials.getPrivType())) {
-				this.privProtocol = PrivAES128.ID;
-			}
-			else if ("AES192".equals(v3Credentials.getPrivType())) {
-				this.privProtocol = PrivAES192.ID;
-			}
-			else if ("AES256".equals(v3Credentials.getPrivType())) {
-				this.privProtocol = PrivAES256.ID;
-			}
-			else {
-				this.privProtocol = Priv3DES.ID;
+			if (hasPriv) {
+				this.privProtocol = switch (privType) {
+					case DES -> PrivDES.ID;
+					case DES3 -> Priv3DES.ID;
+					case AES128 -> PrivAES128.ID;
+					case AES192 -> PrivAES192.ID;
+					case AES256 -> PrivAES256.ID;
+					default -> Priv3DES.ID;
+				};
 			}
 
 			USM usm = new USM(SecurityProtocols.getInstance(), new OctetString(MPv3.createLocalEngineID()), 0);
 			usm.addUser(
 				new UsmUser(
-					new OctetString(v3Credentials.getUsername()), this.authProtocol,
-					new OctetString(v3Credentials.getAuthKey()), this.privProtocol,
-					new OctetString(v3Credentials.getPrivKey())));
+					new OctetString(v3Credentials.getUsername()),
+					hasAuth ? this.authProtocol : null,
+					hasAuth ? new OctetString(v3Credentials.getAuthKey()) : null,
+					hasPriv ? this.privProtocol : null,
+					hasPriv ? new OctetString(v3Credentials.getPrivKey()) : null));
 			SecurityModels.getInstance().addSecurityModel(usm);
 
 			start();

@@ -2087,7 +2087,10 @@ public class RestService extends Thread {
 			}
 		}
 		else if (DeviceSnmpCommunity.class.isInstance(existing)) {
-			((DeviceSnmpCommunity) existing).setCommunity(((DeviceSnmpCommunity) incoming).getCommunity());
+			String community = ((DeviceSnmpCommunity) incoming).getCommunity();
+			if (community != null) {
+				((DeviceSnmpCommunity) existing).setCommunity(community);
+			}
 		}
 		else if (DeviceHttpAccount.class.isInstance(existing)) {
 			DeviceHttpAccount httpAccount = (DeviceHttpAccount) existing;
@@ -3138,9 +3141,8 @@ public class RestService extends Thread {
 				throw new NetshotBadRequestException("Invalid name for the credential set",
 					NetshotBadRequestException.Reason.NETSHOT_INVALID_CREDENTIALS_NAME);
 			}
-			if (DeviceCliAccount.class.isInstance(credentialSet)) {
-				DeviceCliAccount cliAccount = (DeviceCliAccount) credentialSet;
-				DeviceCliAccount rsCliAccount = (DeviceCliAccount) rsCredentialSet;
+			if (credentialSet instanceof DeviceCliAccount cliAccount
+					&& rsCredentialSet instanceof DeviceCliAccount rsCliAccount) {
 				cliAccount.setUsername(rsCliAccount.getUsername());
 				if (rsCliAccount.getPassword() != null) {
 					cliAccount.setPassword(rsCliAccount.getPassword());
@@ -3148,31 +3150,33 @@ public class RestService extends Thread {
 				if (rsCliAccount.getSuperPassword() != null) {
 					cliAccount.setSuperPassword(rsCliAccount.getSuperPassword());
 				}
-				if (DeviceSshKeyAccount.class.isInstance(credentialSet)) {
-					((DeviceSshKeyAccount) cliAccount).setPrivateKey(((DeviceSshKeyAccount) rsCliAccount).getPrivateKey());
+				if (cliAccount instanceof DeviceSshKeyAccount sshKeyAccount
+						&& rsCliAccount instanceof DeviceSshKeyAccount rsSshKeyAccount) {
+					sshKeyAccount.setPrivateKey(rsSshKeyAccount.getPrivateKey());
 				}
 			}
-			else if (DeviceSnmpv3Community.class.isInstance(credentialSet)) {
-				DeviceSnmpv3Community rsSnmp3 = (DeviceSnmpv3Community) rsCredentialSet;
-				((DeviceSnmpv3Community) credentialSet).setUsername(rsSnmp3.getUsername());
-				((DeviceSnmpv3Community) credentialSet).setAuthType(rsSnmp3.getAuthType());
+			else if (credentialSet instanceof DeviceSnmpv3Community snmp3
+					&& rsCredentialSet instanceof DeviceSnmpv3Community rsSnmp3) {
+				snmp3.setUsername(rsSnmp3.getUsername());
+				snmp3.setAuthType(rsSnmp3.getAuthType());
 				if (rsSnmp3.getAuthKey() != null) {
-					((DeviceSnmpv3Community) credentialSet).setAuthKey(rsSnmp3.getAuthKey());
+					snmp3.setAuthKey(rsSnmp3.getAuthKey());
 				}
-				((DeviceSnmpv3Community) credentialSet).setPrivType(rsSnmp3.getPrivType());
+				snmp3.setPrivType(rsSnmp3.getPrivType());
 				if (rsSnmp3.getPrivKey() != null) {
-					((DeviceSnmpv3Community) credentialSet).setPrivKey(rsSnmp3.getPrivKey());
+					snmp3.setPrivKey(rsSnmp3.getPrivKey());
 				}
 
 			}
-			else if (DeviceSnmpCommunity.class.isInstance(credentialSet)) {
-				((DeviceSnmpCommunity) credentialSet)
-					.setCommunity(((DeviceSnmpCommunity) rsCredentialSet)
-						.getCommunity());
+			else if (credentialSet instanceof DeviceSnmpCommunity snmpCommunity
+					&& rsCredentialSet instanceof DeviceSnmpCommunity rsSnmpCommunity) {
+				String community = rsSnmpCommunity.getCommunity();
+				if (community != null) {
+					snmpCommunity.setCommunity(community);
+				}
 			}
-			else if (DeviceHttpAccount.class.isInstance(credentialSet)) {
-				DeviceHttpAccount httpAccount = (DeviceHttpAccount) credentialSet;
-				DeviceHttpAccount rsHttpAccount = (DeviceHttpAccount) rsCredentialSet;
+			else if (credentialSet instanceof DeviceHttpAccount httpAccount
+					&& rsCredentialSet instanceof DeviceHttpAccount rsHttpAccount) {
 				httpAccount.setUsername(rsHttpAccount.getUsername());
 				if (rsHttpAccount.getPassword() != null) {
 					httpAccount.setPassword(rsHttpAccount.getPassword());

@@ -39,7 +39,7 @@ export type DeviceCredentialPayload = {
   mgmtDomain: {
     id: number
   }
-  community: string
+  community?: string
   type: CredentialSetType
   authKey?: string
   authType?: HashingAlgorithm

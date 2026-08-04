@@ -42,7 +42,7 @@ export default function EditDeviceCredentialSetTrigger({ credentialSet: credenti
       credential.type === CredentialSetType.SNMP_V2C
     ) {
       Object.assign(values, {
-        community: credential.community,
+        community: PASSWORD_UNCHANGED,
       })
     } else if (credential.type === CredentialSetType.SNMP_V3) {
       Object.assign(values, {
@@ -123,9 +123,11 @@ export default function EditDeviceCredentialSetTrigger({ credentialSet: credenti
           type === CredentialSetType.SNMP_V1 ||
           type === CredentialSetType.SNMP_V2C
         ) {
-          Object.assign(payload, {
-            community: values.community,
-          })
+          if (values.community !== PASSWORD_UNCHANGED) {
+            Object.assign(payload, {
+              community: values.community ?? undefined,
+            })
+          }
         }
 
         if (type === CredentialSetType.SNMP_V3) {

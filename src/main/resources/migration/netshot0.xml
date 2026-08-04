@@ -1923,4 +1923,34 @@
 		<dropForeignKeyConstraint baseTableName="device_credential_sets" constraintName="FK_e1p7bmak3fa8yhqns9y4ttofg"/>
 		<dropTable tableName="device_credential_sets"/>
 	</changeSet>
+	<changeSet author="netshot" id="0.25.0_34">
+		<!-- auth_type/priv_type move from free-form strings to Java enums
+			(DeviceSnmpv3Community.AuthProtocol/PrivProtocol, stored by name,
+			e.g. "MD5"/"AES128"), which also introduces the explicit "NONE"
+			value for noAuth/noPriv - uppercase any existing value so it keeps
+			resolving to the matching enum constant. -->
+		<sql>
+			UPDATE device_credential_set
+			SET auth_type = UPPER(auth_type)
+			WHERE dtype = 'DeviceSnmpv3Community' AND auth_type IS NOT NULL;
+		</sql>
+		<sql>
+			UPDATE device_credential_set
+			SET priv_type = UPPER(priv_type)
+			WHERE dtype = 'DeviceSnmpv3Community' AND priv_type IS NOT NULL;
+		</sql>
+	</changeSet>
+	<changeSet author="netshot" id="0.25.0_35">
+		<!-- PrivProtocol now distinguishes single DES ("DES", newly backed by
+			the real DES cipher) from triple DES ("DES3") - previously "DES"
+			was the only choice offered and was silently implemented with
+			triple DES under the hood (see the old Snmp.java default branch).
+			Rename existing rows so already-configured devices keep connecting
+			with the cipher they were actually using. -->
+		<sql>
+			UPDATE device_credential_set
+			SET priv_type = 'DES3'
+			WHERE dtype = 'DeviceSnmpv3Community' AND priv_type = 'DES';
+		</sql>
+	</changeSet>
 </databaseChangeLog>

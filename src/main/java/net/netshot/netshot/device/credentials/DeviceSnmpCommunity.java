@@ -19,6 +19,8 @@
 package net.netshot.netshot.device.credentials;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -38,6 +40,8 @@ public abstract class DeviceSnmpCommunity extends DeviceCredentialSet {
 	/** The community. */
 	@Getter(onMethod = @__({
 		@XmlElement, @JsonView(DefaultView.class),
+		@JsonSerialize(using = HideSecretSerializer.class),
+		@JsonDeserialize(using = HideSecretDeserializer.class),
 		@Convert(converter = StringEncryptorConverter.class)
 	}))
 	@Setter

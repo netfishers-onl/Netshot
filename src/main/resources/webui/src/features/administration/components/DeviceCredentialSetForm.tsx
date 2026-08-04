@@ -15,7 +15,7 @@ import {
 export type DeviceCredentialSetForm = {
   name: string
   mgmtDomain: number | null
-  community: string
+  community?: string | null
   type: CredentialSetType
   authKey?: string | null
   authType?: HashingAlgorithm
@@ -44,6 +44,16 @@ export default function DeviceCredentialSetForm(props: DeviceCredentialSetFormPr
     control: form.control,
     name: "type",
   })
+  const authType = useWatch({
+    control: form.control,
+    name: "authType",
+  })
+  const privType = useWatch({
+    control: form.control,
+    name: "privType",
+  })
+  const hasAuth = authType !== HashingAlgorithm.NONE
+  const hasPriv = hasAuth && privType !== HashingAlgorithm.NONE
 
   return (
     <Stack gap="6">
@@ -78,52 +88,69 @@ export default function DeviceCredentialSetForm(props: DeviceCredentialSetFormPr
             control={form.control}
             name="username"
           />
-          <Field.Root required={!freezePasswords}>
+          <Field.Root required={!freezePasswords && hasAuth}>
             <Field.Label>
               {t("network.authKey")}
-              {!freezePasswords && <Field.RequiredIndicator />}
+              {!freezePasswords && hasAuth && <Field.RequiredIndicator />}
             </Field.Label>
             <Group w="full">
               <Select
                 required
-                fieldProps={{ flex: "1", w: "auto" }}
+                fieldProps={{ flex: hasAuth ? "1" : "1 0 100%", w: "auto" }}
                 control={form.control}
                 name="authType"
                 options={deviceCredentialSetAuthTypeOptions.options}
+                onSelectItem={(value) => {
+                  if (value === HashingAlgorithm.NONE) {
+                    form.setValue("privType", HashingAlgorithm.NONE)
+                    form.setValue("privKey", "")
+                    form.setValue("authKey", "")
+                  }
+                }}
               />
-              <FormControl
-                flex="2"
-                type={FormControlType.Password}
-                placeholder={t("common.eG", { example: t("credential.secretKey") })}
-                required={!freezePasswords}
-                allowUnchanged={freezePasswords}
-                control={form.control}
-                name="authKey"
-              />
+              {hasAuth && (
+                <FormControl
+                  flex="2"
+                  type={FormControlType.Password}
+                  placeholder={t("common.eG", { example: t("credential.secretKey") })}
+                  required={!freezePasswords}
+                  allowUnchanged={freezePasswords}
+                  control={form.control}
+                  name="authKey"
+                />
+              )}
             </Group>
           </Field.Root>
-          <Field.Root required={!freezePasswords}>
+          <Field.Root required={!freezePasswords && hasPriv}>
             <Field.Label>
               {t("network.privKey")}
-              {!freezePasswords && <Field.RequiredIndicator />}
+              {!freezePasswords && hasPriv && <Field.RequiredIndicator />}
             </Field.Label>
             <Group w="full">
               <Select
                 required
-                fieldProps={{ flex: "1", w: "auto" }}
+                disabled={!hasAuth}
+                fieldProps={{ flex: hasPriv ? "1" : "1 0 100%", w: "auto" }}
                 control={form.control}
                 name="privType"
                 options={deviceCredentialSetPrivateKeyTypeOptions.options}
+                onSelectItem={(value) => {
+                  if (value === HashingAlgorithm.NONE) {
+                    form.setValue("privKey", "")
+                  }
+                }}
               />
-              <FormControl
-                flex="2"
-                type={FormControlType.Password}
-                placeholder={t("common.eG", { example: t("credential.secretKey") })}
-                required={!freezePasswords}
-                allowUnchanged={freezePasswords}
-                control={form.control}
-                name="privKey"
-              />
+              {hasPriv && (
+                <FormControl
+                  flex="2"
+                  type={FormControlType.Password}
+                  placeholder={t("common.eG", { example: t("credential.secretKey") })}
+                  required={!freezePasswords}
+                  allowUnchanged={freezePasswords}
+                  control={form.control}
+                  name="privKey"
+                />
+              )}
             </Group>
           </Field.Root>
         </>
@@ -202,7 +229,9 @@ export default function DeviceCredentialSetForm(props: DeviceCredentialSetFormPr
         <FormControl
           label={t("common.community")}
           placeholder={t("common.eG", { example: "public" })}
-          required
+          type={FormControlType.Password}
+          required={!freezePasswords}
+          allowUnchanged={freezePasswords}
           control={form.control}
           name="community"
         />

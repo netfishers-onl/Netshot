@@ -71,7 +71,7 @@ export default function AddDeviceCredentialSetTrigger({ children, ...rest }: Add
         ) {
           payload = {
             ...payload,
-            community: values.community,
+            community: values.community ?? undefined,
           }
         }
 

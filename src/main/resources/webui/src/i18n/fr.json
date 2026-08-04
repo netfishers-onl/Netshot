@@ -141,6 +141,7 @@
       "noDevicesSelected": "Aucun équipement sélectionné",
       "notFound": "Équipement introuvable",
       "notFoundDescription": "Cet équipement n'existe pas ou a été supprimé.",
+      "openAccessLink": "Ouvrir {{url}}",
       "overrideConnection": "Remplacer la connexion",
       "overrideConnectionSettings": "Remplacer l'adresse et/ou le port utilisés pour se connecter à cet accès",
       "connectionOverridesPerAccess": "Identifiants et connexion",

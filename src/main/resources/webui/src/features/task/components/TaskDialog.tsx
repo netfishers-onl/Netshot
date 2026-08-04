@@ -96,11 +96,6 @@ export default function TaskDialog(props: TaskDialogProps) {
   const purgeGroupId =
     task?.type === TaskType.PurgeDatabase && task?.deviceGroupId ? task.deviceGroupId : null
 
-  const snapshotTaskId =
-    task?.type === TaskType.DiscoverDeviceType && task?.snapshotTaskId
-      ? task.snapshotTaskId
-      : null
-
   const { data: purgeGroup } = useQuery({
     queryKey: [QUERIES.GROUP_DETAIL, purgeGroupId],
     queryFn: async () => api.group.getById(purgeGroupId!),
@@ -466,23 +461,6 @@ export default function TaskDialog(props: TaskDialogProps) {
                             <Text color="grey.400">{t("task.discoveredDeviceType")}</Text>
                           </Box>
                           <Text>{task.discoveredDeviceTypeDescription}</Text>
-                        </Flex>
-                      )}
-                      {snapshotTaskId && (
-                        <Flex alignItems="center">
-                          <Box w="140px">
-                            <Text color="grey.400">{t("task.snapshotTask")}</Text>
-                          </Box>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              dialogConfig.close()
-                              taskDialog.open(<TaskDialog id={snapshotTaskId} />)
-                            }}
-                          >
-                            #{snapshotTaskId}
-                          </Button>
                         </Flex>
                       )}
                     </Stack>

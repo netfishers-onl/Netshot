@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { DeviceAttributeDefinition, DeviceAttributeLevel } from "@/types"
 import { useLocalization } from "@/i18n"
 import { useMemo } from "react"
-import { DeviceAttributeValue } from "../components"
+import { DeviceAccessLinks, DeviceAttributeValue } from "../components"
 import { DeviceGroupBadge, DeviceStatusBadge } from "@/components/entity"
 import { useDevice } from "../contexts/device"
 
@@ -34,7 +34,16 @@ export default function DeviceGeneralScreen() {
               <Text color="grey.400">{t("device.managementIp")}</Text>
             </Box>
             <Skeleton loading={!!isLoading}>
-              <Text>{device?.mgmtAddress ?? t("common.nA")}</Text>
+              <Flex alignItems="center" gap="2">
+                <Text>{device?.mgmtAddress ?? t("common.nA")}</Text>
+                {device && (
+                  <DeviceAccessLinks
+                    mgmtAddress={device.mgmtAddress}
+                    accesses={device.accesses}
+                    accessDefinitions={type?.accessDefinitions}
+                  />
+                )}
+              </Flex>
             </Skeleton>
           </Flex>
           <Flex alignItems="center">

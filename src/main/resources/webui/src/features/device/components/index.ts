@@ -1,4 +1,5 @@
 export { default as BulkEditDeviceTrigger } from "./BulkEditDeviceTrigger"
+export { default as DeviceAccessLinks } from "./DeviceAccessLinks"
 export { default as DeviceComplianceTrigger } from "./DeviceComplianceTrigger"
 export { default as DeviceConfigurationAttribute } from "./DeviceConfigurationAttribute"
 export { default as DeviceDiagnosticTrigger } from "./DeviceDiagnosticTrigger"

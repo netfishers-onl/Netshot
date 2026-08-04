@@ -6125,6 +6125,7 @@ public class RestService extends Thread {
 		summary = "Get the number of configuration changes for the last 7 days",
 		description = "Returns the number of device configuration changes per day, for the last 7 days."
 	)
+	@Tag(name = "Reports", description = "Report and statistics")
 	@Deprecated
 	public List<RsConfigChangeNumberByDateStat> getLast7DaysChangesByDayStats(@QueryParam("tz") String jsTimeZone) throws WebApplicationException {
 		log.debug("REST request, get last 7 day changes by day stats.");

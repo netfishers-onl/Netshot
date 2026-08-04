@@ -42,7 +42,7 @@ import {
 } from "@/features/report"
 import { TaskActiveScreen, TaskHistoryScreen, TaskScreen } from "@/features/task"
 import i18n, { LocalizationProvider } from "@/i18n"
-import { MainScreen, NotFoundScreen } from "@/screens"
+import { ApiBrowserScreen, MainScreen, NotFoundScreen } from "@/screens"
 import { Level } from "@/types"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { I18nextProvider } from "react-i18next"
@@ -74,6 +74,7 @@ function App() {
                   <ToastProvider />
                   <Routes>
                     <Route path="signin" element={<SigninScreen />} />
+                    <Route path="app/api-browser" element={<ApiBrowserScreen />} />
                     <Route path="app" element={<MainScreen />}>
                       <Route index element={<Navigate to="devices" replace />} />
                       <Route path="reports" element={<ReportScreen />}>

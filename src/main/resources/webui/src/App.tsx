@@ -42,13 +42,21 @@ import {
 } from "@/features/report"
 import { TaskActiveScreen, TaskHistoryScreen, TaskScreen } from "@/features/task"
 import i18n, { LocalizationProvider } from "@/i18n"
-import { ApiBrowserScreen, MainScreen, NotFoundScreen } from "@/screens"
+import { MainScreen, NotFoundScreen } from "@/screens"
 import { Level } from "@/types"
+import { Center, Spinner } from "@chakra-ui/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { lazy, Suspense } from "react"
 import { I18nextProvider } from "react-i18next"
 import { BrowserRouter, Navigate, Route, Routes } from "react-router"
 import { ApplicationProvider } from "./contexts/ApplicationProvider"
 import { DialogProviderWithI18n } from "./dialog/extensions"
+
+const ApiBrowserScreen = lazy(() =>
+  import("@/screens/ApiBrowserScreen").then((module) => ({
+    default: module.ApiBrowserScreen,
+  })),
+)
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,7 +82,20 @@ function App() {
                   <ToastProvider />
                   <Routes>
                     <Route path="signin" element={<SigninScreen />} />
-                    <Route path="app/api-browser" element={<ApiBrowserScreen />} />
+                    <Route
+                      path="app/api-browser"
+                      element={
+                        <Suspense
+                          fallback={
+                            <Center h="100vh">
+                              <Spinner size="lg" />
+                            </Center>
+                          }
+                        >
+                          <ApiBrowserScreen />
+                        </Suspense>
+                      }
+                    />
                     <Route path="app" element={<MainScreen />}>
                       <Route index element={<Navigate to="devices" replace />} />
                       <Route path="reports" element={<ReportScreen />}>

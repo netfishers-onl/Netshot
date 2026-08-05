@@ -12,7 +12,7 @@ import useToast from "@/hooks/useToast"
 
 import { useUserLevelOptions } from "@/hooks"
 import { Icon } from "@chakra-ui/react"
-import { LuChevronDown, LuCloud, LuCircleHelp, LuInfo, LuLogOut, LuUser } from "react-icons/lu"
+import { LuChevronDown, LuCircleHelp, LuInfo, LuLogOut, LuUser, LuBookMarked } from "react-icons/lu"
 import { Link } from "react-router"
 import { AboutNetshotDialog } from "./AboutNetshotDialog"
 import UserSettingTrigger from "./UserSettingTrigger"
@@ -131,7 +131,7 @@ export default function NavbarUser() {
             </Menu.Item>
             <Menu.Item value="api-doc" asChild>
               <Link to="/app/api-browser" target="_blank" rel="noreferrer">
-                <LuCloud />
+                <LuBookMarked />
                 {t("api.documentation")}
               </Link>
             </Menu.Item>

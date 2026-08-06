@@ -28,7 +28,6 @@ import java.util.regex.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.work.TaskContext;
 
 /**
@@ -228,16 +227,16 @@ public abstract class Cli implements Client {
 	/** The prompt. */
 	protected String prompt;
 
-	/** The host. */
-	protected NetworkAddress host;
+	/** The host (IPv4/IPv6 literal or FQDN, resolved by the underlying transport at connect time). */
+	protected String host;
 
 	/**
 	 * Instantiates a new cli.
 	 *
-	 * @param host the host
+	 * @param host the host (IPv4/IPv6 literal or FQDN)
 	 * @param taskContext the current task context
 	 */
-	public Cli(NetworkAddress host, TaskContext taskContext) {
+	public Cli(String host, TaskContext taskContext) {
 		this.host = host;
 		this.taskContext = taskContext;
 	}

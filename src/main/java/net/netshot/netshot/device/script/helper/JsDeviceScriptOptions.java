@@ -33,7 +33,7 @@ import net.netshot.netshot.work.TaskContext;
  * @author sylvain.cadilhac
  *
  */
-public final class JsCliScriptOptions {
+public final class JsDeviceScriptOptions {
 	@Getter(onMethod = @__({
 		@Export
 	}))
@@ -80,7 +80,7 @@ public final class JsCliScriptOptions {
 	}))
 	private TaskContext taskContext;
 
-	public JsCliScriptOptions(JsCliHelper cliHelper, JsSnmpHelper snmpHelper, TaskContext taskContext) {
+	public JsDeviceScriptOptions(JsCliHelper cliHelper, JsSnmpHelper snmpHelper, TaskContext taskContext) {
 		this.cliHelper = cliHelper;
 		this.snmpHelper = snmpHelper;
 		this.taskContext = taskContext;

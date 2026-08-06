@@ -20,11 +20,11 @@ package net.netshot.netshot;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.AfterEach;
@@ -36,7 +36,6 @@ import org.junit.jupiter.api.Test;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
-import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.access.Http;
 import net.netshot.netshot.device.access.Http.AuthScheme;
 import net.netshot.netshot.device.access.Http.HttpConfig;
@@ -81,8 +80,7 @@ public class HttpTest {
 	}
 
 	private Http newClient() throws IOException {
-		NetworkAddress address = NetworkAddress.getNetworkAddress(InetAddress.getByName("127.0.0.1"));
-		return new Http(address, this.port, false, new FakeTaskContext());
+		return new Http("127.0.0.1", this.port, false, new FakeTaskContext());
 	}
 
 	@Test
@@ -150,6 +148,78 @@ public class HttpTest {
 
 		Assertions.assertEquals(200, result.getStatus());
 		Assertions.assertEquals("/status?api_key=the-key", this.lastExchange.get().getRequestURI().toString());
+	}
+
+	@Test
+	@DisplayName("the configured host (FQDN or IP) is used as the request's Host, resolved by the HTTP client itself")
+	void configuredHostIsUsedAsRequestHost() throws IOException {
+		Http client = new Http("localhost", this.port, false, new FakeTaskContext());
+
+		HttpResult result = client.request("GET", "/status", null, null, null, null, null, null);
+
+		Assertions.assertEquals(200, result.getStatus());
+		Assertions.assertEquals("localhost:" + this.port, this.lastExchange.get().getRequestHeaders().getFirst("Host"));
+	}
+
+	@Test
+	@DisplayName("cookie auth logs in once (POST to auth.path) and replays the session cookie on later requests")
+	void cookieAuthLoginAndReplay() throws IOException {
+		AtomicInteger loginCalls = new AtomicInteger(0);
+		AtomicReference<String> loginBody = new AtomicReference<>();
+		this.server.createContext("/login", exchange -> {
+			loginCalls.incrementAndGet();
+			byte[] requestBody = exchange.getRequestBody().readAllBytes();
+			loginBody.set(new String(requestBody, StandardCharsets.UTF_8));
+			exchange.getResponseHeaders().add("Set-Cookie", "SESSION=abc123; Path=/");
+			byte[] response = "{}".getBytes(StandardCharsets.UTF_8);
+			exchange.sendResponseHeaders(200, response.length);
+			try (OutputStream os = exchange.getResponseBody()) {
+				os.write(response);
+			}
+		});
+
+		HttpConfig config = new HttpConfig();
+		AuthScheme auth = new AuthScheme();
+		auth.setType("cookie");
+		auth.setMethod("POST");
+		auth.setPath("/login");
+		auth.setContentType("json");
+		auth.setData(Map.of(
+			"userName", "$$NetshotUsername$$",
+			"userPasswd", "$$NetshotPassword$$"
+		));
+		config.setAuth(auth);
+		DeviceHttpAccount account = new DeviceHttpAccount("bob", "s3cret", "cred");
+		Http client = newClient();
+
+		HttpResult first = client.request("GET", "/status", null, null, null, null, config, account);
+		Assertions.assertEquals(200, first.getStatus());
+		Assertions.assertEquals(1, loginCalls.get());
+		Assertions.assertTrue(loginBody.get().contains("\"userName\":\"bob\""));
+		Assertions.assertTrue(loginBody.get().contains("\"userPasswd\":\"s3cret\""));
+		Assertions.assertEquals("$Version=1;SESSION=abc123", this.lastExchange.get().getRequestHeaders().getFirst("Cookie"));
+
+		HttpResult second = client.request("GET", "/other", null, null, null, null, config, account);
+		Assertions.assertEquals(200, second.getStatus());
+		Assertions.assertEquals(1, loginCalls.get(), "login should only happen once; the cookie must be replayed");
+		Assertions.assertEquals("$Version=1;SESSION=abc123", this.lastExchange.get().getRequestHeaders().getFirst("Cookie"));
+	}
+
+	@Test
+	@DisplayName("apiKey auth with wrong-case type is ignored (exact-case match required)")
+	void wrongCaseAuthTypeIsIgnored() throws IOException {
+		HttpConfig config = new HttpConfig();
+		AuthScheme auth = new AuthScheme();
+		auth.setType("APIKEY");
+		auth.setIn("header");
+		auth.setName("X-API-Key");
+		config.setAuth(auth);
+		DeviceHttpAccount account = new DeviceHttpAccount(null, "the-key", "cred");
+
+		HttpResult result = newClient().request("GET", "/status", null, null, null, null, config, account);
+
+		Assertions.assertEquals(200, result.getStatus());
+		Assertions.assertNull(this.lastExchange.get().getRequestHeaders().getFirst("X-API-Key"));
 	}
 
 	@Test

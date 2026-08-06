@@ -36,7 +36,7 @@ import net.netshot.netshot.TaskManager;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DynamicDeviceGroup;
-import net.netshot.netshot.device.script.RunDiagnosticCliScript;
+import net.netshot.netshot.device.script.RunDiagnosticDeviceScript;
 import net.netshot.netshot.diagnostic.Diagnostic;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.DebugLog;
@@ -137,7 +137,7 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 		boolean locked = false;
 
 		Session session = Database.getSession();
-		RunDiagnosticCliScript cliScript = null;
+		RunDiagnosticDeviceScript deviceScript = null;
 		try {
 			session.beginTransaction();
 			// Start over from a fresh device from DB
@@ -166,8 +166,8 @@ public final class RunDiagnosticsTask extends Task implements DeviceBasedTask {
 				.setParameter("enabled", true)
 				.list();
 			if (diagnostics.size() > 0) {
-				cliScript = new RunDiagnosticCliScript(diagnostics, this.logger);
-				cliScript.connectRun(session, device);
+				deviceScript = new RunDiagnosticDeviceScript(diagnostics, this.logger);
+				deviceScript.connectRun(session, device);
 				session.merge(device);
 				session.getTransaction().commit();
 			}

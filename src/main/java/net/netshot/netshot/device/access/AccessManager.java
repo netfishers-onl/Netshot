@@ -37,7 +37,7 @@ import net.netshot.netshot.work.TaskContext;
 
 /**
  * Generalizes the credential-set fallback logic that used to be triplicated
- * (once each for SSH, Telnet, SNMP) in {@code CliScript.connectRun}. One
+ * (once each for SSH, Telnet, SNMP) in {@code DeviceScript.connectRun}. One
  * {@code AccessManager} is built per task attempt and shared by every client
  * a driver creates during that attempt (the default legacy CLI/SNMP client,
  * plus anything created via {@code client.create(...)}).
@@ -109,6 +109,42 @@ public class AccessManager {
 	}
 
 	/**
+	 * Builds a new access manager for one task attempt against a device, resolving
+	 * (and caching, via {@link Device#refreshCachedIpAddress()}) its default
+	 * management address along the way - the one entry point production code
+	 * should use, so this resolve-and-cache step lives in one place common to
+	 * every caller instead of being repeated ad hoc.
+	 * @param session the Hibernate session (may be null, e.g. for ad-hoc/test runs)
+	 * @param device the device being accessed
+	 * @param taskContext the current task context
+	 * @param oneTimeCredentialSets one-time credential sets to try first (may be null/empty)
+	 * @return the new access manager
+	 */
+	public static AccessManager forDevice(Session session, Device device, TaskContext taskContext,
+			java.util.Set<DeviceCredentialSet> oneTimeCredentialSets) {
+		device.refreshCachedIpAddress();
+		NetworkAddress address = null;
+		InetAddress cachedIp = device.getCachedIpAddress();
+		if (cachedIp == null) {
+			log.warn("Unable to resolve management address '{}' of device {}.",
+				device.getMgmtAddress(), device.getId());
+			taskContext.warn("Unable to resolve management address '{}'.", device.getMgmtAddress());
+		}
+		else {
+			try {
+				address = NetworkAddress.getNetworkAddress(cachedIp);
+			}
+			catch (UnknownHostException e) {
+				// Unreachable in practice: cachedIp is already a resolved Inet4Address/
+				// Inet6Address, which NetworkAddress.getNetworkAddress always accepts.
+				log.warn("Unexpected failure wrapping the already-resolved management address '{}' of device {}.",
+					device.getMgmtAddress(), device.getId(), e);
+			}
+		}
+		return new AccessManager(session, device, address, taskContext, oneTimeCredentialSets);
+	}
+
+	/**
 	 * Resolves the effective network address to connect to for a given access:
 	 * its own per-access override address if configured (see
 	 * {@link Device#getDeviceAccess(String)}), otherwise the device's default
@@ -128,6 +164,34 @@ public class AccessManager {
 				"Unable to resolve an address to connect to for access '" + accessDef.getName() + "'.");
 		}
 		return this.address;
+	}
+
+	/**
+	 * Resolves the effective host to connect to for a given access, as
+	 * originally configured (IPv4/IPv6 literal or FQDN, not yet DNS-resolved):
+	 * its own per-access override address if configured, otherwise the
+	 * device's default management address. This is the value transport
+	 * clients (SSH/Telnet/HTTP) should connect with, letting the underlying
+	 * client library perform DNS resolution itself - unlike {@link #resolveAddress},
+	 * this preserves a configured hostname as-is, which also matters for TLS
+	 * hostname/certificate validation (a device's certificate is typically
+	 * issued for its DNS name, not its resolved IP).
+	 * @param accessDef the access to resolve the host for
+	 * @return the effective host string
+	 * @throws IOException if the access has no override and the device has no
+	 *         configured management address
+	 */
+	public String resolveHost(AccessDefinition accessDef) throws IOException {
+		DeviceAccess access = this.device.getDeviceAccess(accessDef.getName());
+		if (access != null && access.getAddress() != null && !access.getAddress().isEmpty()) {
+			return access.getAddress();
+		}
+		String mgmtAddress = this.device.getMgmtAddress();
+		if (mgmtAddress == null || mgmtAddress.isEmpty()) {
+			throw new UnknownHostException(
+				"Unable to resolve a host to connect to for access '" + accessDef.getName() + "'.");
+		}
+		return mgmtAddress;
 	}
 
 	/**

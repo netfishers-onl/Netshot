@@ -84,7 +84,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
 import net.netshot.netshot.device.DeviceDriver;
-import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.work.TaskContext;
 
 /**
@@ -453,7 +452,7 @@ public class Ssh extends Cli {
 	 * @param password the password
 	 * @param taskContext the current task context
 	 */
-	public Ssh(NetworkAddress host, int port, String username, String password, TaskContext taskContext) {
+	public Ssh(String host, int port, String username, String password, TaskContext taskContext) {
 		super(host, taskContext);
 		this.port = port;
 		this.username = username;
@@ -474,7 +473,7 @@ public class Ssh extends Cli {
 	 * @param passphrase the passphrase which protects the private key
 	 * @param taskContext the current task context
 	 */
-	public Ssh(NetworkAddress host, int port, String username, String privateKey,
+	public Ssh(String host, int port, String username, String privateKey,
 		String passphrase, TaskContext taskContext) {
 		super(host, taskContext);
 		this.port = port;
@@ -495,7 +494,7 @@ public class Ssh extends Cli {
 	 * @param passphrase the passphrase which protects the private key
 	 * @param taskContext the current task context
 	 */
-	public Ssh(NetworkAddress host, String username, String privateKey,
+	public Ssh(String host, String username, String privateKey,
 		String passphrase, TaskContext taskContext) {
 		super(host, taskContext);
 		this.username = username;
@@ -515,7 +514,7 @@ public class Ssh extends Cli {
 	 * @param password the password
 	 * @param taskContext the current task context
 	 */
-	public Ssh(NetworkAddress host, String username, String password, TaskContext taskContext) {
+	public Ssh(String host, String username, String password, TaskContext taskContext) {
 		super(host, taskContext);
 		this.username = username;
 		this.password = password;
@@ -556,7 +555,7 @@ public class Ssh extends Cli {
 	public void connect(boolean openChannel) throws IOException {
 		try {
 			this.session = Ssh.client
-				.connect(this.username, this.host.getIp(), this.port)
+				.connect(this.username, this.host, this.port)
 				.verify(this.connectionTimeout)
 				.getSession();
 

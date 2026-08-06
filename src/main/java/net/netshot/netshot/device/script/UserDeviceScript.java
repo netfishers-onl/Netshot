@@ -43,7 +43,7 @@ import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.access.AccessManager;
 import net.netshot.netshot.device.access.InvalidCredentialsException;
 import net.netshot.netshot.device.script.helper.JsCliHelper;
-import net.netshot.netshot.device.script.helper.JsCliScriptOptions;
+import net.netshot.netshot.device.script.helper.JsDeviceScriptOptions;
 import net.netshot.netshot.device.script.helper.JsClientFactory;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.device.script.helper.JsSnmpHelper;
@@ -57,7 +57,7 @@ import net.netshot.netshot.work.TaskContext;
  *
  */
 @Slf4j
-public class JsCliScript extends CliScript {
+public class UserDeviceScript extends DeviceScript {
 
 	public enum UserInputType {
 		STRING,
@@ -125,7 +125,7 @@ public class JsCliScript extends CliScript {
 	 * @param code = The JavaScript code
 	 * @param logger = The task context
 	 */
-	public JsCliScript(String driverName, String code, TaskContext logger) {
+	public UserDeviceScript(String driverName, String code, TaskContext logger) {
 		super(logger);
 		this.driverName = driverName;
 		this.code = code;
@@ -141,7 +141,7 @@ public class JsCliScript extends CliScript {
 		try (Context context = driver.getContext()) {
 			driver.loadCode(context);
 			context.eval("js", code);
-			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
+			JsDeviceScriptOptions options = new JsDeviceScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
 			options.setClientFactory(clientFactory);
 			options.setDeviceHelper(new JsDeviceHelper(device, jsCliHelper, null, this.taskContext, false));
 			options.setUserInputs(this.userInputValues);
@@ -174,7 +174,7 @@ public class JsCliScript extends CliScript {
 		try (Context context = driver.getContext()) {
 			driver.loadCode(context);
 			context.eval("js", this.code);
-			JsCliScriptOptions options = new JsCliScriptOptions(null, null, null);
+			JsDeviceScriptOptions options = new JsDeviceScriptOptions(null, null, null);
 			options.setUserInputs(this.userInputValues);
 			context
 				.getBindings("js")
@@ -201,7 +201,7 @@ public class JsCliScript extends CliScript {
 		try (Context context = driver.getContext()) {
 			driver.loadCode(context);
 			context.eval("js", this.code);
-			JsCliScriptOptions options = new JsCliScriptOptions(null, null, null);
+			JsDeviceScriptOptions options = new JsDeviceScriptOptions(null, null, null);
 			options.setUserInputs(this.userInputValues);
 			context
 				.getBindings("js")

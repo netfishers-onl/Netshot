@@ -547,9 +547,10 @@ public class Device {
 	/**
 	 * Resolves {@link #mgmtAddress} and updates {@link #cachedIpAddress} accordingly
 	 * (cleared to null if the address can't currently be resolved). Called when the
-	 * device is created or its management address is changed; also refreshed on every
-	 * successful connection attempt (see CliScript), which is where a stale cache
-	 * left over from a failed resolution normally gets a chance to heal.
+	 * device is created or its management address is changed; also refreshed at the
+	 * start of every connection attempt (see {@code AccessManager#forDevice}), which
+	 * is where a stale cache left over from a failed resolution normally gets a
+	 * chance to heal.
 	 */
 	public void refreshCachedIpAddress() {
 		try {

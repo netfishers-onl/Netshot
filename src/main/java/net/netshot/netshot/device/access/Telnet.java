@@ -35,7 +35,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.Netshot;
-import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.TaskContext;
 
@@ -141,7 +140,7 @@ public class Telnet extends Cli {
 	 * @param host the host
 	 * @param taskContext the current task context
 	 */
-	public Telnet(NetworkAddress host, TaskContext taskContext) {
+	public Telnet(String host, TaskContext taskContext) {
 		super(host, taskContext);
 	}
 
@@ -152,7 +151,7 @@ public class Telnet extends Cli {
 	 * @param port the port
 	 * @param taskContext the current task context
 	 */
-	public Telnet(NetworkAddress host, int port, TaskContext taskContext) {
+	public Telnet(String host, int port, TaskContext taskContext) {
 		this(host, taskContext);
 		this.port = port;
 		this.connectionTimeout = Telnet.SETTINGS.getConnectionTimeout();
@@ -174,7 +173,7 @@ public class Telnet extends Cli {
 		catch (InvalidTelnetOptionException e) {
 			log.warn("Unable to register the Telnet Window Size option handler.", e);
 		}
-		telnet.connect(this.host.getInetAddress(), this.port);
+		telnet.connect(this.host, this.port);
 		telnet.setSoTimeout(this.receiveTimeout);
 		this.inStream = telnet.getInputStream();
 		this.outStream = new PrintStream(telnet.getOutputStream());

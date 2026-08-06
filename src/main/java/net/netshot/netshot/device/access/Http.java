@@ -19,23 +19,35 @@
 package net.netshot.netshot.device.access;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
+import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.client.ClientConfig;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Form;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlElement;
@@ -43,7 +55,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.netshot.netshot.device.NetworkAddress;
+import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.credentials.DeviceHttpAccount;
 import net.netshot.netshot.utils.InsecureHostnameVerifier;
 import net.netshot.netshot.utils.InsecureTrustManager;
@@ -70,7 +82,7 @@ public class Http implements Client {
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.NONE)
 	public static final class AuthScheme {
-		/** "http", "apiKey", "oauth2" or "openIdConnect". */
+		/** "http", "apiKey", "cookie", "oauth2" or "openIdConnect". */
 		@Getter(onMethod = @__({ @XmlElement }))
 		@Setter
 		private String type;
@@ -89,6 +101,27 @@ public class Http implements Client {
 		@Getter(onMethod = @__({ @XmlElement }))
 		@Setter
 		private String name;
+
+		/** For type "cookie": the HTTP method used to log in ("POST" or "PUT"). */
+		@Getter(onMethod = @__({ @XmlElement }))
+		@Setter
+		private String method;
+
+		/** For type "cookie": the login request path (relative to the access's base path). */
+		@Getter(onMethod = @__({ @XmlElement }))
+		@Setter
+		private String path;
+
+		/** For type "cookie": the login request body, with {@code $$NetshotUsername$$}/
+		 * {@code $$NetshotPassword$$} placeholders substituted from the resolved credential. */
+		@Getter(onMethod = @__({ @XmlElement }))
+		@Setter
+		private Map<String, Object> data;
+
+		/** For type "cookie": "json" or "form" - how {@link #data} is encoded in the login request body. */
+		@Getter(onMethod = @__({ @XmlElement }))
+		@Setter
+		private String contentType;
 
 		public AuthScheme() {
 		}
@@ -142,7 +175,12 @@ public class Http implements Client {
 		}
 	}
 
-	private final NetworkAddress host;
+	private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+
+	/** The target host (IPv4/IPv6 literal or FQDN) - DNS resolution is left to the
+	 * underlying Jersey/JAX-RS client, so that TLS hostname/certificate validation
+	 * matches the device's certificate (typically issued for its DNS name). */
+	private final String host;
 	private final int port;
 	private final boolean tls;
 	@SuppressWarnings("unused")
@@ -152,13 +190,22 @@ public class Http implements Client {
 	private jakarta.ws.rs.client.Client jerseyClient;
 
 	/**
+	 * Session cookies obtained via a "cookie" auth login request, replayed on
+	 * every subsequent request made through this same {@link Http} instance.
+	 */
+	private final Map<String, String> sessionCookies = new HashMap<>();
+
+	/** Whether the "cookie" auth login request has already been attempted. */
+	private boolean cookieSessionAttempted = false;
+
+	/**
 	 * Instantiates a new HTTP access.
-	 * @param host the target host
+	 * @param host the target host (IPv4/IPv6 literal or FQDN)
 	 * @param port the target TCP port
 	 * @param tls whether to use TLS (https) or not
 	 * @param taskContext the current task context
 	 */
-	public Http(NetworkAddress host, int port, boolean tls, TaskContext taskContext) {
+	public Http(String host, int port, boolean tls, TaskContext taskContext) {
 		this.host = host;
 		this.port = port;
 		this.tls = tls;
@@ -200,19 +247,25 @@ public class Http implements Client {
 	 * Injects the authentication data (per the access's declared auth scheme)
 	 * into the effective headers/query/cookies of the outgoing request.
 	 * The credential itself never leaves this method.
-	 * @param auth the auth scheme to apply
+	 * <p>
+	 * The "type"/"scheme"/"in" values were already validated with exact case
+	 * by {@code DeviceDriver.parseHttpAuthScheme}, so they are matched here
+	 * with exact case too.
+	 * @param httpConfig the access's declared HTTP configuration (base path, auth scheme)
 	 * @param account the credential set to authenticate with
 	 * @param headers the effective request headers, updated in place
 	 * @param query the effective request query parameters, updated in place
 	 * @param cookies the effective request cookies, updated in place
+	 * @throws IOException if a "cookie" auth login request is needed and fails
 	 */
-	private void applyAuth(AuthScheme auth, DeviceHttpAccount account,
-			Map<String, String> headers, Map<String, String> query, Map<String, String> cookies) {
+	private void applyAuth(HttpConfig httpConfig, DeviceHttpAccount account,
+			Map<String, String> headers, Map<String, String> query, Map<String, String> cookies) throws IOException {
+		AuthScheme auth = httpConfig == null ? null : httpConfig.getAuth();
 		if (auth == null || account == null || auth.getType() == null) {
 			return;
 		}
-		if ("http".equalsIgnoreCase(auth.getType())) {
-			if ("bearer".equalsIgnoreCase(auth.getScheme())) {
+		if ("http".equals(auth.getType())) {
+			if ("bearer".equals(auth.getScheme())) {
 				if (account.getPassword() != null) {
 					headers.put("Authorization", "Bearer " + account.getPassword());
 				}
@@ -226,25 +279,191 @@ public class Http implements Client {
 				headers.put("Authorization", "Basic " + encoded);
 			}
 		}
-		else if ("apiKey".equalsIgnoreCase(auth.getType())) {
+		else if ("apiKey".equals(auth.getType())) {
 			String value = account.getPassword();
 			if (value == null) {
 				return;
 			}
 			String keyName = auth.getName() == null ? "X-API-Key" : auth.getName();
-			if ("query".equalsIgnoreCase(auth.getIn())) {
+			if ("query".equals(auth.getIn())) {
 				query.put(keyName, value);
 			}
-			else if ("cookie".equalsIgnoreCase(auth.getIn())) {
+			else if ("cookie".equals(auth.getIn())) {
 				cookies.put(keyName, value);
 			}
 			else {
 				headers.put(keyName, value);
 			}
 		}
+		else if ("cookie".equals(auth.getType())) {
+			Map<String, String> loginCookies = this.ensureCookieSession(httpConfig, auth, account);
+			cookies.putAll(loginCookies);
+		}
 		// "oauth2" / "openIdConnect": schema is recognized and validated by
 		// DeviceDriver, but the token fetch/cache/refresh flow against an IdP
 		// is a deliberately deferred fast-follow, not implemented in Phase 1.
+	}
+
+	/**
+	 * Logs in (once per {@link Http} instance) against the "cookie" auth
+	 * scheme's declared endpoint, and returns the session cookie(s) captured
+	 * from its response - cached so later requests on this same instance
+	 * replay them without logging in again.
+	 * @param httpConfig the access's declared HTTP configuration (for the base path)
+	 * @param auth the "cookie" auth scheme (method/path/data/contentType)
+	 * @param account the credential set to log in with
+	 * @return the session cookies to replay on every request
+	 * @throws IOException if the login request could not be sent, or came back with a non-2xx status
+	 */
+	private Map<String, String> ensureCookieSession(HttpConfig httpConfig, AuthScheme auth, DeviceHttpAccount account)
+			throws IOException {
+		if (this.cookieSessionAttempted) {
+			return this.sessionCookies;
+		}
+		this.connect();
+		Object substitutedData = substitutePlaceholders(auth.getData(), account);
+		Entity<?> entity;
+		if ("form".equals(auth.getContentType())) {
+			entity = Entity.form(toForm(substitutedData));
+		}
+		else {
+			String body;
+			try {
+				body = JSON_MAPPER.writeValueAsString(substitutedData == null ? Map.of() : substitutedData);
+			}
+			catch (Exception e) {
+				throw new IOException("Unable to serialize the cookie-auth login body.", e);
+			}
+			entity = Entity.entity(body, MediaType.APPLICATION_JSON_TYPE);
+		}
+		URI uri = this.buildUri(auth.getPath(), httpConfig);
+		String method = auth.getMethod() == null ? "POST" : auth.getMethod();
+		Invocation.Builder invocationBuilder = this.buildInvocation(uri, Map.of(), Map.of(), Map.of());
+		Response response;
+		try {
+			response = invocationBuilder.method(method, entity);
+		}
+		catch (ProcessingException e) {
+			log.warn("Cookie-auth login request to {} failed.", uri, e);
+			throw new IOException("Cookie-auth login request failed: " + e.getMessage(), e);
+		}
+		try {
+			int status = response.getStatus();
+			if (status < 200 || status >= 300) {
+				throw new IOException("Cookie-auth login failed (HTTP status " + status + ").");
+			}
+			for (NewCookie cookie : response.getCookies().values()) {
+				this.sessionCookies.put(cookie.getName(), cookie.getValue());
+			}
+		}
+		finally {
+			response.close();
+		}
+		this.cookieSessionAttempted = true;
+		return this.sessionCookies;
+	}
+
+	/**
+	 * Recursively substitutes the {@code $$NetshotUsername$$}/{@code $$NetshotPassword$$}
+	 * placeholders (see {@link DeviceDriver#PLACEHOLDER_USERNAME}/{@link DeviceDriver#PLACEHOLDER_PASSWORD})
+	 * in a driver-declared "cookie" auth login body with the resolved credential's values.
+	 * @param value the value to substitute into (String, Map, List, or any other plain object)
+	 * @param account the credential set to substitute with
+	 * @return the substituted value
+	 */
+	private static Object substitutePlaceholders(Object value, DeviceHttpAccount account) {
+		if (value instanceof String s) {
+			String result = s.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_USERNAME),
+				Matcher.quoteReplacement(StringUtils.defaultString(account.getUsername())));
+			result = result.replaceAll(Pattern.quote(DeviceDriver.PLACEHOLDER_PASSWORD),
+				Matcher.quoteReplacement(StringUtils.defaultString(account.getPassword())));
+			return result;
+		}
+		if (value instanceof Map<?, ?> map) {
+			Map<String, Object> result = new HashMap<>();
+			for (Map.Entry<?, ?> entry : map.entrySet()) {
+				result.put(String.valueOf(entry.getKey()), substitutePlaceholders(entry.getValue(), account));
+			}
+			return result;
+		}
+		if (value instanceof List<?> list) {
+			List<Object> result = new ArrayList<>();
+			for (Object item : list) {
+				result.add(substitutePlaceholders(item, account));
+			}
+			return result;
+		}
+		return value;
+	}
+
+	/**
+	 * Converts a flat map into a JAX-RS {@link Form}, for an
+	 * {@code application/x-www-form-urlencoded} login request body.
+	 * @param data the data to convert (expected to be a flat {@code Map<String, Object>})
+	 * @return the form
+	 */
+	private static Form toForm(Object data) {
+		Form form = new Form();
+		if (data instanceof Map<?, ?> map) {
+			for (Map.Entry<?, ?> entry : map.entrySet()) {
+				form.param(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+			}
+		}
+		return form;
+	}
+
+	/**
+	 * Builds the absolute request URI for a given path, prepending the access's base path.
+	 * Uses {@link #host} (the originally configured IPv4/IPv6 literal or FQDN) as-is,
+	 * leaving DNS resolution to the underlying Jersey/JAX-RS client, so TLS hostname/
+	 * certificate validation matches the device's certificate.
+	 * @param path the request path (may be null/empty)
+	 * @param httpConfig the access's declared HTTP configuration (for the base path)
+	 * @return the absolute URI
+	 */
+	private URI buildUri(String path, HttpConfig httpConfig) {
+		StringBuilder pathBuilder = new StringBuilder();
+		if (httpConfig != null && httpConfig.getBasePath() != null && !httpConfig.getBasePath().isEmpty()) {
+			String base = httpConfig.getBasePath();
+			pathBuilder.append(base.startsWith("/") ? base : "/" + base);
+		}
+		if (path != null && !path.isEmpty()) {
+			pathBuilder.append(path.startsWith("/") ? path : "/" + path);
+		}
+		return UriBuilder.newInstance()
+			.scheme(this.tls ? "https" : "http")
+			.host(this.host)
+			.port(this.port)
+			.replacePath(pathBuilder.toString())
+			.build();
+	}
+
+	/**
+	 * Builds a Jersey invocation for a given URI, with query params/headers/cookies applied.
+	 * @param uri the absolute request URI
+	 * @param headers the request headers to apply (a "Content-Type" entry, if any, is skipped - it is
+	 *        applied separately via {@link Entity#entity(Object, String)} when sending the request)
+	 * @param query the request query parameters to apply
+	 * @param cookies the request cookies to apply
+	 * @return the configured invocation builder
+	 */
+	private Invocation.Builder buildInvocation(URI uri, Map<String, String> headers,
+			Map<String, String> query, Map<String, String> cookies) {
+		WebTarget target = this.jerseyClient.target(uri);
+		for (Map.Entry<String, String> entry : query.entrySet()) {
+			target = target.queryParam(entry.getKey(), entry.getValue());
+		}
+		Invocation.Builder invocationBuilder = target.request();
+		for (Map.Entry<String, String> entry : headers.entrySet()) {
+			if ("Content-Type".equalsIgnoreCase(entry.getKey())) {
+				continue;
+			}
+			invocationBuilder = invocationBuilder.header(entry.getKey(), entry.getValue());
+		}
+		for (Map.Entry<String, String> entry : cookies.entrySet()) {
+			invocationBuilder = invocationBuilder.cookie(entry.getKey(), entry.getValue());
+		}
+		return invocationBuilder;
 	}
 
 	/**
@@ -265,18 +484,7 @@ public class Http implements Client {
 			HttpConfig httpConfig, DeviceHttpAccount account) throws IOException {
 		this.connect();
 
-		StringBuilder pathBuilder = new StringBuilder();
-		if (httpConfig != null && httpConfig.getBasePath() != null && !httpConfig.getBasePath().isEmpty()) {
-			String base = httpConfig.getBasePath();
-			pathBuilder.append(base.startsWith("/") ? base : "/" + base);
-		}
-		if (path != null && !path.isEmpty()) {
-			pathBuilder.append(path.startsWith("/") ? path : "/" + path);
-		}
-
-		String scheme = this.tls ? "https" : "http";
-		String hostAddress = this.host.getInetAddress().getHostAddress();
-		String uri = String.format("%s://%s:%d%s", scheme, hostAddress, this.port, pathBuilder.toString());
+		URI uri = this.buildUri(path, httpConfig);
 
 		Map<String, String> effectiveHeaders = new HashMap<>();
 		if (headers != null) {
@@ -292,29 +500,16 @@ public class Http implements Client {
 		}
 
 		if (httpConfig != null) {
-			this.applyAuth(httpConfig.getAuth(), account, effectiveHeaders, effectiveQuery, effectiveCookies);
+			this.applyAuth(httpConfig, account, effectiveHeaders, effectiveQuery, effectiveCookies);
 		}
 
-		WebTarget target = this.jerseyClient.target(uri);
-		for (Map.Entry<String, String> entry : effectiveQuery.entrySet()) {
-			target = target.queryParam(entry.getKey(), entry.getValue());
-		}
-		Invocation.Builder invocationBuilder = target.request();
-		for (Map.Entry<String, String> entry : effectiveHeaders.entrySet()) {
-			if ("Content-Type".equalsIgnoreCase(entry.getKey())) {
-				continue;
-			}
-			invocationBuilder = invocationBuilder.header(entry.getKey(), entry.getValue());
-		}
-		for (Map.Entry<String, String> entry : effectiveCookies.entrySet()) {
-			invocationBuilder = invocationBuilder.cookie(entry.getKey(), entry.getValue());
-		}
+		Invocation.Builder invocationBuilder = this.buildInvocation(uri, effectiveHeaders, effectiveQuery, effectiveCookies);
 
 		String contentType = effectiveHeaders.entrySet().stream()
 			.filter(e -> "Content-Type".equalsIgnoreCase(e.getKey()))
 			.map(Map.Entry::getValue)
 			.findFirst()
-			.orElse("application/json");
+			.orElse(MediaType.APPLICATION_JSON);
 
 		String upperMethod = method == null ? "GET" : method.toUpperCase();
 		try {

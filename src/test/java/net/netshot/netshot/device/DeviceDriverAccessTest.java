@@ -20,6 +20,7 @@ package net.netshot.netshot.device;
 
 import java.io.StringReader;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,7 @@ import net.netshot.netshot.device.DeviceDriver.AccessDefinition;
 import net.netshot.netshot.device.DeviceDriver.DriverProtocol;
 import net.netshot.netshot.device.DeviceDriver.Location;
 import net.netshot.netshot.device.DeviceDriver.LocationType;
+import net.netshot.netshot.device.access.Http.AuthScheme;
 import net.netshot.netshot.device.credentials.DeviceHttpAccount;
 
 /**
@@ -62,6 +64,64 @@ public class DeviceDriverAccessTest {
 			http: {},
 			https: {},
 			custom: { protocol: "https", group: "custom", priority: 5 },
+		};
+
+		function snapshot(client, device, config) {
+		}
+		""";
+
+	private static final String COOKIE_AUTH_DRIVER_JS = """
+		var Info = {
+			name: "CookieAuthDriver",
+			author: "test",
+			description: "Test driver for cookie-based HTTP auth",
+			version: "1.0"
+		};
+
+		var Config = {};
+		var Device = {};
+		var CLI = { ssh: {} };
+
+		var HTTP = {
+			https: {
+				auth: {
+					type: "cookie",
+					method: "post",
+					path: "/login",
+					data: {
+						domain: "local",
+						userName: "$$NetshotUsername$$",
+						userPasswd: "$$NetshotPassword$$",
+					},
+					contentType: "json",
+				}
+			}
+		};
+
+		function snapshot(client, device, config) {
+		}
+		""";
+
+	private static final String BAD_CASE_AUTH_TYPE_DRIVER_JS = """
+		var Info = {
+			name: "BadCaseAuthTypeDriver",
+			author: "test",
+			description: "test",
+			version: "1.0"
+		};
+
+		var Config = {};
+		var Device = {};
+		var CLI = {};
+
+		var HTTP = {
+			https: {
+				auth: {
+					type: "APIKEY",
+					in: "header",
+					name: "X-API-Key",
+				}
+			}
 		};
 
 		function snapshot(client, device, config) {
@@ -183,6 +243,32 @@ public class DeviceDriverAccessTest {
 		List<AccessDefinition> customGroup = driver.getAccessDefinitionsByGroup("custom");
 		Assertions.assertEquals(1, customGroup.size());
 		Assertions.assertEquals("custom", customGroup.get(0).getName());
+	}
+
+	@Test
+	public void cookieAuthSchemeIsParsed() throws Exception {
+		DeviceDriver driver = new DeviceDriver(new StringReader(COOKIE_AUTH_DRIVER_JS), "CookieAuthDriver.js",
+			new Location(LocationType.EMBEDDED, "CookieAuthDriver.js"));
+
+		AuthScheme auth = driver.getAccessDefinition("https").getHttpConfig().getAuth();
+		Assertions.assertEquals("cookie", auth.getType());
+		Assertions.assertEquals("POST", auth.getMethod());
+		Assertions.assertEquals("/login", auth.getPath());
+		Assertions.assertEquals("json", auth.getContentType());
+		Assertions.assertEquals(Map.of(
+			"domain", "local",
+			"userName", "$$NetshotUsername$$",
+			"userPasswd", "$$NetshotPassword$$"
+		), auth.getData());
+	}
+
+	@Test
+	public void authSchemeTypeIsCaseSensitive() {
+		// "APIKEY" must be rejected: driver-declared auth constants like "apiKey"
+		// are matched with exact case, not loosely/case-insensitively.
+		Assertions.assertThrows(IllegalArgumentException.class, () -> new DeviceDriver(
+			new StringReader(BAD_CASE_AUTH_TYPE_DRIVER_JS), "BadCaseAuthTypeDriver.js",
+			new Location(LocationType.EMBEDDED, "BadCaseAuthTypeDriver.js")));
 	}
 
 }

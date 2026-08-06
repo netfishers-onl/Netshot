@@ -40,8 +40,8 @@ import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DynamicDeviceGroup;
 import net.netshot.netshot.device.Network4Address;
-import net.netshot.netshot.device.script.CliScript;
-import net.netshot.netshot.device.script.SnapshotCliScript;
+import net.netshot.netshot.device.script.DeviceScript;
+import net.netshot.netshot.device.script.SnapshotDeviceScript;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.rest.RestViews.HookView;
 import net.netshot.netshot.work.DebugLog;
@@ -194,7 +194,7 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 		boolean locked = false;
 
 		Session session = Database.getSession();
-		CliScript cliScript = new SnapshotCliScript(this.logger);
+		DeviceScript deviceScript = new SnapshotDeviceScript(this.logger);
 		try {
 			session.beginTransaction();
 			// Start over from a fresh device from DB
@@ -215,7 +215,7 @@ public final class TakeSnapshotTask extends Task implements DeviceBasedTask {
 				return;
 			}
 
-			cliScript.connectRun(session, device);
+			deviceScript.connectRun(session, device);
 			session.persist(device);
 			session.getTransaction().commit();
 			this.status = Status.SUCCESS;

@@ -47,7 +47,7 @@ import net.netshot.netshot.device.attribute.AttributeDefinition.AttributeLevel;
 import net.netshot.netshot.device.attribute.ConfigAttribute;
 import net.netshot.netshot.device.attribute.ConfigBinaryFileAttribute;
 import net.netshot.netshot.device.script.helper.JsCliHelper;
-import net.netshot.netshot.device.script.helper.JsCliScriptOptions;
+import net.netshot.netshot.device.script.helper.JsDeviceScriptOptions;
 import net.netshot.netshot.device.script.helper.JsClientFactory;
 import net.netshot.netshot.device.script.helper.JsConfigHelper;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
@@ -56,9 +56,9 @@ import net.netshot.netshot.device.script.helper.JsUtils;
 import net.netshot.netshot.work.TaskContext;
 
 @Slf4j
-public final class SnapshotCliScript extends CliScript {
+public final class SnapshotDeviceScript extends DeviceScript {
 
-	public SnapshotCliScript(TaskContext logger) {
+	public SnapshotDeviceScript(TaskContext logger) {
 		super(logger);
 	}
 
@@ -133,7 +133,7 @@ public final class SnapshotCliScript extends CliScript {
 		JsCliHelper jsCliHelper = new JsCliHelper(accessManager, driver.getDefaultCliAccessDefinitions(), true, this.taskContext);
 		JsSnmpHelper jsSnmpHelper = new JsSnmpHelper(accessManager, driver.getDefaultSnmpAccessDefinitions(), true, this.taskContext);
 		JsClientFactory clientFactory = new JsClientFactory(accessManager, driver);
-		JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
+		JsDeviceScriptOptions options = new JsDeviceScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
 		options.setClientFactory(clientFactory);
 
 		try (Context context = driver.getContext()) {

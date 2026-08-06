@@ -58,7 +58,7 @@ import net.netshot.netshot.device.credentials.DeviceCliAccount;
 import net.netshot.netshot.device.credentials.DeviceSnmpCommunity;
 import net.netshot.netshot.device.credentials.DeviceSnmpv2cCommunity;
 import net.netshot.netshot.device.credentials.DeviceSshAccount;
-import net.netshot.netshot.device.script.SnapshotCliScript;
+import net.netshot.netshot.device.script.SnapshotDeviceScript;
 import net.netshot.netshot.work.TaskContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -83,7 +83,7 @@ public class DeviceDriverTest {
 		protected PrintStream srvOutStream;
 		protected DeviceCliAccount cliAccount;
 
-		public FakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
+		public FakeCli(String host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
 			super(host, taskContext);
 			PipedOutputStream pipedStream = new PipedOutputStream();
 			this.srvOutStream = new PrintStream(pipedStream);
@@ -117,7 +117,7 @@ public class DeviceDriverTest {
 		private final String hostname = "router1";
 		private final Pattern commandPattern = Pattern.compile("(.+)\r");
 
-		public CiscoIOS12FakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
+		public CiscoIOS12FakeCli(String host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
 			super(host, cliAccount, taskContext);
 		}
 
@@ -392,10 +392,10 @@ public class DeviceDriverTest {
 			Cli fakeCli = new CiscoIOS12FakeCli(null, credentials, taskContext);
 			Session nullSession = null;
 			Device device = FakeDeviceFactory.getFakeCiscoIosDevice();
-			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
+			SnapshotDeviceScript script = new SnapshotDeviceScript(this.taskContext);
 			AccessManager accessManager = new AccessManager(nullSession, device, null, this.taskContext, null);
 			accessManager.forceClientForTest(fakeCli, credentials);
-			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
+			Method runMethod = SnapshotDeviceScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, AccessManager.class);
 			runMethod.setAccessible(true);
 			runMethod.invoke(script, nullSession, device, accessManager);
@@ -449,7 +449,7 @@ public class DeviceDriverTest {
 		private final String currentPath = "/";
 		private List<String> pagedLines;
 
-		public ZPENodeGridFakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
+		public ZPENodeGridFakeCli(String host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
 			super(host, cliAccount, taskContext);
 		}
 
@@ -671,10 +671,10 @@ public class DeviceDriverTest {
 			Session nullSession = null;
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("ZPENodeGrid", null, domain, "test");
-			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
+			SnapshotDeviceScript script = new SnapshotDeviceScript(this.taskContext);
 			AccessManager accessManager = new AccessManager(nullSession, device, null, this.taskContext, null);
 			accessManager.forceClientForTest(fakeCli, credentials);
-			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
+			Method runMethod = SnapshotDeviceScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, AccessManager.class);
 			runMethod.setAccessible(true);
 			runMethod.invoke(script, nullSession, device, accessManager);
@@ -731,7 +731,7 @@ public class DeviceDriverTest {
 		private final String hostname = "switch1";
 		private final Pattern commandPattern = Pattern.compile("(.+)\r");
 
-		public AristaMOSFakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
+		public AristaMOSFakeCli(String host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
 			super(host, cliAccount, taskContext);
 		}
 
@@ -1150,10 +1150,10 @@ public class DeviceDriverTest {
 			Session nullSession = null;
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("AristaMOS", null, domain, "test");
-			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
+			SnapshotDeviceScript script = new SnapshotDeviceScript(this.taskContext);
 			AccessManager accessManager = new AccessManager(nullSession, device, null, this.taskContext, null);
 			accessManager.forceClientForTest(fakeCli, credentials);
-			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
+			Method runMethod = SnapshotDeviceScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, AccessManager.class);
 			runMethod.setAccessible(true);
 			runMethod.invoke(script, nullSession, device, accessManager);
@@ -1202,7 +1202,7 @@ public class DeviceDriverTest {
 		private final Pattern commandPattern = Pattern.compile("(.+)\r");
 		private Deque<String> nextPages;
 
-		public CiscoAsyncOSFakeCli(NetworkAddress host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
+		public CiscoAsyncOSFakeCli(String host, DeviceCliAccount cliAccount, TaskContext taskContext) throws IOException {
 			super(host, cliAccount, taskContext);
 		}
 
@@ -1534,10 +1534,10 @@ public class DeviceDriverTest {
 			Session nullSession = null;
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("CiscoAsyncOS", null, domain, "test");
-			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
+			SnapshotDeviceScript script = new SnapshotDeviceScript(this.taskContext);
 			AccessManager accessManager = new AccessManager(nullSession, device, null, this.taskContext, null);
 			accessManager.forceClientForTest(fakeCli, credentials);
-			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
+			Method runMethod = SnapshotDeviceScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, AccessManager.class);
 			runMethod.setAccessible(true);
 			runMethod.invoke(script, nullSession, device, accessManager);
@@ -1601,11 +1601,11 @@ public class DeviceDriverTest {
 			Session nullSession = null;
 			Domain domain = new Domain("Test domain", "Fake domain for tests", null, null);
 			Device device = new Device("GenericSNMP", null, domain, "test");
-			SnapshotCliScript script = new SnapshotCliScript(this.taskContext);
+			SnapshotDeviceScript script = new SnapshotDeviceScript(this.taskContext);
 
 			AccessManager accessManager = new AccessManager(nullSession, device, address, this.taskContext, null);
 			accessManager.forceClientForTest(fakeSnmp, community);
-			Method runMethod = SnapshotCliScript.class.getDeclaredMethod("run", Session.class,
+			Method runMethod = SnapshotDeviceScript.class.getDeclaredMethod("run", Session.class,
 				Device.class, AccessManager.class);
 			runMethod.setAccessible(true);
 			runMethod.invoke(script, nullSession, device, accessManager);

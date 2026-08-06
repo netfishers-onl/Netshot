@@ -35,7 +35,7 @@ import net.netshot.netshot.device.DeviceDriver;
 import net.netshot.netshot.device.access.AccessManager;
 import net.netshot.netshot.device.access.InvalidCredentialsException;
 import net.netshot.netshot.device.script.helper.JsCliHelper;
-import net.netshot.netshot.device.script.helper.JsCliScriptOptions;
+import net.netshot.netshot.device.script.helper.JsDeviceScriptOptions;
 import net.netshot.netshot.device.script.helper.JsClientFactory;
 import net.netshot.netshot.device.script.helper.JsDeviceHelper;
 import net.netshot.netshot.device.script.helper.JsDiagnosticHelper;
@@ -45,7 +45,7 @@ import net.netshot.netshot.diagnostic.Diagnostic;
 import net.netshot.netshot.work.TaskContext;
 
 @Slf4j
-public final class RunDiagnosticCliScript extends CliScript {
+public final class RunDiagnosticDeviceScript extends DeviceScript {
 
 	/** The diagnostics to execute. */
 	private List<Diagnostic> diagnostics;
@@ -55,7 +55,7 @@ public final class RunDiagnosticCliScript extends CliScript {
 	 * @param diagnostics = the list of diagnostics
 	 * @param logger = the task context
 	 */
-	public RunDiagnosticCliScript(List<Diagnostic> diagnostics, TaskContext logger) {
+	public RunDiagnosticDeviceScript(List<Diagnostic> diagnostics, TaskContext logger) {
 		super(logger);
 		this.diagnostics = diagnostics;
 	}
@@ -70,7 +70,7 @@ public final class RunDiagnosticCliScript extends CliScript {
 		// Filter on the device driver
 		try (Context context = driver.getContext()) {
 			driver.loadCode(context);
-			JsCliScriptOptions options = new JsCliScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
+			JsDeviceScriptOptions options = new JsDeviceScriptOptions(jsCliHelper, jsSnmpHelper, this.taskContext);
 			options.setClientFactory(clientFactory);
 			options.setDeviceHelper(new JsDeviceHelper(device, jsCliHelper, null, this.taskContext, false));
 

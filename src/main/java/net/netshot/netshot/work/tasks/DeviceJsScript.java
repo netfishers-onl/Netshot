@@ -39,8 +39,8 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.Getter;
 import lombok.Setter;
 import net.netshot.netshot.device.DeviceDriver;
-import net.netshot.netshot.device.script.JsCliScript;
-import net.netshot.netshot.device.script.JsCliScript.UserInputDefinition;
+import net.netshot.netshot.device.script.UserDeviceScript;
+import net.netshot.netshot.device.script.UserDeviceScript.UserInputDefinition;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.TaskContext;
 
@@ -149,7 +149,7 @@ public class DeviceJsScript {
 	 */
 	public void extractUserInputDefinitions() throws IllegalArgumentException {
 		if (this.userInputDefinitions == null) {
-			final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, this.makeVoidLogger());
+			final UserDeviceScript jsScript = new UserDeviceScript(this.deviceDriver, this.script, this.makeVoidLogger());
 			this.userInputDefinitions = jsScript.extractInputDefinitions();
 		}
 	}
@@ -161,7 +161,7 @@ public class DeviceJsScript {
 	 * @throws IllegalArgumentException if validation fails
 	 */
 	public void validateUserInputs(Map<String, String> userInputs) throws IllegalArgumentException {
-		final JsCliScript jsScript = new JsCliScript(this.deviceDriver, this.script, this.makeVoidLogger());
+		final UserDeviceScript jsScript = new UserDeviceScript(this.deviceDriver, this.script, this.makeVoidLogger());
 		jsScript.setUserInputValues(userInputs);
 		jsScript.validateUserInputs();
 	}

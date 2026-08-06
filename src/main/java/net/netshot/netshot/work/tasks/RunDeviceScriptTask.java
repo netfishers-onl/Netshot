@@ -32,7 +32,7 @@ import net.netshot.netshot.TaskManager;
 import net.netshot.netshot.database.Database;
 import net.netshot.netshot.device.Device;
 import net.netshot.netshot.device.DeviceDriver;
-import net.netshot.netshot.device.script.JsCliScript;
+import net.netshot.netshot.device.script.UserDeviceScript;
 import net.netshot.netshot.rest.RestViews.DefaultView;
 import net.netshot.netshot.work.DebugLog;
 import net.netshot.netshot.work.Task;
@@ -78,7 +78,7 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 			return;
 		}
 
-		JsCliScript cliScript = null;
+		UserDeviceScript deviceScript = null;
 		Session session = Database.getSession();
 		try {
 			session.beginTransaction();
@@ -99,9 +99,9 @@ public final class RunDeviceScriptTask extends Task implements DeviceBasedTask {
 				return;
 			}
 
-			cliScript = new JsCliScript(this.deviceDriver, this.script, this.logger);
-			cliScript.setUserInputValues(this.userInputValues);
-			cliScript.connectRun(session, device);
+			deviceScript = new UserDeviceScript(this.deviceDriver, this.script, this.logger);
+			deviceScript.setUserInputValues(this.userInputValues);
+			deviceScript.connectRun(session, device);
 
 			session.merge(device);
 			session.getTransaction().commit();

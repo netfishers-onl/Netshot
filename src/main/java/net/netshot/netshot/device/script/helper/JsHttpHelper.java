@@ -27,7 +27,6 @@ import org.graalvm.polyglot.HostAccess.Export;
 
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.DeviceDriver.AccessDefinition;
-import net.netshot.netshot.device.NetworkAddress;
 import net.netshot.netshot.device.access.AccessAuthenticationException;
 import net.netshot.netshot.device.access.AccessManager;
 import net.netshot.netshot.device.access.AccessManager.Resolution;
@@ -83,11 +82,11 @@ public class JsHttpHelper {
 
 	private Client buildClient(AccessDefinition candidateAccessDef, DeviceCredentialSet credentialSet) throws IOException {
 		Http.HttpConfig httpConfig = candidateAccessDef.getHttpConfig();
-		NetworkAddress address = this.accessManager.resolveAddress(candidateAccessDef);
+		String host = this.accessManager.resolveHost(candidateAccessDef);
 		int port = this.accessManager.resolvePort(candidateAccessDef);
 		this.taskContext.debug("Trying access '{}' ({}) using credentials '{}', at {}:{}.",
-			candidateAccessDef.getName(), candidateAccessDef.getProtocol(), credentialSet.getName(), address.getIp(), port);
-		return new Http(address, port, httpConfig.isTls(), this.taskContext);
+			candidateAccessDef.getName(), candidateAccessDef.getProtocol(), credentialSet.getName(), host, port);
+		return new Http(host, port, httpConfig.isTls(), this.taskContext);
 	}
 
 	private void ensureResolved() throws IOException {

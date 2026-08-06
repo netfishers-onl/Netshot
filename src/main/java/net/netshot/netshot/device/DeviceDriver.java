@@ -1289,6 +1289,11 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 	 * OpenAPI-securitySchemes-inspired. "oauth2"/"openIdConnect" shapes are
 	 * recognized but the actual IdP token fetch/cache/refresh flow is a
 	 * deliberately deferred fast-follow, not implemented in this phase.
+	 * <p>
+	 * The "type"/"scheme"/"in" values are driver-authored constants (part of
+	 * the documented schema, e.g. "apiKey"), not free-form user input, so they
+	 * are matched with exact case - a typo like "apikey" is rejected rather
+	 * than silently accepted.
 	 * @param authValue the JS "auth" object
 	 * @param accessName the name of the HTTP access (for error messages)
 	 * @return the populated AuthScheme
@@ -1302,19 +1307,19 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 		}
 		String type = typeValue.asString();
 		auth.setType(type);
-		if ("http".equalsIgnoreCase(type)) {
+		if ("http".equals(type)) {
 			Value schemeValue = authValue.getMember("scheme");
 			String scheme = (schemeValue != null && schemeValue.isString()) ? schemeValue.asString() : "basic";
-			if (!"basic".equalsIgnoreCase(scheme) && !"bearer".equalsIgnoreCase(scheme)) {
+			if (!"basic".equals(scheme) && !"bearer".equals(scheme)) {
 				throw new IllegalArgumentException(
 					String.format("Invalid 'scheme' '%s' in auth scheme of HTTP access '%s'.", scheme, accessName));
 			}
 			auth.setScheme(scheme);
 		}
-		else if ("apiKey".equalsIgnoreCase(type)) {
+		else if ("apiKey".equals(type)) {
 			Value inValue = authValue.getMember("in");
 			String in = (inValue != null && inValue.isString()) ? inValue.asString() : "header";
-			if (!"header".equalsIgnoreCase(in) && !"query".equalsIgnoreCase(in) && !"cookie".equalsIgnoreCase(in)) {
+			if (!"header".equals(in) && !"query".equals(in) && !"cookie".equals(in)) {
 				throw new IllegalArgumentException(
 					String.format("Invalid 'in' '%s' in auth scheme of HTTP access '%s'.", in, accessName));
 			}
@@ -1326,7 +1331,39 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 			}
 			auth.setName(nameValue.asString());
 		}
-		else if (!"oauth2".equalsIgnoreCase(type) && !"openIdConnect".equalsIgnoreCase(type)) {
+		else if ("cookie".equals(type)) {
+			Value methodValue = authValue.getMember("method");
+			String method = (methodValue != null && methodValue.isString()) ? methodValue.asString() : "post";
+			if (!"post".equals(method) && !"put".equals(method)) {
+				throw new IllegalArgumentException(
+					String.format("Invalid 'method' '%s' in cookie auth scheme of HTTP access '%s'.", method, accessName));
+			}
+			auth.setMethod(method.toUpperCase());
+			Value pathValue = authValue.getMember("path");
+			if (pathValue == null || !pathValue.isString()) {
+				throw new IllegalArgumentException(
+					String.format("Missing 'path' in cookie auth scheme of HTTP access '%s'.", accessName));
+			}
+			auth.setPath(pathValue.asString());
+			Value dataValue = authValue.getMember("data");
+			if (dataValue != null && dataValue.hasMembers()) {
+				Object data = JsUtils.valueToJavaObject(dataValue);
+				if (data instanceof Map) {
+					@SuppressWarnings("unchecked")
+					Map<String, Object> dataMap = (Map<String, Object>) data;
+					auth.setData(dataMap);
+				}
+			}
+			Value contentTypeValue = authValue.getMember("contentType");
+			String contentType = (contentTypeValue != null && contentTypeValue.isString())
+				? contentTypeValue.asString() : "json";
+			if (!"json".equals(contentType) && !"form".equals(contentType)) {
+				throw new IllegalArgumentException(String.format(
+					"Invalid 'contentType' '%s' in cookie auth scheme of HTTP access '%s'.", contentType, accessName));
+			}
+			auth.setContentType(contentType);
+		}
+		else if (!"oauth2".equals(type) && !"openIdConnect".equals(type)) {
 			throw new IllegalArgumentException(
 				String.format("Invalid auth 'type' '%s' in HTTP access '%s'.", type, accessName));
 		}

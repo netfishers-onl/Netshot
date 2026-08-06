@@ -18,6 +18,10 @@
  */
 package net.netshot.netshot.device.script.helper;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.graalvm.polyglot.PolyglotException;
@@ -31,6 +35,44 @@ public final class JsUtils {
 
 	private JsUtils() {
 		// Private constructor to prevent instantiation
+	}
+
+	/**
+	 * Recursively converts a JavaScript value (as read from driver code) into
+	 * plain Java objects ({@link Map}, {@link List}, {@link String}, {@link Double},
+	 * {@link Boolean}), so it can be safely stored/serialized outside of the
+	 * GraalJS context (e.g. in a {@code DeviceDriver} field).
+	 * @param value the JS value to convert (may be null)
+	 * @return the equivalent plain Java object, or null
+	 */
+	public static Object valueToJavaObject(Value value) {
+		if (value == null || value.isNull()) {
+			return null;
+		}
+		if (value.isString()) {
+			return value.asString();
+		}
+		if (value.isBoolean()) {
+			return value.asBoolean();
+		}
+		if (value.isNumber()) {
+			return value.fitsInLong() ? (Object) value.asLong() : (Object) value.asDouble();
+		}
+		if (value.hasArrayElements()) {
+			List<Object> list = new ArrayList<>();
+			for (long i = 0; i < value.getArraySize(); i++) {
+				list.add(valueToJavaObject(value.getArrayElement(i)));
+			}
+			return list;
+		}
+		if (value.hasMembers()) {
+			Map<String, Object> map = new LinkedHashMap<>();
+			for (String key : value.getMemberKeys()) {
+				map.put(key, valueToJavaObject(value.getMember(key)));
+			}
+			return map;
+		}
+		return value.toString();
 	}
 
 	/**

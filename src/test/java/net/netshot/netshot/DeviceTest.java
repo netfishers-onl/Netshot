@@ -1118,7 +1118,7 @@ public class DeviceTest extends WithDatabaseTest {
 	/**
 	 * Unit tests for {@link AccessManager}, the generalized lazy connect +
 	 * credential-set fallback engine that replaced the triplicated SSH/Telnet/SNMP
-	 * loops previously duplicated in {@code CliScript.connectRun}.
+	 * loops previously duplicated in {@code DeviceScript.connectRun}.
 	 */
 	@Nested
 	@DisplayName("AccessManager tests")

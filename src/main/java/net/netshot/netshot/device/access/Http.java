@@ -183,7 +183,6 @@ public class Http implements Client {
 	private final String host;
 	private final int port;
 	private final boolean tls;
-	@SuppressWarnings("unused")
 	private final TaskContext taskContext;
 
 	/** The underlying JAX-RS (Jersey) client - built lazily on first connect(). */
@@ -338,6 +337,14 @@ public class Http implements Client {
 		}
 		URI uri = this.buildUri(auth.getPath(), httpConfig);
 		String method = auth.getMethod() == null ? "POST" : auth.getMethod();
+		if (this.taskContext.isTracing()) {
+			// Trace the login request template (with the $$NetshotUsername$$/
+			// $$NetshotPassword$$ placeholders still in place), never the
+			// substituted body, so the credential itself never reaches the trace log.
+			this.taskContext.trace("About to send the following cookie-auth login request (secrets not inserted):");
+			this.taskContext.trace("{} {}", method, uri);
+			this.taskContext.trace("{}", auth.getData() == null ? Map.of() : auth.getData());
+		}
 		Invocation.Builder invocationBuilder = this.buildInvocation(uri, Map.of(), Map.of(), Map.of());
 		Response response;
 		try {
@@ -345,15 +352,28 @@ public class Http implements Client {
 		}
 		catch (ProcessingException e) {
 			log.warn("Cookie-auth login request to {} failed.", uri, e);
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace("I/O exception: {}", e.getMessage());
+			}
 			throw new IOException("Cookie-auth login request failed: " + e.getMessage(), e);
 		}
 		try {
 			int status = response.getStatus();
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace("Received the following cookie-auth login response:");
+				this.taskContext.trace("Status: {}", status);
+			}
 			if (status < 200 || status >= 300) {
 				throw new IOException("Cookie-auth login failed (HTTP status " + status + ").");
 			}
 			for (NewCookie cookie : response.getCookies().values()) {
 				this.sessionCookies.put(cookie.getName(), cookie.getValue());
+			}
+			if (this.taskContext.isTracing()) {
+				// Cookie names only - the values are session credentials, replayed
+				// on every later request, so they are kept out of the trace log.
+				this.taskContext.trace("Captured {} session cookie(s): {}", this.sessionCookies.size(),
+					this.sessionCookies.keySet());
 			}
 		}
 		finally {

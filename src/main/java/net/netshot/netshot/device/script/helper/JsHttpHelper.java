@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.graalvm.polyglot.HostAccess.Export;
+import org.graalvm.polyglot.proxy.ProxyObject;
 
 import lombok.extern.slf4j.Slf4j;
 import net.netshot.netshot.device.DeviceDriver.AccessDefinition;
@@ -111,8 +112,39 @@ public class JsHttpHelper {
 			String p = (path == null) ? "" : (path.startsWith("/") ? path : "/" + path);
 			fullPath = base + p;
 		}
-		return this.http.request(method, fullPath, headers, query, cookies, body,
-			this.accessDef.getHttpConfig(), this.account);
+		String upperMethod = method == null ? "GET" : method.toUpperCase();
+		if (this.taskContext.isTracing()) {
+			// Trace the request as built by the driver, i.e. before authentication
+			// data (Authorization header, API key, session cookie...) is injected,
+			// so that no secret ever gets written to the trace log.
+			this.taskContext.trace("About to send the following HTTP request (before authentication is applied):");
+			this.taskContext.trace("{} {}", upperMethod, fullPath);
+			this.taskContext.trace("Headers: {}", headers);
+			this.taskContext.trace("Query parameters: {}", query);
+			this.taskContext.trace("Cookies: {}", cookies);
+			if (body != null) {
+				this.taskContext.trace("Body:");
+				this.taskContext.trace(body);
+			}
+		}
+		try {
+			HttpResult result = this.http.request(method, fullPath, headers, query, cookies, body,
+				this.accessDef.getHttpConfig(), this.account);
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace("Received the following HTTP response:");
+				this.taskContext.trace("Status: {}", result.getStatus());
+				this.taskContext.trace("Headers: {}", result.getHeaders());
+				this.taskContext.trace("Body:");
+				this.taskContext.trace(result.getBody());
+			}
+			return result;
+		}
+		catch (IOException e) {
+			if (this.taskContext.isTracing()) {
+				this.taskContext.trace("I/O exception: {}", e.getMessage());
+			}
+			throw e;
+		}
 	}
 
 	/**
@@ -137,6 +169,20 @@ public class JsHttpHelper {
 	}
 
 	/**
+	 * Pause the thread for the given number of milliseconds (e.g. while polling
+	 * an asynchronous job on the remote HTTP API).
+	 * @param millis The number of milliseconds to wait for
+	 */
+	@Export
+	public void sleep(long millis) {
+		try {
+			Thread.sleep(millis);
+		}
+		catch (InterruptedException e) {
+		}
+	}
+
+	/**
 	 * Perform an HTTP request.
 	 * @param method the HTTP method
 	 * @param path the request path
@@ -148,7 +194,7 @@ public class JsHttpHelper {
 	 * @throws IOException on connection failure, or if no credential worked
 	 */
 	@Export
-	public Map<String, Object> request(String method, String path, Map<String, String> headers,
+	public ProxyObject request(String method, String path, Map<String, String> headers,
 			Map<String, String> query, Map<String, String> cookies, String body) throws IOException {
 		this.ensureResolved();
 		HttpResult result = this.doRequest(method, path, headers, query, cookies, body);
@@ -181,7 +227,7 @@ public class JsHttpHelper {
 		jsResult.put("status", result.getStatus());
 		jsResult.put("headers", result.getHeaders());
 		jsResult.put("body", result.getBody());
-		return jsResult;
+		return ProxyObject.fromMap(jsResult);
 	}
 
 }

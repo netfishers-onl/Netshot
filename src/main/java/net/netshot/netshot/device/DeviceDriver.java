@@ -31,7 +31,6 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -869,7 +868,7 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 
 			try {
 				Value cli = context.getBindings("js").getMember("CLI");
-				if (cli.hasMembers()) {
+				if (cli != null && cli.hasMembers()) {
 					for (String key : cli.getMemberKeys()) {
 						Value accessValue = cli.getMember(key);
 						if (accessValue == null || !accessValue.hasMembers()) {
@@ -1062,11 +1061,8 @@ public class DeviceDriver implements Comparable<DeviceDriver> {
 				throw new IllegalArgumentException("Invalid HTTP object.", e);
 			}
 
-			Set<DriverProtocol> connectableProtocols = EnumSet.copyOf(
-				this.protocols.isEmpty() ? EnumSet.noneOf(DriverProtocol.class) : this.protocols);
-			connectableProtocols.removeIf(DriverProtocol::isHttp);
-			if (connectableProtocols.isEmpty()) {
-				throw new IllegalArgumentException("Invalid driver, it supports neither Telnet, SSH nor SNMP.");
+			if (this.protocols.isEmpty()) {
+				throw new IllegalArgumentException("Invalid driver, it supports neither Telnet, SSH, SNMP nor HTTP/HTTPS.");
 			}
 
 			try {

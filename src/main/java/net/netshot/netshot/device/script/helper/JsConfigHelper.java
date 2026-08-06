@@ -295,6 +295,7 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 		try {
 			if ("author".equals(key)) {
 				config.setAuthor(value.asString());
+				taskContext.trace("Setting config author to '{}'.", value.asString());
 			}
 			else {
 				DeviceDriver driver = device.getDeviceDriver();
@@ -303,15 +304,19 @@ public final class JsConfigHelper implements UploadTicket.Owner {
 						switch (attribute.getType()) {
 							case BINARY:
 								config.addAttribute(new ConfigBinaryAttribute(config, key, value.asBoolean()));
+								taskContext.trace("Setting config attribute '{}' to {}.", key, value.asBoolean());
 								break;
 							case NUMERIC:
 								config.addAttribute(new ConfigNumericAttribute(config, key, value.asDouble()));
+								taskContext.trace("Setting config attribute '{}' to {}.", key, value.asDouble());
 								break;
 							case LONGTEXT:
 								config.addAttribute(new ConfigLongTextAttribute(config, key, value.asString()));
+								taskContext.trace("Setting config attribute '{}' to '{}'.", key, value.asString());
 								break;
 							case TEXT:
 								config.addAttribute(new ConfigTextAttribute(config, key, value.asString()));
+								taskContext.trace("Setting config attribute '{}' to '{}'.", key, value.asString());
 								break;
 							default:
 						}

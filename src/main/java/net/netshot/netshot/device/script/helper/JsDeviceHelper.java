@@ -229,6 +229,7 @@ public final class JsDeviceHelper {
 					switch (attribute.getType()) {
 						case BINARY:
 							device.addAttribute(new DeviceBinaryAttribute(device, key, value));
+							taskContext.trace("Setting device attribute '{}' to {}.", key, value);
 							break;
 						default:
 					}
@@ -260,6 +261,7 @@ public final class JsDeviceHelper {
 					switch (attribute.getType()) {
 						case NUMERIC:
 							device.addAttribute(new DeviceNumericAttribute(device, key, value));
+							taskContext.trace("Setting device attribute '{}' to {}.", key, value);
 							break;
 						default:
 					}
@@ -286,29 +288,37 @@ public final class JsDeviceHelper {
 		try {
 			if ("name".equals(key)) {
 				device.setName(value);
+				taskContext.trace("Setting device name to '{}'.", value);
 			}
 			else if ("family".equals(key)) {
 				device.setFamily(value);
+				taskContext.trace("Setting device family to '{}'.", value);
 			}
 			else if ("location".equals(key)) {
 				device.setLocation(value);
+				taskContext.trace("Setting device location to '{}'.", value);
 			}
 			else if ("contact".equals(key)) {
 				device.setContact(value);
+				taskContext.trace("Setting device contact to '{}'.", value);
 			}
 			else if ("softwareVersion".equals(key)) {
 				device.setSoftwareVersion(value);
+				taskContext.trace("Setting device software version to '{}'.", value);
 			}
 			else if ("serialNumber".equals(key)) {
 				device.setSerialNumber(value);
+				taskContext.trace("Setting device serial number to '{}'.", value);
 			}
 			else if ("comments".equals(key)) {
 				device.setComments(value);
+				taskContext.trace("Setting device comments to '{}'.", value);
 			}
 			else if ("networkClass".equals(key)) {
 				NetworkClass nc = NetworkClass.valueOf(value);
 				if (nc != null) {
 					device.setNetworkClass(nc);
+					taskContext.trace("Setting device network class to '{}'.", value);
 				}
 			}
 			else {
@@ -318,9 +328,11 @@ public final class JsDeviceHelper {
 						switch (attribute.getType()) {
 							case LONGTEXT:
 								device.addAttribute(new DeviceLongTextAttribute(device, key, value));
+								taskContext.trace("Setting device attribute '{}' to '{}'.", key, value);
 								break;
 							case TEXT:
 								device.addAttribute(new DeviceTextAttribute(device, key, value));
+								taskContext.trace("Setting device attribute '{}' to '{}'.", key, value);
 								break;
 							default:
 						}

@@ -827,6 +827,23 @@ const _connect = (_function, _options) => {
 			tryNextCredentials: function() {
 				return _http.tryNextCredentials();
 			},
+
+			sleep: function(millis) {
+				if (typeof(millis) !== "number") {
+					throw "Invalid number of milliseconds in sleep.";
+				}
+				if (millis < 0) {
+					throw "The number of milliseconds to wait can't be negative in sleep.";
+				}
+				if (millis % 1 !== 0) {
+					throw "The number of milliseconds to wait must be integer in sleep.";
+				}
+				_http.sleep(millis);
+			},
+
+			debug: function(message) {
+				debug(message);
+			},
 		};
 		return httpClient;
 	};

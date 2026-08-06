@@ -30,14 +30,16 @@ export default function TestRuleOnDeviceButton(props: TestRuleOnDeviceButtonProp
   const mutation = isScript ? scriptMutation : textMutation
 
   function runTest() {
+    if (!device) return
+
     const values = form.getValues()
     setTestedAt(new Date())
 
     if (isScript) {
-      scriptMutation.mutate({ device: device!.id, script: values.script, type })
+      scriptMutation.mutate({ device: device.id, script: values.script, type })
     } else {
       textMutation.mutate({
-        device: device!.id,
+        device: device.id,
         anyBlock: stringToBoolean(values.anyBlock),
         context: values.context,
         driver: values.driver!,

@@ -12,7 +12,7 @@ export default {
       pattern: {
         value:
           /(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d?\d{1})/g,
-        message: i18n.t(message || "thisIsNotAValidIpAddress"),
+        message: i18n.t(message || "common.thisIsNotAValidIpAddress"),
       },
     };
   },
@@ -24,7 +24,7 @@ export default {
         IPV4_PATTERN.test(value) ||
         IPV6_PATTERN.test(value) ||
         HOSTNAME_PATTERN.test(value) ||
-        i18n.t(message || "thisIsNotAValidIpAddressOrHostname"),
+        i18n.t(message || "common.thisIsNotAValidIpAddressOrHostname"),
     };
   },
 }

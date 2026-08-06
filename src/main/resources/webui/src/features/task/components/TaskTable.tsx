@@ -62,26 +62,27 @@ export default function TaskTable(props: TaskTableProps) {
   const columns = useMemo(
     () => [
       columnHelper.accessor("type", {
-        cell: (info) => (
-          <Stack
-            direction="row"
-            gap="2"
-            alignItems="center"
-            pl={`${info.row.original.depth * TREE_INDENT_PX}px`}
-          >
-            {Boolean(info.row.original.parentTaskId) && (
-              <Tooltip content={t("task.childOfTask", { id: info.row.original.parentTaskId })}>
-                <Icon size="xs" color="grey.400" flexShrink={0}>
-                  <LuCornerDownRight />
-                </Icon>
-              </Tooltip>
-            )}
-            <Icon size="sm" flexShrink={0}>
-              {TASK_TYPE_ICONS[info.getValue() as TaskType]}
-            </Icon>
-            <Text>{t(`task.type.${info.getValue()}`)}</Text>
-          </Stack>
-        ),
+        cell: (info) => {
+          const { parentTaskId, depth } = info.row.original
+          const previousRow = info.table.getRowModel().rows[info.row.index - 1]
+          const showParentArrow = Boolean(parentTaskId) && previousRow?.original.id === parentTaskId
+
+          return (
+            <Stack direction="row" gap="2" alignItems="center" pl={`${depth * TREE_INDENT_PX}px`}>
+              {showParentArrow && (
+                <Tooltip content={t("task.childOfTask", { id: parentTaskId })}>
+                  <Icon size="xs" color="grey.400" flexShrink={0}>
+                    <LuCornerDownRight />
+                  </Icon>
+                </Tooltip>
+              )}
+              <Icon size="sm" flexShrink={0}>
+                {TASK_TYPE_ICONS[info.getValue() as TaskType]}
+              </Icon>
+              <Text>{t(`task.type.${info.getValue()}`)}</Text>
+            </Stack>
+          )
+        },
         header: t("common.type"),
         enableSorting: !treeMode,
         size: 15000,

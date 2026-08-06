@@ -1,5 +1,5 @@
 import { Box, BoxProps } from "@chakra-ui/react";
-import { editor, languages } from "monaco-editor";
+import { editor, typescript } from "monaco-editor";
 import {
   MutableRefObject,
   useEffect,
@@ -9,32 +9,20 @@ import {
 
 self.MonacoEnvironment = {
   async getWorker(_, label) {
-    let worker;
 
     if (label === "typescript" || label === "javascript") {
-      worker = await import(
-        "monaco-editor/esm/vs/language/typescript/ts.worker?worker"
+      const jsWorker = await import(
+        "monaco-editor/language/typescript/ts.worker?worker"
       );
-    } else {
-      worker = await import("monaco-editor/esm/vs/editor/editor.worker?worker");
+      return new jsWorker.default();
     }
 
-    return worker.default();
+    const worker = await import("monaco-editor/editor/editor.worker?worker");
+    return new worker.default();
   },
 };
 
-/**
- * Add extra library for typescript autocompletion
- *
- * `languages.typescript` is typed as a deprecated stub (`{ deprecated: true }`) in this
- * version of monaco-editor's public types, even though `typescriptDefaults` still exists
- * at runtime - cast to access it.
- */
-const typescriptLanguage = languages.typescript as unknown as {
-  typescriptDefaults: { addExtraLib(content: string): void };
-};
-
-typescriptLanguage.typescriptDefaults.addExtraLib(`
+typescript.typescriptDefaults.addExtraLib(`
   type DeviceConfigurationType = "systemConfiguration";
   type CliMacroDefinition = "configure" | "end" | "save";
   type CliCommandDefinition = "no ip domain-lookup";

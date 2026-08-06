@@ -1,6 +1,7 @@
-import react from "@vitejs/plugin-react"
 import { defineConfig, loadEnv } from "vite"
-import svgrPlugin from "vite-plugin-svgr"
+import react, { reactCompilerPreset } from "@vitejs/plugin-react"
+import babel from '@rolldown/plugin-babel';
+
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "")
@@ -22,17 +23,15 @@ export default defineConfig(({ mode }) => {
       tsconfigPaths: true,
     },
     plugins: [
-      react({
-        babel: {
-          plugins: [["babel-plugin-react-compiler", {}]],
-        },
+      react(),
+      babel({
+        presets: [reactCompilerPreset()],
       }),
-      svgrPlugin(),
     ],
     optimizeDeps: {
       include: [
-        `monaco-editor/esm/vs/language/typescript/ts.worker`,
-        `monaco-editor/esm/vs/editor/editor.worker`,
+        `monaco-editor/language/typescript/ts.worker`,
+        `monaco-editor/editor/editor.worker`,
       ],
     },
     rollupOptions: {
